@@ -8,6 +8,7 @@ import {
   mergeAudio,
   type PipelineDeps,
   prepareChunk,
+  redactTypedChunk,
   stampOverCap,
   summarize,
   summarizedWebhook,
@@ -49,11 +50,31 @@ const RUN_NAMESPACE = "2f7c6b1e-3d4a-4e8f-9b0c-1a2b3c4d5e6f";
 export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES) {
   return {
     /** conversations.chunk: load, convert and split, transcribe each piece, hand over. */
-    async chunk(p: { chunkId: string; usePiiRedaction: boolean }): Promise<void> {
-      const loaded = await step("load", () => loadChunk(d, p.chunkId), retry.db);
+    async chunk(p: {
+      chunkId: string;
+      usePiiRedaction: boolean;
+      typed?: boolean | undefined;
+    }): Promise<void> {
+      const typed = p.typed === true;
+      const loaded = await step("load", () => loadChunk(d, p.chunkId, typed), retry.db);
       const conversationId = loaded.conversationId;
       if (!conversationId) return;
-      if (!loaded.skip) {
+      if (!loaded.skip && typed) {
+        try {
+          await step(
+            "redact",
+            () =>
+              redactTypedChunk(d, p.chunkId, {
+                usePiiRedaction: p.usePiiRedaction,
+                anonymize: loaded.anonymize,
+              }),
+            retry.transcribe,
+          );
+        } catch {
+          // Out of retries: the last attempt saved its error on the chunk, so it counts as
+          // done and holds no text: the raw text is cleared with it, never kept.
+        }
+      } else if (!loaded.skip) {
         let pieces: string[] = [];
         try {
           pieces = await step("prepare", () => prepareChunk(d, p.chunkId), retry.media);

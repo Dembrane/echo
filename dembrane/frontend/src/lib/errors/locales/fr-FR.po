@@ -14,17 +14,27 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Saisissez au moins l'un de vos numéros de TVA, KvK ou KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} ne peut pas être vide. Remplissez-le ou supprimez-le."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} doit être une vraie date, pas dans le futur et pas avant l'envoi du document."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'image de vos initiales} other {L'image de votre signature}} est trop volumineuse. Elle doit faire moins de 512 Ko."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Vos initiales doivent} other {Votre signature doit}} être une image PNG."
 
@@ -179,12 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Saisissez une adresse web commençant par http:// ou https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Saisissez au moins l'un de vos numéros de TVA, KvK ou KBO."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Saisissez du texte pour {label}."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Remplissez {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Remplissez {label} pour continuer."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Seul {signer_email} peut refuser ce document."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Seul {signer_email} peut signer ce document. Invitez cette personne à signer ou contactez-nous pour changer de signataire."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "La carte a été mise à jour depuis votre sélection. Rechargez la carte et sélectionnez à nouveau."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "Le PDF de ce document n'est pas disponible. Contactez-nous et nous vous le renverrons."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Ce responsable des données fait déjà partie de votre organisation. Pour un client externe, désignez quelqu'un en dehors, ou créez plutôt un espace de travail interne."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "Ce document ne peut plus être refusé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "Ce document ne peut pas être signé pour le moment. Nous avons été prévenus et allons régler cela."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "Ce document a été modifié depuis son ouverture. Rechargez la page et relisez-le avant de signer."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "Ce document a été modifié depuis son ouverture. Rechargez la page et réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "Ce document ne nécessite pas de signature."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "Ce document est déjà signé. Il n'y a plus rien à faire."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "Ce document n'est pas encore signé, il n'y a donc pas de copie signée à télécharger."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "Ce document n'est plus en attente de signature."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "Ce document a été refusé et ne peut plus être signé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "Ce document a été retiré et ne peut plus être signé."
 
@@ -839,12 +844,12 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Le lien vers ce logo est trop long. Utilisez un lien plus court."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Cette action nécessite le forfait {required}. Passez à une offre supérieure pour l'utiliser."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "Cette offre a expiré le {valid_until}. Contactez-nous pour en obtenir une nouvelle."
 
@@ -904,7 +909,7 @@ msgid "error.member.already_removed"
 msgstr "Cette personne a déjà été retirée."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Ce forfait ne peut pas être acheté en ligne. Contactez-nous pour y souscrire."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "Cet espace de travail contient encore {count, plural, one {# projet} other {# projets}}. Supprimez-les ou déplacez-les d'abord depuis la page Projets de votre organisation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Cochez {label} pour continuer."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Cochez ou décochez {label}."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Pour déplacer des projets, vous devez être administrateur ou propriétaire de l'espace de travail {side}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "Pour signer, connectez-vous avec une adresse e-mail vérifiée."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "Conversation introuvable. Elle a peut-être été supprimée."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "Document introuvable. Il a peut-être été retiré."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "Une partie de dembrane est inaccessible pour le moment. Réessayez dans un instant."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "Impossible de lire votre signature. Dessinez-la à nouveau et réessayez."
 
@@ -1569,7 +1574,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Vous n'avez encore rien ajouté de nouveau. Indiquez ce que vous aimeriez changer, puis réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Vous avez atteint la limite du forfait Free. Passez au forfait supérieur pour continuer."
 

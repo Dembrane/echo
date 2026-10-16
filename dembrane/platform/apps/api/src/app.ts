@@ -2,6 +2,7 @@ import { DrizzleAccessStore } from "@dembrane/access";
 import { accountRoutes } from "@dembrane/account";
 import {
   accountsRoutes,
+  demoDeckHook,
   demoProspectHook,
   httpFetchText,
   onboardingSignals,
@@ -23,11 +24,20 @@ import {
   ParticipantTokens,
 } from "@dembrane/conversations";
 import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@dembrane/feedback";
-import { vertexCompleter, vertexEmbedder } from "@dembrane/llm";
+import {
+  completerConfigOf,
+  embedderConfigOf,
+  embeddingLocationOf,
+  embeddingModelOf,
+  searchGroundingOn,
+  vertexCompleter,
+  vertexEmbedder,
+} from "@dembrane/llm";
 import { MapStore, mapRoutes } from "@dembrane/map";
 import { notificationRoutes } from "@dembrane/notifications";
 import {
   analysisDeck,
+  draftDeckRoutes,
   popcornDemoRoutes,
   popcornDeps,
   popcornFlags,
@@ -58,6 +68,8 @@ import { notFound, onError } from "./middleware/errors";
 import { session } from "./middleware/session";
 import { systemRoutes } from "./routes/system";
 
+const EMAIL_CODE_LIMIT = { name: "email_code", capacity: 1, windowSeconds: 60 };
+
 /** Pure composition: no I/O at build time, so tests call app.request() with fake deps. */
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
@@ -84,6 +96,17 @@ export function buildApp(deps: Deps) {
       exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
     }),
   );
+  // One emailed code per address a minute, checked here: Better Auth replaces the stored code
+  // before its send hook runs, so a refusal there would void the code already in the inbox.
+  app.post("/api/auth/email-otp/send-verification-otp", async (c, next) => {
+    const body = (await c.req.raw
+      .clone()
+      .json()
+      .catch(() => ({}))) as { email?: unknown };
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    await deps.limiter.check(EMAIL_CODE_LIMIT, email);
+    await next();
+  });
   // Sign-in keys its rate limits on the address the API resolved, never on a header the
   // caller sent.
   app.on(["GET", "POST"], "/api/auth/*", (c) => {
@@ -92,6 +115,9 @@ export function buildApp(deps: Deps) {
     return deps.auth.handler(new Request(c.req.raw, { headers }));
   });
   app.use("/api/*", session(deps));
+  // Account events, project webhooks and MCP tool requests take sam's inbox only when it is
+  // set and SAM_INBOX_SCOPE is all; support requests go there from the worker either way.
+  const inboxAll = Boolean(deps.config.samInbox.url) && deps.config.samInbox.scope === "all";
   const accounts = {
     db: deps.db,
     access: deps.access,
@@ -116,7 +142,7 @@ export function buildApp(deps: Deps) {
       eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
       // The config check sets SAM_INBOX_* together, so the URL stands for all three.
-      samInbox: Boolean(deps.config.samInbox.url),
+      samInbox: inboxAll,
       offerMessages: deps.config.accounts.offerMessages,
       reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
       inviteSecret: deps.config.account.inviteHashSecret,
@@ -146,24 +172,14 @@ export function buildApp(deps: Deps) {
       deliver: deps.deliverWebhook,
       allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
       dashboardUrl: deps.config.http.dashboardUrl,
-      samInbox: Boolean(deps.config.samInbox.url),
+      samInbox: inboxAll,
     }),
   );
   app.route("/", notificationRoutes(deps));
   app.route("/", reportRoutes(deps));
   // One set of model calls for the analysis, map, canvas and popcorn routes.
-  const completer = vertexCompleter(deps.models, {
-    groups: {
-      text_fast: deps.config.llm.textFast,
-      multi_modal_fast: deps.config.llm.multiModalFast,
-      multi_modal_pro: deps.config.llm.multiModalPro,
-    },
-  });
-  const embedder = vertexEmbedder(deps.models, {
-    project: deps.config.llm.vertexProject,
-    location: deps.config.llm.embeddingLocation,
-    model: deps.config.llm.embeddingModel,
-  });
+  const completer = vertexCompleter(deps.models, completerConfigOf(deps.config.llm));
+  const embedder = vertexEmbedder(deps.models, embedderConfigOf(deps.config.llm));
   app.route(
     "/",
     analysisRoutes({
@@ -172,8 +188,8 @@ export function buildApp(deps: Deps) {
       completer,
       embedder,
       enablePresent: deps.config.analysis.enablePresent,
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
     }),
   );
   app.route(
@@ -183,8 +199,9 @@ export function buildApp(deps: Deps) {
       jobs: deps.queue,
       completer,
       embedder,
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
+      factCheck: searchGroundingOn(deps.config.llm),
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
       // The room shows the project's groups and follows its popcorn session's channel.
@@ -282,8 +299,8 @@ export function buildApp(deps: Deps) {
     embedder,
     jobs: deps.queue,
     config: {
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
     },
   });
   const popcorn = popcornDeps({
@@ -306,6 +323,8 @@ export function buildApp(deps: Deps) {
   const presentDeps = { ...popcorn, access: deps.access, hub, map };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
+  // Before the accounts routes: a demo's draft deck sits under their demo paths.
+  app.route("/", draftDeckRoutes({ ...popcorn, hub, open: demoDeckHook(accounts) }));
   app.route("/", accountsRoutes(accounts));
   app.route(
     "/",
@@ -328,10 +347,11 @@ export function buildApp(deps: Deps) {
       capture,
       publicUrl: deps.config.http.publicUrl,
       dashboardUrl: deps.config.http.dashboardUrl,
+      docsUrl: deps.config.http.docsUrl,
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
-      samInbox: deps.config.samInbox.url
+      samInbox: inboxAll
         ? { sink: deps.queue, environment: environmentName(deps.config.http.dashboardUrl) }
         : null,
     }),

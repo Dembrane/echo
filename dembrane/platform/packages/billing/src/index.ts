@@ -1,9 +1,6 @@
 export { type Billing, type BillingWiring, createBilling } from "./create";
 export { type DowngradeEffect, meetsTier, previewDowngrade } from "./downgrade";
 export {
-  type EmailParts,
-  emailLayout,
-  emailStyles,
   paymentFailedEmail,
   type RenderedEmail,
   tierExpiredEmail,

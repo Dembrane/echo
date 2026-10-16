@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { sendEmail } from "@dembrane/account";
+import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { deliverSamMessage } from "@dembrane/webhooks";
 import { and, eq, sql } from "drizzle-orm";
@@ -10,6 +11,7 @@ import * as K from "../src/contract";
 import { runRemindersTick, runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
+import { billingComplete } from "../src/tasks";
 import { admin, call, dropDatabase, png, pngB64, type World, world } from "./helpers";
 
 // Every route against Postgres: success, the refusal of each role that must not pass, and
@@ -217,7 +219,12 @@ run("accounts routes against Postgres", () => {
       "signature",
     ]);
     expect(pushed.task?.code).toBe("sign_offer");
-    expect(pushed.task?.params).toEqual({ document_title: pushed.document.title });
+    expect(pushed.task?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    expect(pushed.document.title).toBe(`Offerte jaarlicentie ${pushed.document.reference}`);
     expect([pushed.task?.title, pushed.task?.body]).toEqual([null, null]);
     expect(pushed.task?.status).toBe("open");
     expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
@@ -232,7 +239,7 @@ run("accounts routes against Postgres", () => {
       const r = await call(w, "GET", C(), as);
       expect(r.status).toBe(200);
       const page = K.AccountPage.parse(r.data);
-      expect(page.tasks[0]?.code).toBe("sign_offer");
+      expect(page.tasks.map((t) => t.code).slice(0, 2)).toEqual(["who_signs", "sign_offer"]);
       expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
       expect(page.documents.find((d) => d.id === offerId)?.file_url).toBe(
         `${C()}/documents/${offerId}/file`,
@@ -416,7 +423,76 @@ run("accounts routes against Postgres", () => {
     );
   });
 
-  test("a signer who may not agree to data processing leaves a DPA to sign separately", async () => {
+  test("who signs: the answers name the signers of the offer and its DPA, and settle the task for sam", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    const asked = (await store.tasks(w.db, w.orgId)).find(
+      (t) => t.code === "who_signs" && t.documentId === id,
+    );
+    expect(asked?.status).toBe("open");
+    expect(asked?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    const path = `${C()}/tasks/${asked?.id}/who-signs`;
+    const officer = { name: "Data Officer", email: "dpo@example.test", role: "FG" };
+    const answer = { offer_signer: officer, dpa_same: true, dpa_signer: null, dpia: true };
+    expect((await call(w, "POST", path, "member", answer)).status).toBe(403);
+    // Not answered by a reply: it has its own form.
+    expect(
+      (await call(w, "POST", `${C()}/tasks/${asked?.id}/submit`, "admin", { response_text: "x" }))
+        .status,
+    ).toBe(409);
+    w.jobs.jobs.length = 0;
+    const r = await call(w, "POST", path, "admin", answer);
+    expect(r.status).toBe(200);
+    const done = K.Task.parse(r.data);
+    expect(done.status).toBe("done");
+    expect(done.params).toMatchObject({ dpa_same: "true", dpia: "true" });
+    expect(done.response_text).toContain("Offer: signed by Data Officer (dpo@example.test, FG).");
+    expect(done.response_text).toContain("own data protection impact assessment");
+    expect(w.jobs.of("accounts.deliver-event").map((j) => j.payload)).toContainEqual(
+      expect.objectContaining({ event: "account.task.submitted" }),
+    );
+    expect((await call(w, "POST", path, "admin", answer)).status).toBe(409);
+    // The same person signs the offer and the DPA sent with it.
+    const dpa = (await store.documents(w.db, w.orgId)).find(
+      (x) => x.kind === "dpa" && ["sent", "viewed"].includes(x.status),
+    );
+    expect((await store.document(w.db, w.orgId, id))?.signerEmail).toBe("dpo@example.test");
+    expect(dpa?.signerEmail).toBe("dpo@example.test");
+    // Back to the admin, who signs the DPA in the next test.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${dpa?.id}/signer`, "admin", {
+          name: "Admin",
+          email: "admin@example.test",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+
+    // An offer signed without answering first settles the question too.
+    const other = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const signed = await signPayload(other.document.id, "admin");
+    expect(
+      (await call(w, "POST", `${C()}/documents/${other.document.id}/sign`, "admin", signed.body))
+        .status,
+    ).toBe(200);
+    expect(
+      (await store.tasks(w.db, w.orgId))
+        .filter((t) => t.documentId === other.document.id)
+        .map((t) => `${t.code}:${t.status}`)
+        .sort(),
+    ).toEqual(["sign_offer:done", "who_signs:done"]);
+  });
+
+  test("the DPA goes out with the offer as its own document; signing the offer asks nothing about it", async () => {
     const pushed = K.PushOfferResponse.parse(
       (
         await call(
@@ -428,10 +504,16 @@ run("accounts routes against Postgres", () => {
         )
       ).data,
     );
+    // An event has no SLA, so the DPA is the first appendix, and it is signed on its own.
     expect(pushed.document.body).toContain(
-      "Appendix B: Data Processing Agreement (version 3.0.1, 17-07-2026",
+      "Appendix A: Data Processing Agreement (version 3.0.1, 17-07-2026",
     );
-    const { body } = await signPayload(pushed.document.id, "admin", { dpa_authorised: false });
+    expect(pushed.document.body).not.toContain("Service Level Agreement");
+    expect(pushed.document.body).toContain("is signed separately");
+    expect(pushed.document.confirmation?.dpa_not_authorised).toBeNull();
+    expect(pushed.document.confirmation?.dpa_authorised).not.toContain("data processing");
+    expect(pushed.document.legal.map((l) => l.kind)).toEqual(["terms", "dpa"]);
+    const { body } = await signPayload(pushed.document.id, "admin");
     expect(
       (await call(w, "POST", `${C()}/documents/${pushed.document.id}/sign`, "admin", body)).status,
     ).toBe(200);
@@ -474,11 +556,33 @@ run("accounts routes against Postgres", () => {
     expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("signer@example.test");
     const [mail] = w.jobs.of("account.send-email");
     expect(mail).toMatchObject({ to: "signer@example.test", template: "account_signer_invite" });
-    expect((mail as { data: { sign_url: string } }).data.sign_url).toBe(
-      `https://dash.test/o/${w.orgId}/account/documents/${id}/sign`,
+    expect((mail as { data: { sign_url: string } }).data.sign_url).toMatch(
+      new RegExp(
+        `^https://dash\\.test/o/${w.orgId}/account/documents/${id}/sign\\?invite=[\\w-]{32}$`,
+      ),
     );
     expect(await store.mayReceiveCode(w.db, "signer@example.test", w.clock.now)).toBe(true);
     expect(await store.mayReceiveCode(w.db, "stranger@example.test", w.clock.now)).toBe(false);
+    // They show among the members as invited, once however often they are named; a
+    // member named to sign gets no invitation.
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const invites = async (email: string) =>
+      w.db
+        .select({ role: schema.org_invite.role })
+        .from(schema.org_invite)
+        .where(and(eq(schema.org_invite.org_id, w.orgId), eq(schema.org_invite.email, email)));
+    expect(await invites("signer@example.test")).toEqual([{ role: "billing" }]);
+    expect(
+      await store.inviteSigner(w.db, {
+        id: crypto.randomUUID(),
+        orgId: w.orgId,
+        email: "Admin@Example.test",
+        invitedBy: null,
+        now: w.clock.now,
+      }),
+    ).toBe(false);
     // The signer sees that document, and nothing else of the organisation.
     const seen = await call(w, "GET", `${C()}/documents/${id}`, "signer");
     expect(seen.status).toBe(200);
@@ -500,6 +604,118 @@ run("accounts routes against Postgres", () => {
     ).toBe(200);
     expect((await store.signatureOf(w.db, id))?.email).toBe("signer@example.test");
     expect((await call(w, "GET", `${C()}/documents/${id}/signed.pdf`, "signer")).status).toBe(200);
+    // Signing takes up the invitation the naming made: they are a billing member now.
+    const joined = await store.orgMembership(w.db, w.orgId, w.people.signer.appUserId as string);
+    expect(joined).toMatchObject({ role: "billing", deleted_at: null });
+    const [taken] = await w.db
+      .select({ accepted: schema.org_invite.accepted_at })
+      .from(schema.org_invite)
+      .where(
+        and(
+          eq(schema.org_invite.org_id, w.orgId),
+          eq(schema.org_invite.email, "signer@example.test"),
+        ),
+      );
+    expect(taken?.accepted).toBeTruthy();
+  });
+
+  test("the invitation link greets the person named before sign-in, and only they can take it up", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Someone new: an identity from the code sign-in, without the app user onboarding makes.
+    const freshId = newId();
+    await w.db.insert(schema.auth_user).values({
+      id: freshId,
+      name: "",
+      email: "fresh@example.test",
+      emailVerified: true,
+      createdAt: w.clock.now,
+      updatedAt: w.clock.now,
+    });
+    await w.db.insert(schema.directus_users).values({ id: freshId, email: "fresh@example.test" });
+    (w.people as Record<string, unknown>).fresh = {
+      appUserId: null,
+      directusUserId: freshId,
+      isStaff: false,
+      email: "fresh@example.test",
+    };
+    const fresh = "fresh" as keyof World["people"];
+    w.jobs.jobs.length = 0;
+    const named = { name: "Taylor van Lake", email: "Fresh@Example.test", role: "Griffier" };
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const [mail] = w.jobs.of("account.send-email");
+    const link = new URL((mail as { data: { sign_url: string } }).data.sign_url);
+    const token = link.searchParams.get("invite") as string;
+    const invitePath = `${C()}/documents/${id}/invite`;
+
+    // No session: the token is the access, and a wrong one reads as a wrong id.
+    const seen = await call(w, "GET", `${invitePath}?invite=${token}`, null);
+    expect(K.SignerInvite.parse(seen.data)).toEqual({
+      organisation: { name: "Gemeente Testdorp" },
+      inviter: { name: "admin" },
+      document: {
+        title: pushed.document.title,
+        kind: "offer",
+        reference: pushed.document.reference,
+      },
+      signer: {
+        email: "fresh@example.test",
+        first_name: "Taylor",
+        last_name: "van Lake",
+        role: "Griffier",
+      },
+      status: "open",
+      has_account: false,
+    });
+    const wrong = `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`;
+    expect((await call(w, "GET", `${invitePath}?invite=${wrong}`, null)).status).toBe(404);
+    expect((await call(w, "GET", invitePath, null)).status).toBe(422);
+    const signerSees = K.SignerInvite.parse(
+      (await call(w, "GET", `${invitePath}?invite=${token}`, "signer")).data,
+    );
+    expect(signerSees.signer.email).toBe("fresh@example.test");
+
+    // Taking it up needs the session of that address; the names land on someone new.
+    const accept = { invite: token, first_name: "Taylor", last_name: "Lake" };
+    expect((await call(w, "POST", `${invitePath}/accept`, null, accept)).status).toBe(401);
+    expect((await call(w, "POST", `${invitePath}/accept`, "admin", accept)).status).toBe(403);
+    const taken = await call(w, "POST", `${invitePath}/accept`, fresh, accept);
+    expect(K.AcceptSignerInviteResponse.parse(taken.data)).toEqual({
+      org_id: w.orgId,
+      document_id: id,
+    });
+    expect((await store.identity(w.db, freshId))?.name).toBe("Taylor Lake");
+    const [profile] = await w.db
+      .select({ first: schema.directus_users.first_name, last: schema.directus_users.last_name })
+      .from(schema.directus_users)
+      .where(eq(schema.directus_users.id, freshId));
+    expect(profile).toEqual({ first: "Taylor", last: "Lake" });
+    // An existing account keeps its own name.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", {
+          ...named,
+          email: "signer@example.test",
+        })
+      ).status,
+    ).toBe(200);
+    expect((await call(w, "GET", `${invitePath}?invite=${token}`, null)).status).toBe(404);
+    const again = new URL(
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url,
+    ).searchParams.get("invite") as string;
+    expect(
+      K.SignerInvite.parse((await call(w, "GET", `${invitePath}?invite=${again}`, null)).data)
+        .has_account,
+    ).toBe(true);
+    expect(
+      (await call(w, "POST", `${invitePath}/accept`, "signer", { ...accept, invite: again }))
+        .status,
+    ).toBe(200);
+    expect((await store.identity(w.db, w.people.signer.directusUserId))?.name).toBe("signer");
   });
 
   test("naming a different signer is recorded as a replacement, and namings are limited per organisation", async () => {
@@ -627,6 +843,12 @@ run("accounts routes against Postgres", () => {
     expect(K.BillingDetails.parse(r.data)).toMatchObject({
       billing_email: "facturen@testdorp.example",
       po_number: "PO-2026-77",
+      // The code decides what is asked; the name is what reads on the invoice.
+      country: "Netherlands",
+      country_code: "NL",
+      // A caller from before the question sends a KvK number alone: that says there is no VAT number.
+      no_vat_number: true,
+      invoice_portal: null,
     });
     expect(
       K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data).kvk_number,
@@ -637,13 +859,239 @@ run("accounts routes against Postgres", () => {
     expect(task?.nextReminderAt).toBeNull();
     expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
       event: "account.billing_details.updated",
-      billing: { legal_name: "Gemeente Testdorp", kvk_number: "12345678", po_number: "PO-2026-77" },
+      billing: {
+        legal_name: "Gemeente Testdorp",
+        kvk_number: "12345678",
+        po_number: "PO-2026-77",
+        no_vat_number: true,
+        invoice_portal: null,
+        address: { country: "Netherlands", country_code: "NL" },
+      },
     });
     expect(w.jobs.of("accounts.notify-slack")[0]?.text).toContain("PO-2026-77");
     const review = await call(w, "POST", `${S()}/tasks/${task?.id}/review`, "staff", {
       decision: "approve",
     });
     expect(review.status).toBe(409);
+  });
+
+  test("billing details: Peppol from the directory, delivery by email when chosen, by customer or staff", async () => {
+    const id = "iso6523-actorid-upis::0106:87654321";
+    w.web.pages.set(
+      `https://directory.peppol.eu/search/1.0/json?participant=${encodeURIComponent(id)}`,
+      JSON.stringify({
+        matches: [
+          {
+            participantID: { value: "0106:87654321" },
+            entities: [{ name: [{ name: "Gemeente Testdorp" }] }],
+          },
+        ],
+      }),
+    );
+    const looked = await call(w, "POST", `${C()}/peppol-lookup`, "billing", {
+      kvk_number: "87654321",
+    });
+    expect(K.PeppolLookupResponse.parse(looked.data).match).toEqual({
+      participant_id: "0106:87654321",
+      name: "Gemeente Testdorp",
+    });
+    const details = {
+      legal_name: "Gemeente Testdorp",
+      billing_email: "facturen@testdorp.example",
+      address_line1: "Dorpsstraat 1",
+      postal_code: "1234 AB",
+      city: "Testdorp",
+      country: "NL",
+      kvk_number: "87654321",
+    };
+    w.jobs.jobs.length = 0;
+    const saved = K.BillingDetails.parse(
+      (await call(w, "PUT", `${C()}/billing`, "billing", details)).data,
+    );
+    expect(saved).toMatchObject({
+      peppol_id: "0106:87654321",
+      peppol_match: { participant_id: "0106:87654321", name: "Gemeente Testdorp" },
+      invoice_delivery: null,
+    });
+    expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
+      billing: { peppol_id: "0106:87654321", invoice_delivery: "peppol" },
+    });
+    const byEmail = await call(w, "PUT", `${C()}/billing`, "billing", {
+      ...details,
+      invoice_delivery: "email",
+    });
+    expect(K.BillingDetails.parse(byEmail.data).invoice_delivery).toBe("email");
+    const staff = await call(w, "PATCH", S(), "staff", { invoice_delivery: "peppol" });
+    expect(staff.status).toBe(200);
+    expect(
+      K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data)
+        .invoice_delivery,
+    ).toBe("peppol");
+  });
+
+  test("billing details by country: the numbers asked, no VAT number said plainly, another way written as a question", async () => {
+    const details = {
+      legal_name: "Beispielstadt Verwaltung",
+      billing_email: "rechnung@beispielstadt.example",
+      address_line1: "Rathausplatz 1",
+      postal_code: "12345",
+      city: "Beispielstadt",
+    };
+    const put = (over: Record<string, unknown>) =>
+      call(w, "PUT", `${C()}/billing`, "billing", { ...details, ...over });
+    const fields = (r: { data: unknown }) =>
+      (r.data as { detail: { loc: string[]; type: string }[] }).detail.map(
+        (d) => `${d.loc[1]}: ${d.type}`,
+      );
+
+    // Each refusal names the field to fix, with the code the form words.
+    const refusals: [Record<string, unknown>, string[]][] = [
+      [{}, ["country_code: field.required"]],
+      [{ country: "Atlantis" }, ["country_code: field.required"]],
+      [{ country_code: "DE" }, ["vat_id: field.required"]],
+      [{ country_code: "DE", vat_id: "DE12" }, ["vat_id: field.invalid"]],
+      [{ country_code: "DE", vat_id: "NL001234567B01" }, ["vat_id: field.invalid"]],
+      [{ country_code: "BE", no_vat_number: true }, ["kbo_number: field.required"]],
+      [{ country_code: "NL" }, ["vat_id: field.required"]],
+      [{ country_code: "NL", no_vat_number: true }, ["kvk_number: field.required"]],
+      [
+        { country_code: "NL", kvk_number: "12345678", no_vat_number: false },
+        ["vat_id: field.required"],
+      ],
+      [{ country_code: "NL", kvk_number: "1234" }, ["kvk_number: field.invalid"]],
+      [
+        { country_code: "NL", kvk_number: "12345678", invoice_delivery: "other" },
+        ["invoice_portal: field.required"],
+      ],
+      [
+        { country_code: "NL", kvk_number: "12345678", peppol_id: "12345678" },
+        ["peppol_id: field.invalid"],
+      ],
+    ];
+    for (const [over, expected] of refusals) {
+      const r = await put(over);
+      expect([r.status, fields(r)]).toEqual([422, expected]);
+    }
+
+    // Another EU country with no VAT number: complete without any number, by its own word.
+    // Invoices another way: what they wrote is saved, and is their question to dembrane.
+    const questions = async () =>
+      K.AccountPage.parse((await call(w, "GET", C(), "billing")).data).tickets;
+    const before = (await questions()).length;
+    const german = {
+      country_code: "de",
+      no_vat_number: true,
+      invoice_delivery: "other",
+      invoice_portal: " We use the Example supplier portal. ",
+    };
+    w.jobs.jobs.length = 0;
+    expect(K.BillingDetails.parse((await put(german)).data)).toMatchObject({
+      country: "Germany",
+      country_code: "DE",
+      vat_id: null,
+      no_vat_number: true,
+      kvk_number: null,
+      invoice_delivery: "other",
+      invoice_portal: "We use the Example supplier portal.",
+    });
+    expect(billingComplete(await store.billing(w.db, w.orgId))).toBe(true);
+    const events = w.jobs.of("accounts.deliver-event").map((j) => j.payload);
+    expect(events[0]).toMatchObject({
+      event: "account.billing_details.updated",
+      billing: {
+        vat_id: null,
+        no_vat_number: true,
+        invoice_delivery: "other",
+        invoice_portal: "We use the Example supplier portal.",
+        address: { country: "Germany", country_code: "DE" },
+      },
+    });
+    expect(events[1]).toMatchObject({
+      event: "account.ticket.opened",
+      ticket: {
+        subject: "How we receive invoices",
+        message: "We use the Example supplier portal.",
+      },
+    });
+    expect(w.jobs.of("accounts.notify-slack").map((j) => j.text)).toContainEqual(
+      expect.stringContaining("New question from"),
+    );
+    const asked = await questions();
+    expect(asked).toHaveLength(before + 1);
+    expect(asked[0]).toMatchObject({
+      subject: "How we receive invoices",
+      status: "waiting_on_dembrane",
+      messages: [{ from: "customer", body: "We use the Example supplier portal." }],
+    });
+    // The same words saved again ask nothing new; other words are a new question.
+    await put(german);
+    expect(await questions()).toHaveLength(before + 1);
+    await put({ ...german, invoice_portal: "By post, to the address above." });
+    expect(await questions()).toHaveLength(before + 2);
+
+    // Staff switch between what Exact sends itself; that ends the other way, which is the customer's to choose.
+    expect((await call(w, "PATCH", S(), "staff", { invoice_delivery: "other" })).status).toBe(422);
+    expect((await call(w, "PATCH", S(), "staff", { invoice_delivery: "email" })).status).toBe(200);
+    expect(
+      K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data),
+    ).toMatchObject({ invoice_delivery: "email", invoice_portal: null });
+
+    // Belgium: a VAT number typed the Belgian way is stored clean; without one, the KBO number.
+    expect(
+      K.BillingDetails.parse((await put({ country_code: "BE", vat_id: "be 0123.456.789" })).data),
+    ).toMatchObject({ country: "Belgium", vat_id: "BE0123456789", no_vat_number: false });
+    expect(
+      K.BillingDetails.parse(
+        (await put({ country_code: "BE", no_vat_number: true, kbo_number: "0123456789" })).data,
+      ),
+    ).toMatchObject({ vat_id: null, no_vat_number: true, kbo_number: "0123.456.789" });
+
+    // The Netherlands follows the same pattern: a VAT number, or none and the KvK number.
+    expect(
+      K.BillingDetails.parse(
+        (await put({ country_code: "NL", no_vat_number: true, kvk_number: "1234 5678" })).data,
+      ),
+    ).toMatchObject({ vat_id: null, no_vat_number: true, kvk_number: "12345678" });
+
+    // Outside the EU nothing more is asked.
+    expect(K.BillingDetails.parse((await put({ country: "United States" })).data)).toMatchObject({
+      country: "United States",
+      country_code: "US",
+      no_vat_number: null,
+    });
+    expect(billingComplete(await store.billing(w.db, w.orgId))).toBe(true);
+
+    // A caller from before sends the country as a name; the Dutch council is back for what follows.
+    const dutch = K.BillingDetails.parse(
+      (
+        await call(w, "PUT", `${C()}/billing`, "billing", {
+          legal_name: "Gemeente Testdorp",
+          billing_email: "facturen@testdorp.example",
+          address_line1: "Dorpsstraat 1",
+          postal_code: "1234 AB",
+          city: "Testdorp",
+          country: "Nederland",
+          kvk_number: "1234 5678",
+          vat_id: "nl 0012.34.567 b01",
+        })
+      ).data,
+    );
+    expect(dutch).toMatchObject({
+      country: "Netherlands",
+      country_code: "NL",
+      kvk_number: "12345678",
+      vat_id: "NL001234567B01",
+      kbo_number: null,
+      no_vat_number: false,
+    });
+    // What a signer need not type names the country in the document's language: this offer is Dutch.
+    expect(
+      K.DocumentDetail.parse((await call(w, "GET", `${C()}/documents/${offerId}`, "admin")).data)
+        .prefill,
+    ).toEqual({
+      organisation: "Gemeente Testdorp",
+      address: "Dorpsstraat 1, 1234 AB Testdorp, Nederland",
+    });
   });
 
   test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {
@@ -848,7 +1296,9 @@ run("accounts routes against Postgres", () => {
         customer: `https://dash.test/o/${w.orgId}/account`,
       },
     });
+    // The signer named earlier joined as billing when they signed.
     expect(first.contacts).toEqual([
+      { name: "signer", email: "signer@example.test", role: "billing" },
       { name: "admin", email: "admin@example.test", role: "admin" },
       { name: "billing", email: "billing@example.test", role: "billing" },
     ]);
@@ -1194,5 +1644,42 @@ run("accounts routes against Postgres", () => {
       .select({ n: sql<number>`count(*)::int` })
       .from(schema.account_signature);
     expect(rows[0]?.n).toBeGreaterThanOrEqual(4);
+  });
+
+  test("reminding the named signer sends the same link again and keeps the wait", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Last in the file: an hour on, so the signer namings above no longer count to the limit.
+    w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
+    const remind = `${C()}/documents/${id}/signer/remind`;
+    // Nobody named yet: the admins sign it themselves, so there is no one to remind.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(409);
+    const person = { name: "Taylor Lake", email: "taylor@example.test", role: null };
+    const named = K.NameSignerResponse.parse(
+      (await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", person)).data,
+    );
+    const link = () =>
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url;
+    const first = link();
+    expect((await call(w, "POST", remind, "member", {})).status).toBe(403);
+    const r = await call(w, "POST", remind, "billing", {});
+    expect(r.status).toBe(200);
+    expect(K.NameSignerResponse.parse(r.data).signer).toEqual({
+      ...named.signer,
+      reminded_at: w.clock.now.toISOString(),
+    });
+    expect(link()).toBe(first);
+    // Once a day per document.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(429);
+    const page = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
+    expect(page.documents.find((x) => x.id === id)?.signer?.reminded_at).toBe(
+      w.clock.now.toISOString(),
+    );
+    const types = (await store.events(w.db, w.orgId))
+      .filter((e) => e.subjectId === id)
+      .map((e) => e.type);
+    expect(types).toContain("document.signer_reminded");
   });
 });

@@ -281,12 +281,9 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						label={t`Tags`}
 						description={t`Add all that apply`}
 						size="md"
-						comboboxProps={{
-							middlewares: { flip: false, shift: false },
-							offset: 0,
-							position: "top",
-							withinPortal: false,
-						}}
+						// In the page's scroll container an above-the-field dropdown with flip off
+						// was clipped by the container's top edge; the portal and default flip fit it.
+						comboboxProps={{ withinPortal: true }}
 						data={(project.tags as unknown as ProjectTag[])
 							.filter((tag) => tag && tag.text != null && tag.id != null)
 							.map((tag) => ({

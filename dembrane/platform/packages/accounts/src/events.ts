@@ -1,5 +1,6 @@
 import { newId } from "@dembrane/core";
 import { enqueueSamMessage } from "@dembrane/webhooks";
+import { DELIVERIES, type Delivery } from "./billing-rules";
 import type { AccountsDeps, AccountsSettings, Conn } from "./deps";
 import { deliverEvent, notifySlack } from "./jobs";
 import type { BillingRow, DocumentRow, OrgRow, SignatureRow, TaskRow, TicketRow } from "./storage";
@@ -169,21 +170,37 @@ export function orgPayload(o: OrgRow) {
   return { id: o.id, name: o.name, account_stage: o.account_stage };
 }
 
+/**
+ * How the invoice reaches the customer: the choice made, else Peppol when the customer is
+ * on it. `other` is a way Exact cannot send by itself: a person sends the invoice.
+ */
+export function invoiceDelivery(b: BillingRow | null): Delivery {
+  const chosen = DELIVERIES.find((way) => way === b?.invoice_delivery);
+  return chosen ?? (b?.peppol_id ? "peppol" : "email");
+}
+
 export function billingPayload(b: BillingRow | null) {
   return {
     legal_name: b?.billing_legal_name ?? null,
     vat_id: b?.billing_vat_id ?? null,
+    // true: the customer said it has no VAT number. false: asked, and it gave one. null: not asked.
+    no_vat_number: b?.no_vat_number ?? null,
     kvk_number: b?.kvk_number ?? null,
     kbo_number: b?.kbo_number ?? null,
     billing_email: b?.billing_email ?? null,
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
+    invoice_delivery: invoiceDelivery(b),
+    // How the customer receives invoices, in their words; set only with delivery "other".
+    invoice_portal: b?.invoice_portal ?? null,
     address: {
       line1: b?.billing_address_line1 ?? null,
       line2: b?.billing_address_line2 ?? null,
       postal_code: b?.billing_postal_code ?? null,
       city: b?.billing_city ?? null,
       country: b?.billing_country ?? null,
+      // ISO 3166-1 alpha-2; null for details saved before the form had a list of countries.
+      country_code: b?.billing_country_code ?? null,
     },
   };
 }

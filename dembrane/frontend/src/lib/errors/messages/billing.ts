@@ -47,10 +47,6 @@ export const billing = {
 		message:
 			"We could not work out the seat price just now. Try again in a moment.",
 	}),
-	"billing.tax_id_required": msg({
-		id: "error.billing.tax_id_required",
-		message: "Enter at least one of your VAT, KvK or KBO numbers.",
-	}),
 	"billing.tier_limit": msg({
 		id: "error.billing.tier_limit",
 		message:

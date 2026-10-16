@@ -16,8 +16,19 @@ import { canvasWorker } from "@dembrane/canvas";
 import type { Config } from "@dembrane/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
-import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "@dembrane/feedback";
-import type { Completer, Embedder, Models } from "@dembrane/llm";
+import {
+  supportContent,
+  supportForwardRegistration,
+  supportInboxMessage,
+  supportOutbox,
+} from "@dembrane/feedback";
+import {
+  type Completer,
+  type Embedder,
+  embeddingLocationOf,
+  embeddingModelOf,
+  type Models,
+} from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
 import { audiences, Notifier } from "@dembrane/notifications";
@@ -113,7 +124,7 @@ export function registrations(deps: {
   embedder: Embedder;
   /** The model groups the chat assistant runs on. */
   models: Models;
-  /** Offer PDFs of demos made in echo. */
+  /** Offer PDFs of demos made in echo, and the signed copies emailed with their attachments. */
   files: ObjectStorage;
   /** Runtime database URL with DATABASE_NAME applied, for jobs that open their own connections. */
   databaseUrl: string;
@@ -136,14 +147,18 @@ export function registrations(deps: {
   const inboxOpts = { allowPrivate: config.webhooks.allowPrivateTargets };
   const toSam = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
     inboxTarget ? samInboxForwarder(deps.accountsJobs, toMessage) : teamWebhook;
+  // SAM_INBOX_SCOPE=support: only support requests take the inbox; the rest keeps its old route.
+  const inboxAll = Boolean(inboxTarget) && config.samInbox.scope === "all";
+  const toSamAll = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
+    inboxAll ? toSam(toMessage) : teamWebhook;
   const analysisDeps = {
     db,
     logger,
     completer: deps.completer,
     embedder: deps.embedder,
     config: {
-      embeddingModel: config.llm.embeddingModel,
-      embeddingLocation: config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(config.llm),
+      embeddingLocation: embeddingLocationOf(config.llm),
     },
   };
   const popcornDeps: PopcornWorkerDeps = {
@@ -210,7 +225,7 @@ export function registrations(deps: {
         const store = webhooksStorage(db);
         const deliver = httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets });
         // Deliveries wait on other people's servers, so many run at once.
-        const inbox = inboxTarget ? queue : null;
+        const inbox = inboxAll ? queue : null;
         await queue.work(dispatchWebhook, { concurrency: 20 }, (p) =>
           runDispatch({ store, deliver, logger, inbox }, p),
         );
@@ -223,7 +238,15 @@ export function registrations(deps: {
     {
       jobs: [sendEmail],
       async register(queue) {
-        await queue.work(sendEmail, { concurrency: 10 }, emailHandler(deps.mailer, logger));
+        const loadFile = async (key: string) => {
+          const blob = await deps.files.get(key);
+          return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+        };
+        await queue.work(
+          sendEmail,
+          { concurrency: 10 },
+          emailHandler(deps.mailer, logger, loadFile),
+        );
       },
     },
     tenancyWorker(deps),
@@ -245,7 +268,7 @@ export function registrations(deps: {
         db,
         // Live portal recordings from the presence store the portal's pings write.
         live: liveRecordings({ db, logger }),
-        forwarder: toSam(overageInboxMessage),
+        forwarder: toSamAll(overageInboxMessage),
         environment: environmentName(deps.dashboardUrl),
       },
     }),
@@ -255,11 +278,12 @@ export function registrations(deps: {
       forwarder: toSam(supportInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       dashboardUrl: deps.dashboardUrl,
+      content: supportContent(config.support.forwardContent, config.support.readUrl),
       logger,
     }),
     pricingRegistration({
       store: pricingStorage(db),
-      forwarder: toSam(bookingInboxMessage),
+      forwarder: toSamAll(bookingInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
@@ -283,8 +307,8 @@ export function registrations(deps: {
       completer: deps.completer,
       embedder: deps.embedder,
       config: {
-        embeddingModel: config.llm.embeddingModel,
-        embeddingLocation: config.llm.embeddingLocation,
+        embeddingModel: embeddingModelOf(config.llm),
+        embeddingLocation: embeddingLocationOf(config.llm),
       },
       // A group landing wakes the room, which follows its popcorn session's channel.
       onGroupChanged: popcornProjectNudge(db, logger),
@@ -297,7 +321,7 @@ export function registrations(deps: {
       dashboardUrl: deps.dashboardUrl,
       eventsUrl: config.accounts.eventsUrl ?? null,
       eventsSecret: config.accounts.eventsSecret ?? null,
-      samInbox: Boolean(inboxTarget),
+      samInbox: inboxAll,
       offerMessages: config.accounts.offerMessages,
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
@@ -321,7 +345,7 @@ export function registrations(deps: {
             company,
             eventsEnabled: Boolean(config.accounts.eventsUrl),
             slackEnabled: Boolean(config.accounts.slackWebhookUrl),
-            samInbox: Boolean(inboxTarget),
+            samInbox: inboxAll,
             offerMessages: config.accounts.offerMessages,
             reminderIntervalDays: config.accounts.reminderIntervalDays,
             // Demo builds send no invite links; publishing (in the API) does.

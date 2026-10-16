@@ -29,6 +29,11 @@ export const document = {
 		message:
 			"Confirm that you are authorised to agree to data processing for your organisation.",
 	}),
+	"document.field_date_invalid": msg({
+		id: "error.document.field_date_invalid",
+		message:
+			"{label} must be a real date, not in the future and not before the document was sent.",
+	}),
 	"document.field_must_tick": msg({
 		id: "error.document.field_must_tick",
 		message: "Tick {label} to continue.",

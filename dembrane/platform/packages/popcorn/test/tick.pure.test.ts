@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { validatePayload } from "@dembrane/analysis";
 import type { Json } from "../src/py";
 import {
   applyResults,
@@ -17,6 +18,7 @@ import {
   nameHits,
   negated,
   scrubNames,
+  shownIndex,
 } from "../src/tick/flags";
 import { islandFlags, nameFlags, screenFlags } from "../src/tick/gates";
 import { groundItems } from "../src/tick/grounding";
@@ -29,7 +31,13 @@ import {
   selectedAnalysisViews,
   staleViews,
 } from "../src/tick/run";
-import { allocateChars, QuoteBook, shapePopcornItems, shapeStakeholders } from "../src/tick/shapes";
+import {
+  allocateChars,
+  MAX_PHRASE_CHARS,
+  QuoteBook,
+  shapePopcornItems,
+  shapeStakeholders,
+} from "../src/tick/shapes";
 
 // Every case was produced by the Python functions the tick ports (fixtures/tick/gen/
 // tick_pure.py, run with echo main's server); each must come out the same here.
@@ -90,12 +98,60 @@ describe("tick parts match the Python", () => {
     }
   });
 
+  test("one index of shown text answers as each conversation's own set", () => {
+    const both = "people want the bus to run later at night";
+    const onSlide = "the slide says cars come first in this town";
+    const made: Json = {
+      conversations: {
+        a: {
+          items: [
+            { phrase: both },
+            { phrase: "the square needs more places to sit down" },
+            { phrase: both },
+          ],
+        },
+        b: { items: [{ phrase: both }, { phrase: "parking near the station costs far too much" }] },
+        c: { items: [{ phrase: onSlide }] },
+        d: { items: [] },
+      },
+      analysis: { tensions: { tensions: [{ id: "x1", poleA: onSlide }] } },
+    };
+    const states = [made, ...cases("known_shingles").map((c) => (c.in as [Json])[0])];
+    for (const state of states) {
+      const shown = shownIndex(state);
+      const all = knownShingles(state);
+      for (const cid of [...Object.keys(state.conversations as Json), "not-in-the-session"]) {
+        const got = shown.except(cid);
+        expect([...all].filter((run) => got.has(run)).sort()).toEqual(
+          [...knownShingles(state, 6, cid)].sort(),
+        );
+        expect(got.has("never\u0001shown\u0001to\u0001the\u0001room\u0001once")).toBe(false);
+      }
+    }
+    // A run only this conversation holds is its own; one another text holds too is known.
+    const own = "the\u0001square\u0001needs\u0001more\u0001places\u0001to";
+    expect(shownIndex(made).except("a").has(own)).toBe(false);
+    expect(shownIndex(made).except("b").has(own)).toBe(true);
+    expect(shownIndex(made).except("a").has(both.split(" ").slice(0, 6).join("\u0001"))).toBe(true);
+    expect(shownIndex(made).except("c").has(onSlide.split(" ").slice(0, 6).join("\u0001"))).toBe(
+      true,
+    );
+  });
+
   test("the slide gates", () => {
     for (const c of cases("name_flags")) expect(nameFlags(c.in as Json)).toEqual(c.out as string[]);
     for (const c of cases("island_flags"))
       expect(islandFlags(c.in as Json)).toEqual(c.out as string[]);
     for (const c of cases("screen_flags"))
       expect(screenFlags(c.in as Json)).toEqual(c.out as string[]);
+  });
+
+  test("a phrase the tick keeps is one the popcorn recipe accepts", () => {
+    // Twenty words, exactly the character limit.
+    const phrase = `${"abcdef ".repeat(20).trimEnd()}g`;
+    const [item] = shapePopcornItems({ items: [{ phrase }] }, "t1");
+    expect([...String(item?.phrase)].length).toBe(MAX_PHRASE_CHARS);
+    expect(() => validatePayload("popcorn", { phrase: item?.phrase })).not.toThrow();
   });
 
   test("shaping, grounding and the quote registry", () => {

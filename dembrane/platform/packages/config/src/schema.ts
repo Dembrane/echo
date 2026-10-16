@@ -50,6 +50,11 @@ export const schema = defineSchema({
       description: "Participant portal origin.",
       public: true,
     }),
+    docsUrl: key("DOCS_URL", z.url().optional(), {
+      description:
+        "The published documentation site that describes this environment. Agents read its pages and the assistant links its citations there. Unset: the repository's docs/ when run from source.",
+      public: true,
+    }),
     trustedProxies: key("HTTP_TRUSTED_PROXIES", list.default([]), {
       description:
         "Addresses or CIDR ranges of our own proxies that append to X-Forwarded-For (the load balancer). Skipped when reading the caller's address.",
@@ -118,6 +123,22 @@ export const schema = defineSchema({
     distDir: key("WEB_DIST_DIR", z.string().default("/app/dist"), {
       description: "The built frontend the web server serves.",
     }),
+    analytics: key("WEB_ANALYTICS", bool.optional(), {
+      description:
+        "Set to false to switch off PostHog (events, session replay) and the Tally script in the browser, and drop their hosts from the content security policy. Unset keeps today's behaviour, which follows the environment.",
+    }),
+    region: key("WEB_REGION", z.enum(["eu"]).optional(), {
+      description:
+        "Set to eu on the EU deployment: the logo shows EU and the sign-in footer says the app is proudly hosted in the EU.",
+    }),
+    storageOrigins: key(
+      "WEB_STORAGE_ORIGINS",
+      list.default(["https://storage.googleapis.com", "https://ams3.digitaloceanspaces.com"]),
+      {
+        description:
+          "Origins of the storage buckets the browser loads audio and images from or uploads to, allowed by the content security policy. Wildcards such as https://*.s3.fr-par.scw.cloud work.",
+      },
+    ),
     previewPr: key("WEB_PREVIEW_PR", int.min(1).optional(), {
       description:
         "Pull request a PR preview was built from. The frontend shows it under the logo and on the sign-in page; unset elsewhere.",
@@ -136,6 +157,55 @@ export const schema = defineSchema({
     ),
   },
   llm: {
+    provider: key("LLM_PROVIDER", z.enum(["vertex", "openai-compatible"]).default("vertex"), {
+      description:
+        "Where model calls go. vertex is Google Vertex AI. openai-compatible is any OpenAI-style API (for example Scaleway), with audio turned to text by its speech-to-text endpoint first.",
+    }),
+    baseUrl: key("LLM_BASE_URL", z.url().optional(), {
+      description:
+        "Base URL of the OpenAI-compatible API, such as https://api.scaleway.ai/v1. Used when LLM_PROVIDER is openai-compatible.",
+    }),
+    apiKey: key("LLM_API_KEY", z.string().optional(), {
+      description: "API key of the OpenAI-compatible API.",
+      secret: true,
+    }),
+    compatTextFast: key("LLM_COMPAT_TEXT_FAST", list.default(["glm-5.3"]), {
+      description: "text_fast group on the OpenAI-compatible provider, in fallback order.",
+    }),
+    compatMultiModalFast: key("LLM_COMPAT_MULTI_MODAL_FAST", list.default(["glm-5.3"]), {
+      description: "multi_modal_fast group on the OpenAI-compatible provider, in fallback order.",
+    }),
+    compatMultiModalPro: key("LLM_COMPAT_MULTI_MODAL_PRO", list.default(["glm-5.3"]), {
+      description: "multi_modal_pro group on the OpenAI-compatible provider, in fallback order.",
+    }),
+    compatEmbeddingModel: key(
+      "LLM_COMPAT_EMBEDDING_MODEL",
+      z.string().default("qwen3-embedding-8b"),
+      {
+        description:
+          "Embedding model on the OpenAI-compatible provider. Vectors are cut to EMBEDDING_DIMENSIONS values (the model keeps its best information first).",
+      },
+    ),
+    transcriptionModel: key("LLM_TRANSCRIPTION_MODEL", z.string().default("whisper-large-v3"), {
+      description:
+        "Speech-to-text model on the OpenAI-compatible provider. It turns audio into text before a text model reads it.",
+    }),
+    reasoningEffort: key(
+      "LLM_REASONING_EFFORT",
+      z.enum(["none", "low", "medium", "high", "max"]).optional(),
+      {
+        description:
+          "Reasoning effort sent to the OpenAI-compatible provider when a call does not ask for its own. Unset leaves the model default. Calls that turn thinking off always send none.",
+      },
+    ),
+    maxOutputTokens: key("LLM_MAX_OUTPUT_TOKENS", int.min(1).optional(), {
+      description:
+        "Most answer tokens the OpenAI-compatible provider accepts per call (16384 for glm-5.3 on Scaleway). A call that asks for more is sent with this limit instead of being refused. Unset sends what the call asks for.",
+    }),
+    searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {
+      description:
+        "Lets the map fact-check ground claims with Google Search. Always off when LLM_PROVIDER is not vertex; with it off, fact-check requests are refused.",
+    }),
     vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-web-previews"), {
       description: "GCP project billed for language model calls.",
     }),
@@ -161,7 +231,8 @@ export const schema = defineSchema({
       "LLM_MULTI_MODAL_PRO",
       list.default(["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]),
       {
-        description: "multi_modal_pro group, in fallback order.",
+        description:
+          "multi_modal_pro group, in fallback order. A transcription the model refuses moves down this list; gemini-3.5-flash is the one that answered refused chunks in the ECHO-980 replay, so keep it last.",
       },
     ),
     embeddingModel: key("EMBEDDING_MODEL", z.string().default("text-embedding-004"), {
@@ -222,6 +293,20 @@ export const schema = defineSchema({
     }),
     sendgridRegion: key("SENDGRID_REGION", z.enum(["global", "eu"]).default("eu"), {
       description: "SendGrid data residency. eu keeps recipient data in the EU; needs an EU key.",
+    }),
+    provider: key("MAIL_PROVIDER", z.enum(["sendgrid", "scaleway"]).default("sendgrid"), {
+      description: "Which service sends transactional email.",
+    }),
+    scalewaySecretKey: key("SCALEWAY_MAIL_SECRET_KEY", z.string().optional(), {
+      description:
+        "Scaleway API secret key for Transactional Email. Unset logs each email instead of sending it.",
+      secret: true,
+    }),
+    scalewayProjectId: key("SCALEWAY_MAIL_PROJECT_ID", z.string().optional(), {
+      description: "Scaleway project that owns the verified sending domain.",
+    }),
+    scalewayRegion: key("SCALEWAY_MAIL_REGION", z.string().default("fr-par"), {
+      description: "Scaleway region of Transactional Email.",
     }),
     fromEmail: key("EMAIL_FROM", z.email().default("do-not-reply@dembrane.com"), {
       description: "Sender address of every transactional email.",
@@ -410,6 +495,21 @@ export const schema = defineSchema({
       description:
         "Where support requests and pricing bookings are forwarded to reach the team. Unset turns forwarding off.",
     }),
+    forwardContent: key("SUPPORT_FORWARD_CONTENT", z.enum(["full", "pointer"]).default("full"), {
+      description:
+        "What sam is told about a support request. full sends the message and page context. pointer sends only the id, environment, source, time and a link where the request is read, never the message or page context, so customer text stays in this deployment.",
+    }),
+    readUrl: key(
+      "SUPPORT_READ_URL",
+      z
+        .url()
+        .refine((u) => u.includes("{id}"), "a URL containing {id}")
+        .optional(),
+      {
+        description:
+          "Where a support request is read, with {id} standing for the request id, e.g. https://grafana.eu.dembrane.com/d/eu-support/support?var-id={id}. Required when SUPPORT_FORWARD_CONTENT is pointer; unused otherwise.",
+      },
+    ),
     forwardWebhookToken: key("ECHO_SUPPORT_WEBHOOK_TOKEN", z.string().optional(), {
       description: "Shared token sent as X-Echo-Support-Token with every forward.",
       secret: true,
@@ -513,6 +613,10 @@ export const schema = defineSchema({
           "Who this deployment is to sam (X-Webhook-From), e.g. api.staging.dembrane.com; sam picks the secret and the allowed codes by it.",
       },
     ),
+    scope: key("SAM_INBOX_SCOPE", z.enum(["all", "support"]).default("all"), {
+      description:
+        "What goes to sam's inbox. all: support requests, account events, bookings, overage notices, project webhooks and MCP tool requests. support: support requests only; the rest keeps its old route or stays in this deployment, so a deployment whose data must stay home sends sam nothing but support pointers.",
+    }),
   },
 });
 

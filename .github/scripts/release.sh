@@ -5,10 +5,13 @@
 #   release.sh prs <from> <to>                      merged PRs with a commit in from..to (JSON)
 #   release.sh staging-summary <from> <to>             the staging deploy summary (Markdown)
 #   release.sh release-notes <tag> [<prev> [<to>]]  the release title, then its notes
-#   release.sh announce-start <staging|prod> <ref>     as a deploy begins: "... environment updating" in Slack
-#   release.sh announce-failed <staging|prod> <ref> [<step>]   a deploy that stopped: "... not updated"
+#   release.sh announce-start <staging|prod|eu> <ref>     as a deploy begins: "... environment updating" in Slack
+#   release.sh announce-failed <staging|prod|eu> <ref> [<step>]   a deploy that stopped: "... not updated"
 #   release.sh announce-staging <sha>                  after a staging deploy: job summary, Slack, PR comments
+#   release.sh announce-eu <sha>                       after an EU deploy: Slack only, no PR comments
 #   release.sh publish-release <tag>                after a prod deploy: Release, Slack, PR comments, sam
+#   release.sh announce-docs <staging|prod> <ref>      after a docs publish: "... documentation updated" in Slack
+#   release.sh announce-docs-failed <staging|prod> <ref> [<step>]   a docs publish that stopped: "... not updated"
 #
 # #alerts-ci gets one message per deploy. It is posted as the deploy begins ("Staging
 # environment updating", with each PR the deploy carries: its title, the first paragraph of its
@@ -33,6 +36,9 @@ TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering: releases to prod
 ALERTS_CHANNEL=${ALERTS_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging and prod deploy
 STAGING_DASHBOARD_URL=${STAGING_DASHBOARD_URL:-https://dashboard.staging.dembrane.com}
 PROD_DASHBOARD_URL=${PROD_DASHBOARD_URL:-https://dashboard.dembrane.com}
+EU_DASHBOARD_URL=${EU_DASHBOARD_URL:-https://dashboard.eu.dembrane.com}
+STAGING_DOCS_URL=${STAGING_DOCS_URL:-https://docs.staging.dembrane.com}
+PROD_DOCS_URL=${PROD_DOCS_URL:-https://docs.dembrane.com}
 SLACK_LINES=${SLACK_LINES:-40}
 # A message holds at most 50 blocks; each PR takes three.
 SLACK_PRS=${SLACK_PRS:-10}
@@ -170,11 +176,14 @@ previous_deploy() {
 deploy_from() {
   case "$1" in
     staging) if [ -n "${STAGING_FROM:-}" ]; then echo "$STAGING_FROM deployment"; else previous_deploy staging; fi ;;
+    eu) previous_deploy eu ;;
     prod) echo "${PREV_TAG:-$(previous_tag "$2")} release" ;;
     *) echo "unknown environment: $1" >&2; exit 2 ;;
   esac
 }
-env_name() { [ "$1" = prod ] && echo Production || echo Staging; }
+env_name() {
+  case "$1" in prod) echo Production ;; eu) echo EU ;; *) echo Staging ;; esac
+}
 
 # Posted as the deploy begins; the workflow hands its timestamp to the step that ends it.
 announce_start() {
@@ -213,6 +222,15 @@ announce_staging() {
   else
     echo "::notice::First recorded staging deployment: the list starts at release $prev and no PR comments were posted"
   fi
+}
+
+# EU runs staging's images and is rolled out by Argo CD, so this only edits the start message
+# into its final state: no PR comments, and no summary.
+announce_eu() {
+  local sha=$1 prev list
+  read -r prev _ < <(deploy_from eu "$sha")
+  list=$(prs "$prev" "$sha")
+  slack_post "$ALERTS_CHANNEL" "$(message 'environment(":large_blue_circle:"; "EU environment updated"; $url; $max)' --arg url "$EU_DASHBOARD_URL" <<<"$list")" "" "${SLACK_TS:-}"
 }
 
 # sam hears about each release the way it hears about account events: a POST signed with
@@ -265,6 +283,54 @@ publish_release() {
                notes: $notes, pull_requests: $prs}}')"
 }
 
+# Where the list of PRs for a docs publish of <ref> starts. staging: the commit of the docs
+# workflow's last successful run for a push to main, which is what the site shows. prod: the
+# release before <ref>, or the latest release when <ref> is not a release tag (a run by hand).
+# Before staging's first publish the list starts at the latest release too.
+docs_from() {
+  local env=$1 ref=$2 sha=""
+  if [ "$env" = prod ]; then
+    if [[ $ref =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then previous_tag "$ref"
+    else gh api "repos/$REPO/releases/latest" --jq .tag_name; fi
+    return
+  fi
+  sha=$(gh api "repos/$REPO/actions/workflows/docs.yml/runs?branch=main&event=push&status=success&per_page=1" \
+    --jq '.workflow_runs[0].head_sha // ""') || sha=""
+  [ -n "$sha" ] || sha=$(gh api "repos/$REPO/releases/latest" --jq .tag_name)
+  echo "$sha"
+}
+
+# The merged PRs in <from>..<to> that changed a page: the ones a docs publish carries.
+docs_prs() {
+  local list n keep='[]'
+  list=$(prs "$1" "$2")
+  for n in $(jq -r '.[].number' <<<"$list"); do
+    if gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[].filename' | grep -q '^docs/'; then
+      keep=$(jq -c --argjson n "$n" '. + [$n]' <<<"$keep")
+    fi
+  done
+  jq --argjson keep "$keep" 'map(select(.number as $n | $keep | index($n)))' <<<"$list"
+}
+
+docs_url() { [ "$1" = prod ] && echo "$PROD_DOCS_URL" || echo "$STAGING_DOCS_URL"; }
+
+announce_docs() {
+  local env=$1 ref=$2 list emoji=":large_blue_circle:"
+  list=$(docs_prs "$(docs_from "$env" "$ref")" "$ref")
+  [ "$env" = prod ] && emoji=":large_green_circle:"
+  slack_post "$ALERTS_CHANNEL" "$(message 'environment($emoji; $head; $url; $max)' --arg emoji "$emoji" \
+    --arg head "$(env_name "$env") documentation updated" --arg url "$(docs_url "$env")" <<<"$list")"
+}
+
+# <step> is the publish job's step that failed, or "cancelled".
+announce_docs_failed() {
+  local env=$1 ref=$2 step=${3:-} list name
+  list=$(docs_prs "$(docs_from "$env" "$ref")" "$ref") || list='[]'
+  name=$(env_name "$env")
+  slack_post "$ALERTS_CHANNEL" "$(message 'stopped($head; ([{name: "docs", step: $step}] | reasons) + ", so the \($name | ascii_downcase) documentation was not updated."; $run; $max)' \
+    --arg head "$name documentation not updated" --arg name "$name" --arg step "$step" --arg run "$RUN_URL" <<<"$list")"
+}
+
 case "${1:-}" in
   prs) prs "$2" "$3" | without_bodies ;;
   staging-summary) staging_summary "$2" "$3" ;;
@@ -272,7 +338,10 @@ case "${1:-}" in
   announce-start) announce_start "$2" "$3" ;;
   announce-failed) announce_failed "$2" "$3" "${4:-}" ;;
   announce-staging) announce_staging "$2" ;;
+  announce-eu) announce_eu "$2" ;;
   publish-release) publish_release "$2" ;;
-  *) sed -n '2,11p' "$0"; exit 2 ;;
+  announce-docs) announce_docs "$2" "$3" ;;
+  announce-docs-failed) announce_docs_failed "$2" "$3" "${4:-}" ;;
+  *) sed -n '2,14p' "$0"; exit 2 ;;
 esac
 exit "$failed"

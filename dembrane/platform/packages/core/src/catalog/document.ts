@@ -128,6 +128,12 @@ export const document = {
     detail: "{label} is required",
     description: "A required text field is empty.",
   },
+  "document.field_date_invalid": {
+    action: "fix_input",
+    detail: "{label} must be a real date, not in the future and not before the document was sent",
+    description:
+      "A date field is not a day-month-year date, is in the future, or is before the document was sent.",
+  },
   "document.pdf_invalid": {
     action: "fix_input",
     detail: "pdf_base64 is not a PDF",
@@ -157,6 +163,12 @@ export const document = {
     detail: "A document needs a title",
     audience: "staff",
     description: "A document was created without a title.",
+  },
+  "document.vat_treatment": {
+    action: "fix_input",
+    detail: "A reverse-charged or outside-EU offer has only 0% lines",
+    audience: "staff",
+    description: "An offer marked reverse charge or outside the EU had a line with VAT.",
   },
   "document.content_required": {
     action: "fix_input",
@@ -188,5 +200,11 @@ export const document = {
     detail: "A signed document cannot be voided",
     audience: "staff",
     description: "Signed documents are final and cannot be withdrawn.",
+  },
+  "document.not_withdrawn": {
+    action: "none",
+    detail: "This document has not been withdrawn",
+    audience: "staff",
+    description: "A withdrawal message was asked for a document that is not void.",
   },
 } as const satisfies Codes<"document">;

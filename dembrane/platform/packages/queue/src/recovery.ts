@@ -2,12 +2,25 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 import { connect } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
+import { DEFAULT_LOST_WORKER_LIMIT } from "./define";
 
 const BEAT_MS = 10_000;
 /** An executor silent this long is presumed dead and its unfinished workflows are resumed elsewhere. */
 const DEAD_AFTER_S = 60;
 // Any fixed number; every worker must use the same one.
 const SWEEP_LOCK = 72_1405_2027;
+/**
+ * The last_seen of an executor that stopped with workflows unfinished: older than any
+ * staleness threshold, so the next sweep resumes them without waiting for the row to age.
+ */
+const LEFT_AT = new Date(0);
+
+/** What recovery reads of a workflow it found running on a dead executor. */
+export interface LostWorkflow {
+  readonly workflowID: string;
+  readonly workflowName: string;
+  readonly queueName?: string;
+}
 
 /**
  * Open-source DBOS resumes a workflow only in a process with the executor id that started
@@ -15,10 +28,21 @@ const SWEEP_LOCK = 72_1405_2027;
  * heartbeat; one instance at a time (advisory lock) finds executors whose heartbeat
  * stopped and resumes their unfinished workflows on their queues, where any live worker
  * picks them up. Checkpointed steps are not re-run.
+ *
+ * A workflow found on a dead executor has lost a worker, and that is counted per workflow.
+ * Past its job's limit it is set aside instead of resumed: cancelled, which ends recovery
+ * and leaves it for a person to resume, so a run that cannot finish stops taking workers
+ * from the other jobs. Everything a worker was running loses that worker with it, so one
+ * sweep sets aside only the workflows that lost a worker most often among those past their
+ * limit. A run that merely shared the worker finishes or waits in its queue between two
+ * losses, and its count stays behind.
  */
 export class ExecutorHeartbeat {
   private readonly sql: postgres.Sql;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /** Beats and sweeps in flight, so stop() can wait for them. */
+  private readonly ticks = new Set<Promise<void>>();
+  private leaving = false;
 
   constructor(
     url: string,
@@ -28,6 +52,8 @@ export class ExecutorHeartbeat {
       beatMs: BEAT_MS,
       deadAfterS: DEAD_AFTER_S,
     },
+    /** The job's lostWorkerLimit; the queue resolves it from its job definitions. */
+    private readonly limitOf: (wf: LostWorkflow) => number = () => DEFAULT_LOST_WORKER_LIMIT,
   ) {
     // connect() reads the Cloud SQL socket form of the URL; bare postgres() would dial
     // localhost:5432 and crash the worker at its first heartbeat.
@@ -37,9 +63,15 @@ export class ExecutorHeartbeat {
   async start(): Promise<void> {
     await this.beat();
     this.timer = setInterval(() => {
-      void this.beat()
-        .then(() => this.sweep())
-        .catch((err) => this.logger.warn({ err }, "executor heartbeat failed"));
+      const tick: Promise<void> = this.beat()
+        // A leaving executor only beats: the sweep needs DBOS, which is shutting down.
+        .then(() => (this.leaving ? 0 : this.sweep()))
+        .then(
+          () => {},
+          (err) => this.logger.warn({ err }, "executor heartbeat failed"),
+        )
+        .finally(() => this.ticks.delete(tick));
+      this.ticks.add(tick);
     }, this.timing.beatMs);
   }
 
@@ -49,30 +81,114 @@ export class ExecutorHeartbeat {
       on conflict (executor_id) do update set last_seen = now()`;
   }
 
-  /** Resumes the unfinished workflows of dead executors. Returns how many were resumed. */
+  /**
+   * Resumes the unfinished workflows of dead executors, except those it sets aside for
+   * losing their worker too often. Returns how many were resumed.
+   */
   async sweep(): Promise<number> {
     return this.sql.begin(async (tx) => {
       const [lock] = await tx`select pg_try_advisory_xact_lock(${SWEEP_LOCK}) as ok`;
       if (!lock?.ok) return 0;
-      const dead = await tx<{ executor_id: string }[]>`
-        select executor_id from dbos_executor_heartbeat
+      await this.forgetSettled(tx);
+      const dead = await tx<{ executor_id: string; handed_over: boolean }[]>`
+        select executor_id, last_seen = to_timestamp(0) as handed_over
+        from dbos_executor_heartbeat
         where last_seen < now() - make_interval(secs => ${this.timing.deadAfterS})`;
       let resumed = 0;
-      for (const { executor_id } of dead) {
+      for (const { executor_id, handed_over } of dead) {
         const pending = await DBOS.listWorkflows({ status: "PENDING", executorId: executor_id });
+        // A last_seen at the epoch is an executor that stopped on purpose and handed its
+        // workflows over. None of them lost a worker, so none is counted or set aside.
+        const lost = handed_over ? new Map<string, number>() : await this.countLosses(tx, pending);
+        const aside = this.pastLimit(pending, lost);
+        let resumedHere = 0;
         for (const wf of pending) {
+          if (aside.has(wf.workflowID)) {
+            await this.setAside(tx, wf, lost.get(wf.workflowID) ?? 0);
+            continue;
+          }
           await DBOS.resumeWorkflow(wf.workflowID, wf.queueName ? { queueName: wf.queueName } : {});
-          resumed++;
+          resumedHere++;
         }
         await tx`delete from dbos_executor_heartbeat where executor_id = ${executor_id}`;
-        if (pending.length)
+        if (resumedHere)
           this.logger.warn(
-            { deadExecutor: executor_id, resumed: pending.length },
+            { deadExecutor: executor_id, resumed: resumedHere },
             "resumed workflows of a dead worker",
           );
+        resumed += resumedHere;
       }
       return resumed;
     });
+  }
+
+  /**
+   * Drops the counts nothing reads any more: of a workflow that finished, and of a set-aside
+   * one a person resumed or deleted. Runs before counting, so a run a person resumed starts
+   * from zero if it loses a worker again.
+   */
+  private async forgetSettled(tx: postgres.TransactionSql) {
+    await tx`
+      delete from dbos_workflow_lost_worker c
+      where not exists (
+        select 1 from dbos.workflow_status w
+        where w.workflow_uuid = c.workflow_id
+          and w.status = any(case when c.set_aside_at is null
+            then array['PENDING', 'ENQUEUED', 'DELAYED'] else array['CANCELLED'] end))`;
+  }
+
+  /** Adds one lost worker to each workflow and returns the new counts by workflow id. */
+  private async countLosses(
+    tx: postgres.TransactionSql,
+    pending: readonly LostWorkflow[],
+  ): Promise<Map<string, number>> {
+    if (!pending.length) return new Map();
+    const rows = pending.map((wf) => ({
+      workflow_id: wf.workflowID,
+      queue_name: wf.queueName ?? null,
+      lost: 1,
+    }));
+    const counted = await tx<{ workflow_id: string; lost: number }[]>`
+      insert into dbos_workflow_lost_worker ${tx(rows)}
+      on conflict (workflow_id) do update
+        set lost = dbos_workflow_lost_worker.lost + 1, queue_name = excluded.queue_name
+      returning workflow_id, lost`;
+    return new Map(counted.map((r) => [r.workflow_id, r.lost]));
+  }
+
+  /**
+   * The workflows to set aside: of those past their own limit, the ones that lost a worker
+   * most often. Others past their limit are resumed and judged again at their next loss.
+   */
+  private pastLimit(
+    pending: readonly LostWorkflow[],
+    lost: ReadonlyMap<string, number>,
+  ): Set<string> {
+    const count = (wf: LostWorkflow) => lost.get(wf.workflowID) ?? 0;
+    const over = pending.filter((wf) => count(wf) > this.limitOf(wf));
+    const most = Math.max(0, ...over.map(count));
+    return new Set(over.filter((wf) => count(wf) === most).map((wf) => wf.workflowID));
+  }
+
+  /**
+   * Cancels the workflow, which ends automatic recovery and keeps its checkpoints: a person
+   * resumes it with DBOS.resumeWorkflow on the queue kept in its count row.
+   */
+  private async setAside(tx: postgres.TransactionSql, wf: LostWorkflow, lost: number) {
+    await DBOS.cancelWorkflow(wf.workflowID);
+    await tx`
+      update dbos_workflow_lost_worker set set_aside_at = now() where workflow_id = ${wf.workflowID}`;
+    this.logger.error(
+      {
+        signal: "queue.job_set_aside",
+        job: wf.workflowName,
+        queue: wf.queueName ?? null,
+        job_id: wf.workflowID,
+        lost,
+        limit: this.limitOf(wf),
+      },
+      "job set aside after losing its worker repeatedly",
+    );
   }
 
   async queueHealth(names: readonly string[]) {
@@ -86,6 +202,10 @@ export class ExecutorHeartbeat {
       where queue_name = any(${names as string[]}) and status in ('ENQUEUED', 'DELAYED', 'PENDING', 'ERROR')
         and (status <> 'ERROR' or updated_at > (extract(epoch from now() - interval '1 day') * 1000))
       group by queue_name, status`;
+    const aside = await this.sql<{ queue_name: string; n: number }[]>`
+      select queue_name, count(*)::int as n from dbos_workflow_lost_worker
+      where queue_name = any(${names as string[]}) and set_aside_at > now() - interval '1 day'
+      group by queue_name`;
     return names.map((name) => {
       const of = (s: string) =>
         rows.filter((r) => r.queue_name === name && r.status === s).reduce((a, r) => a + r.n, 0);
@@ -99,18 +219,46 @@ export class ExecutorHeartbeat {
         active: of("PENDING"),
         failed: of("ERROR"),
         deferred: of("DELAYED"),
+        setAside: aside.find((r) => r.queue_name === name)?.n ?? 0,
         oldestReadyS: oldest(name),
       };
     });
   }
 
-  async stop(): Promise<void> {
-    if (this.timer) clearInterval(this.timer);
-    await this
-      .sql`delete from dbos_executor_heartbeat where executor_id = ${this.executorId}`.catch(
-      () => {},
-    );
-    await this.sql.end();
+  /**
+   * Stops for good. `quiesce` is where the caller stops executing; the heartbeat keeps
+   * beating until it returns, because a row that looks dead while this process still runs a
+   * step lets another worker run the same step. Then the executor leaves: with nothing
+   * unfinished its row is deleted, otherwise the row is marked LEFT_AT and the next sweep
+   * resumes those workflows and deletes it. A process killed before that, or a `quiesce`
+   * that fails, leaves an ordinary row, which goes stale and is swept like any other.
+   */
+  async stop(quiesce: () => Promise<void> = async () => {}): Promise<void> {
+    this.leaving = true;
+    try {
+      // A sweep in flight ends before the caller shuts DBOS down under it.
+      await Promise.all(this.ticks);
+      await quiesce();
+      if (this.timer) clearInterval(this.timer);
+      // No beat may land after the mark and make the row look alive again.
+      await Promise.all(this.ticks);
+      await this.leave().catch(() => {});
+    } finally {
+      if (this.timer) clearInterval(this.timer);
+      await this.sql.end();
+    }
+  }
+
+  private async leave() {
+    const [unfinished] = await this.sql`
+      select 1 from dbos.workflow_status
+      where executor_id = ${this.executorId} and status = 'PENDING' limit 1`;
+    if (unfinished)
+      await this.sql`
+        insert into dbos_executor_heartbeat (executor_id, last_seen)
+        values (${this.executorId}, ${LEFT_AT})
+        on conflict (executor_id) do update set last_seen = excluded.last_seen`;
+    else await this.sql`delete from dbos_executor_heartbeat where executor_id = ${this.executorId}`;
   }
 }
 

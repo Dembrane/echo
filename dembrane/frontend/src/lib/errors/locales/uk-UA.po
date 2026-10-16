@@ -14,17 +14,27 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} має бути справжньою датою, не в майбутньому і не раніше за день надсилання документа."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Зображення ваших ініціалів} other {Зображення вашого підпису}} завелике. Розмір має бути менше 512 КБ."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Ваші ініціали мають} other {Ваш підпис має}} бути зображенням у форматі PNG."
 
@@ -179,12 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Введіть текст для «{label}»."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Заповніть {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Заповніть «{label}», щоб продовжити."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Лише {signer_email} може відхилити цей документ."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Лише {signer_email} може підписати цей документ. Попросіть підписати його або зверніться до нас, щоб змінити підписанта."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "Карту було оновлено після вашого вибору. Оновіть карту та зробіть вибір знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "PDF цього документа недоступний. Зв'яжіться з нами, і ми надішлемо його знову."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Цей власник даних уже є у вашій організації. Для зовнішнього клієнта вкажіть когось за її межами або натомість створіть внутрішній робочий простір."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "Цей документ більше не можна відхилити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "Цей документ зараз не можна підписати. Ми вже знаємо про проблему та виправляємо її."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та прочитайте його знову перед підписанням."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "Цей документ не потребує підпису."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "Цей документ уже підписано. Більше нічого робити не потрібно."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "Цей документ ще не підписано, тому підписаної копії для завантаження немає."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "Цей документ більше не очікує на підпис."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "Цей документ було відхилено, тому його більше не можна підписати."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "Цей документ було відкликано, тому його більше не можна підписати."
 
@@ -839,12 +844,12 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Це посилання на логотип задовге. Скористайтеся коротшим посиланням."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Для цього потрібен тариф {required}. Оновіть тариф, щоб скористатися цією можливістю."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "Термін дії цієї пропозиції закінчився {valid_until}. Зв’яжіться з нами, щоб отримати нову."
 
@@ -904,7 +909,7 @@ msgid "error.member.already_removed"
 msgstr "Цю людину вже вилучено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Цей тариф не можна придбати онлайн. Зв’яжіться з нами, щоб отримати його."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "У цьому робочому просторі все ще є {count, plural, one {# проєкт} few {# проєкти} other {# проєктів}}. Спочатку видаліть або перемістіть їх зі сторінки «Проєкти» вашої організації."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Позначте {label}, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Позначте або зніміть позначку з {label}."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Щоб переміщувати проєкти, ви маєте бути адміністратором або власником {side} робочого простору."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "Щоб підписати, увійдіть із підтвердженою електронною адресою."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "Не вдалося знайти цей документ. Можливо, його було відкликано."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "Не вдалося зв'язатися з частиною сервісів dembrane. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "Не вдалося розпізнати ваш підпис. Намалюйте його ще раз і повторіть спробу."
 
@@ -1569,7 +1574,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Ви ще не додали нічого нового. Вкажіть, що ви б змінили, і спробуйте знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Ви досягли ліміту тарифу Free. Оновіть тариф, щоб продовжити."
 

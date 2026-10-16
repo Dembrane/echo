@@ -14,17 +14,27 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Geben Sie mindestens eine Ihrer VAT-, KvK- oder KBO-Nummern ein."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} darf nicht leer sein. Füllen Sie es aus oder entfernen Sie es."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} muss ein gültiges Datum sein, nicht in der Zukunft und nicht vor dem Versand des Dokuments."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Das Bild Ihrer Initialen} other {Das Bild Ihrer Unterschrift}} ist zu groß. Bitte unter 512 KB halten."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Ihre Initialen} other {Ihre Unterschrift}} müssen als PNG-Bild vorliegen."
 
@@ -179,12 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Geben Sie eine Webadresse ein, die mit http:// oder https:// beginnt."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Geben Sie mindestens eine Ihrer VAT-, KvK- oder KBO-Nummern ein."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Geben Sie Text für {label} ein."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Füllen Sie {field} aus."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Füllen Sie {label} aus, um fortzufahren."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Nur {signer_email} kann dieses Dokument ablehnen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Nur {signer_email} kann dieses Dokument unterschreiben. Bitten Sie die Person zu unterschreiben oder bitten Sie uns, die unterzeichnende Person zu ändern."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "Die Map wurde seit Ihrer Auswahl aktualisiert. Laden Sie die Map neu und wählen Sie erneut aus."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "Die PDF-Datei dieses Dokuments ist nicht verfügbar. Kontaktieren Sie uns und wir senden sie Ihnen erneut."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Diese datenverantwortliche Person gehört bereits zu Ihrer Organisation. Wählen Sie für einen externen Kunden jemanden von außerhalb oder erstellen Sie stattdessen einen internen Arbeitsbereich."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "Dieses Dokument kann nicht mehr abgelehnt werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "Dieses Dokument kann derzeit nicht unterzeichnet werden. Wir wurden benachrichtigt und beheben das Problem."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "Dieses Dokument wurde geändert, seit Sie es geöffnet haben. Laden Sie die Seite neu und lesen Sie es noch einmal durch, bevor Sie unterzeichnen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "Dieses Dokument wurde geändert, seit Sie es geöffnet haben. Laden Sie die Seite neu und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "Dieses Dokument benötigt keine Unterschrift."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "Dieses Dokument ist bereits unterzeichnet. Es ist nichts weiter zu tun."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "Dieses Dokument ist noch nicht unterzeichnet, daher gibt es keine unterzeichnete Kopie zum Herunterladen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "Dieses Dokument wartet nicht mehr auf eine Unterschrift."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "Dieses Dokument wurde abgelehnt und kann daher nicht mehr unterzeichnet werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "Dieses Dokument wurde zurückgezogen und kann daher nicht mehr unterzeichnet werden."
 
@@ -839,12 +844,12 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Dieser Logo-Link ist zu lang. Verwenden Sie einen kürzeren Link."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Hierfür ist der Tarif {required} erforderlich. Führen Sie ein Upgrade durch, um dies zu nutzen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "Dieses Angebot ist am {valid_until} abgelaufen. Kontaktieren Sie uns für ein neues Angebot."
 
@@ -904,7 +909,7 @@ msgid "error.member.already_removed"
 msgstr "Diese Person wurde bereits entfernt."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Dieser Tarif kann nicht online gekauft werden. Kontaktieren Sie uns, um ihn zu buchen."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "Dieser Arbeitsbereich enthält noch {count, plural, one {# Projekt} other {# Projekte}}. Löschen oder verschieben Sie diese zuerst auf der Seite „Projekte“ Ihrer Organisation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Wählen Sie {label} aus, um fortzufahren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Aktivieren oder deaktivieren Sie {label}."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Um Projekte zu verschieben, müssen Sie Administrator oder Eigentümer des Arbeitsbereichs {side} sein."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "Um zu unterschreiben, melden Sie sich mit einer verifizierten E-Mail-Adresse an."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "Dieses Gespräch konnte nicht gefunden werden. Es wurde möglicherweise gelöscht."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "Dieses Dokument konnte nicht gefunden werden. Es wurde möglicherweise zurückgezogen."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "Wir konnten einen Teil von dembrane gerade nicht erreichen. Versuchen Sie es gleich noch einmal."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "Wir konnten Ihre Unterschrift nicht erkennen. Zeichnen Sie sie neu und versuchen Sie es noch einmal."
 
@@ -1569,7 +1574,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Sie haben noch nichts Neues hinzugefügt. Geben Sie an, was Sie ändern möchten, und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Sie haben das Limit des Free-Tarifs erreicht. Führen Sie ein Upgrade durch, um fortzufahren."
 

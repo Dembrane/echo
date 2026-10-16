@@ -4,9 +4,11 @@ import { assertMaySign, documentFor } from "./access";
 import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
+import { joinOnSigning } from "./invite";
 import { requestInvoices } from "./invoice";
-import type { FieldKind } from "./offer";
+import type { FieldKind, OfferContent } from "./offer";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
+import { emailSignedCopy } from "./signed-copy";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
 import { createTask, settleTask, unlockTask } from "./tasks";
 import { confirmationText, sameText, staffBase } from "./views";
@@ -69,10 +71,68 @@ export function signerFacts(
   };
 }
 
-/** Every required field filled, no values for fields the document does not have. */
+/**
+ * A date as a signer's page or an API client writes it, day-month-year ("28-09-2026", as
+ * the documents print it) or ISO ("2026-09-28"), as an ISO date; null when it is not a day
+ * on the calendar (31-02-2026, "asdf").
+ */
+export function isoOfDocumentDate(text: string): string | null {
+  const t = text.trim();
+  const dmy = /^(\d{2})-(\d{2})-(\d{4})$/.exec(t);
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  const [day, month, year] = dmy
+    ? [Number(dmy[1]), Number(dmy[2]), Number(dmy[3])]
+    : ymd
+      ? [Number(ymd[3]), Number(ymd[2]), Number(ymd[1])]
+      : [0, 0, 0];
+  const at = new Date(Date.UTC(year, month - 1, day));
+  if (
+    !year ||
+    at.getUTCFullYear() !== year ||
+    at.getUTCMonth() !== month - 1 ||
+    at.getUTCDate() !== day
+  )
+    return null;
+  return at.toISOString().slice(0, 10);
+}
+
+/** The values with every date written the way the documents print it: day-month-year. */
+export function printedDates(
+  fields: readonly FieldRow[],
+  values: Readonly<Record<string, string | boolean>>,
+): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = { ...values };
+  for (const f of fields) {
+    const v = out[f.id];
+    const iso = f.kind === "date" && typeof v === "string" ? isoOfDocumentDate(v) : null;
+    if (iso) out[f.id] = `${iso.slice(8)}-${iso.slice(5, 7)}-${iso.slice(0, 4)}`;
+  }
+  return out;
+}
+
+/**
+ * The signer writes their own calendar day: it may already be tomorrow here (time zones run
+ * 14 hours ahead of UTC) or still be the day before the send (12 hours behind).
+ */
+const AHEAD_MS = 14 * 60 * 60 * 1000;
+const BEHIND_MS = 12 * 60 * 60 * 1000;
+
+/** When a signing date may fall: from the day the document was sent to the signer's today. */
+export interface DateWindow {
+  readonly now: Date;
+  readonly sentAt: Date | null;
+}
+
+/**
+ * Every required field filled, no values for fields the document does not have, and every
+ * date a real day between the day the document was sent and today. The date is what the
+ * signer writes into the agreement, so it is held to the same standard as the rest of the
+ * record.
+ */
 export function checkValues(
   fields: readonly FieldRow[],
   values: Readonly<Record<string, string | boolean>>,
+  window?: DateWindow,
 ): void {
   const ids = new Set(fields.map((f) => f.id));
   for (const key of Object.keys(values))
@@ -91,6 +151,19 @@ export function checkValues(
       throw new ValidationError("document.field_text_invalid", { params: { label: f.label } });
     if (f.required && !(typeof v === "string" && v.trim()))
       throw new ValidationError("document.field_required", { params: { label: f.label } });
+    if (f.kind === "date" && typeof v === "string" && v.trim()) {
+      const day = isoOfDocumentDate(v);
+      const latest = window ? new Date(window.now.getTime() + AHEAD_MS) : null;
+      const earliest = window?.sentAt
+        ? new Date(window.sentAt.getTime() - BEHIND_MS).toISOString().slice(0, 10)
+        : null;
+      if (
+        !day ||
+        (latest && day > latest.toISOString().slice(0, 10)) ||
+        (earliest && day < earliest)
+      )
+        throw new ValidationError("document.field_date_invalid", { params: { label: f.label } });
+    }
   }
 }
 
@@ -132,9 +205,16 @@ export async function signDocument(
   }
   if (doc.kind === "dpa" && !input.dpa_authorised)
     throw new ValidationError("document.dpa_not_authorised");
+  // An offer whose DPA is its own document asks nothing about data processing: its signer
+  // is recorded as not having agreed to it, and the DPA task stands on its own.
+  const dpaSeparate =
+    doc.kind === "offer" && Boolean((doc.content as OfferContent | null)?.dpa_separate);
+  const dpaAuthorised = dpaSeparate ? false : input.dpa_authorised;
   const fields = await store.fields(d.db, doc.id);
-  checkValues(fields, input.values);
-  const facts = signerFacts(fields, input.values, org.name);
+  checkValues(fields, input.values, { now, sentAt: doc.sentAt });
+  // Stamped and kept the way the documents print dates, whichever form the page sent.
+  const values = printedDates(fields, input.values);
+  const facts = signerFacts(fields, values, org.name);
   const identity = await store.identity(d.db, who.directusUserId);
   const name = facts.name ?? identity?.name ?? access.email;
   // With no organisation field, the signature is for the organisation the document is in.
@@ -142,7 +222,7 @@ export async function signDocument(
     name,
     role: facts.role ?? "",
     organisation: facts.organisation,
-    dpa_authorised: input.dpa_authorised,
+    dpa_authorised: dpaAuthorised,
   });
   if (!sameText(expected, input.confirmation_text))
     throw new ValidationError("document.confirmation_mismatch", { params: { expected } });
@@ -156,6 +236,7 @@ export async function signDocument(
   ]);
   const signatureId = newId();
   const signedAt = now.toISOString();
+  const language = doc.language === "nl" ? "nl" : "en";
   const imageSha256 = sha256Hex(signaturePng);
   const audit: AuditRecord = {
     documentTitle: doc.title,
@@ -169,7 +250,7 @@ export async function signDocument(
     organisation: facts.organisation,
     address: facts.address,
     vatNumber: facts.vatNumber,
-    dpaAuthorised: input.dpa_authorised,
+    dpaAuthorised: dpaSeparate ? null : dpaAuthorised,
     signedAt,
     ip: meta.ip,
     userAgent: meta.userAgent,
@@ -177,6 +258,7 @@ export async function signDocument(
     signatureId,
     method: input.signature.method,
     imageSha256,
+    language,
     legal: (
       [
         ["terms", terms],
@@ -184,7 +266,9 @@ export async function signDocument(
         ["dpa", dpa],
       ] as const
     ).flatMap(([kind, row]) =>
-      row ? [{ kind, version: row.version, effectiveOn: row.effectiveOn, sha256: row.sha256 }] : [],
+      row && !(kind === "sla" && (doc.content as OfferContent | null)?.template === "event")
+        ? [{ kind, version: row.version, effectiveOn: row.effectiveOn, sha256: row.sha256 }]
+        : [],
     ),
   };
   let pdf: Uint8Array;
@@ -192,7 +276,7 @@ export async function signDocument(
     pdf = await signedPdf(
       unsigned,
       fields.map((f) => ({ ...f, kind: f.kind as FieldKind })),
-      input.values,
+      values,
       { signature: signaturePng, initials: initialsPng },
       audit,
     );
@@ -228,9 +312,9 @@ export async function signDocument(
         organisation: facts.organisation,
         address: facts.address,
         vatNumber: facts.vatNumber,
-        dpaAuthorised: input.dpa_authorised,
+        dpaAuthorised,
         sha256: doc.sha256 as string,
-        fieldValues: input.values,
+        fieldValues: values,
         method: input.signature.method,
         imageKey,
         imageSha256,
@@ -241,19 +325,41 @@ export async function signDocument(
         confirmationText: expected,
         signedPdfKey: pdfKey,
         signedPdfSha256: sha256Hex(pdf),
+        language,
       });
       await store.updateDocument(tx, doc.id, { status: "signed", signedAt: now, updatedAt: now });
       await afterSigned(d, tx, org, doc, input, who);
+      if (access.via === "signer")
+        await joinOnSigning(
+          tx,
+          org.id,
+          { directusUserId: who.directusUserId, email: access.email as string },
+          now,
+        );
       const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
       const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
       // Read again: signing an offer makes a prospect a customer.
       const signedFor = (await store.org(tx, org.id)) as OrgRow;
+      // The signer and the people who run the account hold the signed copy and its details.
+      const copySentTo = await emailSignedCopy(d, tx, signedFor, doc, {
+        signerName: name,
+        signerEmail: access.email as string,
+        signedAt,
+        pdfKey,
+        pdfSha256: sha256Hex(pdf),
+        pdfBytes: pdf.byteLength,
+      });
       await emit(d, tx, {
         orgId: org.id,
         actor: { kind: "customer", userId: who.directusUserId },
         type: "document.signed",
         subject: { type: "document", id: doc.id },
-        detail: { title: doc.title, signer: access.email, via: access.via },
+        detail: {
+          title: doc.title,
+          signer: access.email,
+          via: access.via,
+          copy_sent_to: copySentTo,
+        },
         webhook: {
           event: "account.document.signed",
           org: orgPayload(signedFor),
@@ -263,8 +369,9 @@ export async function signDocument(
         },
         slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${doc.totalCents !== null ? `, ${(doc.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}.`,
       });
-      // A returning customer's billing details are on file: the invoice can go out now.
-      if (doc.kind === "offer") await requestInvoices(d, tx, signedFor);
+      // An offer or a DPA can be the last thing the invoice waited for: a returning
+      // customer's billing details are on file, and a DPA is often signed after the offer.
+      if (doc.kind === "offer" || doc.kind === "dpa") await requestInvoices(d, tx, signedFor);
     });
   } catch (err) {
     // Two signatures racing: the unique document id lets exactly one row in.
@@ -285,8 +392,13 @@ async function afterSigned(
   who: Signed,
 ) {
   const tasks = await store.tasks(tx, org.id);
+  // Signed without saying who signs first: the signer answered it by signing.
   for (const t of tasks)
-    if (t.kind === "sign" && t.documentId === doc.id && !["done", "withdrawn"].includes(t.status))
+    if (
+      (t.kind === "sign" || t.code === "who_signs") &&
+      t.documentId === doc.id &&
+      !["done", "withdrawn"].includes(t.status)
+    )
       await settleTask(d, tx, t.id, "done");
   for (const t of tasks)
     if (
@@ -300,42 +412,62 @@ async function afterSigned(
       account_stage: "customer",
       updated_at: d.now().toISOString(),
     });
-  if (input.dpa_authorised) return;
-  // The signer may not agree to data processing: the DPA becomes its own document for
-  // someone who may (art. 3.6 of the terms), with the same DPA text the offer pinned.
-  const dpa = await store.legalById(tx, doc.dpaTextId);
+  // Offers from before the DPA was its own document asked the signer whether they may also
+  // agree to data processing; a no sends the DPA on its own to someone who may.
+  if ((doc.content as OfferContent | null)?.dpa_separate || input.dpa_authorised) return;
+  await openDpa(d, tx, org.id, doc, who.directusUserId);
+}
+
+/**
+ * The DPA as its own document, with its own "Review and sign" task, for someone who may
+ * agree to data processing on behalf of the organisation (art. 3.6 of the terms). It
+ * carries the DPA text the offer pinned. One per organisation and text: an offer sent
+ * again, or a second offer on the same text, opens nothing new.
+ */
+export async function openDpa(
+  d: AccountsDeps,
+  tx: Conn,
+  orgId: string,
+  offer: DocumentRow,
+  createdBy: string | null,
+) {
+  const dpa = await store.legalById(tx, offer.dpaTextId);
   if (!dpa) return;
-  const lang = doc.language === "nl" ? "nl" : "en";
+  const open = (await store.documents(tx, orgId)).some(
+    (x) => x.kind === "dpa" && x.dpaTextId === dpa.id && x.status !== "void",
+  );
+  if (open) return;
+  const lang = offer.language === "nl" ? "nl" : "en";
   const id = newId();
   const now = d.now();
   const title = `${dpa.title} ${dpa.version}`;
   const rendered = await textPdf(title, dpa.body, { signing: true, language: lang });
-  const file = await storeRendered(d, org.id, id, rendered);
+  const file = await storeRendered(d, orgId, id, rendered);
   await store.insertDocument(tx, {
     id,
-    orgId: org.id,
+    orgId,
     kind: "dpa",
     title,
     language: lang,
-    reference: doc.reference ? `${doc.reference}-DPA` : null,
+    reference: offer.reference ? `${offer.reference}-DPA` : null,
     body: dpa.body,
     ...file,
     requiresSignature: true,
     status: "draft",
     dpaTextId: dpa.id,
-    externalRef: doc.externalRef,
+    externalRef: offer.externalRef,
     createdAt: now,
     updatedAt: now,
   });
   await writeFields(tx, id, rendered.fields);
   await store.updateDocument(tx, id, { status: "sent", sentAt: now, updatedAt: now });
   await createTask(d, tx, {
-    orgId: org.id,
+    orgId,
     code: "sign_dpa",
     params: { document_title: title },
     title: null,
     kind: "sign",
     documentId: id,
-    createdBy: who.directusUserId,
+    createdBy,
   });
 }

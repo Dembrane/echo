@@ -55,7 +55,7 @@ import {
 } from "@/components/results";
 import { openConfirm } from "@/lib/openConfirm";
 import { testId } from "@/lib/testUtils";
-import { useRecipeParameters } from "./useRecipeParameters";
+import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
 const activeStatuses = new Set(["queued", "running", "waiting_for_inputs"]);
@@ -426,15 +426,7 @@ function RecipeCard({
 	const request = useRequestAnalysisRun(projectId);
 	const isConversationScoped = recipe.scopeKeyPattern.includes("conversation:");
 	const [conversationId, setConversationId] = useState<string | null>(null);
-	const defaults = useMemo(
-		() =>
-			Object.fromEntries(
-				Object.entries(recipe.parametersSchema?.properties ?? {})
-					.filter(([, schema]) => schema.default !== undefined)
-					.map(([name, schema]) => [name, schema.default]),
-			),
-		[recipe.parametersSchema],
-	);
+	const defaults = useMemo(() => recipeDefaults(recipe, runs), [recipe, runs]);
 	const scopeKey =
 		isConversationScoped && conversationId
 			? `conversation:${conversationId}`
@@ -734,10 +726,10 @@ function RunDetail({
 	const outputObjects = run.output?.objects ?? 0;
 	const confirmStop = () =>
 		openConfirm({
-			title: t`Stop run?`,
 			danger: true,
 			labels: { confirm: t`Stop run` },
 			onConfirm: () => cancel.mutate(run.id),
+			title: t`Stop run?`,
 		});
 	return (
 		<Paper withBorder p="lg">
@@ -826,10 +818,7 @@ function RunsView({ projectId }: { projectId: string }) {
 				</Text>
 			)}
 			{runs.data?.runs.map((run) => (
-				<EntityListRow
-					key={run.id}
-					onActivate={() => setSelected(run.id)}
-				>
+				<EntityListRow key={run.id} onActivate={() => setSelected(run.id)}>
 					<Stack gap="xs">
 						<Group gap="sm">
 							<Text>{run.recipeId}</Text>

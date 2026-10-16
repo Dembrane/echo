@@ -1035,6 +1035,16 @@ export const billing_account = pgTable(
     billing_email: varchar({ length: 255 }),
     po_number: varchar({ length: 255 }),
     peppol_id: varchar({ length: 255 }),
+    // The Peppol directory's name for peppol_id, when echo found it there.
+    peppol_name: varchar({ length: 255 }),
+    // "peppol", "email" or "other"; null until chosen: Peppol when peppol_id is known, else email.
+    invoice_delivery: varchar({ length: 16 }),
+    // ISO 3166-1 alpha-2 of billing_country, which keeps the country's name.
+    billing_country_code: varchar({ length: 2 }),
+    // true: the customer said it has no VAT number; false: asked and gave one; null: not asked.
+    no_vat_number: boolean(),
+    // What the customer wrote about how they receive invoices, when invoice_delivery is "other".
+    invoice_portal: text(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1168,6 +1178,7 @@ export const conversation_chunk = pgTable(
     id: uuid().primaryKey().notNull(),
     noise_ratio: real().default(sql`'0'`),
     path: varchar({ length: 255 }).default(sql`NULL`),
+    pending_text: text(),
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),

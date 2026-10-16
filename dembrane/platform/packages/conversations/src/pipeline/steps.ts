@@ -21,7 +21,7 @@ import { type ChunkRow, conversationStore, type Tx, transaction } from "../stora
 import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
-import { finalizeConversation } from "./defs";
+import { finalizeConversation, processChunk } from "./defs";
 
 const { conversation, conversation_chunk, processing_status, project, workspace, billing_account } =
   schema;
@@ -137,13 +137,17 @@ export interface LoadedChunk {
  * already carries a transcript or an error (a typed chunk, an unplayable upload) has
  * nothing to process; the run still hands over so a finished conversation finalizes.
  */
-export async function loadChunk(d: PipelineDeps, chunkId: string): Promise<LoadedChunk> {
+export async function loadChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  typed = false,
+): Promise<LoadedChunk> {
   const store = conversationStore(d.db);
   const chunk = await store.chunk(chunkId);
   if (!chunk) return { skip: true, conversationId: null, anonymize: false };
   const conv = await store.conversation(chunk.conversation_id);
   if (!conv) return { skip: true, conversationId: null, anonymize: false };
-  const done = chunk.error !== null || chunk.transcript !== null || !chunk.path;
+  const done = chunk.error !== null || chunk.transcript !== null || (!chunk.path && !typed);
   return { skip: done, conversationId: conv.id, anonymize: Boolean(conv.is_anonymized) };
 }
 
@@ -320,7 +324,7 @@ export async function updateChunk(
   d: Pick<PipelineDeps, "db" | "now">,
   chunkId: string,
   conversationId: string,
-  patch: Partial<Pick<ChunkRow, "path" | "transcript" | "error" | "diarization">>,
+  patch: Partial<Pick<ChunkRow, "path" | "transcript" | "error" | "diarization" | "pending_text">>,
   bumpConversation = "transcript" in patch,
 ): Promise<void> {
   const now = d.now().toISOString();
@@ -406,36 +410,104 @@ export async function transcribePiece(
         });
         return { ok: true };
       } catch (err) {
-        const message = (err as Error).message ?? String(err);
-        // This write is what marks the chunk done; lost, the chunk stays pending for good.
-        if (isRecoverableTranscriptionError(err) || isFinalAttempt()) {
-          const failure = await retryWrite(() =>
-            updateChunk(d, chunkId, chunk.conversation_id, { error: message }, false),
-          );
-          if (failure)
-            d.logger.error(
-              {
-                chunkId,
-                conversationId: chunk.conversation_id,
-                err: failure,
-                signal: "chunk.error_not_saved",
-              },
-              "chunk error could not be saved; the chunk stays pending",
-            );
-        }
-        d.logger.warn(
-          {
-            chunkId,
-            conversationId: chunk.conversation_id,
-            recoverable: isRecoverableTranscriptionError(err),
-            reason: transcriptionFailureReason(err),
-            signal: "chunk.transcription_failed",
-          },
-          "chunk transcription failed",
-        );
-        if (isRecoverableTranscriptionError(err))
-          return { ok: false, reason: transcriptionFailureReason(err) };
-        throw err;
+        return failChunk(d, chunkId, chunk.conversation_id, err);
+      }
+    },
+  );
+}
+
+/**
+ * What a failed attempt does to its chunk, for audio and typed text alike: a recoverable
+ * failure, or the last attempt of any, saves the error (which marks the chunk done) and a
+ * recoverable one returns; anything else throws so the step retries.
+ */
+async function failChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  conversationId: string,
+  err: unknown,
+): Promise<TranscribeOutcome> {
+  const message = (err as Error).message ?? String(err);
+  // This write is what marks the chunk done; lost, the chunk stays pending for good.
+  if (isRecoverableTranscriptionError(err) || isFinalAttempt()) {
+    const failure = await retryWrite(() =>
+      // The raw typed text goes with a failed redaction: lost is the safe side of it.
+      updateChunk(d, chunkId, conversationId, { error: message, pending_text: null }, false),
+    );
+    if (failure)
+      d.logger.error(
+        { chunkId, conversationId, err: failure, signal: "chunk.error_not_saved" },
+        "chunk error could not be saved; the chunk stays pending",
+      );
+  }
+  d.logger.warn(
+    {
+      chunkId,
+      conversationId,
+      recoverable: isRecoverableTranscriptionError(err),
+      reason: transcriptionFailureReason(err),
+      signal: "chunk.transcription_failed",
+    },
+    "chunk transcription failed",
+  );
+  if (isRecoverableTranscriptionError(err))
+    return { ok: false, reason: transcriptionFailureReason(err) };
+  throw err;
+}
+
+/**
+ * The redaction of one typed chunk of an anonymised conversation: the same regex and model
+ * passes a transcript of audio gets, then the redacted text becomes the chunk's transcript.
+ * Until then the row has no transcript, so nothing reads the raw text and the conversation
+ * is not finalized or summarised without it. A failure ends as it does for audio.
+ *
+ * Idempotent: the transcript is an update of one row; a retry writes a fresh redaction of
+ * the same text.
+ */
+export async function redactTypedChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  opts: { usePiiRedaction: boolean; anonymize: boolean },
+): Promise<TranscribeOutcome> {
+  const store = conversationStore(d.db);
+  const chunk = await store.chunk(chunkId);
+  if (!chunk) return { ok: false, reason: "gone" };
+  const text = chunk.pending_text;
+  if (chunk.transcript !== null || chunk.error !== null || text === null) return { ok: true };
+  return withStatus(
+    d,
+    { conversationId: chunk.conversation_id },
+    "task_transcribe_chunk",
+    `for chunk ${chunkId}`,
+    async () => {
+      try {
+        const [conv] = await d.db
+          .select({
+            language: project.language,
+            prompt: project.default_conversation_transcript_prompt,
+            anonymize: project.anonymize_transcripts,
+          })
+          .from(conversation)
+          .innerJoin(project, eq(project.id, conversation.project_id))
+          .where(eq(conversation.id, chunk.conversation_id))
+          .limit(1);
+        if (!conv) throw new Error("Conversation not found");
+        const result = await d.transcriber.redactText({
+          text,
+          language: conv.language || "en",
+          hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
+          usePiiRedaction: opts.usePiiRedaction,
+          anonymizeTranscripts: opts.anonymize || Boolean(conv.anonymize),
+          customGuidancePrompt: conv.prompt,
+        });
+        // One write: the redacted text arrives as the raw text goes.
+        await updateChunk(d, chunkId, chunk.conversation_id, {
+          transcript: result.transcript,
+          pending_text: null,
+        });
+        return { ok: true };
+      } catch (err) {
+        return failChunk(d, chunkId, chunk.conversation_id, err);
       }
     },
   );
@@ -818,6 +890,92 @@ export async function unsummarizedConversations(db: Db, now: Date, limit = 50): 
     order by c.created_at, c.id
     limit ${limit}`);
   return [...rows].map((r) => r.id);
+}
+
+export const CHUNK_GAVE_UP = "Transcription did not finish";
+const STRANDED_WINDOW_MS = 14 * 24 * 3600_000;
+
+export interface Rerunner {
+  rerun(def: typeof processChunk, workflowId: string, newWorkflowId: string): Promise<boolean>;
+}
+
+/**
+ * Chunk runs that ended unfinished (cancelled, set aside, errored) and still hold up a recording.
+ * A split chunk has no row of its own; the caller checks its pieces.
+ */
+export async function strandedChunkRuns(
+  db: Db,
+  now: Date,
+  limit = 50,
+): Promise<{ id: string; again: string | null; setAside: boolean }[]> {
+  const since = now.getTime() - STRANDED_WINDOW_MS;
+  const prefix = `${processChunk.name}:`;
+  const rows = await db.execute<{ id: string; again: string | null; set_aside: boolean }>(sql`
+    select w.workflow_uuid as id, a.status as again, (lw.set_aside_at is not null) as set_aside
+    from dbos.workflow_status w
+    left join dbos.workflow_status a on a.workflow_uuid = w.workflow_uuid || ':again'
+    left join dbos_workflow_lost_worker lw on lw.workflow_id = w.workflow_uuid
+    left join conversation_chunk ch on ch.id = (case when length(w.workflow_uuid) = ${prefix.length + 36}
+      then substr(w.workflow_uuid, ${prefix.length + 1})::uuid end)
+    left join conversation c on c.id = ch.conversation_id
+    where w.name = ${processChunk.name} and w.created_at > ${since}
+      and w.status in ('CANCELLED', 'ERROR', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED')
+      and w.workflow_uuid not like '%:again'
+      and (a.status is null or a.status in ('CANCELLED', 'ERROR', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED'))
+      and (ch.id is null or (c.deleted_at is null and (
+        (ch.transcript is null and ch.error is null)
+        or (c.is_finished and c.is_all_chunks_transcribed is not true))))
+    order by w.created_at
+    limit ${limit}`);
+  return [...rows].map((r) => ({ id: r.id, again: r.again, setAside: r.set_aside }));
+}
+
+/**
+ * A stranded chunk run goes again once, from the step it did not finish; set aside or failed
+ * twice, its chunks get an error. Either way the conversation is handed over to finalize.
+ */
+export async function releaseStrandedChunks(d: PipelineDeps, jobs: Rerunner): Promise<void> {
+  for (const runInfo of await strandedChunkRuns(d.db, d.now())) {
+    const chunkId = runInfo.id.slice(`${processChunk.name}:`.length);
+    // A split chunk's row is gone; its pieces remain.
+    const ids = [chunkId, ...Array.from({ length: MAX_PIECES }, (_, i) => pieceId(chunkId, i))];
+    const chunks = await d.db
+      .select({
+        id: conversation_chunk.id,
+        conversationId: conversation_chunk.conversation_id,
+        pending: sql<boolean>`${conversation_chunk.transcript} is null and ${conversation_chunk.error} is null`,
+      })
+      .from(conversation_chunk)
+      .innerJoin(
+        conversation,
+        and(
+          eq(conversation.id, conversation_chunk.conversation_id),
+          isNull(conversation.deleted_at),
+        ),
+      )
+      .where(inArray(conversation_chunk.id, ids));
+    const conversationId = chunks[0]?.conversationId;
+    if (!conversationId) continue;
+    const pending = chunks.filter((c) => c.pending).map((c) => c.id);
+    const log = { chunkId, conversationId, workflowId: runInfo.id, pending: pending.length };
+    if (pending.length && runInfo.again === null && !runInfo.setAside) {
+      if (await jobs.rerun(processChunk, runInfo.id, `${runInfo.id}:again`))
+        d.logger.warn(
+          { ...log, signal: "chunk.run_again" },
+          "chunk run ended unfinished; running it again",
+        );
+      continue;
+    }
+    for (const id of pending)
+      await updateChunk(d, id, conversationId, { error: CHUNK_GAVE_UP }, false);
+    if (pending.length)
+      d.logger.error(
+        { ...log, signal: "chunk.gave_up" },
+        "chunk run ended unfinished; chunk given up",
+      );
+    // Also with nothing pending: a run that failed at its hand-over never handed over.
+    await handOver(d, conversationId);
+  }
 }
 
 export type { Models };

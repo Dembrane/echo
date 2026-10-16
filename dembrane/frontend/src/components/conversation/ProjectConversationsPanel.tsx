@@ -65,6 +65,7 @@ import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import {
 	type ConversationSort,
 	formatStartedAt,
+	formatStartedAtFull,
 	getTagText,
 	hasVerifiedArtifacts,
 	SORT_OPTIONS,
@@ -226,6 +227,8 @@ export const ConversationRow = ({
 		participantLabel !== primary && participantLabel !== t`No name`;
 	const summary = conversation.summary?.trim();
 	const isLocked = !!conversation.locked;
+	const startedAt = getConversationStartTime(conversation);
+	const startedFull = formatStartedAtFull(startedAt);
 	const tags =
 		(conversation.tags as ConversationProjectTag[] | undefined) ?? [];
 	const verified = hasVerifiedArtifacts(conversation);
@@ -324,9 +327,11 @@ export const ConversationRow = ({
 									</Text>
 								</Tooltip>
 							)}
-							<Text size="xs" c="dimmed">
-								{formatStartedAt(getConversationStartTime(conversation))}
-							</Text>
+							<Tooltip label={startedFull} disabled={!startedFull}>
+								<Text size="xs" c="dimmed">
+									{formatStartedAt(startedAt)}
+								</Text>
+							</Tooltip>
 							{conversation.live && (
 								<Badge size="xs" color="red" variant="light">
 									<Trans>Ongoing</Trans>

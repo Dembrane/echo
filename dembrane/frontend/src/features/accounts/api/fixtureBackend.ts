@@ -1,5 +1,11 @@
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
+import {
+	type BillingAnswers,
+	checkBilling,
+	countryCodeOf,
+	countryName,
+} from "../contract/billing-rules.gen";
 import type {
 	AccountCard,
 	AccountListItem,
@@ -80,10 +86,13 @@ function demoStore(): Store {
 		body: null,
 		confirmation: null,
 		content: null,
+		customer_email: null,
+		customer_links: null,
 		fields: [],
 		legal: [],
 		lines: null,
 		page_count: 1,
+		prefill: { address: null, organisation: null },
 		sha256: null,
 		signature: null,
 		signing_note: null,
@@ -369,9 +378,19 @@ function withUrls(
 	base: string,
 	access: DocumentDetailT["access"],
 ): DocumentDetailT {
+	const orgId = base.split("/").pop() as string;
+	const toTheCustomer =
+		access === "staff" && doc.status === "sent" && doc.requires_signature;
+	const origin = window.location.origin;
+	const links = {
+		document: `${origin}/o/${orgId}/account/documents/${doc.id}/sign`,
+		sign_in: `${origin}/login?next=${encodeURIComponent(`/o/${orgId}/account`)}`,
+	};
 	return {
 		...doc,
 		access,
+		customer_email: toTheCustomer ? customerEmail(orgId, doc, links) : null,
+		customer_links: toTheCustomer ? links : null,
 		file_url: `${base}/documents/${doc.id}/file`,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
@@ -379,6 +398,48 @@ function withUrls(
 			access === "staff"
 				? `${base.replace(/^\/api\/v2/, "")}/documents/${doc.id}`
 				: null,
+	};
+}
+
+/** The email the platform words for a sent offer, in the two languages the fixtures speak. */
+function customerEmail(
+	orgId: string,
+	doc: DocumentDetailT,
+	links: { document: string; sign_in: string },
+): DocumentDetailT["customer_email"] {
+	const contact = storeFor(orgId).members.find((m) => m.email);
+	if (!contact?.email) return null;
+	const nl = doc.language === "nl";
+	const offer = doc.reference
+		? `"${doc.title}" (${doc.reference})`
+		: `"${doc.title}"`;
+	const until = doc.valid_until
+		? new Intl.DateTimeFormat(nl ? "nl-NL" : "en-GB", {
+				dateStyle: "long",
+				timeZone: "UTC",
+			}).format(new Date(`${doc.valid_until.slice(0, 10)}T12:00:00Z`))
+		: null;
+	const paragraphs = nl
+		? [
+				contact.name ? `Hallo ${contact.name},` : "Hallo,",
+				`De offerte ${offer} staat klaar om te lezen en te ondertekenen:\n${links.document}`,
+				`Je logt in met je e-mailadres en een eenmalige code. Log hier in:\n${links.sign_in}`,
+				until ? `De offerte is geldig tot ${until}.` : null,
+				"Met vriendelijke groet,\nSam",
+			]
+		: [
+				contact.name ? `Hello ${contact.name},` : "Hello,",
+				`The offer ${offer} is ready to review and sign:\n${links.document}`,
+				`You sign in with your email address and a one-time code. Sign in here:\n${links.sign_in}`,
+				until ? `The offer is valid until ${until}.` : null,
+				"Kind regards,\nSam",
+			];
+	return {
+		body: paragraphs.filter((p) => p !== null).join("\n\n"),
+		subject: nl
+			? `Je offerte van dembrane: ${doc.title}`
+			: `Your offer from dembrane: ${doc.title}`,
+		to: contact.email,
 	};
 }
 
@@ -396,6 +457,8 @@ function summary(doc: DocumentDetailT): DocumentSummaryT {
 		signature: _sg,
 		access: _a,
 		staff_url: _su,
+		customer_email: _ce,
+		customer_links: _cl,
 		...rest
 	} = doc;
 	return rest;
@@ -476,9 +539,28 @@ const event = (
 	});
 };
 
+/** The demo's reading of the deal stage, as the backend derives it from the same facts. */
+function dealStageOf(s: Store): Out<typeof AccountListItem>["deal_stage"] {
+	const offer = s.docs.find((d) => d.kind === "offer" && d.status !== "void");
+	if (!offer) return s.stage === null ? null : "in_progress";
+	if (offer.status === "draft") return "offer_drafted";
+	if (offer.status === "declined") return "lost";
+	const waiting = s.docs.some(
+		(d) => d.kind === "dpa" && (d.status === "sent" || d.status === "viewed"),
+	);
+	if (offer.status !== "signed" || !s.billing.billing_email || waiting)
+		return "offer_sent";
+	const invoices = s.docs.filter((d) => d.kind === "invoice" && d.invoice);
+	if (!invoices.length) return "offer_accepted";
+	return invoices.every((d) => d.invoice?.status === "paid")
+		? "paid"
+		: "invoice_sent";
+}
+
 function listItem(s: Store): Out<typeof AccountListItem> {
 	return {
 		created_at: s.created_at,
+		deal_stage: dealStageOf(s),
 		id: s.id,
 		name: s.name,
 		open_tasks: s.tasks.filter(
@@ -503,11 +585,14 @@ function card(s: Store) {
 		billing: s.billing,
 		demo: s.demo,
 		documents: s.docs.map((d) => summary(withUrls(d, base, "staff"))),
+		// The fixture account asks for no invoice, so nothing waits.
+		invoice_waits: [],
 		members: s.members,
 		needs_form: s.needs_form,
 		organisation: {
 			account_stage: s.stage,
 			created_at: s.created_at,
+			deal_stage: dealStageOf(s),
 			id: s.id,
 			name: s.name,
 		},
@@ -699,6 +784,19 @@ function openTask(
 	return task;
 }
 
+/** How echo's coded tasks name an offer: by its kind and number. */
+function offerParams(doc: DocumentDetailT): Record<string, string> {
+	return {
+		document_title: doc.title,
+		...(doc.kind === "offer" && doc.content
+			? { offer_template: doc.content.template }
+			: {}),
+		...(doc.kind === "offer" && doc.reference
+			? { offer_reference: doc.reference }
+			: {}),
+	};
+}
+
 function signTaskFor(
 	s: Store,
 	doc: DocumentDetailT,
@@ -720,11 +818,83 @@ function signTaskFor(
 		kind: "sign",
 		locked: false,
 		locked_until: null,
-		params: code ? { document_title: doc.title } : null,
+		params: code ? offerParams(doc) : null,
 		reminder_interval_days: null,
 		status: "open",
 		title,
 	});
+}
+
+/**
+ * The DPA as a document of its own, for someone who may agree to data processing: made
+ * once per offer, when the signer may not or the customer said so up front.
+ */
+function separateDpaFor(s: Store, d: DocumentDetailT, signedAt: string) {
+	const made = dpaOf(s, d.id);
+	if (made) return made;
+	const dpa: DocumentDetailT = {
+		...clone(fx.signedDpaDetail),
+		declined_at: null,
+		fields: fx.signedDpaDetail.fields.map((f) => ({
+			...f,
+			id: uuid(),
+		})),
+		id: uuid(),
+		sent_at: signedAt,
+		sha256: randomHex(),
+		signature: null,
+		signed_at: null,
+		signer: null,
+		status: "sent",
+		viewed_at: null,
+	};
+	dpa.confirmation = confirmationFor(
+		dpa.language,
+		dpa.title,
+		dpa.reference ?? "",
+		dpa.sha256 ?? "",
+		false,
+		dpa.fields,
+		s.name,
+	);
+	s.docs.unshift(dpa);
+	const t = signTaskFor(
+		s,
+		dpa,
+		d.language === "nl"
+			? "Verwerkersovereenkomst laten tekenen"
+			: "Have the DPA signed",
+		d.language === "nl"
+			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
+			: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
+	);
+	t.params = { ...(t.params ?? {}), offer_id: d.id };
+	return dpa;
+}
+
+/** The first task on a sent offer: who signs it, and its DPA. */
+function whoSignsFor(s: Store, d: DocumentDetailT) {
+	return openTask(s, {
+		body: null,
+		code: "who_signs",
+		document_id: d.id,
+		due_on: null,
+		kind: "generic",
+		locked: false,
+		locked_until: null,
+		params: offerParams(d),
+		reminder_interval_days: null,
+		status: "open",
+		title: null,
+	});
+}
+
+/** The separate DPA made for an offer, if there is one. */
+function dpaOf(s: Store, offerId: string) {
+	const t = s.tasks.find(
+		(x) => x.code === "sign_dpa" && x.params?.offer_id === offerId,
+	);
+	return t ? (s.docs.find((x) => x.id === t.document_id) ?? null) : null;
 }
 
 /** A document ready to sign gets its confirmation from the fields it was sent with. */
@@ -835,7 +1005,8 @@ export async function handle(
 			}
 			case "demoStatus":
 			case "retryDemo":
-			case "publishDemo": {
+			case "publishDemo":
+			case "unpublishDemo": {
 				const d = loadDemos()[params.demoId ?? ""];
 				if (!d) throw notFound();
 				if (name === "retryDemo") {
@@ -853,14 +1024,23 @@ export async function handle(
 						throw new AccountsApiError(409, "The draft is not ready yet.");
 					const signIn =
 						typeof body.sign_in === "boolean" ? body.sign_in : d.sign_in;
+					// The invitation goes out once, as on the server.
+					const invite = signIn && !d.invited_at;
 					d.sign_in = signIn;
 					d.status = "published";
 					d.published_at = now();
-					d.invited_at = signIn ? now() : null;
+					if (invite) d.invited_at = now();
 					d.links.public = d.links.public.map((l) => ({ ...l, live: true }));
 					const target = load()[d.org_id ?? ""];
 					if (target)
-						event(target, "demo.published", "staff", {}, { invited: signIn });
+						event(target, "demo.published", "staff", {}, { invited: invite });
+				}
+				if (name === "unpublishDemo" && d.status === "published") {
+					d.status = "draft";
+					d.published_at = null;
+					d.links.public = d.links.public.map((l) => ({ ...l, live: false }));
+					const target = load()[d.org_id ?? ""];
+					if (target) event(target, "demo.unpublished", "staff");
 				}
 				d.updated_at = now();
 				return publicDemo(d);
@@ -1060,9 +1240,10 @@ export async function handle(
 					png: sig.png_base64,
 				};
 				for (const t of s.tasks) {
+					// Signing without saying who signs first answers that too.
 					if (
 						t.document_id === d.id &&
-						t.kind === "sign" &&
+						(t.kind === "sign" || t.code === "who_signs") &&
 						t.status !== "withdrawn"
 					) {
 						t.status = "done";
@@ -1087,44 +1268,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ dpa_authorised: dpaAuthorised },
 				);
-				if (d.kind === "offer" && !dpaAuthorised) {
-					const dpa: DocumentDetailT = {
-						...clone(fx.signedDpaDetail),
-						declined_at: null,
-						fields: fx.signedDpaDetail.fields.map((f) => ({
-							...f,
-							id: uuid(),
-						})),
-						id: uuid(),
-						sent_at: signedAt,
-						sha256: randomHex(),
-						signature: null,
-						signed_at: null,
-						signer: null,
-						status: "sent",
-						viewed_at: null,
-					};
-					dpa.confirmation = confirmationFor(
-						dpa.language,
-						dpa.title,
-						dpa.reference ?? "",
-						dpa.sha256 ?? "",
-						false,
-						dpa.fields,
-						s.name,
-					);
-					s.docs.unshift(dpa);
-					signTaskFor(
-						s,
-						dpa,
-						d.language === "nl"
-							? "Verwerkersovereenkomst laten tekenen"
-							: "Have the DPA signed",
-						d.language === "nl"
-							? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
-							: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
-					);
-				}
+				if (d.kind === "offer" && !dpaAuthorised)
+					separateDpaFor(s, d, signedAt);
 				return {
 					confirmation_text: body.confirmation_text,
 					signature_id: d.signature.id,
@@ -1150,9 +1295,11 @@ export async function handle(
 				d.signer = {
 					email: String(body.email),
 					name: String(body.name),
+					named_at: now(),
+					reminded_at: null,
 					role: (body.role as string | null) ?? null,
 				};
-				const replaced = previous && previous.email !== d.signer.email;
+				const replaced = previous && previous.email !== body.email;
 				event(
 					s,
 					replaced ? "document.signer_replaced" : "document.signer_named",
@@ -1164,13 +1311,76 @@ export async function handle(
 				);
 				return { signer: d.signer };
 			}
+			case "remindSigner": {
+				const d = doc();
+				if (!d.signer)
+					throw new AccountsApiError(
+						409,
+						"This document is not waiting for a signature",
+					);
+				const last = d.signer.reminded_at;
+				if (last && Date.now() - Date.parse(last) < 864e5)
+					throw new AccountsApiError(429, "Try again tomorrow.");
+				d.signer.reminded_at = now();
+				event(
+					s,
+					"document.signer_reminded",
+					"customer",
+					{ id: d.id, type: "document" },
+					{ email: d.signer.email },
+				);
+				return { signer: d.signer };
+			}
 			case "readBilling":
 				return s.billing;
 			case "updateBilling": {
-				if (!body.vat_id && !body.kvk_number && !body.kbo_number) {
-					throw invalid("vat_id", "Give a VAT, KvK or KBO number.");
+				// The server's own rules, so a fixture run refuses what the API would.
+				const country = countryCodeOf(
+					(body.country_code ?? body.country) as string | null,
+				);
+				const { problems, clean } = checkBilling({
+					...(body as BillingAnswers),
+					country_code: country,
+				});
+				const first = problems[0];
+				if (first) throw invalid(first.field, "Check this field.");
+				// Like the server: another way, newly written, opens the customer's question.
+				const wrote =
+					body.invoice_delivery === "other" ? clean.invoice_portal : null;
+				if (
+					wrote &&
+					!(
+						s.billing.invoice_delivery === "other" &&
+						s.billing.invoice_portal === wrote
+					)
+				) {
+					const t: TicketT = {
+						closed_at: null,
+						created_at: now(),
+						id: uuid(),
+						messages: [
+							{ body: wrote, created_at: now(), from: "customer", id: uuid() },
+						],
+						status: "waiting_on_dembrane",
+						subject: "How we receive invoices",
+						updated_at: now(),
+					};
+					s.tickets.unshift(t);
+					event(s, "ticket.opened", "customer", { id: t.id, type: "ticket" });
 				}
-				s.billing = { ...s.billing, ...(body as Partial<Billing>) };
+				s.billing = {
+					...s.billing,
+					...(body as Partial<Billing>),
+					...clean,
+					country: country ? countryName(country) : null,
+					country_code: country,
+				};
+				// Like the server: saving without a typed Peppol id looks the numbers up.
+				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
+				s.billing.peppol_match =
+					!body.peppol_id && kvk.length === 8
+						? { name: s.billing.legal_name, participant_id: `0106:${kvk}` }
+						: null;
 				for (const t of s.tasks) {
 					if (
 						t.kind === "billing_details" &&
@@ -1184,6 +1394,62 @@ export async function handle(
 				}
 				event(s, "billing_details.updated", "customer");
 				return s.billing;
+			}
+			case "answerWhoSigns": {
+				const t = task();
+				if (t.code !== "who_signs") throw notFound();
+				if (t.status !== "open" && t.status !== "changes_requested")
+					throw new AccountsApiError(409, "This task is not waiting on you.");
+				const offer = s.docs.find((x) => x.id === t.document_id);
+				if (!offer) throw notFound();
+				type Named = { email: string; name: string; role: string | null };
+				const name = (d: DocumentDetailT, p: Named) => {
+					d.signer = {
+						email: p.email.toLowerCase(),
+						name: p.name,
+						named_at: now(),
+						reminded_at: null,
+						role: p.role,
+					};
+					event(
+						s,
+						"document.signer_named",
+						"customer",
+						{
+							id: d.id,
+							type: "document",
+						},
+						{ email: p.email },
+					);
+				};
+				const offerSigner = body.offer_signer as Named | null;
+				const dpaSigner =
+					body.dpa_same === true
+						? offerSigner
+						: (body.dpa_signer as Named | null);
+				if (offerSigner) name(offer, offerSigner);
+				const dpa = dpaOf(s, offer.id);
+				if (dpa && dpaSigner && dpa.status !== "signed") name(dpa, dpaSigner);
+				t.status = "done";
+				t.submitted_at = now();
+				t.next_reminder_at = null;
+				t.params = {
+					...(t.params ?? {}),
+					dpa_same: String(body.dpa_same === true),
+					dpia: String(body.dpia === true),
+				};
+				event(s, "task.submitted", "customer", { id: t.id, type: "task" });
+				return publicTask(t);
+			}
+			case "lookupPeppol": {
+				// The fixtures know every Dutch KvK number; the real directory may not.
+				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
+				return {
+					match:
+						kvk.length === 8
+							? { name: s.billing.legal_name, participant_id: `0106:${kvk}` }
+							: null,
+				};
 			}
 			case "submitTask": {
 				const t = task();
@@ -1250,6 +1516,32 @@ export async function handle(
 					if (t.code === "watch_tutorial" && t.status === "open")
 						t.status = "done";
 				return { recorded: true };
+			// Any token opens the invitation in fixture mode; the API checks it.
+			case "signerInvite": {
+				const d = doc();
+				if (!d.signer) throw notFound();
+				const [first = "", ...rest] = (d.signer.name ?? "").split(" ");
+				return {
+					document: { kind: d.kind, reference: d.reference, title: d.title },
+					has_account: false,
+					inviter: { name: "Anna de Vries" },
+					organisation: { name: s.name },
+					signer: {
+						email: d.signer.email,
+						first_name: first,
+						last_name: rest.join(" "),
+						role: d.signer.role,
+					},
+					status:
+						d.status === "signed"
+							? "signed"
+							: d.status === "sent" || d.status === "viewed"
+								? "open"
+								: "closed",
+				};
+			}
+			case "acceptSignerInvite":
+				return { document_id: doc().id, org_id: orgId };
 			case "signingRequests":
 				return s.docs
 					.filter(
@@ -1288,6 +1580,11 @@ export async function handle(
 			case "accountCard":
 				return card(s);
 			case "updateAccount":
+				if (body.invoice_delivery !== undefined) {
+					s.billing.invoice_delivery =
+						body.invoice_delivery as Billing["invoice_delivery"];
+					s.billing.invoice_portal = null;
+				}
 				if (body.account_stage) {
 					s.stage = body.account_stage as Store["stage"];
 					event(s, "account.stage_set", "staff", {}, { stage: s.stage });
@@ -1410,8 +1707,11 @@ export async function handle(
 					vat_cents: vat,
 					viewed_at: null,
 				};
+				// The DPA goes out with it as its own document, listed after the offer.
+				if (body.send !== false) separateDpaFor(s, d, now());
 				s.docs.unshift(d);
-				// A draft offer gets its task when it is sent.
+				// Who signs comes first; a draft offer gets its tasks when it is sent.
+				if (body.send !== false) whoSignsFor(s, d);
 				const t =
 					body.send === false
 						? null
@@ -1454,6 +1754,8 @@ export async function handle(
 					confirmation: null,
 					content: null,
 					currency: null,
+					customer_email: null,
+					customer_links: null,
 					declined_at: null,
 					fields: [],
 					file_url: null,
@@ -1464,6 +1766,7 @@ export async function handle(
 					legal: [],
 					lines: null,
 					page_count: bytes ? await pageCountOf(bytes) : 1,
+					prefill: { address: null, organisation: null },
 					reference: (body.reference as string | null) ?? null,
 					requires_signature: requires,
 					sent_at: sendNow ? now() : null,
@@ -1650,6 +1953,39 @@ export async function handle(
 					{ reason: body.reason },
 				);
 				return withUrls(d, sBase, "staff");
+			}
+			case "sendMessage": {
+				// The demo draws a plain English stand-in; the API renders echo's templates.
+				const subjectId = String(body.document_id ?? body.task_id ?? "");
+				const title =
+					body.kind === "task_reminder"
+						? (s.tasks.find((x) => x.id === subjectId)?.title ?? null)
+						: (s.docs.find((x) => x.id === subjectId)?.title ?? null);
+				if (!title) throw notFound();
+				const [subject, lead] =
+					body.kind === "task_reminder"
+						? [
+								`Still open: ${title}`,
+								`A step is still waiting for you: ${title}`,
+							]
+						: [`${title} has been withdrawn`, `We withdrew ${title}.`];
+				const note = typeof body.note === "string" ? body.note : null;
+				const text = [lead, note].filter(Boolean).join("\n\n");
+				const messages = s.members
+					.filter((m) => m.email)
+					.map((m) => ({
+						html: `<p>${text}</p>`,
+						language: "en",
+						subject,
+						text,
+						to: m.email as string,
+					}));
+				if (!body.dry_run)
+					event(s, "message.sent", "staff", {
+						id: subjectId,
+						type: body.kind === "task_reminder" ? "task" : "document",
+					});
+				return { messages, queued: body.dry_run ? 0 : messages.length };
 			}
 			case "upsertInvoice":
 				throw new AccountsApiError(501, "Invoices come from sam in the demo.");

@@ -7,6 +7,7 @@ import "./lib/tamper";
 import { PostHogProvider } from "@posthog/react";
 import posthog from "posthog-js";
 import {
+	ANALYTICS_ENABLED,
 	POSTHOG_CAPTURE,
 	POSTHOG_HOST,
 	POSTHOG_TOKEN,
@@ -15,40 +16,42 @@ import {
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
 
-posthog.init(POSTHOG_TOKEN, {
-	api_host: POSTHOG_HOST,
-	// Error tracking: autocapture unhandled errors and promise rejections.
-	// React render errors are reported separately via ErrorBoundary.
-	capture_exceptions: {
-		capture_console_errors: false,
-		capture_unhandled_errors: true,
-		capture_unhandled_rejections: true,
-	},
-	// Share the cookie across .dembrane.com so a visitor's distinct id carries
-	// over from the marketing site, stitching both into one person profile.
-	cross_subdomain_cookie: true,
-	defaults: "2026-01-30",
-	// The portal serves anonymous participants on a privacy-sensitive flow, so
-	// never record their sessions. We track the journey with explicit events
-	// instead. The dashboard (hosts) is unaffected.
-	disable_session_recording: USE_PARTICIPANT_ROUTER,
-	loaded: (ph) => {
-		// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
-		// The opt-out persists per-domain, so explicitly opt back in when the
-		// config says capture: otherwise flipping an environment to capture-on
-		// would silently keep returning visitors opted out.
-		if (!POSTHOG_CAPTURE) {
-			ph.opt_out_capturing();
-		} else if (ph.has_opted_out_capturing()) {
-			// Use the singleton: the `loaded` param is typed without the
-			// options bag, and we don't want a $opt_in event in the data.
-			posthog.opt_in_capturing({ captureEventName: null });
-		}
-	},
-	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
-	// the toolbar and in-app links resolve (required when api_host is proxied).
-	ui_host: POSTHOG_UI_HOST,
-});
+// With analytics switched off PostHog is never initialised: no request, script or cookie.
+if (ANALYTICS_ENABLED)
+	posthog.init(POSTHOG_TOKEN, {
+		api_host: POSTHOG_HOST,
+		// Error tracking: autocapture unhandled errors and promise rejections.
+		// React render errors are reported separately via ErrorBoundary.
+		capture_exceptions: {
+			capture_console_errors: false,
+			capture_unhandled_errors: true,
+			capture_unhandled_rejections: true,
+		},
+		// Share the cookie across .dembrane.com so a visitor's distinct id carries
+		// over from the marketing site, stitching both into one person profile.
+		cross_subdomain_cookie: true,
+		defaults: "2026-01-30",
+		// The portal serves anonymous participants on a privacy-sensitive flow, so
+		// never record their sessions. We track the journey with explicit events
+		// instead. The dashboard (hosts) is unaffected.
+		disable_session_recording: USE_PARTICIPANT_ROUTER,
+		loaded: (ph) => {
+			// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
+			// The opt-out persists per-domain, so explicitly opt back in when the
+			// config says capture: otherwise flipping an environment to capture-on
+			// would silently keep returning visitors opted out.
+			if (!POSTHOG_CAPTURE) {
+				ph.opt_out_capturing();
+			} else if (ph.has_opted_out_capturing()) {
+				// Use the singleton: the `loaded` param is typed without the
+				// options bag, and we don't want a $opt_in event in the data.
+				posthog.opt_in_capturing({ captureEventName: null });
+			}
+		},
+		// api_host is our reverse proxy; ui_host must stay the real PostHog host so
+		// the toolbar and in-app links resolve (required when api_host is proxied).
+		ui_host: POSTHOG_UI_HOST,
+	});
 
 // Not calling preventDefault: cancelling makes Vite resolve the import to
 // `undefined`, so LazyRoute throws a misleading error instead of the real one.

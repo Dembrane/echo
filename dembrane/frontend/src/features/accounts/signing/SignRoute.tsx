@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Anchor,
@@ -11,7 +11,6 @@ import {
 	Group,
 	Image,
 	Loader,
-	Modal,
 	Paper,
 	Progress,
 	Radio,
@@ -22,24 +21,28 @@ import {
 	Title,
 	UnstyledButton,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDocumentTitle, useMediaQuery } from "@mantine/hooks";
 import { ArrowLeftIcon, CheckIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
-import { toast } from "@/components/common/Toaster";
 import { useV2Me } from "@/hooks/useV2Me";
 import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
 import {
 	accountKeys,
-	useAccountsMutation,
 	useDocument,
+	useLegalHref,
 	usePdfData,
 	usePdfHref,
 } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
+import { DocumentPreview } from "../customer/DocumentPreview";
+import { mayRemind, RemindSigner } from "../customer/RemindSigner";
+import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
+import { secondary } from "../customer/TaskLine";
+import { FitLabel, fitting } from "../FitLabel";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
@@ -48,7 +51,10 @@ import {
 	confirmationTemplate,
 	fillConfirmation,
 	type Images,
+	documentDate,
+	inputDate,
 	isFilled,
+	localIsoDate,
 	nextStop,
 	orderFields,
 	previousField,
@@ -60,12 +66,13 @@ import {
 import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 
 /**
- * Signing: the document as it will be signed, its fields on the pages, and one panel at
- * the bottom that walks the signer field by field. It sits outside the dashboard chrome so
- * a named signer who is not a member lands on the document alone, on a phone as well.
+ * Signing: the document as it will be signed, its fields on the pages, and one panel
+ * beside it (below it on a phone) that walks the signer field by field. It sits outside
+ * the dashboard chrome so a named signer who is not a member lands on the document alone,
+ * on a phone as well.
  */
 export const SignRoute = () => (
-	<AccountsI18n>
+	<AccountsI18n signing>
 		<SignScreen />
 	</AccountsI18n>
 );
@@ -175,22 +182,138 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			</>
 		);
 	}
+	if (doc.access === "member" && doc.signer)
+		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
 }
 
+/**
+ * Once someone else is named to sign, a member opening the link sees whom it is assigned
+ * to, not a signing walk that would refuse them at the end, and can hand it to someone
+ * else instead. The named person signs in their own name, from their own invitation.
+ */
+function MaybeWaiting({
+	doc,
+	orgId,
+	signer,
+}: {
+	doc: DocumentDetailT;
+	orgId: string;
+	signer: NonNullable<DocumentDetailT["signer"]>;
+}) {
+	const { data: me, isLoading } = useV2Me();
+	const [reassigning, setReassigning] = useState(false);
+	if (isLoading)
+		return (
+			<Stack align="center" pt="20vh">
+				<Loader />
+			</Stack>
+		);
+	if (me?.email && me.email.toLowerCase() === signer.email.toLowerCase())
+		return <Walk doc={doc} orgId={orgId} />;
+	const name = signer.name || signer.email;
+	const jobTitle = signer.role;
+	const assignee = jobTitle ? `${name}, ${jobTitle}` : name;
+	const email = signer.email;
+	const firstName = signer.name?.split(" ")[0] || signer.email;
+	const days =
+		signer.named_at == null
+			? null
+			: Math.floor((Date.now() - Date.parse(signer.named_at)) / 864e5);
+	// Read along, not sign: the document under a band saying whose it is. Nothing here is
+	// the viewer's to finish, so there is no pill; Back is in the header.
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="md" py="xl">
+				<Stack gap="md" data-testid="sign-waiting">
+					<Stack gap={4}>
+						<Title order={2} size="h4">
+							{doc.title}
+						</Title>
+						<Text size="xs" c="dimmed" data-testid="sign-waiting-on">
+							<Trans>Waiting on {assignee}</Trans>
+							{" · "}
+							{email}
+							{days != null && (
+								<>
+									{" · "}
+									{days < 1 ? (
+										<Trans>sent today</Trans>
+									) : (
+										<Plural value={days} one="# day" other="# days" />
+									)}
+								</>
+							)}
+						</Text>
+					</Stack>
+					<Group gap="md">
+						{mayRemind(signer) && (
+							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
+						)}
+						<Button
+							{...secondary}
+							onClick={() => setReassigning(true)}
+							data-testid="sign-reassign"
+						>
+							<Trans>Send to someone else</Trans>
+						</Button>
+					</Group>
+					<DocumentPreview doc={doc} who={assignee} />
+				</Stack>
+			</Container>
+			<SendToSomeoneElse
+				orgId={orgId}
+				docId={doc.id}
+				current={signer}
+				opened={reassigning}
+				onClose={() => setReassigning(false)}
+			/>
+		</>
+	);
+}
+
+/** Below the sticky header, so the panel and the field brought into view clear it. */
+const HEADER_HEIGHT = 50;
+
+/**
+ * The signer's own values to start from: today's date, and the organisation and address
+ * when we know them. Their name follows once their profile has loaded.
+ */
+const initialValues = (doc: DocumentDetailT): Values => {
+	const initial: Values = {};
+	for (const f of doc.fields) {
+		if (f.kind === "date") initial[f.id] = todayForDocument();
+		if (
+			f.kind === "text" &&
+			f.key === "organisation" &&
+			doc.prefill.organisation
+		)
+			initial[f.id] = doc.prefill.organisation;
+		if (f.kind === "text" && f.key === "address" && doc.prefill.address)
+			initial[f.id] = doc.prefill.address;
+	}
+	return initial;
+};
+
+/**
+ * The walk: the document on the left, scrolling, and on the right a panel that stays put
+ * and always has one blue button saying what to do next. While a field is empty that
+ * button names it ("Fill in your organisation"); pressing it says what is missing. The
+ * field the panel asks for is brought to the middle of the screen. On a phone the panel
+ * sits at the bottom instead.
+ */
 function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const { data: me } = useV2Me();
+	const wide = useMediaQuery("(min-width: 62em)") ?? false;
 	const pdf = usePdfData(doc.file_url);
+	// Only for showing the file when the browser cannot draw it; there is no download
+	// before signing, only of the signed copy.
 	const fileHref = usePdfHref(pdf.data ? doc.file_url : null);
 	const fields = useMemo(() => orderFields(doc.fields), [doc.fields]);
 
-	const [values, setValues] = useState<Values>(() => {
-		const initial: Values = {};
-		for (const f of doc.fields)
-			if (f.kind === "date") initial[f.id] = todayForDocument();
-		return initial;
-	});
+	const [values, setValues] = useState<Values>(() => initialValues(doc));
 	const [signature, setSignature] = useState<CapturedImage | null>(null);
 	const [initials, setInitials] = useState<CapturedImage | null>(null);
 	const images: Images = {
@@ -203,7 +326,6 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const [dpa, setDpa] = useState<"yes" | "no" | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
-	const [signerOpen, setSignerOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	// The signer's name is the one thing we know; fill it once so they only check it.
@@ -242,7 +364,11 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const back = () => {
 		if (finishing) return goTo(fields[fields.length - 1] ?? null);
 		const prev = previousField(fields, current);
-		if (prev) goTo(prev);
+		if (prev) return goTo(prev);
+		// Before the first field is the start.
+		setCurrent(null);
+		setFinishing(false);
+		window.scrollTo({ behavior: "smooth", top: 0 });
 	};
 
 	const nameValue = (() => {
@@ -256,13 +382,16 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const confirmation = template
 		? fillConfirmation(template, fields, values)
 		: null;
+	const firstEmpty = nextStop(
+		fields,
+		values,
+		images,
+		null,
+		new Set(fields.map((f) => f.id)),
+	);
 	const complete =
-		nextStop(fields, values, images, null, new Set(fields.map((f) => f.id))) ===
-		null;
-	const canSign =
-		complete &&
-		Boolean(signature || !fields.some((f) => f.kind === "signature")) &&
-		(!asksDpa || dpa !== null);
+		firstEmpty === null &&
+		Boolean(signature || !fields.some((f) => f.kind === "signature"));
 
 	const submit = async () => {
 		if (!doc.sha256) return;
@@ -314,224 +443,607 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				/>
 			));
 
+	const panel = (
+		<Stack gap="md" data-testid="sign-panel">
+			<Group gap="xs" wrap="nowrap">
+				<Progress
+					value={total ? (done / total) * 100 : 100}
+					size="sm"
+					style={{ flex: 1 }}
+					aria-label={t`Progress`}
+				/>
+				<Text
+					size="xs"
+					c="dimmed"
+					data-testid="sign-progress"
+					style={{ whiteSpace: "nowrap" }}
+				>
+					<Trans>
+						{done} of {total} filled
+					</Trans>
+				</Text>
+			</Group>
+
+			{!field && !finishing && (
+				<Stack gap="md">
+					<Text>
+						{doc.signing_note ?? (
+							<Trans>Your signature completes the agreement.</Trans>
+						)}
+					</Text>
+					<Button
+						variant="filled"
+						size="md"
+						fullWidth
+						onClick={next}
+						data-testid="sign-start"
+					>
+						<Trans>Start</Trans>
+					</Button>
+				</Stack>
+			)}
+
+			{field && (
+				<FieldPanel
+					key={field.id}
+					field={field}
+					value={values[field.id]}
+					onValue={(v) => setValues((old) => ({ ...old, [field.id]: v }))}
+					filled={isFilled(field, values, images)}
+					signature={signature}
+					initials={initials}
+					nameForSignature={nameValue}
+					dateRange={{
+						max: localIsoDate(),
+						min: doc.sent_at ? localIsoDate(new Date(doc.sent_at)) : undefined,
+					}}
+					// Adopting a signature is the step's decision, so it also moves on.
+					onSignature={(img) => {
+						setSignature(img);
+						goTo(
+							nextStop(
+								fields,
+								values,
+								{ ...images, signature: true },
+								current,
+								visited,
+							),
+						);
+					}}
+					onInitials={(img) => {
+						setInitials(img);
+						goTo(
+							nextStop(
+								fields,
+								values,
+								{ ...images, initials: true },
+								current,
+								visited,
+							),
+						);
+					}}
+					onBack={back}
+					onNext={next}
+				/>
+			)}
+
+			{finishing && (
+				<FinishStep
+					doc={doc}
+					complete={complete}
+					asksDpa={asksDpa}
+					dpa={dpa}
+					onDpa={setDpa}
+					confirmation={confirmation}
+					error={error}
+					submitting={submitting}
+					onBack={back}
+					onFill={() => goTo(firstEmpty)}
+					onSign={submit}
+				/>
+			)}
+		</Stack>
+	);
+
+	const pages = pdf.data ? (
+		<PdfPages data={pdf.data} overlay={overlay} fileHref={fileHref} />
+	) : pdf.isError ? (
+		<FileError
+			missing={
+				pdf.error instanceof AccountsApiError && pdf.error.status === 404
+			}
+			orgId={orgId}
+			retrying={pdf.isFetching}
+			onRetry={() => void pdf.refetch()}
+			access={doc.access}
+		/>
+	) : (
+		<Stack align="center" py="xl">
+			<Loader size="sm" />
+		</Stack>
+	);
+
 	return (
 		<>
-			<Header doc={doc} orgId={orgId}>
-				{doc.access === "member" && (
-					<Anchor
-						component="button"
-						size="sm"
-						onClick={() => setSignerOpen(true)}
-						style={{ whiteSpace: "nowrap" }}
+			<Header doc={doc} orgId={orgId} />
+			{wide ? (
+				<Group
+					align="flex-start"
+					gap="xl"
+					wrap="nowrap"
+					maw={1280}
+					mx="auto"
+					px="lg"
+					py="lg"
+				>
+					<Box style={{ flex: 1, minWidth: 0 }} maw={860}>
+						{pages}
+					</Box>
+					<Box
+						w={380}
+						style={{
+							alignSelf: "flex-start",
+							flexShrink: 0,
+							position: "sticky",
+							top: HEADER_HEIGHT + 24,
+						}}
 					>
-						<Trans>Someone else signs</Trans>
-					</Anchor>
-				)}
-			</Header>
-			<Box maw={860} mx="auto" px={{ base: 8, sm: "md" }} pt="md" pb={360}>
-				{pdf.data ? (
-					<PdfPages data={pdf.data} overlay={overlay} fileHref={fileHref} />
-				) : pdf.isError ? (
-					<FileError
-						missing={
-							pdf.error instanceof AccountsApiError && pdf.error.status === 404
-						}
-						orgId={orgId}
-						retrying={pdf.isFetching}
-						onRetry={() => void pdf.refetch()}
-						access={doc.access}
-					/>
-				) : (
-					<Stack align="center" py="xl">
-						<Loader size="sm" />
-					</Stack>
-				)}
-			</Box>
-
-			<Paper
-				pos="fixed"
-				bottom={0}
-				left={0}
-				right={0}
-				radius={0}
-				shadow="md"
-				withBorder
-				style={{ borderBottom: 0, borderLeft: 0, borderRight: 0, zIndex: 30 }}
-			>
-				<Box maw={860} mx="auto" px="md" pt="sm" pb="md">
-					<Group gap="xs" mb={8} wrap="nowrap">
-						<Progress
-							value={total ? (done / total) * 100 : 100}
-							size="sm"
-							style={{ flex: 1 }}
-							aria-label={t`Progress`}
-						/>
-						<Text
-							size="xs"
-							c="dimmed"
-							data-testid="sign-progress"
-							style={{ whiteSpace: "nowrap" }}
+						{/* Parchment with a quiet outline, so its white fields read as fields. */}
+						<Paper
+							p="lg"
+							bg="var(--app-background)"
+							style={{ border: "var(--app-stroke) solid var(--app-quiet)" }}
 						>
-							<Trans>
-								{done} of {total} filled
-							</Trans>
-						</Text>
-					</Group>
-
-					{!field && !finishing && (
-						<Stack gap="xs">
-							<Text size="sm">
-								{doc.signing_note ?? (
-									<Trans>Your signature completes the agreement.</Trans>
-								)}
-							</Text>
-							<Button size="md" onClick={next} data-testid="sign-start">
-								<Trans>Start</Trans>
-							</Button>
-						</Stack>
-					)}
-
-					{field && (
-						<FieldPanel
-							key={field.id}
-							field={field}
-							value={values[field.id]}
-							onValue={(v) => setValues((old) => ({ ...old, [field.id]: v }))}
-							signature={signature}
-							initials={initials}
-							nameForSignature={nameValue}
-							// Adopting a signature is the step's decision, so it also moves on.
-							onSignature={(img) => {
-								setSignature(img);
-								goTo(
-									nextStop(
-										fields,
-										values,
-										{ ...images, signature: true },
-										current,
-										visited,
-									),
-								);
-							}}
-							onInitials={(img) => {
-								setInitials(img);
-								goTo(
-									nextStop(
-										fields,
-										values,
-										{ ...images, initials: true },
-										current,
-										visited,
-									),
-								);
-							}}
-							canGoBack={previousField(fields, current) !== null}
-							onBack={back}
-							onNext={next}
-							nextDisabled={field.required && !isFilled(field, values, images)}
-						/>
-					)}
-
-					{finishing && (
-						<Stack gap="sm" data-testid="sign-finish">
-							<Text>
-								<Trans>Review and sign</Trans>
-							</Text>
-							{!complete && (
-								<Alert color="yellow" p="xs">
-									<Group justify="space-between" gap="xs">
-										<Text size="sm">
-											<Trans>Some required fields are still empty.</Trans>
-										</Text>
-										<Button
-											size="xs"
-											variant="light"
-											onClick={() =>
-												goTo(
-													nextStop(
-														fields,
-														values,
-														images,
-														null,
-														new Set(fields.map((f) => f.id)),
-													),
-												)
-											}
-										>
-											<Trans>Go to the next one</Trans>
-										</Button>
-									</Group>
-								</Alert>
-							)}
-							{doc.signing_note && (
-								<Text size="sm" c="dimmed">
-									{doc.signing_note}
-								</Text>
-							)}
-							{asksDpa && (
-								<Radio.Group
-									value={dpa}
-									onChange={(v) => setDpa(v as "yes" | "no")}
-									label={t`May you also agree to data processing for your organisation?`}
-									description={t`If not, the data processing agreement becomes a separate document for someone who may.`}
-								>
-									<Stack gap={6} mt={6}>
-										<Radio
-											value="yes"
-											label={t`Yes, I may`}
-											data-testid="dpa-yes"
-										/>
-										<Radio
-											value="no"
-											label={t`No, someone else signs it`}
-											data-testid="dpa-no"
-										/>
-									</Stack>
-								</Radio.Group>
-							)}
-							{confirmation && (!asksDpa || dpa) && (
-								<Paper withBorder p="xs" radius="sm" bg="var(--app-quiet)">
-									<Text
-										size="sm"
-										data-testid="sign-confirmation"
-										style={{ overflowWrap: "anywhere" }}
-									>
-										{confirmation}
-									</Text>
-								</Paper>
-							)}
-							{error && (
-								<Text size="sm" c="red">
-									{error}
-								</Text>
-							)}
-							<Group justify="space-between">
-								<Button variant="default" onClick={back}>
-									<Trans>Back</Trans>
-								</Button>
-								<Button
-									size="md"
-									disabled={!canSign}
-									loading={submitting}
-									onClick={submit}
-									data-testid="sign-submit"
-								>
-									<Trans>Sign</Trans>
-								</Button>
-							</Group>
-						</Stack>
-					)}
-				</Box>
-			</Paper>
-
-			<NameSignerModal
-				opened={signerOpen}
-				onClose={() => setSignerOpen(false)}
-				orgId={orgId}
-				docId={doc.id}
-				locale={i18n.locale}
-			/>
+							{panel}
+						</Paper>
+					</Box>
+				</Group>
+			) : (
+				<>
+					<Box maw={860} mx="auto" px={8} pt="md" pb={380}>
+						{pages}
+					</Box>
+					<Paper
+						pos="fixed"
+						bottom={0}
+						left={0}
+						right={0}
+						shadow="md"
+						bg="var(--app-background)"
+						style={{
+							borderTop: "var(--app-stroke) solid var(--app-quiet)",
+							zIndex: 30,
+						}}
+					>
+						<Box maw={860} mx="auto" px="md" pt="sm" pb="md">
+							{panel}
+						</Box>
+					</Paper>
+				</>
+			)}
 		</>
+	);
+}
+
+/** Back on the left, the one primary action on the right, always on one row. */
+function ActionRow({
+	onBack,
+	primary,
+}: {
+	onBack?: () => void;
+	primary: ReactNode;
+}) {
+	return (
+		<Group justify="space-between" wrap="nowrap" gap="sm">
+			{onBack ? (
+				<Button
+					onClick={onBack}
+					data-testid="sign-back"
+					style={{ flexShrink: 0 }}
+				>
+					<Trans>Back</Trans>
+				</Button>
+			) : (
+				<span />
+			)}
+			{primary}
+		</Group>
+	);
+}
+
+/**
+ * What the blue button says while a field is empty, and what pressing it then says. In
+ * the viewer's language: the field's own label is in the document's.
+ */
+function askFor(field: DocumentFieldT): { action: string; empty: string } {
+	if (field.kind === "name")
+		return { action: t`Fill in your name`, empty: t`Your name is empty.` };
+	if (field.kind === "role")
+		return {
+			action: t`Fill in your job title`,
+			empty: t`Your job title is empty.`,
+		};
+	if (field.kind === "date")
+		return { action: t`Fill in the date`, empty: t`The date is empty.` };
+	if (field.kind === "checkbox")
+		return { action: t`Tick the box`, empty: t`The box is not ticked yet.` };
+	switch (field.key) {
+		case "organisation":
+			return {
+				action: t`Fill in your organisation`,
+				empty: t`Your organisation is empty.`,
+			};
+		case "address":
+			return {
+				action: t`Fill in your address`,
+				empty: t`Your address is empty.`,
+			};
+		case "vat_number":
+			return {
+				action: t`Fill in your VAT number`,
+				empty: t`Your VAT number is empty.`,
+			};
+		case "po_number":
+			return {
+				action: t`Fill in your PO number`,
+				empty: t`Your PO number is empty.`,
+			};
+	}
+	const label = field.label;
+	return { action: t`Fill in ${label}`, empty: t`${label} is empty.` };
+}
+
+function FieldPanel({
+	field,
+	value,
+	onValue,
+	filled,
+	signature,
+	initials,
+	nameForSignature,
+	dateRange,
+	onSignature,
+	onInitials,
+	onBack,
+	onNext,
+}: {
+	field: DocumentFieldT;
+	value: string | boolean | undefined;
+	onValue: (v: string | boolean) => void;
+	filled: boolean;
+	signature: CapturedImage | null;
+	initials: CapturedImage | null;
+	nameForSignature: string;
+	/** The days a date field accepts: from the day the document was sent to today. */
+	dateRange: { min: string | undefined; max: string };
+	onSignature: (img: CapturedImage | null) => void;
+	onInitials: (img: CapturedImage | null) => void;
+	onBack: () => void;
+	onNext: () => void;
+}) {
+	// The panel is keyed by field, so these reset when the walk moves on.
+	const [redo, setRedo] = useState(false);
+	const [tried, setTried] = useState(false);
+	const input = useRef<HTMLInputElement>(null);
+	const ask = askFor(field);
+	const missing = field.required && !filled;
+	const label = (
+		<Group gap={6}>
+			<Text size="sm">{field.label}</Text>
+			{!field.required && (
+				<Text size="xs" c="dimmed">
+					<Trans>Optional</Trans>
+				</Text>
+			)}
+		</Group>
+	);
+
+	const advance = () => {
+		if (missing) {
+			setTried(true);
+			input.current?.focus();
+			return;
+		}
+		onNext();
+	};
+
+	const row = (
+		<ActionRow
+			onBack={onBack}
+			primary={
+				<Button
+					{...fitting}
+					variant="filled"
+					size="md"
+					onClick={advance}
+					data-testid="sign-next"
+					data-missing={missing ? "true" : undefined}
+				>
+					<FitLabel>{missing ? ask.action : <Trans>Next</Trans>}</FitLabel>
+				</Button>
+			}
+		/>
+	);
+
+	if (field.kind === "signature" || field.kind === "initials") {
+		const own = field.kind === "signature" ? signature : initials;
+		const shown = own ?? (field.kind === "initials" ? signature : null);
+		if (!shown || redo)
+			return (
+				<Stack gap={6}>
+					{label}
+					<SignatureCapture
+						key={field.id}
+						purpose={field.kind}
+						suggestedText={nameForSignature}
+						onBack={onBack}
+						onCapture={(img) => {
+							(field.kind === "signature" ? onSignature : onInitials)(img);
+							setRedo(false);
+						}}
+					/>
+				</Stack>
+			);
+		return (
+			<Stack gap="sm">
+				{label}
+				<Group justify="space-between" wrap="nowrap">
+					<Image
+						src={shown.dataUrl}
+						alt={field.label}
+						h={56}
+						w="auto"
+						fit="contain"
+					/>
+					<Button variant="subtle" size="xs" onClick={() => setRedo(true)}>
+						{field.kind === "initials" && !initials ? (
+							<Trans>Draw initials instead</Trans>
+						) : (
+							<Trans>Change</Trans>
+						)}
+					</Button>
+				</Group>
+				{field.kind === "signature" && (
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Initials fields use this signature unless you draw initials.
+						</Trans>
+					</Text>
+				)}
+				{row}
+			</Stack>
+		);
+	}
+
+	if (field.kind === "checkbox") {
+		return (
+			<Stack gap="sm">
+				<Checkbox
+					ref={input}
+					label={field.label}
+					checked={value === true}
+					onChange={(e) => {
+						onValue(e.currentTarget.checked);
+						setTried(false);
+					}}
+					error={tried && missing ? ask.empty : undefined}
+					size="md"
+				/>
+				{row}
+			</Stack>
+		);
+	}
+
+	const isDate = field.kind === "date";
+	return (
+		<Stack gap="sm">
+			<TextInput
+				ref={input}
+				key={field.id}
+				label={label}
+				size="md"
+				autoFocus
+				// A date is picked, not typed; the document keeps it as day-month-year.
+				type={isDate ? "date" : undefined}
+				min={isDate ? dateRange.min : undefined}
+				max={isDate ? dateRange.max : undefined}
+				value={
+					typeof value === "string" ? (isDate ? inputDate(value) : value) : ""
+				}
+				onChange={(e) => {
+					const v = e.currentTarget.value;
+					onValue(isDate ? documentDate(v) : v);
+					setTried(false);
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") advance();
+				}}
+				error={tried && missing ? ask.empty : undefined}
+				autoComplete={
+					field.kind === "name"
+						? "name"
+						: field.key === "organisation"
+							? "organization"
+							: field.key === "address"
+								? "street-address"
+								: "off"
+				}
+				data-testid="sign-field-input"
+			/>
+			{row}
+		</Stack>
+	);
+}
+
+/**
+ * The last step: the sentence the signature confirms, the data processing question on an
+ * offer, and Sign. Until everything is filled and answered, the blue button names what is
+ * left instead of signing.
+ */
+function FinishStep({
+	doc,
+	complete,
+	asksDpa,
+	dpa,
+	onDpa,
+	confirmation,
+	error,
+	submitting,
+	onBack,
+	onFill,
+	onSign,
+}: {
+	doc: DocumentDetailT;
+	complete: boolean;
+	asksDpa: boolean;
+	dpa: "yes" | "no" | null;
+	onDpa: (v: "yes" | "no") => void;
+	confirmation: string | null;
+	error: string | null;
+	submitting: boolean;
+	onBack: () => void;
+	onFill: () => void;
+	onSign: () => void;
+}) {
+	const [tried, setTried] = useState(false);
+	const unanswered = asksDpa && dpa === null;
+	return (
+		<Stack gap="sm" data-testid="sign-finish">
+			<Text size="lg">
+				<Trans>Review and sign</Trans>
+			</Text>
+			{!complete && (
+				<Text size="sm" c="var(--app-warning)">
+					<Trans>Some required fields are still empty.</Trans>
+				</Text>
+			)}
+			<LegalDocuments doc={doc} />
+			{asksDpa && (
+				<Radio.Group
+					value={dpa}
+					onChange={(v) => onDpa(v as "yes" | "no")}
+					label={t`May you also agree to data processing for your organisation?`}
+					description={t`If not, the data processing agreement becomes a separate document for someone who may.`}
+					error={tried && unanswered ? t`Choose one to continue.` : undefined}
+				>
+					<Stack gap={6} mt={6}>
+						<Radio value="yes" label={t`Yes, I may`} data-testid="dpa-yes" />
+						<Radio
+							value="no"
+							label={t`No, someone else signs it`}
+							data-testid="dpa-no"
+						/>
+					</Stack>
+				</Radio.Group>
+			)}
+			{confirmation && !unanswered && (
+				<Paper withBorder p="xs" bg="var(--app-quiet)">
+					<Text
+						size="sm"
+						data-testid="sign-confirmation"
+						style={{ overflowWrap: "anywhere" }}
+					>
+						{confirmation}
+					</Text>
+				</Paper>
+			)}
+			{complete && !unanswered && (
+				<Text size="xs" c="dimmed" data-testid="sign-consent">
+					<Trans>
+						By selecting Sign, you sign electronically. Your electronic
+						signature is as binding as one made by hand.
+					</Trans>
+				</Text>
+			)}
+			{error && (
+				<Text size="sm" c="red">
+					{error}
+				</Text>
+			)}
+			<ActionRow
+				onBack={onBack}
+				primary={
+					!complete ? (
+						<Button
+							{...fitting}
+							variant="filled"
+							size="md"
+							onClick={onFill}
+							data-testid="sign-fill-next"
+						>
+							<FitLabel>
+								<Trans>Fill in what is left</Trans>
+							</FitLabel>
+						</Button>
+					) : (
+						<Button
+							{...fitting}
+							variant="filled"
+							size="md"
+							loading={submitting}
+							disabled={!doc.sha256}
+							onClick={() => {
+								if (unanswered) return setTried(true);
+								onSign();
+							}}
+							data-testid="sign-submit"
+						>
+							{unanswered ? (
+								<FitLabel>
+									<Trans>Answer the question</Trans>
+								</FitLabel>
+							) : (
+								<Trans>Sign</Trans>
+							)}
+						</Button>
+					)
+				}
+			/>
+		</Stack>
+	);
+}
+
+/** What the agreement includes, as each text stood when the document was sent. */
+const legalName = (kind: string) =>
+	kind === "terms"
+		? t`General terms and conditions`
+		: kind === "sla"
+			? t`Service level agreement`
+			: t`Data processing agreement`;
+
+/**
+ * The legal documents the agreement is made of, each opening the version this document
+ * pinned (the pages above are drawn on a canvas, so the links inside them do nothing). The
+ * DPA is its own document: its text is the page being signed.
+ */
+export function LegalDocuments({ doc }: { doc: DocumentDetailT }) {
+	const pins = doc.legal.filter((l) => l.text_url);
+	if (doc.kind === "dpa" || pins.length === 0) return null;
+	return (
+		<Stack gap={4} data-testid="sign-documents">
+			<Text size="sm">
+				<Trans>Documents that form the agreement</Trans>
+			</Text>
+			{pins.map((pin) => (
+				<LegalLink key={pin.kind} pin={pin} />
+			))}
+		</Stack>
+	);
+}
+
+function LegalLink({ pin }: { pin: DocumentDetailT["legal"][number] }) {
+	const href = useLegalHref(pin);
+	const name = legalName(pin.kind);
+	return (
+		<Anchor
+			href={href ?? undefined}
+			target="_blank"
+			rel="noreferrer"
+			size="sm"
+			data-testid={`sign-document-${pin.kind}`}
+		>
+			{name} ({pin.version})
+		</Anchor>
 	);
 }
 
@@ -627,159 +1139,6 @@ function FieldBox({
 	);
 }
 
-function FieldPanel({
-	field,
-	value,
-	onValue,
-	signature,
-	initials,
-	nameForSignature,
-	onSignature,
-	onInitials,
-	canGoBack,
-	onBack,
-	onNext,
-	nextDisabled,
-}: {
-	field: DocumentFieldT;
-	value: string | boolean | undefined;
-	onValue: (v: string | boolean) => void;
-	signature: CapturedImage | null;
-	initials: CapturedImage | null;
-	nameForSignature: string;
-	onSignature: (img: CapturedImage | null) => void;
-	onInitials: (img: CapturedImage | null) => void;
-	canGoBack: boolean;
-	onBack: () => void;
-	onNext: () => void;
-	nextDisabled: boolean;
-}) {
-	// The panel is keyed by field, so this resets when the walk moves on.
-	const [redo, setRedo] = useState(false);
-	const label = (
-		<Group gap={6}>
-			<Text size="sm">{field.label}</Text>
-			{!field.required && (
-				<Text size="xs" c="dimmed">
-					<Trans>Optional</Trans>
-				</Text>
-			)}
-		</Group>
-	);
-
-	const nav = (
-		<Group justify="space-between" mt="xs">
-			<Button variant="default" onClick={onBack} disabled={!canGoBack}>
-				<Trans>Back</Trans>
-			</Button>
-			<Button
-				size="md"
-				onClick={onNext}
-				disabled={nextDisabled}
-				data-testid="sign-next"
-			>
-				<Trans>Next</Trans>
-			</Button>
-		</Group>
-	);
-
-	if (field.kind === "signature" || field.kind === "initials") {
-		const own = field.kind === "signature" ? signature : initials;
-		const shown = own ?? (field.kind === "initials" ? signature : null);
-		return (
-			<Stack gap={6}>
-				{label}
-				{shown && !redo ? (
-					<Group justify="space-between" wrap="nowrap">
-						<Image
-							src={shown.dataUrl}
-							alt={field.label}
-							h={56}
-							w="auto"
-							fit="contain"
-						/>
-						<Button variant="subtle" size="xs" onClick={() => setRedo(true)}>
-							{field.kind === "initials" && !initials ? (
-								<Trans>Draw initials instead</Trans>
-							) : (
-								<Trans>Change</Trans>
-							)}
-						</Button>
-					</Group>
-				) : (
-					<SignatureCapture
-						key={field.id}
-						purpose={field.kind}
-						suggestedText={nameForSignature}
-						onCapture={(img) => {
-							(field.kind === "signature" ? onSignature : onInitials)(img);
-							setRedo(false);
-						}}
-					/>
-				)}
-				{field.kind === "signature" && shown && !redo && (
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Initials fields use this signature unless you draw initials.
-						</Trans>
-					</Text>
-				)}
-				{shown && !redo ? (
-					nav
-				) : (
-					<Group mt="xs">
-						<Button variant="default" onClick={onBack} disabled={!canGoBack}>
-							<Trans>Back</Trans>
-						</Button>
-					</Group>
-				)}
-			</Stack>
-		);
-	}
-
-	if (field.kind === "checkbox") {
-		return (
-			<Stack gap={6}>
-				<Checkbox
-					label={field.label}
-					checked={value === true}
-					onChange={(e) => onValue(e.currentTarget.checked)}
-					size="md"
-				/>
-				{nav}
-			</Stack>
-		);
-	}
-
-	return (
-		<Stack gap={6}>
-			<TextInput
-				key={field.id}
-				label={label}
-				size="md"
-				autoFocus
-				value={typeof value === "string" ? value : ""}
-				onChange={(e) => onValue(e.currentTarget.value)}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" && !nextDisabled) onNext();
-				}}
-				placeholder={field.kind === "date" ? "dd-mm-yyyy" : undefined}
-				autoComplete={
-					field.kind === "name"
-						? "name"
-						: field.key === "organisation"
-							? "organization"
-							: field.key === "address"
-								? "street-address"
-								: "off"
-				}
-				data-testid="sign-field-input"
-			/>
-			{nav}
-		</Stack>
-	);
-}
-
 function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const href = usePdfHref(doc.signed_pdf_url);
@@ -788,7 +1147,7 @@ function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			<Header doc={doc} orgId={orgId} />
 			<Container size="xs" pt="10vh" px="md">
 				<Stack align="center" gap="md" ta="center" data-testid="sign-result">
-					<ThemeIcon size={56} radius="xl" color="green" variant="light">
+					<ThemeIcon size={56} color="green" variant="light">
 						<CheckIcon size={28} />
 					</ThemeIcon>
 					<Title order={3}>
@@ -829,79 +1188,6 @@ function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				</Stack>
 			</Container>
 		</>
-	);
-}
-
-function NameSignerModal({
-	opened,
-	onClose,
-	orgId,
-	docId,
-}: {
-	opened: boolean;
-	onClose: () => void;
-	orgId: string;
-	docId: string;
-	locale: string;
-}) {
-	const [name, setName] = useState("");
-	const [email, setEmail] = useState("");
-	const [role, setRole] = useState("");
-	const mutation = useAccountsMutation("nameSigner", { docId, orgId });
-	const fieldError = (key: string) =>
-		mutation.error instanceof AccountsApiError
-			? mutation.error.fields[key]
-			: undefined;
-	return (
-		<Modal
-			opened={opened}
-			onClose={onClose}
-			title={t`Someone else signs`}
-			centered
-		>
-			<Stack gap="sm">
-				<Text size="sm" c="dimmed">
-					<Trans>We send them their own link to this document.</Trans>
-				</Text>
-				<TextInput
-					label={t`Name`}
-					value={name}
-					onChange={(e) => setName(e.currentTarget.value)}
-					error={fieldError("name")}
-				/>
-				<TextInput
-					label={t`Email`}
-					type="email"
-					value={email}
-					onChange={(e) => setEmail(e.currentTarget.value)}
-					error={fieldError("email")}
-				/>
-				<TextInput
-					label={t`Role`}
-					description={t`Optional`}
-					value={role}
-					onChange={(e) => setRole(e.currentTarget.value)}
-				/>
-				<Group justify="flex-end">
-					<Button
-						loading={mutation.isPending}
-						onClick={() =>
-							mutation.mutate(
-								{ body: { email, name, role } },
-								{
-									onSuccess: () => {
-										toast.success(t`Sent to ${name}`);
-										onClose();
-									},
-								},
-							)
-						}
-					>
-						<Trans>Send the link</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Modal>
 	);
 }
 

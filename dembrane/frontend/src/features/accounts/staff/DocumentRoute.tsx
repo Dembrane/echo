@@ -7,6 +7,7 @@ import {
 	Badge,
 	Box,
 	Button,
+	CopyButton,
 	Group,
 	Loader,
 	Stack,
@@ -38,6 +39,7 @@ import { AccountsI18n } from "../i18n";
 import { PdfPages } from "../pdf/PdfPages";
 import { StaffOnly } from "./AccountCardRoute";
 import { PushOfferModal } from "./PushOfferModal";
+import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
 
 /**
  * Staff: one document as the customer will get it. A draft offer is read here, changed
@@ -61,6 +63,8 @@ function DocumentPage() {
 	const fileHref = usePdfHref(doc.data?.file_url);
 	const send = useAccountsMutation("sendDocument", { orgId: orgId ?? "" });
 	const [editing, setEditing] = useState(false);
+	const [confirming, setConfirming] = useState(false);
+	const [emailOpen, setEmailOpen] = useState(false);
 	useDocumentTitle(doc.data ? `${doc.data.title} | dembrane` : "dembrane");
 
 	if (doc.isLoading) return <Loader m="xl" size="sm" />;
@@ -106,7 +110,7 @@ function DocumentPage() {
 					py="xs"
 					style={{ background: "var(--app-background)", zIndex: 5 }}
 				>
-					<Stack gap={2} style={{ flex: "1 1 260px", minWidth: 0 }}>
+					<Stack gap="xs" style={{ flex: "1 1 260px", minWidth: 0 }}>
 						<Anchor
 							component={I18nLink}
 							to={`/admin/accounts/${orgId}`}
@@ -114,7 +118,7 @@ function DocumentPage() {
 							c="dimmed"
 						>
 							<Group gap={4}>
-								<ArrowLeftIcon size={14} />
+								<ArrowLeftIcon size={16} />
 								{orgName || <Trans>Back to the account</Trans>}
 							</Group>
 						</Anchor>
@@ -146,19 +150,7 @@ function DocumentPage() {
 								</Button>
 								<Button
 									variant="filled"
-									loading={send.isPending}
-									onClick={() =>
-										send.mutate(
-											{ params: { docId } },
-											{
-												onError: (e) => void notifyError(e),
-												onSuccess: () =>
-													toast.success(
-														t`Offer sent. The customer sees it the next time they sign in.`,
-													),
-											},
-										)
-									}
+									onClick={() => setConfirming(true)}
 									data-testid="draft-send"
 								>
 									<Trans>Send offer</Trans>
@@ -192,6 +184,55 @@ function DocumentPage() {
 						</Trans>
 					</Text>
 				)}
+				{d.customer_links && !d.signed_at && (
+					<Stack gap="xs" data-testid="customer-links">
+						<Text size="sm" c="dimmed">
+							<Trans>
+								No email went to the customer. Send them these links in your own
+								email.
+							</Trans>
+						</Text>
+						{d.customer_email && (
+							<Box>
+								<Button
+									size="compact-sm"
+									variant="subtle"
+									onClick={() => setEmailOpen(true)}
+									data-testid="show-email-again"
+								>
+									<Trans>Show the email again</Trans>
+								</Button>
+							</Box>
+						)}
+						{[
+							{ label: t`Sign-in link`, value: d.customer_links.sign_in },
+							{ label: t`Offer link`, value: d.customer_links.document },
+						].map(({ label, value }) => (
+							<Stack key={label} gap={0} style={{ minWidth: 0 }}>
+								<Group gap="xs" align="center">
+									<Text size="sm" c="dimmed">
+										{label}
+									</Text>
+									<CopyButton value={value}>
+										{({ copied, copy }) => (
+											<Button
+												size="compact-sm"
+												variant="subtle"
+												onClick={copy}
+												aria-label={t`Copy ${label}`}
+											>
+												{copied ? <Trans>Copied</Trans> : <Trans>Copy</Trans>}
+											</Button>
+										)}
+									</CopyButton>
+								</Group>
+								<Text size="sm" style={{ overflowWrap: "anywhere" }}>
+									{value}
+								</Text>
+							</Stack>
+						))}
+					</Stack>
+				)}
 				{pdf.data ? (
 					<PdfPages data={pdf.data} fileHref={fileHref} />
 				) : pdf.isError ? (
@@ -202,6 +243,39 @@ function DocumentPage() {
 					<Loader size="sm" />
 				)}
 			</Stack>
+			{draftOffer && (
+				<SendOfferConfirmModal
+					opened={confirming}
+					orgName={orgName}
+					loading={send.isPending}
+					onCancel={() => setConfirming(false)}
+					onApprove={() =>
+						send.mutate(
+							{ body: { notify: false }, params: { docId } },
+							{
+								onError: (e) => void notifyError(e),
+								onSuccess: (sent) => {
+									setConfirming(false);
+									if (sent.customer_email) setEmailOpen(true);
+									else
+										toast.success(
+											t`Offer sent. It is in the customer's account; no email went out.`,
+										);
+								},
+							},
+						)
+					}
+				/>
+			)}
+			<CustomerEmailModal
+				opened={emailOpen}
+				onClose={() => setEmailOpen(false)}
+				email={d.customer_email}
+				contactName={
+					card.data?.members.find((m) => m.email === d.customer_email?.to)
+						?.name ?? null
+				}
+			/>
 			{draftOffer && (
 				<PushOfferModal
 					opened={editing}

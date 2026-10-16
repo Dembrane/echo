@@ -261,36 +261,52 @@ export async function buildManifest(request: SnapshotRequest, store: AnalysisSto
   return { ...body, contentHash: contentHash(body) };
 }
 
-/** Builds and publishes a snapshot against the view's current one; SnapshotConflict when it moved. */
+/**
+ * Builds and publishes a snapshot against the view's current one. When the caller names no
+ * expected snapshot, the head is whatever the view is at now: two writers racing on a
+ * fresh view both read it empty, so the loser re-reads the head and assembles again instead
+ * of failing. A caller that names one gets SnapshotConflict when the view moved.
+ */
 export async function assembleSnapshot(
   request: SnapshotRequest,
   store: AnalysisStore,
   expectedPrevious?: string | null,
 ): Promise<Snapshot> {
-  const scope = await store.ensureScope({
-    projectId: request.projectId,
-    kind: "view",
-    ownerId: request.viewId,
-    scopeKey: request.scopeKey,
-  });
-  const expected = expectedPrevious === undefined ? scope.currentSnapshotId : expectedPrevious;
-  const manifest = await buildManifest(request, store);
-  return store.publishSnapshot(
-    {
+  for (let attempt = 0; ; attempt++) {
+    const scope = await store.ensureScope({
       projectId: request.projectId,
-      scopeId: scope.id,
-      viewId: request.viewId,
-      manifest,
-      contentHash: String(manifest.contentHash),
-      manifestVersion: SNAPSHOT_MANIFEST_VERSION,
-      settings: { ...(request.settings ?? {}) },
-      versions: { ...(request.versions ?? {}) },
-      embeddingConfig: request.embeddingConfig ? { ...request.embeddingConfig } : null,
-      createdBy: request.createdBy ?? null,
-      sourceEventId: request.sourceEventId ?? null,
-    },
-    expected,
-  );
+      kind: "view",
+      ownerId: request.viewId,
+      scopeKey: request.scopeKey,
+    });
+    const expected = expectedPrevious === undefined ? scope.currentSnapshotId : expectedPrevious;
+    const manifest = await buildManifest(request, store);
+    try {
+      return await store.publishSnapshot(
+        {
+          projectId: request.projectId,
+          scopeId: scope.id,
+          viewId: request.viewId,
+          manifest,
+          contentHash: String(manifest.contentHash),
+          manifestVersion: SNAPSHOT_MANIFEST_VERSION,
+          settings: { ...(request.settings ?? {}) },
+          versions: { ...(request.versions ?? {}) },
+          embeddingConfig: request.embeddingConfig ? { ...request.embeddingConfig } : null,
+          createdBy: request.createdBy ?? null,
+          sourceEventId: request.sourceEventId ?? null,
+        },
+        expected,
+      );
+    } catch (err) {
+      if (
+        expectedPrevious !== undefined ||
+        !(err instanceof SnapshotConflict) ||
+        attempt === CONFLICT_RETRIES - 1
+      )
+        throw err;
+    }
+  }
 }
 
 /** A pinned snapshot by id, or a view's current snapshot; null when not this project's. */

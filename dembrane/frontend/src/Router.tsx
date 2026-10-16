@@ -28,6 +28,7 @@ import {
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
+import { LegacyProjectRedirect } from "./routes/project/LegacyProjectRedirect";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
@@ -188,13 +189,21 @@ const AdminSettingsRoute = createLazyNamedRoute(
 // Customer accounts (src/features/accounts). Dashboard only and lazy: pdf.js, the
 // signature pad and the cal.com step load with these screens, never with the shell or the
 // portal.
-const AccountRoute = createLazyNamedRoute(
+const AccountRedirect = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountRoute"),
-	"AccountRoute",
+	"AccountRedirect",
 );
-const SignRoute = createLazyNamedRoute(
-	() => import("./features/accounts/signing/SignRoute"),
-	"SignRoute",
+const AccountTasksRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountRoute"),
+	"AccountTasksRoute",
+);
+const AccountDocumentsRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountRoute"),
+	"AccountDocumentsRoute",
+);
+const SignGate = createLazyNamedRoute(
+	() => import("./features/accounts/signing/SignGate"),
+	"SignGate",
 );
 const AccountCardRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/AccountCardRoute"),
@@ -207,6 +216,10 @@ const NewDemoRoute = createLazyNamedRoute(
 const DemoRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/DemoRoute"),
 	"DemoRoute",
+);
+const DemoDraftRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/DemoDraftRoute"),
+	"DemoDraftRoute",
 );
 const AccountPickerRoute = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountPickerRoute"),
@@ -524,9 +537,18 @@ export const mainRouter = createBrowserRouter([
 						index: true,
 					},
 					{
-						// The customer's account page; ranked above the splat below.
-						element: <AccountRoute />,
+						// The customer account's pages; ranked above the splat below. The old
+						// single account page now lives on the overview.
+						element: <AccountRedirect />,
 						path: ":organisationId/account",
+					},
+					{
+						element: <AccountTasksRoute />,
+						path: ":organisationId/tasks",
+					},
+					{
+						element: <AccountDocumentsRoute />,
+						path: ":organisationId/documents",
 					},
 					{
 						// Splat so tab state lives in the path
@@ -589,15 +611,29 @@ export const mainRouter = createBrowserRouter([
 				path: "w/:workspaceId",
 			},
 			{
-				// Signing is one focused screen without the dashboard chrome: a person
-				// named to sign may not be a member of the organisation, and it has to
-				// work on a phone. Protected sends a signed-out signer to
-				// /login?next=..., which lands them back here.
+				// Pre-v3 links (bookmarks, emails, ?next) open the project in its workspace.
 				element: (
 					<Protected>
-						<SignRoute />
+						<LegacyProjectRedirect />
 					</Protected>
 				),
+				path: "projects",
+			},
+			{
+				element: (
+					<Protected>
+						<LegacyProjectRedirect />
+					</Protected>
+				),
+				path: "projects/:projectId/*",
+			},
+			{
+				// Signing is one focused screen without the dashboard chrome: a person
+				// named to sign may not be a member of the organisation, and it has to
+				// work on a phone. SignGate shows a signed-out invitee (?invite=) their
+				// invitation and a code sign-in; anyone else signed out goes through
+				// /login?next=..., which lands them back here.
+				element: <SignGate />,
 				path: "o/:organisationId/account/documents/:docId/sign",
 			},
 			{
@@ -624,7 +660,7 @@ export const mainRouter = createBrowserRouter([
 				path: "release-notes",
 			},
 			{
-				// "Tasks" in the Help menu, when the caller has account tasks in several orgs.
+				// The organisations with account tasks, one card each; once Help's "Tasks".
 				children: [{ element: <AccountPickerRoute />, index: true }],
 				element: (
 					<Protected>
@@ -669,6 +705,10 @@ export const mainRouter = createBrowserRouter([
 					{ element: <AdminSettingsRoute />, path: ":tab" },
 					{ element: <NewDemoRoute />, path: "accounts/new-demo" },
 					{ element: <DemoRoute />, path: "accounts/demos/:demoId" },
+					{
+						element: <DemoDraftRoute />,
+						path: "accounts/demos/:demoId/draft/:deckLanguage",
+					},
 					{ element: <AccountCardRoute />, path: "accounts/:orgId" },
 					{
 						element: <StaffDocumentRoute />,

@@ -118,6 +118,10 @@ export const flows: Record<string, Flow> = {
 		params: { demoId: "$demo" },
 		roles: ["staff"],
 	},
+	"/admin/accounts/demos/:demoId/draft/:deckLanguage": {
+		params: { deckLanguage: "en", demoId: "$demo" },
+		roles: ["staff"],
+	},
 	"/admin/accounts/new-demo": { roles: ["staff"] },
 	"/check-your-email": { auth: false },
 	"/connect-agent": {},
@@ -127,7 +131,7 @@ export const flows: Record<string, Flow> = {
 	"/o": {},
 	"/o/:organisationId/*": {
 		params: {
-			"*": ["overview", "usage", "billing", "training", "agents", "members"],
+			"*": ["overview", "usage", "billing", "agents", "members"],
 			organisationId: "$org",
 		},
 	},
@@ -135,6 +139,8 @@ export const flows: Record<string, Flow> = {
 	"/o/:organisationId/account/documents/:docId/sign": {
 		params: { docId: "$doc", organisationId: "$org" },
 	},
+	"/o/:organisationId/documents": { params: { organisationId: "$org" } },
+	"/o/:organisationId/tasks": { params: { organisationId: "$org" } },
 	"/onboarding": {
 		skip: "shown only before onboarding completes; the check's login has completed it",
 	},
@@ -143,6 +149,8 @@ export const flows: Record<string, Flow> = {
 	"/present/screen/:presentationId": {
 		params: { presentationId: "$presentation" },
 	},
+	"/projects": REDIRECT,
+	"/projects/:projectId/*": REDIRECT,
 	"/register": { auth: false },
 	"/release-notes": {},
 	"/request-password-reset": { auth: false },

@@ -402,7 +402,9 @@ function checkWords(text, file, line, { lead = false } = {}) {
 	if (!s) return;
 	const hits = [];
 	if (/\bRetry\b/.test(s)) hits.push('"Retry" (say "Try again")');
-	if (/^Next\s*[→›»>]?$/.test(s)) hits.push('"Next" (say "Continue")');
+	// "Next" is allowed: a step's pill says it when its full label does not fit beside
+	// Back (Jor, 12 Oct 2026). "Next →" with an arrow is still a slip.
+	if (/^Next\s*[→›»>]$/.test(s)) hits.push('"Next →" (say "Next")');
 	if (/\bLogin\b/.test(s)) hits.push('"Login" (say "Log in")');
 	if (/\bLogout\b/.test(s)) hits.push('"Logout" (say "Log out")');
 	if (/\bsign in\b/i.test(s)) hits.push('"Sign in" (say "Log in")');

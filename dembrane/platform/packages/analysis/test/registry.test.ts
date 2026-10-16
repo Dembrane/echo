@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import "../src/recipes";
+import { listRecipesDoc } from "../src/bff";
 import { contentHash } from "../src/hashing";
 import { getRecipe, listRecipes, recipeDefinition, recipeMetadata } from "../src/registry";
 import python from "./fixtures/python-recipes.json" with { type: "json" };
@@ -43,4 +44,11 @@ test("definition hashes are stable", () => {
       }))(byId.get("arguments") as never),
     ),
   );
+});
+
+test("the recipe list users see leaves out the integration fixture and internal recipes", () => {
+  const ids = ((listRecipesDoc().recipes as { id: string }[]) ?? []).map((r) => r.id);
+  expect(ids).toContain("arguments");
+  expect(ids).not.toContain("integration.fixture_delivery");
+  expect(ids).not.toContain("map.fact_check_assessment");
 });

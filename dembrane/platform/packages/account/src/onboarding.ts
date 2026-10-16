@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@dembrane/core";
+import { NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { type InviteCtx, notifyWorkspaceJoin, onboardedUser } from "./invites/accept";
@@ -14,16 +14,15 @@ const ANSWERS_LIMIT = { name: "onboarding_answers", capacity: 10, windowSeconds:
  * One-time onboarding, safe to repeat. Creates the app_user row, accepts every pending
  * invite for the user's verified email, and creates a personal org with a default
  * workspace only when the user has legacy projects to move or no invite of any kind (an
- * invited user belongs to the inviter's org, not a stray one of their own).
+ * invited user belongs to the inviter's org, not a stray one of their own, on a repeat too).
  */
-export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { org_name: string }) {
+export async function completeOnboarding(
+  ctx: InviteCtx,
+  who: Signed,
+  body: { org_name?: string | null },
+) {
   const { store, now, deps } = ctx;
   await deps.limiter.check(ONBOARDING_LIMIT, who.directusUserId);
-  const orgName = body.org_name.trim();
-  if (!orgName)
-    throw new BadRequestError("organisation.name_required", {
-      message: "Organization name is required",
-    });
 
   const profile = await store.directusProfile(who.directusUserId);
   let me = await store.appUserByDirectusId(who.directusUserId);
@@ -132,10 +131,19 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   let orgId: string | null = null;
   let workspaceId = firstWorkspaceId;
 
-  if (hasOwnProjects || (!joinedAnOrg && !joinedAnyWorkspace && !hadPendingInvite)) {
-    orgId = await store.ownedOrgId(userId);
+  const invited = joinedAnOrg || joinedAnyWorkspace || hadPendingInvite;
+  const owned = await store.ownedOrgId(userId);
+  // A repeat has no invite left to accept: someone who joined on an earlier call still
+  // belongs to the inviter's org, and only an owner goes back to an org of their own.
+  const belongs = invited || owned ? null : await store.belonging(userId);
+  if (belongs) workspaceId = belongs.workspaceId;
+
+  if (hasOwnProjects || (!invited && !belongs)) {
+    orgId = owned;
     if (!orgId) {
-      orgId = await store.createOrg({ name: orgName, createdBy: userId }, now);
+      // A code sign-in has no name to suggest one, so an unnamed org is named after the email.
+      const name = body.org_name?.trim() || defaultOrgName(email ?? profile?.email ?? "");
+      orgId = await store.createOrg({ name, createdBy: userId }, now);
       await store.createMembership("org", { orgId, userId, role: "owner" }, now);
     }
     let personal = (await store.defaultWorkspace(orgId))?.id ?? null;
@@ -271,4 +279,10 @@ async function notifyStaff(
       context: `onboarding follow-up / ${me.id}`,
     });
   }
+}
+
+/** "jane's Organisation" for jane@acme.com. */
+export function defaultOrgName(email: string): string {
+  const local = email.split("@")[0]?.trim();
+  return local ? `${local}'s Organisation`.slice(0, 100) : "My Organisation";
 }

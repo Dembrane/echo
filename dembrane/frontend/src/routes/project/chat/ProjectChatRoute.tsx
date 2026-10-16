@@ -88,6 +88,7 @@ import {
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
+import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
 
 // useChat hands back a failed response as an Error whose message is the body.
@@ -850,7 +851,13 @@ export const ProjectChatRoute = () => {
 							{...testId("chat-error-alert")}
 						>
 							<Text>
-								<Trans>An error occurred.</Trans>
+								{isNoAnswer(error) ? (
+									<Trans>
+										The AI couldn't answer this question. Try rewording it.
+									</Trans>
+								) : (
+									<Trans>An error occurred.</Trans>
+								)}
 							</Text>
 							<Button
 								onClick={() => reload()}

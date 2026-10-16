@@ -99,6 +99,30 @@ test("sign-in is handed the address the API resolved, not one the caller named",
   expect(seen).toEqual(["198.51.100.7", "198.51.100.8"]);
 });
 
+test("a sign-in code is sent at most once a minute per email, before Better Auth replaces it", async () => {
+  let sent = 0;
+  const auth = {
+    handler: async () => {
+      sent++;
+      return Response.json({ success: true });
+    },
+    api: { getSession: async () => null },
+  } as unknown as Deps["auth"];
+  const app = buildApp(deps({ auth }));
+  const send = (email: string) =>
+    app.request("/api/auth/email-otp/send-verification-otp", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, type: "sign-in" }),
+    });
+  expect((await send("Jane@acme.com")).status).toBe(200);
+  const again = await send("jane@acme.com ");
+  expect(again.status).toBe(429);
+  expect(((await again.json()) as { code: string }).code).toBe("rate_limit.exceeded");
+  expect((await send("bob@acme.com")).status).toBe(200);
+  expect(sent).toBe(2);
+});
+
 test("ready fails when the database does not answer", async () => {
   const res = await buildApp(deps({ pingDb: () => Promise.reject(new Error("down")) })).request(
     "/ready",

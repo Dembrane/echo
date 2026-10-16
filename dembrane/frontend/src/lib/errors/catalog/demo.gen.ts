@@ -28,6 +28,18 @@ export const demo = {
     audience: "staff",
     description: "Publish was asked for a demo that is not a finished draft.",
   },
+  "demo.unpublish_not_published": {
+    action: "none",
+    detail: "Only a published demo can be unpublished",
+    audience: "staff",
+    description: "Unpublish was asked for a demo that is not published or a finished draft.",
+  },
+  "demo.deck_not_ready": {
+    action: "none",
+    detail: "The demo has no draft to open yet",
+    audience: "staff",
+    description: "The demo's deck was asked for while the demo is still building or has failed.",
+  },
   "demo.contact_not_created": {
     action: "retry",
     detail: "The contact was not created",

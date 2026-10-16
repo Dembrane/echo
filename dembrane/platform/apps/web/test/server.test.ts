@@ -10,6 +10,10 @@ mkdirSync(join(dist, "assets"));
 writeFileSync(join(dist, "index.html"), "<html>app</html>");
 writeFileSync(join(dist, "assets", "app-abc.js"), "console.log(1)");
 writeFileSync(join(dist, "version.json"), '{"v":1}');
+// What the build's precompress step writes next to each text file.
+writeFileSync(join(dist, "assets", "app-abc.js.br"), "br-bytes");
+writeFileSync(join(dist, "assets", "app-abc.js.gz"), "gz-bytes");
+writeFileSync(join(dist, "index.html.br"), "br-index");
 
 let upstream: ReturnType<typeof Bun.serve>;
 let openStreamAborted: Promise<void> = Promise.resolve();
@@ -42,6 +46,11 @@ beforeAll(() => {
           }),
           { headers: { "content-type": "text/event-stream" } },
         );
+      }
+      if (u.pathname === "/api/gzipped") {
+        return new Response(Bun.gzipSync(JSON.stringify({ ok: true })), {
+          headers: { "content-type": "application/json", "content-encoding": "gzip" },
+        });
       }
       return Response.json({
         path: u.pathname + u.search,
@@ -85,6 +94,50 @@ test("hashed assets are cached for a year; a missing asset is a 404, not the app
   expect(ok.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
   const missing = await handler()(new Request("https://dash.example/assets/gone.js"));
   expect(missing.status).toBe(404);
+});
+
+const get = (path: string, headers: Record<string, string> = {}) =>
+  handler()(new Request(`https://dash.example${path}`, { headers }));
+
+test("assets go out as brotli when the browser takes it, else gzip, else as built", async () => {
+  const br = await get("/assets/app-abc.js", { "accept-encoding": "gzip, deflate, br" });
+  expect(br.headers.get("content-encoding")).toBe("br");
+  expect(await br.text()).toBe("br-bytes");
+  expect(br.headers.get("content-type")).toContain("javascript");
+  expect(br.headers.get("vary")).toBe("Accept-Encoding");
+  expect(br.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+
+  const gz = await get("/assets/app-abc.js", { "accept-encoding": "gzip" });
+  expect(gz.headers.get("content-encoding")).toBe("gzip");
+  expect(await gz.text()).toBe("gz-bytes");
+
+  const plain = await get("/assets/app-abc.js");
+  expect(plain.headers.get("content-encoding")).toBeNull();
+  expect(await plain.text()).toBe("console.log(1)");
+  expect(plain.headers.get("vary")).toBe("Accept-Encoding");
+});
+
+test("an encoding the browser refuses with q=0 is not sent", async () => {
+  const res = await get("/assets/app-abc.js", { "accept-encoding": "br;q=0, gzip;q=0.5" });
+  expect(res.headers.get("content-encoding")).toBe("gzip");
+});
+
+test("index.html is sent compressed on client-side routes too", async () => {
+  const res = await get("/en-US/w/123/projects", { "accept-encoding": "br" });
+  expect(res.headers.get("content-encoding")).toBe("br");
+  expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
+  expect(res.headers.get("cache-control")).toBe("no-cache");
+});
+
+test("a Range request gets the file as built, never a compressed copy", async () => {
+  const res = await get("/assets/app-abc.js", { "accept-encoding": "br", range: "bytes=0-3" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+});
+
+test("a file without a compressed copy goes out as built", async () => {
+  const res = await get("/version.json", { "accept-encoding": "br, gzip" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+  expect(await res.text()).toBe('{"v":1}');
 });
 
 test("path traversal cannot leave the dist directory", async () => {
@@ -145,7 +198,14 @@ test("without a shared secret neither header is forwarded", async () => {
 test("event streams pass through the proxy", async () => {
   const res = await handler()(new Request("https://dash.example/api/stream"));
   expect(res.headers.get("content-type")).toBe("text/event-stream");
+  expect(res.headers.get("content-encoding")).toBeNull();
   expect(await res.text()).toBe("event: connected\n\n");
+});
+
+test("a compressed API response is passed on once, not encoded twice", async () => {
+  const res = await get("/api/gzipped", { "accept-encoding": "gzip" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+  expect(await res.json()).toEqual({ ok: true });
 });
 
 test("a browser that goes away cancels the upstream stream", async () => {

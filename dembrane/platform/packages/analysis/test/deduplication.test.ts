@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { contentHash } from "../src/hashing";
 import { promptFingerprint } from "../src/recipes/deduplication";
 import {
+  candidateThreshold,
   type DeduplicationParams,
   deduplicate,
   discoverCandidates,
@@ -70,3 +71,19 @@ for (const c of python.cases) {
 
 /** Named like Python's builtin, so a failed call records the same "RuntimeError: boom". */
 class RuntimeError extends Error {}
+
+test("qwen3-embedding-8b has a calibrated threshold, an unknown model none", () => {
+  const p = (embeddingModel: string): DeduplicationParams => ({
+    embeddingModel,
+    similarityThreshold: null,
+    maxGroupSize: 8,
+    maxCandidateGroups: 250,
+    concurrency: 4,
+  });
+  expect(candidateThreshold(p("openai_compatible/qwen3-embedding-8b"))).toEqual([
+    0.89,
+    "calibrated",
+  ]);
+  expect(candidateThreshold(p("vertex/gemini-embedding-001"))).toEqual([0.92, "calibrated"]);
+  expect(candidateThreshold(p("some-new-model"))).toEqual([null, "uncalibrated"]);
+});

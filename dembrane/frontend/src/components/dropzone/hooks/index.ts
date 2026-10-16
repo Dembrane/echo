@@ -2,7 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
-import { initiateAndUploadConversationChunk } from "@/lib/api";
+import {
+	initiateAndUploadConversationChunk,
+	UploadFailedError,
+} from "@/lib/api";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
 
 export const useUploadConversation = () => {
@@ -21,6 +24,8 @@ export const useUploadConversation = () => {
 			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => initiateAndUploadConversationChunk(payload),
 		onError: (error) => {
+			// The upload already toasted which files failed.
+			if (error instanceof UploadFailedError) return;
 			void notifyError(error);
 		},
 		onMutate: () => {
@@ -38,7 +43,9 @@ export const useUploadConversation = () => {
 			invalidateConversationCounts(queryClient);
 			toast.success("Conversation(s) uploaded successfully");
 		},
-		retry: 3, // Reduced retry count to avoid too many duplicate attempts
+		// A retry would re-run the whole upload and create new conversations.
+		// Each file already retries its storage upload inside.
+		retry: false,
 	});
 };
 
@@ -176,10 +183,25 @@ export const useConversationUploader = () => {
 			// Update refs first
 			const newErrors = { ...errorsRef.current };
 			const errorMessage = uploadMutation.error?.message || "Upload failed";
+			const uploadError = uploadMutation.error;
 
-			fileNames.forEach((key) => {
-				newErrors[key] = errorMessage;
-			});
+			if (uploadError instanceof UploadFailedError) {
+				// Only the failed files are in error; the others did finish.
+				const completed = { ...progressRef.current };
+				const failedNames = new Set(uploadError.failed.map((f) => f.name));
+				uploadError.failed.forEach((f) => {
+					newErrors[f.name] = f.error.message || "Upload failed";
+				});
+				fileNames.forEach((key) => {
+					if (!failedNames.has(key)) completed[key] = 100;
+				});
+				progressRef.current = completed;
+				setUploadProgress(completed);
+			} else {
+				fileNames.forEach((key) => {
+					newErrors[key] = errorMessage;
+				});
+			}
 			errorsRef.current = newErrors;
 
 			// Then update state - do this once rather than per file

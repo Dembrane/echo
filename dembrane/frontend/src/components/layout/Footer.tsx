@@ -5,6 +5,7 @@ import {
 	LEGAL_PRIVACY_URL,
 	LEGAL_TERMS_URL,
 	PREVIEW_PR,
+	REGION,
 } from "@/config";
 
 // PR previews only: which pull request this deployment was built from.
@@ -39,6 +40,11 @@ export const Footer = () => (
 				dembrane B.V. {new Date().getFullYear()}, all rights reserved.
 			</Trans>
 		</Text>
+		{REGION === "eu" && (
+			<Text size="xs" c="dimmed" data-testid="footer-region-eu">
+				<Trans>Proudly hosted in the EU</Trans>
+			</Text>
+		)}
 		{PREVIEW_PR && <PreviewLine {...PREVIEW_PR} />}
 	</Stack>
 );

@@ -468,6 +468,7 @@
       "name": "@dembrane/llm",
       "dependencies": {
         "@ai-sdk/google-vertex": "^5.0.95",
+        "@ai-sdk/openai-compatible": "3.0.57",
         "@ai-sdk/provider": "*",
         "@dembrane/observability": "workspace:*",
         "ai": "^7.0.118",

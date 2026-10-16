@@ -4,9 +4,12 @@ import { offerDetail } from "../contract/fixtures.gen";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
+	documentDate,
 	fillConfirmation,
+	inputDate,
 	isComplete,
 	isFilled,
+	localIsoDate,
 	nextRequired,
 	nextStop,
 	orderFields,
@@ -217,5 +220,17 @@ describe("requestValues", () => {
 
 	it("prints dates day-month-year", () => {
 		expect(todayForDocument(new Date(2026, 8, 3))).toBe("03-09-2026");
+	});
+
+	it("moves a date between the date input and the document", () => {
+		expect(localIsoDate(new Date(2026, 8, 3))).toBe("2026-09-03");
+		expect(inputDate("03-09-2026")).toBe("2026-09-03");
+		expect(documentDate("2026-09-03")).toBe("03-09-2026");
+		// What the date input gives for a half-typed or cleared date, and what an old
+		// free-text value looks like, is empty rather than a wrong day.
+		expect(documentDate("")).toBe("");
+		expect(inputDate("")).toBe("");
+		expect(inputDate("asdf")).toBe("");
+		expect(documentDate("03-09-2026")).toBe("");
 	});
 });

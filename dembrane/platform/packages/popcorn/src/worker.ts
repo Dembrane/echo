@@ -4,14 +4,18 @@ import { DrizzleAccessStore } from "@dembrane/access";
 import {
   type AnalysisRuntime,
   analysisRuntime,
+  EmbeddingService,
   type ExecutorDeps,
+  embeddingInputHash,
   type JobSink,
+  PRODUCERS_KEY,
+  type ProducerServices,
   type RuntimeDeps,
   type SnapshotHook,
 } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
-import type { Logger } from "@dembrane/observability";
+import { correlation, type Logger, withCorrelation } from "@dembrane/observability";
 import {
   defineJob,
   type JobDefinition,
@@ -24,11 +28,11 @@ import { z } from "zod";
 import { analysisDeck, type DeckAnalysis, deckViewHook } from "./deck";
 import { publishNudge } from "./events";
 import { popcornTick } from "./jobs";
-import { dict, orStr, pyIso } from "./py";
+import { dict, list, orStr, pyIso } from "./py";
 import type { PopcornFlags } from "./service";
 import { client, popcornStore, type Row } from "./storage";
 import { PopcornModel } from "./tick/model";
-import { reconcileMissingTicks, runPopcornTick, type TickDeps } from "./tick/run";
+import { reconcileMissingTicks, runPopcornTick, type SimilarFor, type TickDeps } from "./tick/run";
 import { tickStore } from "./tick/storage";
 
 /**
@@ -138,6 +142,8 @@ export interface TickArgs {
   readonly loopId: string;
   readonly tickKind: string;
   readonly requestId: string | null;
+  /** The conversations whose finish booked the read. */
+  readonly conversationIds?: readonly string[] | null;
 }
 
 /** One id per request, so both deliveries of an on-request tick are one run. */
@@ -148,6 +154,34 @@ export function tickWorkflowId(requestId: string | null, taskId?: string): strin
 /** The lease token of a workflow: stable across its executions, distinct between workflows. */
 export function leaseToken(workflowId: string): number {
   return createHash("sha1").update(workflowId).digest().readInt32BE(0) & 0x7fffffff;
+}
+
+// One per executor, so the embedding deployment is probed once per worker, not once per read.
+const similarByExecutor = new WeakMap<ExecutorDeps, SimilarFor>();
+
+/** Vectors for position texts through the analysis embeddings, stored per project. */
+function similarFrom(executor: ExecutorDeps): SimilarFor {
+  const held = similarByExecutor.get(executor);
+  if (held) return held;
+  // A failed probe is tried again by the next read.
+  let identity: ReturnType<ProducerServices["probe"]> | null = null;
+  const similar: SimilarFor = async (projectId, texts) => {
+    const services = executor.services[PRODUCERS_KEY] as ProducerServices;
+    identity ??= services.probe().catch((err) => {
+      identity = null;
+      throw err;
+    });
+    const service = new EmbeddingService(executor.store, await identity, services.embed);
+    const batch = await service.ensure(projectId, texts);
+    const out = new Map<string, number[]>();
+    for (const t of texts) {
+      const v = batch.vectors.get(embeddingInputHash(t));
+      if (v) out.set(t, v);
+    }
+    return out;
+  };
+  similarByExecutor.set(executor, similar);
+  return similar;
 }
 
 export function tickDeps(
@@ -171,6 +205,7 @@ export function tickDeps(
       ? (p, a) => analysis.adopt?.requestMap(p, a) ?? Promise.resolve()
       : null,
     notifyReady: deps.notifyReady ?? null,
+    similar: analysis.executor ? similarFrom(analysis.executor) : null,
     flags: deps.flags,
     participantBaseUrl: deps.participantBaseUrl,
     adminBaseUrl: deps.adminBaseUrl,
@@ -199,11 +234,13 @@ export async function dispatchDueTicks(
     try {
       if (!loopId) throw new Error("popcorn_tick payload missing loop_id");
       const requestId = orStr(payload.request_id) || null;
+      const conversationIds = list(payload.conversation_ids).map(String);
       await start({
         workflowId: tickWorkflowId(requestId, String(row.id)),
         loopId,
         tickKind: orStr(payload.tick_kind, "scheduled"),
         requestId,
+        ...(conversationIds.length && { conversationIds }),
       });
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -242,15 +279,26 @@ export function popcornWorker(deps: PopcornWorkerDeps): {
       // A resumed workflow reruns its one step: the tick is written to be re-read from the
       // state it left, and the lease token it holds is its own.
       workflow(TICK_WORKFLOW, async (args: TickArgs) => {
-        const outcome = await step("tick", async () => {
-          const result = await runPopcornTick(
-            tickDeps(deps, args.workflowId, analysis),
-            args.loopId,
-            args.tickKind,
-            args.requestId,
-          );
-          return result.status;
-        });
+        // Model calls are metered under the kind of read, e.g. popcorn.tick.finish.
+        const c = correlation();
+        const outcome = await withCorrelation(
+          {
+            ...c,
+            requestId: c?.requestId ?? args.workflowId,
+            operation: `popcorn.tick.${args.tickKind}`,
+          },
+          () =>
+            step("tick", async () => {
+              const result = await runPopcornTick(
+                tickDeps(deps, args.workflowId, analysis),
+                args.loopId,
+                args.tickKind,
+                args.requestId,
+                args.conversationIds ?? null,
+              );
+              return result.status;
+            }),
+        );
         deps.logger.info({ loop_id: args.loopId, outcome }, "popcorn tick finished");
       });
       await queue.work(popcornTick, { concurrency: 8 }, async (p, job) => {

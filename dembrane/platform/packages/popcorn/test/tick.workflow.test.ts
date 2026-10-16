@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createDb, migrate } from "@dembrane/db";
 import { FakeCompleter } from "@dembrane/llm";
-import { createLogger, initTracing } from "@dembrane/observability";
+import { correlation, createLogger, initTracing } from "@dembrane/observability";
 import { installQueueSchema, Queue } from "@dembrane/queue";
 import postgres from "postgres";
 import { popcornTick } from "../src/jobs";
@@ -36,7 +36,11 @@ run("popcorn tick workflow on DBOS", () => {
   let database: ReturnType<typeof createDb>;
   let queue: Queue;
   let deps: PopcornWorkerDeps;
-  const fake = new FakeCompleter().on("Transcript id:", JSON.stringify({ items: [] }));
+  const operations: (string | undefined)[] = [];
+  const fake = new FakeCompleter().on("Transcript id:", () => {
+    operations.push(correlation()?.operation);
+    return JSON.stringify({ items: [] });
+  });
   const logger = createLogger({ service: "t", release: "r", env: "test", level: "error" });
   const { tracer } = initTracing({ service: "t", release: "r", env: "test", sampleRatio: 0 });
 
@@ -82,6 +86,8 @@ run("popcorn tick workflow on DBOS", () => {
     });
     const calls = fake.calls.length;
     expect(calls).toBe(2);
+    // Metered under the kind of read.
+    expect(operations).toEqual(["popcorn.tick.manual", "popcorn.tick.manual"]);
     await queue.enqueue(popcornTick, { loopId: ids.loop, tickKind: "manual", requestId: REQUEST });
     await Bun.sleep(1500);
     const runs = await raw`select id from agent_loop_run where loop_id = ${ids.loop}`;

@@ -440,7 +440,7 @@ run("demos made in echo", () => {
     expect(await store.mayReceiveCode(w.db, "joop@voorbeeldstad.example", w.clock.now)).toBe(false);
   });
 
-  test("sending the demo's offer releases the held contact and emails them the offer", async () => {
+  test("sending the demo's offer releases the held contact; with notify it emails them the offer", async () => {
     const { published } = await publishHeld("lotte@voorbeeldstad.example");
     w.jobs.jobs.length = 0;
     const sent = await call(
@@ -448,7 +448,7 @@ run("demos made in echo", () => {
       "POST",
       `/api/v2/admin/accounts/${published.org_id}/documents/${published.offer_document_id}/send`,
       "staff",
-      {},
+      { notify: true },
     );
     expect(sent.status).toBe(200);
     expect(await store.mayReceiveCode(w.db, "lotte@voorbeeldstad.example", w.clock.now)).toBe(true);
@@ -578,7 +578,9 @@ run("demos made in echo", () => {
     const page = K.AccountPage.parse(
       (await call(w, "GET", `/api/v2/orgs/${demo.org_id}/account`, "signer")).data,
     );
-    expect(page.documents.map((d) => d.id)).toEqual([demo.offer_document_id as string]);
+    // The offer, and the DPA that goes out with it.
+    expect(page.documents.map((d) => d.kind).sort()).toEqual(["dpa", "offer"]);
+    expect(page.documents.some((d) => d.id === demo.offer_document_id)).toBe(true);
     expect(page.tasks.some((t) => t.code === "sign_offer" && t.status === "open")).toBe(true);
   });
 

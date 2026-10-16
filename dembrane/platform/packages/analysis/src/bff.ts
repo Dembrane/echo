@@ -37,6 +37,7 @@ import {
   UnknownResultScope,
 } from "./mapview";
 import { ASSESSMENT_RECIPE_ID } from "./recipes";
+import { RECIPE_ID as INTEGRATION_RECIPE_ID } from "./recipes/integration";
 import { listRecipes, pyRepr, recipeMetadata, sortedStrings } from "./registry";
 import { RevisionService } from "./revisions";
 import type { AnalysisRuntime } from "./runtime";
@@ -60,6 +61,8 @@ export interface BffDeps {
 
 /** Recipes that run only from their own feature: an assessment records what a fact-check found. */
 export const INTERNAL_RECIPES = new Set([ASSESSMENT_RECIPE_ID]);
+/** The integration fixture stays runnable for the parity scenarios but is not offered to users. */
+const UNLISTED_RECIPES = new Set([INTEGRATION_RECIPE_ID]);
 /** Client idempotency keys live apart from the keys the platform makes itself. */
 export const CLIENT_KEY_PREFIX = "client:";
 export const MAX_PAGE = 200;
@@ -200,7 +203,7 @@ export function revisionDoc(r: ObjectRevision): Json {
 export function listRecipesDoc(): Json {
   return {
     recipes: listRecipes()
-      .filter((r) => !INTERNAL_RECIPES.has(r.id))
+      .filter((r) => !INTERNAL_RECIPES.has(r.id) && !UNLISTED_RECIPES.has(r.id))
       .map(recipeMetadata),
   };
 }

@@ -8,12 +8,37 @@ import {
   primaryKey,
   text,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 /** One row per live worker process; a stale row marks a dead worker whose workflows get resumed. */
 export const dbos_executor_heartbeat = pgTable("dbos_executor_heartbeat", {
   executor_id: text("executor_id").primaryKey(),
   last_seen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * One row per unfinished workflow that was running on a worker that stopped: how often, and
+ * when recovery set it aside instead of resuming it. The recovery sweep deletes the row once
+ * the workflow finishes or a person resumes it.
+ */
+export const dbos_workflow_lost_worker = pgTable("dbos_workflow_lost_worker", {
+  workflow_id: text("workflow_id").primaryKey(),
+  /** The queue it ran on. DBOS clears its own copy on a cancelled workflow; a resume reads this one. */
+  queue_name: text("queue_name"),
+  lost: integer("lost").notNull(),
+  set_aside_at: timestamp("set_aside_at", { withTimezone: true }),
+});
+
+/**
+ * What a large popcorn session's tensions keep between reads (popcorn tick/scale.ts): positions
+ * per conversation, the pairs found and their verdicts. Kept apart from agent_loop so the
+ * deck's frequent reads and writes never carry it. Written only by the popcorn tick.
+ */
+export const popcorn_tensions_cache = pgTable("popcorn_tensions_cache", {
+  loop_id: uuid("loop_id").primaryKey(),
+  cache: jsonb("cache").notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // Fixed-window counters for rate limits (per user or per IP). Unlogged: a crash may
