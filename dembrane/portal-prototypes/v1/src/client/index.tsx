@@ -24,7 +24,7 @@ function App() {
   if (projectId && !isProjectId(projectId)) return <ProjectNotFound />;
   if (projectId) {
     const base = `/${parts.map(encodeURIComponent).join("/")}`;
-    if (page === "start") return <Start projectId={projectId} />;
+    if (page === "start") return <Start projectId={projectId} base={base} />;
     if (page === "host") return <HostConfigPage projectId={projectId} />;
     return <ProjectHome projectId={projectId} base={base} />;
   }
