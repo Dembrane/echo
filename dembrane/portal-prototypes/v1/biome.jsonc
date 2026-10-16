@@ -1,0 +1,25 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  // Skips what .gitignore does: node_modules, dist, .wrangler.
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!env.d.ts"]
+  },
+  // Reads Tailwind's @source in src/client/styles.css.
+  "css": { "parser": { "tailwindDirectives": true } },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "suspicious": { "noConsole": "error" },
+      "style": { "noNonNullAssertion": "error" }
+    }
+  },
+  "overrides": [
+    {
+      // The Worker logs failed syncs to the terminal.
+      "includes": ["src/server/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ]
+}

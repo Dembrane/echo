@@ -1,0 +1,10 @@
+{
+  "extends": "agents/tsconfig",
+  "compilerOptions": {
+    // The Worker and its Durable Object: no browser APIs.
+    "lib": ["ES2022"],
+    "types": ["node", "@cloudflare/workers-types", "./env.d.ts"]
+  },
+  // The page in src/client/ has tsconfig.client.json.
+  "include": ["src/server", "src/shared", "env.d.ts", "vite.config.ts"]
+}

@@ -1,0 +1,6 @@
+{
+  // The page, which runs in the browser. It keeps agents/tsconfig's Workers
+  // types too, since it imports the server's types.
+  "extends": "agents/tsconfig",
+  "include": ["src/client", "src/shared", "env.d.ts"]
+}

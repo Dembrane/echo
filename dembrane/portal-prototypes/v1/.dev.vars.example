@@ -1,0 +1,4 @@
+# Optional: wrangler.jsonc already defaults to these. Copy to .dev.vars to point elsewhere,
+# such as the API on the remote dev VM.
+VITE_DEV_API_PROXY=http://localhost:8080/
+DASHBOARD_URL=http://localhost:5173
