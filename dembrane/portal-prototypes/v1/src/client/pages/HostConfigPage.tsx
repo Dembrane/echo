@@ -2,6 +2,7 @@ import {
   Badge,
   Banner,
   Button,
+  Checkbox,
   Input,
   InputArea,
   LayerCard,
@@ -43,6 +44,28 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 
 const jsonText = (value: unknown) => (value == null ? "" : JSON.stringify(value, null, 2));
 
+const jsonTexts = (config: Config) =>
+  Object.fromEntries(
+    FIELDS.filter((f) => f.kind === "json").map((f) => [f.key, jsonText(config[f.key])]),
+  );
+
+/** `next`, except fields edited since `sent` was sent, which keep their edit. */
+function keepEdits<T extends Record<string, unknown>>(next: T, sent: T, current: T): T {
+  const out: Record<string, unknown> = { ...next };
+  for (const k of Object.keys(current)) if (!same(current[k], sent[k])) out[k] = current[k];
+  return out as T;
+}
+
+// Whether auto-sync was on, remembered per browser.
+const AUTO_SYNC_KEY = "autoSync";
+function readAutoSync() {
+  try {
+    return localStorage.getItem(AUTO_SYNC_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 /** The settings form for one project, read from and saved to its mirror. */
 export function HostConfigPage({ projectId, base }: { projectId: string; base: string }) {
   const toasts = useKumoToastManager();
@@ -55,16 +78,22 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autoSync, setAutoSync] = useState(readAutoSync);
 
   const show = useCallback((view: ConfigView) => {
     setState({ kind: "ready", view });
     setDraft(view.config);
-    setDrafts(
-      Object.fromEntries(
-        FIELDS.filter((f) => f.kind === "json").map((f) => [f.key, jsonText(view.config[f.key])]),
-      ),
-    );
+    setDrafts(jsonTexts(view.config));
   }, []);
+
+  function toggleAutoSync(on: boolean) {
+    setAutoSync(on);
+    try {
+      localStorage.setItem(AUTO_SYNC_KEY, String(on));
+    } catch {
+      // Private windows can refuse storage; the choice then lasts for this visit.
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -107,9 +136,11 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
   }, [draft, drafts, loaded]);
   const changed = Object.keys(changes);
 
-  async function save() {
+  async function save({ quiet = false } = {}) {
     setErrors({});
     setSaveError(null);
+    const sentDraft = draft;
+    const sentDrafts = drafts;
     const fields: Config = { ...changes };
     for (const f of FIELDS) {
       if (f.kind !== "json" || !(f.key in fields)) continue;
@@ -128,13 +159,18 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
       if (res.status === 401) return setState({ kind: "signed-out" });
       return setSaveError(errorMessage(res));
     }
-    show(res.body);
+    // Edits made while the save was out stay, to go in the next one.
+    setState({ kind: "ready", view: res.body });
+    setDraft((current) => keepEdits(res.body.config, sentDraft, current));
+    setDrafts((current) => keepEdits(jsonTexts(res.body.config), sentDrafts, current));
     const { rejected, pending } = res.body;
     if (rejected) {
       const byField = fieldErrors(rejected.error);
       setErrors(byField);
       if (!Object.keys(byField).length) setSaveError(errorMessage(rejected.error));
       toasts.add({ title: "Not saved", description: "The API refused it.", variant: "error" });
+    } else if (quiet) {
+      // Auto-sync saves on every pause; the badge shows how it went.
     } else if (pending.length) {
       toasts.add({
         title: "Saved here",
@@ -145,6 +181,15 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
       toasts.add({ title: "Saved", variant: "success" });
     }
   }
+
+  // With auto-sync on, changes save themselves once editing pauses. It holds off
+  // after a failed save until the next edit, rather than retrying in a loop.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: save reads the same state these name.
+  useEffect(() => {
+    if (!autoSync || !changed.length || saving || saveError) return;
+    const timer = setTimeout(() => save({ quiet: true }), 800);
+    return () => clearTimeout(timer);
+  }, [autoSync, changes, saving, saveError]);
 
   const title =
     state.kind === "ready" ? String(draft.name ?? "Untitled project") : "Project settings";
@@ -250,27 +295,45 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
                 value={f.kind === "json" ? drafts[f.key] : draft[f.key]}
                 pending={view.pending.includes(f.key)}
                 error={errors[f.key]}
-                onChange={(v) =>
-                  f.kind === "json"
-                    ? setDrafts((d) => ({ ...d, [f.key]: v as string }))
-                    : setDraft((d) => ({ ...d, [f.key]: v }))
-                }
+                onChange={(v) => {
+                  setSaveError(null);
+                  if (f.kind === "json") setDrafts((d) => ({ ...d, [f.key]: v as string }));
+                  else setDraft((d) => ({ ...d, [f.key]: v }));
+                }}
               />
             ))}
           </LayerCard.Primary>
         </LayerCard>
       ))}
 
-      <div className="sticky bottom-0 flex items-center justify-end gap-2 bg-kumo-base py-3">
+      <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-kumo-base py-3">
+        <Checkbox label="Auto-sync" checked={autoSync} onCheckedChange={toggleAutoSync} />
         <Text variant="secondary" size="sm">
-          {changed.length ? `${changed.length} changed` : "No changes"}
+          {saving
+            ? "Saving…"
+            : changed.length
+              ? `${changed.length} changed`
+              : autoSync
+                ? "All changes saved"
+                : "No changes"}
         </Text>
-        <Button variant="secondary" disabled={!changed.length || saving} onClick={() => show(view)}>
-          Discard
-        </Button>
-        <Button variant="primary" loading={saving} disabled={!changed.length} onClick={save}>
-          Save
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            disabled={autoSync || !changed.length || saving}
+            onClick={() => show(view)}
+          >
+            Discard
+          </Button>
+          <Button
+            variant="primary"
+            loading={saving && !autoSync}
+            disabled={autoSync || !changed.length}
+            onClick={() => save()}
+          >
+            Save
+          </Button>
+        </div>
       </div>
     </Shell>
   );
