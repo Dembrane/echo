@@ -125,7 +125,9 @@ export async function transcribeAudio(
   /** Words the speaker is likely to say (names, terms): Whisper spells them as given. */
   prompt?: string,
 ): Promise<string> {
-  const body = await requestTranscription(ep, audio, "json", language, signal, prompt);
+  // verbose_json, though only the text is used: for the same 30 second pieces of a recording that
+  // switches language, plain json returned 130 to 147 words and verbose_json 173 to 178.
+  const body = await requestTranscription(ep, audio, "verbose_json", language, signal, prompt);
   return typeof body.text === "string" ? body.text.trim() : "";
 }
 
