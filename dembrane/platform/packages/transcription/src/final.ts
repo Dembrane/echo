@@ -83,10 +83,11 @@ export class WhisperFinal implements FinalTranscriber {
   }
 
   async transcribe(input: FinalInput): Promise<FinalPiece> {
-    const hotwords = input.hotwords?.length ? input.hotwords.join(", ") : "";
+    // No prompt: asked for segments with a list of key terms as its prompt, Scaleway's
+    // whisper-large-v3 returned about half the words of real meetings (whole pieces came back
+    // empty); without the prompt nothing was lost. Next: spell key terms in a text pass after it.
     const out = await this.stt.transcribeSegments(input.audio, {
       language: input.language ?? null,
-      ...(hotwords && { prompt: hotwords }),
       ...(input.signal && { signal: input.signal }),
     });
     return {
