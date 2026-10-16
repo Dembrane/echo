@@ -1,6 +1,7 @@
 import { AudioError, fileFormatOf, planPieces } from "@dembrane/audio";
 import { schema } from "@dembrane/db";
 import type {
+  EditStats,
   FinalProvider,
   FinalTranscriber,
   FinalUsage,
@@ -32,6 +33,17 @@ export interface FinalSettings {
       customGuidancePrompt: string | null;
     },
   ) => Promise<string>;
+  /**
+   * The text pass: edits inside sentences only, ids and times untouched. Runs for the
+   * providers listed (Whisper's words are the ones that benefit); absent means off.
+   */
+  readonly edit?: {
+    readonly providers: readonly FinalProvider[];
+    run(
+      sentences: readonly Sentence[],
+      ctx: { language: string | null; keyTerms: readonly string[] | null },
+    ): Promise<{ sentences: Sentence[]; stats: EditStats }>;
+  };
 }
 
 /** Names the chunk list a final transcript was made from; the hand-over names its run the same way. */
@@ -162,14 +174,18 @@ export interface FinalPart {
   readonly model: string | null;
 }
 
-/** One piece through the provider; the checkpointed result is all the later steps need. */
-export async function transcribeFinalPiece(
-  d: PipelineDeps,
+export interface FinalContext {
+  readonly language: string;
+  readonly keyTerms: readonly string[] | null;
+  readonly anonymized: boolean;
+  readonly customGuidancePrompt: string | null;
+}
+
+/** What the project says about this conversation's language, key terms and redaction, read once per run. */
+export async function loadFinalContext(
+  d: Pick<PipelineDeps, "db">,
   conversationId: string,
-  piece: FinalPlan["pieces"][number],
-  transcriber: FinalTranscriber,
-  redact: FinalSettings["redact"],
-): Promise<FinalPart> {
+): Promise<FinalContext> {
   const [row] = await d.db
     .select({
       language: project.language,
@@ -181,34 +197,97 @@ export async function transcribeFinalPiece(
     .where(eq(conversation.id, conversationId))
     .limit(1);
   if (!row) throw new Error("Conversation not found");
+  return {
+    language: row.language || "en",
+    keyTerms: row.prompt
+      ? row.prompt
+          .split(",")
+          .map((w) => w.trim())
+          .filter(Boolean)
+      : null,
+    anonymized: Boolean(row.anonymized),
+    customGuidancePrompt: row.prompt,
+  };
+}
+
+/** One piece through the provider; its sentences keep times in the merged file. Redaction is not here: it runs once, on the final text. */
+export async function transcribeFinalPiece(
+  d: PipelineDeps,
+  piece: FinalPlan["pieces"][number],
+  transcriber: FinalTranscriber,
+  ctx: FinalContext,
+): Promise<FinalPart> {
   const blob = await d.audio.get(piece.key);
   if (!blob) throw new Error(`audio ${piece.key} not found in storage`);
-  const language = row.language || "en";
-  const hotwords = row.prompt ? row.prompt.split(",").map((w) => w.trim()) : null;
   const out = await transcriber.transcribe({
     audio: new Uint8Array(await blob.arrayBuffer()),
     seconds: piece.duration,
-    language,
-    hotwords,
+    language: ctx.language,
+    hotwords: ctx.keyTerms,
   });
   const sentences = out.sentences.map((s) => ({
     start: Math.round((s.start + piece.start) * 100) / 100,
     end: Math.round((s.end + piece.start) * 100) / 100,
     text: s.text,
   }));
-  const text = sentences.map((s) => s.text).join(" ");
-  if (row.anonymized)
-    return {
-      text: await redact(text, {
-        language,
-        hotwords,
-        customGuidancePrompt: row.prompt,
+  return {
+    text: sentences.map((s) => s.text).join(" "),
+    sentences,
+    usage: out.usage,
+    model: out.model,
+  };
+}
+
+export interface FinalText {
+  /** The sentences the player highlights; empty when the text was redacted, since the audio still holds the names. */
+  readonly sentences: readonly Sentence[];
+  readonly text: string;
+  readonly edit: EditStats | null;
+}
+
+/** The text pass over all pieces' sentences, when it is on for this provider. Ids are positions: they and the times survive. */
+export async function editFinal(
+  final: FinalSettings,
+  provider: FinalProvider,
+  parts: readonly FinalPart[],
+  ctx: FinalContext,
+): Promise<{ sentences: Sentence[]; edit: EditStats | null }> {
+  const all = parts.flatMap((p) => p.sentences);
+  if (!final.edit?.providers.includes(provider) || !all.length)
+    return { sentences: all, edit: null };
+  const r = await final.edit.run(all, { language: ctx.language, keyTerms: ctx.keyTerms });
+  return { sentences: r.sentences, edit: r.stats };
+}
+
+// One redaction call reads about this much text: the model keeps its attention and its answer fits.
+const REDACT_CHARS = 3000;
+
+/** Redaction once on the final text, in paragraphs of about 3000 characters cut at sentence ends. */
+export async function redactFinal(
+  final: FinalSettings,
+  sentences: readonly Sentence[],
+  ctx: FinalContext,
+): Promise<string> {
+  const groups: string[] = [];
+  let cur = "";
+  for (const s of sentences) {
+    if (cur && cur.length + s.text.length > REDACT_CHARS) {
+      groups.push(cur);
+      cur = "";
+    }
+    cur = cur ? `${cur} ${s.text}` : s.text;
+  }
+  if (cur) groups.push(cur);
+  const out: string[] = [];
+  for (const g of groups)
+    out.push(
+      await final.redact(g, {
+        language: ctx.language,
+        hotwords: ctx.keyTerms,
+        customGuidancePrompt: ctx.customGuidancePrompt,
       }),
-      sentences: [],
-      usage: out.usage,
-      model: out.model,
-    };
-  return { text, sentences, usage: out.usage, model: out.model };
+    );
+  return out.join("\n");
 }
 
 /**
@@ -224,19 +303,16 @@ export async function storeFinal(
   record: boolean,
   plan: FinalPlan,
   parts: readonly FinalPart[],
+  assembled: FinalText,
 ): Promise<boolean> {
   // Postgres text cannot hold a NUL byte, which Gemini now and then emits.
-  const text = (stripNul(parts.map((p) => p.text)) as string[])
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .join(parts.some((p) => p.sentences.length === 0) ? "\n" : " ")
-    .trim();
+  const text = (stripNul(assembled.text) as string).trim();
   if (!text) {
     d.logger.warn({ conversationId, provider }, "final transcript heard nothing; live text stays");
     return false;
   }
   if ((await currentChunkHash(d, conversationId)) !== hash) return false;
-  const sentences = stripNul(parts.flatMap((p) => p.sentences)) as Sentence[];
+  const sentences = stripNul(assembled.sentences) as Sentence[];
   const usage = parts.reduce(
     (t, p) => ({
       seconds: t.seconds + p.usage.seconds,
@@ -257,6 +333,7 @@ export async function storeFinal(
       ...usage,
       pieces: plan.pieces.length,
       hardCuts: plan.pieces.filter((p) => p.hardCut).length,
+      ...(assembled.edit && { textPass: assembled.edit }),
     },
     updated_at: now,
   };

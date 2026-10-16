@@ -9,6 +9,7 @@ import {
   completerConfigOf,
   createModels,
   embedderConfigOf,
+  type Models,
   modelsConfigOf,
   vertexCompleter,
   vertexEmbedder,
@@ -20,6 +21,7 @@ import { Queue } from "@dembrane/queue";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { queueSink } from "@dembrane/tenancy";
 import {
+  editSentences,
   type FinalTranscriber,
   GeminiFinal,
   GeminiTranscriber,
@@ -117,6 +119,8 @@ const models = createModels(modelsConfigOf(config.llm), {
 // the preview runs both on one conversation. The first one is the transcript people read.
 const transcriber = new GeminiTranscriber(models, logger);
 const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
+// The text pass reads Whisper's transcript with the Whisper provider's own text model.
+let whisperModels: Models | null = null;
 for (const provider of config.llm.finalTranscript) {
   const own = createModels(
     modelsConfigOf({
@@ -129,6 +133,7 @@ for (const provider of config.llm.finalTranscript) {
         logger.warn({ err }, "model call metering failed; later faults are silent"),
     },
   );
+  if (provider === "whisper") whisperModels = own;
   finalTranscribers[provider] =
     provider === "whisper" ? new WhisperFinal(own) : new GeminiFinal(own, logger);
 }
@@ -189,6 +194,14 @@ const regs = registrations({
       final: {
         providers: config.llm.finalTranscript,
         transcribers: finalTranscribers,
+        ...(config.llm.finalTextPass === "glm" &&
+          whisperModels && {
+            edit: {
+              providers: ["whisper" as const],
+              run: (sentences, ctx) =>
+                editSentences(whisperModels as Models, sentences, ctx, logger),
+            },
+          }),
         redact: async (text, o) =>
           (
             await transcriber.redactText({

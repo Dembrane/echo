@@ -1,8 +1,11 @@
 import { type StepConfig, step } from "@dembrane/queue";
 import {
+  editFinal,
   type FinalPart,
   type FinalPlan,
+  loadFinalContext,
   planFinal,
+  redactFinal,
   storeFinal,
   transcribeFinalPiece,
 } from "./final";
@@ -171,21 +174,47 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           retry.media,
         );
         if (!plan) return;
+        const ctx = await step(
+          "final-context",
+          () => loadFinalContext(d, p.conversationId),
+          retry.db,
+        );
         const parts: FinalPart[] = [];
         for (const piece of plan.pieces)
           parts.push(
             await step(
               "final-transcribe",
-              () =>
-                transcribeFinalPiece(d, p.conversationId, piece, transcriber, (text, o) =>
-                  final.redact(text, o),
-                ),
+              () => transcribeFinalPiece(d, piece, transcriber, ctx),
               retry.transcribe,
             ),
           );
+        // The text pass, then redaction, each once over the whole transcript. A failed text
+        // pass leaves Whisper's words; redaction that fails stops the run, since an anonymised
+        // conversation must never show text that was not redacted.
+        const edited = await step(
+          "final-edit",
+          () => editFinal(final, p.provider, parts, ctx),
+          retry.llm,
+        );
+        const assembled = ctx.anonymized
+          ? {
+              sentences: [],
+              text: await step(
+                "final-redact",
+                () => redactFinal(final, edited.sentences, ctx),
+                retry.llm,
+              ),
+              edit: edited.edit,
+            }
+          : {
+              sentences: edited.sentences,
+              text: edited.sentences.map((s) => s.text).join(" "),
+              edit: edited.edit,
+            };
         const wrote = await step(
           "final-store",
-          () => storeFinal(d, p.conversationId, p.hash, p.provider, p.record, plan, parts),
+          () =>
+            storeFinal(d, p.conversationId, p.hash, p.provider, p.record, plan, parts, assembled),
           retry.db,
         );
         if (wrote && p.record) await summarizeWithWebhook(d, p.conversationId, retry, true, false);

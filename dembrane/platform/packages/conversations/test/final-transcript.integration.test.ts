@@ -77,6 +77,20 @@ run("final transcript", () => {
       final: {
         providers: ["whisper", "gemini"],
         transcribers: { whisper, gemini },
+        edit: {
+          providers: ["whisper"],
+          run: async (sentences) => ({
+            sentences: sentences.map((x) => ({ ...x, text: `${x.text}!` })),
+            stats: {
+              sentences: sentences.length,
+              edited: sentences.length,
+              rejected: 0,
+              failedBatches: 0,
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          }),
+        },
         redact: async (text) => {
           redacted.push(text);
           return text.replaceAll("Zin", "<redacted>");
@@ -145,6 +159,11 @@ run("final transcript", () => {
     // The second piece's times are counted from the start of the merged file.
     expect(sentences.some((s) => s.start > 9)).toBe(true);
 
+    // The text pass ran for Whisper only, inside sentences: times unchanged, ids are positions.
+    expect(sentences.every((x) => x.text.endsWith("!"))).toBe(true);
+    expect((w.usage as { textPass?: { edited: number } }).textPass?.edited).toBe(sentences.length);
+    const g = rows.find((r) => r.provider === "gemini") as Record<string, unknown>;
+    expect(String(g.text)).not.toContain("!");
     // Readers see the record; the live chunk text is still there.
     const [r] = await record(cid);
     expect(r?.provider).toBe("whisper");

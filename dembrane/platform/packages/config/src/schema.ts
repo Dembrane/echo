@@ -190,6 +190,22 @@ export const schema = defineSchema({
       description:
         "Speech-to-text model on the OpenAI-compatible provider. It turns audio into text before a text model reads it.",
     }),
+    transcriptionLanguage: key(
+      "LLM_TRANSCRIPTION_LANGUAGE",
+      z.enum(["auto", "project"]).default("project"),
+      {
+        description:
+          "Language sent to the speech-to-text model. project forces the project's language on every piece: a piece in another language is then translated or dropped. auto lets the model hear each piece, which keeps recordings that switch language (measured: a Dutch piece came back as 2 words under project and in full under auto).",
+      },
+    ),
+    transcriptionKeyTerms: key("LLM_WHISPER_KEY_TERMS", bool.default(false), {
+      description:
+        "Send the project's key terms as the speech-to-text model's prompt. Off by default: on Scaleway's whisper-large-v3 the prompt made it return a third fewer words on a whole recording and nothing at all for some pieces.",
+    }),
+    finalTextPass: key("LLM_FINAL_TEXT_PASS", z.enum(["off", "glm"]).default("off"), {
+      description:
+        "A text model reads the Whisper final transcript once and edits inside its sentences only: key terms spelled as the project writes them, obvious mishearings, casing. Sentence ids and timings never change. off keeps Whisper's words. glm uses the text_fast group of the provider.",
+    }),
     reasoningEffort: key(
       "LLM_REASONING_EFFORT",
       z.enum(["none", "low", "medium", "high", "max"]).optional(),

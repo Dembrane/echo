@@ -4,6 +4,9 @@ import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provid
 import { FallbackModel } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import {
+  acceptable,
+  editRatio,
+  editSentences,
   GeminiTranscriber,
   isRecoverableTranscriptionError,
   parseSegments,
@@ -346,4 +349,84 @@ test("timed sentences are parsed from seconds or a clock and tidied into the pie
   ]);
   expect(toSeconds("1:02:03")).toBe(3723);
   expect(toSeconds("abc")).toBeNull();
+});
+
+function editModel(answer: (prompt: string) => unknown, seen: string[] = []): LanguageModelV4 {
+  return {
+    specificationVersion: "v4",
+    provider: "fake",
+    modelId: "edit-fake",
+    supportedUrls: {},
+    async doGenerate(opts: LanguageModelV4CallOptions) {
+      const user = (opts.prompt[1] as { content: { text: string }[] }).content[0]?.text ?? "";
+      seen.push(user);
+      return {
+        content: [{ type: "text", text: JSON.stringify(answer(user)) }],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: {
+          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+          outputTokens: { total: 5, text: 5, reasoning: 0 },
+        },
+        warnings: [],
+      } as never;
+    },
+    async doStream() {
+      throw new Error("not used");
+    },
+  };
+}
+
+const sentenceList = [
+  { start: 0, end: 4, text: "ik werk bij dem brane en praat met jorim" },
+  { start: 4.5, end: 9, text: "we hebben het over de roadmap voor volgende maand" },
+  { start: 9.5, end: 12, text: "salam aleikum" },
+];
+
+test("the text pass keeps ids and times and takes a small edit, refusing a rewrite and a made-up id", async () => {
+  const seen: string[] = [];
+  const models = {
+    model: () =>
+      editModel(
+        () => ({
+          sentences: [
+            { id: 0, text: "Ik werk bij Dembrane en praat met Jorim." },
+            {
+              id: 1,
+              text: "Completely different: here is a summary of the roadmap discussion and next steps.",
+            },
+            { id: 2, text: "Salam aleikum." },
+            { id: 7, text: "made up" },
+          ],
+        }),
+        seen,
+      ),
+    embedding: () => ({}) as never,
+  } as never;
+  const out = await editSentences(
+    models,
+    sentenceList,
+    { language: "nl", keyTerms: ["Dembrane", "Jorim"] },
+    logger,
+  );
+  expect(out.sentences.map((s) => [s.start, s.end])).toEqual(
+    sentenceList.map((s) => [s.start, s.end]),
+  );
+  expect(out.sentences[0]?.text).toBe("Ik werk bij Dembrane en praat met Jorim.");
+  expect(out.sentences[1]?.text).toBe(sentenceList[1]?.text);
+  expect(out.sentences[2]?.text).toBe("Salam aleikum.");
+  expect(out.stats).toMatchObject({ sentences: 3, edited: 2, rejected: 2, failedBatches: 0 });
+  expect(seen[0]).toContain("Dembrane, Jorim");
+  expect(seen[0]).toContain("0: ik werk bij dem brane");
+});
+
+test("a batch the model fails on stays as Whisper wrote it", async () => {
+  const models = {
+    model: () => editModel(() => ({ nothing: true })),
+    embedding: () => ({}) as never,
+  } as never;
+  const out = await editSentences(models, sentenceList, {}, logger);
+  expect(out.sentences).toEqual(sentenceList);
+  expect(out.stats.failedBatches).toBe(1);
+  expect(acceptable("a b c d", "a b c d e f g")).toBe(false);
+  expect(editRatio("one two three", "one two three")).toBe(0);
 });
