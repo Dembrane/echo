@@ -381,6 +381,7 @@ export function applyPublishedObjects(
   if (isEmpty(objects)) return bundle;
   const files: Json = { ...dict(bundle.files) };
   const quotes = new DeckQuotes();
+  const built = new Set<string>();
   const tabs = dict(args.settings.tabs);
   for (const [conversationId, revisions] of objects.popcorn) {
     const name = `popcorn/${conversationId}.json`;
@@ -397,6 +398,7 @@ export function applyPublishedObjects(
       popcornItem(r, conversationId, quotes.add, sources, args.host),
     );
     files[name] = current;
+    built.add(name);
   }
   if (objects.ownsTensions && truthy(tabs.tensions ?? true)) {
     const ordered = [...objects.tensions].sort(
@@ -406,13 +408,28 @@ export function applyPublishedObjects(
     files["tensions.json"] = {
       tensions: ordered.map((r, i) => tensionSlide(r, i + 1, quotes.add)),
     };
+    built.add("tensions.json");
   }
-  if (objects.ownsStakeholders && truthy(tabs.stakeholders ?? true))
+  if (objects.ownsStakeholders && truthy(tabs.stakeholders ?? true)) {
     files["stakeholders.json"] = stakeholdersSlide(
       objects.stakeholders,
       objects.relations,
       quotes.add,
     );
+    built.add("stakeholders.json");
+  }
+  // The session's slides cite the session's registry: carry those quotes into the deck's.
+  const theirs = new Map(
+    list(dict(files["quotes.json"]).quotes)
+      .filter(isRecord)
+      .map((q) => [pyStr(q.id), q]),
+  );
+  const carry = (id: string) => {
+    const q = theirs.get(id);
+    return q ? quotes.add({ text: q.text, conversationId: q.transcript }) : null;
+  };
+  for (const [name, file] of Object.entries(files))
+    if (name !== "quotes.json" && !built.has(name)) files[name] = withQuoteIds(file, carry);
   if (quotes.entries.length || "quotes.json" in files) {
     files["quotes.json"] = {
       quotes: quotes.entries.map((q) => {
@@ -425,6 +442,22 @@ export function applyPublishedObjects(
   }
   for (const tab of TOGGLEABLE_TABS) if (!truthy(tabs[tab] ?? true)) delete files[`${tab}.json`];
   return { ...bundle, files: markSyntheticFiles(files) };
+}
+
+/** `value` with every quote id it cites passed through `to`; an id `to` cannot place is dropped. */
+function withQuoteIds(value: unknown, to: (id: string) => string | null): unknown {
+  if (Array.isArray(value)) return value.map((v) => withQuoteIds(v, to));
+  if (!isRecord(value)) return value;
+  const out: Json = {};
+  for (const [key, v] of Object.entries(value)) {
+    if (key === "quoteIds" && Array.isArray(v))
+      out[key] = v.map((q) => to(pyStr(q))).filter((q): q is string => Boolean(q));
+    else if (key === "quoteId" && typeof v === "string") {
+      const id = to(v);
+      if (id) out[key] = id;
+    } else out[key] = withQuoteIds(v, to);
+  }
+  return out;
 }
 
 /**

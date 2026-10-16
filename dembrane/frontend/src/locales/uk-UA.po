@@ -1161,6 +1161,10 @@ msgstr "8 годин"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Синя смужка вгорі кожної вкладки з вашим текстом і посиланням назад на початок."
 
+#: src/components/release/releases.ts:68
+msgid "A cleaner, more accessible dashboard and portal."
+msgstr "Чистіша й доступніша панель керування та портал."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "Кілька швидких запитань, і ви всередині."
@@ -1964,6 +1968,10 @@ msgstr "Вибрано всі видимі розмови"
 #: src/components/workspace/OrganisationProjectsTable.tsx:190
 msgid "All workspaces"
 msgstr "Усі робочі простори"
+
+#: src/components/release/releases.ts:48
+msgid "All-new Present features: show live results on a big screen during your session."
+msgstr "Нові функції презентації: показуйте результати наживо на великому екрані під час сесії."
 
 #: src/routes/settings/AgentConsentRoute.tsx:325
 msgid "Allow"
@@ -3346,6 +3354,10 @@ msgstr "Чат створено"
 msgid "Chat deleted"
 msgstr "Чат видалено"
 
+#: src/components/release/releases.ts:75
+msgid "Chat is more reliable."
+msgstr "Чат працює надійніше."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:642
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
@@ -3494,6 +3506,10 @@ msgstr "Виберіть результати, доступні для вашо�
 #: src/routes/project/present/PresentRoute.tsx:160
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Виберіть вкладки, доступні для вашої аудиторії."
+
+#: src/components/release/releases.ts:52
+msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
+msgstr "Обирайте, що бачить зала: Popcorn, Напруження, Карта та Зацікавлені."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Choose when you want to receive notifications"
@@ -5107,6 +5123,10 @@ msgstr "Команда dembrane вийшла"
 msgid "dembrane staff requested access"
 msgstr "Команда dembrane надіслала запит на доступ"
 
+#: src/components/release/releases.ts:85
+msgid "dembrane v3"
+msgstr "dembrane v3"
+
 #: src/components/release/PilotHistory.tsx:16
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot був нашим попереднім проєктом. Дякуємо організаторам, учасникам і всім, хто допомагав його створювати."
@@ -6069,7 +6089,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Досліджуйте повторювані теми в Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:103
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Досліджуй історії та погляди за допомогою шаблону чату Narratives англійською та нідерландською."
 
@@ -7527,7 +7547,7 @@ msgstr "інтерв'ю"
 msgid "Intro"
 msgstr "Вступ"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:121
 msgid "Introducing Popcorn"
 msgstr "Представляємо Popcorn"
 
@@ -8794,7 +8814,7 @@ msgstr "Доступ через MCP для {0} вимкнено"
 msgid "MCP access for {0} is on"
 msgstr "Доступ через MCP для {0} увімкнено"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:95
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "З’єднання MCP дають твоєму агенту змогу знаходити проєкти, шукати розмови, читати транскрипти та переглядати документацію з контролем організації та явною згодою."
 
@@ -10767,7 +10787,7 @@ msgstr "Учасники"
 msgid "Participants can request a reply during a recording."
 msgstr "Учасники можуть запросити відповідь під час запису."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:99
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Учасники можуть поділитися порталом із шапки або зі сторінки подяки: через QR-код, посилання, WhatsApp, електронну пошту або стандартне меню поширення пристрою."
 
@@ -12524,6 +12544,10 @@ msgstr "Звіт оновлено · {0}"
 msgid "Reports"
 msgstr "Reports"
 
+#: src/components/release/releases.ts:78
+msgid "Reports publish, schedule and notify as expected."
+msgstr "Звіти публікуються, плануються й надсилають сповіщення як слід."
+
 #. placeholder {0}: product.name
 #: src/components/training/RequestTrainingModal.tsx:55
 msgid "Request {0} training"
@@ -13413,6 +13437,10 @@ msgstr "Переглядайте індикатори якості звуку: �
 msgid "error.action.upgrade"
 msgstr "Переглянути тарифи"
 
+#: src/components/release/releases.ts:56
+msgid "See the arguments from your conversations and the quotes behind them on the Map."
+msgstr "Переглядайте на Карті аргументи з ваших розмов і цитати, на яких вони ґрунтуються."
+
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
 msgstr "переглядати стенограми"
@@ -13924,7 +13952,7 @@ msgstr "Надано доступ для {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Надано доступ для {0} та ще {overflow}"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:111
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Коли ти ділишся приватним проєктом із людиною, яка ще не є учасником, тепер можна надіслати запрошення замість отримання помилки. Доступ надається після приєднання до робочого простору."
 
@@ -14060,6 +14088,10 @@ msgstr "Показувати лише розмови з будь-яким із �
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:372
 msgid "Show only what changed"
 msgstr "Показати лише зміни"
+
+#: src/components/release/releases.ts:60
+msgid "Show popcorn in up to three extra languages at once."
+msgstr "Показуйте popcorn одночасно ще до трьох мовами."
 
 #: src/components/project/ProjectPortalEditor.tsx:571
 msgid "Show preview"
@@ -14588,6 +14620,10 @@ msgstr "Status"
 #: src/components/sharing/LiveButton.tsx:133
 msgid "Stay live for"
 msgstr "Залишатися в ефірі на"
+
+#: src/components/release/releases.ts:64
+msgid "Stay signed in on two devices, such as your phone and laptop."
+msgstr "Залишайтеся в системі на двох пристроях, наприклад на телефоні й ноутбуці."
 
 #: src/routes/project/library/LibraryRoute.tsx:28
 #: src/routes/project/library/LibraryRoute.tsx:30
@@ -15121,6 +15157,10 @@ msgstr "Для цього потрібен платний тариф. Ми по�
 msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "Запис закороткий для транскрибування. Утримуйте запис трохи довше."
 
+#: src/components/release/releases.ts:82
+msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+msgstr "[Довідку](https://docs.dembrane.com/) переписано й оновлено."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:202
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "Можливо, адміністратор скасував запрошення або посилання пошкоджено. Попросіть надіслати нове запрошення."
@@ -15136,6 +15176,10 @@ msgstr "Агент і компанія, що ним керує, отримают
 #: src/routes/project/chat/ProjectChatRoute.tsx:855
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "ШІ не зміг відповісти на це запитання. Спробуйте перефразувати його."
+
+#: src/components/release/releases.ts:72
+msgid "The app feels much faster overall."
+msgstr "Застосунок загалом працює значно швидше."
 
 #: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
@@ -15171,7 +15215,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "У списку розмов тепер чіткіше відображаються підсумки."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:107
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Стандартний посібник ведучого тепер нагадує вмикати режим зосередження, щоб сповіщення не з'являлися на екрані під час запису."
 
@@ -15462,7 +15506,7 @@ msgstr "вибрана розмова"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "На спільному екрані показується ваша опублікована презентація. Опублікуйте зміни, щоб оновити її вміст і доступ."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:115
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "Бічна панель тепер краще підлаштовується під мобільні екрани, а також виправлено підписи французькою мовою."
 
@@ -16530,7 +16574,7 @@ msgstr "Хочете приєднатися до наявної організа
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Хочете приєднатися до наявної організації?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:91
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Перетворюй розмови на слайди наживо. Запускай живу сесію або аналіз на запит, презентуй групі та перевіряй джерела висновків."
 
@@ -16999,6 +17043,10 @@ msgstr "Uploading audio..."
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Завантаження записів доступне на платному тарифі."
+
+#: src/components/release/releases.ts:76
+msgid "Uploads show clearly when they fail."
+msgstr "Завантаження чітко показують, коли вони не вдалися."
 
 #: src/components/agent-access/AgentAccessSection.tsx:43
 msgid "URL copied"

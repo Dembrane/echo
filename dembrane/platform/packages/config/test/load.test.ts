@@ -123,7 +123,14 @@ group("sam's inbox", () => {
       url: inbox.SAM_INBOX_URL,
       secret: inbox.SAM_INBOX_SECRET,
       from: inbox.SAM_INBOX_FROM,
+      scope: "all",
     });
+  });
+
+  test("takes support only when SAM_INBOX_SCOPE is support, and nothing else", () => {
+    const loaded = loadConfig({ ...base, ...inbox, SAM_INBOX_SCOPE: "support" });
+    expect(loaded.values.samInbox.scope).toBe("support");
+    expect(() => loadConfig({ ...base, ...inbox, SAM_INBOX_SCOPE: "events" })).toThrow();
   });
 
   for (const missing of Object.keys(inbox))

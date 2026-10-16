@@ -652,6 +652,10 @@ export const schema = defineSchema({
           "Who this deployment is to sam (X-Webhook-From), e.g. api.staging.dembrane.com; sam picks the secret and the allowed codes by it.",
       },
     ),
+    scope: key("SAM_INBOX_SCOPE", z.enum(["all", "support"]).default("all"), {
+      description:
+        "What goes to sam's inbox. all: support requests, account events, bookings, overage notices, project webhooks and MCP tool requests. support: support requests only; the rest keeps its old route or stays in this deployment, so a deployment whose data must stay home sends sam nothing but support pointers.",
+    }),
   },
 });
 

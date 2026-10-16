@@ -115,6 +115,9 @@ export function buildApp(deps: Deps) {
     return deps.auth.handler(new Request(c.req.raw, { headers }));
   });
   app.use("/api/*", session(deps));
+  // Account events, project webhooks and MCP tool requests take sam's inbox only when it is
+  // set and SAM_INBOX_SCOPE is all; support requests go there from the worker either way.
+  const inboxAll = Boolean(deps.config.samInbox.url) && deps.config.samInbox.scope === "all";
   const accounts = {
     db: deps.db,
     access: deps.access,
@@ -139,7 +142,7 @@ export function buildApp(deps: Deps) {
       eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
       // The config check sets SAM_INBOX_* together, so the URL stands for all three.
-      samInbox: Boolean(deps.config.samInbox.url),
+      samInbox: inboxAll,
       offerMessages: deps.config.accounts.offerMessages,
       reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
       inviteSecret: deps.config.account.inviteHashSecret,
@@ -169,7 +172,7 @@ export function buildApp(deps: Deps) {
       deliver: deps.deliverWebhook,
       allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
       dashboardUrl: deps.config.http.dashboardUrl,
-      samInbox: Boolean(deps.config.samInbox.url),
+      samInbox: inboxAll,
     }),
   );
   app.route("/", notificationRoutes(deps));
@@ -349,7 +352,7 @@ export function buildApp(deps: Deps) {
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
-      samInbox: deps.config.samInbox.url
+      samInbox: inboxAll
         ? { sink: deps.queue, environment: environmentName(deps.config.http.dashboardUrl) }
         : null,
     }),

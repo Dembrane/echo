@@ -147,6 +147,10 @@ export function registrations(deps: {
   const inboxOpts = { allowPrivate: config.webhooks.allowPrivateTargets };
   const toSam = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
     inboxTarget ? samInboxForwarder(deps.accountsJobs, toMessage) : teamWebhook;
+  // SAM_INBOX_SCOPE=support: only support requests take the inbox; the rest keeps its old route.
+  const inboxAll = Boolean(inboxTarget) && config.samInbox.scope === "all";
+  const toSamAll = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
+    inboxAll ? toSam(toMessage) : teamWebhook;
   const analysisDeps = {
     db,
     logger,
@@ -221,7 +225,7 @@ export function registrations(deps: {
         const store = webhooksStorage(db);
         const deliver = httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets });
         // Deliveries wait on other people's servers, so many run at once.
-        const inbox = inboxTarget ? queue : null;
+        const inbox = inboxAll ? queue : null;
         await queue.work(dispatchWebhook, { concurrency: 20 }, (p) =>
           runDispatch({ store, deliver, logger, inbox }, p),
         );
@@ -264,7 +268,7 @@ export function registrations(deps: {
         db,
         // Live portal recordings from the presence store the portal's pings write.
         live: liveRecordings({ db, logger }),
-        forwarder: toSam(overageInboxMessage),
+        forwarder: toSamAll(overageInboxMessage),
         environment: environmentName(deps.dashboardUrl),
       },
     }),
@@ -279,7 +283,7 @@ export function registrations(deps: {
     }),
     pricingRegistration({
       store: pricingStorage(db),
-      forwarder: toSam(bookingInboxMessage),
+      forwarder: toSamAll(bookingInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
@@ -317,7 +321,7 @@ export function registrations(deps: {
       dashboardUrl: deps.dashboardUrl,
       eventsUrl: config.accounts.eventsUrl ?? null,
       eventsSecret: config.accounts.eventsSecret ?? null,
-      samInbox: Boolean(inboxTarget),
+      samInbox: inboxAll,
       offerMessages: config.accounts.offerMessages,
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
@@ -341,7 +345,7 @@ export function registrations(deps: {
             company,
             eventsEnabled: Boolean(config.accounts.eventsUrl),
             slackEnabled: Boolean(config.accounts.slackWebhookUrl),
-            samInbox: Boolean(inboxTarget),
+            samInbox: inboxAll,
             offerMessages: config.accounts.offerMessages,
             reminderIntervalDays: config.accounts.reminderIntervalDays,
             // Demo builds send no invite links; publishing (in the API) does.
