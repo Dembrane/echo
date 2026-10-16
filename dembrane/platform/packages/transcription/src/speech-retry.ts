@@ -28,6 +28,14 @@ export interface RetryPolicy {
   }[];
   /** At most this share of a piece's seconds is sent again. */
   readonly maxShare: number;
+  /**
+   * Whisper sometimes stops early on noisy audio, confidently: a 29 second piece comes back with
+   * nine seconds of words and a good log probability. A stretch this long with no segment in it is
+   * transcribed again, and the new reading is kept only when it holds speech: at least `gapRate`
+   * words per second (a hallucination on silence is a few words over a long stretch). 0 turns it off.
+   */
+  readonly minGap: number;
+  readonly gapRate: number;
 }
 
 export const DEFAULT_RETRY: RetryPolicy = {
@@ -42,7 +50,9 @@ export const DEFAULT_RETRY: RetryPolicy = {
     { temperature: 0.2, language: "auto" },
     { temperature: 0.4, language: "detected" },
   ],
-  maxShare: 0.5,
+  maxShare: 1,
+  minGap: 4,
+  gapRate: 0.8,
 };
 
 export interface RetryStats {
@@ -56,9 +66,18 @@ export interface RetryStats {
   readonly kept: number;
   /** Stretches where the retry could not run (cut or request failed). */
   readonly failed: number;
+  /** Seconds of audio sent again, for the cost. */
+  readonly seconds: number;
 }
 
-export const NO_RETRIES: RetryStats = { spans: 0, attempts: 0, improved: 0, kept: 0, failed: 0 };
+export const NO_RETRIES: RetryStats = {
+  spans: 0,
+  attempts: 0,
+  improved: 0,
+  kept: 0,
+  failed: 0,
+  seconds: 0,
+};
 
 /** Cuts seconds [start, end) out of the audio that was sent. Supplied by whoever has the media service. */
 export type SpanCutter = (start: number, end: number) => Promise<Uint8Array>;
@@ -76,11 +95,11 @@ export function doubtful(s: Segment, p: RetryPolicy): boolean {
 export interface Span {
   readonly start: number;
   readonly end: number;
-  /** Indexes into the segment list. */
+  /** Indexes into the segment list; none for a stretch where Whisper wrote nothing at all. */
   readonly indexes: number[];
 }
 
-/** The doubtful segments as spans: neighbours merged, padded, kept inside the audio. */
+/** The doubtful segments, and the stretches with no segment, as spans: neighbours merged, padded, kept inside the audio. */
 export function spansOf(segments: readonly Segment[], p: RetryPolicy, seconds: number): Span[] {
   const out: { start: number; end: number; indexes: number[] }[] = [];
   segments.forEach((s, i) => {
@@ -91,6 +110,18 @@ export function spansOf(segments: readonly Segment[], p: RetryPolicy, seconds: n
       last.indexes.push(i);
     } else out.push({ start: s.start, end: s.end, indexes: [i] });
   });
+  if (p.minGap > 0 && seconds > 0) {
+    const sorted = [...segments].sort((a, b) => a.start - b.start);
+    let cursor = 0;
+    const gaps: { start: number; end: number; indexes: number[] }[] = [];
+    for (const s of sorted) {
+      if (s.start - cursor >= p.minGap) gaps.push({ start: cursor, end: s.start, indexes: [] });
+      cursor = Math.max(cursor, s.end);
+    }
+    if (seconds - cursor >= p.minGap) gaps.push({ start: cursor, end: seconds, indexes: [] });
+    out.push(...gaps);
+    out.sort((a, b) => a.start - b.start);
+  }
   return out
     .map((s) => ({
       ...s,
@@ -118,8 +149,20 @@ export function quality(segments: readonly Segment[], p: RetryPolicy) {
  * higher mean confidence. A reading that dropped most of the words wins only over a
  * looping one (compression ratio over the limit), where fewer words is the point.
  */
-export function better(next: readonly Segment[], old: readonly Segment[], p: RetryPolicy): boolean {
+export function better(
+  next: readonly Segment[],
+  old: readonly Segment[],
+  p: RetryPolicy,
+  spanSeconds?: number,
+): boolean {
   if (!next.length) return false;
+  if (!old.length) {
+    // A stretch that had no words: it must now hold speech, not a few words over a long silence.
+    const q = quality(next, p);
+    const length =
+      spanSeconds ?? Math.max(...next.map((s) => s.end)) - Math.min(...next.map((s) => s.start));
+    return q.flagged === 0 && q.words / Math.max(length, 1) >= p.gapRate;
+  }
   const a = quality(next, p);
   const b = quality(old, p);
   const looping = old.some((s) => (s.compressionRatio ?? 0) > p.maxCompression);
@@ -159,8 +202,10 @@ export async function transcribeChecked(
   let improved = 0;
   let kept = 0;
   let failed = 0;
+  let resent = 0;
   const replace = new Map<number, Segment[]>();
   const dropped = new Set<number>();
+  const added: Segment[] = [];
   for (const span of spans) {
     const length = span.end - span.start;
     if (length > budget) {
@@ -181,6 +226,7 @@ export async function transcribeChecked(
     let ran = false;
     for (const a of policy.attempts) {
       attempts++;
+      resent += length;
       try {
         const r = await stt.transcribeSegments(bytes, {
           language: opts.language ?? null,
@@ -195,7 +241,7 @@ export async function transcribeChecked(
           start: s.start + span.start,
           end: s.end + span.start,
         }));
-        if (better(shifted, best?.segments ?? old, policy)) best = { segments: shifted };
+        if (better(shifted, best?.segments ?? old, policy, length)) best = { segments: shifted };
         if (best && quality(best.segments, policy).flagged === 0) break;
       } catch {
         // A failed retry costs nothing: the first reading stays.
@@ -204,6 +250,7 @@ export async function transcribeChecked(
     if (!ran) failed++;
     else if (best) {
       improved++;
+      if (span.indexes.length === 0) added.push(...best.segments);
       span.indexes.forEach((i, k) => {
         dropped.add(i);
         if (k === 0) replace.set(i, best.segments);
@@ -215,9 +262,10 @@ export async function transcribeChecked(
     if (replace.has(i)) segments.push(...(replace.get(i) as Segment[]));
     else if (!dropped.has(i)) segments.push(s);
   });
+  segments.push(...added);
   segments.sort((a, b) => a.start - b.start);
   return {
     result: { ...first, segments, text: segments.map((s) => s.text).join(" ") },
-    stats: { spans: spans.length, attempts, improved, kept, failed },
+    stats: { spans: spans.length, attempts, improved, kept, failed, seconds: resent },
   };
 }

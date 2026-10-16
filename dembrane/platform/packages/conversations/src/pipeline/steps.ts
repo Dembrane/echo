@@ -123,7 +123,16 @@ export async function recordRetries(
   if (!stats || (!stats.spans && !stats.attempts)) return;
   await d.db
     .insert(conversation_transcribe_retry)
-    .values({ conversation_id: conversationId, stage, ...stats, updated_at: d.now().toISOString() })
+    .values({
+      conversation_id: conversationId,
+      stage,
+      spans: stats.spans,
+      attempts: stats.attempts,
+      improved: stats.improved,
+      kept: stats.kept,
+      failed: stats.failed,
+      updated_at: d.now().toISOString(),
+    })
     .onConflictDoUpdate({
       target: [conversation_transcribe_retry.conversation_id, conversation_transcribe_retry.stage],
       set: {

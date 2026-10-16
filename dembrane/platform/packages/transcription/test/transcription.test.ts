@@ -486,7 +486,7 @@ test("doubtful stretches are found from Whisper's own confidence and merged with
     seg(12, 20, "fine"),
     seg(28, 29, "x", -1.2),
   ];
-  const spans = spansOf(segments, DEFAULT_RETRY, 30);
+  const spans = spansOf(segments, { ...DEFAULT_RETRY, minGap: 0 }, 30);
   expect(spans.map((s) => [s.start, s.end, s.indexes])).toEqual([
     [4.7, 12.3, [1, 2]],
     [27.7, 29.3, [4]],
@@ -523,7 +523,7 @@ test("a retry replaces a doubtful stretch only when the signals say it is better
   const cut = async () => new Uint8Array([1]);
   const out = await transcribeChecked(stt, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
   expect(out.result.segments.map((s) => s.text)).toEqual(["fine", "heard properly", "fine"]);
-  expect(out.stats).toEqual({ spans: 1, attempts: 1, improved: 1, kept: 0, failed: 0 });
+  expect(out.stats).toMatchObject({ spans: 1, attempts: 1, improved: 1, kept: 0, failed: 0 });
   expect(calls[1]?.temperature).toBe(0.2);
 
   // A retry that is no better leaves the first reading and says so.
@@ -534,11 +534,14 @@ test("a retry replaces a doubtful stretch only when the signals say it is better
       text: "",
       seconds: 20,
       language: "nl",
-      segments: o.temperature === undefined ? [seg(0, 8, "a", -1.5)] : [seg(0, 8, "b", -1.9)],
+      segments:
+        o.temperature === undefined
+          ? [seg(0, 8, "a", -1.5), seg(8, 20, "t")]
+          : [seg(0, 8, "b", -1.9)],
     }),
   } as never;
   const kept = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
-  expect(kept.result.segments.map((s) => s.text)).toEqual(["a"]);
+  expect(kept.result.segments.map((s) => s.text)).toEqual(["a", "t"]);
   expect(kept.stats).toMatchObject({ spans: 1, attempts: 2, improved: 0, kept: 1 });
 
   // No cutter or no policy: one plain call, no retries.
@@ -551,4 +554,38 @@ test("a retry replaces a doubtful stretch only when the signals say it is better
     DEFAULT_RETRY,
   );
   expect(plain.stats.attempts).toBe(0);
+});
+
+test("a stretch where Whisper wrote nothing is read again and kept only when it holds speech", async () => {
+  const cut = async () => new Uint8Array([1]);
+  const mk = (retried: string) =>
+    ({
+      model: "w",
+      transcribe: async () => "",
+      transcribeSegments: async (_a: Uint8Array, o: { temperature?: number } = {}) => ({
+        text: "",
+        seconds: 30,
+        language: "nl",
+        segments:
+          o.temperature === undefined
+            ? [seg(0, 18, "ik denk dat het goed is")]
+            : [seg(0, 12, retried, -0.5)],
+      }),
+    }) as never;
+  const words = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
+  const full = await transcribeChecked(mk(words), new Uint8Array([0]), {}, 30, cut, DEFAULT_RETRY);
+  expect(full.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is", words]);
+  expect(full.result.segments[1]?.start).toBeCloseTo(17.7);
+  expect(full.stats).toMatchObject({ spans: 1, improved: 1 });
+  // A few words over twenty seconds are what Whisper invents on silence.
+  const halluc = await transcribeChecked(
+    mk("bedankt voor het kijken"),
+    new Uint8Array([0]),
+    {},
+    30,
+    cut,
+    DEFAULT_RETRY,
+  );
+  expect(halluc.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is"]);
+  expect(halluc.stats).toMatchObject({ spans: 1, improved: 0, kept: 1 });
 });
