@@ -140,7 +140,7 @@ export async function planFinal(
       Math.floor(transcriber.limits.maxBytes / bytesPerSecond),
     ),
   );
-  const planned = planPieces(duration, found.silences, maxSeconds);
+  const planned = planPieces(duration, found.silences, maxSeconds, found.quiet);
   if (planned.length === 1)
     return { duration, pieces: [{ key, start: 0, duration, hardCut: false }] };
 
@@ -337,8 +337,9 @@ export async function storeFinal(
       improved: t.improved + (p.retry?.improved ?? 0),
       kept: t.kept + (p.retry?.kept ?? 0),
       failed: t.failed + (p.retry?.failed ?? 0),
+      seconds: t.seconds + (p.retry?.seconds ?? 0),
     }),
-    { spans: 0, attempts: 0, improved: 0, kept: 0, failed: 0 },
+    { spans: 0, attempts: 0, improved: 0, kept: 0, failed: 0, seconds: 0 },
   );
   const now = d.now().toISOString();
   const values = {

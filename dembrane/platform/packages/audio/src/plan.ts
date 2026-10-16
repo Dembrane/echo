@@ -3,8 +3,10 @@ import type { Silence } from "./ffmpeg";
 export interface PlannedPiece {
   readonly start: number;
   readonly duration: number;
-  /** True when no pause was found in reach and the piece ends at the size limit. */
+  /** True when no pause was found in reach: the piece ends at the quietest moment there was, or at the size limit. */
   readonly hardCut: boolean;
+  /** True when there was not even a quiet moment to go by and the piece ends at the size limit. */
+  readonly clockCut?: boolean;
 }
 
 /**
@@ -19,6 +21,7 @@ export function planPieces(
   duration: number,
   silences: readonly Silence[],
   maxSeconds: number,
+  quiet: readonly { t: number; level: number }[] = [],
 ): PlannedPiece[] {
   const pauses = silences
     .map((s) => ({ start: s.start, end: Math.min(s.end, duration), mid: 0 }))
@@ -35,8 +38,22 @@ export function planPieces(
       (a, b) => (a && a.length >= b.length ? a : b),
       null,
     );
-    const cut = best ? best.mid : limit;
-    pieces.push({ start: cursor, duration: cut - cursor, hardCut: !best });
+    // No pause in reach: the quietest moment of the later half, so a word is the least likely to be cut.
+    const low = best
+      ? null
+      : quiet
+          .filter((q) => q.t > cursor + maxSeconds / 2 && q.t <= limit)
+          .reduce<{ t: number; level: number } | null>(
+            (a, b) => (a && a.level <= b.level ? a : b),
+            null,
+          );
+    const cut = best ? best.mid : (low?.t ?? limit);
+    pieces.push({
+      start: cursor,
+      duration: cut - cursor,
+      hardCut: !best,
+      ...(!best && !low && { clockCut: true }),
+    });
     cursor = cut;
   }
   pieces.push({ start: cursor, duration: duration - cursor, hardCut: false });

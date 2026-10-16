@@ -5,11 +5,17 @@ export {
   noMergeableChunks,
 } from "./errors";
 export {
+  analysePauses,
   concatFiles,
   convertFile,
   cutFile,
   detectSilences,
   durationOf,
+  findPauses,
+  LEVEL_FRAME_SECONDS,
+  levelFrames,
+  type PauseOptions,
+  type Pauses,
   type ProbeResult,
   parseSilences,
   probeFile,

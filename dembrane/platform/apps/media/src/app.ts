@@ -20,7 +20,9 @@ const schemas = {
   }),
   silences: z.object({
     source,
+    method: z.enum(["fixed", "adaptive"]).optional(),
     noiseDb: z.number().min(-80).max(-10).optional(),
+    alpha: z.number().min(0.05).max(0.9).optional(),
     minSeconds: z.number().min(0.05).max(5).optional(),
   }),
   merge: z.object({ sources: z.array(source).min(1), target, outputFormat: output }),
