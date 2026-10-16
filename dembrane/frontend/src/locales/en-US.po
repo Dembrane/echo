@@ -1156,6 +1156,10 @@ msgstr "8 hours"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "A blue bar across the top of every tab, with your text and a link back to the opening."
 
+#: src/components/release/releases.ts:68
+msgid "A cleaner, more accessible dashboard and portal."
+msgstr "A cleaner, more accessible dashboard and portal."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "A couple of quick questions and you're in."
@@ -1959,6 +1963,10 @@ msgstr "All visible conversations selected"
 #: src/components/workspace/OrganisationProjectsTable.tsx:190
 msgid "All workspaces"
 msgstr "All workspaces"
+
+#: src/components/release/releases.ts:48
+msgid "All-new Present features: show live results on a big screen during your session."
+msgstr "All-new Present features: show live results on a big screen during your session."
 
 #: src/routes/settings/AgentConsentRoute.tsx:325
 msgid "Allow"
@@ -3341,6 +3349,10 @@ msgstr "Chat created"
 msgid "Chat deleted"
 msgstr "Chat deleted"
 
+#: src/components/release/releases.ts:75
+msgid "Chat is more reliable."
+msgstr "Chat is more reliable."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:642
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
@@ -3489,6 +3501,10 @@ msgstr "Choose the outcomes your audience can explore."
 #: src/routes/project/present/PresentRoute.tsx:160
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Choose the tabs your audience can explore."
+
+#: src/components/release/releases.ts:52
+msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
+msgstr "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Choose when you want to receive notifications"
@@ -5098,6 +5114,10 @@ msgstr "dembrane staff left"
 msgid "dembrane staff requested access"
 msgstr "dembrane staff requested access"
 
+#: src/components/release/releases.ts:85
+msgid "dembrane v3"
+msgstr "dembrane v3"
+
 #: src/components/release/PilotHistory.tsx:16
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
@@ -6056,7 +6076,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Explore recurring themes in the Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:103
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 
@@ -7514,7 +7534,7 @@ msgstr "interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:121
 msgid "Introducing Popcorn"
 msgstr "Introducing Popcorn"
 
@@ -8781,7 +8801,7 @@ msgstr "MCP access for {0} is off"
 msgid "MCP access for {0} is on"
 msgstr "MCP access for {0} is on"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:95
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 
@@ -10754,7 +10774,7 @@ msgstr "Participants"
 msgid "Participants can request a reply during a recording."
 msgstr "Participants can request a reply during a recording."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:99
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 
@@ -12511,6 +12531,10 @@ msgstr "Report updated · {0}"
 msgid "Reports"
 msgstr "Reports"
 
+#: src/components/release/releases.ts:78
+msgid "Reports publish, schedule and notify as expected."
+msgstr "Reports publish, schedule and notify as expected."
+
 #. placeholder {0}: product.name
 #: src/components/training/RequestTrainingModal.tsx:55
 msgid "Request {0} training"
@@ -13400,6 +13424,10 @@ msgstr "See audio quality indicators for noise, silence and overlapping speech."
 msgid "error.action.upgrade"
 msgstr "See plans"
 
+#: src/components/release/releases.ts:56
+msgid "See the arguments from your conversations and the quotes behind them on the Map."
+msgstr "See the arguments from your conversations and the quotes behind them on the Map."
+
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
 msgstr "see transcripts"
@@ -13911,7 +13939,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:111
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 
@@ -14043,6 +14071,10 @@ msgstr "Show only conversations with any of the ticked tags."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:372
 msgid "Show only what changed"
 msgstr "Show only what changed"
+
+#: src/components/release/releases.ts:60
+msgid "Show popcorn in up to three extra languages at once."
+msgstr "Show popcorn in up to three extra languages at once."
 
 #: src/components/project/ProjectPortalEditor.tsx:571
 msgid "Show preview"
@@ -14571,6 +14603,10 @@ msgstr "Status"
 #: src/components/sharing/LiveButton.tsx:133
 msgid "Stay live for"
 msgstr "Stay live for"
+
+#: src/components/release/releases.ts:64
+msgid "Stay signed in on two devices, such as your phone and laptop."
+msgstr "Stay signed in on two devices, such as your phone and laptop."
 
 #: src/routes/project/library/LibraryRoute.tsx:28
 #: src/routes/project/library/LibraryRoute.tsx:30
@@ -15104,6 +15140,10 @@ msgstr "That requires a paid plan. We're going to ask you 5 more quick questions
 msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "That was too short to transcribe. Hold the recording a little longer."
 
+#: src/components/release/releases.ts:82
+msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+msgstr "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:202
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
@@ -15119,6 +15159,10 @@ msgstr "The agent and the company running it will receive the conversation conte
 #: src/routes/project/chat/ProjectChatRoute.tsx:855
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "The AI couldn't answer this question. Try rewording it."
+
+#: src/components/release/releases.ts:72
+msgid "The app feels much faster overall."
+msgstr "The app feels much faster overall."
 
 #: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
@@ -15154,7 +15198,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "The conversation list shows clearer totals."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:107
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 
@@ -15444,7 +15488,7 @@ msgstr "the selected conversation"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "The shared screen shows your published presentation. Publish changes to update its content and access."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:115
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 
@@ -16508,7 +16552,7 @@ msgstr "Trying to join an existing organisation?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Trying to join an existing organization?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:91
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 
@@ -16977,6 +17021,10 @@ msgstr "Uploading audio..."
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Uploading recordings comes with a paid plan."
+
+#: src/components/release/releases.ts:76
+msgid "Uploads show clearly when they fail."
+msgstr "Uploads show clearly when they fail."
 
 #: src/components/agent-access/AgentAccessSection.tsx:43
 msgid "URL copied"

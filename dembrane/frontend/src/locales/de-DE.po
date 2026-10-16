@@ -1162,6 +1162,10 @@ msgstr "8 Stunden"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Ein blauer Balken am oberen Rand jedes Tabs mit Ihrem Text und einem Link zurück zum Anfang."
 
+#: src/components/release/releases.ts:68
+msgid "A cleaner, more accessible dashboard and portal."
+msgstr "Ein übersichtlicheres, barrierefreieres Dashboard und Portal."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "Nur ein paar kurze Fragen, und schon sind Sie startklar."
@@ -1965,6 +1969,10 @@ msgstr "Alle sichtbaren Gespräche ausgewählt"
 #: src/components/workspace/OrganisationProjectsTable.tsx:190
 msgid "All workspaces"
 msgstr "Alle Arbeitsbereiche"
+
+#: src/components/release/releases.ts:48
+msgid "All-new Present features: show live results on a big screen during your session."
+msgstr "Ganz neue Funktionen in Präsentieren: Zeigen Sie während Ihrer Sitzung Live-Ergebnisse auf einem großen Bildschirm."
 
 #: src/routes/settings/AgentConsentRoute.tsx:325
 msgid "Allow"
@@ -3347,6 +3355,10 @@ msgstr "Chat erstellt"
 msgid "Chat deleted"
 msgstr "Chat gelöscht"
 
+#: src/components/release/releases.ts:75
+msgid "Chat is more reliable."
+msgstr "Der Chat ist zuverlässiger."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:642
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
@@ -3495,6 +3507,10 @@ msgstr "Wählen Sie die Ergebnisse aus, die Ihr Publikum erkunden kann."
 #: src/routes/project/present/PresentRoute.tsx:160
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Wählen Sie die Reiter aus, die Ihr Publikum erkunden kann."
+
+#: src/components/release/releases.ts:52
+msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
+msgstr "Wählen Sie, was der Raum sieht: Popcorn, Spannungen, Karte und Beteiligte."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Choose when you want to receive notifications"
@@ -5104,6 +5120,10 @@ msgstr "dembrane-Team hat den Zugriff beendet"
 msgid "dembrane staff requested access"
 msgstr "dembrane-Team hat Zugriff angefragt"
 
+#: src/components/release/releases.ts:85
+msgid "dembrane v3"
+msgstr "dembrane v3"
+
 #: src/components/release/PilotHistory.tsx:16
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot war unser früheres Projekt. Danke an die Gastgeber, Teilnehmenden und Mitwirkenden, die es mitgestaltet haben."
@@ -6062,7 +6082,7 @@ msgstr "Erkunden"
 msgid "Explore recurring themes in the Library"
 msgstr "Wiederkehrende Themen in der Library erkunden"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:103
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Erkunde Geschichten und Perspektiven mit der Chatvorlage Narratives, auf Englisch und Niederländisch."
 
@@ -7520,7 +7540,7 @@ msgstr "Interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:121
 msgid "Introducing Popcorn"
 msgstr "Neu: Popcorn"
 
@@ -8787,7 +8807,7 @@ msgstr "MCP-Zugriff für {0} ist deaktiviert"
 msgid "MCP access for {0} is on"
 msgstr "MCP-Zugriff für {0} ist aktiviert"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:95
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Über MCP-Verbindungen kann dein Agent Projekte finden, Gespräche durchsuchen, Transkripte lesen und Dokumentation nutzen, mit Organisationskontrollen und ausdrücklicher Zustimmung."
 
@@ -10760,7 +10780,7 @@ msgstr "Teilnehmer"
 msgid "Participants can request a reply during a recording."
 msgstr "Teilnehmer können während einer Aufnahme um eine Antwort bitten."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:99
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Teilnehmer können das Portal über den Header oder die Dankesseite teilen: per QR-Code, teilbarem Link, WhatsApp, E-Mail oder über das Teilen-Menü des Geräts."
 
@@ -12517,6 +12537,10 @@ msgstr "Bericht aktualisiert · {0}"
 msgid "Reports"
 msgstr "Berichte"
 
+#: src/components/release/releases.ts:78
+msgid "Reports publish, schedule and notify as expected."
+msgstr "Berichte werden wie erwartet veröffentlicht, geplant und gemeldet."
+
 #. placeholder {0}: product.name
 #: src/components/training/RequestTrainingModal.tsx:55
 msgid "Request {0} training"
@@ -13406,6 +13430,10 @@ msgstr "Audioqualitäts-Indikatoren für Rauschen, Stille und überlappende Spra
 msgid "error.action.upgrade"
 msgstr "Tarife ansehen"
 
+#: src/components/release/releases.ts:56
+msgid "See the arguments from your conversations and the quotes behind them on the Map."
+msgstr "Sehen Sie die Argumente aus Ihren Gesprächen und die Zitate dahinter auf der Karte."
+
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
 msgstr "Transkripte ansehen"
@@ -13917,7 +13945,7 @@ msgstr "Geteilt mit {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Geteilt mit {0} und {overflow} weiteren"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:111
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Beim Teilen eines privaten Projekts mit einem Nichtmitglied wird jetzt eine Einladung statt eines Fehlers angeboten. Der Zugriff wird beim Beitritt zum Arbeitsbereich gewährt."
 
@@ -14049,6 +14077,10 @@ msgstr "Nur Gespräche mit einem der angehakten Tags anzeigen."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:372
 msgid "Show only what changed"
 msgstr "Nur Änderungen anzeigen"
+
+#: src/components/release/releases.ts:60
+msgid "Show popcorn in up to three extra languages at once."
+msgstr "Zeigen Sie Popcorn in bis zu drei zusätzlichen Sprachen gleichzeitig."
 
 #: src/components/project/ProjectPortalEditor.tsx:571
 msgid "Show preview"
@@ -14577,6 +14609,10 @@ msgstr "Status"
 #: src/components/sharing/LiveButton.tsx:133
 msgid "Stay live for"
 msgstr "Live bleiben für"
+
+#: src/components/release/releases.ts:64
+msgid "Stay signed in on two devices, such as your phone and laptop."
+msgstr "Bleiben Sie auf zwei Geräten angemeldet, etwa auf Ihrem Telefon und Laptop."
 
 #: src/routes/project/library/LibraryRoute.tsx:28
 #: src/routes/project/library/LibraryRoute.tsx:30
@@ -15110,6 +15146,10 @@ msgstr "Dazu ist ein kostenpflichtiger Tarif erforderlich. Wir stellen Ihnen noc
 msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "Das war zu kurz für eine Transkription. Halten Sie die Aufnahme etwas länger gedrückt."
 
+#: src/components/release/releases.ts:82
+msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+msgstr "Die [Hilfedokumentation](https://docs.dembrane.com/) ist neu geschrieben und aktuell."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:202
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "Der Administrator hat sie möglicherweise storniert, oder der Link wurde manipuliert. Bitten Sie die einladende Person um einen neuen Link."
@@ -15125,6 +15165,10 @@ msgstr "Der Agent und das betreibende Unternehmen erhalten die von Ihnen freigeg
 #: src/routes/project/chat/ProjectChatRoute.tsx:855
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "Die KI konnte diese Frage nicht beantworten. Versuchen Sie, sie umzuformulieren."
+
+#: src/components/release/releases.ts:72
+msgid "The app feels much faster overall."
+msgstr "Die App fühlt sich insgesamt deutlich schneller an."
 
 #: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
@@ -15160,7 +15204,7 @@ msgstr "Das Gespräch konnte nicht geladen werden. Bitte versuchen Sie es erneut
 msgid "The conversation list shows clearer totals."
 msgstr "Die Gesprächsliste zeigt übersichtlichere Gesamtzahlen."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:107
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Der Standard-Host-Leitfaden erinnert Hosts jetzt daran, den Fokusmodus zu aktivieren, damit Benachrichtigungen während der Aufnahme nicht auf dem Bildschirm erscheinen."
 
@@ -15451,7 +15495,7 @@ msgstr "das ausgewählte Gespräch"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "Der geteilte Bildschirm zeigt Ihre veröffentlichte Präsentation. Veröffentlichen Sie Änderungen, um Inhalt und Zugriff zu aktualisieren."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:115
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "Die Seitenleiste passt auf mobilen Bildschirmen jetzt zuverlässiger, inklusive korrigierter französischer Navigationsbeschriftungen."
 
@@ -16513,7 +16557,7 @@ msgstr "Möchten Sie einer bestehenden Organisation beitreten?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Möchten Sie einer bestehenden Organisation beitreten?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:91
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Verwandle Gespräche in Live-Folien. Starte eine Live-Sitzung oder eine Analyse bei Bedarf, präsentiere der Gruppe und verfolge Erkenntnisse bis zu ihren Quellen."
 
@@ -16982,6 +17026,10 @@ msgstr "Audio wird hochgeladen..."
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Das Hochladen von Aufnahmen ist in einem kostenpflichtigen Tarif enthalten."
+
+#: src/components/release/releases.ts:76
+msgid "Uploads show clearly when they fail."
+msgstr "Uploads zeigen deutlich, wenn sie fehlschlagen."
 
 #: src/components/agent-access/AgentAccessSection.tsx:43
 msgid "URL copied"

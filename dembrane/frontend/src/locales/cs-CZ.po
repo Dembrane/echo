@@ -1161,6 +1161,10 @@ msgstr "8 hodin"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Modrý pruh v horní části každé záložky s vaším textem a odkazem zpět na úvod."
 
+#: src/components/release/releases.ts:68
+msgid "A cleaner, more accessible dashboard and portal."
+msgstr "Přehlednější a přístupnější dashboard a portál."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "Pár rychlých otázek a jste uvnitř."
@@ -1964,6 +1968,10 @@ msgstr "All visible conversations selected"
 #: src/components/workspace/OrganisationProjectsTable.tsx:190
 msgid "All workspaces"
 msgstr "All workspaces"
+
+#: src/components/release/releases.ts:48
+msgid "All-new Present features: show live results on a big screen during your session."
+msgstr "Zcela nové funkce prezentace: zobrazte během setkání živé výsledky na velké obrazovce."
 
 #: src/routes/settings/AgentConsentRoute.tsx:325
 msgid "Allow"
@@ -3346,6 +3354,10 @@ msgstr "Chat vytvořen"
 msgid "Chat deleted"
 msgstr "Chat deleted"
 
+#: src/components/release/releases.ts:75
+msgid "Chat is more reliable."
+msgstr "Chat je spolehlivější."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:642
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
@@ -3494,6 +3506,10 @@ msgstr "Vyberte výsledky, které může vaše publikum prozkoumat."
 #: src/routes/project/present/PresentRoute.tsx:160
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Vyberte záložky, které může vaše publikum prozkoumat."
+
+#: src/components/release/releases.ts:52
+msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
+msgstr "Vyberte, co uvidí sál: Popcorn, Napětí, Mapa a Zainteresovaní."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Choose when you want to receive notifications"
@@ -5103,6 +5119,10 @@ msgstr "Tým dembrane se odpojil"
 msgid "dembrane staff requested access"
 msgstr "Tým dembrane požádal o přístup"
 
+#: src/components/release/releases.ts:85
+msgid "dembrane v3"
+msgstr "dembrane v3"
+
 #: src/components/release/PilotHistory.tsx:16
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot byl náš dřívější projekt. Děkujeme organizátorům, účastníkům a přispěvatelům, kteří jej pomáhali utvářet."
@@ -6061,7 +6081,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Prozkoumej opakující se témata v Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:103
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Prozkoumej příběhy a pohledy pomocí šablony chatu Narratives v angličtině a nizozemštině."
 
@@ -7519,7 +7539,7 @@ msgstr "rozhovor"
 msgid "Intro"
 msgstr "Úvod"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:121
 msgid "Introducing Popcorn"
 msgstr "Představujeme Popcorn"
 
@@ -8786,7 +8806,7 @@ msgstr "Přístup přes MCP pro {0} je vypnutý"
 msgid "MCP access for {0} is on"
 msgstr "Přístup přes MCP pro {0} je zapnutý"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:95
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Připojení MCP umožní tvému agentovi hledat projekty a konverzace, číst přepisy a procházet dokumentaci, s kontrolou organizace a výslovným souhlasem."
 
@@ -10759,7 +10779,7 @@ msgstr "Účastníci"
 msgid "Participants can request a reply during a recording."
 msgstr "Účastníci mohou během nahrávání požádat o odpověď."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:99
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Účastníci mohou portál sdílet ze záhlaví nebo děkovné stránky: přes QR kód, zkopírovatelný odkaz, WhatsApp, e-mail nebo nabídku sdílení v zařízení."
 
@@ -12516,6 +12536,10 @@ msgstr "Zpráva aktualizována · {0}"
 msgid "Reports"
 msgstr "Reports"
 
+#: src/components/release/releases.ts:78
+msgid "Reports publish, schedule and notify as expected."
+msgstr "Reporty se publikují, plánují a upozorňují podle očekávání."
+
 #. placeholder {0}: product.name
 #: src/components/training/RequestTrainingModal.tsx:55
 msgid "Request {0} training"
@@ -13405,6 +13429,10 @@ msgstr "Zobrazte si ukazatele kvality zvuku pro šum, ticho a překrývající s
 msgid "error.action.upgrade"
 msgstr "Zobrazit tarify"
 
+#: src/components/release/releases.ts:56
+msgid "See the arguments from your conversations and the quotes behind them on the Map."
+msgstr "Prohlédněte si na Mapě argumenty z vašich rozhovorů a citace, o které se opírají."
+
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
 msgstr "zobrazit přepisy"
@@ -13916,7 +13944,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:111
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
@@ -14048,6 +14076,10 @@ msgstr "Zobrazit jen konverzace s některým ze zaškrtnutých štítků."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:372
 msgid "Show only what changed"
 msgstr "Zobrazit pouze změny"
+
+#: src/components/release/releases.ts:60
+msgid "Show popcorn in up to three extra languages at once."
+msgstr "Zobrazte popcorn až ve třech dalších jazycích najednou."
 
 #: src/components/project/ProjectPortalEditor.tsx:571
 msgid "Show preview"
@@ -14576,6 +14608,10 @@ msgstr "Status"
 #: src/components/sharing/LiveButton.tsx:133
 msgid "Stay live for"
 msgstr "Zůstat živě po dobu"
+
+#: src/components/release/releases.ts:64
+msgid "Stay signed in on two devices, such as your phone and laptop."
+msgstr "Zůstaňte přihlášeni na dvou zařízeních, například na telefonu a notebooku."
 
 #: src/routes/project/library/LibraryRoute.tsx:28
 #: src/routes/project/library/LibraryRoute.tsx:30
@@ -15109,6 +15145,10 @@ msgstr "K tomu je potřeba placený tarif. Položíme vám ještě 5 rychlých o
 msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "To bylo příliš krátké na přepis. Podržte nahrávání o něco déle."
 
+#: src/components/release/releases.ts:82
+msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+msgstr "[Nápověda](https://docs.dembrane.com/) je přepsaná a aktuální."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:202
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
@@ -15124,6 +15164,10 @@ msgstr "Agent a společnost, která ho provozuje, získají obsah rozhovoru, kte
 #: src/routes/project/chat/ProjectChatRoute.tsx:855
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "Umělá inteligence na tuto otázku nedokázala odpovědět. Zkuste ji přeformulovat."
+
+#: src/components/release/releases.ts:72
+msgid "The app feels much faster overall."
+msgstr "Aplikace je celkově mnohem rychlejší."
 
 #: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
@@ -15159,7 +15203,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "V seznamu rozhovorů se přehledněji zobrazují součty."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:107
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Výchozí průvodce pro hostitele nyní připomíná, aby zapnuli režim soustředění a notifikace během nahrávání nerušily na obrazovce."
 
@@ -15449,7 +15493,7 @@ msgstr "vybraný rozhovor"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "Sdílená obrazovka zobrazuje vaši publikovanou prezentaci. Zveřejněním změn aktualizujete její obsah i přístup."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:115
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "Boční panel lépe sedí na mobilních obrazovkách a má opravené francouzské navigační popisky."
 
@@ -16513,7 +16557,7 @@ msgstr "Snažíte se připojit k existující organizaci?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Trying to join an existing organization?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:91
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Proměň konverzace v živé snímky. Spusť živou relaci nebo analýzu na vyžádání, prezentuj skupině a dohledávej zdroje poznatků."
 
@@ -16982,6 +17026,10 @@ msgstr "Uploading audio..."
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Nahrávání záznamů je k dispozici v placeném tarifu."
+
+#: src/components/release/releases.ts:76
+msgid "Uploads show clearly when they fail."
+msgstr "Nahrávání jasně ukáže, když selže."
 
 #: src/components/agent-access/AgentAccessSection.tsx:43
 msgid "URL copied"
