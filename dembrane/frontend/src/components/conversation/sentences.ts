@@ -41,3 +41,24 @@ export function activeSentenceIndex(
 	const s = sentences[found] as FinalSentence;
 	return time > s.end + HOLD_AFTER_END_SECONDS ? -1 : found;
 }
+
+// A pause this long between two segments starts a new paragraph.
+const PARAGRAPH_PAUSE_SECONDS = 2;
+
+/** The segments in paragraphs, a new one after a pause of more than two seconds; each keeps its index for highlight and seek. */
+export function paragraphs(
+	sentences: readonly FinalSentence[],
+): { sentence: FinalSentence; index: number }[][] {
+	const out: { sentence: FinalSentence; index: number }[][] = [];
+	let last = Number.NEGATIVE_INFINITY;
+	sentences.forEach((sentence, index) => {
+		if (!out.length || sentence.start - last > PARAGRAPH_PAUSE_SECONDS)
+			out.push([]);
+		(out[out.length - 1] as { sentence: FinalSentence; index: number }[]).push({
+			sentence,
+			index,
+		});
+		last = sentence.end;
+	});
+	return out;
+}

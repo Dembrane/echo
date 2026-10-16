@@ -2,7 +2,11 @@ import { Stack, Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { RedactedText } from "../common/RedactedText";
-import { activeSentenceIndex, type FinalSentence } from "./sentences";
+import {
+	activeSentenceIndex,
+	type FinalSentence,
+	paragraphs,
+} from "./sentences";
 
 /**
  * The final transcript as running text. With timed sentences and the merged audio the
@@ -24,7 +28,7 @@ export const FinalTranscript = ({
 	const [started, setStarted] = useState(false);
 	const timed = Boolean(audioUrl) && sentences.length > 0;
 	const active = timed && started ? activeSentenceIndex(sentences, time) : -1;
-	const activeRef = useRef<HTMLButtonElement | null>(null);
+	const activeRef = useRef<HTMLSpanElement | null>(null);
 
 	// Follow the audio: the sentence in play stays in view, without jumping the page for
 	// a person who is reading elsewhere (nearest only moves when it is out of view).
@@ -51,24 +55,36 @@ export const FinalTranscript = ({
 
 	return (
 		<Stack gap="md">
-			<Text lh={1.8} data-testid="final-transcript-text">
-				{sentences.map((s, i) => (
-					<span key={`${s.start}-${i}`}>
-						<button
-							type="button"
-							ref={i === active ? activeRef : undefined}
-							onClick={() => seek(s.start)}
-							className={cn(
-								"cursor-pointer rounded-sm border-0 bg-transparent px-0.5 text-left align-baseline font-[inherit] text-[inherit] leading-[inherit] transition-colors hover:bg-[var(--app-action-tint)]",
-								i === active && "bg-[var(--app-action-tint)]",
-							)}
-							data-active={i === active}
-						>
-							{s.text}
-						</button>{" "}
-					</span>
+			<Stack gap="sm" data-testid="final-transcript-text">
+				{paragraphs(sentences).map((para) => (
+					<Text key={para[0]?.index} lh={1.8}>
+						{para.map(({ sentence: s, index: i }) => (
+							<span key={`${s.start}-${i}`}>
+								{/* biome-ignore lint/a11y/useSemanticElements: a button is a box and breaks the line at every segment; a span lets the text flow */}
+								<span
+									role="button"
+									tabIndex={0}
+									ref={i === active ? activeRef : undefined}
+									onClick={() => seek(s.start)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											seek(s.start);
+										}
+									}}
+									className={cn(
+										"cursor-pointer rounded-sm px-0.5 transition-colors hover:bg-[var(--app-action-tint)]",
+										i === active && "bg-[var(--app-action-tint)]",
+									)}
+									data-active={i === active}
+								>
+									{s.text}
+								</span>{" "}
+							</span>
+						))}
+					</Text>
 				))}
-			</Text>
+			</Stack>
 			<div
 				className="sticky bottom-0 z-20 py-2"
 				style={{ backgroundColor: "var(--app-background)" }}
