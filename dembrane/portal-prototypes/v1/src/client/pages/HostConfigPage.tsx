@@ -177,11 +177,16 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
           title="Sign in on the dashboard"
           description="This page uses your dashboard session. Sign in there, then reload this page."
           action={
-            dashboardUrl && (
-              <Banner.Action onClick={() => window.open(dashboardUrl, "_blank")}>
-                Open the dashboard
+            <>
+              {dashboardUrl && (
+                <Banner.Action onClick={() => window.open(dashboardUrl, "_blank")}>
+                  Open the dashboard
+                </Banner.Action>
+              )}
+              <Banner.Action variant="secondary" onClick={() => location.assign(`${base}/start`)}>
+                Back to the conversation
               </Banner.Action>
-            )
+            </>
           }
         />
       </Shell>
