@@ -263,6 +263,7 @@ export function buildApp(deps: Deps) {
       monitorEnabled: deps.config.conversations.monitorEnabled,
       webhooksEnabled: deps.config.webhooks.enabled,
       dashboardUrl: deps.config.http.dashboardUrl,
+      finalTranscript: deps.config.llm.finalTranscript.length > 0,
     },
     now: () => new Date(),
   };

@@ -6,7 +6,9 @@ import {
   CompatLanguageModel,
   echoOptions,
   languageHint,
+  type SpeechResult,
   transcribeAudio,
+  transcribeSegments,
 } from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely } from "./observe";
@@ -21,6 +23,10 @@ export interface OpenAICompatibleConfig {
   readonly transcriptionModel: string;
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
+  /** "auto" lets Whisper hear the language of each piece; "project" forces the project's language. */
+  readonly transcriptionLanguage?: "auto" | "project" | undefined;
+  /** Send the project's key terms as Whisper's prompt. Off by default: see LLM_WHISPER_KEY_TERMS. */
+  readonly transcriptionKeyTerms?: boolean | undefined;
   readonly fetch?: typeof fetch | undefined;
 }
 
@@ -54,6 +60,19 @@ export interface Models {
       audio: Uint8Array,
       opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
     ): Promise<string>;
+    /** The same, as sentences with their start and end in seconds. */
+    transcribeSegments(
+      audio: Uint8Array,
+      opts?: {
+        language?: string | null;
+        prompt?: string;
+        signal?: AbortSignal;
+        /** Sampling temperature: 0 is Whisper's default; a retry of a doubtful span raises it. */
+        temperature?: number;
+        /** Send this language even where the configuration leaves the language to Whisper: a retry names the language it heard. */
+        forceLanguage?: string;
+      },
+    ): Promise<SpeechResult>;
   };
 }
 
@@ -122,11 +141,33 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
       speechToText: {
         model: compat.transcriptionModel,
         transcribe: (audio, o = {}) =>
-          transcribeAudio(compat, audio, languageHint(o.language), o.signal, o.prompt),
+          transcribeAudio(
+            compat,
+            audio,
+            whisperLanguage(compat, o.language),
+            o.signal,
+            whisperPrompt(compat, o.prompt),
+          ),
+        transcribeSegments: (audio, o = {}) =>
+          transcribeSegments(
+            compat,
+            audio,
+            o.forceLanguage ?? whisperLanguage(compat, o.language),
+            o.signal,
+            whisperPrompt(compat, o.prompt),
+            o.temperature,
+          ),
       },
     }),
   };
 }
+
+/** The language sent to Whisper: none lets it listen, which is how a piece that switches language is kept. */
+const whisperLanguage = (c: OpenAICompatibleConfig, language: string | null | undefined) =>
+  c.transcriptionLanguage === "auto" ? undefined : languageHint(language);
+/** The key terms go to Whisper only when asked: as its prompt they made it return less text (measured). */
+const whisperPrompt = (c: OpenAICompatibleConfig, prompt: string | undefined) =>
+  c.transcriptionKeyTerms ? prompt : undefined;
 
 function requireCompat(cfg: ModelsConfig): OpenAICompatibleConfig {
   if (!cfg.openaiCompatible?.baseUrl || !cfg.openaiCompatible.apiKey)

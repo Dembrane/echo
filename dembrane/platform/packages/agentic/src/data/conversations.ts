@@ -259,6 +259,9 @@ export async function transcript(d: DataDeps, who: Signed, conversationId: strin
   if (!conv || conv.deleted_at || !conv.project_id)
     throw new NotFoundError("conversation.not_found");
   await projectFor(d.access, who, String(conv.project_id), "conversation:read");
+  const [record] = await sql`
+    select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+  if (record) return String(record.text);
   const chunks = await sql`
     select transcript from conversation_chunk where conversation_id = ${conversationId}
     order by timestamp asc limit 1500`;

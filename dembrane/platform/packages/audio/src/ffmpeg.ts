@@ -278,3 +278,130 @@ export async function concatFiles(
     );
   }
 }
+
+export interface Silence {
+  readonly start: number;
+  readonly end: number;
+}
+
+/** Seconds per level frame: short enough to see a breath between two words, long enough to be steady. */
+export const LEVEL_FRAME_SECONDS = 0.05;
+
+/** The loudness of a recording, one RMS value in dB for every 50 ms, from ffmpeg's astats. */
+export async function levelFrames(path: string): Promise<number[]> {
+  const r = await run([
+    "ffmpeg",
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    path,
+    "-af",
+    "aresample=16000,asetnsamples=n=800:p=0,astats=metadata=1:reset=1,ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file=-",
+    "-f",
+    "null",
+    "-",
+  ]);
+  if (r.code !== 0) {
+    if (r.signal) throw new AudioError("transient", `ffmpeg level analysis killed (${r.signal})`);
+    throw new AudioError("ffmpeg", `level analysis failed: ${r.stderr.trim().slice(-300)}`);
+  }
+  const out: number[] = [];
+  for (const m of r.stdout.matchAll(/RMS_level=(-?[\d.]+|-inf)/g)) {
+    const v = m[1] as string;
+    out.push(v === "-inf" ? -90 : Math.max(-90, Number(v)));
+  }
+  return out;
+}
+
+export interface PauseOptions {
+  /** "fixed" is the old rule: a pause is anything under noiseDb. "adaptive" sets the line from the recording's own levels. */
+  readonly method?: "fixed" | "adaptive";
+  readonly noiseDb?: number;
+  /** Where in the room's noise to speech range the line falls, 0 at the noise floor and 1 at the speech level. */
+  readonly alpha?: number;
+  readonly minSeconds?: number;
+}
+
+export interface Pauses {
+  readonly silences: Silence[];
+  /** The quietest moments, one per half second of recording at most, for a cut where no pause exists. */
+  readonly quiet: { readonly t: number; readonly level: number }[];
+  readonly floorDb: number;
+  readonly speechDb: number;
+  readonly thresholdDb: number;
+}
+
+const percentile = (sorted: number[], p: number) =>
+  sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor(sorted.length * p)))] ?? -90;
+
+/**
+ * Pauses in a recording from its loudness frames. A fixed line fails in a noisy room, where
+ * the pauses are no quieter than the line and speech sits on it. The adaptive line is set from
+ * the recording itself: the room's noise is its quiet tenth (never lower than -70 dB, so
+ * digital silence does not push the line to nothing), speech is its loud quarter, and the line
+ * sits a fixed share of the way between them. Pauses are runs under the line, at least
+ * `minSeconds` long.
+ */
+export function findPauses(levels: readonly number[], opts: PauseOptions = {}): Pauses {
+  const sorted = [...levels].sort((a, b) => a - b);
+  const floorDb = Math.max(percentile(sorted, 0.1), -70);
+  const speechDb = percentile(sorted, 0.75);
+  const thresholdDb =
+    opts.method === "fixed"
+      ? (opts.noiseDb ?? -35)
+      : floorDb + (opts.alpha ?? 0.25) * Math.max(speechDb - floorDb, 6);
+  const min = Math.ceil((opts.minSeconds ?? 0.3) / LEVEL_FRAME_SECONDS);
+  const silences: Silence[] = [];
+  let from = -1;
+  levels.forEach((v, i) => {
+    if (v < thresholdDb) {
+      if (from < 0) from = i;
+    } else if (from >= 0) {
+      if (i - from >= min)
+        silences.push({ start: from * LEVEL_FRAME_SECONDS, end: i * LEVEL_FRAME_SECONDS });
+      from = -1;
+    }
+  });
+  if (from >= 0 && levels.length - from >= min)
+    silences.push({ start: from * LEVEL_FRAME_SECONDS, end: levels.length * LEVEL_FRAME_SECONDS });
+  // Quietest 0.3 s windows, one per 0.5 s: where to cut when speech runs on without a pause.
+  const w = Math.round(0.3 / LEVEL_FRAME_SECONDS);
+  const quiet: { t: number; level: number }[] = [];
+  for (let i = 0; i + w <= levels.length; i += Math.round(0.5 / LEVEL_FRAME_SECONDS)) {
+    let sum = 0;
+    for (let k = 0; k < w; k++) sum += levels[i + k] as number;
+    quiet.push({ t: (i + w / 2) * LEVEL_FRAME_SECONDS, level: sum / w });
+  }
+  return { silences, quiet, floorDb, speechDb, thresholdDb };
+}
+
+/**
+ * Pauses in a file: where ffmpeg hears nothing louder than the recording's own noise line for
+ * a short while. A recording is cut at these, never in the middle of a word. A pause that runs
+ * to the end of the file ends at the duration.
+ */
+export async function detectSilences(path: string, opts: PauseOptions = {}): Promise<Silence[]> {
+  return (await analysePauses(path, opts)).silences;
+}
+
+export async function analysePauses(path: string, opts: PauseOptions = {}): Promise<Pauses> {
+  return findPauses(await levelFrames(path), opts);
+}
+
+/** The `silence_start` and `silence_end` lines of silencedetect, paired in order. */
+export function parseSilences(log: string): Silence[] {
+  const out: Silence[] = [];
+  let open: number | null = null;
+  for (const line of log.split("\n")) {
+    const s = /silence_start: (-?[\d.]+)/.exec(line);
+    if (s) open = Math.max(0, Number(s[1]));
+    const e = /silence_end: (-?[\d.]+)/.exec(line);
+    if (e && open !== null) {
+      out.push({ start: open, end: Number(e[1]) });
+      open = null;
+    }
+  }
+  // Left open: the file ends in silence; the caller closes it with the duration.
+  if (open !== null) out.push({ start: open, end: Number.POSITIVE_INFINITY });
+  return out;
+}

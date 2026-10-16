@@ -4,12 +4,23 @@ import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provid
 import { FallbackModel } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import {
+  DEFAULT_RETRY,
+  doubtful,
+  editSentences,
   GeminiTranscriber,
+  guardEdit,
   isRecoverableTranscriptionError,
+  maxWordDistance,
+  parseSegments,
   parseTranscriptJson,
   regexRedactPii,
+  rescaleToPiece,
+  spansOf,
   TranscriptParseError,
   TranscriptRefusedError,
+  tidy,
+  toSeconds,
+  transcribeChecked,
   transcriptionFailureReason,
 } from "../src";
 
@@ -108,6 +119,7 @@ test("with a speech-to-text model its words are the transcript and no chat model
           heard.push(o);
           return "Ik ben Jan en ik werk bij Dembrane.";
         },
+        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
       },
     },
     logger,
@@ -132,7 +144,11 @@ test("with a speech-to-text model, redaction is one text-only pass with reasonin
     {
       model: () => model(['{"corrected_transcript": "Ik ben <redacted_name>", "note": "n"}'], seen),
       embedding: () => ({}) as never,
-      speechToText: { model: "whisper-fake", transcribe: async () => "Ik ben Jan" },
+      speechToText: {
+        model: "whisper-fake",
+        transcribe: async () => "Ik ben Jan",
+        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
+      },
     },
     logger,
   );
@@ -297,4 +313,279 @@ test("typed text with both redaction flags off is returned as typed and calls no
   const out = await t.redactText({ text: "mail jan@example.nl" });
   expect(out.transcript).toBe("mail jan@example.nl");
   expect(seen).toHaveLength(0);
+});
+
+test("a piece whose last sentence ends after the audio is pulled back to its length", () => {
+  const out = rescaleToPiece(
+    [
+      { start: 0, end: 30, text: "a" },
+      { start: 30, end: 72, text: "b" },
+    ],
+    60,
+    true,
+  );
+  expect(out[1]?.end).toBeCloseTo(60);
+  expect(out[0]?.end).toBeCloseTo(25);
+  // Inside the audio, or switched off: untouched.
+  const early = [{ start: 0, end: 50, text: "a" }];
+  expect(rescaleToPiece(early, 60, true)).toEqual(early);
+  expect(rescaleToPiece([{ start: 0, end: 80, text: "a" }], 60, false)[0]?.end).toBe(80);
+});
+
+test("timed sentences are parsed from seconds or a clock and tidied into the piece", () => {
+  const parsed = parseSegments(
+    JSON.stringify({
+      segments: [
+        { start: "00:02.5", end: "00:04", text: " Hallo. " },
+        { start: 1, end: 3, text: "Tweede" },
+        { start: 3, end: 99, text: "" },
+      ],
+    }),
+    "stop",
+  );
+  expect(parsed.map((s) => [s.start, s.end, s.text])).toEqual([
+    [2.5, 4, "Hallo."],
+    [1, 3, "Tweede"],
+  ]);
+  expect(tidy(parsed, 3.5).map((s) => [s.start, s.end])).toEqual([
+    [1, 3],
+    [3, 3.5],
+  ]);
+  expect(toSeconds("1:02:03")).toBe(3723);
+  expect(toSeconds("abc")).toBeNull();
+});
+
+function editModel(answer: (prompt: string) => unknown, seen: string[] = []): LanguageModelV4 {
+  return {
+    specificationVersion: "v4",
+    provider: "fake",
+    modelId: "edit-fake",
+    supportedUrls: {},
+    async doGenerate(opts: LanguageModelV4CallOptions) {
+      const user = (opts.prompt[1] as { content: { text: string }[] }).content[0]?.text ?? "";
+      seen.push(user);
+      return {
+        content: [{ type: "text", text: JSON.stringify(answer(user)) }],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: {
+          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+          outputTokens: { total: 5, text: 5, reasoning: 0 },
+        },
+        warnings: [],
+      } as never;
+    },
+    async doStream() {
+      throw new Error("not used");
+    },
+  };
+}
+
+const sentenceList = [
+  { start: 0, end: 4, text: "ik werk bij dem brane en praat met jorim" },
+  { start: 4.5, end: 9, text: "we hebben het over de roadmap voor volgende maand" },
+  { start: 9.5, end: 12, text: "salam aleikum" },
+];
+
+test("the text pass keeps ids and times and takes a small edit, refusing a rewrite and a made-up id", async () => {
+  const seen: string[] = [];
+  const models = {
+    model: () =>
+      editModel(
+        () => ({
+          sentences: [
+            { id: 0, text: "Ik werk bij Dembrane en praat met Jorim." },
+            {
+              id: 1,
+              text: "Completely different: here is a summary of the roadmap discussion and next steps.",
+            },
+            { id: 2, text: "Salam aleikum." },
+            { id: 7, text: "made up" },
+          ],
+        }),
+        seen,
+      ),
+    embedding: () => ({}) as never,
+  } as never;
+  const out = await editSentences(
+    models,
+    sentenceList,
+    { language: "nl", keyTerms: ["Dembrane", "Jorim"] },
+    logger,
+  );
+  expect(out.sentences.map((s) => [s.start, s.end])).toEqual(
+    sentenceList.map((s) => [s.start, s.end]),
+  );
+  expect(out.sentences[0]?.text).toBe("Ik werk bij Dembrane en praat met Jorim.");
+  expect(out.sentences[1]?.text).toBe(sentenceList[1]?.text);
+  expect(out.sentences[2]?.text).toBe("Salam aleikum.");
+  expect(out.stats).toMatchObject({ sentences: 3, edited: 2, changedWords: 1, failedBatches: 0 });
+  expect(out.stats.rejected).toBeGreaterThanOrEqual(2);
+  expect(seen[0]).toContain("Dembrane, Jorim");
+  expect(seen[0]).toContain("0: ik werk bij dem brane");
+});
+
+test("a batch the model fails on stays as Whisper wrote it", async () => {
+  const models = {
+    model: () => editModel(() => ({ nothing: true })),
+    embedding: () => ({}) as never,
+  } as never;
+  const out = await editSentences(models, sentenceList, {}, logger);
+  expect(out.sentences).toEqual(sentenceList);
+  expect(out.stats.failedBatches).toBe(1);
+});
+
+test("the guard puts back the swaps that broke sentences and keeps spellings, key terms, casing and punctuation", () => {
+  const dutch = guardEdit("ik zag ze lopen", "ik zag hij lopen");
+  expect(dutch.text).toBe("ik zag ze lopen");
+  expect(dutch.refused).toBe(1);
+  expect(guardEdit("het verhaal achter de film", "het mooie de film").text).toBe(
+    "het verhaal achter de film",
+  );
+  expect(guardEdit("the uproar'd crowd", "the arose crowd").text).toBe("the uproar'd crowd");
+  expect(guardEdit("i find it so", "he found it so").text).toBe("i find it so");
+  // What it is for.
+  const terms = ["Dembrane", "Jorim", "Toki Pona"];
+  expect(guardEdit("ik werk bij dem brane", "Ik werk bij Dembrane.", terms)).toMatchObject({
+    text: "Ik werk bij Dembrane.",
+    kept: 1,
+  });
+  expect(guardEdit("soy yorim aqui", "Soy Jorim aquí.", terms).text).toBe("Soy Jorim aquí.");
+  expect(guardEdit("maybe toki ponna works", "Maybe Toki Pona works.", terms).text).toBe(
+    "Maybe Toki Pona works.",
+  );
+  expect(guardEdit("we wich restaraunt", "we which restaurant").text).toBe("we which restaurant");
+  expect(guardEdit("hola buenas tardes", "Hola, buenas tardes.").text).toBe("Hola, buenas tardes.");
+  // A key term never replaces a different word.
+  expect(guardEdit("the sea is calm", "Sameer sea is calm", terms).text).toBe("the sea is calm");
+  expect([
+    maxWordDistance("ze", "zo"),
+    maxWordDistance("find", "found"),
+    maxWordDistance("restaraunt", "restaurant"),
+  ]).toEqual([0, 1, 2]);
+});
+
+const seg = (
+  start: number,
+  end: number,
+  text: string,
+  avgLogprob = -0.3,
+  compressionRatio = 1.4,
+) => ({
+  start,
+  end,
+  text,
+  avgLogprob,
+  compressionRatio,
+});
+
+test("doubtful stretches are found from Whisper's own confidence and merged with a pad", () => {
+  const segments = [
+    seg(0, 5, "fine"),
+    seg(5, 9, "unsure", -1.4),
+    seg(9.5, 12, "looping looping looping", -0.5, 3.1),
+    seg(12, 20, "fine"),
+    seg(28, 29, "x", -1.2),
+  ];
+  const spans = spansOf(segments, { ...DEFAULT_RETRY, minGap: 0 }, 30);
+  expect(spans.map((s) => [s.start, s.end, s.indexes])).toEqual([
+    [4.7, 12.3, [1, 2]],
+    [27.7, 29.3, [4]],
+  ]);
+  expect(doubtful(seg(0, 3, "a", -0.4, 1.2), DEFAULT_RETRY)).toBe(false);
+});
+
+test("a retry replaces a doubtful stretch only when the signals say it is better, and every retry is counted", async () => {
+  const calls: { temperature?: number | undefined; forceLanguage?: string | undefined }[] = [];
+  const stt = {
+    model: "w",
+    transcribe: async () => "",
+    transcribeSegments: async (
+      _a: Uint8Array,
+      o: { temperature?: number; forceLanguage?: string } = {},
+    ) => {
+      calls.push({ temperature: o.temperature, forceLanguage: o.forceLanguage });
+      if (o.temperature === undefined)
+        return {
+          text: "",
+          seconds: 20,
+          language: "nl",
+          segments: [seg(0, 6, "fine"), seg(6, 12, "garbled", -1.6), seg(12, 20, "fine")],
+        };
+      // The retry hears it: a clean reading of the span, in the language it reports.
+      return {
+        text: "",
+        seconds: 6,
+        language: "nl",
+        segments: [seg(0, 6, "heard properly", -0.4)],
+      };
+    },
+  } as never;
+  const cut = async () => new Uint8Array([1]);
+  const out = await transcribeChecked(stt, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  expect(out.result.segments.map((s) => s.text)).toEqual(["fine", "heard properly", "fine"]);
+  expect(out.stats).toMatchObject({ spans: 1, attempts: 1, improved: 1, kept: 0, failed: 0 });
+  expect(calls[1]?.temperature).toBe(0.2);
+
+  // A retry that is no better leaves the first reading and says so.
+  const worse = {
+    model: "w",
+    transcribe: async () => "",
+    transcribeSegments: async (_a: Uint8Array, o: { temperature?: number } = {}) => ({
+      text: "",
+      seconds: 20,
+      language: "nl",
+      segments:
+        o.temperature === undefined
+          ? [seg(0, 8, "a", -1.5), seg(8, 20, "t")]
+          : [seg(0, 8, "b", -1.9)],
+    }),
+  } as never;
+  const kept = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  expect(kept.result.segments.map((s) => s.text)).toEqual(["a", "t"]);
+  expect(kept.stats).toMatchObject({ spans: 1, attempts: 2, improved: 0, kept: 1 });
+
+  // No cutter or no policy: one plain call, no retries.
+  const plain = await transcribeChecked(
+    worse,
+    new Uint8Array([0]),
+    {},
+    20,
+    undefined,
+    DEFAULT_RETRY,
+  );
+  expect(plain.stats.attempts).toBe(0);
+});
+
+test("a stretch where Whisper wrote nothing is read again and kept only when it holds speech", async () => {
+  const cut = async () => new Uint8Array([1]);
+  const mk = (retried: string) =>
+    ({
+      model: "w",
+      transcribe: async () => "",
+      transcribeSegments: async (_a: Uint8Array, o: { temperature?: number } = {}) => ({
+        text: "",
+        seconds: 30,
+        language: "nl",
+        segments:
+          o.temperature === undefined
+            ? [seg(0, 18, "ik denk dat het goed is")]
+            : [seg(0, 12, retried, -0.5)],
+      }),
+    }) as never;
+  const words = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
+  const full = await transcribeChecked(mk(words), new Uint8Array([0]), {}, 30, cut, DEFAULT_RETRY);
+  expect(full.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is", words]);
+  expect(full.result.segments[1]?.start).toBeCloseTo(17.7);
+  expect(full.stats).toMatchObject({ spans: 1, improved: 1 });
+  // A few words over twenty seconds are what Whisper invents on silence.
+  const halluc = await transcribeChecked(
+    mk("bedankt voor het kijken"),
+    new Uint8Array([0]),
+    {},
+    30,
+    cut,
+    DEFAULT_RETRY,
+  );
+  expect(halluc.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is"]);
+  expect(halluc.stats).toMatchObject({ spans: 1, improved: 0, kept: 1 });
 });

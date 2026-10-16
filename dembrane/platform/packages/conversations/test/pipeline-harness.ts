@@ -145,6 +145,7 @@ export async function startWorker(
     media?: Media;
     transcriber?: FakeTranscriber;
     maxChunkBytes?: number;
+    final?: PipelineDeps["final"];
     executorId?: string;
     bucketRoot?: string;
   } = {},
@@ -169,6 +170,7 @@ export async function startWorker(
     now: () => new Date(),
     webhooks: { enabled: false, dashboardUrl: "http://dashboard.test" },
     ...(opts.maxChunkBytes && { maxChunkBytes: opts.maxChunkBytes }),
+    ...(opts.final && { final: opts.final }),
   };
   const worker = conversationWorker(deps, { retry: FAST });
   await queue.start(worker.jobs);

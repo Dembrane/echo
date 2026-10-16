@@ -59,15 +59,37 @@ function withoutTrailingSlashes(url: string): string {
   return url.slice(0, end);
 }
 
-/** Audio to text on the endpoint's `/audio/transcriptions`. */
-export async function transcribeAudio(
+/** A stretch of speech with its start and end in seconds from the start of the audio sent. */
+export interface SpeechSegment {
+  readonly start: number;
+  readonly end: number;
+  readonly text: string;
+  /** Whisper's own confidence in the segment (mean log probability of its tokens; about -0.3 is clean, below -1 is doubtful). */
+  readonly avgLogprob?: number;
+  /** How compressible the text is: over 2.4 is Whisper looping on itself. */
+  readonly compressionRatio?: number;
+  /** Chance that the segment holds no speech. */
+  readonly noSpeechProb?: number;
+}
+
+export interface SpeechResult {
+  readonly text: string;
+  readonly segments: readonly SpeechSegment[];
+  /** Seconds of audio the provider billed, when it says. */
+  readonly seconds: number | null;
+  /** The language Whisper reported for the audio sent. */
+  readonly language?: string | undefined;
+}
+
+async function requestTranscription(
   ep: CompatEndpoint,
   audio: Uint8Array,
+  format: "json" | "verbose_json",
   language?: string,
   signal?: AbortSignal,
-  /** Words the speaker is likely to say (names, terms): Whisper spells them as given. */
   prompt?: string,
-): Promise<string> {
+  temperature?: number,
+): Promise<Record<string, unknown>> {
   if (audio.byteLength > MAX_AUDIO_BYTES) {
     const err = new Error(
       `audio is ${audio.byteLength} bytes, above the ${MAX_AUDIO_BYTES} the speech-to-text endpoint takes`,
@@ -78,9 +100,10 @@ export async function transcribeAudio(
   const kind = sniff(audio);
   const form = new FormData();
   form.set("model", ep.transcriptionModel);
-  form.set("response_format", "json");
+  form.set("response_format", format);
   if (language) form.set("language", language);
   if (prompt) form.set("prompt", prompt);
+  if (temperature !== undefined) form.set("temperature", String(temperature));
   form.set("file", new Blob([audio as never], { type: kind.type }), `audio.${kind.ext}`);
   const res = await (ep.fetch ?? fetch)(
     `${withoutTrailingSlashes(ep.baseUrl)}/audio/transcriptions`,
@@ -100,8 +123,66 @@ export async function transcribeAudio(
       res.status === 408 || res.status === 429 || res.status >= 500;
     throw err;
   }
-  const body = (await res.json()) as { text?: unknown };
+  return (await res.json()) as Record<string, unknown>;
+}
+
+/** Audio to text on the endpoint's `/audio/transcriptions`. */
+export async function transcribeAudio(
+  ep: CompatEndpoint,
+  audio: Uint8Array,
+  language?: string,
+  signal?: AbortSignal,
+  /** Words the speaker is likely to say (names, terms): Whisper spells them as given. */
+  prompt?: string,
+): Promise<string> {
+  // verbose_json, though only the text is used: for the same 30 second pieces of a recording that
+  // switches language, plain json returned 130 to 147 words and verbose_json 173 to 178.
+  const body = await requestTranscription(ep, audio, "verbose_json", language, signal, prompt);
   return typeof body.text === "string" ? body.text.trim() : "";
+}
+
+/**
+ * The same call asking for segments: the text split where the model heard a sentence end,
+ * each with its start and end. The final transcript's player highlights these.
+ */
+export async function transcribeSegments(
+  ep: CompatEndpoint,
+  audio: Uint8Array,
+  language?: string,
+  signal?: AbortSignal,
+  prompt?: string,
+  temperature?: number,
+): Promise<SpeechResult> {
+  const body = await requestTranscription(
+    ep,
+    audio,
+    "verbose_json",
+    language,
+    signal,
+    prompt,
+    temperature,
+  );
+  const raw = Array.isArray(body.segments) ? (body.segments as Record<string, unknown>[]) : [];
+  const segments = raw
+    .map((s) => ({
+      start: Number(s.start),
+      end: Number(s.end),
+      text: typeof s.text === "string" ? s.text.trim() : "",
+      ...(Number.isFinite(Number(s.avg_logprob)) &&
+        s.avg_logprob !== null && { avgLogprob: Number(s.avg_logprob) }),
+      ...(Number.isFinite(Number(s.compression_ratio)) &&
+        s.compression_ratio !== null && { compressionRatio: Number(s.compression_ratio) }),
+      ...(Number.isFinite(Number(s.no_speech_prob)) &&
+        s.no_speech_prob !== null && { noSpeechProb: Number(s.no_speech_prob) }),
+    }))
+    .filter((s) => s.text && Number.isFinite(s.start) && Number.isFinite(s.end));
+  const duration = Number(body.duration);
+  return {
+    text: typeof body.text === "string" ? body.text.trim() : segments.map((s) => s.text).join(" "),
+    segments,
+    seconds: Number.isFinite(duration) ? duration : null,
+    ...(typeof body.language === "string" && { language: body.language }),
+  };
 }
 
 function audioBytes(part: { data: unknown }): Uint8Array | null {
