@@ -79,7 +79,7 @@ export const UpdateReportModalButton = ({
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
+	const { mutate, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
 	// Free tier: one report per workspace. Gate the "New Report" action on click.
 	const { workspace } = useWorkspace();
@@ -131,9 +131,9 @@ export const UpdateReportModalButton = ({
 		open();
 	};
 
-	const handleSubmit = async (schedule?: boolean) => {
+	const handleSubmit = (schedule?: boolean) => {
 		posthog.capture("report_updated");
-		await mutateAsync(
+		mutate(
 			{
 				language,
 				otherPayload: {
