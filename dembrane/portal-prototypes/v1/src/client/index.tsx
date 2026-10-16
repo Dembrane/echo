@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { HostConfigPage } from "./pages/HostConfigPage";
 import { ProjectHome } from "./pages/ProjectHome";
 import { Start } from "./pages/Start";
-import { Shell } from "./ui";
+import { isProjectId } from "../shared/ids";
+import { ProjectNotFound, Shell } from "./ui";
 import "./styles.css";
 
 const PAGES = new Set(["start", "host"]);
@@ -20,9 +21,10 @@ function App() {
   const page = PAGES.has(parts.at(-1) ?? "") ? parts.pop() : undefined;
   const projectId = parts.length === 1 || parts.length === 2 ? parts.at(-1) : undefined;
 
+  if (projectId && !isProjectId(projectId)) return <ProjectNotFound />;
   if (projectId) {
     const base = `/${parts.map(encodeURIComponent).join("/")}`;
-    if (page === "start") return <Start />;
+    if (page === "start") return <Start projectId={projectId} />;
     if (page === "host") return <HostConfigPage projectId={projectId} />;
     return <ProjectHome projectId={projectId} base={base} />;
   }

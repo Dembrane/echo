@@ -21,12 +21,21 @@ import {
   GROUPS,
   type GroupKey,
 } from "../../shared/fields";
-import { errorMessage, fieldErrors, getAppConfig, getConfig, getSession, saveConfig } from "../api";
-import { Shell } from "../ui";
+import {
+  errorMessage,
+  fieldErrors,
+  getAccess,
+  getAppConfig,
+  getConfig,
+  getSession,
+  saveConfig,
+} from "../api";
+import { ProjectNotFound, Shell } from "../ui";
 
 type State =
   | { kind: "loading" }
   | { kind: "signed-out" }
+  | { kind: "missing" }
   | { kind: "failed"; message: string }
   | { kind: "ready"; view: ConfigView };
 
@@ -59,20 +68,23 @@ export function HostConfigPage({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     (async () => {
-      const [app, session] = await Promise.all([getAppConfig(), getSession()]);
+      const [app, session, access] = await Promise.all([
+        getAppConfig(),
+        getSession(),
+        getAccess(projectId),
+      ]);
       if (app.ok) setDashboardUrl(app.body.dashboardUrl);
+      if (!access.ok && access.status === 404) return setState({ kind: "missing" });
       if (!session.ok || !session.body) return setState({ kind: "signed-out" });
       setEmail(session.body.user.email);
 
       const res = await getConfig(projectId);
       if (res.ok) return show(res.body);
       if (res.status === 401) return setState({ kind: "signed-out" });
+      if (res.status === 404) return setState({ kind: "missing" });
       setState({
         kind: "failed",
-        message:
-          res.status === 403 || res.status === 404
-            ? "This project doesn't exist, or you don't have access to it."
-            : errorMessage(res),
+        message: res.status === 403 ? "You don't have access to this project." : errorMessage(res),
       });
     })();
   }, [projectId, show]);
@@ -155,6 +167,7 @@ export function HostConfigPage({ projectId }: { projectId: string }) {
       </Shell>
     );
   }
+  if (state.kind === "missing") return <ProjectNotFound />;
   if (state.kind === "signed-out") {
     return (
       <Shell title={title}>

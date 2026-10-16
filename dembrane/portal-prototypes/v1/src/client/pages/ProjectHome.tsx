@@ -2,7 +2,7 @@ import { Badge, LayerCard, LinkButton, Loader, Text } from "@cloudflare/kumo";
 import { ChatsCircleIcon, GearSixIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { getAccess } from "../api";
-import { Shell } from "../ui";
+import { ProjectNotFound, Shell } from "../ui";
 
 /**
  * A project's own link. Participants go straight on to /start; a host picks
@@ -10,14 +10,17 @@ import { Shell } from "../ui";
  */
 export function ProjectHome({ projectId, base }: { projectId: string; base: string }) {
   const [role, setRole] = useState<string | null | undefined>(undefined);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     getAccess(projectId).then((res) => {
+      if (!res.ok && res.status === 404) return setMissing(true);
       if (res.ok && res.body.host) return setRole(res.body.role);
       location.replace(`${base}/start`);
     });
   }, [projectId, base]);
 
+  if (missing) return <ProjectNotFound />;
   if (role === undefined) {
     return (
       <Shell title="Project">

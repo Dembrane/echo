@@ -41,5 +41,20 @@ export const fetchProject = (env: Env, cookie: string, id: string) =>
     `/api/v2/projects/${encodeURIComponent(id)}/bff?include_tags=false`,
   );
 
+/**
+ * Whether a project exists, asked as a participant would, with no session. The
+ * portal's route answers 404 for a missing project, and 403 for one that
+ * exists but isn't taking conversations.
+ */
+export async function projectExists(env: Env, id: string): Promise<boolean> {
+  const res = await call<unknown>(
+    env,
+    "",
+    "GET",
+    `/api/participant/projects/${encodeURIComponent(id)}`,
+  );
+  return res.ok || res.status !== 404;
+}
+
 export const patchProject = (env: Env, cookie: string, id: string, fields: Config) =>
   call<ApiProject>(env, cookie, "PATCH", `/api/v2/bff/projects/${encodeURIComponent(id)}`, fields);

@@ -1,5 +1,5 @@
-import { Button, Text } from "@cloudflare/kumo";
-import { GearSixIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
+import { Button, Empty, Text } from "@cloudflare/kumo";
+import { GearSixIcon, MoonIcon, QuestionIcon, SunIcon } from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useState } from "react";
 
 function ModeToggle() {
@@ -19,6 +19,19 @@ function ModeToggle() {
       onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}
       icon={mode === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
     />
+  );
+}
+
+/** For a project ID that isn't one, or a project that doesn't exist. */
+export function ProjectNotFound() {
+  return (
+    <Shell title="Not found">
+      <Empty
+        icon={<QuestionIcon size={48} />}
+        title="Project not found"
+        description="Check the link you were given."
+      />
+    </Shell>
   );
 }
 
