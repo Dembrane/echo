@@ -1,6 +1,7 @@
 import { getAgentByName } from "agents";
 import { type Context, Hono } from "hono";
 import { type Config, FIELD_KEYS } from "../shared/fields";
+import { fetchProject } from "./api";
 import type { ConfigResult } from "./project.do";
 
 export { ProjectConfig } from "./project.do";
@@ -46,6 +47,19 @@ const reply = (c: Context<AppEnv>, result: ConfigResult) =>
   result.ok
     ? c.json(result.view)
     : c.json(result.body as object, result.status as 400 | 401 | 403 | 404 | 422 | 500);
+
+/**
+ * Whether the visitor is one of the project's hosts: signed in on the
+ * dashboard, and let in by the API. Anyone else is a participant.
+ */
+app.get("/api/projects/:id/access", async (c) => {
+  const who = await signedIn(c);
+  if (!who) return c.json({ host: false, role: null });
+  const res = await fetchProject(c.env, who.cookie, c.req.param("id"));
+  return c.json(
+    res.ok ? { host: true, role: res.body._role ?? null } : { host: false, role: null },
+  );
+});
 
 app.get("/api/projects/:id/config", async (c) => {
   const who = await signedIn(c);

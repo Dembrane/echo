@@ -18,6 +18,9 @@ export const getSession = () => call<Session>("/auth/get-session");
 
 export const getAppConfig = () => call<{ dashboardUrl: string }>("/config");
 
+export const getAccess = (projectId: string) =>
+  call<{ host: boolean; role: string | null }>(`/projects/${encodeURIComponent(projectId)}/access`);
+
 export const getConfig = (projectId: string) =>
   call<ConfigView>(`/projects/${encodeURIComponent(projectId)}/config`);
 

@@ -20,9 +20,9 @@ import {
   type FieldDef,
   GROUPS,
   type GroupKey,
-} from "../shared/fields";
-import { errorMessage, fieldErrors, getAppConfig, getConfig, getSession, saveConfig } from "./api";
-import { Shell } from "./ui";
+} from "../../shared/fields";
+import { errorMessage, fieldErrors, getAppConfig, getConfig, getSession, saveConfig } from "../api";
+import { Shell } from "../ui";
 
 type State =
   | { kind: "loading" }

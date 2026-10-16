@@ -1,6 +1,12 @@
 # portal-prototypes/v1: a host's settings page for a project
 
-A page where a host changes an Echo project's settings, at the participant portal's URL with `/host` on the end: `/:language?/:projectId/host`, such as `/en-US/<projectId>/host`. It's the start of a new portal, so there's no participant page yet.
+The start of a new participant portal, with a page where a host changes an Echo project's settings. The URLs follow the portal's, `/:language?/:projectId/:page?`:
+
+| URL | Shows |
+| --- | --- |
+| `/en-US/<projectId>` | Hosts (signed in on the dashboard, with access to the project) get a choice: take part, or manage the project. Anyone else is sent on to `/start`. |
+| `/en-US/<projectId>/start` | The participant portal. For now it's a "not yet implemented" placeholder. |
+| `/en-US/<projectId>/host` | The project's settings. |
 
 Signing in on the dashboard is enough to use it. It's a Cloudflare Worker with a Vite + React page in Cloudflare's [Kumo](https://www.npmjs.com/package/@cloudflare/kumo) theme, laid out like the examples in `dembrane/cloudflare-examples`.
 
@@ -14,7 +20,7 @@ You need the dembrane API on `:8080` and the dashboard on `:5173`, as usual.
    pnpm install
    pnpm dev
    ```
-3. Open http://localhost:8804/en-US/<projectId>/host.
+3. Open http://localhost:8804/en-US/<projectId>.
 
 To point it at another API, such as the remote dev VM's, copy `.dev.vars.example` to `.dev.vars`. `VITE_DEV_API_PROXY` has the same name and default as in the dashboard's `vite.config.ts`.
 
@@ -63,7 +69,8 @@ API       dembrane platform, as the signed-in person
 - `src/server/project.do.ts`: `ProjectConfig`, the mirror, and its sync.
 - `src/server/api.ts`: the calls to the dembrane API.
 - `src/shared/fields.ts`: the settings, their types and their option lists.
-- `src/client/`: the page. `HostConfigPage.tsx` holds the form.
+- `src/client/index.tsx`: picks the page from the URL.
+- `src/client/pages/`: `ProjectHome.tsx` (the host's choice), `Start.tsx` (the placeholder) and `HostConfigPage.tsx` (the settings form).
 
 ## Limits
 
