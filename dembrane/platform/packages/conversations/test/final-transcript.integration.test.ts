@@ -215,16 +215,16 @@ run("final transcript", () => {
     expect(statuses.map((s) => s.event)).toContain("task_final_transcript.completed");
   });
 
-  test("a conversation with one chunk keeps its live text", async () => {
+  test("a conversation with one chunk gets the final pass too, for its timings", async () => {
     const cid = newId();
     await finished(cid, 1);
-    await until(async () => {
-      const [c] = await h.sql`select is_all_chunks_transcribed from conversation where id = ${cid}`;
-      return c?.is_all_chunks_transcribed ? c : null;
+    const rows = await until(async () => {
+      const r = await finals(cid);
+      return r.length === 2 ? r : null;
     });
-    await Bun.sleep(3000);
-    expect(await finals(cid)).toHaveLength(0);
-    expect(await record(cid)).toHaveLength(0);
+    const w = rows.find((r) => r.provider === "whisper") as Record<string, unknown>;
+    expect((w.sentences as unknown[]).length).toBeGreaterThan(0);
+    expect(await record(cid)).toHaveLength(1);
   });
 
   test("an anonymised conversation gets redacted text and no timings", async () => {

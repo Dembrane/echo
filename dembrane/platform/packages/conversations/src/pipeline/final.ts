@@ -83,8 +83,9 @@ export interface FinalPlan {
 
 /**
  * Merges the chunks, finds the pauses and cuts the merged file into pieces the provider
- * takes in one request. Returns null when there is nothing to improve: a single chunk was
- * already transcribed whole, no audio, or the chunk list changed since the hand-over.
+ * takes in one request. Returns null when there is nothing to transcribe: no audio, or the
+ * chunk list changed since the hand-over. A single chunk still gets its pass: the sentence
+ * times for the player, the text pass and the one redaction all come from it.
  * Idempotent: the merged file and the pieces are named from the chunk list.
  */
 export async function planFinal(
@@ -105,7 +106,7 @@ export async function planFinal(
         isNotNull(conversation_chunk.path),
       ),
     );
-  if ((audioChunks?.n ?? 0) < 2) return null;
+  if ((audioChunks?.n ?? 0) < 1) return null;
 
   let merged: { path: string; duration: number };
   try {
