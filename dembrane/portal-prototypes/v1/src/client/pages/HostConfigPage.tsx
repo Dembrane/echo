@@ -36,7 +36,7 @@ type State =
   | { kind: "loading" }
   | { kind: "signed-out" }
   | { kind: "missing" }
-  | { kind: "failed"; message: string }
+  | { kind: "failed"; message: string; forbidden: boolean }
   | { kind: "ready"; view: ConfigView };
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
@@ -44,7 +44,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 const jsonText = (value: unknown) => (value == null ? "" : JSON.stringify(value, null, 2));
 
 /** The settings form for one project, read from and saved to its mirror. */
-export function HostConfigPage({ projectId }: { projectId: string }) {
+export function HostConfigPage({ projectId, base }: { projectId: string; base: string }) {
   const toasts = useKumoToastManager();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [email, setEmail] = useState<string | null>(null);
@@ -85,6 +85,7 @@ export function HostConfigPage({ projectId }: { projectId: string }) {
       setState({
         kind: "failed",
         message: res.status === 403 ? "You don't have access to this project." : errorMessage(res),
+        forbidden: res.status === 403,
       });
     })();
   }, [projectId, show]);
@@ -194,6 +195,13 @@ export function HostConfigPage({ projectId }: { projectId: string }) {
           icon={<WarningIcon />}
           title="Can't open this project"
           description={state.message}
+          action={
+            state.forbidden && (
+              <Banner.Action onClick={() => location.assign(`${base}/start`)}>
+                Back to the conversation
+              </Banner.Action>
+            )
+          }
         />
       </Shell>
     );

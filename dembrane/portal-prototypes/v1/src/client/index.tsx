@@ -25,7 +25,7 @@ function App() {
   if (projectId) {
     const base = `/${parts.map(encodeURIComponent).join("/")}`;
     if (page === "start") return <Start projectId={projectId} base={base} />;
-    if (page === "host") return <HostConfigPage projectId={projectId} />;
+    if (page === "host") return <HostConfigPage projectId={projectId} base={base} />;
     return <ProjectHome projectId={projectId} base={base} />;
   }
   return (
