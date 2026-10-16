@@ -79,6 +79,8 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [autoSync, setAutoSync] = useState(readAutoSync);
+  // Focus left a field with changes waiting: auto-sync saves now.
+  const [leftField, setLeftField] = useState(false);
 
   const show = useCallback((view: ConfigView) => {
     setState({ kind: "ready", view });
@@ -182,14 +184,22 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
     }
   }
 
-  // With auto-sync on, changes save themselves once editing pauses. It holds off
-  // after a failed save until the next edit, rather than retrying in a loop.
+  // With auto-sync on, changes save 3s after the last edit, or as soon as focus
+  // leaves a field, whichever comes first. It holds off after a failed save until
+  // the next edit, rather than retrying in a loop.
   // biome-ignore lint/correctness/useExhaustiveDependencies: save reads the same state these name.
   useEffect(() => {
-    if (!autoSync || !changed.length || saving || saveError) return;
-    const timer = setTimeout(() => save({ quiet: true }), 800);
+    if (!changed.length) return setLeftField(false);
+    if (!autoSync || saving || saveError) return;
+    const timer = setTimeout(
+      () => {
+        setLeftField(false);
+        save({ quiet: true });
+      },
+      leftField ? 0 : 3000,
+    );
     return () => clearTimeout(timer);
-  }, [autoSync, changes, saving, saveError]);
+  }, [autoSync, changes, saving, saveError, leftField]);
 
   const title =
     state.kind === "ready" ? String(draft.name ?? "Untitled project") : "Project settings";
@@ -284,27 +294,35 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
         <Banner variant="error" icon={<WarningIcon />} title="Not saved" description={saveError} />
       )}
 
-      {groups.map((group) => (
-        <LayerCard key={group}>
-          <LayerCard.Secondary>{GROUPS[group]}</LayerCard.Secondary>
-          <LayerCard.Primary className="flex flex-col gap-4">
-            {FIELDS.filter((f) => f.group === group).map((f) => (
-              <FieldInput
-                key={f.key}
-                field={f}
-                value={f.kind === "json" ? drafts[f.key] : draft[f.key]}
-                pending={view.pending.includes(f.key)}
-                error={errors[f.key]}
-                onChange={(v) => {
-                  setSaveError(null);
-                  if (f.kind === "json") setDrafts((d) => ({ ...d, [f.key]: v as string }));
-                  else setDraft((d) => ({ ...d, [f.key]: v }));
-                }}
-              />
-            ))}
-          </LayerCard.Primary>
-        </LayerCard>
-      ))}
+      {/* React's onBlur bubbles, as focusout does: it fires when any field loses focus.
+          Saving is the buttons' or auto-sync's job, so Enter doesn't submit. */}
+      <form
+        className="flex flex-col gap-4"
+        onBlur={() => setLeftField(true)}
+        onSubmit={(e) => e.preventDefault()}
+      >
+        {groups.map((group) => (
+          <LayerCard key={group}>
+            <LayerCard.Secondary>{GROUPS[group]}</LayerCard.Secondary>
+            <LayerCard.Primary className="flex flex-col gap-4">
+              {FIELDS.filter((f) => f.group === group).map((f) => (
+                <FieldInput
+                  key={f.key}
+                  field={f}
+                  value={f.kind === "json" ? drafts[f.key] : draft[f.key]}
+                  pending={view.pending.includes(f.key)}
+                  error={errors[f.key]}
+                  onChange={(v) => {
+                    setSaveError(null);
+                    if (f.kind === "json") setDrafts((d) => ({ ...d, [f.key]: v as string }));
+                    else setDraft((d) => ({ ...d, [f.key]: v }));
+                  }}
+                />
+              ))}
+            </LayerCard.Primary>
+          </LayerCard>
+        ))}
+      </form>
 
       <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-kumo-base py-3">
         <Checkbox label="Auto-sync" checked={autoSync} onCheckedChange={toggleAutoSync} />
