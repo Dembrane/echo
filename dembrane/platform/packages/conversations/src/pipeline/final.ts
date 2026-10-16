@@ -244,6 +244,8 @@ export interface FinalText {
   readonly sentences: readonly Sentence[];
   readonly text: string;
   readonly edit: EditStats | null;
+  /** Whisper's sentences before the text pass changed them; null when it changed none or the text was redacted. */
+  readonly raw: readonly Sentence[] | null;
 }
 
 /** The text pass over all pieces' sentences, when it is on for this provider. Ids are positions: they and the times survive. */
@@ -252,12 +254,13 @@ export async function editFinal(
   provider: FinalProvider,
   parts: readonly FinalPart[],
   ctx: FinalContext,
-): Promise<{ sentences: Sentence[]; edit: EditStats | null }> {
+): Promise<{ sentences: Sentence[]; edit: EditStats | null; raw: Sentence[] | null }> {
   const all = parts.flatMap((p) => p.sentences);
   if (!final.edit?.providers.includes(provider) || !all.length)
-    return { sentences: all, edit: null };
+    return { sentences: all, edit: null, raw: null };
   const r = await final.edit.run(all, { language: ctx.language, keyTerms: ctx.keyTerms });
-  return { sentences: r.sentences, edit: r.stats };
+  const changed = r.sentences.some((s, i) => s.text !== all[i]?.text);
+  return { sentences: r.sentences, edit: r.stats, raw: changed && !ctx.anonymized ? all : null };
 }
 
 // One redaction call reads about this much text: the model keeps its attention and its answer fits.
@@ -329,6 +332,7 @@ export async function storeFinal(
     is_record: record,
     text,
     sentences: sentences.length ? sentences : null,
+    raw_sentences: assembled.raw?.length ? (stripNul(assembled.raw) as Sentence[]) : null,
     audio_seconds: plan.duration,
     usage: {
       ...usage,

@@ -25,7 +25,18 @@ export {
   WHISPER_LIMITS,
   WhisperFinal,
 } from "./final";
-export { acceptable, type EditInput, type EditStats, editRatio, editSentences } from "./final-edit";
+export {
+  applyProposals,
+  charDistance,
+  type EditInput,
+  type EditStats,
+  editSentences,
+  type GuardResult,
+  guardEdit,
+  maxWordDistance,
+  type Proposals,
+  proposeEdits,
+} from "./final-edit";
 export { GeminiTranscriber, parseTranscriptJson } from "./gemini";
 export { regexRedactPii } from "./pii";
 export type {

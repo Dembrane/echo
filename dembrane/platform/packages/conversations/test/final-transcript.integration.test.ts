@@ -84,6 +84,7 @@ run("final transcript", () => {
             stats: {
               sentences: sentences.length,
               edited: sentences.length,
+              changedWords: 0,
               rejected: 0,
               failedBatches: 0,
               inputTokens: 1,
@@ -162,6 +163,10 @@ run("final transcript", () => {
     // The text pass ran for Whisper only, inside sentences: times unchanged, ids are positions.
     expect(sentences.every((x) => x.text.endsWith("!"))).toBe(true);
     expect((w.usage as { textPass?: { edited: number } }).textPass?.edited).toBe(sentences.length);
+    // Whisper's own words are kept beside the edits, with the same times.
+    const raw = w.raw_sentences as { start: number; end: number; text: string }[];
+    expect(raw.map((x) => [x.start, x.end])).toEqual(sentences.map((x) => [x.start, x.end]));
+    expect(raw.every((x) => !x.text.endsWith("!"))).toBe(true);
     const g = rows.find((r) => r.provider === "gemini") as Record<string, unknown>;
     expect(String(g.text)).not.toContain("!");
     // Readers see the record; the live chunk text is still there.

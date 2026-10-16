@@ -4,11 +4,11 @@ import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provid
 import { FallbackModel } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import {
-  acceptable,
-  editRatio,
   editSentences,
   GeminiTranscriber,
+  guardEdit,
   isRecoverableTranscriptionError,
+  maxWordDistance,
   parseSegments,
   parseTranscriptJson,
   regexRedactPii,
@@ -414,7 +414,8 @@ test("the text pass keeps ids and times and takes a small edit, refusing a rewri
   expect(out.sentences[0]?.text).toBe("Ik werk bij Dembrane en praat met Jorim.");
   expect(out.sentences[1]?.text).toBe(sentenceList[1]?.text);
   expect(out.sentences[2]?.text).toBe("Salam aleikum.");
-  expect(out.stats).toMatchObject({ sentences: 3, edited: 2, rejected: 2, failedBatches: 0 });
+  expect(out.stats).toMatchObject({ sentences: 3, edited: 2, changedWords: 1, failedBatches: 0 });
+  expect(out.stats.rejected).toBeGreaterThanOrEqual(2);
   expect(seen[0]).toContain("Dembrane, Jorim");
   expect(seen[0]).toContain("0: ik werk bij dem brane");
 });
@@ -427,6 +428,34 @@ test("a batch the model fails on stays as Whisper wrote it", async () => {
   const out = await editSentences(models, sentenceList, {}, logger);
   expect(out.sentences).toEqual(sentenceList);
   expect(out.stats.failedBatches).toBe(1);
-  expect(acceptable("a b c d", "a b c d e f g")).toBe(false);
-  expect(editRatio("one two three", "one two three")).toBe(0);
+});
+
+test("the guard puts back the swaps that broke sentences and keeps spellings, key terms, casing and punctuation", () => {
+  const dutch = guardEdit("ik zag ze lopen", "ik zag hij lopen");
+  expect(dutch.text).toBe("ik zag ze lopen");
+  expect(dutch.refused).toBe(1);
+  expect(guardEdit("het verhaal achter de film", "het mooie de film").text).toBe(
+    "het verhaal achter de film",
+  );
+  expect(guardEdit("the uproar'd crowd", "the arose crowd").text).toBe("the uproar'd crowd");
+  expect(guardEdit("i find it so", "he found it so").text).toBe("i find it so");
+  // What it is for.
+  const terms = ["Dembrane", "Jorim", "Toki Pona"];
+  expect(guardEdit("ik werk bij dem brane", "Ik werk bij Dembrane.", terms)).toMatchObject({
+    text: "Ik werk bij Dembrane.",
+    kept: 1,
+  });
+  expect(guardEdit("soy yorim aqui", "Soy Jorim aquí.", terms).text).toBe("Soy Jorim aquí.");
+  expect(guardEdit("maybe toki ponna works", "Maybe Toki Pona works.", terms).text).toBe(
+    "Maybe Toki Pona works.",
+  );
+  expect(guardEdit("we wich restaraunt", "we which restaurant").text).toBe("we which restaurant");
+  expect(guardEdit("hola buenas tardes", "Hola, buenas tardes.").text).toBe("Hola, buenas tardes.");
+  // A key term never replaces a different word.
+  expect(guardEdit("the sea is calm", "Sameer sea is calm", terms).text).toBe("the sea is calm");
+  expect([
+    maxWordDistance("ze", "zo"),
+    maxWordDistance("find", "found"),
+    maxWordDistance("restaraunt", "restaurant"),
+  ]).toEqual([0, 1, 2]);
 });

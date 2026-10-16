@@ -1220,6 +1220,8 @@ export const conversation_final_transcript = pgTable(
     is_record: boolean().default(false).notNull(),
     text: text().notNull(),
     sentences: jsonb(),
+    /** Whisper's sentences as they were before the text pass, same ids and times, when the pass changed any; the edits stay visible and reversible. */
+    raw_sentences: jsonb(),
     audio_seconds: real(),
     usage: jsonb(),
     created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),

@@ -205,11 +205,13 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
                 retry.llm,
               ),
               edit: edited.edit,
+              raw: null,
             }
           : {
               sentences: edited.sentences,
               text: edited.sentences.map((s) => s.text).join(" "),
               edit: edited.edit,
+              raw: edited.raw,
             };
         const wrote = await step(
           "final-store",
