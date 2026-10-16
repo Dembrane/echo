@@ -20,8 +20,10 @@ export const FinalTranscript = ({
 }) => {
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const [time, setTime] = useState(0);
+	// Nothing is highlighted until the audio has been played: at rest the first sentence is not "the one being read".
+	const [started, setStarted] = useState(false);
 	const timed = Boolean(audioUrl) && sentences.length > 0;
-	const active = timed ? activeSentenceIndex(sentences, time) : -1;
+	const active = timed && started ? activeSentenceIndex(sentences, time) : -1;
 	const activeRef = useRef<HTMLButtonElement | null>(null);
 
 	// Follow the audio: the sentence in play stays in view, without jumping the page for
@@ -78,6 +80,7 @@ export const FinalTranscript = ({
 					className="h-10 w-full"
 					preload="metadata"
 					controls
+					onPlay={() => setStarted(true)}
 					onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
 					onSeeked={(e) => setTime(e.currentTarget.currentTime)}
 				/>
