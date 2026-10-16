@@ -184,7 +184,7 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
     }
   }
 
-  // With auto-sync on, changes save 3s after the last edit, or as soon as focus
+  // With auto-sync on, changes save 1s after the last edit, or as soon as focus
   // leaves a field, whichever comes first. It holds off after a failed save until
   // the next edit, rather than retrying in a loop.
   // biome-ignore lint/correctness/useExhaustiveDependencies: save reads the same state these name.
@@ -196,7 +196,7 @@ export function HostConfigPage({ projectId, base }: { projectId: string; base: s
         setLeftField(false);
         save({ quiet: true });
       },
-      leftField ? 0 : 3000,
+      leftField ? 0 : 1000,
     );
     return () => clearTimeout(timer);
   }, [autoSync, changes, saving, saveError, leftField]);
