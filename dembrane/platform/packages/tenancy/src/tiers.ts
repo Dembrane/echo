@@ -17,6 +17,9 @@ export interface TierCapacity {
   readonly priceEurMonthly: number | null;
   readonly includedSeats: number | null;
   readonly includedHours: number | null;
+  readonly includedConversationsMonthly?: number | null;
+  readonly includedProjects?: number | null;
+  readonly maxConversationDurationMinutes?: number | null;
   /** Kept for the response shape; no tier blocks on hours any more. */
   readonly hardBlockOnHours: boolean;
   readonly trainingIncluded: string;
@@ -30,7 +33,10 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     tagline: "get started.",
     priceEurMonthly: null,
     includedSeats: null,
-    includedHours: 1,
+    includedHours: 5,
+    includedConversationsMonthly: 5,
+    includedProjects: 1,
+    maxConversationDurationMinutes: 60,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "—",
@@ -42,6 +48,9 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     priceEurMonthly: 20,
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
@@ -53,6 +62,9 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     priceEurMonthly: 75,
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
@@ -64,6 +76,9 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     priceEurMonthly: 150,
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
@@ -102,10 +117,16 @@ export function allowsOverage(tier: string | null | undefined): boolean {
   return tier === "innovator" || tier === "changemaker" || tier === "guardian";
 }
 
-export function usageGates(tier: string, hoursLifetime: number) {
+export function usageGates(tier: string, hoursLifetime: number, conversationsThisMonth?: number) {
   const cap = capacityOf(tier);
-  if (allowsOverage(tier) || !cap || cap.includedHours === null)
-    return { over_cap_active: false, uploads_locked: false };
+  if (allowsOverage(tier) || !cap) return { over_cap_active: false, uploads_locked: false };
+  if (tier === "free") {
+    const over =
+      conversationsThisMonth !== undefined &&
+      conversationsThisMonth >= (cap.includedConversationsMonthly ?? 5);
+    return { over_cap_active: over, uploads_locked: over };
+  }
+  if (cap.includedHours === null) return { over_cap_active: false, uploads_locked: false };
   const over = hoursLifetime >= cap.includedHours;
   return { over_cap_active: over, uploads_locked: over };
 }

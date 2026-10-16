@@ -1,4 +1,4 @@
-import { newId } from "@dembrane/core";
+import { newId, PaymentRequiredError } from "@dembrane/core";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import type { WorkspaceContext } from "../context";
 import { iso } from "../db";
@@ -7,7 +7,8 @@ import { effectiveMembers } from "../members";
 import { pyRound } from "../numbers";
 import { appUsersByIds, avatars } from "../storage/people";
 import { insertProject, projectListPage, sharedProjectIds, sharePairs } from "../storage/projects";
-import { hoursByProject } from "../storage/usage";
+import { countLiveProjects, hoursByProject } from "../storage/usage";
+import { FREE_TIER_MAX_PROJECTS, freeTierLimit } from "../usage";
 
 export function projectService(deps: TenancyDeps) {
   const { db } = deps;
@@ -113,6 +114,17 @@ export function projectService(deps: TenancyDeps) {
     /** Creates a project in the workspace; the caller is recorded as its Directus-era creator. */
     async create(ctx: WorkspaceContext, body: { name: string; language: string }) {
       ctx.require("project:create");
+      if (
+        !ctx.who.isStaff &&
+        ctx.tier === "free" &&
+        (await countLiveProjects(db, ctx.workspaceId)) >= FREE_TIER_MAX_PROJECTS
+      ) {
+        throw new PaymentRequiredError("billing.tier_limit", {
+          message: "free tier limit",
+          params: { limit: "projects" },
+          details: freeTierLimit("projects"),
+        });
+      }
       const now = clock(deps);
       const id = newId();
       await insertProject(db, {

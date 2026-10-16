@@ -7,6 +7,7 @@ import {
   countDistinct,
   desc,
   eq,
+  gte,
   inArray,
   isNull,
   max,
@@ -541,6 +542,26 @@ export function bffStore(db: Db) {
       await db
         .insert(conversation_project_tag)
         .values({ conversation_id: conversationId, project_tag_id: tagId });
+    },
+
+    /**
+     * Count of live conversations created in the workspace since sinceIso,
+     * samples left out.
+     */
+    async workspaceMonthlyConversations(workspaceId: string, sinceIso: string): Promise<number> {
+      const [row] = await db
+        .select({ n: sql<number>`count(${conversation.id})::int` })
+        .from(conversation)
+        .innerJoin(project, eq(project.id, conversation.project_id))
+        .where(
+          and(
+            eq(project.workspace_id, workspaceId),
+            eq(project.is_sample, false),
+            isNull(conversation.deleted_at),
+            gte(conversation.created_at, sinceIso),
+          ),
+        );
+      return Number(row?.n ?? 0);
     },
 
     /**

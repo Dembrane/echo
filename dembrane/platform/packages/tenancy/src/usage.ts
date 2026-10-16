@@ -72,23 +72,42 @@ export async function cardUsage(db: Conn, workspaceId: string, now: Date): Promi
 export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   const out = { ...usage };
   const cap = capacityOf(tier);
-  if (cap && cap.includedHours !== null) {
+  if (tier === "free") {
+    const limit = cap?.includedConversationsMonthly ?? 5;
+    out.hours_included = cap?.includedHours ?? 5;
+    const pct = limit ? usage.conversations_this_month / limit : 0;
+    out.hours_pct = pyRound(pct, 3);
+    if (usage.conversations_this_month >= limit) out.at_cap = true;
+    else if (usage.conversations_this_month >= limit * 0.8) out.approaching_cap = true;
+  } else if (cap && cap.includedHours !== null) {
     out.hours_included = cap.includedHours;
     const pct = cap.includedHours ? usage.audio_hours_this_month / cap.includedHours : 0;
     out.hours_pct = pyRound(pct, 3);
     if (pct >= 1) out.at_cap = true;
     else if (pct >= 0.8) out.approaching_cap = true;
   }
-  out.usage_gates = { ...usageGates(tier, usage.audio_hours), upgrade_cta_tier: nextTier(tier) };
+  out.usage_gates = {
+    ...usageGates(tier, usage.audio_hours, usage.conversations_this_month),
+    upgrade_cta_tier: nextTier(tier),
+  };
   return out;
 }
 
 export const FREE_TIER_MAX_CHATS = 1;
 export const FREE_TIER_MAX_REPORTS = 1;
 export const FREE_TIER_MAX_WORKSPACES = 1;
+export const FREE_TIER_MAX_PROJECTS = 1;
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
+export const FREE_TIER_MAX_CONVERSATION_DURATION_SECONDS = 3600;
 
 /** The free tier block the frontend gates on; counted live so a deleted chat frees its slot at once. */
-export async function freeTierBlock(db: Conn, tier: string | null, projectIds: readonly string[]) {
+export async function freeTierBlock(
+  db: Conn,
+  tier: string | null,
+  projectIds: readonly string[],
+  liveProjectsCount?: number,
+  conversationsThisMonth?: number,
+) {
   const active = tier === "free";
   const [chats, primaryChat, reports, primaryReport] = active
     ? await Promise.all([
@@ -106,10 +125,17 @@ export async function freeTierBlock(db: Conn, tier: string | null, projectIds: r
     reports_used: reports,
     reports_limit: FREE_TIER_MAX_REPORTS,
     primary_report_id: primaryReport,
+    projects_used: liveProjectsCount ?? projectIds.length,
+    projects_limit: FREE_TIER_MAX_PROJECTS,
+    conversations_used: conversationsThisMonth ?? 0,
+    conversations_limit: FREE_TIER_MAX_CONVERSATIONS_PER_MONTH,
+    conversation_duration_limit_seconds: FREE_TIER_MAX_CONVERSATION_DURATION_SECONDS,
   };
 }
 
 /** The 402 body the frontend keys on to show the upgrade path. */
-export function freeTierLimit(limit: "workspaces" | "chats" | "report") {
+export function freeTierLimit(
+  limit: "workspaces" | "chats" | "report" | "projects" | "conversations",
+) {
   return { error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" };
 }

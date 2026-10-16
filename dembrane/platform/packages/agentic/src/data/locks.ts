@@ -7,8 +7,7 @@ import { type DataDeps, sqlOf } from "./deps";
  * tier) never lock.
  */
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-/** Tiers with an hour cap and how many hours it allows. */
-const INCLUDED_HOURS: Record<string, number> = { free: 1 };
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
 
 /** The finish-time stamp decides for finished conversations. */
 export function stampLocked(isOverCap: unknown, tier: string | null): boolean {
@@ -28,21 +27,21 @@ export function conversationLocked(
 }
 
 /**
- * Whether the workspace is past its lifetime hour cap now. Counts every conversation of
- * every project the workspace ever held, deleted ones too: deleting audio keeps its
- * billable duration. A sample copy (project.is_sample) holds no one's audio and is left out.
+ * Whether the workspace is past its monthly conversation cap now (5 conversations/month for free).
+ * Counts live conversations created this month.
  */
 export async function workspaceOverCapActive(
   d: DataDeps,
   workspaceId: string | null,
   tier: string | null,
 ): Promise<boolean> {
-  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier)) return false;
-  const included = INCLUDED_HOURS[tier];
-  if (included === undefined) return false;
+  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier) || tier !== "free") return false;
   const [r] = await sqlOf(d)`
-    select coalesce(sum(c.duration), 0)::float8 as seconds
+    select count(c.id)::int as n
     from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId} and not p.is_sample`;
-  return Number(r?.seconds ?? 0) / 3600 >= included;
+    where p.workspace_id = ${workspaceId}
+      and not p.is_sample
+      and c.deleted_at is null
+      and c.created_at >= date_trunc('month', now() at time zone 'UTC')`;
+  return Number(r?.n ?? 0) >= FREE_TIER_MAX_CONVERSATIONS_PER_MONTH;
 }
