@@ -73,12 +73,12 @@ export const FinalTranscript = ({
 										}
 									}}
 									className={cn(
-										"cursor-pointer rounded-sm px-0.5 transition-colors hover:bg-[var(--app-action-tint)]",
+										"cursor-pointer rounded-sm transition-colors hover:bg-[var(--app-action-tint)]",
 										i === active && "bg-[var(--app-action-tint)]",
 									)}
 									data-active={i === active}
 								>
-									{s.text}
+									{s.text.trim()}
 								</span>{" "}
 							</span>
 						))}
