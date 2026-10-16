@@ -1248,6 +1248,32 @@ export const conversation_record_transcript = pgView("conversation_record_transc
   updated_at: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 }).existing();
 
+/**
+ * What Whisper's confidence retries did for a conversation, per stage (live pieces, final pass):
+ * doubtful stretches found, requests sent again, and how each stretch ended. Numbers only.
+ */
+export const conversation_transcribe_retry = pgTable(
+  "conversation_transcribe_retry",
+  {
+    conversation_id: uuid().notNull(),
+    stage: text().notNull(),
+    spans: integer().default(0).notNull(),
+    attempts: integer().default(0).notNull(),
+    improved: integer().default(0).notNull(),
+    kept: integer().default(0).notNull(),
+    failed: integer().default(0).notNull(),
+    updated_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    primaryKey({ columns: [table.conversation_id, table.stage] }),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "conversation_transcribe_retry_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const conversation_link = pgTable(
   "conversation_link",
   {

@@ -5,13 +5,14 @@ import type {
   FinalProvider,
   FinalTranscriber,
   FinalUsage,
+  RetryStats,
   Sentence,
 } from "@dembrane/transcription";
 import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { conversationStore } from "../storage";
 import type { PipelineDeps } from "./steps";
-import { recordStatus, stripNul } from "./steps";
+import { recordRetries, recordStatus, spanCutter, stripNul } from "./steps";
 
 const { conversation, conversation_chunk, conversation_final_transcript, project } = schema;
 
@@ -173,6 +174,8 @@ export interface FinalPart {
   readonly sentences: readonly Sentence[];
   readonly usage: FinalUsage;
   readonly model: string | null;
+  /** What the confidence retries did for this piece, when they were on. */
+  readonly retry?: RetryStats;
 }
 
 export interface FinalContext {
@@ -225,6 +228,7 @@ export async function transcribeFinalPiece(
     seconds: piece.duration,
     language: ctx.language,
     hotwords: ctx.keyTerms,
+    cutSpan: spanCutter(d, piece.key, `final-${piece.key.replaceAll("/", "-")}`),
   });
   const sentences = out.sentences.map((s) => ({
     start: Math.round((s.start + piece.start) * 100) / 100,
@@ -236,6 +240,7 @@ export async function transcribeFinalPiece(
     sentences,
     usage: out.usage,
     model: out.model,
+    ...(out.retry && { retry: out.retry }),
   };
 }
 
@@ -325,6 +330,16 @@ export async function storeFinal(
     }),
     { seconds: 0, inputTokens: 0 as number | null, outputTokens: 0 as number | null },
   );
+  const retries = parts.reduce(
+    (t, p) => ({
+      spans: t.spans + (p.retry?.spans ?? 0),
+      attempts: t.attempts + (p.retry?.attempts ?? 0),
+      improved: t.improved + (p.retry?.improved ?? 0),
+      kept: t.kept + (p.retry?.kept ?? 0),
+      failed: t.failed + (p.retry?.failed ?? 0),
+    }),
+    { spans: 0, attempts: 0, improved: 0, kept: 0, failed: 0 },
+  );
   const now = d.now().toISOString();
   const values = {
     model: parts.find((p) => p.model)?.model ?? null,
@@ -339,6 +354,7 @@ export async function storeFinal(
       pieces: plan.pieces.length,
       hardCuts: plan.pieces.filter((p) => p.hardCut).length,
       ...(assembled.edit && { textPass: assembled.edit }),
+      ...(retries.spans || retries.attempts ? { retries } : {}),
     },
     updated_at: now,
   };
@@ -370,6 +386,8 @@ export async function storeFinal(
       .update(conversation)
       .set({ token_count: null, updated_at: now })
       .where(eq(conversation.id, conversationId));
+  // Counted once per conversation and provider run that wrote: the first provider's retries are the record's.
+  if (record) await recordRetries(d, conversationId, "final", retries);
   await recordStatus(d.db, {
     conversationId,
     event: "task_final_transcript.completed",

@@ -8,6 +8,12 @@ import {
 } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
+import {
+  type RetryPolicy,
+  type RetryStats,
+  type SpanCutter,
+  transcribeChecked,
+} from "./speech-retry";
 
 /** One sentence of a transcript with where it starts and ends in the recording, in seconds. */
 export interface Sentence {
@@ -28,6 +34,8 @@ export interface FinalPiece {
   readonly sentences: readonly Sentence[];
   readonly usage: FinalUsage;
   readonly model: string | null;
+  /** What the confidence retries did for this piece, when they were on. */
+  readonly retry?: RetryStats;
 }
 
 export interface FinalInput {
@@ -37,6 +45,8 @@ export interface FinalInput {
   readonly language?: string | null;
   readonly hotwords?: readonly string[] | null;
   readonly signal?: AbortSignal;
+  /** Cuts a stretch out of the audio sent, for the retries of doubtful stretches. */
+  readonly cutSpan?: SpanCutter;
 }
 
 export type FinalProvider = "gemini" | "whisper";
@@ -71,7 +81,10 @@ export class WhisperFinal implements FinalTranscriber {
   readonly model: string;
   private readonly stt: NonNullable<Models["speechToText"]>;
 
-  constructor(models: Models, opts: { maxSeconds?: number } = {}) {
+  private readonly retry: RetryPolicy | null;
+
+  constructor(models: Models, opts: { maxSeconds?: number; retry?: RetryPolicy | null } = {}) {
+    this.retry = opts.retry ?? null;
     this.limits = {
       maxBytes: WHISPER_LIMITS.maxBytes,
       maxSeconds: opts.maxSeconds ?? WHISPER_LIMITS.maxSeconds,
@@ -86,14 +99,22 @@ export class WhisperFinal implements FinalTranscriber {
     // No prompt: asked for segments with a list of key terms as its prompt, Scaleway's
     // whisper-large-v3 returned about half the words of real meetings (whole pieces came back
     // empty); without the prompt nothing was lost. Next: spell key terms in a text pass after it.
-    const out = await this.stt.transcribeSegments(input.audio, {
-      language: input.language ?? null,
-      ...(input.signal && { signal: input.signal }),
-    });
+    const { result: out, stats } = await transcribeChecked(
+      this.stt,
+      input.audio,
+      {
+        language: input.language ?? null,
+        ...(input.signal && { signal: input.signal }),
+      },
+      input.seconds,
+      input.cutSpan,
+      this.retry,
+    );
     return {
       sentences: tidy(out.segments, input.seconds),
       usage: { seconds: out.seconds ?? input.seconds, inputTokens: null, outputTokens: null },
       model: this.model,
+      ...(this.retry && input.cutSpan && { retry: stats }),
     };
   }
 }

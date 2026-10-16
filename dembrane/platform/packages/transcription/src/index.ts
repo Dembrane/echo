@@ -39,6 +39,19 @@ export {
 } from "./final-edit";
 export { GeminiTranscriber, parseTranscriptJson } from "./gemini";
 export { regexRedactPii } from "./pii";
+export {
+  better,
+  DEFAULT_RETRY,
+  doubtful,
+  NO_RETRIES,
+  quality,
+  type RetryPolicy,
+  type RetryStats,
+  type Span,
+  type SpanCutter,
+  spansOf,
+  transcribeChecked,
+} from "./speech-retry";
 export type {
   RedactTextInput,
   TranscribeInput,

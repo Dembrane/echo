@@ -21,6 +21,7 @@ import { Queue } from "@dembrane/queue";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { queueSink } from "@dembrane/tenancy";
 import {
+  DEFAULT_RETRY,
   editSentences,
   type FinalTranscriber,
   GeminiFinal,
@@ -117,7 +118,8 @@ const models = createModels(modelsConfigOf(config.llm), {
 // The final pass transcribes the whole recording again with the providers named in
 // LLM_FINAL_TRANSCRIPT, each on its own models whatever LLM_PROVIDER serves the live text:
 // the preview runs both on one conversation. The first one is the transcript people read.
-const transcriber = new GeminiTranscriber(models, logger);
+const retry = config.llm.whisperRetry ? DEFAULT_RETRY : null;
+const transcriber = new GeminiTranscriber(models, logger, { retry });
 const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
 // The text pass reads Whisper's transcript with the Whisper provider's own text model.
 let whisperModels: Models | null = null;
@@ -135,7 +137,7 @@ for (const provider of config.llm.finalTranscript) {
   );
   if (provider === "whisper") whisperModels = own;
   finalTranscribers[provider] =
-    provider === "whisper" ? new WhisperFinal(own) : new GeminiFinal(own, logger);
+    provider === "whisper" ? new WhisperFinal(own, { retry }) : new GeminiFinal(own, logger);
 }
 const audio = config.audio.s3Bucket
   ? new S3Storage({

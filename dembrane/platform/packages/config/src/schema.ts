@@ -202,6 +202,10 @@ export const schema = defineSchema({
       description:
         "Send the project's key terms as the speech-to-text model's prompt. Off by default: on Scaleway's whisper-large-v3 the prompt made it return a third fewer words on a whole recording and nothing at all for some pieces.",
     }),
+    whisperRetry: key("LLM_WHISPER_RETRY", bool.default(false), {
+      description:
+        "Read Whisper's own confidence on every segment (mean log probability under -1, compression ratio over 2.4) and transcribe a doubtful stretch again alone, with a higher temperature and then the language Whisper heard there; the better reading by the same signals is kept. Live pieces and the final pass. Every retry and its outcome is counted per conversation.",
+    }),
     finalTextPass: key("LLM_FINAL_TEXT_PASS", z.enum(["off", "glm"]).default("off"), {
       description:
         "A text model reads the Whisper final transcript once and edits inside its sentences only: key terms spelled as the project writes them, obvious mishearings, casing. Sentence ids and timings never change. off keeps Whisper's words. glm uses the text_fast group of the provider.",

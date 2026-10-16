@@ -4,6 +4,8 @@ import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provid
 import { FallbackModel } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import {
+  DEFAULT_RETRY,
+  doubtful,
   editSentences,
   GeminiTranscriber,
   guardEdit,
@@ -13,10 +15,12 @@ import {
   parseTranscriptJson,
   regexRedactPii,
   rescaleToPiece,
+  spansOf,
   TranscriptParseError,
   TranscriptRefusedError,
   tidy,
   toSeconds,
+  transcribeChecked,
   transcriptionFailureReason,
 } from "../src";
 
@@ -458,4 +462,93 @@ test("the guard puts back the swaps that broke sentences and keeps spellings, ke
     maxWordDistance("find", "found"),
     maxWordDistance("restaraunt", "restaurant"),
   ]).toEqual([0, 1, 2]);
+});
+
+const seg = (
+  start: number,
+  end: number,
+  text: string,
+  avgLogprob = -0.3,
+  compressionRatio = 1.4,
+) => ({
+  start,
+  end,
+  text,
+  avgLogprob,
+  compressionRatio,
+});
+
+test("doubtful stretches are found from Whisper's own confidence and merged with a pad", () => {
+  const segments = [
+    seg(0, 5, "fine"),
+    seg(5, 9, "unsure", -1.4),
+    seg(9.5, 12, "looping looping looping", -0.5, 3.1),
+    seg(12, 20, "fine"),
+    seg(28, 29, "x", -1.2),
+  ];
+  const spans = spansOf(segments, DEFAULT_RETRY, 30);
+  expect(spans.map((s) => [s.start, s.end, s.indexes])).toEqual([
+    [4.7, 12.3, [1, 2]],
+    [27.7, 29.3, [4]],
+  ]);
+  expect(doubtful(seg(0, 3, "a", -0.4, 1.2), DEFAULT_RETRY)).toBe(false);
+});
+
+test("a retry replaces a doubtful stretch only when the signals say it is better, and every retry is counted", async () => {
+  const calls: { temperature?: number | undefined; forceLanguage?: string | undefined }[] = [];
+  const stt = {
+    model: "w",
+    transcribe: async () => "",
+    transcribeSegments: async (
+      _a: Uint8Array,
+      o: { temperature?: number; forceLanguage?: string } = {},
+    ) => {
+      calls.push({ temperature: o.temperature, forceLanguage: o.forceLanguage });
+      if (o.temperature === undefined)
+        return {
+          text: "",
+          seconds: 20,
+          language: "nl",
+          segments: [seg(0, 6, "fine"), seg(6, 12, "garbled", -1.6), seg(12, 20, "fine")],
+        };
+      // The retry hears it: a clean reading of the span, in the language it reports.
+      return {
+        text: "",
+        seconds: 6,
+        language: "nl",
+        segments: [seg(0, 6, "heard properly", -0.4)],
+      };
+    },
+  } as never;
+  const cut = async () => new Uint8Array([1]);
+  const out = await transcribeChecked(stt, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  expect(out.result.segments.map((s) => s.text)).toEqual(["fine", "heard properly", "fine"]);
+  expect(out.stats).toEqual({ spans: 1, attempts: 1, improved: 1, kept: 0, failed: 0 });
+  expect(calls[1]?.temperature).toBe(0.2);
+
+  // A retry that is no better leaves the first reading and says so.
+  const worse = {
+    model: "w",
+    transcribe: async () => "",
+    transcribeSegments: async (_a: Uint8Array, o: { temperature?: number } = {}) => ({
+      text: "",
+      seconds: 20,
+      language: "nl",
+      segments: o.temperature === undefined ? [seg(0, 8, "a", -1.5)] : [seg(0, 8, "b", -1.9)],
+    }),
+  } as never;
+  const kept = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  expect(kept.result.segments.map((s) => s.text)).toEqual(["a"]);
+  expect(kept.stats).toMatchObject({ spans: 1, attempts: 2, improved: 0, kept: 1 });
+
+  // No cutter or no policy: one plain call, no retries.
+  const plain = await transcribeChecked(
+    worse,
+    new Uint8Array([0]),
+    {},
+    20,
+    undefined,
+    DEFAULT_RETRY,
+  );
+  expect(plain.stats.attempts).toBe(0);
 });

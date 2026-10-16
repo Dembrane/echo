@@ -63,7 +63,15 @@ export interface Models {
     /** The same, as sentences with their start and end in seconds. */
     transcribeSegments(
       audio: Uint8Array,
-      opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
+      opts?: {
+        language?: string | null;
+        prompt?: string;
+        signal?: AbortSignal;
+        /** Sampling temperature: 0 is Whisper's default; a retry of a doubtful span raises it. */
+        temperature?: number;
+        /** Send this language even where the configuration leaves the language to Whisper: a retry names the language it heard. */
+        forceLanguage?: string;
+      },
     ): Promise<SpeechResult>;
   };
 }
@@ -144,9 +152,10 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
           transcribeSegments(
             compat,
             audio,
-            whisperLanguage(compat, o.language),
+            o.forceLanguage ?? whisperLanguage(compat, o.language),
             o.signal,
             whisperPrompt(compat, o.prompt),
+            o.temperature,
           ),
       },
     }),
