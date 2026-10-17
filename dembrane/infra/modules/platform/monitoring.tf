@@ -37,9 +37,11 @@ resource "google_logging_metric" "worker_heartbeat" {
   }
 }
 
+# Cloud Logging lifts the httpRequest key of the API's request line out of jsonPayload to
+# the top of the entry, so status and latency are read from there.
 resource "google_logging_metric" "api_5xx" {
   name   = "${local.name}/api_5xx"
-  filter = "${local.run_filter} AND jsonPayload.message=\"request\" AND jsonPayload.httpRequest.status>=500"
+  filter = "${local.run_filter} AND jsonPayload.message=\"request\" AND httpRequest.status>=500"
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
@@ -294,7 +296,7 @@ resource "google_monitoring_alert_policy" "api_error_ratio" {
 resource "google_logging_metric" "api_latency" {
   name            = "${local.name}/api_latency"
   filter          = "${local.run_filter} AND jsonPayload.message=\"request\""
-  value_extractor = "REGEXP_EXTRACT(jsonPayload.httpRequest.latency, \"([0-9.]+)s\")"
+  value_extractor = "EXTRACT(httpRequest.latency)"
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "DISTRIBUTION"
