@@ -15,6 +15,8 @@ export interface TranscribeInput {
   readonly cutSpan?: SpanCutter;
   /** The pauses of this audio, for the retry that looks for loud stretches with few words. */
   readonly pauses?: Pauser;
+  /** Live recordings go first when the speech-to-text limit is the bottleneck; uploads wait. */
+  readonly priority?: "live" | "upload";
 }
 
 export interface TranscribeResult {

@@ -1,4 +1,4 @@
-import type { Models } from "@dembrane/llm";
+import type { Models, SpeechPriority } from "@dembrane/llm";
 
 type SpeechToText = NonNullable<Models["speechToText"]>;
 type Result = Awaited<ReturnType<SpeechToText["transcribeSegments"]>>;
@@ -259,6 +259,10 @@ export interface CheckedOptions {
   readonly language?: string | null;
   readonly prompt?: string;
   readonly signal?: AbortSignal;
+  /** Who the audio is for, for the provider's rate limit: live goes first. */
+  readonly priority?: SpeechPriority;
+  /** Seconds of audio in the piece, for the same pacing. */
+  readonly seconds?: number;
 }
 
 /**
@@ -354,6 +358,8 @@ export async function transcribeChecked(
           ...(opts.signal && { signal: opts.signal }),
           temperature: a.temperature,
           ...(forced && { forceLanguage: isoOf(forced) }),
+          ...(opts.priority && { priority: opts.priority }),
+          seconds: to - from,
         });
         ran = true;
         detected ??= r.language;

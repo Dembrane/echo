@@ -13,7 +13,6 @@ import {
   probeFile,
   probePlain,
   probeUrl,
-  type Silence,
 } from "./ffmpeg";
 import type { AudioFormat } from "./formats";
 

@@ -49,6 +49,7 @@ export interface FinalInput {
   /** Cuts a stretch out of the audio sent, for the retries of doubtful stretches. */
   readonly cutSpan?: SpanCutter;
   readonly pauses?: Pauser;
+  readonly priority?: "final" | "upload";
 }
 
 export type FinalProvider = "gemini" | "whisper";
@@ -107,6 +108,8 @@ export class WhisperFinal implements FinalTranscriber {
       {
         language: input.language ?? null,
         ...(input.signal && { signal: input.signal }),
+        priority: input.priority ?? "final",
+        seconds: input.seconds,
       },
       input.seconds,
       input.cutSpan,

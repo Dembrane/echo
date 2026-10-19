@@ -160,7 +160,11 @@ export class GeminiTranscriber implements Transcriber {
       ? await transcribeChecked(
           stt,
           input.audio,
-          { language: input.language ?? null, ...(hotwordsStr && { prompt: hotwordsStr }) },
+          {
+            language: input.language ?? null,
+            ...(hotwordsStr && { prompt: hotwordsStr }),
+            priority: input.priority ?? "live",
+          },
           undefined,
           input.cutSpan,
           this.opts.retry ?? null,
@@ -173,6 +177,7 @@ export class GeminiTranscriber implements Transcriber {
       (await stt.transcribe(input.audio, {
         language: input.language ?? null,
         ...(hotwordsStr && { prompt: hotwordsStr }),
+        priority: input.priority ?? "live",
       }));
     const redacted = await this.redactText({
       text: transcript,

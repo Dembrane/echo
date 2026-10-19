@@ -506,6 +506,7 @@ export async function transcribePiece(
           customGuidancePrompt: conv.prompt,
           cutSpan: spanCutter(d, key, `chunk-${chunkId}`),
           pauses: pausesOf(d, key),
+          priority: chunk.source === "PORTAL_AUDIO" ? "live" : "upload",
         });
         await recordRetries(d, chunk.conversation_id, "live", result.retry);
         await updateChunk(d, chunkId, chunk.conversation_id, {

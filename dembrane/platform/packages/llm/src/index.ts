@@ -57,6 +57,7 @@ export {
   modelsConfigOf,
   searchGroundingOn,
 } from "./settings";
+export { retryAfterMs, SpeechGate, type SpeechPriority } from "./speech-gate";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,

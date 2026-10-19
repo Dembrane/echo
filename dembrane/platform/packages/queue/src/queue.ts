@@ -70,6 +70,9 @@ type Handler = (
  */
 export class Queue {
   private readonly defs = new Map<string, JobDefinition>();
+  /** The URL for postgres.js as given, and the one for node-postgres (DBOS) with its mode spelled out. */
+  private readonly connectionString: string;
+  private readonly dbosUrl: string;
   private readonly concurrency = new Map<string, number>();
   private readonly schedules: { def: JobDefinition; cron: string; payload: unknown; tz: string }[] =
     [];
@@ -78,7 +81,7 @@ export class Queue {
   private running = false;
 
   constructor(
-    private readonly connectionString: string,
+    connectionString: string,
     private readonly logger: Logger,
     private readonly tracer: Tracer,
     private readonly opts: {
@@ -94,13 +97,16 @@ export class Queue {
       /** How often an idle worker checks each queue; lower in tests, DBOS's default in production. */
       readonly pollingIntervalMs?: number;
     } = {},
-  ) {}
+  ) {
+    this.connectionString = connectionString;
+    this.dbosUrl = verifyFullUrl(connectionString);
+  }
 
   /** Declares the jobs this process knows. Enqueue-only processes stop here. */
   async start(defs: readonly JobDefinition[]): Promise<void> {
     for (const d of defs) this.defs.set(d.name, d);
     this.client = await DBOSClient.create({
-      systemDatabaseUrl: this.connectionString,
+      systemDatabaseUrl: this.dbosUrl,
       systemDatabaseSchemaName: SCHEMA,
       systemDatabasePoolSize: this.opts.clientConnections ?? this.opts.maxConnections ?? 4,
       applicationName: "echo",
@@ -256,7 +262,7 @@ export class Queue {
     });
     DBOS.setConfig({
       name: "echo",
-      systemDatabaseUrl: this.connectionString,
+      systemDatabaseUrl: this.dbosUrl,
       systemDatabaseSchemaName: SCHEMA,
       systemDatabasePoolSize: this.opts.maxConnections ?? 4,
       applicationVersion: WORKFLOW_VERSION,
@@ -404,7 +410,7 @@ function adaptTx(sql: postgres.TransactionSql | postgres.Sql) {
 export async function installQueueSchema(connectionString: string): Promise<void> {
   DBOS.setConfig({
     name: "echo",
-    systemDatabaseUrl: connectionString,
+    systemDatabaseUrl: verifyFullUrl(connectionString),
     systemDatabaseSchemaName: SCHEMA,
     applicationVersion: WORKFLOW_VERSION,
     executorID: "migrate",
@@ -415,4 +421,24 @@ export async function installQueueSchema(connectionString: string): Promise<void
   });
   await DBOS.launch();
   await DBOS.shutdown();
+}
+
+/**
+ * node-postgres (under DBOS) treats sslmode prefer, require and verify-ca as verify-full and
+ * warns about it on every start. Naming verify-full says what it already does, so the logs
+ * stay clean and nothing about the connection changes. A URL that asks for libpq's own
+ * semantics (uselibpqcompat) or any other mode is left alone.
+ */
+export function verifyFullUrl(url: string): string {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return url;
+  }
+  const mode = u.searchParams.get("sslmode");
+  if (!mode || u.searchParams.has("uselibpqcompat")) return url;
+  if (mode !== "prefer" && mode !== "require" && mode !== "verify-ca") return url;
+  u.searchParams.set("sslmode", "verify-full");
+  return u.toString();
 }

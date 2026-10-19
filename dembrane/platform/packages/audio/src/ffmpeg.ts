@@ -224,16 +224,19 @@ export async function cutFile(
   start: number,
   duration: number,
 ): Promise<void> {
+  // The seek comes before the input so ffmpeg jumps to the piece instead of decoding everything
+  // before it: a minute from the end of a three hour file took seconds, and a hundred such
+  // pieces took minutes. The cut stays sample exact (the audio test compares both orders).
   const r = await run([
     "ffmpeg",
-    "-i",
-    source,
-    "-f",
-    format,
     "-ss",
     pyFloat(start),
+    "-i",
+    source,
     "-t",
     pyFloat(duration),
+    "-f",
+    format,
     output,
     "-y",
   ]);
