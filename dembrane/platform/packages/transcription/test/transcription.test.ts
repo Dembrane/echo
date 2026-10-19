@@ -9,7 +9,9 @@ import {
   editSentences,
   GeminiTranscriber,
   guardEdit,
+  isoOf,
   isRecoverableTranscriptionError,
+  lowWordSpans,
   maxWordDistance,
   parseSegments,
   parseTranscriptJson,
@@ -478,6 +480,18 @@ const seg = (
   compressionRatio,
 });
 
+// Whisper's own confidence as the trigger, with the language and loudness triggers off.
+const SIGNALS = {
+  ...DEFAULT_RETRY,
+  minLogprob: -1,
+  language: false,
+  lowWords: null,
+  attempts: [
+    { temperature: 0.2, language: "auto" as const },
+    { temperature: 0.4, language: "detected" as const },
+  ],
+};
+
 test("doubtful stretches are found from Whisper's own confidence and merged with a pad", () => {
   const segments = [
     seg(0, 5, "fine"),
@@ -486,12 +500,12 @@ test("doubtful stretches are found from Whisper's own confidence and merged with
     seg(12, 20, "fine"),
     seg(28, 29, "x", -1.2),
   ];
-  const spans = spansOf(segments, { ...DEFAULT_RETRY, minGap: 0 }, 30);
+  const spans = spansOf(segments, { ...SIGNALS, minGap: 0 }, 30);
   expect(spans.map((s) => [s.start, s.end, s.indexes])).toEqual([
     [4.7, 12.3, [1, 2]],
     [27.7, 29.3, [4]],
   ]);
-  expect(doubtful(seg(0, 3, "a", -0.4, 1.2), DEFAULT_RETRY)).toBe(false);
+  expect(doubtful(seg(0, 3, "a", -0.4, 1.2), SIGNALS)).toBe(false);
 });
 
 test("a retry replaces a doubtful stretch only when the signals say it is better, and every retry is counted", async () => {
@@ -521,7 +535,7 @@ test("a retry replaces a doubtful stretch only when the signals say it is better
     },
   } as never;
   const cut = async () => new Uint8Array([1]);
-  const out = await transcribeChecked(stt, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  const out = await transcribeChecked(stt, new Uint8Array([0]), {}, 20, cut, SIGNALS);
   expect(out.result.segments.map((s) => s.text)).toEqual(["fine", "heard properly", "fine"]);
   expect(out.stats).toMatchObject({ spans: 1, attempts: 1, improved: 1, kept: 0, failed: 0 });
   expect(calls[1]?.temperature).toBe(0.2);
@@ -540,19 +554,12 @@ test("a retry replaces a doubtful stretch only when the signals say it is better
           : [seg(0, 8, "b", -1.9)],
     }),
   } as never;
-  const kept = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, cut, DEFAULT_RETRY);
+  const kept = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, cut, SIGNALS);
   expect(kept.result.segments.map((s) => s.text)).toEqual(["a", "t"]);
   expect(kept.stats).toMatchObject({ spans: 1, attempts: 2, improved: 0, kept: 1 });
 
   // No cutter or no policy: one plain call, no retries.
-  const plain = await transcribeChecked(
-    worse,
-    new Uint8Array([0]),
-    {},
-    20,
-    undefined,
-    DEFAULT_RETRY,
-  );
+  const plain = await transcribeChecked(worse, new Uint8Array([0]), {}, 20, undefined, SIGNALS);
   expect(plain.stats.attempts).toBe(0);
 });
 
@@ -573,7 +580,7 @@ test("a stretch where Whisper wrote nothing is read again and kept only when it 
       }),
     }) as never;
   const words = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
-  const full = await transcribeChecked(mk(words), new Uint8Array([0]), {}, 30, cut, DEFAULT_RETRY);
+  const full = await transcribeChecked(mk(words), new Uint8Array([0]), {}, 30, cut, SIGNALS);
   expect(full.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is", words]);
   expect(full.result.segments[1]?.start).toBeCloseTo(17.7);
   expect(full.stats).toMatchObject({ spans: 1, improved: 1 });
@@ -584,8 +591,49 @@ test("a stretch where Whisper wrote nothing is read again and kept only when it 
     {},
     30,
     cut,
-    DEFAULT_RETRY,
+    SIGNALS,
   );
   expect(halluc.result.segments.map((s) => s.text)).toEqual(["ik denk dat het goed is"]);
   expect(halluc.stats).toMatchObject({ spans: 1, improved: 0, kept: 1 });
+});
+
+test("a piece in another language than the project's is read again in the project's language", async () => {
+  const seen: (string | undefined)[] = [];
+  const stt = {
+    model: "w",
+    transcribe: async () => "",
+    transcribeSegments: async (_a: Uint8Array, o: { forceLanguage?: string } = {}) => {
+      seen.push(o.forceLanguage);
+      return o.forceLanguage
+        ? {
+            text: "",
+            seconds: 10,
+            language: "en",
+            segments: [seg(0, 10, "ten words in the language of the project, said clearly", -0.3)],
+          }
+        : { text: "", seconds: 10, language: "welsh", segments: [seg(0, 10, "gibberish", -1.5)] };
+    },
+  } as never;
+  const cut = async () => new Uint8Array([1]);
+  const out = await transcribeChecked(
+    stt,
+    new Uint8Array([0]),
+    { language: "en-US" },
+    10,
+    cut,
+    DEFAULT_RETRY,
+  );
+  expect(seen).toEqual([undefined, "en"]);
+  expect(out.result.segments[0]?.text).toContain("project");
+  expect(isoOf("English")).toBe("en");
+});
+
+test("a window of loud audio with few words is read again", () => {
+  const spans = lowWordSpans(
+    [seg(0, 4, "one two three four five six seven eight"), seg(12, 16, "one")],
+    [{ start: 4, end: 12 }],
+    16,
+    { window: 4, minSpeech: 0.6, maxWps: 1 },
+  );
+  expect(spans.map((s) => [s.start, s.end])).toEqual([[12, 16]]);
 });

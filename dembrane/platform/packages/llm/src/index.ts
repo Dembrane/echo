@@ -51,6 +51,7 @@ export {
   embedderConfigOf,
   embeddingLocationOf,
   embeddingModelOf,
+  finalProvidersOf,
   groupsOf,
   type LlmSettings,
   modelsConfigOf,

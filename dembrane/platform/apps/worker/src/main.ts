@@ -9,6 +9,7 @@ import {
   completerConfigOf,
   createModels,
   embedderConfigOf,
+  finalProvidersOf,
   type Models,
   modelsConfigOf,
   vertexCompleter,
@@ -123,7 +124,8 @@ const transcriber = new GeminiTranscriber(models, logger, { retry });
 const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
 // The text pass reads Whisper's transcript with the Whisper provider's own text model.
 let whisperModels: Models | null = null;
-for (const provider of config.llm.finalTranscript) {
+const finalProviders = finalProvidersOf(config.llm);
+for (const provider of finalProviders) {
   const own = createModels(
     modelsConfigOf({
       ...config.llm,
@@ -192,9 +194,9 @@ const regs = registrations({
     ),
     media,
     transcriber,
-    ...(config.llm.finalTranscript.length && {
+    ...(finalProviders.length && {
       final: {
-        providers: config.llm.finalTranscript,
+        providers: finalProviders,
         transcribers: finalTranscribers,
         ...(config.llm.finalTextPass === "glm" &&
           whisperModels && {

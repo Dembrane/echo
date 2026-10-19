@@ -24,7 +24,12 @@ export interface RetryPolicy {
   /** The retries of one span, in order. A named language is the one Whisper reported for the span in the first retry. */
   readonly attempts: readonly {
     readonly temperature: number;
-    readonly language: "auto" | "detected";
+    /** auto: Whisper listens; detected: the language it reported for the span; project: the project's language. */
+    readonly language: "auto" | "detected" | "project";
+    /** Seconds of context added on both sides of the cut; only the span's own words are taken from the reading. */
+    readonly pad?: number;
+    /** Seconds the cut starts earlier, so Whisper's 30 second window falls elsewhere. */
+    readonly shift?: number;
   }[];
   /** At most this share of a piece's seconds is sent again. */
   readonly maxShare: number;
@@ -36,10 +41,35 @@ export interface RetryPolicy {
    */
   readonly minGap: number;
   readonly gapRate: number;
+  /**
+   * A piece whose detected language is not the project's is read again in the project's language
+   * (far-field English came back as another language, or translated). The new reading still has
+   * to win on the signals, so a conversation that really switches language keeps its words.
+   */
+  readonly language?: boolean;
+  /**
+   * A window of loud audio with few words: Whisper dropped speech without any sign of doubt.
+   * Needs the pauses of the piece (the backend measures them against the piece's own noise floor).
+   */
+  readonly lowWords?: {
+    readonly window: number;
+    readonly minSpeech: number;
+    readonly maxWps: number;
+  } | null;
+  /** A reading with this many times the words, no more doubtful and not unsure, wins. 0 turns it off. */
+  readonly wordsGain?: number;
+  /** Every piece is read twice and the better reading kept: the upper bound of what retries can give. */
+  readonly always?: boolean;
 }
 
+/**
+ * Chosen on human reference text (AMI far-field meetings, VoxPopuli and FLEURS Dutch, read speech):
+ * a retry is triggered by a language that is not the project's, a window of speech with few
+ * words, or a gap with no words, and is read in the project's language first. Whisper's own
+ * confidence adds little on top of these (it is kept for loops: compression ratio over 2.4).
+ */
 export const DEFAULT_RETRY: RetryPolicy = {
-  minLogprob: -1,
+  minLogprob: Number.NEGATIVE_INFINITY,
   maxCompression: 2.4,
   maxNoSpeech: 0.6,
   mergeGap: 1,
@@ -47,13 +77,61 @@ export const DEFAULT_RETRY: RetryPolicy = {
   minSpan: 1,
   maxSpans: 4,
   attempts: [
-    { temperature: 0.2, language: "auto" },
-    { temperature: 0.4, language: "detected" },
+    { temperature: 0.2, language: "project" },
+    { temperature: 0.4, language: "auto" },
   ],
   maxShare: 1,
   minGap: 4,
   gapRate: 0.8,
+  language: true,
+  lowWords: { window: 4, minSpeech: 0.6, maxWps: 1 },
 };
+
+const NAMES: Record<string, string> = {
+  english: "en",
+  dutch: "nl",
+  german: "de",
+  french: "fr",
+  spanish: "es",
+  italian: "it",
+  ukrainian: "uk",
+  czech: "cs",
+};
+/** The two letter code of a language Whisper reported or a project names ("English", "en-US"). */
+export const isoOf = (l: string) =>
+  NAMES[l.trim().toLowerCase()] ?? l.trim().toLowerCase().slice(0, 2);
+
+/** The length of a piece of audio and its pauses, measured by the media service. */
+export type Pauser = () => Promise<{
+  readonly duration: number;
+  readonly silences: readonly { start: number; end: number }[];
+}>;
+
+/** Windows of loud audio whose words per second are under the limit. */
+export function lowWordSpans(
+  segments: readonly Segment[],
+  pauses: readonly { start: number; end: number }[],
+  total: number,
+  c: { window: number; minSpeech: number; maxWps: number },
+): { start: number; end: number }[] {
+  const out: { start: number; end: number }[] = [];
+  for (let t = 0; t + c.window <= total + 0.01; t += c.window / 2) {
+    const e = t + c.window;
+    const silent = pauses.reduce(
+      (n, p) => n + Math.max(0, Math.min(p.end, e) - Math.max(p.start, t)),
+      0,
+    );
+    if (1 - silent / c.window < c.minSpeech) continue;
+    let words = 0;
+    for (const s of segments) {
+      const o = Math.min(s.end, e) - Math.max(s.start, t);
+      if (o > 0)
+        words += (s.text.split(/\s+/).filter(Boolean).length * o) / Math.max(0.1, s.end - s.start);
+    }
+    if (words / c.window < c.maxWps) out.push({ start: t, end: e });
+  }
+  return out;
+}
 
 export interface RetryStats {
   /** Doubtful stretches found. */
@@ -156,6 +234,12 @@ export function better(
   spanSeconds?: number,
 ): boolean {
   if (!next.length) return false;
+  if (old.length && p.wordsGain) {
+    const a = quality(next, p);
+    const b = quality(old, p);
+    if (a.flagged <= b.flagged && a.words >= b.words * p.wordsGain + 2 && a.mean > p.minLogprob)
+      return true;
+  }
   if (!old.length) {
     // A stretch that had no words: it must now hold speech, not a few words over a long silence.
     const q = quality(next, p);
@@ -190,14 +274,53 @@ export async function transcribeChecked(
   seconds: number | undefined,
   cut: SpanCutter | undefined,
   policy: RetryPolicy | null,
+  /** More stretches to read again, from a signal Whisper does not give: loudness against words, a language. */
+  extra?: (first: Result, seconds: number) => { start: number; end: number }[],
+  pauses?: Pauser,
 ): Promise<{ result: Result; stats: RetryStats }> {
   const first = await stt.transcribeSegments(audio, opts);
   if (!policy || !cut) return { result: first, stats: NO_RETRIES };
-  const total = seconds ?? first.seconds ?? Math.max(0, ...first.segments.map((s) => s.end));
-  const spans = spansOf(first.segments, policy, total).slice(0, policy.maxSpans);
+  let measured: Awaited<ReturnType<Pauser>> | null = null;
+  if (pauses) {
+    try {
+      measured = await pauses();
+    } catch {
+      // Without a measurement the pause-based signals are skipped.
+    }
+  }
+  // Whisper's own count of seconds can stop with its words: the length of the audio is what a gap is measured against.
+  const total =
+    seconds ??
+    measured?.duration ??
+    first.seconds ??
+    Math.max(0, ...first.segments.map((s) => s.end));
+  let found: Span[] = policy.always
+    ? [{ start: 0, end: total, indexes: first.segments.map((_, i) => i) }]
+    : spansOf(first.segments, policy, total);
+  const more = extra ? [...extra(first, total)] : [];
+  if (policy.language && opts.language && first.language && !policy.always) {
+    if (isoOf(first.language) !== isoOf(opts.language)) more.push({ start: 0, end: total });
+  }
+  if (policy.lowWords && measured && !policy.always)
+    more.push(...lowWordSpans(first.segments, measured.silences, total, policy.lowWords));
+  if (more.length)
+    found = mergeSpans(
+      [
+        ...found,
+        ...more.map((e) => ({
+          start: Math.max(0, e.start),
+          end: Math.min(total, e.end),
+          indexes: first.segments.flatMap((g, i) =>
+            (g.start + g.end) / 2 >= e.start && (g.start + g.end) / 2 <= e.end ? [i] : [],
+          ),
+        })),
+      ],
+      first.segments,
+    );
+  const spans = found.slice(0, policy.maxSpans);
   if (!spans.length) return { result: first, stats: NO_RETRIES };
 
-  let budget = total * policy.maxShare;
+  let budget = total * policy.maxShare * (policy.always ? 3 : 1);
   let attempts = 0;
   let improved = 0;
   let kept = 0;
@@ -213,34 +336,34 @@ export async function transcribeChecked(
       continue;
     }
     budget -= length;
-    let bytes: Uint8Array;
-    try {
-      bytes = await cut(span.start, span.end);
-    } catch {
-      failed++;
-      continue;
-    }
     const old = span.indexes.map((i) => first.segments[i] as Segment);
     let best: { segments: Segment[]; language?: string } | null = null;
     let detected: string | undefined;
     let ran = false;
     for (const a of policy.attempts) {
+      const from = Math.max(0, span.start - (a.pad ?? 0) - (a.shift ?? 0));
+      const to = Math.min(total, span.end + (a.pad ?? 0));
       attempts++;
-      resent += length;
+      resent += to - from;
       try {
+        const bytes = await cut(from, to);
+        const forced =
+          a.language === "detected" ? detected : a.language === "project" ? opts.language : null;
         const r = await stt.transcribeSegments(bytes, {
           language: opts.language ?? null,
           ...(opts.signal && { signal: opts.signal }),
           temperature: a.temperature,
-          ...(a.language === "detected" && detected && { forceLanguage: detected }),
+          ...(forced && { forceLanguage: isoOf(forced) }),
         });
         ran = true;
         detected ??= r.language;
-        const shifted = r.segments.map((s) => ({
-          ...s,
-          start: s.start + span.start,
-          end: s.end + span.start,
-        }));
+        const wide = from < span.start - 1e-6 || to > span.end + 1e-6;
+        const shifted = r.segments
+          .map((s) => ({ ...s, start: s.start + from, end: s.end + from }))
+          .filter(
+            (s) =>
+              !wide || ((s.start + s.end) / 2 >= span.start && (s.start + s.end) / 2 <= span.end),
+          );
         if (better(shifted, best?.segments ?? old, policy, length)) best = { segments: shifted };
         if (best && quality(best.segments, policy).flagged === 0) break;
       } catch {
@@ -268,4 +391,24 @@ export async function transcribeChecked(
     result: { ...first, segments, text: segments.map((s) => s.text).join(" ") },
     stats: { spans: spans.length, attempts, improved, kept, failed, seconds: resent },
   };
+}
+
+/** Spans that touch are one span; the segments inside are the union. */
+function mergeSpans(spans: Span[], segments: readonly Segment[]): Span[] {
+  const sorted = [...spans].sort((a, b) => a.start - b.start);
+  const out: Span[] = [];
+  for (const s of sorted) {
+    const last = out[out.length - 1];
+    if (last && s.start <= last.end) {
+      const end = Math.max(last.end, s.end);
+      const inside = segments.flatMap((g, i) =>
+        (g.start + g.end) / 2 >= last.start && (g.start + g.end) / 2 <= end ? [i] : [],
+      );
+      const indexes = [...new Set([...last.indexes, ...s.indexes, ...inside])].sort(
+        (a, b) => a - b,
+      );
+      out[out.length - 1] = { start: last.start, end, indexes };
+    } else out.push(s);
+  }
+  return out.filter((s) => s.end - s.start > 0.5);
 }

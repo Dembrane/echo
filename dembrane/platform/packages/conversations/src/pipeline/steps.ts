@@ -8,6 +8,7 @@ import { isFinalAttempt } from "@dembrane/queue";
 import type { ObjectStorage } from "@dembrane/storage";
 import {
   isRecoverableTranscriptionError,
+  type Pauser,
   type RetryStats,
   type SpanCutter,
   type Transcriber,
@@ -111,6 +112,25 @@ export function spanCutter(
     if (!blob) throw new AudioError("transient", `cut ${out} not in the bucket`);
     return new Uint8Array(await blob.arrayBuffer());
   };
+}
+
+/**
+ * The length and the pauses of an object in the bucket, measured against its own noise floor,
+ * for the retry that looks for loud stretches with few words. Measured at most once per piece.
+ */
+export function pausesOf(d: Pick<PipelineDeps, "audio" | "media">, key: string): Pauser {
+  let once: ReturnType<Pauser> | null = null;
+  return () =>
+    (once ??= d.media
+      .silences({
+        source: {
+          url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+          format: fileFormatOf(key),
+          name: key,
+        },
+        method: "adaptive",
+      })
+      .then((r) => ({ duration: r.duration, silences: r.silences })));
 }
 
 /** Adds one piece's retry counts to the conversation's tally for a stage. Numbers only; at least once. */
@@ -485,6 +505,7 @@ export async function transcribePiece(
           anonymizeTranscripts: opts.anonymize,
           customGuidancePrompt: conv.prompt,
           cutSpan: spanCutter(d, key, `chunk-${chunkId}`),
+          pauses: pausesOf(d, key),
         });
         await recordRetries(d, chunk.conversation_id, "live", result.retry);
         await updateChunk(d, chunkId, chunk.conversation_id, {

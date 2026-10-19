@@ -9,6 +9,7 @@ import {
 import type { Logger } from "@dembrane/observability";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
 import {
+  type Pauser,
   type RetryPolicy,
   type RetryStats,
   type SpanCutter,
@@ -47,6 +48,7 @@ export interface FinalInput {
   readonly signal?: AbortSignal;
   /** Cuts a stretch out of the audio sent, for the retries of doubtful stretches. */
   readonly cutSpan?: SpanCutter;
+  readonly pauses?: Pauser;
 }
 
 export type FinalProvider = "gemini" | "whisper";
@@ -109,6 +111,8 @@ export class WhisperFinal implements FinalTranscriber {
       input.seconds,
       input.cutSpan,
       this.retry,
+      undefined,
+      input.pauses,
     );
     return {
       sentences: tidy(out.segments, input.seconds),

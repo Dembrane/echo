@@ -12,7 +12,7 @@ import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { conversationStore } from "../storage";
 import type { PipelineDeps } from "./steps";
-import { recordRetries, recordStatus, spanCutter, stripNul } from "./steps";
+import { pausesOf, recordRetries, recordStatus, spanCutter, stripNul } from "./steps";
 
 const { conversation, conversation_chunk, conversation_final_transcript, project } = schema;
 
@@ -229,6 +229,7 @@ export async function transcribeFinalPiece(
     language: ctx.language,
     hotwords: ctx.keyTerms,
     cutSpan: spanCutter(d, piece.key, `final-${piece.key.replaceAll("/", "-")}`),
+    pauses: pausesOf(d, piece.key),
   });
   const sentences = out.sentences.map((s) => ({
     start: Math.round((s.start + piece.start) * 100) / 100,

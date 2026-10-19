@@ -12,7 +12,7 @@ export interface LlmSettings {
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
   /** Who transcribes the whole recording after the conversation; the first is the record. */
-  readonly finalTranscript?: readonly ("gemini" | "whisper")[] | undefined;
+  readonly finalTranscript?: readonly ("auto" | "gemini" | "whisper")[] | undefined;
   readonly searchGrounding: boolean;
   readonly textFast: readonly string[];
   readonly multiModalFast: readonly string[];
@@ -98,3 +98,11 @@ export const embedderConfigOf = (s: LlmSettings) => ({
   provider: s.provider,
   baseUrl: s.baseUrl,
 });
+
+/** Who makes the final transcript: "auto" is the stack's own model (gemini on Vertex, whisper on the compatible provider). */
+export function finalProvidersOf(
+  s: Pick<LlmSettings, "provider" | "finalTranscript">,
+): ("gemini" | "whisper")[] {
+  const own = s.provider === "vertex" ? "gemini" : "whisper";
+  return [...new Set((s.finalTranscript ?? ["auto"]).map((p) => (p === "auto" ? own : p)))];
+}

@@ -202,11 +202,11 @@ export const schema = defineSchema({
       description:
         "Send the project's key terms as the speech-to-text model's prompt. Off by default: on Scaleway's whisper-large-v3 the prompt made it return a third fewer words on a whole recording and nothing at all for some pieces.",
     }),
-    whisperRetry: key("LLM_WHISPER_RETRY", bool.default(false), {
+    whisperRetry: key("LLM_WHISPER_RETRY", bool.default(true), {
       description:
-        "Read Whisper's own confidence on every segment (mean log probability under -1, compression ratio over 2.4) and transcribe a doubtful stretch again alone, with a higher temperature and then the language Whisper heard there; the better reading by the same signals is kept. Live pieces and the final pass. Every retry and its outcome is counted per conversation.",
+        "Read a doubtful stretch of Whisper's answer again alone and keep the better reading: a piece in another language than the project's, a window of loud audio with few words, a gap with no words, a looping segment. The first retry names the project's language. Live pieces and the final pass, Whisper only. Every retry and its outcome is counted per conversation. Measured on human reference text; off keeps the first reading.",
     }),
-    finalTextPass: key("LLM_FINAL_TEXT_PASS", z.enum(["off", "glm"]).default("off"), {
+    finalTextPass: key("LLM_FINAL_TEXT_PASS", z.enum(["off", "glm"]).default("glm"), {
       description:
         "A text model reads the Whisper final transcript once and edits inside its sentences only: key terms spelled as the project writes them, obvious mishearings, casing. Sentence ids and timings never change. off keeps Whisper's words. glm uses the text_fast group of the provider.",
     }),
@@ -234,11 +234,11 @@ export const schema = defineSchema({
               .filter((x) => x && x !== "off"),
           ),
         ])
-        .pipe(z.array(z.enum(["gemini", "whisper"])).max(2))
-        .default([]),
+        .pipe(z.array(z.enum(["auto", "gemini", "whisper"])).max(2))
+        .default(["auto"]),
       {
         description:
-          "Who transcribes a whole recording again when its conversation is finished: gemini, whisper, or both separated by a comma or a plus (the first is the transcript people read, the second is kept beside it). Empty or off keeps the live 30 second text. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
+          "Who transcribes a whole recording again when its conversation is finished: auto (the default: gemini with the vertex provider, whisper with the openai-compatible one), gemini, whisper, or two of them separated by a comma or a plus (the first is the transcript people read, the second is kept beside it). off keeps the live 30 second text and hides the draft line and the player. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
       },
     ),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {

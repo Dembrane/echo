@@ -164,6 +164,8 @@ export class GeminiTranscriber implements Transcriber {
           undefined,
           input.cutSpan,
           this.opts.retry ?? null,
+          undefined,
+          input.pauses,
         )
       : null;
     const transcript =

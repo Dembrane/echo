@@ -1,4 +1,4 @@
-import type { RetryStats, SpanCutter } from "./speech-retry";
+import type { Pauser, RetryStats, SpanCutter } from "./speech-retry";
 
 /** One audio file in, its transcript out. The Gemini pipeline and a fake implement it. */
 export interface TranscribeInput {
@@ -13,6 +13,8 @@ export interface TranscribeInput {
   readonly promptOverride?: string | null;
   /** Cuts a stretch out of this audio so Whisper can read a doubtful part again alone; absent means no retries. */
   readonly cutSpan?: SpanCutter;
+  /** The pauses of this audio, for the retry that looks for loud stretches with few words. */
+  readonly pauses?: Pauser;
 }
 
 export interface TranscribeResult {
