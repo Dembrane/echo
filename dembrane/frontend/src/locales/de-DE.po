@@ -1211,6 +1211,10 @@ msgstr "Ein Host"
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr "Eine Live-Seite in Ihrer Bibliothek und Live-Folien für den Raum, beides während einer Session direkt aus Ihren Gesprächen erstellt. Frühe Beta: Änderungen oder Entfernung vorbehalten."
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:188
+msgid "A more accurate transcript of the full recording is on its way."
+msgstr "Ein genaueres Transkript der gesamten Aufnahme ist unterwegs."
+
 #: src/components/release/releaseHistory.ts:742
 msgid "A more reliable audio upload experience"
 msgstr "Zuverlässigere Audio-Uploads"
@@ -5418,8 +5422,8 @@ msgid "Draft next actions and organize them by priority"
 msgstr "Nächste Aktionen erstellen und nach Priorität organisieren"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:187
-msgid "Draft. It improves when the conversation ends."
-msgstr "Entwurf. Er wird verbessert, sobald das Gespräch endet."
+#~ msgid "Draft. It improves when the conversation ends."
+#~ msgstr "Entwurf. Er wird verbessert, sobald das Gespräch endet."
 
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
@@ -9805,7 +9809,7 @@ msgstr "Noch keine Schulungen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Kein Transkript verfügbar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:192
+#: src/components/conversation/ConversationTranscriptSection.tsx:202
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Noch kein Transkript für dieses Gespräch vorhanden. Bitte später erneut prüfen."
 
@@ -15823,6 +15827,10 @@ msgstr "Dies ist noch nicht gespeichert."
 #: src/components/settings/LegalBasisCard.tsx:132
 msgid "This is set to consent-based processing without a privacy policy link. Add one to keep this setting valid: participants must be able to read the privacy policy."
 msgstr "Hier ist Verarbeitung auf Basis von Einwilligung festgelegt, aber ohne Link zur Datenschutzerklärung. Fügen Sie einen hinzu, damit die Einstellung gültig bleibt: Teilnehmende müssen die Datenschutzerklärung lesen können."
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:193
+msgid "This is the live transcript. You get a more accurate one when the conversation ends."
+msgstr "Das ist das Live-Transkript. Ein genaueres bekommst du, wenn das Gespräch endet."
 
 #: src/components/pricing/questions.ts:197
 msgid "This is urgent"

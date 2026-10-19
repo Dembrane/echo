@@ -184,7 +184,17 @@ export const ConversationTranscriptSection = ({
 				<Stack className="relative">
 					{isDraft && allChunks.length > 0 && (
 						<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
-							<Trans>Draft. It improves when the conversation ends.</Trans>
+							{isFinished ? (
+								<Trans>
+									A more accurate transcript of the full recording is on its
+									way.
+								</Trans>
+							) : (
+								<Trans>
+									This is the live transcript. You get a more accurate one when
+									the conversation ends.
+								</Trans>
+							)}
 						</Text>
 					)}
 					{allChunks.length === 0 ? (

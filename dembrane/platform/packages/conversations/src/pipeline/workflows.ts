@@ -4,6 +4,7 @@ import {
   type FinalPart,
   type FinalPlan,
   loadFinalContext,
+  markFinalGaveUp,
   planFinal,
   redactFinal,
   storeFinal,
@@ -167,6 +168,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       const final = d.final;
       const transcriber = final?.transcribers[p.provider];
       if (!final || !transcriber) return;
+      let wrote = false;
       try {
         const plan: FinalPlan | null = await step(
           "final-plan",
@@ -213,7 +215,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
               edit: edited.edit,
               raw: edited.raw,
             };
-        const wrote = await step(
+        wrote = await step(
           "final-store",
           () =>
             storeFinal(d, p.conversationId, p.hash, p.provider, p.record, plan, parts, assembled),
@@ -230,6 +232,13 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           },
           "final transcript gave up; the live text stays",
         );
+      } finally {
+        if (!wrote && p.record)
+          await step(
+            "final-gave-up",
+            () => markFinalGaveUp(d, p.conversationId, p.hash),
+            retry.db,
+          ).catch(() => undefined);
       }
     },
 

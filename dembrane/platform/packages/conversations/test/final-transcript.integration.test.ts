@@ -273,5 +273,9 @@ run("final transcript", () => {
     });
     await Bun.sleep(5000);
     expect(await finals(cid)).toHaveLength(0);
+    // The dashboard stops saying a final transcript is on its way.
+    const gaveUp =
+      await h.sql`select 1 from processing_status where conversation_id = ${cid} and event = 'task_final_transcript.gave_up'`;
+    expect(gaveUp).toHaveLength(1);
   });
 });
