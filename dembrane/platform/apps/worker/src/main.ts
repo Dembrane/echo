@@ -27,6 +27,7 @@ import {
   type FinalTranscriber,
   GeminiFinal,
   GeminiTranscriber,
+  requestLimits,
   WhisperFinal,
 } from "@dembrane/transcription";
 import { WORKER_ASSETS } from "./assets";
@@ -124,6 +125,7 @@ const models = createModels(modelsConfigOf(config.llm), {
 // the preview runs both on one conversation. The first one is the transcript people read.
 const retry = config.llm.whisperRetry ? DEFAULT_RETRY : null;
 const transcriber = new GeminiTranscriber(models, logger, { retry });
+const liveLimits = requestLimits(config.llm.provider === "openai-compatible" ? "whisper" : "gemini");
 const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
 // The text pass reads Whisper's transcript with the Whisper provider's own text model.
 let whisperModels: Models | null = null;
@@ -199,6 +201,12 @@ const regs = registrations({
     media,
     transcriber,
     liveProvider: config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
+    ...(config.llm.whisperMaxRequestSeconds && {
+      requestLimits: {
+        ...liveLimits,
+        maxSeconds: Math.min(liveLimits.maxSeconds, config.llm.whisperMaxRequestSeconds),
+      },
+    }),
     ...(finalProviders.length && {
       final: {
         providers: finalProviders,

@@ -210,6 +210,10 @@ export const schema = defineSchema({
       description:
         "Speech-to-text requests this process keeps in flight at once. A request that waits for a free place is ordered live first, then final pass, then uploads. A provider that works through requests one after another (a single GPU) wants a small number so a live chunk is never queued behind a long upload.",
     }),
+    whisperMaxRequestSeconds: key("LLM_WHISPER_MAX_REQUEST_SECONDS", int.min(1).optional(), {
+      description:
+        "Shortest cap on the audio one speech-to-text request carries, below the limit worked out from the provider (1800 s quota, 25 MB, answer within the request timeout). For a provider that answers slowly, such as a single local GPU, where a long request would time out or hold up live chunks.",
+    }),
     whisperRetry: key("LLM_WHISPER_RETRY", bool.default(true), {
       description:
         "Read a doubtful stretch of Whisper's answer again alone and keep the better reading: a piece in another language than the project's, a window of loud audio with few words, a gap with no words, a looping segment. The first retry names the project's language. Live pieces and the final pass, Whisper only. Every retry and its outcome is counted per conversation. Measured on human reference text; off keeps the first reading.",

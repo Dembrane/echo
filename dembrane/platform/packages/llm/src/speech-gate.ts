@@ -15,6 +15,8 @@ export interface SpeechGateOptions {
   readonly concurrency?: number;
   /** Share of the minute's budget only live requests may use. */
   readonly liveReserve?: number;
+  /** Places in flight only live requests may take: with every other place busy a live request still starts at once. */
+  readonly liveSlots?: number;
   /** The window the limit is counted over; a minute, shorter only in tests. */
   readonly windowMs?: number;
   readonly now?: () => number;
@@ -43,6 +45,7 @@ export class SpeechGate {
   private readonly limit: number;
   private readonly concurrency: number;
   private readonly reserve: number;
+  private readonly liveSlots: number;
   private readonly window: number;
   private readonly now: () => number;
 
@@ -50,6 +53,11 @@ export class SpeechGate {
     this.limit = opts.secondsPerMinute;
     this.concurrency = opts.concurrency ?? 8;
     this.reserve = opts.liveReserve ?? 0.3;
+    // At least one place, a quarter of them when there are many.
+    this.liveSlots = Math.min(
+      this.concurrency - 1,
+      opts.liveSlots ?? Math.max(1, Math.floor(this.concurrency / 4)),
+    );
     this.window = opts.windowMs ?? 60_000;
     this.now = opts.now ?? Date.now;
   }
@@ -99,6 +107,12 @@ export class SpeechGate {
       // Best first: live, then final, then upload; each in arrival order.
       this.waiting.sort((a, b) => RANK[a.priority] - RANK[b.priority] || a.order - b.order);
       const next = this.waiting[0] as Waiter;
+      // The last places are for live: background work leaves them free.
+      if (
+        next.priority !== "live" &&
+        this.inFlight >= this.concurrency - Math.max(0, this.liveSlots)
+      )
+        return;
       const used = this.sent.reduce((n, s) => n + s.seconds, 0);
       const background = this.sent.reduce((n, s) => n + (s.background ? s.seconds : 0), 0);
       const budget = next.priority === "live" ? this.limit : this.limit * (1 - this.reserve);

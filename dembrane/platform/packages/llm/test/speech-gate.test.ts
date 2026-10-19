@@ -86,3 +86,35 @@ test("five long uploads and final passes never starve a live session, and the wi
   expect(maxUsed).toBeLessThanOrEqual(100);
   expect(uploaded).toBeGreaterThan(0);
 });
+
+test("with every background place busy a live request still starts at once", async () => {
+  const gate = new SpeechGate({ secondsPerMinute: 100_000, concurrency: 4 });
+  const releases: (() => void)[] = [];
+  const started: string[] = [];
+  const hold = (name: string, priority: "upload" | "live") =>
+    gate.run(
+      1,
+      priority,
+      () =>
+        new Promise<void>((r) => {
+          started.push(name);
+          releases.push(r);
+        }),
+    );
+  const background = [
+    hold("u1", "upload"),
+    hold("u2", "upload"),
+    hold("u3", "upload"),
+    hold("u4", "upload"),
+  ];
+  await tick();
+  // Three of the four places are background; the fourth waits for a live request.
+  expect(started).toEqual(["u1", "u2", "u3"]);
+  const live = hold("live", "live");
+  await tick();
+  expect(started).toEqual(["u1", "u2", "u3", "live"]);
+  for (const r of releases.splice(0)) r();
+  await tick();
+  for (const r of releases.splice(0)) r();
+  await Promise.all([...background, live]);
+});
