@@ -16,7 +16,7 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm";
-import { isUuid, type Row } from "../storage";
+import { FINAL_GAVE_UP, isUuid, type Row } from "../storage";
 
 const {
   conversation,
@@ -456,6 +456,21 @@ export function bffStore(db: Db) {
           and(
             eq(conversation_chunk.conversation_id, conversationId),
             isNotNull(conversation_chunk.path),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
+    },
+
+    /** Whether the final transcript job ended without one, so the dashboard stops saying it is on its way. */
+    async finalGaveUp(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: processing_status.id })
+        .from(processing_status)
+        .where(
+          and(
+            eq(processing_status.conversation_id, conversationId),
+            eq(processing_status.event, FINAL_GAVE_UP),
           ),
         )
         .limit(1);

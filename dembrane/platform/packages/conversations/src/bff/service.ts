@@ -400,7 +400,10 @@ export async function finalTranscript(d: AudioDeps, who: Signed, conversationId:
       !a.conversation.is_finished ||
       d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
     const expected =
-      Boolean(d.settings.finalTranscript) && fresh && (await store.hasAudio(conversationId));
+      Boolean(d.settings.finalTranscript) &&
+      fresh &&
+      (await store.hasAudio(conversationId)) &&
+      !(await store.finalGaveUp(conversationId));
     return { available: false as const, expected };
   }
   if (locked) return { available: true as const, locked: true as const };

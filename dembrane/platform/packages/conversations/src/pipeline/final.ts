@@ -10,7 +10,7 @@ import type {
 } from "@dembrane/transcription";
 import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
-import { conversationStore } from "../storage";
+import { conversationStore, FINAL_GAVE_UP } from "../storage";
 import type { PipelineDeps } from "./steps";
 import { pausesOf, recordRetries, recordStatus, spanCutter, stripNul } from "./steps";
 
@@ -398,4 +398,24 @@ export async function storeFinal(
     now: d.now(),
   });
   return true;
+}
+
+/**
+ * The record's run ended without a final transcript: the dashboard stops saying one is on its
+ * way. A run whose chunk list changed meanwhile says nothing, since the next hand-over starts
+ * its own.
+ */
+export async function markFinalGaveUp(
+  d: PipelineDeps,
+  conversationId: string,
+  hash: string,
+): Promise<void> {
+  if ((await currentChunkHash(d, conversationId)) !== hash) return;
+  await recordStatus(d.db, {
+    conversationId,
+    event: FINAL_GAVE_UP,
+    message: "the live text stays",
+    durationMs: 0,
+    now: d.now(),
+  });
 }

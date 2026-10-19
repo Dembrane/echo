@@ -1210,6 +1210,10 @@ msgstr "Ведучий"
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr "Жива сторінка у вашій Бібліотеці та живі слайди для зали: обидва створюються з ваших розмов просто під час сесії. Рання бета: вони можуть змінитися або бути вилучені."
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:188
+msgid "A more accurate transcript of the full recording is on its way."
+msgstr "Точніша транскрипція всього запису вже готується."
+
 #: src/components/release/releaseHistory.ts:742
 msgid "A more reliable audio upload experience"
 msgstr "Надійніше завантаження аудіо"
@@ -5417,8 +5421,8 @@ msgid "Draft next actions and organize them by priority"
 msgstr "Draft next actions and organize them by priority"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:187
-msgid "Draft. It improves when the conversation ends."
-msgstr "Чернетка. Вона покращиться після завершення розмови."
+#~ msgid "Draft. It improves when the conversation ends."
+#~ msgstr "Чернетка. Вона покращиться після завершення розмови."
 
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
@@ -9804,7 +9808,7 @@ msgstr "Тренінгів ще немає."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:192
+#: src/components/conversation/ConversationTranscriptSection.tsx:202
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -15822,6 +15826,10 @@ msgstr "Це ще не збережено."
 #: src/components/settings/LegalBasisCard.tsx:132
 msgid "This is set to consent-based processing without a privacy policy link. Add one to keep this setting valid: participants must be able to read the privacy policy."
 msgstr "Встановлено обробку на основі згоди без посилання на політику конфіденційності. Додайте його, щоб налаштування залишалося дійсним: учасники мають мати змогу прочитати політику конфіденційності."
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:193
+msgid "This is the live transcript. You get a more accurate one when the conversation ends."
+msgstr "Це транскрипція наживо. Точнішу ви отримаєте, коли розмова закінчиться."
 
 #: src/components/pricing/questions.ts:197
 msgid "This is urgent"
