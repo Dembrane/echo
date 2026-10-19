@@ -8,6 +8,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   max,
   notInArray,
@@ -20,6 +21,7 @@ import { isUuid, type Row } from "../storage";
 const {
   conversation,
   conversation_chunk,
+  conversation_record_transcript,
   conversation_project_tag,
   conversation_artifact,
   conversation_link,
@@ -428,6 +430,36 @@ export function bffStore(db: Db) {
       ).map(withoutPendingText);
       const aliases = await chunkAliases(rows.map((r) => r.id));
       return rows.map((r) => ({ ...directusRow(r), ...(aliases.get(r.id) ?? {}) }));
+    },
+
+    /** The final transcript people read, when the conversation has one that is still current. */
+    async recordTranscript(conversationId: string) {
+      const [row] = await db
+        .select({
+          provider: conversation_record_transcript.provider,
+          model: conversation_record_transcript.model,
+          text: conversation_record_transcript.text,
+          sentences: conversation_record_transcript.sentences,
+        })
+        .from(conversation_record_transcript)
+        .where(eq(conversation_record_transcript.conversation_id, conversationId))
+        .limit(1);
+      return row ?? null;
+    },
+
+    /** Whether the conversation has any recorded audio: only those get a final transcript. */
+    async hasAudio(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: conversation_chunk.id })
+        .from(conversation_chunk)
+        .where(
+          and(
+            eq(conversation_chunk.conversation_id, conversationId),
+            isNotNull(conversation_chunk.path),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
     },
 
     async chunkPage(

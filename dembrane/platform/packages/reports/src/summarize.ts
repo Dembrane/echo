@@ -169,12 +169,18 @@ async function summarizeNow(d: SummarizeDeps, conv: Record<string, unknown>) {
   const conversationId = String(conv.id);
   const [project] = await sql`select * from project where id = ${conv.project_id as string}`;
   if (!project) throw new Error("Project not found");
-  const chunks = await sql`select transcript from conversation_chunk
+  const [record] = await sql`
+    select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+  const chunks = record
+    ? []
+    : await sql`select transcript from conversation_chunk
     where conversation_id = ${conversationId} order by timestamp nulls last, id limit 1500`;
-  const transcript = chunks
-    .map((c) => c.transcript as string | null)
-    .filter((t): t is string => Boolean(t))
-    .join("\n");
+  const transcript = record
+    ? String(record.text)
+    : chunks
+        .map((c) => c.transcript as string | null)
+        .filter((t): t is string => Boolean(t))
+        .join("\n");
   const now = d.now().toISOString();
   if (transcript === "") {
     if (conv.is_all_chunks_transcribed || conv.is_finished)

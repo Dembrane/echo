@@ -17,6 +17,7 @@ const media: Media = {
     return local.convert(req);
   },
   split: (req) => local.split(req),
+  silences: (req) => local.silences(req),
   merge: (req) => local.merge(req),
 };
 const transcriber = new FakeTranscriber();

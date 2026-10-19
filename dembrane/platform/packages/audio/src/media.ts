@@ -3,14 +3,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AudioError, type AudioErrorKind, noMergeableChunks } from "./errors";
 import {
+  analysePauses,
   concatFiles,
   convertFile,
   cutFile,
   durationOf,
+  type Pauses,
   type ProbeResult,
   probeFile,
   probePlain,
   probeUrl,
+  type Silence,
 } from "./ffmpeg";
 import type { AudioFormat } from "./formats";
 
@@ -52,6 +55,14 @@ export interface Media {
     source: MediaSource;
     pieces: readonly { start: number; duration: number; target: MediaTarget }[];
   }): Promise<void>;
+  /** The pauses in a file, for cutting a long recording where nobody speaks. */
+  silences(req: {
+    source: MediaSource;
+    method?: "fixed" | "adaptive" | undefined;
+    noiseDb?: number | undefined;
+    alpha?: number | undefined;
+    minSeconds?: number | undefined;
+  }): Promise<{ duration: number } & Pauses>;
   /**
    * Merges sources in order into one file: each is probed, converted when it is not
    * already in the output format, and skipped when it fails; all failing is an error.
@@ -142,6 +153,32 @@ export class LocalMedia implements Media {
     });
   }
 
+  silences(req: {
+    source: MediaSource;
+    method?: "fixed" | "adaptive" | undefined;
+    noiseDb?: number | undefined;
+    alpha?: number | undefined;
+    minSeconds?: number | undefined;
+  }) {
+    return inTemp(async (dir) => {
+      const p = join(dir, `input.${req.source.format}`);
+      await download(req.source.url, p);
+      const duration = durationOf(await probeFile(p, req.source.format)) ?? 0;
+      const found = await analysePauses(p, {
+        ...(req.method && { method: req.method }),
+        ...(req.noiseDb !== undefined && { noiseDb: req.noiseDb }),
+        ...(req.alpha !== undefined && { alpha: req.alpha }),
+        ...(req.minSeconds !== undefined && { minSeconds: req.minSeconds }),
+      });
+      // JSON cannot carry Infinity, and a pause left open runs to the end of the file.
+      return {
+        duration,
+        ...found,
+        silences: found.silences.map((x) => ({ start: x.start, end: Math.min(x.end, duration) })),
+      };
+    });
+  }
+
   merge(req: {
     sources: readonly MediaSource[];
     target: MediaTarget;
@@ -227,6 +264,15 @@ export class HttpMedia implements Media {
     pieces: readonly { start: number; duration: number; target: MediaTarget }[];
   }) {
     await this.call("split", req);
+  }
+  silences(req: {
+    source: MediaSource;
+    method?: "fixed" | "adaptive" | undefined;
+    noiseDb?: number | undefined;
+    alpha?: number | undefined;
+    minSeconds?: number | undefined;
+  }) {
+    return this.call<{ duration: number } & Pauses>("silences", req);
   }
   merge(req: {
     sources: readonly MediaSource[];

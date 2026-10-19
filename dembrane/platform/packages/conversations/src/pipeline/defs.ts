@@ -42,6 +42,21 @@ export const finalizeConversation = defineJob(
   { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
+/**
+ * The whole recording transcribed again once the conversation is finalized. One run per
+ * provider and chunk list; the first provider's result is the transcript people read.
+ */
+export const finalTranscript = defineJob(
+  "conversations.final-transcript",
+  z.object({
+    conversationId: z.string(),
+    provider: z.enum(["gemini", "whisper"]),
+    record: z.boolean(),
+    hash: z.string(),
+  }),
+  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+);
+
 /** A summary on its own: the catch-up for conversations unlocked by an upgrade. */
 export const summarizeConversation = defineJob(
   "conversations.summarize",

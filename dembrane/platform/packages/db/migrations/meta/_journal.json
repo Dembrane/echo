@@ -169,6 +169,27 @@
       "when": 1792084180085,
       "tag": "0023_expand_chunk_pending_text",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792085728096,
+      "tag": "0024_expand_final_transcript",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792153182007,
+      "tag": "0025_expand_final_transcript_raw",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792177537284,
+      "tag": "0026_expand_transcribe_retry",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,7 @@ import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
 import { regexRedactPii } from "./pii";
+import { type RetryPolicy, transcribeChecked } from "./speech-retry";
 import type {
   RedactTextInput,
   TranscribeInput,
@@ -88,6 +89,7 @@ export class GeminiTranscriber implements Transcriber {
   constructor(
     private readonly models: Models,
     private readonly logger: Logger,
+    private readonly opts: { retry?: RetryPolicy | null } = {},
   ) {}
 
   async transcribe(input: TranscribeInput): Promise<TranscribeResult> {
@@ -153,10 +155,25 @@ export class GeminiTranscriber implements Transcriber {
     hotwordsStr: string,
   ): Promise<TranscribeResult> {
     const stt = this.models.speechToText as NonNullable<Models["speechToText"]>;
-    const transcript = await stt.transcribe(input.audio, {
-      language: input.language ?? null,
-      ...(hotwordsStr && { prompt: hotwordsStr }),
-    });
+    const retrying = Boolean(this.opts.retry && input.cutSpan);
+    const checked = retrying
+      ? await transcribeChecked(
+          stt,
+          input.audio,
+          { language: input.language ?? null, ...(hotwordsStr && { prompt: hotwordsStr }) },
+          undefined,
+          input.cutSpan,
+          this.opts.retry ?? null,
+          undefined,
+          input.pauses,
+        )
+      : null;
+    const transcript =
+      checked?.result.text ??
+      (await stt.transcribe(input.audio, {
+        language: input.language ?? null,
+        ...(hotwordsStr && { prompt: hotwordsStr }),
+      }));
     const redacted = await this.redactText({
       text: transcript,
       language: input.language ?? null,
@@ -169,6 +186,7 @@ export class GeminiTranscriber implements Transcriber {
       transcript: redacted.transcript,
       note: redacted.note,
       models: [stt.model, ...redacted.models],
+      ...(checked && { retry: checked.stats }),
     };
   }
 

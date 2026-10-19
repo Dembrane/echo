@@ -1006,7 +1006,7 @@ msgstr "{tag} (vorausgewählt)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} von # Gespräch} other {{done} von # Gesprächen}}"
 
-#: src/components/conversation/hooks/index.ts:523
+#: src/components/conversation/hooks/index.ts:545
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {{cleared} von # Gespräch gelöscht} other {{cleared} von # Gesprächen gelöscht}}"
 
@@ -2602,7 +2602,7 @@ msgstr "Audio-Download nicht verfügbar für anonymisierte Unterhaltungen"
 msgid "Audio is coming in"
 msgstr "Audiosignal empfangen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:138
+#: src/components/conversation/ConversationTranscriptSection.tsx:155
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-Wiedergabe nicht verfügbar für anonymisierte Unterhaltungen"
 
@@ -3606,6 +3606,10 @@ msgstr "Klicken Sie auf ein Gesprächs-Tag, um es zu den Filtern hinzuzufügen."
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Klicken Sie auf einen Knoten in der Baum- oder Cluster-Ansicht, um ihn hier hervorzuheben."
 
+#: src/components/conversation/FinalTranscript.tsx:86
+#~ msgid "Click a sentence to play from there."
+#~ msgstr "Klicken Sie auf einen Satz, um ab dort abzuspielen."
+
 #: src/components/map/panels/HistoryPanel.tsx:121
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 #~ msgstr "Klicke auf ein Argument oder lass den Cursor auf einem Cluster ruhen, bis sich der Kreis schließt, dann wird es hier festgehalten."
@@ -4058,7 +4062,7 @@ msgstr "Gespräch"
 msgid "Conversation {0}"
 msgstr "Gespräch {0}"
 
-#: src/components/conversation/hooks/index.ts:368
+#: src/components/conversation/hooks/index.ts:390
 msgid "Conversation added to chat"
 msgstr "Gespräch zum Chat hinzugefügt"
 
@@ -4087,7 +4091,7 @@ msgstr "Gesprächsnamen erscheinen in der Bibliothek und der Endbildschirm des P
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Gesprächsseiten und das Laden von Daten wurden optimiert."
 
-#: src/components/conversation/hooks/index.ts:476
+#: src/components/conversation/hooks/index.ts:498
 msgid "Conversation removed from chat"
 msgstr "Gespräch aus dem Chat entfernt"
 
@@ -4150,7 +4154,7 @@ msgstr "Gespräche"
 msgid "Conversations"
 msgstr "Gespräche"
 
-#: src/components/conversation/hooks/index.ts:512
+#: src/components/conversation/hooks/index.ts:534
 msgid "Conversations cleared"
 msgstr "Gespräche geleert"
 
@@ -5413,6 +5417,10 @@ msgstr "AVV"
 msgid "Draft next actions and organize them by priority"
 msgstr "Nächste Aktionen erstellen und nach Priorität organisieren"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:187
+msgid "Draft. It improves when the conversation ends."
+msgstr "Entwurf. Er wird verbessert, sobald das Gespräch endet."
+
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
 msgstr "Notiz an das dembrane-Team wird verfasst"
@@ -5753,7 +5761,7 @@ msgid "emptied out"
 msgstr "geleert"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:116
+#: src/components/conversation/ConversationTranscriptSection.tsx:132
 msgid "Empty"
 msgstr "Leer"
 
@@ -6220,8 +6228,8 @@ msgstr "Fehler beim Hinzufügen von Unterhaltungen zum Kontext"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Ergebnis konnte nicht freigegeben werden. Bitte versuchen Sie es erneut."
 
-#: src/components/conversation/hooks/index.ts:503
-#: src/components/conversation/hooks/index.ts:519
+#: src/components/conversation/hooks/index.ts:525
+#: src/components/conversation/hooks/index.ts:541
 msgid "Failed to clear conversations"
 msgstr "Gespräche konnten nicht geleert werden"
 
@@ -6339,7 +6347,7 @@ msgstr "Logo konnte nicht entfernt werden"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Neuplanung fehlgeschlagen. Bitte wahlen Sie einen spateren Zeitpunkt und versuchen Sie es erneut."
 
-#: src/components/conversation/hooks/index.ts:622
+#: src/components/conversation/hooks/index.ts:644
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fehler beim Hertranskribieren des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -8471,7 +8479,7 @@ msgstr "Arbeitsbereiche werden geladen…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:130
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:341
+#: src/components/conversation/hooks/index.ts:363
 msgid "Loading..."
 msgstr "Laden..."
 
@@ -9797,7 +9805,7 @@ msgstr "Noch keine Schulungen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Kein Transkript verfügbar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:161
+#: src/components/conversation/ConversationTranscriptSection.tsx:192
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Noch kein Transkript für dieses Gespräch vorhanden. Bitte später erneut prüfen."
 
@@ -14016,7 +14024,7 @@ msgstr "Alle {total} anzeigen"
 msgid "Show all conversations"
 msgstr "Alle Gespräche anzeigen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:148
+#: src/components/conversation/ConversationTranscriptSection.tsx:165
 msgid "Show audio player"
 msgstr "Audio-Player anzeigen"
 
@@ -14053,6 +14061,10 @@ msgstr "IP-Adressen anzeigen"
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
 msgstr "Weniger anzeigen"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:157
+#~ msgid "Show live preview text"
+#~ msgstr "Live-Vorschautext anzeigen"
 
 #: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
@@ -16357,6 +16369,10 @@ msgstr "Schulungen"
 msgid "Transcribe a conversation again"
 msgstr "Ein Gespräch erneut transkribieren"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:186
+#~ msgid "Transcribed again from the whole recording."
+#~ msgstr "Aus der gesamten Aufnahme neu transkribiert."
+
 #: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"
 msgstr "Wird transkribiert"
@@ -16372,7 +16388,7 @@ msgstr "Transkript"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:108
+#: src/components/conversation/ConversationTranscriptSection.tsx:124
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transkript"

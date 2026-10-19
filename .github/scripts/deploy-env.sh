@@ -116,6 +116,10 @@ deploy() {
   filled=$(filled_secrets)
   # Logs, and Vertex calls, stay in the environment's own project.
   local common="APP_ENV=$ENV,APP_RELEASE=$tag,GCP_PROJECT=$PROJECT,LLM_VERTEX_PROJECT=$PROJECT$hosts$db_env"
+  # A preview transcribes finished recordings again with both providers (Gemini is the one
+  # people read, Whisper is kept beside it) so the two can be compared on one conversation.
+  # The Scaleway key is the llm-api-key secret; a comma would split this list, hence the plus.
+  [ "$ENV" = preview ] && common+=",LLM_BASE_URL=https://api.scaleway.ai/v1,LLM_FINAL_TRANSCRIPT=gemini+whisper"
 
   # A PR preview's migrate job also seeds it (apps/migrate/src/preview-seed.ts): it needs the
   # preview's URLs, the bucket the accounts demo writes its PDFs to, and the admin password.

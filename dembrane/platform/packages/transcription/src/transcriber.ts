@@ -1,3 +1,5 @@
+import type { Pauser, RetryStats, SpanCutter } from "./speech-retry";
+
 /** One audio file in, its transcript out. The Gemini pipeline and a fake implement it. */
 export interface TranscribeInput {
   /** The audio bytes; sent inline, as the Python API did. */
@@ -9,6 +11,10 @@ export interface TranscribeInput {
   readonly customGuidancePrompt?: string | null;
   /** Replaces the first pass's prompt; the redaction pass keeps its own. */
   readonly promptOverride?: string | null;
+  /** Cuts a stretch out of this audio so Whisper can read a doubtful part again alone; absent means no retries. */
+  readonly cutSpan?: SpanCutter;
+  /** The pauses of this audio, for the retry that looks for loud stretches with few words. */
+  readonly pauses?: Pauser;
 }
 
 export interface TranscribeResult {
@@ -16,6 +22,8 @@ export interface TranscribeResult {
   readonly note: string;
   /** Which deployment answered each pass, so a fallback-degraded chunk is identifiable. */
   readonly models: readonly (string | null)[];
+  /** What the confidence retries did for this audio, when they were on. */
+  readonly retry?: RetryStats;
 }
 
 /** Typed text in, the same redaction audio gets out. */

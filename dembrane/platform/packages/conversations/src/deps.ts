@@ -28,6 +28,8 @@ export interface ConversationSettings {
   /** ENABLE_WEBHOOKS: conversation events enqueue deliveries. */
   readonly webhooksEnabled: boolean;
   readonly dashboardUrl: string;
+  /** LLM_FINAL_TRANSCRIPT names a provider: a finished conversation with audio gets a final transcript. */
+  readonly finalTranscript?: boolean;
 }
 
 /** Everything the conversation routes need; built once by the API, faked in tests. */

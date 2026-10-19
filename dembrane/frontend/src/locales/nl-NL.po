@@ -1006,7 +1006,7 @@ msgstr "{tag} (vooraf gekozen)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} van # gesprek} other {{done} van # gesprekken}}"
 
-#: src/components/conversation/hooks/index.ts:523
+#: src/components/conversation/hooks/index.ts:545
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {{cleared} van # gesprek gewist} other {{cleared} van # gesprekken gewist}}"
 
@@ -2599,7 +2599,7 @@ msgstr "Audio-download niet beschikbaar voor anonieme gesprekken"
 msgid "Audio is coming in"
 msgstr "Audio komt binnen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:138
+#: src/components/conversation/ConversationTranscriptSection.tsx:155
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-afspelen niet beschikbaar voor anonieme gesprekken"
 
@@ -3603,6 +3603,10 @@ msgstr "Klik op een gesprekstag om die aan je filters toe te voegen."
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Klik op een knooppunt in de boom of clusterkaart om het hier uit te lichten."
 
+#: src/components/conversation/FinalTranscript.tsx:86
+#~ msgid "Click a sentence to play from there."
+#~ msgstr "Klik op een zin om vanaf daar af te spelen."
+
 #: src/components/map/panels/HistoryPanel.tsx:121
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 #~ msgstr "Klik op een argument, of laat de cursor op een cluster rusten tot de cirkel rond is, en je vindt het hier terug."
@@ -4055,7 +4059,7 @@ msgstr "Gesprek"
 msgid "Conversation {0}"
 msgstr "Gesprek {0}"
 
-#: src/components/conversation/hooks/index.ts:368
+#: src/components/conversation/hooks/index.ts:390
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
 
@@ -4084,7 +4088,7 @@ msgstr "Gespreksnamen verschijnen in de Library en het eindscherm van het portaa
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Gesprekspagina's en het laden van gegevens zijn vereenvoudigd."
 
-#: src/components/conversation/hooks/index.ts:476
+#: src/components/conversation/hooks/index.ts:498
 msgid "Conversation removed from chat"
 msgstr "Gesprek verwijderd uit chat"
 
@@ -4147,7 +4151,7 @@ msgstr "gesprekken"
 msgid "Conversations"
 msgstr "Gesprekken"
 
-#: src/components/conversation/hooks/index.ts:512
+#: src/components/conversation/hooks/index.ts:534
 msgid "Conversations cleared"
 msgstr "Gesprekken gewist"
 
@@ -5410,6 +5414,10 @@ msgstr "DPA"
 msgid "Draft next actions and organize them by priority"
 msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:187
+msgid "Draft. It improves when the conversation ends."
+msgstr "Concept. Dit verbetert zodra het gesprek is afgelopen."
+
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
 msgstr "Een notitie opstellen die je naar het dembrane-team kunt sturen"
@@ -5750,7 +5758,7 @@ msgid "emptied out"
 msgstr "leeggemaakt"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:116
+#: src/components/conversation/ConversationTranscriptSection.tsx:132
 msgid "Empty"
 msgstr "Leeg"
 
@@ -6217,8 +6225,8 @@ msgstr "Mislukt om gesprekken aan context toe te voegen"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Fout bij het goedkeuren van het resultaat. Probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:503
-#: src/components/conversation/hooks/index.ts:519
+#: src/components/conversation/hooks/index.ts:525
+#: src/components/conversation/hooks/index.ts:541
 msgid "Failed to clear conversations"
 msgstr "Gesprekken wissen is mislukt"
 
@@ -6336,7 +6344,7 @@ msgstr "Fout bij het verwijderen van het logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Opnieuw plannen mislukt. Kies een tijdstip verder in de toekomst en probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:622
+#: src/components/conversation/hooks/index.ts:644
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
@@ -8468,7 +8476,7 @@ msgstr "Werkruimtes laden…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:130
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:341
+#: src/components/conversation/hooks/index.ts:363
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
@@ -9794,7 +9802,7 @@ msgstr "Nog geen trainingen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Geen transcript beschikbaar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:161
+#: src/components/conversation/ConversationTranscriptSection.tsx:192
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -14013,7 +14021,7 @@ msgstr "Toon alle {total}"
 msgid "Show all conversations"
 msgstr "Alle gesprekken tonen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:148
+#: src/components/conversation/ConversationTranscriptSection.tsx:165
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
@@ -14050,6 +14058,10 @@ msgstr "IP-adressen tonen"
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
 msgstr "Minder tonen"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:157
+#~ msgid "Show live preview text"
+#~ msgstr "Live voorbeeldtekst tonen"
 
 #: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
@@ -16353,6 +16365,10 @@ msgstr "Trainingen"
 msgid "Transcribe a conversation again"
 msgstr "Een gesprek opnieuw transcriberen"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:186
+#~ msgid "Transcribed again from the whole recording."
+#~ msgstr "Opnieuw getranscribeerd op basis van de hele opname."
+
 #: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"
 msgstr "Wordt getranscribeerd"
@@ -16368,7 +16384,7 @@ msgstr "transcript"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:108
+#: src/components/conversation/ConversationTranscriptSection.tsx:124
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcriptie"

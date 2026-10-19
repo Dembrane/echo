@@ -6,8 +6,13 @@ export interface LlmSettings {
   readonly baseUrl?: string | undefined;
   readonly apiKey?: string | undefined;
   readonly transcriptionModel: string;
+  readonly transcriptionLanguage?: "auto" | "project" | undefined;
+  readonly transcriptionKeyTerms?: boolean | undefined;
+  readonly whisperRetry?: boolean | undefined;
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
+  /** Who transcribes the whole recording after the conversation; the first is the record. */
+  readonly finalTranscript?: readonly ("auto" | "gemini" | "whisper")[] | undefined;
   readonly searchGrounding: boolean;
   readonly textFast: readonly string[];
   readonly multiModalFast: readonly string[];
@@ -63,6 +68,8 @@ export function modelsConfigOf(s: LlmSettings): ModelsConfig {
         baseUrl: s.baseUrl ?? "",
         apiKey: s.apiKey ?? "",
         transcriptionModel: s.transcriptionModel,
+        transcriptionLanguage: s.transcriptionLanguage,
+        transcriptionKeyTerms: s.transcriptionKeyTerms,
         reasoningEffort: s.reasoningEffort,
         maxOutputTokens: s.maxOutputTokens,
       },
@@ -91,3 +98,11 @@ export const embedderConfigOf = (s: LlmSettings) => ({
   provider: s.provider,
   baseUrl: s.baseUrl,
 });
+
+/** Who makes the final transcript: "auto" is the stack's own model (gemini on Vertex, whisper on the compatible provider). */
+export function finalProvidersOf(
+  s: Pick<LlmSettings, "provider" | "finalTranscript">,
+): ("gemini" | "whisper")[] {
+  const own = s.provider === "vertex" ? "gemini" : "whisper";
+  return [...new Set((s.finalTranscript ?? ["auto"]).map((p) => (p === "auto" ? own : p)))];
+}

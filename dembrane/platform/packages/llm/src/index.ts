@@ -5,7 +5,10 @@ export {
   compatCallOptions,
   echoOptions,
   languageHint,
+  type SpeechResult,
+  type SpeechSegment,
   transcribeAudio,
+  transcribeSegments,
 } from "./compat";
 export {
   type Completer,
@@ -48,6 +51,7 @@ export {
   embedderConfigOf,
   embeddingLocationOf,
   embeddingModelOf,
+  finalProvidersOf,
   groupsOf,
   type LlmSettings,
   modelsConfigOf,

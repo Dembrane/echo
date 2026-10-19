@@ -8,6 +8,9 @@ import { isFinalAttempt } from "@dembrane/queue";
 import type { ObjectStorage } from "@dembrane/storage";
 import {
   isRecoverableTranscriptionError,
+  type Pauser,
+  type RetryStats,
+  type SpanCutter,
   type Transcriber,
   transcriptionFailureReason,
 } from "@dembrane/transcription";
@@ -21,10 +24,18 @@ import { type ChunkRow, conversationStore, type Tx, transaction } from "../stora
 import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
-import { finalizeConversation, processChunk } from "./defs";
+import { finalizeConversation, finalTranscript, processChunk } from "./defs";
+import { chunkListHash, type FinalSettings } from "./final";
 
-const { conversation, conversation_chunk, processing_status, project, workspace, billing_account } =
-  schema;
+const {
+  conversation,
+  conversation_chunk,
+  conversation_transcribe_retry,
+  processing_status,
+  project,
+  workspace,
+  billing_account,
+} = schema;
 
 /** Everything the pipeline's steps touch; built once by the worker, faked in tests. */
 export interface PipelineDeps {
@@ -47,6 +58,8 @@ export interface PipelineDeps {
     projectId: string,
     conversationId: string,
   ) => Promise<void>;
+  /** The final pass over the whole recording; absent or empty means the live text is the record. */
+  readonly final?: FinalSettings;
   /** Files above this are split before transcription; tests lower it to split small files. */
   readonly maxChunkBytes?: number;
 }
@@ -62,6 +75,97 @@ const MAX_CONVERT_BYTES = 1000 * 1024 * 1024;
 const MIN_AUDIO_BYTES = 1024;
 const URL_EXPIRES_S = 3 * 3600;
 export const UNPLAYABLE = "Audio not playable";
+
+/**
+ * Cuts a stretch out of an object in the bucket through the media service, for Whisper's
+ * retries of a doubtful stretch. The cut goes to a temporary key and is removed after it is read.
+ */
+export function spanCutter(
+  d: Pick<PipelineDeps, "audio" | "media">,
+  key: string,
+  tag: string,
+): SpanCutter {
+  return async (start, end) => {
+    const out = `retry/${tag}/${Math.round(start * 100)}-${Math.round(end * 100)}.mp3`;
+    await d.media.split({
+      source: {
+        url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+        format: fileFormatOf(key),
+        name: key,
+      },
+      pieces: [
+        {
+          start,
+          duration: end - start,
+          target: {
+            url: d.audio.presignUpload(out, {
+              contentType: "audio/mpeg",
+              expiresInSeconds: URL_EXPIRES_S,
+            }),
+            contentType: "audio/mpeg",
+          },
+        },
+      ],
+    });
+    const blob = await d.audio.get(out);
+    await d.audio.delete(out).catch(() => undefined);
+    if (!blob) throw new AudioError("transient", `cut ${out} not in the bucket`);
+    return new Uint8Array(await blob.arrayBuffer());
+  };
+}
+
+/**
+ * The length and the pauses of an object in the bucket, measured against its own noise floor,
+ * for the retry that looks for loud stretches with few words. Measured at most once per piece.
+ */
+export function pausesOf(d: Pick<PipelineDeps, "audio" | "media">, key: string): Pauser {
+  let once: ReturnType<Pauser> | null = null;
+  return () =>
+    (once ??= d.media
+      .silences({
+        source: {
+          url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+          format: fileFormatOf(key),
+          name: key,
+        },
+        method: "adaptive",
+      })
+      .then((r) => ({ duration: r.duration, silences: r.silences })));
+}
+
+/** Adds one piece's retry counts to the conversation's tally for a stage. Numbers only; at least once. */
+export async function recordRetries(
+  d: Pick<PipelineDeps, "db" | "now">,
+  conversationId: string,
+  stage: "live" | "final",
+  stats: RetryStats | undefined,
+): Promise<void> {
+  if (!stats || (!stats.spans && !stats.attempts)) return;
+  await d.db
+    .insert(conversation_transcribe_retry)
+    .values({
+      conversation_id: conversationId,
+      stage,
+      spans: stats.spans,
+      attempts: stats.attempts,
+      improved: stats.improved,
+      kept: stats.kept,
+      failed: stats.failed,
+      updated_at: d.now().toISOString(),
+    })
+    .onConflictDoUpdate({
+      target: [conversation_transcribe_retry.conversation_id, conversation_transcribe_retry.stage],
+      set: {
+        spans: sql`${conversation_transcribe_retry.spans} + ${stats.spans}`,
+        attempts: sql`${conversation_transcribe_retry.attempts} + ${stats.attempts}`,
+        improved: sql`${conversation_transcribe_retry.improved} + ${stats.improved}`,
+        kept: sql`${conversation_transcribe_retry.kept} + ${stats.kept}`,
+        failed: sql`${conversation_transcribe_retry.failed} + ${stats.failed}`,
+        updated_at: d.now().toISOString(),
+      },
+    })
+    .catch(() => undefined);
+}
 
 /**
  * A processing_status row, as ProcessingStatusContext wrote them: only completions and
@@ -342,7 +446,7 @@ export async function updateChunk(
   });
 }
 
-function stripNul(v: unknown): unknown {
+export function stripNul(v: unknown): unknown {
   if (typeof v === "string") return v.replaceAll("\u0000", "");
   if (Array.isArray(v)) return v.map(stripNul);
   if (v && typeof v === "object")
@@ -400,7 +504,10 @@ export async function transcribePiece(
           usePiiRedaction: opts.usePiiRedaction,
           anonymizeTranscripts: opts.anonymize,
           customGuidancePrompt: conv.prompt,
+          cutSpan: spanCutter(d, key, `chunk-${chunkId}`),
+          pauses: pausesOf(d, key),
         });
+        await recordRetries(d, chunk.conversation_id, "live", result.retry);
         await updateChunk(d, chunkId, chunk.conversation_id, {
           transcript: result.transcript,
           diarization: {
@@ -552,15 +659,23 @@ export async function handOver(d: PipelineDeps, conversationId: string): Promise
     const [set] = await tx.sql<{ ids: string | null }[]>`
       select string_agg(id::text, ',' order by id) as ids from conversation_chunk
       where conversation_id = ${conversationId}`;
-    const state = new Bun.CryptoHasher("sha256")
-      .update(set?.ids ?? "")
-      .digest("hex")
-      .slice(0, 16);
+    const state = chunkListHash(set?.ids ?? null);
     await d.jobs.enqueue(
       finalizeConversation,
       { conversationId },
       { tx: tx.sql, workflowId: `conversations.finalize:${conversationId}:${state}` },
     );
+    // One run per provider and chunk list; the live text is never held for them.
+    const providers = d.final?.providers ?? [];
+    for (const [i, provider] of providers.entries())
+      await d.jobs.enqueue(
+        finalTranscript,
+        { conversationId, provider, record: i === 0, hash: state },
+        {
+          tx: tx.sql,
+          workflowId: `conversations.final-transcript:${conversationId}:${provider}:${state}`,
+        },
+      );
     return true;
   });
 }

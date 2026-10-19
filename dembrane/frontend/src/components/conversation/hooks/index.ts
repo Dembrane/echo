@@ -24,6 +24,7 @@ import {
 import { bff } from "@/lib/bff";
 import type { ListQuery } from "@/lib/listQuery";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
+import type { FinalTranscriptData } from "../sentences";
 
 type ConversationBffListParams = {
 	search_text?: string;
@@ -150,6 +151,27 @@ export const useInfiniteConversationChunks = (
 		refetchInterval,
 	});
 };
+
+/**
+ * The transcript made from the whole recording once the conversation is finished, with its
+ * timed sentences and the merged audio. Until it exists the dashboard shows the live text,
+ * so a finished conversation is asked again every half minute.
+ */
+export const useConversationFinalTranscript = (
+	conversationId: string,
+	isFinished: boolean,
+) =>
+	useQuery({
+		queryFn: () =>
+			bff.get<FinalTranscriptData>(
+				`/conversations/${conversationId}/final-transcript`,
+			),
+		queryKey: ["conversations", conversationId, "final-transcript"],
+		refetchInterval: (query) =>
+			isFinished && !query.state.data?.available ? 30000 : false,
+		// The audio link is signed for hours; a refetch hands out a fresh one.
+		staleTime: 5 * 60 * 1000,
+	});
 
 export const useUpdateConversationByIdMutation = () => {
 	const queryClient = useQueryClient();
