@@ -120,6 +120,10 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       ),
     );
   const demo = events.find((e) => e.type === "demo.seeded");
+  const staffNames = await store.userNames(
+    d.db,
+    events.flatMap((e) => (e.actorKind === "staff" && e.actorUserId ? [e.actorUserId] : [])),
+  );
   return {
     organisation: {
       id: org.id,
@@ -179,7 +183,7 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       : [],
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
-    timeline: events.map(eventView),
+    timeline: events.map((e) => eventView(e, staffNames)),
   };
 }
 

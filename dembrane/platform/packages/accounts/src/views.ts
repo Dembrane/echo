@@ -279,12 +279,18 @@ export function billingView(b: BillingRow | null) {
   };
 }
 
-export function eventView(e: EventRow) {
+/**
+ * `names` is the staff members' display names by user id: the staff card shows who acted so
+ * the team knows whom to ask. A customer or system row, or a user since deleted, has none.
+ */
+export function eventView(e: EventRow, names: ReadonlyMap<string, string> = new Map()) {
   return {
     id: e.id,
     type: e.type,
     actor: e.actorKind,
     actor_user_id: e.actorUserId,
+    actor_name:
+      e.actorKind === "staff" && e.actorUserId ? (names.get(e.actorUserId) ?? null) : null,
     subject_type: e.subjectType,
     subject_id: e.subjectId,
     detail: e.detail,

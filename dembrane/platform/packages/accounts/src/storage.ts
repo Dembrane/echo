@@ -539,6 +539,20 @@ export const store = {
       .limit(limit);
   },
 
+  /** Display names by sign-in user id, for the people a timeline names; a deleted user is absent. */
+  async userNames(c: Conn, ids: readonly string[]): Promise<Map<string, string>> {
+    if (!ids.length) return new Map();
+    const rows = await c
+      .select({
+        id: auth_user.id,
+        name: sql<string | null>`coalesce(${app_user.display_name}, ${auth_user.name})`,
+      })
+      .from(auth_user)
+      .leftJoin(app_user, eq(app_user.directus_user_id, auth_user.id))
+      .where(inArray(auth_user.id, [...ids]));
+    return new Map(rows.flatMap((r) => (r.name?.trim() ? [[r.id, r.name.trim()] as const] : [])));
+  },
+
   /** When each document's named signer was last reminded, by document id. */
   async lastReminders(c: Conn, orgId: string, docId?: string): Promise<Map<string, Date>> {
     const rows = await c

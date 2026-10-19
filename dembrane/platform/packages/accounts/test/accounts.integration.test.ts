@@ -1646,6 +1646,39 @@ run("accounts routes against Postgres", () => {
     expect(rows[0]?.n).toBeGreaterThanOrEqual(4);
   });
 
+  test("the staff card names the staff member behind a staff row, and no one else", async () => {
+    const base = { orgId: w.orgId, type: "account.updated", createdAt: w.clock.now };
+    const rows = {
+      staff: newId(),
+      gone: newId(),
+      customer: newId(),
+    };
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.staff,
+      actorKind: "staff",
+      actorUserId: w.people.staff.directusUserId,
+    });
+    // A staff user since deleted, and a customer row that carries a real user id.
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.gone,
+      actorKind: "staff",
+      actorUserId: newId(),
+    });
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.customer,
+      actorKind: "customer",
+      actorUserId: w.people.admin.directusUserId,
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    const nameOf = (id: string) => card.timeline.find((e) => e.id === id)?.actor_name;
+    expect(nameOf(rows.staff)).toBe("staff");
+    expect(nameOf(rows.gone)).toBeNull();
+    expect(nameOf(rows.customer)).toBeNull();
+  });
+
   test("reminding the named signer sends the same link again and keeps the wait", async () => {
     const pushed = K.PushOfferResponse.parse(
       (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
