@@ -25,6 +25,8 @@ import {
  */
 export const OFFER_TEMPLATES = ["subscription", "event", "custom"] as const;
 export type OfferTemplate = (typeof OFFER_TEMPLATES)[number];
+export const BILLING_UNITS = ["seat", "month"] as const;
+export type BillingUnit = (typeof BILLING_UNITS)[number];
 export const LANGUAGES = ["en", "nl"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
@@ -89,6 +91,8 @@ export interface OfferContent {
   readonly items: readonly OfferItem[];
   /** Absent on offers made before it existed: Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
+  /** Subscription offers: what the quantity counts. Absent means seats, as before it existed. */
+  readonly billing_unit?: BillingUnit;
   /** Custom offers only: numbered terms that take precedence over the standard documents. */
   readonly amendments?: readonly Amendment[];
   /**
@@ -116,6 +120,8 @@ interface Copy {
   readonly greeting: string;
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
+  /** Subscription offers billed per month instead of per seat. */
+  readonly monthColumns?: readonly [string, string, string, string];
   readonly totals: { readonly subtotal: string; readonly vat: string; readonly total: string };
   /** Why there is no VAT, in the words the invoice uses. */
   readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
@@ -400,6 +406,7 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
         "Here is what your dembrane subscription includes and what it costs. If anything is unclear, ask us; we are happy to talk it through.",
       ],
       columns: ["Description", "Price per seat per month", "Seats", "Amount"],
+      monthColumns: ["Description", "Price per month", "Months", "Amount"],
       closing: ["We look forward to working with you.", "Best regards,", "Team dembrane"],
       words: EN_SUB_WORDS,
     },
@@ -410,6 +417,7 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
         "Hieronder staat wat het dembrane-abonnement inhoudt en wat het kost. Is iets niet duidelijk? Vraag het ons gerust; we lichten het graag toe.",
       ],
       columns: ["Omschrijving", "Prijs per seat per maand", "Seats", "Bedrag"],
+      monthColumns: ["Omschrijving", "Prijs per maand", "Maanden", "Bedrag"],
       closing: ["We kijken uit naar de samenwerking.", "Met vriendelijke groet,", "Team dembrane"],
       acceptance: NL_ACCEPT(true),
       words: NL_WORDS,
@@ -501,6 +509,8 @@ export interface OfferLayout {
   /** Paragraphs; an event offer's second paragraph is a heading over its third. */
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
+  /** Subscription offers billed per month instead of per seat. */
+  readonly monthColumns?: readonly [string, string, string, string];
   readonly rows: readonly {
     readonly description: string;
     readonly bullets: readonly string[];
@@ -559,6 +569,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const totals = offerTotals(content);
   const c = content.company;
   const unitFirst = content.template === "subscription";
+  // A flat monthly price has no seats, so the table must not call its quantity "Seats".
+  const perMonth = unitFirst && content.billing_unit === "month";
   const clause = buildClause(copy.words, content);
   const money = (cents: number) => euro(cents, content.currency, content.language);
   const treatment = content.vat_treatment ?? "standard";
@@ -585,8 +597,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     facts,
     greeting: `${copy.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
     intro: copy.intro,
-    // Subscriptions put the price per seat before the number of seats; events the reverse.
-    columns: copy.columns,
+    // Subscriptions put the price per seat (or month) before the quantity; events the reverse.
+    columns: (perMonth && copy.monthColumns) || copy.columns,
     rows: totals.lines.map((l: PricedLine, i) => {
       const unit = money(l.unit_price_cents);
       const quantity = String(l.quantity);

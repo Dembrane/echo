@@ -52,6 +52,8 @@ export const DealStage = z.enum([
 export const Language = z.enum(["en", "nl"]);
 /** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
 export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
+/** What a subscription offer's quantity counts: seats (default) or months of a flat price. */
+export const BillingUnit = z.enum(["seat", "month"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -208,6 +210,8 @@ export const OfferContent = z.object({
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
   vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Subscription offers: what the quantity counts. Absent means seats. */
+  billing_unit: BillingUnit.optional(),
   /** Custom offers: numbered terms that take precedence over the standard documents. */
   amendments: z.array(OfferAmendment).optional(),
   /** True when the DPA is its own document; absent on offers made before that. */
@@ -769,6 +773,11 @@ export const PushOfferRequest = z.object({
    * the agreement, and takes precedence over them where they differ.
    */
   amendments: z.array(OfferAmendment).max(10).default([]),
+  /**
+   * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
+   * is seats; `month` prices per month and the quantity is months, with no mention of seats.
+   */
+  billing_unit: BillingUnit.optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
