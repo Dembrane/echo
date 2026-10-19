@@ -110,7 +110,7 @@ test("redaction runs a second pass on the audio plus the first transcript", asyn
 
 test("with a speech-to-text model its words are the transcript and no chat model runs", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const heard: { language?: string | null; prompt?: string }[] = [];
+  const heard: { language?: string | null; prompt?: string; priority?: string }[] = [];
   const t = new GeminiTranscriber(
     {
       model: () => model([], seen),
