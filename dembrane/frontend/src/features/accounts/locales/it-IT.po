@@ -165,6 +165,10 @@ msgstr "Account creato"
 msgid "Account enabled"
 msgstr "Account abilitato"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:878
+msgid "Account enabled automatically"
+msgstr "Account abilitato automaticamente"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:842
 msgid "Account manager asked to check in"
 msgstr "Chiesto all'account manager di ricontattare il cliente"
@@ -548,7 +552,7 @@ msgid "Custom"
 msgstr "Su misura"
 
 #: src/features/accounts/format.ts:120
-#: src/features/accounts/staff/AccountCardRoute.tsx:888
+#: src/features/accounts/staff/AccountCardRoute.tsx:890
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Cliente"
@@ -1981,7 +1985,7 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Imposta un progetto tutto tuo per la tua prima sessione reale."
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show all"
 msgstr "Mostra tutto"
 
@@ -1991,7 +1995,7 @@ msgid "Show finished ({0})"
 msgstr "Mostra completate ({0})"
 
 #: src/features/accounts/staff/DemoRoute.tsx:330
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show less"
 msgstr "Mostra meno"
 
@@ -2095,7 +2099,7 @@ msgstr "La firma deve essere di chi può autorizzare il trattamento dei dati per
 msgid "Something went wrong"
 msgstr "Qualcosa è andato storto"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:890
+#: src/features/accounts/staff/AccountCardRoute.tsx:892
 msgid "Staff"
 msgstr "Staff"
 
@@ -2151,7 +2155,7 @@ msgstr "Inviato"
 msgid "Subscription"
 msgstr "Abbonamento"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:891
+#: src/features/accounts/staff/AccountCardRoute.tsx:893
 msgid "System"
 msgstr "Sistema"
 

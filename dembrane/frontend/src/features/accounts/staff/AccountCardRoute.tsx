@@ -874,7 +874,9 @@ function Timeline({ card }: { card: AccountCardT }) {
 											(e.detail as { waits_for?: string[] } | null)
 												?.waits_for ?? [],
 										)
-									: eventLabel(e.type)}
+									: e.type === "account.enabled" && e.actor === "system"
+										? t`Account enabled automatically`
+										: eventLabel(e.type)}
 								{title(e.subject_id) ? (
 									<Text span c="dimmed" size="sm">
 										{" "}

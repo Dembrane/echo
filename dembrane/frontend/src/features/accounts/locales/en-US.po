@@ -165,6 +165,10 @@ msgstr "Account created"
 msgid "Account enabled"
 msgstr "Account enabled"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:878
+msgid "Account enabled automatically"
+msgstr "Account enabled automatically"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:842
 msgid "Account manager asked to check in"
 msgstr "Account manager asked to check in"
@@ -548,7 +552,7 @@ msgid "Custom"
 msgstr "Custom"
 
 #: src/features/accounts/format.ts:120
-#: src/features/accounts/staff/AccountCardRoute.tsx:888
+#: src/features/accounts/staff/AccountCardRoute.tsx:890
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Customer"
@@ -1981,7 +1985,7 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Set up a project of your own for your first real session."
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show all"
 msgstr "Show all"
 
@@ -1991,7 +1995,7 @@ msgid "Show finished ({0})"
 msgstr "Show finished ({0})"
 
 #: src/features/accounts/staff/DemoRoute.tsx:330
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show less"
 msgstr "Show less"
 
@@ -2095,7 +2099,7 @@ msgstr "Someone who may agree to data processing for your organisation signs it.
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:890
+#: src/features/accounts/staff/AccountCardRoute.tsx:892
 msgid "Staff"
 msgstr "Staff"
 
@@ -2151,7 +2155,7 @@ msgstr "Submitted"
 msgid "Subscription"
 msgstr "Subscription"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:891
+#: src/features/accounts/staff/AccountCardRoute.tsx:893
 msgid "System"
 msgstr "System"
 

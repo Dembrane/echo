@@ -36,7 +36,7 @@ import {
   withdrawOnboarding,
 } from "./onboarding";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
-import { releaseHeldContacts } from "./prospect";
+import { enableOrg, releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
 import { openDpa } from "./signing";
 import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
@@ -195,28 +195,11 @@ export async function enableAccount(
   input: { stage: "prospect" | "customer" | "churned"; language: Language },
 ) {
   const org = await staffOrg(d, orgId);
-  const nowIso = d.now().toISOString();
   await d.db.transaction(async (tx) => {
-    await store.updateOrg(tx, org.id, { account_stage: input.stage, updated_at: nowIso });
-    if (!(await store.billing(tx, org.id)))
-      await store.insertBilling(tx, {
-        id: newId(),
-        org_id: org.id,
-        tier: "free",
-        payment_mode: "none",
-        created_by: who.appUserId,
-        created_at: nowIso,
-        updated_at: nowIso,
-      });
-    // A prospect gets the billing details task with its first offer, not before.
-    if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, who.directusUserId);
-    // Enabling is staff saying the customer may use their account now.
-    await releaseHeldContacts(tx, org.id, d.now());
-    await emit(d, tx, {
-      orgId: org.id,
+    await enableOrg(d, tx, org, {
+      stage: input.stage,
       actor: actorOf(who),
-      type: "account.enabled",
-      detail: { stage: input.stage, previous: org.account_stage },
+      createdBy: who.appUserId,
     });
   });
   return accountCard(d, org.id);

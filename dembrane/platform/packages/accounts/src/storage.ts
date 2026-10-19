@@ -569,6 +569,16 @@ export const store = {
     return new Map(rows.flatMap((r) => (r.id ? [[r.id, r.detail] as const] : [])));
   },
 
+  /** Whether the organisation's timeline holds an event of `type`. */
+  async hasEvent(c: Conn, orgId: string, type: string): Promise<boolean> {
+    const [row] = await c
+      .select({ id: event.id })
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.type, type)))
+      .limit(1);
+    return Boolean(row);
+  },
+
   async eventSubjects(c: Conn, orgId: string, type: string): Promise<Set<string>> {
     const rows = await c
       .select({ id: event.subjectId })
