@@ -669,3 +669,16 @@ test("a segment of half a minute is cut at its sentence ends, timed by share, an
     splitLong([{ start: 0, end: 30, text: "no punctuation at all in this long run of words" }]),
   ).toHaveLength(1);
 });
+
+test("the speech endpoint refusing the file ends the chunk, a rate limit or a server fault does not", () => {
+  expect(
+    isRecoverableTranscriptionError(
+      new Error('transcription 400: {"message":"Invalid or unsupported audio file."}'),
+    ),
+  ).toBe(true);
+  expect(isRecoverableTranscriptionError(new Error("transcription 422: unprocessable"))).toBe(true);
+  expect(isRecoverableTranscriptionError(new Error("transcription 429: INSUFFICIENT QUOTA"))).toBe(
+    false,
+  );
+  expect(isRecoverableTranscriptionError(new Error("transcription 503: busy"))).toBe(false);
+});
