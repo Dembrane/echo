@@ -36,7 +36,7 @@ run("conversation pipeline", () => {
   beforeAll(async () => {
     const url = await freshDatabase("conv_pipeline_test");
     // A 60 KB split threshold, so a few seconds of mp3 is cut into pieces.
-    h = await startWorker(url, { maxChunkBytes: 60_000 });
+    h = await startWorker(url, { requestLimits: { maxBytes: 60_000 } });
   });
   afterAll(async () => {
     await h?.stop();
@@ -120,7 +120,8 @@ run("conversation pipeline", () => {
       return r.length > 1 && r.every((c) => c.transcript) ? r : null;
     });
     const n = rows.length;
-    expect(n).toBe(Math.ceil(file.size / 60_000));
+    // Cut at the size limit or finer: pieces end where the planner finds a pause.
+    expect(n).toBeGreaterThanOrEqual(Math.ceil(file.size / 60_000));
     expect(rows.map((r) => r.id)).toEqual(
       Array.from({ length: n }, (_, i) => pieceId(chunk.id, i)),
     );

@@ -204,7 +204,23 @@ export class GeminiFinal implements FinalTranscriber {
     // A bad payload is retried once; a truncated one is not, it would truncate again.
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
+      const began = Date.now();
       const r = await this.call(prompt, input);
+      this.logger.info(
+        {
+          signal: "speech.request",
+          provider: "gemini",
+          model: r.model,
+          audioSeconds: input.seconds,
+          estimated: false,
+          bytes: input.audio.byteLength,
+          ms: Date.now() - began,
+          status: 200,
+          attempt: attempt + 1,
+          path: input.priority ?? "final",
+        },
+        "speech request",
+      );
       try {
         const segments = rescaleToPiece(
           parseSegments(r.text, r.finishReason),

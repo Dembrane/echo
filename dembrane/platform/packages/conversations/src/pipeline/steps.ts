@@ -1,4 +1,4 @@
-import { AudioError, durationOf, fileFormatOf, MAX_CHUNK_BYTES } from "@dembrane/audio";
+import { AudioError, durationOf, fileFormatOf, planPieces } from "@dembrane/audio";
 import { PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
@@ -9,8 +9,12 @@ import type { ObjectStorage } from "@dembrane/storage";
 import {
   isRecoverableTranscriptionError,
   type Pauser,
+  pieceSeconds,
+  type RequestLimits,
   type RetryStats,
+  requestLimits,
   type SpanCutter,
+  type SpeechProvider,
   type Transcriber,
   transcriptionFailureReason,
 } from "@dembrane/transcription";
@@ -61,7 +65,10 @@ export interface PipelineDeps {
   /** The final pass over the whole recording; absent or empty means the live text is the record. */
   readonly final?: FinalSettings;
   /** Files above this are split before transcription; tests lower it to split small files. */
-  readonly maxChunkBytes?: number;
+  /** Which speech model the live text goes to; its limits cut uploads. Defaults to whisper. */
+  readonly liveProvider?: SpeechProvider;
+  /** Replaces the provider's limits; tests lower them to cut small files. */
+  readonly requestLimits?: RequestLimits;
 }
 
 // Namespace for the ids of split pieces: a retried split names its pieces the same way.
@@ -73,6 +80,11 @@ const MAX_PIECES = 1500;
 // Convert refuses inputs above this, as convert_and_save_to_s3 did.
 const MAX_CONVERT_BYTES = 1000 * 1024 * 1024;
 const MIN_AUDIO_BYTES = 1024;
+/** The recorder hands over a chunk every 30 seconds; at any bitrate speech is recorded at, one is under this. */
+const LIVE_CHUNK_BYTES = 1024 * 1024;
+/** The lowest bitrate speech is recorded at (Opus at 6 kbps), in bytes per second: below this a file is not speech. */
+const MIN_SPEECH_BYTES_PER_SECOND = 750;
+const SPLIT_BATCH = 20;
 const URL_EXPIRES_S = 3 * 3600;
 export const UNPLAYABLE = "Audio not playable";
 
@@ -280,7 +292,10 @@ export async function prepareChunk(d: PipelineDeps, chunkId: string): Promise<st
       () => convertAndSplit(d, chunk),
     );
   } catch (err) {
-    if (err instanceof AudioError && err.unplayable) {
+    // Bytes that will not change on a retry (an unsupported type, a file with no audio stream, a
+    // container ffmpeg cannot read) fail at once and mark the chunk; retrying them held the
+    // conversation for the whole retry schedule.
+    if (err instanceof AudioError && (err.unplayable || err.terminal)) {
       d.logger.warn({ chunkId, err: err.message }, "chunk is unreadable, marking with error");
       await updateChunk(d, chunkId, chunk.conversation_id, { error: UNPLAYABLE });
       return [];
@@ -339,9 +354,15 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const key = d.audioUrls.keyOf(current);
   const size = await d.audio.size(key);
   if (size === null) throw new AudioError("transient", `converted file ${key} not in the bucket`);
-  const pieces = Math.ceil(size / (d.maxChunkBytes ?? MAX_CHUNK_BYTES));
-  if (pieces <= 1) return [chunk.id];
-  if (pieces > MAX_PIECES) throw new AudioError("too_large", `File splits into ${pieces} pieces`);
+  if (size < MIN_AUDIO_BYTES)
+    throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
+  const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
+  // The recorder cuts a live chunk at 30 seconds, and a small file cannot hold more than
+  // the limit at any bitrate speech is recorded at: neither needs measuring.
+  const smallLive = chunk.source === "PORTAL_AUDIO" && size < LIVE_CHUNK_BYTES;
+  // A file too small to hold the seconds limit even at that bitrate needs no measuring.
+  const small = size < limits.maxSeconds * MIN_SPEECH_BYTES_PER_SECOND;
+  if ((smallLive || small) && size <= limits.maxBytes) return [chunk.id];
 
   const source = {
     url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
@@ -352,26 +373,38 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const duration = probe.format?.duration === undefined ? null : Number(probe.format.duration);
   if (duration === null || Number.isNaN(duration))
     throw new AudioError("value", "Duration not found in ffprobe output");
-  const each = duration / pieces;
-  const plan = Array.from({ length: pieces }, (_, i) => {
+  // One planner for every request to a speech model: no piece is longer than the provider's
+  // seconds limit or, at the file's own bitrate, its byte limit (see request-limits.ts).
+  const limit = pieceSeconds(limits, size, duration);
+  if (duration <= limit) return [chunk.id];
+  // Cut where nobody speaks, so a word is not split between two requests.
+  const found = await d.media.silences({ source });
+  const planned = planPieces(duration, found.silences, limit, found.quiet);
+  const pieces = planned.length;
+  if (pieces <= 1) return [chunk.id];
+  if (pieces > MAX_PIECES) throw new AudioError("too_large", `File splits into ${pieces} pieces`);
+  const plan = planned.map((p, i) => {
     const id = pieceId(chunk.id, i);
     const pieceKey = `chunks/${chunk.conversation_id}/${id}_${i}-of-${pieces}.mp3`;
-    return { id, i, start: i * each, key: pieceKey };
+    return { id, i, start: p.start, duration: p.duration, key: pieceKey };
   });
-  await d.media.split({
-    source,
-    pieces: plan.map((p) => ({
-      start: p.start,
-      duration: each,
-      target: {
-        url: d.audio.presignUpload(p.key, {
+  // Batches of a few dozen: one request that runs for minutes can be cut off by a proxy or a
+  // restart, and then the whole split starts over.
+  for (let i = 0; i < plan.length; i += SPLIT_BATCH)
+    await d.media.split({
+      source,
+      pieces: plan.slice(i, i + SPLIT_BATCH).map((p) => ({
+        start: p.start,
+        duration: p.duration,
+        target: {
+          url: d.audio.presignUpload(p.key, {
+            contentType: "audio/mpeg",
+            expiresInSeconds: URL_EXPIRES_S,
+          }),
           contentType: "audio/mpeg",
-          expiresInSeconds: URL_EXPIRES_S,
-        }),
-        contentType: "audio/mpeg",
-      },
-    })),
-  });
+        },
+      })),
+    });
   for (const p of plan)
     if ((await d.audio.size(p.key)) === null)
       throw new AudioError("transient", `S3 upload verification failed for ${p.key}`);

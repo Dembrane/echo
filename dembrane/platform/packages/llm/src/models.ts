@@ -6,6 +6,7 @@ import {
   CompatLanguageModel,
   echoOptions,
   languageHint,
+  type SpeechRequestLog,
   type SpeechResult,
   transcribeAudio,
   transcribeSegments,
@@ -98,7 +99,13 @@ export const speechHint = (models: Models, language: string | null | undefined) 
  * deployments, as the Python router did for text-only work. `opts.observe` hears every
  * attempt of every group and the embedding model: the one place all model calls pass.
  */
-export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> = {}): Models {
+export function createModels(
+  cfg: ModelsConfig,
+  opts: Partial<FallbackOptions> & {
+    /** Hears every request to the speech-to-text endpoint, for one structured log line each. */
+    onSpeechRequest?: (e: SpeechRequestLog) => void;
+  } = {},
+): Models {
   const configured = cfg.provider === "openai-compatible" ? requireCompat(cfg) : null;
   // One gate per endpoint and process: the worker builds several Models on the same Whisper
   // endpoint and they share one limit.
@@ -107,6 +114,7 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
     speechGate: speechGateFor(configured.baseUrl, {
       secondsPerMinute: configured.speechSecondsPerMinute ?? 0,
     }),
+    onSpeechRequest: opts.onSpeechRequest,
   };
   const vertex = compat
     ? null

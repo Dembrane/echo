@@ -1,12 +1,14 @@
 import { AudioError, fileFormatOf, planPieces } from "@dembrane/audio";
 import { schema } from "@dembrane/db";
-import type {
-  EditStats,
-  FinalProvider,
-  FinalTranscriber,
-  FinalUsage,
-  RetryStats,
-  Sentence,
+import {
+  type EditStats,
+  type FinalProvider,
+  type FinalTranscriber,
+  type FinalUsage,
+  pieceSeconds,
+  type RetryStats,
+  requestLimits,
+  type Sentence,
 } from "@dembrane/transcription";
 import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
@@ -133,13 +135,12 @@ export async function planFinal(
   const duration = found.duration > 0 ? found.duration : merged.duration;
   if (!(duration > 0)) return null;
 
-  const bytesPerSecond = size / duration;
-  const maxSeconds = Math.max(
-    1,
-    Math.min(
-      transcriber.limits.maxSeconds,
-      Math.floor(transcriber.limits.maxBytes / bytesPerSecond),
-    ),
+  // The final pass needs sentence timings, so its pieces keep the shorter cap on top of the limits.
+  const maxSeconds = pieceSeconds(
+    requestLimits(transcriber.provider),
+    size,
+    duration,
+    transcriber.limits.maxSeconds,
   );
   const planned = planPieces(duration, found.silences, maxSeconds, found.quiet);
   if (planned.length === 1)

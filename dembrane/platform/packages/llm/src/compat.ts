@@ -20,6 +20,23 @@ export interface CompatEndpoint {
   readonly fetch?: typeof fetch | undefined;
   /** Paces speech-to-text calls against the provider's audio-seconds-per-minute limit. */
   readonly speechGate?: SpeechGate | undefined;
+  /** Told about every speech-to-text request, once it has an answer (a 429 included). */
+  readonly onSpeechRequest?: ((e: SpeechRequestLog) => void) | undefined;
+}
+
+/** What one request to the speech-to-text endpoint was: numbers and names, never audio or text. */
+export interface SpeechRequestLog {
+  readonly provider: "openai-compatible";
+  readonly model: string;
+  /** Seconds of audio the caller said the request holds, or an estimate from its size. */
+  readonly audioSeconds: number;
+  readonly estimated: boolean;
+  readonly bytes: number;
+  readonly ms: number;
+  readonly status: number;
+  readonly attempt: number;
+  /** Who it was for: a live recording, a long upload or the final pass. */
+  readonly path: SpeechPriority;
 }
 
 /** Who a speech-to-text call is for and how much audio it holds, for the pacing. */
@@ -59,7 +76,7 @@ function sniff(b: Uint8Array): Sniffed {
 /** Largest file `/audio/transcriptions` takes on Scaleway Generative APIs (serverless). */
 export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 /** One transcription request may not hold a worker longer than this. */
-const TRANSCRIBE_TIMEOUT_MS = 180_000;
+export const TRANSCRIBE_TIMEOUT_MS = 180_000;
 /** A 429 is answered this many times in one call before the step's own retry takes over. */
 const RATE_LIMIT_ATTEMPTS = 6;
 
@@ -127,11 +144,23 @@ async function requestTranscription(
         : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
     });
   // Without a length, a minute of audio is about this many bytes of compressed speech.
-  const seconds = call.seconds ?? Math.min(900, Math.max(1, audio.byteLength / 8000));
+  const seconds = call.seconds ?? Math.min(3600, Math.max(1, audio.byteLength / 8000));
   const gate = ep.speechGate;
   let res: Response;
   for (let attempt = 0; ; attempt++) {
+    const began = Date.now();
     res = gate ? await gate.run(seconds, call.priority ?? "live", request) : await request();
+    ep.onSpeechRequest?.({
+      provider: "openai-compatible",
+      model: ep.transcriptionModel,
+      audioSeconds: Math.round(seconds * 10) / 10,
+      estimated: call.seconds === undefined,
+      bytes: audio.byteLength,
+      ms: Date.now() - began,
+      status: res.status,
+      attempt: attempt + 1,
+      path: call.priority ?? "live",
+    });
     if (res.status !== 429 || attempt >= RATE_LIMIT_ATTEMPTS - 1) break;
     // The org limit answered: everybody in this process waits as long as it asks (or, without
     // a hint, a growing while), then goes again in priority order.

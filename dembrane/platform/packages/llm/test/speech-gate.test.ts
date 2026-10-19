@@ -51,3 +51,38 @@ test("a 429 pause holds every caller and Retry-After is read as seconds or a dat
   ).toBe(10_000);
   expect(retryAfterMs(null)).toBeNull();
 });
+
+test("five long uploads and final passes never starve a live session, and the window is never exceeded", async () => {
+  const windowMs = 200;
+  const gate = new SpeechGate({ secondsPerMinute: 100, concurrency: 8, windowMs });
+  let stop = false;
+  let maxUsed = 0;
+  let uploaded = 0;
+  // Five uploads and a final pass ask for audio as fast as they are let through.
+  const background = Array.from({ length: 6 }, (_, i) =>
+    (async () => {
+      while (!stop) {
+        await gate.run(30, i === 5 ? "final" : "upload", async () => {
+          maxUsed = Math.max(maxUsed, gate.used());
+          uploaded += 30;
+        });
+      }
+    })(),
+  );
+  // A person records: a 30 second chunk every 40 ms of test time.
+  const waits: number[] = [];
+  for (let i = 0; i < 15; i++) {
+    const asked = Date.now();
+    await gate.run(30, "live", async () => {
+      waits.push(Date.now() - asked);
+      maxUsed = Math.max(maxUsed, gate.used());
+    });
+    await new Promise((r) => setTimeout(r, 40));
+  }
+  stop = true;
+  await Promise.all(background);
+  // Live always had room: nobody else may take the last 30 percent of the window.
+  expect(Math.max(...waits)).toBeLessThan(windowMs);
+  expect(maxUsed).toBeLessThanOrEqual(100);
+  expect(uploaded).toBeGreaterThan(0);
+});

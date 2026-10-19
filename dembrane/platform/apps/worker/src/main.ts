@@ -111,7 +111,10 @@ const billing = createBilling({
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
 // Every model call is metered: one log line at once and one model_call row per batch.
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+// One structured line per request to a speech model: what is sent, how long it took, how it ended.
+const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
 const models = createModels(modelsConfigOf(config.llm), {
+  onSpeechRequest: logSpeech,
   observe: metering.observe,
   onObserverFault: (err) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
@@ -132,6 +135,7 @@ for (const provider of finalProviders) {
       provider: provider === "whisper" ? "openai-compatible" : "vertex",
     }),
     {
+      onSpeechRequest: logSpeech,
       observe: metering.observe,
       onObserverFault: (err) =>
         logger.warn({ err }, "model call metering failed; later faults are silent"),
@@ -194,6 +198,7 @@ const regs = registrations({
     ),
     media,
     transcriber,
+    liveProvider: config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
     ...(finalProviders.length && {
       final: {
         providers: finalProviders,

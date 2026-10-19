@@ -222,3 +222,29 @@ test("a 429 is waited out as Retry-After says, for every caller of the endpoint,
   expect(calls).toBe(2);
   expect(Date.now() - start).toBeGreaterThanOrEqual(45);
 });
+
+test("every speech-to-text request is reported once with what it carried and how it ended", async () => {
+  const seen: Record<string, unknown>[] = [];
+  const fetcher = (async () =>
+    new Response(JSON.stringify({ text: "hi" }))) as unknown as typeof fetch;
+  await transcribeAudio(
+    { ...ep(fetcher), onSpeechRequest: (e) => seen.push(e as unknown as Record<string, unknown>) },
+    new Uint8Array(80_000),
+    undefined,
+    undefined,
+    undefined,
+    { priority: "upload", seconds: 600 },
+  );
+  expect(seen).toHaveLength(1);
+  expect(seen[0]).toMatchObject({
+    provider: "openai-compatible",
+    model: "whisper-large-v3",
+    audioSeconds: 600,
+    estimated: false,
+    bytes: 80_000,
+    status: 200,
+    attempt: 1,
+    path: "upload",
+  });
+  expect(typeof seen[0]?.ms).toBe("number");
+});

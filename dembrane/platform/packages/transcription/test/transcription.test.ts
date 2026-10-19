@@ -137,7 +137,7 @@ test("with a speech-to-text model its words are the transcript and no chat model
     models: ["whisper-fake"],
   });
   expect(seen).toHaveLength(0);
-  expect(heard).toEqual([{ language: "nl", prompt: "Dembrane" }]);
+  expect(heard).toEqual([{ language: "nl", prompt: "Dembrane", priority: "live" }]);
 });
 
 test("with a speech-to-text model, redaction is one text-only pass with reasoning off", async () => {

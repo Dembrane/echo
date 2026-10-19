@@ -5,8 +5,10 @@ export {
   compatCallOptions,
   echoOptions,
   languageHint,
+  type SpeechRequestLog,
   type SpeechResult,
   type SpeechSegment,
+  TRANSCRIBE_TIMEOUT_MS,
   transcribeAudio,
   transcribeSegments,
 } from "./compat";

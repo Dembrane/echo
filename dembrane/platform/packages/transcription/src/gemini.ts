@@ -104,12 +104,28 @@ export class GeminiTranscriber implements Transcriber {
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
         language: input.language ?? null,
       });
+    const began = Date.now();
     const first = await this.complete(
       [
         { role: "system", content: prompt },
         { role: "user", content: [audioPart(input.audio)] },
       ],
       input.language,
+    );
+    this.logger.info(
+      {
+        signal: "speech.request",
+        provider: "gemini",
+        model: first.model,
+        audioSeconds: null,
+        estimated: true,
+        bytes: input.audio.byteLength,
+        ms: Date.now() - began,
+        status: 200,
+        attempt: 1,
+        path: input.priority ?? "live",
+      },
+      "speech request",
     );
     let transcript = first.json.corrected_transcript;
     let note = first.json.note;

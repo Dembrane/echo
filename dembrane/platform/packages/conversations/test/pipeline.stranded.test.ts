@@ -37,7 +37,7 @@ run("a chunk run that ends without a result", () => {
       }
       return plain(input);
     };
-    h = await startWorker(url, { transcriber, maxChunkBytes: 60_000 });
+    h = await startWorker(url, { transcriber, requestLimits: { maxBytes: 60_000 } });
   });
   afterAll(async () => {
     await h?.stop();
