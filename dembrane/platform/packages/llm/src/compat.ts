@@ -4,6 +4,7 @@ import type {
   LanguageModelV4CallOptions,
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
+import { mp3Seconds } from "./audio-length";
 import { retryAfterMs, type SpeechGate, type SpeechPriority } from "./speech-gate";
 
 /** Connection to an OpenAI-compatible API (Scaleway Generative APIs, for example). */
@@ -143,8 +144,9 @@ async function requestTranscription(
         ? AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS)])
         : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
     });
-  // Without a length, a minute of audio is about this many bytes of compressed speech.
-  const seconds = call.seconds ?? Math.min(3600, Math.max(1, audio.byteLength / 8000));
+  // Without a length from the caller: read it from an mp3 header, else about 8 kB per second of compressed speech.
+  const known = call.seconds ?? mp3Seconds(audio);
+  const seconds = known ?? Math.min(3600, Math.max(1, audio.byteLength / 8000));
   const gate = ep.speechGate;
   let res: Response;
   for (let attempt = 0; ; attempt++) {
@@ -154,7 +156,7 @@ async function requestTranscription(
       provider: "openai-compatible",
       model: ep.transcriptionModel,
       audioSeconds: Math.round(seconds * 10) / 10,
-      estimated: call.seconds === undefined,
+      estimated: known === null,
       bytes: audio.byteLength,
       ms: Date.now() - began,
       status: res.status,
