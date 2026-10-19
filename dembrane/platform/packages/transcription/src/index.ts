@@ -19,6 +19,7 @@ export {
   rescaleToPiece,
   type Sentence,
   segmentsPrompt,
+  splitLong,
   type TimeFormat,
   tidy,
   toSeconds,

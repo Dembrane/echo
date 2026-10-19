@@ -18,6 +18,7 @@ import {
   regexRedactPii,
   rescaleToPiece,
   spansOf,
+  splitLong,
   TranscriptParseError,
   TranscriptRefusedError,
   tidy,
@@ -636,4 +637,35 @@ test("a window of loud audio with few words is read again", () => {
     { window: 4, minSpeech: 0.6, maxWps: 1 },
   );
   expect(spans.map((s) => [s.start, s.end])).toEqual([[12, 16]]);
+});
+
+test("a segment of half a minute is cut at its sentence ends, timed by share, and nothing else changes", () => {
+  const long = {
+    start: 10,
+    end: 40,
+    text: "We start with the budget for the new building. It is more than last year, but less than we feared! Then the schedule, which nobody likes. Done.",
+  };
+  const out = splitLong([
+    { start: 0, end: 10, text: "Short one." },
+    long,
+    { start: 40, end: 42, text: "After." },
+  ]);
+  expect(out[0]?.text).toBe("Short one.");
+  expect(out.at(-1)?.text).toBe("After.");
+  const parts = out.slice(1, -1);
+  expect(parts.length).toBeGreaterThanOrEqual(3);
+  expect(parts.map((p) => p.text).join(" ")).toBe(long.text);
+  expect(parts[0]?.start).toBe(10);
+  expect(parts.at(-1)?.end).toBe(40);
+  for (const p of parts) expect(p.end - p.start).toBeLessThan(15);
+  for (let i = 1; i < parts.length; i++)
+    expect((parts[i] as { start: number }).start).toBeCloseTo(
+      (parts[i - 1] as { end: number }).end,
+      1,
+    );
+  // A short segment is left alone, and so is a long one with no punctuation to cut at.
+  expect(splitLong([{ start: 0, end: 5, text: "One. Two. Three." }])).toHaveLength(1);
+  expect(
+    splitLong([{ start: 0, end: 30, text: "no punctuation at all in this long run of words" }]),
+  ).toHaveLength(1);
 });
