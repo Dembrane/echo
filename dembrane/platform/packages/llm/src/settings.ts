@@ -10,6 +10,7 @@ export interface LlmSettings {
   readonly transcriptionKeyTerms?: boolean | undefined;
   readonly whisperRetry?: boolean | undefined;
   readonly whisperSecondsPerMinute?: number | undefined;
+  readonly whisperConcurrency?: number | undefined;
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
   /** Who transcribes the whole recording after the conversation; the first is the record. */
@@ -72,6 +73,7 @@ export function modelsConfigOf(s: LlmSettings): ModelsConfig {
         transcriptionLanguage: s.transcriptionLanguage,
         transcriptionKeyTerms: s.transcriptionKeyTerms,
         speechSecondsPerMinute: s.whisperSecondsPerMinute,
+        speechConcurrency: s.whisperConcurrency,
         reasoningEffort: s.reasoningEffort,
         maxOutputTokens: s.maxOutputTokens,
       },

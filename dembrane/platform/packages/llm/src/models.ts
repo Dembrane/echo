@@ -32,6 +32,8 @@ export interface OpenAICompatibleConfig {
   readonly fetch?: typeof fetch | undefined;
   /** Audio seconds per minute the provider takes for this process; unset or 0 sends without pacing. */
   readonly speechSecondsPerMinute?: number | undefined;
+  /** Requests in flight at once; unset keeps the gate's default. */
+  readonly speechConcurrency?: number | undefined;
   readonly speechGate?: SpeechGate | undefined;
 }
 
@@ -113,6 +115,7 @@ export function createModels(
     ...configured,
     speechGate: speechGateFor(configured.baseUrl, {
       secondsPerMinute: configured.speechSecondsPerMinute ?? 0,
+      ...(configured.speechConcurrency && { concurrency: configured.speechConcurrency }),
     }),
     onSpeechRequest: opts.onSpeechRequest,
   };

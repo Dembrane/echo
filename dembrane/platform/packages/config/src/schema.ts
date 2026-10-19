@@ -206,6 +206,10 @@ export const schema = defineSchema({
       description:
         "Seconds of audio this process sends to the speech-to-text provider per minute. Scaleway limits an organisation to 1800 (3600 once identity is verified) across every process, so with several workers set each one's share. Live recordings go first and keep 30 percent of the budget; final passes and long uploads share the rest, and a 429 pauses every caller for as long as Retry-After says. 0 sends without pacing.",
     }),
+    whisperConcurrency: key("LLM_WHISPER_CONCURRENCY", int.min(1).default(8), {
+      description:
+        "Speech-to-text requests this process keeps in flight at once. A request that waits for a free place is ordered live first, then final pass, then uploads. A provider that works through requests one after another (a single GPU) wants a small number so a live chunk is never queued behind a long upload.",
+    }),
     whisperRetry: key("LLM_WHISPER_RETRY", bool.default(true), {
       description:
         "Read a doubtful stretch of Whisper's answer again alone and keep the better reading: a piece in another language than the project's, a window of loud audio with few words, a gap with no words, a looping segment. The first retry names the project's language. Live pieces and the final pass, Whisper only. Every retry and its outcome is counted per conversation. Measured on human reference text; off keeps the first reading.",
