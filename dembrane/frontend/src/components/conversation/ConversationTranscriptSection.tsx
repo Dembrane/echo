@@ -13,7 +13,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { Eye } from "@phosphor-icons/react";
+import { Info } from "@phosphor-icons/react";
 import {
 	lazy,
 	Suspense,
@@ -61,7 +61,7 @@ const viewOptions = () => [
 	{ label: t`Original`, value: "live" },
 ];
 
-/** The eye beside the switch: hover, focus or tap shows how the improved transcript is made. */
+/** The info mark beside the line or the switch: hover, focus or tap shows how the improved transcript is made. */
 function HowItImproves() {
 	const [opened, setOpened] = useState(false);
 	const label = t`How dembrane improves your transcript`;
@@ -85,7 +85,7 @@ function HowItImproves() {
 					onClick={() => setOpened((o) => !o)}
 					{...testId("transcript-how-it-improves")}
 				>
-					<Eye size={18} />
+					<Info size={18} />
 				</ActionIcon>
 			</Popover.Target>
 			<Popover.Dropdown p="sm" w={380}>
