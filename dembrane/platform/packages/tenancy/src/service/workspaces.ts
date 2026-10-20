@@ -686,7 +686,10 @@ export function workspaceService(deps: TenancyDeps) {
         pilot_hard_block_active: false,
         // No tier hard-caps seats any more (spec 4.1, CTO Q12).
         seat_invite_blocked: false,
-        usage_gates: { ...usageGates(tier, hoursLifetime), upgrade_cta_tier: nextTier(tier) },
+        usage_gates: {
+          ...usageGates(tier, hoursLifetime, cycle.length),
+          upgrade_cta_tier: nextTier(tier),
+        },
         next_tier:
           seesFinancials && recommended && rcap
             ? {
@@ -697,7 +700,13 @@ export function workspaceService(deps: TenancyDeps) {
                 included_seats: rcap.includedSeats,
               }
             : null,
-        free_tier: await freeTierBlock(db, tier, ids),
+        free_tier: await freeTierBlock(
+          db,
+          tier,
+          ids,
+          projects.filter((p) => !p.deleted_at).length,
+          cycle.length,
+        ),
       };
     },
 

@@ -724,6 +724,20 @@ export function projectsStorage(db: Db) {
       return row?.tier ?? null;
     },
 
+    async countLiveProjects(workspaceId: string): Promise<number> {
+      const [row] = await db
+        .select({ n: sql<number>`count(${project.id})::int` })
+        .from(project)
+        .where(
+          and(
+            eq(project.workspace_id, workspaceId),
+            isNull(project.deleted_at),
+            eq(project.is_sample, false),
+          ),
+        );
+      return Number(row?.n ?? 0);
+    },
+
     async billingAccountForWorkspace(id: string) {
       const [row] = await db
         .select({ id: billing_account.id, orgId: billing_account.org_id })

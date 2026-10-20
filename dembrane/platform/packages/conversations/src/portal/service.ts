@@ -1,14 +1,15 @@
-import { ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { ForbiddenError, NotFoundError, newId, PaymentRequiredError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { directusTime } from "@dembrane/http";
 import { pydanticIso } from "@dembrane/legacy-shape";
 import { effectiveLegalBasis, isExternalClient } from "@dembrane/projects";
 import { enqueueConversationEvent, webhooksStorage } from "@dembrane/webhooks";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import { finishConversation } from "../pipeline/defs";
 import { type ChunkRow, type ConversationRow, conversationStore, transaction } from "../storage";
+import { FREE_TIER_MAX_CONVERSATIONS_PER_MONTH, resolveProjectTier } from "../tiers";
 import { portalStore } from "./storage";
 
 const { conversation, conversation_project_tag, project_tag } = schema;
@@ -62,6 +63,37 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
   // project_service raised ProjectNotFoundException here, which the route did not catch.
   if (!project) throw new Error(`project ${projectId} not found`);
   if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
+
+  const tier = await resolveProjectTier(d.db, project.id);
+  if (tier === "free" && project.workspace_id) {
+    const startOfMonthIso = new Date(
+      Date.UTC(d.now().getUTCFullYear(), d.now().getUTCMonth(), 1),
+    ).toISOString();
+    const [countRow] = await d.db
+      .select({ n: sql<number>`count(${conversation.id})::int` })
+      .from(conversation)
+      .innerJoin(schema.project, eq(schema.project.id, conversation.project_id))
+      .where(
+        and(
+          eq(schema.project.workspace_id, project.workspace_id),
+          eq(schema.project.is_sample, false),
+          isNull(conversation.deleted_at),
+          gte(conversation.created_at, startOfMonthIso),
+        ),
+      );
+    if ((countRow?.n ?? 0) >= FREE_TIER_MAX_CONVERSATIONS_PER_MONTH) {
+      throw new PaymentRequiredError("billing.tier_limit", {
+        message: "free tier conversation limit reached",
+        params: { limit: "conversations" },
+        details: {
+          error: "FREE_TIER_LIMIT",
+          limit: "conversations",
+          upgrade_cta_tier: "changemaker",
+        },
+      });
+    }
+  }
+
   const id = newId();
   const now = d.now().toISOString();
   const row = await transaction(d.db, async (tx) => {

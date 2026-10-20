@@ -4,12 +4,22 @@ import { readApiError } from "./errors/read";
 // (dembrane/free_tier.py free_tier_limit_error). Frontend gates and the
 // UpgradeModal key on this.
 
-export type FreeTierLimit = "chats" | "chat_turns" | "report" | "workspaces";
+export type FreeTierLimit =
+	| "chats"
+	| "chat_turns"
+	| "report"
+	| "workspaces"
+	| "projects"
+	| "conversations";
 
-// Mirror of the backend limits in dembrane/free_tier.py. Kept in sync by hand;
-// the backend remains the source of truth and enforces these via 402.
+// Mirror of the backend limits in dembrane/free_tier.py and @dembrane/tenancy.
+// Kept in sync by hand; the backend remains the source of truth and enforces these via 402.
 export const FREE_TIER_MAX_CHATS = 1;
 export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+export const FREE_TIER_MAX_WORKSPACES = 1;
+export const FREE_TIER_MAX_PROJECTS = 1;
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
+export const FREE_TIER_MAX_CONVERSATION_DURATION_SECONDS = 3600;
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
 
@@ -30,12 +40,7 @@ export function isFreeTierLimitError(err: unknown): FreeTierLimit | null {
 		(detail as { error?: unknown }).error === FREE_TIER_LIMIT_ERROR
 	) {
 		const limit = (detail as { limit?: unknown }).limit;
-		if (
-			limit === "chats" ||
-			limit === "chat_turns" ||
-			limit === "report" ||
-			limit === "workspaces"
-		) {
+		if (isLimit(limit)) {
 			return limit;
 		}
 	}
@@ -56,6 +61,11 @@ function extractDetail(err: unknown): unknown {
 
 function isLimit(v: unknown): v is FreeTierLimit {
 	return (
-		v === "chats" || v === "chat_turns" || v === "report" || v === "workspaces"
+		v === "chats" ||
+		v === "chat_turns" ||
+		v === "report" ||
+		v === "workspaces" ||
+		v === "projects" ||
+		v === "conversations"
 	);
 }

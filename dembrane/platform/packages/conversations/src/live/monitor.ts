@@ -27,14 +27,9 @@ const FUNNEL_STAGES = ["scanned", "terms", "profile"] as const;
 // Stages written by portals from before the microphone check was removed; they passed consent.
 const RETIRED_MIC_STAGES = new Set(["mic_ok", "mic_skipped", "mic_blocked"]);
 const PORTAL_ONLY = ["DASHBOARD_UPLOAD", "CLONE"];
-// tier_capacity: paid tiers are never hour capped; free has a one-hour lifetime cap.
+// tier_capacity: paid tiers are never capped; free has 5 conversations per month.
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-const INCLUDED_HOURS: Record<string, number | null> = {
-  free: 1,
-  innovator: null,
-  changemaker: null,
-  guardian: null,
-};
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
 
 const clip = (s: string, n: number) => [...s.trim()].slice(0, n).join("");
 
@@ -556,24 +551,24 @@ export async function gatherProjectMonitor(
 }
 
 /**
- * workspace_over_cap_active: whether a free workspace is past its lifetime hour cap now.
- * Counts every conversation, deleted ones included, since delete keeps billable hours; a
- * sample copy's invented ones are no one's audio and are left out.
+ * workspace_over_cap_active: whether a free workspace reached its 5 conversations
+ * monthly limit right now. Paid tiers never cap.
  */
 export async function workspaceOverCapActive(
   db: Db,
   workspaceId: string | null,
   tier: string | null,
 ): Promise<boolean> {
-  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier)) return false;
-  const included = INCLUDED_HOURS[tier];
-  if (included === undefined || included === null) return false;
+  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier) || tier !== "free") return false;
   const sql = (db as unknown as { $client: postgres.Sql }).$client;
-  const [row] = await sql<{ s: number | null }[]>`
-    select coalesce(sum(c.duration), 0)::float8 as s
+  const [row] = await sql<{ n: number | null }[]>`
+    select count(c.id)::int as n
     from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId} and not p.is_sample`;
-  return (row?.s ?? 0) / 3600 >= included;
+    where p.workspace_id = ${workspaceId}
+      and not p.is_sample
+      and c.deleted_at is null
+      and c.created_at >= date_trunc('month', now() at time zone 'UTC')`;
+  return (row?.n ?? 0) >= FREE_TIER_MAX_CONVERSATIONS_PER_MONTH;
 }
 
 /** One computation per project and window every 3 seconds, however many hosts watch. */

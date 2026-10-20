@@ -17,6 +17,11 @@ export interface FreeTierUsage {
 	reports_used: number;
 	reports_limit: number;
 	primary_report_id: string | null;
+	projects_used?: number;
+	projects_limit?: number;
+	conversations_used?: number;
+	conversations_limit?: number;
+	conversation_duration_limit_seconds?: number;
 }
 
 export interface WorkspaceUsageData {

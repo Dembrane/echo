@@ -50,7 +50,9 @@ async function projectRead(d: Deps, who: Signed, projectId: string) {
 }
 
 async function activeFor(store: BffStore, pa: ProjectAccess) {
-  return overCapActive(pa.project.workspaceId, pa.tier, (ws) => store.workspaceSeconds(ws));
+  return overCapActive(pa.project.workspaceId, pa.tier, (ws, start) =>
+    store.workspaceMonthlyConversations(ws, start),
+  );
 }
 
 function filterOf(

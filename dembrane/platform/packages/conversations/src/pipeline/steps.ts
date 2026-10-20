@@ -19,7 +19,7 @@ import {
   transcriptionFailureReason,
 } from "@dembrane/transcription";
 import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@dembrane/webhooks";
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
@@ -739,15 +739,16 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
 }
 
 /**
- * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
- * hours, deleted conversations included, since deleting keeps billable duration.
- * A sample copy's invented conversations are no one's audio and do not count.
- * Deterministic in the database's state, so a retry writes the same value.
+ * _stamp_over_cap: for free tier, marks conversation over-cap if:
+ * 1. The workspace already reached 5 conversations in the month prior to this one, OR
+ * 2. This conversation's duration exceeded the 1-hour (3600s) cap.
+ * Paid tiers and legacy tiers never lock.
  */
 export async function stampOverCap(d: PipelineDeps, conversationId: string): Promise<void> {
   const [row] = await d.db
     .select({
       duration: conversation.duration,
+      createdAt: conversation.created_at,
       workspaceId: project.workspace_id,
       tier: billing_account.tier,
     })
@@ -758,16 +759,30 @@ export async function stampOverCap(d: PipelineDeps, conversationId: string): Pro
     .where(and(eq(conversation.id, conversationId), isNull(conversation.deleted_at)))
     .limit(1);
   if (!row?.workspaceId) return;
-  const [total] = await d.db
-    .select({ seconds: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
+
+  const convDate = row.createdAt ? new Date(row.createdAt) : d.now();
+  const startOfMonthIso = new Date(
+    Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth(), 1),
+  ).toISOString();
+  const endOfMonthIso = new Date(
+    Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth() + 1, 1),
+  ).toISOString();
+
+  const [prior] = await d.db
+    .select({ n: sql<number>`count(${conversation.id})::int` })
     .from(conversation)
     .innerJoin(project, eq(project.id, conversation.project_id))
-    .where(and(eq(project.workspace_id, row.workspaceId), eq(project.is_sample, false)));
-  const overCap = computeIsOverCap(
-    row.tier ?? "",
-    (total?.seconds ?? 0) / 3600,
-    (row.duration ?? 0) / 3600,
-  );
+    .where(
+      and(
+        eq(project.workspace_id, row.workspaceId),
+        eq(project.is_sample, false),
+        isNull(conversation.deleted_at),
+        gte(conversation.created_at, startOfMonthIso),
+        lt(conversation.created_at, row.createdAt ?? endOfMonthIso),
+        ne(conversation.id, conversationId),
+      ),
+    );
+  const overCap = computeIsOverCap(row.tier ?? "", prior?.n ?? 0, row.duration ?? 0);
   await d.db
     .update(conversation)
     .set({ is_over_cap: overCap, updated_at: d.now().toISOString() })

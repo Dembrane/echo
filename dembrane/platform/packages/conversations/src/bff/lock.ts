@@ -2,8 +2,7 @@ import type { Row } from "../storage";
 
 /** Paid tiers bill hours instead of capping them (tier_capacity.OVERAGE_TIERS). */
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-/** Free's lifetime hour cap; other capped tiers have no capacity entry and never lock live. */
-const FREE_INCLUDED_HOURS = 1;
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
 
 export function tierAllowsOverage(tier: string): boolean {
   return OVERAGE_TIERS.has(tier);
@@ -17,16 +16,18 @@ export function stampLocked(conv: Row, tier: string | null): boolean {
 }
 
 /**
- * workspace_over_cap_active: whether a free workspace is past its lifetime hours right
- * now, which also locks conversations still recording. Paid and legacy tiers never cap.
+ * workspace_over_cap_active: whether a free workspace is past its monthly conversation
+ * cap right now, which also locks conversations still recording. Paid and legacy tiers never cap.
  */
 export async function overCapActive(
   workspaceId: string | null,
   tier: string | null,
-  seconds: (workspaceId: string) => Promise<number>,
+  countMonthly: (workspaceId: string, startOfMonthIso: string) => Promise<number>,
+  now: Date = new Date(),
 ): Promise<boolean> {
   if (!workspaceId || tier === null || tierAllowsOverage(tier) || tier !== "free") return false;
-  return (await seconds(workspaceId)) / 3600 >= FREE_INCLUDED_HOURS;
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  return (await countMonthly(workspaceId, startOfMonth)) >= FREE_TIER_MAX_CONVERSATIONS_PER_MONTH;
 }
 
 /** (locked, lock_reason) for one conversation, shared by list, detail and chunk reads. */
