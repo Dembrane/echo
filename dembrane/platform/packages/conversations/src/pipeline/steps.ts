@@ -25,7 +25,6 @@ import type { ConversationsDeps, JobSink } from "../deps";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
-import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
 import { finalizeConversation, finalTranscript, processChunk } from "./defs";
@@ -37,8 +36,6 @@ const {
   conversation_transcribe_retry,
   processing_status,
   project,
-  workspace,
-  billing_account,
 } = schema;
 
 /** Everything the pipeline's steps touch; built once by the worker, faked in tests. */
@@ -758,41 +755,8 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
   return rows.length > 0;
 }
 
-/**
- * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
- * hours, deleted conversations included, since deleting keeps billable duration.
- * A sample copy's invented conversations are no one's audio and do not count.
- * Deterministic in the database's state, so a retry writes the same value.
- */
-export async function stampOverCap(d: PipelineDeps, conversationId: string): Promise<void> {
-  const [row] = await d.db
-    .select({
-      duration: conversation.duration,
-      workspaceId: project.workspace_id,
-      tier: billing_account.tier,
-    })
-    .from(conversation)
-    .innerJoin(project, and(eq(project.id, conversation.project_id), isNull(project.deleted_at)))
-    .leftJoin(workspace, eq(workspace.id, project.workspace_id))
-    .leftJoin(billing_account, eq(billing_account.id, workspace.billing_account_id))
-    .where(and(eq(conversation.id, conversationId), isNull(conversation.deleted_at)))
-    .limit(1);
-  if (!row?.workspaceId) return;
-  const [total] = await d.db
-    .select({ seconds: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
-    .from(conversation)
-    .innerJoin(project, eq(project.id, conversation.project_id))
-    .where(and(eq(project.workspace_id, row.workspaceId), eq(project.is_sample, false)));
-  const overCap = computeIsOverCap(
-    row.tier ?? "",
-    (total?.seconds ?? 0) / 3600,
-    (row.duration ?? 0) / 3600,
-  );
-  await d.db
-    .update(conversation)
-    .set({ is_over_cap: overCap, updated_at: d.now().toISOString() })
-    .where(eq(conversation.id, conversationId));
-}
+/** _stamp_over_cap: retired; kept as a no-op so the durable step replays by order. */
+export async function stampOverCap(_d: PipelineDeps, _conversationId: string): Promise<void> {}
 
 // ── finalize ─────────────────────────────────────────────────────────
 

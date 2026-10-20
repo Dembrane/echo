@@ -1,4 +1,5 @@
 import { DrizzleStaffAudit, requireStaff } from "@dembrane/access";
+import { allowanceSnapshot } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -626,6 +627,12 @@ export function workspaceService(deps: TenancyDeps) {
         hard_block_on_hours: c.hardBlockOnHours,
         training_included: c.trainingIncluded,
       }));
+    },
+
+    /** The free tier meter for the workspace's account; `{ free: false }` when unlimited. */
+    async freeAllowance(ctx: WorkspaceContext) {
+      ctx.require("workspace:view_usage");
+      return allowanceSnapshot(db, ctx.workspaceId, clock(deps));
     },
 
     /** Usage for one calendar month; financial fields only for those who see invoices. */

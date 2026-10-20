@@ -233,7 +233,7 @@ msgstr "(Partner)"
 msgid "(unknown)"
 msgstr "(unknown)"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:926
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:930
 #: src/components/project/ProjectUsageAndSharing.tsx:334
 msgid "(You)"
 msgstr "(You)"
@@ -244,7 +244,7 @@ msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 
 #. placeholder {0}: rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2316
+#: src/routes/admin/AdminSettingsRoute.tsx:2317
 msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# agreement} other {# agreements}}"
 
@@ -328,8 +328,8 @@ msgstr "{0, plural, one {# část k přepisu} few {# části k přepisu} many {#
 
 #. placeholder {0}: filteredRows.length
 #. placeholder {0}: group.rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2785
-#: src/routes/admin/AdminSettingsRoute.tsx:2818
+#: src/routes/admin/AdminSettingsRoute.tsx:2786
+#: src/routes/admin/AdminSettingsRoute.tsx:2819
 msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# platba} few {# platby} other {# plateb}}"
 
@@ -342,7 +342,7 @@ msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
-#: src/components/workspace/UsageCard.tsx:257
+#: src/components/workspace/UsageCard.tsx:261
 #: src/components/settings/MyAccessCard.tsx:214
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projects}}"
@@ -406,7 +406,7 @@ msgstr "{0, plural, one {# odebrané slovo} few {# odebraná slova} other {# ode
 #. placeholder {0}: organisation.workspace_count
 #. placeholder {0}: rows.length
 #: src/routes/organisation/OrganisationRoute.tsx:726
-#: src/routes/admin/AdminSettingsRoute.tsx:1303
+#: src/routes/admin/AdminSettingsRoute.tsx:1304
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
@@ -509,7 +509,7 @@ msgstr "{0} / místo × {1}. Po tomto období již nebude účtováno."
 #. placeholder {0}: data.account_count
 #. placeholder {1}: data.workspace_count
 #. placeholder {2}: data.active_workspace_count
-#: src/routes/admin/AdminSettingsRoute.tsx:1972
+#: src/routes/admin/AdminSettingsRoute.tsx:1973
 msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} účtů, {1} pracovních prostorů, {2} aktivních"
 
@@ -519,7 +519,7 @@ msgid "{0} across all"
 msgstr "{0} across all"
 
 #. placeholder {0}: b.active
-#: src/routes/admin/AdminSettingsRoute.tsx:1327
+#: src/routes/admin/AdminSettingsRoute.tsx:1328
 msgid "{0} active"
 msgstr "{0} active"
 
@@ -729,13 +729,13 @@ msgstr "{0} pracovních prostorů · {1} placených míst · {2} bezplatných po
 #. placeholder {0}: account.workspace_count
 #. placeholder {1}: account.seat_count + account.external_count
 #. placeholder {2}: account.observer_count > 0 ? ` · ${account.observer_count} free observers` : ""
-#: src/routes/admin/AdminSettingsRoute.tsx:1452
+#: src/routes/admin/AdminSettingsRoute.tsx:1453
 msgid "{0} workspaces, {1} seats pooled{2}"
 msgstr "{0} pracovních prostorů, sdíleno {1} míst{2}"
 
 #. placeholder {0}: row.org_name
 #. placeholder {1}: row.workspace_id.slice(0, 8)
-#: src/routes/admin/AdminSettingsRoute.tsx:1222
+#: src/routes/admin/AdminSettingsRoute.tsx:1223
 msgid "{0}, workspace id {1}"
 msgstr "{0}, workspace id {1}"
 
@@ -745,7 +745,7 @@ msgid "{0}'s conversation"
 msgstr "Rozhovor uživatele {0}"
 
 #. placeholder {0}: settings.percent_discount
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:652
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:653
 msgid "{0}% discount"
 msgstr "Sleva {0} %"
 
@@ -791,7 +791,7 @@ msgstr "{changes, plural, one {# změna zatím nezobrazena} few {# změny zatím
 msgid "{clientName} and the company running it will receive the conversation content you allow."
 msgstr "{clientName} a společnost, která jej provozuje, obdrží vámi povolený obsah rozhovoru."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1992
+#: src/routes/admin/AdminSettingsRoute.tsx:1993
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# zdarma} few {# zdarma} other {# zdarma}}"
 
@@ -894,9 +894,17 @@ msgstr "{invalidCount} addresses need attention"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} invited you to join {resolvedWorkspaceName}"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1259
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1263
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:46
+msgid "{n} h"
+msgstr "{n} h"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:47
+msgid "{n} min"
+msgstr "{n} min"
 
 #: src/components/present/TranslationStatus.tsx:76
 msgid "{name}: {rowDone} of {rowTotal}"
@@ -1029,6 +1037,11 @@ msgstr "{translated} z {total} přeloženo, {failed} se nepodařilo přeložit"
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument se nepodařilo umístit na mapu.} few {# argumenty se nepodařilo umístit na mapu.} other {# argumentů se nepodařilo umístit na mapu.}}"
 
+#: src/components/workspace/FreeAllowanceCard.tsx:57
+#: src/components/workspace/FreeAllowanceCard.tsx:60
+msgid "{used} of {limit}"
+msgstr "{used} z {limit}"
+
 #: src/components/popcorn/PopcornStatus.tsx:48
 msgid "{validated} validated"
 msgstr "{validated} ověřeno"
@@ -1111,7 +1124,7 @@ msgstr "1. You provide a URL where you want to receive notifications"
 msgid "16 to 40."
 msgstr "16 až 40."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:250
+#: src/routes/admin/AdminSettingsRoute.tsx:251
 msgid "2 months ago"
 msgstr "2 months ago"
 
@@ -1136,7 +1149,7 @@ msgstr "250 až 1000."
 msgid "3 days"
 msgstr "3 dny"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:251
+#: src/routes/admin/AdminSettingsRoute.tsx:252
 msgid "3 months ago"
 msgstr "3 months ago"
 
@@ -1169,15 +1182,15 @@ msgstr "Přehlednější a přístupnější dashboard a portál."
 msgid "A couple of quick questions and you're in."
 msgstr "Pár rychlých otázek a jste uvnitř."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3027
+#: src/routes/admin/AdminSettingsRoute.tsx:3028
 msgid "A dembrane staff app_user id. The server checks the @dembrane.com address."
 msgstr "ID uživatele app_user z týmu dembrane. Server kontroluje adresu @dembrane.com."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:612
+#: src/routes/admin/AdminSettingsRoute.tsx:613
 msgid "A downgrade applies the matrix downgrade effects and notifies workspace admins. A paid tier puts the account on dembrane-managed billing."
 msgstr "Při přechodu na nižší tarif se okamžitě uplatní příslušná omezení a správci pracovního prostoru obdrží oznámení. Placený tarif převede účet na fakturaci spravovanou dembrane."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:660
+#: src/routes/admin/AdminSettingsRoute.tsx:661
 msgid "A downgrade limits features immediately."
 msgstr "Přechod na nižší tarif okamžitě omezí funkce."
 
@@ -1333,7 +1346,7 @@ msgstr "Accept and join"
 msgid "Accepted terms"
 msgstr "Podmínky přijaty"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1888
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
 #: src/routes/project/CreateProjectRoute.tsx:281
@@ -1348,7 +1361,7 @@ msgstr "Access"
 msgid "Access controls explain when you need to join a workspace first."
 msgstr "Řízení přístupu vysvětluje, kdy se nejprve musíte připojit k pracovnímu prostoru."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:840
+#: src/routes/admin/AdminSettingsRoute.tsx:841
 msgid "Access ends on"
 msgstr "Přístup končí"
 
@@ -1384,11 +1397,11 @@ msgstr "Žádost o přístup stažena"
 msgid "Access requests"
 msgstr "Access requests"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:473
-#: src/routes/admin/AdminSettingsRoute.tsx:1352
-#: src/routes/admin/AdminSettingsRoute.tsx:1557
-#: src/routes/admin/AdminSettingsRoute.tsx:2571
-#: src/routes/admin/AdminSettingsRoute.tsx:2990
+#: src/routes/admin/AdminSettingsRoute.tsx:474
+#: src/routes/admin/AdminSettingsRoute.tsx:1353
+#: src/routes/admin/AdminSettingsRoute.tsx:1558
+#: src/routes/admin/AdminSettingsRoute.tsx:2572
+#: src/routes/admin/AdminSettingsRoute.tsx:2991
 #: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
@@ -1406,16 +1419,16 @@ msgstr "Account & security"
 msgid "Account default"
 msgstr "Výchozí hodnota účtu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3026
+#: src/routes/admin/AdminSettingsRoute.tsx:3027
 #: src/components/billing/BillingManager.tsx:351
 msgid "Account manager"
 msgstr "Správce účtu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2933
+#: src/routes/admin/AdminSettingsRoute.tsx:2934
 msgid "Account manager assigned."
 msgstr "Správce účtu přiřazen."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:745
+#: src/routes/admin/AdminSettingsRoute.tsx:746
 msgid "Account moved to self-serve billing."
 msgstr "Účet byl převeden na samoobslužnou fakturaci."
 
@@ -1423,15 +1436,15 @@ msgstr "Účet byl převeden na samoobslužnou fakturaci."
 msgid "Account password"
 msgstr "Account password"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:746
+#: src/routes/admin/AdminSettingsRoute.tsx:747
 msgid "Account set to managed billing."
 msgstr "Účet byl nastaven na spravovanou fakturaci."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2925
+#: src/routes/admin/AdminSettingsRoute.tsx:2926
 msgid "Account set to managed."
 msgstr "Účet byl nastaven jako spravovaný."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2775
+#: src/routes/admin/AdminSettingsRoute.tsx:2776
 msgid "Accounts billed"
 msgstr "Fakturované účty"
 
@@ -1461,9 +1474,9 @@ msgstr "Objekt akce"
 msgid "Actions"
 msgstr "Actions"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1502
-#: src/routes/admin/AdminSettingsRoute.tsx:1706
-#: src/routes/admin/AdminSettingsRoute.tsx:2024
+#: src/routes/admin/AdminSettingsRoute.tsx:1503
+#: src/routes/admin/AdminSettingsRoute.tsx:1707
+#: src/routes/admin/AdminSettingsRoute.tsx:2025
 #: src/components/workspace/OrganisationUsageRollup.tsx:393
 #: src/components/workspace/OrganisationUsageRollup.tsx:535
 #: src/components/billing/BillingManager.tsx:1243
@@ -1530,7 +1543,7 @@ msgstr "Přidat poznámku"
 msgid "Add a project goal before saving."
 msgstr "Před uložením přidejte cíl projektu."
 
-#: src/components/workspace/gateWalls.ts:137
+#: src/components/workspace/gateWalls.ts:141
 msgid "add a workspace"
 msgstr "přidat pracovní prostor"
 
@@ -1681,7 +1694,7 @@ msgstr "Přidat webhook"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Add Your First Webhook"
 
-#: src/components/workspace/gateWalls.ts:126
+#: src/components/workspace/gateWalls.ts:129
 msgid "add your logo"
 msgstr "přidat své logo"
 
@@ -1781,10 +1794,10 @@ msgstr "Upřesnění adresy (volitelné)"
 msgid "Adjust the base font size for the interface"
 msgstr "Adjust the base font size for the interface"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:987
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1003
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1052
-#: src/routes/admin/AdminSettingsRoute.tsx:3154
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:991
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1007
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1056
+#: src/routes/admin/AdminSettingsRoute.tsx:3155
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
 msgid "Admin"
@@ -1798,11 +1811,11 @@ msgstr "Admin dashboard"
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3122
+#: src/routes/admin/AdminSettingsRoute.tsx:3123
 msgid "Admin, dembrane"
 msgstr "Admin, dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:805
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
 #: src/routes/organisation/OrganisationRoute.tsx:889
 #: src/components/project/ProjectUsageAndSharing.tsx:262
 msgid "Admins"
@@ -1875,10 +1888,10 @@ msgstr "Agentic - Tool-driven execution"
 msgid "Agentic chat"
 msgstr "Agentní chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:804
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:808
 #: src/routes/organisation/OrganisationRoute.tsx:888
-#: src/routes/admin/AdminSettingsRoute.tsx:2023
-#: src/routes/admin/AdminSettingsRoute.tsx:2693
+#: src/routes/admin/AdminSettingsRoute.tsx:2024
+#: src/routes/admin/AdminSettingsRoute.tsx:2694
 #: src/components/workspace/OrganisationUsageRollup.tsx:534
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
@@ -1940,11 +1953,11 @@ msgstr "All read"
 msgid "All releases on GitHub"
 msgstr "Všechna vydání na GitHubu"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:851
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:855
 msgid "All seats are taken on this tier. Remove a member or external, or upgrade the workspace tier to invite more people."
 msgstr "All seats are taken on this tier. Remove a member or external, or upgrade the workspace tier to invite more people."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:834
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:838
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "All seats are taken. Free a seat or upgrade to invite more."
 
@@ -1960,7 +1973,7 @@ msgstr "Všechny šablony"
 #~ msgid "All Templates"
 #~ msgstr "All Templates"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2011
+#: src/routes/admin/AdminSettingsRoute.tsx:2012
 #: src/components/workspace/OrganisationUsageRollup.tsx:522
 msgid "All tiers"
 msgstr "All tiers"
@@ -1981,7 +1994,7 @@ msgstr "Zcela nové funkce prezentace: zobrazte během setkání živé výsledk
 msgid "Allow"
 msgstr "Povolit"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1984
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1988
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr "Povolit týmu dembrane přístup do tohoto pracovního prostoru pro podporu"
 
@@ -2047,12 +2060,12 @@ msgstr "Stále aktivní, běží na našem webu"
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Stále aktivní. Obrazovka se otevře zde, aby si účastníci v místnosti měli co číst, než se zbytek připraví."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2597
+#: src/routes/admin/AdminSettingsRoute.tsx:2598
 #: src/components/billing/BillingManager.tsx:779
 msgid "Amount"
 msgstr "Částka"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3052
+#: src/routes/admin/AdminSettingsRoute.tsx:3053
 msgid "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 msgstr "Částky se standardně počítají jako počet křesel účtu krát cena za křeslo. Přepište je pouze v případě potřeby."
 
@@ -2234,7 +2247,7 @@ msgstr "Anonymní účastník"
 msgid "Anonymous visitor"
 msgstr "Anonymní návštěvník"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1085
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1089
 msgid "Another admin or owner will need to restore you."
 msgstr "Another admin or owner will need to restore you."
 
@@ -2247,7 +2260,7 @@ msgstr "jiný důvod"
 msgid "Any tag"
 msgstr "Any tag"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1907
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1911
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Tento pracovní prostor může najít kdokoli z vaší organizace. Správci se mohou připojit rovnou, členové mohou o přístup požádat."
 
@@ -2295,7 +2308,7 @@ msgstr "Použito. Na plátně se teď zobrazuje tento návrh a udržuje se aktu�
 msgid "Applies this wording and refresh behavior to the existing canvas."
 msgstr "Použije toto znění a chování obnovování na stávající plátno."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:641
+#: src/routes/admin/AdminSettingsRoute.tsx:642
 #: src/components/goal/GoalSuggestionCard.tsx:128
 #: src/components/common/ImageCropModal.tsx:143
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:210
@@ -2514,8 +2527,8 @@ msgstr "Požádejte účastníky o e-mail po skončení rozhovoru."
 #~ msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
 #~ msgstr "Až budete chtít živý přehled rozhovorů, požádejte v chatu. První plátno zůstane tady."
 
-#: src/components/workspace/gateWalls.ts:123
-#: src/components/workspace/gateWalls.ts:124
+#: src/components/workspace/gateWalls.ts:126
+#: src/components/workspace/gateWalls.ts:127
 msgid "ask more in chat"
 msgstr "zeptat se na více v chatu"
 
@@ -2541,7 +2554,7 @@ msgstr "Požádejte svého správce"
 #~ msgid "Aspects"
 #~ msgstr "Aspects"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3037
+#: src/routes/admin/AdminSettingsRoute.tsx:3038
 msgid "Assign"
 msgstr "Přiřadit"
 
@@ -2550,7 +2563,7 @@ msgstr "Přiřadit"
 msgid "Assistant"
 msgstr "Asistent"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1597
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1601
 msgid "Assistant context"
 msgstr "Kontext asistenta"
 
@@ -2592,7 +2605,8 @@ msgstr "Jazyk publika:"
 msgid "Audience preview"
 msgstr "Náhled pro publikum"
 
-#: src/components/workspace/UsageCard.tsx:169
+#: src/components/workspace/UsageCard.tsx:173
+#: src/components/workspace/FreeAllowanceCard.tsx:39
 #: src/components/project/ProjectUsageAndSharing.tsx:463
 msgid "Audio"
 msgstr "Audio"
@@ -2608,6 +2622,14 @@ msgstr "Audio download not available for anonymized conversations"
 #: src/components/conversation/LiveMonitorSection.tsx:93
 msgid "Audio is coming in"
 msgstr "Zvuk přichází"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:56
+msgid "Audio per conversation"
+msgstr "Zvuk na rozhovor"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:54
+msgid "Audio per month"
+msgstr "Zvuk za měsíc"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:267
 msgid "Audio playback not available for anonymized conversations"
@@ -2817,7 +2839,7 @@ msgstr "Zpět na projekty"
 #~ msgid "Back to templates"
 #~ msgstr "Back to templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:663
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:664
 #: src/routes/invite/MyInvitesRoute.tsx:127
 msgid "Back to workspaces"
 msgstr "Back to workspaces"
@@ -2826,7 +2848,7 @@ msgstr "Back to workspaces"
 msgid "Back to your workspaces"
 msgstr "Back to your workspaces"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1331
+#: src/routes/admin/AdminSettingsRoute.tsx:1332
 msgid "Base"
 msgstr "Base"
 
@@ -2928,8 +2950,8 @@ msgstr "Účtováno samostatně, není součástí tarifu organizace."
 msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr "Účtováno v rámci tarifu vaší organizace, společně s ostatními pracovními prostory."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:807
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1051
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:811
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1055
 #: src/routes/organisation/OrganisationRoute.tsx:839
 #: src/routes/organisation/OrganisationRoute.tsx:891
 #: src/lib/roles.ts:13
@@ -2950,7 +2972,7 @@ msgstr "Fakturační údaje uloženy."
 msgid "Billing is managed by your organisation"
 msgstr "Fakturaci spravuje vaše organizace"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:768
+#: src/routes/admin/AdminSettingsRoute.tsx:769
 msgid "Billing mode"
 msgstr "Režim fakturace"
 
@@ -2987,7 +3009,7 @@ msgstr "Brainstorming nápadů"
 msgid "Breakdown · {0} active"
 msgstr "Breakdown · {0} active"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1299
+#: src/routes/admin/AdminSettingsRoute.tsx:1300
 msgid "Breakdown by tier"
 msgstr "Breakdown by tier"
 
@@ -3032,11 +3054,11 @@ msgstr "C_Med: {0}"
 msgid "Can you tell us more?"
 msgstr "Můžete nám říct víc?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1142
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1176
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1337
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1972
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1180
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/ProjectsHome.tsx:453
 #: src/routes/project/CreateProjectRoute.tsx:444
@@ -3048,8 +3070,8 @@ msgstr "Můžete nám říct víc?"
 #: src/routes/organisation/OrganisationRoute.tsx:2081
 #: src/routes/organisation/OrganisationRoute.tsx:2123
 #: src/routes/invite/MyInvitesRoute.tsx:80
-#: src/routes/admin/AdminSettingsRoute.tsx:858
-#: src/routes/admin/AdminSettingsRoute.tsx:1172
+#: src/routes/admin/AdminSettingsRoute.tsx:859
+#: src/routes/admin/AdminSettingsRoute.tsx:1173
 #: src/lib/openConfirm.tsx:54
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/training/TrainingRowActions.tsx:199
@@ -3134,7 +3156,7 @@ msgstr "Zrušit přepsání"
 msgid "Cancel plan"
 msgstr "Zrušit tarif"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1131
+#: src/routes/admin/AdminSettingsRoute.tsx:1132
 msgid "Cancel request"
 msgstr "Zrušit žádost"
 
@@ -3229,7 +3251,7 @@ msgstr "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1095
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1099
 msgid "Change anyway"
 msgstr "Change anyway"
 
@@ -3267,10 +3289,10 @@ msgstr "Change role"
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Uprav slova, přečti si doklady, nebo nech zjištění mimo tuto prezentaci. Sdílené výsledky zůstávají v Analýze."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:609
-#: src/routes/admin/AdminSettingsRoute.tsx:650
-#: src/routes/admin/AdminSettingsRoute.tsx:652
-#: src/routes/admin/AdminSettingsRoute.tsx:1242
+#: src/routes/admin/AdminSettingsRoute.tsx:610
+#: src/routes/admin/AdminSettingsRoute.tsx:651
+#: src/routes/admin/AdminSettingsRoute.tsx:653
+#: src/routes/admin/AdminSettingsRoute.tsx:1243
 msgid "Change tier"
 msgstr "Change tier"
 
@@ -3278,13 +3300,17 @@ msgstr "Change tier"
 msgid "Change workspace role?"
 msgstr "Change workspace role?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1102
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1106
 msgid "Change your own role?"
 msgstr "Change your own role?"
 
 #: src/components/release/releaseHistory.ts:342
 msgid "Change your password from settings without contacting support."
 msgstr "Změňte si heslo v nastavení bez nutnosti kontaktovat podporu."
+
+#: src/routes/admin/FreeLimitsPanel.tsx:227
+msgid "Changed by"
+msgstr "Změnil(a)"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:146
 msgid "Changemaker plan takes it off"
@@ -3400,6 +3426,7 @@ msgid "Chat with individual conversations."
 msgstr "Chat s jednotlivými konverzacemi."
 
 #: src/routes/project/chat/NewChatRoute.tsx:155
+#: src/components/workspace/FreeAllowanceCard.tsx:41
 msgid "Chats"
 msgstr "Chats"
 
@@ -3412,6 +3439,10 @@ msgstr "Chats"
 #: src/components/chat/ChatAccordion.tsx:272
 msgid "project.sidebar.chat.title"
 msgstr "Chats"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:60
+msgid "Chats per month"
+msgstr "Chaty za měsíc"
 
 #: src/components/release/releaseHistory.ts:606
 msgid "Chats receive automatic titles."
@@ -3637,20 +3668,20 @@ msgstr "Click to edit"
 msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2117
+#: src/routes/admin/AdminSettingsRoute.tsx:2118
 #: src/components/workspace/OrganisationUsageRollup.tsx:595
 msgid "Click to sort"
 msgstr "Click to sort"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2271
+#: src/routes/admin/AdminSettingsRoute.tsx:2272
 msgid "Client discount %"
 msgstr "Client discount %"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2252
+#: src/routes/admin/AdminSettingsRoute.tsx:2253
 msgid "Client organisation"
 msgstr "Client organisation"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2403
+#: src/routes/admin/AdminSettingsRoute.tsx:2404
 msgid "Client orgs from partners"
 msgstr "Klientské organizace od partnerů"
 
@@ -3849,12 +3880,12 @@ msgstr "Compare & Contrast"
 msgid "Compare & Contrast Insights"
 msgstr "Compare & Contrast Insights"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1386
+#: src/routes/admin/AdminSettingsRoute.tsx:1387
 msgid "Comped trial. €0 revenue."
 msgstr "Bezplatná zkušební verze. Výnos 0 €."
 
 #. placeholder {0}: formatDate(account.tier_expires_at)
-#: src/routes/admin/AdminSettingsRoute.tsx:1385
+#: src/routes/admin/AdminSettingsRoute.tsx:1386
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Bezplatná zkušební verze. Vyprší {0}. Výnos 0 €."
 
@@ -4360,13 +4391,17 @@ msgstr "Nepodařilo se spustit živý přenos"
 msgid "Could not load methodologies."
 msgstr "Metodiky se nepodařilo načíst."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2682
+#: src/routes/admin/AdminSettingsRoute.tsx:2683
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Platby se nepodařilo načíst. Zkontrolujte přihlášení a záznamy backendu."
 
 #: src/routes/project/canvas/CanvasRoute.tsx:523
 msgid "Could not load the canvas."
 msgstr "Plátno se nepodařilo načíst."
+
+#: src/routes/admin/FreeLimitsPanel.tsx:210
+msgid "Could not load the free plan limits."
+msgstr "Limity pro tarif Free se nepodařilo načíst."
 
 #: src/routes/project/present/PresentRoute.tsx:890
 msgid "Could not load the latest results"
@@ -4380,7 +4415,7 @@ msgstr "Nejnovější výsledky se nepodařilo načíst"
 msgid "Could not load the library."
 msgstr "Knihovnu se nepodařilo načíst."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1882
+#: src/routes/admin/AdminSettingsRoute.tsx:1883
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "Could not load the rollup. Check auth and backend logs."
 
@@ -4614,7 +4649,7 @@ msgstr "Create an account to join"
 msgid "Create and manage multiple reports in one project."
 msgstr "Vytvářejte a spravujte více zpráv v jednom projektu."
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:133
 msgid "create another report"
 msgstr "vytvořit další zprávu"
 
@@ -4692,12 +4727,12 @@ msgstr "Create workspace"
 msgid "Create workspace | dembrane"
 msgstr "Vytvořit pracovní prostor | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2390
+#: src/routes/admin/AdminSettingsRoute.tsx:2391
 #: src/components/workspace/OrganisationProjectsTable.tsx:230
 msgid "Created"
 msgstr "Created"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2384
+#: src/routes/admin/AdminSettingsRoute.tsx:2385
 msgid "Created by"
 msgstr "Vytvořil/a"
 
@@ -4726,7 +4761,7 @@ msgstr "Oříznout obrázek"
 #~ msgid "Crop Image"
 #~ msgstr "Crop Image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1790
 #: src/components/settings/WhitelabelLogoCard.tsx:199
 msgid "Crop logo"
 msgstr "Crop logo"
@@ -4735,11 +4770,12 @@ msgstr "Crop logo"
 #~ msgid "Crop Logo"
 #~ msgstr "Crop Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1788
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1792
 #: src/components/settings/WhitelabelLogoCard.tsx:201
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Ořízněte logo na vodorovný poměr stran 3:1 (doporučeno např. 600×200 px)."
 
+#: src/routes/admin/FreeLimitsPanel.tsx:221
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr "Aktuální"
@@ -4791,11 +4827,11 @@ msgstr "Vlastní logo"
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1706
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1710
 msgid "Custom workspace logo shown to participants."
 msgstr "Custom workspace logo shown to participants."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1637
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1641
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Vlastní logo pracovního prostoru zobrazené účastníkům. Doporučený poměr stran je 3:1 (např. 600×200 px na šířku)."
 
@@ -4857,7 +4893,7 @@ msgstr "Zásady nakládání s daty"
 msgid "Data policy and disclosure"
 msgstr "Zásady nakládání s daty a prohlášení"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2547
+#: src/routes/admin/AdminSettingsRoute.tsx:2548
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
 #: src/components/billing/BillingManager.tsx:773
@@ -4920,8 +4956,9 @@ msgstr "Deduplikované argumenty"
 msgid "Deep Dive"
 msgstr "Podrobný rozbor"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3061
-#: src/routes/admin/AdminSettingsRoute.tsx:3077
+#: src/routes/admin/FreeLimitsPanel.tsx:224
+#: src/routes/admin/AdminSettingsRoute.tsx:3062
+#: src/routes/admin/AdminSettingsRoute.tsx:3078
 #: src/components/project/ProjectPortalEditor.tsx:826
 #: src/components/chat/CanvasSuggestionCard.tsx:102
 msgid "Default"
@@ -5026,11 +5063,11 @@ msgstr "Delete template"
 msgid "Delete this project in {0}? All conversations and data are permanently removed."
 msgstr "Delete this project in {0}? All conversations and data are permanently removed."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1231
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1235
 msgid "Delete this workspace"
 msgstr "Delete this workspace"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1234
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1238
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 
@@ -5046,7 +5083,7 @@ msgstr "Smazat webhook"
 #~ msgid "Delete Webhook"
 #~ msgstr "Delete Webhook"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1292
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1296
 msgid "Delete workspace"
 msgstr "Delete workspace"
 
@@ -5159,9 +5196,9 @@ msgstr "Deny"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Describe what the language model should extract or summarize from the conversation..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1574
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1578
 #: src/routes/organisation/OrganisationRoute.tsx:1140
-#: src/routes/admin/AdminSettingsRoute.tsx:2644
+#: src/routes/admin/AdminSettingsRoute.tsx:2645
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
 #: src/components/billing/BillingManager.tsx:776
@@ -5252,7 +5289,7 @@ msgstr "Discard this workspace?"
 msgid "Disclosure"
 msgstr "Prohlášení"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:420
+#: src/routes/admin/AdminSettingsRoute.tsx:421
 msgid "Discount"
 msgstr "Discount"
 
@@ -5357,7 +5394,7 @@ msgstr "Done"
 #~ msgid "Done reviewing"
 #~ msgstr "Dokončit kontrolu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:828
+#: src/routes/admin/AdminSettingsRoute.tsx:829
 msgid "Downgrade to Free now"
 msgstr "Přejít na tarif Free hned"
 
@@ -5449,7 +5486,7 @@ msgstr "Drag audio files here or click to select files"
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:829
+#: src/routes/admin/AdminSettingsRoute.tsx:830
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Přejde na bezplatnou úroveň. K placenému tarifu se mohou přihlásit kdykoli."
 
@@ -5475,7 +5512,7 @@ msgstr "Nizozemská dokumentace je aktualizována."
 msgid "Dutch-speaking hosts see the Dutch What's new walkthrough."
 msgstr "Nizozemsky mluvícím hostitelům se zobrazí nizozemský průvodce novinkami."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3084
+#: src/routes/admin/AdminSettingsRoute.tsx:3085
 msgid "E-invoice"
 msgstr "Elektronická faktura"
 
@@ -5487,7 +5524,7 @@ msgstr "e.g. \"Focus on sustainability themes\" or \"What do participants think 
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1549
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1553
 msgid "e.g. Client Alpha"
 msgstr "e.g. Client Alpha"
 
@@ -5495,7 +5532,7 @@ msgstr "e.g. Client Alpha"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "e.g. Client Alpha, Q1 Research"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1576
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1580
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "e.g. Client onboarding interviews, Q1 product research"
 
@@ -5503,11 +5540,11 @@ msgstr "e.g. Client onboarding interviews, Q1 product research"
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "e.g. Climate Listening, Q1 Research"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1158
+#: src/routes/admin/AdminSettingsRoute.tsx:1159
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "např. prověření problému se zprávou, o kterém jste psali e-mailem"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1599
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1603
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr "např. Jsme výzkumná agentura. Zprávy putují městským klientům, shrnutí proto udržujte formální a v nizozemštině."
 
@@ -5527,7 +5564,7 @@ msgstr "např. upozornění ve Slacku, workflow v Make"
 msgid "Each line becomes a paragraph."
 msgstr "Z každého řádku se stane odstavec."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:839
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:843
 msgid "Each new member is billed per seat on your plan."
 msgstr "Každý nový člen je účtován podle počtu míst ve vašem tarifu."
 
@@ -6020,7 +6057,7 @@ msgstr "Najít ho může kdokoli. Správci se připojí přímo, členové mohou
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1904
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
 #: src/components/workspace/DiscoverableWorkspaces.tsx:305
 msgid "Everyone in your organisation"
@@ -6069,7 +6106,7 @@ msgstr "Exceeds seat cap. Overage billing applies."
 msgid "Exit fullscreen"
 msgstr "Exit fullscreen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1592
+#: src/routes/admin/AdminSettingsRoute.tsx:1593
 msgid "Expand workspaces"
 msgstr "Rozbalit pracovní prostory"
 
@@ -6082,7 +6119,7 @@ msgstr "Experimental"
 msgid "Expired"
 msgstr "Platnost vypršela"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2291
+#: src/routes/admin/AdminSettingsRoute.tsx:2292
 #: src/components/agent-access/AgentGrantsCard.tsx:99
 msgid "Expires"
 msgstr "Expires"
@@ -6128,17 +6165,17 @@ msgstr "Prozkoumávání"
 msgid "Export"
 msgstr "Export"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2033
+#: src/routes/admin/AdminSettingsRoute.tsx:2034
 msgid "Export CSV"
 msgstr "Export CSV"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1092
+#: src/routes/admin/AdminSettingsRoute.tsx:1093
 msgid "Extend 24h"
 msgstr "Prodloužit o 24 h"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:936
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1022
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:940
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1318
 #: src/routes/organisation/OrganisationRoute.tsx:1410
 #: src/routes/organisation/OrganisationRoute.tsx:1914
 #: src/routes/organisation/OrganisationExternalView.tsx:62
@@ -6151,17 +6188,17 @@ msgid "External"
 msgstr "External"
 
 #. placeholder {0}: settings.org_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:632
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:633
 msgid "External of {0}"
 msgstr "External of {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2374
+#: src/routes/admin/AdminSettingsRoute.tsx:2375
 msgid "External of partner"
 msgstr "Externí od partnera"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:811
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:815
 #: src/routes/organisation/OrganisationRoute.tsx:895
-#: src/components/workspace/UsageCard.tsx:220
+#: src/components/workspace/UsageCard.tsx:224
 #: src/components/project/ProjectUsageAndSharing.tsx:265
 msgid "Externals"
 msgstr "Externals"
@@ -6216,8 +6253,8 @@ msgid "Factual status does not apply to this object."
 msgstr "Na tento objekt se faktický stav nevztahuje."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:93
-#: src/routes/admin/AdminSettingsRoute.tsx:2695
-#: src/routes/admin/AdminSettingsRoute.tsx:2757
+#: src/routes/admin/AdminSettingsRoute.tsx:2696
+#: src/routes/admin/AdminSettingsRoute.tsx:2758
 #: src/features/sidebar/primitives/NavItem.tsx:281
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
@@ -6711,7 +6748,7 @@ msgstr "Parametry sil"
 msgid "Force settings"
 msgstr "Nastavení sil"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1569
+#: src/routes/admin/AdminSettingsRoute.tsx:1570
 msgid "Forecast"
 msgstr "Předpověď"
 
@@ -6744,6 +6781,10 @@ msgstr "Free"
 msgid "Free organisations have a monthly limit of {freeTierMonthlyCalls} calls."
 msgstr "Organizace s tarifem Free mají měsíční limit {freeTierMonthlyCalls} volání."
 
+#: src/components/workspace/FreeAllowanceCard.tsx:132
+msgid "Free plan allowance"
+msgstr "Příděl tarifu Free"
+
 #: src/components/report/UpdateReportModalButton.tsx:161
 #: src/components/report/UpdateReportModalButton.tsx:184
 msgid "Free plan allows 1 report per workspace"
@@ -6752,6 +6793,10 @@ msgstr "Tarif Free umožňuje 1 zprávu na pracovní prostor"
 #: src/routes/organisation/OrganisationRoute.tsx:1481
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Tarif Free umožňuje 1 pracovní prostor na organizaci"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:196
+msgid "Free plan limits"
+msgstr "Limity tarifu Free"
 
 #: src/components/release/releaseHistory.ts:214
 msgid "Free-plan limits and upgrade options are clearer."
@@ -6971,6 +7016,10 @@ msgstr "Pojmenujte relaci"
 msgid "Go back"
 msgstr "Go back"
 
+#: src/components/workspace/gateWalls.ts:131
+msgid "go beyond this month's free allowance"
+msgstr "překročit bezplatný limit na tento měsíc"
+
 #: src/routes/project/HostGuidePage.tsx:1569
 msgid "Go fullscreen"
 msgstr "Celá obrazovka"
@@ -7088,6 +7137,10 @@ msgstr "Guide the report"
 msgid "Guided"
 msgstr "Guided"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:169
+msgid "h"
+msgstr "h"
+
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:226
 #: src/components/conversation/ProjectConversationsPanel.tsx:294
 #: src/components/conversation/ConversationAccordion.tsx:575
@@ -7098,7 +7151,7 @@ msgstr "Has verified artifacts"
 msgid "Have you completed a training?"
 msgstr "Absolvovali jste školení?"
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:137
 msgid "have your recordings transcribed"
 msgstr "nechat přepsat své nahrávky"
 
@@ -7133,7 +7186,7 @@ msgstr "Hidden"
 msgid "Hidden by the Objects filter"
 msgstr "Skryto filtrem objektů"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1926
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1930
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Skryto před členy organizace. Správci organizace mohou prostor stále najít a připojit se."
 
@@ -7191,11 +7244,11 @@ msgstr "Skrýt kroky"
 msgid "Hide the changes"
 msgstr "Skrýt změny"
 
-#: src/components/workspace/gateWalls.ts:127
+#: src/components/workspace/gateWalls.ts:130
 msgid "hide the dembrane event invitation"
 msgstr "skrýt pozvánku na akci dembrane"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:90
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Skrytí pozvánky na akci dembrane je součástí placeného plánu."
 
@@ -7268,8 +7321,8 @@ msgstr "Zpětná vazba od hostitele"
 msgid "Hosts can enable replies and customise their prompt in portal settings."
 msgstr "Hostitelé mohou v nastavení portálu povolit odpovědi a upravit jejich výzvu."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1563
-#: src/routes/admin/AdminSettingsRoute.tsx:1676
+#: src/routes/admin/AdminSettingsRoute.tsx:1564
+#: src/routes/admin/AdminSettingsRoute.tsx:1677
 #: src/components/workspace/TierCapacityMatrix.tsx:110
 #: src/components/workspace/OrganisationUsageRollup.tsx:373
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
@@ -7470,9 +7523,9 @@ msgstr "Ve kterých organizacích"
 msgid "In your own words"
 msgstr "Vlastními slovy"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1502
-#: src/routes/admin/AdminSettingsRoute.tsx:1714
-#: src/routes/admin/AdminSettingsRoute.tsx:2025
+#: src/routes/admin/AdminSettingsRoute.tsx:1503
+#: src/routes/admin/AdminSettingsRoute.tsx:1715
+#: src/routes/admin/AdminSettingsRoute.tsx:2026
 #: src/components/workspace/OrganisationUsageRollup.tsx:397
 #: src/components/workspace/OrganisationUsageRollup.tsx:536
 msgid "Inactive"
@@ -7490,7 +7543,7 @@ msgstr "Inbox"
 msgid "Include portal link"
 msgstr "Include portal link"
 
-#: src/components/workspace/UsageCard.tsx:158
+#: src/components/workspace/UsageCard.tsx:162
 msgid "Included hours used up"
 msgstr "Included hours used up"
 
@@ -7512,12 +7565,12 @@ msgstr "Nesprávné nebo vymyšlené"
 msgid "Inferred"
 msgstr "Odvozeno"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:952
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:966
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:956
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:970
 msgid "inherited from organisation"
 msgstr "inherited from organisation"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2622
+#: src/routes/admin/AdminSettingsRoute.tsx:2623
 msgid "Initial"
 msgstr "Výchozí"
 
@@ -7632,17 +7685,17 @@ msgstr "Invite declined"
 msgid "Invite external collaborators and observers with their own access roles."
 msgstr "Pozvěte externí spolupracovníky a pozorovatele s vlastními rolemi přístupu."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:868
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:872
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Invite members to collaborate on projects and conversations in this workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1923
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
 #: src/components/workspace/DiscoverableWorkspaces.tsx:307
 msgid "Invite only"
 msgstr "Jen na pozvání"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:829
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:833
 #: src/routes/organisation/OrganisationRoute.tsx:931
 msgid "Invite people"
 msgstr "Invite people"
@@ -7677,7 +7730,7 @@ msgstr "Pozvánka odeslána. Projekt se nasdílí, jakmile se připojí."
 msgid "Invite to a workspace, or just the organisation."
 msgstr "Invite to a workspace, or just the organisation."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:843
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:847
 msgid "Invite to this workspace, or just the organisation."
 msgstr "Invite to this workspace, or just the organisation."
 
@@ -7700,15 +7753,15 @@ msgstr "invited by {0}"
 msgid "Invites expire after 7 days. Ask {inviterName} to send a new one."
 msgstr "Invites expire after 7 days. Ask {inviterName} to send a new one."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3076
+#: src/routes/admin/AdminSettingsRoute.tsx:3077
 msgid "Invoice amount, EUR"
 msgstr "Částka na faktuře, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2967
+#: src/routes/admin/AdminSettingsRoute.tsx:2968
 msgid "Invoice recorded as paid."
 msgstr "Faktura byla označena jako zaplacená."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1396
+#: src/routes/admin/AdminSettingsRoute.tsx:1397
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Fakturováno offline, bez mandátu Mollie."
 
@@ -7716,7 +7769,7 @@ msgstr "Fakturováno offline, bez mandátu Mollie."
 msgid "Invoices"
 msgstr "Faktury"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3049
+#: src/routes/admin/AdminSettingsRoute.tsx:3050
 msgid "Invoicing"
 msgstr "Fakturace"
 
@@ -7740,11 +7793,11 @@ msgstr "Je to pro interní potřeby vaší organizace, nebo pro externí organiz
 msgid "Is this workspace for your organisation's internal use, or for an external organisation that owns its data?"
 msgstr "Je tento pracovní prostor pro interní potřeby vaší organizace, nebo pro externí organizaci, která vlastní svá data?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3101
+#: src/routes/admin/AdminSettingsRoute.tsx:3102
 msgid "Issue invoice"
 msgstr "Vystavit fakturu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3068
+#: src/routes/admin/AdminSettingsRoute.tsx:3069
 msgid "Issue payment link"
 msgstr "Vytvořit platební odkaz"
 
@@ -7757,7 +7810,7 @@ msgstr "Vytvořit platební odkaz"
 #~ msgstr "Od {elsewhereSince} je přihlášen na dalších zařízeních. Z bezpečnostních důvodů může být účet přihlášen nejvýše na dvou zařízeních současně."
 
 #. placeholder {0}: settings.org_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:710
 msgid "It has its own plan and seats, not {0}'s pooled plan. Changes here only affect this workspace."
 msgstr "Má vlastní tarif a místa, nikoli sdílený tarif organizace {0}. Změny zde ovlivní pouze tento pracovní prostor."
 
@@ -7873,11 +7926,11 @@ msgstr "Připojit se jako správce?"
 msgid "Join first"
 msgstr "Nejprve se připojit"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1065
+#: src/routes/admin/AdminSettingsRoute.tsx:1066
 msgid "Join for support"
 msgstr "Připojit se pro podporu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1094
+#: src/routes/admin/AdminSettingsRoute.tsx:1095
 msgid "Join for support (24h)"
 msgstr "Připojit se pro podporu (24 h)"
 
@@ -7896,7 +7949,7 @@ msgstr "Join this organisation to discover workspaces and collaborate with your 
 msgid "Join this portal session"
 msgstr "Připojit se k této relaci portálu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1076
+#: src/routes/admin/AdminSettingsRoute.tsx:1077
 msgid "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
 msgstr "Připojte se k tomuto pracovnímu prostoru jako správce a pomozte s podporou. Zákazník musí mít povolený přístup pro podporu. Váš přístup po 24 hodinách automaticky vyprší."
 
@@ -7987,7 +8040,7 @@ msgstr "Jen vy a správci pracovního prostoru."
 msgid "Just you. Share with specific people."
 msgstr "Jen vy. Sdílejte s konkrétními lidmi."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:833
+#: src/routes/admin/AdminSettingsRoute.tsx:834
 msgid "Keep {tier} until a date"
 msgstr "Ponechat úroveň {tier} do data"
 
@@ -8033,7 +8086,7 @@ msgstr "Udržovat toto plátno aktuální"
 msgid "Keep working while audio uploads in the background."
 msgstr "Pokračujte v práci, zatímco se zvuk nahrává na pozadí."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:834
+#: src/routes/admin/AdminSettingsRoute.tsx:835
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Ponechá úroveň do data níže, poté se vrátí na Free, pokud si nepředplatí."
 
@@ -8050,7 +8103,7 @@ msgstr "Klíčové výrazy"
 msgid "Key terms tell transcription how to spell the names and words that matter in this project."
 msgstr "Klíčové výrazy pomáhají přepisu správně zachytit jména a slova důležitá pro tento projekt."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2261
+#: src/routes/admin/AdminSettingsRoute.tsx:2262
 msgid "Kickback %"
 msgstr "Kickback %"
 
@@ -8092,7 +8145,7 @@ msgstr "Poslední aktivita: {lastActiveAt}"
 msgid "Last audio"
 msgstr "Poslední zvuk"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:249
+#: src/routes/admin/AdminSettingsRoute.tsx:250
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
 msgstr "Last month"
@@ -8160,17 +8213,17 @@ msgstr "Leave empty to keep existing"
 msgid "Leave feedback"
 msgstr "Zanechat zpětnou vazbu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1106
+#: src/routes/admin/AdminSettingsRoute.tsx:1107
 msgid "Leave now"
 msgstr "Odejít hned"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1124
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1143
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1128
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1147
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1150
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1338
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1151
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1154
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1342
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1346
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1350
 msgid "Leave workspace"
 msgstr "Leave workspace"
 
@@ -8248,7 +8301,7 @@ msgstr "Licence"
 msgid "Licenses granted"
 msgstr "Licence uděleny"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2278
+#: src/routes/admin/AdminSettingsRoute.tsx:2279
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
@@ -8265,6 +8318,14 @@ msgstr "Pravděpodobně nepravdivé"
 #: src/components/map/panels/shared.tsx:147
 msgid "Likely true"
 msgstr "Pravděpodobně pravdivé"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:218
+msgid "Limit"
+msgstr "Limit"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:117
+msgid "Limit saved"
+msgstr "Limit byl uložen"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:565
 #~ msgid "Lineage could not be loaded."
@@ -8617,17 +8678,17 @@ msgstr "Zaznamenává se pro tým dembrane"
 #~ msgid "Login | dembrane"
 #~ msgstr "Login | dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1634
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1703
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1638
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1707
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1519
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1523
 #: src/components/settings/WhitelabelLogoCard.tsx:89
 msgid "Logo removed"
 msgstr "Logo removed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1509
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1513
 #: src/components/settings/WhitelabelLogoCard.tsx:66
 msgid "Logo updated"
 msgstr "Logo updated"
@@ -8657,7 +8718,7 @@ msgstr "smyčka"
 msgid "Low battery"
 msgstr "Slabá baterie"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:132
 msgid "make a workspace private"
 msgstr "nastavit pracovní prostor jako soukromý"
 
@@ -8710,16 +8771,16 @@ msgstr "Spravovat školení"
 msgid "Manage workspace ownership, including internal and external data owners."
 msgstr "Spravujte vlastnictví pracovního prostoru, včetně interních a externích vlastníků dat."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:761
-#: src/routes/admin/AdminSettingsRoute.tsx:1398
+#: src/routes/admin/AdminSettingsRoute.tsx:762
+#: src/routes/admin/AdminSettingsRoute.tsx:1399
 msgid "Managed"
 msgstr "Spravováno"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2982
+#: src/routes/admin/AdminSettingsRoute.tsx:2983
 msgid "Managed accounts pay by invoice, not by card. Setting an account managed keeps every feature on and turns off auto-charging, dunning, and expiry. Assign a dembrane account manager so the client knows who to contact."
 msgstr "Spravované účty platí na fakturu, nikoli kartou. Nastavení účtu jako spravovaného ponechá všechny funkce aktivní a vypne automatické strhávání plateb, upomínky i expiraci. Přiřaďte account managera z dembrane, aby klient věděl, na koho se obrátit."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2979
+#: src/routes/admin/AdminSettingsRoute.tsx:2980
 msgid "Managed billing"
 msgstr "Spravovaná fakturace"
 
@@ -8782,6 +8843,14 @@ msgstr "Mapa je hotová"
 msgid "Map results are not ready yet."
 msgstr "Výsledky mapy ještě nejsou připraveny."
 
+#: src/components/workspace/FreeAllowanceCard.tsx:45
+msgid "Maps"
+msgstr "Mapy"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:68
+msgid "Maps per month"
+msgstr "Mapy za měsíc"
+
 #: src/features/sidebar/views/InboxView.tsx:177
 msgid "Mark all as read"
 msgstr "Mark all as read"
@@ -8810,7 +8879,7 @@ msgstr "Mark as unread"
 msgid "Mark completed"
 msgstr "Označit jako dokončené"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3104
+#: src/routes/admin/AdminSettingsRoute.tsx:3105
 msgid "Mark invoice paid"
 msgstr "Označit fakturu jako zaplacenou"
 
@@ -8818,7 +8887,7 @@ msgstr "Označit fakturu jako zaplacenou"
 msgid "Mark training completed"
 msgstr "Označit školení jako dokončené"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:523
+#: src/routes/admin/AdminSettingsRoute.tsx:524
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr "Označí {orgName} jako partnera. Jeho pracovní prostory při vytvoření samy určí, zda jde o interní nebo externí klientské využití."
 
@@ -8871,11 +8940,11 @@ msgstr "Střední vzdálenosti: {0}"
 msgid "Meeting Notes"
 msgstr "Meeting Notes"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:792
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:796
 msgid "member"
 msgstr "member"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1050
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1054
 #: src/lib/roles.ts:11
 #: src/components/training/TrainingRoster.tsx:44
 #: src/components/training/TrainingRoster.tsx:56
@@ -8885,21 +8954,21 @@ msgstr "member"
 msgid "Member"
 msgstr "Member"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:392
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:393
 msgid "Member removed"
 msgstr "Member removed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:792
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:796
 msgid "members"
 msgstr "members"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:788
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:792
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:813
 #: src/routes/organisation/OrganisationRoute.tsx:893
 #: src/routes/organisation/OrganisationRoute.tsx:1389
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/org/OrgHomeView.tsx:150
-#: src/components/workspace/UsageCard.tsx:210
+#: src/components/workspace/UsageCard.tsx:214
 #: src/components/project/ProjectUsageAndSharing.tsx:233
 #: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Members"
@@ -8957,6 +9026,10 @@ msgstr "Metodika aktualizována"
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
+#: src/routes/admin/FreeLimitsPanel.tsx:169
+msgid "min"
+msgstr "min"
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:270
 msgid "min {minimum}"
 msgstr "min. {minimum}"
@@ -8984,7 +9057,7 @@ msgstr "měs."
 msgid "Mode"
 msgstr "Mode"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2736
+#: src/routes/admin/AdminSettingsRoute.tsx:2737
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie není v tomto prostředí nakonfigurováno, takže se nezobrazují žádné živé transakce. Odkaz na přehled ale stále směřuje do správného prostředí Mollie."
 
@@ -9047,11 +9120,11 @@ msgstr "Přesunout „{0}“ do {targetWorkspaceName}? Členové stávajícího 
 
 #. placeholder {0}: row.workspace_name
 #. placeholder {1}: row.tier
-#: src/routes/admin/AdminSettingsRoute.tsx:655
+#: src/routes/admin/AdminSettingsRoute.tsx:656
 msgid "Move {0} from {1} to {tier}?"
 msgstr "Přesunout {0} z {1} do {tier}?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:816
+#: src/routes/admin/AdminSettingsRoute.tsx:817
 msgid "Move {name} off dembrane-managed billing. Choose what happens to their plan."
 msgstr "Odebrat {name} z fakturace spravované dembrane. Vyberte, co se stane s jejich tarifem."
 
@@ -9133,7 +9206,7 @@ msgstr "My access"
 msgid "My templates"
 msgstr "My templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1547
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1551
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
 #: src/routes/project/CreateProjectRoute.tsx:232
@@ -9261,6 +9334,10 @@ msgstr "Neutrální"
 msgid "Never"
 msgstr "Nikdy"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:148
+msgid "Never changed"
+msgstr "Nikdy nezměněno"
+
 #: src/components/results/ResultRow.tsx:64
 #: src/components/results/curate/CurateMeta.tsx:53
 msgid "new"
@@ -9309,7 +9386,7 @@ msgstr "Nový vzhled, nové funkce"
 #~ msgid "New methodology"
 #~ msgstr "Nová metodika"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2366
+#: src/routes/admin/AdminSettingsRoute.tsx:2367
 msgid "New organisation"
 msgstr "Nová organizace"
 
@@ -9342,9 +9419,13 @@ msgstr "U nových projektů se už dembrane nepřidává jako výchozí termín 
 #~ msgid "New Report"
 #~ msgstr "New Report"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:633
+#: src/routes/admin/AdminSettingsRoute.tsx:634
 msgid "New tier"
 msgstr "Nový tarif"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:230
+msgid "New value"
+msgstr "Nová hodnota"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1426
 #~ msgid "New workspace"
@@ -9392,7 +9473,7 @@ msgstr "Ne"
 msgid "No access"
 msgstr "No access"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2996
+#: src/routes/admin/AdminSettingsRoute.tsx:2997
 msgid "No accounts"
 msgstr "Žádné účty"
 
@@ -9433,7 +9514,7 @@ msgstr "No audit logs match the current filters."
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Zatím nemáte fakturační účet. Napište na <0>support@dembrane.com</0> a my vám ho zřídíme."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1545
+#: src/routes/admin/AdminSettingsRoute.tsx:1546
 msgid "No billing accounts match the current filters."
 msgstr "Aktuálním filtrům neodpovídají žádné fakturační účty."
 
@@ -9526,7 +9607,7 @@ msgstr "Není nastavena výchozí hodnota (platí správa klientem)"
 msgid "No evidenced connections."
 msgstr "Žádná doložená propojení."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2290
+#: src/routes/admin/AdminSettingsRoute.tsx:2291
 msgid "no expiry"
 msgstr "no expiry"
 
@@ -9534,7 +9615,7 @@ msgstr "no expiry"
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "No explicit shares. Workspace admins still have access."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2416
+#: src/routes/admin/AdminSettingsRoute.tsx:2417
 msgid "No external-led organisations yet."
 msgstr "Zatím žádné externě vedené organizace."
 
@@ -9571,8 +9652,8 @@ msgstr "No invites went out. Check the list below."
 msgid "No linked arguments."
 msgstr "Žádné propojené argumenty."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1666
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1740
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1670
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1744
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
@@ -9630,15 +9711,15 @@ msgstr "Zatím nikdo nebyl přidán"
 msgid "No one else in this organisation yet"
 msgstr "V této organizaci zatím nikdo další není"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:865
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:869
 msgid "No one here yet."
 msgstr "No one here yet."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2715
+#: src/routes/admin/AdminSettingsRoute.tsx:2716
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "Nikdo není automaticky blokován z důvodu neplacení. Zde můžete sledovat neúspěšné platby a řešit je."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1200
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1204
 #: src/routes/organisation/OrganisationRoute.tsx:1008
 #: src/components/project/ProjectUsageAndSharing.tsx:371
 msgid "No one matches that filter."
@@ -9674,8 +9755,8 @@ msgstr "No one's on the workspace yet."
 msgid "No organisation role. Access via workspace invites."
 msgstr "No organisation role. Access via workspace invites."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2810
-#: src/routes/admin/AdminSettingsRoute.tsx:2831
+#: src/routes/admin/AdminSettingsRoute.tsx:2811
+#: src/routes/admin/AdminSettingsRoute.tsx:2832
 msgid "No payments match the filter."
 msgstr "Filtru neodpovídají žádné platby."
 
@@ -9748,7 +9829,7 @@ msgstr "Žádná nedávná aktivita. Účastníci se zde zobrazí, jakmile naske
 msgid "No recipe checks declared."
 msgstr "Nebyly deklarovány žádné kontroly postupu."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2336
+#: src/routes/admin/AdminSettingsRoute.tsx:2337
 msgid "No referral agreements yet."
 msgstr "No referral agreements yet."
 
@@ -9961,6 +10042,10 @@ msgstr "Není v této prezentaci."
 msgid "Not in this view"
 msgstr "Není v tomto zobrazení"
 
+#: src/components/workspace/FreeAllowanceCard.tsx:161
+msgid "Not monthly"
+msgstr "Ne měsíčně"
+
 #: src/routes/invite/AcceptInviteRoute.tsx:579
 #: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/popcorn/PopcornIntroModal.tsx:67
@@ -9968,7 +10053,7 @@ msgstr "Není v tomto zobrazení"
 msgid "Not now"
 msgstr "Not now"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:786
+#: src/routes/admin/AdminSettingsRoute.tsx:787
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Není na spravované fakturaci. Nastavte na spravovanou a fakturujte tento účet v tarifu {tier} bez automatických plateb přes Mollie."
 
@@ -10031,7 +10116,7 @@ msgstr "Nepoužívám ho dost často"
 msgid "note"
 msgstr "poznámka"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2301
+#: src/routes/admin/AdminSettingsRoute.tsx:2302
 #: src/components/training/StaffTrainingPanel.tsx:164
 msgid "Notes"
 msgstr "Notes"
@@ -10098,13 +10183,13 @@ msgstr "Notify participants when a report is published."
 #~ msgid "Objects ({visibleCount})"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1039
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1043
 #: src/lib/roles.ts:17
 #: src/components/invite/RoleSelect.tsx:65
 msgid "Observer"
 msgstr "Pozorovatel"
 
-#: src/components/workspace/UsageCard.tsx:230
+#: src/components/workspace/UsageCard.tsx:234
 msgid "Observers (free)"
 msgstr "Pozorovatelé (zdarma)"
 
@@ -10112,7 +10197,7 @@ msgstr "Pozorovatelé (zdarma)"
 msgid "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 msgstr "Pozorovatelé jsou zdarma, mají přístup pouze pro čtení a jsou určeni pouze pro pracovní prostory externích klientů. Mohou si pracovní prostor prohlížet, ale nemohou chatovat, vytvářet zprávy ani provádět úpravy. Chcete-li jim umožnit více, změňte jejich roli na Externí."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1030
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1034
 msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 msgstr "Pozorovatelé jsou bezplatní hosté s přístupem pouze pro čtení. Chcete-li jim udělit práva k úpravám, odeberte je a znovu pozvěte jako členy."
 
@@ -10164,7 +10249,7 @@ msgstr "zapnuto"
 msgid "On"
 msgstr "On"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:781
+#: src/routes/admin/AdminSettingsRoute.tsx:782
 msgid "On dembrane-managed billing. Switching to self-serve keeps the tier and shows the customer the checkout to set up card payment."
 msgstr "Fakturaci spravuje dembrane. Přechod na samoobsluhu zachová úroveň a zákazníkovi zobrazí pokladnu pro nastavení platby kartou."
 
@@ -10231,7 +10316,7 @@ msgstr "Jeden symbol"
 msgid "One uppercase letter"
 msgstr "Jedno velké písmeno"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2626
+#: src/routes/admin/AdminSettingsRoute.tsx:2627
 msgid "One-off"
 msgstr "Jednorázově"
 
@@ -10260,7 +10345,7 @@ msgstr "Přikládat lze jen obrázky"
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr "Pracovní prostory mohou vytvářet pouze správci a vlastníci organizace. Požádejte správce své organizace o vytvoření, nebo o přidělení vyšších práv."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1946
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1950
 msgid "Only the people you add can see it. The organisation owner can also find and join."
 msgstr "Uvidí jej pouze lidé, které přidáte. Vlastník organizace ho může také najít a připojit se."
 
@@ -10268,7 +10353,7 @@ msgstr "Uvidí jej pouze lidé, které přidáte. Vlastník organizace ho může
 msgid "Only the people you add or invite can see it."
 msgstr "Uvidí ho pouze lidé, které přidáte nebo pozvete."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3091
+#: src/routes/admin/AdminSettingsRoute.tsx:3092
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Pouze při evidenci faktury již uhrazené mimo systém."
 
@@ -10281,7 +10366,7 @@ msgstr "Only workspace admins and the people you invite can open this project."
 msgid "Only workspace admins can change the legal basis."
 msgstr "Právní základ mohou měnit pouze administrátoři workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:763
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:767
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Only workspace admins can change these settings. Ask an admin if something needs updating."
 
@@ -10299,8 +10384,8 @@ msgid "participant.alert.microphone.access.failure"
 msgstr "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 
 #: src/routes/organisation/OrganisationExternalView.tsx:116
-#: src/routes/admin/AdminSettingsRoute.tsx:2657
-#: src/routes/admin/AdminSettingsRoute.tsx:2697
+#: src/routes/admin/AdminSettingsRoute.tsx:2658
+#: src/routes/admin/AdminSettingsRoute.tsx:2698
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/popcorn/PopcornHistory.tsx:68
@@ -10311,7 +10396,7 @@ msgstr "Open"
 msgid "Open {label}"
 msgstr "Otevřít {label}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1648
+#: src/routes/admin/AdminSettingsRoute.tsx:1649
 msgid "Open account actions"
 msgstr "Otevřít akce účtu"
 
@@ -10384,7 +10469,7 @@ msgstr "Otevřít mapu"
 msgid "Open menu"
 msgstr "Otevřít nabídku"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2729
+#: src/routes/admin/AdminSettingsRoute.tsx:2730
 msgid "Open Mollie dashboard"
 msgstr "Otevřít panel Mollie"
 
@@ -10468,11 +10553,11 @@ msgstr "Otevřete v postranním panelu Co je nového a podívejte se na průvodc
 #~ msgid "Open with"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1114
+#: src/routes/admin/AdminSettingsRoute.tsx:1115
 msgid "Open workspace"
 msgstr "Otevřít pracovní prostor"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1736
+#: src/routes/admin/AdminSettingsRoute.tsx:1737
 msgid "Open workspace actions"
 msgstr "Otevřít akce pracovního prostoru"
 
@@ -10518,7 +10603,7 @@ msgstr "Optional field on the start page"
 msgid "Optional field on the thank you page"
 msgstr "Optional field on the thank you page"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1575
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1579
 msgid "Optional. What this workspace is for."
 msgstr "Optional. What this workspace is for."
 
@@ -10567,8 +10652,8 @@ msgstr "Organisation"
 msgid "Organisation | dembrane"
 msgstr "Organisation | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:471
-#: src/routes/admin/AdminSettingsRoute.tsx:1350
+#: src/routes/admin/AdminSettingsRoute.tsx:472
+#: src/routes/admin/AdminSettingsRoute.tsx:1351
 msgid "Organisation account"
 msgstr "Účet organizace"
 
@@ -10620,7 +10705,7 @@ msgstr "Organisations"
 msgid "Organisations | dembrane"
 msgstr "Organisations | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2406
+#: src/routes/admin/AdminSettingsRoute.tsx:2407
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr "Organizace vytvořené externími spolupracovníky partnera. Signál, že mohou mít zájem o vlastní tarif."
 
@@ -10718,7 +10803,7 @@ msgstr "Overview - Themes & patterns"
 msgid "Ownership"
 msgstr "Vlastnictví"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:980
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:984
 msgid "Ownership is locked. Contact support to transfer."
 msgstr "Ownership is locked. Contact support to transfer."
 
@@ -10751,8 +10836,8 @@ msgstr "Název stránky"
 #~ msgid "Page Title"
 #~ msgstr "Page Title"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2694
-#: src/routes/admin/AdminSettingsRoute.tsx:2749
+#: src/routes/admin/AdminSettingsRoute.tsx:2695
+#: src/routes/admin/AdminSettingsRoute.tsx:2750
 #: src/components/billing/BillingManager.tsx:224
 msgid "Paid"
 msgstr "Zaplaceno"
@@ -10847,13 +10932,13 @@ msgstr "Participants will be able to select tags when creating conversations"
 msgid "partner"
 msgstr "partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:534
+#: src/routes/admin/AdminSettingsRoute.tsx:535
 #: src/components/invite/InviteModal.tsx:726
 msgid "Partner"
 msgstr "Partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:520
-#: src/routes/admin/AdminSettingsRoute.tsx:2233
+#: src/routes/admin/AdminSettingsRoute.tsx:521
+#: src/routes/admin/AdminSettingsRoute.tsx:2234
 msgid "Partner organisation"
 msgstr "Partner organisation"
 
@@ -10921,11 +11006,11 @@ msgstr "Pozastaveno. Aktualizováno {updatedAgo}."
 msgid "Pay now"
 msgstr "Zaplatit nyní"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1758
+#: src/routes/admin/AdminSettingsRoute.tsx:1759
 msgid "Paying revenue"
 msgstr "Příjmy od platících"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1983
+#: src/routes/admin/AdminSettingsRoute.tsx:1984
 msgid "Paying revenue this month"
 msgstr "Příjmy od platících za tento měsíc"
 
@@ -10933,11 +11018,11 @@ msgstr "Příjmy od platících za tento měsíc"
 msgid "Payment failed"
 msgstr "Platba se nezdařila"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3060
+#: src/routes/admin/AdminSettingsRoute.tsx:3061
 msgid "Payment link amount, EUR"
 msgstr "Částka platebního odkazu, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2941
+#: src/routes/admin/AdminSettingsRoute.tsx:2942
 msgid "Payment link issued."
 msgstr "Platební odkaz byl vystaven."
 
@@ -10945,7 +11030,7 @@ msgstr "Platební odkaz byl vystaven."
 msgid "Payment method"
 msgstr "Způsob platby"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3090
+#: src/routes/admin/AdminSettingsRoute.tsx:3091
 msgid "Payment reference"
 msgstr "Variabilní symbol"
 
@@ -10953,12 +11038,12 @@ msgstr "Variabilní symbol"
 msgid "Payment went through. Your plan is up to date."
 msgstr "Platba proběhla úspěšně. Váš tarif je aktuální."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:794
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
 msgid "pending"
 msgstr "pending"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2696
-#: src/routes/admin/AdminSettingsRoute.tsx:2767
+#: src/routes/admin/AdminSettingsRoute.tsx:2697
+#: src/routes/admin/AdminSettingsRoute.tsx:2768
 #: src/components/workspace/AccessRequestsList.tsx:170
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/project/ProjectUsageAndSharing.tsx:354
@@ -10977,7 +11062,7 @@ msgid "Pending action"
 msgstr "Čeká na akci"
 
 #: src/routes/invite/MyInvitesRoute.tsx:139
-#: src/components/workspace/UsageCard.tsx:240
+#: src/components/workspace/UsageCard.tsx:244
 #: src/components/members/PendingInvitesSection.tsx:129
 msgid "Pending invites"
 msgstr "Pending invites"
@@ -11011,7 +11096,7 @@ msgstr "Per-recipient results:"
 msgid "Per-workspace access"
 msgstr "Per-workspace access"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:438
+#: src/routes/admin/AdminSettingsRoute.tsx:439
 msgid "Percent"
 msgstr "Percent"
 
@@ -11039,7 +11124,7 @@ msgstr "Phone"
 #~ msgid "phrases"
 #~ msgstr "fráze"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:841
+#: src/routes/admin/AdminSettingsRoute.tsx:842
 #: src/components/training/TrainingRowActions.tsx:184
 #: src/components/report/ScheduleDateTimePicker.tsx:86
 msgid "Pick a date"
@@ -11058,7 +11143,7 @@ msgstr "Vyberte čas"
 msgid "Pick a time with {host}."
 msgstr "Vyberte si čas ({host})."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2991
+#: src/routes/admin/AdminSettingsRoute.tsx:2992
 msgid "Pick an account"
 msgstr "Vyberte účet"
 
@@ -11273,6 +11358,10 @@ msgstr "Popcorn"
 msgid "Popcorn also in"
 msgstr "Popcorn také v jazyce"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:74
+msgid "Popcorn cadence floor"
+msgstr "Minimální kadence Popcorn"
+
 #: src/routes/project/popcorn/PopcornRoute.tsx:183
 msgid "Popcorn could not be loaded"
 msgstr "Popcorn se nepodařilo načíst"
@@ -11293,9 +11382,21 @@ msgstr "Fráze Popcorn"
 msgid "Popcorn ready by {ready}"
 msgstr "Popcorn připraven v {ready}"
 
+#: src/components/workspace/FreeAllowanceCard.tsx:47
+msgid "Popcorn sessions"
+msgstr "Relace Popcorn"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:70
+msgid "Popcorn sessions per month"
+msgstr "Relace Popcorn za měsíc"
+
 #: src/components/popcorn/PopcornIntroModal.tsx:46
 msgid "Popcorn shows a room its own words while it is still talking: live slides from this project's conversations, for a big screen. It is early, and you can turn it off again in the project settings."
 msgstr "Popcorn ukazuje publiku jeho vlastní slova, zatímco ještě mluví: živé snímky z rozhovorů v tomto projektu pro velkou obrazovku. Funkce je v rané fázi a můžete ji v nastavení projektu kdykoli vypnout."
+
+#: src/routes/admin/FreeLimitsPanel.tsx:72
+msgid "Popcorn window"
+msgstr "Časové okno Popcorn"
 
 #: src/components/workspace/TierStatusBadge.tsx:46
 msgid "Popular"
@@ -11517,7 +11618,7 @@ msgstr "URL zásad ochrany osobních údajů"
 #~ msgid "Privacy Policy URL"
 #~ msgstr "URL zásad ochrany osobních údajů"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1943
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1947
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
 #: src/routes/project/CreateProjectRoute.tsx:315
 #: src/routes/project/CreateProjectRoute.tsx:385
@@ -11542,7 +11643,7 @@ msgstr "Private project"
 msgid "Private workspace"
 msgstr "Private workspace"
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:92
 msgid "Private workspaces come with a paid plan."
 msgstr "Soukromé pracovní prostory jsou součástí placeného tarifu."
 
@@ -11710,7 +11811,9 @@ msgstr "Předpokládaný roční součet"
 msgid "projects"
 msgstr "projects"
 
-#: src/components/workspace/UsageCard.tsx:251
+#: src/routes/admin/FreeLimitsPanel.tsx:58
+#: src/components/workspace/UsageCard.tsx:255
+#: src/components/workspace/FreeAllowanceCard.tsx:49
 msgid "Projects"
 msgstr "Projects"
 
@@ -11798,7 +11901,7 @@ msgstr "Published"
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Pull out the most impactful quotes from this session"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:873
+#: src/routes/admin/AdminSettingsRoute.tsx:874
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "Nastavit pro {name} fakturaci spravovanou dembrane s tarifem {tier}? Žádné automatické platby přes Mollie ani automatické vypršení platnosti."
 
@@ -12030,7 +12133,7 @@ msgstr "Důvod"
 msgid "reason: {0}"
 msgstr "důvod: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2706
+#: src/routes/admin/AdminSettingsRoute.tsx:2707
 msgid "Recent payments across all accounts"
 msgstr "Nedávné platby napříč všemi účty"
 
@@ -12301,10 +12404,10 @@ msgstr "Remind users to verify before finishing"
 msgid "Reminder sent: support access still on"
 msgstr "Připomínka odeslána: přístup podpory je stále aktivní"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1177
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1661
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1728
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1808
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1181
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1665
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1812
 #: src/routes/organisation/OrganisationRoute.tsx:1865
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
@@ -12327,7 +12430,7 @@ msgid "Remove {0}"
 msgstr "Remove {0}"
 
 #. placeholder {0}: member.display_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1166
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1170
 msgid "Remove {0} from this workspace? They'll lose access to all projects inside it."
 msgstr "Remove {0} from this workspace? They'll lose access to all projects inside it."
 
@@ -12372,14 +12475,14 @@ msgstr "Remove from organisation?"
 msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1806
 #: src/components/settings/WhitelabelLogoCard.tsx:177
 msgid "Remove logo"
 msgstr "Remove logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1157
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1181
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1184
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1161
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1185
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1188
 msgid "Remove member"
 msgstr "Remove member"
 
@@ -12389,7 +12492,7 @@ msgstr "Remove member"
 msgid "Remove override"
 msgstr "Odebrat přepsání"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1804
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1808
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Remove the custom logo? The dembrane default will be used instead."
 
@@ -12423,7 +12526,7 @@ msgstr "Rename chat"
 msgid "Rename project"
 msgstr "Přejmenovat projekt"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2624
+#: src/routes/admin/AdminSettingsRoute.tsx:2625
 msgid "Renewal"
 msgstr "Obnovení"
 
@@ -12581,8 +12684,13 @@ msgid "Report updated · {0}"
 msgstr "Zpráva aktualizována · {0}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:890
+#: src/components/workspace/FreeAllowanceCard.tsx:43
 msgid "Reports"
 msgstr "Reports"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:66
+msgid "Reports per month"
+msgstr "Zprávy za měsíc"
 
 #: src/components/release/releases.ts:78
 msgid "Reports publish, schedule and notify as expected."
@@ -12601,7 +12709,7 @@ msgstr "Požádejte o tarif prostřednictvím formuláře potřeb a domluvte si 
 msgid "Request a training"
 msgstr "Požádat o školení"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1137
+#: src/routes/admin/AdminSettingsRoute.tsx:1138
 #: src/components/workspace/DiscoverableWorkspaces.tsx:385
 msgid "Request access"
 msgstr "Request access"
@@ -12647,19 +12755,19 @@ msgstr "Požádat o obnovení hesla | dembrane"
 msgid "Request sent"
 msgstr "Request sent"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:958
+#: src/routes/admin/AdminSettingsRoute.tsx:959
 msgid "Request sent. The workspace admins were notified."
 msgstr "Žádost byla odeslána. Správci pracovního prostoru byli informováni."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1121
+#: src/routes/admin/AdminSettingsRoute.tsx:1122
 msgid "Request sent. Waiting for the workspace admins."
 msgstr "Žádost byla odeslána. Čeká se na správce pracovního prostoru."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1145
+#: src/routes/admin/AdminSettingsRoute.tsx:1146
 msgid "Request support access"
 msgstr "Požádat o přístup pro podporu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:977
+#: src/routes/admin/AdminSettingsRoute.tsx:978
 msgid "Request withdrawn."
 msgstr "Žádost byla stažena."
 
@@ -12772,6 +12880,11 @@ msgstr "Obnovit průvodce?"
 #: src/components/conversation/ConversationAccordion.tsx:1404
 msgid "Reset to default"
 msgstr "Reset to default"
+
+#. placeholder {0}: formatResets(data.resets_at, i18n.locale)
+#: src/components/workspace/FreeAllowanceCard.tsx:150
+msgid "Resets on {0}"
+msgstr "Obnoví se {0}"
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:278
 msgid "Response feedback"
@@ -13034,7 +13147,7 @@ msgstr "Role"
 msgid "Role changed"
 msgstr "Role changed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:378
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:379
 msgid "Role updated"
 msgstr "Role updated"
 
@@ -13088,7 +13201,7 @@ msgstr "Běží"
 msgid "Runs"
 msgstr "Běhy"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2954
+#: src/routes/admin/AdminSettingsRoute.tsx:2955
 msgid "Sales invoice issued."
 msgstr "Faktura vystavena."
 
@@ -13097,6 +13210,7 @@ msgid "Sample popcorn session"
 msgstr "Ukázková relace Popcorn"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:261
+#: src/routes/admin/FreeLimitsPanel.tsx:180
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
 #: src/components/settings/LegalBasisCard.tsx:226
@@ -13117,7 +13231,7 @@ msgstr "Save"
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1964
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1968
 msgid "Save access"
 msgstr "Uložit přístup"
 
@@ -13137,7 +13251,7 @@ msgstr "Uložit změny"
 #~ msgid "Save Changes"
 #~ msgstr "Save Changes"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:458
+#: src/routes/admin/AdminSettingsRoute.tsx:459
 msgid "Save discount"
 msgstr "Save discount"
 
@@ -13149,12 +13263,12 @@ msgstr "Save discount"
 msgid "Save template"
 msgstr "Save template"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1418
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1437
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1469
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1489
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1422
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1441
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1473
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1493
 #: src/routes/organisation/OrganisationRoute.tsx:1107
-#: src/routes/admin/AdminSettingsRoute.tsx:449
+#: src/routes/admin/AdminSettingsRoute.tsx:450
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
 #: src/components/conversation/ConversationDrilldownModal.tsx:144
 msgid "Saved"
@@ -13260,7 +13374,7 @@ msgstr "Naplánováno"
 msgid "Scheduled reports and custom templates"
 msgstr "Plánované zprávy a vlastní šablony"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:426
+#: src/routes/admin/AdminSettingsRoute.tsx:427
 msgid "Scholarship"
 msgstr "Stipendium"
 
@@ -13301,11 +13415,11 @@ msgstr "Search"
 msgid "select.all.modal.loading.search"
 msgstr "Search"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2800
+#: src/routes/admin/AdminSettingsRoute.tsx:2801
 msgid "Search account, status, description"
 msgstr "Hledat účet, stav, popis"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2001
+#: src/routes/admin/AdminSettingsRoute.tsx:2002
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Hledat účet, pracovní prostor, organizaci, e-mail, úroveň"
 
@@ -13338,7 +13452,7 @@ msgstr "Vyhledávání najde vaše slova v jakémkoli pořadí."
 msgid "Search name or email"
 msgstr "Search name or email"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2324
+#: src/routes/admin/AdminSettingsRoute.tsx:2325
 msgid "Search partner, client, workspace"
 msgstr "Search partner, client, workspace"
 
@@ -13441,9 +13555,9 @@ msgstr "Searching…"
 msgid "seats"
 msgstr "seats"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1566
-#: src/routes/admin/AdminSettingsRoute.tsx:1681
-#: src/components/workspace/UsageCard.tsx:192
+#: src/routes/admin/AdminSettingsRoute.tsx:1567
+#: src/routes/admin/AdminSettingsRoute.tsx:1682
+#: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/TierCapacityMatrix.tsx:109
 #: src/components/workspace/OrganisationUsageRollup.tsx:385
 #: src/components/billing/BillingManager.tsx:342
@@ -13481,7 +13595,7 @@ msgstr "Zobrazit tarify"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Prohlédněte si na Mapě argumenty z vašich rozhovorů a citace, o které se opírají."
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:138
 msgid "see transcripts"
 msgstr "zobrazit přepisy"
 
@@ -13698,7 +13812,7 @@ msgstr "Selection too large"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selection too large. Some conversations weren't added."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:761
+#: src/routes/admin/AdminSettingsRoute.tsx:762
 msgid "Self-serve"
 msgstr "Samoobslužné"
 
@@ -13748,7 +13862,7 @@ msgstr "Odeslat poznámku"
 #~ msgid "Send report"
 #~ msgstr "Odeslat hlášení"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1169
+#: src/routes/admin/AdminSettingsRoute.tsx:1170
 #: src/components/training/RequestTrainingModal.tsx:101
 msgid "Send request"
 msgstr "Odeslat žádost"
@@ -13815,7 +13929,7 @@ msgstr "Nastavit cíl"
 msgid "Set key terms"
 msgstr "Nastavit klíčové pojmy"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3020
+#: src/routes/admin/AdminSettingsRoute.tsx:3021
 msgid "Set managed"
 msgstr "Nastavit jako spravované"
 
@@ -13823,12 +13937,12 @@ msgstr "Nastavit jako spravované"
 msgid "Set project context"
 msgstr "Nastavit kontext projektu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:871
+#: src/routes/admin/AdminSettingsRoute.tsx:872
 msgid "Set to managed"
 msgstr "Nastavit na spravované"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:802
-#: src/routes/admin/AdminSettingsRoute.tsx:869
+#: src/routes/admin/AdminSettingsRoute.tsx:803
+#: src/routes/admin/AdminSettingsRoute.tsx:870
 msgid "Set to managed billing"
 msgstr "Nastavit na spravovanou fakturaci"
 
@@ -13975,6 +14089,10 @@ msgstr "Share your ideas with our team"
 #: src/components/report/ReportRenderer.tsx:16
 msgid "Share your voice by scanning the QR code"
 msgstr "Share your voice by scanning the QR code"
+
+#: src/components/workspace/FreeAllowanceCard.tsx:135
+msgid "Shared across all workspaces in this organisation"
+msgstr "Sdíleno všemi pracovními prostory v této organizaci"
 
 #: src/components/project/ProjectSharingStrip.tsx:70
 msgid "Shared with"
@@ -14527,16 +14645,16 @@ msgstr "Bod zájmu"
 #~ msgid "Spread out"
 #~ msgstr "Rozprostřené"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3157
+#: src/routes/admin/AdminSettingsRoute.tsx:3158
 #: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Staff"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:428
+#: src/routes/admin/AdminSettingsRoute.tsx:429
 msgid "Staff discount"
 msgstr "Sleva pro zaměstnance"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3132
+#: src/routes/admin/AdminSettingsRoute.tsx:3133
 msgid "Staff only"
 msgstr "Staff only"
 
@@ -14572,7 +14690,7 @@ msgstr "Postoj"
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Standard access. Collaborates in the workspaces they're added to."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1598
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1602
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Stálé pokyny, které asistent dostává v každém projektovém chatu v tomto pracovním prostoru. Ukládá se automaticky."
 
@@ -14619,7 +14737,7 @@ msgstr "Spustit nahrávání bez dalšího potvrzení připravenosti."
 msgid "Started recording"
 msgstr "Nahrávání zahájeno"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2285
+#: src/routes/admin/AdminSettingsRoute.tsx:2286
 msgid "Starts"
 msgstr "Starts"
 
@@ -14643,8 +14761,8 @@ msgstr "Začne hned"
 msgid "Statement"
 msgstr "Tvrzení"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1671
-#: src/routes/admin/AdminSettingsRoute.tsx:2613
+#: src/routes/admin/AdminSettingsRoute.tsx:1672
+#: src/routes/admin/AdminSettingsRoute.tsx:2614
 #: src/components/workspace/OrganisationUsageRollup.tsx:400
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
@@ -14877,15 +14995,15 @@ msgstr "Summary will be available once the conversation is transcribed"
 msgid "Superseded"
 msgstr "Nahrazeno"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1035
+#: src/routes/admin/AdminSettingsRoute.tsx:1036
 msgid "Support access ended."
 msgstr "Přístup podpory skončil."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1006
+#: src/routes/admin/AdminSettingsRoute.tsx:1007
 msgid "Support access extended for another 24 hours."
 msgstr "Přístup podpory byl prodloužen o dalších 24 hodin."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1009
+#: src/routes/admin/AdminSettingsRoute.tsx:1010
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Přístup podpory byl udělen. Automaticky skončí za 24 hodin."
 
@@ -14929,12 +15047,12 @@ msgstr "Podporuje pól B"
 msgid "Switch to audio"
 msgstr "Přepnout na zvuk"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:855
+#: src/routes/admin/AdminSettingsRoute.tsx:856
 msgid "Switch to self-serve"
 msgstr "Přepnout na samoobsluhu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:800
-#: src/routes/admin/AdminSettingsRoute.tsx:811
+#: src/routes/admin/AdminSettingsRoute.tsx:801
+#: src/routes/admin/AdminSettingsRoute.tsx:812
 msgid "Switch to self-serve billing"
 msgstr "Přepnout na samoobslužnou fakturaci"
 
@@ -15049,10 +15167,11 @@ msgstr "Úkoly"
 #~ msgid "Technical lineage"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1150
+#: src/routes/admin/AdminSettingsRoute.tsx:1151
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr "Sdělte správcům pracovního prostoru, k čemu přístup potřebujete. Tato poznámka je nepovinná."
 
+#: src/components/workspace/FreeAllowanceCard.tsx:173
 #: src/components/workspace/FeatureGatePopover.tsx:115
 #: src/components/billing/BillingManager.tsx:690
 msgid "Tell us what you need"
@@ -15113,7 +15232,7 @@ msgstr "Podmínky"
 msgid "Test and select your microphone before recording."
 msgstr "Před nahráváním mikrofon otestujte a vyberte."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2710
+#: src/routes/admin/AdminSettingsRoute.tsx:2711
 msgid "test mode"
 msgstr "testovací režim"
 
@@ -15312,16 +15431,16 @@ msgstr "Portál pro zpětnou vazbu vysvětluje, jak nahlásit bezpečnostní pro
 msgid "The following conversations were automatically added to the context"
 msgstr "The following conversations were automatically added to the context"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:98
 msgid "The free plan covers one workspace."
 msgstr "Tarif Free pokrývá jeden pracovní prostor."
 
-#: src/components/workspace/gateWalls.ts:84
-#: src/components/workspace/gateWalls.ts:85
+#: src/components/workspace/gateWalls.ts:86
+#: src/components/workspace/gateWalls.ts:87
 msgid "The free plan includes one chat with three questions."
 msgstr "Tarif Free zahrnuje jeden chat se třemi otázkami."
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:93
 msgid "The free plan includes one report."
 msgstr "Tarif Free zahrnuje jednu zprávu."
 
@@ -15670,6 +15789,10 @@ msgstr "These conversations were excluded due to missing transcripts."
 #~ msgid "These default view templates will be generated when you create your first library."
 #~ msgstr "These default view templates will be generated when you create your first library."
 
+#: src/routes/admin/FreeLimitsPanel.tsx:199
+msgid "These limits apply to every free account. Changes take effect within about a minute."
+msgstr "Tyto limity platí pro každý bezplatný účet. Změny se projeví přibližně do minuty."
+
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:130
 msgid "These tag changes are applied to your project."
 msgstr "Tyto změny štítků jsou u vašeho projektu uplatněny."
@@ -15694,11 +15817,11 @@ msgstr "Například: Hovor s vaším DPO nebo CISO, bezpečnostní prověrka či
 msgid "Thinking..."
 msgstr "Thinking..."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:757
+#: src/routes/admin/AdminSettingsRoute.tsx:758
 msgid "This account has a live Mollie subscription. Cancel it first."
 msgstr "Tento účet má aktivní předplatné Mollie. Nejprve jej zrušte."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:620
+#: src/routes/admin/AdminSettingsRoute.tsx:621
 msgid "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 msgstr "Tento účet má aktivní předplatné. Než změníte úroveň, požádejte zákazníka, aby předplatné zrušil na své fakturační stránce."
 
@@ -15710,7 +15833,7 @@ msgstr "Tento účet má aktivní předplatné. Než změníte úroveň, požád
 #~ msgid "This account is logged in somewhere else"
 #~ msgstr "Tento účet je přihlášen jinde"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3135
+#: src/routes/admin/AdminSettingsRoute.tsx:3136
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
@@ -15910,7 +16033,7 @@ msgstr "Tato mapa obsahuje {count} argumentů. Její zobrazení může být pro 
 msgid "This marks the training cancelled. You can reopen it later from the same menu."
 msgstr "Tímto se školení označí jako zrušené. Později ho můžete ze stejné nabídky znovu otevřít."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:248
+#: src/routes/admin/AdminSettingsRoute.tsx:249
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "This month"
@@ -16003,11 +16126,11 @@ msgstr "Tento projekt se pak bude řídit zděděným nastavením: {0} ({1})."
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:664
+#: src/routes/admin/AdminSettingsRoute.tsx:665
 msgid "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 msgstr "Tímto se účet přepne na fakturaci spravovanou dembrane: žádné automatické platby přes Mollie ani automatické vypršení platnosti."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:755
+#: src/routes/admin/AdminSettingsRoute.tsx:756
 msgid "This record has no billing account."
 msgstr "Tento záznam nemá žádný fakturační účet."
 
@@ -16049,7 +16172,7 @@ msgstr "Tento požadavek trval příliš dlouho, proto jsem ho zastavil. Pošlet
 #~ msgid "This result changed while you were reviewing it."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:669
+#: src/routes/admin/AdminSettingsRoute.tsx:670
 msgid "This returns the account to standard free billing."
 msgstr "Tímto se účet vrátí na standardní bezplatnou fakturaci."
 
@@ -16129,7 +16252,7 @@ msgstr "This workspace has reached its recording cap. Upgrade to upload more aud
 msgid "This workspace has used its recording hours. Upgrade to keep using voice."
 msgstr "Tento pracovní prostor vyčerpal své nahrávací hodiny. Chcete-li pokračovat v používání hlasu, upgradujte tarif."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:703
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:707
 msgid "This workspace is billed separately"
 msgstr "Tento pracovní prostor se fakturuje samostatně"
 
@@ -16146,7 +16269,7 @@ msgstr "This workspace is on a tier that doesn't allow more seats. Upgrade the w
 msgid "This workspace no longer exists"
 msgstr "This workspace no longer exists"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1245
+#: src/routes/admin/AdminSettingsRoute.tsx:1246
 msgid "This workspace shares its organisation's billing. Change the tier from the organisation account, where it applies to every internal workspace in the org."
 msgstr "Tento pracovní prostor sdílí fakturaci své organizace. Úroveň změňte v účtu organizace, kde se uplatní na každý interní pracovní prostor v ní."
 
@@ -16179,14 +16302,14 @@ msgid "Tick as many as relevant"
 msgstr "Zaškrtněte vše relevantní"
 
 #: src/routes/project/CreateProjectRoute.tsx:405
-#: src/routes/admin/AdminSettingsRoute.tsx:1560
-#: src/routes/admin/AdminSettingsRoute.tsx:2587
-#: src/routes/admin/AdminSettingsRoute.tsx:3009
+#: src/routes/admin/AdminSettingsRoute.tsx:1561
+#: src/routes/admin/AdminSettingsRoute.tsx:2588
+#: src/routes/admin/AdminSettingsRoute.tsx:3010
 #: src/components/workspace/OrganisationUsageRollup.tsx:358
 msgid "Tier"
 msgstr "Tier"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:581
+#: src/routes/admin/AdminSettingsRoute.tsx:582
 msgid "Tier changed"
 msgstr "Úroveň změněna"
 
@@ -16254,7 +16377,7 @@ msgstr "na"
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "Chcete-li přiřadit nový štítek, vytvořte jej nejprve v nastavení portálu."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1013
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1017
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 
@@ -16469,7 +16592,7 @@ msgstr "Chyba přepisu"
 msgid "Transcription failed"
 msgstr "Přepis se nezdařil"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:95
 msgid "Transcripts come with a paid plan."
 msgstr "Přepisy jsou součástí placeného tarifu."
 
@@ -16550,11 +16673,11 @@ msgstr "Strom"
 msgid "Tree repulsion factor: {0}"
 msgstr "Faktor odpuzování stromu: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1391
+#: src/routes/admin/AdminSettingsRoute.tsx:1392
 msgid "Trial"
 msgstr "Zkušební verze"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1988
+#: src/routes/admin/AdminSettingsRoute.tsx:1989
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Zkušební a bezplatné účty, nezapočítané do celkového počtu platících."
 
@@ -16665,6 +16788,14 @@ msgstr "Turning off anonymization while recordings are ongoing may have unintend
 msgid "Turning your voice note into text"
 msgstr "Převádíme hlasovou zprávu na text"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:62
+msgid "Turns in the first chat"
+msgstr "Počet tahů v prvním chatu"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:64
+msgid "Turns in the second chat"
+msgstr "Počet tahů ve druhém chatu"
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:70
 msgid "Tutorial"
 msgstr "Návod"
@@ -16681,8 +16812,8 @@ msgstr "Two-factor authentication disabled"
 msgid "Two-factor authentication enabled"
 msgstr "Two-factor authentication enabled"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:424
-#: src/routes/admin/AdminSettingsRoute.tsx:2634
+#: src/routes/admin/AdminSettingsRoute.tsx:425
+#: src/routes/admin/AdminSettingsRoute.tsx:2635
 #: src/components/training/StaffTrainingPanel.tsx:155
 #: src/components/settings/AuditLogsCard.tsx:190
 #: src/components/map/attributes.ts:332
@@ -16690,7 +16821,7 @@ msgid "Type"
 msgstr "Type"
 
 #. placeholder {0}: settings.name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1271
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1275
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Type <0>{0}</0> to confirm."
 
@@ -16759,7 +16890,7 @@ msgstr "Zrušit stažení"
 msgid "Unknown"
 msgstr "Unknown"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2510
+#: src/routes/admin/AdminSettingsRoute.tsx:2511
 #: src/components/conversation/useConversationList.ts:45
 msgid "Unknown date"
 msgstr "Unknown date"
@@ -16768,7 +16899,7 @@ msgstr "Unknown date"
 msgid "Unknown device"
 msgstr "Neznámé zařízení"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:922
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:926
 #: src/routes/organisation/OrganisationRoute.tsx:1892
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
@@ -17061,12 +17192,12 @@ msgstr "Dosažen limit nahrávání"
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload limit reached. Upgrade your workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1685
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1768
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1689
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1772
 msgid "Upload logo"
 msgstr "Upload logo"
 
-#: src/components/workspace/gateWalls.ts:135
+#: src/components/workspace/gateWalls.ts:139
 msgid "upload recordings"
 msgstr "nahrát nahrávky"
 
@@ -17088,7 +17219,7 @@ msgstr "Uploading audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:96
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Nahrávání záznamů je k dispozici v placeném tarifu."
 
@@ -17116,7 +17247,7 @@ msgid "Usage"
 msgstr "Usage"
 
 #. placeholder {0}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/UsageCard.tsx:145
+#: src/components/workspace/UsageCard.tsx:149
 msgid "Usage · {0}"
 msgstr "Usage · {0}"
 
@@ -17124,15 +17255,15 @@ msgstr "Usage · {0}"
 msgid "Usage and billing"
 msgstr "Usage and billing"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1969
+#: src/routes/admin/AdminSettingsRoute.tsx:1970
 msgid "Usage and billing, {cycleLabel}"
 msgstr "Usage and billing, {cycleLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3161
+#: src/routes/admin/AdminSettingsRoute.tsx:3162
 msgid "Usage and billing, payments, partner ledger. Any Directus admin has access."
 msgstr "Využití a fakturace, platby, partnerská kniha. Přístup má každý správce Directus."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:691
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:695
 msgid "Usage is tracked for your organisation. View it in organisation settings."
 msgstr "Využití se sleduje pro vaši organizaci. Zobrazit jej můžete v nastavení organizace."
 
@@ -17186,11 +17317,11 @@ msgstr "Použít toto znění"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Používejte ukrajinštinu pro chat a odpovědi účastníků."
 
-#: src/components/workspace/gateWalls.ts:136
+#: src/components/workspace/gateWalls.ts:140
 msgid "use webhooks"
 msgstr "používat webhooky"
 
-#: src/components/workspace/gateWalls.ts:125
+#: src/components/workspace/gateWalls.ts:128
 msgid "use your voice in chat"
 msgstr "používat v chatu hlas"
 
@@ -17546,7 +17677,7 @@ msgstr "Pracovní prostory této organizace se nepodařilo načíst. Některé o
 #~ msgid "We couldn't load this project. Check your connection and try again."
 #~ msgstr "We couldn't load this project. Check your connection and try again."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:588
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:589
 msgid "We couldn't load this workspace. Try again in a moment."
 msgstr "We couldn't load this workspace. Try again in a moment."
 
@@ -17663,7 +17794,7 @@ msgstr "Webhooks are automated messages sent from one app to another when someth
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:97
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooky jsou součástí placeného tarifu."
 
@@ -17865,7 +17996,7 @@ msgstr "When enabled, all new transcripts will have personal information (names,
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1989
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1993
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "Pokud je tato možnost zapnutá, podpora dembrane se může připojit k tomuto pracovnímu prostoru a pomoci vám. Její přístup automaticky vyprší po 24 hodinách."
 
@@ -18039,8 +18170,8 @@ msgstr "Pracujeme na vaší odpovědi..."
 #~ msgstr "workspace"
 
 #: src/routes/project/CreateProjectRoute.tsx:373
-#: src/routes/admin/AdminSettingsRoute.tsx:1666
-#: src/routes/admin/AdminSettingsRoute.tsx:2214
+#: src/routes/admin/AdminSettingsRoute.tsx:1667
+#: src/routes/admin/AdminSettingsRoute.tsx:2215
 #: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/components/workspace/OrganisationUsageRollup.tsx:352
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
@@ -18056,12 +18187,12 @@ msgstr "Pracovní prostor / Projekt"
 msgid "Workspace access options explain which settings need a paid plan."
 msgstr "Možnosti přístupu k pracovnímu prostoru vysvětlují, která nastavení vyžadují placený tarif."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:472
-#: src/routes/admin/AdminSettingsRoute.tsx:1351
+#: src/routes/admin/AdminSettingsRoute.tsx:473
+#: src/routes/admin/AdminSettingsRoute.tsx:1352
 msgid "Workspace account"
 msgstr "Účet pracovního prostoru"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1513
+#: src/routes/admin/AdminSettingsRoute.tsx:1514
 msgid "Workspace actions"
 msgstr "Akce pracovního prostoru"
 
@@ -18074,16 +18205,16 @@ msgstr "Pracovní prostor vytvořen."
 msgid "Workspace default"
 msgstr "Výchozí hodnota workspace"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:405
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:406
 msgid "Workspace deleted"
 msgstr "Workspace deleted"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:827
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:831
 msgid "Workspace is full"
 msgstr "Workspace is full"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1646
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1713
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1650
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1717
 msgid "Workspace logo"
 msgstr "Workspace logo"
 
@@ -18091,7 +18222,7 @@ msgstr "Workspace logo"
 msgid "Workspace name"
 msgstr "Workspace name"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1548
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1552
 msgid "Workspace name. Saves automatically."
 msgstr "Workspace name. Saves automatically."
 
@@ -18099,7 +18230,7 @@ msgstr "Workspace name. Saves automatically."
 msgid "Workspace permissions, member counts and account-specific data loading are corrected."
 msgstr "Oprávnění pracovního prostoru, počty členů i načítání dat specifických pro účet jsou opraveny."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1452
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1456
 msgid "Workspace renamed"
 msgstr "Workspace renamed"
 
@@ -18107,7 +18238,7 @@ msgstr "Workspace renamed"
 msgid "Workspace settings"
 msgstr "Nastavení workspace"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:293
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:294
 msgid "Workspace settings | dembrane"
 msgstr "Workspace settings | dembrane"
 
@@ -18120,7 +18251,7 @@ msgstr "Workspace-only guest. Not added to the organisation."
 #~ msgstr "workspaces"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1462
-#: src/routes/admin/AdminSettingsRoute.tsx:1659
+#: src/routes/admin/AdminSettingsRoute.tsx:1660
 #: src/features/sidebar/views/org/OrgHomeView.tsx:174
 msgid "Workspaces"
 msgstr "Workspaces"
@@ -18129,7 +18260,7 @@ msgstr "Workspaces"
 msgid "Workspaces billed separately"
 msgstr "Pracovní prostory účtované zvlášť"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1492
+#: src/routes/admin/AdminSettingsRoute.tsx:1493
 msgid "Workspaces in this account"
 msgstr "Pracovní prostory v tomto účtu"
 
@@ -18191,7 +18322,7 @@ msgstr "vy"
 msgid "You"
 msgstr "You"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1004
+#: src/routes/admin/AdminSettingsRoute.tsx:1005
 msgid "You already have access to this workspace."
 msgstr "K tomuto pracovnímu prostoru již máte přístup."
 
@@ -18354,7 +18485,7 @@ msgstr "You have changed the mic. Doing this will save your audio till this poin
 msgid "You have successfully unsubscribed."
 msgstr "You have successfully unsubscribed."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1069
+#: src/routes/admin/AdminSettingsRoute.tsx:1070
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "K tomuto pracovnímu prostoru máte přístup podpory. Vyprší automaticky {endsAt}."
 
@@ -18371,7 +18502,7 @@ msgstr "You haven't joined any workspace in this organisation yet."
 msgid "participant.modal.verify_prompt.description"
 msgstr "You haven't verified any outcomes yet. Would you like to verify before finishing?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:422
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:423
 msgid "You left the workspace"
 msgstr "You left the workspace"
 
@@ -18412,11 +18543,11 @@ msgstr "You'll find all your projects waiting for you."
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Ocitnete se v chatu, kde vám dembrane pomůže vyladit projekt ještě před sběrem rozhovorů."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1330
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1334
 msgid "You'll lose access to this workspace."
 msgstr "You'll lose access to this workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1133
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1137
 msgid "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 msgstr "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 
@@ -18430,7 +18561,7 @@ msgid "You'll verify your new payment method on the next screen. You won't be ch
 msgstr "Novou platební metodu ověříte na další obrazovce. Nic vám nenaúčtujeme, jen se tím potvrdí nová karta."
 
 #. placeholder {0}: displayRole(v)
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1074
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1078
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 
@@ -18479,7 +18610,7 @@ msgstr "You're not part of any organisation right now."
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "Znovu využíváte místa, která už máte v tomto období zaplacená (někdo odešel), takže za ně teď nic neplatíte. Projeví se to při obnovení."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:996
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1000
 msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "You're the only admin. Promote someone else before changing your role."
 
@@ -18519,7 +18650,7 @@ msgstr "You've reached your transcript limit"
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1310
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "Your access"
 msgstr "Your access"
 
@@ -18638,7 +18769,7 @@ msgstr "Poslední platba neproběhla. Váš tarif zůstává aktivní. Pro vyrov
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1736
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Your logo is still active but can't be changed on this tier."
 
@@ -18671,7 +18802,7 @@ msgstr "Your organisation or company"
 msgid "Your organisations"
 msgstr "Vaše organizace"
 
-#: src/components/workspace/gateWalls.ts:87
+#: src/components/workspace/gateWalls.ts:89
 msgid "Your own logo comes with a paid plan."
 msgstr "Vlastní logo získáte s placeným tarifem."
 

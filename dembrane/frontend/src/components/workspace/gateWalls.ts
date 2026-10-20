@@ -29,6 +29,8 @@ export type WallKey =
 	| "chat_voice_cap"
 	| "custom_logo"
 	| "event_cta"
+	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
+	| "free_allowance"
 	| "private_workspace"
 	| "report_cap"
 	| "transcription_cap"
@@ -86,6 +88,7 @@ export function wallPopoverLine(wall: WallKey): string {
 		chat_voice_cap: "",
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
+		free_allowance: "",
 		private_workspace: t`Private workspaces come with a paid plan.`,
 		report_cap: t`The free plan includes one report.`,
 		transcription_cap: "",
@@ -125,6 +128,7 @@ export function wallActionLine(wall: WallKey | string | undefined): string {
 		chat_voice_cap: t`use your voice in chat`,
 		custom_logo: t`add your logo`,
 		event_cta: t`hide the dembrane event invitation`,
+		free_allowance: t`go beyond this month's free allowance`,
 		private_workspace: t`make a workspace private`,
 		report_cap: t`create another report`,
 		// The one locked data wall. Nothing was blocked in the room: the

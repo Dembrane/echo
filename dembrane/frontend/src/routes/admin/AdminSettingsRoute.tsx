@@ -75,6 +75,7 @@ import {
 	TIER_ORDER,
 	type Tier,
 } from "@/lib/tiers";
+import { FreeLimitsPanel } from "./FreeLimitsPanel";
 
 const _tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
@@ -3173,7 +3174,11 @@ export const AdminSettingsRoute = () => {
 					keepMounted={false}
 				>
 					<Tabs.Panel value="usage-and-billing" pt="md">
-						<UsageAndBillingPanel />
+						<Stack gap="xl">
+							<UsageAndBillingPanel />
+							{/* Tier-wide, so it sits beside the rollup, not per workspace. */}
+							<FreeLimitsPanel />
+						</Stack>
 					</Tabs.Panel>
 					<Tabs.Panel value="payments" pt="md">
 						<PaymentsPanel />

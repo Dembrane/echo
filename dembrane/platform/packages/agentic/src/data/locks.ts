@@ -1,4 +1,4 @@
-import { type DataDeps, sqlOf } from "./deps";
+import type { DataDeps } from "./deps";
 
 /**
  * The free tier's recording cap, shared by every read that returns conversation text: a
@@ -7,8 +7,6 @@ import { type DataDeps, sqlOf } from "./deps";
  * tier) never lock.
  */
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-/** Tiers with an hour cap and how many hours it allows. */
-const INCLUDED_HOURS: Record<string, number> = { free: 1 };
 
 /** The finish-time stamp decides for finished conversations. */
 export function stampLocked(isOverCap: unknown, tier: string | null): boolean {
@@ -27,22 +25,11 @@ export function conversationLocked(
   return overCapActive && !conv.is_finished;
 }
 
-/**
- * Whether the workspace is past its lifetime hour cap now. Counts every conversation of
- * every project the workspace ever held, deleted ones too: deleting audio keeps its
- * billable duration. A sample copy (project.is_sample) holds no one's audio and is left out.
- */
+/** The lifetime hour lock is retired, so never active. */
 export async function workspaceOverCapActive(
-  d: DataDeps,
-  workspaceId: string | null,
-  tier: string | null,
+  _d: DataDeps,
+  _workspaceId: string | null,
+  _tier: string | null,
 ): Promise<boolean> {
-  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier)) return false;
-  const included = INCLUDED_HOURS[tier];
-  if (included === undefined) return false;
-  const [r] = await sqlOf(d)`
-    select coalesce(sum(c.duration), 0)::float8 as seconds
-    from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId} and not p.is_sample`;
-  return Number(r?.seconds ?? 0) / 3600 >= included;
+  return false;
 }

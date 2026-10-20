@@ -57,18 +57,6 @@ run("a sample project and the free hour cap", () => {
     expect(await workspaceOverCapActive(database.db, ws, "free")).toBe(false);
   });
 
-  test("the hour is still the workspace's own: its own audio past it locks the next one", async () => {
-    const more = newId();
-    await sql`insert into conversation (id, project_id, participant_name, source, duration, is_finished, created_at, updated_at)
-      values (${more}, ${real}, 'Mine', 'PORTAL_AUDIO', 600, true, now(), now())`;
-    const after = newId();
-    await sql`insert into conversation (id, project_id, participant_name, source, duration, is_finished, created_at, updated_at)
-      values (${after}, ${real}, 'Mine', 'PORTAL_AUDIO', 60, true, now(), now())`;
-    await stampOverCap(deps(), after);
-    const [row] = await sql`select is_over_cap from conversation where id = ${after}`;
-    expect(row?.is_over_cap).toBe(true);
-  });
-
   test("the portal refuses the sample even with its toggle on", async () => {
     const d = { db: database.db } as never;
     await expect(publicProject(d, sample)).rejects.toMatchObject({ code: "conversation.not_open" });

@@ -1,4 +1,5 @@
 import { requireStaff, type StaffAudit, type StaffPolicy } from "@dembrane/access";
+import { freeLimitRows, LIMIT_KEYS, type LimitKey, setFreeLimit } from "@dembrane/allowance";
 import {
   type Billing,
   BillingError,
@@ -39,6 +40,7 @@ export interface StaffRouteDeps {
 const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
 const MOLLIE_DASHBOARD_TEST = "https://www.mollie.com/dashboard/org_test/payments";
 const STAFF_EMAIL_DOMAIN = "@dembrane.com";
+const MAX_LIMIT = 10_000_000;
 
 /**
  * The staff console (old admin.py and admin_managed.py). Every route needs a named
@@ -434,6 +436,31 @@ export function staffRoutes(deps: StaffRouteDeps) {
     };
     await s.updateWorkspace(id, { settings }, now);
     return c.json({ status: "ok", workspace_id: id, usage_reset_at: nowIso });
+  });
+
+  // ── Free tier limits ─────────────────────────────────────────────────
+  app.get(`${A}/free-limits`, async (c) => {
+    await staff(c, "staff:set_tier", "free_limit.read");
+    return c.json({ limits: await freeLimitRows(deps.db) });
+  });
+
+  app.put(`${A}/free-limits/:key`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, { body: { value: v.any() } });
+    const key = c.req.param("key");
+    const value = body.value;
+    // Strict: no numeric strings, booleans or fractions.
+    if (!(LIMIT_KEYS as readonly string[]).includes(key))
+      throw new BadRequestError("request.invalid");
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > MAX_LIMIT)
+      throw new BadRequestError("request.invalid");
+    const who = await staff(c, "staff:set_tier", "free_limit.update", ["free_limit", key], {
+      key,
+      value,
+    });
+    await setFreeLimit(deps.db, key as LimitKey, value, who.directusUserId);
+    return c.json({ limits: await freeLimitRows(deps.db) });
   });
 
   // ── Support access ───────────────────────────────────────────────────

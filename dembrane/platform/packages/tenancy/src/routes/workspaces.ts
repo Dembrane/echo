@@ -42,6 +42,9 @@ export function workspaceRoutes(deps: TenancyDeps) {
       const { query } = await p.validate(c.req, { query: UsageQuery });
       return c.json(await svc.usage(ctx, query.month_offset));
     })
+    .get("/api/v2/workspaces/:workspace_id/free-allowance", async (c) =>
+      c.json(await svc.freeAllowance(await h.ws(c))),
+    )
     .post("/api/v2/workspaces/:workspace_id/handoff/initiate", async (c) => {
       const ctx = await h.ws(c);
       const { body } = await p.validate(c.req, { body: HandoffInitiate });

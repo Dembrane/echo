@@ -141,6 +141,17 @@ it("names the attempt, never the feature or the plan, because the popover named 
 	expect(text).not.toMatch(/report/i);
 });
 
+it("names the free allowance as the referent when opened from the allowance card", () => {
+	renderModal({ wallKey: "free_allowance" });
+	const text = modalText();
+	expect(text).toContain(
+		"You were trying to go beyond this month's free allowance.",
+	);
+	expect(text).toContain("That requires a paid plan.");
+	expect(text).not.toContain("You are on the free plan.");
+	expect(wallPopoverLine("free_allowance")).toBe("");
+});
+
 // 2. The locked data family is the only exception.
 
 it("puts the cap block above the opening for the transcription cap", () => {
@@ -174,6 +185,7 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
+		"free_allowance",
 		"private_workspace",
 		"report_cap",
 		"transcription_cap",
@@ -206,6 +218,7 @@ it("names no tier in any gate copy", () => {
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
+		"free_allowance",
 		"private_workspace",
 		"report_cap",
 		"transcription_cap",

@@ -53,6 +53,7 @@ import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import { FreeAllowanceCard } from "@/components/workspace/FreeAllowanceCard";
 import type { WallKey } from "@/components/workspace/gateWalls";
 import { SupportAccessSection } from "@/components/workspace/SupportAccessSection";
 import { TierBadge } from "@/components/workspace/TierBadge";
@@ -675,6 +676,9 @@ export const WorkspaceSettingsRoute = () => {
 
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
+									{workspaceId && (
+										<FreeAllowanceCard workspaceId={workspaceId} />
+									)}
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
 									{seesFinancials && settings.billing_org_managed && (
 										<OrgManagedBillingNotice

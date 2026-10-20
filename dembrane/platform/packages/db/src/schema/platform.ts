@@ -1,4 +1,5 @@
 import {
+  bigint,
   bigserial,
   boolean,
   index,
@@ -97,4 +98,34 @@ export const model_call = pgTable(
     output_tokens: integer("output_tokens"),
   },
   (t) => [index("model_call_started_at_idx").on(t.started_at)],
+);
+
+/** One limit per tier and key; staff edit them, so each row keeps who changed it last. */
+export const tier_limit = pgTable(
+  "tier_limit",
+  {
+    tier: text("tier").notNull(),
+    key: text("key").notNull(),
+    value: bigint("value", { mode: "number" }).notNull(),
+    updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updated_by: uuid("updated_by"),
+  },
+  (t) => [primaryKey({ columns: [t.tier, t.key] })],
+);
+
+/** What a free billing account has used per period and key; deletes never decrement it. */
+export const free_usage = pgTable(
+  "free_usage",
+  {
+    billing_account_id: uuid("billing_account_id").notNull(),
+    period_start: timestamp("period_start", { withTimezone: true, mode: "string" }).notNull(),
+    key: text("key").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull().default(0),
+    updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.billing_account_id, t.period_start, t.key] })],
 );

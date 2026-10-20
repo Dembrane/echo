@@ -28,10 +28,9 @@ test("a locked row loses its gated text and the raw stamp", () => {
   });
 });
 
-test("only free workspaces past one hour are over the cap", async () => {
+test("the lifetime hour lock is retired: no workspace is over the cap", async () => {
   const hours = (h: number) => async () => h * 3600;
-  expect(await overCapActive("w", "free", hours(1))).toBe(true);
-  expect(await overCapActive("w", "free", hours(0.5))).toBe(false);
+  expect(await overCapActive("w", "free", hours(99))).toBe(false);
   expect(await overCapActive("w", "changemaker", hours(9))).toBe(false);
   expect(await overCapActive(null, "free", hours(9))).toBe(false);
 });

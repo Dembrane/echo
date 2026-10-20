@@ -102,12 +102,9 @@ export function allowsOverage(tier: string | null | undefined): boolean {
   return tier === "innovator" || tier === "changemaker" || tier === "guardian";
 }
 
-export function usageGates(tier: string, hoursLifetime: number) {
-  const cap = capacityOf(tier);
-  if (allowsOverage(tier) || !cap || cap.includedHours === null)
-    return { over_cap_active: false, uploads_locked: false };
-  const over = hoursLifetime >= cap.includedHours;
-  return { over_cap_active: over, uploads_locked: over };
+/** The lifetime hour lock is retired: no tier is gated by it. */
+export function usageGates(_tier: string, _hoursLifetime: number) {
+  return { over_cap_active: false, uploads_locked: false };
 }
 
 /**
