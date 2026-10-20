@@ -47,7 +47,7 @@ msgstr "{0} email inviate"
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:232
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} IVA esclusa, {1} IVA inclusa"
 
@@ -292,6 +292,10 @@ msgstr "Torna alla demo"
 #: src/features/accounts/customer/NextSteps.tsx:275
 msgid "Before {due}"
 msgstr "Entro il {due}"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:209
+msgid "Billed per"
+msgstr "Fatturato per"
 
 #: src/features/accounts/format.ts:170
 #: src/features/accounts/staff/AccountCardRoute.tsx:779
@@ -543,7 +547,7 @@ msgstr "Crea un progetto"
 msgid "Create task"
 msgstr "Crea attività"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:184
+#: src/features/accounts/staff/PushOfferModal.tsx:189
 msgid "Custom"
 msgstr "Su misura"
 
@@ -560,7 +564,7 @@ msgstr "Cliente"
 msgid "Customer emailed"
 msgstr "Email inviata al cliente"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:202
+#: src/features/accounts/staff/PushOfferModal.tsx:223
 msgid "Customer name in the title"
 msgstr "Nome del cliente nel titolo"
 
@@ -708,8 +712,8 @@ msgstr "Bozza modificata"
 msgid "Draft ready"
 msgstr "Bozza pronta"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:144
-#: src/features/accounts/staff/PushOfferModal.tsx:158
+#: src/features/accounts/staff/PushOfferModal.tsx:149
+#: src/features/accounts/staff/PushOfferModal.tsx:163
 msgid "Draft saved"
 msgstr "Bozza salvata"
 
@@ -783,7 +787,7 @@ msgstr "Attivalo per inviare offerte e attività. Riceveranno una pagina Account
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Inserisci il codice a sei cifre che abbiamo inviato a {email}."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:183
+#: src/features/accounts/staff/PushOfferModal.tsx:188
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Evento"
@@ -894,7 +898,7 @@ msgstr "Per esempio {example}"
 msgid "For example an invoice portal"
 msgstr "Per esempio un portale fatture"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:218
+#: src/features/accounts/staff/PushOfferModal.tsx:239
 msgid "For the attention of"
 msgstr "All'attenzione di"
 
@@ -1117,7 +1121,7 @@ msgid "Label"
 msgstr "Etichetta"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:190
+#: src/features/accounts/staff/PushOfferModal.tsx:195
 #: src/features/accounts/staff/AccountCardRoute.tsx:605
 msgid "Language"
 msgstr "Lingua"
@@ -1149,7 +1153,7 @@ msgstr "Permetti loro di accedere con un codice via email"
 msgid "Line total"
 msgstr "Totale riga"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:226
+#: src/features/accounts/staff/PushOfferModal.tsx:247
 msgid "Lines"
 msgstr "Voci"
 
@@ -1181,11 +1185,15 @@ msgstr "Puoi anche approvare il trattamento dei dati per la tua organizzazione?"
 msgid "Message"
 msgstr "Messaggio"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:216
+msgid "Month"
+msgstr "Mese"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 msgid "Name"
 msgstr "Nome"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:210
+#: src/features/accounts/staff/PushOfferModal.tsx:231
 msgid "Name in the greeting"
 msgstr "Nome nel saluto"
 
@@ -1367,7 +1375,7 @@ msgstr "Offerta inviata"
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Offerta inviata. Si trova nell'account del cliente; non è stata inviata alcuna e-mail."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:157
+#: src/features/accounts/staff/PushOfferModal.tsx:162
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerta inviata. Il cliente la vedrà al prossimo accesso."
 
@@ -1499,8 +1507,8 @@ msgid "optional"
 msgstr "facoltativo"
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:211
-#: src/features/accounts/staff/PushOfferModal.tsx:219
+#: src/features/accounts/staff/PushOfferModal.tsx:232
+#: src/features/accounts/staff/PushOfferModal.tsx:240
 #: src/features/accounts/signing/SignRoute.tsx:735
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
@@ -1719,7 +1727,7 @@ msgstr "Domande"
 #~ msgstr "Leggi l'offerta e firmala qui. Firma qualcun altro per la tua organizzazione? Indicalo sull'offerta; riceverà un link dedicato."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:203
+#: src/features/accounts/staff/PushOfferModal.tsx:224
 msgid "Reads \"{0} x dembrane\""
 msgstr "Mostra \"{0} x dembrane\""
 
@@ -1827,7 +1835,7 @@ msgstr "Salva"
 msgid "Save billing details"
 msgstr "Salva dati di fatturazione"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:253
+#: src/features/accounts/staff/PushOfferModal.tsx:274
 msgid "Save draft"
 msgstr "Salva bozza"
 
@@ -1844,6 +1852,10 @@ msgstr "Cerca per nome o email del membro"
 #: src/features/accounts/staff/AccountsPanel.tsx:65
 msgid "Search organisations"
 msgstr "Cerca organizzazioni"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:215
+msgid "Seat"
+msgstr "Posto"
 
 #: src/features/accounts/format.ts:179
 msgid "See how dembrane works, from setting up a project to reading what people said."
@@ -1888,7 +1900,7 @@ msgstr "Rimanda indietro"
 msgid "Send by email instead"
 msgstr "Invia invece via email"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:262
+#: src/features/accounts/staff/PushOfferModal.tsx:283
 #: src/features/accounts/staff/DocumentRoute.tsx:156
 msgid "Send offer"
 msgstr "Invia offerta"
@@ -2146,7 +2158,7 @@ msgstr "Oggetto"
 msgid "Submitted"
 msgstr "Inviato"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:182
+#: src/features/accounts/staff/PushOfferModal.tsx:187
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Abbonamento"
@@ -2226,7 +2238,7 @@ msgstr "Dicci chi firma l’offerta"
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Dicci chi firma l’offerta di licenza annuale {number}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:176
+#: src/features/accounts/staff/PushOfferModal.tsx:181
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Modello"
@@ -2557,7 +2569,7 @@ msgstr "Usa queste iniziali"
 msgid "Use this signature"
 msgstr "Usa questa firma"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:238
+#: src/features/accounts/staff/PushOfferModal.tsx:259
 msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 msgstr "Valido per 14 giorni. Si applicano le versioni odierne dei termini, dello SLA e del DPA."
 

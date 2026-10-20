@@ -20,6 +20,7 @@ import { legalForPush } from "./legal/store";
 import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
   type Amendment,
+  type BillingUnit,
   type Language,
   type OfferContent,
   type OfferItem,
@@ -295,6 +296,8 @@ export interface PushOfferInput {
   readonly items: readonly OfferItem[];
   /** Absent means Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
+  /** Subscription offers: absent means seats. */
+  readonly billing_unit?: BillingUnit | undefined;
   /** Custom offers only. */
   readonly amendments?: readonly Amendment[];
   /** The customer's own terms for data processing, in place of our DPA. */
@@ -351,6 +354,7 @@ function offerContent(
     | "currency"
     | "items"
     | "vat_treatment"
+    | "billing_unit"
     | "amendments"
     | "processing_terms"
   > & { date: string; reference: string },
@@ -365,6 +369,7 @@ function offerContent(
     throw new ValidationError("offer.amendments_custom_only");
   return {
     vat_treatment: vatTreatment,
+    ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
     ...(amendments.length && { amendments }),
     ...(o.processing_terms && { processing_terms: o.processing_terms }),
     dpa_separate: true,
