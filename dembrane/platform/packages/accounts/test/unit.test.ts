@@ -263,6 +263,20 @@ describe("the offer", () => {
     expect(pdf.fields.every((f) => f.page === pdf.pageCount)).toBe(true);
   });
 
+  test("the customer's own processing terms take the DPA's place in the list, and nothing says it is signed apart", () => {
+    const own =
+      "'GIBIT 2025 standaard' voor verwerking met aanpassingen zoals beschreven in het document 'Afwijkingen dembrane GIBIT 2025'";
+    const nl = offerText(offer({ template: "event", language: "nl", processing_terms: own }));
+    expect(nl).toContain(`3. ${own}.`);
+    expect(nl).not.toContain("Verwerkersovereenkomst");
+    expect(nl).not.toContain("apart ondertekend");
+    // A subscription keeps its SLA as the only annex, with the customer's terms after it.
+    const sub = offerText(offer({ processing_terms: "The customer's own processing terms" }));
+    expect(sub).toContain("3. Annex A: Service Level Agreement");
+    expect(sub).toContain("4. The customer's own processing terms.");
+    expect(sub).not.toContain("Data Processing Agreement");
+  });
+
   test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {
     const one = offer().items[0] as OfferContent["items"][number];
     const r = await offerPdf(

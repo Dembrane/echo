@@ -293,6 +293,8 @@ export interface PushOfferInput {
   readonly vat_treatment?: VatTreatment;
   /** Custom offers only. */
   readonly amendments?: readonly Amendment[];
+  /** The customer's own terms for data processing, in place of our DPA. */
+  readonly processing_terms?: string | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -346,6 +348,7 @@ function offerContent(
     | "items"
     | "vat_treatment"
     | "amendments"
+    | "processing_terms"
   > & { date: string; reference: string },
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
@@ -359,6 +362,7 @@ function offerContent(
   return {
     vat_treatment: vatTreatment,
     ...(amendments.length && { amendments }),
+    ...(o.processing_terms && { processing_terms: o.processing_terms }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -516,6 +520,8 @@ export async function updateOffer(
     ...input,
     date: input.date ?? before.date,
     reference: input.reference ?? before.reference,
+    processing_terms:
+      input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
   });
   const rendered = await offerPdf(content);
   await d.db.transaction(async (tx) => {
@@ -577,16 +583,18 @@ async function sendOfferIn(
     ...(doc.reference && { offer_reference: doc.reference }),
   };
   // First who signs: the offer and the DPA may be signed by different people, and the
-  // answer says which signing tasks there are and whose they are.
-  await createTask(d, tx, {
-    orgId,
-    code: "who_signs",
-    params,
-    title: null,
-    kind: "generic",
-    documentId: docId,
-    createdBy: who.directusUserId,
-  });
+  // answer says which signing tasks there are and whose they are. With the customer's own
+  // processing terms there is only the offer to sign, so nothing to ask.
+  if (!content?.processing_terms)
+    await createTask(d, tx, {
+      orgId,
+      code: "who_signs",
+      params,
+      title: null,
+      kind: "generic",
+      documentId: docId,
+      createdBy: who.directusUserId,
+    });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -600,7 +608,8 @@ async function sendOfferIn(
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
-  if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
+  if (content?.dpa_separate && !content.processing_terms)
+    await openDpa(d, tx, orgId, doc, who.directusUserId);
   await withdrawOnboarding(d, tx, orgId, actorOf(who));
   await emit(d, tx, {
     orgId,

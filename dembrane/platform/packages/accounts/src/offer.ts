@@ -96,6 +96,11 @@ export interface OfferContent {
    * before: there the signer said whether they may also agree to data processing.
    */
   readonly dpa_separate?: boolean;
+  /**
+   * The customer's own terms for data processing, listed in place of our DPA: the offer is
+   * all they sign, and no DPA of its own is sent.
+   */
+  readonly processing_terms?: string;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -266,7 +271,8 @@ export function legalKinds(template: OfferTemplate): readonly ("terms" | "sla" |
 
 /**
  * The clause of one offer: the offer, the terms, the annexes that apply lettered in order,
- * then each amendment by number. The DPA is named but signed on its own.
+ * the customer's own processing terms where they replace our DPA, then each amendment by
+ * number. Our DPA is named but signed on its own.
  */
 function buildClause(w: ClauseWords, content: OfferContent): Clause {
   const l = content.legal;
@@ -277,7 +283,10 @@ function buildClause(w: ClauseWords, content: OfferContent): Clause {
     address(t),
     ")",
   ];
-  const annexes = (["sla", "dpa"] as const).filter((k) => kinds.includes(k));
+  const own = content.processing_terms;
+  const annexes = (["sla", "dpa"] as const).filter(
+    (k) => kinds.includes(k) && !(k === "dpa" && own),
+  );
   const lines: ClausePart[][] = [
     [w.offer],
     [w.terms[0], linked(w.terms[1], l.terms), w.terms[2], ...version(l.terms)],
@@ -286,6 +295,7 @@ function buildClause(w: ClauseWords, content: OfferContent): Clause {
       linked(k === "sla" ? w.sla : w.dpa, l[k]),
       ...version(l[k]),
     ]),
+    ...(own ? [[own]] : []),
     ...amendments.map((a, i) => [`${w.amendment} ${i + 1}: ${a.title}${w.amendmentWhere}`]),
   ];
   const items = lines.map((line, i) => [...line, i === lines.length - 1 ? "." : ";"]);
@@ -293,7 +303,7 @@ function buildClause(w: ClauseWords, content: OfferContent): Clause {
     opening: w.opening,
     items,
     closing: [
-      w.dpaSeparate,
+      ...(own ? [] : [w.dpaSeparate]),
       ...(amendments.length ? [w.amendmentsFirst] : []),
       w.precedence,
       w.received,

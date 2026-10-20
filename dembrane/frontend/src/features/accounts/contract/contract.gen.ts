@@ -214,6 +214,8 @@ export const OfferContent = z.object({
   amendments: z.array(OfferAmendment).optional(),
   /** True when the DPA is its own document; absent on offers made before that. */
   dpa_separate: z.boolean().optional(),
+  /** The customer's own terms for data processing, named in place of our DPA. */
+  processing_terms: z.string().optional(),
 });
 
 export const LegalPin = z.object({
@@ -771,6 +773,13 @@ export const PushOfferRequest = z.object({
    * the agreement, and takes precedence over them where they differ.
    */
   amendments: z.array(OfferAmendment).max(10).default([]),
+  /**
+   * The customer's own terms for data processing, in the offer's language, listed among the
+   * documents that form the agreement in place of our DPA ("'GIBIT 2025 standaard' voor
+   * verwerking ..."). The customer then signs the offer only: no DPA of its own is sent and
+   * nobody is asked who signs it. On a change, absent keeps the draft's line and null drops it.
+   */
+  processing_terms: z.string().trim().max(500).nullable().optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
