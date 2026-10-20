@@ -157,6 +157,8 @@ export const useCloneProjectByIdMutation = () => {
 			}),
 		onError: (error) => {
 			console.error(error);
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: (newProjectId, variables) => {
@@ -200,6 +202,8 @@ export const useMoveProjectMutation = () => {
 			};
 		},
 		onError: (error: Error) => {
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: (_data, variables) => {
@@ -241,6 +245,8 @@ export const useBulkMoveProjectsMutation = () => {
 			return (await res.json()) as { moved: string[]; count: number };
 		},
 		onError: (error: Error) => {
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: () => {
@@ -746,6 +752,7 @@ import {
 	type WebhookUpdatePayload,
 } from "@/lib/api";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export const useProjectWebhooks = (projectId: string | undefined) => {
 	return useQuery({

@@ -13,7 +13,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -23,6 +23,7 @@ import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -33,8 +34,9 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
-import { isOutsiderRole } from "@/lib/roles";
+import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 
 type Access = "workspace" | "private";
 
@@ -84,6 +86,7 @@ export const CreateProjectRoute = () => {
 	const [context, setContext] = useState("");
 	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	// Availability is not default-ness. The assistant setup starts an agentic
 	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it.
 	// Pre-ticking it would fire an agentic run on every project created,
@@ -129,6 +132,10 @@ export const CreateProjectRoute = () => {
 			return project;
 		},
 		onError: (error: Error) => {
+			if (isFreeTierLimitError(error) === "projects") {
+				upgradeHandlers.open();
+				return;
+			}
 			void notifyError(error);
 		},
 		onSuccess: (project) => {
@@ -445,6 +452,16 @@ export const CreateProjectRoute = () => {
 					</Button>
 				</Group>
 			</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdminRole(workspace?.role)}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="project_cap"
+			/>
 		</Container>
 	);
 };

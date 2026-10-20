@@ -250,6 +250,28 @@ export function billingStorage(db: Db): BillingStore {
         .orderBy(asc(billing_account.id));
     },
 
+    async freeAudioCandidates(since) {
+      const rows = await db
+        .select({
+          accountId: schema.free_usage.billing_account_id,
+          periodStart: schema.free_usage.period_start,
+          amount: schema.free_usage.amount,
+        })
+        .from(schema.free_usage)
+        .where(
+          and(
+            eq(schema.free_usage.key, "audio_seconds"),
+            gte(schema.free_usage.updated_at, since.toISOString()),
+          ),
+        )
+        .orderBy(asc(schema.free_usage.billing_account_id), asc(schema.free_usage.period_start));
+      return rows.map((r) => ({
+        ...r,
+        periodStart: new Date(r.periodStart),
+        amount: Number(r.amount),
+      }));
+    },
+
     async prewarnAccounts(from, until) {
       return db
         .select({

@@ -281,6 +281,10 @@ interface ParticipantProject extends Project {
 	privacy_policy_url: string | null;
 	// consent-card name; null renders "The organiser"
 	organiser_name: string | null;
+	// Free tier: false when the portal may not start a recording.
+	is_taking_recordings?: boolean;
+	// Recorded seconds after which the portal stops itself; null is no limit.
+	conversation_limit_seconds?: number | null;
 }
 
 interface ProjectAgenticRun {

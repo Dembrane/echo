@@ -129,3 +129,20 @@ export async function usedThisPeriod(
       used[r.key as UsageKey] = Number(r.amount);
   return used;
 }
+
+export type Marker = "notice:audio_out";
+
+// True only for the first call per account and period.
+export async function claimOnce(db: Db, a: AllowanceAccount, marker: Marker): Promise<boolean> {
+  const rows = await db
+    .insert(free_usage)
+    .values({
+      billing_account_id: a.accountId,
+      period_start: a.periodStart.toISOString(),
+      key: marker,
+      amount: 1,
+    })
+    .onConflictDoNothing()
+    .returning({ key: free_usage.key });
+  return rows.length > 0;
+}

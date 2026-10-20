@@ -129,6 +129,45 @@ export async function probeUrl(url: string, timeoutMs = 120_000): Promise<ProbeR
   return JSON.parse(r.stdout) as ProbeResult;
 }
 
+/**
+ * The real length of a file's first audio stream: decodes it to nowhere and reads ffmpeg's last
+ * progress time. Auto-detect first, then with the format hint, as probeFile does.
+ */
+export async function decodeSeconds(path: string, hint: AudioFormat): Promise<number> {
+  if (!isAudioFormat(hint))
+    throw new AudioError("value", `Unsupported or invalid input format '${hint}'.`);
+  const decode = (forced: string[]) =>
+    run([
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-nostats",
+      "-progress",
+      "pipe:1",
+      // convertFile's tolerance: a damaged file the pipeline converts still measures.
+      "-err_detect",
+      "ignore_err",
+      ...forced,
+      "-i",
+      path,
+      "-vn",
+      "-map",
+      "0:a:0",
+      "-f",
+      "null",
+      "-",
+    ]);
+  let r = await decode([]);
+  if (r.code !== 0 && !r.signal) r = await decode(["-f", demuxerOf(hint)]);
+  if (r.signal) throw new AudioError("transient", `ffmpeg decode killed (${r.signal})`);
+  if (r.code !== 0)
+    throw new AudioError("value", `ffmpeg decode failed: ${r.stderr.trim() || "Unknown error"}`);
+  const last = [...r.stdout.matchAll(/^out_time_us=(\d+)$/gm)].at(-1)?.[1];
+  if (last === undefined) throw new AudioError("value", "ffmpeg decode reported no audio time");
+  return Number(last) / 1e6;
+}
+
 export function durationOf(p: ProbeResult): number | null {
   const d = p.format?.duration;
   return d === undefined ? null : Number(d);

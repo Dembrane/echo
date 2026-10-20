@@ -2,10 +2,15 @@ import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 import { useProjectById } from "@/components/project/hooks";
+import {
+	recordingPaused,
+	useProjectRecording,
+} from "@/hooks/useProjectRecording";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { isReadOnlyRole } from "@/lib/roles";
 import { ProjectSettingsSection } from "./ProjectSettingsSection";
+import { RecordingPausedUploadButton } from "./RecordingPausedNotice";
 import { UploadLockedCard } from "./UploadLockedCard";
 
 type ProjectUploadSectionProps = {
@@ -28,6 +33,7 @@ export const ProjectUploadSection = ({
 	const canUpload = !!workspace && !isReadOnlyRole(workspace.role);
 
 	const { usageGates } = useWorkspaceUsage(workspaceId, { enabled: canUpload });
+	const recording = useProjectRecording(canUpload ? projectId : null);
 
 	if (!canUpload) {
 		return (
@@ -61,7 +67,13 @@ export const ProjectUploadSection = ({
 				/>
 			) : (
 				<Stack maw="300px">
-					<UploadConversationDropzone projectId={projectId} />
+					{recordingPaused(recording.data) ? (
+						<RecordingPausedUploadButton
+							name={recording.data.recording_project.name}
+						/>
+					) : (
+						<UploadConversationDropzone projectId={projectId} />
+					)}
 				</Stack>
 			)}
 		</ProjectSettingsSection>

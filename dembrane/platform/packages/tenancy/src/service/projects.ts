@@ -1,3 +1,4 @@
+import { allowanceForWorkspace, requireProjectRoom, withAllowanceLock } from "@dembrane/allowance";
 import { newId } from "@dembrane/core";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import type { WorkspaceContext } from "../context";
@@ -115,16 +116,24 @@ export function projectService(deps: TenancyDeps) {
       ctx.require("project:create");
       const now = clock(deps);
       const id = newId();
-      await insertProject(db, {
-        id,
-        name: body.name,
-        language: body.language,
-        workspace_id: ctx.workspaceId,
-        directus_user_id: ctx.who.directusUserId,
-        is_conversation_allowed: true,
-        created_at: iso(now),
-        updated_at: iso(now),
-      });
+      const insert = (conn: typeof db) =>
+        insertProject(conn, {
+          id,
+          name: body.name,
+          language: body.language,
+          workspace_id: ctx.workspaceId,
+          directus_user_id: ctx.who.directusUserId,
+          is_conversation_allowed: true,
+          created_at: iso(now),
+          updated_at: iso(now),
+        });
+      const a = ctx.who.isStaff ? null : await allowanceForWorkspace(db, ctx.workspaceId, now);
+      if (a)
+        await withAllowanceLock(db, a, async (tx) => {
+          await requireProjectRoom(tx, a);
+          await insert(tx);
+        });
+      else await insert(db);
       return { id, name: body.name, workspace_id: ctx.workspaceId };
     },
   };

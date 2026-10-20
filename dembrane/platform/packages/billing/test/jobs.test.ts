@@ -37,6 +37,7 @@ test("schedules keep the old cadence", () => {
     ["billing.tier-prewarning", "0 * * * *", "singleton"],
     ["billing.overage-close", "*/2 * * * *", "singleton"],
     ["billing.overage-notify", "1-59/2 * * * *", "singleton"],
+    ["billing.free-audio-out", "*/5 * * * *", "singleton"],
   ]);
 });
 

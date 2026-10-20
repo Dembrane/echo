@@ -23,6 +23,8 @@ export interface NewChunk {
   readonly transcript?: string | null;
   /** Set on the row in the same commit, for audio the API already knows is unusable. */
   readonly error?: string | null;
+  /** Seconds a free account was charged for this audio. */
+  readonly audioSeconds?: number | null;
 }
 
 /**
@@ -93,6 +95,7 @@ export async function createChunk(
         transcript: redactTyped ? null : (input.transcript ?? null),
         pending_text: redactTyped ? (input.transcript as string) : null,
         error: input.error ?? null,
+        audio_seconds: input.audioSeconds ?? null,
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
       })

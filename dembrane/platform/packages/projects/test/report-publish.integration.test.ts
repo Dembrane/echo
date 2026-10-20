@@ -40,6 +40,7 @@ run("report publish", () => {
     await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${newId()}, ${ws}, ${owner.appUserId}, 'owner')`;
     await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${project}, 'P', ${ws}, true)`;
     d = {
+      db: database.db,
       store: projectsStorage(database.db),
       access: new Access(new DrizzleAccessStore(database.db)),
       jobs: {

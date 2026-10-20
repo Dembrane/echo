@@ -180,13 +180,17 @@ it("keeps every other wall byte for byte the same as every other", () => {
 
 it("carries an attempt for every wall, and none for the page that is not one", () => {
 	const walls: WallKey[] = [
+		"audio_cap",
 		"chat_cap",
 		"chat_turn_cap",
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
+		"org_cap",
 		"private_workspace",
+		"project_cap",
+		"recording_project",
 		"report_cap",
 		"transcription_cap",
 		"transcripts_view",
@@ -213,13 +217,17 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
+		"audio_cap",
 		"chat_cap",
 		"chat_turn_cap",
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
+		"org_cap",
 		"private_workspace",
+		"project_cap",
+		"recording_project",
 		"report_cap",
 		"transcription_cap",
 		"transcripts_view",

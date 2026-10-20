@@ -1022,6 +1022,8 @@ export const billing_account = pgTable(
     updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
     workspace_id: uuid(),
     account_manager_id: uuid(),
+    // The free account's one recording project; checked on read, no foreign key.
+    recording_project_id: uuid(),
     billing_address_line1: varchar({ length: 255 }).default(sql`NULL`),
     billing_address_line2: varchar({ length: 255 }).default(sql`NULL`),
     billing_city: varchar({ length: 255 }).default(sql`NULL`),
@@ -1185,6 +1187,8 @@ export const conversation_chunk = pgTable(
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),
+    // Seconds of audio this chunk counted against a free allowance.
+    audio_seconds: real(),
     // Whisper's own sentences for this piece, with times from its start, and the piece's length.
     segments: jsonb(),
     silence_ratio: real().default(sql`'0'`),

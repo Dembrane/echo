@@ -119,3 +119,29 @@ export function tierExpiringSoonEmail(
     ]),
   };
 }
+
+export function freeAudioOutEmail(
+  p: { name: string; hours: string; resetDate: string; workspaceUrl: string },
+  locale?: string | null,
+): RenderedEmail {
+  const { tr, base, act } = frameOf(locale);
+  const k = "email.free_audio_out";
+  const v = { name: p.name, hours: p.hours, reset_date: p.resetDate };
+  const bodyV = { ...escAll(v), name: e.em(p.name) };
+  return {
+    subject: tr(`${k}.subject`, v),
+    html: emailFrame({
+      ...base,
+      title: tr(`${k}.subject`, v),
+      preview: tr(`${k}.preview`, v),
+      heading: tr(`${k}.heading`, v),
+      body: e.lead(tr(`${k}.body`, bodyV)),
+      action: act(tr(`${k}.cta`), p.workspaceUrl),
+    }),
+    text: emailText([
+      tr(`${k}.body`, v),
+      `${tr(`${k}.text_cta`)}\n${p.workspaceUrl}`,
+      base.signoff.name,
+    ]),
+  };
+}

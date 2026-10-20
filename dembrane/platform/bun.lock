@@ -315,6 +315,7 @@
       "name": "@dembrane/billing",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/config": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -388,6 +389,7 @@
       "name": "@dembrane/conversations",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/audio": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -605,6 +607,7 @@
       "name": "@dembrane/projects",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",

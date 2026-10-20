@@ -36,7 +36,10 @@ import {
 import { useLocation, useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useProjectRecording } from "@/hooks/useProjectRecording";
+import { readMediaSeconds } from "@/lib/mediaDuration";
 import { testId } from "@/lib/testUtils";
+import { precheckRefusalMessage, precheckUploads } from "@/lib/uploadPrecheck";
 import { toast } from "../common/Toaster";
 import { CommonDropzone } from "./Dropzone";
 import { useConversationUploader } from "./hooks";
@@ -266,6 +269,9 @@ export const UploadConversationDropzone = (
 	const [uploadStatus, setUploadStatus] = useState<FileUploadStatus[]>([]);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const [uploadStarted, setUploadStarted] = useState(false);
+	// Files the browser refused before upload, by name.
+	const [refusals, setRefusals] = useState<Record<string, string>>({});
+	const [checking, setChecking] = useState(false);
 
 	// Use our custom uploader hook
 	const uploader = useConversationUploader();
@@ -275,9 +281,11 @@ export const UploadConversationDropzone = (
 			fields: ["id"],
 		},
 	});
+	const recordingQuery = useProjectRecording(props.projectId);
 
 	// Handle file rename with the custom hook
 	const handleFileRename = (_oldFile: File, newFile: File, index: number) => {
+		setRefusals({});
 		// Update selected files
 		setSelectedFiles((prev) =>
 			prev.map((file, idx) => (idx === index ? newFile : file)),
@@ -302,7 +310,7 @@ export const UploadConversationDropzone = (
 		const newUploadStatus = selectedFiles.map((file) => {
 			const fileName = file.name;
 			const progress = uploader.uploadProgress[fileName] || 0;
-			const error = uploader.uploadErrors[fileName];
+			const error = refusals[fileName] ?? uploader.uploadErrors[fileName];
 
 			let status: "pending" | "uploading" | "complete" | "error" = "pending";
 			if (error) {
@@ -331,6 +339,7 @@ export const UploadConversationDropzone = (
 		uploader.isUploading,
 		uploader.uploadProgress,
 		uploader.uploadErrors,
+		refusals,
 		selectedFiles,
 		uploadStatus,
 	]);
@@ -364,6 +373,7 @@ export const UploadConversationDropzone = (
 				setGlobalError(null);
 				setUploadStatus([]);
 				setSelectedFiles([]);
+				setRefusals({});
 				setUploadStarted(false);
 
 				// This should come last as it might trigger other state changes
@@ -391,15 +401,22 @@ export const UploadConversationDropzone = (
 		navigate,
 	]);
 
+	const hasRefusals = Object.keys(refusals).length > 0;
+
 	// Automatically close the modal after 1.5 seconds on successful upload if we are on the upload page
 	useEffect(() => {
-		if (uploader.isSuccess && location.pathname.endsWith("/upload") && opened) {
+		if (
+			uploader.isSuccess &&
+			!hasRefusals &&
+			location.pathname.endsWith("/upload") &&
+			opened
+		) {
 			const timer = setTimeout(() => {
 				close();
 			}, 1500);
 			return () => clearTimeout(timer);
 		}
-	}, [uploader.isSuccess, location.pathname, opened, close]);
+	}, [uploader.isSuccess, hasRefusals, location.pathname, opened, close]);
 
 	// Handle file selection - make this a useCallback to ensure stability
 	const handleFileSelection = useCallback(
@@ -463,6 +480,7 @@ export const UploadConversationDropzone = (
 
 			const updatedFiles = [...selectedFiles, ...newFiles];
 			setSelectedFiles(updatedFiles);
+			setRefusals({});
 
 			// Create status entries for the new files
 			setUploadStatus((prevStatus) => {
@@ -494,6 +512,7 @@ export const UploadConversationDropzone = (
 
 	// Remove file from selection
 	const handleRemoveFile = useCallback((indexToRemove: number) => {
+		setRefusals({});
 		setSelectedFiles((prev) =>
 			prev.filter((_, index) => index !== indexToRemove),
 		);
@@ -503,25 +522,62 @@ export const UploadConversationDropzone = (
 	}, []);
 
 	// Start the upload process
-	const handleUpload = useCallback(() => {
-		if (selectedFiles.length === 0) return;
+	const handleUpload = useCallback(async () => {
+		if (selectedFiles.length === 0 || checking) return;
+
+		// Refuse only files the browser knows are too long; the server decides the rest.
+		const status = recordingQuery.data;
+		let refused: Record<string, string> = {};
+		if (status?.free) {
+			setChecking(true);
+			try {
+				const seconds = await Promise.all(
+					selectedFiles.map((file) => readMediaSeconds(file)),
+				);
+				const found = precheckUploads(
+					selectedFiles.map((file, i) => ({
+						name: file.name,
+						seconds: seconds[i],
+					})),
+					{
+						fileLimitSeconds: status.file_limit_seconds,
+						secondsLeft: status.audio_seconds_left,
+					},
+				);
+				refused = Object.fromEntries(
+					found.map((r) => [r.name, precheckRefusalMessage(r)]),
+				);
+			} finally {
+				setChecking(false);
+			}
+		}
+		setRefusals(refused);
+		const toUpload = selectedFiles.filter((file) => !refused[file.name]);
+		if (toUpload.length === 0) return;
 
 		posthog?.capture("conversation_upload_started", {
-			file_count: selectedFiles.length,
+			file_count: toUpload.length,
 			project_id: props.projectId,
 		});
 
 		// Start the upload process using our uploader hook
 		uploader.uploadFiles({
-			chunks: selectedFiles,
+			chunks: toUpload,
 			namePrefix: "",
 			pin: "",
 			projectId: props.projectId,
 			source: "DASHBOARD_UPLOAD",
 			tagIdList: [],
-			timestamps: selectedFiles.map(() => new Date()),
+			timestamps: toUpload.map(() => new Date()),
 		});
-	}, [selectedFiles, props.projectId, uploader, posthog]);
+	}, [
+		selectedFiles,
+		checking,
+		recordingQuery.data,
+		props.projectId,
+		uploader,
+		posthog,
+	]);
 
 	// The button holds its place while the project loads; it opens nothing
 	// until the project is there.
@@ -620,96 +676,110 @@ export const UploadConversationDropzone = (
 										<Paper withBorder p="md">
 											<Stack gap="xs">
 												{selectedFiles.map((file, index) => (
-													<Group
-														key={file.name}
-														justify="space-between"
-														{...testId(`conversation-upload-file-${index}`)}
-													>
-														<Group style={{ flex: 1 }}>
-															<FileArrowUpIcon size={16} />
-															{fileEditor.editingIndex === index ? (
-																<TextInput
-																	ref={fileEditor.inputRef}
-																	value={fileEditor.editValue}
-																	onChange={(e) =>
-																		fileEditor.setEditValue(e.target.value)
-																	}
-																	onKeyDown={fileEditor.handleKeyDown}
-																	style={{ flex: 1 }}
-																	placeholder={t`Enter filename (without extension)`}
-																	rightSection={
-																		<ActionIcon
-																			onClick={fileEditor.saveEdit}
-																			color="green"
-																			variant="subtle"
-																			{...testId(
-																				`conversation-upload-file-save-${index}`,
-																			)}
-																		>
-																			<CheckIcon size={16} />
-																		</ActionIcon>
-																	}
-																	{...testId(
-																		`conversation-upload-file-input-${index}`,
-																	)}
-																/>
-															) : (
-																<>
-																	<Tooltip
-																		label={file.name}
-																		position="bottom"
-																		multiline
-																		maw={300}
-																	>
-																		<Text
-																			size="sm"
-																			lineClamp={1}
-																			{...testId(
-																				`conversation-upload-file-name-${index}`,
-																			)}
-																		>
-																			{truncateFileName(file.name)}
-																		</Text>
-																	</Tooltip>
-																	<Text size="xs" c="dimmed">
-																		({formatFileSize(file.size)})
-																	</Text>
-																</>
-															)}
-														</Group>
-														<Group gap="xs">
-															{fileEditor.editingIndex !== index && (
-																<Tooltip label={t`Edit file name`}>
-																	<ActionIcon
-																		color="primary"
-																		variant="subtle"
-																		onClick={() =>
-																			fileEditor.startEditing(index)
+													<Stack key={file.name} gap={2}>
+														<Group
+															justify="space-between"
+															{...testId(`conversation-upload-file-${index}`)}
+														>
+															<Group style={{ flex: 1 }}>
+																<FileArrowUpIcon size={16} />
+																{fileEditor.editingIndex === index ? (
+																	<TextInput
+																		ref={fileEditor.inputRef}
+																		value={fileEditor.editValue}
+																		onChange={(e) =>
+																			fileEditor.setEditValue(e.target.value)
 																		}
-																		disabled={fileEditor.editingIndex !== null}
+																		onKeyDown={fileEditor.handleKeyDown}
+																		style={{ flex: 1 }}
+																		placeholder={t`Enter filename (without extension)`}
+																		rightSection={
+																			<ActionIcon
+																				onClick={fileEditor.saveEdit}
+																				color="green"
+																				variant="subtle"
+																				{...testId(
+																					`conversation-upload-file-save-${index}`,
+																				)}
+																			>
+																				<CheckIcon size={16} />
+																			</ActionIcon>
+																		}
 																		{...testId(
-																			`conversation-upload-file-edit-${index}`,
+																			`conversation-upload-file-input-${index}`,
+																		)}
+																	/>
+																) : (
+																	<>
+																		<Tooltip
+																			label={file.name}
+																			position="bottom"
+																			multiline
+																			maw={300}
+																		>
+																			<Text
+																				size="sm"
+																				lineClamp={1}
+																				{...testId(
+																					`conversation-upload-file-name-${index}`,
+																				)}
+																			>
+																				{truncateFileName(file.name)}
+																			</Text>
+																		</Tooltip>
+																		<Text size="xs" c="dimmed">
+																			({formatFileSize(file.size)})
+																		</Text>
+																	</>
+																)}
+															</Group>
+															<Group gap="xs">
+																{fileEditor.editingIndex !== index && (
+																	<Tooltip label={t`Edit file name`}>
+																		<ActionIcon
+																			color="primary"
+																			variant="subtle"
+																			onClick={() =>
+																				fileEditor.startEditing(index)
+																			}
+																			disabled={
+																				fileEditor.editingIndex !== null
+																			}
+																			{...testId(
+																				`conversation-upload-file-edit-${index}`,
+																			)}
+																		>
+																			<PencilSimpleIcon size={16} />
+																		</ActionIcon>
+																	</Tooltip>
+																)}
+																<Tooltip label={t`Remove file`}>
+																	<ActionIcon
+																		color="red"
+																		variant="subtle"
+																		onClick={() => handleRemoveFile(index)}
+																		disabled={fileEditor.editingIndex === index}
+																		{...testId(
+																			`conversation-upload-file-remove-${index}`,
 																		)}
 																	>
-																		<PencilSimpleIcon size={16} />
+																		<TrashIcon size={16} />
 																	</ActionIcon>
 																</Tooltip>
-															)}
-															<Tooltip label={t`Remove file`}>
-																<ActionIcon
-																	color="red"
-																	variant="subtle"
-																	onClick={() => handleRemoveFile(index)}
-																	disabled={fileEditor.editingIndex === index}
-																	{...testId(
-																		`conversation-upload-file-remove-${index}`,
-																	)}
-																>
-																	<TrashIcon size={16} />
-																</ActionIcon>
-															</Tooltip>
+															</Group>
 														</Group>
-													</Group>
+														{refusals[file.name] && (
+															<Text
+																size="xs"
+																c="red"
+																{...testId(
+																	`conversation-upload-file-error-${index}`,
+																)}
+															>
+																{refusals[file.name]}
+															</Text>
+														)}
+													</Stack>
 												))}
 											</Stack>
 										</Paper>
@@ -734,6 +804,7 @@ export const UploadConversationDropzone = (
 									<Button
 										variant="filled"
 										onClick={handleUpload}
+										loading={checking}
 										rightSection={<ArrowRightIcon size={20} />}
 										disabled={fileEditor.editingIndex !== null}
 										{...testId("conversation-upload-files-button")}
@@ -821,6 +892,11 @@ export const UploadConversationDropzone = (
 												size="md"
 												animated={fileStatus.status === "uploading"}
 											/>
+											{fileStatus.status === "error" && fileStatus.error && (
+												<Text size="xs" c="red">
+													{fileStatus.error}
+												</Text>
+											)}
 										</Stack>
 									</Box>
 								))}
@@ -840,7 +916,7 @@ export const UploadConversationDropzone = (
 							)}
 
 							{/* Success message */}
-							{uploader.isSuccess && (
+							{uploader.isSuccess && !hasRefusals && (
 								<Alert
 									icon={<CheckCircleIcon size={20} />}
 									title={t`Success`}
@@ -856,7 +932,7 @@ export const UploadConversationDropzone = (
 									<Button
 										variant="filled"
 										onClick={handleUpload}
-										loading={uploader.isPending}
+										loading={uploader.isPending || checking}
 										{...testId("conversation-upload-retry-button")}
 									>
 										{t`Try again`}

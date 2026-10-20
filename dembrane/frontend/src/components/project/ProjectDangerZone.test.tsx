@@ -9,6 +9,7 @@ import { ProjectDangerZone } from "./ProjectDangerZone";
 
 const navigateMock = vi.hoisted(() => vi.fn());
 const deleteMutate = vi.hoisted(() => vi.fn());
+const cloneMutateAsync = vi.hoisted(() => vi.fn());
 const role = vi.hoisted(() => ({ current: "owner" }));
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
@@ -24,12 +25,16 @@ vi.mock("./hooks", () => ({
 	useCloneProjectByIdMutation: () => ({
 		error: null,
 		isPending: false,
-		mutateAsync: vi.fn(),
+		mutateAsync: cloneMutateAsync,
 	}),
 	useDeleteProjectByIdMutation: () => ({
 		isPending: false,
 		mutate: deleteMutate,
 	}),
+}));
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({ opened, wallKey }: { opened: boolean; wallKey: string }) =>
+		opened ? <div data-testid="upgrade-modal" data-wall={wallKey} /> : null,
 }));
 // Two-step confirm collapsed to a plain button per modal.
 vi.mock("@/components/common/ConfirmModal", () => ({
@@ -56,6 +61,7 @@ afterEach(() => {
 	cleanup();
 	navigateMock.mockReset();
 	deleteMutate.mockReset();
+	cloneMutateAsync.mockReset();
 	role.current = "owner";
 });
 
@@ -137,5 +143,26 @@ describe("ProjectDangerZone role gating", () => {
 		expect(!!screen.queryByTestId("project-actions-delete-button")).toBe(
 			canDelete,
 		);
+	});
+});
+
+describe("ProjectDangerZone clone", () => {
+	it("opens the project cap wall when the clone hits the free limit", async () => {
+		cloneMutateAsync.mockRejectedValue({
+			response: {
+				data: {
+					code: "billing.tier_limit",
+					detail: { error: "FREE_TIER_LIMIT", limit: "projects" },
+					params: { limit: "projects" },
+				},
+				status: 402,
+			},
+		});
+		renderZone();
+		fireEvent.click(screen.getByTestId("project-actions-clone-button"));
+		fireEvent.click(await screen.findByTestId("project-clone-confirm-button"));
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("project_cap");
+		expect(navigateMock).not.toHaveBeenCalled();
 	});
 });

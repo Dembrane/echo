@@ -42,9 +42,14 @@ import { EntityListRow } from "@/components/common/EntityListRow";
 import { toast } from "@/components/common/Toaster";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
+import { RecordingPausedUploadButton } from "@/components/project/RecordingPausedNotice";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import {
+	recordingPaused,
+	useProjectRecording,
+} from "@/hooks/useProjectRecording";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
@@ -531,6 +536,7 @@ export const ProjectConversationsPanel = ({
 	const { usageGates } = useWorkspaceUsage(resolvedWorkspaceId, {
 		enabled: showUpload,
 	});
+	const recording = useProjectRecording(showUpload ? projectId : null);
 	const selectAllMutation = useSelectAllContextMutation();
 
 	const chatContextQuery = useProjectChatContext(selectionChatId ?? "");
@@ -656,6 +662,10 @@ export const ProjectConversationsPanel = ({
 										<Trans>Upload</Trans>
 									</Button>
 								</Tooltip>
+							) : recordingPaused(recording.data) ? (
+								<RecordingPausedUploadButton
+									name={recording.data.recording_project.name}
+								/>
 							) : (
 								<UploadConversationDropzone projectId={projectId} />
 							)}

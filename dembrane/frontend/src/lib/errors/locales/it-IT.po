@@ -774,12 +774,17 @@ msgid "error.popcorn.feature_disabled"
 msgstr "Questa funzione non è disponibile per questo progetto."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:37
+msgid "error.upload.unreadable"
+msgstr "Impossibile leggere questo file come audio. Scegli un altro file."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
 msgstr "Questo file è vuoto. Scegli un altro file."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:25
+#: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.too_large"
 msgstr "Questo file è troppo grande. I file possono avere una dimensione massima di {max_mb} MB."
 
@@ -1029,7 +1034,7 @@ msgid "error.training.not_available"
 msgstr "Le iscrizioni per questo corso non sono ancora aperte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:33
+#: src/lib/errors/messages/upload.ts:41
 msgid "error.upload.unsupported_type"
 msgstr "Questo tipo di file non è supportato."
 
@@ -1149,12 +1154,17 @@ msgid "error.canvas.extraction_failed"
 msgstr "Non siamo riusciti a generare l'anteprima del canvas in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:21
+msgid "error.upload.measure_failed"
+msgstr "Non siamo riusciti a verificare la durata di questo file. Riprova."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
 msgstr "Non siamo riusciti a verificare questa chat in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:21
+#: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.probe_url_failed"
 msgstr "Non siamo riusciti a verificare la tua connessione. Riprova."
 
@@ -1429,12 +1439,12 @@ msgid "error.map.fact_check_not_started"
 msgstr "Non siamo riusciti ad avviare la verifica dei fatti. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:37
+#: src/lib/errors/messages/upload.ts:45
 msgid "error.upload.url_failed"
 msgstr "Non siamo riusciti ad avviare il caricamento. Riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:29
+#: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.transcription_failed"
 msgstr "Non siamo riusciti a trascrivere questo audio. Riprova."
 

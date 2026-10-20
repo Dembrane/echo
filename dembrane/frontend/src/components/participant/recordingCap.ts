@@ -11,3 +11,13 @@ export const resolvePortalMode = (
 		? "text"
 		: "audio";
 };
+
+/** A closed project shows no recorder, unless this conversation already has audio. */
+export const recordingClosed = (state: {
+	takingRecordings: boolean | undefined;
+	chunkCount: number | undefined;
+	recordingStarted: boolean;
+}): boolean =>
+	state.takingRecordings === false &&
+	state.chunkCount === 0 &&
+	!state.recordingStarted;

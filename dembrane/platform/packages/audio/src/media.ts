@@ -7,6 +7,7 @@ import {
   concatFiles,
   convertFile,
   cutFile,
+  decodeSeconds,
   durationOf,
   type Pauses,
   type ProbeResult,
@@ -48,7 +49,9 @@ export interface Media {
     source: MediaSource;
     target: MediaTarget;
     outputFormat: "mp3" | "ogg";
-  }): Promise<{ bytes: number }>;
+  }): Promise<{ bytes: number; seconds?: number | null }>;
+  /** The decoded length of the first audio stream, for a file whose header cannot be trusted. */
+  decodedSeconds(source: MediaSource): Promise<{ seconds: number }>;
   /** Cuts the source into pieces of the given start and length, each to its own target. */
   split(req: {
     source: MediaSource;
@@ -133,7 +136,21 @@ export class LocalMedia implements Media {
       const output = join(dir, `output.${req.outputFormat}`);
       await download(req.source.url, input);
       await convertFile(input, req.source.format, output, req.outputFormat);
-      return { bytes: await upload(req.target, output) };
+      let seconds: number | null;
+      try {
+        seconds = durationOf(await probePlain(output));
+      } catch {
+        seconds = null;
+      }
+      return { bytes: await upload(req.target, output), seconds };
+    });
+  }
+
+  decodedSeconds(source: MediaSource) {
+    return inTemp(async (dir) => {
+      const p = join(dir, `input.${source.format}`);
+      await download(source.url, p);
+      return { seconds: await decodeSeconds(p, source.format) };
     });
   }
 
@@ -256,7 +273,10 @@ export class HttpMedia implements Media {
     return this.call<ProbeResult>("probe-url", { url });
   }
   convert(req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" }) {
-    return this.call<{ bytes: number }>("convert", req);
+    return this.call<{ bytes: number; seconds?: number | null }>("convert", req);
+  }
+  decodedSeconds(source: MediaSource) {
+    return this.call<{ seconds: number }>("decoded-seconds", { source });
   }
   async split(req: {
     source: MediaSource;

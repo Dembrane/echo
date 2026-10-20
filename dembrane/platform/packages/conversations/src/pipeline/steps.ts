@@ -22,6 +22,7 @@ import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@d
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
+import { LIVE_SOURCE, meterLiveChunk } from "../free-audio";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
@@ -315,6 +316,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const path = chunk.path as string;
   const format = fileFormatOf(path);
   let current = path;
+  let converted: number | null = null;
   if (format !== "mp3") {
     const originalKey = d.audioUrls.keyOf(path);
     // The Python replaced every occurrence of the extension in the key; kept, so both
@@ -330,7 +332,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
       );
     if (size < MIN_AUDIO_BYTES)
       throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
-    await d.media.convert({
+    const out = await d.media.convert({
       source: {
         url: d.audio.presignDownload(originalKey, { expiresInSeconds: URL_EXPIRES_S }),
         format,
@@ -345,6 +347,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
       },
       outputFormat: "mp3",
     });
+    converted = out.seconds ?? null;
     current = d.audioUrls.fileUrl(outKey);
     await updateChunk(d, chunk.id, chunk.conversation_id, { path: current }, false);
   }
@@ -353,6 +356,26 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   if (size === null) throw new AudioError("transient", `converted file ${key} not in the bucket`);
   if (size < MIN_AUDIO_BYTES)
     throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
+  const mp3 = {
+    url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+    format: "mp3" as const,
+    name: key,
+  };
+  let metered = chunk.audio_seconds !== null;
+  if (chunk.source === LIVE_SOURCE) {
+    const r = await meterLiveChunk(d, chunk, async () => {
+      if (converted !== null) return converted;
+      // Decoded: an mp3 header can understate its length. The probe only when decoding can't.
+      try {
+        return (await d.media.decodedSeconds(mp3)).seconds;
+      } catch (err) {
+        if (!(err instanceof AudioError && err.terminal)) throw err;
+        return durationOf(await d.media.probe(mp3));
+      }
+    });
+    if (r === "refused") return [];
+    metered = r === "counted" || r === "already";
+  }
   const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
   // An upload whose improved transcript is its own first reading is cut, at pauses, into pieces
   // short enough for Whisper's sentence times; anything else keeps the provider's limits.
@@ -371,11 +394,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const small = size < maxSeconds * MIN_SPEECH_BYTES_PER_SECOND;
   if ((smallLive || small) && size <= limits.maxBytes) return [chunk.id];
 
-  const source = {
-    url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
-    format: "mp3" as const,
-    name: key,
-  };
+  const source = mp3;
   const probe = await d.media.probe(source);
   const duration = probe.format?.duration === undefined ? null : Number(probe.format.duration);
   if (duration === null || Number.isNaN(duration))
@@ -428,6 +447,8 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
           timestamp: shift(chunk.timestamp, p.start) as string,
           path: d.audioUrls.fileUrl(p.key),
           source: chunk.source,
+          // Pieces keep the seconds the original counted, so the conversation's total holds.
+          ...(metered && { audio_seconds: p.duration }),
           updated_at: d.now().toISOString(),
         })),
       )

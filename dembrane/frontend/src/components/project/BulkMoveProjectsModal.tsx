@@ -1,9 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
+import { isAdminRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { useBulkMoveProjectsMutation } from "./hooks";
 
@@ -30,7 +34,8 @@ export const BulkMoveProjectsModal = ({
 	sourceWorkspaceId,
 	onMoved,
 }: Props) => {
-	const { workspaces } = useWorkspace();
+	const { workspace, workspaces } = useWorkspace();
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const [targetWorkspaceId, setTargetWorkspaceId] = useState<string | null>(
 		null,
 	);
@@ -63,6 +68,11 @@ export const BulkMoveProjectsModal = ({
 		bulkMove.mutate(
 			{ projectIds, targetWorkspaceId },
 			{
+				onError: (error) => {
+					if (isFreeTierLimitError(error) !== "projects") return;
+					onClose();
+					upgradeHandlers.open();
+				},
 				onSuccess: () => {
 					onMoved();
 					onClose();
@@ -72,58 +82,70 @@ export const BulkMoveProjectsModal = ({
 	};
 
 	return (
-		<Modal
-			opened={opened}
-			onClose={onClose}
-			title={t`Move projects`}
-			{...testId("bulk-move-projects-modal")}
-		>
-			<Stack gap="lg">
-				<Text size="sm">
-					<Plural
-						value={projectIds.length}
-						one="Move # project to another workspace."
-						other="Move # projects to another workspace."
-					/>
-				</Text>
-				{options.length === 0 ? (
+		<>
+			<Modal
+				opened={opened}
+				onClose={onClose}
+				title={t`Move projects`}
+				{...testId("bulk-move-projects-modal")}
+			>
+				<Stack gap="lg">
 					<Text size="sm">
-						<Trans>
-							There are no other workspaces you can move these projects into.
-						</Trans>
+						<Plural
+							value={projectIds.length}
+							one="Move # project to another workspace."
+							other="Move # projects to another workspace."
+						/>
 					</Text>
-				) : (
-					<Select
-						label={<Trans>Destination workspace</Trans>}
-						placeholder={t`Select a workspace`}
-						data={options}
-						value={targetWorkspaceId}
-						onChange={setTargetWorkspaceId}
-						searchable
-						{...testId("bulk-move-projects-select")}
-					/>
-				)}
-				<Group gap="sm">
-					<Button
-						variant="filled"
-						onClick={handleMove}
-						loading={bulkMove.isPending}
-						disabled={!targetWorkspaceId || bulkMove.isPending}
-						{...testId("bulk-move-projects-confirm")}
-					>
-						<Trans>Move</Trans>
-					</Button>
-					<Button
-						variant="subtle"
-						color="gray"
-						onClick={onClose}
-						disabled={bulkMove.isPending}
-						{...testId("bulk-move-projects-cancel")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Modal>
+					{options.length === 0 ? (
+						<Text size="sm">
+							<Trans>
+								There are no other workspaces you can move these projects into.
+							</Trans>
+						</Text>
+					) : (
+						<Select
+							label={<Trans>Destination workspace</Trans>}
+							placeholder={t`Select a workspace`}
+							data={options}
+							value={targetWorkspaceId}
+							onChange={setTargetWorkspaceId}
+							searchable
+							{...testId("bulk-move-projects-select")}
+						/>
+					)}
+					<Group gap="sm">
+						<Button
+							variant="filled"
+							onClick={handleMove}
+							loading={bulkMove.isPending}
+							disabled={!targetWorkspaceId || bulkMove.isPending}
+							{...testId("bulk-move-projects-confirm")}
+						>
+							<Trans>Move</Trans>
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={onClose}
+							disabled={bulkMove.isPending}
+							{...testId("bulk-move-projects-cancel")}
+						>
+							<Trans>Cancel</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Modal>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdminRole(workspace?.role)}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="project_cap"
+			/>
+		</>
 	);
 };

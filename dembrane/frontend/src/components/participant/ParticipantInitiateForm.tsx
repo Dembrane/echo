@@ -18,9 +18,11 @@ import { z } from "zod";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { initiateConversation as requestConversation } from "@/lib/api";
+import { portalRecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "./hooks";
+import { NotTakingRecordings } from "./NotTakingRecordings";
 import { resolvePortalMode } from "./recordingCap";
 
 const FormSchema = z.object({
@@ -244,6 +246,9 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		}
 	}, [isError, reset]);
 
+	const initiateError: unknown =
+		initiateConversationMutation.error ?? autoStartError;
+
 	return (
 		<form
 			onSubmit={handleSubmit(startConversation)}
@@ -251,13 +256,14 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			{...testId("portal-initiate-form")}
 		>
 			<Stack className="relative">
-				{Boolean(initiateConversationMutation.error || autoStartError) && (
-					<Box {...testId("portal-initiate-error-alert")}>
-						<ErrorNotice
-							error={initiateConversationMutation.error ?? autoStartError}
-						/>
-					</Box>
-				)}
+				{Boolean(initiateError) &&
+					(portalRecordingRefusal(initiateError) ? (
+						<NotTakingRecordings />
+					) : (
+						<Box {...testId("portal-initiate-error-alert")}>
+							<ErrorNotice error={initiateError} />
+						</Box>
+					))}
 
 				{project.default_conversation_ask_for_participant_name && (
 					<TextInput

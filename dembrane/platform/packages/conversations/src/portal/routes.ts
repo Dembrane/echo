@@ -154,14 +154,17 @@ export function portalRoutes(d: ConversationsDeps) {
     const cid = c.req.param("conversation_id");
     d.tokens.check(token(c), cid);
     const { body } = await p.validate(c.req, { body: ConfirmBody });
-    const chunk = await confirmUpload(d, cid, {
+    const { chunk, recordingStop } = await confirmUpload(d, cid, {
       chunkId: body.data.chunk_id,
       fileUrl: body.data.file_url,
       timestamp: body.data.timestamp,
       source: body.data.source,
     });
     await liveServices(d).meter.meterUpload(cid, d.now());
-    return c.json(publicChunk(chunk));
+    // The free limit's stop signal rides on the live chunk's response.
+    return c.json(
+      recordingStop ? { ...publicChunk(chunk), recording_stop: recordingStop } : publicChunk(chunk),
+    );
   });
 
   app.post("/api/participant/conversations/:conversation_id/finish", async (c) => {

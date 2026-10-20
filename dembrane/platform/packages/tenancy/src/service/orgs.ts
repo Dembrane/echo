@@ -4,6 +4,7 @@ import {
   resolveWorkspace,
   type WorkspaceRole,
 } from "@dembrane/access";
+import { freeLimitError, isFreeTier } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -40,6 +41,7 @@ import {
   insertOrgMembership,
   liveConversationDurations,
   liveProjectsIn,
+  managedOrgTiers,
   partnerOrgNamesExternalOf,
   pinnedProjects,
   referralLedger,
@@ -210,6 +212,8 @@ export function orgService(deps: TenancyDeps) {
       const member = requireOnboarded(who);
       const name = oneLine(rawName);
       if (!name) throw new BadRequestError("organisation.name_required");
+      if (!who.isStaff && (await managedOrgTiers(db, member.appUserId)).some(isFreeTier))
+        throw freeLimitError("organisations");
       const now = clock(deps);
       const orgId = newId();
       const wsId = newId();

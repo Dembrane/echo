@@ -1,6 +1,7 @@
 export { type Billing, type BillingWiring, createBilling } from "./create";
 export { type DowngradeEffect, meetsTier, previewDowngrade } from "./downgrade";
 export {
+  freeAudioOutEmail,
   paymentFailedEmail,
   type RenderedEmail,
   tierExpiredEmail,
@@ -15,12 +16,14 @@ export {
   closeOverageEpisodes,
   expireTiers,
   formatExpiryDate,
+  notifyFreeAudioOut,
   notifyRecordingOverage,
   reconcileAccountSeats,
   reconcilePendingBilling,
   reconcileSubscriptionSeats,
   runCloseOverage,
   runExpireTiers,
+  runFreeAudioOut,
   runNotifyOverage,
   runReconcileAccountSeats,
   runReconcilePending,

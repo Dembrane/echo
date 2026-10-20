@@ -31,6 +31,7 @@ import {
 	readBatteryTelemetry,
 	readNetworkTelemetry,
 } from "@/lib/deviceTelemetry";
+import type { RecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { I18nLink } from "../common/i18nLink";
@@ -46,16 +47,25 @@ import {
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
+import { useRecordingLimit } from "./hooks/useRecordingLimit";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
+import { NotTakingRecordings } from "./NotTakingRecordings";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { ParticipantSettingsModal } from "./ParticipantSettingsModal";
 import { PermissionErrorModal } from "./PermissionErrorModal";
+import { recordingClosed } from "./recordingCap";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { useConversationArtefacts } from "./verify/hooks";
+import { WrapUpModal } from "./WrapUpModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
+
+type WrapUpReason = "conversation" | "account";
+
+const wrapUpReasonOf = (r: RecordingRefusal): WrapUpReason =>
+	r === "audio_conversation" ? "conversation" : "account";
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -78,7 +88,11 @@ export const ParticipantConversationAudio = () => {
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
-	const uploadChunkMutation = useUploadConversationChunk();
+	// Set after the recorder exists; upload callbacks reach it through this ref.
+	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
+	const uploadChunkMutation = useUploadConversationChunk({
+		onRecordingStop: (r) => wrapUpRef.current?.(wrapUpReasonOf(r)),
+	});
 	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploadsRef = useRef<Promise<unknown>[]>([]);
 
@@ -114,6 +128,7 @@ export const ParticipantConversationAudio = () => {
 
 	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
+	const [wrapUpReason, setWrapUpReason] = useState<WrapUpReason | null>(null);
 	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<
 		number | null
 	>(null);
@@ -495,6 +510,39 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
+	// A limit stopped the recording: keep what was recorded, offer only Finish.
+	const wrappedUpRef = useRef(false);
+	const wrapUp = (reason: WrapUpReason) => {
+		if (wrappedUpRef.current || isStopping) return;
+		wrappedUpRef.current = true;
+		if (isRecording) {
+			setStoppedRecordingTime(recordingTime);
+			stopRecording();
+		} else if (stoppedRecordingTime === null) {
+			setStoppedRecordingTime(recordingTime);
+		}
+		wakeLock.releaseWakeLock();
+		wakeLock.disableAutoReacquire();
+		close();
+		setWrapUpReason(reason);
+		posthog.capture("portal_recording_wrapped_up", {
+			conversation_id: conversationId,
+			project_id: projectId,
+			reason,
+			recording_time_seconds: isRecording
+				? recordingTime
+				: stoppedRecordingTime,
+		});
+	};
+	wrapUpRef.current = wrapUp;
+
+	useRecordingLimit({
+		isRecording,
+		limitSeconds: projectQuery.data?.conversation_limit_seconds ?? null,
+		onLimit: () => wrapUp("conversation"),
+		recordingTime,
+	});
+
 	const handleConfirmFinish = async () => {
 		setIsStopping(true);
 		try {
@@ -554,6 +602,7 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleResumeRecording = async () => {
+		if (wrapUpReason !== null) return;
 		const timeToResume = stoppedRecordingTime ?? 0;
 		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
 		const started = await startRecording(timeToResume);
@@ -652,7 +701,7 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleStartRecording = async () => {
-		if (s3Status !== "passed") {
+		if (s3Status !== "passed" || wrapUpReason !== null) {
 			return;
 		}
 
@@ -696,7 +745,12 @@ export const ParticipantConversationAudio = () => {
 		return () => observer.disconnect();
 	}, [footer]);
 
-	if (conversationQuery.isLoading || projectQuery.isLoading) {
+	const takingRecordings = projectQuery.data?.is_taking_recordings;
+	if (
+		conversationQuery.isLoading ||
+		projectQuery.isLoading ||
+		(takingRecordings === false && chunks.isLoading)
+	) {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
@@ -712,6 +766,16 @@ export const ParticipantConversationAudio = () => {
 				newConversationLink={newConversationLink}
 			/>
 		);
+	}
+
+	if (
+		recordingClosed({
+			chunkCount: chunks.data?.length,
+			recordingStarted: isRecording || isStarting || recordingTime > 0,
+			takingRecordings,
+		})
+	) {
+		return <NotTakingRecordings />;
 	}
 
 	const refineProgress = Math.min(
@@ -849,6 +913,13 @@ export const ParticipantConversationAudio = () => {
 				showVerifyOnFinish={shouldVerifyOnFinish}
 				handleSkipVerification={handleSkipVerification}
 				handleVerify={handleVerify}
+			/>
+
+			<WrapUpModal
+				opened={wrapUpReason !== null}
+				reason={wrapUpReason ?? "account"}
+				onFinish={handleConfirmFinish}
+				isFinishing={isStopping}
 			/>
 
 			{/* Modal for refine info */}

@@ -12,6 +12,7 @@ const schemas = {
   probe: z.object({ source }),
   "probe-url": z.object({ url: z.url() }),
   convert: z.object({ source, target, outputFormat: output }),
+  "decoded-seconds": z.object({ source }),
   split: z.object({
     source,
     pieces: z
@@ -79,6 +80,8 @@ function dispatch(media: Media, op: keyof typeof schemas, body: unknown): Promis
       return media.probeUrl((body as z.output<(typeof schemas)["probe-url"]>).url);
     case "convert":
       return media.convert(body as z.output<typeof schemas.convert>);
+    case "decoded-seconds":
+      return media.decodedSeconds((body as z.output<(typeof schemas)["decoded-seconds"]>).source);
     case "split":
       return media.split(body as z.output<typeof schemas.split>);
     case "silences":

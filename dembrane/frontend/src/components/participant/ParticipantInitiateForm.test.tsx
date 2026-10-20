@@ -144,3 +144,28 @@ it("leaves the Continue button alone when the project asks for a name", () => {
 	expect(initiate).not.toHaveBeenCalled();
 	expect(screen.getByTestId("portal-initiate-next-button")).toBeTruthy();
 });
+
+it("shows the neutral notice when the project refuses recordings", async () => {
+	initiate.mockRejectedValue({
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "recording_project",
+					upgrade_cta_tier: "changemaker",
+				},
+				params: { limit: "recording_project" },
+			},
+			status: 402,
+		},
+	});
+	wrap(project());
+
+	await waitFor(() =>
+		expect(
+			screen.getByText("This project isn't taking recordings right now."),
+		).toBeTruthy(),
+	);
+	expect(document.querySelector("[data-error-code]")).toBeNull();
+});

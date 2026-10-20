@@ -72,6 +72,7 @@ run("clone project", () => {
     await sql`insert into verification_topic (key, project_id, prompt, icon, sort, user_updated, date_updated) values (${topicKey}, ${src}, 'What about housing?', 'house', 3, ${owner.directusUserId}, '2026-01-01')`;
     await sql`insert into verification_topic_translations (verification_topic_key, languages_code, label) values (${topicKey}, 'en-US', 'Housing'), (${topicKey}, 'nl-NL', 'Wonen')`;
     d = {
+      db: database.db,
       store: projectsStorage(database.db),
       access: new Access(new DrizzleAccessStore(database.db)),
       jobs: { enqueue: async () => "job" },
@@ -116,7 +117,9 @@ run("clone project", () => {
 
   test("on the free plan the clone shows the event invitation again", async () => {
     await sql`update billing_account set tier = 'free' where id = ${billing}`;
-    const id = await cloneProject(d, owner, src, { name: null, language: null }).finally(
+    // Staff skip the free project cap, which the earlier clones already fill.
+    const staff = { ...owner, isStaff: true };
+    const id = await cloneProject(d, staff, src, { name: null, language: null }).finally(
       () => sql`update billing_account set tier = 'changemaker' where id = ${billing}`,
     );
     const [row] = await sql`select is_dembrane_event_cta_enabled from project where id = ${id}`;

@@ -649,7 +649,7 @@ run("a staff demo where the deployment is production", () => {
       usage_gates: { over_cap_active: false, uploads_locked: false },
       free_tier: { active: true, chats_used: 0, reports_used: 0 },
     });
-    // The prospect's first own project, in the same workspace: half an hour, then the hour.
+    // The prospect's own project counts its hours; the hour no longer locks anything.
     ownProject = newId();
     await realProject(ownProject, demoWorkspace, contact);
     await record(ownProject, 1800);
@@ -661,7 +661,7 @@ run("a staff demo where the deployment is production", () => {
     await record(ownProject, 1800);
     expect((await get(contact, path)).data).toMatchObject({
       audio_hours: 1,
-      usage_gates: { over_cap_active: true, uploads_locked: true },
+      usage_gates: { over_cap_active: false, uploads_locked: false },
     });
   });
 

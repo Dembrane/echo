@@ -216,3 +216,19 @@ export async function softDeleteMembershipsInOrg(
       );
   return rows;
 }
+
+/** Pooled account tier of each live org the user owns or admins; null when it has none. */
+export async function managedOrgTiers(db: Conn, appUserId: string): Promise<(string | null)[]> {
+  const rows = await db.execute<{ tier: string | null }>(sql`
+    select (
+      select b.tier from billing_account b
+      where b.org_id = o.id and b.deleted_at is null
+      order by b.created_at asc nulls last, b.id asc
+      limit 1
+    ) as tier
+    from org o
+    join org_membership m on m.org_id = o.id
+    where o.deleted_at is null and m.deleted_at is null
+      and m.user_id = ${appUserId} and m.role in ('owner', 'admin')`);
+  return rows.map((r) => r.tier);
+}

@@ -254,7 +254,6 @@ msgstr "Váš kód pro přihlášení je {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Váš kód pro přihlášení."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Váš kód pro přihlášení je {code}. Platí 10 minut."
@@ -266,7 +265,6 @@ msgstr "Pokud jste se nepokoušeli přihlásit, můžete tento e-mail bez obav i
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} vás žádá o podpis dokumentu {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Otevřít pracovní prostor"
 msgid "email.payment_failed.subject"
 msgstr "Vaše platba pro dembrane neprošla"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Váš tarif zůstává aktivní. Aktualizujte platební metodu a uhraďte dlužnou částku."
@@ -604,7 +601,6 @@ msgstr "Aktualizujte svoji platební metodu:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} je nyní na bezplatném tarifu"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Požádat o upgrade"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} přejde {date} na bezplatný tarif"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Váš tarif {tier} končí {date}. Vše, co jste vytvořili, zůstane zachováno."
@@ -658,6 +653,38 @@ msgstr "Vše, co jste vytvořili, zůstane zachováno. Pokud si chcete {tier} po
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Požádat o upgrade"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name}: hodiny nahrávání na tento měsíc jsou vyčerpány"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Nové nahrávky a nahrávání souborů jsou pozastaveny do {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name}: hodiny nahrávání na tento měsíc jsou vyčerpány"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Tarif Free zahrnuje {hours} nahrávání měsíčně a {name} je už vyčerpal. Nové nahrávky a nahrávání souborů jsou pozastaveny do {reset_date}. Vše dosud nahrané zůstává k dispozici."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} h"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} h"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Přejděte na vyšší tarif a nahrávejte dál"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Přejděte na vyšší tarif a nahrávejte dál:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

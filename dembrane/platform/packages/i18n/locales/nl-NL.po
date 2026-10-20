@@ -254,7 +254,6 @@ msgstr "Je inlogcode is {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Je inlogcode."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Je inlogcode is {code}. Deze verloopt over 10 minuten."
@@ -266,7 +265,6 @@ msgstr "Als je niet hebt geprobeerd in te loggen, kun je deze e-mail gerust nege
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} vraagt je {document_title} te ondertekenen"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Werkruimte openen"
 msgid "email.payment_failed.subject"
 msgstr "Je betaling aan dembrane is niet gelukt"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Je abonnement blijft actief. Werk je betaalmethode bij om het openstaande bedrag te voldoen."
@@ -604,7 +601,6 @@ msgstr "Werk je betaalmethode bij:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} zit nu op het gratis abonnement"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Upgrade aanvragen"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} gaat op {date} over naar het gratis abonnement"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Je {tier}-abonnement stopt op {date}. Alles wat je hebt gemaakt blijft bewaard."
@@ -658,6 +653,38 @@ msgstr "Alles wat je hebt gemaakt blijft bewaard. Wil je {tier} houden? Vraag da
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Upgrade aanvragen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} heeft de opname-uren van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Nieuwe opnames en uploads zijn gepauzeerd tot {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} heeft de opname-uren van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Het Free-abonnement bevat {hours} aan opnames per maand, en {name} heeft deze verbruikt. Nieuwe opnames en uploads zijn gepauzeerd tot {reset_date}. Alles wat tot nu toe is opgenomen, blijft beschikbaar."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} uur"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} uur"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Upgrade om te blijven opnemen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Upgrade om te blijven opnemen:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

@@ -254,7 +254,6 @@ msgstr "Tu código de acceso es {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Tu código de acceso."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Tu código de acceso es {code}. Caduca en 10 minutos."
@@ -266,7 +265,6 @@ msgstr "Si no intentaste iniciar sesión, puedes ignorar este correo tranquilame
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} te pide que firmes {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Abrir espacio de trabajo"
 msgid "email.payment_failed.subject"
 msgstr "Tu pago a dembrane no se ha completado"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Tu plan sigue activo. Actualiza tu método de pago para saldar el importe pendiente."
@@ -604,7 +601,6 @@ msgstr "Actualiza tu método de pago:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} está ahora en el plan gratuito"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Solicitar una mejora"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} pasa al plan gratuito el {date}"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Tu plan {tier} termina el {date}. Todo lo que has creado se conserva."
@@ -658,6 +653,38 @@ msgstr "Todo lo que has creado se conserva. Para mantener {tier}, solicita una m
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Solicitar una mejora"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} ha agotado las horas de grabación de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Las nuevas grabaciones y subidas están en pausa hasta el {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} ha agotado las horas de grabación de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "El plan Free incluye {hours} de grabación al mes, y {name} ya las ha usado. Las nuevas grabaciones y subidas están en pausa hasta el {reset_date}. Todo lo grabado hasta ahora sigue estando disponible."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} horas"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} hora"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Pasa a un plan superior para seguir grabando"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Pasa a un plan superior para seguir grabando:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

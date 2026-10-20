@@ -103,6 +103,34 @@ test("bad input is 422 with its kind; a transient failure is 503", async () => {
     expect((err as AudioError).kind).toBe("invalid_audio");
     expect((err as AudioError).unplayable).toBe(true);
   });
+
+  test("decoded-seconds returns the decoded length; random bytes are 422 value", async () => {
+    const app = mediaApp(new LocalMedia(), logger);
+    const call = (key: string) =>
+      app.request("/decoded-seconds", {
+        method: "POST",
+        body: JSON.stringify({
+          source: {
+            url: storage.presignDownload(key, { expiresInSeconds: 60 }),
+            format: "webm",
+          },
+        }),
+      });
+    const good = await call("in.webm");
+    expect(good.status).toBe(200);
+    const { seconds } = (await good.json()) as { seconds: number };
+    expect(seconds).toBeCloseTo(2, 0);
+    await storage.put("random.webm", crypto.getRandomValues(new Uint8Array(20_000)));
+    const bad = await call("random.webm");
+    expect(bad.status).toBe(422);
+    expect(((await bad.json()) as { kind: string }).kind).toBe("value");
+    const media = new HttpMedia(`http://127.0.0.1:${service.port}`, { timeoutMs: 60_000 });
+    const over = await media.decodedSeconds({
+      url: storage.presignDownload("in.webm", { expiresInSeconds: 60 }),
+      format: "webm",
+    });
+    expect(over.seconds).toBeCloseTo(2, 0);
+  });
 });
 
 // MEDIA_AUTH: Cloud Run callers present a metadata-server token; in-cluster callers send none.

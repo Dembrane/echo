@@ -1,4 +1,14 @@
+import {
+  type AllowanceAccount,
+  accountWorkspaceIds,
+  claimOnce,
+  freeLimits,
+  isFreeTier,
+  nextReset,
+  periodStart,
+} from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
+import { translator } from "@dembrane/i18n";
 import { parseTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
@@ -6,8 +16,8 @@ import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { z } from "zod";
 import type { Billing } from "./create";
 import { previewDowngrade } from "./downgrade";
-import { tierExpiredEmail, tierExpiringSoonEmail } from "./emails";
-import { recipientsOf, workspaceAdminsAndBilling } from "./notify";
+import { freeAudioOutEmail, tierExpiredEmail, tierExpiringSoonEmail } from "./emails";
+import { billingAccountAdmins, recipientsOf, workspaceAdminsAndBilling } from "./notify";
 import {
   closeFinishedEpisodes,
   type Forwarder,
@@ -30,6 +40,7 @@ export const expireTiers = defineJob("billing.expire-tiers", tick, opts);
 export const tierExpiryPrewarning = defineJob("billing.tier-prewarning", tick, opts);
 export const closeOverageEpisodes = defineJob("billing.overage-close", tick, opts);
 export const notifyRecordingOverage = defineJob("billing.overage-notify", tick, opts);
+export const notifyFreeAudioOut = defineJob("billing.free-audio-out", tick, opts);
 
 /**
  * One account's seats changed: re-price its subscription and charge added seats pro rata,
@@ -54,6 +65,7 @@ export const BILLING_SCHEDULES: readonly [JobDefinition, string][] = [
   [closeOverageEpisodes, "*/2 * * * *"],
   // Odd minutes, one after each close run.
   [notifyRecordingOverage, "1-59/2 * * * *"],
+  [notifyFreeAudioOut, "*/5 * * * *"],
 ];
 
 export interface BillingJobDeps {
@@ -123,7 +135,8 @@ export async function runReconcileAccountSeats(
   await d.billing.service.reconcileAccountSeats(p.accountId);
 }
 
-function workspaceUrl(base: string, workspaceId: string): string {
+function workspaceUrl(base: string, workspaceId: string | undefined): string {
+  if (!workspaceId) return base.replace(/\/+$/, "") || "/";
   const b = base.replace(/\/+$/, "");
   return b ? `${b}/w/${workspaceId}/settings/billing` : `/w/${workspaceId}/settings/billing`;
 }
@@ -289,6 +302,80 @@ export async function runTierPrewarning(d: BillingJobDeps): Promise<void> {
   }
 }
 
+const CANDIDATE_WINDOW_MS = 35 * 86_400_000;
+
+/** Tells a free account's owners and admins, once per period, that its recording hours are used. */
+export async function runFreeAudioOut(d: BillingJobDeps): Promise<void> {
+  if (!guard(d, notifyFreeAudioOut.name)) return;
+  const { store, notifier } = d.billing;
+  const db = d.overage.db;
+  const clock = d.clock ?? (() => new Date());
+  const now = clock();
+  const limit = (await freeLimits(db, clock, d.logger)).audio_seconds_month;
+  const since = new Date(now.getTime() - CANDIDATE_WINDOW_MS);
+  for (const c of await store.freeAudioCandidates(since)) {
+    if (c.amount < limit) continue;
+    try {
+      const acc = await store.account(c.accountId);
+      if (!acc || acc.deleted_at || !isFreeTier(acc.tier)) continue;
+      const downgradedAt = parseTime(acc.downgraded_at)?.toISOString() ?? null;
+      const start = periodStart(now, acc.tier, downgradedAt);
+      if (start.getTime() !== c.periodStart.getTime()) continue;
+      const a: AllowanceAccount = {
+        accountId: acc.id,
+        free: true,
+        periodStart: start,
+        orgId: acc.org_id,
+      };
+      const audience = await billingAccountAdmins(store, acc);
+      if (!audience.length) continue;
+      const recipients = await recipientsOf(store, audience);
+      // Prefer a workspace billed on this account over a pooled client's.
+      const wsIds = await accountWorkspaceIds(db, a);
+      const workspaces = await Promise.all(wsIds.map((id) => store.workspace(id)));
+      const ws = workspaces.find((w) => w?.billing_account_id === acc.id) ?? workspaces[0];
+      const wsId = ws?.id;
+      const name = (acc.org_id ? await store.orgName(acc.org_id) : ws?.name) || "Untitled";
+      const resetDate = formatExpiryDate(nextReset(now).toISOString());
+      // Claim after the reads: a crash after this point can drop a notice but never send two.
+      if (!(await claimOnce(db, a, "notice:audio_out"))) continue;
+      await notifier.emitToAudience(
+        audience,
+        {
+          eventCode: "FREE_AUDIO_OUT",
+          title: `${name}: this month's recording hours are used`,
+          message: `New recordings and uploads are paused until ${resetDate}.`,
+          action: "NAVIGATE_WORKSPACE_SETTINGS",
+          refWorkspaceId: wsId ?? null,
+        },
+        now,
+      );
+      const url = workspaceUrl(d.dashboardUrl, wsId);
+      const hours = Math.round(limit / 360) / 10;
+      await sendAll(
+        d,
+        recipients,
+        (locale) =>
+          freeAudioOutEmail(
+            {
+              name,
+              hours: translator(locale)(
+                hours === 1 ? "email.free_audio_out.hours_one" : "email.free_audio_out.hours",
+                { count: hours },
+              ),
+              resetDate,
+              workspaceUrl: url,
+            },
+            locale,
+          ),
+        "free_audio_out",
+      );
+    } catch (err) {
+      d.logger.error({ err, accountId: c.accountId }, "failed to send free audio notice");
+    }
+  }
+}
+
 const quietSince = new Map<string, Date>();
 
 /** Ends overage episodes that stayed at or below their cap for the quiet window. */
@@ -324,6 +411,7 @@ export function billingRegistration(d: BillingJobDeps) {
     [tierExpiryPrewarning, () => runTierPrewarning(d)],
     [closeOverageEpisodes, () => runCloseOverage(d)],
     [notifyRecordingOverage, () => runNotifyOverage(d)],
+    [notifyFreeAudioOut, () => runFreeAudioOut(d)],
   ];
   return {
     jobs: [...handlers.map(([j]) => j), reconcileAccountSeats],

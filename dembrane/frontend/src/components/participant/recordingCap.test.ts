@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolvePortalMode } from "./recordingCap";
+import { recordingClosed, resolvePortalMode } from "./recordingCap";
 
 describe("resolvePortalMode", () => {
 	it("reads mode=text", () => {
@@ -13,5 +13,29 @@ describe("resolvePortalMode", () => {
 	});
 	it("defaults to audio", () => {
 		expect(resolvePortalMode(new URLSearchParams(""))).toBe("audio");
+	});
+});
+
+describe("recordingClosed", () => {
+	const closed = {
+		chunkCount: 0,
+		recordingStarted: false,
+		takingRecordings: false,
+	};
+	it("closes an empty conversation on a project not taking recordings", () => {
+		expect(recordingClosed(closed)).toBe(true);
+	});
+	it("keeps the recorder once the conversation has audio", () => {
+		expect(recordingClosed({ ...closed, chunkCount: 1 })).toBe(false);
+	});
+	it("keeps a recording that has started", () => {
+		expect(recordingClosed({ ...closed, recordingStarted: true })).toBe(false);
+	});
+	it("keeps the recorder while the chunks are unknown or the project takes recordings", () => {
+		expect(recordingClosed({ ...closed, chunkCount: undefined })).toBe(false);
+		expect(recordingClosed({ ...closed, takingRecordings: true })).toBe(false);
+		expect(recordingClosed({ ...closed, takingRecordings: undefined })).toBe(
+			false,
+		);
 	});
 });

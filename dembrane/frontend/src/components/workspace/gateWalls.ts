@@ -24,6 +24,7 @@ export type WallKey =
 	 * `surface="modal"`.
 	 */
 	| "billing_page"
+	| "audio_cap"
 	| "chat_cap"
 	| "chat_turn_cap"
 	| "chat_voice_cap"
@@ -31,7 +32,10 @@ export type WallKey =
 	| "event_cta"
 	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
 	| "free_allowance"
+	| "org_cap"
 	| "private_workspace"
+	| "project_cap"
+	| "recording_project"
 	| "report_cap"
 	| "transcription_cap"
 	| "transcripts_view"
@@ -79,6 +83,7 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
  */
 export function wallPopoverLine(wall: WallKey): string {
 	const lines: Record<WallKey, string> = {
+		audio_cap: t`The free plan includes 5 hours of recording a month.`,
 		billing_page: "",
 		// Both chat walls read the same line. The agreed copy has one entry for
 		// chat, and its wording already covers the turn limit: the free plan is
@@ -89,7 +94,10 @@ export function wallPopoverLine(wall: WallKey): string {
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
 		free_allowance: "",
+		org_cap: t`The free plan includes one organisation.`,
 		private_workspace: t`Private workspaces come with a paid plan.`,
+		project_cap: t`The free plan includes one project.`,
+		recording_project: t`On the free plan one project takes recordings.`,
 		report_cap: t`The free plan includes one report.`,
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
@@ -122,6 +130,7 @@ export function wallPopoverLine(wall: WallKey): string {
 export function wallActionLine(wall: WallKey | string | undefined): string {
 	if (!wall) return "";
 	const actions: Record<WallKey, string> = {
+		audio_cap: t`keep recording`,
 		billing_page: "",
 		chat_cap: t`ask more in chat`,
 		chat_turn_cap: t`ask more in chat`,
@@ -129,7 +138,10 @@ export function wallActionLine(wall: WallKey | string | undefined): string {
 		custom_logo: t`add your logo`,
 		event_cta: t`hide the dembrane event invitation`,
 		free_allowance: t`go beyond this month's free allowance`,
+		org_cap: t`create more organisations`,
 		private_workspace: t`make a workspace private`,
+		project_cap: t`add more projects`,
+		recording_project: t`record in every project`,
 		report_cap: t`create another report`,
 		// The one locked data wall. Nothing was blocked in the room: the
 		// recording ran and the participants never met a wall. What stopped is
