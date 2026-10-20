@@ -186,7 +186,12 @@ export const ConversationTranscriptSection = ({
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
 	);
 
-	const isEmptyConversation = !hasValidTranscripts && isFinished;
+	// A piece without text and without an error is still being transcribed: say so, not "Empty".
+	const isTranscribing = allChunks.some(
+		(chunk) => !chunk.transcript?.trim() && !chunk.error,
+	);
+	const isEmptyConversation =
+		!hasValidTranscripts && isFinished && !isTranscribing;
 
 	if (status === "pending") {
 		return (
@@ -216,6 +221,15 @@ export const ConversationTranscriptSection = ({
 							{...testId("transcript-empty-badge")}
 						>
 							<Trans>Empty</Trans>
+						</Badge>
+					)}
+					{!hasValidTranscripts && isTranscribing && !isLocked && (
+						<Badge
+							color="gray"
+							variant="light"
+							{...testId("transcript-transcribing-badge")}
+						>
+							<Trans>Transcribing</Trans>
 						</Badge>
 					)}
 					{!isLocked && (
@@ -281,15 +295,18 @@ export const ConversationTranscriptSection = ({
 			) : (
 				<Stack className="relative reading-measure">
 					{isDraft && allChunks.length > 0 && (
-						<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
-							{isFinished ? (
-								<Trans>An improved transcript is on its way.</Trans>
-							) : (
-								<Trans>
-									You get an improved transcript when the conversation ends.
-								</Trans>
-							)}
-						</Text>
+						<Group gap={4} wrap="nowrap">
+							<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
+								{isFinished ? (
+									<Trans>An improved transcript is on its way.</Trans>
+								) : (
+									<Trans>
+										The transcript is improved once the conversation ends.
+									</Trans>
+								)}
+							</Text>
+							<HowItImproves />
+						</Group>
 					)}
 					{allChunks.length === 0 ? (
 						<Text size="sm" c="dimmed" {...testId("transcript-empty-alert")}>

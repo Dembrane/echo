@@ -2095,7 +2095,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "An event or a workshop."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:286
+#: src/components/conversation/ConversationTranscriptSection.tsx:301
 msgid "An improved transcript is on its way."
 msgstr "An improved transcript is on its way."
 
@@ -2604,7 +2604,7 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Audio is coming in"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:253
+#: src/components/conversation/ConversationTranscriptSection.tsx:267
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -5767,7 +5767,7 @@ msgid "emptied out"
 msgstr "emptied out"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:218
+#: src/components/conversation/ConversationTranscriptSection.tsx:223
 msgid "Empty"
 msgstr "Empty"
 
@@ -9827,7 +9827,7 @@ msgstr "No trainings yet."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:296
+#: src/components/conversation/ConversationTranscriptSection.tsx:313
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -14050,7 +14050,7 @@ msgstr "Show all {total}"
 msgid "Show all conversations"
 msgstr "Show all conversations"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:263
+#: src/components/conversation/ConversationTranscriptSection.tsx:277
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -15560,6 +15560,10 @@ msgstr "The title could not be generated."
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "The transcript did not come back. Check your connection and try again."
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:303
+msgid "The transcript is improved once the conversation ends."
+msgstr "The transcript is improved once the conversation ends."
+
 #: src/components/voice/VoiceInputError.tsx:43
 msgid "The transcription did not finish. Try again."
 msgstr "The transcription did not finish. Try again."
@@ -16403,6 +16407,7 @@ msgstr "Transcribe a conversation again"
 #~ msgstr "Transcribed again from the whole recording."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
+#: src/components/conversation/ConversationTranscriptSection.tsx:232
 msgid "Transcribing"
 msgstr "Transcribing"
 
@@ -16417,7 +16422,7 @@ msgstr "transcript"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:210
+#: src/components/conversation/ConversationTranscriptSection.tsx:215
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"
@@ -18297,8 +18302,8 @@ msgid "You don't have permission to invite to any workspace in this organisation
 msgstr "You don't have permission to invite to any workspace in this organisation."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:288
-msgid "You get an improved transcript when the conversation ends."
-msgstr "You get an improved transcript when the conversation ends."
+#~ msgid "You get an improved transcript when the conversation ends."
+#~ msgstr "You get an improved transcript when the conversation ends."
 
 #: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
