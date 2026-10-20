@@ -93,6 +93,18 @@ body {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
+/* The reading surfaces (summary, transcript) share the app body size and a line
+   length of about 70 characters, so they line up and stay easy to read. Counted in the body
+   size, not ch (a zero is wider than DM Sans's average letter: 70ch held about 95), so a
+   header row capped with it ends where the text ends. */
+.reading-measure,
+.prose.reading-text {
+	max-width: calc(34 * var(--app-font-size-md));
+}
+.prose.reading-text {
+	font-size: var(--app-font-size-md);
+}
+
 /* Ensure all elements within also use the font */
 .prose * {
 	font-family: var(--app-font-family) !important;

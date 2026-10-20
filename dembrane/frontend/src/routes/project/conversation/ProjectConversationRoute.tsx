@@ -339,6 +339,7 @@ export const ProjectConversationRoute = () => {
 								<>
 									<div {...testId("conversation-overview-summary-content")}>
 										<Markdown
+											className="reading-text"
 											content={
 												conversation?.summary ??
 												(useHandleGenerateSummaryManually.data &&

@@ -27,7 +27,6 @@ import {
 } from "./routes/participant/ParticipantConversation";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
-import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { LegacyProjectRedirect } from "./routes/project/LegacyProjectRedirect";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
@@ -44,6 +43,11 @@ import {
 } from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
+// The conversation page is dashboard only; loaded lazily so the portal's first load stays small.
+const ProjectConversationRoute = createLazyNamedRoute(
+	() => import("./routes/project/conversation/ProjectConversationRoute"),
+	"ProjectConversationRoute",
+);
 const ProjectsHomeRoute = createLazyNamedRoute(
 	() => import("./routes/project/ProjectsHome"),
 	"ProjectsHomeRoute",
