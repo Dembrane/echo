@@ -82,7 +82,7 @@ export const TRANSCRIBE_TIMEOUT_MS = 180_000;
 const RATE_LIMIT_ATTEMPTS = 6;
 
 /** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
-function withoutTrailingSlashes(url: string): string {
+export function withoutTrailingSlashes(url: string): string {
   let end = url.length;
   while (end > 0 && url[end - 1] === "/") end--;
   return url.slice(0, end);

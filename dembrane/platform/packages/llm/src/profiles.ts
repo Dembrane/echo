@@ -7,6 +7,8 @@
  * A new pipeline is a new profile with a new name; a stored transcript keeps naming the one
  * that made it, so a profile is never changed in place once deployed.
  */
+import { withoutTrailingSlashes } from "./compat";
+
 export type SpeechProvider = "whisper" | "gemini";
 
 export interface TranscriptionProfile {
@@ -150,7 +152,7 @@ export async function checkProfileModels(
   const wanted = compatibleModelsOf(p);
   if (!wanted.length || !s.baseUrl || !s.apiKey) return;
   try {
-    const res = await fetcher(`${s.baseUrl.replace(/\/+$/, "")}/models`, {
+    const res = await fetcher(`${withoutTrailingSlashes(s.baseUrl)}/models`, {
       headers: { authorization: `Bearer ${s.apiKey}` },
       signal: AbortSignal.timeout(5000),
     });
