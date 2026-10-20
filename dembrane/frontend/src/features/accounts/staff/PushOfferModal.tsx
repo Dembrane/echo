@@ -103,6 +103,9 @@ function OfferForm({
 		from?.template ?? "subscription",
 	);
 	const [language, setLanguage] = useState<"en" | "nl">(from?.language ?? "nl");
+	const [billingUnit, setBillingUnit] = useState<"seat" | "month">(
+		from?.billing_unit ?? "seat",
+	);
 	const [offerName, setOfferName] = useState(from?.offer_name ?? orgName);
 	const [personName, setPersonName] = useState(from?.person_name ?? "");
 	const [attention, setAttention] = useState(from?.attention ?? "");
@@ -132,6 +135,8 @@ function OfferForm({
 		// Amendments and VAT treatment come from sam; editing a draft here keeps them.
 		...(template === "custom" &&
 			from?.amendments && { amendments: from.amendments }),
+		// Only a subscription has a unit; seats is what an absent value means.
+		...(template === "subscription" && { billing_unit: billingUnit }),
 		...(from?.vat_treatment && { vat_treatment: from.vat_treatment }),
 	};
 
@@ -198,6 +203,22 @@ function OfferForm({
 						]}
 					/>
 				</Stack>
+				{template === "subscription" && (
+					<Stack gap={4}>
+						<Text size="sm">
+							<Trans>Billed per</Trans>
+						</Text>
+						<SegmentedControl
+							value={billingUnit}
+							onChange={(v) => setBillingUnit(v as typeof billingUnit)}
+							data={[
+								{ label: t`Seat`, value: "seat" },
+								{ label: t`Month`, value: "month" },
+							]}
+							data-testid="offer-billing-unit"
+						/>
+					</Stack>
+				)}
 				<TextInput
 					label={t`Customer name in the title`}
 					description={t`Reads "${offerName || "..."} x dembrane"`}

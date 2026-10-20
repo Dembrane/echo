@@ -118,6 +118,30 @@ describe("money", () => {
 });
 
 describe("the offer", () => {
+  test("a subscription billed per month names months, not seats", () => {
+    const month = offerText(offer({ billing_unit: "month" }));
+    expect(month).toContain("| Description | Price per month | Months | Amount |");
+    expect(month).not.toContain("seat");
+    expect(month).toContain("Subtotal (excl. VAT): €6,410.00");
+    const nl = offerText(offer({ language: "nl", billing_unit: "month" }));
+    expect(nl).toContain("| Omschrijving | Prijs per maand | Maanden | Bedrag |");
+    expect(nl).not.toContain("seat");
+    expect(nl).toContain("Subtotaal (excl. btw): €");
+    // Price first, then the quantity, as for seats.
+    expect(month).toContain(
+      "| Changemaker<br>• Unlimited recording hours | €86.00 | 60 | €5,160.00 |",
+    );
+  });
+  test("seats stay the default, and only subscriptions have a unit", () => {
+    const seat = "| Description | Price per seat per month | Seats | Amount |";
+    expect(offerText(offer())).toContain(seat);
+    expect(offerText(offer({ billing_unit: "seat" }))).toContain(seat);
+    const nl = offerText(offer({ language: "nl", billing_unit: "seat" }));
+    expect(nl).toContain("| Omschrijving | Prijs per seat per maand | Seats | Bedrag |");
+    expect(offerText(offer({ template: "event", billing_unit: "month" }))).toContain(
+      "| Description | Quantity | Unit price | Amount |",
+    );
+  });
   test("follows the template: facts, columns, totals with VAT, acceptance, pinned versions", () => {
     const text = offerText(offer());
     expect(text).toContain("Yearly license offer\n# Gemeente Voorbeeldstad\n");
@@ -214,6 +238,26 @@ describe("the offer", () => {
     expect(Buffer.from(again.bytes).equals(Buffer.from(r.bytes))).toBe(true);
   });
 
+  test("a per-month subscription renders on the same two pages", async () => {
+    const items = [
+      {
+        description: "dembrane subscription",
+        bullets: [],
+        quantity: 12,
+        unit_price_cents: 30000,
+        vat_rate_bps: 2100,
+      },
+    ];
+    for (const language of ["en", "nl"] as const) {
+      const content = offer({ language, billing_unit: "month", items });
+      const text = offerText(content);
+      expect(text).toContain("| dembrane subscription | €");
+      expect(text).toContain("| 12 |");
+      const r = await offerPdf(content);
+      expect(r.pageCount).toBe(2);
+    }
+  });
+
   test("each template puts the acceptance block on its own page and links the texts that apply", async () => {
     for (const template of ["subscription", "event", "custom"] as const)
       for (const language of ["en", "nl"] as const) {
@@ -261,6 +305,20 @@ describe("the offer", () => {
     expect(nl).toContain("artikel 3:15a BW");
     const pdf = await offerPdf(offer({ template: "custom", amendments }));
     expect(pdf.fields.every((f) => f.page === pdf.pageCount)).toBe(true);
+  });
+
+  test("the customer's own processing terms take the DPA's place in the list, and nothing says it is signed apart", () => {
+    const own =
+      "'GIBIT 2025 standaard' voor verwerking met aanpassingen zoals beschreven in het document 'Afwijkingen dembrane GIBIT 2025'";
+    const nl = offerText(offer({ template: "event", language: "nl", processing_terms: own }));
+    expect(nl).toContain(`3. ${own}.`);
+    expect(nl).not.toContain("Verwerkersovereenkomst");
+    expect(nl).not.toContain("apart ondertekend");
+    // A subscription keeps its SLA as the only annex, with the customer's terms after it.
+    const sub = offerText(offer({ processing_terms: "The customer's own processing terms" }));
+    expect(sub).toContain("3. Annex A: Service Level Agreement");
+    expect(sub).toContain("4. The customer's own processing terms.");
+    expect(sub).not.toContain("Data Processing Agreement");
   });
 
   test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {
@@ -346,6 +404,14 @@ describe("the offer", () => {
         imageSha256: "b".repeat(64),
         language: "en",
         legal: [],
+        trail: [
+          {
+            at: "2026-09-27T09:00:00.000Z",
+            what: "Sent by Sam Staff (sam@dembrane.example), dembrane",
+          },
+          { at: "2026-09-28T09:58:00.000Z", what: "First opened by a@b.example" },
+          { at: "2026-09-28T10:00:00.000Z", what: "Signed by a@b.example" },
+        ],
       },
     );
     expect((await PDFDocument.load(out)).getPageCount()).toBe(r.pageCount + 1);

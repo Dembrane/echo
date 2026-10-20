@@ -113,9 +113,10 @@ export const dealStageLabel = (stage: string): string =>
 		parked: t`Parked`,
 	})[stage] ?? stage;
 
+/** Whether the organisation is a customer: access and churn, beside the deal stage. */
 export const stageLabel = (stage: string | null): string =>
 	stage === "prospect"
-		? t`Prospect`
+		? t`Not yet a customer`
 		: stage === "customer"
 			? t`Customer`
 			: stage === "churned"

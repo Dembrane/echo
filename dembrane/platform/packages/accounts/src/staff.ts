@@ -11,7 +11,7 @@ import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
-import { dealStage } from "./deal-stage";
+import { type DealStage, dealMilestones, dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
@@ -20,6 +20,7 @@ import { legalForPush } from "./legal/store";
 import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
   type Amendment,
+  type BillingUnit,
   type Language,
   type OfferContent,
   type OfferItem,
@@ -56,25 +57,47 @@ const actorOf = (who: Signed): Actor => ({ kind: "staff", userId: who.directusUs
 
 export async function listAccounts(
   d: AccountsDeps,
-  q: { stage: string | null; q: string | null; limit: number; offset: number },
+  q: {
+    stage: string | null;
+    deal_stage?: DealStage | null;
+    q: string | null;
+    limit: number;
+    offset: number;
+  },
 ) {
-  const rows = await store.accountList(d.db, q);
+  // The deal stage is read, not stored, so filtering on it reads every account and pages
+  // after; accounts are the organisations sales works with, a short list.
+  const byDeal = Boolean(q.deal_stage);
+  const rows = await store.accountList(
+    d.db,
+    byDeal ? { ...q, limit: 2000, offset: 0, accountsOnly: true } : q,
+  );
   const facts = await store.stageFacts(
     d.db,
     rows.map((r) => r.id),
   );
-  return {
-    accounts: rows.map((r) => ({
+  const accounts = rows.map((r) => {
+    // The first billing account is the organisation's, as store.billing reads it.
+    const billing = facts.billing.find((b) => b.org_id === r.id) ?? null;
+    const stageFacts = {
+      isAccount: r.stage !== null,
+      documents: facts.documents.filter((x) => x.orgId === r.id),
+      billingComplete: billingComplete(billing),
+      billingAt:
+        facts.billingSaved.find((b) => b.orgId === r.id)?.at ?? billing?.updated_at ?? null,
+    };
+    return {
       ...r,
       stage: r.stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: r.stage !== null,
-        documents: facts.documents.filter((x) => x.orgId === r.id),
-        // The first billing account is the organisation's, as store.billing reads it.
-        billingComplete: billingComplete(facts.billing.find((b) => b.org_id === r.id) ?? null),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: r.created_at ? new Date(r.created_at).toISOString() : null,
-    })),
+    };
+  });
+  return {
+    accounts: byDeal
+      ? accounts.filter((a) => a.deal_stage === q.deal_stage).slice(q.offset, q.offset + q.limit)
+      : accounts,
     limit: q.limit,
     offset: q.offset,
   };
@@ -120,16 +143,27 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       ),
     );
   const demo = events.find((e) => e.type === "demo.seeded");
+  const staffNames = await store.userNames(
+    d.db,
+    events.flatMap((e) => (e.actorKind === "staff" && e.actorUserId ? [e.actorUserId] : [])),
+  );
+  const stageFacts = {
+    isAccount: org.account_stage !== null,
+    documents: docs,
+    billingComplete: billingComplete(billing),
+    // Events come newest first; the billing row also changes with the plan.
+    billingAt:
+      events.find((e) => e.type === "billing_details.updated")?.createdAt ??
+      billing?.updated_at ??
+      null,
+  };
   return {
     organisation: {
       id: org.id,
       name: org.name,
       account_stage: org.account_stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: org.account_stage !== null,
-        documents: docs,
-        billingComplete: billingComplete(billing),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: org.created_at ? new Date(org.created_at).toISOString() : null,
     },
     account_manager: manager
@@ -179,7 +213,7 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       : [],
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
-    timeline: events.map(eventView),
+    timeline: events.map((e) => eventView(e, staffNames)),
   };
 }
 
@@ -291,8 +325,12 @@ export interface PushOfferInput {
   readonly items: readonly OfferItem[];
   /** Absent means Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
+  /** Subscription offers: absent means seats. */
+  readonly billing_unit?: BillingUnit | undefined;
   /** Custom offers only. */
   readonly amendments?: readonly Amendment[];
+  /** The customer's own terms for data processing, in place of our DPA. */
+  readonly processing_terms?: string | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -345,7 +383,9 @@ function offerContent(
     | "currency"
     | "items"
     | "vat_treatment"
+    | "billing_unit"
     | "amendments"
+    | "processing_terms"
   > & { date: string; reference: string },
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
@@ -358,7 +398,9 @@ function offerContent(
     throw new ValidationError("offer.amendments_custom_only");
   return {
     vat_treatment: vatTreatment,
+    ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
     ...(amendments.length && { amendments }),
+    ...(o.processing_terms && { processing_terms: o.processing_terms }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -516,6 +558,8 @@ export async function updateOffer(
     ...input,
     date: input.date ?? before.date,
     reference: input.reference ?? before.reference,
+    processing_terms:
+      input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
   });
   const rendered = await offerPdf(content);
   await d.db.transaction(async (tx) => {
@@ -577,16 +621,18 @@ async function sendOfferIn(
     ...(doc.reference && { offer_reference: doc.reference }),
   };
   // First who signs: the offer and the DPA may be signed by different people, and the
-  // answer says which signing tasks there are and whose they are.
-  await createTask(d, tx, {
-    orgId,
-    code: "who_signs",
-    params,
-    title: null,
-    kind: "generic",
-    documentId: docId,
-    createdBy: who.directusUserId,
-  });
+  // answer says which signing tasks there are and whose they are. With the customer's own
+  // processing terms there is only the offer to sign, so nothing to ask.
+  if (!content?.processing_terms)
+    await createTask(d, tx, {
+      orgId,
+      code: "who_signs",
+      params,
+      title: null,
+      kind: "generic",
+      documentId: docId,
+      createdBy: who.directusUserId,
+    });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -600,7 +646,8 @@ async function sendOfferIn(
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
-  if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
+  if (content?.dpa_separate && !content.processing_terms)
+    await openDpa(d, tx, orgId, doc, who.directusUserId);
   await withdrawOnboarding(d, tx, orgId, actorOf(who));
   await emit(d, tx, {
     orgId,

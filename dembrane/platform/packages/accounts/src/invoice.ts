@@ -32,8 +32,10 @@ export function invoiceWaits(
 ): InvoiceWait[] {
   const waits: InvoiceWait[] = [];
   if (!billingComplete(billing)) waits.push("billing_details");
+  const content = offer.content as OfferContent | null;
+  // The customer's own processing terms stand in for our DPA: there is none to wait for.
   const separate =
-    Boolean((offer.content as OfferContent | null)?.dpa_separate) || !sig.dpaAuthorised;
+    !content?.processing_terms && (Boolean(content?.dpa_separate) || !sig.dpaAuthorised);
   const dpaSigned = docs.some(
     (x) =>
       x.kind === "dpa" &&
