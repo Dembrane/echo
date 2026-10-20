@@ -1,4 +1,6 @@
-import { Stack, Text } from "@mantine/core";
+import { t } from "@lingui/core/macro";
+import { ActionIcon, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { ArrowClockwise, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { RedactedText } from "../common/RedactedText";
@@ -37,6 +39,17 @@ export const FinalTranscript = ({
 		if (active < 0 || audioRef.current?.paused) return;
 		activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 	}, [active]);
+
+	// Jumps within the recording, never past either end; it plays on if it was playing.
+	const skip = (seconds: number) => {
+		const audio = audioRef.current;
+		if (!audio) return;
+		const end = Number.isFinite(audio.duration)
+			? audio.duration
+			: audio.currentTime + seconds;
+		audio.currentTime = Math.min(Math.max(audio.currentTime + seconds, 0), end);
+		setStarted(true);
+	};
 
 	const seek = (start: number) => {
 		const audio = audioRef.current;
@@ -93,18 +106,75 @@ export const FinalTranscript = ({
 				className="sticky bottom-0 z-20 py-2"
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
-				{/* biome-ignore lint/a11y/useMediaCaption: the transcript is the text above */}
-				<audio
-					ref={audioRef}
-					src={audioUrl ?? undefined}
-					className="h-10 w-full"
-					preload="metadata"
-					controls
-					onPlay={() => setStarted(true)}
-					onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-					onSeeked={(e) => setTime(e.currentTarget.currentTime)}
-				/>
+				<Group gap={4} wrap="nowrap">
+					<SkipButton
+						label={t`Back 15 seconds`}
+						onClick={() => skip(-SKIP_SECONDS)}
+					>
+						<ArrowCounterClockwise size={18} />
+					</SkipButton>
+					{/* biome-ignore lint/a11y/useMediaCaption: the transcript is the text above */}
+					<audio
+						ref={audioRef}
+						src={audioUrl ?? undefined}
+						className="h-10 w-full"
+						preload="metadata"
+						controls
+						onPlay={() => setStarted(true)}
+						onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+						onSeeked={(e) => setTime(e.currentTarget.currentTime)}
+					/>
+					<SkipButton
+						label={t`Forward 15 seconds`}
+						onClick={() => skip(SKIP_SECONDS)}
+					>
+						<ArrowClockwise size={18} />
+					</SkipButton>
+				</Group>
 			</div>
 		</Stack>
 	);
 };
+
+const SKIP_SECONDS = 15;
+
+/** A round button with the number of seconds under the arrow, as players show it. */
+function SkipButton({
+	label,
+	onClick,
+	children,
+}: {
+	label: string;
+	onClick: () => void;
+	children: React.ReactNode;
+}) {
+	return (
+		<Tooltip label={label}>
+			<ActionIcon
+				variant="subtle"
+				color="gray"
+				size="lg"
+				aria-label={label}
+				onClick={onClick}
+				style={{ flexShrink: 0 }}
+			>
+				<span style={{ display: "inline-flex", position: "relative" }}>
+					{children}
+					<span
+						style={{
+							display: "grid",
+							fontSize: 7,
+							fontWeight: 600,
+							inset: 0,
+							paddingTop: 1,
+							placeItems: "center",
+							position: "absolute",
+						}}
+					>
+						{SKIP_SECONDS}
+					</span>
+				</span>
+			</ActionIcon>
+		</Tooltip>
+	);
+}
