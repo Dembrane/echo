@@ -188,13 +188,16 @@ export class GeminiTranscriber implements Transcriber {
           input.pauses,
         )
       : null;
-    const transcript =
-      checked?.result.text ??
-      (await stt.transcribe(input.audio, {
+    // The same request either way (verbose_json); asking for segments keeps Whisper's times.
+    const read =
+      checked?.result ??
+      (await stt.transcribeSegments(input.audio, {
         language: input.language ?? null,
         ...(hotwordsStr && { prompt: hotwordsStr }),
         priority: input.priority ?? "live",
       }));
+    const transcript = read.text;
+    const seconds = read.seconds ?? Math.max(0, ...read.segments.map((s) => s.end));
     const redacted = await this.redactText({
       text: transcript,
       language: input.language ?? null,
@@ -208,6 +211,14 @@ export class GeminiTranscriber implements Transcriber {
       note: redacted.note,
       models: [stt.model, ...redacted.models],
       ...(checked && { retry: checked.stats }),
+      ...(!piiOn &&
+        read.segments.length > 0 &&
+        seconds > 0 && {
+          segments: {
+            seconds,
+            sentences: read.segments.map((s) => ({ start: s.start, end: s.end, text: s.text })),
+          },
+        }),
     };
   }
 

@@ -18,7 +18,14 @@ import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
 import { localeOfEmail } from "@dembrane/i18n";
-import { createModels, modelsConfigOf } from "@dembrane/llm";
+import {
+  checkProfileModels,
+  createModels,
+  type LlmSettings,
+  modelsConfigOf,
+  profileGaps,
+  profileOf,
+} from "@dembrane/llm";
 import { type Mailer, MemoryMailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
 import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
@@ -243,11 +250,43 @@ void (async () => {
 
 // Every model call is metered: one log line at once and one model_call row per batch.
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
-const models = createModels(modelsConfigOf(config.llm), {
+// The transcription profile the worker runs: the API transcribes typed text and short audio
+// with the same live model, and refuses to start when the deployment lacks what it needs.
+const profile = (() => {
+  try {
+    const p = profileOf(config.llm);
+    const gap = profileGaps(p, config.llm);
+    if (gap) throw new Error(gap);
+    return p;
+  } catch (err) {
+    logger.fatal({ signal: "api.boot_failed" }, (err as Error).message);
+    logger.flush();
+    process.exit(1);
+  }
+})();
+void checkProfileModels(profile, config.llm, (line) =>
+  logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
+);
+const modelHooks = {
   observe: metering.observe,
-  onObserverFault: (err) =>
+  onObserverFault: (err: unknown) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
-});
+};
+const models = createModels(modelsConfigOf(config.llm, profile), modelHooks);
+const liveSettings: LlmSettings = {
+  ...config.llm,
+  provider: profile.live.provider === "whisper" ? "openai-compatible" : "vertex",
+  ...(profile.live.provider === "gemini" && {
+    multiModalPro: [
+      profile.live.model,
+      ...config.llm.multiModalPro.filter((m) => m !== profile.live.model),
+    ],
+  }),
+};
+const liveModels =
+  liveSettings.provider === config.llm.provider && profile.live.provider === "whisper"
+    ? models
+    : createModels(modelsConfigOf(liveSettings, profile), modelHooks);
 
 const app = buildApp({
   config,
@@ -283,7 +322,7 @@ const app = buildApp({
   siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
   audio,
   media,
-  transcriber: new GeminiTranscriber(models, logger),
+  transcriber: new GeminiTranscriber(liveModels, logger),
   hub,
 });
 

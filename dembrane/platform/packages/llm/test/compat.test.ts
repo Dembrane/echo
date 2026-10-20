@@ -149,7 +149,6 @@ test("embeddings ask for the configured dimensions, and a longer vector is cut t
 
 const settings = (over: Partial<LlmSettings> = {}): LlmSettings => ({
   provider: "vertex",
-  transcriptionModel: "whisper-large-v3",
   searchGrounding: true,
   textFast: ["g1"],
   multiModalFast: ["g2"],

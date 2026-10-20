@@ -6,7 +6,7 @@ import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
-import type { Row } from "../storage";
+import { type Row, UPLOAD_SOURCE } from "../storage";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
 import {
   type BffStore,
@@ -394,13 +394,18 @@ export async function finalTranscript(d: AudioDeps, who: Signed, conversationId:
   );
   const record = await store.recordTranscript(conversationId);
   if (!record) {
-    // Is a final transcript on its way? Switched on, recorded audio, and not so old that the
-    // job has long since given up (a conversation it failed on must not say "draft" forever).
+    // Is a final transcript on its way? The profile improves this kind of conversation, it has
+    // audio, and it is not so old that the job has long since given up (a conversation it
+    // failed on must not say "draft" forever).
     const fresh =
       !a.conversation.is_finished ||
       d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
     const expected =
-      Boolean(d.settings.finalTranscript) &&
+      Boolean(
+        a.conversation.source === UPLOAD_SOURCE
+          ? d.settings.improves?.uploads
+          : d.settings.improves?.recordings,
+      ) &&
       fresh &&
       (await store.hasAudio(conversationId)) &&
       !(await store.finalGaveUp(conversationId));

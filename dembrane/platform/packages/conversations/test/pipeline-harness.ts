@@ -53,12 +53,12 @@ export const PROJECT = "f7000000-0000-4000-8000-000000000001";
 export async function seed(
   sql: postgres.Sql,
   conversationId: string,
-  opts: { anonymise?: boolean } = {},
+  opts: { anonymise?: boolean; source?: string } = {},
 ) {
   await sql`insert into project (id, name, language, is_conversation_allowed, anonymize_transcripts)
     values (${PROJECT}, 'Pipeline', 'en', true, false) on conflict do nothing`;
   await sql`insert into conversation (id, project_id, participant_name, source, is_anonymized, created_at, updated_at)
-    values (${conversationId}, ${PROJECT}, 'Tester', 'PORTAL_AUDIO', ${opts.anonymise ?? false}, now() - interval '1 hour', now())`;
+    values (${conversationId}, ${PROJECT}, 'Tester', ${opts.source ?? "PORTAL_AUDIO"}, ${opts.anonymise ?? false}, now() - interval '1 hour', now())`;
 }
 
 /** A bucket on disk that answers presigned URLs over HTTP, like S3 does. */

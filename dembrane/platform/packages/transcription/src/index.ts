@@ -72,6 +72,7 @@ export {
 } from "./speech-retry";
 export type {
   RedactTextInput,
+  TimedText,
   TranscribeInput,
   TranscribeResult,
   Transcriber,

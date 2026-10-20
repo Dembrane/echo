@@ -1,6 +1,7 @@
 import { regexRedactPii } from "./pii";
 import type {
   RedactTextInput,
+  TimedText,
   TranscribeInput,
   TranscribeResult,
   Transcriber,
@@ -19,6 +20,11 @@ export class FakeTranscriber implements Transcriber {
   constructor(
     private readonly answer: (input: TranscribeInput, n: number) => string = (i) =>
       `transcript of ${i.audio.byteLength} bytes`,
+    /** Timed sentences to return beside the text, as Whisper's live path does. */
+    private readonly timed?: (
+      input: TranscribeInput,
+      text: string,
+    ) => TimedText | undefined | Promise<TimedText | undefined>,
   ) {}
 
   failNext(...errors: Error[]): void {
@@ -30,10 +36,12 @@ export class FakeTranscriber implements Transcriber {
     const fail = this.failures.shift();
     if (fail) throw fail;
     const text = this.answer(input, this.calls.length);
+    const segments = await this.timed?.(input, text);
     return {
       transcript: text === "" ? "[Nothing to transcribe]" : text,
       note: "",
       models: ["fake"],
+      ...(segments && { segments }),
     };
   }
 

@@ -118,11 +118,18 @@ test("with a speech-to-text model its words are the transcript and no chat model
       embedding: () => ({}) as never,
       speechToText: {
         model: "whisper-fake",
-        transcribe: async (_audio, o = {}) => {
+        transcribe: async () => "unused",
+        transcribeSegments: async (_audio, o = {}) => {
           heard.push(o);
-          return "Ik ben Jan en ik werk bij Dembrane.";
+          return {
+            text: "Ik ben Jan en ik werk bij Dembrane.",
+            segments: [
+              { start: 0, end: 1.5, text: "Ik ben Jan" },
+              { start: 1.5, end: 3, text: "en ik werk bij Dembrane." },
+            ],
+            seconds: 3.2,
+          };
         },
-        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
       },
     },
     logger,
@@ -132,10 +139,18 @@ test("with a speech-to-text model its words are the transcript and no chat model
     language: "nl",
     hotwords: ["Dembrane"],
   });
+  // Whisper's own sentences come back beside the text, for an upload's improved transcript.
   expect(out).toEqual({
     transcript: "Ik ben Jan en ik werk bij Dembrane.",
     note: "",
     models: ["whisper-fake"],
+    segments: {
+      seconds: 3.2,
+      sentences: [
+        { start: 0, end: 1.5, text: "Ik ben Jan" },
+        { start: 1.5, end: 3, text: "en ik werk bij Dembrane." },
+      ],
+    },
   });
   expect(seen).toHaveLength(0);
   expect(heard).toEqual([{ language: "nl", prompt: "Dembrane", priority: "live" }]);
@@ -149,14 +164,20 @@ test("with a speech-to-text model, redaction is one text-only pass with reasonin
       embedding: () => ({}) as never,
       speechToText: {
         model: "whisper-fake",
-        transcribe: async () => "Ik ben Jan",
-        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
+        transcribe: async () => "unused",
+        transcribeSegments: async () => ({
+          text: "Ik ben Jan",
+          segments: [{ start: 0, end: 1, text: "Ik ben Jan" }],
+          seconds: 1,
+        }),
       },
     },
     logger,
   );
   const out = await t.transcribe({ audio: new Uint8Array([1]), usePiiRedaction: true });
   expect(out.transcript).toBe("Ik ben <redacted_name>");
+  // The sentences hold the words before redaction, so they are not returned.
+  expect(out.segments).toBeUndefined();
   expect(out.models).toEqual(["whisper-fake", "gemini-fake"]);
   expect(seen).toHaveLength(1);
   const user = seen[0]?.prompt[1] as { content: { type: string; text?: string }[] };

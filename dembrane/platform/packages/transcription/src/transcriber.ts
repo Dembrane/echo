@@ -26,6 +26,17 @@ export interface TranscribeResult {
   readonly models: readonly (string | null)[];
   /** What the confidence retries did for this audio, when they were on. */
   readonly retry?: RetryStats;
+  /**
+   * Whisper's own sentences with times from the start of this audio, and its length: an
+   * upload's improved transcript is built from them. Absent for Gemini and whenever the text
+   * was redacted, since these hold the words before redaction.
+   */
+  readonly segments?: TimedText;
+}
+
+export interface TimedText {
+  readonly seconds: number;
+  readonly sentences: readonly { start: number; end: number; text: string }[];
 }
 
 /** Typed text in, the same redaction audio gets out. */

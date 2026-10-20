@@ -1185,6 +1185,8 @@ export const conversation_chunk = pgTable(
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),
+    // Whisper's own sentences for this piece, with times from its start, and the piece's length.
+    segments: jsonb(),
     silence_ratio: real().default(sql`'0'`),
     source: varchar({ length: 255 }).default(sql`NULL`),
     timestamp: timestamp({ withTimezone: true, mode: "string" }).notNull(),

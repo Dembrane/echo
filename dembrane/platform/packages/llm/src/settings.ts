@@ -1,20 +1,18 @@
 import type { ModelGroup, ModelsConfig } from "./models";
+import { profileOf, type TranscriptionProfile } from "./profiles";
 
 /** The `llm` section of the platform config, as far as model wiring reads it. */
 export interface LlmSettings {
   readonly provider: "vertex" | "openai-compatible";
   readonly baseUrl?: string | undefined;
   readonly apiKey?: string | undefined;
-  readonly transcriptionModel: string;
-  readonly transcriptionLanguage?: "auto" | "project" | undefined;
+  /** TRANSCRIPTION_PROFILE: the transcription pipeline by name (profiles.ts). */
+  readonly transcriptionProfile?: string | undefined;
   readonly transcriptionKeyTerms?: boolean | undefined;
-  readonly whisperRetry?: boolean | undefined;
   readonly whisperSecondsPerMinute?: number | undefined;
   readonly whisperConcurrency?: number | undefined;
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
-  /** Who transcribes the whole recording after the conversation; the first is the record. */
-  readonly finalTranscript?: readonly ("auto" | "gemini" | "whisper")[] | undefined;
   readonly searchGrounding: boolean;
   readonly textFast: readonly string[];
   readonly multiModalFast: readonly string[];
@@ -61,16 +59,31 @@ export const embeddingLocationOf = (s: LlmSettings) =>
 /** Search grounding exists only on Vertex, and only while the switch allows it. */
 export const searchGroundingOn = (s: LlmSettings) => s.provider === "vertex" && s.searchGrounding;
 
-/** Input of `createModels`, from the platform config. */
-export function modelsConfigOf(s: LlmSettings): ModelsConfig {
+/** The Whisper model and language a profile asks for, wherever Whisper runs in it. */
+function whisperOf(p: TranscriptionProfile) {
+  const model =
+    p.live.provider === "whisper"
+      ? p.live.model
+      : p.redo?.provider === "whisper"
+        ? p.redo.model
+        : "whisper-large-v3";
+  return { model, language: p.live.language };
+}
+
+/** Input of `createModels`, from the platform config; Whisper's model and language come from the transcription profile. */
+export function modelsConfigOf(
+  s: LlmSettings,
+  profile: TranscriptionProfile = profileOf(s),
+): ModelsConfig {
+  const whisper = whisperOf(profile);
   return {
     provider: s.provider,
     ...(isCompat(s) && {
       openaiCompatible: {
         baseUrl: s.baseUrl ?? "",
         apiKey: s.apiKey ?? "",
-        transcriptionModel: s.transcriptionModel,
-        transcriptionLanguage: s.transcriptionLanguage,
+        transcriptionModel: whisper.model,
+        transcriptionLanguage: whisper.language,
         transcriptionKeyTerms: s.transcriptionKeyTerms,
         speechSecondsPerMinute: s.whisperSecondsPerMinute,
         speechConcurrency: s.whisperConcurrency,
@@ -102,11 +115,3 @@ export const embedderConfigOf = (s: LlmSettings) => ({
   provider: s.provider,
   baseUrl: s.baseUrl,
 });
-
-/** Who makes the final transcript: "auto" is the stack's own model (gemini on Vertex, whisper on the compatible provider). */
-export function finalProvidersOf(
-  s: Pick<LlmSettings, "provider" | "finalTranscript">,
-): ("gemini" | "whisper")[] {
-  const own = s.provider === "vertex" ? "gemini" : "whisper";
-  return [...new Set((s.finalTranscript ?? ["auto"]).map((p) => (p === "auto" ? own : p)))];
-}

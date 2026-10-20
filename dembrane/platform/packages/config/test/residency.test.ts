@@ -48,7 +48,7 @@ test("providers default to today's, and the Scaleway switches load", () => {
   }).values;
   expect(eu.llm.compatMultiModalPro).toEqual(["glm-5.3"]);
   expect(eu.llm.compatEmbeddingModel).toBe("qwen3-embedding-8b");
-  expect(eu.llm.transcriptionModel).toBe("whisper-large-v3");
+  expect(eu.llm.transcriptionProfile).toBeUndefined();
   expect(eu.mail.provider).toBe("scaleway");
   expect(eu.web.analytics).toBe(false);
   expect(eu.web.storageOrigins).toEqual(["https://*.s3.fr-par.scw.cloud"]);

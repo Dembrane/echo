@@ -1,68 +1,16 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
 import { newId } from "@dembrane/core";
-import type { FinalInput, FinalTranscriber } from "@dembrane/transcription";
+import { FakeTranscriber } from "@dembrane/transcription";
 import { createChunk } from "../src/chunks";
 import { finishConversation } from "../src/pipeline/defs";
 import { v1Store } from "../src/v1/storage";
+import { bursts, fakeProvider, timedLive } from "./final-helpers";
 import { admin, freshDatabase, type Harness, seed, startWorker, until } from "./pipeline-harness";
 
 // The final pass through the real workflows: two chunks of speech-like bursts with pauses
 // are merged, cut at a pause, transcribed by a fake provider and stored beside the chunks.
 const run = admin && Bun.which("ffmpeg") ? describe : describe.skip;
-
-/** Bursts of tone with pauses: `bursts` of 3 s separated by 1.5 s of silence. */
-async function bursts(path: string, bursts: number) {
-  const parts = Array.from({ length: bursts }, (_, i) => `[t${i}]`);
-  const filter = [
-    ...parts.map((_, i) => `sine=frequency=${300 + i * 50}:duration=3[t${i}]`),
-    ...parts.slice(1).map((_, i) => `anullsrc=r=44100:cl=mono:d=1.5[s${i}]`),
-    `${parts.map((p, i) => (i < parts.length - 1 ? `${p}[s${i}]` : p)).join("")}concat=n=${bursts * 2 - 1}:v=0:a=1[out]`,
-  ].join(";");
-  const p = Bun.spawn(
-    [
-      "ffmpeg",
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-filter_complex",
-      filter,
-      "-map",
-      "[out]",
-      "-c:a",
-      "libmp3lame",
-      "-y",
-      path,
-    ],
-    { stdout: "ignore", stderr: "pipe" },
-  );
-  if ((await p.exited) !== 0) throw new Error(await new Response(p.stderr).text());
-  return Bun.file(path);
-}
-
-/** One sentence per second of the piece it is given; the text names the piece's length. */
-function fakeProvider(maxSeconds: number): FinalTranscriber & { calls: FinalInput[] } {
-  const calls: FinalInput[] = [];
-  return {
-    calls,
-    provider: "whisper",
-    model: "whisper-fake",
-    limits: { maxBytes: 20_000_000, maxSeconds },
-    async transcribe(input) {
-      calls.push(input);
-      const n = Math.max(1, Math.floor(input.seconds / 3));
-      return {
-        sentences: Array.from({ length: n }, (_, i) => ({
-          start: i * 3,
-          end: i * 3 + 2.5,
-          text: `Zin ${calls.length}.${i}`,
-        })),
-        usage: { seconds: input.seconds, inputTokens: null, outputTokens: null },
-        model: "whisper-fake",
-      };
-    },
-  };
-}
 
 run("final transcript", () => {
   setDefaultTimeout(120_000);
@@ -74,7 +22,12 @@ run("final transcript", () => {
   beforeAll(async () => {
     const url = await freshDatabase("conv_final_test");
     h = await startWorker(url, {
+      transcriber: new FakeTranscriber(undefined, timedLive),
       final: {
+        profile: "test-profile",
+        recordings: "redo",
+        uploads: "first-pass",
+        timedPieceSeconds: 9,
         providers: ["whisper", "gemini"],
         transcribers: { whisper, gemini },
         edit: {
@@ -103,7 +56,7 @@ run("final transcript", () => {
     await h?.stop();
   });
 
-  async function upload(conversationId: string, file: Blob, n: number) {
+  async function upload(conversationId: string, file: Blob, n: number, source = "PORTAL_AUDIO") {
     const chunkId = newId();
     const key = `conversation/${conversationId}/chunks/${chunkId}-rec${n}.mp3`;
     await h.deps.audio.put(key, file);
@@ -112,7 +65,7 @@ run("final transcript", () => {
       {
         conversationId,
         timestamp: new Date(Date.now() + n * 1000),
-        source: "PORTAL_AUDIO",
+        source,
         fileUrl: h.deps.audioUrls.fileUrl(key),
       },
       { chunkId },
@@ -123,14 +76,26 @@ run("final transcript", () => {
   const record = (id: string) =>
     h.sql`select * from conversation_record_transcript where conversation_id = ${id}`;
 
-  async function finished(id: string, chunks: number, anonymise = false) {
-    await seed(h.sql, id, { anonymise });
+  async function finished(
+    id: string,
+    chunks: number,
+    anonymise = false,
+    source = "PORTAL_AUDIO",
+    burstsPerFile = 3,
+  ) {
+    await seed(h.sql, id, { anonymise, source });
     for (let n = 0; n < chunks; n++)
-      await upload(id, await bursts(join(h.bucket.root, `b${n}.mp3`), 3), n);
+      await upload(
+        id,
+        await bursts(join(h.bucket.root, `b${n}-${burstsPerFile}.mp3`), burstsPerFile),
+        n,
+        source,
+      );
     await until(async () => {
       const rows =
         await h.sql`select transcript from conversation_chunk where conversation_id = ${id}`;
-      return rows.length === chunks && rows.every((r) => r.transcript) ? rows : null;
+      // An upload can be cut into more pieces than files were uploaded.
+      return rows.length >= chunks && rows.every((r) => r.transcript) ? rows : null;
     });
     await h.queue.enqueue(finishConversation, { conversationId: id }, { singletonKey: id });
   }
@@ -185,6 +150,67 @@ run("final transcript", () => {
       unknown
     >;
     expect(conv.merged_audio_path).toContain(`merged-${cid}-`);
+  });
+
+  test("an upload's improved transcript is its first reading, with no second Whisper pass", async () => {
+    const cid = newId();
+    const before = whisper.calls.length;
+    // Two uploads of about 22 s each: each is cut at pauses into pieces of at most 9 s.
+    await finished(cid, 2, false, "DASHBOARD_UPLOAD", 5);
+    const rows = await until(async () => {
+      const r = await finals(cid);
+      return r.some((x) => x.provider === "whisper") ? r : null;
+    });
+    const w = rows.find((r) => r.provider === "whisper") as Record<string, unknown>;
+    expect(whisper.calls.length).toBe(before);
+    expect(w.is_record).toBe(true);
+    const usage = w.usage as {
+      firstPass?: boolean;
+      profile?: string;
+      seconds: number;
+      pieces: number;
+    };
+    expect(usage.firstPass).toBe(true);
+    expect(usage.profile).toBe("test-profile");
+    expect(usage.seconds).toBe(0);
+    // Every live piece was at most the timed piece length.
+    const pieces =
+      await h.sql`select segments from conversation_chunk where conversation_id = ${cid}`;
+    expect(pieces.length).toBe(usage.pieces);
+    expect(pieces.length).toBeGreaterThan(2);
+    for (const p of pieces)
+      expect((p.segments as { seconds: number }).seconds).toBeLessThanOrEqual(9.2);
+    // The sentences follow each other through both uploads, offset by the pieces before them.
+    const sentences = w.sentences as { start: number; end: number; text: string }[];
+    expect(sentences.length).toBeGreaterThan(pieces.length);
+    for (const [i, x] of sentences.entries()) {
+      expect(x.end).toBeGreaterThanOrEqual(x.start);
+      if (i) expect(x.start).toBeGreaterThanOrEqual((sentences[i - 1] as { end: number }).end);
+    }
+    const total = pieces.reduce((t, p) => t + (p.segments as { seconds: number }).seconds, 0);
+    expect((sentences.at(-1) as { end: number }).end).toBeLessThanOrEqual(total + 0.01);
+    expect((sentences.at(-1) as { start: number }).start).toBeGreaterThan(total / 2);
+    // The clean-up ran on them as on a redo.
+    expect(sentences.every((x) => x.text.endsWith("!"))).toBe(true);
+    const [conv] = await h.sql`select merged_audio_path from conversation where id = ${cid}`;
+    expect(String(conv?.merged_audio_path)).toContain(`merged-${cid}-`);
+  });
+
+  test("a recording's improved transcript still hears the whole recording again", async () => {
+    const cid = newId();
+    const before = whisper.calls.length;
+    await finished(cid, 2);
+    const rows = await until(async () => {
+      const r = await finals(cid);
+      return r.some((x) => x.provider === "whisper") ? r : null;
+    });
+    expect(whisper.calls.length).toBeGreaterThan(before);
+    const usage = rows.find((r) => r.provider === "whisper")?.usage as {
+      firstPass?: boolean;
+      profile?: string;
+    };
+    expect(usage.firstPass).toBeUndefined();
+    expect(usage.profile).toBe("test-profile");
   });
 
   test("a NUL byte in a provider's text is dropped, not fatal", async () => {

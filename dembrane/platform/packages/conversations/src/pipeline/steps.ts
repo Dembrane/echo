@@ -29,7 +29,7 @@ import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
 import { finalizeConversation, finalTranscript, processChunk } from "./defs";
-import { chunkListHash, type FinalSettings } from "./final";
+import { chunkListHash, type FinalSettings, finalTreatment, UPLOAD_SOURCE } from "./final";
 
 const {
   conversation,
@@ -357,11 +357,21 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   if (size < MIN_AUDIO_BYTES)
     throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
   const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
+  // An upload whose improved transcript is its own first reading is cut, at pauses, into pieces
+  // short enough for Whisper's sentence times; anything else keeps the provider's limits.
+  const conv = await conversationStore(d.db).conversation(chunk.conversation_id);
+  const timedCap =
+    (d.liveProvider ?? "whisper") === "whisper" &&
+    conv?.source === UPLOAD_SOURCE &&
+    finalTreatment(d.final, conv.source) === "first-pass"
+      ? (d.final?.timedPieceSeconds ?? Number.POSITIVE_INFINITY)
+      : Number.POSITIVE_INFINITY;
+  const maxSeconds = Math.min(limits.maxSeconds, timedCap);
   // The recorder cuts a live chunk at 30 seconds, and a small file cannot hold more than
   // the limit at any bitrate speech is recorded at: neither needs measuring.
   const smallLive = chunk.source === "PORTAL_AUDIO" && size < LIVE_CHUNK_BYTES;
   // A file too small to hold the seconds limit even at that bitrate needs no measuring.
-  const small = size < limits.maxSeconds * MIN_SPEECH_BYTES_PER_SECOND;
+  const small = size < maxSeconds * MIN_SPEECH_BYTES_PER_SECOND;
   if ((smallLive || small) && size <= limits.maxBytes) return [chunk.id];
 
   const source = {
@@ -375,7 +385,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
     throw new AudioError("value", "Duration not found in ffprobe output");
   // One planner for every request to a speech model: no piece is longer than the provider's
   // seconds limit or, at the file's own bitrate, its byte limit (see request-limits.ts).
-  const limit = pieceSeconds(limits, size, duration);
+  const limit = pieceSeconds(limits, size, duration, timedCap);
   if (duration <= limit) return [chunk.id];
   // Cut where nobody speaks, so a word is not split between two requests.
   const found = await d.media.silences({ source });
@@ -461,7 +471,9 @@ export async function updateChunk(
   d: Pick<PipelineDeps, "db" | "now">,
   chunkId: string,
   conversationId: string,
-  patch: Partial<Pick<ChunkRow, "path" | "transcript" | "error" | "diarization" | "pending_text">>,
+  patch: Partial<
+    Pick<ChunkRow, "path" | "transcript" | "error" | "diarization" | "pending_text" | "segments">
+  >,
   bumpConversation = "transcript" in patch,
 ): Promise<void> {
   const now = d.now().toISOString();
@@ -544,6 +556,8 @@ export async function transcribePiece(
         await recordRetries(d, chunk.conversation_id, "live", result.retry);
         await updateChunk(d, chunkId, chunk.conversation_id, {
           transcript: result.transcript,
+          // A new reading replaces the old times too; none (Gemini, redacted) clears them.
+          segments: result.segments ?? null,
           diarization: {
             schema: "Dembrane-26-07-gemini",
             data: { note: result.note, raw: {}, error: null, models: result.models },
@@ -681,9 +695,13 @@ async function pendingChunks(db: Db, conversationId: string): Promise<number> {
 export async function handOver(d: PipelineDeps, conversationId: string): Promise<boolean> {
   return transaction(d.db, async (tx) => {
     const locked = await tx.sql<
-      { is_finished: boolean | null; is_all_chunks_transcribed: boolean | null }[]
+      {
+        is_finished: boolean | null;
+        is_all_chunks_transcribed: boolean | null;
+        source: string | null;
+      }[]
     >`
-      select is_finished, is_all_chunks_transcribed from conversation
+      select is_finished, is_all_chunks_transcribed, source from conversation
       where id = ${conversationId} and deleted_at is null for update`;
     const row = locked[0];
     if (!row?.is_finished || row.is_all_chunks_transcribed) return false;
@@ -699,8 +717,10 @@ export async function handOver(d: PipelineDeps, conversationId: string): Promise
       { conversationId },
       { tx: tx.sql, workflowId: `conversations.finalize:${conversationId}:${state}` },
     );
-    // One run per provider and chunk list; the live text is never held for them.
-    const providers = d.final?.providers ?? [];
+    // One run per provider and chunk list; the live text is never held for them. A kind of
+    // conversation the profile does not improve keeps its live text and queues nothing.
+    const providers =
+      finalTreatment(d.final, row.source) === "none" ? [] : (d.final?.providers ?? []);
     for (const [i, provider] of providers.entries())
       await d.jobs.enqueue(
         finalTranscript,
