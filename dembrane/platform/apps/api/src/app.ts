@@ -29,7 +29,8 @@ import {
   embedderConfigOf,
   embeddingLocationOf,
   embeddingModelOf,
-  finalProvidersOf,
+  improves,
+  profileOf,
   searchGroundingOn,
   vertexCompleter,
   vertexEmbedder,
@@ -264,7 +265,10 @@ export function buildApp(deps: Deps) {
       monitorEnabled: deps.config.conversations.monitorEnabled,
       webhooksEnabled: deps.config.webhooks.enabled,
       dashboardUrl: deps.config.http.dashboardUrl,
-      finalTranscript: finalProvidersOf(deps.config.llm).length > 0,
+      improves: {
+        recordings: improves(profileOf(deps.config.llm), false),
+        uploads: improves(profileOf(deps.config.llm), true),
+      },
     },
     now: () => new Date(),
   };

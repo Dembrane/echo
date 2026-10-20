@@ -1,11 +1,14 @@
 import { type StepConfig, step } from "@dembrane/queue";
+import { conversationStore } from "../storage";
 import {
   editFinal,
   type FinalPart,
   type FinalPlan,
+  finalTreatment,
   loadFinalContext,
   markFinalGaveUp,
   planFinal,
+  planFromFirstPass,
   redactFinal,
   storeFinal,
   transcribeFinalPiece,
@@ -166,30 +169,64 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       hash: string;
     }): Promise<void> {
       const final = d.final;
-      const transcriber = final?.transcribers[p.provider];
-      if (!final || !transcriber) return;
+      if (!final) return;
+      const transcriber = final.transcribers[p.provider];
       let wrote = false;
       try {
-        const plan: FinalPlan | null = await step(
-          "final-plan",
-          () => planFinal(d, p.conversationId, p.hash, transcriber),
+        // An upload whose first reading is kept: its own sentences, moved to their place in
+        // the merged file; nothing is sent to the speech model again. When the first reading
+        // cannot give the times, the recording is read again as for a recorded conversation.
+        const kind = await step(
+          "final-kind",
+          async () => {
+            const conv = await conversationStore(d.db).conversation(p.conversationId);
+            const treatment = finalTreatment(final, conv?.source);
+            return {
+              treatment,
+              // The first reading's sentences are Whisper's: only a Whisper run keeps them.
+              firstPass:
+                treatment === "first-pass" && p.provider === "whisper"
+                  ? await planFromFirstPass(d, p.conversationId, p.hash)
+                  : null,
+            };
+          },
           retry.media,
         );
-        if (!plan) return;
+        if (kind.treatment === "none") return;
+        let plan: FinalPlan | null = kind.firstPass?.plan ?? null;
+        let parts: FinalPart[] = kind.firstPass ? [...kind.firstPass.parts] : [];
+        if (!plan) {
+          if (!transcriber) return;
+          plan = await step(
+            "final-plan",
+            () => planFinal(d, p.conversationId, p.hash, transcriber),
+            retry.media,
+          );
+          if (!plan) return;
+        }
         const ctx = await step(
           "final-context",
           () => loadFinalContext(d, p.conversationId),
           retry.db,
         );
-        const parts: FinalPart[] = [];
-        for (const piece of plan.pieces)
-          parts.push(
-            await step(
-              "final-transcribe",
-              () => transcribeFinalPiece(d, piece, transcriber, ctx),
-              retry.transcribe,
-            ),
-          );
+        if (!kind.firstPass) {
+          parts = [];
+          for (const piece of (plan as FinalPlan).pieces)
+            parts.push(
+              await step(
+                "final-transcribe",
+                () =>
+                  transcribeFinalPiece(
+                    d,
+                    piece,
+                    transcriber as NonNullable<typeof transcriber>,
+                    ctx,
+                  ),
+                retry.transcribe,
+              ),
+            );
+        }
+        const done = plan as FinalPlan;
         // The text pass, then redaction, each once over the whole transcript. A failed text
         // pass leaves Whisper's words; redaction that fails stops the run, since an anonymised
         // conversation must never show text that was not redacted.
@@ -218,7 +255,17 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
         wrote = await step(
           "final-store",
           () =>
-            storeFinal(d, p.conversationId, p.hash, p.provider, p.record, plan, parts, assembled),
+            storeFinal(
+              d,
+              p.conversationId,
+              p.hash,
+              p.provider,
+              p.record,
+              done,
+              parts,
+              assembled,
+              final.profile,
+            ),
           retry.db,
         );
         if (wrote && p.record) await summarizeWithWebhook(d, p.conversationId, retry, true, false);

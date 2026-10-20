@@ -49,11 +49,21 @@ export {
   resetObserverFaults,
 } from "./observe";
 export {
+  checkProfileModels,
+  compatibleModelsOf,
+  improves,
+  PROFILE_NAMES,
+  PROFILES,
+  type ProfileName,
+  profileGaps,
+  profileOf,
+  type TranscriptionProfile,
+} from "./profiles";
+export {
   completerConfigOf,
   embedderConfigOf,
   embeddingLocationOf,
   embeddingModelOf,
-  finalProvidersOf,
   groupsOf,
   type LlmSettings,
   modelsConfigOf,

@@ -9,10 +9,16 @@ import {
   type RetryStats,
   requestLimits,
   type Sentence,
+  splitLong,
+  type TimedText,
+  tidy,
 } from "@dembrane/transcription";
-import { and, count, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
-import { conversationStore, FINAL_GAVE_UP } from "../storage";
+import { conversationStore, FINAL_GAVE_UP, UPLOAD_SOURCE } from "../storage";
+
+export { UPLOAD_SOURCE };
+
 import type { PipelineDeps } from "./steps";
 import { pausesOf, recordRetries, recordStatus, spanCutter, stripNul } from "./steps";
 
@@ -24,6 +30,14 @@ const { conversation, conversation_chunk, conversation_final_transcript, project
  * speaks, and that becomes the transcript people read. The live text stays stored.
  */
 export interface FinalSettings {
+  /** The transcription profile that makes these, stored on every final transcript. */
+  readonly profile?: string;
+  /** What a recorded conversation gets; absent is a redo. */
+  readonly recordings?: "none" | "redo";
+  /** What an uploaded conversation gets: first-pass keeps the upload's own first reading; absent is a redo. */
+  readonly uploads?: "none" | "first-pass" | "redo";
+  /** Longest piece a timed transcript is read in; upload pieces are cut to it when uploads keep their first pass. */
+  readonly timedPieceSeconds?: number;
   /** Providers to run, in order. The first is the record, the others are kept beside it. */
   readonly providers: readonly FinalProvider[];
   readonly transcribers: Partial<Record<FinalProvider, FinalTranscriber>>;
@@ -47,6 +61,15 @@ export interface FinalSettings {
       ctx: { language: string | null; keyTerms: readonly string[] | null },
     ): Promise<{ sentences: Sentence[]; stats: EditStats }>;
   };
+}
+
+/** What a finished conversation from this source gets under these settings. */
+export function finalTreatment(
+  final: FinalSettings | undefined,
+  source: string | null | undefined,
+): "none" | "redo" | "first-pass" {
+  if (!final?.providers.length) return "none";
+  return source === UPLOAD_SOURCE ? (final.uploads ?? "redo") : (final.recordings ?? "redo");
 }
 
 /** Names the chunk list a final transcript was made from; the hand-over names its run the same way. */
@@ -77,6 +100,8 @@ const SPLIT_BATCH = 20;
 
 export interface FinalPlan {
   readonly duration: number;
+  /** Built from the first reading's own sentences: no audio was sent again. */
+  readonly firstPass?: boolean;
   readonly pieces: readonly {
     readonly key: string;
     readonly start: number;
@@ -173,6 +198,114 @@ export async function planFinal(
     if ((await d.audio.size(p.key)) === null)
       throw new AudioError("transient", `upload verification failed for ${p.key}`);
   return { duration, pieces };
+}
+
+/** One piece of the merged file and the first reading's sentences for it. */
+export interface FirstPassPiece {
+  readonly key: string;
+  readonly timed: TimedText | null;
+  readonly model: string | null;
+}
+
+/**
+ * The pieces' own sentences, moved to their place in the merged file: each piece starts where
+ * the ones before it end, by their real lengths. Null when a piece has no sentences to give
+ * (read by Gemini, redacted, or from before they were kept) or the lengths do not add up to
+ * the merged file, so the caller reads the recording again instead.
+ */
+export function assembleFirstPass(
+  pieces: readonly FirstPassPiece[],
+  mergedSeconds: number,
+  maxSentenceSeconds = 15,
+): { plan: FinalPlan; parts: FinalPart[] } | null {
+  if (!pieces.length || pieces.some((p) => !p.timed || !(p.timed.seconds > 0))) return null;
+  let at = 0;
+  const planned: FinalPlan["pieces"][number][] = [];
+  const parts: FinalPart[] = [];
+  for (const p of pieces) {
+    const timed = p.timed as TimedText;
+    const own = splitLong(
+      tidy(
+        timed.sentences.filter((x) => x.text.trim()),
+        timed.seconds,
+      ),
+      maxSentenceSeconds,
+    );
+    const sentences = own.map((x) => ({
+      start: Math.round((x.start + at) * 100) / 100,
+      end: Math.round((x.end + at) * 100) / 100,
+      text: x.text,
+    }));
+    planned.push({ key: p.key, start: at, duration: timed.seconds, hardCut: false });
+    parts.push({
+      text: sentences.map((x) => x.text).join(" "),
+      sentences,
+      usage: { seconds: 0, inputTokens: null, outputTokens: null },
+      model: p.model,
+    });
+    at += timed.seconds;
+  }
+  // Mp3 frames pad each file a little: a few hundredths of a second per piece is expected;
+  // more means a piece is missing from the merge or its length is wrong, and the times would slide.
+  const slack = Math.max(2, 0.01 * mergedSeconds, 0.1 * pieces.length);
+  if (mergedSeconds > 0 && Math.abs(at - mergedSeconds) > slack) return null;
+  return {
+    plan: { duration: mergedSeconds > 0 ? mergedSeconds : at, firstPass: true, pieces: planned },
+    parts,
+  };
+}
+
+/**
+ * An upload's improved transcript from its first reading: the merged file is made for the
+ * player as for any final pass, and the sentences Whisper gave each piece are moved to their
+ * place in it. Null when the conversation is gone, its chunk list changed, or the first
+ * reading cannot give the times; the run then reads the recording again.
+ */
+export async function planFromFirstPass(
+  d: PipelineDeps,
+  conversationId: string,
+  hash: string,
+): Promise<{ plan: FinalPlan; parts: FinalPart[] } | null> {
+  if ((await currentChunkHash(d, conversationId)) !== hash) return null;
+  let merged: { path: string; duration: number; used: string[] };
+  try {
+    merged = await mergeConversationAudio(
+      d,
+      conversationId,
+      Bun.randomUUIDv5(`${conversationId}:${hash}`, FINAL_NAMESPACE),
+    );
+  } catch (err) {
+    if (err instanceof NoContent || err instanceof NoMergeableChunks) return null;
+    throw err;
+  }
+  if (!merged.used.length) return null;
+  const rows = await d.db
+    .select({
+      id: conversation_chunk.id,
+      path: conversation_chunk.path,
+      segments: conversation_chunk.segments,
+      diarization: conversation_chunk.diarization,
+    })
+    .from(conversation_chunk)
+    .where(inArray(conversation_chunk.id, merged.used))
+    .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id));
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const pieces = merged.used.map((id): FirstPassPiece => {
+    const r = byId.get(id);
+    const models = (r?.diarization as { data?: { models?: unknown[] } } | null)?.data?.models;
+    return {
+      key: r?.path ? d.audioUrls.keyOf(r.path) : id,
+      timed: (r?.segments as TimedText | null) ?? null,
+      model: typeof models?.[0] === "string" ? models[0] : null,
+    };
+  });
+  const out = assembleFirstPass(pieces, merged.duration);
+  if (!out)
+    d.logger.info(
+      { conversationId, pieces: pieces.length, signal: "conversation.final_first_pass_unusable" },
+      "the first reading cannot give the times; reading the recording again",
+    );
+  return out;
 }
 
 export interface FinalPart {
@@ -321,6 +454,8 @@ export async function storeFinal(
   plan: FinalPlan,
   parts: readonly FinalPart[],
   assembled: FinalText,
+  /** The transcription profile that made it, so every transcript names its pipeline. */
+  profile?: string,
 ): Promise<boolean> {
   // Postgres text cannot hold a NUL byte, which Gemini now and then emits.
   const text = (stripNul(assembled.text) as string).trim();
@@ -360,6 +495,8 @@ export async function storeFinal(
     audio_seconds: plan.duration,
     usage: {
       ...usage,
+      ...(profile && { profile }),
+      ...(plan.firstPass && { firstPass: true }),
       pieces: plan.pieces.length,
       hardCuts: plan.pieces.filter((p) => p.hardCut).length,
       ...(assembled.edit && { textPass: assembled.edit }),

@@ -15,6 +15,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Ids arrive from paths and bodies; one that is not a uuid names nothing, like a missing row. */
 /** The processing event a final transcript run writes when it ends without a transcript; the dashboard reads it. */
 export const FINAL_GAVE_UP = "task_final_transcript.gave_up";
+/** How a conversation uploaded in the dashboard is marked; every other conversation was recorded. */
+export const UPLOAD_SOURCE = "DASHBOARD_UPLOAD";
 
 export const isUuid = (id: unknown): id is string => typeof id === "string" && UUID.test(id);
 

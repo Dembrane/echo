@@ -6,12 +6,15 @@ import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
 import {
+  checkProfileModels,
   completerConfigOf,
   createModels,
   embedderConfigOf,
-  finalProvidersOf,
+  type LlmSettings,
   type Models,
   modelsConfigOf,
+  profileGaps,
+  profileOf,
   vertexCompleter,
   vertexEmbedder,
 } from "@dembrane/llm";
@@ -114,41 +117,75 @@ const billing = createBilling({
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
 // One structured line per request to a speech model: what is sent, how long it took, how it ended.
 const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
-const models = createModels(modelsConfigOf(config.llm), {
+// The transcription pipeline is one named profile (packages/llm/src/profiles.ts). A deployment
+// that lacks what it needs stops here, naming the profile and the missing setting, instead of
+// failing every recording later.
+const profile = (() => {
+  try {
+    return profileOf(config.llm);
+  } catch (err) {
+    logger.fatal({ signal: "worker.boot_failed" }, (err as Error).message);
+    logger.flush();
+    process.exit(1);
+  }
+})();
+const gap = profileGaps(profile, config.llm);
+if (gap) {
+  logger.fatal({ signal: "worker.boot_failed", profile: profile.name }, gap);
+  logger.flush();
+  process.exit(1);
+}
+logger.info({ profile: profile.name }, "transcription profile");
+void checkProfileModels(profile, config.llm, (line) =>
+  logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
+);
+const modelHooks = {
   onSpeechRequest: logSpeech,
   observe: metering.observe,
-  onObserverFault: (err) =>
+  onObserverFault: (err: unknown) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
-});
-// The final pass transcribes the whole recording again with the providers named in
-// LLM_FINAL_TRANSCRIPT, each on its own models whatever LLM_PROVIDER serves the live text:
-// the preview runs both on one conversation. The first one is the transcript people read.
-const retry = config.llm.whisperRetry ? DEFAULT_RETRY : null;
-const transcriber = new GeminiTranscriber(models, logger, { retry });
-const liveLimits = requestLimits(
-  config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
-);
-const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
-// The text pass reads Whisper's transcript with the Whisper provider's own text model.
-let whisperModels: Models | null = null;
-const finalProviders = finalProvidersOf(config.llm);
-for (const provider of finalProviders) {
-  const own = createModels(
-    modelsConfigOf({
-      ...config.llm,
-      provider: provider === "whisper" ? "openai-compatible" : "vertex",
+};
+const models = createModels(modelsConfigOf(config.llm, profile), modelHooks);
+/**
+ * Models on one speech provider whatever LLM_PROVIDER serves chat: the profile's Gemini model
+ * leads that provider's audio group (its fallbacks follow), and on the compatible provider the
+ * profile's clean-up model is the text model.
+ */
+const speechModels = (provider: "whisper" | "gemini", geminiModel?: string): Models => {
+  const s: LlmSettings = {
+    ...config.llm,
+    provider: provider === "whisper" ? "openai-compatible" : "vertex",
+    ...(geminiModel && {
+      multiModalPro: [geminiModel, ...config.llm.multiModalPro.filter((m) => m !== geminiModel)],
     }),
-    {
-      onSpeechRequest: logSpeech,
-      observe: metering.observe,
-      onObserverFault: (err) =>
-        logger.warn({ err }, "model call metering failed; later faults are silent"),
-    },
-  );
-  if (provider === "whisper") whisperModels = own;
-  finalTranscribers[provider] =
-    provider === "whisper" ? new WhisperFinal(own, { retry }) : new GeminiFinal(own, logger);
-}
+    ...(profile.cleanUp && { compatTextFast: [profile.cleanUp.model] }),
+  };
+  return createModels(modelsConfigOf(s, profile), modelHooks);
+};
+const retry = profile.live.secondListen ? DEFAULT_RETRY : null;
+const liveModels =
+  profile.live.provider === "whisper"
+    ? speechModels("whisper")
+    : speechModels("gemini", profile.live.model);
+const transcriber = new GeminiTranscriber(liveModels, logger, { retry });
+const liveLimits = requestLimits(profile.live.provider);
+const redoesAnything =
+  profile.redo !== null && (profile.recordings === "redo" || profile.uploads === "redo");
+const redoModels =
+  redoesAnything && profile.redo
+    ? profile.redo.provider === "whisper"
+      ? speechModels("whisper")
+      : speechModels("gemini", profile.redo.model)
+    : null;
+// The clean-up reads Whisper's sentences with the compatible provider's text model.
+const cleanUpModels = profile.cleanUp ? speechModels("whisper") : null;
+const finalTranscriber: FinalTranscriber | null =
+  redoModels && profile.redo
+    ? profile.redo.provider === "whisper"
+      ? new WhisperFinal(redoModels, { retry })
+      : new GeminiFinal(redoModels, logger)
+    : null;
+const finalProvider = profile.redo?.provider ?? profile.live.provider;
 const audio = config.audio.s3Bucket
   ? new S3Storage({
       endpoint: config.audio.s3Endpoint ?? "",
@@ -202,25 +239,27 @@ const regs = registrations({
     ),
     media,
     transcriber,
-    liveProvider: config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
+    liveProvider: profile.live.provider,
     ...(config.llm.whisperMaxRequestSeconds && {
       requestLimits: {
         ...liveLimits,
         maxSeconds: Math.min(liveLimits.maxSeconds, config.llm.whisperMaxRequestSeconds),
       },
     }),
-    ...(finalProviders.length && {
+    ...((profile.recordings !== "none" || profile.uploads !== "none") && {
       final: {
-        providers: finalProviders,
-        transcribers: finalTranscribers,
-        ...(config.llm.finalTextPass === "glm" &&
-          whisperModels && {
-            edit: {
-              providers: ["whisper" as const],
-              run: (sentences, ctx) =>
-                editSentences(whisperModels as Models, sentences, ctx, logger),
-            },
-          }),
+        profile: profile.name,
+        recordings: profile.recordings,
+        uploads: profile.uploads,
+        timedPieceSeconds: profile.timedPieceSeconds,
+        providers: [finalProvider],
+        transcribers: finalTranscriber ? { [finalProvider]: finalTranscriber } : {},
+        ...(cleanUpModels && {
+          edit: {
+            providers: ["whisper" as const],
+            run: (sentences, ctx) => editSentences(cleanUpModels as Models, sentences, ctx, logger),
+          },
+        }),
         redact: async (text, o) =>
           (
             await transcriber.redactText({
