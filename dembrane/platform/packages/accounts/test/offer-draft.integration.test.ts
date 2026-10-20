@@ -342,6 +342,10 @@ run("an offer draft, and the invoice request after the signature", () => {
     const org = w.otherOrgId;
     const requested = () => inbox("echo_account_invoice_requested_v1");
     const before = requested().length;
+    const enabled = async () =>
+      (await store.events(w.db, org)).filter((e) => e.type === "account.enabled");
+    // The test above never enabled it: that is what the ready moment does.
+    expect(await enabled()).toHaveLength(0);
     // The offer of the test above (OFFER-901) is sent and waits for a signature.
     const [open] = (await store.documents(w.db, org)).filter(
       (d) => d.reference === "OFFER-901" && d.status === "sent",
@@ -350,13 +354,20 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect((await sign(docId, "outsider", org)).status).toBe(200);
     // Signed, but nobody knows yet who to invoice.
     expect(requested()).toHaveLength(before);
+    expect(await enabled()).toHaveLength(0);
 
     expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
     // The DPA went out with the offer as a document of its own, and is not signed yet.
     expect(requested()).toHaveLength(before);
+    expect(await enabled()).toHaveLength(0);
     const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
     expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
     expect(requested()).toHaveLength(before + 1);
+    // Ready to invoice opens the account, once, as the system; nobody waits for payment.
+    const [opened, ...rest] = await enabled();
+    expect(rest).toHaveLength(0);
+    expect(opened).toMatchObject({ actorKind: "system", actorUserId: null });
+    expect(opened?.detail).toMatchObject({ stage: "customer" });
     const message = requested().at(-1) as Record<string, unknown>;
     expect(message).toMatchObject({
       event: "account.invoice.requested",
@@ -424,6 +435,10 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect((await sign(second.id, "outsider", org)).status).toBe(200);
     expect(requested()).toHaveLength(before + 1);
     expect(requested().at(-1)).toMatchObject({ document: { reference: "OFFER-904" } });
+    // Already enabled: the second offer being ready records nothing more.
+    expect(
+      (await store.events(w.db, org)).filter((e) => e.type === "account.enabled"),
+    ).toHaveLength(1);
 
     // An offer without amounts is never drafted, so there is nothing to sign or invoice.
     const free = await call(

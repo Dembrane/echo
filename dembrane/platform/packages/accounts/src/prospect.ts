@@ -3,9 +3,9 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { AccountsDeps, Conn } from "./deps";
-import { emit } from "./events";
+import { type Actor, emit } from "./events";
 import type { Language } from "./offer";
-import { store } from "./storage";
+import { type OrgRow, store } from "./storage";
 import { ensureBillingTask } from "./tasks";
 
 export interface CreateAccountInput {
@@ -321,4 +321,49 @@ export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Pr
     .where(
       and(eq(schema.directus_users.status, "draft"), inArray(schema.directus_users.id, members)),
     );
+}
+
+/**
+ * What "enabled" means: the organisation has its account stage, its own billing account,
+ * the billing details task (not for a prospect) and its held contacts let in, and the
+ * timeline says who enabled it. Staff do this from the account page; the product does it
+ * on its own when an organisation becomes ready to invoice (requestInvoices), so a customer
+ * who pays 30 days after the invoice does not wait for the payment. Both go through here.
+ *
+ * The caller holds the organisation's transaction. `actor` is the staff member, or the
+ * system for the automatic path.
+ */
+export async function enableOrg(
+  d: AccountsDeps,
+  tx: Conn,
+  org: OrgRow,
+  input: {
+    stage: "prospect" | "customer" | "churned";
+    actor: Actor;
+    /** The staff member's app user, or null for the system. */
+    createdBy: string | null;
+  },
+): Promise<void> {
+  const nowIso = d.now().toISOString();
+  await store.updateOrg(tx, org.id, { account_stage: input.stage, updated_at: nowIso });
+  if (!(await store.billing(tx, org.id)))
+    await store.insertBilling(tx, {
+      id: newId(),
+      org_id: org.id,
+      tier: "free",
+      payment_mode: "none",
+      created_by: input.createdBy,
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+  // A prospect gets the billing details task with its first offer, not before.
+  if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, input.actor.userId);
+  // Enabling is the customer being allowed to use their account now.
+  await releaseHeldContacts(tx, org.id, d.now());
+  await emit(d, tx, {
+    orgId: org.id,
+    actor: input.actor,
+    type: "account.enabled",
+    detail: { stage: input.stage, previous: org.account_stage },
+  });
 }

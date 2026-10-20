@@ -2,6 +2,7 @@ import type { AccountsDeps, Conn } from "./deps";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
 import { accountPageUrl, dashboardBase } from "./jobs";
 import type { OfferContent } from "./offer";
+import { enableOrg } from "./prospect";
 import {
   type BillingRow,
   type DocumentRow,
@@ -103,6 +104,16 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
         });
       continue;
     }
+    // Ready to invoice is when the customer may start: a large customer pays 30 days
+    // after the invoice and must not wait for it. Staff enabling the account by hand
+    // stays the way to open it earlier (a PO or the DPA arrives late). Once: an account
+    // already enabled, by staff or by an earlier offer, is left as it is.
+    if (!(await store.hasEvent(tx, org.id, "account.enabled")))
+      await enableOrg(d, tx, org, {
+        stage: "customer",
+        actor: { kind: "system", userId: null },
+        createdBy: null,
+      });
     const signedPdf = `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`;
     await emit(d, tx, {
       orgId: org.id,

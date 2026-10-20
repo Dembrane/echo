@@ -165,6 +165,10 @@ msgstr "Обліковий запис створено"
 msgid "Account enabled"
 msgstr "Обліковий запис активовано"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:878
+msgid "Account enabled automatically"
+msgstr "Обліковий запис активовано автоматично"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:842
 msgid "Account manager asked to check in"
 msgstr "Менеджера акаунта попросили зв'язатися з клієнтом"
@@ -548,7 +552,7 @@ msgid "Custom"
 msgstr "Індивідуальний"
 
 #: src/features/accounts/format.ts:120
-#: src/features/accounts/staff/AccountCardRoute.tsx:888
+#: src/features/accounts/staff/AccountCardRoute.tsx:890
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Клієнт"
@@ -1981,7 +1985,7 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Налаштуйте власний проєкт для своєї першої справжньої сесії."
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show all"
 msgstr "Показати всі"
 
@@ -1991,7 +1995,7 @@ msgid "Show finished ({0})"
 msgstr "Показати завершені ({0})"
 
 #: src/features/accounts/staff/DemoRoute.tsx:330
-#: src/features/accounts/staff/AccountCardRoute.tsx:902
+#: src/features/accounts/staff/AccountCardRoute.tsx:904
 msgid "Show less"
 msgstr "Показати менше"
 
@@ -2095,7 +2099,7 @@ msgstr "Підписує особа, уповноважена погоджува
 msgid "Something went wrong"
 msgstr "Щось пішло не так"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:890
+#: src/features/accounts/staff/AccountCardRoute.tsx:892
 msgid "Staff"
 msgstr "Команда"
 
@@ -2151,7 +2155,7 @@ msgstr "Надіслано"
 msgid "Subscription"
 msgstr "Підписка"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:891
+#: src/features/accounts/staff/AccountCardRoute.tsx:893
 msgid "System"
 msgstr "Система"
 
