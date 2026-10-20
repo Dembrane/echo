@@ -528,7 +528,7 @@ export function ImproveTranscriptAnimation() {
 	}, [reduced]);
 	const lines = [
 		translate`While people talk, the text appears piece by piece.`,
-		translate`When the conversation ends, we listen to the whole recording again.`,
+		translate`When the conversation ends, dembrane listens to the whole recording again.`,
 		translate`Names and key terms are spelled right, and the text is cleaned up.`,
 		translate`Click a sentence to hear it from there.`,
 	];

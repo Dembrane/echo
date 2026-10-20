@@ -17871,8 +17871,12 @@ msgid "When someone scans the QR code, that is one conversation. If 50 people sc
 msgstr "Als iemand de QR-code scant, is dat één gesprek. Als 50 mensen hem tegelijk scannen, zijn dat 50 gesprekken tegelijk."
 
 #: src/components/conversation/ImproveTranscriptAnimation.tsx:531
-msgid "When the conversation ends, we listen to the whole recording again."
-msgstr "Als het gesprek is afgelopen, luisteren we de hele opname opnieuw."
+msgid "When the conversation ends, dembrane listens to the whole recording again."
+msgstr "Als het gesprek is afgelopen, luistert dembrane de hele opname opnieuw."
+
+#: src/components/conversation/ImproveTranscriptAnimation.tsx:531
+#~ msgid "When the conversation ends, we listen to the whole recording again."
+#~ msgstr "Als het gesprek is afgelopen, luisteren we de hele opname opnieuw."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:67
 msgid "When the summary is generated"
