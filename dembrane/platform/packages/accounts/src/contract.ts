@@ -463,6 +463,8 @@ export const TimelineEvent = z.object({
   type: z.string(),
   actor: z.enum(["customer", "staff", "system"]),
   actor_user_id: Uuid.nullable(),
+  /** The staff member's display name, on staff rows of the staff card; null otherwise. */
+  actor_name: z.string().nullable(),
   subject_type: z.string().nullable(),
   subject_id: z.string().nullable(),
   detail: z.unknown().nullable(),

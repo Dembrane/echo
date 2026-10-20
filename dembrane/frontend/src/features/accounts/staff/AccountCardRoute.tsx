@@ -887,7 +887,7 @@ function Timeline({ card }: { card: AccountCardT }) {
 								{e.actor === "customer"
 									? t`Customer`
 									: e.actor === "staff"
-										? t`Staff`
+										? (e.actor_name ?? t`Staff`)
 										: t`System`}
 							</Text>
 						</Stack>

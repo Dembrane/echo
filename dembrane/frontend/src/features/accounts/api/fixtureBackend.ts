@@ -177,6 +177,7 @@ function otherStores(): Store[] {
 		timeline: [
 			{
 				actor: "staff",
+				actor_name: null,
 				actor_user_id: null,
 				created_at: created,
 				detail: { stage },
@@ -529,6 +530,7 @@ const event = (
 ) => {
 	s.timeline.unshift({
 		actor,
+		actor_name: actor === "staff" ? "Pauline" : null,
 		actor_user_id: null,
 		created_at: now(),
 		detail,

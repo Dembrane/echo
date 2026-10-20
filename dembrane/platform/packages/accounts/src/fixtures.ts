@@ -662,6 +662,7 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "document.sent",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: "document",
       subject_id: OFFER,
       detail: {
@@ -676,6 +677,7 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "demo.seeded",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: null,
       subject_id: null,
       detail: { slug: "voorbeeldwonen" },
@@ -686,6 +688,7 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "account.created",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: null,
       subject_id: null,
       detail: { stage: "customer", contact: "robin@example-town.example" },
