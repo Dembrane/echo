@@ -107,12 +107,6 @@ export const FinalTranscript = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Group gap={4} wrap="nowrap">
-					<SkipButton
-						label={t`Back 15 seconds`}
-						onClick={() => skip(-SKIP_SECONDS)}
-					>
-						<ArrowCounterClockwise size={18} />
-					</SkipButton>
 					{/* biome-ignore lint/a11y/useMediaCaption: the transcript is the text above */}
 					<audio
 						ref={audioRef}
@@ -124,6 +118,12 @@ export const FinalTranscript = ({
 						onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
 						onSeeked={(e) => setTime(e.currentTarget.currentTime)}
 					/>
+					<SkipButton
+						label={t`Back 15 seconds`}
+						onClick={() => skip(-SKIP_SECONDS)}
+					>
+						<ArrowCounterClockwise size={18} />
+					</SkipButton>
 					<SkipButton
 						label={t`Forward 15 seconds`}
 						onClick={() => skip(SKIP_SECONDS)}
