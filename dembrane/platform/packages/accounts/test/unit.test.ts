@@ -404,6 +404,14 @@ describe("the offer", () => {
         imageSha256: "b".repeat(64),
         language: "en",
         legal: [],
+        trail: [
+          {
+            at: "2026-09-27T09:00:00.000Z",
+            what: "Sent by Sam Staff (sam@dembrane.example), dembrane",
+          },
+          { at: "2026-09-28T09:58:00.000Z", what: "First opened by a@b.example" },
+          { at: "2026-09-28T10:00:00.000Z", what: "Signed by a@b.example" },
+        ],
       },
     );
     expect((await PDFDocument.load(out)).getPageCount()).toBe(r.pageCount + 1);

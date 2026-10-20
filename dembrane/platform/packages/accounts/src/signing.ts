@@ -270,6 +270,7 @@ export async function signDocument(
         ? [{ kind, version: row.version, effectiveOn: row.effectiveOn, sha256: row.sha256 }]
         : [],
     ),
+    trail: await auditTrail(d, doc, access.email, signedAt),
   };
   let pdf: Uint8Array;
   try {
@@ -380,6 +381,54 @@ export async function signDocument(
     throw err;
   }
   return { signature_id: signatureId, signed_at: signedAt, confirmation_text: expected };
+}
+
+/**
+ * The document's trail as the signature record prints it: who at dembrane sent it, when it
+ * was first opened and by whom, any signer named in between, and this signature. A dispute
+ * then reads from the signed PDF alone, without our database.
+ */
+export async function auditTrail(
+  d: AccountsDeps,
+  doc: DocumentRow,
+  signer: string,
+  signedAt: string,
+): Promise<{ at: string; what: string }[]> {
+  const rows = await store.documentEvents(d.db, doc.orgId, doc.id);
+  const ids = [...new Set(rows.flatMap((e) => (e.actorUserId ? [e.actorUserId] : [])))];
+  const names = await store.userNames(d.db, ids);
+  const emails = new Map(
+    await Promise.all(
+      ids.map(async (id) => [id, (await store.identity(d.db, id))?.email ?? null] as const),
+    ),
+  );
+  const who = (e: (typeof rows)[number]) => {
+    if (!e.actorUserId) return e.actorKind === "customer" ? "the customer" : "dembrane";
+    const name = names.get(e.actorUserId);
+    const email = emails.get(e.actorUserId);
+    return name && email ? `${name} (${email})` : (email ?? name ?? "an unknown user");
+  };
+  const at = (e: (typeof rows)[number]) => new Date(e.createdAt).toISOString();
+  const trail: { at: string; what: string }[] = [];
+  let opened = false;
+  for (const e of rows) {
+    const detail = (e.detail ?? {}) as { email?: string; name?: string };
+    const named = detail.name ? `${detail.name} (${detail.email})` : (detail.email ?? "");
+    if (e.type === "document.sent")
+      trail.push({
+        at: at(e),
+        what: e.actorKind === "staff" ? `Sent by ${who(e)}, dembrane` : `Sent by ${who(e)}`,
+      });
+    else if (e.type === "document.viewed" && !opened) {
+      opened = true;
+      trail.push({ at: at(e), what: `First opened by ${who(e)}` });
+    } else if (e.type === "document.signer_named")
+      trail.push({ at: at(e), what: `${named} named as signer by ${who(e)}` });
+    else if (e.type === "document.signer_replaced")
+      trail.push({ at: at(e), what: `Signer changed to ${named} by ${who(e)}` });
+  }
+  trail.push({ at: signedAt, what: `Signed by ${signer}` });
+  return trail;
 }
 
 /** What signing sets in motion: the sign task is done, locked tasks open, and the DPA follows. */

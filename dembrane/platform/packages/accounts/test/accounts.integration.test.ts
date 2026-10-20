@@ -10,6 +10,7 @@ import postgres from "postgres";
 import * as K from "../src/contract";
 import { runRemindersTick, runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
+import { auditTrail } from "../src/signing";
 import { store } from "../src/storage";
 import { billingComplete } from "../src/tasks";
 import { admin, call, dropDatabase, png, pngB64, type World, world } from "./helpers";
@@ -341,6 +342,21 @@ run("accounts routes against Postgres", () => {
     const bytes = pdf.data as unknown as Uint8Array;
     expect(sha(bytes)).toBe(sig?.signedPdfSha256 as string);
     expect((await PDFDocument.load(bytes)).getPageCount()).toBe((doc?.pageCount as number) + 1);
+    // The record's trail: staff sent it, the customer opened it, then this signature.
+    const signedAt = new Date(sig?.signedAt ?? 0).toISOString();
+    const trail = await auditTrail(
+      w.deps,
+      doc as NonNullable<typeof doc>,
+      "billing@example.test",
+      signedAt,
+    );
+    expect(trail[0]?.what).toMatch(/^Sent by .+, dembrane$/);
+    expect(trail.filter((t) => t.what.startsWith("First opened by "))).toHaveLength(1);
+    expect(trail.at(-1)).toEqual({
+      at: signedAt,
+      what: "Signed by billing@example.test",
+    });
+    expect(trail.map((t) => t.at)).toEqual([...trail.map((t) => t.at)].sort());
     const image = await w.files.get(sig?.imageKey as string);
     expect(sha(new Uint8Array(await (image as Blob).arrayBuffer()))).toBe(
       sig?.imageSha256 as string,

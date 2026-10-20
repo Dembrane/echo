@@ -539,6 +539,15 @@ export const store = {
       .limit(limit);
   },
 
+  /** One document's timeline, oldest first: what the signature record's trail is made of. */
+  async documentEvents(c: Conn, orgId: string, docId: string): Promise<EventRow[]> {
+    return c
+      .select()
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.subjectId, docId)))
+      .orderBy(asc(event.createdAt), asc(event.id));
+  },
+
   /** Display names by sign-in user id, for the people a timeline names; a deleted user is absent. */
   async userNames(c: Conn, ids: readonly string[]): Promise<Map<string, string>> {
     if (!ids.length) return new Map();
