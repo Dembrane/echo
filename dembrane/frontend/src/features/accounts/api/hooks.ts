@@ -49,16 +49,19 @@ export const useDocument = (
 		queryKey: accountKeys.doc(orgId ?? "", docId ?? "", staff),
 	});
 
-export const useAccountList = (stage: string | null, q = "") =>
+export const useAccountList = (dealStage: string | null, q = "") =>
 	useQuery({
 		// Keeps the rows while a new search loads, so the table does not flash empty.
 		placeholderData: (previous) => previous,
 		queryFn: () =>
 			call("listAccounts", {
-				// PROVISIONAL: `q` (name or member email) is not in AccountListQuery yet.
-				query: { limit: 200, q: q || undefined, stage: stage ?? undefined },
+				query: {
+					deal_stage: dealStage ?? undefined,
+					limit: 200,
+					q: q || undefined,
+				},
 			}),
-		queryKey: [...accountKeys.list(stage), q],
+		queryKey: [...accountKeys.list(dealStage), q],
 	});
 
 export const useAccountCard = (orgId: string | undefined) =>

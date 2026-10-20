@@ -333,16 +333,17 @@ export const store = {
       .orderBy(desc(doc.createdAt), desc(doc.id));
   },
 
-  /** What the deal stage is read from, for many organisations in two reads. */
+  /** What the deal stage and its dates are read from, for many organisations in three reads. */
   async stageFacts(c: Conn, orgIds: readonly string[]) {
-    if (!orgIds.length) return { documents: [], billing: [] };
-    const [documents, billing] = await Promise.all([
+    if (!orgIds.length) return { documents: [], billing: [], billingSaved: [] };
+    const [documents, billing, billingSaved] = await Promise.all([
       c
         .select({
           orgId: doc.orgId,
           kind: doc.kind,
           status: doc.status,
           createdAt: doc.createdAt,
+          sentAt: doc.sentAt,
           signedAt: doc.signedAt,
           dpaTextId: doc.dpaTextId,
           invoiceStatus: doc.invoiceStatus,
@@ -358,8 +359,14 @@ export const store = {
           and(inArray(billing_account.org_id, [...orgIds]), isNull(billing_account.deleted_at)),
         )
         .orderBy(asc(billing_account.created_at)),
+      // When the details were last saved: the billing row also changes with the plan.
+      c
+        .select({ orgId: event.orgId, at: sql<Date>`max(${event.createdAt})` })
+        .from(event)
+        .where(and(inArray(event.orgId, [...orgIds]), eq(event.type, "billing_details.updated")))
+        .groupBy(event.orgId),
     ]);
-    return { documents, billing };
+    return { documents, billing, billingSaved };
   },
 
   async document(c: Conn, orgId: string, id: string): Promise<DocumentRow | null> {
@@ -822,7 +829,14 @@ export const store = {
    */
   async accountList(
     c: Conn,
-    opts: { stage: string | null; q: string | null; limit: number; offset: number },
+    opts: {
+      stage: string | null;
+      q: string | null;
+      limit: number;
+      offset: number;
+      /** Only organisations with an account stage or an offer: the ones a deal stage fits. */
+      accountsOnly?: boolean;
+    },
   ) {
     const like = opts.q ? `%${opts.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%` : null;
     return c
@@ -841,6 +855,12 @@ export const store = {
       .where(
         and(
           isNull(org.deleted_at),
+          opts.accountsOnly
+            ? or(
+                isNotNull(org.account_stage),
+                sql`exists (select 1 from account_document d where d.org_id = ${org.id} and d.kind = 'offer')`,
+              )
+            : undefined,
           opts.stage === "none"
             ? isNull(org.account_stage)
             : opts.stage

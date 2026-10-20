@@ -559,11 +559,31 @@ function dealStageOf(s: Store): Out<typeof AccountListItem>["deal_stage"] {
 		: "invoice_sent";
 }
 
+/** The dates behind the demo's stage, as the backend reads them from the same facts. */
+function milestonesOf(s: Store): Out<typeof AccountListItem>["milestones"] {
+	const offer = s.docs.find((d) => d.kind === "offer" && d.status !== "void");
+	const signed = offer?.status === "signed" ? offer.signed_at : null;
+	const dpas = s.docs.filter((d) => d.kind === "dpa" && d.status !== "void");
+	const invoice = s.docs.find((d) => d.kind === "invoice" && d.invoice);
+	return {
+		billing_details: s.billing.billing_email ? s.created_at : null,
+		documents_signed:
+			signed && dpas.every((d) => d.status === "signed")
+				? ([signed, ...dpas.map((d) => d.signed_at)].sort().at(-1) ?? null)
+				: null,
+		invoice_sent: signed && invoice ? (invoice.sent_at ?? null) : null,
+		offer_drafted: offer ? (offer.sent_at ?? s.created_at) : null,
+		offer_sent: offer && offer.status !== "draft" ? offer.sent_at : null,
+		signed,
+	};
+}
+
 function listItem(s: Store): Out<typeof AccountListItem> {
 	return {
 		created_at: s.created_at,
 		deal_stage: dealStageOf(s),
 		id: s.id,
+		milestones: milestonesOf(s),
 		name: s.name,
 		open_tasks: s.tasks.filter(
 			(t) => t.status === "open" || t.status === "changes_requested",
@@ -596,6 +616,7 @@ function card(s: Store) {
 			created_at: s.created_at,
 			deal_stage: dealStageOf(s),
 			id: s.id,
+			milestones: milestonesOf(s),
 			name: s.name,
 		},
 		pending_invites: [],
@@ -1562,8 +1583,10 @@ export async function handle(
 				const q = String(query?.q ?? "")
 					.trim()
 					.toLowerCase();
+				const deal = query?.deal_stage;
 				const rows = all
 					.filter((x) => stage === undefined || x.stage === stage)
+					.filter((x) => !deal || dealStageOf(x) === deal)
 					.filter(
 						(x) =>
 							!q ||

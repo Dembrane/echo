@@ -634,10 +634,23 @@ export const SigningRequests = z.array(
 export const AccountListQuery = z.object({
   /** A stage, or `none` for organisations that are not managed as accounts yet. */
   stage: nullish(z.enum(["prospect", "customer", "churned", "none"])),
+  /** Only accounts whose deal stands at this stage. */
+  deal_stage: nullish(DealStage),
   /** Part of the organisation's name or of a member's email address. */
   q: optText(200),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
+});
+
+/** When the deal reached each step of its stage, as the list and the card show them. */
+export const DealMilestones = z.object({
+  offer_drafted: IsoTime.nullable(),
+  offer_sent: IsoTime.nullable(),
+  signed: IsoTime.nullable(),
+  billing_details: IsoTime.nullable(),
+  /** Every other document that goes with the offer is signed, such as its separate DPA. */
+  documents_signed: IsoTime.nullable(),
+  invoice_sent: IsoTime.nullable(),
 });
 
 export const AccountListItem = z.object({
@@ -645,6 +658,7 @@ export const AccountListItem = z.object({
   name: z.string(),
   stage: AccountStage.nullable(),
   deal_stage: DealStage.nullable(),
+  milestones: DealMilestones,
   created_at: IsoTime.nullable(),
   /** Waiting on the customer. */
   open_tasks: z.number().int(),
@@ -685,6 +699,7 @@ export const AccountCard = z.object({
   organisation: OrganisationRef.extend({
     created_at: IsoTime.nullable(),
     deal_stage: DealStage.nullable(),
+    milestones: DealMilestones,
   }),
   account_manager: z
     .object({ id: Uuid, email: z.string().nullable(), name: z.string().nullable() })

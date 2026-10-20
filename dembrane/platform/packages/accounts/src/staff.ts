@@ -11,7 +11,7 @@ import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
-import { dealStage } from "./deal-stage";
+import { type DealStage, dealMilestones, dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
@@ -57,25 +57,47 @@ const actorOf = (who: Signed): Actor => ({ kind: "staff", userId: who.directusUs
 
 export async function listAccounts(
   d: AccountsDeps,
-  q: { stage: string | null; q: string | null; limit: number; offset: number },
+  q: {
+    stage: string | null;
+    deal_stage?: DealStage | null;
+    q: string | null;
+    limit: number;
+    offset: number;
+  },
 ) {
-  const rows = await store.accountList(d.db, q);
+  // The deal stage is read, not stored, so filtering on it reads every account and pages
+  // after; accounts are the organisations sales works with, a short list.
+  const byDeal = Boolean(q.deal_stage);
+  const rows = await store.accountList(
+    d.db,
+    byDeal ? { ...q, limit: 2000, offset: 0, accountsOnly: true } : q,
+  );
   const facts = await store.stageFacts(
     d.db,
     rows.map((r) => r.id),
   );
-  return {
-    accounts: rows.map((r) => ({
+  const accounts = rows.map((r) => {
+    // The first billing account is the organisation's, as store.billing reads it.
+    const billing = facts.billing.find((b) => b.org_id === r.id) ?? null;
+    const stageFacts = {
+      isAccount: r.stage !== null,
+      documents: facts.documents.filter((x) => x.orgId === r.id),
+      billingComplete: billingComplete(billing),
+      billingAt:
+        facts.billingSaved.find((b) => b.orgId === r.id)?.at ?? billing?.updated_at ?? null,
+    };
+    return {
       ...r,
       stage: r.stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: r.stage !== null,
-        documents: facts.documents.filter((x) => x.orgId === r.id),
-        // The first billing account is the organisation's, as store.billing reads it.
-        billingComplete: billingComplete(facts.billing.find((b) => b.org_id === r.id) ?? null),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: r.created_at ? new Date(r.created_at).toISOString() : null,
-    })),
+    };
+  });
+  return {
+    accounts: byDeal
+      ? accounts.filter((a) => a.deal_stage === q.deal_stage).slice(q.offset, q.offset + q.limit)
+      : accounts,
     limit: q.limit,
     offset: q.offset,
   };
@@ -125,16 +147,23 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
     d.db,
     events.flatMap((e) => (e.actorKind === "staff" && e.actorUserId ? [e.actorUserId] : [])),
   );
+  const stageFacts = {
+    isAccount: org.account_stage !== null,
+    documents: docs,
+    billingComplete: billingComplete(billing),
+    // Events come newest first; the billing row also changes with the plan.
+    billingAt:
+      events.find((e) => e.type === "billing_details.updated")?.createdAt ??
+      billing?.updated_at ??
+      null,
+  };
   return {
     organisation: {
       id: org.id,
       name: org.name,
       account_stage: org.account_stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: org.account_stage !== null,
-        documents: docs,
-        billingComplete: billingComplete(billing),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: org.created_at ? new Date(org.created_at).toISOString() : null,
     },
     account_manager: manager

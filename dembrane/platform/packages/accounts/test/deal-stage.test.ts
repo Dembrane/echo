@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { dealStage, type StageDocument } from "../src/deal-stage";
+import { dealMilestones, dealStage, type StageDocument } from "../src/deal-stage";
 
 // The deal stage is read from what the account holds; each case is one account's facts.
 const at = (day: number) => new Date(Date.UTC(2026, 9, day));
@@ -7,6 +7,7 @@ const doc = (over: Partial<StageDocument>): StageDocument => ({
   kind: "offer",
   status: "sent",
   createdAt: at(1),
+  sentAt: at(2),
   signedAt: null,
   dpaTextId: "dpa-1",
   invoiceStatus: null,
@@ -54,5 +55,61 @@ describe("the deal stage of an account", () => {
     // An older invoice belongs to an earlier deal; a void one to none.
     expect(stage([signed, invoice("paid", 2)])).toBe("offer_accepted");
     expect(stage([signed, invoice("void")])).toBe("offer_accepted");
+  });
+
+  test("the dates behind the stage: each step from when it happened, nothing before", () => {
+    const day = (n: number) => at(n).toISOString();
+    expect(dealMilestones({ isAccount: true, documents: [], billingComplete: false })).toEqual({
+      offer_drafted: null,
+      offer_sent: null,
+      signed: null,
+      billing_details: null,
+      documents_signed: null,
+      invoice_sent: null,
+    });
+    const draft = dealMilestones({
+      isAccount: true,
+      documents: [doc({ status: "draft", sentAt: null })],
+      billingComplete: false,
+    });
+    expect([draft.offer_drafted, draft.offer_sent]).toEqual([day(1), null]);
+    // Signed on the 5th, its DPA on the 6th, details saved on the 7th, invoiced on the 8th.
+    const dpa = doc({ kind: "dpa", status: "signed", signedAt: at(6) });
+    const invoice = doc({
+      kind: "invoice",
+      status: "sent",
+      createdAt: at(8),
+      invoiceStatus: "open",
+    });
+    expect(
+      dealMilestones({
+        isAccount: true,
+        documents: [signed, dpa, invoice],
+        billingComplete: true,
+        billingAt: at(7),
+      }),
+    ).toEqual({
+      offer_drafted: day(1),
+      offer_sent: day(2),
+      signed: day(5),
+      billing_details: day(7),
+      documents_signed: day(6),
+      invoice_sent: day(8),
+    });
+    // A DPA still open leaves the documents step open; an offer without one is done when signed.
+    const open = dealMilestones({
+      isAccount: true,
+      documents: [signed, doc({ kind: "dpa", status: "sent" })],
+      billingComplete: false,
+    });
+    expect([open.signed, open.documents_signed, open.billing_details]).toEqual([
+      day(5),
+      null,
+      null,
+    ]);
+    expect(
+      dealMilestones({ isAccount: true, documents: [signed], billingComplete: false })
+        .documents_signed,
+    ).toBe(day(5));
   });
 });

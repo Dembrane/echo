@@ -8,10 +8,12 @@ import {
 	Box,
 	Button,
 	Container,
+	CopyButton,
 	Flex,
 	Group,
 	Loader,
 	Menu,
+	Modal,
 	Paper,
 	SegmentedControl,
 	Select,
@@ -116,23 +118,24 @@ function Card() {
 							<Trans>Accounts</Trans>
 						</Group>
 					</Anchor>
-					<Group gap="xs">
-						<Title order={3}>{data.organisation.name}</Title>
-						{data.organisation.deal_stage && (
-							<Badge
-								size="sm"
-								variant="light"
-								color="gray"
-								data-testid="account-deal-stage"
-							>
-								{dealStageLabel(data.organisation.deal_stage)}
-							</Badge>
-						)}
+					<Group justify="space-between" align="flex-start" gap="sm">
+						<Group gap="xs">
+							<Title order={3}>{data.organisation.name}</Title>
+							{data.organisation.deal_stage && (
+								<Badge
+									size="sm"
+									variant="light"
+									color="gray"
+									data-testid="account-deal-stage"
+								>
+									{dealStageLabel(data.organisation.deal_stage)}
+								</Badge>
+							)}
+						</Group>
+						<UpgradeAccount card={data} />
 					</Group>
 				</Stack>
-				{data.organisation.account_stage === null && (
-					<EnableAccount orgId={orgId} />
-				)}
+				<Milestones card={data} />
 				{/* Flex, not Grid: Grid would join the shared Mantine chunk the portal loads. */}
 				<Flex
 					direction={{ base: "column", md: "row" }}
@@ -564,79 +567,111 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	);
 }
 
-/**
- * An organisation that is not an account yet (a free tier signup, a customer who never had
- * a demo): one decision, turning the account side on. Offers and tasks come after.
- */
-function EnableAccount({ orgId }: { orgId: string }) {
-	const [stage, setStage] = useState<"prospect" | "customer">("customer");
-	const [language, setLanguage] = useState<"nl" | "en">("nl");
-	const enable = useAccountsMutation("enableAccount", { orgId });
+/** The steps of the deal under the same names as the accounts list, each with its day. */
+function Milestones({ card }: { card: AccountCardT }) {
+	const { i18n } = useLingui();
+	const m = card.organisation.milestones;
+	const steps: [string, string | null][] = [
+		[dealStageLabel("offer_drafted"), m.offer_drafted],
+		[dealStageLabel("offer_sent"), m.offer_sent],
+		[t`Signed`, m.signed],
+		[t`Billing details`, m.billing_details],
+		[t`Documents`, m.documents_signed],
+		[dealStageLabel("invoice_sent"), m.invoice_sent],
+	];
 	return (
-		<Paper withBorder radius="md" p="md" data-testid="enable-account">
-			<Stack gap="sm">
-				<Stack gap={2}>
-					<Text>
-						<Trans>This organisation has no account yet</Trans>
+		<Group gap="xl" data-testid="account-milestones">
+			{steps.map(([label, at]) => (
+				<Stack key={label} gap={0}>
+					<Text size="xs" c="dimmed">
+						{label}
 					</Text>
-					<Text size="sm" c="dimmed">
-						<Trans>
-							Enable it to push offers and tasks. They get an Account page with
-							a billing details step.
-						</Trans>
+					<Text size="sm" c={at ? undefined : "dimmed"}>
+						{at ? formatDate(at, i18n.locale) : "·"}
 					</Text>
 				</Stack>
-				<Group gap="lg" align="flex-end">
-					<Stack gap={4}>
+			))}
+		</Group>
+	);
+}
+
+const PLANS = [
+	["innovator", "Innovator"],
+	["changemaker", "Changemaker"],
+	["guardian", "Guardian"],
+] as const;
+
+/**
+ * Staff do not switch an account on from here any more: the plan is asked of sam in
+ * #team-customer_support, in the open, so the team sees who asked for which plan and when.
+ */
+function UpgradeAccount({ card }: { card: AccountCardT }) {
+	const [opened, setOpened] = useState(false);
+	const [plan, setPlan] = useState<string>("changemaker");
+	const name = PLANS.find(([value]) => value === plan)?.[1] ?? plan;
+	const message = `@sam upgrade ${card.organisation.name} to ${name}: ${window.location.origin}/admin/accounts/${card.organisation.id}`;
+	return (
+		<>
+			<Button
+				size="xs"
+				variant="default"
+				onClick={() => setOpened(true)}
+				data-testid="upgrade-account"
+			>
+				<Trans>Upgrade account</Trans>
+			</Button>
+			<Modal
+				opened={opened}
+				onClose={() => setOpened(false)}
+				title={t`Upgrade this account`}
+			>
+				<Stack gap="md">
+					<Text size="sm">
+						<Trans>
+							Copy this message and paste it in #team-customer_support.
+						</Trans>
+					</Text>
+					<Group gap="sm">
 						<Text size="sm">
-							<Trans>Stage</Trans>
+							<Trans>Plan</Trans>
 						</Text>
 						<SegmentedControl
-							value={stage}
-							onChange={(v) => setStage(v as typeof stage)}
-							data={[
-								{ label: stageLabel("customer"), value: "customer" },
-								{ label: stageLabel("prospect"), value: "prospect" },
-							]}
+							size="xs"
+							value={plan}
+							onChange={setPlan}
+							data={PLANS.map(([value, label]) => ({ label, value }))}
 						/>
-					</Stack>
-					<Stack gap={4}>
-						<Text size="sm">
-							<Trans>Language</Trans>
+					</Group>
+					<Paper withBorder radius="sm" p="sm">
+						<Text
+							size="sm"
+							style={{ overflowWrap: "anywhere" }}
+							data-testid="upgrade-message"
+						>
+							{message}
 						</Text>
-						<SegmentedControl
-							value={language}
-							onChange={(v) => setLanguage(v as typeof language)}
-							data={[
-								{ label: "Nederlands", value: "nl" },
-								{ label: "English", value: "en" },
-							]}
-						/>
-					</Stack>
-					<Button
-						loading={enable.isPending}
-						onClick={() =>
-							enable.mutate(
-								{ body: { language, stage } },
-								{ onSuccess: () => toast.success(t`Account enabled`) },
-							)
-						}
-						data-testid="enable-account-submit"
-					>
-						<Trans>Enable account</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Paper>
+					</Paper>
+					<Group justify="flex-end">
+						<CopyButton value={message}>
+							{({ copied, copy }) => (
+								<Button onClick={copy} data-testid="upgrade-copy">
+									{copied ? <Trans>Copied</Trans> : <Trans>Copy message</Trans>}
+								</Button>
+							)}
+						</CopyButton>
+					</Group>
+				</Stack>
+			</Modal>
+		</>
 	);
 }
 
 function Stage({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const update = useAccountsMutation("updateAccount", { orgId });
 	return (
-		<Section title={<Trans>Stage</Trans>}>
+		<Section title={<Trans>Customer status</Trans>}>
 			<Select
-				aria-label={t`Stage`}
+				aria-label={t`Customer status`}
 				value={card.organisation.account_stage}
 				onChange={(v) =>
 					v &&
