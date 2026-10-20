@@ -8,7 +8,7 @@ import {
 	Button,
 	Group,
 	Loader,
-	SegmentedControl,
+	Select,
 	Stack,
 	Table,
 	Text,
@@ -22,12 +22,12 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { call } from "../api/client";
 import { useAccountList } from "../api/hooks";
-import { dealStageLabel, formatDate, stageLabel } from "../format";
+import { dealStageLabel, formatDate } from "../format";
 import { AccountsI18n } from "../i18n";
 
 /**
- * Staff: every customer account in one bounded table, with what is open on each side.
- * Counts only; the card behind a row holds the detail and the actions.
+ * Staff: every account in one bounded table under the deal stages the team uses in Attio,
+ * each step with the day it happened. The card behind a row holds the detail and the actions.
  */
 export const AccountsPanel = () => (
 	<AccountsI18n>
@@ -35,26 +35,40 @@ export const AccountsPanel = () => (
 	</AccountsI18n>
 );
 
-const Count = ({ n, tone }: { n: number; tone?: "red" | "blue" }) =>
-	n === 0 ? (
-		<Text size="sm" c="dimmed">
-			0
+const STAGES = [
+	"in_progress",
+	"offer_drafted",
+	"offer_sent",
+	"offer_accepted",
+	"invoice_sent",
+	"paid",
+	"lost",
+	"parked",
+] as const;
+
+/** A step's day, or a dot while the deal has not reached it. */
+const Step = ({ at }: { at: string | null }) => {
+	const { i18n } = useLingui();
+	return at ? (
+		<Text size="sm">
+			{new Intl.DateTimeFormat(i18n.locale, {
+				day: "numeric",
+				month: "short",
+			}).format(new Date(at))}
 		</Text>
 	) : (
-		<Badge variant="light" color={tone ?? "gray"} size="sm">
-			{n}
-		</Badge>
+		<Text size="sm" c="dimmed">
+			·
+		</Text>
 	);
+};
 
 function AccountsTable() {
 	const { i18n } = useLingui();
-	const [stage, setStage] = useState<string>("all");
+	const [stage, setStage] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [q] = useDebouncedValue(search.trim(), 250);
-	const { data, isLoading, error } = useAccountList(
-		stage === "all" ? null : stage,
-		q,
-	);
+	const { data, isLoading, error } = useAccountList(stage, q);
 	const navigate = useI18nNavigate();
 
 	return (
@@ -70,17 +84,15 @@ function AccountsTable() {
 						style={{ flex: 1, maxWidth: 340 }}
 						data-testid="accounts-search"
 					/>
-					<SegmentedControl
-						size="xs"
+					<Select
+						aria-label={t`Stage`}
+						placeholder={t`All stages`}
 						value={stage}
 						onChange={setStage}
-						data={[
-							{ label: t`All`, value: "all" },
-							{ label: t`Prospects`, value: "prospect" },
-							{ label: t`Customers`, value: "customer" },
-							{ label: t`Churned`, value: "churned" },
-							{ label: t`No account`, value: "none" },
-						]}
+						data={STAGES.map((s) => ({ label: dealStageLabel(s), value: s }))}
+						clearable
+						w={220}
+						data-testid="accounts-stage"
 					/>
 				</Group>
 				<Button
@@ -104,30 +116,38 @@ function AccountsTable() {
 				</Text>
 			)}
 			{data && data.accounts.length > 0 && (
-				<Table.ScrollContainer minWidth={760}>
+				<Table.ScrollContainer minWidth={900}>
 					<Table highlightOnHover verticalSpacing="xs">
 						<Table.Thead>
 							<Table.Tr>
-								<Table.Th>
+								<Table.Th rowSpan={2}>
 									<Trans>Organisation</Trans>
 								</Table.Th>
-								<Table.Th w={190}>
+								<Table.Th rowSpan={2} w={170}>
 									<Trans>Stage</Trans>
 								</Table.Th>
-								<Table.Th w={100} ta="center">
-									<Trans>Open tasks</Trans>
+								<Table.Th rowSpan={2} w={100}>
+									{dealStageLabel("offer_drafted")}
 								</Table.Th>
-								<Table.Th w={110} ta="center">
-									<Trans>Waiting on us</Trans>
+								<Table.Th rowSpan={2} w={100}>
+									{dealStageLabel("offer_sent")}
 								</Table.Th>
-								<Table.Th w={100} ta="center">
-									<Trans>Unsigned</Trans>
+								<Table.Th colSpan={3} ta="center">
+									{dealStageLabel("offer_accepted")}
 								</Table.Th>
-								<Table.Th w={100} ta="center">
-									<Trans>Overdue</Trans>
+								<Table.Th rowSpan={2} w={100}>
+									{dealStageLabel("invoice_sent")}
 								</Table.Th>
-								<Table.Th w={100} ta="center">
-									<Trans>Questions</Trans>
+							</Table.Tr>
+							<Table.Tr>
+								<Table.Th w={90}>
+									<Trans>Signed</Trans>
+								</Table.Th>
+								<Table.Th w={110}>
+									<Trans>Billing details</Trans>
+								</Table.Th>
+								<Table.Th w={100}>
+									<Trans>Documents</Trans>
 								</Table.Th>
 							</Table.Tr>
 						</Table.Thead>
@@ -154,33 +174,28 @@ function AccountsTable() {
 											</Trans>
 										</Text>
 									</Table.Td>
+									<Table.Td data-testid="account-deal-stage">
+										<Text size="sm">
+											{a.deal_stage ? dealStageLabel(a.deal_stage) : "·"}
+										</Text>
+									</Table.Td>
 									<Table.Td>
-										<Text size="sm">{stageLabel(a.stage)}</Text>
-										{a.deal_stage && (
-											<Badge
-												size="sm"
-												variant="light"
-												color="gray"
-												data-testid="account-deal-stage"
-											>
-												{dealStageLabel(a.deal_stage)}
-											</Badge>
-										)}
+										<Step at={a.milestones.offer_drafted} />
 									</Table.Td>
-									<Table.Td ta="center">
-										<Count n={a.open_tasks} />
+									<Table.Td>
+										<Step at={a.milestones.offer_sent} />
 									</Table.Td>
-									<Table.Td ta="center">
-										<Count n={a.waiting_on_us} tone="blue" />
+									<Table.Td>
+										<Step at={a.milestones.signed} />
 									</Table.Td>
-									<Table.Td ta="center">
-										<Count n={a.unsigned_documents} />
+									<Table.Td>
+										<Step at={a.milestones.billing_details} />
 									</Table.Td>
-									<Table.Td ta="center">
-										<Count n={a.overdue_invoices} tone="red" />
+									<Table.Td>
+										<Step at={a.milestones.documents_signed} />
 									</Table.Td>
-									<Table.Td ta="center">
-										<Count n={a.open_tickets} />
+									<Table.Td>
+										<Step at={a.milestones.invoice_sent} />
 									</Table.Td>
 								</Table.Tr>
 							))}

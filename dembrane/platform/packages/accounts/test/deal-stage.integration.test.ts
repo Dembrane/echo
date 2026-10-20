@@ -46,5 +46,22 @@ run("the deal stage on the staff list and the card", () => {
     expect((await call(w, "POST", `${S}/documents/${doc.id}/send`, "staff", {})).status).toBe(200);
     expect(await onCard()).toBe("offer_sent");
     expect(await onList()).toBe("offer_sent");
+
+    // The list and the card carry the same dates, and the list filters on the deal stage.
+    const card = K.AccountCard.parse((await call(w, "GET", S, "staff")).data).organisation;
+    expect(card.milestones.offer_drafted).not.toBeNull();
+    expect(card.milestones.offer_sent).not.toBeNull();
+    expect(card.milestones.signed).toBeNull();
+    const listed = async (stage: string) =>
+      K.AccountList.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts?limit=200&deal_stage=${stage}`, "staff"))
+          .data,
+      ).accounts.map((a) => a.id);
+    expect(await listed("offer_sent")).toContain(org);
+    expect(await listed("offer_drafted")).not.toContain(org);
+    const row = K.AccountList.parse(
+      (await call(w, "GET", "/api/v2/admin/accounts?limit=200", "staff")).data,
+    ).accounts.find((a) => a.id === org);
+    expect(row?.milestones).toEqual(card.milestones);
   });
 });
