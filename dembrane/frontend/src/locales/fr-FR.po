@@ -1212,8 +1212,8 @@ msgid "A live page in your Library, and live slides for the room, both made from
 msgstr "Une page en direct dans votre Bibliothèque et des diapositives en direct pour la salle, toutes deux créées à partir de vos conversations pendant une session. Bêta préliminaire : elles peuvent changer ou être retirées."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:229
-msgid "A more accurate transcript of the full recording is on its way."
-msgstr "Une transcription plus précise de l'enregistrement complet arrive."
+#~ msgid "A more accurate transcript of the full recording is on its way."
+#~ msgstr "Une transcription plus précise de l'enregistrement complet arrive."
 
 #: src/components/release/releaseHistory.ts:742
 msgid "A more reliable audio upload experience"
@@ -2101,6 +2101,10 @@ msgstr "Une erreur s'est produite."
 msgid "An event or a workshop."
 msgstr "Un événement ou un atelier."
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:263
+msgid "An improved transcript is on its way."
+msgstr "Une transcription améliorée arrive."
+
 #: src/components/map/panels/NodeDetailCard.tsx:200
 #: src/components/map/panels/DetailsSheet.tsx:258
 msgid "An object outside this view"
@@ -2606,7 +2610,7 @@ msgstr "Le téléchargement de l'audio n'est pas disponible pour les conversatio
 msgid "Audio is coming in"
 msgstr "Le son arrive"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:196
+#: src/components/conversation/ConversationTranscriptSection.tsx:230
 msgid "Audio playback not available for anonymized conversations"
 msgstr "La lecture de l'audio n'est pas disponible pour les conversations anonymisées"
 
@@ -5765,7 +5769,7 @@ msgid "emptied out"
 msgstr "vidé"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:164
+#: src/components/conversation/ConversationTranscriptSection.tsx:195
 msgid "Empty"
 msgstr "Vide"
 
@@ -6508,8 +6512,8 @@ msgid "Filter by name or id"
 msgstr "Filtrer par nom ou identifiant"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:44
-msgid "Final"
-msgstr "Final"
+#~ msgid "Final"
+#~ msgstr "Final"
 
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
@@ -7273,6 +7277,10 @@ msgstr "Heures à partir de maintenant"
 msgid "How Ask works and what it can do."
 msgstr "Comment fonctionne Ask et ce qu'il peut faire."
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:54
+msgid "How dembrane improves your transcript"
+msgstr "Comment dembrane améliore votre transcription"
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:695
 msgid "How it works:"
 msgstr "Comment ça marche :"
@@ -7426,6 +7434,10 @@ msgstr "Importé depuis une analyse antérieure, {day}"
 #: src/components/chat/AgenticChatPanel.tsx:1919
 msgid "Improve my setup"
 msgstr "Améliorer ma configuration"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:47
+msgid "Improved"
+msgstr "Améliorée"
 
 #: src/components/release/ReleaseChanges.tsx:18
 msgid "Improvements"
@@ -8281,7 +8293,6 @@ msgstr "Récupération des pages de documentation"
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
 #: src/components/conversation/ConversationsMiniList.tsx:70
-#: src/components/conversation/ConversationTranscriptSection.tsx:45
 msgid "Live"
 msgstr "Direct"
 
@@ -9814,7 +9825,7 @@ msgstr "Aucune formation pour l'instant."
 #~ msgid "No Transcript Available"
 #~ msgstr "Aucune transcription disponible"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:243
+#: src/components/conversation/ConversationTranscriptSection.tsx:273
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aucune transcription n'existe pour cette conversation. Veuillez vérifier plus tard."
 
@@ -10609,6 +10620,10 @@ msgstr "Organisez vos projets dans des espaces de travail au sein de votre organ
 #: src/components/release/releaseHistory.ts:150
 msgid "Organization"
 msgstr "Organisation"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:48
+msgid "Original"
+msgstr "Originale"
 
 #: src/components/popcorn/PopcornLanguageSettings.tsx:134
 msgid "Original language"
@@ -14033,7 +14048,7 @@ msgstr "Afficher les {total}"
 msgid "Show all conversations"
 msgstr "Afficher toutes les conversations"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:206
+#: src/components/conversation/ConversationTranscriptSection.tsx:240
 msgid "Show audio player"
 msgstr "Afficher le lecteur audio"
 
@@ -15834,8 +15849,8 @@ msgid "This is set to consent-based processing without a privacy policy link. Ad
 msgstr "Le traitement basé sur le consentement est défini sans lien vers la politique de confidentialité. Ajoutez-en un pour que ce réglage reste valide : les participants doivent pouvoir lire la politique de confidentialité."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:234
-msgid "This is the live transcript. You get a more accurate one when the conversation ends."
-msgstr "Ceci est la transcription en direct. Vous en recevrez une plus précise à la fin de la conversation."
+#~ msgid "This is the live transcript. You get a more accurate one when the conversation ends."
+#~ msgstr "Ceci est la transcription en direct. Vous en recevrez une plus précise à la fin de la conversation."
 
 #: src/components/pricing/questions.ts:197
 msgid "This is urgent"
@@ -16401,7 +16416,7 @@ msgstr "transcription"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:156
+#: src/components/conversation/ConversationTranscriptSection.tsx:187
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcription"
@@ -18269,6 +18284,10 @@ msgstr "Vous n'avez pas l'autorisation de créer des espaces de travail dans cet
 #: src/components/invite/WorkspaceSelectList.tsx:75
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Vous n'avez l'autorisation d'inviter dans aucun espace de travail de cette organisation."
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:265
+msgid "You get an improved transcript when the conversation ends."
+msgstr "Vous recevrez une transcription améliorée à la fin de la conversation."
 
 #: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"

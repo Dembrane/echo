@@ -1,8 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Badge,
 	Group,
+	Popover,
 	SegmentedControl,
 	Skeleton,
 	Stack,
@@ -11,6 +13,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { Eye } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
@@ -24,6 +27,7 @@ import {
 	useConversationFinalTranscript,
 	useInfiniteConversationChunks,
 } from "./hooks";
+import { ImproveTranscriptAnimation } from "./ImproveTranscriptAnimation";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
 import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
@@ -39,11 +43,44 @@ type ConversationTranscriptSectionProps = {
 const VIEW_KEY = "conversation-transcript-view";
 type TranscriptView = "final" | "live";
 
-// Placeholder labels for the two views; change them here only.
 const viewOptions = () => [
-	{ label: t`Final`, value: "final" },
-	{ label: t`Live`, value: "live" },
+	{ label: t`Improved`, value: "final" },
+	{ label: t`Original`, value: "live" },
 ];
+
+/** The eye beside the switch: hover, focus or tap shows how the improved transcript is made. */
+function HowItImproves() {
+	const [opened, setOpened] = useState(false);
+	const label = t`How dembrane improves your transcript`;
+	return (
+		<Popover
+			opened={opened}
+			onChange={setOpened}
+			position="bottom-end"
+			shadow="md"
+			withArrow
+		>
+			<Popover.Target>
+				<ActionIcon
+					variant="subtle"
+					color="gray"
+					aria-label={label}
+					onMouseEnter={() => setOpened(true)}
+					onMouseLeave={() => setOpened(false)}
+					onFocus={() => setOpened(true)}
+					onBlur={() => setOpened(false)}
+					onClick={() => setOpened((o) => !o)}
+					{...testId("transcript-how-it-improves")}
+				>
+					<Eye size={18} />
+				</ActionIcon>
+			</Popover.Target>
+			<Popover.Dropdown p="xs" w={320}>
+				{opened && <ImproveTranscriptAnimation />}
+			</Popover.Dropdown>
+		</Popover>
+	);
+}
 
 // Remembered per browser, not per conversation: a person who prefers the parts keeps them.
 const readView = (): TranscriptView => {
@@ -148,7 +185,7 @@ export const ConversationTranscriptSection = ({
 		<Stack>
 			<Group
 				justify="space-between"
-				className="sticky top-0 z-10 py-2"
+				className="sticky top-0 z-10 py-2 reading-measure"
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Group gap="sm">
@@ -163,15 +200,6 @@ export const ConversationTranscriptSection = ({
 						>
 							<Trans>Empty</Trans>
 						</Badge>
-					)}
-					{hasFinal && !isLocked && (
-						<SegmentedControl
-							size="xs"
-							value={view}
-							onChange={changeView}
-							data={viewOptions()}
-							{...testId("transcript-view-toggle")}
-						/>
 					)}
 					{!isLocked && (
 						<>
@@ -190,7 +218,19 @@ export const ConversationTranscriptSection = ({
 					)}
 				</Group>
 
-				<Group>
+				<Group gap="xs">
+					{hasFinal && !isLocked && (
+						<>
+							<SegmentedControl
+								size="xs"
+								value={view}
+								onChange={changeView}
+								data={viewOptions()}
+								{...testId("transcript-view-toggle")}
+							/>
+							<HowItImproves />
+						</>
+					)}
 					{!hasFinal && (
 						<Tooltip
 							label={t`Audio playback not available for anonymized conversations`}
@@ -226,14 +266,10 @@ export const ConversationTranscriptSection = ({
 					{isDraft && allChunks.length > 0 && (
 						<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
 							{isFinished ? (
-								<Trans>
-									A more accurate transcript of the full recording is on its
-									way.
-								</Trans>
+								<Trans>An improved transcript is on its way.</Trans>
 							) : (
 								<Trans>
-									This is the live transcript. You get a more accurate one when
-									the conversation ends.
+									You get an improved transcript when the conversation ends.
 								</Trans>
 							)}
 						</Text>
