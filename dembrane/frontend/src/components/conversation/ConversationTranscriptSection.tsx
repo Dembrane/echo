@@ -14,7 +14,14 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { Eye } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	lazy,
+	Suspense,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
@@ -27,7 +34,6 @@ import {
 	useConversationFinalTranscript,
 	useInfiniteConversationChunks,
 } from "./hooks";
-import { ImproveTranscriptAnimation } from "./ImproveTranscriptAnimation";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
 import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
@@ -42,6 +48,13 @@ type ConversationTranscriptSectionProps = {
 
 const VIEW_KEY = "conversation-transcript-view";
 type TranscriptView = "final" | "live";
+
+// Loaded on first open only: the loop is not part of anyone's first load.
+const ImproveTranscriptAnimation = lazy(() =>
+	import("./ImproveTranscriptAnimation").then((m) => ({
+		default: m.ImproveTranscriptAnimation,
+	})),
+);
 
 const viewOptions = () => [
 	{ label: t`Improved`, value: "final" },
@@ -75,8 +88,12 @@ function HowItImproves() {
 					<Eye size={18} />
 				</ActionIcon>
 			</Popover.Target>
-			<Popover.Dropdown p="xs" w={320}>
-				{opened && <ImproveTranscriptAnimation />}
+			<Popover.Dropdown p="sm" w={380}>
+				{opened && (
+					<Suspense fallback={<div style={{ aspectRatio: "360 / 176" }} />}>
+						<ImproveTranscriptAnimation />
+					</Suspense>
+				)}
 			</Popover.Dropdown>
 		</Popover>
 	);

@@ -2101,7 +2101,7 @@ msgstr "Ocurrió un error."
 msgid "An event or a workshop."
 msgstr "Un evento o un taller."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:263
+#: src/components/conversation/ConversationTranscriptSection.tsx:286
 msgid "An improved transcript is on its way."
 msgstr "Una transcripción mejorada está en camino."
 
@@ -2610,7 +2610,7 @@ msgstr "El descarga de audio no está disponible para conversaciones anónimas"
 msgid "Audio is coming in"
 msgstr "Llega señal de audio"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:230
+#: src/components/conversation/ConversationTranscriptSection.tsx:253
 msgid "Audio playback not available for anonymized conversations"
 msgstr "La reproducción de audio no está disponible para conversaciones anónimas"
 
@@ -3613,6 +3613,10 @@ msgstr "Haz clic en una etiqueta de conversación para añadirla a tus filtros."
 #: src/components/map/panels/SpotlightPanel.tsx:440
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Haz clic en un nodo del árbol o del mapa de clústeres para destacarlo aquí."
+
+#: src/components/conversation/ImproveTranscriptAnimation.tsx:533
+msgid "Click a sentence to hear it from there."
+msgstr "Haz clic en una frase para escucharla desde ahí."
 
 #: src/components/conversation/FinalTranscript.tsx:86
 #~ msgid "Click a sentence to play from there."
@@ -5769,7 +5773,7 @@ msgid "emptied out"
 msgstr "se ha vaciado"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:195
+#: src/components/conversation/ConversationTranscriptSection.tsx:218
 msgid "Empty"
 msgstr "Vacío"
 
@@ -7277,7 +7281,7 @@ msgstr "Horas a partir de ahora"
 msgid "How Ask works and what it can do."
 msgstr "Cómo funciona Preguntar y qué puede hacer."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:54
+#: src/components/conversation/ConversationTranscriptSection.tsx:67
 msgid "How dembrane improves your transcript"
 msgstr "Cómo mejora dembrane tu transcripción"
 
@@ -7435,7 +7439,7 @@ msgstr "Importado de un análisis anterior, {day}"
 msgid "Improve my setup"
 msgstr "Mejorar mi configuración"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:47
+#: src/components/conversation/ConversationTranscriptSection.tsx:60
 msgid "Improved"
 msgstr "Mejorada"
 
@@ -9194,6 +9198,10 @@ msgstr "Mencionado por participantes"
 msgid "Named ways of working your team can reuse."
 msgstr "Formas de trabajar con nombre propio que tu equipo puede reutilizar."
 
+#: src/components/conversation/ImproveTranscriptAnimation.tsx:532
+msgid "Names and key terms are spelled right, and the text is cleaned up."
+msgstr "Los nombres y los términos clave se escriben bien, y el texto se limpia."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:31
 msgid "Names on the legend"
 msgstr "Nombres en la leyenda"
@@ -9825,7 +9833,7 @@ msgstr "Aún no hay formaciones."
 #~ msgid "No Transcript Available"
 #~ msgstr "No hay transcripción disponible"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:273
+#: src/components/conversation/ConversationTranscriptSection.tsx:296
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
@@ -10621,7 +10629,7 @@ msgstr "Organiza proyectos en espacios de trabajo dentro de tu organización."
 msgid "Organization"
 msgstr "Organización"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:48
+#: src/components/conversation/ConversationTranscriptSection.tsx:61
 msgid "Original"
 msgstr "Original"
 
@@ -14048,7 +14056,7 @@ msgstr "Mostrar los {total}"
 msgid "Show all conversations"
 msgstr "Mostrar todas las conversaciones"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:240
+#: src/components/conversation/ConversationTranscriptSection.tsx:263
 msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
@@ -16416,7 +16424,7 @@ msgstr "transcripción"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:187
+#: src/components/conversation/ConversationTranscriptSection.tsx:210
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcripción"
@@ -17864,6 +17872,10 @@ msgstr "¿Cuándo se debe generar el informe?"
 msgid "When someone scans the QR code, that is one conversation. If 50 people scan it at the same time, that is 50 conversations at once."
 msgstr "Cuando alguien escanea el código QR, cuenta como una conversación. Si 50 personas lo escanean a la vez, son 50 conversaciones simultáneas."
 
+#: src/components/conversation/ImproveTranscriptAnimation.tsx:531
+msgid "When the conversation ends, we listen to the whole recording again."
+msgstr "Cuando termina la conversación, volvemos a escuchar toda la grabación."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:67
 msgid "When the summary is generated"
 msgstr "Cuando se genera el resumen"
@@ -17889,6 +17901,10 @@ msgstr "¿A qué organización pertenece este espacio de trabajo?"
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:149
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr "¿Qué organización es la propietaria de los datos de este espacio de trabajo? Esto define el marco normativo y de datos."
+
+#: src/components/conversation/ImproveTranscriptAnimation.tsx:530
+msgid "While people talk, the text appears piece by piece."
+msgstr "Mientras la gente habla, el texto aparece poco a poco."
 
 #: src/components/project/ProjectUsageAndSharing.tsx:220
 msgid "Who can see and collaborate on this project."
@@ -18288,7 +18304,7 @@ msgstr "No tienes permiso para crear espacios de trabajo en esa organización. V
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "No tienes permiso para invitar a ningún espacio de trabajo en esta organización."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:265
+#: src/components/conversation/ConversationTranscriptSection.tsx:288
 msgid "You get an improved transcript when the conversation ends."
 msgstr "Recibirás una transcripción mejorada cuando termine la conversación."
 
