@@ -79,7 +79,7 @@ on:
         options: [staging, prod]
         default: staging
       tag:
-        description: "prod: the release tag to deploy (vX.Y.Z, on main)"
+        description: "prod: the release tag to deploy (vX.Y.Z, on main, or a hotfix on release/vX.Y)"
         type: string
         default: ""
       gitops_branch:
@@ -178,10 +178,11 @@ jobs:
           if [ "$deploy_env" = prod ]; then
             [[ $release_tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::prod deploys a release tag vX.Y.Z, not '$release_tag'"; exit 1; }
             sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$release_tag" --jq .sha) || { echo "::error::No tag $release_tag"; exit 1; }
-            case "$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$sha" --jq .status)" in
-              identical | behind) ;;
-              *) echo "::error::$release_tag ($sha) is not on main"; exit 1 ;;
-            esac
+            # A release comes from main. A hotfix comes from release/vX.Y, a branch cut from the
+            # vX.Y tag that is live, so a fix ships without what main holds since.
+            on() { case "$(gh api "repos/$GITHUB_REPOSITORY/compare/$1...$sha" --jq .status 2>/dev/null)" in identical | behind) return 0 ;; esac; return 1; }
+            line=${release_tag%.*}
+            on main || on "release/$line" || { echo "::error::$release_tag ($sha) is on neither main nor release/$line"; exit 1; }
           fi
           echo "sha=$sha pr=$pr deploy_pr=$deploy_pr deploy_env=$deploy_env release_tag=$release_tag teardown=$teardown"
           {
