@@ -20,8 +20,9 @@ import { notifyError } from "./components/error/notifyError";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
 import { watchForNewVersion } from "./lib/appVersion";
-import { errorCode, readApiError } from "./lib/errors/read";
+import { errorCode } from "./lib/errors/read";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
+import { queryRetry } from "./lib/queryRetry";
 
 // Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
 // per-deploy env var is needed. The chunk stays lazy: environments where the
@@ -48,6 +49,17 @@ import { mainRouter, participantRouter } from "./Router";
 import { cssVariablesResolver, theme } from "./theme";
 import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTheme";
 
+// A tab left on screen never refocuses, so the session check would never rerun. If the
+// server confirms the session is gone, Protected signs out, which also stops every poll.
+const recheckSessionOnExpiry = (error: unknown) => {
+	if (errorCode(error) === "auth.session_expired")
+		// Several polls can fail together; keep one check running instead of restarting it.
+		void queryClient.invalidateQueries(
+			{ queryKey: ["auth", "session"] },
+			{ cancelRefetch: false },
+		);
+};
+
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
 // copy-substring since we control both the backend body and the frontend
@@ -58,25 +70,12 @@ import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTh
 // (ErrorNotice) pass `meta: { errorToast: false }` or their own onError.
 const queryClient = new QueryClient({
 	defaultOptions: {
-		queries: {
-			// A refused request (an ended session, a missing project, no access) answers the
-			// same way on every retry: say so at once instead of after three backoffs.
-			retry: (failures, error) => {
-				const status = readApiError(error).status;
-				if (
-					status &&
-					status >= 400 &&
-					status < 500 &&
-					![408, 429].includes(status)
-				)
-					return false;
-				return failures < 3;
-			},
-		},
+		queries: { retry: queryRetry },
 	},
 	mutationCache: new MutationCache({
 		onError: (error, _variables, _context, mutation) => {
 			if (detectAndEmitPilotBlock(error)) return;
+			recheckSessionOnExpiry(error);
 			if (mutation.options.onError) return;
 			if (mutation.meta?.errorToast === false) return;
 			void notifyError(error);
@@ -85,6 +84,7 @@ const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error) => {
 			detectAndEmitPilotBlock(error);
+			recheckSessionOnExpiry(error);
 			if (errorCode(error) === "auth.session_expired") void notifyError(error);
 		},
 	}),

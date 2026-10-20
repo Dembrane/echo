@@ -11,6 +11,7 @@ import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { ensureOk, readApiError } from "@/lib/errors/read";
 import type { ListQuery } from "@/lib/listQuery";
 import { isUnreadByMe } from "../announcementFilters";
 
@@ -35,17 +36,24 @@ async function fetchAnnouncements(params: {
 	);
 	for (const [k, v] of Object.entries(params))
 		if (v !== undefined) url.searchParams.set(k, String(v));
-	const res = await fetch(url, { credentials: "include" });
-	if (!res.ok) throw new Error(`Announcements request failed: ${res.status}`);
+	const res = await ensureOk(await fetch(url, { credentials: "include" }));
 	return res.json();
 }
 
+const statusOf = (error: unknown) => readApiError(error).status ?? 0;
+
+// An ended session or no access is expected; any other failure is a bug worth seeing.
+const reportUnlessRefused = (error: unknown) => {
+	if (![401, 403].includes(statusOf(error))) posthog.captureException(error);
+};
+
 async function postAnnouncements(path: string) {
-	const res = await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
-		credentials: "include",
-		method: "POST",
-	});
-	if (!res.ok) throw new Error(`Announcements update failed: ${res.status}`);
+	const res = await ensureOk(
+		await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
+			credentials: "include",
+			method: "POST",
+		}),
+	);
 	return res.json();
 }
 
@@ -61,13 +69,12 @@ export const useLatestAnnouncement = () => {
 
 				return response.length > 0 ? response[0] : null;
 			} catch (error) {
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error fetching latest announcement:", error);
 				throw error;
 			}
 		},
 		queryKey: ["announcements", "latest"],
-		retry: 2,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 };
@@ -110,7 +117,7 @@ export const useInfiniteAnnouncements = ({
 						response.length === initialLimit ? pageParam + 1 : undefined,
 				};
 			} catch (error) {
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error fetching announcements:", error);
 				throw error;
 			}
@@ -139,7 +146,7 @@ export const useMarkAsReadMutation = () => {
 				return await postAnnouncements(`/${announcementId}/read`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as read`);
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error in mutationFn:", error);
 				throw error;
 			}
@@ -255,7 +262,7 @@ export const useMarkAsUnreadMutation = () => {
 				return await postAnnouncements(`/${announcementId}/unread`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as unread`);
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error in markAsUnread mutationFn:", error);
 				throw error;
 			}
@@ -353,7 +360,7 @@ export const useMarkAllAsReadMutation = () => {
 				return await postAnnouncements("/read-all");
 			} catch (error) {
 				toast.error(t`Failed to mark all announcements as read`);
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error in markAllAsRead mutationFn:", error);
 				throw error;
 			}
@@ -461,14 +468,17 @@ const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
 
 				return (await fetchAnnouncements({})) as SummaryRow[];
 			} catch (error) {
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error fetching announcement summary:", error);
 				throw error;
 			}
 		},
 		queryKey: ["announcements", "summary", currentUser?.id],
-		refetchInterval: 60_000,
-		retry: 2,
+		// A 4xx answers the same every minute; a refocus refetches after sign-in.
+		refetchInterval: (query) => {
+			const status = statusOf(query.state.error);
+			return status >= 400 && status < 500 ? false : 60_000;
+		},
 		select,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
@@ -506,13 +516,12 @@ export const useWhatsNewAnnouncements = ({
 
 				return response;
 			} catch (error) {
-				posthog.captureException(error);
+				reportUnlessRefused(error);
 				console.error("Error fetching what's new announcements:", error);
 				throw error;
 			}
 		},
 		queryKey: ["announcements", "whats-new"],
-		retry: 2,
 		staleTime: 1000 * 60 * 5,
 	});
 };
