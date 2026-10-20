@@ -1210,7 +1210,7 @@ msgstr "Un host"
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr "Una pagina live nella tua Libreria e slide live per la sala, create entrambe dalle tue conversazioni durante la sessione. Versione beta iniziale: potrebbero cambiare o essere rimosse."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:188
+#: src/components/conversation/ConversationTranscriptSection.tsx:229
 msgid "A more accurate transcript of the full recording is on its way."
 msgstr "Una trascrizione più precisa dell'intera registrazione è in arrivo."
 
@@ -2385,7 +2385,7 @@ msgstr "Are you sure you want to finish the conversation?"
 #~ msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 #~ msgstr "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:444
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:445
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
@@ -2605,7 +2605,7 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Ricezione audio in corso"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:155
+#: src/components/conversation/ConversationTranscriptSection.tsx:196
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -5764,7 +5764,7 @@ msgid "emptied out"
 msgstr "svuotato"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:132
+#: src/components/conversation/ConversationTranscriptSection.tsx:164
 msgid "Empty"
 msgstr "Empty"
 
@@ -6506,6 +6506,10 @@ msgstr "Filter by collection"
 msgid "Filter by name or id"
 msgstr "Filtra per nome o ID"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:44
+msgid "Final"
+msgstr "Finale"
+
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Find contradictions and suggest follow-up questions"
@@ -6856,7 +6860,7 @@ msgstr "Generate secret"
 msgid "Generate stakeholders"
 msgstr "Genera stakeholder"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:376
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:377
 msgid "Generate summary"
 msgstr "Genera riepilogo"
 
@@ -8276,6 +8280,7 @@ msgstr "Elenco delle pagine di documentazione in corso"
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
 #: src/components/conversation/ConversationsMiniList.tsx:70
+#: src/components/conversation/ConversationTranscriptSection.tsx:45
 msgid "Live"
 msgstr "Live"
 
@@ -9808,7 +9813,7 @@ msgstr "Ancora nessuna formazione."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:202
+#: src/components/conversation/ConversationTranscriptSection.tsx:243
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -11883,7 +11888,7 @@ msgstr "Leggi le risposte man mano che arrivano."
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Leggi i risultati condivisi, esamina le prove e scopri come sono stati ricavati."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:454
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:455
 #: src/components/conversation/RetranscribeConversation.tsx:187
 msgid "Read the troubleshooting guide for transcripts and summaries"
 msgstr "Leggi la guida alla risoluzione dei problemi per trascrizioni e riassunti"
@@ -12173,7 +12178,7 @@ msgstr "L'aggiornamento sarà disponibile quando il servizio canvas sarà pronto
 msgid "Refreshing…"
 msgstr "Aggiornamento in corso…"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:460
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:461
 #: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
@@ -12190,7 +12195,7 @@ msgid "Regenerate popcorn?"
 msgstr "Rigenerare Popcorn?"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:318
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:439
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:440
 msgid "Regenerate summary"
 msgstr "Regenerate summary"
 
@@ -14027,7 +14032,7 @@ msgstr "Mostra tutti {total}"
 msgid "Show all conversations"
 msgstr "Mostra tutte le conversazioni"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:165
+#: src/components/conversation/ConversationTranscriptSection.tsx:206
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -14833,7 +14838,7 @@ msgstr "Riepilogo generato."
 msgid "Summary regenerated."
 msgstr "Riepilogo rigenerato."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:360
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:361
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Summary will be available once the conversation is transcribed"
 
@@ -15827,7 +15832,7 @@ msgstr "Non è ancora salvato."
 msgid "This is set to consent-based processing without a privacy policy link. Add one to keep this setting valid: participants must be able to read the privacy policy."
 msgstr "È impostato il trattamento basato sul consenso senza link all'informativa sulla privacy. Aggiungine uno per mantenere valida questa impostazione: i partecipanti devono poter leggere l'informativa."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:193
+#: src/components/conversation/ConversationTranscriptSection.tsx:234
 msgid "This is the live transcript. You get a more accurate one when the conversation ends."
 msgstr "Questa è la trascrizione dal vivo. Ne riceverai una più precisa al termine della conversazione."
 
@@ -16395,7 +16400,7 @@ msgstr "trascrizione"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:124
+#: src/components/conversation/ConversationTranscriptSection.tsx:156
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"

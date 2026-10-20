@@ -35,7 +35,7 @@ export const FinalTranscript = ({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: scrolls when the sentence changes
 	useEffect(() => {
 		if (active < 0 || audioRef.current?.paused) return;
-		activeRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+		activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 	}, [active]);
 
 	const seek = (start: number) => {
@@ -47,7 +47,7 @@ export const FinalTranscript = ({
 
 	if (!timed) {
 		return (
-			<Text style={{ whiteSpace: "pre-wrap" }}>
+			<Text className="reading-measure" style={{ whiteSpace: "pre-wrap" }}>
 				<RedactedText>{text}</RedactedText>
 			</Text>
 		);
@@ -55,7 +55,11 @@ export const FinalTranscript = ({
 
 	return (
 		<Stack gap="md">
-			<Stack gap="sm" data-testid="final-transcript-text">
+			<Stack
+				gap="sm"
+				className="reading-measure"
+				data-testid="final-transcript-text"
+			>
 				{paragraphs(sentences).map((para) => (
 					<Text key={para[0]?.index} lh={1.8}>
 						{para.map(({ sentence: s, index: i }) => (

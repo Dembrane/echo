@@ -1210,7 +1210,7 @@ msgstr "Ведучий"
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr "Жива сторінка у вашій Бібліотеці та живі слайди для зали: обидва створюються з ваших розмов просто під час сесії. Рання бета: вони можуть змінитися або бути вилучені."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:188
+#: src/components/conversation/ConversationTranscriptSection.tsx:229
 msgid "A more accurate transcript of the full recording is on its way."
 msgstr "Точніша транскрипція всього запису вже готується."
 
@@ -2385,7 +2385,7 @@ msgstr "Are you sure you want to finish the conversation?"
 #~ msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 #~ msgstr "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:444
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:445
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
@@ -2605,7 +2605,7 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Аудіо надходить"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:155
+#: src/components/conversation/ConversationTranscriptSection.tsx:196
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -5764,7 +5764,7 @@ msgid "emptied out"
 msgstr "очищено"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:132
+#: src/components/conversation/ConversationTranscriptSection.tsx:164
 msgid "Empty"
 msgstr "Empty"
 
@@ -6506,6 +6506,10 @@ msgstr "Filter by collection"
 msgid "Filter by name or id"
 msgstr "Фільтрувати за назвою або ID"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:44
+msgid "Final"
+msgstr "Остаточна"
+
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Find contradictions and suggest follow-up questions"
@@ -6856,7 +6860,7 @@ msgstr "Generate secret"
 msgid "Generate stakeholders"
 msgstr "Згенерувати стейкхолдерів"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:376
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:377
 msgid "Generate summary"
 msgstr "Згенерувати підсумок"
 
@@ -8276,6 +8280,7 @@ msgstr "Складання списку сторінок документаці�
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
 #: src/components/conversation/ConversationsMiniList.tsx:70
+#: src/components/conversation/ConversationTranscriptSection.tsx:45
 msgid "Live"
 msgstr "Live"
 
@@ -9808,7 +9813,7 @@ msgstr "Тренінгів ще немає."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:202
+#: src/components/conversation/ConversationTranscriptSection.tsx:243
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -11883,7 +11888,7 @@ msgstr "Читайте відповіді в міру їх надходженн�
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Переглядайте спільні висновки, вивчайте докази та дізнавайтеся, як вони були створені."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:454
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:455
 #: src/components/conversation/RetranscribeConversation.tsx:187
 msgid "Read the troubleshooting guide for transcripts and summaries"
 msgstr "Перегляньте посібник із вирішення проблем для стенограм і підсумків"
@@ -12173,7 +12178,7 @@ msgstr "Оновлення запрацює, коли сервіс полотн�
 msgid "Refreshing…"
 msgstr "Оновлення…"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:460
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:461
 #: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
@@ -12190,7 +12195,7 @@ msgid "Regenerate popcorn?"
 msgstr "Згенерувати Popcorn знову?"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:318
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:439
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:440
 msgid "Regenerate summary"
 msgstr "Regenerate summary"
 
@@ -14027,7 +14032,7 @@ msgstr "Показати всі {total}"
 msgid "Show all conversations"
 msgstr "Показати всі розмови"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:165
+#: src/components/conversation/ConversationTranscriptSection.tsx:206
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -14833,7 +14838,7 @@ msgstr "Підсумок згенеровано."
 msgid "Summary regenerated."
 msgstr "Підсумок згенеровано повторно."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:360
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:361
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Summary will be available once the conversation is transcribed"
 
@@ -15827,7 +15832,7 @@ msgstr "Це ще не збережено."
 msgid "This is set to consent-based processing without a privacy policy link. Add one to keep this setting valid: participants must be able to read the privacy policy."
 msgstr "Встановлено обробку на основі згоди без посилання на політику конфіденційності. Додайте його, щоб налаштування залишалося дійсним: учасники мають мати змогу прочитати політику конфіденційності."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:193
+#: src/components/conversation/ConversationTranscriptSection.tsx:234
 msgid "This is the live transcript. You get a more accurate one when the conversation ends."
 msgstr "Це транскрипція наживо. Точнішу ви отримаєте, коли розмова закінчиться."
 
@@ -16395,7 +16400,7 @@ msgstr "стенограма"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:124
+#: src/components/conversation/ConversationTranscriptSection.tsx:156
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"

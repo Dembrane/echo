@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Group,
+	SegmentedControl,
 	Skeleton,
 	Stack,
 	Switch,
@@ -10,7 +11,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
@@ -33,6 +34,24 @@ type ConversationTranscriptSectionProps = {
 	isFinished: boolean;
 	isLocked: boolean;
 	participantName: string;
+};
+
+const VIEW_KEY = "conversation-transcript-view";
+type TranscriptView = "final" | "live";
+
+// Placeholder labels for the two views; change them here only.
+const viewOptions = () => [
+	{ label: t`Final`, value: "final" },
+	{ label: t`Live`, value: "live" },
+];
+
+// Remembered per browser, not per conversation: a person who prefers the parts keeps them.
+const readView = (): TranscriptView => {
+	try {
+		return localStorage.getItem(VIEW_KEY) === "live" ? "live" : "final";
+	} catch {
+		return "final";
+	}
 };
 
 export const ConversationTranscriptSection = ({
@@ -81,7 +100,20 @@ export const ConversationTranscriptSection = ({
 		finalQuery.data?.available && !finalQuery.data.locked
 			? finalQuery.data
 			: null;
-	const showFinal = finalTranscript !== null;
+	const [view, setView] = useState<TranscriptView>(readView);
+	const changeView = (next: string) => {
+		const v: TranscriptView = next === "live" ? "live" : "final";
+		setView(v);
+		try {
+			localStorage.setItem(VIEW_KEY, v);
+		} catch {
+			// The choice just is not remembered.
+		}
+	};
+	const hasFinal = finalTranscript !== null;
+	const showFinal = hasFinal && view === "final";
+	// Under Live after the conversation ended, each part has its own player, as while it was recorded.
+	const partsPlayer = hasFinal ? !isAnonymized : showAudioPlayer;
 	// A final transcript is on its way: say so in one line, and say nothing once it is here.
 	const isDraft =
 		!showFinal &&
@@ -119,7 +151,7 @@ export const ConversationTranscriptSection = ({
 				className="sticky top-0 z-10 py-2"
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
-				<Group>
+				<Group gap="sm">
 					<Title order={4} {...testId("transcript-title")}>
 						<Trans>Transcript</Trans>
 					</Title>
@@ -131,6 +163,15 @@ export const ConversationTranscriptSection = ({
 						>
 							<Trans>Empty</Trans>
 						</Badge>
+					)}
+					{hasFinal && !isLocked && (
+						<SegmentedControl
+							size="xs"
+							value={view}
+							onChange={changeView}
+							data={viewOptions()}
+							{...testId("transcript-view-toggle")}
+						/>
 					)}
 					{!isLocked && (
 						<>
@@ -150,7 +191,7 @@ export const ConversationTranscriptSection = ({
 				</Group>
 
 				<Group>
-					{!showFinal && (
+					{!hasFinal && (
 						<Tooltip
 							label={t`Audio playback not available for anonymized conversations`}
 							disabled={!isAnonymized}
@@ -181,7 +222,7 @@ export const ConversationTranscriptSection = ({
 					/>
 				</Stack>
 			) : (
-				<Stack className="relative">
+				<Stack className="relative reading-measure">
 					{isDraft && allChunks.length > 0 && (
 						<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
 							{isFinished ? (
@@ -224,7 +265,7 @@ export const ConversationTranscriptSection = ({
 											transcript: chunk.transcript ?? "",
 										}}
 										highlighted={highlightedChunkId === chunk.id}
-										showAudioPlayer={isAnonymized ? false : showAudioPlayer}
+										showAudioPlayer={isAnonymized ? false : partsPlayer}
 										transcriptLocked={!!chunk.transcript_locked}
 									/>
 								</div>

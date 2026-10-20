@@ -93,6 +93,16 @@ body {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
+/* The reading surfaces (summary, transcript) share the app body size and a line
+   length of about 70 characters, so they line up and stay easy to read. */
+.reading-measure {
+	max-width: 70ch;
+}
+.prose.reading-text {
+	font-size: var(--app-font-size-md);
+	max-width: 70ch;
+}
+
 /* Ensure all elements within also use the font */
 .prose * {
 	font-family: var(--app-font-family) !important;
