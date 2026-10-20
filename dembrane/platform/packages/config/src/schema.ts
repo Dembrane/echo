@@ -250,7 +250,7 @@ export const schema = defineSchema({
         .default(["auto"]),
       {
         description:
-          "Who transcribes a whole recording again when its conversation is finished: auto (the default: gemini with the vertex provider, whisper with the openai-compatible one), gemini, whisper, or two of them separated by a comma or a plus (the first is the transcript people read, the second is kept beside it). off keeps the live 30 second text and hides the draft line and the player. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
+          "Who transcribes a whole recording again when its conversation is finished: auto (the default: whisper with the openai-compatible provider, nobody with the vertex one, whose live text a second Gemini pass does not improve), gemini, whisper, or two of them separated by a comma or a plus (the first is the transcript people read, the second is kept beside it). off keeps the live 30 second text and hides the draft line and the player. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
       },
     ),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {

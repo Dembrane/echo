@@ -103,10 +103,18 @@ export const embedderConfigOf = (s: LlmSettings) => ({
   baseUrl: s.baseUrl,
 });
 
-/** Who makes the final transcript: "auto" is the stack's own model (gemini on Vertex, whisper on the compatible provider). */
+/**
+ * Who makes the final transcript. "auto" is Whisper on the compatible provider and nobody on
+ * Vertex: Gemini's live text is already as good as a second Gemini pass over the whole
+ * recording (9.7 against 10.0 words wrong per 100 on the public test sets), so a Gemini stack
+ * keeps its live text and spends nothing more. Whisper's live pieces gain from it (16.0 to 14.0).
+ * "gemini" still turns it on by name.
+ */
 export function finalProvidersOf(
   s: Pick<LlmSettings, "provider" | "finalTranscript">,
 ): ("gemini" | "whisper")[] {
-  const own = s.provider === "vertex" ? "gemini" : "whisper";
-  return [...new Set((s.finalTranscript ?? ["auto"]).map((p) => (p === "auto" ? own : p)))];
+  const own = s.provider === "vertex" ? [] : (["whisper"] as const);
+  return [
+    ...new Set((s.finalTranscript ?? ["auto"]).flatMap((p) => (p === "auto" ? own : [p]))),
+  ];
 }
