@@ -113,7 +113,12 @@ export async function createChunk(
           usePiiRedaction: opts.usePiiRedaction ?? false,
           ...(redactTyped && { typed: true }),
         },
-        { tx: tx.sql, workflowId: `conversations.chunk:${opts.chunkId}` },
+        {
+          tx: tx.sql,
+          workflowId: `conversations.chunk:${opts.chunkId}`,
+          // A person recording goes ahead of a long upload when every worker slot is busy.
+          priority: input.source === "PORTAL_AUDIO" ? 1 : 10,
+        },
       );
     return { ...row, pending_text: null } as ChunkRow;
   });

@@ -4,6 +4,8 @@ import type {
   LanguageModelV4CallOptions,
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
+import { mp3Seconds } from "./audio-length";
+import { retryAfterMs, type SpeechGate, type SpeechPriority } from "./speech-gate";
 
 /** Connection to an OpenAI-compatible API (Scaleway Generative APIs, for example). */
 export interface CompatEndpoint {
@@ -17,6 +19,31 @@ export interface CompatEndpoint {
   readonly maxOutputTokens?: number | undefined;
   /** Injected so tests can assert requests without the network. */
   readonly fetch?: typeof fetch | undefined;
+  /** Paces speech-to-text calls against the provider's audio-seconds-per-minute limit. */
+  readonly speechGate?: SpeechGate | undefined;
+  /** Told about every speech-to-text request, once it has an answer (a 429 included). */
+  readonly onSpeechRequest?: ((e: SpeechRequestLog) => void) | undefined;
+}
+
+/** What one request to the speech-to-text endpoint was: numbers and names, never audio or text. */
+export interface SpeechRequestLog {
+  readonly provider: "openai-compatible";
+  readonly model: string;
+  /** Seconds of audio the caller said the request holds, or an estimate from its size. */
+  readonly audioSeconds: number;
+  readonly estimated: boolean;
+  readonly bytes: number;
+  readonly ms: number;
+  readonly status: number;
+  readonly attempt: number;
+  /** Who it was for: a live recording, a long upload or the final pass. */
+  readonly path: SpeechPriority;
+}
+
+/** Who a speech-to-text call is for and how much audio it holds, for the pacing. */
+export interface SpeechCall {
+  readonly priority?: SpeechPriority | undefined;
+  readonly seconds?: number | undefined;
 }
 
 /**
@@ -50,7 +77,9 @@ function sniff(b: Uint8Array): Sniffed {
 /** Largest file `/audio/transcriptions` takes on Scaleway Generative APIs (serverless). */
 export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 /** One transcription request may not hold a worker longer than this. */
-const TRANSCRIBE_TIMEOUT_MS = 180_000;
+export const TRANSCRIBE_TIMEOUT_MS = 180_000;
+/** A 429 is answered this many times in one call before the step's own retry takes over. */
+const RATE_LIMIT_ATTEMPTS = 6;
 
 /** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
 function withoutTrailingSlashes(url: string): string {
@@ -89,6 +118,7 @@ async function requestTranscription(
   signal?: AbortSignal,
   prompt?: string,
   temperature?: number,
+  call: SpeechCall = {},
 ): Promise<Record<string, unknown>> {
   if (audio.byteLength > MAX_AUDIO_BYTES) {
     const err = new Error(
@@ -105,17 +135,44 @@ async function requestTranscription(
   if (prompt) form.set("prompt", prompt);
   if (temperature !== undefined) form.set("temperature", String(temperature));
   form.set("file", new Blob([audio as never], { type: kind.type }), `audio.${kind.ext}`);
-  const res = await (ep.fetch ?? fetch)(
-    `${withoutTrailingSlashes(ep.baseUrl)}/audio/transcriptions`,
-    {
+  const request = () =>
+    (ep.fetch ?? fetch)(`${withoutTrailingSlashes(ep.baseUrl)}/audio/transcriptions`, {
       method: "POST",
       headers: { authorization: `Bearer ${ep.apiKey}` },
       body: form,
       signal: signal
         ? AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS)])
         : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
-    },
-  );
+    });
+  // Without a length from the caller: read it from an mp3 header, else about 8 kB per second of compressed speech.
+  const known = call.seconds ?? mp3Seconds(audio);
+  const seconds = known ?? Math.min(3600, Math.max(1, audio.byteLength / 8000));
+  const gate = ep.speechGate;
+  let res: Response;
+  for (let attempt = 0; ; attempt++) {
+    const began = Date.now();
+    res = gate ? await gate.run(seconds, call.priority ?? "live", request) : await request();
+    ep.onSpeechRequest?.({
+      provider: "openai-compatible",
+      model: ep.transcriptionModel,
+      audioSeconds: Math.round(seconds * 10) / 10,
+      estimated: known === null,
+      bytes: audio.byteLength,
+      ms: Date.now() - began,
+      status: res.status,
+      attempt: attempt + 1,
+      path: call.priority ?? "live",
+    });
+    if (res.status !== 429 || attempt >= RATE_LIMIT_ATTEMPTS - 1) break;
+    // The org limit answered: everybody in this process waits as long as it asks (or, without
+    // a hint, a growing while), then goes again in priority order.
+    const wait =
+      retryAfterMs(res.headers.get("retry-after")) ??
+      Math.min(60_000, 5_000 * 2 ** attempt) + Math.random() * 1_000;
+    await res.body?.cancel().catch(() => undefined);
+    if (gate) gate.pause(wait);
+    else await new Promise((r) => setTimeout(r, wait));
+  }
   if (!res.ok) {
     const err = new Error(`transcription ${res.status}: ${(await res.text()).slice(0, 300)}`);
     // Rate limits and server faults are worth another try; a bad request is not.
@@ -134,10 +191,20 @@ export async function transcribeAudio(
   signal?: AbortSignal,
   /** Words the speaker is likely to say (names, terms): Whisper spells them as given. */
   prompt?: string,
+  call?: SpeechCall,
 ): Promise<string> {
   // verbose_json, though only the text is used: for the same 30 second pieces of a recording that
   // switches language, plain json returned 130 to 147 words and verbose_json 173 to 178.
-  const body = await requestTranscription(ep, audio, "verbose_json", language, signal, prompt);
+  const body = await requestTranscription(
+    ep,
+    audio,
+    "verbose_json",
+    language,
+    signal,
+    prompt,
+    undefined,
+    call,
+  );
   return typeof body.text === "string" ? body.text.trim() : "";
 }
 
@@ -152,6 +219,7 @@ export async function transcribeSegments(
   signal?: AbortSignal,
   prompt?: string,
   temperature?: number,
+  call?: SpeechCall,
 ): Promise<SpeechResult> {
   const body = await requestTranscription(
     ep,
@@ -161,6 +229,7 @@ export async function transcribeSegments(
     signal,
     prompt,
     temperature,
+    call,
   );
   const raw = Array.isArray(body.segments) ? (body.segments as Record<string, unknown>[]) : [];
   const segments = raw

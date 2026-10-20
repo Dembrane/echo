@@ -201,3 +201,50 @@ test("openai-compatible without a base URL or key refuses to start", () => {
   const cfg: ModelsConfig = modelsConfigOf(settings({ provider: "openai-compatible" }));
   expect(() => createModels(cfg)).toThrow("LLM_BASE_URL");
 });
+
+test("a 429 is waited out as Retry-After says, for every caller of the endpoint, then goes again", async () => {
+  const { SpeechGate } = await import("../src/speech-gate");
+  let calls = 0;
+  const answers = [
+    new Response('{"error":"INSUFFICIENT QUOTA"}', {
+      status: 429,
+      headers: { "retry-after": "0.05" },
+    }),
+    new Response(JSON.stringify({ text: " hello ", segments: [] })),
+  ];
+  const fetcher = (async () => answers[calls++] as Response) as unknown as typeof fetch;
+  const start = Date.now();
+  const text = await transcribeAudio(
+    { ...ep(fetcher), speechGate: new SpeechGate({ secondsPerMinute: 600 }) },
+    new Uint8Array(100),
+  );
+  expect(text).toBe("hello");
+  expect(calls).toBe(2);
+  expect(Date.now() - start).toBeGreaterThanOrEqual(45);
+});
+
+test("every speech-to-text request is reported once with what it carried and how it ended", async () => {
+  const seen: Record<string, unknown>[] = [];
+  const fetcher = (async () =>
+    new Response(JSON.stringify({ text: "hi" }))) as unknown as typeof fetch;
+  await transcribeAudio(
+    { ...ep(fetcher), onSpeechRequest: (e) => seen.push(e as unknown as Record<string, unknown>) },
+    new Uint8Array(80_000),
+    undefined,
+    undefined,
+    undefined,
+    { priority: "upload", seconds: 600 },
+  );
+  expect(seen).toHaveLength(1);
+  expect(seen[0]).toMatchObject({
+    provider: "openai-compatible",
+    model: "whisper-large-v3",
+    audioSeconds: 600,
+    estimated: false,
+    bytes: 80_000,
+    status: 200,
+    attempt: 1,
+    path: "upload",
+  });
+  expect(typeof seen[0]?.ms).toBe("number");
+});

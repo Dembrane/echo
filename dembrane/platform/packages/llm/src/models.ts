@@ -6,12 +6,14 @@ import {
   CompatLanguageModel,
   echoOptions,
   languageHint,
+  type SpeechRequestLog,
   type SpeechResult,
   transcribeAudio,
   transcribeSegments,
 } from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely } from "./observe";
+import { type SpeechGate, type SpeechPriority, speechGateFor } from "./speech-gate";
 
 /** The model groups callers ask for by purpose, never by vendor model name. */
 export type ModelGroup = "text_fast" | "multi_modal_fast" | "multi_modal_pro";
@@ -28,6 +30,11 @@ export interface OpenAICompatibleConfig {
   /** Send the project's key terms as Whisper's prompt. Off by default: see LLM_WHISPER_KEY_TERMS. */
   readonly transcriptionKeyTerms?: boolean | undefined;
   readonly fetch?: typeof fetch | undefined;
+  /** Audio seconds per minute the provider takes for this process; unset or 0 sends without pacing. */
+  readonly speechSecondsPerMinute?: number | undefined;
+  /** Requests in flight at once; unset keeps the gate's default. */
+  readonly speechConcurrency?: number | undefined;
+  readonly speechGate?: SpeechGate | undefined;
 }
 
 export interface ModelsConfig {
@@ -58,7 +65,13 @@ export interface Models {
     readonly model: string;
     transcribe(
       audio: Uint8Array,
-      opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
+      opts?: {
+        language?: string | null;
+        prompt?: string;
+        signal?: AbortSignal;
+        priority?: SpeechPriority;
+        seconds?: number;
+      },
     ): Promise<string>;
     /** The same, as sentences with their start and end in seconds. */
     transcribeSegments(
@@ -71,6 +84,9 @@ export interface Models {
         temperature?: number;
         /** Send this language even where the configuration leaves the language to Whisper: a retry names the language it heard. */
         forceLanguage?: string;
+        priority?: SpeechPriority;
+        /** Seconds of audio in this call, for the pacing; estimated from the size when absent. */
+        seconds?: number;
       },
     ): Promise<SpeechResult>;
   };
@@ -85,8 +101,24 @@ export const speechHint = (models: Models, language: string | null | undefined) 
  * deployments, as the Python router did for text-only work. `opts.observe` hears every
  * attempt of every group and the embedding model: the one place all model calls pass.
  */
-export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> = {}): Models {
-  const compat = cfg.provider === "openai-compatible" ? requireCompat(cfg) : null;
+export function createModels(
+  cfg: ModelsConfig,
+  opts: Partial<FallbackOptions> & {
+    /** Hears every request to the speech-to-text endpoint, for one structured log line each. */
+    onSpeechRequest?: (e: SpeechRequestLog) => void;
+  } = {},
+): Models {
+  const configured = cfg.provider === "openai-compatible" ? requireCompat(cfg) : null;
+  // One gate per endpoint and process: the worker builds several Models on the same Whisper
+  // endpoint and they share one limit.
+  const compat = configured && {
+    ...configured,
+    speechGate: speechGateFor(configured.baseUrl, {
+      secondsPerMinute: configured.speechSecondsPerMinute ?? 0,
+      ...(configured.speechConcurrency && { concurrency: configured.speechConcurrency }),
+    }),
+    onSpeechRequest: opts.onSpeechRequest,
+  };
   const vertex = compat
     ? null
     : createVertex({ project: cfg.vertexProject, location: cfg.vertexLocation });
@@ -147,6 +179,7 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
             whisperLanguage(compat, o.language),
             o.signal,
             whisperPrompt(compat, o.prompt),
+            { priority: o.priority, seconds: o.seconds },
           ),
         transcribeSegments: (audio, o = {}) =>
           transcribeSegments(
@@ -156,6 +189,7 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
             o.signal,
             whisperPrompt(compat, o.prompt),
             o.temperature,
+            { priority: o.priority, seconds: o.seconds },
           ),
       },
     }),

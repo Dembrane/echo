@@ -49,6 +49,7 @@ export interface FinalInput {
   /** Cuts a stretch out of the audio sent, for the retries of doubtful stretches. */
   readonly cutSpan?: SpanCutter;
   readonly pauses?: Pauser;
+  readonly priority?: "final" | "upload";
 }
 
 export type FinalProvider = "gemini" | "whisper";
@@ -107,6 +108,8 @@ export class WhisperFinal implements FinalTranscriber {
       {
         language: input.language ?? null,
         ...(input.signal && { signal: input.signal }),
+        priority: input.priority ?? "final",
+        seconds: input.seconds,
       },
       input.seconds,
       input.cutSpan,
@@ -115,7 +118,7 @@ export class WhisperFinal implements FinalTranscriber {
       input.pauses,
     );
     return {
-      sentences: tidy(out.segments, input.seconds),
+      sentences: splitLong(tidy(out.segments, input.seconds)),
       usage: { seconds: out.seconds ?? input.seconds, inputTokens: null, outputTokens: null },
       model: this.model,
       ...(this.retry && input.cutSpan && { retry: stats }),
@@ -201,7 +204,23 @@ export class GeminiFinal implements FinalTranscriber {
     // A bad payload is retried once; a truncated one is not, it would truncate again.
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
+      const began = Date.now();
       const r = await this.call(prompt, input);
+      this.logger.info(
+        {
+          signal: "speech.request",
+          provider: "gemini",
+          model: r.model,
+          audioSeconds: input.seconds,
+          estimated: false,
+          bytes: input.audio.byteLength,
+          ms: Date.now() - began,
+          status: 200,
+          attempt: attempt + 1,
+          path: input.priority ?? "final",
+        },
+        "speech request",
+      );
       try {
         const segments = rescaleToPiece(
           parseSegments(r.text, r.finishReason),
@@ -369,3 +388,47 @@ export function tidy(sentences: readonly Sentence[], seconds: number): Sentence[
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Whisper's segments are what fits one 30 second decoding window, not sentences: on fast or
+ * continuous speech a segment ran 30 seconds, which highlights half a minute of text at once.
+ * A segment longer than `maxSeconds` is cut at its sentence ends (and, failing those, at
+ * clause ends), each part timed by its share of the characters. Text and order never change.
+ */
+export function splitLong(sentences: readonly Sentence[], maxSeconds = 15): Sentence[] {
+  const out: Sentence[] = [];
+  for (const s of sentences) {
+    if (s.end - s.start <= maxSeconds) {
+      out.push(s);
+      continue;
+    }
+    let parts = s.text.split(/(?<=[.!?…])\s+/).filter(Boolean);
+    if (parts.length < 2 || longest(parts, s) > maxSeconds)
+      parts = parts.flatMap((p) =>
+        (p.length / s.text.length) * (s.end - s.start) > maxSeconds
+          ? p.split(/(?<=[,;:])\s+/).filter(Boolean)
+          : [p],
+      );
+    // A part of a word or two is not worth a highlight of its own: it joins the one before.
+    const merged: string[] = [];
+    for (const p of parts) {
+      if (merged.length && p.split(/\s+/).length < 3) merged[merged.length - 1] += ` ${p}`;
+      else merged.push(p);
+    }
+    if (merged.length < 2) {
+      out.push(s);
+      continue;
+    }
+    const chars = merged.reduce((n, p) => n + p.length, 0);
+    let at = s.start;
+    for (const [i, p] of merged.entries()) {
+      const end = i === merged.length - 1 ? s.end : at + ((s.end - s.start) * p.length) / chars;
+      out.push({ start: round(at), end: round(end), text: p });
+      at = end;
+    }
+  }
+  return out;
+}
+
+const longest = (parts: string[], s: Sentence) =>
+  Math.max(...parts.map((p) => (p.length / s.text.length) * (s.end - s.start)));

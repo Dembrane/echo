@@ -1,12 +1,14 @@
 import { AudioError, fileFormatOf, planPieces } from "@dembrane/audio";
 import { schema } from "@dembrane/db";
-import type {
-  EditStats,
-  FinalProvider,
-  FinalTranscriber,
-  FinalUsage,
-  RetryStats,
-  Sentence,
+import {
+  type EditStats,
+  type FinalProvider,
+  type FinalTranscriber,
+  type FinalUsage,
+  pieceSeconds,
+  type RetryStats,
+  requestLimits,
+  type Sentence,
 } from "@dembrane/transcription";
 import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
@@ -71,6 +73,7 @@ export async function currentChunkHash(d: Pick<PipelineDeps, "db">, conversation
 // and a retried merge overwrites its own file.
 const FINAL_NAMESPACE = "9c4e2d7a-61b8-4f0e-a3d5-2b8f7e1c6a90";
 const URL_EXPIRES_S = 3 * 3600;
+const SPLIT_BATCH = 20;
 
 export interface FinalPlan {
   readonly duration: number;
@@ -132,13 +135,12 @@ export async function planFinal(
   const duration = found.duration > 0 ? found.duration : merged.duration;
   if (!(duration > 0)) return null;
 
-  const bytesPerSecond = size / duration;
-  const maxSeconds = Math.max(
-    1,
-    Math.min(
-      transcriber.limits.maxSeconds,
-      Math.floor(transcriber.limits.maxBytes / bytesPerSecond),
-    ),
+  // The final pass needs sentence timings, so its pieces keep the shorter cap on top of the limits.
+  const maxSeconds = pieceSeconds(
+    requestLimits(transcriber.provider),
+    size,
+    duration,
+    transcriber.limits.maxSeconds,
   );
   const planned = planPieces(duration, found.silences, maxSeconds, found.quiet);
   if (planned.length === 1)
@@ -148,20 +150,25 @@ export async function planFinal(
     ...p,
     key: `final/${conversationId}/${hash}/${i}.mp3`,
   }));
-  await d.media.split({
-    source,
-    pieces: pieces.map((p) => ({
-      start: p.start,
-      duration: p.duration,
-      target: {
-        url: d.audio.presignUpload(p.key, {
+  // A request for a few dozen pieces, not for all of them: a request that runs for many
+  // minutes is one a proxy, a client or a restarting instance can cut off, and then the whole
+  // plan starts over. A batch is short whatever the recording's length, and a retried batch
+  // overwrites the same keys.
+  for (let i = 0; i < pieces.length; i += SPLIT_BATCH)
+    await d.media.split({
+      source,
+      pieces: pieces.slice(i, i + SPLIT_BATCH).map((p) => ({
+        start: p.start,
+        duration: p.duration,
+        target: {
+          url: d.audio.presignUpload(p.key, {
+            contentType: "audio/mpeg",
+            expiresInSeconds: URL_EXPIRES_S,
+          }),
           contentType: "audio/mpeg",
-          expiresInSeconds: URL_EXPIRES_S,
-        }),
-        contentType: "audio/mpeg",
-      },
-    })),
-  });
+        },
+      })),
+    });
   for (const p of pieces)
     if ((await d.audio.size(p.key)) === null)
       throw new AudioError("transient", `upload verification failed for ${p.key}`);

@@ -56,6 +56,10 @@ export function isRecoverableTranscriptionError(err: unknown): boolean {
   if (err instanceof TranscriptRefusedError) return true;
   if (err instanceof TranscriptParseError && err.isTruncated) return true;
   const text = String((err as Error)?.message ?? err).toLowerCase();
+  // The speech-to-text endpoint refusing the file itself (400 invalid or unsupported audio, 415, 422)
+  // will refuse it again: the chunk is done with an error, as a refused Gemini call is. A 429 or
+  // a 5xx is not about the file and stays retryable.
+  if (/^transcription (400|415|422)\b/.test(text)) return true;
   return RECOVERABLE.some((p) => text.includes(p));
 }
 
@@ -65,5 +69,6 @@ export function transcriptionFailureReason(err: unknown): string {
   if (err instanceof TranscriptRefusedError) return "refused";
   if (err instanceof TranscriptParseError && err.isTruncated) return "truncated_output";
   const text = String((err as Error)?.message ?? err).toLowerCase();
+  if (/^transcription (400|415|422)\b/.test(text)) return "bad_audio";
   return RECOVERABLE.find((p) => text.includes(p)) ?? "other";
 }

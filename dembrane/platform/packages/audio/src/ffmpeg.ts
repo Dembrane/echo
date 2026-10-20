@@ -53,6 +53,17 @@ const PROBE_ARGS = [
 ];
 
 /**
+ * ffmpeg names containers, not file extensions: an .opus file is an ogg stream, an .m4a file an
+ * mp4 one. Forcing the extension as the format made every .opus upload fail ("Unknown input
+ * format: opus") although the format is accepted.
+ */
+export const demuxerOf = (format: AudioFormat): string =>
+  format === "opus" ? "ogg" : format === "m4a" ? "mp4" : format === "mpeg" ? "mpeg" : format;
+/** The same for writing: the muxer ffmpeg knows by that name. */
+export const muxerOf = (format: AudioFormat): string =>
+  format === "opus" ? "ogg" : format === "m4a" ? "ipod" : format === "aac" ? "adts" : format;
+
+/**
  * probe_from_bytes on a local file: auto-detect first, then with the format hint, and a
  * failure classified as bad bytes or retryable.
  */
@@ -67,7 +78,7 @@ export async function probeFile(path: string, hint: AudioFormat): Promise<ProbeR
       "-show_format",
       "-show_streams",
       "-f",
-      hint,
+      demuxerOf(hint),
       path,
     ]);
     if (r.code !== 0) throw classifyFfprobeFailure(r.signal, r.stderr.trim());
@@ -138,7 +149,7 @@ export async function convertFile(
         ? [
             "ffmpeg",
             "-f",
-            inputFormat,
+            demuxerOf(inputFormat),
             "-i",
             input,
             "-acodec",
@@ -158,7 +169,7 @@ export async function convertFile(
         : [
             "ffmpeg",
             "-f",
-            inputFormat,
+            demuxerOf(inputFormat),
             "-i",
             input,
             "-acodec",
@@ -177,7 +188,7 @@ export async function convertFile(
     cmd = [
       "ffmpeg",
       "-f",
-      inputFormat,
+      demuxerOf(inputFormat),
       "-i",
       input,
       "-acodec",
@@ -224,16 +235,19 @@ export async function cutFile(
   start: number,
   duration: number,
 ): Promise<void> {
+  // The seek comes before the input so ffmpeg jumps to the piece instead of decoding everything
+  // before it: a minute from the end of a three hour file took seconds, and a hundred such
+  // pieces took minutes. The cut stays sample exact (the audio test compares both orders).
   const r = await run([
     "ffmpeg",
-    "-i",
-    source,
-    "-f",
-    format,
     "-ss",
     pyFloat(start),
+    "-i",
+    source,
     "-t",
     pyFloat(duration),
+    "-f",
+    muxerOf(format),
     output,
     "-y",
   ]);

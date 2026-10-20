@@ -13,7 +13,7 @@ import type { Models } from "@dembrane/llm";
 import { createLogger, initTracing, type Logger } from "@dembrane/observability";
 import { installQueueSchema, Queue } from "@dembrane/queue";
 import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
-import { FakeTranscriber } from "@dembrane/transcription";
+import { FakeTranscriber, requestLimits } from "@dembrane/transcription";
 import postgres from "postgres";
 import { AudioUrls } from "../src/audio-urls";
 import type { PipelineDeps } from "../src/pipeline/steps";
@@ -144,7 +144,8 @@ export async function startWorker(
   opts: {
     media?: Media;
     transcriber?: FakeTranscriber;
-    maxChunkBytes?: number;
+    /** Lowers the request limits so small files are cut. */
+    requestLimits?: { maxBytes?: number; maxSeconds?: number };
     final?: PipelineDeps["final"];
     executorId?: string;
     bucketRoot?: string;
@@ -169,7 +170,9 @@ export async function startWorker(
     logger: quiet,
     now: () => new Date(),
     webhooks: { enabled: false, dashboardUrl: "http://dashboard.test" },
-    ...(opts.maxChunkBytes && { maxChunkBytes: opts.maxChunkBytes }),
+    ...(opts.requestLimits && {
+      requestLimits: { ...requestLimits("whisper"), ...opts.requestLimits },
+    }),
     ...(opts.final && { final: opts.final }),
   };
   const worker = conversationWorker(deps, { retry: FAST });

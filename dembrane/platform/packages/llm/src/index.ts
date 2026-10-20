@@ -5,8 +5,10 @@ export {
   compatCallOptions,
   echoOptions,
   languageHint,
+  type SpeechRequestLog,
   type SpeechResult,
   type SpeechSegment,
+  TRANSCRIBE_TIMEOUT_MS,
   transcribeAudio,
   transcribeSegments,
 } from "./compat";
@@ -57,6 +59,7 @@ export {
   modelsConfigOf,
   searchGroundingOn,
 } from "./settings";
+export { retryAfterMs, SpeechGate, type SpeechPriority } from "./speech-gate";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,

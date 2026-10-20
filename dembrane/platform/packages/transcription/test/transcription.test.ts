@@ -18,6 +18,7 @@ import {
   regexRedactPii,
   rescaleToPiece,
   spansOf,
+  splitLong,
   TranscriptParseError,
   TranscriptRefusedError,
   tidy,
@@ -110,7 +111,7 @@ test("redaction runs a second pass on the audio plus the first transcript", asyn
 
 test("with a speech-to-text model its words are the transcript and no chat model runs", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const heard: { language?: string | null; prompt?: string }[] = [];
+  const heard: { language?: string | null; prompt?: string; priority?: string }[] = [];
   const t = new GeminiTranscriber(
     {
       model: () => model([], seen),
@@ -137,7 +138,7 @@ test("with a speech-to-text model its words are the transcript and no chat model
     models: ["whisper-fake"],
   });
   expect(seen).toHaveLength(0);
-  expect(heard).toEqual([{ language: "nl", prompt: "Dembrane" }]);
+  expect(heard).toEqual([{ language: "nl", prompt: "Dembrane", priority: "live" }]);
 });
 
 test("with a speech-to-text model, redaction is one text-only pass with reasoning off", async () => {
@@ -636,4 +637,48 @@ test("a window of loud audio with few words is read again", () => {
     { window: 4, minSpeech: 0.6, maxWps: 1 },
   );
   expect(spans.map((s) => [s.start, s.end])).toEqual([[12, 16]]);
+});
+
+test("a segment of half a minute is cut at its sentence ends, timed by share, and nothing else changes", () => {
+  const long = {
+    start: 10,
+    end: 40,
+    text: "We start with the budget for the new building. It is more than last year, but less than we feared! Then the schedule, which nobody likes. Done.",
+  };
+  const out = splitLong([
+    { start: 0, end: 10, text: "Short one." },
+    long,
+    { start: 40, end: 42, text: "After." },
+  ]);
+  expect(out[0]?.text).toBe("Short one.");
+  expect(out.at(-1)?.text).toBe("After.");
+  const parts = out.slice(1, -1);
+  expect(parts.length).toBeGreaterThanOrEqual(3);
+  expect(parts.map((p) => p.text).join(" ")).toBe(long.text);
+  expect(parts[0]?.start).toBe(10);
+  expect(parts.at(-1)?.end).toBe(40);
+  for (const p of parts) expect(p.end - p.start).toBeLessThan(15);
+  for (let i = 1; i < parts.length; i++)
+    expect((parts[i] as { start: number }).start).toBeCloseTo(
+      (parts[i - 1] as { end: number }).end,
+      1,
+    );
+  // A short segment is left alone, and so is a long one with no punctuation to cut at.
+  expect(splitLong([{ start: 0, end: 5, text: "One. Two. Three." }])).toHaveLength(1);
+  expect(
+    splitLong([{ start: 0, end: 30, text: "no punctuation at all in this long run of words" }]),
+  ).toHaveLength(1);
+});
+
+test("the speech endpoint refusing the file ends the chunk, a rate limit or a server fault does not", () => {
+  expect(
+    isRecoverableTranscriptionError(
+      new Error('transcription 400: {"message":"Invalid or unsupported audio file."}'),
+    ),
+  ).toBe(true);
+  expect(isRecoverableTranscriptionError(new Error("transcription 422: unprocessable"))).toBe(true);
+  expect(isRecoverableTranscriptionError(new Error("transcription 429: INSUFFICIENT QUOTA"))).toBe(
+    false,
+  );
+  expect(isRecoverableTranscriptionError(new Error("transcription 503: busy"))).toBe(false);
 });

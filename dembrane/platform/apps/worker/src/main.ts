@@ -27,6 +27,7 @@ import {
   type FinalTranscriber,
   GeminiFinal,
   GeminiTranscriber,
+  requestLimits,
   WhisperFinal,
 } from "@dembrane/transcription";
 import { WORKER_ASSETS } from "./assets";
@@ -111,7 +112,10 @@ const billing = createBilling({
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
 // Every model call is metered: one log line at once and one model_call row per batch.
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+// One structured line per request to a speech model: what is sent, how long it took, how it ended.
+const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
 const models = createModels(modelsConfigOf(config.llm), {
+  onSpeechRequest: logSpeech,
   observe: metering.observe,
   onObserverFault: (err) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
@@ -121,6 +125,9 @@ const models = createModels(modelsConfigOf(config.llm), {
 // the preview runs both on one conversation. The first one is the transcript people read.
 const retry = config.llm.whisperRetry ? DEFAULT_RETRY : null;
 const transcriber = new GeminiTranscriber(models, logger, { retry });
+const liveLimits = requestLimits(
+  config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
+);
 const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
 // The text pass reads Whisper's transcript with the Whisper provider's own text model.
 let whisperModels: Models | null = null;
@@ -132,6 +139,7 @@ for (const provider of finalProviders) {
       provider: provider === "whisper" ? "openai-compatible" : "vertex",
     }),
     {
+      onSpeechRequest: logSpeech,
       observe: metering.observe,
       onObserverFault: (err) =>
         logger.warn({ err }, "model call metering failed; later faults are silent"),
@@ -194,6 +202,13 @@ const regs = registrations({
     ),
     media,
     transcriber,
+    liveProvider: config.llm.provider === "openai-compatible" ? "whisper" : "gemini",
+    ...(config.llm.whisperMaxRequestSeconds && {
+      requestLimits: {
+        ...liveLimits,
+        maxSeconds: Math.min(liveLimits.maxSeconds, config.llm.whisperMaxRequestSeconds),
+      },
+    }),
     ...(finalProviders.length && {
       final: {
         providers: finalProviders,
