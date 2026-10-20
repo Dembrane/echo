@@ -187,7 +187,9 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
+		"map_cap",
 		"org_cap",
+		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",
@@ -213,6 +215,29 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 	expect(wallActionLine(undefined)).toBe("");
 });
 
+it("states the monthly free content limits without an em dash", () => {
+	const lines: [WallKey, string][] = [
+		[
+			"chat_cap",
+			"The free plan includes two chats a month, with 20 questions each.",
+		],
+		[
+			"chat_turn_cap",
+			"The free plan includes two chats a month, with 20 questions each.",
+		],
+		["report_cap", "The free plan includes one report a month."],
+		["map_cap", "The free plan includes one map a month."],
+		["popcorn_cap", "The free plan includes 12 popcorn analyses a month."],
+	];
+	for (const [wall, line] of lines) {
+		expect(wallPopoverLine(wall)).toBe(line);
+		expect(wallPopoverLine(wall)).not.toContain("\u2014");
+		expect(wallActionLine(wall)).not.toContain("\u2014");
+	}
+	expect(wallActionLine("map_cap")).toBe("generate another map");
+	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
+});
+
 // 3. No tier name anywhere on the gate path, and no price table.
 
 it("names no tier in any gate copy", () => {
@@ -224,7 +249,9 @@ it("names no tier in any gate copy", () => {
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
+		"map_cap",
 		"org_cap",
+		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",

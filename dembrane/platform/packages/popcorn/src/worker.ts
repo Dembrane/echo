@@ -27,6 +27,7 @@ import {
 import { z } from "zod";
 import { analysisDeck, type DeckAnalysis, deckViewHook } from "./deck";
 import { publishNudge } from "./events";
+import { popcornAllowance } from "./free";
 import { popcornTick } from "./jobs";
 import { dict, list, orStr, pyIso } from "./py";
 import type { PopcornFlags } from "./service";
@@ -205,6 +206,7 @@ export function tickDeps(
       ? (p, a) => analysis.adopt?.requestMap(p, a) ?? Promise.resolve()
       : null,
     notifyReady: deps.notifyReady ?? null,
+    free: popcornAllowance(deps.db),
     similar: analysis.executor ? similarFrom(analysis.executor) : null,
     flags: deps.flags,
     participantBaseUrl: deps.participantBaseUrl,

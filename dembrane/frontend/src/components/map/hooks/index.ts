@@ -9,8 +9,10 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { budgetRequestParams, type CustomBudgets } from "../budgets";
 import type {
 	FactCheckState,
@@ -336,6 +338,11 @@ export const useGenerateMap = (projectId: string) => {
 				`/map/projects/${enc(projectId)}/generate`,
 			),
 		onError: (error: HttpError) => {
+			// The page opens the wall for a used-up month.
+			if (isFreeTierLimitError(error) === "map") {
+				void invalidateFreeAllowance(queryClient);
+				return;
+			}
 			if (error.status === 403) {
 				toast.error(t`You do not have permission to generate a map.`);
 				return;
@@ -346,7 +353,10 @@ export const useGenerateMap = (projectId: string) => {
 			}
 			toast.error(t`The map could not be started.`);
 		},
-		onSuccess: ({ attempt }) => putAttempt(queryClient, projectId, attempt),
+		onSuccess: ({ attempt }) => {
+			putAttempt(queryClient, projectId, attempt);
+			void invalidateFreeAllowance(queryClient);
+		},
 	});
 };
 

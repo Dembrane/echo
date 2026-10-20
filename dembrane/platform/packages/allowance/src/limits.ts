@@ -7,12 +7,10 @@ export const LIMIT_KEYS = [
   "audio_seconds_conversation",
   "projects",
   "chats_month",
-  "chat_turns_first",
-  "chat_turns_second",
+  "chat_turns_per_chat",
   "reports_month",
   "maps_month",
-  "popcorn_sessions_month",
-  "popcorn_window_minutes",
+  "popcorn_analyses_month",
   "popcorn_cadence_minutes",
 ] as const;
 
@@ -24,12 +22,10 @@ export const FREE_LIMIT_DEFAULTS: FreeLimits = Object.freeze({
   audio_seconds_conversation: 3600,
   projects: 1,
   chats_month: 2,
-  chat_turns_first: 20,
-  chat_turns_second: 3,
+  chat_turns_per_chat: 20,
   reports_month: 1,
   maps_month: 1,
-  popcorn_sessions_month: 1,
-  popcorn_window_minutes: 60,
+  popcorn_analyses_month: 12,
   popcorn_cadence_minutes: 5,
 });
 

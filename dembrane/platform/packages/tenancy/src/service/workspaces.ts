@@ -704,7 +704,7 @@ export function workspaceService(deps: TenancyDeps) {
                 included_seats: rcap.includedSeats,
               }
             : null,
-        free_tier: await freeTierBlock(db, tier, ids),
+        free_tier: await freeTierBlock(db, ctx.workspaceId, now),
       };
     },
 

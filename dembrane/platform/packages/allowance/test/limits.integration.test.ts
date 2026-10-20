@@ -62,12 +62,10 @@ run("free limits", () => {
       audio_seconds_conversation: 3600,
       projects: 1,
       chats_month: 2,
-      chat_turns_first: 20,
-      chat_turns_second: 3,
+      chat_turns_per_chat: 20,
       reports_month: 1,
       maps_month: 1,
-      popcorn_sessions_month: 1,
-      popcorn_window_minutes: 60,
+      popcorn_analyses_month: 12,
       popcorn_cadence_minutes: 5,
     });
   });
@@ -89,6 +87,13 @@ run("free limits", () => {
     const limits = await freeLimits(db);
     expect(limits).toEqual(FREE_LIMIT_DEFAULTS);
     expect("bogus" in limits).toBe(false);
+  });
+
+  test("retired keys are ignored", async () => {
+    await sql`insert into tier_limit (tier, key, value) values ('free', 'chat_turns_first', 7)`;
+    const limits = await freeLimits(db);
+    expect(limits).toEqual(FREE_LIMIT_DEFAULTS);
+    expect("chat_turns_first" in limits).toBe(false);
   });
 
   test("cached for 60 s", async () => {

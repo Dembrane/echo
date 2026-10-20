@@ -49,6 +49,8 @@ export interface GenerateDeps {
   readonly notifier: Notify;
   /** Sends report.generated to the project's webhooks. */
   readonly reportGenerated: (projectId: string, reportId: number) => Promise<unknown>;
+  /** Gives back a free report that produced nothing. */
+  readonly refundFreeReport: (reportId: number) => Promise<unknown>;
   /** Tests stretch a step to crash a worker inside it. */
   readonly pause?: (step: string) => Promise<void>;
 }
@@ -100,7 +102,7 @@ function analytics(d: GenerateDeps, event: string, props: Record<string, unknown
   d.logger.info({ signal: "analytics", event, ...props }, "analytics event");
 }
 
-async function markError(d: GenerateDeps, p: Payload, code: string, message: string) {
+export async function markError(d: GenerateDeps, p: Payload, code: string, message: string) {
   const now = d.now().toISOString();
   try {
     await d.store.updateReport(p.reportId, {
@@ -111,6 +113,11 @@ async function markError(d: GenerateDeps, p: Payload, code: string, message: str
     });
   } catch (err) {
     d.logger.error({ err, reportId: p.reportId }, "failed to update report status to error");
+  }
+  try {
+    await d.refundFreeReport(p.reportId);
+  } catch (err) {
+    d.logger.error({ err, reportId: p.reportId }, "free report refund failed");
   }
   await progress(d, p.reportId, "failed", message);
 }

@@ -58,18 +58,14 @@ const labelOf = (key: FreeLimitKey): string => {
 			return t`Projects`;
 		case "chats_month":
 			return t`Chats per month`;
-		case "chat_turns_first":
-			return t`Turns in the first chat`;
-		case "chat_turns_second":
-			return t`Turns in the second chat`;
+		case "chat_turns_per_chat":
+			return t`Turns per chat`;
 		case "reports_month":
 			return t`Reports per month`;
 		case "maps_month":
 			return t`Maps per month`;
-		case "popcorn_sessions_month":
-			return t`Popcorn sessions per month`;
-		case "popcorn_window_minutes":
-			return t`Popcorn window`;
+		case "popcorn_analyses_month":
+			return t`Popcorn analyses per month`;
 		case "popcorn_cadence_minutes":
 			return t`Popcorn cadence floor`;
 	}

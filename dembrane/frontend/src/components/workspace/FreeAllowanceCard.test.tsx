@@ -35,7 +35,7 @@ const NOT_FREE = {
 	free: false,
 	maps: null,
 	period_start: null,
-	popcorn_sessions: null,
+	popcorn_analyses: null,
 	projects: null,
 	reports: null,
 	resets_at: null,
@@ -47,7 +47,7 @@ const snapshot = (overrides: Record<string, unknown> = {}) => ({
 	free: true,
 	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_sessions: { limit: 1, used: 0 },
+	popcorn_analyses: { limit: 12, used: 3 },
 	projects: { limit: 1, used: 1 },
 	reports: { limit: 1, used: 0 },
 	resets_at: "2026-11-01T00:00:00Z",
@@ -160,14 +160,17 @@ it("shows counted meters as n of m with a progress bar each", async () => {
 	expect(value("chats")).toBe("1 of 2");
 	expect(value("reports")).toBe("0 of 1");
 	expect(value("maps")).toBe("0 of 1");
-	expect(value("popcorn_sessions")).toBe("0 of 1");
+	expect(value("popcorn_analyses")).toBe("3 of 12");
+	expect(
+		within(meter("popcorn_analyses")).getByText("Popcorn analyses"),
+	).toBeTruthy();
 	expect(value("projects")).toBe("1 of 1");
 	for (const key of [
 		"audio_seconds",
 		"chats",
 		"reports",
 		"maps",
-		"popcorn_sessions",
+		"popcorn_analyses",
 		"projects",
 	]) {
 		expect(within(meter(key)).getByRole("progressbar")).toBeTruthy();

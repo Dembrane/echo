@@ -19,13 +19,11 @@ const fetchMock = vi.fn();
 const DEFAULTS: Record<string, number> = {
 	audio_seconds_conversation: 3600,
 	audio_seconds_month: 18000,
-	chat_turns_first: 20,
-	chat_turns_second: 3,
+	chat_turns_per_chat: 20,
 	chats_month: 2,
 	maps_month: 1,
+	popcorn_analyses_month: 12,
 	popcorn_cadence_minutes: 5,
-	popcorn_sessions_month: 1,
-	popcorn_window_minutes: 60,
 	projects: 1,
 	reports_month: 1,
 };
@@ -101,7 +99,26 @@ it("renders one row per limit", async () => {
 	fetchMock.mockResolvedValue(answer(200, limitsBody()));
 	renderPanel();
 	await screen.findByTestId("free-limit-row-audio_seconds_month");
-	expect(screen.getAllByTestId(/^free-limit-row-/)).toHaveLength(11);
+	expect(screen.getAllByTestId(/^free-limit-row-/)).toHaveLength(9);
+});
+
+it("labels the chat turn and popcorn rows", async () => {
+	fetchMock.mockResolvedValue(answer(200, limitsBody()));
+	renderPanel();
+	await screen.findByTestId("free-limit-row-chat_turns_per_chat");
+	const current = (key: string) =>
+		within(row(key)).getByTestId("free-limit-current").textContent;
+	expect(
+		within(row("chat_turns_per_chat")).getByText("Turns per chat"),
+	).toBeTruthy();
+	expect(current("chat_turns_per_chat")).toBe("20");
+	expect(
+		within(row("popcorn_analyses_month")).getByText(
+			"Popcorn analyses per month",
+		),
+	).toBeTruthy();
+	expect(current("popcorn_analyses_month")).toBe("12");
+	expect(screen.queryByText("Popcorn window")).toBeNull();
 });
 
 it("shows audio seconds as hours", async () => {

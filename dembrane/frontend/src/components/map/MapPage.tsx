@@ -11,6 +11,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import {
 	type ReactNode,
@@ -21,7 +22,11 @@ import {
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { useProjectById } from "@/components/project/hooks";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import {
 	budgetState,
@@ -243,6 +248,16 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const mapQuery = useProjectMapSummary(offline ? "" : projectId);
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// Sample projects are exempt; until is_sample loads no banner shows and the server's 402 decides.
+	const sampleQuery = useProjectById({
+		projectId: offline ? "" : projectId,
+		query: { fields: ["id", "is_sample"] },
+	});
+	const allowanceApplies =
+		sampleQuery.isSuccess &&
+		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
+			?.is_sample !== true;
 
 	const projectResultToken = mapQuery.data?.current
 		? resultToken(mapQuery.data.current)
@@ -688,7 +703,14 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							readOnly={readOnly}
 							isStarting={generate.isPending}
 							nothingToRead={nothingToRead}
-							onGenerate={() => generate.mutate()}
+							onGenerate={() =>
+								generate.mutate(undefined, {
+									onError: (error) => {
+										if (isFreeTierLimitError(error) === "map")
+											upgradeHandlers.open();
+									},
+								})
+							}
 						/>
 					)}
 					{graph && argumentCount > 0 && (
@@ -723,6 +745,25 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					)}
 				</Group>
 			</Group>
+
+			{!offline && allowanceApplies && linkWorkspaceId && (
+				<div className="px-4 pb-2 empty:hidden md:px-6">
+					<FreeAllowanceBanner workspaceId={linkWorkspaceId} feature="maps" />
+				</div>
+			)}
+			{!offline && linkWorkspaceId && (
+				<UpgradeModal
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
+					currentTier="free"
+					requiredTier={null}
+					canRequestUpgrade
+					workspaceId={linkWorkspaceId}
+					projectId={projectId}
+					wallKey="map_cap"
+					entry="modal_direct"
+				/>
+			)}
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||

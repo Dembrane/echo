@@ -1,4 +1,3 @@
-import { PaymentRequiredError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import type postgres from "postgres";
 import { isUuid } from "./storage";
@@ -92,35 +91,11 @@ export async function currentGoal(sql: postgres.Sql, projectId: string): Promise
   return typeof row?.content === "string" && row.content.trim() ? row.content.trim() : null;
 }
 
-/** The project's tier through its workspace's billing account; null for legacy projects. */
-export async function projectTier(sql: postgres.Sql, projectId: string): Promise<string | null> {
-  if (!isUuid(projectId)) return null;
-  const [row] = await sql`
-    select ba.tier from project p
-    join workspace w on w.id = p.workspace_id
-    join billing_account ba on ba.id = w.billing_account_id
-    where p.id = ${projectId}`;
-  return (row?.tier as string | null) ?? null;
-}
-
 /** A seeded sample copy (project.is_sample), which free-tier limits leave alone. */
 export async function isSampleProject(sql: postgres.Sql, projectId: string): Promise<boolean> {
   if (!isUuid(projectId)) return false;
   const [row] = await sql`select is_sample from project where id = ${projectId}`;
   return row?.is_sample === true;
-}
-
-export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
-// User turns across all of a sample copy's chats, the seeded opening question included.
-export const FREE_TIER_MAX_SAMPLE_USER_TURNS = 10;
-
-/** The shared 402 the frontend keys on (error FREE_TIER_LIMIT) to offer the upgrade. */
-export function freeTierLimitError(limit: string): PaymentRequiredError {
-  return new PaymentRequiredError("billing.tier_limit", {
-    message: "FREE_TIER_LIMIT",
-    params: { limit },
-    details: { error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" },
-  });
 }
 
 /** The global canvas flag and the project's beta toggle, as project_canvas_enabled. */

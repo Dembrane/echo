@@ -129,7 +129,7 @@ run("free allowance route", () => {
       chats: { used: 1, limit: 2 },
       reports: { used: 0, limit: 1 },
       maps: { used: 0, limit: 1 },
-      popcorn_sessions: { used: 0, limit: 1 },
+      popcorn_analyses: { used: 0, limit: 12 },
       projects: { used: 1, limit: 1 },
     });
   });

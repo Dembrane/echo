@@ -193,8 +193,9 @@ export function popcornStore(sql: Sql) {
     },
 
     async latestRun(loopId: string): Promise<Row | null> {
+      // A counted analysis still in progress is not a run yet.
       const [r] = await sql`select * from agent_loop_run
-        where loop_id = ${loopId} order by started_at desc limit 1`;
+        where loop_id = ${loopId} and status is distinct from 'running' order by started_at desc limit 1`;
       return r ?? null;
     },
 
@@ -263,7 +264,7 @@ export function popcornStore(sql: Sql) {
      */
     async startedFinishReads(loopId: string, limit: number): Promise<Row[]> {
       return sql`select t.payload, t.claimed_at, r.id as run_id from scheduled_task t
-        left join agent_loop_run r on r.id::text = t.payload->>'request_id'
+        left join agent_loop_run r on r.id::text = t.payload->>'request_id' and r.status is distinct from 'running'
         where t.task_type = ${TASK_POPCORN_TICK} and t.status in ('processing', 'completed')
           and t.payload->>'loop_id' = ${loopId} and t.payload->>'tick_kind' = ${FINISH_TICK}
         order by t.claimed_at desc nulls last limit ${limit}`;

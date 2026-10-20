@@ -1,3 +1,4 @@
+import { type AllowanceAccount, freeLimitError, giveBack } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -7,7 +8,8 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
-import { directusRow, PaymentRequiredError, pythonIso } from "@dembrane/legacy-shape";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
+import { takeFreeReport } from "./free";
 import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
 
@@ -50,9 +52,8 @@ const ISO_FORMS =
 
 /**
  * Starts a report, now or at a scheduled time. Generating needs report:generate; a free
- * workspace gets one report, and its sample copy gets one of its own that does not spend
- * the workspace's. One
- * draft at a time per project, so a double click does not start two generations.
+ * account takes its period's report on request, and a sample copy keeps one report of its
+ * own. One draft at a time per project, so a double click does not start two generations.
  */
 export async function createReport(
   d: ProjectDeps,
@@ -61,70 +62,75 @@ export async function createReport(
   body: { language: string | null; user_instructions: string | null; scheduled_at: string | null },
 ) {
   const pa = await projectFor(d.access, who, projectId, "report:generate");
-  if (pa.tier === "free" && pa.project.workspaceId) {
-    const spent = pa.project.isSample
-      ? await d.store.countProjectReports(projectId)
-      : await d.store.countWorkspaceReports(pa.project.workspaceId);
-    if (spent >= 1)
-      throw new PaymentRequiredError("billing.tier_limit", {
-        params: { limit: "report" },
-        details: { error: "FREE_TIER_LIMIT", limit: "report", upgrade_cta_tier: "changemaker" },
-      });
-  }
+  if (
+    pa.project.isSample &&
+    pa.tier === "free" &&
+    (await d.store.countProjectReports(projectId)) >= 1
+  )
+    throw freeLimitError("report");
   const language = body.language || "en";
   const now = d.now();
   const scheduled = body.scheduled_at ? parseSchedule(body.scheduled_at, now) : null;
   if (!scheduled && (await d.store.hasDraftReport(projectId)))
     throw new ConflictError("report.already_generating");
+  const account: AllowanceAccount | null = pa.project.isSample
+    ? null
+    : await takeFreeReport(d.db, projectId, now);
 
-  return d.store.transaction(async ({ store, sql }) => {
-    const created = await store.insertReport({
-      project_id: projectId,
-      language,
-      content: "",
-      status: scheduled ? "scheduled" : "draft",
-      user_created: who.directusUserId,
-      date_created: now.toISOString(),
-    });
-    const extra = {
-      ...(body.user_instructions && { user_instructions: body.user_instructions }),
-      ...(scheduled && { scheduled_at: scheduled.toISOString() }),
-    };
-    if (Object.keys(extra).length)
-      await store.updateReport(created.id, { ...extra, date_updated: now.toISOString() });
-
-    if (!scheduled) {
-      await d.jobs.enqueue(
-        generateReport,
-        {
-          projectId,
-          reportId: Number(created.id),
-          language,
-          userInstructions: body.user_instructions ?? "",
-        },
-        { tx: sql },
-      );
-    } else {
-      await store.scheduleTask({
-        id: newId(),
-        task_type: TASK_GENERATE_REPORT,
-        // The id is the string Directus returned; the runner reads either form.
-        payload: {
-          report_id: String(created.id),
-          project_id: projectId,
-          language,
-          user_instructions: body.user_instructions ?? "",
-        },
-        scheduled_at: scheduled.toISOString(),
-        status: "scheduled",
-        attempts: 0,
-        created_at: pythonIso(now),
-        updated_at: pythonIso(now),
+  try {
+    return await d.store.transaction(async ({ store, sql }) => {
+      const created = await store.insertReport({
+        project_id: projectId,
+        language,
+        content: "",
+        status: scheduled ? "scheduled" : "draft",
+        user_created: who.directusUserId,
+        date_created: now.toISOString(),
+        free_period_start: account ? account.periodStart.toISOString() : null,
       });
-    }
-    // The response is the row as first written, before instructions and schedule were added.
-    return directusRow(created);
-  });
+      const extra = {
+        ...(body.user_instructions && { user_instructions: body.user_instructions }),
+        ...(scheduled && { scheduled_at: scheduled.toISOString() }),
+      };
+      if (Object.keys(extra).length)
+        await store.updateReport(created.id, { ...extra, date_updated: now.toISOString() });
+
+      if (!scheduled) {
+        await d.jobs.enqueue(
+          generateReport,
+          {
+            projectId,
+            reportId: Number(created.id),
+            language,
+            userInstructions: body.user_instructions ?? "",
+          },
+          { tx: sql },
+        );
+      } else {
+        await store.scheduleTask({
+          id: newId(),
+          task_type: TASK_GENERATE_REPORT,
+          // The id is the string Directus returned; the runner reads either form.
+          payload: {
+            report_id: String(created.id),
+            project_id: projectId,
+            language,
+            user_instructions: body.user_instructions ?? "",
+          },
+          scheduled_at: scheduled.toISOString(),
+          status: "scheduled",
+          attempts: 0,
+          created_at: pythonIso(now),
+          updated_at: pythonIso(now),
+        });
+      }
+      // The response is the row as first written, before instructions and schedule were added.
+      return directusRow(created);
+    });
+  } catch (err) {
+    if (account) await giveBack(d.db, account, "reports", 1);
+    throw err;
+  }
 }
 
 export async function listReports(d: ProjectDeps, who: Signed, projectId: string) {

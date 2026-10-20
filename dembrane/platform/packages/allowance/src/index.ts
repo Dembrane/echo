@@ -3,7 +3,7 @@ export {
   allowanceForProject,
   allowanceForWorkspace,
 } from "./account";
-export { type FreeLimitName, freeLimitError } from "./errors";
+export { type FreeLimitName, freeLimitError, isFreeLimit } from "./errors";
 export { isFreeTier } from "./free";
 export {
   add,

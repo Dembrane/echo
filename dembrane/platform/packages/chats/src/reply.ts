@@ -6,12 +6,6 @@ import { chatContext } from "./context";
 import type { ChatDeps } from "./deps";
 import { generateTitle } from "./llm";
 import { systemMessagesForChat } from "./prompt";
-import {
-  FREE_TIER_MAX_CHAT_USER_TURNS,
-  FREE_TIER_MAX_SAMPLE_USER_TURNS,
-  freeTierLimit,
-  isFreeTier,
-} from "./tiers";
 
 export interface ReplyBody {
   messages: { role: "user" | "assistant" | "dembrane"; content: string }[];
@@ -53,30 +47,18 @@ export async function reply(
   protocol: string,
   language: string,
 ): Promise<Response> {
-  const { chat, access } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
+  const { chat } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
     withUsed: true,
   });
   if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
   const projectId = chatProjectId(chat);
   if (!projectId) throw new Error("Chat is missing a project reference");
-  // A sample copy's chats skip the per-chat cap and share the sample's own allowance.
-  if (isFreeTier(await d.reads.projectTier(projectId))) {
-    const spent = access.project.isSample
-      ? (await d.store.countProjectUserTurns(projectId)) >= FREE_TIER_MAX_SAMPLE_USER_TURNS
-      : (await d.store.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS;
-    if (spent) throw freeTierLimit("chat_turns");
-  }
 
   const last = body.messages[body.messages.length - 1];
   if (!last) throw new Error("list index out of range");
   const messageId = d.newId();
-  await d.store.createMessage({
-    id: messageId,
-    chatId,
-    from: "user",
-    text: last.content,
-    now: d.now(),
-  });
+  const turn = { projectId, chatId, messageId, text: last.content, now: d.now() };
+  const admitted = await d.freeChats.admitTurn(turn);
 
   let formatted: { role: "system" | "user" | "assistant"; content: string }[];
   try {
@@ -116,7 +98,7 @@ export async function reply(
     );
     formatted = [...system.map((content) => ({ role: "system" as const, content })), ...convo];
   } catch (err) {
-    await d.store.deleteMessage(messageId);
+    await d.freeChats.undoTurn(turn, admitted);
     throw err;
   }
 
@@ -177,7 +159,7 @@ export async function reply(
           message: String((err as Error)?.message ?? err).slice(0, 300),
           mode: "context",
         });
-        await d.store.deleteMessage(messageId).catch(() => {});
+        await d.freeChats.undoTurn(turn, admitted).catch(() => {});
         first = true;
         // The dashboard turns chat.no_answer into "try rewording it".
         send(

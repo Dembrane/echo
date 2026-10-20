@@ -8,6 +8,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 	within,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
@@ -20,11 +21,50 @@ import {
 	it,
 	vi,
 } from "vitest";
+import { ApiRequestError } from "@/lib/errors/read";
 import { MapPage } from "./MapPage";
 import { resetMapSettingsForTests } from "./state/settings";
 
 vi.mock("@/hooks/useWorkspace", () => ({
 	useWorkspace: () => ({ workspace: { role: "admin" }, workspaceId: "w1" }),
+}));
+
+const bffMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+vi.mock("@/lib/bff", () => ({ bff: bffMock }));
+vi.mock("@/hooks/useServerEvents", () => ({ useServerEvents: () => {} }));
+
+const toastMock = vi.hoisted(() => ({
+	error: vi.fn(),
+	info: vi.fn(),
+	success: vi.fn(),
+}));
+vi.mock("@/components/common/Toaster", () => ({ toast: toastMock }));
+
+vi.mock("@/components/project/hooks", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	useProjectById: () => ({
+		data: { id: "p1", is_sample: false },
+		isSuccess: true,
+	}),
+}));
+
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({
+		opened,
+		wallKey,
+		currentTier,
+	}: {
+		opened: boolean;
+		wallKey: string;
+		currentTier: string;
+	}) =>
+		opened ? (
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-tier={currentTier}
+			/>
+		) : null,
 }));
 
 i18n.load("en-US", {});
@@ -62,6 +102,7 @@ afterAll(() => {
 
 afterEach(() => {
 	cleanup();
+	vi.clearAllMocks();
 	window.localStorage.clear();
 	resetMapSettingsForTests();
 });
@@ -121,5 +162,51 @@ describe("MapPage in fixture mode", () => {
 		// Generation controls are hidden in fixture mode.
 		expect(screen.queryByRole("button", { name: "Generate map" })).toBeNull();
 		expect(fetchSpy).not.toHaveBeenCalled();
+	});
+});
+
+describe("MapPage free tier", () => {
+	it("a spent map opens the upgrade modal", async () => {
+		bffMock.get.mockImplementation((path: string) => {
+			if (path === "/map/projects/p1/graph") return Promise.resolve(null);
+			if (path === "/map/projects/p1") {
+				return Promise.resolve({
+					attempt: null,
+					current: null,
+					source: { conversations_with_transcripts: 2 },
+				});
+			}
+			return Promise.resolve({ fact_checks: {} });
+		});
+		bffMock.post.mockRejectedValue(
+			new ApiRequestError(402, {
+				action: "upgrade",
+				code: "billing.tier_limit",
+				params: { cap: 1, limit: "map", used: 1 },
+			}),
+		);
+		render(
+			<MantineProvider>
+				<I18nProvider i18n={i18n}>
+					<QueryClientProvider
+						client={
+							new QueryClient({ defaultOptions: { queries: { retry: false } } })
+						}
+					>
+						<MemoryRouter>
+							<MapPage projectId="p1" workspaceId="w1" />
+						</MemoryRouter>
+					</QueryClientProvider>
+				</I18nProvider>
+			</MantineProvider>,
+		);
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Generate map" }),
+		);
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("map_cap");
+		expect(modal.dataset.tier).toBe("free");
+		await waitFor(() => expect(bffMock.post).toHaveBeenCalledTimes(1));
+		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 });

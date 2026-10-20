@@ -17,7 +17,7 @@ export interface AllowanceSnapshot {
   chats: Meter | null;
   reports: Meter | null;
   maps: Meter | null;
-  popcorn_sessions: Meter | null;
+  popcorn_analyses: Meter | null;
   projects: Meter | null;
 }
 
@@ -26,7 +26,7 @@ const METERS = {
   chats: "chats_month",
   reports: "reports_month",
   maps: "maps_month",
-  popcorn_sessions: "popcorn_sessions_month",
+  popcorn_analyses: "popcorn_analyses_month",
 } as const satisfies Record<string, LimitKey>;
 
 const NOT_FREE: AllowanceSnapshot = Object.freeze({
@@ -37,7 +37,7 @@ const NOT_FREE: AllowanceSnapshot = Object.freeze({
   chats: null,
   reports: null,
   maps: null,
-  popcorn_sessions: null,
+  popcorn_analyses: null,
   projects: null,
 });
 
@@ -62,7 +62,7 @@ export async function allowanceSnapshot(
     chats: meter("chats"),
     reports: meter("reports"),
     maps: meter("maps"),
-    popcorn_sessions: meter("popcorn_sessions"),
+    popcorn_analyses: meter("popcorn_analyses"),
     projects: { used: projects, limit: limits.projects },
   };
 }

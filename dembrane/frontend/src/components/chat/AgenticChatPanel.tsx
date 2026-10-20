@@ -66,6 +66,7 @@ import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { trackProcess } from "@/features/processes/store";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -89,7 +90,8 @@ import {
 	streamAgenticRun,
 } from "@/lib/api";
 import {
-	FREE_TIER_MAX_CHAT_USER_TURNS,
+	chatTurnGate,
+	freeLimitDetails,
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
@@ -860,18 +862,16 @@ export const AgenticChatPanel = ({
 	const projectTranscriptHintsQuery = useProjectById({
 		projectId,
 		query: {
-			fields: ["id", "default_conversation_transcript_prompt", "is_sample"],
+			fields: ["id", "default_conversation_transcript_prompt"],
 		},
 	});
-	const isSample =
-		(
-			projectTranscriptHintsQuery.data as
-				| { is_sample?: boolean | null }
-				| undefined
-		)?.is_sample === true;
-	// A sample project's chats share their own allowance, which only the server
-	// counts; its 402 sets this.
-	const [sampleTurnsSpent, setSampleTurnsSpent] = useState(false);
+	// A refused turn (402 chat_turns or chats); sample chats only learn their limit this way.
+	const [turnRefusal, setTurnRefusal] = useState<{
+		frozen: boolean;
+		monthly: boolean;
+	} | null>(null);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on chat switch
+	useEffect(() => setTurnRefusal(null), [chatId]);
 	const voiceHotwords =
 		(
 			projectTranscriptHintsQuery.data as
@@ -1162,24 +1162,15 @@ export const AgenticChatPanel = ({
 		if (landed) setPendingUserMessage(null);
 	}, [timeline, pendingUserMessage]);
 
-	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { freeTier, usageGates } = useWorkspaceUsage(workspace?.id);
+	const { usageGates } = useWorkspaceUsage(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
 	const voiceCapReached = Boolean(usageGates?.uploads_locked);
 	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
-	const userTurnCount = useMemo(
-		() =>
-			timeline.filter((item) => item.kind === "message" && item.role === "user")
-				.length,
-		[timeline],
-	);
-	const atTurnLimit = Boolean(
-		freeTier?.active &&
-			(isSample
-				? sampleTurnsSpent
-				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
-	);
+	// Free tier: the server's turn meter for this chat.
+	const turnGate = chatTurnGate(chatQuery.data?.free_turns);
+	const atTurnLimit = turnGate.atLimit || turnRefusal !== null;
+	const turnsFrozen = turnGate.frozen || Boolean(turnRefusal?.frozen);
 
 	const historyMessages = useMemo(
 		() =>
@@ -1611,6 +1602,7 @@ export const AgenticChatPanel = ({
 		void queryClient.invalidateQueries({
 			queryKey: ["projects", projectId, "chats"],
 		});
+		void invalidateFreeAllowance(queryClient);
 	}, [chatId, projectId, queryClient]);
 
 	const handleSubmit = async (overrideMessage?: string) => {
@@ -1677,8 +1669,12 @@ export const AgenticChatPanel = ({
 			// the composer so it isn't lost (unless they've already typed a new one).
 			setInput((current) => (current.length === 0 ? message : current));
 			// Backend safety net: free-tier turn cap returns 402.
-			if (isFreeTierLimitError(submitError) === "chat_turns") {
-				if (isSample) setSampleTurnsSpent(true);
+			const refused = isFreeTierLimitError(submitError);
+			if (refused === "chat_turns" || refused === "chats") {
+				setTurnRefusal({
+					frozen: freeLimitDetails(submitError)?.reason === "frozen",
+					monthly: refused === "chats",
+				});
 				upgradeHandlers.open();
 			} else {
 				const nextError =
@@ -2172,7 +2168,11 @@ export const AgenticChatPanel = ({
 					/>
 
 					{atTurnLimit && (
-						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
+						<ChatTurnLimitCard
+							onUpgrade={upgradeHandlers.open}
+							frozen={turnsFrozen}
+							monthly={Boolean(turnRefusal?.monthly)}
+						/>
 					)}
 					{voice.errorKind && (
 						<VoiceInputError
@@ -2390,7 +2390,7 @@ export const AgenticChatPanel = ({
 			<ChatUpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
-				reason="chat_turns"
+				reason={turnRefusal?.monthly ? "chats" : "chat_turns"}
 			/>
 			<VoiceCapUpgradeModal
 				opened={voiceCapOpened}

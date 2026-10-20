@@ -23,20 +23,19 @@ export function ChatUpgradeModal({
 	onClose: () => void;
 	reason: FreeTierLimit;
 }) {
-	// UpgradeModal resolves the workspace from context itself; we read it here
-	// only for the tier/role it needs as props.
 	const { workspace } = useWorkspace();
 	const isChatLimit = reason === "chats";
-	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
+	// Only a free limit opens this wall.
 	return (
 		<UpgradeModal
 			opened={opened}
 			onClose={onClose}
-			currentTier={(workspace?.tier ?? "free") as Tier}
-			requiredTier={UPGRADE_TIER}
-			canRequestUpgrade={isAdmin}
+			currentTier="free"
+			requiredTier={null}
+			canRequestUpgrade
 			workspaceId={workspace?.id ?? ""}
 			wallKey={isChatLimit ? "chat_cap" : "chat_turn_cap"}
+			entry="modal_direct"
 		/>
 	);
 }
@@ -67,11 +66,16 @@ export function VoiceCapUpgradeModal({
 	);
 }
 
-/**
- * Inline card rendered in the chat thread in place of the 4th turn's reply.
- * Clicking it opens the upgrade path.
- */
-export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
+/** Inline card in the chat thread once its free turns or the month's chats are used, or it is frozen. */
+export function ChatTurnLimitCard({
+	onUpgrade,
+	frozen,
+	monthly,
+}: {
+	onUpgrade: () => void;
+	frozen?: boolean;
+	monthly?: boolean;
+}) {
 	return (
 		<Alert
 			color="gray"
@@ -80,10 +84,21 @@ export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 		>
 			<Stack gap="sm" align="flex-start">
 				<Text size="sm">
-					<Trans>
-						You've reached the free plan limit for this chat. Upgrade to keep
-						the conversation going.
-					</Trans>
+					{monthly ? (
+						<Trans>
+							You have used this month's free chats. Upgrade to keep chatting.
+						</Trans>
+					) : frozen ? (
+						<Trans>
+							This chat is from an earlier month and is now read-only on the
+							free plan. Start a new chat or upgrade to keep going.
+						</Trans>
+					) : (
+						<Trans>
+							You've reached the free plan limit for this chat. Upgrade to keep
+							the conversation going.
+						</Trans>
+					)}
 				</Text>
 				<Button size="xs" onClick={onUpgrade}>
 					{t`See upgrade options`}

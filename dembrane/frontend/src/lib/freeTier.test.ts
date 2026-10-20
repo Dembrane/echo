@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { ApiRequestError } from "./errors/read";
 import {
+	allowanceSpent,
+	chatTurnGate,
 	freeLimitDetails,
 	isFreeTierLimitError,
 	portalRecordingRefusal,
@@ -32,6 +35,8 @@ describe("isFreeTierLimitError", () => {
 		"recording_project",
 		"chats",
 		"workspaces",
+		"map",
+		"popcorn",
 	])("reads %s from a coded 402", (limit) => {
 		expect(isFreeTierLimitError(tierLimit(limit))).toBe(limit);
 	});
@@ -119,5 +124,69 @@ describe("recordingStopOf", () => {
 		expect(recordingStopOf({ recording_stop: "projects" })).toBeNull();
 		expect(recordingStopOf(null)).toBeNull();
 		expect(recordingStopOf("audio_month")).toBeNull();
+	});
+});
+
+describe("chatTurnGate", () => {
+	it("is at the limit once the turns are used", () => {
+		expect(chatTurnGate({ frozen: false, limit: 20, used: 20 }).atLimit).toBe(
+			true,
+		);
+		expect(chatTurnGate({ frozen: false, limit: 20, used: 19 }).atLimit).toBe(
+			false,
+		);
+	});
+
+	it("treats a frozen chat as at the limit", () => {
+		expect(chatTurnGate({ frozen: true, limit: 20, used: 1 })).toEqual({
+			atLimit: true,
+			frozen: true,
+		});
+	});
+
+	it("is open without turn info", () => {
+		expect(chatTurnGate(null)).toEqual({ atLimit: false, frozen: false });
+		expect(chatTurnGate(undefined)).toEqual({ atLimit: false, frozen: false });
+	});
+});
+
+describe("allowanceSpent", () => {
+	const snap = (over: Partial<FreeAllowance>): FreeAllowance => ({
+		audio_seconds: null,
+		chats: null,
+		free: true,
+		maps: null,
+		period_start: null,
+		popcorn_analyses: null,
+		projects: null,
+		reports: null,
+		resets_at: null,
+		...over,
+	});
+
+	it("is false when not free or unknown", () => {
+		expect(
+			allowanceSpent(
+				snap({ chats: { limit: 2, used: 2 }, free: false }),
+				"chats",
+			),
+		).toBe(false);
+		expect(allowanceSpent(undefined, "chats")).toBe(false);
+		expect(allowanceSpent(snap({}), "maps")).toBe(false);
+	});
+
+	it("is true once the meter is used up", () => {
+		expect(
+			allowanceSpent(snap({ chats: { limit: 2, used: 2 } }), "chats"),
+		).toBe(true);
+		expect(
+			allowanceSpent(snap({ chats: { limit: 2, used: 1 } }), "chats"),
+		).toBe(false);
+		expect(
+			allowanceSpent(
+				snap({ popcorn_analyses: { limit: 12, used: 12 } }),
+				"popcorn_analyses",
+			),
+		).toBe(true);
 	});
 });

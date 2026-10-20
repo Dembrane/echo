@@ -1,3 +1,4 @@
+export { refundFreeReport } from "./free";
 export { generateReport, notifyReportSubscribers, projectJobs } from "./jobs";
 export { effectiveLegalBasis, isExternalClient } from "./legal";
 export { REPORT_PROGRESS_CHANNEL } from "./progress";

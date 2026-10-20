@@ -40,10 +40,11 @@ export function tickStore(sql: Sql) {
       detail: string | null;
       startedAt: string;
       finishedAt: string;
+      freePeriodStart?: string | null;
     }): Promise<Row> {
       const [r] =
-        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at)
-        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt})
+        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at, free_period_start)
+        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt}, ${v.freePeriodStart ?? null})
         returning *`;
       return r as Row;
     },
@@ -56,9 +57,11 @@ export function tickStore(sql: Sql) {
       detail: string | null;
       startedAt: string;
       finishedAt: string;
+      freePeriodStart?: string | null;
     }): Promise<Row> {
       const [r] = await sql`update agent_loop_run set loop_id = ${v.loopId}, status = ${v.status},
-        detail = ${v.detail}, started_at = ${v.startedAt}, finished_at = ${v.finishedAt}
+        detail = ${v.detail}, started_at = ${v.startedAt}, finished_at = ${v.finishedAt},
+        free_period_start = ${v.freePeriodStart === undefined ? sql`free_period_start` : v.freePeriodStart}
         where id = ${v.id} returning *`;
       return r as Row;
     },

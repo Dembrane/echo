@@ -267,7 +267,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# conversation n'a pas pu être ajoutée à ce chat.} other {# conversations n'ont pas pu être ajoutées à ce chat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:814
+#: src/components/map/MapPage.tsx:855
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# conversation est masquée sur la carte.} other {# conversations sont masquées sur la carte.}}"
 
@@ -284,7 +284,7 @@ msgstr "{0, plural, one {# conversation sera masquée avec lui.} other {# conver
 #. placeholder {0}: counts.conversations
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:49
+#: src/routes/project/popcorn/PopcornRoute.tsx:50
 #: src/components/workspace/OrganisationUsageRollup.tsx:812
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
@@ -336,8 +336,8 @@ msgstr "{0, plural, one {# paiement} other {# paiements}}"
 
 #. placeholder {0}: presentation.counts.phrases
 #. placeholder {0}: counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:858
-#: src/routes/project/popcorn/PopcornRoute.tsx:53
+#: src/routes/project/present/PresentRoute.tsx:894
+#: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# phrase} other {# phrases}}"
 
@@ -464,14 +464,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Étiquette :} other {Étiquettes :}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:964
+#: src/routes/project/chat/ProjectChatRoute.tsx:957
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Utilise # conversation :} other {Utilise # conversations :}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:800
+#: src/routes/project/chat/ProjectChatRoute.tsx:789
 #: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -584,7 +584,7 @@ msgid "{0} h ago"
 msgstr "Il y a {0} h"
 
 #. placeholder {0}: counts.held_back
-#: src/routes/project/popcorn/PopcornRoute.tsx:56
+#: src/routes/project/popcorn/PopcornRoute.tsx:57
 msgid "{0} held back"
 msgstr "{0} retenu(s)"
 
@@ -705,7 +705,7 @@ msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "Le total {0} passe à {1} quand {pendingInvites} {2} en attente"
 
 #. placeholder {0}: counts.validated ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:54
+#: src/routes/project/popcorn/PopcornRoute.tsx:55
 msgid "{0} validated"
 msgstr "{0} validé(s)"
 
@@ -772,11 +772,11 @@ msgstr "Ajoutés : {addedCount}. Vérifiez la liste ci-dessous."
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} personnes étaient déjà invitées. Le projet sera partagé dès qu'elles rejoignent."
 
-#: src/components/map/MapPage.tsx:500
+#: src/components/map/MapPage.tsx:515
 msgid "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}}"
 
-#: src/components/map/MapPage.tsx:499
+#: src/components/map/MapPage.tsx:514
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}} provenant de {conversationCount, plural, one {# conversation} other {# conversations}}"
 
@@ -784,7 +784,7 @@ msgstr "{argumentCount, plural, one {# argument} other {# arguments}} provenant 
 msgid "{browser} on {platform}"
 msgstr "{browser} sur {platform}"
 
-#: src/routes/project/present/PresentRoute.tsx:656
+#: src/routes/project/present/PresentRoute.tsx:669
 msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 msgstr "{changes, plural, one {# modification pas encore affichée} other {# modifications pas encore affichées}}"
 
@@ -911,11 +911,11 @@ msgstr "{n} min"
 msgid "{name}: {rowDone} of {rowTotal}"
 msgstr "{name} : {rowDone} sur {rowTotal}"
 
-#: src/components/chat/AgenticChatPanel.tsx:276
+#: src/components/chat/AgenticChatPanel.tsx:278
 msgid "{name}'s conversation"
 msgstr "Conversation de {name}"
 
-#: src/components/chat/AgenticChatPanel.tsx:275
+#: src/components/chat/AgenticChatPanel.tsx:277
 msgid "{name}'s transcript excerpt"
 msgstr "Extrait de transcription de {name}"
 
@@ -956,11 +956,11 @@ msgstr "{person} perdra l'accès à tous les espaces de travail de cette organis
 msgid "{phrases, plural, one {# phrase} other {# phrases}}"
 msgstr "{phrases, plural, one {# phrase} other {# phrases}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:591
+#: src/routes/project/chat/NewChatRoute.tsx:604
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
 msgstr "{pickedCount, plural, one {Centré sur # conversation} other {Centré sur # conversations}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:597
+#: src/routes/project/chat/NewChatRoute.tsx:610
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr "{pickedCount, plural, one {Utilise # conversation} other {Utilise # conversations}}"
 
@@ -1034,7 +1034,7 @@ msgstr "{totalWorkspaces, plural, one {# espace de travail} other {# espaces de 
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} sur {total} traduits, {failed} n'ont pas pu être traduits"
 
-#: src/components/map/MapPage.tsx:753
+#: src/components/map/MapPage.tsx:794
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument n’a pas pu être placé sur la carte.} other {# arguments n’ont pas pu être placés sur la carte.}}"
 
@@ -1042,6 +1042,10 @@ msgstr "{unplacedCount, plural, one {# argument n’a pas pu être placé sur la
 #: src/components/workspace/FreeAllowanceCard.tsx:60
 msgid "{used} of {limit}"
 msgstr "{used} sur {limit}"
+
+#: src/components/popcorn/PopcornFreeNotice.tsx:38
+msgid "{used} of {limit} analyses used this month"
+msgstr "{used} sur {limit} analyses utilisées ce mois-ci"
 
 #: src/components/popcorn/PopcornStatus.tsx:48
 msgid "{validated} validated"
@@ -1109,7 +1113,7 @@ msgstr "1 h d'enregistrement"
 msgid "1 history entry"
 msgstr "1 entrée dans l'historique"
 
-#: src/components/sharing/LiveButton.tsx:79
+#: src/components/sharing/LiveButton.tsx:82
 msgid "1 hour"
 msgstr "1 heure"
 
@@ -1138,7 +1142,7 @@ msgid "2. When a conversation or report event happens, we automatically send the
 msgstr "2. Lorsqu'un événement de conversation ou de rapport se produit, nous envoyons automatiquement les données à votre URL"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:219
-#: src/components/sharing/LiveButton.tsx:81
+#: src/components/sharing/LiveButton.tsx:84
 msgid "24 hours"
 msgstr "24 heures"
 
@@ -1167,7 +1171,7 @@ msgid "6 to 15."
 msgstr "6 à 15."
 
 #: src/routes/project/canvas/CanvasRoute.tsx:218
-#: src/components/sharing/LiveButton.tsx:80
+#: src/components/sharing/LiveButton.tsx:83
 msgid "8 hours"
 msgstr "8 heures"
 
@@ -1252,12 +1256,12 @@ msgstr "Un lien vers la politique de confidentialité est obligatoire pour le tr
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Un projet réunit tout ce qui concerne un sujet. Partagez son lien avec les participants, recueillez leurs voix, puis laissez dembrane les transformer en idées clés."
 
-#: src/routes/project/present/PresentRoute.tsx:772
+#: src/routes/project/present/PresentRoute.tsx:808
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Une page publique nécessite une offre supérieure. Désactive Page publique dans Partager pour afficher les autres modifications."
 
-#: src/components/report/UpdateReportModalButton.tsx:249
-#: src/components/report/CreateReportForm.tsx:141
+#: src/components/report/UpdateReportModalButton.tsx:257
+#: src/components/report/CreateReportForm.tsx:159
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Un rapport est déjà en cours de génération pour ce projet. Veuillez attendre qu'il soit terminé."
 
@@ -1544,7 +1548,7 @@ msgstr "Ajouter une note"
 msgid "Add a project goal before saving."
 msgstr "Ajoutez un objectif de projet avant d'enregistrer."
 
-#: src/components/workspace/gateWalls.ts:153
+#: src/components/workspace/gateWalls.ts:157
 msgid "add a workspace"
 msgstr "ajouter un espace de travail"
 
@@ -1569,7 +1573,7 @@ msgstr "Ajoutez des étiquettes de conversation depuis le tableau de bord."
 msgid "select.all.modal.title.add"
 msgstr "Ajouter des conversations au contexte"
 
-#: src/components/report/CreateReportForm.tsx:337
+#: src/components/report/CreateReportForm.tsx:346
 msgid "Add conversations to your project first"
 msgstr "Ajoutez d'abord des conversations a votre projet"
 
@@ -1593,7 +1597,7 @@ msgstr "Ajouter des images"
 #~ msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 #~ msgstr "Ajoutez des termes clés ou des noms propres pour améliorer la qualité et la précision de la transcription."
 
-#: src/components/workspace/gateWalls.ts:143
+#: src/components/workspace/gateWalls.ts:147
 msgid "add more projects"
 msgstr "ajouter d'autres projets"
 
@@ -1699,7 +1703,7 @@ msgstr "Ajouter un webhook"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Ajouter votre premier webhook"
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:140
 msgid "add your logo"
 msgstr "ajouter votre logo"
 
@@ -1876,7 +1880,7 @@ msgstr "Contre"
 msgid "Agent"
 msgstr "Agent"
 
-#: src/components/chat/AgenticChatPanel.tsx:412
+#: src/components/chat/AgenticChatPanel.tsx:414
 msgid "Agent run failed"
 msgstr "Échec de l'exécution de l'agent"
 
@@ -2061,7 +2065,7 @@ msgstr "L'autoriser également à modifier les paramètres du projet"
 msgid "Always on, it lives on our website"
 msgstr "Toujours actif, accessible directement sur notre site"
 
-#: src/routes/project/present/PresentRoute.tsx:211
+#: src/routes/project/present/PresentRoute.tsx:215
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Toujours actif. L'écran s'ouvre ici pour donner de la lecture à la salle pendant que le reste se prépare."
 
@@ -2110,7 +2114,7 @@ msgstr "Une erreur s'est produite lors du chargement du portail. Veuillez contac
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:859
+#: src/routes/project/chat/ProjectChatRoute.tsx:848
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -2135,11 +2139,11 @@ msgstr "Un second écran optionnel après la présentation."
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Une erreur inattendue s'est produite. Recharger la page ou revenir à l'accueil aide souvent."
 
-#: src/components/sharing/LiveButton.tsx:224
+#: src/components/sharing/LiveButton.tsx:239
 msgid "Analyse"
 msgstr "Analyser"
 
-#: src/components/sharing/LiveButton.tsx:256
+#: src/components/sharing/LiveButton.tsx:273
 msgid "Analyse now"
 msgstr "Analyser maintenant"
 
@@ -2303,7 +2307,7 @@ msgid "Anything you want to add"
 msgstr "Tout ce que vous souhaitez ajouter"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:132
+#: src/routes/project/present/PresentRoute.tsx:136
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2471,11 +2475,11 @@ msgstr "Convenu avec dembrane"
 msgid "Ask"
 msgstr "Demander"
 
-#: src/routes/project/chat/NewChatRoute.tsx:258
+#: src/routes/project/chat/NewChatRoute.tsx:260
 msgid "Ask | dembrane"
 msgstr "Poser une question | dembrane"
 
-#: src/components/chat/AgenticChatPanel.tsx:1899
+#: src/components/chat/AgenticChatPanel.tsx:1895
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Posez une question sur les conversations de ce projet ou obtenez de l'aide pour le configurer. Toute modification est d'abord soumise à révision, et rien n'est enregistré avant d'être approuvé."
 
@@ -2499,7 +2503,7 @@ msgstr "Posez une question sur l'application."
 msgid "Ask about these"
 msgstr "Poser une question sur ces éléments"
 
-#: src/routes/project/chat/NewChatRoute.tsx:673
+#: src/routes/project/chat/NewChatRoute.tsx:686
 #: src/components/chat/AgenticChatPanel.tsx:2325
 msgid "Ask about your conversations..."
 msgstr "Posez une question sur vos conversations..."
@@ -2536,8 +2540,8 @@ msgstr "Demander l'adresse e-mail des participants à la fin d'une conversation.
 #~ msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
 #~ msgstr "Demandez dans le chat lorsque vous souhaitez une vue en direct des conversations. Le premier canevas restera ici."
 
-#: src/components/workspace/gateWalls.ts:135
-#: src/components/workspace/gateWalls.ts:136
+#: src/components/workspace/gateWalls.ts:137
+#: src/components/workspace/gateWalls.ts:138
 msgid "ask more in chat"
 msgstr "en savoir plus dans le chat"
 
@@ -2606,11 +2610,11 @@ msgstr "Joindre les artéfacts vérifiés"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention ! Nous avons perdu les 60 dernières secondes de votre enregistrement en raison d'une interruption. Veuillez appuyer sur le bouton ci-dessous pour vous reconnecter."
 
-#: src/routes/project/present/PresentRoute.tsx:267
+#: src/routes/project/present/PresentRoute.tsx:271
 msgid "Audience language:"
 msgstr "Langue du public :"
 
-#: src/routes/project/present/PresentRoute.tsx:416
+#: src/routes/project/present/PresentRoute.tsx:420
 msgid "Audience preview"
 msgstr "Aperçu pour le public"
 
@@ -2888,20 +2892,20 @@ msgid "Before you connect an agent"
 msgstr "Avant de connecter un agent"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:86
-#: src/routes/project/popcorn/PopcornRoute.tsx:108
+#: src/routes/project/popcorn/PopcornRoute.tsx:111
 #: src/routes/project/library/LibraryRoute.tsx:98
-#: src/routes/project/chat/NewChatRoute.tsx:700
+#: src/routes/project/chat/NewChatRoute.tsx:713
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:112
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:121
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:143
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:155
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:168
-#: src/components/report/UpdateReportModalButton.tsx:210
-#: src/components/report/CreateReportForm.tsx:237
+#: src/components/report/UpdateReportModalButton.tsx:220
+#: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1380
 #: src/components/project/ProjectPortalEditor.tsx:1460
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:669
+#: src/components/map/MapPage.tsx:684
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2985,7 +2989,7 @@ msgstr "La facturation est gérée par votre organisation"
 msgid "Billing mode"
 msgstr "Mode de facturation"
 
-#: src/components/sharing/LiveButton.tsx:116
+#: src/components/sharing/LiveButton.tsx:119
 msgid "Book"
 msgstr "Planifier"
 
@@ -3086,8 +3090,8 @@ msgstr "Pouvez-vous nous en dire plus ?"
 #: src/components/training/TrainingRowActions.tsx:199
 #: src/components/training/TrainingRowActions.tsx:312
 #: src/components/training/RequestTrainingModal.tsx:104
-#: src/components/sharing/PresentButton.tsx:103
-#: src/components/sharing/LiveButton.tsx:272
+#: src/components/sharing/PresentButton.tsx:112
+#: src/components/sharing/LiveButton.tsx:289
 #: src/components/settings/TwoFactorSettingsCard.tsx:379
 #: src/components/results/ResultItem.tsx:432
 #: src/components/results/ReasonPrompt.tsx:180
@@ -3113,7 +3117,7 @@ msgstr "Pouvez-vous nous en dire plus ?"
 #: src/components/common/ImageCropModal.tsx:146
 #: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:730
-#: src/components/chat/AgenticChatPanel.tsx:751
+#: src/components/chat/AgenticChatPanel.tsx:753
 #: src/components/chat/AgenticChatPanel.tsx:2234
 msgid "Cancel"
 msgstr "Annuler"
@@ -3152,7 +3156,7 @@ msgstr "Annuler"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Résiliez à tout moment. Vous conservez votre accès jusqu'à la fin de la période."
 
-#: src/components/chat/AgenticChatPanel.tsx:739
+#: src/components/chat/AgenticChatPanel.tsx:741
 msgid "Cancel current run"
 msgstr "Annuler l'exécution en cours"
 
@@ -3317,7 +3321,7 @@ msgstr "Modifier votre propre rôle ?"
 msgid "Change your password from settings without contacting support."
 msgstr "Modifiez votre mot de passe depuis les paramètres sans contacter l'assistance."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:227
+#: src/routes/admin/FreeLimitsPanel.tsx:223
 msgid "Changed by"
 msgstr "Modifié par"
 
@@ -3341,16 +3345,16 @@ msgstr "Modifications appliquées. Vous pouvez les ajuster à tout moment dans l
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Impossible de publier les modifications. Réessayez."
 
-#: src/routes/project/present/PresentRoute.tsx:740
-#: src/routes/project/present/PresentRoute.tsx:773
+#: src/routes/project/present/PresentRoute.tsx:756
+#: src/routes/project/present/PresentRoute.tsx:809
 msgid "Changes could not be shown on the room screen"
 msgstr "Les modifications n’ont pas pu être affichées sur l’écran de la salle"
 
-#: src/routes/project/present/PresentRoute.tsx:660
+#: src/routes/project/present/PresentRoute.tsx:673
 msgid "Changes not shown yet"
 msgstr "Modifications pas encore affichées"
 
-#: src/routes/project/present/PresentRoute.tsx:814
+#: src/routes/project/present/PresentRoute.tsx:850
 msgid "Changes show on the room screen as you make them."
 msgstr "Les modifications s’affichent sur l’écran de la salle au fur et à mesure."
 
@@ -3375,17 +3379,17 @@ msgstr "Distance de charge (fraction de la vue) : {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Distance de charge (fraction de la vue) : {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:705
-#: src/routes/project/chat/ProjectChatRoute.tsx:711
+#: src/routes/project/chat/ProjectChatRoute.tsx:694
+#: src/routes/project/chat/ProjectChatRoute.tsx:700
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1748
+#: src/components/chat/AgenticChatPanel.tsx:1744
 msgid "Chat"
 msgstr "Discussion"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:347
+#: src/routes/project/chat/ProjectChatRoute.tsx:341
 msgid "Chat | dembrane"
 msgstr "Discussion | dembrane"
 
@@ -3405,8 +3409,8 @@ msgstr "Chat supprimé"
 msgid "Chat is more reliable."
 msgstr "La discussion est plus fiable."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:642
-#: src/routes/project/chat/NewChatRoute.tsx:540
+#: src/routes/project/chat/ProjectChatRoute.tsx:631
+#: src/routes/project/chat/NewChatRoute.tsx:550
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Le chat n'est pas disponible avec votre niveau d'accès. Contactez l'administrateur de votre espace de travail pour demander un surclassement."
 
@@ -3434,7 +3438,7 @@ msgstr "Le chat vous avertit avant d'envoyer un message dépassant la limite de 
 msgid "Chat with individual conversations."
 msgstr "Le chat avec des conversations individuelles."
 
-#: src/routes/project/chat/NewChatRoute.tsx:155
+#: src/routes/project/chat/NewChatRoute.tsx:157
 #: src/components/workspace/FreeAllowanceCard.tsx:41
 msgid "Chats"
 msgstr "Discussions"
@@ -3551,7 +3555,7 @@ msgstr "Choisir parmi vos autres projets"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Choisissez les modes de réponse Résumer, Trouver des idées ou Personnalisé."
 
-#: src/routes/project/present/PresentRoute.tsx:201
+#: src/routes/project/present/PresentRoute.tsx:205
 msgid "Choose the outcomes your audience can explore."
 msgstr "Choisissez les résultats que votre public peut explorer."
 
@@ -3620,7 +3624,7 @@ msgstr "Effacer les filtres"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
 #: src/routes/project/ProjectsHome.tsx:374
-#: src/routes/project/chat/NewChatRoute.tsx:171
+#: src/routes/project/chat/NewChatRoute.tsx:173
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:698
@@ -4159,7 +4163,7 @@ msgstr "Conversation démarrée"
 #~ msgid "Conversation Status"
 #~ msgstr "Statut de la conversation"
 
-#: src/components/report/CreateReportForm.tsx:214
+#: src/components/report/CreateReportForm.tsx:225
 msgid "Conversation status details"
 msgstr "Détails du statut de la conversation"
 
@@ -4192,7 +4196,7 @@ msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1648
-#: src/components/report/CreateReportForm.tsx:206
+#: src/components/report/CreateReportForm.tsx:217
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
 msgstr "conversations"
@@ -4350,7 +4354,7 @@ msgstr "Impossible d'appliquer toutes les modifications d'étiquettes."
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Impossible d'appliquer les modifications. Rien n'a été enregistré."
 
-#: src/routes/project/chat/NewChatRoute.tsx:455
+#: src/routes/project/chat/NewChatRoute.tsx:465
 msgid "Could not carry over your selection. Pick again below."
 msgstr "Votre sélection n'a pas pu être reprise. Sélectionnez à nouveau ci-dessous."
 
@@ -4391,7 +4395,7 @@ msgstr "Impossible de copier dans le presse-papiers. Veuillez réessayer."
 msgid "Could not generate a summary. Please try again."
 msgstr "Impossible de générer un résumé. Veuillez réessayer."
 
-#: src/components/popcorn/hooks/index.ts:370
+#: src/components/popcorn/hooks/index.ts:399
 msgid "Could not go live"
 msgstr "Impossible de lancer le direct"
 
@@ -4408,11 +4412,11 @@ msgstr "Impossible de charger les paiements. Vérifiez l'authentification et les
 msgid "Could not load the canvas."
 msgstr "Impossible de charger le canevas."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:210
+#: src/routes/admin/FreeLimitsPanel.tsx:206
 msgid "Could not load the free plan limits."
 msgstr "Impossible de charger les limites du forfait Free."
 
-#: src/routes/project/present/PresentRoute.tsx:890
+#: src/routes/project/present/PresentRoute.tsx:926
 msgid "Could not load the latest results"
 msgstr "Impossible de charger les derniers résultats"
 
@@ -4432,7 +4436,7 @@ msgstr "Impossible de charger le récapitulatif. Vérifiez l'authentification et
 msgid "Could not load this project's goal."
 msgstr "Impossible de charger l'objectif de ce projet."
 
-#: src/routes/project/chat/NewChatRoute.tsx:459
+#: src/routes/project/chat/NewChatRoute.tsx:469
 msgid "Could not open the conversation list. Try again."
 msgstr "Impossible d'ouvrir la liste des conversations. Réessayez."
 
@@ -4444,7 +4448,7 @@ msgstr "Impossible d'ouvrir la présentation. Réessayez."
 msgid "Could not preview this canvas right now."
 msgstr "Impossible de prévisualiser ce canevas pour le moment."
 
-#: src/components/popcorn/hooks/index.ts:325
+#: src/components/popcorn/hooks/index.ts:339
 msgid "Could not refresh popcorn"
 msgstr "Impossible d'actualiser Popcorn"
 
@@ -4452,11 +4456,11 @@ msgstr "Impossible d'actualiser Popcorn"
 #~ msgid "Could not refresh this canvas"
 #~ msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:349
+#: src/components/popcorn/hooks/index.ts:369
 msgid "Could not rerun popcorn"
 msgstr "Impossible de relancer Popcorn"
 
-#: src/components/popcorn/hooks/index.ts:270
+#: src/components/popcorn/hooks/index.ts:276
 msgid "Could not run popcorn"
 msgstr "Impossible de lancer Popcorn"
 
@@ -4464,7 +4468,7 @@ msgstr "Impossible de lancer Popcorn"
 msgid "Could not save"
 msgstr "Impossible d'enregistrer"
 
-#: src/components/popcorn/hooks/index.ts:298
+#: src/components/popcorn/hooks/index.ts:304
 msgid "Could not save changes. Try again."
 msgstr "Impossible d'enregistrer les modifications. Réessayez."
 
@@ -4512,7 +4516,7 @@ msgstr "Impossible d'envoyer votre retour. Réessayez"
 msgid "Could not start this run. Try again."
 msgstr "Impossible de démarrer cette exécution. Réessayez."
 
-#: src/components/popcorn/hooks/index.ts:390
+#: src/components/popcorn/hooks/index.ts:421
 msgid "Could not stop live"
 msgstr "Impossible d'arrêter le direct"
 
@@ -4658,7 +4662,7 @@ msgstr "Créer un compte pour rejoindre"
 msgid "Create and manage multiple reports in one project."
 msgstr "Créez et gérez plusieurs rapports au sein d'un même projet."
 
-#: src/components/workspace/gateWalls.ts:145
+#: src/components/workspace/gateWalls.ts:149
 msgid "create another report"
 msgstr "créer un autre rapport"
 
@@ -4671,7 +4675,7 @@ msgstr "Créez des modèles de chat personnalisés (bêta) ou dupliquez et modif
 msgid "Create methodology"
 msgstr "Créer une méthodologie"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:144
 msgid "create more organisations"
 msgstr "créer d'autres organisations"
 
@@ -4701,8 +4705,8 @@ msgstr "Créer un projet"
 msgid "Create project | dembrane"
 msgstr "Créer un projet | dembrane"
 
-#: src/components/report/UpdateReportModalButton.tsx:179
-#: src/components/report/UpdateReportModalButton.tsx:205
+#: src/components/report/UpdateReportModalButton.tsx:189
+#: src/components/report/UpdateReportModalButton.tsx:215
 msgid "Create report"
 msgstr "Créer un rapport"
 
@@ -4788,7 +4792,7 @@ msgstr "Recadrer le logo"
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Recadrez votre logo au format horizontal 3:1 (recommandé : 600×200 px)."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:221
+#: src/routes/admin/FreeLimitsPanel.tsx:217
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr "Actuel"
@@ -4898,7 +4902,7 @@ msgstr "E-mail du responsable des données"
 msgid "Data ownership"
 msgstr "Propriété des données"
 
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:132
 msgid "Data policy"
 msgstr "Politique de confidentialité"
 
@@ -4969,7 +4973,7 @@ msgstr "Arguments dédupliqués"
 msgid "Deep Dive"
 msgstr "Deep Dive"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:224
+#: src/routes/admin/FreeLimitsPanel.tsx:220
 #: src/routes/admin/AdminSettingsRoute.tsx:3062
 #: src/routes/admin/AdminSettingsRoute.tsx:3078
 #: src/components/project/ProjectPortalEditor.tsx:826
@@ -5140,8 +5144,8 @@ msgstr "dembrane pour votre événement ?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, tous droits réservés."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1050
-#: src/routes/project/chat/ProjectChatRoute.tsx:1060
+#: src/routes/project/chat/ProjectChatRoute.tsx:1043
+#: src/routes/project/chat/ProjectChatRoute.tsx:1053
 #: src/components/chat/AgenticChatPanel.tsx:2368
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane peut faire des erreurs. Veuillez vérifier les réponses."
@@ -5269,7 +5273,7 @@ msgstr "Rien reçu ? Vérifiez vos courriers indésirables ou spams. L'e-mail pr
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Rien reçu ? Vérifiez votre dossier de spams ou de courriers indésirables. L'e-mail provient de dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:216
+#: src/routes/project/present/PresentRoute.tsx:220
 msgid "Different perspectives and trade-offs"
 msgstr "Différentes perspectives et compromis"
 
@@ -5395,7 +5399,7 @@ msgstr "Ne s'actualise pas automatiquement. Mis à jour {updatedAgo}."
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
-#: src/components/chat/AgenticChatPanel.tsx:431
+#: src/components/chat/AgenticChatPanel.tsx:433
 msgid "Done"
 msgstr "Terminé"
 
@@ -5653,8 +5657,8 @@ msgstr "Modifier la méthodologie"
 msgid "Edit mode"
 msgstr "Mode édition"
 
-#: src/components/report/UpdateReportModalButton.tsx:296
-#: src/components/report/CreateReportForm.tsx:275
+#: src/components/report/UpdateReportModalButton.tsx:304
+#: src/components/report/CreateReportForm.tsx:286
 msgid "Edit options"
 msgstr "Modifier les options"
 
@@ -5746,7 +5750,7 @@ msgstr "Modifié par {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "La modification d'une conversation ne déclenche plus l'erreur de sauvegarde concernée."
 
-#: src/routes/project/present/PresentRoute.tsx:157
+#: src/routes/project/present/PresentRoute.tsx:161
 msgid "Editor section"
 msgstr "Section de l’éditeur"
 
@@ -5804,11 +5808,11 @@ msgstr "email@travail.com"
 #~ msgid "Embed in a webpage"
 #~ msgstr "Intégrer sur une page web"
 
-#: src/components/map/MapPage.tsx:99
+#: src/components/map/MapPage.tsx:104
 msgid "Embedding arguments"
 msgstr "Vectorisation des arguments"
 
-#: src/components/map/MapPage.tsx:98
+#: src/components/map/MapPage.tsx:103
 msgid "Embedding arguments {done} of {total}"
 msgstr "Vectorisation des arguments {done} sur {total}"
 
@@ -5901,7 +5905,7 @@ msgstr "Prend fin le {endDate}, puis passe au forfait Free"
 msgid "English"
 msgstr "Anglais"
 
-#: src/routes/project/present/PresentRoute.tsx:272
+#: src/routes/project/present/PresentRoute.tsx:276
 msgid "English fallback"
 msgstr "Langue de secours : anglais"
 
@@ -5917,7 +5921,7 @@ msgstr "Entrez un nom pour le nouveau conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Entrez un nom pour votre projet cloné"
 
-#: src/routes/project/present/PresentRoute.tsx:381
+#: src/routes/project/present/PresentRoute.tsx:385
 msgid "Enter a presentation title"
 msgstr "Saisissez un titre de présentation"
 
@@ -5970,13 +5974,13 @@ msgstr "Entré par le participant sur le portail"
 msgid "Entered details"
 msgstr "Coordonnées saisies"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:849
+#: src/routes/project/chat/ProjectChatRoute.tsx:838
 #: src/routes/project/canvas/CanvasRoute.tsx:337
 #: src/components/dropzone/UploadConversationDropzone.tsx:793
 #: src/components/dropzone/UploadConversationDropzone.tsx:909
 #: src/components/conversation/LiveMonitorSection.tsx:274
-#: src/components/chat/AgenticChatPanel.tsx:436
-#: src/components/chat/AgenticChatPanel.tsx:1850
+#: src/components/chat/AgenticChatPanel.tsx:438
+#: src/components/chat/AgenticChatPanel.tsx:1846
 msgid "Error"
 msgstr "Erreur"
 
@@ -5984,8 +5988,8 @@ msgstr "Erreur"
 msgid "Error cloning project"
 msgstr "Erreur lors du clonage du projet"
 
-#: src/components/report/UpdateReportModalButton.tsx:244
-#: src/components/report/CreateReportForm.tsx:135
+#: src/components/report/UpdateReportModalButton.tsx:252
+#: src/components/report/CreateReportForm.tsx:153
 msgid "Error creating report"
 msgstr "Erreur lors de la création du rapport"
 
@@ -6424,11 +6428,11 @@ msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Échec de l'arrêt de l'enregistrement lors du changement de périphérique. Veuillez réessayer."
 
-#: src/components/chat/AgenticChatPanel.tsx:1741
+#: src/components/chat/AgenticChatPanel.tsx:1737
 msgid "Failed to stop run"
 msgstr "Échec de l'arrêt de l'exécution"
 
-#: src/components/chat/AgenticChatPanel.tsx:1687
+#: src/components/chat/AgenticChatPanel.tsx:1683
 msgid "Failed to submit agentic message"
 msgstr "Échec de l'envoi du message agentique"
 
@@ -6651,8 +6655,8 @@ msgstr "Première page"
 msgid "Fixture"
 msgstr "Jeu d'essai"
 
-#: src/components/report/UpdateReportModalButton.tsx:270
-#: src/components/report/CreateReportForm.tsx:249
+#: src/components/report/UpdateReportModalButton.tsx:278
+#: src/components/report/CreateReportForm.tsx:260
 msgid "Focus"
 msgstr "Focus"
 
@@ -6662,7 +6666,7 @@ msgstr "Focus"
 msgid "Focus on conversations"
 msgstr "Se concentrer sur les conversations"
 
-#: src/components/chat/AgenticChatPanel.tsx:249
+#: src/components/chat/AgenticChatPanel.tsx:251
 msgid "Focusing on:"
 msgstr "Centré sur :"
 
@@ -6670,7 +6674,7 @@ msgstr "Centré sur :"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Suivez les sessions en cours sur le moniteur en direct."
 
-#: src/routes/project/present/PresentRoute.tsx:248
+#: src/routes/project/present/PresentRoute.tsx:252
 msgid "Follow project language"
 msgstr "Suivre la langue du projet"
 
@@ -6809,14 +6813,14 @@ msgstr "Quota du forfait Free"
 
 #: src/components/report/UpdateReportModalButton.tsx:161
 #: src/components/report/UpdateReportModalButton.tsx:184
-msgid "Free plan allows 1 report per workspace"
-msgstr "Le forfait Free permet 1 rapport par espace de travail"
+#~ msgid "Free plan allows 1 report per workspace"
+#~ msgstr "Le forfait Free permet 1 rapport par espace de travail"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1481
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Le forfait Free permet 1 espace de travail par organisation"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:196
+#: src/routes/admin/FreeLimitsPanel.tsx:192
 msgid "Free plan limits"
 msgstr "Limites du forfait Free"
 
@@ -6891,7 +6895,7 @@ msgstr "Répulsion générale : {0}"
 msgid "Generate"
 msgstr "Générer"
 
-#: src/components/report/UpdateReportModalButton.tsx:162
+#: src/components/report/UpdateReportModalButton.tsx:172
 msgid "Generate a new report"
 msgstr "Générer un nouveau rapport"
 
@@ -6907,6 +6911,10 @@ msgstr "Générer un nouveau rapport"
 msgid "Generate a summary first"
 msgstr "Générer un résumé d'abord"
 
+#: src/components/workspace/gateWalls.ts:143
+msgid "generate another map"
+msgstr "générer une autre carte"
+
 #: src/components/release/releaseHistory.ts:433
 msgid "Generate conversation titles automatically, with an option to turn this off."
 msgstr "Générez automatiquement les titres de conversation, avec une option pour désactiver cette fonction."
@@ -6916,18 +6924,18 @@ msgstr "Générez automatiquement les titres de conversation, avec une option po
 #~ msgstr "Générer la bibliothèque"
 
 #: src/components/map/attributes.ts:126
-#: src/components/map/MapPage.tsx:149
+#: src/components/map/MapPage.tsx:154
 msgid "Generate map"
 msgstr "Générer la carte"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:506
-#: src/components/report/UpdateReportModalButton.tsx:361
-#: src/components/report/CreateReportForm.tsx:348
+#: src/components/report/UpdateReportModalButton.tsx:369
+#: src/components/report/CreateReportForm.tsx:357
 msgid "Generate now"
 msgstr "Générer maintenant"
 
-#: src/components/report/UpdateReportModalButton.tsx:329
-#: src/components/report/CreateReportForm.tsx:313
+#: src/components/report/UpdateReportModalButton.tsx:337
+#: src/components/report/CreateReportForm.tsx:322
 msgid "Generate now instead"
 msgstr "Générer maintenant"
 
@@ -7038,7 +7046,7 @@ msgstr "Donnez un titre à la session"
 msgid "Go back"
 msgstr "Retour"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:142
 msgid "go beyond this month's free allowance"
 msgstr "dépasser le quota gratuit de ce mois-ci"
 
@@ -7159,7 +7167,7 @@ msgstr "Guider le rapport"
 msgid "Guided"
 msgstr "Guide"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:169
+#: src/routes/admin/FreeLimitsPanel.tsx:165
 msgid "h"
 msgstr "h"
 
@@ -7173,7 +7181,7 @@ msgstr "A des artefacts vérifiés"
 msgid "Have you completed a training?"
 msgstr "Avez-vous suivi une formation ?"
 
-#: src/components/workspace/gateWalls.ts:149
+#: src/components/workspace/gateWalls.ts:153
 msgid "have your recordings transcribed"
 msgstr "faire transcrire vos enregistrements"
 
@@ -7242,7 +7250,7 @@ msgstr "Masquer le détail"
 msgid "Hide from this presentation"
 msgstr "Masquer de cette présentation"
 
-#: src/components/map/MapPage.tsx:764
+#: src/components/map/MapPage.tsx:805
 msgid "Hide missing arguments"
 msgstr "Masquer les arguments manquants"
 
@@ -7258,7 +7266,7 @@ msgstr "Masquer les projets"
 msgid "Hide revision data"
 msgstr "Masquer les données de révision"
 
-#: src/components/chat/AgenticChatPanel.tsx:642
+#: src/components/chat/AgenticChatPanel.tsx:644
 msgid "Hide steps"
 msgstr "Masquer les étapes"
 
@@ -7266,7 +7274,7 @@ msgstr "Masquer les étapes"
 msgid "Hide the changes"
 msgstr "Masquer les modifications"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:141
 msgid "hide the dembrane event invitation"
 msgstr "masquer l'invitation événement dembrane"
 
@@ -7325,7 +7333,7 @@ msgid "host guide"
 msgstr "guide de l'hôte"
 
 #: src/routes/project/ProjectHomeRoute.tsx:107
-#: src/routes/project/present/PresentRoute.tsx:129
+#: src/routes/project/present/PresentRoute.tsx:133
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7397,11 +7405,11 @@ msgstr "Comme vous le diriez. Une date, une saison, ou que vous ne savez pas enc
 msgid "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 msgstr "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 
-#: src/components/chat/AgenticChatPanel.tsx:2022
+#: src/components/chat/AgenticChatPanel.tsx:2018
 msgid "I applied the canvas."
 msgstr "J'ai appliqué le canvas."
 
-#: src/components/chat/AgenticChatPanel.tsx:2038
+#: src/components/chat/AgenticChatPanel.tsx:2034
 msgid "I applied the goal."
 msgstr "J'ai appliqué l'objectif."
 
@@ -7447,7 +7455,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:213
+#: src/routes/project/present/PresentRoute.tsx:217
 msgid "Ideas and how they connect"
 msgstr "Les idées et leurs liens"
 
@@ -7517,7 +7525,7 @@ msgstr "Importé depuis une analyse antérieure"
 msgid "Imported from an earlier analysis, {day}"
 msgstr "Importé depuis une analyse antérieure, {day}"
 
-#: src/components/chat/AgenticChatPanel.tsx:1919
+#: src/components/chat/AgenticChatPanel.tsx:1915
 msgid "Improve my setup"
 msgstr "Améliorer ma configuration"
 
@@ -7634,7 +7642,7 @@ msgstr "insight {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:766
+#: src/components/map/MapPage.tsx:807
 msgid "Inspect missing arguments"
 msgstr "Voir les arguments manquants"
 
@@ -7650,7 +7658,7 @@ msgstr "Instructions pour générer le résultat de la vérification"
 msgid "interview"
 msgstr "entretien"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:131
 msgid "Intro"
 msgstr "Intro"
 
@@ -7858,7 +7866,7 @@ msgstr "Il semble que la conversation a été supprimée pendant que vous enregi
 msgid "participant.outcome.error.description"
 msgstr "Nous n'avons pas pu charger ce résultat. Il peut s'agir d'un problème temporaire. Vous pouvez essayer de recharger ou revenir en arrière pour sélectionner un autre sujet."
 
-#: src/components/report/CreateReportForm.tsx:185
+#: src/components/report/CreateReportForm.tsx:196
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Il semble que vous n'ayez pas encore de rapport pour ce projet. Générez-en un pour obtenir un aperçu de vos conversations."
 
@@ -8025,11 +8033,11 @@ msgstr "Simple pause pour l'instant"
 msgid "Just previewed. Give it a moment."
 msgstr "Aperçu tout juste généré. Patientez un instant."
 
-#: src/components/popcorn/hooks/index.ts:346
+#: src/components/popcorn/hooks/index.ts:366
 msgid "Just read. Give it a moment."
 msgstr "Lecture tout juste effectuée. Patientez un instant."
 
-#: src/components/popcorn/hooks/index.ts:322
+#: src/components/popcorn/hooks/index.ts:336
 #: src/components/canvas/hooks/index.ts:264
 msgid "Just refreshed. Give it a moment."
 msgstr "Tout juste actualisé. Patientez un instant."
@@ -8070,6 +8078,10 @@ msgstr "Conserver {tier} jusqu'à une date"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Sécurisez l'accès avec un code à usage unique de votre application d'authentification. Activez ou désactivez l'authentification à deux facteurs pour ce compte."
 
+#: src/components/workspace/gateWalls.ts:145
+msgid "keep analysing with popcorn"
+msgstr "continuer d'analyser avec Popcorn"
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
 #: src/routes/project/CreateProjectRoute.tsx:178
 msgid "Keep editing"
@@ -8096,7 +8108,7 @@ msgstr "Laisser en attente"
 #~ msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
 #~ msgstr "Gardez Popcorn à jour au fil des conversations. Vous pouvez lancer la diffusion avant le premier enregistrement."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:135
 msgid "keep recording"
 msgstr "continuer à enregistrer"
 
@@ -8149,13 +8161,13 @@ msgstr "Types de constats"
 msgid "Knowledge graph"
 msgstr "Graphe de connaissances"
 
-#: src/routes/project/present/PresentRoute.tsx:131
+#: src/routes/project/present/PresentRoute.tsx:135
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
-#: src/components/report/UpdateReportModalButton.tsx:265
-#: src/components/report/UpdateReportModalButton.tsx:339
-#: src/components/report/CreateReportForm.tsx:244
-#: src/components/report/CreateReportForm.tsx:322
+#: src/components/report/UpdateReportModalButton.tsx:273
+#: src/components/report/UpdateReportModalButton.tsx:347
+#: src/components/report/CreateReportForm.tsx:255
+#: src/components/report/CreateReportForm.tsx:331
 #: src/components/project/ProjectPortalEditor.tsx:603
 #: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
@@ -8345,11 +8357,11 @@ msgstr "Probablement faux"
 msgid "Likely true"
 msgstr "Probablement vrai"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:218
+#: src/routes/admin/FreeLimitsPanel.tsx:214
 msgid "Limit"
 msgstr "Limite"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:117
+#: src/routes/admin/FreeLimitsPanel.tsx:113
 msgid "Limit saved"
 msgstr "Limite enregistrée"
 
@@ -8370,11 +8382,11 @@ msgstr "Lien copié"
 msgid "Link to the privacy policy shown to participants"
 msgstr "Lien vers la politique de confidentialité affichée aux participants"
 
-#: src/components/chat/AgenticChatPanel.tsx:1909
+#: src/components/chat/AgenticChatPanel.tsx:1905
 msgid "List my conversations"
 msgstr "Lister mes conversations"
 
-#: src/components/chat/AgenticChatPanel.tsx:1910
+#: src/components/chat/AgenticChatPanel.tsx:1906
 msgid "List the conversations in this project."
 msgstr "Lister les conversations de ce projet."
 
@@ -8467,7 +8479,7 @@ msgstr "Diapositives en direct pour la salle, créées à partir des conversatio
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr "Flux en direct déconnecté. Mise à jour par requêtes espacées jusqu'à la reconnexion."
 
-#: src/components/chat/AgenticChatPanel.tsx:1365
+#: src/components/chat/AgenticChatPanel.tsx:1356
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Flux en direct interrompu. Passage au mode par requêtes régulières."
 
@@ -8477,7 +8489,7 @@ msgid "Live until {0}"
 msgstr "En direct jusqu’à {0}"
 
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
-#: src/routes/project/popcorn/PopcornRoute.tsx:62
+#: src/routes/project/popcorn/PopcornRoute.tsx:63
 msgid "live until {0}, reads every {every} min"
 msgstr "en direct jusqu'à {0}, lecture toutes les {every} min"
 
@@ -8486,7 +8498,7 @@ msgstr "en direct jusqu'à {0}, lecture toutes les {every} min"
 msgid "Live, {0} phrases so far"
 msgstr "En direct, {0} phrases jusqu'ici"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:63
+#: src/routes/project/popcorn/PopcornRoute.tsx:64
 msgid "live, reads every {every} min"
 msgstr "en direct, lecture toutes les {every} min"
 
@@ -8529,7 +8541,7 @@ msgstr "Chargement de l'artefact"
 msgid "Loading collections..."
 msgstr "Chargement des collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:848
+#: src/routes/project/present/PresentRoute.tsx:884
 msgid "Loading draft"
 msgstr "Chargement du brouillon"
 
@@ -8557,8 +8569,8 @@ msgstr "Chargement de la méthodologie"
 msgid "Loading microphones..."
 msgstr "Chargement des microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:755
-#: src/routes/project/present/PresentRoute.tsx:964
+#: src/routes/project/present/PresentRoute.tsx:771
+#: src/routes/project/present/PresentRoute.tsx:1000
 msgid "Loading presentation"
 msgstr "Chargement de la présentation"
 
@@ -8566,15 +8578,15 @@ msgstr "Chargement de la présentation"
 #~ msgid "Loading projects..."
 #~ msgstr "Chargement des projets..."
 
-#: src/components/map/MapPage.tsx:551
+#: src/components/map/MapPage.tsx:566
 msgid "Loading the map."
 msgstr "Chargement de la carte."
 
-#: src/components/map/MapPage.tsx:833
+#: src/components/map/MapPage.tsx:874
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Chargement du nouveau périmètre. La carte actuelle reste affichée d'ici là."
 
-#: src/components/chat/AgenticChatPanel.tsx:1861
+#: src/components/chat/AgenticChatPanel.tsx:1857
 msgid "Loading this chat..."
 msgstr "Chargement de cette discussion..."
 
@@ -8744,7 +8756,7 @@ msgstr "boucle"
 msgid "Low battery"
 msgstr "Batterie faible"
 
-#: src/components/workspace/gateWalls.ts:142
+#: src/components/workspace/gateWalls.ts:146
 msgid "make a workspace private"
 msgstr "rendre un espace de travail privé"
 
@@ -8822,13 +8834,13 @@ msgstr "Gère les membres, les espaces de travail et les paramètres de l'organi
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "De nombreuses vérifications des faits viennent d'être lancées. Réessayez dans un instant."
 
-#: src/components/map/hooks/index.ts:344
+#: src/components/map/hooks/index.ts:351
 msgid "Many maps were started just now. Try again in a moment."
 msgstr "De nombreuses cartes viennent d'être lancées. Réessayez dans un instant."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
-#: src/components/map/MapPage.tsx:666
+#: src/components/map/MapPage.tsx:681
 #: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Map"
 msgstr "Carte"
@@ -8857,7 +8869,7 @@ msgstr "Affichage de la carte"
 msgid "Map failed"
 msgstr "Échec de la carte"
 
-#: src/components/map/MapPage.tsx:593
+#: src/components/map/MapPage.tsx:608
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "La Carte analyse les transcriptions de ce projet, identifie les arguments avancés et regroupe les arguments similaires. Générez une carte pour les explorer."
 
@@ -8873,7 +8885,7 @@ msgstr "Les résultats de la carte ne sont pas encore prêts."
 msgid "Maps"
 msgstr "Cartes"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:68
+#: src/routes/admin/FreeLimitsPanel.tsx:66
 msgid "Maps per month"
 msgstr "Cartes par mois"
 
@@ -9052,7 +9064,7 @@ msgstr "Méthodologie mise à jour"
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "L'accès au microphone est toujours refusé. Veuillez vérifier vos paramètres et réessayer."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:169
+#: src/routes/admin/FreeLimitsPanel.tsx:165
 msgid "min"
 msgstr "min"
 
@@ -9125,11 +9137,11 @@ msgstr "Plus de 40."
 msgid "More useful chat context"
 msgstr "Un contexte de chat plus utile"
 
-#: src/components/sharing/LiveButton.tsx:242
+#: src/components/sharing/LiveButton.tsx:258
 msgid "More ways to analyse"
 msgstr "Autres façons d'analyser"
 
-#: src/components/sharing/PresentButton.tsx:70
+#: src/components/sharing/PresentButton.tsx:79
 msgid "More ways to present"
 msgstr "Autres façons de présenter"
 
@@ -9360,7 +9372,7 @@ msgstr "Neutre"
 msgid "Never"
 msgstr "Jamais"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:148
+#: src/routes/admin/FreeLimitsPanel.tsx:144
 msgid "Never changed"
 msgstr "Jamais modifié"
 
@@ -9391,7 +9403,7 @@ msgstr "Nouveau nom de la conversation"
 #~ msgid "New Conversation Name"
 #~ msgstr "Nom de la nouvelle conversation"
 
-#: src/components/report/UpdateReportModalButton.tsx:159
+#: src/components/report/UpdateReportModalButton.tsx:169
 msgid "New conversations added since this report"
 msgstr "Nouvelles conversations ajoutees depuis ce rapport"
 
@@ -9449,7 +9461,7 @@ msgstr "Les nouveaux projets n'ajoutent plus dembrane comme terme de transcripti
 msgid "New tier"
 msgstr "Nouveau niveau"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:230
+#: src/routes/admin/FreeLimitsPanel.tsx:226
 msgid "New value"
 msgstr "Nouvelle valeur"
 
@@ -9523,7 +9535,7 @@ msgstr "Aucun agent connecté pour le moment."
 msgid "No arguments saved yet."
 msgstr "Aucun argument enregistré pour le moment."
 
-#: src/components/map/MapPage.tsx:612
+#: src/components/map/MapPage.tsx:627
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "Aucun argument n’a été trouvé dans les conversations de ce projet."
@@ -9566,11 +9578,11 @@ msgstr "Aucun changement"
 msgid "project.sidebar.chat.empty.description"
 msgstr "Aucune discussion trouvée. Commencez une discussion en utilisant le bouton \"Demander\"."
 
-#: src/routes/project/chat/NewChatRoute.tsx:184
+#: src/routes/project/chat/NewChatRoute.tsx:186
 msgid "No chats match your search."
 msgstr "Aucune discussion ne correspond à votre recherche."
 
-#: src/routes/project/chat/NewChatRoute.tsx:189
+#: src/routes/project/chat/NewChatRoute.tsx:191
 msgid "No chats yet."
 msgstr "Aucune discussion pour le moment."
 
@@ -9617,7 +9629,7 @@ msgstr "Aucune conversation n'a été traitée. Cela peut se produire si toutes 
 msgid "No conversations yet."
 msgstr "Aucune conversation pour le moment."
 
-#: src/components/report/CreateReportForm.tsx:190
+#: src/components/report/CreateReportForm.tsx:201
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Pas encore de conversations. Vous pouvez planifier un rapport maintenant et les conversations seront incluses une fois ajoutees."
 
@@ -9683,7 +9695,7 @@ msgstr "Aucun argument associé."
 msgid "No logo set. dembrane default will be used."
 msgstr "Aucun logo défini. Le logo dembrane par défaut sera utilisé."
 
-#: src/components/map/MapPage.tsx:589
+#: src/components/map/MapPage.tsx:604
 msgid "No map has been generated for this project yet."
 msgstr "Aucune carte n'a encore été générée pour ce projet."
 
@@ -10083,7 +10095,7 @@ msgstr "Pas maintenant"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Pas en facturation gérée. Passez en facturation gérée pour facturer ce compte au forfait {tier}, sans prélèvement automatique Mollie."
 
-#: src/routes/project/present/PresentRoute.tsx:424
+#: src/routes/project/present/PresentRoute.tsx:428
 msgid "Not on the room screen yet"
 msgstr "Pas encore sur l’écran de la salle"
 
@@ -10284,7 +10296,7 @@ msgstr "Facturation gérée par dembrane. Passer en libre-service conserve le ni
 msgid "On recording page"
 msgstr "Sur la page d'enregistrement"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:102
 msgid "On the free plan one project takes recordings."
 msgstr "Avec le forfait Free, un seul projet permet d'enregistrer."
 
@@ -10473,7 +10485,7 @@ msgstr "Ouvrir la documentation"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:883
+#: src/routes/project/present/PresentRoute.tsx:919
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10515,7 +10527,7 @@ msgstr "Ouvrir l'organisation"
 msgid "Open presentation"
 msgstr "Ouvrir la présentation"
 
-#: src/components/popcorn/PopcornActions.tsx:51
+#: src/components/popcorn/PopcornActions.tsx:53
 msgid "Open presenter view"
 msgstr "Ouvrir la vue présentateur"
 
@@ -10796,7 +10808,7 @@ msgstr "Résultat mis à jour !"
 msgid "outcomes"
 msgstr "résultats"
 
-#: src/routes/project/present/PresentRoute.tsx:130
+#: src/routes/project/present/PresentRoute.tsx:134
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Résultats"
@@ -11118,7 +11130,7 @@ msgstr "Personnes"
 msgid "People with access"
 msgstr "Personnes ayant accès"
 
-#: src/routes/project/present/PresentRoute.tsx:215
+#: src/routes/project/present/PresentRoute.tsx:219
 msgid "People, groups and what matters to them"
 msgstr "Personnes, groupes et ce qui compte pour eux"
 
@@ -11392,11 +11404,19 @@ msgstr "Popcorn"
 msgid "Popcorn also in"
 msgstr "Popcorn également en"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:74
+#: src/components/workspace/FreeAllowanceCard.tsx:47
+msgid "Popcorn analyses"
+msgstr "Analyses Popcorn"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:68
+msgid "Popcorn analyses per month"
+msgstr "Analyses Popcorn par mois"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:70
 msgid "Popcorn cadence floor"
 msgstr "Cadence minimale Popcorn"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:183
+#: src/routes/project/popcorn/PopcornRoute.tsx:191
 msgid "Popcorn could not be loaded"
 msgstr "Impossible de charger Popcorn"
 
@@ -11417,20 +11437,20 @@ msgid "Popcorn ready by {ready}"
 msgstr "Popcorn prêt à {ready}"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:47
-msgid "Popcorn sessions"
-msgstr "Sessions Popcorn"
+#~ msgid "Popcorn sessions"
+#~ msgstr "Sessions Popcorn"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:70
-msgid "Popcorn sessions per month"
-msgstr "Sessions Popcorn par mois"
+#~ msgid "Popcorn sessions per month"
+#~ msgstr "Sessions Popcorn par mois"
 
 #: src/components/popcorn/PopcornIntroModal.tsx:46
 msgid "Popcorn shows a room its own words while it is still talking: live slides from this project's conversations, for a big screen. It is early, and you can turn it off again in the project settings."
 msgstr "Popcorn renvoie à une salle ses propres mots pendant qu'elle s'exprime : des diapositives en direct tirées des conversations de ce projet, pour grand écran. Il s'agit d'une version préliminaire, désactivable à tout moment dans les paramètres du projet."
 
 #: src/routes/admin/FreeLimitsPanel.tsx:72
-msgid "Popcorn window"
-msgstr "Fenêtre Popcorn"
+#~ msgid "Popcorn window"
+#~ msgstr "Fenêtre Popcorn"
 
 #: src/components/workspace/TierStatusBadge.tsx:46
 msgid "Popular"
@@ -11568,11 +11588,11 @@ msgstr "Préparation de ce canevas. Une première version apparaîtra ici dès q
 msgid "Preparing your experience"
 msgstr "Préparation de votre expérience"
 
-#: src/routes/project/present/PresentRoute.tsx:640
-#: src/routes/project/present/PresentRoute.tsx:712
-#: src/routes/project/present/PresentRoute.tsx:948
+#: src/routes/project/present/PresentRoute.tsx:653
+#: src/routes/project/present/PresentRoute.tsx:728
+#: src/routes/project/present/PresentRoute.tsx:984
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
-#: src/components/sharing/PresentButton.tsx:57
+#: src/components/sharing/PresentButton.tsx:66
 msgid "Present"
 msgstr "Présenter"
 
@@ -11580,15 +11600,15 @@ msgstr "Présenter"
 msgid "Presentation activities"
 msgstr "Activités de présentation"
 
-#: src/routes/project/present/PresentRoute.tsx:688
+#: src/routes/project/present/PresentRoute.tsx:701
 msgid "Presentation controls"
 msgstr "Commandes de présentation"
 
-#: src/routes/project/present/PresentRoute.tsx:151
+#: src/routes/project/present/PresentRoute.tsx:155
 msgid "Presentation editor"
 msgstr "Éditeur de présentation"
 
-#: src/routes/project/present/PresentRoute.tsx:378
+#: src/routes/project/present/PresentRoute.tsx:382
 msgid "Presentation title"
 msgstr "Titre de la présentation"
 
@@ -11677,7 +11697,7 @@ msgstr "Projet privé"
 msgid "Private workspace"
 msgstr "Espace de travail privé"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:100
 msgid "Private workspaces come with a paid plan."
 msgstr "Les espaces de travail privés sont inclus dans les forfaits payants."
 
@@ -11808,7 +11828,7 @@ msgstr "Nom et ID du projet"
 msgid "Project name must be at least 4 characters long"
 msgstr "Le nom du projet doit comporter au moins 4 caractères"
 
-#: src/routes/project/chat/NewChatRoute.tsx:528
+#: src/routes/project/chat/NewChatRoute.tsx:538
 msgid "Project not found"
 msgstr "Projet introuvable"
 
@@ -11979,7 +11999,7 @@ msgstr "Citations ({quoteCount})"
 #~ msgstr "Citations ({quotes})"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:616
+#: src/components/chat/AgenticChatPanel.tsx:618
 msgid "Ran {0} steps at once"
 msgstr "{0} étapes exécutées simultanément"
 
@@ -12096,15 +12116,15 @@ msgstr "Lecture d'une compétence"
 msgid "Reading a transcript"
 msgstr "Lecture d'une transcription"
 
-#: src/components/map/MapPage.tsx:106
+#: src/components/map/MapPage.tsx:111
 msgid "Reading conversations"
 msgstr "Lecture des conversations"
 
-#: src/components/map/MapPage.tsx:105
+#: src/components/map/MapPage.tsx:110
 msgid "Reading conversations {done} of {total}"
 msgstr "Lecture des conversations : {done} sur {total}"
 
-#: src/components/popcorn/hooks/index.ts:352
+#: src/components/popcorn/hooks/index.ts:372
 msgid "Reading everything again"
 msgstr "Nouvelle lecture de tout le contenu"
 
@@ -12116,7 +12136,7 @@ msgstr "Lecture du contexte du projet"
 msgid "Reading project settings"
 msgstr "Lecture des paramètres du projet"
 
-#: src/components/popcorn/hooks/index.ts:328
+#: src/components/popcorn/hooks/index.ts:342
 msgid "Reading the conversations again"
 msgstr "Nouvelle lecture des conversations"
 
@@ -12133,7 +12153,7 @@ msgstr "Lecture de la documentation"
 msgid "Ready"
 msgstr "Prêt"
 
-#: src/components/sharing/LiveButton.tsx:103
+#: src/components/sharing/LiveButton.tsx:106
 msgid "Ready by"
 msgstr "Prêt à"
 
@@ -12229,7 +12249,7 @@ msgstr "Enregistrer un message vocal"
 msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
-#: src/components/workspace/gateWalls.ts:144
+#: src/components/workspace/gateWalls.ts:148
 msgid "record in every project"
 msgstr "enregistrer dans chaque projet"
 
@@ -12332,7 +12352,7 @@ msgid "Refine shows the correct label and cannot run while another reply is bein
 msgstr "Le bouton Affiner affiche le bon libellé et ne peut pas être lancé pendant la génération d'une autre réponse."
 
 #: src/components/project/ProjectPortalEditor.tsx:1589
-#: src/components/popcorn/PopcornActions.tsx:59
+#: src/components/popcorn/PopcornActions.tsx:62
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:157
 #: src/components/common/UsageFreshness.tsx:32
 #: src/components/chat/CanvasSuggestionCard.tsx:104
@@ -12364,18 +12384,18 @@ msgid "Refreshing…"
 msgstr "Actualisation…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:461
-#: src/routes/project/chat/ProjectChatRoute.tsx:777
+#: src/routes/project/chat/ProjectChatRoute.tsx:766
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
-#: src/components/popcorn/PopcornActions.tsx:66
-#: src/components/popcorn/PopcornActions.tsx:91
-#: src/components/map/MapPage.tsx:147
+#: src/components/popcorn/PopcornActions.tsx:70
+#: src/components/popcorn/PopcornActions.tsx:96
+#: src/components/map/MapPage.tsx:152
 #: src/components/conversation/ConversationEdit.tsx:401
 #: src/components/conversation/ConversationEdit.tsx:469
 msgid "Regenerate"
 msgstr "Régénérer"
 
-#: src/components/popcorn/PopcornActions.tsx:83
+#: src/components/popcorn/PopcornActions.tsx:88
 msgid "Regenerate popcorn?"
 msgstr "Régénérer Popcorn ?"
 
@@ -12565,7 +12585,7 @@ msgid "project.sidebar.chat.rename"
 msgstr "Renommer"
 
 #: src/components/chat/ChatAccordion.tsx:139
-#: src/components/chat/AgenticChatPanel.tsx:1811
+#: src/components/chat/AgenticChatPanel.tsx:1807
 msgid "Rename chat"
 msgstr "Renommer le chat"
 
@@ -12628,8 +12648,8 @@ msgstr "rapport"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/report/UpdateReportModalButton.tsx:243
-#: src/components/report/CreateReportForm.tsx:135
+#: src/components/report/UpdateReportModalButton.tsx:251
+#: src/components/report/CreateReportForm.tsx:153
 msgid "Report already generating"
 msgstr "Rapport déjà en cours de génération"
 
@@ -12687,8 +12707,8 @@ msgstr "La génération de rapports, la retranscription, le clonage de projets e
 msgid "Report issues from the dashboard with images and voice recordings."
 msgstr "Signalez des problèmes depuis le tableau de bord avec des images et des enregistrements vocaux."
 
-#: src/components/report/UpdateReportModalButton.tsx:218
-#: src/components/report/CreateReportForm.tsx:158
+#: src/components/report/UpdateReportModalButton.tsx:228
+#: src/components/report/CreateReportForm.tsx:179
 msgid "Report limit reached"
 msgstr "Limite de rapports atteinte"
 
@@ -12716,8 +12736,8 @@ msgstr "Rapport programmé"
 msgid "Report subscriptions, Library generation and live indicators receive fixes."
 msgstr "Les abonnements aux rapports, la génération de la Bibliothèque et les indicateurs en direct reçoivent des correctifs."
 
-#: src/components/report/UpdateReportModalButton.tsx:377
-#: src/components/report/CreateReportForm.tsx:365
+#: src/components/report/UpdateReportModalButton.tsx:385
+#: src/components/report/CreateReportForm.tsx:376
 msgid "Report templates are on our roadmap."
 msgstr "Les modèles de rapport sont sur notre feuille de route."
 
@@ -12739,7 +12759,7 @@ msgstr "Rapport mis à jour · {0}"
 msgid "Reports"
 msgstr "Rapports"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:66
+#: src/routes/admin/FreeLimitsPanel.tsx:64
 msgid "Reports per month"
 msgstr "Rapports par mois"
 
@@ -13106,7 +13126,7 @@ msgstr "Vérifiez avant de créer."
 msgid "Review files before uploading"
 msgstr "Examiner les fichiers avant le téléchargement"
 
-#: src/components/chat/AgenticChatPanel.tsx:1920
+#: src/components/chat/AgenticChatPanel.tsx:1916
 msgid "Review my project settings and suggest improvements."
 msgstr "Examinez les paramètres de mon projet et suggérez des améliorations."
 
@@ -13244,7 +13264,7 @@ msgid "Run transcription again for an existing conversation."
 msgstr "Relancer la transcription pour une conversation existante."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:97
-#: src/components/chat/AgenticChatPanel.tsx:441
+#: src/components/chat/AgenticChatPanel.tsx:443
 msgid "Running"
 msgstr "En cours d'exécution"
 
@@ -13261,7 +13281,7 @@ msgid "Sample popcorn session"
 msgstr "Exemple de session Popcorn"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:261
-#: src/routes/admin/FreeLimitsPanel.tsx:180
+#: src/routes/admin/FreeLimitsPanel.tsx:176
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
 #: src/components/settings/LegalBasisCard.tsx:226
@@ -13388,15 +13408,15 @@ msgid "Scanned the QR"
 msgstr "A scanné le QR code"
 
 #: src/components/training/TrainingRowActions.tsx:152
-#: src/components/report/UpdateReportModalButton.tsx:368
-#: src/components/report/CreateReportForm.tsx:357
+#: src/components/report/UpdateReportModalButton.tsx:376
+#: src/components/report/CreateReportForm.tsx:368
 msgid "Schedule"
 msgstr "Planifier"
 
-#: src/components/report/UpdateReportModalButton.tsx:203
-#: src/components/report/UpdateReportModalButton.tsx:321
-#: src/components/report/CreateReportForm.tsx:234
-#: src/components/report/CreateReportForm.tsx:305
+#: src/components/report/UpdateReportModalButton.tsx:213
+#: src/components/report/UpdateReportModalButton.tsx:329
+#: src/components/report/CreateReportForm.tsx:245
+#: src/components/report/CreateReportForm.tsx:314
 msgid "Schedule report"
 msgstr "Programmer le rapport"
 
@@ -13486,8 +13506,8 @@ msgstr "Rechercher des arguments"
 msgid "Search by organisation"
 msgstr "Rechercher par organisation"
 
-#: src/routes/project/chat/NewChatRoute.tsx:164
-#: src/routes/project/chat/NewChatRoute.tsx:165
+#: src/routes/project/chat/NewChatRoute.tsx:166
+#: src/routes/project/chat/NewChatRoute.tsx:167
 msgid "Search chats"
 msgstr "Rechercher des discussions"
 
@@ -13646,13 +13666,15 @@ msgstr "Voir les forfaits"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Retrouvez sur la Carte les arguments de vos conversations et les citations qui les appuient."
 
-#: src/components/workspace/gateWalls.ts:150
+#: src/components/workspace/gateWalls.ts:154
 msgid "see transcripts"
 msgstr "voir les transcriptions"
 
-#: src/components/report/UpdateReportModalButton.tsx:235
-#: src/components/report/CreateReportForm.tsx:176
-#: src/components/chat/FreeTierChatGate.tsx:89
+#: src/components/workspace/FreeAllowanceBanner.tsx:70
+#: src/components/report/UpdateReportModalButton.tsx:243
+#: src/components/report/CreateReportForm.tsx:189
+#: src/components/popcorn/PopcornFreeNotice.tsx:69
+#: src/components/chat/FreeTierChatGate.tsx:104
 msgid "See upgrade options"
 msgstr "Voir les options de mise à niveau"
 
@@ -13682,7 +13704,7 @@ msgstr "Sélectionner {0}"
 msgid "Select {title}"
 msgstr "Sélectionner {title}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:917
+#: src/routes/project/chat/ProjectChatRoute.tsx:906
 msgid "Select a conversation to continue"
 msgstr "Sélectionnez une conversation pour continuer"
 
@@ -13758,13 +13780,13 @@ msgstr "Sélectionner des fichiers audio"
 msgid "Select conversation"
 msgstr "Sélectionner la conversation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:926
-#: src/routes/project/chat/ProjectChatRoute.tsx:985
-#: src/routes/project/chat/ProjectChatRoute.tsx:986
-#: src/routes/project/chat/ProjectChatRoute.tsx:1071
-#: src/routes/project/chat/NewChatRoute.tsx:624
-#: src/routes/project/chat/NewChatRoute.tsx:626
-#: src/routes/project/chat/NewChatRoute.tsx:733
+#: src/routes/project/chat/ProjectChatRoute.tsx:915
+#: src/routes/project/chat/ProjectChatRoute.tsx:978
+#: src/routes/project/chat/ProjectChatRoute.tsx:979
+#: src/routes/project/chat/ProjectChatRoute.tsx:1064
+#: src/routes/project/chat/NewChatRoute.tsx:637
+#: src/routes/project/chat/NewChatRoute.tsx:639
+#: src/routes/project/chat/NewChatRoute.tsx:746
 #: src/components/conversation/ProjectConversationsPanel.tsx:818
 msgid "Select conversations"
 msgstr "Sélectionner des conversations"
@@ -13832,7 +13854,7 @@ msgstr "Indiquez les participants présents. Chacun reçoit une licence d'un an 
 msgid "participant.select.microphone"
 msgstr "Sélectionner votre microphone:"
 
-#: src/components/sharing/LiveButton.tsx:141
+#: src/components/sharing/LiveButton.tsx:145
 msgid "Selected"
 msgstr "Sélectionné"
 
@@ -13867,8 +13889,8 @@ msgstr "Sélection trop grande. Certaines conversations n'ont pas été ajoutée
 msgid "Self-serve"
 msgstr "En libre-service"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1010
-#: src/routes/project/chat/NewChatRoute.tsx:647
+#: src/routes/project/chat/ProjectChatRoute.tsx:1003
+#: src/routes/project/chat/NewChatRoute.tsx:660
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2299
 msgid "Send"
@@ -14132,8 +14154,8 @@ msgstr "Partager avec l'espace de travail"
 msgid "Share your details here"
 msgstr "Partager vos informations ici"
 
-#: src/components/report/UpdateReportModalButton.tsx:385
-#: src/components/report/CreateReportForm.tsx:372
+#: src/components/report/UpdateReportModalButton.tsx:393
+#: src/components/report/CreateReportForm.tsx:383
 msgid "Share your ideas with our team"
 msgstr "Partagez vos idées avec notre équipe"
 
@@ -14169,7 +14191,7 @@ msgstr "Partager un projet privé avec une personne non membre propose désormai
 msgid "Sharing this login with a colleague? An admin of your organisation can invite them, so each of you has a login of your own."
 msgstr "Vous partagez cet identifiant avec un collègue ? Un administrateur de votre organisation peut l'inviter, pour que chacun ait son propre identifiant."
 
-#: src/routes/project/present/PresentRoute.tsx:214
+#: src/routes/project/present/PresentRoute.tsx:218
 msgid "Short phrases from the conversations"
 msgstr "Courtes phrases issues des conversations"
 
@@ -14228,7 +14250,7 @@ msgstr "Afficher les {0}"
 msgid "Show all {total}"
 msgstr "Afficher les {total}"
 
-#: src/components/map/MapPage.tsx:825
+#: src/components/map/MapPage.tsx:866
 msgid "Show all conversations"
 msgstr "Afficher toutes les conversations"
 
@@ -14236,7 +14258,7 @@ msgstr "Afficher toutes les conversations"
 msgid "Show audio player"
 msgstr "Afficher le lecteur audio"
 
-#: src/components/map/MapPage.tsx:786
+#: src/components/map/MapPage.tsx:827
 msgid "Show current arguments"
 msgstr "Afficher les arguments actuels"
 
@@ -14248,7 +14270,7 @@ msgstr "Afficher les données"
 msgid "Show detail"
 msgstr "Afficher les détails"
 
-#: src/components/map/MapPage.tsx:807
+#: src/components/map/MapPage.tsx:848
 msgid "Show every tag"
 msgstr "Afficher toutes les étiquettes"
 
@@ -14327,7 +14349,7 @@ msgstr "Afficher les références"
 msgid "Show revision data"
 msgstr "Afficher les données de révision"
 
-#: src/components/chat/AgenticChatPanel.tsx:642
+#: src/components/chat/AgenticChatPanel.tsx:644
 msgid "Show steps"
 msgstr "Afficher les étapes"
 
@@ -14348,7 +14370,7 @@ msgstr "Afficher l'invitation"
 msgid "Show the path to this page"
 msgstr "Afficher le chemin vers cette page"
 
-#: src/routes/project/present/PresentRoute.tsx:678
+#: src/routes/project/present/PresentRoute.tsx:691
 msgid "Show them"
 msgstr "Les afficher"
 
@@ -14389,16 +14411,16 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} sur {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:793
+#: src/components/map/MapPage.tsx:834
 msgid "Showing conversations tagged {0}."
 msgstr "Conversations étiquetées {0}."
 
-#: src/components/map/MapPage.tsx:779
+#: src/components/map/MapPage.tsx:820
 msgid "Showing the arguments of one result."
 msgstr "Les arguments d’un résultat sont affichés."
 
 #. placeholder {0}: listedChats.length
-#: src/routes/project/chat/NewChatRoute.tsx:194
+#: src/routes/project/chat/NewChatRoute.tsx:196
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Affichage des {0} premiers résultats sur {shownCount}. Affinez la recherche pour voir le reste."
 
@@ -14469,7 +14491,7 @@ msgstr "Communauté Slack"
 msgid "Smoother recording and quicker questions"
 msgstr "Des enregistrements plus fluides, des questions plus rapides"
 
-#: src/components/map/MapPage.tsx:773
+#: src/components/map/MapPage.tsx:814
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Certains arguments reposent sur une analyse antérieure."
 
@@ -14556,7 +14578,7 @@ msgstr "Un problème est survenu lors de la génération de votre dernier rappor
 msgid "Something went wrong generating your report."
 msgstr "Un problème est survenu lors de la génération de votre rapport."
 
-#: src/components/chat/AgenticChatPanel.tsx:215
+#: src/components/chat/AgenticChatPanel.tsx:217
 msgid "Something went wrong on my side. Send your message again and I'll retry."
 msgstr "Une erreur est survenue de mon côté. Renvoyez votre message et je réessaierai."
 
@@ -14771,8 +14793,8 @@ msgstr "Commencer dans la discussion avec l'assistant"
 msgid "participant.button.start.new.conversation"
 msgstr "Commencer une nouvelle conversation"
 
-#: src/components/sharing/LiveButton.tsx:213
-#: src/components/sharing/LiveButton.tsx:282
+#: src/components/sharing/LiveButton.tsx:227
+#: src/components/sharing/LiveButton.tsx:299
 msgid "Start now"
 msgstr "Démarrer maintenant"
 
@@ -14800,11 +14822,11 @@ msgstr "démarre à {starts}"
 #~ msgid "Starts at {0}, 15 minutes early"
 #~ msgstr ""
 
-#: src/components/sharing/LiveButton.tsx:123
+#: src/components/sharing/LiveButton.tsx:126
 msgid "Starts at {startTime}, 15 minutes early"
 msgstr "Démarre à {startTime}, 15 minutes plus tôt"
 
-#: src/components/sharing/LiveButton.tsx:122
+#: src/components/sharing/LiveButton.tsx:125
 msgid "Starts now"
 msgstr "Démarre tout de suite"
 
@@ -14826,7 +14848,7 @@ msgid "Status"
 msgstr "Statut"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:213
-#: src/components/sharing/LiveButton.tsx:133
+#: src/components/sharing/LiveButton.tsx:136
 msgid "Stay live for"
 msgstr "Rester en direct pendant"
 
@@ -14867,7 +14889,7 @@ msgstr "Étapes et journaux"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Toujours bloqué ? Écrivez à <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:812
+#: src/routes/project/chat/ProjectChatRoute.tsx:801
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:244
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -14895,8 +14917,8 @@ msgstr "Ne plus colorer le graphe par statut factuel"
 msgid "Stop coloring graph by valence"
 msgstr "Ne plus colorer le graphe par valence"
 
-#: src/components/sharing/PresentButton.tsx:87
-#: src/components/sharing/LiveButton.tsx:201
+#: src/components/sharing/PresentButton.tsx:96
+#: src/components/sharing/LiveButton.tsx:214
 msgid "Stop live"
 msgstr "Arrêter le direct"
 
@@ -15228,9 +15250,9 @@ msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre d
 msgid "Tell us what you need"
 msgstr "Dites-nous ce dont vous avez besoin"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:590
-#: src/routes/project/chat/NewChatRoute.tsx:309
-#: src/components/chat/AgenticChatPanel.tsx:1718
+#: src/routes/project/chat/ProjectChatRoute.tsx:579
+#: src/routes/project/chat/NewChatRoute.tsx:319
+#: src/components/chat/AgenticChatPanel.tsx:1714
 msgid "Template applied"
 msgstr "Template appliqué"
 
@@ -15388,7 +15410,7 @@ msgstr "L'agent agit en votre nom : il ne peut voir que ce à quoi vous avez dé
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "L'agent et l'entreprise qui l'exploite recevront le contenu de la conversation que vous autorisez."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:855
+#: src/routes/project/chat/ProjectChatRoute.tsx:844
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "L'IA n'a pas pu répondre à cette question. Essayez de la reformuler."
 
@@ -15438,8 +15460,8 @@ msgstr "Le guide de l'hôte par défaut rappelle désormais d'activer le mode Ne
 msgid "the dembrane team"
 msgstr "l'équipe dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:749
-#: src/routes/project/present/PresentRoute.tsx:783
+#: src/routes/project/present/PresentRoute.tsx:765
+#: src/routes/project/present/PresentRoute.tsx:819
 msgid "The draft could not be loaded"
 msgstr "Impossible de charger le brouillon"
 
@@ -15487,30 +15509,51 @@ msgstr "Le portail de retours explique comment signaler les failles de sécurit�
 msgid "The following conversations were automatically added to the context"
 msgstr "Les conversations suivantes ont été automatiquement ajoutées au contexte"
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:108
 msgid "The free plan covers one workspace."
 msgstr "Le forfait Free couvre un seul espace de travail."
 
-#: src/components/workspace/gateWalls.ts:86
+#: src/components/workspace/gateWalls.ts:99
+msgid "The free plan includes 12 popcorn analyses a month."
+msgstr "Le forfait Free comprend 12 analyses Popcorn par mois."
+
+#: src/components/workspace/gateWalls.ts:88
 msgid "The free plan includes 5 hours of recording a month."
 msgstr "Le forfait Free comprend 5 heures d'enregistrement par mois."
 
 #: src/components/workspace/gateWalls.ts:91
 #: src/components/workspace/gateWalls.ts:92
-msgid "The free plan includes one chat with three questions."
-msgstr "Le forfait Free inclut une conversation avec trois questions."
+#~ msgid "The free plan includes one chat with three questions."
+#~ msgstr "Le forfait Free inclut une conversation avec trois questions."
 
 #: src/components/workspace/gateWalls.ts:97
+msgid "The free plan includes one map a month."
+msgstr "Le forfait Free comprend une carte par mois."
+
+#: src/components/workspace/gateWalls.ts:98
 msgid "The free plan includes one organisation."
 msgstr "Le forfait Free comprend une seule organisation."
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:101
 msgid "The free plan includes one project."
 msgstr "Le forfait Free comprend un seul projet."
 
+#: src/components/workspace/gateWalls.ts:103
+#: src/components/report/UpdateReportModalButton.tsx:171
+#: src/components/report/UpdateReportModalButton.tsx:194
+#: src/components/report/UpdateReportModalButton.tsx:234
+#: src/components/report/CreateReportForm.tsx:185
+msgid "The free plan includes one report a month."
+msgstr "Le forfait Free comprend un rapport par mois."
+
 #: src/components/workspace/gateWalls.ts:101
-msgid "The free plan includes one report."
-msgstr "Le forfait Free inclut un rapport."
+#~ msgid "The free plan includes one report."
+#~ msgstr "Le forfait Free inclut un rapport."
+
+#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:92
+msgid "The free plan includes two chats a month, with 20 questions each."
+msgstr "Le forfait Free comprend deux discussions par mois, de 20 questions chacune."
 
 #: src/components/goal/ProjectGoalSection.tsx:87
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
@@ -15528,7 +15571,7 @@ msgstr "Le guide de l'hôte est la référence lue par les animateurs avant d'an
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "L’écran du guide de l’hôte montre le code pour participer. Activez la participation dans l’éditeur du portail pour l’utiliser."
 
-#: src/routes/project/present/PresentRoute.tsx:952
+#: src/routes/project/present/PresentRoute.tsx:988
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "L'hôte n'a pas encore préparé de présentation."
 
@@ -15541,7 +15584,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "L'invitation a été envoyée à {invitedEmail}, mais vous êtes connecté sous {myEmail}. Déconnectez-vous et inscrivez-vous avec la bonne adresse, ou demandez à l'administrateur de réinviter {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:739
+#: src/components/map/MapPage.tsx:780
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "La dernière génération a échoué ; la carte précédente reste affichée. {0}"
 
@@ -15571,11 +15614,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "Le deck Popcorn en direct et les canevas créés pour ce projet se trouvent ici."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:744
+#: src/components/map/MapPage.tsx:785
 msgid "The map could not be generated. {0}"
 msgstr "Impossible de générer la carte. {0}"
 
-#: src/components/map/MapPage.tsx:563
+#: src/components/map/MapPage.tsx:578
 msgid "The map could not be loaded"
 msgstr "Impossible de charger la carte"
 
@@ -15587,11 +15630,11 @@ msgstr "Impossible de charger la carte."
 #~ msgid "The map could not be loaded. Try again in a moment."
 #~ msgstr "Impossible de charger la carte. Réessayez dans un instant."
 
-#: src/components/map/hooks/index.ts:347
+#: src/components/map/hooks/index.ts:354
 msgid "The map could not be started."
 msgstr "Impossible de lancer la carte."
 
-#: src/components/map/MapPage.tsx:576
+#: src/components/map/MapPage.tsx:591
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "La carte est en cours de génération. Elle s'affichera ici dès qu'elle sera prête."
 
@@ -15664,7 +15707,7 @@ msgstr "Le parcours des participants propose des vérifications du micro plus cl
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Les portails continueront de fonctionner ! Vos participants ne sont jamais coupés et rien de ce qu'ils disent n'est perdu. Dès que vous passez à un forfait payant, la transcription rattrape tout ce qui a déjà été enregistré."
 
-#: src/routes/project/present/PresentRoute.tsx:933
+#: src/routes/project/present/PresentRoute.tsx:969
 msgid "The presentation could not be loaded"
 msgstr "Impossible de charger la présentation"
 
@@ -15672,7 +15715,7 @@ msgstr "Impossible de charger la présentation"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Impossible de charger la présentation."
 
-#: src/routes/project/present/PresentRoute.tsx:926
+#: src/routes/project/present/PresentRoute.tsx:962
 msgid "The presentation could not be opened"
 msgstr "Impossible d'ouvrir la présentation"
 
@@ -15692,7 +15735,7 @@ msgstr "Le projet adopte la Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Le contexte du projet est lu par la transcription, les réponses du chat et la génération de canvas, donc une modification ici impacte plusieurs écrans."
 
-#: src/routes/project/present/PresentRoute.tsx:810
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "The public page is on, so changes wait until you show them."
 msgstr "La page publique est activée : les modifications attendent que vous les affichiez."
 
@@ -15708,12 +15751,12 @@ msgstr "Le parcours aléatoire fera apparaître des nœuds ici dès qu'ils seron
 msgid "The report ends with an invitation to add your voice."
 msgstr "Le rapport se termine par une invitation à ajouter votre voix."
 
-#: src/components/report/UpdateReportModalButton.tsx:308
-#: src/components/report/CreateReportForm.tsx:287
+#: src/components/report/UpdateReportModalButton.tsx:316
+#: src/components/report/CreateReportForm.tsx:298
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Le rapport peut démarrer jusqu'à 5 minutes après l'heure choisie."
 
-#: src/routes/project/present/PresentRoute.tsx:801
+#: src/routes/project/present/PresentRoute.tsx:837
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "L’écran de la salle est ouvert : les modifications attendent que vous les affichiez."
 
@@ -15832,8 +15875,8 @@ msgstr "Il n'y a aucun autre espace de travail vers lequel déplacer ce projet."
 #~ msgid "There was an error cloning your project. Please try again or contact support."
 #~ msgstr "Il y avait une erreur lors du clonage de votre projet. Veuillez réessayer ou contacter le support."
 
-#: src/components/report/UpdateReportModalButton.tsx:254
-#: src/components/report/CreateReportForm.tsx:146
+#: src/components/report/UpdateReportModalButton.tsx:262
+#: src/components/report/CreateReportForm.tsx:164
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Il y avait une erreur lors de la création de votre rapport. Veuillez réessayer ou contacter le support."
 
@@ -15858,7 +15901,7 @@ msgstr "Ces conversations ont été exclues en raison de transcriptions manquant
 #~ msgid "These default view templates will be generated when you create your first library."
 #~ msgstr "Ces modèles de vue par défaut seront générés lorsque vous créerez votre première bibliothèque."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:199
+#: src/routes/admin/FreeLimitsPanel.tsx:195
 msgid "These limits apply to every free account. Changes take effect within about a minute."
 msgstr "Ces limites s'appliquent à tous les comptes gratuits. Les modifications prennent effet en une minute environ."
 
@@ -15934,6 +15977,10 @@ msgstr "Ce canvas n'a pas pu être mis à jour."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:80
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "Cela modifie le mode d'enregistrement des transcriptions à partir de maintenant. Les conversations déjà enregistrées conservent leur format initial."
+
+#: src/components/chat/FreeTierChatGate.tsx:92
+msgid "This chat is from an earlier month and is now read-only on the free plan. Start a new chat or upgrade to keep going."
+msgstr "Cette discussion date d'un mois antérieur et est désormais en lecture seule avec le forfait Free. Démarrez une nouvelle discussion ou changez de forfait pour continuer."
 
 #: src/components/map/panels/SpotlightPanel.tsx:346
 msgid "This claim has not been fact-checked."
@@ -16181,8 +16228,8 @@ msgstr "Cette présentation n'est pas disponible."
 msgid "This project could not be reached."
 msgstr "Impossible d'accéder à ce projet."
 
-#: src/components/map/MapPage.tsx:582
-#: src/components/map/MapPage.tsx:607
+#: src/components/map/MapPage.tsx:597
+#: src/components/map/MapPage.tsx:622
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "Ce projet ne contient encore aucune conversation avec transcription. Générez une carte dès que des conversations auront été transcrites."
 
@@ -16234,7 +16281,7 @@ msgstr "Cette action retire la conversation du projet. Elle ne peut pas être an
 msgid "This removes the one-year license for {0}. They will no longer count as trained and lose access to high-risk settings. Only do this if the license was granted by mistake."
 msgstr "Cela retire la licence d'un an de {0}. Cette personne ne sera plus considérée comme formée et perdra l'accès aux paramètres à haut risque. Ne faites cela que si la licence a été accordée par erreur."
 
-#: src/components/popcorn/PopcornActions.tsx:85
+#: src/components/popcorn/PopcornActions.tsx:90
 msgid "This replaces every popcorn, tension and stakeholder on the screen and reads all conversations again. Earlier runs are saved in the history."
 msgstr "Cela remplace chaque popcorn, tension et partie prenante à l'écran et réanalyse toutes les conversations. Les analyses précédentes sont enregistrées dans l'historique."
 
@@ -16255,7 +16302,7 @@ msgstr "Ce rapport a été ouvert par {0} personnes"
 msgid "This request has expired"
 msgstr "Cette demande a expiré"
 
-#: src/components/chat/AgenticChatPanel.tsx:213
+#: src/components/chat/AgenticChatPanel.tsx:215
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
 msgstr "Cette demande a pris trop de temps, je l'ai donc interrompue. Renvoyez-la et je réessaierai."
 
@@ -16274,6 +16321,10 @@ msgstr "Cela rétablit l'espace de travail sur la facturation partagée de votre
 #: src/components/analysis/AnalysisResultsList.tsx:88
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
+
+#: src/components/report/CreateReportForm.tsx:183
+msgid "This sample project includes one report."
+msgstr "Ce projet d'exemple inclut un rapport."
 
 #: src/components/map/panels/HistoryPanel.tsx:75
 msgid "This selection is too large to title."
@@ -16642,7 +16693,7 @@ msgstr "Transcription en cours"
 msgid "Transcribing..."
 msgstr "Transcription en cours..."
 
-#: src/components/chat/AgenticChatPanel.tsx:279
+#: src/components/chat/AgenticChatPanel.tsx:281
 msgid "transcript"
 msgstr "transcription"
 
@@ -16662,7 +16713,7 @@ msgstr "L'anonymisation et la retranscription des transcriptions appliquent les 
 msgid "Transcript copied to clipboard"
 msgstr "Transcription copiée dans le presse-papiers"
 
-#: src/components/chat/AgenticChatPanel.tsx:278
+#: src/components/chat/AgenticChatPanel.tsx:280
 msgid "transcript excerpt"
 msgstr "extrait de transcription"
 
@@ -16683,7 +16734,7 @@ msgstr "Erreur de transcription"
 msgid "Transcription failed"
 msgstr "Échec de la transcription"
 
-#: src/components/workspace/gateWalls.ts:103
+#: src/components/workspace/gateWalls.ts:105
 msgid "Transcripts come with a paid plan."
 msgstr "Les transcriptions nécessitent un forfait payant."
 
@@ -16777,9 +16828,9 @@ msgstr "Déclencher des workflows automatisés dans des outils comme Zapier, Mak
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:957
+#: src/routes/project/present/PresentRoute.tsx:993
 #: src/routes/project/present/PresentResultsPanel.tsx:158
-#: src/routes/project/chat/ProjectChatRoute.tsx:868
+#: src/routes/project/chat/ProjectChatRoute.tsx:857
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:449
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -16787,7 +16838,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/components/results/resultEditing.tsx:555
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
-#: src/components/map/MapPage.tsx:145
+#: src/components/map/MapPage.tsx:150
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:938
@@ -16805,7 +16856,7 @@ msgstr "Réessayer"
 #~ msgid "Try again in a moment."
 #~ msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:697
+#: src/routes/project/chat/NewChatRoute.tsx:710
 msgid "Try Agentic instead"
 msgstr "Essayer plutôt Agentic"
 
@@ -16877,12 +16928,16 @@ msgid "Turning your voice note into text"
 msgstr "Conversion de votre message vocal en texte"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:62
-msgid "Turns in the first chat"
-msgstr "Tours dans la première discussion"
+#~ msgid "Turns in the first chat"
+#~ msgstr "Tours dans la première discussion"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:64
-msgid "Turns in the second chat"
-msgstr "Tours dans la deuxième discussion"
+#~ msgid "Turns in the second chat"
+#~ msgstr "Tours dans la deuxième discussion"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:62
+msgid "Turns per chat"
+msgstr "Tours de parole par chat"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:70
 msgid "Tutorial"
@@ -16913,7 +16968,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Tapez <0>{0}</0> pour confirmer."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1019
+#: src/routes/project/chat/ProjectChatRoute.tsx:1012
 msgid "Type a message or press / for templates..."
 msgstr "Tapez un message ou appuyez sur / pour les templates..."
 
@@ -16958,11 +17013,11 @@ msgstr "Moins de 50."
 msgid "Under your organisation"
 msgstr "Dans votre organisation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:592
-#: src/routes/project/chat/NewChatRoute.tsx:311
+#: src/routes/project/chat/ProjectChatRoute.tsx:581
+#: src/routes/project/chat/NewChatRoute.tsx:321
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
-#: src/components/chat/AgenticChatPanel.tsx:1720
+#: src/components/chat/AgenticChatPanel.tsx:1716
 msgid "Undo"
 msgstr "Annuler"
 
@@ -17190,12 +17245,16 @@ msgstr "Mise à jour d'un souvenir enregistré"
 msgid "Updating project tags"
 msgstr "Mise à jour des tags du projet"
 
+#: src/components/workspace/FreeAllowanceBanner.tsx:69
+#~ msgid "Upgrade"
+#~ msgstr "Changer de forfait"
+
 #: src/components/conversation/ProjectConversationsPanel.tsx:152
 #: src/components/conversation/ConversationAccordion.tsx:157
 msgid "Upgrade to add this to the chat"
 msgstr "Changez de forfait pour ajouter ceci au chat"
 
-#: src/components/chat/FreeTierChatGate.tsx:79
+#: src/components/chat/FreeTierChatGate.tsx:83
 msgid "Upgrade to continue"
 msgstr "Changez de forfait pour continuer"
 
@@ -17286,7 +17345,7 @@ msgstr "Limite d'importation atteinte. Mettez à niveau votre espace de travail.
 msgid "Upload logo"
 msgstr "Importer le logo"
 
-#: src/components/workspace/gateWalls.ts:151
+#: src/components/workspace/gateWalls.ts:155
 msgid "upload recordings"
 msgstr "importer des enregistrements"
 
@@ -17308,7 +17367,7 @@ msgstr "Envoi de l'audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Envoi de l'audio..."
 
-#: src/components/workspace/gateWalls.ts:104
+#: src/components/workspace/gateWalls.ts:106
 msgid "Uploading recordings comes with a paid plan."
 msgstr "L'importation d'enregistrements nécessite un forfait payant."
 
@@ -17376,7 +17435,7 @@ msgstr "Utiliser la valeur héritée"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Utilisez l'italien pour le chat, les rapports, la transcription et les fiches d'accueil des participants."
 
-#: src/routes/project/present/PresentRoute.tsx:871
+#: src/routes/project/present/PresentRoute.tsx:907
 msgid "Use latest results"
 msgstr "Utiliser les derniers résultats"
 
@@ -17388,8 +17447,8 @@ msgstr "Utiliser plutôt mon mot de passe"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Utilisez des modèles de questions épinglés et enregistrés, y compris le raccourci /, depuis Demander."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1047
-#: src/routes/project/chat/ProjectChatRoute.tsx:1057
+#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:1050
 #: src/components/chat/AgenticChatPanel.tsx:2364
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
@@ -17410,11 +17469,11 @@ msgstr "Utiliser cette formulation"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Utilisez l'ukrainien pour le chat et les réponses des participants."
 
-#: src/components/workspace/gateWalls.ts:152
+#: src/components/workspace/gateWalls.ts:156
 msgid "use webhooks"
 msgstr "utiliser les webhooks"
 
-#: src/components/workspace/gateWalls.ts:137
+#: src/components/workspace/gateWalls.ts:139
 msgid "use your voice in chat"
 msgstr "utiliser votre voix dans le chat"
 
@@ -17680,7 +17739,7 @@ msgstr "La saisie vocale respecte la limite d'enregistrement du forfait Free."
 msgid "Voiced in a conversation"
 msgstr "Exprimé dans une conversation"
 
-#: src/components/report/CreateReportForm.tsx:226
+#: src/components/report/CreateReportForm.tsx:237
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "En attente de la fin des conversations avant de générer un rapport."
 
@@ -17692,7 +17751,7 @@ msgstr "En attente des conversations..."
 msgid "Waiting for inputs"
 msgstr "En attente des sources"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:47
+#: src/routes/project/popcorn/PopcornRoute.tsx:48
 msgid "Waiting for the first conversation"
 msgstr "En attente de la première conversation"
 
@@ -17704,7 +17763,7 @@ msgstr "En attente de la première conversation avec une transcription."
 msgid "Waiting for the next node"
 msgstr "En attente du prochain nœud"
 
-#: src/components/map/MapPage.tsx:108
+#: src/components/map/MapPage.tsx:113
 msgid "Waiting to start"
 msgstr "En attente de démarrage"
 
@@ -17888,7 +17947,7 @@ msgstr "Les webhooks sont des messages automatisés envoyés d'une application �
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:107
 msgid "Webhooks come with a paid plan."
 msgstr "Les webhooks sont inclus avec un forfait payant."
 
@@ -17912,7 +17971,7 @@ msgstr "Ravi de vous revoir, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Bienvenue sur dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:734
+#: src/routes/project/chat/ProjectChatRoute.tsx:723
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Bienvenue dans le chat dembrane. Sélectionnez les conversations que vous souhaitez analyser, puis posez des questions pour obtenir des détails, des citations et des synthèses."
 
@@ -17920,7 +17979,7 @@ msgstr "Bienvenue dans le chat dembrane. Sélectionnez les conversations que vou
 msgid "Welcome to dembrane!"
 msgstr "Bienvenue sur dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:733
+#: src/routes/project/chat/ProjectChatRoute.tsx:722
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de toutes tes conversations. Pose-moi des questions sur les tendances, thèmes et insights de tes données. Pour des citations exactes, démarre un nouveau chat en mode Contexte précis."
 
@@ -17991,11 +18050,11 @@ msgstr "Que doit ECHO analyser ou générer à partir des conversations ?"
 msgid "What should we know? Paste a screenshot here to attach it"
 msgstr "Que devrions-nous savoir ? Collez une capture d'écran ici pour la joindre"
 
-#: src/components/chat/AgenticChatPanel.tsx:1915
+#: src/components/chat/AgenticChatPanel.tsx:1911
 msgid "What themes came up across the conversations in this project?"
 msgstr "Quels thèmes sont ressortis de l'ensemble des conversations de ce projet ?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1914
+#: src/components/chat/AgenticChatPanel.tsx:1910
 msgid "What themes came up?"
 msgstr "Quels thèmes sont ressortis ?"
 
@@ -18098,8 +18157,8 @@ msgstr "Lorsqu'elle est activée, l'équipe d'assistance de dembrane peut rejoin
 #~ msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 #~ msgstr "Quand les participants scannent le code QR, ils apparaissent ici et avancent à travers les étapes en temps réel."
 
-#: src/components/report/UpdateReportModalButton.tsx:302
-#: src/components/report/CreateReportForm.tsx:281
+#: src/components/report/UpdateReportModalButton.tsx:310
+#: src/components/report/CreateReportForm.tsx:292
 msgid "When should the report be generated?"
 msgstr "Quand le rapport doit-il être généré ?"
 
@@ -18127,8 +18186,8 @@ msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le ré
 msgid "Where would you like to go?"
 msgstr "Où souhaitez-vous aller ?"
 
-#: src/routes/project/chat/NewChatRoute.tsx:572
-#: src/components/chat/AgenticChatPanel.tsx:1896
+#: src/routes/project/chat/NewChatRoute.tsx:582
+#: src/components/chat/AgenticChatPanel.tsx:1892
 msgid "Where would you like to start?"
 msgstr "Par quoi souhaitez-vous commencer ?"
 
@@ -18172,7 +18231,7 @@ msgstr "Pourquoi pas dans cette présentation ?"
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Pourquoi ? Une phrase, pour vos collègues et pour toute personne qui vérifiera plus tard."
 
-#: src/components/report/CreateReportForm.tsx:208
+#: src/components/report/CreateReportForm.tsx:219
 msgid "will be included in your report"
 msgstr "sera inclus dans votre rapport"
 
@@ -18247,7 +18306,7 @@ msgid "Work with the new conversational assistant."
 msgstr "Travaillez avec le nouvel assistant conversationnel."
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:617
+#: src/components/chat/AgenticChatPanel.tsx:619
 msgid "Worked through {0} steps"
 msgstr "{0} étapes traitées"
 
@@ -18255,7 +18314,7 @@ msgstr "{0} étapes traitées"
 msgid "working"
 msgstr "en cours"
 
-#: src/components/chat/AgenticChatPanel.tsx:1773
+#: src/components/chat/AgenticChatPanel.tsx:1769
 msgid "Working on your answer..."
 msgstr "Préparation de votre réponse..."
 
@@ -18519,7 +18578,7 @@ msgstr "Vous n'avez pas l'autorisation d'effectuer cette action. Demandez l'acc�
 msgid "You do not have permission to fact-check claims."
 msgstr "Vous n'avez pas l'autorisation de vérifier les affirmations."
 
-#: src/components/map/hooks/index.ts:340
+#: src/components/map/hooks/index.ts:347
 msgid "You do not have permission to generate a map."
 msgstr "Vous n'avez pas l'autorisation de générer une carte."
 
@@ -18587,6 +18646,30 @@ msgstr "Vous avez été désinscrit avec succès."
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "Vous avez un accès d'assistance à cet espace de travail. Il prend fin automatiquement le {endsAt}."
 
+#: src/components/workspace/FreeAllowanceBanner.tsx:47
+msgid "You have used this month's free chats. They reset on {date}."
+msgstr "Vous avez utilisé les discussions gratuites de ce mois-ci. Elles seront réinitialisées le {date}."
+
+#: src/components/chat/FreeTierChatGate.tsx:88
+msgid "You have used this month's free chats. Upgrade to keep chatting."
+msgstr "Vous avez utilisé vos conversations gratuites ce mois-ci. Passez à un forfait supérieur pour continuer à discuter."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:57
+msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
+msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. Votre carte actuelle reste accessible. Réinitialisation le {date}."
+
+#: src/components/popcorn/PopcornFreeNotice.tsx:56
+msgid "You have used this month's free popcorn analyses. The results stay here."
+msgstr "Vous avez utilisé vos analyses Popcorn gratuites de ce mois-ci. Les résultats restent accessibles ici."
+
+#: src/components/popcorn/PopcornFreeNotice.tsx:51
+msgid "You have used this month's free popcorn analyses. The results stay here. Analysis starts again on {date}."
+msgstr "Vous avez utilisé vos analyses Popcorn gratuites de ce mois-ci. Les résultats restent accessibles ici. Les analyses reprendront le {date}."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:52
+msgid "You have used this month's free report. It resets on {date}."
+msgstr "Vous avez utilisé le rapport gratuit de ce mois-ci. Il sera réinitialisé le {date}."
+
 #: src/components/project/ProjectUploadSection.tsx:42
 msgid "You have view-only access to this project, so you can't upload recordings."
 msgstr "Vous avez un accès en lecture seule à ce projet, vous ne pouvez donc pas importer d'enregistrements."
@@ -18616,7 +18699,7 @@ msgstr "Vous avez besoin d'une invitation d'un collègue"
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion internet"
 
-#: src/components/chat/AgenticChatPanel.tsx:211
+#: src/components/chat/AgenticChatPanel.tsx:213
 msgid "You stopped this run."
 msgstr "Vous avez interrompu cette exécution."
 
@@ -18684,7 +18767,7 @@ msgstr "Vous êtes un collaborateur externe dans cette organisation. Ouvrez l'un
 msgid "You're in"
 msgstr "Vous y êtes"
 
-#: src/routes/project/present/PresentRoute.tsx:806
+#: src/routes/project/present/PresentRoute.tsx:842
 msgid "You’re live, so changes wait until you show them."
 msgstr "Vous êtes en direct : les modifications attendent que vous les affichiez."
 
@@ -18732,7 +18815,7 @@ msgstr "Vous avez été invité à rejoindre {0} organisations. Vous y accédere
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "Vous avez été invité à rejoindre <0>{0}</0>. Nous vous y redirigeons dans un instant."
 
-#: src/components/chat/FreeTierChatGate.tsx:83
+#: src/components/chat/FreeTierChatGate.tsx:97
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Vous avez atteint la limite du forfait Free pour cette discussion. Passez à un forfait supérieur pour poursuivre la conversation."
 
@@ -18839,8 +18922,8 @@ msgstr "Votre retour et cette réponse sont transmis à l'équipe dembrane."
 
 #: src/components/report/UpdateReportModalButton.tsx:224
 #: src/components/report/CreateReportForm.tsx:161
-msgid "Your free plan includes one report. Upgrade to create more."
-msgstr "Votre forfait Free comprend un rapport. Passez à un forfait supérieur pour en créer d'autres."
+#~ msgid "Your free plan includes one report. Upgrade to create more."
+#~ msgstr "Votre forfait Free comprend un rapport. Passez à un forfait supérieur pour en créer d'autres."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
 msgid "Your free transcription hour is used up."

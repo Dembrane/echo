@@ -36,6 +36,8 @@ export function PopcornActions({
 	const [rerunOpened, rerunModal] = useDisclosure(false);
 	const isLive = popcorn.loop?.mode === "live";
 	const booking = liveBooking(popcorn.loop);
+	// A free account's month of analyses is used up: nothing new can start.
+	const usedUp = !!popcorn.free_popcorn?.exhausted;
 
 	return (
 		<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
@@ -53,6 +55,7 @@ export function PopcornActions({
 			<Button
 				leftSection={<ArrowsClockwiseIcon size={20} />}
 				loading={refresh.isPending}
+				disabled={usedUp}
 				onClick={() => refresh.mutate()}
 				{...testId("popcorn-refresh-button")}
 			>
@@ -60,6 +63,7 @@ export function PopcornActions({
 			</Button>
 			<Button
 				leftSection={<ArrowCounterClockwiseIcon size={20} />}
+				disabled={usedUp}
 				onClick={rerunModal.open}
 				{...testId("popcorn-rerun-button")}
 			>
@@ -69,6 +73,7 @@ export function PopcornActions({
 				live={isLive}
 				booking={booking}
 				pending={live.isPending || stopLive.isPending}
+				analysisDisabled={usedUp}
 				onGoLive={(hours) => live.mutate({ hours })}
 				onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
 				onStop={() => stopLive.mutate()}

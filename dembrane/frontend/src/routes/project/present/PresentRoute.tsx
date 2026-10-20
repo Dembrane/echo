@@ -14,7 +14,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useElementSize } from "@mantine/hooks";
+import { useDisclosure, useElementSize } from "@mantine/hooks";
 import { ArrowSquareOutIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -34,11 +34,13 @@ import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { readAfterFinish } from "@/components/popcorn/finishedRead";
 import {
+	type LiveHours,
 	liveBooking,
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
 } from "@/components/popcorn/hooks";
+import { PopcornFreeNotice } from "@/components/popcorn/PopcornFreeNotice";
 import {
 	PopcornAlsoLanguages,
 	PopcornLanguageSettings,
@@ -81,12 +83,14 @@ import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
 import { PresentButton } from "@/components/sharing/PresentButton";
 import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
 import { StatusLine } from "@/components/sharing/StatusLine";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
 import { errorCode } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
 import { PresentResultsPanel } from "./PresentResultsPanel";
@@ -491,6 +495,15 @@ function Session({
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
 	const booking = liveBooking(presentation.loop);
+	// A free account's month of analyses is used up: presenting shows the wall instead of going live.
+	const usedUp = !!presentation.free_popcorn?.exhausted;
+	const [wallOpened, wall] = useDisclosure(false);
+	const goLive = (vars: { hours: LiveHours; readyBy?: Date }) =>
+		live.mutate(vars, {
+			onError: (error) => {
+				if (isFreeTierLimitError(error) === "popcorn") wall.open();
+			},
+		});
 	const readAfter = readAfterFinish(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
@@ -693,13 +706,16 @@ function Session({
 								booking={booking}
 								opening={opening}
 								pending={live.isPending || stop.isPending}
+								analysisDisabled={usedUp}
 								onPresent={(hours) => {
 									// The room screen opens in the click, or it is blocked.
 									open();
-									if (!isLive && !booking) live.mutate({ hours });
+									if (isLive || booking) return;
+									if (usedUp) wall.open();
+									else goLive({ hours });
 								}}
-								onGoLive={(hours) => live.mutate({ hours })}
-								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
+								onGoLive={(hours) => goLive({ hours })}
+								onReadyBy={(hours, readyBy) => goLive({ hours, readyBy })}
 								onStop={() => stop.mutate()}
 							/>
 						) : (
@@ -762,6 +778,26 @@ function Session({
 						)}
 					</Group>
 				</Group>
+				{canEdit && (
+					<PopcornFreeNotice
+						status={presentation.free_popcorn}
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+					/>
+				)}
+				{canEdit && (
+					<UpgradeModal
+						opened={wallOpened}
+						onClose={wall.close}
+						currentTier="free"
+						requiredTier={null}
+						canRequestUpgrade
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+						wallKey="popcorn_cap"
+						entry="modal_direct"
+					/>
+				)}
 				{/* Read where Show them was pressed. */}
 				{canEdit && (
 					<ErrorNotice

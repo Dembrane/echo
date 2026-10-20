@@ -1,3 +1,4 @@
+import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { readApiError } from "./errors/read";
 
 // Detects the shared free-tier 402 contract raised by the backend
@@ -13,7 +14,9 @@ export type FreeTierLimit =
 	| "organisations"
 	| "audio_month"
 	| "audio_conversation"
-	| "recording_project";
+	| "recording_project"
+	| "map"
+	| "popcorn";
 
 /** The limits that stop a recording or an upload. */
 export type RecordingRefusal =
@@ -31,6 +34,8 @@ const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
 	"audio_month",
 	"audio_conversation",
 	"recording_project",
+	"map",
+	"popcorn",
 ]);
 
 const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
@@ -39,10 +44,22 @@ const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
 	"recording_project",
 ]);
 
-// Mirror of the backend limits in dembrane/free_tier.py. Kept in sync by hand;
-// the backend remains the source of truth and enforces these via 402.
-export const FREE_TIER_MAX_CHATS = 1;
-export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+/** A chat's turn meter: a frozen chat (opened before the free limits) takes no more turns. */
+export function chatTurnGate(
+	t: { limit: number; used: number; frozen: boolean } | null | undefined,
+): { atLimit: boolean; frozen: boolean } {
+	if (!t) return { atLimit: false, frozen: false };
+	return { atLimit: t.frozen || t.used >= t.limit, frozen: t.frozen };
+}
+
+/** True when a free account has used this month's meter up. */
+export function allowanceSpent(
+	s: FreeAllowance | undefined,
+	key: "chats" | "reports" | "maps" | "popcorn_analyses",
+): boolean {
+	const meter = s?.free ? s[key] : null;
+	return !!meter && meter.used >= meter.limit;
+}
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
 

@@ -1,8 +1,10 @@
 import { Writable } from "node:stream";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { Access, MemoryAccessStore } from "@dembrane/access";
+import { freeLimitError } from "@dembrane/allowance";
 import { createLogger, type Logger } from "@dembrane/observability";
 import type { ChatDeps } from "../src/deps";
+import type { Admitted, FreeChats, FreeTurns, UserTurn } from "../src/free";
 
 const usage = {
   inputTokens: { total: 3, noCache: 3, cacheRead: 0, cacheWrite: 0 },
@@ -62,6 +64,42 @@ export const quietLogger: Logger = createLogger(
   new Writable({ write: (_c, _e, cb) => cb() }),
 );
 
+/** A FreeChats over a fake store: admits by storing, undoes by deleting, records undo calls. */
+export function fakeFreeChats(
+  store: Record<string, unknown> | undefined,
+  opts: { refuse?: "chats" | "chat_turns"; turns?: FreeTurns | null } = {},
+): FreeChats & { undone: [UserTurn, Admitted][] } {
+  const s = store as {
+    createMessage?: (v: Record<string, unknown>) => Promise<unknown>;
+    deleteMessage?: (id: string) => Promise<unknown>;
+  };
+  const undone: [UserTurn, Admitted][] = [];
+  return {
+    undone,
+    async canStartChat() {
+      if (opts.refuse === "chats") throw freeLimitError("chats");
+    },
+    async admitTurn(turn) {
+      if (opts.refuse) throw freeLimitError(opts.refuse);
+      await s.createMessage?.({
+        id: turn.messageId,
+        chatId: turn.chatId,
+        from: "user",
+        text: turn.text,
+        now: turn.now,
+      });
+      return { account: null, claimed: false };
+    },
+    async undoTurn(turn, admitted) {
+      undone.push([turn, admitted]);
+      await s.deleteMessage?.(turn.messageId);
+    },
+    async turnStatus() {
+      return opts.turns ?? null;
+    },
+  };
+}
+
 /** ChatDeps over hand-written store and reads: only the methods a test touches need to exist. */
 export function fakeDeps(parts: {
   store?: Record<string, unknown>;
@@ -69,11 +107,13 @@ export function fakeDeps(parts: {
   model?: LanguageModelV4;
   models?: Record<string, LanguageModelV4>;
   captured?: unknown[][];
+  freeChats?: FreeChats;
 }): ChatDeps {
   let n = 0;
   return {
     store: parts.store as never,
     reads: parts.reads as never,
+    freeChats: parts.freeChats ?? fakeFreeChats(parts.store),
     access: hostAccess(),
     models: {
       model: (g: string) => (parts.models?.[g] ?? parts.model ?? fakeModel({})) as never,

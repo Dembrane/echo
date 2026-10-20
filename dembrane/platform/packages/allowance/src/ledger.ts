@@ -9,7 +9,7 @@ export const USAGE_KEYS = [
   "chats",
   "reports",
   "maps",
-  "popcorn_sessions",
+  "popcorn_analyses",
 ] as const;
 export type UsageKey = (typeof USAGE_KEYS)[number];
 

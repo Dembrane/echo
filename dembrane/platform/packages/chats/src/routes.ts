@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import * as bff from "./bff";
 import { chatReads } from "./conversations";
 import type { ChatDeps } from "./deps";
+import { freeChats } from "./free";
 import { reply } from "./reply";
 import * as chats from "./service";
 import { chatsStorage } from "./storage";
@@ -34,6 +35,7 @@ export function chatDeps(deps: ChatRoutesDeps): ChatDeps {
     store: chatsStorage(deps.db),
     reads: chatReads(deps.db),
     access: deps.access,
+    freeChats: freeChats(deps.db),
     models: deps.models,
     limiter: deps.limiter,
     capture: deps.capture,

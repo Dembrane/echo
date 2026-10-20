@@ -30,7 +30,7 @@ const MONTHLY_METERS: MeterKey[] = [
 	"chats",
 	"reports",
 	"maps",
-	"popcorn_sessions",
+	"popcorn_analyses",
 ];
 
 const labelOf = (key: MeterKey): string => {
@@ -43,8 +43,8 @@ const labelOf = (key: MeterKey): string => {
 			return t`Reports`;
 		case "maps":
 			return t`Maps`;
-		case "popcorn_sessions":
-			return t`Popcorn sessions`;
+		case "popcorn_analyses":
+			return t`Popcorn analyses`;
 		case "projects":
 			return t`Projects`;
 	}

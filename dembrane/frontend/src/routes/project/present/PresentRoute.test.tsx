@@ -60,6 +60,24 @@ vi.mock("@/components/popcorn/PopcornScreenSettings", () => ({
 vi.mock("@/components/popcorn/PopcornShare", () => ({
 	PopcornShare: () => <div>Sharing settings</div>,
 }));
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({
+		opened,
+		wallKey,
+		currentTier,
+	}: {
+		opened: boolean;
+		wallKey: string;
+		currentTier: string;
+	}) =>
+		opened ? (
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-tier={currentTier}
+			/>
+		) : null,
+}));
 const saveSettings = vi.fn();
 const goLive = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
@@ -141,6 +159,66 @@ function show(entry = "/projects/empty/present") {
 		</I18nProvider>,
 	);
 }
+describe("A free host with this month's analyses used up", () => {
+	const usedUp = {
+		...presentation,
+		free_popcorn: { exhausted: true, limit: 12, used: 12 },
+	};
+	const serve = (p: Record<string, unknown>) =>
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: false, presentation: p, revision: 0 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: p };
+		});
+	it("still opens the screen, and shows the wall instead of going live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		serve(usedUp);
+		show();
+		expect(await screen.findByTestId("popcorn-free-notice")).toBeTruthy();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledWith(
+			"/present/screen/empty-screen",
+			"_blank",
+			"noopener",
+		);
+		expect(goLive).not.toHaveBeenCalled();
+		const modal = screen.getAllByTestId("upgrade-modal");
+		expect(modal).toHaveLength(1);
+		expect(modal[0].dataset.wall).toBe("popcorn_cap");
+		expect(modal[0].dataset.tier).toBe("free");
+	});
+	it("opens the screen with no wall while already live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		serve({ ...usedUp, loop: { mode: "live" } });
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledTimes(1);
+		expect(goLive).not.toHaveBeenCalled();
+		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	});
+	it("opens the wall when going live is refused for popcorn", async () => {
+		vi.spyOn(window, "open").mockReturnValue(null);
+		goLive.mockImplementation(
+			(_vars: unknown, opts?: { onError?: (e: unknown) => void }) =>
+				opts?.onError?.({
+					body: {
+						action: "upgrade",
+						code: "billing.tier_limit",
+						params: { cap: 12, limit: "popcorn", used: 12 },
+					},
+					status: 402,
+				}),
+		);
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(goLive).toHaveBeenCalledTimes(1);
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("popcorn_cap");
+		expect(modal.dataset.tier).toBe("free");
+		goLive.mockReset();
+	});
+});
 describe("Preparing the room before recordings", () => {
 	it("creates a presentation without starting analysis, then opens the full editor", async () => {
 		vi.mocked(bff.get).mockImplementation(async (url) => {
@@ -181,7 +259,10 @@ describe("Preparing the room before recordings", () => {
 			"_blank",
 			"noopener",
 		);
-		expect(goLive).toHaveBeenCalledExactlyOnceWith({ hours: 8 });
+		expect(goLive).toHaveBeenCalledExactlyOnceWith(
+			{ hours: 8 },
+			expect.anything(),
+		);
 	});
 	it("only opens the screen when popcorn is already live", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);

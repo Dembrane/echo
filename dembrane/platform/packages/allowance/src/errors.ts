@@ -22,3 +22,9 @@ export function freeLimitError(
     details: { ...params, error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" },
   });
 }
+
+export function isFreeLimit(err: unknown, limit?: FreeLimitName): boolean {
+  if (!(err instanceof PaymentRequiredError)) return false;
+  const d = err.details as { error?: unknown; limit?: unknown } | undefined;
+  return d?.error === "FREE_TIER_LIMIT" && (limit === undefined || d.limit === limit);
+}

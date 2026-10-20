@@ -4,6 +4,7 @@ import type { Models } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import type { ChatReads } from "./conversations";
+import type { FreeChats } from "./free";
 import type { ChatsStorage } from "./storage";
 
 /** What the chat services use; built once by the routes, faked in tests. */
@@ -11,6 +12,7 @@ export interface ChatDeps {
   readonly store: ChatsStorage;
   readonly reads: ChatReads;
   readonly access: Access;
+  readonly freeChats: FreeChats;
   /** Language models by group; tests pass fakes. */
   readonly models: Pick<Models, "model">;
   readonly limiter: Pick<RateLimiter, "check">;

@@ -17,6 +17,7 @@ import {
 } from "./access";
 import { roomFiles, sampleBundle } from "./bundle";
 import { updateStream } from "./events";
+import { popcornAllowance, withFreePopcorn } from "./free";
 import { dict, type Json, orStr, parseDt, truthy } from "./py";
 import {
   bundleForReport,
@@ -134,7 +135,16 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     if (!loop) throw new NotFoundError("popcorn.loop_not_found");
     return loop;
   };
-  const payload = (report: Row) => popcornPayload(d.store, report);
+  const payload = async (report: Row) =>
+    withFreePopcorn(
+      d.db,
+      await popcornPayload(d.store, report),
+      String(report.project_id),
+      d.now(),
+    );
+  // A free account with its month's analyses used up may not start another.
+  const requireRoom = (report: Row) =>
+    popcornAllowance(d.db).requireRoom(String(report.project_id), d.now());
 
   app.get(base, async (c) => {
     gate();
@@ -250,6 +260,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const id = c.req.param("popcorn_id");
     const { report } = await popcornReport(ad, who, id, "project:update");
     const loop = await loopOf(report);
+    await requireRoom(report);
     await rateLimit(d, id);
     // Handed to a worker: a manual pass reads every conversation and must not hold the request.
     await dispatchNow(d, String(loop.id), "manual");
@@ -262,6 +273,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const id = c.req.param("popcorn_id");
     const { report } = await popcornReport(ad, who, id, "project:update");
     const loop = await loopOf(report);
+    await requireRoom(report);
     await rateLimit(d, id, "rerun");
     await requestRerun(d, loop);
     forgetBundle(String(report.id));
@@ -277,6 +289,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const readyBy = body.data.ready_by === null ? null : requestTime(body.data.ready_by);
     try {
       if (body.data.ready_by !== null && !readyBy) throw new InvalidReadyBy("unreadable ready_by");
+      await requireRoom(report);
       await goLive(d, loop, body.data.hours, readyBy);
     } catch (err) {
       if (err instanceof InvalidHours)
@@ -307,8 +320,10 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
       throw new NotFoundError("popcorn.loop_action_not_found");
     const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"), "project:update");
     const loop = await loopOf(report);
-    if (action === "go-live" || action === "resume") await goLive(d, loop, 8);
-    else await stopLive(d, loop);
+    if (action === "go-live" || action === "resume") {
+      await requireRoom(report);
+      await goLive(d, loop, 8);
+    } else await stopLive(d, loop);
     return c.json(await payload(report));
   });
 
@@ -317,7 +332,9 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const who = requireUser(c);
     const { body } = await p.validate(c.req, { body: loopSettingsBody });
     const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"), "project:update");
-    await goLive(d, await loopOf(report), hoursUntil(body.data.expires_at, d.now()));
+    const loop = await loopOf(report);
+    await requireRoom(report);
+    await goLive(d, loop, hoursUntil(body.data.expires_at, d.now()));
     return c.json(await payload(report));
   });
 

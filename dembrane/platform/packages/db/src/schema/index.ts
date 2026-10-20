@@ -153,6 +153,7 @@ export const agent_loop_run = pgTable(
   {
     detail: text(),
     finished_at: timestamp({ withTimezone: true, mode: "string" }),
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
     generation_id: uuid(),
     id: uuid().primaryKey().notNull(),
     loop_id: uuid(),
@@ -2506,6 +2507,8 @@ export const project_report = pgTable(
     user_created: uuid(),
     kind: varchar({ length: 255 }).default("report").notNull(),
     public_token: varchar({ length: 255 }).default(sql`NULL`),
+    /** The free period whose report this report took; null when it took none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2765,6 +2768,8 @@ export const project_chat = pgTable(
     user_created: uuid(),
     user_updated: uuid(),
     is_private: boolean().default(false),
+    /** The free period whose chat slot this chat claimed; null when it claimed none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.project_id.asc().nullsLast()),

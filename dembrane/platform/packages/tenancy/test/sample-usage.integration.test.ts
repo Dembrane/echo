@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { invalidateFreeLimits } from "@dembrane/allowance";
 import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
 import { countsByWorkspace, liveProjectsIn } from "../src/storage/orgs";
 import { projectListPage } from "../src/storage/projects";
-import { countLiveProjects, deleteSampleProjects, workspaceProjects } from "../src/storage/usage";
+import { countLiveProjects, deleteSampleProjects } from "../src/storage/usage";
 import { cardUsage, freeTierBlock } from "../src/usage";
 
 // A workspace's sample copy (project.is_sample) is listed with its projects, but its
@@ -31,6 +32,7 @@ run("workspace usage and a sample project", () => {
     await a.end();
     const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
+    invalidateFreeLimits();
     database = createDb({ url, poolMax: 3 });
     sql = connect(url, { max: 2, onnotice: () => {} });
 
@@ -69,13 +71,14 @@ run("workspace usage and a sample project", () => {
     });
   });
 
-  test("the free allowance has its chat and its report still to spend", async () => {
-    const ids = (await workspaceProjects(database.db, WS)).map((p) => p.id);
-    expect(ids).toEqual([OWN]);
-    expect(await freeTierBlock(database.db, "free", ids)).toMatchObject({
+  test("the free block reads the allowance", async () => {
+    expect(await freeTierBlock(database.db, WS, new Date())).toEqual({
+      active: true,
       chats_used: 0,
+      chats_limit: 2,
       primary_chat_id: null,
       reports_used: 0,
+      reports_limit: 1,
       primary_report_id: null,
     });
   });

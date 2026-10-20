@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import {
 	cancelScheduledReport,
 	checkReportNeedsUpdate,
@@ -72,6 +73,7 @@ export const useCreateProjectReportMutation = () => {
 	return useMutation({
 		mutationFn: createProjectReport,
 		onSuccess: (_, vars) => {
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});

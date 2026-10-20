@@ -690,6 +690,12 @@ run("a staff demo where the deployment is production", () => {
     expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 0 });
     // The free plan's one report is still there for the prospect's own project.
     expect(await report(ownProject)).toBe(202);
+    // A draft still generating is a 409; once it is done the month's report is spent.
+    expect(await report(ownProject)).toBe(409);
+    await db
+      .update(schema.project_report)
+      .set({ status: "archived" })
+      .where(eq(schema.project_report.project_id, ownProject));
     expect(await report(ownProject)).toBe(402);
     expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 1 });
   });

@@ -21,19 +21,23 @@ import {
 	InfoIcon,
 	PencilSimpleIcon,
 } from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
+import { useProjectById } from "@/components/project/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import {
+	invalidateFreeAllowance,
+	useFreeAllowance,
+} from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import { allowanceSpent, isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
@@ -81,16 +85,21 @@ export const UpdateReportModalButton = ({
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
-	// Free tier: one report per workspace. Gate the "New Report" action on click.
+	// Free tier: this month's reports. Gate the "New Report" action on click.
 	const { workspace } = useWorkspace();
-	const { freeTier } = useWorkspaceUsage(workspace?.id);
-	const atReportLimit = Boolean(
-		freeTier?.active && freeTier.reports_used >= freeTier.reports_limit,
-	);
-	// This component only mounts when a report already exists. On the free tier
-	// (limit = 1), the user is always at the limit here even if the usage query
-	// hasn't refreshed yet.
-	const effectivelyAtLimit = atReportLimit || Boolean(freeTier?.active);
+	const queryClient = useQueryClient();
+	// Sample projects are exempt; until is_sample loads nothing is walled and the server's 402 decides.
+	const sampleQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: { fields: ["id", "is_sample"] },
+	});
+	const allowanceApplies =
+		sampleQuery.isSuccess &&
+		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
+			?.is_sample !== true;
+	const freeAllowance = useFreeAllowance(workspace?.id);
+	const effectivelyAtLimit =
+		allowanceApplies && allowanceSpent(freeAllowance.data, "reports");
 	const { data: currentReport } = useProjectReport(
 		projectId ?? "",
 		currentReportId,
@@ -116,10 +125,7 @@ export const UpdateReportModalButton = ({
 	const is402ReportError = isFreeTierLimitError(error) === "report";
 
 	const handleOpen = () => {
-		// At the free-tier limit, route straight to the upgrade path instead of
-		// opening the create flow (which would just 402 on submit).
-		// This component only renders when a report exists, so on the free tier
-		// (limit = 1) the user is always at the limit.
+		// At the free-tier limit, route straight to the upgrade path.
 		if (effectivelyAtLimit) {
 			upgradeHandlers.open();
 			return;
@@ -145,6 +151,10 @@ export const UpdateReportModalButton = ({
 				userInstructions: userInstructions || undefined,
 			},
 			{
+				onError: (err) => {
+					if (isFreeTierLimitError(err) === "report")
+						void invalidateFreeAllowance(queryClient);
+				},
 				onSuccess: () => close(),
 			},
 		);
@@ -158,7 +168,7 @@ export const UpdateReportModalButton = ({
 						needsUpdate
 							? t`New conversations added since this report`
 							: effectivelyAtLimit
-								? t`Free plan allows 1 report per workspace`
+								? t`The free plan includes one report a month.`
 								: t`Generate a new report`
 					}
 				>
@@ -181,7 +191,7 @@ export const UpdateReportModalButton = ({
 					</Indicator>
 				</Tooltip>
 				{effectivelyAtLimit && (
-					<Tooltip label={t`Free plan allows 1 report per workspace`}>
+					<Tooltip label={t`The free plan includes one report a month.`}>
 						<InfoIcon
 							size={16}
 							style={{
@@ -221,9 +231,7 @@ export const UpdateReportModalButton = ({
 					>
 						<Stack gap="sm" align="flex-start">
 							<Text size="sm">
-								<Trans>
-									Your free plan includes one report. Upgrade to create more.
-								</Trans>
+								<Trans>The free plan includes one report a month.</Trans>
 							</Text>
 							<Button
 								size="xs"
@@ -398,13 +406,12 @@ export const UpdateReportModalButton = ({
 			<UpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
-				currentTier={(workspace?.tier ?? "free") as Tier}
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade={
-					workspace?.role === "admin" || workspace?.role === "owner"
-				}
+				currentTier="free"
+				requiredTier={null}
+				canRequestUpgrade
 				workspaceId={workspace?.id ?? ""}
 				wallKey="report_cap"
+				entry="modal_direct"
 			/>
 		</>
 	);

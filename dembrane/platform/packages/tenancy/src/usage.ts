@@ -1,13 +1,8 @@
+import { allowanceSnapshot } from "@dembrane/allowance";
+import type { Db } from "@dembrane/db";
 import type { Conn } from "./db";
 import { pyRound } from "./numbers";
-import {
-  cardAggregates,
-  countReports,
-  countUsedChats,
-  oldestLiveChat,
-  oldestReport,
-  workspaceProjects,
-} from "./storage/usage";
+import { cardAggregates, workspaceProjects } from "./storage/usage";
 import { capacityOf, nextTier, usageGates } from "./tiers";
 
 /** First instant of the calendar month `offset` months before the one holding `now`, UTC. */
@@ -83,29 +78,19 @@ export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   return out;
 }
 
-export const FREE_TIER_MAX_CHATS = 1;
-export const FREE_TIER_MAX_REPORTS = 1;
 export const FREE_TIER_MAX_WORKSPACES = 1;
 
-/** The free tier block the frontend gates on; counted live so a deleted chat frees its slot at once. */
-export async function freeTierBlock(db: Conn, tier: string | null, projectIds: readonly string[]) {
-  const active = tier === "free";
-  const [chats, primaryChat, reports, primaryReport] = active
-    ? await Promise.all([
-        countUsedChats(db, projectIds),
-        oldestLiveChat(db, projectIds),
-        countReports(db, projectIds),
-        oldestReport(db, projectIds),
-      ])
-    : [0, null, 0, null];
+/** The free tier block the frontend gates on, read from the account's monthly allowance. */
+export async function freeTierBlock(db: Db, workspaceId: string, now: Date) {
+  const s = await allowanceSnapshot(db, workspaceId, now);
   return {
-    active,
-    chats_used: chats,
-    chats_limit: FREE_TIER_MAX_CHATS,
-    primary_chat_id: primaryChat,
-    reports_used: reports,
-    reports_limit: FREE_TIER_MAX_REPORTS,
-    primary_report_id: primaryReport,
+    active: s.free,
+    chats_used: s.chats?.used ?? 0,
+    chats_limit: s.chats?.limit ?? 0,
+    primary_chat_id: null,
+    reports_used: s.reports?.used ?? 0,
+    reports_limit: s.reports?.limit ?? 0,
+    primary_report_id: null,
   };
 }
 

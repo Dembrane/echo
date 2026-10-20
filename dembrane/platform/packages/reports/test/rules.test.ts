@@ -8,6 +8,7 @@ import {
   ReportGenerationError,
 } from "../src/generation";
 import { pyRepr } from "../src/jinja";
+import { type GenerateDeps, markError } from "../src/jobs";
 import { renderPrompt } from "../src/prompts";
 import { cleanGeneratedTitle, projectContext, selectTagIds } from "../src/summarize";
 import recorded from "./recorded/prompts.json";
@@ -162,5 +163,39 @@ describe("summaries", () => {
       "project context: name: P\ncontext: C",
     );
     expect(projectContext({})).toBeNull();
+  });
+});
+
+describe("a failed report", () => {
+  const payload = { projectId: "p", reportId: 7, language: "en", userInstructions: "" };
+  const fake = (refundFreeReport: (id: number) => Promise<unknown>) => {
+    const logged: unknown[] = [];
+    const updates: unknown[] = [];
+    const d = {
+      store: {
+        updateReport: async (_id: number, v: unknown) => updates.push(v),
+        sql: async () => [],
+      },
+      logger: { error: (o: unknown) => logged.push(o), warn: () => {}, info: () => {} },
+      now: () => new Date("2026-10-20T10:00:00Z"),
+      refundFreeReport,
+    } as unknown as GenerateDeps;
+    return { d, logged, updates };
+  };
+
+  test("markError asks for a refund", async () => {
+    const ids: number[] = [];
+    const { d, updates } = fake(async (id) => ids.push(id));
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(ids).toEqual([7]);
+    expect(updates).toMatchObject([{ status: "error", error_code: "GENERATION_FAILED" }]);
+  });
+
+  test("a refund that throws is logged, not rethrown", async () => {
+    const { d, logged } = fake(async () => {
+      throw new Error("db down");
+    });
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(logged).toHaveLength(1);
   });
 });

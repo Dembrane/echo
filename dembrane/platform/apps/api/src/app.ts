@@ -322,10 +322,15 @@ export function buildApp(deps: Deps) {
   });
   const hub = () => sharedHub(sql, deps.logger);
   app.route("/", popcornRoutes({ ...popcorn, access: deps.access, hub, capture }));
-  const map = analysisMapStore(analysis, new MapStore(sql), {
-    nodeLimit: deps.config.analysis.nodeLimitCeiling ?? null,
-    edgeLimit: deps.config.analysis.edgeLimitCeiling ?? null,
-  });
+  const map = analysisMapStore(
+    analysis,
+    new MapStore(sql),
+    {
+      nodeLimit: deps.config.analysis.nodeLimitCeiling ?? null,
+      edgeLimit: deps.config.analysis.edgeLimitCeiling ?? null,
+    },
+    deps.db,
+  );
   const presentDeps = { ...popcorn, access: deps.access, hub, map };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));

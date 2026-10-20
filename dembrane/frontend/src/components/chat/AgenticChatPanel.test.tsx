@@ -38,6 +38,7 @@ const RUN_ID = "run-1";
 // vi.mock factories are hoisted above every top-level binding, so the state
 // they close over has to be hoisted with them.
 const {
+	appendAgenticRunMessageMock,
 	createAgenticRunMock,
 	runState,
 	stopAgenticRunMock,
@@ -45,6 +46,7 @@ const {
 	transcribeMock,
 	usageState,
 } = vi.hoisted(() => ({
+	appendAgenticRunMessageMock: vi.fn(),
 	createAgenticRunMock: vi.fn(),
 	runState: { events: [], status: "running" } as {
 		events: AgenticRunEvent[];
@@ -75,7 +77,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@/lib/api")>();
 	return {
 		...actual,
-		appendAgenticRunMessage: vi.fn(),
+		appendAgenticRunMessage: appendAgenticRunMessageMock,
 		createAgentInsight: vi.fn(),
 		createAgenticRun: createAgenticRunMock,
 		dismissAgentInsight: vi.fn(),
@@ -180,6 +182,19 @@ vi.mock("@/hooks/useWorkspaceUsage", async (importOriginal) => {
 });
 
 // Children that carry their own data layer and nothing to do with run state.
+vi.mock("./FreeTierChatGate", async (importOriginal) => ({
+	...(await importOriginal<typeof import("./FreeTierChatGate")>()),
+	ChatUpgradeModal: ({
+		opened,
+		reason,
+	}: {
+		opened: boolean;
+		reason: string;
+	}) =>
+		opened ? (
+			<div data-testid="chat-upgrade-modal" data-reason={reason} />
+		) : null,
+}));
 vi.mock("./ChatAccordion", () => ({ ChatAccordionItemMenu: () => null }));
 vi.mock("./ChatTemplatesMenuConnected", () => ({
 	ChatTemplatesMenuConnected: () => null,
@@ -652,6 +667,93 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(alert.textContent).toContain("blocking the microphone");
 		// A denial leaves the composer exactly as it was.
 		expect(screen.getByTestId("chat-input-textarea")).toBeTruthy();
+	});
+});
+
+describe("AgenticChatPanel, free turn limit", () => {
+	const TURN_CARD = "You've reached the free plan limit for this chat.";
+
+	const tree = (chatId: string) => (
+		<MemoryRouter>
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<QueryClientProvider
+						client={
+							new QueryClient({
+								defaultOptions: { queries: { retry: false } },
+							})
+						}
+					>
+						<AgenticChatPanel chatId={chatId} projectId="project-1" />
+					</QueryClientProvider>
+				</MantineProvider>
+			</I18nProvider>
+		</MemoryRouter>
+	);
+
+	it("forgets a refused turn when the chat changes", async () => {
+		runState.events = FINISHED_TURN;
+		runState.status = "completed";
+		appendAgenticRunMessageMock.mockRejectedValueOnce({
+			response: {
+				data: { detail: { error: "FREE_TIER_LIMIT", limit: "chat_turns" } },
+				status: 402,
+			},
+		});
+		const { rerender } = render(tree("chat-1"));
+
+		await screen.findByText("three themes came up.");
+		const input = await screen.findByTestId("chat-input-textarea");
+		fireEvent.change(input, { target: { value: "one more?" } });
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-send-button"));
+		});
+		await waitFor(() =>
+			expect(appendAgenticRunMessageMock).toHaveBeenCalledTimes(1),
+		);
+		await waitFor(() => expect(document.body.textContent).toContain(TURN_CARD));
+
+		rerender(tree("chat-2"));
+		await waitFor(() =>
+			expect(document.body.textContent).not.toContain(TURN_CARD),
+		);
+	});
+
+	it("shows the monthly chat limit, not an error, when the month's chats are used", async () => {
+		runState.events = FINISHED_TURN;
+		runState.status = "completed";
+		appendAgenticRunMessageMock.mockRejectedValueOnce({
+			response: {
+				data: {
+					detail: {
+						cap: 2,
+						error: "FREE_TIER_LIMIT",
+						limit: "chats",
+						used: 2,
+					},
+				},
+				status: 402,
+			},
+		});
+		render(tree("chat-1"));
+
+		await screen.findByText("three themes came up.");
+		const input = await screen.findByTestId("chat-input-textarea");
+		fireEvent.change(input, { target: { value: "one more?" } });
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-send-button"));
+		});
+		await waitFor(() =>
+			expect(document.body.textContent).toContain(
+				"You have used this month's free chats.",
+			),
+		);
+		expect(
+			screen.getByTestId("chat-upgrade-modal").getAttribute("data-reason"),
+		).toBe("chats");
+		expect(document.body.textContent).not.toContain(TURN_CARD);
+		expect(screen.queryByTestId("chat-error-alert")).toBeNull();
+		expect(document.body.textContent).not.toContain("[object Object]");
 	});
 });
 

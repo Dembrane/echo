@@ -7,12 +7,10 @@ export type FreeLimitKey =
 	| "audio_seconds_conversation"
 	| "projects"
 	| "chats_month"
-	| "chat_turns_first"
-	| "chat_turns_second"
+	| "chat_turns_per_chat"
 	| "reports_month"
 	| "maps_month"
-	| "popcorn_sessions_month"
-	| "popcorn_window_minutes"
+	| "popcorn_analyses_month"
 	| "popcorn_cadence_minutes";
 
 export interface FreeLimit {

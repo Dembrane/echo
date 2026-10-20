@@ -113,7 +113,13 @@ run("a group landing on the room's map", () => {
     expect(text.decode((await reader.read()).value)).toContain("event: connected");
 
     const outcome = await runGroup(
-      { store, rt, completer, onGroupChanged: popcornProjectNudge(database.db, logger) },
+      {
+        store,
+        rt,
+        db: database.db,
+        completer,
+        onGroupChanged: popcornProjectNudge(database.db, logger),
+      },
       { groupId, attempt: Number(row.attempt) },
     );
     expect(outcome).toBe("ready");

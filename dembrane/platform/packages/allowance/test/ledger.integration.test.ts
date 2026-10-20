@@ -10,7 +10,7 @@ const run = admin ? describe : describe.skip;
 const dbName = `allowance_ledger_${process.pid}`;
 const OCT = new Date("2026-10-01T00:00:00Z");
 const NOV = new Date("2026-11-01T00:00:00Z");
-const ZERO = { audio_seconds: 0, chats: 0, reports: 0, maps: 0, popcorn_sessions: 0 };
+const ZERO = { audio_seconds: 0, chats: 0, reports: 0, maps: 0, popcorn_analyses: 0 };
 
 run("allowance ledger", () => {
   setDefaultTimeout(60_000);
@@ -89,10 +89,10 @@ run("allowance ledger", () => {
 
   test("usedThisPeriod ignores keys that are not usage keys", async () => {
     const a = account();
-    await add(db, a, "popcorn_sessions", 1);
+    await add(db, a, "popcorn_analyses", 1);
     await sql`insert into free_usage (billing_account_id, period_start, key, amount)
       values (${a.accountId}, ${a.periodStart}, 'notice:audio_out', 1)`;
-    expect(await usedThisPeriod(db, a)).toEqual({ ...ZERO, popcorn_sessions: 1 });
+    expect(await usedThisPeriod(db, a)).toEqual({ ...ZERO, popcorn_analyses: 1 });
   });
 
   test("giveBack never goes below zero", async () => {

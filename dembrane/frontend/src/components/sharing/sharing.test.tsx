@@ -379,3 +379,48 @@ describe("PresentButton", () => {
 		expect(onStop).toHaveBeenCalled();
 	});
 });
+
+describe("LiveButton with analysis disabled", () => {
+	const button = (props: Partial<Parameters<typeof LiveButton>[0]> = {}) =>
+		show(
+			<LiveButton
+				live={false}
+				pending={false}
+				analysisDisabled
+				onGoLive={vi.fn()}
+				onReadyBy={vi.fn()}
+				onStop={vi.fn()}
+				onAnalyseNow={vi.fn()}
+				{...props}
+			/>,
+		);
+	const disabled = (el: HTMLElement) =>
+		el.hasAttribute("disabled") || el.getAttribute("data-disabled") === "true";
+
+	it("cannot start an analysis before live", () => {
+		button();
+		expect(disabled(screen.getByRole("button", { name: "Analyse" }))).toBe(
+			true,
+		);
+		expect(
+			disabled(screen.getByRole("button", { name: "More ways to analyse" })),
+		).toBe(true);
+	});
+
+	it("still stops live, but cannot analyse now or stay live longer", async () => {
+		const onStop = vi.fn();
+		button({ live: true, onStop });
+		const stop = screen.getByRole("button", { name: "Stop live" });
+		expect(disabled(stop)).toBe(false);
+		fireEvent.click(stop);
+		expect(onStop).toHaveBeenCalledTimes(1);
+		fireEvent.click(
+			screen.getByRole("button", { name: "More ways to analyse" }),
+		);
+		expect(
+			disabled(await screen.findByRole("menuitem", { name: "Analyse now" })),
+		).toBe(true);
+		for (const name of ["1 hour", "8 hours", "24 hours"])
+			expect(disabled(screen.getByRole("menuitem", { name }))).toBe(true);
+	});
+});

@@ -1,4 +1,5 @@
 import { type AccessStore, resolveProject } from "@dembrane/access";
+import { isFreeLimit } from "@dembrane/allowance";
 import type { ExecutorDeps } from "@dembrane/analysis";
 import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
@@ -6,6 +7,7 @@ import type postgres from "postgres";
 import { buildBundle } from "../bundle";
 import { applyPublishedObjects, type DeckAnalysis } from "../deck";
 import { publishNudge } from "../events";
+import type { PopcornAllowance } from "../free";
 import {
   asIdTruthy,
   dict,
@@ -38,7 +40,7 @@ import {
   voiceHostNote,
 } from "../settings";
 import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import { FINISH_TICK, type PopcornStore, type Row, START_TICK } from "../storage";
+import { FINISH_TICK, type PopcornStore, popcornStore, type Row, START_TICK } from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -139,6 +141,8 @@ export interface TickDeps {
   readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<void>) | null;
   /** Tells the project's people that the read of a booked start is ready to review. */
   readonly notifyReady?: ((o: { projectId: string; reportId: string }) => Promise<void>) | null;
+  /** The free tier's monthly analyses; null counts nothing. */
+  readonly free?: PopcornAllowance | null;
   readonly flags: PopcornFlags;
   readonly participantBaseUrl: string;
   readonly adminBaseUrl: string;
@@ -195,6 +199,8 @@ async function createRun(
     startedAt: Date;
     detail?: string | null;
     requestId?: string | null;
+    /** The period an analysis counted in; omitted keeps a retried row's stamp. */
+    freePeriodStart?: string;
   },
 ): Promise<Row> {
   const id = o.requestId || newId();
@@ -206,12 +212,21 @@ async function createRun(
     detail,
     startedAt: pyIso(o.startedAt),
     finishedAt: utcNowIso(d.now()),
+    ...(o.freePeriodStart !== undefined && { freePeriodStart: o.freePeriodStart }),
   };
   // An on-request tick's durable backup carries the same id; its retry replaces the
   // failed attempt instead of colliding with the row already written.
   const existing = o.requestId ? await d.ticks.run(id) : null;
   if (existing && asIdTruthy(existing.loop_id) === o.loopId) return d.ticks.replaceRun(payload);
   return d.ticks.insertRun(payload);
+}
+
+/** The run id of a counted analysis: the request's, or one fixed by the workflow's token. */
+export function attemptRunId(loopId: string, token: number, requestId: string | null): string {
+  if (requestId) return requestId;
+  const h = sha1Hex(`popcorn-run:${loopId}:${token}`);
+  const variant = ((Number.parseInt(h.charAt(16), 16) & 3) | 8).toString(16);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${variant}${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
 /** Serialise ticks per loop; an unreachable store is not a reason to stop the room. */
@@ -270,6 +285,53 @@ async function updateLoopAfterTick(d: TickDeps, loop: Row, status: string) {
   }
 }
 
+/** A counted analysis in progress; run readers skip it. */
+export const RUNNING = "running";
+
+/**
+ * Free analyses used up: back to manual as stopLive does, in one transaction. A start booked
+ * for later stays, with its start read, for a month that has analyses again.
+ */
+async function pauseUsedUp(d: TickDeps, loop: Row, at: Date): Promise<void> {
+  const loopId = String(loop.id);
+  const now = utcNowIso(d.now());
+  const booking = liveBooking(loop);
+  const later = booking !== null && (parseDt(booking.startsAt)?.getTime() ?? 0) > at.getTime();
+  await d.sql.begin(async (tx) => {
+    const store = popcornStore(tx);
+    await store.cancelPendingTicks(loopId, now, { withStart: !later, keepFinish: true });
+    await store.updateLoop(
+      loopId,
+      later
+        ? { status: "paused" }
+        : { status: "paused", expires_at: now, caps: withoutBooking(loop.caps) },
+      now,
+    );
+  });
+}
+
+/** A crashed attempt's analysis never finished: its count comes back and its row is closed. */
+async function settleInterrupted(d: TickDeps, loopId: string, attemptId: string, at: Date) {
+  if (!d.free) return;
+  try {
+    const prior = await d.ticks.run(attemptId);
+    if (!prior || asIdTruthy(prior.loop_id) !== loopId || prior.status !== RUNNING) return;
+    await d.free.refund(attemptId, d.now());
+    await createRun(d, {
+      loopId,
+      status: "error",
+      detail: "Interrupted",
+      startedAt: parseDt(prior.started_at) ?? at,
+      requestId: attemptId,
+    });
+  } catch (exc) {
+    d.logger.warn(
+      { err: errText(exc), loop_id: loopId },
+      "popcorn interrupted attempt not settled",
+    );
+  }
+}
+
 /** Whether the session is live at `at`: on, and its window not yet over. */
 function liveAt(loop: Row, at: Date): boolean {
   const expiresAt = parseDt(loop.expires_at);
@@ -299,8 +361,14 @@ export async function enqueueNextIfDue(d: TickDeps, loop: Row, when?: Date): Pro
     await d.store.updateLoop(loopId, { status: "paused" }, utcNowIso(now));
     return;
   }
+  let floor = MIN_CADENCE_MINUTES;
+  try {
+    floor = (await d.free?.cadenceFloorMinutes(String(fresh.project_id), now)) ?? floor;
+  } catch (exc) {
+    d.logger.warn({ err: errText(exc), loop_id: loopId }, "popcorn cadence floor unavailable");
+  }
   const cadence = Math.max(
-    MIN_CADENCE_MINUTES,
+    floor,
     truthy(fresh.cadence_minutes) ? Number(fresh.cadence_minutes) : DEFAULT_CADENCE_MINUTES,
   );
   let nextAt = when ?? new Date(now.getTime() + cadence * 60_000);
@@ -1110,6 +1178,9 @@ export async function runPopcornTick(
 ): Promise<TickOutcome> {
   const startedAt = d.now();
   const sleep = d.sleep ?? ((ms: number) => Bun.sleep(ms));
+  // Its run row, written when counted, so a re-run of a crashed attempt finds and refunds it.
+  const attemptId = attemptRunId(loopId, d.token, requestId);
+  await settleInterrupted(d, loopId, attemptId, startedAt);
   let loop = await d.store.loop(loopId);
   if (!loop || !isPopcornLoop(loop)) throw new Error("Popcorn loop not found");
 
@@ -1240,6 +1311,8 @@ export async function runPopcornTick(
     cacheVersion(promptText("collisions-batch"), promptText("tension-verify")),
     tickKind === "rerun",
   );
+  // The period this tick's analysis counted in, until it finishes or is given back.
+  let counted: string | null = null;
   try {
     if (!reportId || !projectId || !actingUser)
       throw new Error("Popcorn loop is missing required ids");
@@ -1444,6 +1517,34 @@ export async function runPopcornTick(
       return { status: "no_op", run };
     }
 
+    if (d.free) {
+      // A re-run of an attempt that counted gives that count back first.
+      const prior = await d.ticks.run(attemptId);
+      if (prior && asIdTruthy(prior.loop_id) === loopId) await d.free.refund(attemptId, d.now());
+      const admit = await d.free.admit(projectId, startedAt);
+      if (!admit.ok) {
+        await pauseUsedUp(d, currentLoop, startedAt);
+        const run = await createRun(d, {
+          loopId,
+          status: "no_op",
+          detail: "Free analyses used up",
+          startedAt,
+          requestId,
+        });
+        await nudgeLoop(d, currentLoop);
+        return { status: "no_op", run };
+      }
+      counted = admit.periodStart;
+      if (counted)
+        await createRun(d, {
+          loopId,
+          status: RUNNING,
+          startedAt,
+          requestId: attemptId,
+          freePeriodStart: counted,
+        });
+    }
+
     state.run = (truthy(state.run) ? Number(state.run) : 0) + 1;
     // A conversation being re-read shows as reading until its extractor lands.
     for (const t of extractionWork) (conversations[String(t.id)] as Json).done = false;
@@ -1471,7 +1572,9 @@ export async function runPopcornTick(
         await d.requestMap(projectId, actingUser || null);
       } catch (exc) {
         // The read goes on without a new map; the next change asks again.
-        d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
+        if (isFreeLimit(exc, "map"))
+          d.logger.debug({ project_id: projectId }, "map not requested: free map spent");
+        else d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
       } finally {
         state.map_fingerprint = analysisFingerprint;
       }
@@ -1583,7 +1686,16 @@ export async function runPopcornTick(
       ...outcomes,
     ].join("; ");
     await kept.save();
-    const run = await createRun(d, { loopId, status: "ok", detail, startedAt, requestId });
+    const run = await createRun(d, {
+      loopId,
+      status: "ok",
+      detail,
+      startedAt,
+      requestId: counted ? attemptId : requestId,
+      ...(counted ? { freePeriodStart: counted } : {}),
+    });
+    // A finished analysis stays counted whatever happens after.
+    counted = null;
     let snapshotted = false;
     try {
       await snapshotVersion(d, {
@@ -1614,10 +1726,27 @@ export async function runPopcornTick(
     await finish("ok");
     return { status: "ok", run, state };
   } catch (exc) {
-    // What the read already worked out is kept for the next one.
-    await kept.save();
     const detail = exc instanceof Error ? exc.message : String(exc);
-    const run = await createRun(d, { loopId, status: "error", detail, startedAt });
+    let run: Row;
+    try {
+      // What the read already worked out is kept for the next one.
+      await kept.save();
+      run = await createRun(d, {
+        loopId,
+        status: "error",
+        detail,
+        startedAt,
+        ...(counted ? { requestId: attemptId, freePeriodStart: counted } : {}),
+      });
+    } finally {
+      // A failed analysis gives its count back, whatever else failed with it.
+      if (counted && d.free)
+        try {
+          await d.free.refund(attemptId, d.now());
+        } catch (err) {
+          d.logger.warn({ err: errText(err), loop_id: loopId }, "popcorn free refund failed");
+        }
+    }
     await updateLoopAfterTick(d, currentLoop, "error");
     await enqueueNextIfDue(d, currentLoop);
     await nudgeLoop(d, currentLoop);
