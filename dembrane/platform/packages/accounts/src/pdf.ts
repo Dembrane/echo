@@ -66,6 +66,8 @@ export interface AuditRecord {
     effectiveOn: string | null;
     sha256: string;
   }[];
+  /** What happened to the document up to this signature, oldest first. */
+  readonly trail: readonly { at: string; what: string }[];
 }
 
 const A4: [number, number] = [595.28, 841.89];
@@ -625,6 +627,19 @@ function drawAudit(w: Writer, a: AuditRecord) {
     if (w.page === page) w.y = before;
     w.text(value, { size: 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
+  }
+  if (a.trail.length) {
+    w.space(10);
+    w.text("Audit trail (UTC)", { size: brand.type.print.lead, gap: 4 });
+    for (const t of a.trail) {
+      const before = w.y;
+      const page = w.page;
+      w.text(t.at, { size: 9, width: 150, color: MUTED });
+      const after = w.y;
+      if (w.page === page) w.y = before;
+      w.text(t.what, { size: 9, x: MARGIN + 160 });
+      w.y = Math.min(after, w.y) - 3;
+    }
   }
   w.space(10);
   w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });

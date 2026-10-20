@@ -852,4 +852,45 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(requestedFor(org)).toHaveLength(1);
     expect(await cardWaits(org)).toEqual([]);
   });
+
+  test("with the customer's own processing terms the offer is all they sign: no DPA, no who-signs question, and the invoice waits for the billing details only", async () => {
+    const org = await freshOrg("Gemeente Eigen BV");
+    const own = "'GIBIT 2025 standaard' voor verwerking";
+    const doc = await draft(org, {
+      reference: "OFFER-OWN",
+      external_ref: null,
+      processing_terms: own,
+    });
+    expect(doc.content?.processing_terms).toBe(own);
+    // A change that leaves the line out keeps it; null drops it.
+    const S1 = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", S1, "staff", offer({ reference: "OFFER-OWN", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.processing_terms).toBe(own);
+    expect(kept.body).toContain(own);
+    await send(doc.id, org);
+    const docs = await store.documents(w.db, org);
+    expect(docs.filter((d) => d.kind === "dpa")).toHaveLength(0);
+    const codes = (await store.tasks(w.db, org)).map((t) => t.code);
+    expect(codes).toContain("sign_offer");
+    expect(codes).not.toContain("who_signs");
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["billing_details"] }]);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+
+    const other = await freshOrg("Gemeente Zonder BV");
+    const dropped = await draft(other, { reference: "OFFER-OWN2", processing_terms: own });
+    const cleared = K.DocumentDetail.parse(
+      (
+        await call(w, "PUT", `${S(other)}/offers/${dropped.id}`, "staff", {
+          ...offer({ reference: "OFFER-OWN2" }),
+          processing_terms: null,
+        })
+      ).data,
+    );
+    expect(cleared.content?.processing_terms).toBeUndefined();
+  });
 });

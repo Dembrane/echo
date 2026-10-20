@@ -54,6 +54,8 @@ export const DealStage = z.enum([
 export const Language = z.enum(["en", "nl"]);
 /** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
 export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
+/** What a subscription offer's quantity counts: seats (default) or months of a flat price. */
+export const BillingUnit = z.enum(["seat", "month"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -210,10 +212,14 @@ export const OfferContent = z.object({
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
   vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Subscription offers: what the quantity counts. Absent means seats. */
+  billing_unit: BillingUnit.optional(),
   /** Custom offers: numbered terms that take precedence over the standard documents. */
   amendments: z.array(OfferAmendment).optional(),
   /** True when the DPA is its own document; absent on offers made before that. */
   dpa_separate: z.boolean().optional(),
+  /** The customer's own terms for data processing, named in place of our DPA. */
+  processing_terms: z.string().optional(),
 });
 
 export const LegalPin = z.object({
@@ -463,6 +469,8 @@ export const TimelineEvent = z.object({
   type: z.string(),
   actor: z.enum(["customer", "staff", "system"]),
   actor_user_id: Uuid.nullable(),
+  /** The staff member's display name, on staff rows of the staff card; null otherwise. */
+  actor_name: z.string().nullable(),
   subject_type: z.string().nullable(),
   subject_id: z.string().nullable(),
   detail: z.unknown().nullable(),
@@ -626,10 +634,23 @@ export const SigningRequests = z.array(
 export const AccountListQuery = z.object({
   /** A stage, or `none` for organisations that are not managed as accounts yet. */
   stage: nullish(z.enum(["prospect", "customer", "churned", "none"])),
+  /** Only accounts whose deal stands at this stage. */
+  deal_stage: nullish(DealStage),
   /** Part of the organisation's name or of a member's email address. */
   q: optText(200),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
+});
+
+/** When the deal reached each step of its stage, as the list and the card show them. */
+export const DealMilestones = z.object({
+  offer_drafted: IsoTime.nullable(),
+  offer_sent: IsoTime.nullable(),
+  signed: IsoTime.nullable(),
+  billing_details: IsoTime.nullable(),
+  /** Every other document that goes with the offer is signed, such as its separate DPA. */
+  documents_signed: IsoTime.nullable(),
+  invoice_sent: IsoTime.nullable(),
 });
 
 export const AccountListItem = z.object({
@@ -637,6 +658,7 @@ export const AccountListItem = z.object({
   name: z.string(),
   stage: AccountStage.nullable(),
   deal_stage: DealStage.nullable(),
+  milestones: DealMilestones,
   created_at: IsoTime.nullable(),
   /** Waiting on the customer. */
   open_tasks: z.number().int(),
@@ -677,6 +699,7 @@ export const AccountCard = z.object({
   organisation: OrganisationRef.extend({
     created_at: IsoTime.nullable(),
     deal_stage: DealStage.nullable(),
+    milestones: DealMilestones,
   }),
   account_manager: z
     .object({ id: Uuid, email: z.string().nullable(), name: z.string().nullable() })
@@ -771,6 +794,18 @@ export const PushOfferRequest = z.object({
    * the agreement, and takes precedence over them where they differ.
    */
   amendments: z.array(OfferAmendment).max(10).default([]),
+  /**
+   * The customer's own terms for data processing, in the offer's language, listed among the
+   * documents that form the agreement in place of our DPA ("'GIBIT 2025 standaard' voor
+   * verwerking ..."). The customer then signs the offer only: no DPA of its own is sent and
+   * nobody is asked who signs it. On a change, absent keeps the draft's line and null drops it.
+   */
+  processing_terms: z.string().trim().max(500).nullable().optional(),
+  /**
+   * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
+   * is seats; `month` prices per month and the quantity is months, with no mention of seats.
+   */
+  billing_unit: BillingUnit.optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
