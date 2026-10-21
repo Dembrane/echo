@@ -111,7 +111,7 @@ interface Conversation {
 	// Derived by the conversations BFF: a chunk has neither transcript nor error yet.
 	has_pending_chunks?: boolean;
 	// Derived by the conversations BFF. lock_reason explains why `locked`;
-	// summary_locked marks a server-scrubbed summary (1-hour recording cap gate).
+	// summary_locked marks a server-scrubbed summary (legacy free hours cap; no longer set).
 	lock_reason?: "hours_cap" | null;
 	summary_locked?: boolean;
 }

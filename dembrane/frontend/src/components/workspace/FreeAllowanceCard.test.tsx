@@ -39,6 +39,7 @@ const NOT_FREE = {
 	projects: null,
 	reports: null,
 	resets_at: null,
+	scope: null,
 };
 
 const snapshot = (overrides: Record<string, unknown> = {}) => ({
@@ -51,6 +52,7 @@ const snapshot = (overrides: Record<string, unknown> = {}) => ({
 	projects: { limit: 1, used: 1 },
 	reports: { limit: 1, used: 0 },
 	resets_at: "2026-11-01T00:00:00Z",
+	scope: "organisation",
 	...overrides,
 });
 
@@ -196,6 +198,16 @@ it("says the allowance is shared across the organisation", async () => {
 	expect(
 		screen.getByText("Shared across all workspaces in this organisation"),
 	).toBeTruthy();
+});
+
+it("says a workspace on its own free account uses it alone", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot({ scope: "workspace" })));
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(screen.getByText("Used by this workspace only")).toBeTruthy();
+	expect(
+		screen.queryByText("Shared across all workspaces in this organisation"),
+	).toBeNull();
 });
 
 it("shows the reset moment in the viewer's local date and time", async () => {

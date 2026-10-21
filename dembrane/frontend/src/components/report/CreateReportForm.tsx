@@ -37,7 +37,11 @@ import {
 } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { allowanceSpent, isFreeTierLimitError } from "@/lib/freeTier";
+import {
+	allowanceSpent,
+	freeReportsLine,
+	isFreeTierLimitError,
+} from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
@@ -182,7 +186,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							{isSample ? (
 								<Trans>This sample project includes one report.</Trans>
 							) : (
-								<Trans>The free plan includes one report a month.</Trans>
+								freeReportsLine(freeAllowance.data)
 							)}
 						</Text>
 						<Button size="xs" onClick={upgradeHandlers.open}>

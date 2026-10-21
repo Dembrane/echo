@@ -85,4 +85,50 @@ run("the scheduled report runner", () => {
       status: "scheduled",
     });
   });
+
+  test("the scheduler flip leaves a report that is no longer scheduled", async () => {
+    const [r] =
+      await sql`insert into project_report (project_id, status, kind, content, date_created)
+      values (${PROJECT}, 'cancelled', 'report', '', now()) returning id::int`;
+    const store = reportsStorage(database.db);
+    expect(await store.flipScheduled(r?.id as number, new Date().toISOString())).toBe(false);
+    const [row] = await sql`select status from project_report where id = ${r?.id as number}`;
+    expect(row?.status).toBe("cancelled");
+    await sql`update project_report set status = 'scheduled' where id = ${r?.id as number}`;
+    expect(await store.flipScheduled(r?.id as number, new Date().toISOString())).toBe(true);
+  });
+
+  test("a report cancelled after it was read is not enqueued, and its task settles", async () => {
+    const [r] =
+      await sql`insert into project_report (project_id, status, kind, content, date_created)
+      values (${PROJECT}, 'cancelled', 'report', '', now()) returning id::int`;
+    const id = r?.id as number;
+    const task = "f6000000-0000-4000-8000-00000000bb09";
+    await sql`insert into scheduled_task (id, task_type, payload, scheduled_at, status, attempts, created_at, updated_at)
+      values (${task}, 'generate_report', ${{ report_id: id, project_id: PROJECT } as never}, now() - interval '1 minute', 'scheduled', 0, now(), now())`;
+    const store = reportsStorage(database.db);
+    // The read still sees it scheduled; the cancel commits before the flip.
+    const raced = {
+      ...store,
+      transaction: <T>(fn: (q: never) => Promise<T>) =>
+        store.transaction((tx) =>
+          fn({
+            ...tx,
+            report: async (rid: string) => ({ ...(await tx.report(rid)), status: "scheduled" }),
+          } as never),
+        ),
+    } as typeof store;
+    const enqueued: unknown[] = [];
+    expect(
+      await runScheduledReports({
+        store: raced,
+        jobs: { enqueue: async (_def, payload) => enqueued.push(payload) },
+      }),
+    ).toBe(1);
+    expect(enqueued).toEqual([]);
+    const [row] = await sql`select status from project_report where id = ${id}`;
+    expect(row?.status).toBe("cancelled");
+    const [t] = await sql`select status, error from scheduled_task where id = ${task}`;
+    expect(t).toEqual({ status: "completed", error: null });
+  });
 });

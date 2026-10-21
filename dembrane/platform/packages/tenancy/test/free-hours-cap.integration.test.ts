@@ -42,6 +42,7 @@ type OrgRow = {
   approaching_cap: boolean;
 };
 type OrgUsage = {
+  total_audio_hours: number;
   workspaces_at_cap: number;
   workspaces_approaching_cap: number;
   workspaces: OrgRow[];
@@ -209,6 +210,23 @@ run("free hours cap", () => {
     await setFreeLimit(database.db, "audio_seconds_month", 36000, null);
     u = await get<OrgUsage>(`/api/v2/orgs/${ORG}/usage`);
     expect(free(u)).toMatchObject({ hours_included: 10, hours_pct: 0.5, at_cap: false });
+  });
+
+  test("the org total counts a free account's ledger once", async () => {
+    const second = n("c1", 3);
+    await sql`insert into workspace (id, name, org_id, billing_account_id) values
+      (${second}, 'Free two', ${ORG}, ${FREE_BA})`;
+    try {
+      await audioUsed(15000);
+      const u = await get<OrgUsage>(`/api/v2/orgs/${ORG}/usage`);
+      // Both pooled rows show the account's 4.17 h; the total counts it once.
+      expect(u.workspaces.filter((w) => w.hours_counted === 4.17).length).toBe(2);
+      expect(u.total_audio_hours).toBe(4.17);
+      const past = await get<OrgUsage>(`/api/v2/orgs/${ORG}/usage?month_offset=1`);
+      expect(past.total_audio_hours).toBe(0);
+    } finally {
+      await sql`delete from workspace where id = ${second}`;
+    }
   });
 
   test("a past month shows no free cap: the ledger only holds the current period", async () => {

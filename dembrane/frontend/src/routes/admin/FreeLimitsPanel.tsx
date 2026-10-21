@@ -24,28 +24,44 @@ import {
 
 const MAX_STORED = 10_000_000;
 
-type Unit = "hours" | "minutes" | "count";
+// Audio is stored in seconds and edited in minutes; cadence is stored in minutes.
+type Unit = "audio" | "minutes" | "count";
 
 const unitOf = (key: FreeLimitKey): Unit =>
 	key.startsWith("audio_seconds_")
-		? "hours"
+		? "audio"
 		: key.startsWith("popcorn_") && key.endsWith("_minutes")
 			? "minutes"
 			: "count";
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 // Stored value (seconds or count) to the unit staff edit in.
 const toDisplay = (key: FreeLimitKey, stored: number): number =>
-	unitOf(key) === "hours" ? Math.round((stored / 3600) * 100) / 100 : stored;
+	unitOf(key) === "audio" ? round2(stored / 60) : stored;
 
 const toStored = (key: FreeLimitKey, display: number): number =>
-	unitOf(key) === "hours" ? Math.round(display * 3600) : Math.round(display);
+	unitOf(key) === "audio" ? Math.round(display * 60) : Math.round(display);
+
+// The largest display value whose stored value stays within MAX_STORED.
+const maxDisplay = (key: FreeLimitKey): number =>
+	unitOf(key) === "audio"
+		? Math.floor((MAX_STORED / 60) * 100) / 100
+		: MAX_STORED;
+
+const formatAudio = (seconds: number): string => {
+	const h = Math.floor(seconds / 3600);
+	const m = round2((seconds % 3600) / 60);
+	if (h && m) return t`${h} h ${m} min`;
+	if (h) return t`${h} h`;
+	return t`${m} min`;
+};
 
 const formatValue = (key: FreeLimitKey, stored: number): string => {
-	const n = toDisplay(key, stored);
 	const unit = unitOf(key);
-	if (unit === "hours") return t`${n} h`;
-	if (unit === "minutes") return t`${n} min`;
-	return String(n);
+	if (unit === "audio") return formatAudio(stored);
+	if (unit === "minutes") return t`${stored} min`;
+	return String(stored);
 };
 
 const labelOf = (key: FreeLimitKey): string => {
@@ -100,8 +116,11 @@ function FreeLimitRow({ limit }: { limit: FreeLimit }) {
 	const nextStored = Number.isFinite(draftNumber)
 		? toStored(limit.key, draftNumber)
 		: null;
+	// An unedited draft never saves, so a value off the display grid stays as stored.
 	const canSave =
 		nextStored !== null &&
+		draftNumber !== current &&
+		draftNumber <= maxDisplay(limit.key) &&
 		nextStored >= 0 &&
 		nextStored <= MAX_STORED &&
 		nextStored !== limit.value;
@@ -132,8 +151,8 @@ function FreeLimitRow({ limit }: { limit: FreeLimit }) {
 			<Table.Td>
 				{limit.updated_at ? (
 					<Stack gap={0}>
-						<Text size="xs" ff="monospace">
-							{limit.updated_by ?? ""}
+						<Text size="xs">
+							{limit.updated_by_name ?? limit.updated_by ?? ""}
 						</Text>
 						<Text size="xs" c="dimmed">
 							{formatWhen(limit.updated_at, i18n.locale)}
@@ -152,17 +171,17 @@ function FreeLimitRow({ limit }: { limit: FreeLimit }) {
 							size="xs"
 							w={110}
 							min={0}
-							max={unit === "hours" ? MAX_STORED / 3600 : MAX_STORED}
+							max={maxDisplay(limit.key)}
 							allowNegative={false}
-							allowDecimal={unit === "hours"}
-							decimalScale={unit === "hours" ? 2 : 0}
+							allowDecimal={unit === "audio"}
+							decimalScale={unit === "audio" ? 2 : 0}
 							value={draft}
 							onChange={setDraft}
 							aria-label={labelOf(limit.key)}
 							rightSection={
 								unit === "count" ? undefined : (
 									<Text size="xs" c="dimmed">
-										{unit === "hours" ? t`h` : t`min`}
+										{t`min`}
 									</Text>
 								)
 							}

@@ -31,6 +31,8 @@ export const useUpdateProjectReportMutation = () => {
 			payload: Partial<ProjectReport>;
 		}) => updateProjectReport(projectId, reportId, payload),
 		onSuccess: (_, vars) => {
+			// Cancel gives the free report back; rescheduling a cancelled one takes it.
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -98,6 +100,7 @@ export const useCancelScheduledReportMutation = () => {
 			reportId: number;
 		}) => cancelScheduledReport(projectId, reportId),
 		onSuccess: (_, vars) => {
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});

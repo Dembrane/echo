@@ -24,7 +24,6 @@ export type WallKey =
 	 * `surface="modal"`.
 	 */
 	| "billing_page"
-	| "audio_cap"
 	| "chat_cap"
 	| "chat_turn_cap"
 	| "chat_voice_cap"
@@ -73,7 +72,8 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
  * The feature is named here and nowhere else. The modal never names it,
  * because the popover named it one click earlier.
  *
- * Every line says "a paid plan". No line names a tier.
+ * Every line says "a paid plan". No line names a tier. Staff edit the free
+ * limits, so no line states one.
  *
  * An empty string means this wall has no popover line, so the blocked control
  * carries no popover and the modal opens directly:
@@ -85,22 +85,21 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
  */
 export function wallPopoverLine(wall: WallKey): string {
 	const lines: Record<WallKey, string> = {
-		audio_cap: t`The free plan includes 5 hours of recording a month.`,
 		billing_page: "",
 		// Both chat walls read the same line: it covers chats and turns.
-		chat_cap: t`The free plan includes two chats a month, with 20 questions each.`,
-		chat_turn_cap: t`The free plan includes two chats a month, with 20 questions each.`,
+		chat_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
+		chat_turn_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
 		chat_voice_cap: "",
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
 		free_allowance: "",
-		map_cap: t`The free plan includes one map a month.`,
+		map_cap: t`The free plan includes a monthly allowance of maps.`,
 		org_cap: t`The free plan includes one organisation.`,
-		popcorn_cap: t`The free plan includes 12 popcorn analyses a month.`,
+		popcorn_cap: t`The free plan includes a monthly allowance of popcorn analyses.`,
 		private_workspace: t`Private workspaces come with a paid plan.`,
-		project_cap: t`The free plan includes one project.`,
+		project_cap: t`The free plan includes a limited number of projects.`,
 		recording_project: t`On the free plan one project takes recordings.`,
-		report_cap: t`The free plan includes one report a month.`,
+		report_cap: t`The free plan includes a monthly allowance of reports.`,
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
 		upload_cap: t`Uploading recordings comes with a paid plan.`,
@@ -132,7 +131,6 @@ export function wallPopoverLine(wall: WallKey): string {
 export function wallActionLine(wall: WallKey | string | undefined): string {
 	if (!wall) return "";
 	const actions: Record<WallKey, string> = {
-		audio_cap: t`keep recording`,
 		billing_page: "",
 		chat_cap: t`ask more in chat`,
 		chat_turn_cap: t`ask more in chat`,

@@ -27,11 +27,12 @@ import {
   NotFoundError,
   newId,
 } from "@dembrane/core";
-import type { Db } from "@dembrane/db";
+import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
+import { inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { atRisk, billingRollup } from "./rollup";
 import { cancelPendingTasks, SUPPORT_TASKS, scheduleTask } from "./scheduled";
@@ -52,6 +53,33 @@ const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
 const MOLLIE_DASHBOARD_TEST = "https://www.mollie.com/dashboard/org_test/payments";
 const STAFF_EMAIL_DOMAIN = "@dembrane.com";
 const MAX_LIMIT = 10_000_000;
+
+// The free limit rows, each naming the staff user who last changed it.
+async function freeLimitView(db: Db) {
+  const rows = await freeLimitRows(db);
+  const ids = [...new Set(rows.flatMap((r) => (r.updated_by ? [r.updated_by] : [])))];
+  const users = ids.length
+    ? await db
+        .select({
+          id: schema.directus_users.id,
+          email: schema.directus_users.email,
+          first: schema.directus_users.first_name,
+          last: schema.directus_users.last_name,
+        })
+        .from(schema.directus_users)
+        .where(inArray(schema.directus_users.id, ids))
+    : [];
+  const names = new Map(
+    users.map((u) => {
+      const name = [u.first, u.last].filter(Boolean).join(" ");
+      return [u.id, name && u.email ? `${name} (${u.email})` : name || u.email || null];
+    }),
+  );
+  return rows.map((r) => ({
+    ...r,
+    updated_by_name: r.updated_by ? (names.get(r.updated_by) ?? null) : null,
+  }));
+}
 
 /**
  * The staff console (old admin.py and admin_managed.py). Every route needs a named
@@ -486,7 +514,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
   // ── Free tier limits ─────────────────────────────────────────────────
   app.get(`${A}/free-limits`, async (c) => {
     await staff(c, "staff:set_tier", "free_limit.read");
-    return c.json({ limits: await freeLimitRows(deps.db) });
+    return c.json({ limits: await freeLimitView(deps.db) });
   });
 
   app.put(`${A}/free-limits/:key`, async (c) => {
@@ -505,7 +533,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
       value,
     });
     await setFreeLimit(deps.db, key as LimitKey, value, who.directusUserId);
-    return c.json({ limits: await freeLimitRows(deps.db) });
+    return c.json({ limits: await freeLimitView(deps.db) });
   });
 
   // ── Support access ───────────────────────────────────────────────────

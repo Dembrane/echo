@@ -22,7 +22,7 @@ import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@d
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
-import { LIVE_SOURCE, meterLiveChunk } from "../free-audio";
+import { FREE_LIMIT_SKIPPED, LIVE_SOURCE, meterLiveChunk } from "../free-audio";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
@@ -280,7 +280,8 @@ export async function prepareChunk(d: PipelineDeps, chunkId: string): Promise<st
   const store = conversationStore(d.db);
   const chunk = await store.chunk(chunkId);
   if (!chunk) return existingPieces(d.db, chunkId);
-  if (!chunk.path) return [];
+  // Refused by the free limit: a re-run must not count or transcribe it.
+  if (!chunk.path || chunk.error === FREE_LIMIT_SKIPPED) return [];
   try {
     return await withStatus(
       d,

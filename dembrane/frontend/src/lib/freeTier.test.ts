@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { i18n } from "@lingui/core";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { ApiRequestError } from "./errors/read";
 import {
 	allowanceSpent,
 	chatTurnGate,
 	freeLimitDetails,
+	freeReportsLine,
 	isFreeTierLimitError,
 	portalRecordingRefusal,
 	recordingStopOf,
@@ -188,5 +190,35 @@ describe("allowanceSpent", () => {
 				"popcorn_analyses",
 			),
 		).toBe(true);
+	});
+});
+
+describe("freeReportsLine", () => {
+	beforeAll(() => {
+		i18n.load("en", {});
+		i18n.activate("en");
+	});
+	const snap = (limit: number) =>
+		({ free: true, reports: { limit, used: 0 } }) as unknown as FreeAllowance;
+
+	it("states the live limit", () => {
+		expect(freeReportsLine(snap(1))).toBe(
+			"The free plan includes 1 report a month.",
+		);
+		expect(freeReportsLine(snap(4))).toBe(
+			"The free plan includes 4 reports a month.",
+		);
+	});
+
+	it("states no number when staff set the limit to 0", () => {
+		expect(freeReportsLine(snap(0))).toBe(
+			"The free plan includes a monthly allowance of reports.",
+		);
+	});
+
+	it("states no number without a snapshot", () => {
+		expect(freeReportsLine(undefined)).toBe(
+			"The free plan includes a monthly allowance of reports.",
+		);
 	});
 });

@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
@@ -38,6 +38,7 @@ export function FreeAllowanceBanner({
 
 	if (!data || !allowanceSpent(data, feature)) return null;
 	const date = formatDate(data.resets_at, i18n.locale);
+	const limit = data[feature]?.limit ?? 1;
 
 	return (
 		<Alert variant="light" color="gray" {...testId("free-allowance-banner")}>
@@ -48,17 +49,24 @@ export function FreeAllowanceBanner({
 							You have used this month's free chats. They reset on {date}.
 						</Trans>
 					)}
-					{feature === "reports" && (
-						<Trans>
-							You have used this month's free report. It resets on {date}.
-						</Trans>
-					)}
-					{feature === "maps" && (
-						<Trans>
-							You have used this month's free map. Your current map stays here.
-							It resets on {date}.
-						</Trans>
-					)}
+					{feature === "reports" &&
+						limit <= 0 &&
+						t`You have used this month's free reports. They reset on ${date}.`}
+					{feature === "reports" &&
+						limit > 0 &&
+						plural(limit, {
+							one: `You have used this month's free report. It resets on ${date}.`,
+							other: `You have used this month's # free reports. They reset on ${date}.`,
+						})}
+					{feature === "maps" &&
+						limit <= 0 &&
+						t`You have used this month's free maps. Your current maps stay here. They reset on ${date}.`}
+					{feature === "maps" &&
+						limit > 0 &&
+						plural(limit, {
+							one: `You have used this month's free map. Your current map stays here. It resets on ${date}.`,
+							other: `You have used this month's # free maps. Your current maps stay here. They reset on ${date}.`,
+						})}
 				</Text>
 				<Group>
 					<Button

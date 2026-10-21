@@ -22,7 +22,7 @@ import { formatDurationFromSeconds } from "@/lib/time";
 
 type MeterKey = Exclude<
 	keyof FreeAllowance,
-	"free" | "period_start" | "resets_at"
+	"free" | "scope" | "period_start" | "resets_at"
 >;
 
 const MONTHLY_METERS: MeterKey[] = [
@@ -132,7 +132,11 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 						<Trans>Free plan allowance</Trans>
 					</Title>
 					<Text size="xs" c="dimmed">
-						<Trans>Shared across all workspaces in this organisation</Trans>
+						{data.scope === "workspace" ? (
+							<Trans>Used by this workspace only</Trans>
+						) : (
+							<Trans>Shared across all workspaces in this organisation</Trans>
+						)}
 					</Text>
 				</Stack>
 

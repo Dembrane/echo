@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { readApiError } from "./errors/read";
 
@@ -59,6 +60,17 @@ export function allowanceSpent(
 ): boolean {
 	const meter = s?.free ? s[key] : null;
 	return !!meter && meter.used >= meter.limit;
+}
+
+/** The monthly free report line, with the live limit when the snapshot has it. */
+export function freeReportsLine(s: FreeAllowance | undefined): string {
+	const limit = s?.free ? s.reports?.limit : undefined;
+	if (limit === undefined || limit <= 0)
+		return t`The free plan includes a monthly allowance of reports.`;
+	return plural(limit, {
+		one: "The free plan includes # report a month.",
+		other: "The free plan includes # reports a month.",
+	});
 }
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";

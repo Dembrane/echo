@@ -59,7 +59,7 @@ type Payload = Parsed<typeof generateReport>;
 
 /** Progress for the report page's stream, delivered on commit of nothing: a nudge, best effort. */
 async function progress(
-  d: GenerateDeps,
+  d: Pick<GenerateDeps, "store" | "logger">,
   reportId: number,
   type: string,
   message: string,
@@ -102,15 +102,16 @@ function analytics(d: GenerateDeps, event: string, props: Record<string, unknown
   d.logger.info({ signal: "analytics", event, ...props }, "analytics event");
 }
 
-export async function markError(d: GenerateDeps, p: Payload, code: string, message: string) {
-  const now = d.now().toISOString();
+/** Ends the run's report in error; false when another run had already saved it. */
+export async function markError(
+  d: GenerateDeps,
+  p: Payload,
+  code: string,
+  message: string,
+): Promise<boolean> {
   try {
-    await d.store.updateReport(p.reportId, {
-      status: "error",
-      error_code: code,
-      error_message: message,
-      date_updated: now,
-    });
+    // Never over a report another run saved.
+    if (!(await d.store.failRun(p.reportId, code, message, d.now().toISOString()))) return false;
   } catch (err) {
     d.logger.error({ err, reportId: p.reportId }, "failed to update report status to error");
   }
@@ -120,6 +121,38 @@ export async function markError(d: GenerateDeps, p: Payload, code: string, messa
     d.logger.error({ err, reportId: p.reportId }, "free report refund failed");
   }
   await progress(d, p.reportId, "failed", message);
+  return true;
+}
+
+/** The model could not write the report: error, tell its creator, record the phase. */
+export async function reportFailed(d: GenerateDeps, p: Payload, message: string, t1: number) {
+  if (await markError(d, p, "GENERATION_FAILED", message)) {
+    const { user, project } = await creator(d, p);
+    if (user)
+      await d.notifier.emit({
+        audienceUserId: user.id,
+        eventCode: "REPORT_FAILED",
+        title: "Report generation ran into a problem",
+        message: "Open the report to retry or check details.",
+        action: "NAVIGATE_REPORT",
+        refProjectId: p.projectId,
+        refReportId: String(p.reportId),
+        refWorkspaceId: (project?.workspace_id as string | null) ?? null,
+      });
+  }
+  analytics(d, "server_report_generation_failed", {
+    project_id: p.projectId,
+    report_id: p.reportId,
+    error_code: "GENERATION_FAILED",
+  });
+  await phaseEnded(
+    d,
+    p,
+    "task_create_report_continue",
+    "completed",
+    `for report ${p.reportId}`,
+    t1,
+  );
 }
 
 async function creator(d: GenerateDeps, p: Payload) {
@@ -149,15 +182,19 @@ export function generateReportWorkflow(d: GenerateDeps) {
       "guard",
       async () => {
         const report = await d.store.report(String(p.reportId));
-        if (!report || (report.status !== "draft" && report.status !== "scheduled")) {
+        // Conditional, so a report another run saved meanwhile is not re-entered.
+        const started =
+          report &&
+          (report.status === "draft" || report.status === "scheduled") &&
+          (await d.store.startRun(
+            p.reportId,
+            d.now().toISOString(),
+            Boolean(report.free_period_start),
+          ));
+        if (!started) {
           await phaseEnded(d, p, "task_create_report", "completed", `for report ${p.reportId}`, t0);
           return { go: false };
         }
-        if (report.status === "scheduled")
-          await d.store.updateReport(p.reportId, {
-            status: "draft",
-            date_updated: d.now().toISOString(),
-          });
         analytics(d, "server_report_generation_started", {
           project_id: p.projectId,
           report_id: p.reportId,
@@ -308,48 +345,14 @@ export function generateReportWorkflow(d: GenerateDeps) {
     }
 
     if (phase2.kind === "failed") {
-      await step("failed", async () => {
-        await markError(d, p, "GENERATION_FAILED", phase2.message);
-        const { user, project } = await creator(d, p);
-        if (user)
-          await d.notifier.emit({
-            audienceUserId: user.id,
-            eventCode: "REPORT_FAILED",
-            title: "Report generation ran into a problem",
-            message: "Open the report to retry or check details.",
-            action: "NAVIGATE_REPORT",
-            refProjectId: p.projectId,
-            refReportId: String(p.reportId),
-            refWorkspaceId: (project?.workspace_id as string | null) ?? null,
-          });
-        analytics(d, "server_report_generation_failed", {
-          project_id: p.projectId,
-          report_id: p.reportId,
-          error_code: "GENERATION_FAILED",
-        });
-        await phaseEnded(
-          d,
-          p,
-          "task_create_report_continue",
-          "completed",
-          `for report ${p.reportId}`,
-          t1,
-        );
-      });
+      await step("failed", () => reportFailed(d, p, phase2.message, t1));
       return;
     }
 
     const saved = await step("save", async () => {
-      const report = await d.store.report(String(p.reportId));
-      // A host may have cancelled or deleted the draft while the model worked.
-      if (report?.status !== "draft") return false;
-      const now = d.now().toISOString();
-      await d.store.updateReport(p.reportId, {
-        content: phase2.content,
-        status: "archived",
-        date_created: now,
-        date_updated: now,
-      });
+      // A host may have cancelled or deleted the draft, or the sweep ended it, while the model worked.
+      if (!(await d.store.archiveDraft(p.reportId, phase2.content, d.now().toISOString())))
+        return false;
       await progress(d, p.reportId, "completed", "Report ready");
       analytics(d, "server_report_generated", {
         project_id: p.projectId,
@@ -410,6 +413,35 @@ async function callModel(d: GenerateDeps, prompt: string): Promise<string> {
   throw modelFailure(last);
 }
 
+/** Past the generation workflow's deadline, plus a margin: its run can no longer be alive. */
+export const STUCK_REPORT_MS =
+  generateReport.expireInSeconds * 1000 * (generateReport.retryLimit + 1) + 30 * 60_000;
+
+/**
+ * A free draft whose run ended without markError (DBOS cancelled or timed it out) ends in
+ * error, gives its report back once, and no longer blocks a new report. Paid drafts are left.
+ */
+export async function failStuckReports(
+  d: Pick<GenerateDeps, "store" | "refundFreeReport" | "logger" | "now">,
+): Promise<number> {
+  const now = d.now();
+  const ids = await d.store.failStuckDrafts(
+    new Date(now.getTime() - STUCK_REPORT_MS).toISOString(),
+    now.toISOString(),
+    "GENERATION_DID_NOT_FINISH",
+    "Report generation did not finish",
+  );
+  for (const id of ids) {
+    try {
+      await d.refundFreeReport(id);
+    } catch (err) {
+      d.logger.error({ err, reportId: id }, "free report refund failed");
+    }
+    await progress(d, id, "failed", "Report generation did not finish");
+  }
+  return ids.length;
+}
+
 // ── the scheduled report runner ─────────────────────────────────────
 
 /** Every minute: fire the scheduled reports whose time came (generate_report rows). */
@@ -419,7 +451,7 @@ export const scheduledReports = defineJob("reports.scheduled", z.object({}), {
   expireInSeconds: 5 * 60,
 });
 
-/** Every five minutes: give every still-scheduled report the task row that fires it. */
+/** Every five minutes: give every still-scheduled report the task row that fires it, and end stuck drafts. */
 export const backfillScheduledReports = defineJob("reports.backfill-scheduled", z.object({}), {
   policy: "singleton",
   retryLimit: 0,
@@ -458,7 +490,7 @@ export async function runScheduledReports(d: {
       await d.store.transaction(async (tx) => {
         const report = await tx.report(String(reportId));
         if (!report || report.deleted_at || report.status !== "scheduled") return;
-        await tx.updateReport(Number(reportId), { status: "draft", date_updated: nowIso });
+        if (!(await tx.flipScheduled(Number(reportId), nowIso))) return;
         await d.jobs.enqueue(
           generateReport,
           {
@@ -530,6 +562,8 @@ export async function registerReportJobs(
   await queue.work(backfillScheduledReports, { concurrency: 1 }, async () => {
     const n = await backfillScheduled(d);
     if (n) d.logger.info({ backfilled: n }, "scheduled report tasks backfilled");
+    const stuck = await failStuckReports(d);
+    if (stuck) d.logger.warn({ stuck }, "stuck report drafts ended in error");
   });
   await queue.schedule(scheduledReports, "* * * * *", {});
   await queue.schedule(backfillScheduledReports, "*/5 * * * *", {});

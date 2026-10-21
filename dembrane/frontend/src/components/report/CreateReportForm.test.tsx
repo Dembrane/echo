@@ -225,3 +225,13 @@ it("names the sample's own report, not a month, when the server refuses it", asy
 	);
 	expect(document.body.textContent).not.toContain("one report a month");
 });
+
+it("states the live monthly report limit when the server refuses it", async () => {
+	fetchMock.mockResolvedValue(answer(snapshot({ limit: 3, used: 0 })));
+	mutation.error = reportLimit;
+	const client = renderForm();
+	await settled(client);
+	expect(document.body.textContent).toContain(
+		"The free plan includes 3 reports a month.",
+	);
+});

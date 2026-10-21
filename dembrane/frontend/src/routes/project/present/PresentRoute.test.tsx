@@ -79,7 +79,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		) : null,
 }));
 const mapNotice = vi.fn();
-vi.mock("./MapFreeNotice", () => ({
+vi.mock("./MapFreeNotice", async (importOriginal) => ({
+	...(await importOriginal<typeof import("./MapFreeNotice")>()),
 	MapFreeNotice: (props: { mapOn: boolean }) => {
 		mapNotice(props);
 		return props.mapOn ? <div data-testid="map-free-notice-slot" /> : null;
@@ -192,6 +193,29 @@ describe("The host's free map notice", () => {
 		);
 		for (const [props] of screenProps.mock.calls)
 			expect(JSON.stringify(props)).not.toContain("free map");
+	});
+	it("is on when only the draft has the map outcome", async () => {
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return {
+					has_changes: true,
+					presentation: {
+						...presentation,
+						settings: {
+							...presentation.settings,
+							presentation: {
+								...presentation.settings.presentation,
+								blocks: ["popcorn", "map"],
+							},
+						},
+					},
+					revision: 1,
+				};
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation };
+		});
+		show();
+		expect(await screen.findByTestId("map-free-notice-slot")).toBeTruthy();
 	});
 	it("is off without the map outcome", async () => {
 		show();

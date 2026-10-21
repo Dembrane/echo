@@ -8,7 +8,7 @@ import {
   ReportGenerationError,
 } from "../src/generation";
 import { pyRepr } from "../src/jinja";
-import { type GenerateDeps, markError } from "../src/jobs";
+import { type GenerateDeps, markError, reportFailed } from "../src/jobs";
 import { renderPrompt } from "../src/prompts";
 import { cleanGeneratedTitle, projectContext, selectTagIds } from "../src/summarize";
 import recorded from "./recorded/prompts.json";
@@ -168,12 +168,14 @@ describe("summaries", () => {
 
 describe("a failed report", () => {
   const payload = { projectId: "p", reportId: 7, language: "en", userInstructions: "" };
-  const fake = (refundFreeReport: (id: number) => Promise<unknown>) => {
+  const fake = (refundFreeReport: (id: number) => Promise<unknown>, status = "draft") => {
     const logged: unknown[] = [];
     const updates: unknown[] = [];
     const d = {
       store: {
         updateReport: async (_id: number, v: unknown) => updates.push(v),
+        failRun: async (_id: number, error_code: string) =>
+          status === "draft" && updates.push({ status: "error", error_code }) > 0,
         sql: async () => [],
       },
       logger: { error: (o: unknown) => logged.push(o), warn: () => {}, info: () => {} },
@@ -189,6 +191,35 @@ describe("a failed report", () => {
     await markError(d, payload, "GENERATION_FAILED", "x");
     expect(ids).toEqual([7]);
     expect(updates).toMatchObject([{ status: "error", error_code: "GENERATION_FAILED" }]);
+  });
+
+  test("markError on a report another run saved changes nothing", async () => {
+    const ids: number[] = [];
+    const { d, updates } = fake(async (id) => ids.push(id), "archived");
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(ids).toEqual([]);
+    expect(updates).toEqual([]);
+  });
+
+  test("REPORT_FAILED is sent only when the run ended the report in error", async () => {
+    for (const [status, sent] of [
+      ["draft", 1],
+      ["archived", 0],
+    ] as const) {
+      const { d } = fake(async () => {}, status);
+      const emitted: unknown[] = [];
+      const store = d.store as unknown as Record<string, unknown>;
+      store.report = async () => ({ user_created: "du" });
+      store.appUserByDirectusId = async () => ({ id: "u" });
+      store.project = async () => ({ workspace_id: "w" });
+      store.processingStatus = async () => {};
+      const deps = {
+        ...d,
+        notifier: { emit: async (e: unknown) => emitted.push(e) },
+      } as GenerateDeps;
+      await reportFailed(deps, payload, "boom", Date.now());
+      expect(emitted).toHaveLength(sent);
+    }
   });
 
   test("a refund that throws is logged, not rethrown", async () => {

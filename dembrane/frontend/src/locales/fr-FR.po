@@ -285,7 +285,7 @@ msgstr "{0, plural, one {# conversation sera masquée avec lui.} other {# conver
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:50
-#: src/components/workspace/OrganisationUsageRollup.tsx:814
+#: src/components/workspace/OrganisationUsageRollup.tsx:836
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
@@ -723,7 +723,7 @@ msgstr "{0} demande un accès MCP à dembrane"
 #. placeholder {2}: data.total_observer_count
 #. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
 #. placeholder {4}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/OrganisationUsageRollup.tsx:503
+#: src/components/workspace/OrganisationUsageRollup.tsx:525
 msgid "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
 msgstr "{0} espaces de travail · {1} places payantes · {2} observateurs gratuits · {3} en {4}"
 
@@ -875,6 +875,14 @@ msgstr "{empty, plural, one {# conversation n'a pas encore de transcription et a
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:56
+msgid "{h} h"
+msgstr "{h} h"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:55
+msgid "{h} h {m} min"
+msgstr "{h} h {m} min"
+
 #: src/components/conversation/ConversationLinks.tsx:166
 msgid "{hiddenCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{hiddenCount, plural, one {# conversation} other {# conversations}}"
@@ -895,19 +903,43 @@ msgstr "{invalidCount} adresses nécessitent votre attention"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} vous a invité à rejoindre {resolvedWorkspaceName}"
 
+#: src/lib/freeTier.ts:70
+msgid "{limit, plural, one {The free plan includes # report a month.} other {The free plan includes # reports a month.}}"
+msgstr "{limit, plural, one {Le forfait Free comprend # rapport par mois.} other {Le forfait Free comprend # rapports par mois.}}"
+
+#: src/routes/project/present/MapFreeNotice.tsx:64
+msgid "{limit, plural, one {You have used this month's free map. The map in this presentation keeps its current version until {date}.} other {You have used this month's # free maps. The map in this presentation keeps its current version until {date}.}}"
+msgstr "{limit, plural, one {Vous avez utilisé la carte gratuite de ce mois. La carte de cette présentation conserve sa version actuelle jusqu'au {date}.} other {Vous avez utilisé les # cartes gratuites de ce mois. La carte de cette présentation conserve sa version actuelle jusqu'au {date}.}}"
+
+#: src/routes/project/present/MapFreeNotice.tsx:68
+msgid "{limit, plural, one {You have used this month's free map. The map in this presentation keeps its current version.} other {You have used this month's # free maps. The map in this presentation keeps its current version.}}"
+msgstr "{limit, plural, one {Vous avez utilisé la carte gratuite de ce mois. La carte de cette présentation conserve sa version actuelle.} other {Vous avez utilisé les # cartes gratuites de ce mois. La carte de cette présentation conserve sa version actuelle.}}"
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:66
+msgid "{limit, plural, one {You have used this month's free map. Your current map stays here. It resets on {date}.} other {You have used this month's # free maps. Your current maps stay here. They reset on {date}.}}"
+msgstr "{limit, plural, one {Vous avez utilisé la carte gratuite de ce mois. Votre carte actuelle reste ici. Réinitialisation le {date}.} other {Vous avez utilisé les # cartes gratuites de ce mois. Vos cartes actuelles restent ici. Réinitialisation le {date}.}}"
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:57
+msgid "{limit, plural, one {You have used this month's free report. It resets on {date}.} other {You have used this month's # free reports. They reset on {date}.}}"
+msgstr "{limit, plural, one {Vous avez utilisé le rapport gratuit de ce mois. Réinitialisation le {date}.} other {Vous avez utilisé les # rapports gratuits de ce mois. Réinitialisation le {date}.}}"
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1263
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Supprimez le # projet de cet espace de travail avant de supprimer l'espace de travail lui-même.} other {Supprimez les # projets de cet espace de travail avant de supprimer l'espace de travail lui-même.}}"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:57
+msgid "{m} min"
+msgstr "{m} min"
+
 #: src/routes/admin/FreeLimitsPanel.tsx:46
-msgid "{n} h"
-msgstr "{n} h"
+#~ msgid "{n} h"
+#~ msgstr "{n} h"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:47
-msgid "{n} min"
-msgstr "{n} min"
+#~ msgid "{n} min"
+#~ msgstr "{n} min"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:911
+#: src/components/workspace/OrganisationUsageRollup.tsx:933
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
 msgstr "{name} a utilisé les heures d'enregistrement gratuites de ce mois-ci. L'enregistrement est suspendu jusqu'au renouvellement mensuel."
 
@@ -1009,6 +1041,10 @@ msgstr "{sent} invitations envoyées. Le projet sera partagé dès qu'elles rejo
 #: src/components/invite/InviteModal.tsx:467
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} invitations envoyées."
+
+#: src/routes/admin/FreeLimitsPanel.tsx:63
+msgid "{stored} min"
+msgstr "{stored} min"
 
 #: src/components/conversation/LiveFunnelSection.tsx:95
 msgid "{tag} (preselected)"
@@ -1264,8 +1300,8 @@ msgstr "Un projet réunit tout ce qui concerne un sujet. Partagez son lien avec 
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Une page publique nécessite une offre supérieure. Désactive Page publique dans Partager pour afficher les autres modifications."
 
-#: src/components/report/UpdateReportModalButton.tsx:257
-#: src/components/report/CreateReportForm.tsx:159
+#: src/components/report/UpdateReportModalButton.tsx:259
+#: src/components/report/CreateReportForm.tsx:163
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Un rapport est déjà en cours de génération pour ce projet. Veuillez attendre qu'il soit terminé."
 
@@ -1486,8 +1522,8 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1707
 #: src/routes/admin/AdminSettingsRoute.tsx:2025
-#: src/components/workspace/OrganisationUsageRollup.tsx:395
-#: src/components/workspace/OrganisationUsageRollup.tsx:537
+#: src/components/workspace/OrganisationUsageRollup.tsx:417
+#: src/components/workspace/OrganisationUsageRollup.tsx:559
 #: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
@@ -1552,7 +1588,7 @@ msgstr "Ajouter une note"
 msgid "Add a project goal before saving."
 msgstr "Ajoutez un objectif de projet avant d'enregistrer."
 
-#: src/components/workspace/gateWalls.ts:157
+#: src/components/workspace/gateWalls.ts:155
 msgid "add a workspace"
 msgstr "ajouter un espace de travail"
 
@@ -1560,7 +1596,7 @@ msgstr "ajouter un espace de travail"
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Ajouter un contexte supplémentaire (Optionnel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:288
+#: src/components/participant/ParticipantInitiateForm.tsx:292
 msgid "Add all that apply"
 msgstr "Ajouter tout ce qui s'applique"
 
@@ -1577,7 +1613,7 @@ msgstr "Ajoutez des étiquettes de conversation depuis le tableau de bord."
 msgid "select.all.modal.title.add"
 msgstr "Ajouter des conversations au contexte"
 
-#: src/components/report/CreateReportForm.tsx:346
+#: src/components/report/CreateReportForm.tsx:350
 msgid "Add conversations to your project first"
 msgstr "Ajoutez d'abord des conversations a votre projet"
 
@@ -1601,7 +1637,7 @@ msgstr "Ajouter des images"
 #~ msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 #~ msgstr "Ajoutez des termes clés ou des noms propres pour améliorer la qualité et la précision de la transcription."
 
-#: src/components/workspace/gateWalls.ts:147
+#: src/components/workspace/gateWalls.ts:145
 msgid "add more projects"
 msgstr "ajouter d'autres projets"
 
@@ -1707,7 +1743,7 @@ msgstr "Ajouter un webhook"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Ajouter votre premier webhook"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:138
 msgid "add your logo"
 msgstr "ajouter votre logo"
 
@@ -1905,7 +1941,7 @@ msgstr "Chat avec agent"
 #: src/routes/organisation/OrganisationRoute.tsx:888
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
-#: src/components/workspace/OrganisationUsageRollup.tsx:536
+#: src/components/workspace/OrganisationUsageRollup.tsx:558
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -1974,7 +2010,7 @@ msgstr "Toutes les places sont occupées sur ce forfait. Retirez un membre ou un
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "Toutes les places sont occupées. Libérez une place ou changez de forfait pour inviter plus de monde."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:316
+#: src/components/workspace/OrganisationUsageRollup.tsx:338
 msgid "All seats taken"
 msgstr "Toutes les places sont occupées"
 
@@ -1987,7 +2023,7 @@ msgstr "Tous les modèles"
 #~ msgstr "Tous les modèles"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2012
-#: src/components/workspace/OrganisationUsageRollup.tsx:524
+#: src/components/workspace/OrganisationUsageRollup.tsx:546
 msgid "All tiers"
 msgstr "Tous les forfaits"
 
@@ -2341,7 +2377,7 @@ msgstr "Appliquer"
 msgid "Applying a template shows a confirmation with Undo."
 msgstr "L'application d'un modèle affiche une confirmation avec l'option Annuler."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:325
+#: src/components/workspace/OrganisationUsageRollup.tsx:347
 msgid "Approaching a limit this month"
 msgstr "Limite bientôt atteinte ce mois-ci"
 
@@ -2544,8 +2580,8 @@ msgstr "Demander l'adresse e-mail des participants à la fin d'une conversation.
 #~ msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
 #~ msgstr "Demandez dans le chat lorsque vous souhaitez une vue en direct des conversations. Le premier canevas restera ici."
 
-#: src/components/workspace/gateWalls.ts:137
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:135
+#: src/components/workspace/gateWalls.ts:136
 msgid "ask more in chat"
 msgstr "en savoir plus dans le chat"
 
@@ -2640,11 +2676,11 @@ msgstr "Le téléchargement de l'audio n'est pas disponible pour les conversatio
 msgid "Audio is coming in"
 msgstr "Le son arrive"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:56
+#: src/routes/admin/FreeLimitsPanel.tsx:72
 msgid "Audio per conversation"
 msgstr "Audio par conversation"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:54
+#: src/routes/admin/FreeLimitsPanel.tsx:70
 msgid "Audio per month"
 msgstr "Audio par mois"
 
@@ -2904,8 +2940,8 @@ msgstr "Avant de connecter un agent"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:143
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:155
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:168
-#: src/components/report/UpdateReportModalButton.tsx:220
-#: src/components/report/CreateReportForm.tsx:248
+#: src/components/report/UpdateReportModalButton.tsx:224
+#: src/components/report/CreateReportForm.tsx:252
 #: src/components/project/ProjectPortalEditor.tsx:1380
 #: src/components/project/ProjectPortalEditor.tsx:1460
 #: src/components/project/ProjectExperimentalSection.tsx:50
@@ -2951,11 +2987,11 @@ msgstr "Facturé annuellement"
 msgid "Billed monthly"
 msgstr "Facturé mensuellement"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:344
+#: src/components/workspace/OrganisationUsageRollup.tsx:366
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Facturé selon son propre forfait, pas celui de votre organisation. Gérez-le depuis la facturation de cet espace de travail."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:347
+#: src/components/workspace/OrganisationUsageRollup.tsx:369
 msgid "Billed separately"
 msgstr "Facturé séparément"
 
@@ -3325,7 +3361,7 @@ msgstr "Modifier votre propre rôle ?"
 msgid "Change your password from settings without contacting support."
 msgstr "Modifiez votre mot de passe depuis les paramètres sans contacter l'assistance."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:223
+#: src/routes/admin/FreeLimitsPanel.tsx:242
 msgid "Changed by"
 msgstr "Modifié par"
 
@@ -3457,7 +3493,7 @@ msgstr "Discussions"
 msgid "project.sidebar.chat.title"
 msgstr "Discussions"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:60
+#: src/routes/admin/FreeLimitsPanel.tsx:76
 msgid "Chats per month"
 msgstr "Discussions par mois"
 
@@ -3686,7 +3722,7 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Cliquez pour voir les {totalCount} conversations"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2118
-#: src/components/workspace/OrganisationUsageRollup.tsx:597
+#: src/components/workspace/OrganisationUsageRollup.tsx:619
 msgid "Click to sort"
 msgstr "Cliquer pour trier"
 
@@ -3841,7 +3877,7 @@ msgstr "Colorer le graphe par valence"
 msgid "Color nodes by"
 msgstr "Colorer les nœuds par"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:547
+#: src/components/workspace/OrganisationUsageRollup.tsx:569
 msgid "Columns"
 msgstr "Colonnes"
 
@@ -4078,7 +4114,7 @@ msgid "participant.button.next"
 msgstr "Continuer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:324
+#: src/components/participant/ParticipantInitiateForm.tsx:329
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuer"
 
@@ -4167,7 +4203,7 @@ msgstr "Conversation démarrée"
 #~ msgid "Conversation Status"
 #~ msgstr "Statut de la conversation"
 
-#: src/components/report/CreateReportForm.tsx:225
+#: src/components/report/CreateReportForm.tsx:229
 msgid "Conversation status details"
 msgstr "Détails du statut de la conversation"
 
@@ -4200,7 +4236,7 @@ msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1648
-#: src/components/report/CreateReportForm.tsx:217
+#: src/components/report/CreateReportForm.tsx:221
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
 msgstr "conversations"
@@ -4416,7 +4452,7 @@ msgstr "Impossible de charger les paiements. Vérifiez l'authentification et les
 msgid "Could not load the canvas."
 msgstr "Impossible de charger le canevas."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:206
+#: src/routes/admin/FreeLimitsPanel.tsx:225
 msgid "Could not load the free plan limits."
 msgstr "Impossible de charger les limites du forfait Free."
 
@@ -4666,7 +4702,7 @@ msgstr "Créer un compte pour rejoindre"
 msgid "Create and manage multiple reports in one project."
 msgstr "Créez et gérez plusieurs rapports au sein d'un même projet."
 
-#: src/components/workspace/gateWalls.ts:149
+#: src/components/workspace/gateWalls.ts:147
 msgid "create another report"
 msgstr "créer un autre rapport"
 
@@ -4679,7 +4715,7 @@ msgstr "Créez des modèles de chat personnalisés (bêta) ou dupliquez et modif
 msgid "Create methodology"
 msgstr "Créer une méthodologie"
 
-#: src/components/workspace/gateWalls.ts:144
+#: src/components/workspace/gateWalls.ts:142
 msgid "create more organisations"
 msgstr "créer d'autres organisations"
 
@@ -4709,8 +4745,8 @@ msgstr "Créer un projet"
 msgid "Create project | dembrane"
 msgstr "Créer un projet | dembrane"
 
-#: src/components/report/UpdateReportModalButton.tsx:189
-#: src/components/report/UpdateReportModalButton.tsx:215
+#: src/components/report/UpdateReportModalButton.tsx:193
+#: src/components/report/UpdateReportModalButton.tsx:219
 msgid "Create report"
 msgstr "Créer un rapport"
 
@@ -4796,7 +4832,7 @@ msgstr "Recadrer le logo"
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Recadrez votre logo au format horizontal 3:1 (recommandé : 600×200 px)."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:217
+#: src/routes/admin/FreeLimitsPanel.tsx:236
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr "Actuel"
@@ -4977,7 +5013,7 @@ msgstr "Arguments dédupliqués"
 msgid "Deep Dive"
 msgstr "Deep Dive"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:220
+#: src/routes/admin/FreeLimitsPanel.tsx:239
 #: src/routes/admin/AdminSettingsRoute.tsx:3062
 #: src/routes/admin/AdminSettingsRoute.tsx:3078
 #: src/components/project/ProjectPortalEditor.tsx:826
@@ -5661,8 +5697,8 @@ msgstr "Modifier la méthodologie"
 msgid "Edit mode"
 msgstr "Mode édition"
 
-#: src/components/report/UpdateReportModalButton.tsx:304
-#: src/components/report/CreateReportForm.tsx:286
+#: src/components/report/UpdateReportModalButton.tsx:306
+#: src/components/report/CreateReportForm.tsx:290
 msgid "Edit options"
 msgstr "Modifier les options"
 
@@ -5992,8 +6028,8 @@ msgstr "Erreur"
 msgid "Error cloning project"
 msgstr "Erreur lors du clonage du projet"
 
-#: src/components/report/UpdateReportModalButton.tsx:252
-#: src/components/report/CreateReportForm.tsx:153
+#: src/components/report/UpdateReportModalButton.tsx:254
+#: src/components/report/CreateReportForm.tsx:157
 msgid "Error creating report"
 msgstr "Erreur lors de la création du rapport"
 
@@ -6659,8 +6695,8 @@ msgstr "Première page"
 msgid "Fixture"
 msgstr "Jeu d'essai"
 
-#: src/components/report/UpdateReportModalButton.tsx:278
-#: src/components/report/CreateReportForm.tsx:260
+#: src/components/report/UpdateReportModalButton.tsx:280
+#: src/components/report/CreateReportForm.tsx:264
 msgid "Focus"
 msgstr "Focus"
 
@@ -6824,7 +6860,7 @@ msgstr "Quota du forfait Free"
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Le forfait Free permet 1 espace de travail par organisation"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:192
+#: src/routes/admin/FreeLimitsPanel.tsx:211
 msgid "Free plan limits"
 msgstr "Limites du forfait Free"
 
@@ -6899,7 +6935,7 @@ msgstr "Répulsion générale : {0}"
 msgid "Generate"
 msgstr "Générer"
 
-#: src/components/report/UpdateReportModalButton.tsx:172
+#: src/components/report/UpdateReportModalButton.tsx:176
 msgid "Generate a new report"
 msgstr "Générer un nouveau rapport"
 
@@ -6915,7 +6951,7 @@ msgstr "Générer un nouveau rapport"
 msgid "Generate a summary first"
 msgstr "Générer un résumé d'abord"
 
-#: src/components/workspace/gateWalls.ts:143
+#: src/components/workspace/gateWalls.ts:141
 msgid "generate another map"
 msgstr "générer une autre carte"
 
@@ -6933,13 +6969,13 @@ msgid "Generate map"
 msgstr "Générer la carte"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:506
-#: src/components/report/UpdateReportModalButton.tsx:369
-#: src/components/report/CreateReportForm.tsx:357
+#: src/components/report/UpdateReportModalButton.tsx:371
+#: src/components/report/CreateReportForm.tsx:361
 msgid "Generate now"
 msgstr "Générer maintenant"
 
-#: src/components/report/UpdateReportModalButton.tsx:337
-#: src/components/report/CreateReportForm.tsx:322
+#: src/components/report/UpdateReportModalButton.tsx:339
+#: src/components/report/CreateReportForm.tsx:326
 msgid "Generate now instead"
 msgstr "Générer maintenant"
 
@@ -7050,7 +7086,7 @@ msgstr "Donnez un titre à la session"
 msgid "Go back"
 msgstr "Retour"
 
-#: src/components/workspace/gateWalls.ts:142
+#: src/components/workspace/gateWalls.ts:140
 msgid "go beyond this month's free allowance"
 msgstr "dépasser le quota gratuit de ce mois-ci"
 
@@ -7172,8 +7208,8 @@ msgid "Guided"
 msgstr "Guide"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:165
-msgid "h"
-msgstr "h"
+#~ msgid "h"
+#~ msgstr "h"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:226
 #: src/components/conversation/ProjectConversationsPanel.tsx:299
@@ -7185,7 +7221,7 @@ msgstr "A des artefacts vérifiés"
 msgid "Have you completed a training?"
 msgstr "Avez-vous suivi une formation ?"
 
-#: src/components/workspace/gateWalls.ts:153
+#: src/components/workspace/gateWalls.ts:151
 msgid "have your recordings transcribed"
 msgstr "faire transcrire vos enregistrements"
 
@@ -7262,7 +7298,7 @@ msgstr "Masquer les arguments manquants"
 msgid "Hide preview"
 msgstr "Masquer l'aperçu"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:293
+#: src/components/workspace/OrganisationUsageRollup.tsx:315
 msgid "Hide projects"
 msgstr "Masquer les projets"
 
@@ -7278,11 +7314,11 @@ msgstr "Masquer les étapes"
 msgid "Hide the changes"
 msgstr "Masquer les modifications"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:139
 msgid "hide the dembrane event invitation"
 msgstr "masquer l'invitation événement dembrane"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:94
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Masquer l'invitation événement dembrane fait partie d'un forfait payant."
 
@@ -7358,7 +7394,7 @@ msgstr "Les hôtes peuvent activer les réponses et personnaliser leur consigne 
 #: src/routes/admin/AdminSettingsRoute.tsx:1564
 #: src/routes/admin/AdminSettingsRoute.tsx:1677
 #: src/components/workspace/TierCapacityMatrix.tsx:110
-#: src/components/workspace/OrganisationUsageRollup.tsx:375
+#: src/components/workspace/OrganisationUsageRollup.tsx:397
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
 msgstr "Heures"
@@ -7560,8 +7596,8 @@ msgstr "Avec vos propres mots"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1715
 #: src/routes/admin/AdminSettingsRoute.tsx:2026
-#: src/components/workspace/OrganisationUsageRollup.tsx:399
-#: src/components/workspace/OrganisationUsageRollup.tsx:538
+#: src/components/workspace/OrganisationUsageRollup.tsx:421
+#: src/components/workspace/OrganisationUsageRollup.tsx:560
 msgid "Inactive"
 msgstr "Inactif"
 
@@ -7581,7 +7617,7 @@ msgstr "Inclure le lien du portail"
 msgid "Included hours used up"
 msgstr "Heures incluses épuisées"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:315
+#: src/components/workspace/OrganisationUsageRollup.tsx:337
 msgid "Included hours used up this month"
 msgstr "Heures incluses épuisées ce mois-ci"
 
@@ -7870,7 +7906,7 @@ msgstr "Il semble que la conversation a été supprimée pendant que vous enregi
 msgid "participant.outcome.error.description"
 msgstr "Nous n'avons pas pu charger ce résultat. Il peut s'agir d'un problème temporaire. Vous pouvez essayer de recharger ou revenir en arrière pour sélectionner un autre sujet."
 
-#: src/components/report/CreateReportForm.tsx:196
+#: src/components/report/CreateReportForm.tsx:200
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Il semble que vous n'ayez pas encore de rapport pour ce projet. Générez-en un pour obtenir un aperçu de vos conversations."
 
@@ -8082,7 +8118,7 @@ msgstr "Conserver {tier} jusqu'à une date"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Sécurisez l'accès avec un code à usage unique de votre application d'authentification. Activez ou désactivez l'authentification à deux facteurs pour ce compte."
 
-#: src/components/workspace/gateWalls.ts:145
+#: src/components/workspace/gateWalls.ts:143
 msgid "keep analysing with popcorn"
 msgstr "continuer d'analyser avec Popcorn"
 
@@ -8113,8 +8149,8 @@ msgstr "Laisser en attente"
 #~ msgstr "Gardez Popcorn à jour au fil des conversations. Vous pouvez lancer la diffusion avant le premier enregistrement."
 
 #: src/components/workspace/gateWalls.ts:135
-msgid "keep recording"
-msgstr "continuer à enregistrer"
+#~ msgid "keep recording"
+#~ msgstr "continuer à enregistrer"
 
 #: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
@@ -8168,10 +8204,10 @@ msgstr "Graphe de connaissances"
 #: src/routes/project/present/PresentRoute.tsx:136
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
-#: src/components/report/UpdateReportModalButton.tsx:273
-#: src/components/report/UpdateReportModalButton.tsx:347
-#: src/components/report/CreateReportForm.tsx:255
-#: src/components/report/CreateReportForm.tsx:331
+#: src/components/report/UpdateReportModalButton.tsx:275
+#: src/components/report/UpdateReportModalButton.tsx:349
+#: src/components/report/CreateReportForm.tsx:259
+#: src/components/report/CreateReportForm.tsx:335
 #: src/components/project/ProjectPortalEditor.tsx:603
 #: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
@@ -8361,11 +8397,11 @@ msgstr "Probablement faux"
 msgid "Likely true"
 msgstr "Probablement vrai"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:214
+#: src/routes/admin/FreeLimitsPanel.tsx:233
 msgid "Limit"
 msgstr "Limite"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:113
+#: src/routes/admin/FreeLimitsPanel.tsx:132
 msgid "Limit saved"
 msgstr "Limite enregistrée"
 
@@ -8760,7 +8796,7 @@ msgstr "boucle"
 msgid "Low battery"
 msgstr "Batterie faible"
 
-#: src/components/workspace/gateWalls.ts:146
+#: src/components/workspace/gateWalls.ts:144
 msgid "make a workspace private"
 msgstr "rendre un espace de travail privé"
 
@@ -8889,7 +8925,7 @@ msgstr "Les résultats de la carte ne sont pas encore prêts."
 msgid "Maps"
 msgstr "Cartes"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:66
+#: src/routes/admin/FreeLimitsPanel.tsx:82
 msgid "Maps per month"
 msgstr "Cartes par mois"
 
@@ -9068,7 +9104,7 @@ msgstr "Méthodologie mise à jour"
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "L'accès au microphone est toujours refusé. Veuillez vérifier vos paramètres et réessayer."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:165
+#: src/routes/admin/FreeLimitsPanel.tsx:184
 msgid "min"
 msgstr "min"
 
@@ -9344,7 +9380,7 @@ msgstr "Récits (anglais)"
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Besoin de plus d'accès ? Demandez à la personne qui vous a invité de vous ajouter à l'organisation ou à un autre espace de travail."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:962
+#: src/components/workspace/OrganisationUsageRollup.tsx:984
 msgid "Needs attention"
 msgstr "Nécessite une attention"
 
@@ -9380,7 +9416,7 @@ msgstr "Neutre"
 msgid "Never"
 msgstr "Jamais"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:144
+#: src/routes/admin/FreeLimitsPanel.tsx:163
 msgid "Never changed"
 msgstr "Jamais modifié"
 
@@ -9411,7 +9447,7 @@ msgstr "Nouveau nom de la conversation"
 #~ msgid "New Conversation Name"
 #~ msgstr "Nom de la nouvelle conversation"
 
-#: src/components/report/UpdateReportModalButton.tsx:169
+#: src/components/report/UpdateReportModalButton.tsx:173
 msgid "New conversations added since this report"
 msgstr "Nouvelles conversations ajoutees depuis ce rapport"
 
@@ -9469,7 +9505,7 @@ msgstr "Les nouveaux projets n'ajoutent plus dembrane comme terme de transcripti
 msgid "New tier"
 msgstr "Nouveau niveau"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:226
+#: src/routes/admin/FreeLimitsPanel.tsx:245
 msgid "New value"
 msgstr "Nouvelle valeur"
 
@@ -9637,7 +9673,7 @@ msgstr "Aucune conversation n'a été traitée. Cela peut se produire si toutes 
 msgid "No conversations yet."
 msgstr "Aucune conversation pour le moment."
 
-#: src/components/report/CreateReportForm.tsx:201
+#: src/components/report/CreateReportForm.tsx:205
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Pas encore de conversations. Vous pouvez planifier un rapport maintenant et les conversations seront incluses une fois ajoutees."
 
@@ -9834,7 +9870,7 @@ msgstr "Aucun popcorn pour l'instant. Ils apparaîtront après la première anal
 msgid "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 msgstr "Aucun résultat préparé pour l'instant. Ouvrez les Recettes pour préparer des résultats à partir des conversations éligibles de ce projet."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:799
+#: src/components/workspace/OrganisationUsageRollup.tsx:821
 msgid "No project activity this period."
 msgstr "Aucune activité de projet sur cette période."
 
@@ -10088,7 +10124,7 @@ msgstr "Absent de cette présentation."
 msgid "Not in this view"
 msgstr "Absent de cette vue"
 
-#: src/components/workspace/FreeAllowanceCard.tsx:161
+#: src/components/workspace/FreeAllowanceCard.tsx:165
 msgid "Not monthly"
 msgstr "Non mensuel"
 
@@ -10204,7 +10240,7 @@ msgstr "Rien n'est masqué dans cette présentation."
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr "Rien n'est envoyé tant que vous ne le validez pas. Vous pouvez tout modifier ci-dessous avant l'envoi."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:693
+#: src/components/workspace/OrganisationUsageRollup.tsx:715
 msgid "Nothing matches the filter."
 msgstr "Aucun résultat ne correspond au filtre."
 
@@ -10304,7 +10340,7 @@ msgstr "Facturation gérée par dembrane. Passer en libre-service conserve le ni
 msgid "On recording page"
 msgstr "Sur la page d'enregistrement"
 
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:101
 msgid "On the free plan one project takes recordings."
 msgstr "Avec le forfait Free, un seul projet permet d'enregistrer."
 
@@ -10746,7 +10782,7 @@ msgstr "Organisation introuvable"
 msgid "Organisation only"
 msgstr "Organisation uniquement"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:490
+#: src/components/workspace/OrganisationUsageRollup.tsx:512
 msgid "Organisation usage"
 msgstr "Utilisation de l'organisation"
 
@@ -11416,11 +11452,11 @@ msgstr "Popcorn également en"
 msgid "Popcorn analyses"
 msgstr "Analyses Popcorn"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:68
+#: src/routes/admin/FreeLimitsPanel.tsx:84
 msgid "Popcorn analyses per month"
 msgstr "Analyses Popcorn par mois"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:70
+#: src/routes/admin/FreeLimitsPanel.tsx:86
 msgid "Popcorn cadence floor"
 msgstr "Cadence minimale Popcorn"
 
@@ -11701,11 +11737,11 @@ msgid "Private project"
 msgstr "Projet privé"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1253
-#: src/components/workspace/OrganisationUsageRollup.tsx:330
+#: src/components/workspace/OrganisationUsageRollup.tsx:352
 msgid "Private workspace"
 msgstr "Espace de travail privé"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:99
 msgid "Private workspaces come with a paid plan."
 msgstr "Les espaces de travail privés sont inclus dans les forfaits payants."
 
@@ -11873,7 +11909,7 @@ msgstr "Total annuel estimé"
 msgid "projects"
 msgstr "projets"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:58
+#: src/routes/admin/FreeLimitsPanel.tsx:74
 #: src/components/workspace/UsageCard.tsx:255
 #: src/components/workspace/FreeAllowanceCard.tsx:49
 msgid "Projects"
@@ -12257,7 +12293,7 @@ msgstr "Enregistrer un message vocal"
 msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
-#: src/components/workspace/gateWalls.ts:148
+#: src/components/workspace/gateWalls.ts:146
 msgid "record in every project"
 msgstr "enregistrer dans chaque projet"
 
@@ -12656,8 +12692,8 @@ msgstr "rapport"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/report/UpdateReportModalButton.tsx:251
-#: src/components/report/CreateReportForm.tsx:153
+#: src/components/report/UpdateReportModalButton.tsx:253
+#: src/components/report/CreateReportForm.tsx:157
 msgid "Report already generating"
 msgstr "Rapport déjà en cours de génération"
 
@@ -12715,8 +12751,8 @@ msgstr "La génération de rapports, la retranscription, le clonage de projets e
 msgid "Report issues from the dashboard with images and voice recordings."
 msgstr "Signalez des problèmes depuis le tableau de bord avec des images et des enregistrements vocaux."
 
-#: src/components/report/UpdateReportModalButton.tsx:228
-#: src/components/report/CreateReportForm.tsx:179
+#: src/components/report/UpdateReportModalButton.tsx:232
+#: src/components/report/CreateReportForm.tsx:183
 msgid "Report limit reached"
 msgstr "Limite de rapports atteinte"
 
@@ -12744,8 +12780,8 @@ msgstr "Rapport programmé"
 msgid "Report subscriptions, Library generation and live indicators receive fixes."
 msgstr "Les abonnements aux rapports, la génération de la Bibliothèque et les indicateurs en direct reçoivent des correctifs."
 
-#: src/components/report/UpdateReportModalButton.tsx:385
-#: src/components/report/CreateReportForm.tsx:376
+#: src/components/report/UpdateReportModalButton.tsx:387
+#: src/components/report/CreateReportForm.tsx:380
 msgid "Report templates are on our roadmap."
 msgstr "Les modèles de rapport sont sur notre feuille de route."
 
@@ -12767,7 +12803,7 @@ msgstr "Rapport mis à jour · {0}"
 msgid "Reports"
 msgstr "Rapports"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:64
+#: src/routes/admin/FreeLimitsPanel.tsx:80
 msgid "Reports per month"
 msgstr "Rapports par mois"
 
@@ -12961,7 +12997,7 @@ msgid "Reset to default"
 msgstr "Réinitialiser aux paramètres par défaut"
 
 #. placeholder {0}: formatResets(data.resets_at, i18n.locale)
-#: src/components/workspace/FreeAllowanceCard.tsx:150
+#: src/components/workspace/FreeAllowanceCard.tsx:154
 msgid "Resets on {0}"
 msgstr "Réinitialisation le {0}"
 
@@ -13289,7 +13325,7 @@ msgid "Sample popcorn session"
 msgstr "Exemple de session Popcorn"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:261
-#: src/routes/admin/FreeLimitsPanel.tsx:176
+#: src/routes/admin/FreeLimitsPanel.tsx:195
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
 #: src/components/settings/LegalBasisCard.tsx:226
@@ -13416,15 +13452,15 @@ msgid "Scanned the QR"
 msgstr "A scanné le QR code"
 
 #: src/components/training/TrainingRowActions.tsx:152
-#: src/components/report/UpdateReportModalButton.tsx:376
-#: src/components/report/CreateReportForm.tsx:368
+#: src/components/report/UpdateReportModalButton.tsx:378
+#: src/components/report/CreateReportForm.tsx:372
 msgid "Schedule"
 msgstr "Planifier"
 
-#: src/components/report/UpdateReportModalButton.tsx:213
-#: src/components/report/UpdateReportModalButton.tsx:329
-#: src/components/report/CreateReportForm.tsx:245
-#: src/components/report/CreateReportForm.tsx:314
+#: src/components/report/UpdateReportModalButton.tsx:217
+#: src/components/report/UpdateReportModalButton.tsx:331
+#: src/components/report/CreateReportForm.tsx:249
+#: src/components/report/CreateReportForm.tsx:318
 msgid "Schedule report"
 msgstr "Programmer le rapport"
 
@@ -13594,7 +13630,7 @@ msgstr "Texte de recherche :"
 msgid "Search webhooks..."
 msgstr "Rechercher des webhooks..."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:514
+#: src/components/workspace/OrganisationUsageRollup.tsx:536
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Rechercher des espaces de travail"
@@ -13638,7 +13674,7 @@ msgstr "places"
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/TierCapacityMatrix.tsx:109
-#: src/components/workspace/OrganisationUsageRollup.tsx:387
+#: src/components/workspace/OrganisationUsageRollup.tsx:409
 #: src/components/billing/BillingManager.tsx:342
 #: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
@@ -13674,14 +13710,14 @@ msgstr "Voir les forfaits"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Retrouvez sur la Carte les arguments de vos conversations et les citations qui les appuient."
 
-#: src/components/workspace/gateWalls.ts:154
+#: src/components/workspace/gateWalls.ts:152
 msgid "see transcripts"
 msgstr "voir les transcriptions"
 
-#: src/routes/project/present/MapFreeNotice.tsx:69
-#: src/components/workspace/FreeAllowanceBanner.tsx:70
-#: src/components/report/UpdateReportModalButton.tsx:243
-#: src/components/report/CreateReportForm.tsx:189
+#: src/routes/project/present/MapFreeNotice.tsx:81
+#: src/components/workspace/FreeAllowanceBanner.tsx:78
+#: src/components/report/UpdateReportModalButton.tsx:245
+#: src/components/report/CreateReportForm.tsx:193
 #: src/components/popcorn/PopcornFreeNotice.tsx:69
 #: src/components/chat/FreeTierChatGate.tsx:104
 msgid "See upgrade options"
@@ -13982,7 +14018,7 @@ msgstr "Séparé (client)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Séparez par des virgules, des espaces ou des retours à la ligne."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:276
+#: src/components/participant/ParticipantInitiateForm.tsx:280
 msgid "Session name"
 msgstr "Nom de la séance"
 
@@ -14163,8 +14199,8 @@ msgstr "Partager avec l'espace de travail"
 msgid "Share your details here"
 msgstr "Partager vos informations ici"
 
-#: src/components/report/UpdateReportModalButton.tsx:393
-#: src/components/report/CreateReportForm.tsx:383
+#: src/components/report/UpdateReportModalButton.tsx:395
+#: src/components/report/CreateReportForm.tsx:387
 msgid "Share your ideas with our team"
 msgstr "Partagez vos idées avec notre équipe"
 
@@ -14172,7 +14208,7 @@ msgstr "Partagez vos idées avec notre équipe"
 msgid "Share your voice by scanning the QR code"
 msgstr "Partagez votre voix en scannant le code QR"
 
-#: src/components/workspace/FreeAllowanceCard.tsx:135
+#: src/components/workspace/FreeAllowanceCard.tsx:138
 msgid "Shared across all workspaces in this organisation"
 msgstr "Partagé entre tous les espaces de travail de cette organisation"
 
@@ -14220,7 +14256,7 @@ msgstr "Afficher"
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Afficher « made with dembrane » à l'écran"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:989
+#: src/components/workspace/OrganisationUsageRollup.tsx:1011
 msgid "Show {hidden} more"
 msgstr "Afficher {hidden} de plus"
 
@@ -14337,7 +14373,7 @@ msgstr "Affichez le popcorn dans jusqu'à trois langues supplémentaires à la f
 msgid "Show preview"
 msgstr "Afficher l'aperçu"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:293
+#: src/components/workspace/OrganisationUsageRollup.tsx:315
 msgid "Show projects"
 msgstr "Afficher les projets"
 
@@ -14845,7 +14881,7 @@ msgstr "Affirmation"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1672
 #: src/routes/admin/AdminSettingsRoute.tsx:2614
-#: src/components/workspace/OrganisationUsageRollup.tsx:402
+#: src/components/workspace/OrganisationUsageRollup.tsx:424
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
@@ -15192,7 +15228,7 @@ msgid "Tag deleted"
 msgstr "Étiquette supprimée"
 
 #: src/components/project/ProjectTagsInput.tsx:255
-#: src/components/participant/ParticipantInitiateForm.tsx:287
+#: src/components/participant/ParticipantInitiateForm.tsx:291
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:721
 #: src/components/conversation/ConversationsMiniList.tsx:189
@@ -15253,7 +15289,7 @@ msgstr "Tâches"
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre demande d'accès. Cette note est facultative."
 
-#: src/components/workspace/FreeAllowanceCard.tsx:173
+#: src/components/workspace/FreeAllowanceCard.tsx:177
 #: src/components/workspace/FeatureGatePopover.tsx:115
 #: src/components/billing/BillingManager.tsx:690
 msgid "Tell us what you need"
@@ -15518,17 +15554,39 @@ msgstr "Le portail de retours explique comment signaler les failles de sécurit�
 msgid "The following conversations were automatically added to the context"
 msgstr "Les conversations suivantes ont été automatiquement ajoutées au contexte"
 
-#: src/components/workspace/gateWalls.ts:108
+#: src/components/workspace/gateWalls.ts:107
 msgid "The free plan covers one workspace."
 msgstr "Le forfait Free couvre un seul espace de travail."
 
 #: src/components/workspace/gateWalls.ts:99
-msgid "The free plan includes 12 popcorn analyses a month."
-msgstr "Le forfait Free comprend 12 analyses Popcorn par mois."
+#~ msgid "The free plan includes 12 popcorn analyses a month."
+#~ msgstr "Le forfait Free comprend 12 analyses Popcorn par mois."
 
 #: src/components/workspace/gateWalls.ts:88
-msgid "The free plan includes 5 hours of recording a month."
-msgstr "Le forfait Free comprend 5 heures d'enregistrement par mois."
+#~ msgid "The free plan includes 5 hours of recording a month."
+#~ msgstr "Le forfait Free comprend 5 heures d'enregistrement par mois."
+
+#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:91
+msgid "The free plan includes a few chats a month, each with a set number of questions."
+msgstr "Le forfait Free comprend quelques discussions par mois, chacune avec un nombre défini de questions."
+
+#: src/components/workspace/gateWalls.ts:100
+msgid "The free plan includes a limited number of projects."
+msgstr "Le forfait Free comprend un nombre limité de projets."
+
+#: src/components/workspace/gateWalls.ts:96
+msgid "The free plan includes a monthly allowance of maps."
+msgstr "Le forfait Free comprend un quota mensuel de cartes."
+
+#: src/components/workspace/gateWalls.ts:98
+msgid "The free plan includes a monthly allowance of popcorn analyses."
+msgstr "Le forfait Free comprend un quota mensuel d'analyses Popcorn."
+
+#: src/lib/freeTier.ts:69
+#: src/components/workspace/gateWalls.ts:102
+msgid "The free plan includes a monthly allowance of reports."
+msgstr "Le forfait Free comprend un quota mensuel de rapports."
 
 #: src/components/workspace/gateWalls.ts:91
 #: src/components/workspace/gateWalls.ts:92
@@ -15536,24 +15594,24 @@ msgstr "Le forfait Free comprend 5 heures d'enregistrement par mois."
 #~ msgstr "Le forfait Free inclut une conversation avec trois questions."
 
 #: src/components/workspace/gateWalls.ts:97
-msgid "The free plan includes one map a month."
-msgstr "Le forfait Free comprend une carte par mois."
+#~ msgid "The free plan includes one map a month."
+#~ msgstr "Le forfait Free comprend une carte par mois."
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:97
 msgid "The free plan includes one organisation."
 msgstr "Le forfait Free comprend une seule organisation."
 
 #: src/components/workspace/gateWalls.ts:101
-msgid "The free plan includes one project."
-msgstr "Le forfait Free comprend un seul projet."
+#~ msgid "The free plan includes one project."
+#~ msgstr "Le forfait Free comprend un seul projet."
 
 #: src/components/workspace/gateWalls.ts:103
 #: src/components/report/UpdateReportModalButton.tsx:171
 #: src/components/report/UpdateReportModalButton.tsx:194
 #: src/components/report/UpdateReportModalButton.tsx:234
 #: src/components/report/CreateReportForm.tsx:185
-msgid "The free plan includes one report a month."
-msgstr "Le forfait Free comprend un rapport par mois."
+#~ msgid "The free plan includes one report a month."
+#~ msgstr "Le forfait Free comprend un rapport par mois."
 
 #: src/components/workspace/gateWalls.ts:101
 #~ msgid "The free plan includes one report."
@@ -15561,8 +15619,8 @@ msgstr "Le forfait Free comprend un rapport par mois."
 
 #: src/components/workspace/gateWalls.ts:91
 #: src/components/workspace/gateWalls.ts:92
-msgid "The free plan includes two chats a month, with 20 questions each."
-msgstr "Le forfait Free comprend deux discussions par mois, de 20 questions chacune."
+#~ msgid "The free plan includes two chats a month, with 20 questions each."
+#~ msgstr "Le forfait Free comprend deux discussions par mois, de 20 questions chacune."
 
 #: src/components/goal/ProjectGoalSection.tsx:87
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
@@ -15760,8 +15818,8 @@ msgstr "Le parcours aléatoire fera apparaître des nœuds ici dès qu'ils seron
 msgid "The report ends with an invitation to add your voice."
 msgstr "Le rapport se termine par une invitation à ajouter votre voix."
 
-#: src/components/report/UpdateReportModalButton.tsx:316
-#: src/components/report/CreateReportForm.tsx:298
+#: src/components/report/UpdateReportModalButton.tsx:318
+#: src/components/report/CreateReportForm.tsx:302
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Le rapport peut démarrer jusqu'à 5 minutes après l'heure choisie."
 
@@ -15884,8 +15942,8 @@ msgstr "Il n'y a aucun autre espace de travail vers lequel déplacer ce projet."
 #~ msgid "There was an error cloning your project. Please try again or contact support."
 #~ msgstr "Il y avait une erreur lors du clonage de votre projet. Veuillez réessayer ou contacter le support."
 
-#: src/components/report/UpdateReportModalButton.tsx:262
-#: src/components/report/CreateReportForm.tsx:164
+#: src/components/report/UpdateReportModalButton.tsx:264
+#: src/components/report/CreateReportForm.tsx:168
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Il y avait une erreur lors de la création de votre rapport. Veuillez réessayer ou contacter le support."
 
@@ -15910,7 +15968,7 @@ msgstr "Ces conversations ont été exclues en raison de transcriptions manquant
 #~ msgid "These default view templates will be generated when you create your first library."
 #~ msgstr "Ces modèles de vue par défaut seront générés lorsque vous créerez votre première bibliothèque."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:195
+#: src/routes/admin/FreeLimitsPanel.tsx:214
 msgid "These limits apply to every free account. Changes take effect within about a minute."
 msgstr "Ces limites s'appliquent à tous les comptes gratuits. Les modifications prennent effet en une minute environ."
 
@@ -16335,7 +16393,7 @@ msgstr "Cela rétablit l'espace de travail sur la facturation partagée de votre
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
 
-#: src/components/report/CreateReportForm.tsx:183
+#: src/components/report/CreateReportForm.tsx:187
 msgid "This sample project includes one report."
 msgstr "Ce projet d'exemple inclut un rapport."
 
@@ -16460,7 +16518,7 @@ msgstr "Cochez tout ce qui est pertinent"
 #: src/routes/admin/AdminSettingsRoute.tsx:1561
 #: src/routes/admin/AdminSettingsRoute.tsx:2588
 #: src/routes/admin/AdminSettingsRoute.tsx:3010
-#: src/components/workspace/OrganisationUsageRollup.tsx:360
+#: src/components/workspace/OrganisationUsageRollup.tsx:382
 msgid "Tier"
 msgstr "Forfait"
 
@@ -16633,7 +16691,7 @@ msgstr "Titre basé sur le sujet décrivant ce qui a été discuté"
 msgid "total"
 msgstr "total"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:665
+#: src/components/workspace/OrganisationUsageRollup.tsx:687
 msgid "Total"
 msgstr "Total"
 
@@ -16747,7 +16805,7 @@ msgstr "Erreur de transcription"
 msgid "Transcription failed"
 msgstr "Échec de la transcription"
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:104
 msgid "Transcripts come with a paid plan."
 msgstr "Les transcriptions nécessitent un forfait payant."
 
@@ -16948,7 +17006,7 @@ msgstr "Conversion de votre message vocal en texte"
 #~ msgid "Turns in the second chat"
 #~ msgstr "Tours dans la deuxième discussion"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:62
+#: src/routes/admin/FreeLimitsPanel.tsx:78
 msgid "Turns per chat"
 msgstr "Tours de parole par chat"
 
@@ -17127,7 +17185,7 @@ msgstr "jusqu'au {0}"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1667
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
-#: src/components/workspace/OrganisationUsageRollup.tsx:811
+#: src/components/workspace/OrganisationUsageRollup.tsx:833
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
 msgid "Untitled"
 msgstr "Sans titre"
@@ -17283,7 +17341,7 @@ msgstr "Changez de forfait pour générer des résumés pour cette conversation"
 msgid "Upgrade your workspace to download audio for conversations recorded after the cap"
 msgstr "Passez à un forfait supérieur pour télécharger l'audio des conversations enregistrées au-delà de la limite"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:29
+#: src/components/conversation/LockedTranscriptOverlay.tsx:26
 msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Passez à un forfait supérieur pour voir les résumés des nouvelles conversations."
 
@@ -17292,7 +17350,7 @@ msgstr "Passez à un forfait supérieur pour voir les résumés des nouvelles co
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Passez à un forfait supérieur pour voir cette conversation"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:30
+#: src/components/conversation/LockedTranscriptOverlay.tsx:27
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr "Passez à un forfait supérieur pour voir les transcriptions des nouvelles conversations."
 
@@ -17358,7 +17416,7 @@ msgstr "Limite d'importation atteinte. Mettez à niveau votre espace de travail.
 msgid "Upload logo"
 msgstr "Importer le logo"
 
-#: src/components/workspace/gateWalls.ts:155
+#: src/components/workspace/gateWalls.ts:153
 msgid "upload recordings"
 msgstr "importer des enregistrements"
 
@@ -17380,7 +17438,7 @@ msgstr "Envoi de l'audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Envoi de l'audio..."
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:105
 msgid "Uploading recordings comes with a paid plan."
 msgstr "L'importation d'enregistrements nécessite un forfait payant."
 
@@ -17482,13 +17540,17 @@ msgstr "Utiliser cette formulation"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Utilisez l'ukrainien pour le chat et les réponses des participants."
 
-#: src/components/workspace/gateWalls.ts:156
+#: src/components/workspace/gateWalls.ts:154
 msgid "use webhooks"
 msgstr "utiliser les webhooks"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:137
 msgid "use your voice in chat"
 msgstr "utiliser votre voix dans le chat"
+
+#: src/components/workspace/FreeAllowanceCard.tsx:136
+msgid "Used by this workspace only"
+msgstr "Utilisé uniquement par cet espace de travail"
 
 #: src/components/billing/BillingManager.tsx:430
 msgid "Used on your invoices. Prices exclude VAT."
@@ -17698,7 +17760,7 @@ msgstr "Vues"
 msgid "Views: {0}"
 msgstr "Vues : {0}"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:552
+#: src/components/workspace/OrganisationUsageRollup.tsx:574
 msgid "Visible columns"
 msgstr "Colonnes visibles"
 
@@ -17752,7 +17814,7 @@ msgstr "La saisie vocale respecte la limite d'enregistrement du forfait Free."
 msgid "Voiced in a conversation"
 msgstr "Exprimé dans une conversation"
 
-#: src/components/report/CreateReportForm.tsx:237
+#: src/components/report/CreateReportForm.tsx:241
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "En attente de la fin des conversations avant de générer un rapport."
 
@@ -17826,7 +17888,7 @@ msgstr "Nous n'avons pas trouvé la page que vous cherchiez. Elle a peut-être �
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "Impossible de charger cette organisation. Réessayez dans un instant."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:468
+#: src/components/workspace/OrganisationUsageRollup.tsx:490
 msgid "We couldn't load this organisation's usage."
 msgstr "Impossible de charger l'utilisation de cette organisation."
 
@@ -17960,7 +18022,7 @@ msgstr "Les webhooks sont des messages automatisés envoyés d'une application �
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:106
 msgid "Webhooks come with a paid plan."
 msgstr "Les webhooks sont inclus avec un forfait payant."
 
@@ -18170,8 +18232,8 @@ msgstr "Lorsqu'elle est activée, l'équipe d'assistance de dembrane peut rejoin
 #~ msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 #~ msgstr "Quand les participants scannent le code QR, ils apparaissent ici et avancent à travers les étapes en temps réel."
 
-#: src/components/report/UpdateReportModalButton.tsx:310
-#: src/components/report/CreateReportForm.tsx:292
+#: src/components/report/UpdateReportModalButton.tsx:312
+#: src/components/report/CreateReportForm.tsx:296
 msgid "When should the report be generated?"
 msgstr "Quand le rapport doit-il être généré ?"
 
@@ -18244,7 +18306,7 @@ msgstr "Pourquoi pas dans cette présentation ?"
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Pourquoi ? Une phrase, pour vos collègues et pour toute personne qui vérifiera plus tard."
 
-#: src/components/report/CreateReportForm.tsx:219
+#: src/components/report/CreateReportForm.tsx:223
 msgid "will be included in your report"
 msgstr "sera inclus dans votre rapport"
 
@@ -18339,7 +18401,7 @@ msgstr "Préparation de votre réponse..."
 #: src/routes/admin/AdminSettingsRoute.tsx:1667
 #: src/routes/admin/AdminSettingsRoute.tsx:2215
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/components/workspace/OrganisationUsageRollup.tsx:354
+#: src/components/workspace/OrganisationUsageRollup.tsx:376
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
 msgid "Workspace"
@@ -18659,7 +18721,7 @@ msgstr "Vous avez été désinscrit avec succès."
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "Vous avez un accès d'assistance à cet espace de travail. Il prend fin automatiquement le {endsAt}."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:47
+#: src/components/workspace/FreeAllowanceBanner.tsx:48
 msgid "You have used this month's free chats. They reset on {date}."
 msgstr "Vous avez utilisé les discussions gratuites de ce mois-ci. Elles seront réinitialisées le {date}."
 
@@ -18668,16 +18730,28 @@ msgid "You have used this month's free chats. Upgrade to keep chatting."
 msgstr "Vous avez utilisé vos conversations gratuites ce mois-ci. Passez à un forfait supérieur pour continuer à discuter."
 
 #: src/routes/project/present/MapFreeNotice.tsx:51
-msgid "You have used this month's free map. The map in this presentation keeps its current version until {date}."
-msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. La carte de cette présentation conservera sa version actuelle jusqu'au {date}."
+#~ msgid "You have used this month's free map. The map in this presentation keeps its current version until {date}."
+#~ msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. La carte de cette présentation conservera sa version actuelle jusqu'au {date}."
 
 #: src/routes/project/present/MapFreeNotice.tsx:56
-msgid "You have used this month's free map. The map in this presentation keeps its current version."
-msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. La carte de cette présentation conserve sa version actuelle."
+#~ msgid "You have used this month's free map. The map in this presentation keeps its current version."
+#~ msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. La carte de cette présentation conserve sa version actuelle."
 
 #: src/components/workspace/FreeAllowanceBanner.tsx:57
-msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
-msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. Votre carte actuelle reste accessible. Réinitialisation le {date}."
+#~ msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
+#~ msgstr "Vous avez utilisé la carte gratuite de ce mois-ci. Votre carte actuelle reste accessible. Réinitialisation le {date}."
+
+#: src/routes/project/present/MapFreeNotice.tsx:61
+msgid "You have used this month's free maps. The map in this presentation keeps its current version until {date}."
+msgstr "Vous avez utilisé vos cartes gratuites de ce mois-ci. La carte de cette présentation reste dans sa version actuelle jusqu'au {date}."
+
+#: src/routes/project/present/MapFreeNotice.tsx:62
+msgid "You have used this month's free maps. The map in this presentation keeps its current version."
+msgstr "Vous avez utilisé vos cartes gratuites de ce mois-ci. La carte de cette présentation reste dans sa version actuelle."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:63
+msgid "You have used this month's free maps. Your current maps stay here. They reset on {date}."
+msgstr "Vous avez utilisé vos cartes gratuites de ce mois-ci. Vos cartes actuelles restent ici. Elles seront réinitialisées le {date}."
 
 #: src/components/popcorn/PopcornFreeNotice.tsx:56
 msgid "You have used this month's free popcorn analyses. The results stay here."
@@ -18688,8 +18762,12 @@ msgid "You have used this month's free popcorn analyses. The results stay here. 
 msgstr "Vous avez utilisé vos analyses Popcorn gratuites de ce mois-ci. Les résultats restent accessibles ici. Les analyses reprendront le {date}."
 
 #: src/components/workspace/FreeAllowanceBanner.tsx:52
-msgid "You have used this month's free report. It resets on {date}."
-msgstr "Vous avez utilisé le rapport gratuit de ce mois-ci. Il sera réinitialisé le {date}."
+#~ msgid "You have used this month's free report. It resets on {date}."
+#~ msgstr "Vous avez utilisé le rapport gratuit de ce mois-ci. Il sera réinitialisé le {date}."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:54
+msgid "You have used this month's free reports. They reset on {date}."
+msgstr "Vous avez utilisé vos rapports gratuits de ce mois-ci. Ils seront réinitialisés le {date}."
 
 #: src/components/project/ProjectUploadSection.tsx:42
 msgid "You have view-only access to this project, so you can't upload recordings."
@@ -18840,11 +18918,11 @@ msgstr "Vous avez été invité à rejoindre <0>{0}</0>. Nous vous y redirigeons
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Vous avez atteint la limite du forfait Free pour cette discussion. Passez à un forfait supérieur pour poursuivre la conversation."
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:24
+#: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "Vous avez atteint votre limite de résumés"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:25
+#: src/components/conversation/LockedTranscriptOverlay.tsx:22
 msgid "You've reached your transcript limit"
 msgstr "Vous avez atteint votre limite de transcriptions"
 
@@ -18947,8 +19025,12 @@ msgstr "Votre retour et cette réponse sont transmis à l'équipe dembrane."
 #~ msgstr "Votre forfait Free comprend un rapport. Passez à un forfait supérieur pour en créer d'autres."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
-msgid "Your free transcription hour is used up."
-msgstr "Votre heure de transcription gratuite est épuisée."
+msgid "Your free transcription allowance is used up."
+msgstr "Votre quota de transcription gratuite est épuisé."
+
+#: src/components/pricing/PricingConfigurator.tsx:732
+#~ msgid "Your free transcription hour is used up."
+#~ msgstr "Votre heure de transcription gratuite est épuisée."
 
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
@@ -19004,7 +19086,7 @@ msgstr "Votre organisation ou entreprise"
 msgid "Your organisations"
 msgstr "Vos organisations"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:93
 msgid "Your own logo comes with a paid plan."
 msgstr "L'ajout de votre propre logo nécessite un forfait payant."
 

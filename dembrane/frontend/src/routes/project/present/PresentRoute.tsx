@@ -93,7 +93,7 @@ import { errorCode } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
-import { MapFreeNotice } from "./MapFreeNotice";
+import { MapFreeNotice, presentsMap } from "./MapFreeNotice";
 import { PresentResultsPanel } from "./PresentResultsPanel";
 import classes from "./PresentRoute.module.css";
 
@@ -788,10 +788,10 @@ function Session({
 				)}
 				{canEdit && (
 					<MapFreeNotice
-						mapOn={
-							presentation.settings.presentation?.blocks?.includes("map") ??
-							false
-						}
+						mapOn={presentsMap(
+							presentation.settings,
+							draft.query.data?.presentation.settings,
+						)}
 						workspaceId={workspaceId ?? ""}
 						projectId={projectId}
 					/>

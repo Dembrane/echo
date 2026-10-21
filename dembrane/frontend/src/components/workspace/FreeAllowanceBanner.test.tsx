@@ -180,3 +180,52 @@ it("names the chat and map walls", async () => {
 	fireEvent.click(screen.getByTestId("free-allowance-banner-upgrade"));
 	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("map_cap");
 });
+
+it("states the live limit when staff allow more than one", async () => {
+	fetchMock.mockImplementation(async () =>
+		answer(
+			200,
+			snapshot({
+				maps: { limit: 3, used: 3 },
+				reports: { limit: 2, used: 2 },
+			}),
+		),
+	);
+	renderBanner("reports");
+	const reports = await screen.findByTestId("free-allowance-banner");
+	expect(reports.textContent).toContain(
+		`You have used this month's 2 free reports. They reset on ${resetDate}.`,
+	);
+	cleanup();
+
+	renderBanner("maps");
+	const maps = await screen.findByTestId("free-allowance-banner");
+	expect(maps.textContent).toContain(
+		`You have used this month's 3 free maps. Your current maps stay here. They reset on ${resetDate}.`,
+	);
+});
+
+it("states no number when staff set the limit to 0", async () => {
+	fetchMock.mockImplementation(async () =>
+		answer(
+			200,
+			snapshot({
+				maps: { limit: 0, used: 0 },
+				reports: { limit: 0, used: 0 },
+			}),
+		),
+	);
+	renderBanner("reports");
+	const reports = await screen.findByTestId("free-allowance-banner");
+	expect(reports.textContent).toContain(
+		`You have used this month's free reports. They reset on ${resetDate}.`,
+	);
+	expect(reports.textContent).not.toMatch(/\b0\b/);
+	cleanup();
+
+	renderBanner("maps");
+	const maps = await screen.findByTestId("free-allowance-banner");
+	expect(maps.textContent).toContain(
+		`You have used this month's free maps. Your current maps stay here. They reset on ${resetDate}.`,
+	);
+});

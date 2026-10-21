@@ -111,8 +111,20 @@ async function measureUpload(
   } catch (err) {
     if (err instanceof AudioError && err.terminal)
       return { unreadable: true, reason: err.message } satisfies Measured;
-    if (err instanceof AudioError) throw new StatusError(503, "upload.measure_failed");
     throw err;
+  }
+}
+
+// Anything that stops the measurement is a retry: nothing reserved, the object kept.
+async function measureFailed<T>(d: ConversationsDeps, conversationId: string, f: () => Promise<T>) {
+  try {
+    return await f();
+  } catch (err) {
+    d.logger.error(
+      { err, conversationId, signal: "free_audio.measure_failed" },
+      "measuring an upload failed",
+    );
+    throw new StatusError(503, "upload.measure_failed");
   }
 }
 
@@ -126,12 +138,20 @@ export async function reserveUpload(
   key: string,
   bytes: number,
 ): Promise<{ a: AllowanceAccount; seconds: number; reserved: number } | null> {
-  const a = await allowanceForProject(d.db, conv.project_id, d.now());
-  if (!a) return null;
-  const limits = await freeLimits(d.db, d.now, d.logger);
+  const pre = await measureFailed(d, conv.id, async () => {
+    const a = await allowanceForProject(d.db, conv.project_id, d.now());
+    if (!a) return null;
+    const limits = await freeLimits(d.db, d.now, d.logger);
+    return {
+      a,
+      limits,
+      measured: await measureUpload(d, key, bytes, limits.audio_seconds_conversation),
+    };
+  });
+  if (!pre) return null;
+  const { a, limits, measured } = pre;
   const fileLimit = limits.audio_seconds_conversation;
   const monthLimit = limits.audio_seconds_month;
-  const measured = await measureUpload(d, key, bytes, fileLimit);
   const refuse = async (err: Error): Promise<never> => {
     await d.audio
       .delete(key)
@@ -232,6 +252,7 @@ export async function meterLiveChunk(
     const a = await allowanceForProject(d.db, conv.project_id, landed);
     if (!a) return "unlimited";
     if (chunk.audio_seconds !== null) return "already";
+    if (chunk.error === FREE_LIMIT_SKIPPED) return "refused";
     const s = await measure();
     if (s === null || !Number.isFinite(s) || s < 0) {
       d.logger.warn(
@@ -248,7 +269,13 @@ export async function meterLiveChunk(
       const claimed = await db
         .update(conversation_chunk)
         .set({ audio_seconds: s })
-        .where(and(eq(conversation_chunk.id, chunk.id), isNull(conversation_chunk.audio_seconds)))
+        .where(
+          and(
+            eq(conversation_chunk.id, chunk.id),
+            isNull(conversation_chunk.audio_seconds),
+            sql`${conversation_chunk.error} is distinct from ${FREE_LIMIT_SKIPPED}`,
+          ),
+        )
         .returning({ id: conversation_chunk.id });
       if (claimed.length === 0) return "already";
       if (!limits) {

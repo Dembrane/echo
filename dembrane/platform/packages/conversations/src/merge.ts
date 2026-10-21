@@ -4,6 +4,7 @@ import { schema } from "@dembrane/db";
 import { asc, eq } from "drizzle-orm";
 import { sanitizeFilenameComponent } from "./audio-urls";
 import type { ConversationsDeps } from "./deps";
+import { FREE_LIMIT_SKIPPED } from "./free-audio";
 
 const { conversation, conversation_chunk } = schema;
 
@@ -43,8 +44,10 @@ export async function mergeConversationAudio(
     .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id))
     .limit(1000);
   if (!chunks.length) throw new NotFoundError("conversation.not_found");
-  const audible = chunks.filter((c): c is typeof c & { path: string } =>
-    Boolean(c.path?.startsWith("http")),
+  // A chunk the free limit refused stays out of the recording and every transcript of it.
+  const audible = chunks.filter(
+    (c): c is typeof c & { path: string } =>
+      Boolean(c.path?.startsWith("http")) && c.error !== FREE_LIMIT_SKIPPED,
   );
   const paths = audible.map((c) => c.path);
   if (!paths.length) throw new NoContent("conversation.no_content");

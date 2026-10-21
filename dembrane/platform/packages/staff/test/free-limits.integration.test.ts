@@ -9,7 +9,12 @@ import {
 } from "bun:test";
 import { Writable } from "node:stream";
 import { DrizzleStaffAudit } from "@dembrane/access";
-import { FREE_LIMIT_DEFAULTS, invalidateFreeLimits, LIMIT_KEYS } from "@dembrane/allowance";
+import {
+  FREE_LIMIT_DEFAULTS,
+  freeLimits,
+  invalidateFreeLimits,
+  LIMIT_KEYS,
+} from "@dembrane/allowance";
 import { createBilling, FakeMollie } from "@dembrane/billing";
 import { PlatformError } from "@dembrane/core";
 import { connect, createDb, migrate, schema } from "@dembrane/db";
@@ -41,7 +46,13 @@ const logger = createLogger(
   new Writable({ write: (_c, _e, cb) => cb() }),
 );
 
-type Row = { key: string; value: number; default: number; updated_by: string | null };
+type Row = {
+  key: string;
+  value: number;
+  default: number;
+  updated_by: string | null;
+  updated_by_name: string | null;
+};
 
 run("staff free limits", () => {
   setDefaultTimeout(60_000);
@@ -56,6 +67,12 @@ run("staff free limits", () => {
     const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 3 });
+    await database.db.insert(schema.directus_users).values({
+      id: STAFF.directusUserId,
+      email: "sam@dembrane.com",
+      first_name: "Sam",
+      last_name: "Staff",
+    });
     const mailer = new MemoryMailer();
     const clock = () => new Date();
     const billing = createBilling({
@@ -129,6 +146,7 @@ run("staff free limits", () => {
       expect(r.value).toBe(FREE_LIMIT_DEFAULTS[r.key as keyof typeof FREE_LIMIT_DEFAULTS]);
       expect(r.default).toBe(r.value);
       expect(r.updated_by).toBeNull();
+      expect(r.updated_by_name).toBeNull();
     }
   });
 
@@ -137,7 +155,12 @@ run("staff free limits", () => {
     expect(res.status).toBe(200);
     const { limits } = (await res.json()) as { limits: Row[] };
     const row = limits.find((r) => r.key === "chats_month");
-    expect(row).toMatchObject({ value: 4, default: 2, updated_by: STAFF.directusUserId });
+    expect(row).toMatchObject({
+      value: 4,
+      default: 2,
+      updated_by: STAFF.directusUserId,
+      updated_by_name: "Sam Staff (sam@dembrane.com)",
+    });
     const [stored] = await database.db
       .select()
       .from(schema.tier_limit)
@@ -157,6 +180,21 @@ run("staff free limits", () => {
     expect((await put("bogus", 5)).status).toBe(400);
     expect((await put("reports_month", 10_000_000)).status).toBe(200);
     expect((await put("reports_month", 0)).status).toBe(200);
+  });
+
+  test("a value of 0 is stored and served", async () => {
+    expect((await put("maps_month", 0)).status).toBe(200);
+    const [stored] = await database.db
+      .select()
+      .from(schema.tier_limit)
+      .where(eq(schema.tier_limit.key, "maps_month"));
+    expect(stored?.value).toBe(0);
+    invalidateFreeLimits();
+    expect((await freeLimits(database.db)).maps_month).toBe(0);
+    const res = await call("staff", "GET", "/api/v2/admin/free-limits");
+    const { limits } = (await res.json()) as { limits: Row[] };
+    expect(limits.find((r) => r.key === "maps_month")?.value).toBe(0);
+    await database.db.delete(schema.tier_limit).where(eq(schema.tier_limit.key, "maps_month"));
   });
 
   test("a non-staff caller gets 403", async () => {

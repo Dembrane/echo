@@ -9,6 +9,8 @@ export interface FreeMeter {
 
 export interface FreeAllowance {
 	free: boolean;
+	// Whose allowance it is: the organisation's shared one, or this workspace's own.
+	scope?: "organisation" | "workspace" | null;
 	period_start: string | null;
 	resets_at: string | null;
 	audio_seconds: FreeMeter | null;

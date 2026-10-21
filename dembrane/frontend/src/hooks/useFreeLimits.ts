@@ -19,6 +19,8 @@ export interface FreeLimit {
 	default: number;
 	updated_at: string | null;
 	updated_by: string | null;
+	// The staff user's name and email, when known.
+	updated_by_name?: string | null;
 }
 
 type FreeLimitsResponse = { limits: FreeLimit[] };

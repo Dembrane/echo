@@ -110,6 +110,7 @@ run("allowance snapshot", () => {
     await project(ws);
     expect(await allowanceSnapshot(db, ws, NOW)).toEqual({
       free: false,
+      scope: null,
       period_start: null,
       resets_at: null,
       audio_seconds: null,
@@ -132,6 +133,7 @@ run("allowance snapshot", () => {
       (${acc}, ${OCT}, 'audio_seconds', 3600), (${acc}, ${OCT}, 'chats', 1)`;
     expect(await allowanceSnapshot(db, ws, NOW)).toEqual({
       free: true,
+      scope: "organisation",
       period_start: OCT,
       resets_at: NOV,
       audio_seconds: { used: 3600, limit: 18000 },
@@ -155,6 +157,7 @@ run("allowance snapshot", () => {
     expect([...(await accountWorkspaceIds(db, await resolved(internal)))].sort()).toEqual(want);
     const snap = await allowanceSnapshot(db, freeClient, NOW);
     expect(snap.projects).toEqual({ used: 2, limit: 1 });
+    expect(snap.scope).toBe("organisation");
   });
 
   test("a free client of a paid org counts only its own workspace", async () => {
@@ -164,6 +167,8 @@ run("allowance snapshot", () => {
     const client = await workspace(o, own);
     await project(client);
     expect(await accountWorkspaceIds(db, await resolved(client))).toEqual([client]);
-    expect((await allowanceSnapshot(db, client, NOW)).projects).toEqual({ used: 1, limit: 1 });
+    const snap = await allowanceSnapshot(db, client, NOW);
+    expect(snap.projects).toEqual({ used: 1, limit: 1 });
+    expect(snap.scope).toBe("workspace");
   });
 });

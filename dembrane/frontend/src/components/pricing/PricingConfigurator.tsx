@@ -729,7 +729,7 @@ export const PricingConfigurator = ({
 						<>
 							<Stack gap="xs">
 								<Text>
-									<Trans>Your free transcription hour is used up.</Trans>
+									<Trans>Your free transcription allowance is used up.</Trans>
 								</Text>
 								<Text size="sm">
 									<Trans>

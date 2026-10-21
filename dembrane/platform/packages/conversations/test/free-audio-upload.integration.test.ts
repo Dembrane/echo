@@ -19,7 +19,7 @@ import {
   usedThisPeriod,
 } from "@dembrane/allowance";
 import { AudioError, LocalMedia, type Media } from "@dembrane/audio";
-import { errorBody, newId, PlatformError } from "@dembrane/core";
+import { errorBody, newId, PlatformError, StatusError } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
 import type { Env } from "@dembrane/http";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
@@ -27,6 +27,7 @@ import { FakeTranscriber } from "@dembrane/transcription";
 import { Hono } from "hono";
 import postgres from "postgres";
 import type { ConversationsDeps } from "../src/deps";
+import { reserveUpload } from "../src/free-audio";
 import { ParticipantTokens } from "../src/participant-token";
 import { portalRoutes } from "../src/portal/routes";
 import { admin, fakeModels, freshDatabase, localBucket, quiet, tone } from "./pipeline-harness";
@@ -360,5 +361,70 @@ run("free audio: uploads are measured and reserved", () => {
     expect(((await res.json()) as { code: string }).code).toBe("upload.measure_failed");
     expect(await used(p)).toBe(0);
     expect(await chunks(cid)).toHaveLength(0);
+  });
+
+  // A refused-to-measure upload keeps its object so the participant's retry can confirm it.
+  async function expectRetry(res: Response, p: string, cid: string, key: string) {
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as { code: string }).code).toBe("upload.measure_failed");
+    expect(await used(p)).toBe(0);
+    expect(await chunks(cid)).toHaveLength(0);
+    expect(await d.audio.size(key)).not.toBeNull();
+  }
+
+  test("a failing presign fails closed with a retry", async () => {
+    const { p, cid } = await account("free");
+    const original = bucket.storage.presignDownload;
+    bucket.storage.presignDownload = () => {
+      throw new Error("signer down");
+    };
+    try {
+      const { res, key } = await upload(cid, await wav(15));
+      await expectRetry(res, p, cid, key);
+    } finally {
+      bucket.storage.presignDownload = original;
+    }
+  });
+
+  test("a failing media token fails closed with a retry", async () => {
+    const { p, cid } = await account("free");
+    const noToken = () => Promise.reject(new Error("metadata server unreachable"));
+    media = { ...new LocalMedia(), probe: noToken, decodedSeconds: noToken } as unknown as Media;
+    const { res, key } = await upload(cid, await wav(15));
+    await expectRetry(res, p, cid, key);
+  });
+
+  test("a failing account read fails closed with a retry and is logged", async () => {
+    const { p, cid } = await account("free");
+    const { key } = await store(cid, await wav(15));
+    const broken = new Proxy(d.db, {
+      get() {
+        throw new Error("db down");
+      },
+    });
+    const logged: string[] = [];
+    const logger = new Proxy(quiet, {
+      get: (t, prop, r) =>
+        prop === "error"
+          ? (o: { signal?: string }) => {
+              logged.push(String(o.signal));
+            }
+          : Reflect.get(t, prop, r),
+    });
+    const err = await reserveUpload(
+      { ...d, db: broken, logger },
+      { id: cid, project_id: p },
+      key,
+      1,
+    ).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).toBeInstanceOf(StatusError);
+    expect((err as StatusError).status).toBe(503);
+    expect((err as StatusError).code).toBe("upload.measure_failed");
+    expect(logged).toContain("free_audio.measure_failed");
+    expect(await used(p)).toBe(0);
+    expect(await d.audio.size(key)).not.toBeNull();
   });
 });

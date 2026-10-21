@@ -15,7 +15,7 @@ import type { Signed } from "@dembrane/http";
 import type postgres from "postgres";
 import { refundFreeReport } from "../src/free";
 import type { ProjectDeps } from "../src/projects";
-import { createReport, deleteReport } from "../src/reports";
+import { cancelSchedule, createReport, deleteReport, updateReport } from "../src/reports";
 import { projectsStorage } from "../src/storage";
 
 // One free report per period, now or scheduled, given back once when it produced nothing.
@@ -193,7 +193,7 @@ run("free reports", () => {
     expect(await ledger(own)).toBe(0);
 
     const done = await request(d, owner, own, LATER);
-    await sql`update project_report set status = 'error', content = '# Done' where id = ${String(done.id)}`;
+    await sql`update project_report set status = 'archived', content = '# Done' where id = ${String(done.id)}`;
     expect(await refundFreeReport(database.db, Number(done.id), now)).toBe(false);
     expect(await ledger(own)).toBe(1);
   });
@@ -248,6 +248,327 @@ run("free reports", () => {
     });
     // The workspace's own report is still there.
     await request(d, owner, own, LATER);
+    expect(await ledger(own)).toBe(1);
+  });
+  const reschedule = (
+    d: ProjectDeps,
+    who: Person,
+    projectId: string,
+    id: unknown,
+    body: { status?: string | null; scheduled_at?: string | null },
+  ) =>
+    updateReport(d, who, projectId, Number(id), {
+      status: body.status ?? null,
+      show_portal_link: null,
+      content: null,
+      scheduled_at: body.scheduled_at ?? null,
+    });
+
+  const LATER2 = "2026-10-22T10:00:00Z";
+
+  async function refunded(d: ProjectDeps, who: Person, projectId: string) {
+    const r = await request(d, who, projectId, LATER);
+    await sql`update project_report set status = 'error', content = '' where id = ${String(r.id)}`;
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(true);
+    return r;
+  }
+
+  test("rescheduling a refunded report takes the period's report again", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await refunded(d, owner, own);
+    expect(await ledger(own)).toBe(0);
+    await reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe(OCT);
+  });
+
+  test("rescheduling a refunded report is refused when the period's report is spent", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await refunded(d, owner, own);
+    await request(d, owner, own, LATER);
+    for (const body of [{ status: "scheduled", scheduled_at: LATER2 }, { status: "scheduled" }])
+      expect(await rejection(reschedule(d, owner, own, r.id, body))).toMatchObject({
+        status: 402,
+        details: { limit: "report", used: 1, cap: 1 },
+      });
+    const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+    expect(row?.status).toBe("error");
+    expect(await stamp(r.id)).toBeNull();
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("rescheduling a report that already produced content takes again", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await sql`update project_report set status = 'archived', content = '# Done' where id = ${String(r.id)}`;
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({
+      status: 402,
+      details: { limit: "report" },
+    });
+  });
+
+  test("moving a stamped report that has not run does not take twice", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    await reschedule(d, owner, own, r.id, { scheduled_at: LATER });
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe(OCT);
+  });
+
+  test("two reschedules of a refunded report race and take once", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await refunded(d, owner, own);
+    await Promise.all([
+      reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER }),
+    ]);
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("a failed reschedule gives the report back", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await refunded(d, owner, own);
+    const broken = deps({
+      store: {
+        ...projectsStorage(database.db),
+        transaction: async () => {
+          throw new Error("db down");
+        },
+      } as ProjectDeps["store"],
+    });
+    expect(
+      await rejection(
+        reschedule(broken, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ message: "db down" });
+    expect(await ledger(own)).toBe(0);
+    expect(await stamp(r.id)).toBeNull();
+    const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+    expect(row?.status).toBe("error");
+  });
+
+  test("paid and sample reschedules are not counted", async () => {
+    const { owner, billing, own } = await seed("guardian");
+    const r = await request(deps(), owner, own, LATER);
+    await sql`update project_report set status = 'error' where id = ${String(r.id)}`;
+    await reschedule(deps(), owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    expect(await stamp(r.id)).toBeNull();
+    expect(await usageRows(billing)).toBe(0);
+
+    const free = await seed();
+    const s = await request(deps(), free.owner, free.sample, LATER);
+    await sql`update project_report set status = 'error' where id = ${String(s.id)}`;
+    await reschedule(deps(), free.owner, free.sample, s.id, {
+      status: "scheduled",
+      scheduled_at: LATER2,
+    });
+    expect(await stamp(s.id)).toBeNull();
+    expect(await usageRows(free.billing)).toBe(0);
+  });
+  test("clearing a report's content does not make its regeneration free", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await sql`update project_report set status = 'archived', content = '# Done' where id = ${String(r.id)}`;
+    await updateReport(d, owner, own, Number(r.id), {
+      status: null,
+      show_portal_link: null,
+      content: "",
+      scheduled_at: null,
+    });
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 402, details: { limit: "report" } });
+    // Moving a report that ran back to cancelled does not make it unrun.
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await stamp(r.id)).toBeNull();
+    expect(await ledger(own)).toBe(1);
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 402, details: { limit: "report" } });
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("a regeneration that errors is refunded once, though the old content stays", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await sql`update project_report set status = 'archived', content = '# Done' where id = ${String(r.id)}`;
+    now = new Date("2026-11-02T10:00:00Z");
+    await reschedule(d, owner, own, r.id, {
+      status: "scheduled",
+      scheduled_at: "2026-11-03T10:00:00Z",
+    });
+    expect(await ledger(own)).toBe(1);
+    await sql`update project_report set status = 'error' where id = ${String(r.id)}`;
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(true);
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(false);
+    expect(await ledger(own)).toBe(0);
+  });
+
+  test("an edit without status or schedule never charges", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await sql`update project_report set free_period_start = '2026-09-01T00:00:00Z' where id = ${String(r.id)}`;
+    await sql`delete from free_usage`;
+    await updateReport(d, owner, own, Number(r.id), {
+      status: null,
+      show_portal_link: true,
+      content: null,
+      scheduled_at: null,
+    });
+    expect(await ledger(own)).toBe(0);
+  });
+
+  test("rescheduling a free report while it generates is refused and starts no second run", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, null);
+    expect(enqueued).toHaveLength(1);
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 409, code: "report.already_generating" });
+    const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+    expect(row?.status).toBe("draft");
+    const tasks =
+      await sql`select 1 from scheduled_task where payload->>'report_id' = ${String(r.id)}`;
+    expect(tasks).toHaveLength(0);
+    expect(enqueued).toHaveLength(1);
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("cancelling a running draft counts as having run", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, null);
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await stamp(r.id)).toBeNull();
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 402, details: { limit: "report" } });
+    now = new Date("2026-11-02T10:00:00Z");
+    await reschedule(d, owner, own, r.id, {
+      status: "scheduled",
+      scheduled_at: "2026-11-03T10:00:00Z",
+    });
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe("2026-11-01T00:00:00.000Z");
+  });
+
+  test("cancelling a report before it ran gives it back once; rescheduling takes again", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await stamp(r.id)).toBeNull();
+    expect(await ledger(own)).toBe(0);
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await ledger(own)).toBe(0);
+    await reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe(OCT);
+  });
+
+  test("cancel schedule gives the report back once, so generate now works", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await cancelSchedule(d, owner, own, Number(r.id));
+    expect(await ledger(own)).toBe(0);
+    // A retry heals and does not refund twice.
+    expect(await cancelSchedule(d, owner, own, Number(r.id))).toEqual({ cancelled: true });
+    expect(await ledger(own)).toBe(0);
+    const now2 = await request(d, owner, own, null);
+    expect(await stamp(now2.id)).toBe(OCT);
+    expect(await ledger(own)).toBe(1);
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 402, details: { limit: "report" } });
+  });
+
+  test("paid cancels touch no ledger", async () => {
+    const { owner, billing, own } = await seed("guardian");
+    const r = await request(deps(), owner, own, LATER);
+    await cancelSchedule(deps(), owner, own, Number(r.id));
+    expect(await usageRows(billing)).toBe(0);
+  });
+
+  test("cancel schedule of a report that is not scheduled is refused", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, null);
+    expect(await rejection(cancelSchedule(d, owner, own, Number(r.id)))).toMatchObject({
+      status: 400,
+    });
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("a cancel racing a reschedule never leaves an unpaid scheduled report", async () => {
+    for (let i = 0; i < 8; i++) {
+      const { owner, own } = await seed();
+      const d = deps();
+      const r = await request(d, owner, own, LATER);
+      const cancel =
+        i % 2
+          ? cancelSchedule(d, owner, own, Number(r.id))
+          : reschedule(d, owner, own, r.id, { status: "cancelled" });
+      const results = await Promise.allSettled([
+        cancel,
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ]);
+      for (const x of results)
+        if (x.status === "rejected") expect(x.reason).toMatchObject({ status: 402 });
+      const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+      const paid = { stamp: await stamp(r.id), used: await ledger(own) };
+      if (row?.status === "scheduled") expect(paid).toEqual({ stamp: OCT, used: 1 });
+      else expect(paid).toEqual({ stamp: null, used: 0 });
+    }
+  });
+
+  test("a PATCH cancel that lands after the run started counts as having run", async () => {
+    const { owner, own } = await seed();
+    const r = await request(deps(), owner, own, LATER);
+    const store = projectsStorage(database.db);
+    let started = false;
+    // The scheduler starts the run between the cancel's charge and its update.
+    const d = deps({
+      store: {
+        ...store,
+        transaction: async (fn: never) => {
+          if (!started) {
+            started = true;
+            await sql`update project_report set status = 'draft' where id = ${String(r.id)}`;
+          }
+          return store.transaction(fn);
+        },
+      } as ProjectDeps["store"],
+    });
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+    expect(row?.status).toBe("cancelled");
+    expect(await stamp(r.id)).toBeNull();
     expect(await ledger(own)).toBe(1);
   });
 });

@@ -744,6 +744,7 @@ export function orgService(deps: TenancyDeps) {
       let approaching = 0;
       const rows = [];
       const freeLimit = (await freeLimits(db)).audio_seconds_month;
+      const counted = new Set<string>();
       for (const w of workspaces) {
         const [seats, , externals, observers] = seatState(await effectiveMembers(db, w.id));
         totalSeats += seats;
@@ -753,7 +754,6 @@ export function orgService(deps: TenancyDeps) {
         const billing = commercial(account);
         const tier = billing?.tier ?? "";
         const h = hours.get(w.id) ?? 0;
-        totalHours += h;
         const cap = capacityOf(tier);
         let included = cap?.includedHours ?? null;
         const seatsIncluded = cap?.includedSeats ?? null;
@@ -763,6 +763,8 @@ export function orgService(deps: TenancyDeps) {
         let hoursCounted = included !== null ? pyRound(h, 2) : null;
         let wsAtCap = false;
         let wsApproaching = false;
+        // Free rows on the ledger share their account's meter; the total counts it once.
+        let ledgerAccount: string | null = null;
         if (isFreeTier(tier)) {
           // Free hours are the ledger's monthly meter, which only holds the current period.
           const a = monthOffset === 0 ? await allowanceForWorkspace(db, w.id, now) : null;
@@ -771,6 +773,9 @@ export function orgService(deps: TenancyDeps) {
           hoursOver = pyRound(Math.max(0, used - freeLimit) / 3600, 2);
           hoursCounted = a ? pyRound(used / 3600, 2) : null;
           if (a) {
+            ledgerAccount = a.accountId;
+            if (!counted.has(a.accountId)) totalHours += used / 3600;
+            counted.add(a.accountId);
             hoursPct = pyRound(freeLimit > 0 ? used / freeLimit : 1, 3);
             wsAtCap = used >= freeLimit;
             wsApproaching = !wsAtCap && hoursPct >= 0.8;
@@ -780,6 +785,7 @@ export function orgService(deps: TenancyDeps) {
           hoursPct = pyRound(pct, 3);
           wsApproaching = pct >= 0.8;
         }
+        if (!ledgerAccount) totalHours += h;
         if (wsAtCap) atCap++;
         if (wsApproaching) approaching++;
         const seatsPct =
@@ -795,6 +801,7 @@ export function orgService(deps: TenancyDeps) {
           hours_pct: hoursPct,
           hours_over: hoursOver,
           hours_counted: hoursCounted,
+          allowance_account_id: ledgerAccount,
           seat_count: seats,
           seats_included: seatsIncluded,
           seats_pct: seatsPct,

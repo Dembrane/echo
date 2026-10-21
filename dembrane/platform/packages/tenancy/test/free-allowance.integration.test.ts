@@ -123,6 +123,7 @@ run("free allowance route", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
       free: true,
+      scope: "organisation",
       period_start: "2026-10-01T00:00:00.000Z",
       resets_at: "2026-11-01T00:00:00.000Z",
       audio_seconds: { used: 0, limit: 18000 },

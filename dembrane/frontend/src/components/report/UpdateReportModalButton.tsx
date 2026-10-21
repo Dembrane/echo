@@ -36,7 +36,11 @@ import {
 } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { allowanceSpent, isFreeTierLimitError } from "@/lib/freeTier";
+import {
+	allowanceSpent,
+	freeReportsLine,
+	isFreeTierLimitError,
+} from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
@@ -168,7 +172,7 @@ export const UpdateReportModalButton = ({
 						needsUpdate
 							? t`New conversations added since this report`
 							: effectivelyAtLimit
-								? t`The free plan includes one report a month.`
+								? freeReportsLine(freeAllowance.data)
 								: t`Generate a new report`
 					}
 				>
@@ -191,7 +195,7 @@ export const UpdateReportModalButton = ({
 					</Indicator>
 				</Tooltip>
 				{effectivelyAtLimit && (
-					<Tooltip label={t`The free plan includes one report a month.`}>
+					<Tooltip label={freeReportsLine(freeAllowance.data)}>
 						<InfoIcon
 							size={16}
 							style={{
@@ -230,9 +234,7 @@ export const UpdateReportModalButton = ({
 						variant="light"
 					>
 						<Stack gap="sm" align="flex-start">
-							<Text size="sm">
-								<Trans>The free plan includes one report a month.</Trans>
-							</Text>
+							<Text size="sm">{freeReportsLine(freeAllowance.data)}</Text>
 							<Button
 								size="xs"
 								onClick={() => {

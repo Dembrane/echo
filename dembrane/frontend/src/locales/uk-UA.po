@@ -284,7 +284,7 @@ msgstr "{0, plural, one {# розмова буде прихована разом
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:50
-#: src/components/workspace/OrganisationUsageRollup.tsx:814
+#: src/components/workspace/OrganisationUsageRollup.tsx:836
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
@@ -722,7 +722,7 @@ msgstr "{0} запитує доступ MCP до dembrane"
 #. placeholder {2}: data.total_observer_count
 #. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
 #. placeholder {4}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/OrganisationUsageRollup.tsx:503
+#: src/components/workspace/OrganisationUsageRollup.tsx:525
 msgid "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
 msgstr "{0} робочих просторів · {1} платних місць · {2} безкоштовних спостерігачів · {3} у {4}"
 
@@ -874,6 +874,14 @@ msgstr "{empty, plural, one {# розмова ще не має транскри�
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:56
+msgid "{h} h"
+msgstr "{h} год"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:55
+msgid "{h} h {m} min"
+msgstr "{h} год {m} хв"
+
 #: src/components/conversation/ConversationLinks.tsx:166
 msgid "{hiddenCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{hiddenCount, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}}"
@@ -894,19 +902,43 @@ msgstr "Зверніть увагу на такі адреси ({invalidCount})"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} запрошує вас приєднатися до {resolvedWorkspaceName}"
 
+#: src/lib/freeTier.ts:70
+msgid "{limit, plural, one {The free plan includes # report a month.} other {The free plan includes # reports a month.}}"
+msgstr "{limit, plural, one {Тариф Free включає # звіт на місяць.} few {Тариф Free включає # звіти на місяць.} many {Тариф Free включає # звітів на місяць.} other {Тариф Free включає # звіту на місяць.}}"
+
+#: src/routes/project/present/MapFreeNotice.tsx:64
+msgid "{limit, plural, one {You have used this month's free map. The map in this presentation keeps its current version until {date}.} other {You have used this month's # free maps. The map in this presentation keeps its current version until {date}.}}"
+msgstr "{limit, plural, one {Ви використали # безкоштовну карту цього місяця. Карта в цій презентації залишатиметься в поточній версії до {date}.} few {Ви використали # безкоштовні карти цього місяця. Карта в цій презентації залишатиметься в поточній версії до {date}.} many {Ви використали # безкоштовних карт цього місяця. Карта в цій презентації залишатиметься в поточній версії до {date}.} other {Ви використали # безкоштовної карти цього місяця. Карта в цій презентації залишатиметься в поточній версії до {date}.}}"
+
+#: src/routes/project/present/MapFreeNotice.tsx:68
+msgid "{limit, plural, one {You have used this month's free map. The map in this presentation keeps its current version.} other {You have used this month's # free maps. The map in this presentation keeps its current version.}}"
+msgstr "{limit, plural, one {Ви використали # безкоштовну карту цього місяця. Карта в цій презентації зберігає поточну версію.} few {Ви використали # безкоштовні карти цього місяця. Карта в цій презентації зберігає поточну версію.} many {Ви використали # безкоштовних карт цього місяця. Карта в цій презентації зберігає поточну версію.} other {Ви використали # безкоштовної карти цього місяця. Карта в цій презентації зберігає поточну версію.}}"
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:66
+msgid "{limit, plural, one {You have used this month's free map. Your current map stays here. It resets on {date}.} other {You have used this month's # free maps. Your current maps stay here. They reset on {date}.}}"
+msgstr "{limit, plural, one {Ви використали # безкоштовну карту цього місяця. Ваша поточна карта залишається тут. Ліміт оновиться {date}.} few {Ви використали # безкоштовні карти цього місяця. Ваші поточні карти залишаються тут. Ліміт оновиться {date}.} many {Ви використали # безкоштовних карт цього місяця. Ваші поточні карти залишаються тут. Ліміт оновиться {date}.} other {Ви використали # безкоштовної карти цього місяця. Ваші поточні карти залишаються тут. Ліміт оновиться {date}.}}"
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:57
+msgid "{limit, plural, one {You have used this month's free report. It resets on {date}.} other {You have used this month's # free reports. They reset on {date}.}}"
+msgstr "{limit, plural, one {Ви використали # безкоштовний звіт цього місяця. Ліміт оновиться {date}.} few {Ви використали # безкоштовні звіти цього місяця. Ліміт оновиться {date}.} many {Ви використали # безкоштовних звітів цього місяця. Ліміт оновиться {date}.} other {Ви використали # безкоштовного звіту цього місяця. Ліміт оновиться {date}.}}"
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1263
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Видаліть # проєкт у цьому робочому просторі перед видаленням самого робочого простору.} few {Видаліть # проєкти у цьому робочому просторі перед видаленням самого робочого простору.} many {Видаліть # проєктів у цьому робочому просторі перед видаленням самого робочого простору.} other {Видаліть # проєктів у цьому робочому просторі перед видаленням самого робочого простору.}}"
 
+#: src/routes/admin/FreeLimitsPanel.tsx:57
+msgid "{m} min"
+msgstr "{m} хв"
+
 #: src/routes/admin/FreeLimitsPanel.tsx:46
-msgid "{n} h"
-msgstr "{n} год"
+#~ msgid "{n} h"
+#~ msgstr "{n} год"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:47
-msgid "{n} min"
-msgstr "{n} хв"
+#~ msgid "{n} min"
+#~ msgstr "{n} хв"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:911
+#: src/components/workspace/OrganisationUsageRollup.tsx:933
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
 msgstr "{name} вичерпав безкоштовні години запису на цей місяць. Запис призупинено до початку нового місяця."
 
@@ -1008,6 +1040,10 @@ msgstr "Надіслано запрошень: {sent}. Доступ до про�
 #: src/components/invite/InviteModal.tsx:467
 msgid "{sentCount} invites sent."
 msgstr "Надіслано запрошень: {sentCount}."
+
+#: src/routes/admin/FreeLimitsPanel.tsx:63
+msgid "{stored} min"
+msgstr "{stored} хв"
 
 #: src/components/conversation/LiveFunnelSection.tsx:95
 msgid "{tag} (preselected)"
@@ -1263,8 +1299,8 @@ msgstr "Проєкт містить усе, що стосується одніє
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Публічна сторінка потребує вищого тарифу. Вимкни «Публічна сторінка» в розділі «Поділитися», щоб показати інші зміни."
 
-#: src/components/report/UpdateReportModalButton.tsx:257
-#: src/components/report/CreateReportForm.tsx:159
+#: src/components/report/UpdateReportModalButton.tsx:259
+#: src/components/report/CreateReportForm.tsx:163
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "A report is already being generated for this project. Please wait for it to complete."
 
@@ -1485,8 +1521,8 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1707
 #: src/routes/admin/AdminSettingsRoute.tsx:2025
-#: src/components/workspace/OrganisationUsageRollup.tsx:395
-#: src/components/workspace/OrganisationUsageRollup.tsx:537
+#: src/components/workspace/OrganisationUsageRollup.tsx:417
+#: src/components/workspace/OrganisationUsageRollup.tsx:559
 #: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
@@ -1551,7 +1587,7 @@ msgstr "Додати примітку"
 msgid "Add a project goal before saving."
 msgstr "Додайте мету проєкту перед збереженням."
 
-#: src/components/workspace/gateWalls.ts:157
+#: src/components/workspace/gateWalls.ts:155
 msgid "add a workspace"
 msgstr "додати робочий простір"
 
@@ -1559,7 +1595,7 @@ msgstr "додати робочий простір"
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Add additional context (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:288
+#: src/components/participant/ParticipantInitiateForm.tsx:292
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
@@ -1576,7 +1612,7 @@ msgstr "Додавайте теги розмов з панелі керуван�
 msgid "select.all.modal.title.add"
 msgstr "Додати розмови до контексту"
 
-#: src/components/report/CreateReportForm.tsx:346
+#: src/components/report/CreateReportForm.tsx:350
 msgid "Add conversations to your project first"
 msgstr "Спочатку додайте розмови до свого проекту"
 
@@ -1600,7 +1636,7 @@ msgstr "Додати зображення"
 #~ msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 #~ msgstr "Add key terms or proper nouns to improve transcript quality and accuracy."
 
-#: src/components/workspace/gateWalls.ts:147
+#: src/components/workspace/gateWalls.ts:145
 msgid "add more projects"
 msgstr "додавати більше проєктів"
 
@@ -1706,7 +1742,7 @@ msgstr "Додати вебхук"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Add Your First Webhook"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:138
 msgid "add your logo"
 msgstr "додати свій логотип"
 
@@ -1904,7 +1940,7 @@ msgstr "Агентний чат"
 #: src/routes/organisation/OrganisationRoute.tsx:888
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
-#: src/components/workspace/OrganisationUsageRollup.tsx:536
+#: src/components/workspace/OrganisationUsageRollup.tsx:558
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -1973,7 +2009,7 @@ msgstr "На цьому тарифі всі місця зайняті. Вилу�
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "Усі місця зайняті. Звільніть місце або підвищіть тариф, щоб запросити більше людей."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:316
+#: src/components/workspace/OrganisationUsageRollup.tsx:338
 msgid "All seats taken"
 msgstr "Усі місця зайняті"
 
@@ -1986,7 +2022,7 @@ msgstr "Усі шаблони"
 #~ msgstr "All Templates"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2012
-#: src/components/workspace/OrganisationUsageRollup.tsx:524
+#: src/components/workspace/OrganisationUsageRollup.tsx:546
 msgid "All tiers"
 msgstr "Усі тарифи"
 
@@ -2340,7 +2376,7 @@ msgstr "Apply"
 msgid "Applying a template shows a confirmation with Undo."
 msgstr "Під час застосування шаблону показується підтвердження з можливістю скасування."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:325
+#: src/components/workspace/OrganisationUsageRollup.tsx:347
 msgid "Approaching a limit this month"
 msgstr "Наближення до ліміту цього місяця"
 
@@ -2543,8 +2579,8 @@ msgstr "Запитувати електронні адреси учасникі�
 #~ msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
 #~ msgstr "Запитуйте в чаті, коли захочете переглянути розмови наживо. Перше полотно залишиться тут."
 
-#: src/components/workspace/gateWalls.ts:137
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:135
+#: src/components/workspace/gateWalls.ts:136
 msgid "ask more in chat"
 msgstr "дізнатися більше в чаті"
 
@@ -2639,11 +2675,11 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Аудіо надходить"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:56
+#: src/routes/admin/FreeLimitsPanel.tsx:72
 msgid "Audio per conversation"
 msgstr "Аудіо на розмову"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:54
+#: src/routes/admin/FreeLimitsPanel.tsx:70
 msgid "Audio per month"
 msgstr "Аудіо на місяць"
 
@@ -2903,8 +2939,8 @@ msgstr "Перш ніж підключити агента"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:143
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:155
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:168
-#: src/components/report/UpdateReportModalButton.tsx:220
-#: src/components/report/CreateReportForm.tsx:248
+#: src/components/report/UpdateReportModalButton.tsx:224
+#: src/components/report/CreateReportForm.tsx:252
 #: src/components/project/ProjectPortalEditor.tsx:1380
 #: src/components/project/ProjectPortalEditor.tsx:1460
 #: src/components/project/ProjectExperimentalSection.tsx:50
@@ -2950,11 +2986,11 @@ msgstr "Оплата щороку"
 msgid "Billed monthly"
 msgstr "Оплата щомісяця"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:344
+#: src/components/workspace/OrganisationUsageRollup.tsx:366
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Оплачується за власним тарифом, а не тарифом вашої організації. Керуйте цим у платіжних даних цього робочого простору."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:347
+#: src/components/workspace/OrganisationUsageRollup.tsx:369
 msgid "Billed separately"
 msgstr "Оплачується окремо"
 
@@ -3324,7 +3360,7 @@ msgstr "Змінити власну роль?"
 msgid "Change your password from settings without contacting support."
 msgstr "Змінюйте пароль у налаштуваннях без звернення до служби підтримки."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:223
+#: src/routes/admin/FreeLimitsPanel.tsx:242
 msgid "Changed by"
 msgstr "Хто змінив"
 
@@ -3456,7 +3492,7 @@ msgstr "Chats"
 msgid "project.sidebar.chat.title"
 msgstr "Chats"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:60
+#: src/routes/admin/FreeLimitsPanel.tsx:76
 msgid "Chats per month"
 msgstr "Чати на місяць"
 
@@ -3685,7 +3721,7 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2118
-#: src/components/workspace/OrganisationUsageRollup.tsx:597
+#: src/components/workspace/OrganisationUsageRollup.tsx:619
 msgid "Click to sort"
 msgstr "Натисніть, щоб відсортувати"
 
@@ -3840,7 +3876,7 @@ msgstr "Колір графа за тональністю"
 msgid "Color nodes by"
 msgstr "Колір вузлів за"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:547
+#: src/components/workspace/OrganisationUsageRollup.tsx:569
 msgid "Columns"
 msgstr "Стовпці"
 
@@ -4077,7 +4113,7 @@ msgid "participant.button.next"
 msgstr "Продовжити"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:324
+#: src/components/participant/ParticipantInitiateForm.tsx:329
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
@@ -4166,7 +4202,7 @@ msgstr "Розмову розпочато"
 #~ msgid "Conversation Status"
 #~ msgstr "Conversation Status"
 
-#: src/components/report/CreateReportForm.tsx:225
+#: src/components/report/CreateReportForm.tsx:229
 msgid "Conversation status details"
 msgstr "Деталі статусу розмови"
 
@@ -4199,7 +4235,7 @@ msgid "Conversation transcribed"
 msgstr "Розмову транскрибовано"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1648
-#: src/components/report/CreateReportForm.tsx:217
+#: src/components/report/CreateReportForm.tsx:221
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
 msgstr "conversations"
@@ -4415,7 +4451,7 @@ msgstr "Не вдалося завантажити платежі. Переві�
 msgid "Could not load the canvas."
 msgstr "Не вдалося завантажити полотно."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:206
+#: src/routes/admin/FreeLimitsPanel.tsx:225
 msgid "Could not load the free plan limits."
 msgstr "Не вдалося завантажити ліміти тарифу Free."
 
@@ -4665,7 +4701,7 @@ msgstr "Створіть акаунт, щоб приєднатися"
 msgid "Create and manage multiple reports in one project."
 msgstr "Створюйте та керуйте кількома звітами в одному проєкті."
 
-#: src/components/workspace/gateWalls.ts:149
+#: src/components/workspace/gateWalls.ts:147
 msgid "create another report"
 msgstr "створити ще один звіт"
 
@@ -4678,7 +4714,7 @@ msgstr "Створюйте власні шаблони чату (бета) аб�
 msgid "Create methodology"
 msgstr "Створити методологію"
 
-#: src/components/workspace/gateWalls.ts:144
+#: src/components/workspace/gateWalls.ts:142
 msgid "create more organisations"
 msgstr "створювати більше організацій"
 
@@ -4708,8 +4744,8 @@ msgstr "Створити проєкт"
 msgid "Create project | dembrane"
 msgstr "Створити проєкт | dembrane"
 
-#: src/components/report/UpdateReportModalButton.tsx:189
-#: src/components/report/UpdateReportModalButton.tsx:215
+#: src/components/report/UpdateReportModalButton.tsx:193
+#: src/components/report/UpdateReportModalButton.tsx:219
 msgid "Create report"
 msgstr "Створити звіт"
 
@@ -4795,7 +4831,7 @@ msgstr "Кадрувати логотип"
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Кадруйте ваш логотип до співвідношення сторін 3:1 по горизонталі (рекомендовано, наприклад, 600×200 пікс.)."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:217
+#: src/routes/admin/FreeLimitsPanel.tsx:236
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr "Поточний"
@@ -4976,7 +5012,7 @@ msgstr "Аргументи без дублікатів"
 msgid "Deep Dive"
 msgstr "Deep Dive"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:220
+#: src/routes/admin/FreeLimitsPanel.tsx:239
 #: src/routes/admin/AdminSettingsRoute.tsx:3062
 #: src/routes/admin/AdminSettingsRoute.tsx:3078
 #: src/components/project/ProjectPortalEditor.tsx:826
@@ -5660,8 +5696,8 @@ msgstr "Редагувати методологію"
 msgid "Edit mode"
 msgstr "Edit mode"
 
-#: src/components/report/UpdateReportModalButton.tsx:304
-#: src/components/report/CreateReportForm.tsx:286
+#: src/components/report/UpdateReportModalButton.tsx:306
+#: src/components/report/CreateReportForm.tsx:290
 msgid "Edit options"
 msgstr "Edit options"
 
@@ -5991,8 +6027,8 @@ msgstr "Error"
 msgid "Error cloning project"
 msgstr "Error cloning project"
 
-#: src/components/report/UpdateReportModalButton.tsx:252
-#: src/components/report/CreateReportForm.tsx:153
+#: src/components/report/UpdateReportModalButton.tsx:254
+#: src/components/report/CreateReportForm.tsx:157
 msgid "Error creating report"
 msgstr "Error creating report"
 
@@ -6658,8 +6694,8 @@ msgstr "Перша сторінка"
 msgid "Fixture"
 msgstr "Зразок"
 
-#: src/components/report/UpdateReportModalButton.tsx:278
-#: src/components/report/CreateReportForm.tsx:260
+#: src/components/report/UpdateReportModalButton.tsx:280
+#: src/components/report/CreateReportForm.tsx:264
 msgid "Focus"
 msgstr "Focus"
 
@@ -6823,7 +6859,7 @@ msgstr "Обсяг тарифу Free"
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Тариф Free дозволяє 1 робочий простір на організацію"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:192
+#: src/routes/admin/FreeLimitsPanel.tsx:211
 msgid "Free plan limits"
 msgstr "Ліміти тарифу Free"
 
@@ -6898,7 +6934,7 @@ msgstr "Загальне відштовхування: {0}"
 msgid "Generate"
 msgstr "Generate"
 
-#: src/components/report/UpdateReportModalButton.tsx:172
+#: src/components/report/UpdateReportModalButton.tsx:176
 msgid "Generate a new report"
 msgstr "Generate a new report"
 
@@ -6914,7 +6950,7 @@ msgstr "Generate a new report"
 msgid "Generate a summary first"
 msgstr "Generate a summary first"
 
-#: src/components/workspace/gateWalls.ts:143
+#: src/components/workspace/gateWalls.ts:141
 msgid "generate another map"
 msgstr "створити ще одну мапу"
 
@@ -6932,13 +6968,13 @@ msgid "Generate map"
 msgstr "Згенерувати мапу"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:506
-#: src/components/report/UpdateReportModalButton.tsx:369
-#: src/components/report/CreateReportForm.tsx:357
+#: src/components/report/UpdateReportModalButton.tsx:371
+#: src/components/report/CreateReportForm.tsx:361
 msgid "Generate now"
 msgstr "Generate now"
 
-#: src/components/report/UpdateReportModalButton.tsx:337
-#: src/components/report/CreateReportForm.tsx:322
+#: src/components/report/UpdateReportModalButton.tsx:339
+#: src/components/report/CreateReportForm.tsx:326
 msgid "Generate now instead"
 msgstr "Generate now instead"
 
@@ -7049,7 +7085,7 @@ msgstr "Вкажіть назву сесії"
 msgid "Go back"
 msgstr "Go back"
 
-#: src/components/workspace/gateWalls.ts:142
+#: src/components/workspace/gateWalls.ts:140
 msgid "go beyond this month's free allowance"
 msgstr "перевищити ліміт тарифу Free на цей місяць"
 
@@ -7171,8 +7207,8 @@ msgid "Guided"
 msgstr "З керiвництвом"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:165
-msgid "h"
-msgstr "год"
+#~ msgid "h"
+#~ msgstr "год"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:226
 #: src/components/conversation/ProjectConversationsPanel.tsx:299
@@ -7184,7 +7220,7 @@ msgstr "Has verified artifacts"
 msgid "Have you completed a training?"
 msgstr "Ви пройшли навчання?"
 
-#: src/components/workspace/gateWalls.ts:153
+#: src/components/workspace/gateWalls.ts:151
 msgid "have your recordings transcribed"
 msgstr "транскрибувати ваші записи"
 
@@ -7261,7 +7297,7 @@ msgstr "Сховати відсутні аргументи"
 msgid "Hide preview"
 msgstr "Сховати попередній перегляд"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:293
+#: src/components/workspace/OrganisationUsageRollup.tsx:315
 msgid "Hide projects"
 msgstr "Сховати проєкти"
 
@@ -7277,11 +7313,11 @@ msgstr "Сховати кроки"
 msgid "Hide the changes"
 msgstr "Сховати зміни"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:139
 msgid "hide the dembrane event invitation"
 msgstr "приховати запрошення на подію dembrane"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:94
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Приховати запрошення на подію dembrane можна в платному плані."
 
@@ -7357,7 +7393,7 @@ msgstr "Ведучі можуть увімкнути відповіді та н�
 #: src/routes/admin/AdminSettingsRoute.tsx:1564
 #: src/routes/admin/AdminSettingsRoute.tsx:1677
 #: src/components/workspace/TierCapacityMatrix.tsx:110
-#: src/components/workspace/OrganisationUsageRollup.tsx:375
+#: src/components/workspace/OrganisationUsageRollup.tsx:397
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
 msgstr "Години"
@@ -7559,8 +7595,8 @@ msgstr "Своїми словами"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1715
 #: src/routes/admin/AdminSettingsRoute.tsx:2026
-#: src/components/workspace/OrganisationUsageRollup.tsx:399
-#: src/components/workspace/OrganisationUsageRollup.tsx:538
+#: src/components/workspace/OrganisationUsageRollup.tsx:421
+#: src/components/workspace/OrganisationUsageRollup.tsx:560
 msgid "Inactive"
 msgstr "Неактивний"
 
@@ -7580,7 +7616,7 @@ msgstr "Include portal link"
 msgid "Included hours used up"
 msgstr "Включені години вичерпано"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:315
+#: src/components/workspace/OrganisationUsageRollup.tsx:337
 msgid "Included hours used up this month"
 msgstr "Включені години за цей місяць вичерпано"
 
@@ -7869,7 +7905,7 @@ msgstr "It looks like the conversation was deleted while you were recording. We'
 msgid "participant.outcome.error.description"
 msgstr "It looks like we couldn't load this outcome. This might be a temporary issue. You can try reloading or go back to select a different topic."
 
-#: src/components/report/CreateReportForm.tsx:196
+#: src/components/report/CreateReportForm.tsx:200
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
@@ -8081,7 +8117,7 @@ msgstr "Зберегти {tier} до певної дати"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 
-#: src/components/workspace/gateWalls.ts:145
+#: src/components/workspace/gateWalls.ts:143
 msgid "keep analysing with popcorn"
 msgstr "продовжити аналізувати з Popcorn"
 
@@ -8112,8 +8148,8 @@ msgstr "Залишити в очікуванні"
 #~ msgstr "Оновлюйте Popcorn разом із надходженням нових розмов. Ви можете розпочати показ ще до першого запису."
 
 #: src/components/workspace/gateWalls.ts:135
-msgid "keep recording"
-msgstr "продовжувати запис"
+#~ msgid "keep recording"
+#~ msgstr "продовжувати запис"
 
 #: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
@@ -8167,10 +8203,10 @@ msgstr "Граф знань"
 #: src/routes/project/present/PresentRoute.tsx:136
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
-#: src/components/report/UpdateReportModalButton.tsx:273
-#: src/components/report/UpdateReportModalButton.tsx:347
-#: src/components/report/CreateReportForm.tsx:255
-#: src/components/report/CreateReportForm.tsx:331
+#: src/components/report/UpdateReportModalButton.tsx:275
+#: src/components/report/UpdateReportModalButton.tsx:349
+#: src/components/report/CreateReportForm.tsx:259
+#: src/components/report/CreateReportForm.tsx:335
 #: src/components/project/ProjectPortalEditor.tsx:603
 #: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
@@ -8360,11 +8396,11 @@ msgstr "Скоріше хибно"
 msgid "Likely true"
 msgstr "Скоріше істинно"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:214
+#: src/routes/admin/FreeLimitsPanel.tsx:233
 msgid "Limit"
 msgstr "Ліміт"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:113
+#: src/routes/admin/FreeLimitsPanel.tsx:132
 msgid "Limit saved"
 msgstr "Ліміт збережено"
 
@@ -8759,7 +8795,7 @@ msgstr "цикл"
 msgid "Low battery"
 msgstr "Низький заряд батареї"
 
-#: src/components/workspace/gateWalls.ts:146
+#: src/components/workspace/gateWalls.ts:144
 msgid "make a workspace private"
 msgstr "зробити робочий простір приватним"
 
@@ -8888,7 +8924,7 @@ msgstr "Результати карти ще не готові."
 msgid "Maps"
 msgstr "Мапи"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:66
+#: src/routes/admin/FreeLimitsPanel.tsx:82
 msgid "Maps per month"
 msgstr "Мапи на місяць"
 
@@ -9067,7 +9103,7 @@ msgstr "Методологію оновлено"
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:165
+#: src/routes/admin/FreeLimitsPanel.tsx:184
 msgid "min"
 msgstr "хв"
 
@@ -9343,7 +9379,7 @@ msgstr "Оповіді (англійська)"
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Потрібно більше прав доступу? Попросіть людину, яка вас запросила, додати вас до організації або іншого робочого простору."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:962
+#: src/components/workspace/OrganisationUsageRollup.tsx:984
 msgid "Needs attention"
 msgstr "Потребує уваги"
 
@@ -9379,7 +9415,7 @@ msgstr "Нейтрально"
 msgid "Never"
 msgstr "Ніколи"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:144
+#: src/routes/admin/FreeLimitsPanel.tsx:163
 msgid "Never changed"
 msgstr "Ніколи не змінювалося"
 
@@ -9410,7 +9446,7 @@ msgstr "Нова назва розмови"
 #~ msgid "New Conversation Name"
 #~ msgstr "New Conversation Name"
 
-#: src/components/report/UpdateReportModalButton.tsx:169
+#: src/components/report/UpdateReportModalButton.tsx:173
 msgid "New conversations added since this report"
 msgstr "Новi розмови додано пiсля цього звiту"
 
@@ -9468,7 +9504,7 @@ msgstr "У нових проєктах dembrane більше не додаєть
 msgid "New tier"
 msgstr "Новий рівень"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:226
+#: src/routes/admin/FreeLimitsPanel.tsx:245
 msgid "New value"
 msgstr "Нове значення"
 
@@ -9636,7 +9672,7 @@ msgstr "No conversations were processed. This may happen if all conversations ar
 msgid "No conversations yet."
 msgstr "Розмов ще немає."
 
-#: src/components/report/CreateReportForm.tsx:201
+#: src/components/report/CreateReportForm.tsx:205
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Розмов ще немає. Ви можете запланувати звiт зараз, i розмови будуть включенi пiсля їх додавання."
 
@@ -9833,7 +9869,7 @@ msgstr "Popcorn ще немає. Вони з'являться після пер�
 msgid "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 msgstr "Підготовлених результатів ще немає. Відкрийте «Рецепти», щоб підготувати результати з відповідних розмов цього проєкту."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:799
+#: src/components/workspace/OrganisationUsageRollup.tsx:821
 msgid "No project activity this period."
 msgstr "Немає активності в проєкті за цей період."
 
@@ -10087,7 +10123,7 @@ msgstr "Не в цій презентації."
 msgid "Not in this view"
 msgstr "Не в цьому поданні"
 
-#: src/components/workspace/FreeAllowanceCard.tsx:161
+#: src/components/workspace/FreeAllowanceCard.tsx:165
 msgid "Not monthly"
 msgstr "Не щомісяця"
 
@@ -10203,7 +10239,7 @@ msgstr "У цій презентації нічого не приховано."
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr "Нічого не надсилається, доки ви самі не надішлете. Спершу відредагуйте текст нижче."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:693
+#: src/components/workspace/OrganisationUsageRollup.tsx:715
 msgid "Nothing matches the filter."
 msgstr "Нічого не відповідає фільтру."
 
@@ -10303,7 +10339,7 @@ msgstr "На білінгу, керованому dembrane. Перехід на 
 msgid "On recording page"
 msgstr "На сторінці запису"
 
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:101
 msgid "On the free plan one project takes recordings."
 msgstr "У тарифі Free запис доступний лише в одному проєкті."
 
@@ -10745,7 +10781,7 @@ msgstr "Організацію не знайдено"
 msgid "Organisation only"
 msgstr "Лише організація"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:490
+#: src/components/workspace/OrganisationUsageRollup.tsx:512
 msgid "Organisation usage"
 msgstr "Використання в організації"
 
@@ -11415,11 +11451,11 @@ msgstr "Popcorn також доступний такою мовою"
 msgid "Popcorn analyses"
 msgstr "Аналізи Popcorn"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:68
+#: src/routes/admin/FreeLimitsPanel.tsx:84
 msgid "Popcorn analyses per month"
 msgstr "Аналізів Popcorn на місяць"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:70
+#: src/routes/admin/FreeLimitsPanel.tsx:86
 msgid "Popcorn cadence floor"
 msgstr "Мінімальний темп Popcorn"
 
@@ -11700,11 +11736,11 @@ msgid "Private project"
 msgstr "Приватний проєкт"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1253
-#: src/components/workspace/OrganisationUsageRollup.tsx:330
+#: src/components/workspace/OrganisationUsageRollup.tsx:352
 msgid "Private workspace"
 msgstr "Приватний робочий простір"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:99
 msgid "Private workspaces come with a paid plan."
 msgstr "Приватні робочі простори доступні у платних тарифах."
 
@@ -11872,7 +11908,7 @@ msgstr "Прогнозована річна сума"
 msgid "projects"
 msgstr "проєкти"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:58
+#: src/routes/admin/FreeLimitsPanel.tsx:74
 #: src/components/workspace/UsageCard.tsx:255
 #: src/components/workspace/FreeAllowanceCard.tsx:49
 msgid "Projects"
@@ -12256,7 +12292,7 @@ msgstr "Записати голосове повідомлення"
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
-#: src/components/workspace/gateWalls.ts:148
+#: src/components/workspace/gateWalls.ts:146
 msgid "record in every project"
 msgstr "записувати в кожному проєкті"
 
@@ -12655,8 +12691,8 @@ msgstr "звіт"
 msgid "Report"
 msgstr "Report"
 
-#: src/components/report/UpdateReportModalButton.tsx:251
-#: src/components/report/CreateReportForm.tsx:153
+#: src/components/report/UpdateReportModalButton.tsx:253
+#: src/components/report/CreateReportForm.tsx:157
 msgid "Report already generating"
 msgstr "Report already generating"
 
@@ -12714,8 +12750,8 @@ msgstr "Виправлено надійність генерації звіті�
 msgid "Report issues from the dashboard with images and voice recordings."
 msgstr "Повідомляйте про проблеми з панелі керування за допомогою зображень та голосових записів."
 
-#: src/components/report/UpdateReportModalButton.tsx:228
-#: src/components/report/CreateReportForm.tsx:179
+#: src/components/report/UpdateReportModalButton.tsx:232
+#: src/components/report/CreateReportForm.tsx:183
 msgid "Report limit reached"
 msgstr "Досягнуто ліміту звітів"
 
@@ -12743,8 +12779,8 @@ msgstr "Report scheduled"
 msgid "Report subscriptions, Library generation and live indicators receive fixes."
 msgstr "Покращено підписки на звіти, генерацію Бібліотеки та індикатори наживо."
 
-#: src/components/report/UpdateReportModalButton.tsx:385
-#: src/components/report/CreateReportForm.tsx:376
+#: src/components/report/UpdateReportModalButton.tsx:387
+#: src/components/report/CreateReportForm.tsx:380
 msgid "Report templates are on our roadmap."
 msgstr "Report templates are on our roadmap."
 
@@ -12766,7 +12802,7 @@ msgstr "Звіт оновлено · {0}"
 msgid "Reports"
 msgstr "Reports"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:64
+#: src/routes/admin/FreeLimitsPanel.tsx:80
 msgid "Reports per month"
 msgstr "Звіти на місяць"
 
@@ -12960,7 +12996,7 @@ msgid "Reset to default"
 msgstr "Reset to default"
 
 #. placeholder {0}: formatResets(data.resets_at, i18n.locale)
-#: src/components/workspace/FreeAllowanceCard.tsx:150
+#: src/components/workspace/FreeAllowanceCard.tsx:154
 msgid "Resets on {0}"
 msgstr "Оновлюється {0}"
 
@@ -13288,7 +13324,7 @@ msgid "Sample popcorn session"
 msgstr "Зразок сесії Popcorn"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:261
-#: src/routes/admin/FreeLimitsPanel.tsx:176
+#: src/routes/admin/FreeLimitsPanel.tsx:195
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
 #: src/components/settings/LegalBasisCard.tsx:226
@@ -13415,15 +13451,15 @@ msgid "Scanned the QR"
 msgstr "Відсканували QR"
 
 #: src/components/training/TrainingRowActions.tsx:152
-#: src/components/report/UpdateReportModalButton.tsx:376
-#: src/components/report/CreateReportForm.tsx:368
+#: src/components/report/UpdateReportModalButton.tsx:378
+#: src/components/report/CreateReportForm.tsx:372
 msgid "Schedule"
 msgstr "Schedule"
 
-#: src/components/report/UpdateReportModalButton.tsx:213
-#: src/components/report/UpdateReportModalButton.tsx:329
-#: src/components/report/CreateReportForm.tsx:245
-#: src/components/report/CreateReportForm.tsx:314
+#: src/components/report/UpdateReportModalButton.tsx:217
+#: src/components/report/UpdateReportModalButton.tsx:331
+#: src/components/report/CreateReportForm.tsx:249
+#: src/components/report/CreateReportForm.tsx:318
 msgid "Schedule report"
 msgstr "Запланувати звіт"
 
@@ -13593,7 +13629,7 @@ msgstr "Search text:"
 msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:514
+#: src/components/workspace/OrganisationUsageRollup.tsx:536
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Пошук робочих просторів"
@@ -13637,7 +13673,7 @@ msgstr "місць"
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/TierCapacityMatrix.tsx:109
-#: src/components/workspace/OrganisationUsageRollup.tsx:387
+#: src/components/workspace/OrganisationUsageRollup.tsx:409
 #: src/components/billing/BillingManager.tsx:342
 #: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
@@ -13673,14 +13709,14 @@ msgstr "Переглянути тарифи"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Переглядайте на Карті аргументи з ваших розмов і цитати, на яких вони ґрунтуються."
 
-#: src/components/workspace/gateWalls.ts:154
+#: src/components/workspace/gateWalls.ts:152
 msgid "see transcripts"
 msgstr "переглядати стенограми"
 
-#: src/routes/project/present/MapFreeNotice.tsx:69
-#: src/components/workspace/FreeAllowanceBanner.tsx:70
-#: src/components/report/UpdateReportModalButton.tsx:243
-#: src/components/report/CreateReportForm.tsx:189
+#: src/routes/project/present/MapFreeNotice.tsx:81
+#: src/components/workspace/FreeAllowanceBanner.tsx:78
+#: src/components/report/UpdateReportModalButton.tsx:245
+#: src/components/report/CreateReportForm.tsx:193
 #: src/components/popcorn/PopcornFreeNotice.tsx:69
 #: src/components/chat/FreeTierChatGate.tsx:104
 msgid "See upgrade options"
@@ -13981,7 +14017,7 @@ msgstr "Окремий (клієнт)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Розділяйте комами, пробілами або новими рядками."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:276
+#: src/components/participant/ParticipantInitiateForm.tsx:280
 msgid "Session name"
 msgstr "Назва сесії"
 
@@ -14162,8 +14198,8 @@ msgstr "Поділитися з робочим простором"
 msgid "Share your details here"
 msgstr "Share your details here"
 
-#: src/components/report/UpdateReportModalButton.tsx:393
-#: src/components/report/CreateReportForm.tsx:383
+#: src/components/report/UpdateReportModalButton.tsx:395
+#: src/components/report/CreateReportForm.tsx:387
 msgid "Share your ideas with our team"
 msgstr "Share your ideas with our team"
 
@@ -14171,7 +14207,7 @@ msgstr "Share your ideas with our team"
 msgid "Share your voice by scanning the QR code"
 msgstr "Подiлiться своїм голосом, вiдсканувавши QR-код"
 
-#: src/components/workspace/FreeAllowanceCard.tsx:135
+#: src/components/workspace/FreeAllowanceCard.tsx:138
 msgid "Shared across all workspaces in this organisation"
 msgstr "Спільно для всіх робочих просторів у цій організації"
 
@@ -14219,7 +14255,7 @@ msgstr "Show"
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Показувати «made with dembrane» на екрані"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:989
+#: src/components/workspace/OrganisationUsageRollup.tsx:1011
 msgid "Show {hidden} more"
 msgstr "Показати ще {hidden}"
 
@@ -14336,7 +14372,7 @@ msgstr "Показуйте popcorn одночасно ще до трьох мо�
 msgid "Show preview"
 msgstr "Показати попередній перегляд"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:293
+#: src/components/workspace/OrganisationUsageRollup.tsx:315
 msgid "Show projects"
 msgstr "Показати проєкти"
 
@@ -14844,7 +14880,7 @@ msgstr "Твердження"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1672
 #: src/routes/admin/AdminSettingsRoute.tsx:2614
-#: src/components/workspace/OrganisationUsageRollup.tsx:402
+#: src/components/workspace/OrganisationUsageRollup.tsx:424
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
@@ -15191,7 +15227,7 @@ msgid "Tag deleted"
 msgstr "Тег видалено"
 
 #: src/components/project/ProjectTagsInput.tsx:255
-#: src/components/participant/ParticipantInitiateForm.tsx:287
+#: src/components/participant/ParticipantInitiateForm.tsx:291
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:721
 #: src/components/conversation/ConversationsMiniList.tsx:189
@@ -15252,7 +15288,7 @@ msgstr "Завдання"
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr "Повідомте адміністраторам робочого простору, для чого вам потрібен доступ. Ця примітка необов'язкова."
 
-#: src/components/workspace/FreeAllowanceCard.tsx:173
+#: src/components/workspace/FreeAllowanceCard.tsx:177
 #: src/components/workspace/FeatureGatePopover.tsx:115
 #: src/components/billing/BillingManager.tsx:690
 msgid "Tell us what you need"
@@ -15517,17 +15553,39 @@ msgstr "Портал зворотного зв'язку пояснює, як п�
 msgid "The following conversations were automatically added to the context"
 msgstr "The following conversations were automatically added to the context"
 
-#: src/components/workspace/gateWalls.ts:108
+#: src/components/workspace/gateWalls.ts:107
 msgid "The free plan covers one workspace."
 msgstr "Тариф Free містить один робочий простір."
 
 #: src/components/workspace/gateWalls.ts:99
-msgid "The free plan includes 12 popcorn analyses a month."
-msgstr "Тариф Free містить 12 аналізів Popcorn на місяць."
+#~ msgid "The free plan includes 12 popcorn analyses a month."
+#~ msgstr "Тариф Free містить 12 аналізів Popcorn на місяць."
 
 #: src/components/workspace/gateWalls.ts:88
-msgid "The free plan includes 5 hours of recording a month."
-msgstr "Тариф Free містить 5 годин запису на місяць."
+#~ msgid "The free plan includes 5 hours of recording a month."
+#~ msgstr "Тариф Free містить 5 годин запису на місяць."
+
+#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:91
+msgid "The free plan includes a few chats a month, each with a set number of questions."
+msgstr "Тариф Free включає кілька чатів на місяць, кожен із фіксованою кількістю запитань."
+
+#: src/components/workspace/gateWalls.ts:100
+msgid "The free plan includes a limited number of projects."
+msgstr "Тариф Free включає обмежену кількість проєктів."
+
+#: src/components/workspace/gateWalls.ts:96
+msgid "The free plan includes a monthly allowance of maps."
+msgstr "Тариф Free включає щомісячний ліміт карт."
+
+#: src/components/workspace/gateWalls.ts:98
+msgid "The free plan includes a monthly allowance of popcorn analyses."
+msgstr "Тариф Free включає щомісячний ліміт аналізів Popcorn."
+
+#: src/lib/freeTier.ts:69
+#: src/components/workspace/gateWalls.ts:102
+msgid "The free plan includes a monthly allowance of reports."
+msgstr "Тариф Free включає щомісячний ліміт звітів."
 
 #: src/components/workspace/gateWalls.ts:91
 #: src/components/workspace/gateWalls.ts:92
@@ -15535,24 +15593,24 @@ msgstr "Тариф Free містить 5 годин запису на місяц
 #~ msgstr "Тариф Free містить один чат із трьома запитаннями."
 
 #: src/components/workspace/gateWalls.ts:97
-msgid "The free plan includes one map a month."
-msgstr "Тариф Free містить одну мапу на місяць."
+#~ msgid "The free plan includes one map a month."
+#~ msgstr "Тариф Free містить одну мапу на місяць."
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:97
 msgid "The free plan includes one organisation."
 msgstr "Тариф Free містить одну організацію."
 
 #: src/components/workspace/gateWalls.ts:101
-msgid "The free plan includes one project."
-msgstr "Тариф Free містить один проєкт."
+#~ msgid "The free plan includes one project."
+#~ msgstr "Тариф Free містить один проєкт."
 
 #: src/components/workspace/gateWalls.ts:103
 #: src/components/report/UpdateReportModalButton.tsx:171
 #: src/components/report/UpdateReportModalButton.tsx:194
 #: src/components/report/UpdateReportModalButton.tsx:234
 #: src/components/report/CreateReportForm.tsx:185
-msgid "The free plan includes one report a month."
-msgstr "Тариф Free містить один звіт на місяць."
+#~ msgid "The free plan includes one report a month."
+#~ msgstr "Тариф Free містить один звіт на місяць."
 
 #: src/components/workspace/gateWalls.ts:101
 #~ msgid "The free plan includes one report."
@@ -15560,8 +15618,8 @@ msgstr "Тариф Free містить один звіт на місяць."
 
 #: src/components/workspace/gateWalls.ts:91
 #: src/components/workspace/gateWalls.ts:92
-msgid "The free plan includes two chats a month, with 20 questions each."
-msgstr "Тариф Free містить два чати на місяць, по 20 запитань у кожному."
+#~ msgid "The free plan includes two chats a month, with 20 questions each."
+#~ msgstr "Тариф Free містить два чати на місяць, по 20 запитань у кожному."
 
 #: src/components/goal/ProjectGoalSection.tsx:87
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
@@ -15759,8 +15817,8 @@ msgstr "Вузли з'являтимуться тут під час випадк
 msgid "The report ends with an invitation to add your voice."
 msgstr "Звіт завершується запрошенням додати свій голос."
 
-#: src/components/report/UpdateReportModalButton.tsx:316
-#: src/components/report/CreateReportForm.tsx:298
+#: src/components/report/UpdateReportModalButton.tsx:318
+#: src/components/report/CreateReportForm.tsx:302
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
@@ -15883,8 +15941,8 @@ msgstr "Немає інших робочих просторів, куди мож
 #~ msgid "There was an error cloning your project. Please try again or contact support."
 #~ msgstr "There was an error cloning your project. Please try again or contact support."
 
-#: src/components/report/UpdateReportModalButton.tsx:262
-#: src/components/report/CreateReportForm.tsx:164
+#: src/components/report/UpdateReportModalButton.tsx:264
+#: src/components/report/CreateReportForm.tsx:168
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "There was an error creating your report. Please try again or contact support."
 
@@ -15909,7 +15967,7 @@ msgstr "These conversations were excluded due to missing transcripts."
 #~ msgid "These default view templates will be generated when you create your first library."
 #~ msgstr "These default view templates will be generated when you create your first library."
 
-#: src/routes/admin/FreeLimitsPanel.tsx:195
+#: src/routes/admin/FreeLimitsPanel.tsx:214
 msgid "These limits apply to every free account. Changes take effect within about a minute."
 msgstr "Ці ліміти діють для кожного безкоштовного акаунту. Зміни набувають чинності приблизно за хвилину."
 
@@ -16334,7 +16392,7 @@ msgstr "Це повертає робочий простір до спільно�
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
 
-#: src/components/report/CreateReportForm.tsx:183
+#: src/components/report/CreateReportForm.tsx:187
 msgid "This sample project includes one report."
 msgstr "Цей приклад проєкту містить один звіт."
 
@@ -16459,7 +16517,7 @@ msgstr "Позначте всі відповідні варіанти"
 #: src/routes/admin/AdminSettingsRoute.tsx:1561
 #: src/routes/admin/AdminSettingsRoute.tsx:2588
 #: src/routes/admin/AdminSettingsRoute.tsx:3010
-#: src/components/workspace/OrganisationUsageRollup.tsx:360
+#: src/components/workspace/OrganisationUsageRollup.tsx:382
 msgid "Tier"
 msgstr "Тариф"
 
@@ -16632,7 +16690,7 @@ msgstr "Topic-based title describing what was discussed"
 msgid "total"
 msgstr "total"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:665
+#: src/components/workspace/OrganisationUsageRollup.tsx:687
 msgid "Total"
 msgstr "Усього"
 
@@ -16746,7 +16804,7 @@ msgstr "Помилка транскрипції"
 msgid "Transcription failed"
 msgstr "Не вдалося транскрибувати"
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:104
 msgid "Transcripts come with a paid plan."
 msgstr "Стенограми доступні в платному тарифі."
 
@@ -16950,7 +17008,7 @@ msgstr "Перетворюємо голосове повідомлення на 
 #~ msgid "Turns in the second chat"
 #~ msgstr "Репліки в другому чаті"
 
-#: src/routes/admin/FreeLimitsPanel.tsx:62
+#: src/routes/admin/FreeLimitsPanel.tsx:78
 msgid "Turns per chat"
 msgstr "Реплік на чат"
 
@@ -17129,7 +17187,7 @@ msgstr "до {0}"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1667
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
-#: src/components/workspace/OrganisationUsageRollup.tsx:811
+#: src/components/workspace/OrganisationUsageRollup.tsx:833
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
 msgid "Untitled"
 msgstr "Без назви"
@@ -17285,7 +17343,7 @@ msgstr "Оновіть тариф, щоб згенерувати підсумк�
 msgid "Upgrade your workspace to download audio for conversations recorded after the cap"
 msgstr "Оновіть тариф робочого простору, щоб завантажувати аудіо для розмов, записаних понад ліміт"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:29
+#: src/components/conversation/LockedTranscriptOverlay.tsx:26
 msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Оновіть тариф робочого простору, щоб переглядати підсумки для нових розмов."
 
@@ -17294,7 +17352,7 @@ msgstr "Оновіть тариф робочого простору, щоб пе
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Оновіть тариф робочого простору, щоб переглянути цю розмову"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:30
+#: src/components/conversation/LockedTranscriptOverlay.tsx:27
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr "Оновіть тариф робочого простору, щоб переглядати стенограми нових розмов."
 
@@ -17360,7 +17418,7 @@ msgstr "Ліміт завантажень вичерпано. Оновіть т�
 msgid "Upload logo"
 msgstr "Завантажити логотип"
 
-#: src/components/workspace/gateWalls.ts:155
+#: src/components/workspace/gateWalls.ts:153
 msgid "upload recordings"
 msgstr "завантажувати записи"
 
@@ -17382,7 +17440,7 @@ msgstr "Uploading audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:105
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Завантаження записів доступне на платному тарифі."
 
@@ -17484,13 +17542,17 @@ msgstr "Використати це формулювання"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Використовуйте українську мову для чату та відповідей учасників."
 
-#: src/components/workspace/gateWalls.ts:156
+#: src/components/workspace/gateWalls.ts:154
 msgid "use webhooks"
 msgstr "використовувати вебхуки"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:137
 msgid "use your voice in chat"
 msgstr "використовувати голос у чаті"
+
+#: src/components/workspace/FreeAllowanceCard.tsx:136
+msgid "Used by this workspace only"
+msgstr "Використовується лише цим робочим простором"
 
 #: src/components/billing/BillingManager.tsx:430
 msgid "Used on your invoices. Prices exclude VAT."
@@ -17700,7 +17762,7 @@ msgstr "Перегляди"
 msgid "Views: {0}"
 msgstr "Перегляди: {0}"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:552
+#: src/components/workspace/OrganisationUsageRollup.tsx:574
 msgid "Visible columns"
 msgstr "Видимі стовпці"
 
@@ -17754,7 +17816,7 @@ msgstr "Голосове введення враховує ліміт запис
 msgid "Voiced in a conversation"
 msgstr "Озвучено в розмові"
 
-#: src/components/report/CreateReportForm.tsx:237
+#: src/components/report/CreateReportForm.tsx:241
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Waiting for conversations to finish before generating a report."
 
@@ -17828,7 +17890,7 @@ msgstr "Ми не знайшли сторінку, яку ви шукали. М�
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "Не вдалося завантажити цю організацію. Спробуйте ще раз за мить."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:468
+#: src/components/workspace/OrganisationUsageRollup.tsx:490
 msgid "We couldn't load this organisation's usage."
 msgstr "Не вдалося завантажити дані про використання цієї організації."
 
@@ -17962,7 +18024,7 @@ msgstr "Webhooks are automated messages sent from one app to another when someth
 msgid "Webhooks are not enabled for this environment."
 msgstr "Вебхуки не ввімкнено для цього середовища."
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:106
 msgid "Webhooks come with a paid plan."
 msgstr "Вебхуки доступні на платному тарифі."
 
@@ -18172,8 +18234,8 @@ msgstr "Якщо ввімкнено, служба підтримки dembrane м
 #~ msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 #~ msgstr "Коли учасники сканують QR-код, вони з'являються тут і проходять етапи в реальному часі."
 
-#: src/components/report/UpdateReportModalButton.tsx:310
-#: src/components/report/CreateReportForm.tsx:292
+#: src/components/report/UpdateReportModalButton.tsx:312
+#: src/components/report/CreateReportForm.tsx:296
 msgid "When should the report be generated?"
 msgstr "When should the report be generated?"
 
@@ -18246,7 +18308,7 @@ msgstr "Чому не в цій презентації?"
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Чому? Одне речення, для колег і для тих, хто перевірятиме пізніше."
 
-#: src/components/report/CreateReportForm.tsx:219
+#: src/components/report/CreateReportForm.tsx:223
 msgid "will be included in your report"
 msgstr "will be included in your report"
 
@@ -18341,7 +18403,7 @@ msgstr "Працюємо над відповіддю..."
 #: src/routes/admin/AdminSettingsRoute.tsx:1667
 #: src/routes/admin/AdminSettingsRoute.tsx:2215
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/components/workspace/OrganisationUsageRollup.tsx:354
+#: src/components/workspace/OrganisationUsageRollup.tsx:376
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
 msgid "Workspace"
@@ -18661,7 +18723,7 @@ msgstr "You have successfully unsubscribed."
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "У вас є доступ служби підтримки до цього робочого простору. Він завершиться автоматично {endsAt}."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:47
+#: src/components/workspace/FreeAllowanceBanner.tsx:48
 msgid "You have used this month's free chats. They reset on {date}."
 msgstr "Ви використали безкоштовні чати цього місяця. Ліміт оновиться {date}."
 
@@ -18670,16 +18732,28 @@ msgid "You have used this month's free chats. Upgrade to keep chatting."
 msgstr "Ви використали безкоштовні чати цього місяця. Оновіть тариф, щоб продовжувати спілкуватися."
 
 #: src/routes/project/present/MapFreeNotice.tsx:51
-msgid "You have used this month's free map. The map in this presentation keeps its current version until {date}."
-msgstr "Ви використали безкоштовну мапу цього місяця. Мапа в цій презентації залишатиметься в поточній версії до {date}."
+#~ msgid "You have used this month's free map. The map in this presentation keeps its current version until {date}."
+#~ msgstr "Ви використали безкоштовну мапу цього місяця. Мапа в цій презентації залишатиметься в поточній версії до {date}."
 
 #: src/routes/project/present/MapFreeNotice.tsx:56
-msgid "You have used this month's free map. The map in this presentation keeps its current version."
-msgstr "Ви використали безкоштовну мапу цього місяця. Мапа в цій презентації залишатиметься в поточній версії."
+#~ msgid "You have used this month's free map. The map in this presentation keeps its current version."
+#~ msgstr "Ви використали безкоштовну мапу цього місяця. Мапа в цій презентації залишатиметься в поточній версії."
 
 #: src/components/workspace/FreeAllowanceBanner.tsx:57
-msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
-msgstr "Ви використали безкоштовну мапу цього місяця. Поточна мапа залишається доступною. Ліміт оновиться {date}."
+#~ msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
+#~ msgstr "Ви використали безкоштовну мапу цього місяця. Поточна мапа залишається доступною. Ліміт оновиться {date}."
+
+#: src/routes/project/present/MapFreeNotice.tsx:61
+msgid "You have used this month's free maps. The map in this presentation keeps its current version until {date}."
+msgstr "Ви використали безкоштовні карти цього місяця. Карта в цій презентації зберігатиме поточну версію до {date}."
+
+#: src/routes/project/present/MapFreeNotice.tsx:62
+msgid "You have used this month's free maps. The map in this presentation keeps its current version."
+msgstr "Ви використали безкоштовні карти цього місяця. Карта в цій презентації залишається в поточній версії."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:63
+msgid "You have used this month's free maps. Your current maps stay here. They reset on {date}."
+msgstr "Ви використали безкоштовні карти цього місяця. Ваші поточні карти залишаються тут. Ліміт оновиться {date}."
 
 #: src/components/popcorn/PopcornFreeNotice.tsx:56
 msgid "You have used this month's free popcorn analyses. The results stay here."
@@ -18690,8 +18764,12 @@ msgid "You have used this month's free popcorn analyses. The results stay here. 
 msgstr "Ви використали безкоштовні аналізи Popcorn на цей місяць. Результати залишаються тут. Аналіз відновиться {date}."
 
 #: src/components/workspace/FreeAllowanceBanner.tsx:52
-msgid "You have used this month's free report. It resets on {date}."
-msgstr "Ви використали безкоштовний звіт цього місяця. Ліміт оновиться {date}."
+#~ msgid "You have used this month's free report. It resets on {date}."
+#~ msgstr "Ви використали безкоштовний звіт цього місяця. Ліміт оновиться {date}."
+
+#: src/components/workspace/FreeAllowanceBanner.tsx:54
+msgid "You have used this month's free reports. They reset on {date}."
+msgstr "Ви використали безкоштовні звіти цього місяця. Ліміт оновиться {date}."
 
 #: src/components/project/ProjectUploadSection.tsx:42
 msgid "You have view-only access to this project, so you can't upload recordings."
@@ -18842,11 +18920,11 @@ msgstr "Вас запросили приєднатися до <0>{0}</0>. Зар
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Ви досягли ліміту тарифу Free для цього чату. Оновіть тариф, щоб продовжити розмову."
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:24
+#: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "Ви досягли свого ліміту підсумків"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:25
+#: src/components/conversation/LockedTranscriptOverlay.tsx:22
 msgid "You've reached your transcript limit"
 msgstr "Ви досягли свого ліміту стенограм"
 
@@ -18949,8 +19027,12 @@ msgstr "Ваш відгук і ця відповідь надходять ком
 #~ msgstr "Ваш тариф Free містить один звіт. Оновіть тариф, щоб створювати більше."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
-msgid "Your free transcription hour is used up."
-msgstr "Вашу безкоштовну годину транскрибування вичерпано."
+msgid "Your free transcription allowance is used up."
+msgstr "Ваш безкоштовний ліміт транскрипції вичерпано."
+
+#: src/components/pricing/PricingConfigurator.tsx:732
+#~ msgid "Your free transcription hour is used up."
+#~ msgstr "Вашу безкоштовну годину транскрибування вичерпано."
 
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
@@ -19006,7 +19088,7 @@ msgstr "Ваша організація або компанія"
 msgid "Your organisations"
 msgstr "Ваші організації"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:93
 msgid "Your own logo comes with a paid plan."
 msgstr "Власний логотип доступний у платному тарифі."
 

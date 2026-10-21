@@ -27,8 +27,9 @@ import { Hono } from "hono";
 import { createChunk } from "../src/chunks";
 import type { ConversationsDeps } from "../src/deps";
 import { FREE_LIMIT_SKIPPED } from "../src/free-audio";
+import { mergeConversationAudio } from "../src/merge";
 import { ParticipantTokens } from "../src/participant-token";
-import { type PipelineDeps, prepareChunk, transcribePiece } from "../src/pipeline/steps";
+import { loadChunk, type PipelineDeps, prepareChunk, transcribePiece } from "../src/pipeline/steps";
 import { portalRoutes } from "../src/portal/routes";
 import {
   admin,
@@ -271,6 +272,35 @@ run("free audio: live recording", () => {
       expect(c.transcript).toBeNull();
       expect(c.audio_seconds).toBeNull();
       expect(await used(p)).toBe(20);
+    });
+
+    test("a refused long chunk is never counted or transcribed by a re-run", async () => {
+      const { p, cid } = await account("free");
+      await fill(p, 20);
+      const id = await row(cid, 150);
+      const kept = await row(cid, 5);
+      expect(await prepareChunk(h.deps, id)).toEqual([]);
+      expect(await prepareChunk(h.deps, kept)).toEqual([kept]);
+      // Room appears (staff raise the limits), then the step runs again after a crash.
+      await setFreeLimit(d.db, "audio_seconds_conversation", 3600, null);
+      await setFreeLimit(d.db, "audio_seconds_month", 18000, null);
+      invalidateFreeLimits();
+      try {
+        expect(await prepareChunk(h.deps, id)).toEqual([]);
+        expect((await loadChunk(h.deps, id)).skip).toBe(true);
+        const c = await chunkRow(id);
+        expect(c.error).toBe(FREE_LIMIT_SKIPPED);
+        expect(c.transcript).toBeNull();
+        expect(c.audio_seconds).toBeNull();
+        expect(await used(p)).toBe(25);
+        // The merged recording, read by the final transcript and retranscribe, leaves it out.
+        const merged = await mergeConversationAudio(h.deps, cid, newId());
+        expect(merged.used).toEqual([kept]);
+      } finally {
+        await setFreeLimit(d.db, "audio_seconds_conversation", 60, null);
+        await setFreeLimit(d.db, "audio_seconds_month", 120, null);
+        invalidateFreeLimits();
+      }
     });
   });
 

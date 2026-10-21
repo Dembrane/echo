@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
-import { MapFreeNotice } from "./MapFreeNotice";
+import { MapFreeNotice, presentsMap } from "./MapFreeNotice";
 
 const state: {
 	allowance: Record<string, unknown> | undefined;
@@ -143,4 +143,35 @@ it("stays quiet on a paid account", () => {
 	state.allowance = { ...spent, free: false };
 	renderNotice();
 	expect(screen.queryByTestId("map-free-notice")).toBeNull();
+});
+
+it("states the live limit when staff allow more than one map", () => {
+	state.sample = { data: { is_sample: false }, isSuccess: true };
+	state.allowance = { ...spent, maps: { limit: 2, used: 2 } };
+	renderNotice();
+	const text = screen.getByTestId("map-free-notice").textContent ?? "";
+	expect(text).toContain(
+		"You have used this month's 2 free maps. The map in this presentation keeps its current version until ",
+	);
+});
+
+it("counts the map as on only when the published or draft blocks hold it", () => {
+	const settings = (blocks?: string[]) =>
+		blocks ? { presentation: { blocks } } : {};
+	expect(presentsMap(settings(["popcorn"]), settings(["popcorn"]))).toBe(false);
+	expect(presentsMap(settings(), undefined)).toBe(false);
+	expect(presentsMap(undefined, undefined)).toBe(false);
+	expect(presentsMap(settings(["popcorn", "map"]), undefined)).toBe(true);
+	expect(presentsMap(settings(["popcorn"]), settings(["map"]))).toBe(true);
+});
+
+it("states no number when staff set the map limit to 0", () => {
+	state.sample = { data: { is_sample: false }, isSuccess: true };
+	state.allowance = { ...spent, maps: { limit: 0, used: 0 } };
+	renderNotice();
+	const text = screen.getByTestId("map-free-notice").textContent ?? "";
+	expect(text).toContain(
+		"You have used this month's free maps. The map in this presentation keeps its current version until ",
+	);
+	expect(text).not.toContain(" 0 ");
 });

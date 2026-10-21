@@ -11,6 +11,8 @@ export type Meter = { used: number; limit: number };
 
 export interface AllowanceSnapshot {
   free: boolean;
+  // Whose allowance this is: the organisation's shared one, or this workspace's own.
+  scope: "organisation" | "workspace" | null;
   period_start: string | null;
   resets_at: string | null;
   audio_seconds: Meter | null;
@@ -31,6 +33,7 @@ const METERS = {
 
 const NOT_FREE: AllowanceSnapshot = Object.freeze({
   free: false,
+  scope: null,
   period_start: null,
   resets_at: null,
   audio_seconds: null,
@@ -56,6 +59,7 @@ export async function allowanceSnapshot(
   const meter = (k: keyof typeof METERS): Meter => ({ used: used[k], limit: limits[METERS[k]] });
   return {
     free: true,
+    scope: a.orgId ? "organisation" : "workspace",
     period_start: a.periodStart.toISOString(),
     resets_at: nextReset(now).toISOString(),
     audio_seconds: meter("audio_seconds"),

@@ -126,6 +126,14 @@ run("free limits", () => {
     expect(again?.updated_at).toBeTruthy();
   });
 
+  test("a staff value of 0 is stored and served", async () => {
+    await setFreeLimit(db, "reports_month", 0, STAFF);
+    expect((await freeLimits(db)).reports_month).toBe(0);
+    expect((await freeLimitRows(db)).find((r) => r.key === "reports_month")?.value).toBe(0);
+    await sql`delete from tier_limit where key = 'reports_month'`;
+    invalidateFreeLimits();
+  });
+
   test("freeLimitRows lists every key with row or default", async () => {
     await setFreeLimit(db, "chats_month", 4, STAFF);
     const rows = await freeLimitRows(db);

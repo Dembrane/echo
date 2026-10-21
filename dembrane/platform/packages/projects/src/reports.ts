@@ -9,9 +9,16 @@ import {
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
-import { takeFreeReport } from "./free";
+import {
+  cancelScheduledReport,
+  chargeReportChange,
+  refundFreeReport,
+  takeFreeReport,
+  undoReportCharge,
+} from "./free";
 import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
+import { projectsStorage } from "./storage";
 
 /** The scheduled_task type the scheduler runner turns into a report generation. */
 export const TASK_GENERATE_REPORT = "generate_report";
@@ -202,11 +209,51 @@ export async function updateReport(
     payload.scheduled_at = scheduled.toISOString();
   }
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
+  // A report left scheduled generates again, so a free one pays for it.
+  const charging = body.status !== null || body.scheduled_at !== null;
+  let updated: Awaited<ReturnType<typeof applyReportUpdate>> | undefined;
+  for (let attempt = 0; !updated; attempt++) {
+    const charge = charging
+      ? await chargeReportChange(d.db, projectId, rid, body.status, now)
+      : { free: false, undo: null };
+    try {
+      updated = await applyReportUpdate(d, projectId, rid, payload, scheduled, now, charge.free);
+    } catch (err) {
+      if (charge.undo) await undoReportCharge(d.db, rid, charge.undo);
+      // The report moved between the charge and the update: charge again, once.
+      if (!(err instanceof StampMoved)) throw err;
+      if (attempt > 0) throw new ConflictError("report.already_generating");
+    }
+  }
+  // A report cancelled before it ran gives its report back; one that ran has no stamp left.
+  if (body.status === "cancelled") await refundFreeReport(d.db, rid, now);
+  return updated;
+}
 
+class StampMoved extends Error {}
+
+async function applyReportUpdate(
+  d: ProjectDeps,
+  projectId: string,
+  rid: number,
+  payload: Record<string, unknown>,
+  scheduled: Date | null,
+  now: Date,
+  free: boolean,
+) {
   return d.store.transaction(async ({ store, sql }) => {
     const stamp = now.toISOString();
     // Locked, so of two publishes at once only the first emails the subscribers.
-    const [before] = await sql`select status from project_report where id = ${rid} for update`;
+    const [before] =
+      await sql`select status, free_period_start from project_report where id = ${rid} for update`;
+    const next = payload.status ?? before?.status;
+    // The stamp the charge judged moved: a cancel refunded it, or a run started.
+    if (
+      free &&
+      ((next === "scheduled" && !before?.free_period_start) ||
+        (before?.status === "draft" && before.free_period_start && next !== "draft"))
+    )
+      throw new StampMoved();
     if (payload.status === "published")
       for (const other of await store.otherPublishedReports(projectId, reportId(rid)))
         await store.updateReport(other, { status: "archived", date_updated: stamp });
@@ -254,16 +301,21 @@ export async function deleteReport(d: ProjectDeps, who: Signed, projectId: strin
 /** Unschedules; needs report:publish, the policy that schedules (spec H-9). */
 export async function cancelSchedule(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:publish", "v1");
-  const r = await boundReport(d, projectId, rid);
-  if (r.status !== "scheduled") throw new BadRequestError("report.not_scheduled");
+  await boundReport(d, projectId, rid);
   const now = d.now();
-  await d.store.transaction(async ({ store }) => {
-    await store.updateReport(reportId(rid), {
-      status: "cancelled",
-      date_updated: now.toISOString(),
-    });
-    await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
-  });
+  const cancelled = await cancelScheduledReport(d.db, projectId, rid, now, (tx) =>
+    projectsStorage(tx).cancelScheduledTasks(
+      TASK_GENERATE_REPORT,
+      { report_id: rid },
+      pythonIso(now),
+    ),
+  );
+  if (!cancelled) {
+    // A retry of a cancel that already happened heals instead of failing.
+    const r = await boundReport(d, projectId, rid);
+    if (r.status !== "cancelled") throw new BadRequestError("report.not_scheduled");
+    await refundFreeReport(d.db, rid, now);
+  }
   return { cancelled: true };
 }
 

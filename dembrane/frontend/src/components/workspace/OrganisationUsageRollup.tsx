@@ -79,6 +79,8 @@ interface OrgUsageWorkspaceRow {
 	hours_included: number | null;
 	// Hours measured against hours_included (free: the account's monthly ledger).
 	hours_counted: number | null;
+	// Set when hours_counted is a free account's ledger, which pooled rows share.
+	allowance_account_id?: string | null;
 	hours_pct: number | null;
 	hours_over: number;
 	seat_count: number;
@@ -115,8 +117,28 @@ interface OrgUsage {
 // to module scope so it's a stable reference for the useMemo dep arrays
 // below — defining inline would trigger react-hooks/exhaustive-deps and
 // re-allocate on every render for no reason.
-const isActive = (w: OrgUsageWorkspaceRow): boolean =>
-	w.audio_hours > 0 || w.seat_count > 0;
+export const isActive = (w: OrgUsageWorkspaceRow): boolean =>
+	w.audio_hours > 0 || (w.hours_counted ?? 0) > 0 || w.seat_count > 0;
+
+/** The hours the rows show, counting a shared free ledger once. */
+export function totalRowHours(
+	rows: Pick<
+		OrgUsageWorkspaceRow,
+		"audio_hours" | "hours_counted" | "allowance_account_id"
+	>[],
+): number {
+	const seen = new Set<string>();
+	let total = 0;
+	for (const r of rows) {
+		const shared = r.allowance_account_id;
+		if (shared) {
+			if (seen.has(shared)) continue;
+			seen.add(shared);
+		}
+		total += r.hours_counted ?? r.audio_hours;
+	}
+	return total;
+}
 
 async function fetchOrgUsage(
 	orgId: string,
@@ -449,7 +471,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	// Totals row uses filtered (post-search) rows so it tracks the
 	// user's view. When filter is empty it's the same as the top-level
 	// rollup.
-	const totalsHours = rows.reduce((s, r) => s + r.original.audio_hours, 0);
+	const totalsHours = totalRowHours(rows.map((r) => r.original));
 	const totalsSeats = rows.reduce((s, r) => s + r.original.seat_count, 0);
 	if (isLoading) {
 		return (
