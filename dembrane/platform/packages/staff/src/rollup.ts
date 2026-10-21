@@ -1,3 +1,4 @@
+import { isFreeTier, type Meter } from "@dembrane/allowance";
 import {
   applyDiscount,
   effectiveMembersFromRows,
@@ -293,7 +294,8 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     const cap = getCapacity(tier);
     const hours = hoursByWs.get(ws.id) ?? 0;
     const [, seatCount, externalCount, observerCount] = seatState(membersByWs.get(ws.id) ?? []);
-    const includedHours = cap ? cap.includedHours : null;
+    // Free hours are the allowance ledger's monthly meter, not calendar hours here.
+    const includedHours = cap && !isFreeTier(tier) ? cap.includedHours : null;
     const includedSeats = cap ? cap.includedSeats : null;
     const overHours = includedHours !== null ? Math.max(0, hours - includedHours) : 0;
     const overSeats =
@@ -403,8 +405,12 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
 
 const f1 = (x: number) => pyRound(x, 1).toFixed(1);
 
-/** Workspaces needing a call this week: at cap, approaching it, or downgraded in the last 14 days. */
-export async function atRisk(s: StaffStorage, now: Date) {
+/** Workspaces needing a call this week: at cap (free from `freeAtCap`), approaching, or downgraded. */
+export async function atRisk(
+  s: StaffStorage,
+  now: Date,
+  freeAtCap: ReadonlyMap<string, Meter> = new Map(),
+) {
   const rollup = await billingRollup(s, now, 0);
   const out: Record<string, unknown>[] = [];
   for (const r of rollup.rows) {
@@ -415,6 +421,15 @@ export async function atRisk(s: StaffStorage, now: Date) {
       org_name: r.org_name,
       tier: r.tier,
     };
+    const free = freeAtCap.get(r.workspace_id);
+    if (free) {
+      out.push({
+        ...base,
+        reason: "at_cap",
+        detail: `${f1(free.used / 3600)}h / ${pyRound(free.limit / 3600, 2)}h free monthly limit`,
+      });
+      continue;
+    }
     if (r.at_cap) {
       out.push({
         ...base,

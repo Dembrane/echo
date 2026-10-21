@@ -40,7 +40,7 @@ export const TierCapacityMatrix = ({
 	const { data, isLoading } = useQuery({
 		queryFn: () => fetchTierCapacities(API_BASE_URL),
 		queryKey: ["v2", "tier-capacities"],
-		staleTime: 60 * 60 * 1000,
+		staleTime: 60_000,
 	});
 
 	if (isLoading || !data || data.length === 0) return null;

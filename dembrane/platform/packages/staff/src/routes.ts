@@ -1,5 +1,16 @@
-import { requireStaff, type StaffAudit, type StaffPolicy } from "@dembrane/access";
-import { freeLimitRows, LIMIT_KEYS, type LimitKey, setFreeLimit } from "@dembrane/allowance";
+import { requireStaff, type StaffAudit, type StaffPolicy, TIERS } from "@dembrane/access";
+import {
+  accountWorkspaceIds,
+  allowanceForWorkspace,
+  freeLimitRows,
+  freeLimits,
+  LIMIT_KEYS,
+  type LimitKey,
+  type Meter,
+  monthStart,
+  setFreeLimit,
+  usedThisPeriod,
+} from "@dembrane/allowance";
 import {
   type Billing,
   BillingError,
@@ -50,6 +61,24 @@ export function staffRoutes(deps: StaffRouteDeps) {
   const s = staffStorage(deps.db);
   const clock = deps.clock ?? (() => new Date());
   const { service: billing, store: billingStore, notifier } = deps.billing;
+
+  // Free workspaces at their monthly audio limit, read from the allowance ledger.
+  async function freeAudioAtCap(now: Date) {
+    const limit = (await freeLimits(deps.db, clock, deps.logger)).audio_seconds_month;
+    const out = new Map<string, Meter>();
+    for (const acc of await s.freeAudioAccountsAtLeast(limit, monthStart(now).toISOString()))
+      for (const wsId of await accountWorkspaceIds(deps.db, {
+        accountId: acc.id,
+        orgId: acc.org_id,
+      })) {
+        const a = await allowanceForWorkspace(deps.db, wsId, now);
+        if (a?.accountId !== acc.id) continue;
+        const used = (await usedThisPeriod(deps.db, a)).audio_seconds;
+        if (used >= limit) out.set(wsId, { used, limit });
+      }
+    return out;
+  }
+
   const support = new SupportAccess({
     db: deps.db,
     storage: s,
@@ -90,6 +119,21 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const ws = isUuid(id) ? await s.workspace(id) : null;
     if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
     return ws;
+  }
+
+  // Downgrade stamps for a tier move, as the workspace tier change sets them.
+  function tierMovePatch(fromTier: string | null, toTier: string, now: Date) {
+    const from = fromTier || "pioneer";
+    const down = { downgraded_at: now.toISOString(), downgraded_from_tier: from };
+    const up = { downgraded_at: null, downgraded_from_tier: null };
+    if (from === toTier) return {};
+    // Legacy tiers are unlimited, so any move into or out of free counts.
+    if (toTier === "free") return down;
+    if (from === "free") return up;
+    const fromIdx = (TIERS as readonly string[]).indexOf(from);
+    const toIdx = (TIERS as readonly string[]).indexOf(toTier);
+    if (fromIdx < 0 || toIdx < 0) return {};
+    return toIdx < fromIdx ? down : up;
   }
 
   async function liveAccount(id: string) {
@@ -153,7 +197,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
 
   app.get(`${A}/at-risk`, async (c) => {
     await staff(c, "staff:billing", "admin.at_risk.read");
-    return c.json(await atRisk(s, clock()));
+    const now = clock();
+    return c.json(await atRisk(s, now, await freeAudioAtCap(now)));
   });
 
   app.get(`${A}/referral-ledger`, async (c) => {
@@ -672,19 +717,21 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const acc = await liveAccount(id);
     if (acc.payment_mode === "mollie" && acc.mollie_subscription_id)
       throw new ConflictError("staff.active_subscription");
+    const now = clock();
     const patch: Parameters<typeof billingStore.updateAccount>[1] = {
       payment_mode: "offline",
       tier: body.tier,
       status: "active",
       tier_expires_at: null,
       pre_warning_sent: false,
+      ...tierMovePatch(acc.tier, body.tier, now),
     };
     if (body.seats !== null) patch.provisioned_seats = body.seats;
     if (body.account_manager_id !== null) {
       await accountManager(body.account_manager_id);
       patch.account_manager_id = body.account_manager_id;
     }
-    await billingStore.updateAccount(id, patch, clock());
+    await billingStore.updateAccount(id, patch, now);
     return c.json({ status: "ok", billing_account_id: id, payment_mode: "offline" });
   });
 
@@ -700,17 +747,24 @@ export function staffRoutes(deps: StaffRouteDeps) {
     if (acc.payment_mode === "mollie") throw new BadRequestError("staff.already_mollie");
     if (acc.payment_mode !== "offline") throw new BadRequestError("staff.not_managed");
     if (!body.to_free && !body.expires_at) throw new BadRequestError("staff.expiry_required");
+    const now = clock();
     await billingStore.updateAccount(
       id,
       body.to_free
-        ? { payment_mode: "none", tier: "free", status: "active", tier_expires_at: null }
+        ? {
+            payment_mode: "none",
+            tier: "free",
+            status: "active",
+            tier_expires_at: null,
+            ...tierMovePatch(acc.tier, "free", now),
+          }
         : {
             payment_mode: "none",
             tier_expires_at: body.expires_at,
             status: "active",
             pre_warning_sent: false,
           },
-      clock(),
+      now,
     );
     return c.json({ status: "ok", billing_account_id: id, payment_mode: "none" });
   });

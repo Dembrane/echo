@@ -57,7 +57,7 @@ export const finalTranscript = defineJob(
   { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
-/** A summary on its own: the catch-up for conversations unlocked by an upgrade. */
+/** A summary on its own: the catch-up for conversations still without one. */
 export const summarizeConversation = defineJob(
   "conversations.summarize",
   z.object({ conversationId: z.string() }),
@@ -71,7 +71,7 @@ export const finishIdleConversations = defineJob("conversations.finish-idle", z.
   expireInSeconds: 120,
 });
 
-/** Every five minutes: summarise transcribed conversations that have none and are not locked. */
+/** Every five minutes: summarise transcribed conversations that have none. */
 export const catchUpSummaries = defineJob("conversations.summary-catch-up", z.object({}), {
   policy: "singleton",
   retryLimit: 0,

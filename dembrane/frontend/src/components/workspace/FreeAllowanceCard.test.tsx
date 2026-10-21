@@ -151,6 +151,18 @@ it("shows audio as used of limit in hours and minutes", async () => {
 	).toBe("2h 10m of 5h");
 });
 
+it("rounds 160 s of audio as the usage card does", async () => {
+	fetchMock.mockResolvedValue(
+		answer(200, snapshot({ audio_seconds: { limit: 120, used: 160 } })),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("audio_seconds")).getByTestId("free-allowance-value")
+			.textContent,
+	).toBe("2 min of 2 min");
+});
+
 it("shows counted meters as n of m with a progress bar each", async () => {
 	fetchMock.mockResolvedValue(answer(200, snapshot()));
 	renderCard();

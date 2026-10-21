@@ -146,9 +146,13 @@ run("v1 conversation services against the seed", () => {
     expect(JSON.stringify(prompts[0])).toContain("project context: name: City listening 2026");
   });
 
-  test("a locked conversation is refused with the 402 the dashboard reads", async () => {
+  test("a conversation stamped by the retired hour lock is summarised, not refused", async () => {
     await sql`update conversation set is_over_cap = true where id = ${c3}`;
-    await expect(summarizeAndStore(deps([]), c3)).rejects.toBeInstanceOf(PaymentRequiredError);
+    const err = await summarizeAndStore(deps(["S.", "T", "{}"]), c3).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).not.toBeInstanceOf(PaymentRequiredError);
   });
 
   test("the token count is stored only while the conversation reads as transcribed", async () => {

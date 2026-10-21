@@ -42,7 +42,7 @@ const renderCard = (frozen?: boolean) => {
 };
 
 const FROZEN =
-	"This chat is from an earlier month and is now read-only on the free plan. Start a new chat or upgrade to keep going.";
+	"This chat is from an earlier free period and can't take new questions. Start a new chat or upgrade to keep going.";
 const TURNS =
 	"You've reached the free plan limit for this chat. Upgrade to keep the conversation going.";
 

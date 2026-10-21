@@ -22,8 +22,6 @@ export interface SummarizeDeps {
   readonly onSummarized?: (projectId: string, conversationId: string) => Promise<unknown>;
 }
 
-/** Tiers without an hour cap; a locked conversation on any other tier is never summarised. */
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   nl: "Dutch",
@@ -125,18 +123,12 @@ export function summarizeConversation(d: SummarizeDeps): Summarizer {
   const { sql } = d;
   return {
     async summarize(conversationId) {
-      const [conv] = await sql`select c.*, p.deleted_at as project_deleted_at, p.workspace_id,
-          ba.tier
+      const [conv] = await sql`select c.*, p.deleted_at as project_deleted_at
         from conversation c
         left join project p on p.id = c.project_id
-        left join workspace w on w.id = p.workspace_id
-        left join billing_account ba on ba.id = w.billing_account_id
         where c.id = ${conversationId} and c.deleted_at is null`;
       if (!conv?.project_id || conv.project_deleted_at) return "skipped";
       if (conv.is_finished && conv.summary) return "skipped";
-      // Free's hour cap locks a conversation; its summary waits for an upgrade.
-      if (conv.is_over_cap && conv.workspace_id && conv.tier && !OVERAGE_TIERS.has(conv.tier))
-        return "skipped";
 
       const started = performance.now();
       try {

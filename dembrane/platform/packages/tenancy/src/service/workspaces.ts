@@ -1,5 +1,5 @@
 import { DrizzleStaffAudit, requireStaff } from "@dembrane/access";
-import { allowanceSnapshot } from "@dembrane/allowance";
+import { allowanceSnapshot, isFreeTier } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -73,6 +73,7 @@ import {
 import {
   cardUsage,
   FREE_TIER_MAX_WORKSPACES,
+  freeIncludedHours,
   freeTierBlock,
   freeTierLimit,
   monthBounds,
@@ -614,8 +615,9 @@ export function workspaceService(deps: TenancyDeps) {
       return { from_tier: current, to_tier: toTier, effects: downgradeEffects(current, toTier) };
     },
 
-    /** The public tier matrix. */
-    tierCapacities() {
+    /** The public tier matrix; free hours are the live monthly audio limit. */
+    async tierCapacities() {
+      const freeHours = await freeIncludedHours(db);
       return Object.values(TIER_CAPACITIES).map((c) => ({
         tier: c.tier,
         tagline: c.tagline,
@@ -623,7 +625,7 @@ export function workspaceService(deps: TenancyDeps) {
         billing_period_applicable: c.billingPeriodApplicable,
         duration: c.duration,
         included_seats: c.includedSeats,
-        included_hours: c.includedHours,
+        included_hours: isFreeTier(c.tier) ? freeHours : c.includedHours,
         hard_block_on_hours: c.hardBlockOnHours,
         training_included: c.trainingIncluded,
       }));
@@ -681,7 +683,8 @@ export function workspaceService(deps: TenancyDeps) {
         tier,
         tier_tagline: cap?.tagline ?? "",
         audio_hours: audioHours,
-        audio_hours_included: cap?.includedHours ?? null,
+        // Free hours live in free_tier and the allowance meter, not on calendar hours.
+        audio_hours_included: isFreeTier(tier) ? null : (cap?.includedHours ?? null),
         seat_count: seats,
         seat_count_included: cap?.includedSeats ?? null,
         member_count: members,

@@ -77,6 +77,8 @@ interface OrgUsageWorkspaceRow {
 	is_private: boolean;
 	audio_hours: number;
 	hours_included: number | null;
+	// Hours measured against hours_included (free: the account's monthly ledger).
+	hours_counted: number | null;
 	hours_pct: number | null;
 	hours_over: number;
 	seat_count: number;
@@ -364,7 +366,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				accessorKey: "audio_hours",
 				cell: ({ row }) => (
 					<UsageBar
-						used={row.original.audio_hours}
+						used={row.original.hours_counted ?? row.original.audio_hours}
 						cap={row.original.hours_included}
 						unit="h"
 						block={row.original.at_cap}
@@ -899,14 +901,14 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 			});
 		}
 
-		// at_cap on hours is only set server-side when the tier
-		// hard-blocks hours (Pilot per matrix §8). It's always actionable.
+		// Hour caps are free only, measured on the account's monthly allowance.
 		if (ws.at_cap) {
+			const name = ws.name;
 			out.push({
 				actionLabel: "Upgrade",
 				id: ws.id,
 				key: `${ws.id}:hours_full`,
-				message: `${ws.name} at ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)}). Host-side tools paused.`,
+				message: t`${name} has used this month's free recording hours. Recording is paused until the month resets.`,
 				reason: "hours_full",
 				workspaceId: ws.id,
 			});
@@ -915,7 +917,7 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 				actionLabel: "Review",
 				id: ws.id,
 				key: `${ws.id}:hours_near`,
-				message: `${ws.name} near ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)})`,
+				message: `${ws.name} near ${ws.tier} hour limit (${formatHourFraction(ws.hours_counted ?? ws.audio_hours, ws.hours_included)})`,
 				reason: "hours_near",
 				workspaceId: ws.id,
 			});

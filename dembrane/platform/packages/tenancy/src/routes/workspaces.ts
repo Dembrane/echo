@@ -17,7 +17,7 @@ export function workspaceRoutes(deps: TenancyDeps) {
   const svc = workspaceService(deps);
   const h = helpers(deps);
   return new Hono<Env>()
-    .get("/api/v2/workspaces/tier-capacities", (c) => c.json(svc.tierCapacities()))
+    .get("/api/v2/workspaces/tier-capacities", async (c) => c.json(await svc.tierCapacities()))
     .get("/api/v2/workspaces", async (c) => c.json(await svc.list(h.user(c))))
     .post("/api/v2/workspaces", async (c) => {
       const who = h.user(c);

@@ -3,8 +3,8 @@ import { pyRound } from "./numbers";
 
 /**
  * The tier by capacity and price matrix, as the old API serves it. Paid tiers bill
- * per seat with unlimited hours; only free keeps a one hour cap. When pricing changes, this
- * is the one place to edit.
+ * per seat with unlimited hours; free hours are the live monthly audio limit (freeIncludedHours).
+ * When pricing changes, this is the one place to edit.
  */
 
 /** Monthly billing costs this much more than the annual per-seat anchor. */
@@ -30,7 +30,8 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     tagline: "get started.",
     priceEurMonthly: null,
     includedSeats: null,
-    includedHours: 1,
+    // Default of the staff-editable audio_seconds_month limit; responses read it live.
+    includedHours: 5,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "—",

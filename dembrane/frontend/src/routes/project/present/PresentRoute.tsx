@@ -93,6 +93,7 @@ import { errorCode } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
+import { MapFreeNotice } from "./MapFreeNotice";
 import { PresentResultsPanel } from "./PresentResultsPanel";
 import classes from "./PresentRoute.module.css";
 
@@ -781,6 +782,16 @@ function Session({
 				{canEdit && (
 					<PopcornFreeNotice
 						status={presentation.free_popcorn}
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+					/>
+				)}
+				{canEdit && (
+					<MapFreeNotice
+						mapOn={
+							presentation.settings.presentation?.blocks?.includes("map") ??
+							false
+						}
 						workspaceId={workspaceId ?? ""}
 						projectId={projectId}
 					/>

@@ -78,6 +78,13 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 			/>
 		) : null,
 }));
+const mapNotice = vi.fn();
+vi.mock("./MapFreeNotice", () => ({
+	MapFreeNotice: (props: { mapOn: boolean }) => {
+		mapNotice(props);
+		return props.mapOn ? <div data-testid="map-free-notice-slot" /> : null;
+	},
+}));
 const saveSettings = vi.fn();
 const goLive = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
@@ -159,6 +166,52 @@ function show(entry = "/projects/empty/present") {
 		</I18nProvider>,
 	);
 }
+describe("The host's free map notice", () => {
+	const serve = (p: Record<string, unknown>) =>
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: false, presentation: p, revision: 0 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: p };
+		});
+	it("gets the map outcome's state, and the screen never gets the notice", async () => {
+		serve({
+			...presentation,
+			settings: {
+				...presentation.settings,
+				presentation: {
+					...presentation.settings.presentation,
+					blocks: ["popcorn", "map"],
+				},
+			},
+		});
+		show();
+		expect(await screen.findByTestId("map-free-notice-slot")).toBeTruthy();
+		expect(mapNotice).toHaveBeenLastCalledWith(
+			expect.objectContaining({ mapOn: true, projectId: "empty" }),
+		);
+		for (const [props] of screenProps.mock.calls)
+			expect(JSON.stringify(props)).not.toContain("free map");
+	});
+	it("is off without the map outcome", async () => {
+		show();
+		await screen.findAllByText("Room preview");
+		expect(mapNotice).toHaveBeenCalled();
+		expect(mapNotice).toHaveBeenLastCalledWith(
+			expect.objectContaining({ mapOn: false }),
+		);
+		expect(screen.queryByTestId("map-free-notice-slot")).toBeNull();
+	});
+	it("is not shown to someone who can't edit", async () => {
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: false, presentation };
+		});
+		show();
+		await screen.findAllByText("Room preview");
+		expect(mapNotice).not.toHaveBeenCalled();
+	});
+});
 describe("A free host with this month's analyses used up", () => {
 	const usedUp = {
 		...presentation,

@@ -1,19 +1,5 @@
 import type { Row } from "../storage";
 
-/** Paid tiers bill hours instead of capping them (tier_capacity.OVERAGE_TIERS). */
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-
-export function tierAllowsOverage(tier: string): boolean {
-  return OVERAGE_TIERS.has(tier);
-}
-
-/** is_conversation_locked: the finish-time stamp plus a tier that is still hour-capped. */
-export function stampLocked(conv: Row, tier: string | null): boolean {
-  if (!conv.is_over_cap) return false;
-  if (tier === null) return false;
-  return !tierAllowsOverage(tier);
-}
-
 /** workspace_over_cap_active: the lifetime hour lock is retired, so never active. */
 export async function overCapActive(
   _workspaceId: string | null,
@@ -23,10 +9,12 @@ export async function overCapActive(
   return false;
 }
 
-/** (locked, lock_reason) for one conversation, shared by list, detail and chunk reads. */
-export function conversationLock(conv: Row, tier: string | null, active: boolean) {
-  if (stampLocked(conv, tier)) return { locked: true, reason: "hours_cap" as const };
-  if (active && !conv.is_finished) return { locked: true, reason: "hours_cap" as const };
+/** (locked, lock_reason) for one conversation; the retired hour lock never applies. */
+export function conversationLock(
+  _conv: Row,
+  _tier: string | null,
+  _active: boolean,
+): { locked: boolean; reason: "hours_cap" | null } {
   return { locked: false, reason: null };
 }
 

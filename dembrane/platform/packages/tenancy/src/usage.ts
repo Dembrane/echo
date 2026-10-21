@@ -1,4 +1,4 @@
-import { allowanceSnapshot } from "@dembrane/allowance";
+import { allowanceSnapshot, freeLimits, isFreeTier } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import type { Conn } from "./db";
 import { pyRound } from "./numbers";
@@ -67,7 +67,8 @@ export async function cardUsage(db: Conn, workspaceId: string, now: Date): Promi
 export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   const out = { ...usage };
   const cap = capacityOf(tier);
-  if (cap && cap.includedHours !== null) {
+  // Free hours are a monthly ledger meter (FreeAllowanceCard), not calendar hours.
+  if (cap && cap.includedHours !== null && !isFreeTier(tier)) {
     out.hours_included = cap.includedHours;
     const pct = cap.includedHours ? usage.audio_hours_this_month / cap.includedHours : 0;
     out.hours_pct = pyRound(pct, 3);
@@ -76,6 +77,11 @@ export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   }
   out.usage_gates = { ...usageGates(tier, usage.audio_hours), upgrade_cta_tier: nextTier(tier) };
   return out;
+}
+
+/** The free tier's included hours: the live monthly audio limit. */
+export async function freeIncludedHours(db: Db): Promise<number> {
+  return pyRound((await freeLimits(db)).audio_seconds_month / 3600, 2);
 }
 
 export const FREE_TIER_MAX_WORKSPACES = 1;

@@ -1579,6 +1579,8 @@ export async function runPopcornTick(
         state.map_fingerprint = analysisFingerprint;
       }
     }
+    // Every conversation this read tried failed: a free analysis that read nothing.
+    let readNothing = false;
     if (extractionWork.length) {
       const slots = new Semaphore(MAX_PARALLEL_EXTRACTORS);
       await Promise.all(
@@ -1596,6 +1598,8 @@ export async function runPopcornTick(
           ),
         ),
       );
+      const read = writer.state.conversations as Json;
+      readNothing = extractionWork.every((t) => truthy(dict(read[String(t.id)]).error));
     }
 
     // One quote registry for the tick, seeded with the session's so the deck's ids stay valid.
@@ -1694,6 +1698,12 @@ export async function runPopcornTick(
       requestId: counted ? attemptId : requestId,
       ...(counted ? { freePeriodStart: counted } : {}),
     });
+    if (counted && readNothing && d.free)
+      try {
+        await d.free.refund(attemptId, d.now());
+      } catch (err) {
+        d.logger.warn({ err: errText(err), loop_id: loopId }, "popcorn free refund failed");
+      }
     // A finished analysis stays counted whatever happens after.
     counted = null;
     let snapshotted = false;

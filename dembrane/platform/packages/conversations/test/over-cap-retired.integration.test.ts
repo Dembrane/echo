@@ -2,10 +2,12 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { assetPath, newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import postgres from "postgres";
-import { overCapActive } from "../src/bff/lock";
+import { enrich, overCapActive } from "../src/bff/lock";
 import { bffStore } from "../src/bff/storage";
-import { workspaceOverCapActive } from "../src/live/monitor";
-import { type PipelineDeps, stampOverCap } from "../src/pipeline/steps";
+import { conversationLocked, workspaceOverCapActive } from "../src/live/monitor";
+import { type PipelineDeps, stampOverCap, unsummarizedConversations } from "../src/pipeline/steps";
+import { resolveProjectTier } from "../src/tiers";
+import { assertNotLocked } from "../src/v1/summary";
 import { admin, freshDatabase } from "./pipeline-harness";
 
 // The lifetime hour lock is retired: no stamp, no live lock, old stamps cleared.
@@ -60,6 +62,32 @@ run("the retired over-cap lock", () => {
     expect(await store.workspaceSeconds(ws)).toBe(10800);
     expect(await overCapActive(ws, "free", (w) => store.workspaceSeconds(w))).toBe(false);
     expect(await workspaceOverCapActive(database.db, ws, "free")).toBe(false);
+  });
+
+  test("a conversation re-stamped by an old worker on free stays readable", async () => {
+    const late = newId();
+    await sql`insert into conversation (id, project_id, participant_name, source, duration, is_finished, is_all_chunks_transcribed, is_over_cap, created_at, updated_at)
+      values (${late}, ${proj}, 'D', 'PORTAL_AUDIO', 600, true, true, true, now() - interval '1 hour', now())`;
+    await sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, source)
+      values (${newId()}, ${late}, now(), 'we want buses', 'PORTAL_AUDIO')`;
+    const tier = await resolveProjectTier(database.db, proj);
+    expect(tier).toBe("free");
+    const [row] = await sql`select * from conversation where id = ${late}`;
+    // Summary and transcript come back.
+    const read = enrich(
+      { ...row, summary: "S", chunks: [{ transcript: "we want buses" }] },
+      tier,
+      await overCapActive(ws, tier, async () => 99 * 3600),
+    );
+    expect(read).toMatchObject({
+      locked: false,
+      summary: "S",
+      chunks: [{ transcript: "we want buses" }],
+    });
+    expect(conversationLocked(row ?? {}, tier, false)).toBe(false);
+    // Summaries, which chats and reports read, are generated for it.
+    expect(await assertNotLocked({ db: database.db }, late, "locked")).toMatchObject({ id: late });
+    expect(await unsummarizedConversations(database.db, new Date(), 1000)).toContain(late);
   });
 
   test("finishing a conversation no longer stamps it", async () => {

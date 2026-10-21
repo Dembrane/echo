@@ -90,8 +90,8 @@ export function ChatTurnLimitCard({
 						</Trans>
 					) : frozen ? (
 						<Trans>
-							This chat is from an earlier month and is now read-only on the
-							free plan. Start a new chat or upgrade to keep going.
+							This chat is from an earlier free period and can't take new
+							questions. Start a new chat or upgrade to keep going.
 						</Trans>
 					) : (
 						<Trans>

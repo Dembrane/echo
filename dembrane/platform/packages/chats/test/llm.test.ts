@@ -131,15 +131,21 @@ describe("overview summaries", () => {
     expect(tagged).toEqual(["t1"]);
   });
 
-  test("a locked conversation fails without a model call", async () => {
-    const calls: LanguageModelV4CallOptions[] = [];
+  test("a conversation stamped over the retired cap on free is still summarised", async () => {
+    const updates: [string, Record<string, unknown>][] = [];
     const reads = {
       summaries: async () => new Map(),
       liveConversation: async (id: string) => ({ id, project_id: "p1", is_over_cap: true }),
       projectTier: async () => "free",
+      project: async () => ({ name: "City", language: "en" }),
+      transcriptChunks: async () => [{ transcript: "We want buses." }],
+      verifiedArtifacts: async () => [],
+      updateConversation: async (id: string, v: Record<string, unknown>) => {
+        updates.push([id, v]);
+      },
     };
-    const d = fakeDeps({ reads, model: fakeModel({ calls }) });
-    expect(await ensureConversationSummaries(d, ["c9"])).toEqual({ succeeded: [], failed: ["c9"] });
-    expect(calls).toHaveLength(0);
+    const d = fakeDeps({ reads, models: { multi_modal_pro: fakeModel({ text: "Wants buses." }) } });
+    expect(await ensureConversationSummaries(d, ["c9"])).toEqual({ succeeded: ["c9"], failed: [] });
+    expect(updates).toEqual([["c9", { summary: "Wants buses." }]]);
   });
 });

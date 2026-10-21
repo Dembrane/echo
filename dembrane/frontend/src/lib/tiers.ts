@@ -82,7 +82,7 @@ export function capacityShortFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
 		changemaker: t`€75 / seat / month`,
-		free: t`1 h recording`,
+		free: t`Monthly free allowance`,
 		guardian: t`€150 / seat / month`,
 		innovator: t`€20 / seat / month`,
 	};

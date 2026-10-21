@@ -96,7 +96,7 @@ test("monitor status folds contact and audio into state and health", () => {
   ).toEqual(["initiated", "waiting"]);
 });
 
-test("the monitor payload puts live conversations first and withholds locked transcripts", () => {
+test("the monitor payload puts live conversations first and shows stamped transcripts", () => {
   const now = new Date("2026-09-27T12:00:00Z");
   const at = (s: number) => new Date(now.getTime() - s * 1000).toISOString();
   const row = (
@@ -150,8 +150,8 @@ test("the monitor payload puts live conversations first and withholds locked tra
   expect(b?.recording_health).toBe("stalled");
   expect(b?.error_message).toBe("boom");
   expect(b?.transcription_status).toBe("failing");
-  expect(a?.locked).toBe(true);
-  expect(a?.latest_transcript).toBeNull();
+  expect(a?.locked).toBe(false);
+  expect(a?.latest_transcript).toBe("hello there");
   expect(c?.state).toBe("initiated");
   expect(payload.summary).toMatchObject({
     live: 1,

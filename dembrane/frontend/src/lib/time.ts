@@ -46,3 +46,11 @@ export function formatDurationFromHours(
 	if (m === 0) return `${h}h`;
 	return `${h}h ${m}m`;
 }
+
+/** Seconds as the usage API shows them: hours to two decimals, then formatted. */
+export function formatDurationFromSeconds(
+	seconds: number | null | undefined,
+): string {
+	if (seconds == null || !Number.isFinite(seconds)) return "0 min";
+	return formatDurationFromHours(Math.round(seconds / 36) / 100);
+}

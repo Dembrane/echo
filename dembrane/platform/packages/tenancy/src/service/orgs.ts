@@ -4,7 +4,13 @@ import {
   resolveWorkspace,
   type WorkspaceRole,
 } from "@dembrane/access";
-import { freeLimitError, isFreeTier } from "@dembrane/allowance";
+import {
+  allowanceForWorkspace,
+  freeLimitError,
+  freeLimits,
+  isFreeTier,
+  usedThisPeriod,
+} from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -734,9 +740,10 @@ export function orgService(deps: TenancyDeps) {
       let totalExternals = 0;
       let totalObservers = 0;
       let totalHours = 0;
-      const atCap = 0;
+      let atCap = 0;
       let approaching = 0;
       const rows = [];
+      const freeLimit = (await freeLimits(db)).audio_seconds_month;
       for (const w of workspaces) {
         const [seats, , externals, observers] = seatState(await effectiveMembers(db, w.id));
         totalSeats += seats;
@@ -748,18 +755,33 @@ export function orgService(deps: TenancyDeps) {
         const h = hours.get(w.id) ?? 0;
         totalHours += h;
         const cap = capacityOf(tier);
-        const included = cap?.includedHours ?? null;
+        let included = cap?.includedHours ?? null;
         const seatsIncluded = cap?.includedSeats ?? null;
         let hoursPct: number | null = null;
+        let hoursOver = included !== null ? pyRound(Math.max(0, h - included), 2) : 0;
+        // The hours measured against hours_included; null when there is no cap.
+        let hoursCounted = included !== null ? pyRound(h, 2) : null;
+        let wsAtCap = false;
         let wsApproaching = false;
-        if (cap && cap.includedHours !== null) {
+        if (isFreeTier(tier)) {
+          // Free hours are the ledger's monthly meter, which only holds the current period.
+          const a = monthOffset === 0 ? await allowanceForWorkspace(db, w.id, now) : null;
+          const used = a ? (await usedThisPeriod(db, a)).audio_seconds : 0;
+          included = a ? pyRound(freeLimit / 3600, 2) : null;
+          hoursOver = pyRound(Math.max(0, used - freeLimit) / 3600, 2);
+          hoursCounted = a ? pyRound(used / 3600, 2) : null;
+          if (a) {
+            hoursPct = pyRound(freeLimit > 0 ? used / freeLimit : 1, 3);
+            wsAtCap = used >= freeLimit;
+            wsApproaching = !wsAtCap && hoursPct >= 0.8;
+          }
+        } else if (cap && cap.includedHours !== null) {
           const pct = cap.includedHours ? h / cap.includedHours : 0;
           hoursPct = pyRound(pct, 3);
-          if (pct >= 0.8) {
-            approaching++;
-            wsApproaching = true;
-          }
+          wsApproaching = pct >= 0.8;
         }
+        if (wsAtCap) atCap++;
+        if (wsApproaching) approaching++;
         const seatsPct =
           seatsIncluded !== null && seatsIncluded > 0 ? pyRound(seats / seatsIncluded, 3) : null;
         const seatCapHit = seatsIncluded !== null && seats >= seatsIncluded;
@@ -771,7 +793,8 @@ export function orgService(deps: TenancyDeps) {
           audio_hours: pyRound(h, 2),
           hours_included: included,
           hours_pct: hoursPct,
-          hours_over: included !== null ? pyRound(Math.max(0, h - included), 2) : 0,
+          hours_over: hoursOver,
+          hours_counted: hoursCounted,
           seat_count: seats,
           seats_included: seatsIncluded,
           seats_pct: seatsPct,
@@ -779,18 +802,16 @@ export function orgService(deps: TenancyDeps) {
           approaching_seat_cap: seatsPct !== null && seatsPct >= 0.8 && !seatCapHit,
           external_count: externals,
           observer_count: observers,
-          at_cap: false,
+          at_cap: wsAtCap,
           approaching_cap: wsApproaching,
           downgraded_at: isoTimestamp(billing?.downgraded_at),
           bills_separately: account !== null && !account.org_id,
         });
       }
       // Hot workspaces first, then by hours; ties keep their order.
-      rows.sort(
-        (a, b) =>
-          (a.approaching_cap ? 1 : 2) - (b.approaching_cap ? 1 : 2) ||
-          b.audio_hours - a.audio_hours,
-      );
+      const heat = (r: { at_cap: boolean; approaching_cap: boolean }) =>
+        r.at_cap ? 0 : r.approaching_cap ? 1 : 2;
+      rows.sort((a, b) => heat(a) - heat(b) || b.audio_hours - a.audio_hours);
       return {
         cycle_start: pyIso(start),
         cycle_end_exclusive: pyIso(end),

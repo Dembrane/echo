@@ -241,6 +241,67 @@ run("free popcorn in the tick", () => {
     expect(await stampOf(got.run.id)).toBeNull();
   });
 
+  // Extraction of any transcript saying "BROKEN" fails; everything else answers empty.
+  const breaking = () =>
+    new FakeCompleter().on(
+      () => true,
+      (r: CompletionRequest) => {
+        const required = ((r.jsonSchema as { required?: string[] })?.required ?? []).join(",");
+        const user = typeof r.user === "string" ? r.user : r.user.join("\n");
+        if (required === "items" && user.includes("BROKEN")) throw new Error("model down");
+        return JSON.stringify(required === "items" ? { items: [] } : {});
+      },
+    );
+
+  async function addConversation(projectId: string, text: string) {
+    const conv = newId();
+    await sql`insert into conversation (id, project_id, participant_name, created_at, duration)
+      values (${conv}, ${projectId}, 'Table 2', now() - interval '1 hour', 600)`;
+    await say(conv, text);
+    return conv;
+  }
+
+  test("an analysis that read nothing gives its count back", async () => {
+    const s = await seed("free");
+    await say(s.conv, "BROKEN");
+    const got = await runPopcornTick(deps(breaking()), s.loopId, "manual", newId());
+    expect(got.status).toBe("ok");
+    expect(String(got.run.detail)).toContain("FAILED");
+    expect(await ledger(s.projectId)).toBe(0);
+    expect(await stampOf(got.run.id)).toBeNull();
+  });
+
+  test("a finish read whose only conversation failed gives its count back", async () => {
+    const s = await seed("free", { status: "active" });
+    await runPopcornTick(deps(fake()), s.loopId, "manual", newId());
+    expect(await ledger(s.projectId)).toBe(1);
+    const conv = await addConversation(s.projectId, "BROKEN");
+    const got = await runPopcornTick(deps(breaking()), s.loopId, "finish", newId(), [conv]);
+    expect(got.status).toBe("ok");
+    expect(await ledger(s.projectId)).toBe(1);
+    expect(await stampOf(got.run.id)).toBeNull();
+  });
+
+  test("an analysis that read one of two conversations still counts", async () => {
+    const s = await seed("free");
+    await addConversation(s.projectId, "BROKEN");
+    const got = await runPopcornTick(deps(breaking()), s.loopId, "manual", newId());
+    expect(got.status).toBe("ok");
+    expect(String(got.run.detail)).toContain("FAILED");
+    expect(await ledger(s.projectId)).toBe(1);
+    expect((await stampOf(got.run.id))?.getTime()).toBe(period());
+  });
+
+  test("paid analyses that read nothing are unchanged", async () => {
+    const s = await seed("guardian");
+    await say(s.conv, "BROKEN");
+    const got = await runPopcornTick(deps(breaking()), s.loopId, "manual", newId());
+    expect(got.status).toBe("ok");
+    expect(String(got.run.detail)).toContain("FAILED");
+    expect(await ledger(s.projectId)).toBeNull();
+    expect(await stampOf(got.run.id)).toBeNull();
+  });
+
   test("a crash after admitting is counted once when the step runs again", async () => {
     const s = await seed("free", { status: "active" });
     await say(s.conv, "Table 1 says the square needs trees.");

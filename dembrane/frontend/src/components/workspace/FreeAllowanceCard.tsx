@@ -18,7 +18,7 @@ import {
 	type FreeMeter,
 	useFreeAllowance,
 } from "@/hooks/useFreeAllowance";
-import { formatDurationFromHours } from "@/lib/time";
+import { formatDurationFromSeconds } from "@/lib/time";
 
 type MeterKey = Exclude<
 	keyof FreeAllowance,
@@ -52,8 +52,8 @@ const labelOf = (key: MeterKey): string => {
 
 const usageText = (key: MeterKey, meter: FreeMeter): string => {
 	if (key === "audio_seconds") {
-		const used = formatDurationFromHours(meter.used / 3600);
-		const limit = formatDurationFromHours(meter.limit / 3600);
+		const used = formatDurationFromSeconds(meter.used);
+		const limit = formatDurationFromSeconds(meter.limit);
 		return t`${used} of ${limit}`;
 	}
 	const { used, limit } = meter;

@@ -27,8 +27,6 @@ const FUNNEL_STAGES = ["scanned", "terms", "profile"] as const;
 // Stages written by portals from before the microphone check was removed; they passed consent.
 const RETIRED_MIC_STAGES = new Set(["mic_ok", "mic_skipped", "mic_blocked"]);
 const PORTAL_ONLY = ["DASHBOARD_UPLOAD", "CLONE"];
-// tier_capacity: paid tiers are never hour capped.
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
 
 const clip = (s: string, n: number) => [...s.trim()].slice(0, n).join("");
 
@@ -57,14 +55,13 @@ export interface ExtraConversation {
 
 type Tele = Telemetry & { seen: Date };
 
-/** tier_capacity.is_conversation_locked plus the live gate for still-recording rows. */
+/** The retired hour lock never applies, stamped or still recording. */
 export function conversationLocked(
-  conv: { is_over_cap?: unknown; is_finished?: unknown },
-  tier: string | null,
-  overCapActive: boolean,
+  _conv: { is_over_cap?: unknown; is_finished?: unknown },
+  _tier: string | null,
+  _overCapActive: boolean,
 ): boolean {
-  if (conv.is_over_cap && tier !== null && !OVERAGE_TIERS.has(tier)) return true;
-  return overCapActive && !conv.is_finished;
+  return false;
 }
 
 export function monitorStatus(a: {

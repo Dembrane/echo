@@ -918,8 +918,7 @@ export async function measureDuration(
 }
 
 /**
- * task_summarize_conversation: skips a finished conversation that has a summary and a
- * tier-locked one (it stays in the catch-up set and summarises after an upgrade). The
+ * task_summarize_conversation: skips a finished conversation that has a summary. The
  * no-transcript placeholder is not a summary: the catch-up retries it once text exists.
  * A finalize passes `fresh`: it claimed a new set of chunks, so a summary already there
  * is an earlier run's, written after the conversation reopened.
@@ -1004,10 +1003,9 @@ export async function idleConversations(db: Db, now: Date, limit = 100): Promise
 }
 
 /**
- * collect_unsummarized_conversations: transcribed, no summary, not locked (over the cap
- * on a tier without overage), not deleted, created over five minutes ago. The one
- * product-level catch-up kept: a locked conversation summarises once its workspace
- * upgrades, and a summary that failed all its retries gets another chance. The
+ * collect_unsummarized_conversations: transcribed, no summary, not deleted, created over
+ * five minutes ago, whatever the retired is_over_cap stamp says. The one product-level
+ * catch-up kept: a summary that failed all its retries gets another chance. The
  * no-transcript placeholder counts as no summary once a chunk has text, which repairs
  * conversations summarised before their last transcript landed.
  */
@@ -1016,15 +1014,11 @@ export async function unsummarizedConversations(db: Db, now: Date, limit = 50): 
   const rows = await db.execute<{ id: string }>(sql`
     select c.id from conversation c
     join project p on p.id = c.project_id and p.deleted_at is null
-    left join workspace w on w.id = p.workspace_id
-    left join billing_account b on b.id = w.billing_account_id
     where c.is_all_chunks_transcribed = true
       and (c.summary is null or c.summary = ''
            or (c.summary = ${NO_TRANSCRIPT_SUMMARY} and exists (
              select 1 from conversation_chunk ch
              where ch.conversation_id = c.id and octet_length(ch.transcript) > 0)))
-      and (c.is_over_cap is not true or b.tier is null
-           or b.tier in ('innovator', 'changemaker', 'guardian'))
       and c.deleted_at is null and c.created_at <= ${cutoff}
     order by c.created_at, c.id
     limit ${limit}`);

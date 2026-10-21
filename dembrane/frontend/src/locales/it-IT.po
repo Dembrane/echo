@@ -284,7 +284,7 @@ msgstr "{0, plural, one {# conversazione verrà nascosta insieme ad esso.} other
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:50
-#: src/components/workspace/OrganisationUsageRollup.tsx:812
+#: src/components/workspace/OrganisationUsageRollup.tsx:814
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
@@ -335,7 +335,7 @@ msgstr "{0, plural, one {# pagamento} other {# pagamenti}}"
 
 #. placeholder {0}: presentation.counts.phrases
 #. placeholder {0}: counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:894
+#: src/routes/project/present/PresentRoute.tsx:905
 #: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# frase} other {# frasi}}"
@@ -463,14 +463,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:957
+#: src/routes/project/chat/ProjectChatRoute.tsx:956
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Uso di # conversazione:} other {Uso di # conversazioni:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:789
+#: src/routes/project/chat/ProjectChatRoute.tsx:788
 #: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -722,7 +722,7 @@ msgstr "{0} richiede l'accesso MCP a dembrane"
 #. placeholder {2}: data.total_observer_count
 #. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
 #. placeholder {4}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/OrganisationUsageRollup.tsx:501
+#: src/components/workspace/OrganisationUsageRollup.tsx:503
 msgid "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
 msgstr "{0} spazi di lavoro · {1} posti a pagamento · {2} osservatori gratuiti · {3} in {4}"
 
@@ -783,7 +783,7 @@ msgstr "{argumentCount, plural, one {# argomento} other {# argomenti}} da {conve
 msgid "{browser} on {platform}"
 msgstr "{browser} su {platform}"
 
-#: src/routes/project/present/PresentRoute.tsx:669
+#: src/routes/project/present/PresentRoute.tsx:670
 msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 msgstr "{changes, plural, one {# modifica non ancora mostrata} other {# modifiche non ancora mostrate}}"
 
@@ -905,6 +905,10 @@ msgstr "{n} h"
 #: src/routes/admin/FreeLimitsPanel.tsx:47
 msgid "{n} min"
 msgstr "{n} min"
+
+#: src/components/workspace/OrganisationUsageRollup.tsx:911
+msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
+msgstr "{name} ha esaurito le ore di registrazione gratuite di questo mese. La registrazione è in pausa fino al prossimo rinnovo."
 
 #: src/components/present/TranslationStatus.tsx:76
 msgid "{name}: {rowDone} of {rowTotal}"
@@ -1105,8 +1109,8 @@ msgid "1 address needs attention"
 msgstr "1 indirizzo richiede attenzione"
 
 #: src/lib/tiers.ts:85
-msgid "1 h recording"
-msgstr "1 h di registrazione"
+#~ msgid "1 h recording"
+#~ msgstr "1 h di registrazione"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:46
 msgid "1 history entry"
@@ -1255,7 +1259,7 @@ msgstr "Per il trattamento basato sul consenso serve un link all'informativa sul
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Un progetto racchiude tutto ciò che riguarda un argomento. Condividi il link con i partecipanti, raccogli le voci e lascia che dembrane le trasformi in insight."
 
-#: src/routes/project/present/PresentRoute.tsx:808
+#: src/routes/project/present/PresentRoute.tsx:819
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Una pagina pubblica richiede un piano superiore. Disattiva Pagina pubblica in Condividi per mostrare le altre modifiche."
 
@@ -1481,8 +1485,8 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1707
 #: src/routes/admin/AdminSettingsRoute.tsx:2025
-#: src/components/workspace/OrganisationUsageRollup.tsx:393
-#: src/components/workspace/OrganisationUsageRollup.tsx:535
+#: src/components/workspace/OrganisationUsageRollup.tsx:395
+#: src/components/workspace/OrganisationUsageRollup.tsx:537
 #: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
@@ -1900,7 +1904,7 @@ msgstr "Chat con agenti"
 #: src/routes/organisation/OrganisationRoute.tsx:888
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
-#: src/components/workspace/OrganisationUsageRollup.tsx:534
+#: src/components/workspace/OrganisationUsageRollup.tsx:536
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -1969,7 +1973,7 @@ msgstr "Tutti i posti sono occupati per questo piano. Rimuovi un membro o un est
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "Tutti i posti sono occupati. Libera un posto o passa a un piano superiore per invitarne altri."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:314
+#: src/components/workspace/OrganisationUsageRollup.tsx:316
 msgid "All seats taken"
 msgstr "Tutti i posti occupati"
 
@@ -1982,7 +1986,7 @@ msgstr "Tutti i modelli"
 #~ msgstr "All Templates"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2012
-#: src/components/workspace/OrganisationUsageRollup.tsx:522
+#: src/components/workspace/OrganisationUsageRollup.tsx:524
 msgid "All tiers"
 msgstr "Tutti i piani"
 
@@ -2064,7 +2068,7 @@ msgstr "Consenti anche di modificare le impostazioni del progetto"
 msgid "Always on, it lives on our website"
 msgstr "Sempre attivo, vive sul nostro sito web"
 
-#: src/routes/project/present/PresentRoute.tsx:215
+#: src/routes/project/present/PresentRoute.tsx:216
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Sempre attivo. Lo schermo si apre qui, così i partecipanti in sala hanno qualcosa da leggere mentre il resto si prepara."
 
@@ -2113,7 +2117,7 @@ msgstr "Si è verificato un errore durante il caricamento del portale. Contatta 
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:848
+#: src/routes/project/chat/ProjectChatRoute.tsx:847
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -2306,7 +2310,7 @@ msgid "Anything you want to add"
 msgstr "Qualsiasi cosa tu voglia aggiungere"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:136
+#: src/routes/project/present/PresentRoute.tsx:137
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2336,7 +2340,7 @@ msgstr "Apply"
 msgid "Applying a template shows a confirmation with Undo."
 msgstr "L'applicazione di un modello mostra una conferma con Annulla."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:323
+#: src/components/workspace/OrganisationUsageRollup.tsx:325
 msgid "Approaching a limit this month"
 msgstr "Limite quasi raggiunto questo mese"
 
@@ -2609,11 +2613,11 @@ msgstr "Allega elementi verificati"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:271
+#: src/routes/project/present/PresentRoute.tsx:272
 msgid "Audience language:"
 msgstr "Lingua del pubblico:"
 
-#: src/routes/project/present/PresentRoute.tsx:420
+#: src/routes/project/present/PresentRoute.tsx:421
 msgid "Audience preview"
 msgstr "Anteprima per il pubblico"
 
@@ -2946,11 +2950,11 @@ msgstr "Fatturato annualmente"
 msgid "Billed monthly"
 msgstr "Fatturato mensilmente"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:342
+#: src/components/workspace/OrganisationUsageRollup.tsx:344
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Fatturato con un piano proprio, non con quello della tua organizzazione. Gestiscilo dalla fatturazione di questo spazio di lavoro."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:345
+#: src/components/workspace/OrganisationUsageRollup.tsx:347
 msgid "Billed separately"
 msgstr "Fatturato separatamente"
 
@@ -3344,16 +3348,16 @@ msgstr "Modifiche applicate. Puoi perfezionarle quando vuoi nelle impostazioni d
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Impossibile pubblicare le modifiche. Riprova."
 
-#: src/routes/project/present/PresentRoute.tsx:756
-#: src/routes/project/present/PresentRoute.tsx:809
+#: src/routes/project/present/PresentRoute.tsx:757
+#: src/routes/project/present/PresentRoute.tsx:820
 msgid "Changes could not be shown on the room screen"
 msgstr "Impossibile mostrare le modifiche sullo schermo della sala"
 
-#: src/routes/project/present/PresentRoute.tsx:673
+#: src/routes/project/present/PresentRoute.tsx:674
 msgid "Changes not shown yet"
 msgstr "Modifiche non ancora mostrate"
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:861
 msgid "Changes show on the room screen as you make them."
 msgstr "Le modifiche appaiono sullo schermo della sala mentre le fai."
 
@@ -3378,8 +3382,8 @@ msgstr "Distanza di carica (frazione di viewport): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Distanza di carica (frazione di viewport): {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:694
-#: src/routes/project/chat/ProjectChatRoute.tsx:700
+#: src/routes/project/chat/ProjectChatRoute.tsx:693
+#: src/routes/project/chat/ProjectChatRoute.tsx:699
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -3388,7 +3392,7 @@ msgstr "Distanza di carica (frazione di viewport): {0}"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:341
+#: src/routes/project/chat/ProjectChatRoute.tsx:340
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3408,7 +3412,7 @@ msgstr "Chat eliminata"
 msgid "Chat is more reliable."
 msgstr "La chat è più affidabile."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:631
+#: src/routes/project/chat/ProjectChatRoute.tsx:630
 #: src/routes/project/chat/NewChatRoute.tsx:550
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "La chat non è disponibile con il tuo livello di accesso. Contatta l'amministratore del tuo spazio di lavoro per richiedere un upgrade."
@@ -3554,7 +3558,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Scegli le modalità di risposta: Riassumi, Fai brainstorming o Personalizzata."
 
-#: src/routes/project/present/PresentRoute.tsx:205
+#: src/routes/project/present/PresentRoute.tsx:206
 msgid "Choose the outcomes your audience can explore."
 msgstr "Scegli i risultati che il tuo pubblico può esplorare."
 
@@ -3681,7 +3685,7 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2118
-#: src/components/workspace/OrganisationUsageRollup.tsx:595
+#: src/components/workspace/OrganisationUsageRollup.tsx:597
 msgid "Click to sort"
 msgstr "Fai clic per ordinare"
 
@@ -3836,7 +3840,7 @@ msgstr "Colora il grafico in base alla valenza"
 msgid "Color nodes by"
 msgstr "Colora i nodi per"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:545
+#: src/components/workspace/OrganisationUsageRollup.tsx:547
 msgid "Columns"
 msgstr "Colonne"
 
@@ -4415,7 +4419,7 @@ msgstr "Impossibile caricare il canvas."
 msgid "Could not load the free plan limits."
 msgstr "Impossibile caricare i limiti del piano Free."
 
-#: src/routes/project/present/PresentRoute.tsx:926
+#: src/routes/project/present/PresentRoute.tsx:937
 msgid "Could not load the latest results"
 msgstr "Impossibile caricare gli ultimi risultati"
 
@@ -4901,7 +4905,7 @@ msgstr "Email del titolare dei dati"
 msgid "Data ownership"
 msgstr "Titolarità dei dati"
 
-#: src/routes/project/present/PresentRoute.tsx:132
+#: src/routes/project/present/PresentRoute.tsx:133
 msgid "Data policy"
 msgstr "Informativa sui dati"
 
@@ -5143,8 +5147,8 @@ msgstr "dembrane al tuo evento?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, tutti i diritti riservati."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1043
-#: src/routes/project/chat/ProjectChatRoute.tsx:1053
+#: src/routes/project/chat/ProjectChatRoute.tsx:1042
+#: src/routes/project/chat/ProjectChatRoute.tsx:1052
 #: src/components/chat/AgenticChatPanel.tsx:2368
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane può commettere errori. Verifica le risposte."
@@ -5272,7 +5276,7 @@ msgstr "Non l'hai ricevuta? Controlla prima nello spam o nella posta indesiderat
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Non l'hai ricevuta? Controlla nella cartella spam o posta indesiderata. L'email proviene da dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:220
+#: src/routes/project/present/PresentRoute.tsx:221
 msgid "Different perspectives and trade-offs"
 msgstr "Punti di vista diversi e compromessi"
 
@@ -5749,7 +5753,7 @@ msgstr "Modificato da {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "La modifica di una conversazione non causa più l'errore di salvataggio riscontrato."
 
-#: src/routes/project/present/PresentRoute.tsx:161
+#: src/routes/project/present/PresentRoute.tsx:162
 msgid "Editor section"
 msgstr "Sezione dell’editor"
 
@@ -5904,7 +5908,7 @@ msgstr "Termina il {endDate}, poi passa a Free"
 msgid "English"
 msgstr "English"
 
-#: src/routes/project/present/PresentRoute.tsx:276
+#: src/routes/project/present/PresentRoute.tsx:277
 msgid "English fallback"
 msgstr "Fallback in inglese"
 
@@ -5920,7 +5924,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:385
+#: src/routes/project/present/PresentRoute.tsx:386
 msgid "Enter a presentation title"
 msgstr "Inserisci un titolo per la presentazione"
 
@@ -5973,7 +5977,7 @@ msgstr "Entered by the participant on the portal"
 msgid "Entered details"
 msgstr "Dettagli inseriti"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:838
+#: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/canvas/CanvasRoute.tsx:337
 #: src/components/dropzone/UploadConversationDropzone.tsx:793
 #: src/components/dropzone/UploadConversationDropzone.tsx:909
@@ -6673,7 +6677,7 @@ msgstr "In primo piano:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Segui le sessioni in corso dal monitor live."
 
-#: src/routes/project/present/PresentRoute.tsx:252
+#: src/routes/project/present/PresentRoute.tsx:253
 msgid "Follow project language"
 msgstr "Usa la lingua del progetto"
 
@@ -7257,7 +7261,7 @@ msgstr "Nascondi gli argomenti mancanti"
 msgid "Hide preview"
 msgstr "Nascondi anteprima"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:291
+#: src/components/workspace/OrganisationUsageRollup.tsx:293
 msgid "Hide projects"
 msgstr "Nascondi progetti"
 
@@ -7332,7 +7336,7 @@ msgid "host guide"
 msgstr "guida per l'host"
 
 #: src/routes/project/ProjectHomeRoute.tsx:107
-#: src/routes/project/present/PresentRoute.tsx:133
+#: src/routes/project/present/PresentRoute.tsx:134
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7353,7 +7357,7 @@ msgstr "Gli host possono abilitare le risposte e personalizzare il prompt nelle 
 #: src/routes/admin/AdminSettingsRoute.tsx:1564
 #: src/routes/admin/AdminSettingsRoute.tsx:1677
 #: src/components/workspace/TierCapacityMatrix.tsx:110
-#: src/components/workspace/OrganisationUsageRollup.tsx:373
+#: src/components/workspace/OrganisationUsageRollup.tsx:375
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
 msgstr "Ore"
@@ -7454,7 +7458,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:217
+#: src/routes/project/present/PresentRoute.tsx:218
 msgid "Ideas and how they connect"
 msgstr "Le idee e le loro connessioni"
 
@@ -7555,8 +7559,8 @@ msgstr "Con parole tue"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1715
 #: src/routes/admin/AdminSettingsRoute.tsx:2026
-#: src/components/workspace/OrganisationUsageRollup.tsx:397
-#: src/components/workspace/OrganisationUsageRollup.tsx:536
+#: src/components/workspace/OrganisationUsageRollup.tsx:399
+#: src/components/workspace/OrganisationUsageRollup.tsx:538
 msgid "Inactive"
 msgstr "Inattivo"
 
@@ -7576,7 +7580,7 @@ msgstr "Include portal link"
 msgid "Included hours used up"
 msgstr "Ore incluse esaurite"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:313
+#: src/components/workspace/OrganisationUsageRollup.tsx:315
 msgid "Included hours used up this month"
 msgstr "Ore incluse esaurite questo mese"
 
@@ -7657,7 +7661,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr "intervista"
 
-#: src/routes/project/present/PresentRoute.tsx:131
+#: src/routes/project/present/PresentRoute.tsx:132
 msgid "Intro"
 msgstr "Intro"
 
@@ -8160,7 +8164,7 @@ msgstr "Tipi di risultati"
 msgid "Knowledge graph"
 msgstr "Grafo della conoscenza"
 
-#: src/routes/project/present/PresentRoute.tsx:135
+#: src/routes/project/present/PresentRoute.tsx:136
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:273
@@ -8540,7 +8544,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:884
+#: src/routes/project/present/PresentRoute.tsx:895
 msgid "Loading draft"
 msgstr "Caricamento bozza"
 
@@ -8568,8 +8572,8 @@ msgstr "Caricamento metodologia"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:771
-#: src/routes/project/present/PresentRoute.tsx:1000
+#: src/routes/project/present/PresentRoute.tsx:772
+#: src/routes/project/present/PresentRoute.tsx:1011
 msgid "Loading presentation"
 msgstr "Caricamento presentazione"
 
@@ -9103,6 +9107,10 @@ msgstr "Mollie non è configurato in questo ambiente, quindi non vengono mostrat
 msgid "Monitor"
 msgstr "Monitor"
 
+#: src/lib/tiers.ts:85
+msgid "Monthly free allowance"
+msgstr "Soglia mensile gratuita"
+
 #: src/components/results/curate/CurateOpen.tsx:80
 #: src/components/chat/ChatTemplatesMenu.tsx:453
 msgid "more"
@@ -9335,7 +9343,7 @@ msgstr "Narrative (inglese)"
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Ti servono più accessi? Chiedi a chi ti ha invitato di aggiungerti all'organizzazione o a un altro spazio di lavoro."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:960
+#: src/components/workspace/OrganisationUsageRollup.tsx:962
 msgid "Needs attention"
 msgstr "Richiede attenzione"
 
@@ -9825,7 +9833,7 @@ msgstr "Ancora nessun popcorn. Appariranno dopo la prima analisi."
 msgid "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 msgstr "Ancora nessun risultato pronto. Apri Ricette per elaborare i risultati delle conversazioni idonee di questo progetto."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:797
+#: src/components/workspace/OrganisationUsageRollup.tsx:799
 msgid "No project activity this period."
 msgstr "Nessuna attività del progetto in questo periodo."
 
@@ -10094,7 +10102,7 @@ msgstr "Non ora"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Fatturazione gestita non attiva. Imposta su gestita per fatturare a questo account con il piano {tier}, senza addebiti automatici con Mollie."
 
-#: src/routes/project/present/PresentRoute.tsx:428
+#: src/routes/project/present/PresentRoute.tsx:429
 msgid "Not on the room screen yet"
 msgstr "Non ancora sullo schermo della sala"
 
@@ -10195,7 +10203,7 @@ msgstr "Non c'è nulla di nascosto in questa presentazione."
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr "Non verrà inviato nulla finché non lo decidi tu. Modifica liberamente qui sotto prima di inviare."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:691
+#: src/components/workspace/OrganisationUsageRollup.tsx:693
 msgid "Nothing matches the filter."
 msgstr "Nessun elemento corrisponde al filtro."
 
@@ -10484,7 +10492,7 @@ msgstr "Apri documentazione"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:930
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10737,7 +10745,7 @@ msgstr "Organizzazione non trovata"
 msgid "Organisation only"
 msgstr "Solo organizzazione"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:488
+#: src/components/workspace/OrganisationUsageRollup.tsx:490
 msgid "Organisation usage"
 msgstr "Utilizzo dell'organizzazione"
 
@@ -10807,7 +10815,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:134
+#: src/routes/project/present/PresentRoute.tsx:135
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -11129,7 +11137,7 @@ msgstr "Persone"
 msgid "People with access"
 msgstr "Persone con accesso"
 
-#: src/routes/project/present/PresentRoute.tsx:219
+#: src/routes/project/present/PresentRoute.tsx:220
 msgid "People, groups and what matters to them"
 msgstr "Persone, gruppi e ciò che conta per loro"
 
@@ -11587,9 +11595,9 @@ msgstr "Preparazione di questo canvas. Una prima versione apparirà qui non appe
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:653
-#: src/routes/project/present/PresentRoute.tsx:728
-#: src/routes/project/present/PresentRoute.tsx:984
+#: src/routes/project/present/PresentRoute.tsx:654
+#: src/routes/project/present/PresentRoute.tsx:729
+#: src/routes/project/present/PresentRoute.tsx:995
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 #: src/components/sharing/PresentButton.tsx:66
 msgid "Present"
@@ -11599,15 +11607,15 @@ msgstr "Presenta"
 msgid "Presentation activities"
 msgstr "Attività di presentazione"
 
-#: src/routes/project/present/PresentRoute.tsx:701
+#: src/routes/project/present/PresentRoute.tsx:702
 msgid "Presentation controls"
 msgstr "Controlli della presentazione"
 
-#: src/routes/project/present/PresentRoute.tsx:155
+#: src/routes/project/present/PresentRoute.tsx:156
 msgid "Presentation editor"
 msgstr "Editor di presentazioni"
 
-#: src/routes/project/present/PresentRoute.tsx:382
+#: src/routes/project/present/PresentRoute.tsx:383
 msgid "Presentation title"
 msgstr "Titolo della presentazione"
 
@@ -11692,7 +11700,7 @@ msgid "Private project"
 msgstr "Progetto privato"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1253
-#: src/components/workspace/OrganisationUsageRollup.tsx:328
+#: src/components/workspace/OrganisationUsageRollup.tsx:330
 msgid "Private workspace"
 msgstr "Spazio di lavoro privato"
 
@@ -12383,7 +12391,7 @@ msgid "Refreshing…"
 msgstr "Aggiornamento in corso…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:461
-#: src/routes/project/chat/ProjectChatRoute.tsx:766
+#: src/routes/project/chat/ProjectChatRoute.tsx:765
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
 #: src/components/popcorn/PopcornActions.tsx:70
@@ -13585,7 +13593,7 @@ msgstr "Search text:"
 msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:512
+#: src/components/workspace/OrganisationUsageRollup.tsx:514
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Cerca spazi di lavoro"
@@ -13629,7 +13637,7 @@ msgstr "posti"
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/TierCapacityMatrix.tsx:109
-#: src/components/workspace/OrganisationUsageRollup.tsx:385
+#: src/components/workspace/OrganisationUsageRollup.tsx:387
 #: src/components/billing/BillingManager.tsx:342
 #: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
@@ -13669,6 +13677,7 @@ msgstr "Vedi sulla Mappa gli argomenti delle tue conversazioni e le citazioni ch
 msgid "see transcripts"
 msgstr "vedere le trascrizioni"
 
+#: src/routes/project/present/MapFreeNotice.tsx:69
 #: src/components/workspace/FreeAllowanceBanner.tsx:70
 #: src/components/report/UpdateReportModalButton.tsx:243
 #: src/components/report/CreateReportForm.tsx:189
@@ -13703,7 +13712,7 @@ msgstr "Seleziona {0}"
 msgid "Select {title}"
 msgstr "Seleziona {title}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:906
+#: src/routes/project/chat/ProjectChatRoute.tsx:905
 msgid "Select a conversation to continue"
 msgstr "Seleziona una conversazione per continuare"
 
@@ -13779,10 +13788,10 @@ msgstr "Seleziona file audio"
 msgid "Select conversation"
 msgstr "Seleziona conversazione"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:915
+#: src/routes/project/chat/ProjectChatRoute.tsx:914
+#: src/routes/project/chat/ProjectChatRoute.tsx:977
 #: src/routes/project/chat/ProjectChatRoute.tsx:978
-#: src/routes/project/chat/ProjectChatRoute.tsx:979
-#: src/routes/project/chat/ProjectChatRoute.tsx:1064
+#: src/routes/project/chat/ProjectChatRoute.tsx:1063
 #: src/routes/project/chat/NewChatRoute.tsx:637
 #: src/routes/project/chat/NewChatRoute.tsx:639
 #: src/routes/project/chat/NewChatRoute.tsx:746
@@ -13888,7 +13897,7 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr "Self-service"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1003
+#: src/routes/project/chat/ProjectChatRoute.tsx:1002
 #: src/routes/project/chat/NewChatRoute.tsx:660
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2299
@@ -14190,7 +14199,7 @@ msgstr "Quando condividi un progetto privato con chi non è membro, ora puoi inv
 msgid "Sharing this login with a colleague? An admin of your organisation can invite them, so each of you has a login of your own."
 msgstr "Condividi questo accesso con un collega? Un amministratore della tua organizzazione può invitarlo, così ognuno avrà il proprio accesso."
 
-#: src/routes/project/present/PresentRoute.tsx:218
+#: src/routes/project/present/PresentRoute.tsx:219
 msgid "Short phrases from the conversations"
 msgstr "Brevi frasi tratte dalle conversazioni"
 
@@ -14210,7 +14219,7 @@ msgstr "Show"
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Mostra \"made with dembrane\" sullo schermo"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:987
+#: src/components/workspace/OrganisationUsageRollup.tsx:989
 msgid "Show {hidden} more"
 msgstr "Mostra altr{hidden, plural, one {o #} other {i #}}"
 
@@ -14327,7 +14336,7 @@ msgstr "Mostra il popcorn in un massimo di tre lingue aggiuntive contemporaneame
 msgid "Show preview"
 msgstr "Mostra anteprima"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:291
+#: src/components/workspace/OrganisationUsageRollup.tsx:293
 msgid "Show projects"
 msgstr "Mostra progetti"
 
@@ -14369,7 +14378,7 @@ msgstr "Mostra l'invito"
 msgid "Show the path to this page"
 msgstr "Mostra il percorso verso questa pagina"
 
-#: src/routes/project/present/PresentRoute.tsx:691
+#: src/routes/project/present/PresentRoute.tsx:692
 msgid "Show them"
 msgstr "Mostrale"
 
@@ -14835,7 +14844,7 @@ msgstr "Affermazione"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1672
 #: src/routes/admin/AdminSettingsRoute.tsx:2614
-#: src/components/workspace/OrganisationUsageRollup.tsx:400
+#: src/components/workspace/OrganisationUsageRollup.tsx:402
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
@@ -14888,7 +14897,7 @@ msgstr "Passaggi e log"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Hai ancora problemi? Scrivi a <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:801
+#: src/routes/project/chat/ProjectChatRoute.tsx:800
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:244
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -15249,7 +15258,7 @@ msgstr "Spiega agli amministratori dello spazio di lavoro perché ti serve l'acc
 msgid "Tell us what you need"
 msgstr "Facci sapere cosa ti serve"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:579
+#: src/routes/project/chat/ProjectChatRoute.tsx:578
 #: src/routes/project/chat/NewChatRoute.tsx:319
 #: src/components/chat/AgenticChatPanel.tsx:1714
 msgid "Template applied"
@@ -15409,7 +15418,7 @@ msgstr "L'agente agisce a tuo nome: può vedere solo ciò che puoi già vedere t
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "L'agente e l'azienda che lo gestisce riceveranno i contenuti delle conversazioni che autorizzi."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:844
+#: src/routes/project/chat/ProjectChatRoute.tsx:843
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "L'IA non è riuscita a rispondere a questa domanda. Prova a riformularla."
 
@@ -15459,8 +15468,8 @@ msgstr "La guida per gli host predefinita ora ricorda di attivare la modalità n
 msgid "the dembrane team"
 msgstr "il team di dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:765
-#: src/routes/project/present/PresentRoute.tsx:819
+#: src/routes/project/present/PresentRoute.tsx:766
+#: src/routes/project/present/PresentRoute.tsx:830
 msgid "The draft could not be loaded"
 msgstr "Impossibile caricare la bozza"
 
@@ -15570,7 +15579,7 @@ msgstr "La guida per gli host è ciò che i facilitatori leggono prima di avviar
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "La schermata della guida per l’host mostra il codice per partecipare. Attiva la partecipazione nell’editor del portale per usarla."
 
-#: src/routes/project/present/PresentRoute.tsx:988
+#: src/routes/project/present/PresentRoute.tsx:999
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "L'host non ha ancora preparato una presentazione."
 
@@ -15706,7 +15715,7 @@ msgstr "Il percorso dei partecipanti include controlli del microfono più chiari
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "I portali continueranno a funzionare! I tuoi partecipanti non vengono mai interrotti e nulla di ciò che dicono va perso. Con un piano a pagamento, la trascrizione recupera tutto ciò che è già stato registrato."
 
-#: src/routes/project/present/PresentRoute.tsx:969
+#: src/routes/project/present/PresentRoute.tsx:980
 msgid "The presentation could not be loaded"
 msgstr "Impossibile caricare la presentazione"
 
@@ -15714,7 +15723,7 @@ msgstr "Impossibile caricare la presentazione"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Impossibile caricare la presentazione."
 
-#: src/routes/project/present/PresentRoute.tsx:962
+#: src/routes/project/present/PresentRoute.tsx:973
 msgid "The presentation could not be opened"
 msgstr "Impossibile aprire la presentazione"
 
@@ -15734,7 +15743,7 @@ msgstr "Il progetto adotta la licenza Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Il contesto del progetto viene letto da trascrizione, risposte della chat e generazione del canvas; quindi una modifica qui si riflette su più schermate."
 
-#: src/routes/project/present/PresentRoute.tsx:846
+#: src/routes/project/present/PresentRoute.tsx:857
 msgid "The public page is on, so changes wait until you show them."
 msgstr "La pagina pubblica è attiva, quindi le modifiche aspettano finché non le mostri."
 
@@ -15755,7 +15764,7 @@ msgstr "Il report si chiude con un invito a far sentire la tua voce."
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
-#: src/routes/project/present/PresentRoute.tsx:837
+#: src/routes/project/present/PresentRoute.tsx:848
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "Lo schermo della sala è aperto, quindi le modifiche aspettano finché non le mostri."
 
@@ -15978,8 +15987,12 @@ msgid "This changes how transcripts are stored from here on. Conversations alrea
 msgstr "Questo modifica il modo in cui verranno salvate le trascrizioni da ora in poi. Le conversazioni già registrate manterranno il formato in cui sono state salvate."
 
 #: src/components/chat/FreeTierChatGate.tsx:92
-msgid "This chat is from an earlier month and is now read-only on the free plan. Start a new chat or upgrade to keep going."
-msgstr "Questa chat risale a un mese precedente ed è ora di sola lettura con il piano Free. Inizia una nuova chat o passa a un piano superiore per continuare."
+msgid "This chat is from an earlier free period and can't take new questions. Start a new chat or upgrade to keep going."
+msgstr "Questa chat risale a un periodo gratuito precedente e non può ricevere nuove domande. Avvia una nuova chat o passa a un piano superiore per continuare."
+
+#: src/components/chat/FreeTierChatGate.tsx:92
+#~ msgid "This chat is from an earlier month and is now read-only on the free plan. Start a new chat or upgrade to keep going."
+#~ msgstr "Questa chat risale a un mese precedente ed è ora di sola lettura con il piano Free. Inizia una nuova chat o passa a un piano superiore per continuare."
 
 #: src/components/map/panels/SpotlightPanel.tsx:346
 msgid "This claim has not been fact-checked."
@@ -16446,7 +16459,7 @@ msgstr "Seleziona tutte le opzioni pertinenti"
 #: src/routes/admin/AdminSettingsRoute.tsx:1561
 #: src/routes/admin/AdminSettingsRoute.tsx:2588
 #: src/routes/admin/AdminSettingsRoute.tsx:3010
-#: src/components/workspace/OrganisationUsageRollup.tsx:358
+#: src/components/workspace/OrganisationUsageRollup.tsx:360
 msgid "Tier"
 msgstr "Livello"
 
@@ -16619,7 +16632,7 @@ msgstr "Topic-based title describing what was discussed"
 msgid "total"
 msgstr "total"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:663
+#: src/components/workspace/OrganisationUsageRollup.tsx:665
 msgid "Total"
 msgstr "Totale"
 
@@ -16830,9 +16843,9 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Problemi di accesso? Contatta support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:993
+#: src/routes/project/present/PresentRoute.tsx:1004
 #: src/routes/project/present/PresentResultsPanel.tsx:158
-#: src/routes/project/chat/ProjectChatRoute.tsx:857
+#: src/routes/project/chat/ProjectChatRoute.tsx:856
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:449
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -16970,7 +16983,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Digita <0>{0}</0> per confermare."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1012
+#: src/routes/project/chat/ProjectChatRoute.tsx:1011
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
@@ -17015,7 +17028,7 @@ msgstr "Meno di 50."
 msgid "Under your organisation"
 msgstr "Nella tua organizzazione"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:581
+#: src/routes/project/chat/ProjectChatRoute.tsx:580
 #: src/routes/project/chat/NewChatRoute.tsx:321
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
@@ -17116,7 +17129,7 @@ msgstr "fino al {0}"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1667
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
-#: src/components/workspace/OrganisationUsageRollup.tsx:809
+#: src/components/workspace/OrganisationUsageRollup.tsx:811
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
 msgid "Untitled"
 msgstr "Senza titolo"
@@ -17437,7 +17450,7 @@ msgstr "Usa il valore ereditato"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Usa l'italiano per la chat, i report, la trascrizione e le schede di onboarding dei partecipanti."
 
-#: src/routes/project/present/PresentRoute.tsx:907
+#: src/routes/project/present/PresentRoute.tsx:918
 msgid "Use latest results"
 msgstr "Usa gli ultimi risultati"
 
@@ -17449,8 +17462,8 @@ msgstr "Usa invece la password"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Usa i modelli di domande fissati e salvati da Chiedi, inclusa la scorciatoia /."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1040
-#: src/routes/project/chat/ProjectChatRoute.tsx:1050
+#: src/routes/project/chat/ProjectChatRoute.tsx:1039
+#: src/routes/project/chat/ProjectChatRoute.tsx:1049
 #: src/components/chat/AgenticChatPanel.tsx:2364
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
@@ -17687,7 +17700,7 @@ msgstr "Visualizzazioni"
 msgid "Views: {0}"
 msgstr "Visualizzazioni: {0}"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:550
+#: src/components/workspace/OrganisationUsageRollup.tsx:552
 msgid "Visible columns"
 msgstr "Colonne visibili"
 
@@ -17815,7 +17828,7 @@ msgstr "Non abbiamo trovato la pagina che cercavi. Forse è stata spostata."
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "Non siamo riusciti a caricare questa organizzazione. Riprova tra un attimo."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:466
+#: src/components/workspace/OrganisationUsageRollup.tsx:468
 msgid "We couldn't load this organisation's usage."
 msgstr "Non siamo riusciti a caricare l'utilizzo di questa organizzazione."
 
@@ -17973,7 +17986,7 @@ msgstr "Bentornato/a, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Benvenuto su dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:723
+#: src/routes/project/chat/ProjectChatRoute.tsx:722
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Benvenuto nella chat di dembrane. Seleziona le conversazioni che vuoi analizzare, poi chiedi dettagli, citazioni e riassunti."
 
@@ -17981,7 +17994,7 @@ msgstr "Benvenuto nella chat di dembrane. Seleziona le conversazioni che vuoi an
 msgid "Welcome to dembrane!"
 msgstr "Welcome to dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:722
+#: src/routes/project/chat/ProjectChatRoute.tsx:721
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Benvenuto nella modalità Panoramica. Ho caricato i riassunti di tutte le tue conversazioni. Chiedimi schemi, temi o approfondimenti nei tuoi dati. Per citazioni esatte, apri una nuova chat in modalità Contesto Specifico."
 
@@ -18328,7 +18341,7 @@ msgstr "Elaborazione della risposta..."
 #: src/routes/admin/AdminSettingsRoute.tsx:1667
 #: src/routes/admin/AdminSettingsRoute.tsx:2215
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/components/workspace/OrganisationUsageRollup.tsx:352
+#: src/components/workspace/OrganisationUsageRollup.tsx:354
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
 msgid "Workspace"
@@ -18656,6 +18669,14 @@ msgstr "Hai usato le chat gratuite di questo mese. Si rinnoveranno il {date}."
 msgid "You have used this month's free chats. Upgrade to keep chatting."
 msgstr "Hai usato le chat gratuite di questo mese. Passa a un piano superiore per continuare a chattare."
 
+#: src/routes/project/present/MapFreeNotice.tsx:51
+msgid "You have used this month's free map. The map in this presentation keeps its current version until {date}."
+msgstr "Hai usato la mappa gratuita di questo mese. La mappa in questa presentazione manterrà la versione attuale fino al {date}."
+
+#: src/routes/project/present/MapFreeNotice.tsx:56
+msgid "You have used this month's free map. The map in this presentation keeps its current version."
+msgstr "Hai usato la mappa gratuita di questo mese. La mappa in questa presentazione manterrà la versione attuale."
+
 #: src/components/workspace/FreeAllowanceBanner.tsx:57
 msgid "You have used this month's free map. Your current map stays here. It resets on {date}."
 msgstr "Hai usato la mappa gratuita di questo mese. La mappa attuale rimane qui. Si rinnoverà il {date}."
@@ -18769,7 +18790,7 @@ msgstr "Sei un collaboratore esterno in questa organizzazione. Apri uno degli sp
 msgid "You're in"
 msgstr "Ci sei dentro"
 
-#: src/routes/project/present/PresentRoute.tsx:842
+#: src/routes/project/present/PresentRoute.tsx:853
 msgid "You’re live, so changes wait until you show them."
 msgstr "Sei in diretta, quindi le modifiche aspettano finché non le mostri."
 
