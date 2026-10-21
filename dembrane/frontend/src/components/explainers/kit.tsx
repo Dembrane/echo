@@ -14,6 +14,9 @@ export const C = {
 	action: "var(--app-action)",
 	muted: "var(--app-muted)",
 	quiet: "var(--app-quiet)",
+	/** Approved by people: the product's success green. Blue is dembrane acting. */
+	success: "var(--app-success)",
+	successTint: "var(--app-success-tint)",
 	surface: "var(--app-surface)",
 	text: "var(--app-text)",
 	tint: "var(--app-action-tint)",

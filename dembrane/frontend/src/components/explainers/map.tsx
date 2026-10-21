@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { CARD as CONV, ConvCard, Person, ScanLine } from "./cast";
 import { C, Cursor, clamp, type Loop, lerp, smooth, spring } from "./kit";
 
 // Beats: 0 conversations, 1 dembrane finds the ideas in them, 2 related ideas gather, 3 open one for its quotes.
@@ -71,61 +72,24 @@ const Pill = ({
 	);
 };
 
-/** A person: circle head over a rounded shoulder arc, graphite. */
-const Person = ({ cx, cy, s = 1 }: { cx: number; cy: number; s?: number }) => (
-	<g fill="none" stroke={C.text} strokeWidth={1.3} strokeLinecap="round">
-		<circle cx={cx} cy={cy} r={4.5 * s} />
-		<path
-			d={`M ${cx - 8 * s} ${cy + 15 * s} Q ${cx} ${cy + 3 * s} ${cx + 8 * s} ${cy + 15 * s}`}
-		/>
-	</g>
-);
+/** Conversations the cast draws; `verified` ones carry an approved outcome. */
+const CW = CONV.w;
+const CH = CONV.h;
+// Conversations that were verified at a table: they carry an approved outcome under them.
+const VERIFIED = [0, 2];
+/** Outcome card geometry under a ConvCard (see cast Outcome): left offset, top offset, width. */
+const OUT_BOX = { dx: 8, dy: CH + 3, h: 14, w: 40 };
 
-/** A conversation: the shared shape, a rounded card with a head at its left and two grey pill bars. */
-const CW = 84;
-const CH = 40;
-const Conversation = ({
-	x,
-	y,
-	k = 1,
-	lit = () => 0,
-}: {
-	x: number;
-	y: number;
-	k?: number;
-	/** How blue a bar at this x is (0 to 1): the scan lights it as it crosses. */
-	lit?: (px: number) => number;
-}) => (
-	<g>
-		<rect
-			x={x}
-			y={y}
-			width={CW}
-			height={CH}
-			rx={6}
-			fill={C.surface}
-			stroke={C.quiet}
-			strokeWidth={1}
-		/>
-		<Person cx={x + 16} cy={y + 13} s={0.8} />
-		<Pill x={x + 30} y={y + 14} w={42} k={k * 1.6} blue={lit(x + 51)} />
-		<Pill x={x + 30} y={y + 23} w={28} k={k * 1.6 - 0.6} blue={lit(x + 44)} />
-	</g>
-);
-
-/** One idea: a small hairline card; ideas of one kind share a bar pattern, so related ones look alike. */
-const TW = 34;
-const TH = 22;
-const patterns: [number, number][][][] = [
-	[[[0, 24]], [[0, 12]]],
+/** One idea: a pill like the map's miniature; ideas of one kind share a bar pattern inside. */
+const TW = 30;
+const TH = 14;
+const patterns: [number, number][][] = [
+	[[0, 16]],
 	[
-		[
-			[0, 9],
-			[13, 11],
-		],
-		[[0, 24]],
+		[0, 7],
+		[10, 7],
 	],
-	[[[0, 24]], [[0, 24]]],
+	[[0, 18]],
 ];
 const Idea = ({
 	x,
@@ -146,22 +110,20 @@ const Idea = ({
 			y={y - TH / 2}
 			width={TW}
 			height={TH}
-			rx={6}
+			rx={TH / 2}
 			fill={C.surface}
-			stroke={C.quiet}
+			stroke={blue > 0.01 ? C.action : C.quiet}
 			strokeWidth={1}
 		/>
-		{patterns[k]!.map((row, r) =>
-			row.map(([dx, w]) => (
-				<Pill
-					key={`${r}-${dx}`}
-					x={x - 12 + dx}
-					y={y - 6 + r * 8}
-					w={w}
-					blue={blue}
-				/>
-			)),
-		)}
+		{patterns[k]!.map(([dx, w]) => (
+			<Pill
+				key={dx}
+				x={x - patterns[k]![0]![1] / 2 - (k === 1 ? 3 : 0) + dx}
+				y={y - 2}
+				w={w}
+				blue={blue}
+			/>
+		))}
 	</g>
 );
 
@@ -174,6 +136,7 @@ const Curve = ({
 	bend = 0.25,
 	op = 1,
 	k = 1,
+	via,
 }: {
 	x1: number;
 	y1: number;
@@ -182,18 +145,20 @@ const Curve = ({
 	bend?: number;
 	op?: number;
 	k?: number;
+	/** Where the line first heads, instead of the gentle default bend. */
+	via?: [number, number];
 }) => {
 	if (k <= 0.001 || op <= 0.001) return null;
-	const mx = (x1 + x2) / 2 - (y2 - y1) * bend;
-	const my = (y1 + y2) / 2 + (x2 - x1) * bend;
+	const mx = via ? via[0] : (x1 + x2) / 2 - (y2 - y1) * bend;
+	const my = via ? via[1] : (y1 + y2) / 2 + (x2 - x1) * bend;
 	return (
 		<path
 			d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`}
 			fill="none"
-			stroke={C.muted}
-			strokeWidth={1.2}
+			stroke={C.quiet}
+			strokeWidth={1}
 			strokeLinecap="round"
-			opacity={0.5 * op}
+			opacity={op}
 			pathLength={1}
 			strokeDasharray="1 1"
 			strokeDashoffset={1 - clamp(k)}
@@ -204,7 +169,8 @@ const Curve = ({
 // Beat 0: three conversations grow in, one after another.
 const convX = [26, 138, 250];
 const CONV_IN = [0.25, 0.75, 1.25];
-const CONV_Y0 = 68;
+const OUTCOME_IN = [2.0, 0, 2.5];
+const CONV_Y0 = 76;
 // Beat 1: they settle low, then the blue sweep crosses them and each idea rises out as it passes.
 const CONV_Y1 = 122;
 const DROP_AT = 4.1;
@@ -236,15 +202,16 @@ const raised: {
 	o: number;
 	bu: number;
 	at: number;
+	from?: boolean;
 }[] = [
 	{ bu: -16, c: 0, k: 0, o: 6, to: 0, x: 36, y: 80 },
 	{ bu: -16, c: 0, k: 1, o: 1, to: 3, x: 68, y: 46 },
-	{ bu: -8, c: 0, k: 2, o: 5, to: 6, x: 100, y: 82 },
+	{ bu: -8, c: 0, from: true, k: 2, o: 5, to: 6, x: 100, y: 82 },
 	{ bu: 0, c: 1, k: 0, o: 2, to: 1, x: 154, y: 82 },
 	{ bu: -8, c: 1, k: 2, o: 0, to: 7, x: 196, y: 48 },
 	{ bu: -16, c: 2, k: 1, o: 4, to: 5, x: 264, y: 82 },
 	{ bu: 0, c: 2, k: 0, o: 3, to: 2, x: 296, y: 48 },
-	{ bu: 16, c: 2, k: 1, o: 7, to: 4, x: 330, y: 82 },
+	{ bu: 16, c: 2, from: true, k: 1, o: 7, to: 4, x: 330, y: 82 },
 ].map((p) => ({ ...p, at: sweepAt(p.x) }));
 
 // Beat 2 and 3: the same eight ideas gathered into three neighbourhoods, in a 200 x 160 box.
@@ -341,30 +308,62 @@ function draw(t: number) {
 			{convOut > 0.001 && (
 				<g opacity={convOut}>
 					{convX.map((x, c) => {
-						const gr = grow(t, CONV_IN[c]!, x + CW / 2, CONV_Y0 + CH / 2);
+						const l = lit(x + 40);
+						const oc = VERIFIED.includes(c)
+							? smooth((t - OUTCOME_IN[c]!) / 0.5)
+							: 0;
 						return (
-							<g key={x} opacity={gr.op} transform={gr.transform}>
-								<Conversation
+							<g key={x}>
+								<ConvCard
 									x={x}
 									y={convY}
-									k={smooth((t - CONV_IN[c]! - 0.15) / 0.7)}
-									lit={lit}
+									k={smooth((t - CONV_IN[c]!) / 0.6)}
+									lit={l}
+									outcome={oc}
 								/>
+								{oc > 0.5 && l > 0.01 && (
+									<g fill={C.action} opacity={l}>
+										<rect
+											x={x + OUT_BOX.dx + 6}
+											y={convY + OUT_BOX.dy + 4}
+											width={OUT_BOX.w - 16}
+											height={2.6}
+											rx={1.3}
+										/>
+										<rect
+											x={x + OUT_BOX.dx + 6}
+											y={convY + OUT_BOX.dy + 8.4}
+											width={OUT_BOX.w - 24}
+											height={2.6}
+											rx={1.3}
+										/>
+									</g>
+								)}
 							</g>
 						);
 					})}
 					{/* Each idea's thread back to the conversation it came from. */}
 					{raised.map((r) => {
 						const i = ideas[r.to]!;
-						const ax = clamp(r.x, convX[r.c]! + 14, convX[r.c]! + CW - 14);
+						const cxv = convX[r.c]!;
+						const ax = clamp(r.x, cxv + 14, cxv + CW - 14);
+						// Ideas from a verified conversation can lift from its outcome, out past the card's right edge.
+						const fromOutcome = VERIFIED.includes(r.c) && r.from;
 						return (
 							<Curve
 								key={r.to}
-								x1={ax}
-								y1={convY - 2}
+								x1={fromOutcome ? cxv + OUT_BOX.dx + OUT_BOX.w : ax}
+								y1={
+									fromOutcome ? convY + OUT_BOX.dy + OUT_BOX.h / 2 : convY - 2
+								}
 								x2={i.x}
 								y2={i.y + (TH / 2) * i.s + 2}
 								bend={0.12}
+								via={
+									fromOutcome
+										? [cxv + CW + 14, convY + OUT_BOX.dy + OUT_BOX.h / 2]
+										: undefined
+								}
 								k={smooth((t - r.at) / 0.4)}
 							/>
 						);
@@ -397,25 +396,14 @@ function draw(t: number) {
 			)}
 
 			{/* The one blue thing: first the sweep, later the outline on the chosen idea. */}
-			{sweepOp > 0.001 && (
-				<line
-					x1={sx}
-					x2={sx}
-					y1={convY - 8}
-					y2={convY + CH + 8}
-					stroke={C.action}
-					strokeWidth={2}
-					strokeLinecap="round"
-					opacity={sweepOp}
-				/>
-			)}
+			<ScanLine x={sx} y1={convY - 8} y2={convY + CH + 45} opacity={sweepOp} />
 			{ok > 0.001 && (
 				<rect
 					x={sel.x - (TW / 2) * oS}
 					y={sel.y - (TH / 2) * oS}
 					width={TW * oS}
 					height={TH * oS}
-					rx={6}
+					rx={TH / 2}
 					fill="none"
 					stroke={C.action}
 					strokeWidth={2}
@@ -436,25 +424,25 @@ function draw(t: number) {
 						stroke={C.quiet}
 						strokeWidth={1}
 					/>
-					{patterns[p.k]!.map((row, r) =>
-						row.map(([dx, w]) => (
-							<Pill
-								key={`${r}-${dx}`}
-								x={CARD.x + 14 + dx * 2.4}
-								y={CARD.y + 14 + r * 9}
-								w={w * 2.4}
-								k={type(CARD_AT + 0.15 + r * 0.15)}
-							/>
-						)),
-					)}
+					{patterns[p.k]?.map(([dx, w]) => (
+						<Pill
+							key={dx}
+							x={CARD.x + 14 + dx * 2.4}
+							y={CARD.y + 16}
+							w={w * 2.4}
+							k={type(CARD_AT + 0.15)}
+						/>
+					))}
 					{groups.map((gy, gi) => {
 						const t0 = CARD_AT + 0.5 + gi * 0.5;
-						const head = grow(t, t0, CARD.x + 20, gy + 6, 0.7);
 						return (
 							<g key={gy}>
-								<g opacity={head.op} transform={head.transform}>
-									<Person cx={CARD.x + 20} cy={gy} s={0.85} />
-								</g>
+								<Person
+									x={CARD.x + 20}
+									y={gy - 2}
+									k={spring(t, t0, 1.8)}
+									s={0.5}
+								/>
 								<Pill
 									x={CARD.x + 36}
 									y={gy - 4}
@@ -488,9 +476,9 @@ export const map: Loop = {
 	draw,
 	lines: () => [
 		translate`Your conversations hold many ideas.`,
-		translate`See the ideas people raised.`,
-		translate`Related ideas sit side by side.`,
-		translate`Open one to read the quotes.`,
+		translate`dembrane finds the ideas people raised.`,
+		translate`Related ideas sit together.`,
+		translate`Open an idea to read quotes.`,
 	],
 	out: OUT,
 	scenes: [0, 4, 8, 12],

@@ -1952,6 +1952,10 @@ msgstr "All seats are taken. Free a seat or upgrade to invite more."
 msgid "All seats taken"
 msgstr "All seats taken"
 
+#: src/components/explainers/popcorn.tsx:288
+msgid "All tables talk at once."
+msgstr "Všechny stoly mluví najednou."
+
 #: src/components/chat/TemplatesModal.tsx:807
 msgid "All templates"
 msgstr "Všechny šablony"
@@ -1974,8 +1978,8 @@ msgid "All workspaces"
 msgstr "All workspaces"
 
 #: src/components/explainers/chat.tsx:421
-msgid "All your conversations in one place."
-msgstr "Všechny rozhovory na jednom místě."
+#~ msgid "All your conversations in one place."
+#~ msgstr "Všechny rozhovory na jednom místě."
 
 #: src/components/release/releases.ts:48
 msgid "All-new Present features: show live results on a big screen during your session."
@@ -2247,8 +2251,8 @@ msgid "another reason"
 msgstr "jiný důvod"
 
 #: src/components/explainers/chat.tsx:424
-msgid "Answers lean on your picks."
-msgstr "Odpovědi vycházejí z vašeho výběru."
+#~ msgid "Answers lean on your picks."
+#~ msgstr "Odpovědi vycházejí z vašeho výběru."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:712
 #: src/components/conversation/ConversationsMiniList.tsx:190
@@ -2341,6 +2345,10 @@ msgstr "Approve"
 #: src/components/workspace/SupportAccessSection.tsx:286
 msgid "Approve for 24 hours"
 msgstr "Schválit na 24 hodin"
+
+#: src/components/explainers/verify.tsx:741
+msgid "Approve it when you feel heard."
+msgstr "Schvalte, až se budete cítit slyšeni."
 
 #: src/components/workspace/SupportAccessSection.tsx:284
 msgid "Approve support access"
@@ -2485,6 +2493,10 @@ msgstr "Zeptejte se na aplikaci."
 msgid "Ask about these"
 msgstr "Zeptat se na tyto"
 
+#: src/components/explainers/chat.tsx:767
+msgid "Ask about your conversations."
+msgstr "Ptejte se na své rozhovory."
+
 #: src/routes/project/chat/NewChatRoute.tsx:676
 #: src/components/chat/AgenticChatPanel.tsx:2325
 msgid "Ask about your conversations..."
@@ -2540,8 +2552,8 @@ msgid "Ask your admin"
 msgstr "Požádejte svého správce"
 
 #: src/components/explainers/chat.tsx:423
-msgid "Ask your question."
-msgstr "Položte otázku."
+#~ msgid "Ask your question."
+#~ msgstr "Položte otázku."
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
 #~ msgid "Aspect"
@@ -2620,6 +2632,10 @@ msgstr "Audio download not available for anonymized conversations"
 #: src/components/conversation/LiveMonitorSection.tsx:93
 msgid "Audio is coming in"
 msgstr "Zvuk přichází"
+
+#: src/components/explainers/anonymise.tsx:353
+msgid "Audio playback and download are off."
+msgstr "Přehrávání a stahování je vypnuté."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:267
 msgid "Audio playback not available for anonymized conversations"
@@ -5108,6 +5124,10 @@ msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane can make mistakes. Please double-check responses."
 
+#: src/components/explainers/popcorn.tsx:289
+msgid "dembrane catches each table's key ideas."
+msgstr "dembrane zachytí klíčové myšlenky stolů."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "dembrane default"
 msgstr "výchozí dembrane"
@@ -5120,6 +5140,10 @@ msgstr "pozvánka na akci dembrane"
 #: src/components/settings/LegalBasisCard.tsx:23
 msgid "dembrane events"
 msgstr "dembrane events"
+
+#: src/components/explainers/map.tsx:479
+msgid "dembrane finds the ideas people raised."
+msgstr "dembrane najde myšlenky lidí."
 
 #: src/features/sidebar/shell/SidebarHeader.tsx:23
 #: src/features/sidebar/shell/SidebarHeader.tsx:30
@@ -5547,9 +5571,13 @@ msgstr "Každý nový člen je účtován podle počtu míst ve vašem tarifu."
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Každý popcorn vyskočí jednou v každém jazyce: nejprve v původním a poté v těchto v náhodném pořadí."
 
+#: src/components/explainers/report.tsx:432
+msgid "Each question gets its own answer."
+msgstr "Každá otázka má vlastní odpověď."
+
 #: src/components/explainers/popcorn.tsx:332
-msgid "Each table's key ideas, caught live."
-msgstr "Klíčové myšlenky každého stolu, živě."
+#~ msgid "Each table's key ideas, caught live."
+#~ msgstr "Klíčové myšlenky každého stolu, živě."
 
 #: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
@@ -6019,17 +6047,29 @@ msgstr "Každé volání agenta v této organizaci, od nejnovějších."
 msgid "Every connected agent in {0} stops working immediately. Members keep their connections and they resume if you turn this back on."
 msgstr "Všichni připojení agenti v organizaci {0} okamžitě přestanou fungovat. Členům jejich připojení zůstanou a po opětovném zapnutí se obnoví."
 
+#: src/components/explainers/report.tsx:430
+msgid "Every conversation becomes a transcript."
+msgstr "Z každého rozhovoru je přepis."
+
 #: src/components/explainers/report.tsx:472
-msgid "Every conversation, written down."
-msgstr "Každý rozhovor, sepsaný."
+#~ msgid "Every conversation, written down."
+#~ msgstr "Každý rozhovor, sepsaný."
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:206
 msgid "Every member's connection that names this organisation."
 msgstr "Připojení každého člena, které uvádí tuto organizaci."
 
+#: src/components/explainers/verify.tsx:742
+msgid "Every table approves its own outcomes."
+msgstr "Každý stůl schvaluje své výsledky."
+
+#: src/components/explainers/explore.tsx:700
+msgid "Every table explores more ideas."
+msgstr "Každý stůl prozkoumá víc myšlenek."
+
 #: src/components/explainers/popcorn.tsx:331
-msgid "Every table talks at once."
-msgstr "Všechny stoly mluví najednou."
+#~ msgid "Every table talks at once."
+#~ msgstr "Všechny stoly mluví najednou."
 
 #: src/components/pricing/questions.ts:158
 msgid "Every week for a year"
@@ -6053,6 +6093,14 @@ msgstr "Všichni ve vaší organizaci"
 #: src/components/training/TrainingRowActions.tsx:286
 msgid "Everyone on the roster is trained."
 msgstr "Všichni na seznamu jsou proškoleni."
+
+#: src/components/explainers/popcorn.tsx:291
+msgid "Everyone sees what each table thinks."
+msgstr "Všichni vidí, co si myslí každý stůl."
+
+#: src/components/explainers/anonymise.tsx:351
+msgid "Everyone talks as they normally would."
+msgstr "Všichni mluví jako obvykle."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:391
@@ -6136,6 +6184,10 @@ msgstr "Prozkoumej příběhy a pohledy pomocí šablony chatu Narratives v angl
 #: src/components/release/PilotHistory.tsx:41
 msgid "Explore the dembrane/pilot archive"
 msgstr "Prozkoumat archiv dembrane/pilot"
+
+#: src/components/explainers/verify.tsx:743
+msgid "Explore them later in the dashboard."
+msgstr "Prozkoumejte je později v přehledu."
 
 #: src/components/conversation/StatePill.tsx:25
 msgid "Exploring"
@@ -6949,8 +7001,16 @@ msgid "Get a reply during a conversation"
 msgstr "Získej odpověď během rozhovoru"
 
 #: src/components/explainers/explore.tsx:552
-msgid "Get a reply that digs deeper."
-msgstr "Odpověď, která jde hlouběji."
+#~ msgid "Get a reply that digs deeper."
+#~ msgstr "Odpověď, která jde hlouběji."
+
+#: src/components/explainers/explore.tsx:698
+msgid "Get a reply that goes deeper."
+msgstr "Získejte odpověď, která jde hlouběji."
+
+#: src/components/explainers/verify.tsx:739
+msgid "Get a summary of your conversation."
+msgstr "Získejte shrnutí svého rozhovoru."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:730
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
@@ -8086,8 +8146,8 @@ msgid "Keep this canvas fresh"
 msgstr "Udržovat toto plátno aktuální"
 
 #: src/components/explainers/anonymise.tsx:322
-msgid "Keep what was said, not names."
-msgstr "Co zaznělo, ale bez jmen."
+#~ msgid "Keep what was said, not names."
+#~ msgstr "Co zaznělo, ale bez jmen."
 
 #: src/components/release/releaseHistory.ts:567
 msgid "Keep working while audio uploads in the background."
@@ -8223,6 +8283,10 @@ msgstr "Zanechat zpětnou vazbu"
 #: src/routes/admin/AdminSettingsRoute.tsx:1106
 msgid "Leave now"
 msgstr "Odejít hned"
+
+#: src/components/explainers/explore.tsx:701
+msgid "Leave with new insights to explore."
+msgstr "Odejděte s novými poznatky."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1124
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1143
@@ -9269,6 +9333,10 @@ msgstr "Pojmenované pracovní postupy, které váš tým může opakovaně pou�
 msgid "Names and key terms are spelled right, and the text is cleaned up."
 msgstr "Jména a klíčové výrazy jsou napsané správně a text je upravený."
 
+#: src/components/explainers/anonymise.tsx:352
+msgid "Names and personal details are replaced."
+msgstr "Jména a osobní údaje se nahradí."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:31
 msgid "Names on the legend"
 msgstr "Jména v legendě"
@@ -9752,8 +9820,8 @@ msgid "No pending invites"
 msgstr "No pending invites"
 
 #: src/components/explainers/anonymise.tsx:321
-msgid "No playback, no download."
-msgstr "Bez přehrávání, bez stahování."
+#~ msgid "No playback, no download."
+#~ msgstr "Bez přehrávání, bez stahování."
 
 #: src/components/map/attributes.ts:143
 msgid "No popcorn saved yet."
@@ -10045,8 +10113,8 @@ msgid "Not placed on the map"
 msgstr "Neumístěno na mapě"
 
 #: src/components/explainers/verify.tsx:582
-msgid "Not quite? Talk more, tap Revise."
-msgstr "Ne úplně? Mluvte dál, klepněte na Revise."
+#~ msgid "Not quite? Talk more, tap Revise."
+#~ msgstr "Ne úplně? Mluvte dál, klepněte na Revise."
 
 #: src/components/results/curate/RowTools.tsx:39
 msgid "Not recognizable"
@@ -10282,8 +10350,12 @@ msgid "one quote only"
 msgstr "jen jeden citát"
 
 #: src/components/explainers/report.tsx:473
-msgid "One report across all of them."
-msgstr "Jeden report pro všechny."
+#~ msgid "One report across all of them."
+#~ msgstr "Jeden report pro všechny."
+
+#: src/components/explainers/report.tsx:431
+msgid "One report covers all of them."
+msgstr "Jeden report pokrývá všechny rozhovory."
 
 #: src/components/results/ResultRow.tsx:289
 msgid "One sentence, for the people you work with and anyone who checks later."
@@ -10391,6 +10463,10 @@ msgstr "Otevřít akce účtu"
 #~ msgid "Open all"
 #~ msgstr "Open all"
 
+#: src/components/explainers/map.tsx:481
+msgid "Open an idea to read quotes."
+msgstr "Otevřete myšlenku a čtěte citace."
+
 #: src/features/processes/copy.ts:24
 msgid "Open chat"
 msgstr "Otevřít chat"
@@ -10461,8 +10537,8 @@ msgid "Open Mollie dashboard"
 msgstr "Otevřít panel Mollie"
 
 #: src/components/explainers/map.tsx:493
-msgid "Open one to read the quotes."
-msgstr "Otevřete jednu a čtěte citace."
+#~ msgid "Open one to read the quotes."
+#~ msgstr "Otevřete jednu a čtěte citace."
 
 #: src/components/settings/MyAccessCard.tsx:177
 msgid "Open organisation"
@@ -11100,8 +11176,8 @@ msgstr "Period"
 #~ msgstr "person"
 
 #: src/components/explainers/anonymise.tsx:320
-msgid "Personal details become placeholders."
-msgstr "Osobní údaje nahradí zástupci."
+#~ msgid "Personal details become placeholders."
+#~ msgstr "Osobní údaje nahradí zástupci."
 
 #: src/components/conversation/RetranscribeConversation.tsx:206
 msgid "Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
@@ -11163,8 +11239,8 @@ msgid "Pick the approach that fits your question"
 msgstr "Pick the approach that fits your question"
 
 #: src/components/explainers/chat.tsx:422
-msgid "Pick the ones that matter."
-msgstr "Vyberte ty důležité."
+#~ msgid "Pick the ones that matter."
+#~ msgstr "Vyberte ty důležité."
 
 #: src/components/workspace/PilotBlockModal.tsx:36
 msgid "Pilot limit reached"
@@ -11925,6 +12001,10 @@ msgstr "Citace ({quoteCount})"
 #~ msgid "Quotes ({quotes})"
 #~ msgstr "Citace ({quotes})"
 
+#: src/components/explainers/report.tsx:433
+msgid "Quotes show people's own words."
+msgstr "Citace ukazují slova lidí."
+
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:616
 msgid "Ran {0} steps at once"
@@ -12332,8 +12412,12 @@ msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
 #: src/components/explainers/map.tsx:492
-msgid "Related ideas sit side by side."
-msgstr "Související myšlenky vedle sebe."
+#~ msgid "Related ideas sit side by side."
+#~ msgstr "Související myšlenky vedle sebe."
+
+#: src/components/explainers/map.tsx:480
+msgid "Related ideas sit together."
+msgstr "Související myšlenky jsou pohromadě."
 
 #: src/components/map/panels/NodeDetailCard.tsx:325
 #: src/components/map/panels/NodeDetailCard.tsx:531
@@ -13570,8 +13654,8 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Prohlédněte si na Mapě argumenty z vašich rozhovorů a citace, o které se opírají."
 
 #: src/components/explainers/map.tsx:491
-msgid "See the ideas people raised."
-msgstr "Podívejte se na myšlenky lidí."
+#~ msgid "See the ideas people raised."
+#~ msgstr "Podívejte se na myšlenky lidí."
 
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
@@ -13724,6 +13808,10 @@ msgstr "Select Project"
 #: src/components/conversation/ConversationDrilldownModal.tsx:201
 msgid "Select tags"
 msgstr "Select tags"
+
+#: src/components/explainers/chat.tsx:768
+msgid "Select the conversations that matter."
+msgstr "Vyberte rozhovory, na kterých záleží."
 
 #: src/components/project/ProjectPortalEditor.tsx:713
 msgid "Select the instructions that will be shown to participants when they start a conversation"
@@ -14609,6 +14697,10 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Chat ke konkrétním detailům respektuje ruční výběr rozhovorů."
 
+#: src/components/explainers/verify.tsx:740
+msgid "Spot a mistake? Discuss and revise."
+msgstr "Chyba? Proberte ji a upravte."
+
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
 #: src/components/map/panels/MapSettingsMenu.tsx:88
@@ -15129,29 +15221,46 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "participant.refine.make.concrete.description"
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
+#: src/components/explainers/explore.tsx:699
+msgid "Take the conversation somewhere new."
+msgstr "Posuňte rozhovor novým směrem."
+
 #: src/components/explainers/explore.tsx:550
-msgid "Talk a while together."
-msgstr "Chvíli spolu mluvte."
+#~ msgid "Talk a while together."
+#~ msgstr "Chvíli spolu mluvte."
 
 #: src/components/explainers/anonymise.tsx:319
-msgid "Talk freely, names and all."
-msgstr "Mluvte volně, i se jmény."
+#~ msgid "Talk freely, names and all."
+#~ msgstr "Mluvte volně, i se jmény."
+
+#: src/components/explainers/verify.tsx:737
+#: src/components/explainers/explore.tsx:696
+msgid "Talk it through at your table."
+msgstr "Proberte to spolu u stolu."
 
 #: src/components/explainers/verify.tsx:580
-msgid "Talk it through together."
-msgstr "Proberte to spolu."
+#~ msgid "Talk it through together."
+#~ msgstr "Proberte to spolu."
 
 #: src/components/explainers/explore.tsx:553
-msgid "Talk on from a new angle."
-msgstr "Pokračujte z nového úhlu."
+#~ msgid "Talk on from a new angle."
+#~ msgstr "Pokračujte z nového úhlu."
 
 #: src/components/explainers/explore.tsx:551
-msgid "Tap ECHO, then Explore."
+#~ msgid "Tap ECHO, then Explore."
+#~ msgstr "Klepněte na ECHO, pak Explore."
+
+#: src/components/explainers/explore.tsx:697
+msgid "Tap ECHO, then tap Explore."
 msgstr "Klepněte na ECHO, pak Explore."
 
-#: src/components/explainers/verify.tsx:581
-msgid "Tap ECHO, then Verify."
+#: src/components/explainers/verify.tsx:738
+msgid "Tap ECHO, then tap Verify."
 msgstr "Klepněte na ECHO, pak Verify."
+
+#: src/components/explainers/verify.tsx:581
+#~ msgid "Tap ECHO, then Verify."
+#~ msgstr "Klepněte na ECHO, pak Verify."
 
 #: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
@@ -15333,6 +15442,10 @@ msgstr "Agent a společnost, která ho provozuje, získají obsah rozhovoru, kte
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "Umělá inteligence na tuto otázku nedokázala odpovědět. Zkuste ji přeformulovat."
 
+#: src/components/explainers/chat.tsx:770
+msgid "The answer cites those conversations."
+msgstr "Odpověď cituje tyto rozhovory."
+
 #: src/components/release/releases.ts:72
 msgid "The app feels much faster overall."
 msgstr "Aplikace je celkově mnohem rychlejší."
@@ -15460,6 +15573,10 @@ msgstr "Obrazovka průvodce pro hostitele ukazuje kód pro zapojení. Pro její 
 #: src/routes/project/present/PresentRoute.tsx:952
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
+
+#: src/components/explainers/anonymise.tsx:354
+msgid "The ideas stay. The names don't."
+msgstr "Myšlenky zůstanou. Jména ne."
 
 #: src/components/pricing/PricingConfigurator.tsx:906
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
@@ -15646,8 +15763,8 @@ msgid "The room screen is open, so changes wait until you show them."
 msgstr "Plátno v sále je otevřené, takže změny čekají, dokud je nezobrazíte."
 
 #: src/components/explainers/popcorn.tsx:334
-msgid "The room sees every table's thinking."
-msgstr "Sál vidí, co si myslí každý stůl."
+#~ msgid "The room sees every table's thinking."
+#~ msgstr "Sál vidí, co si myslí každý stůl."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
@@ -15802,9 +15919,13 @@ msgstr "Tyto pracovní prostory jsou účtovány samostatně. Každá přidaná 
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Tyto pracovní prostory mají vlastní tarif spravovaný přímo z nich. Nejsou součástí tarifu této organizace."
 
-#: src/components/explainers/popcorn.tsx:333
-msgid "They pop onto the big screen."
+#: src/components/explainers/popcorn.tsx:290
+msgid "They appear on the big screen."
 msgstr "Objeví se na velké obrazovce."
+
+#: src/components/explainers/popcorn.tsx:333
+#~ msgid "They pop onto the big screen."
+#~ msgstr "Objeví se na velké obrazovce."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:659
 msgid "They'll be added as members. You can add more later."
@@ -16821,6 +16942,10 @@ msgstr "Type <0>{0}</0> to confirm."
 #: src/routes/project/chat/ProjectChatRoute.tsx:1019
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
+
+#: src/components/explainers/chat.tsx:769
+msgid "Type your question and send it."
+msgstr "Napište otázku a odešlete ji."
 
 #: src/components/participant/ParticipantConversationText.tsx:212
 msgid "Type your response here"
@@ -17841,8 +17966,8 @@ msgid "What are you trying to learn?"
 msgstr "What are you trying to learn?"
 
 #: src/components/explainers/report.tsx:474
-msgid "What came up, question by question."
-msgstr "Co zaznělo, otázku po otázce."
+#~ msgid "What came up, question by question."
+#~ msgstr "Co zaznělo, otázku po otázce."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:748
 msgid "What data is sent?"
@@ -17994,8 +18119,8 @@ msgid "When finishing the conversation, participants who haven't verified yet wi
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
 #: src/components/explainers/verify.tsx:583
-msgid "When it's right, approve it."
-msgstr "Sedí to? Schvalte."
+#~ msgid "When it's right, approve it."
+#~ msgstr "Sedí to? Schvalte."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1989
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
@@ -18092,8 +18217,8 @@ msgid "With external clients"
 msgstr "S externími klienty"
 
 #: src/components/explainers/report.tsx:475
-msgid "With quotes in people's own words."
-msgstr "S citacemi jejich slovy."
+#~ msgid "With quotes in people's own words."
+#~ msgstr "S citacemi jejich slovy."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:229
 msgid "With several lines, the first reads as a subtitle."
@@ -18698,7 +18823,7 @@ msgstr "Váš hovor je zarezervován: {bookedTime}."
 msgid "Your call is booked."
 msgstr "Váš hovor je zarezervován."
 
-#: src/components/explainers/map.tsx:490
+#: src/components/explainers/map.tsx:478
 msgid "Your conversations hold many ideas."
 msgstr "Vaše rozhovory jsou plné myšlenek."
 

@@ -1953,6 +1953,10 @@ msgstr "Alle Plätze sind belegt. Geben Sie einen Platz frei oder wechseln Sie d
 msgid "All seats taken"
 msgstr "Alle Plätze belegt"
 
+#: src/components/explainers/popcorn.tsx:288
+msgid "All tables talk at once."
+msgstr "Alle Tische sprechen gleichzeitig."
+
 #: src/components/chat/TemplatesModal.tsx:807
 msgid "All templates"
 msgstr "Alle Vorlagen"
@@ -1975,8 +1979,8 @@ msgid "All workspaces"
 msgstr "Alle Arbeitsbereiche"
 
 #: src/components/explainers/chat.tsx:421
-msgid "All your conversations in one place."
-msgstr "Alle Gespräche an einem Ort."
+#~ msgid "All your conversations in one place."
+#~ msgstr "Alle Gespräche an einem Ort."
 
 #: src/components/release/releases.ts:48
 msgid "All-new Present features: show live results on a big screen during your session."
@@ -2248,8 +2252,8 @@ msgid "another reason"
 msgstr "ein anderer Grund"
 
 #: src/components/explainers/chat.tsx:424
-msgid "Answers lean on your picks."
-msgstr "Antworten stützen sich auf deine Auswahl."
+#~ msgid "Answers lean on your picks."
+#~ msgstr "Antworten stützen sich auf deine Auswahl."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:712
 #: src/components/conversation/ConversationsMiniList.tsx:190
@@ -2342,6 +2346,10 @@ msgstr "Freigeben"
 #: src/components/workspace/SupportAccessSection.tsx:286
 msgid "Approve for 24 hours"
 msgstr "Für 24 Stunden genehmigen"
+
+#: src/components/explainers/verify.tsx:741
+msgid "Approve it when you feel heard."
+msgstr "Gib es frei, wenn du dich gehört fühlst."
 
 #: src/components/workspace/SupportAccessSection.tsx:284
 msgid "Approve support access"
@@ -2486,6 +2494,10 @@ msgstr "Fragen zur App stellen."
 msgid "Ask about these"
 msgstr "Dazu fragen"
 
+#: src/components/explainers/chat.tsx:767
+msgid "Ask about your conversations."
+msgstr "Stell Fragen zu deinen Gesprächen."
+
 #: src/routes/project/chat/NewChatRoute.tsx:676
 #: src/components/chat/AgenticChatPanel.tsx:2325
 msgid "Ask about your conversations..."
@@ -2541,8 +2553,8 @@ msgid "Ask your admin"
 msgstr "Ihren Administrator fragen"
 
 #: src/components/explainers/chat.tsx:423
-msgid "Ask your question."
-msgstr "Stell deine Frage."
+#~ msgid "Ask your question."
+#~ msgstr "Stell deine Frage."
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
 #~ msgid "Aspect"
@@ -2621,6 +2633,10 @@ msgstr "Audio-Download nicht verfügbar für anonymisierte Unterhaltungen"
 #: src/components/conversation/LiveMonitorSection.tsx:93
 msgid "Audio is coming in"
 msgstr "Audiosignal empfangen"
+
+#: src/components/explainers/anonymise.tsx:353
+msgid "Audio playback and download are off."
+msgstr "Wiedergabe und Download sind aus."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:267
 msgid "Audio playback not available for anonymized conversations"
@@ -5109,6 +5125,10 @@ msgstr "dembrane B.V. {0}, alle Rechte vorbehalten."
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kann Fehler machen. Bitte überprüfen Sie Antworten."
 
+#: src/components/explainers/popcorn.tsx:289
+msgid "dembrane catches each table's key ideas."
+msgstr "dembrane erfasst die Kernideen jedes Tisches."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "dembrane default"
 msgstr "dembrane-Standard"
@@ -5121,6 +5141,10 @@ msgstr "dembrane Event-Einladung"
 #: src/components/settings/LegalBasisCard.tsx:23
 msgid "dembrane events"
 msgstr "dembrane events"
+
+#: src/components/explainers/map.tsx:479
+msgid "dembrane finds the ideas people raised."
+msgstr "dembrane findet die Ideen, die genannt wurden."
 
 #: src/features/sidebar/shell/SidebarHeader.tsx:23
 #: src/features/sidebar/shell/SidebarHeader.tsx:30
@@ -5548,9 +5572,13 @@ msgstr "Jedes neue Mitglied wird pro Platz in Ihrem Tarif abgerechnet."
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Jedes Popcorn ploppt einmal pro Sprache auf: das Original zuerst, danach die weiteren in zufälliger Reihenfolge."
 
+#: src/components/explainers/report.tsx:432
+msgid "Each question gets its own answer."
+msgstr "Jede Frage bekommt eine eigene Antwort."
+
 #: src/components/explainers/popcorn.tsx:332
-msgid "Each table's key ideas, caught live."
-msgstr "Die Kernideen jedes Tisches, live."
+#~ msgid "Each table's key ideas, caught live."
+#~ msgstr "Die Kernideen jedes Tisches, live."
 
 #: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
@@ -6020,17 +6048,29 @@ msgstr "Jeder Aufruf eines Agenten in dieser Organisation, neueste zuerst."
 msgid "Every connected agent in {0} stops working immediately. Members keep their connections and they resume if you turn this back on."
 msgstr "Jeder verbundene Agent in {0} stoppt sofort. Mitglieder behalten ihre Verbindungen und diese werden fortgesetzt, wenn Sie dies wieder aktivieren."
 
+#: src/components/explainers/report.tsx:430
+msgid "Every conversation becomes a transcript."
+msgstr "Jedes Gespräch wird zum Transkript."
+
 #: src/components/explainers/report.tsx:472
-msgid "Every conversation, written down."
-msgstr "Jedes Gespräch, aufgeschrieben."
+#~ msgid "Every conversation, written down."
+#~ msgstr "Jedes Gespräch, aufgeschrieben."
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:206
 msgid "Every member's connection that names this organisation."
 msgstr "Jede Verbindung eines Mitglieds, die diese Organisation nennt."
 
+#: src/components/explainers/verify.tsx:742
+msgid "Every table approves its own outcomes."
+msgstr "Jeder Tisch gibt eigene Ergebnisse frei."
+
+#: src/components/explainers/explore.tsx:700
+msgid "Every table explores more ideas."
+msgstr "Jeder Tisch entdeckt weitere Ideen."
+
 #: src/components/explainers/popcorn.tsx:331
-msgid "Every table talks at once."
-msgstr "Alle Tische reden gleichzeitig."
+#~ msgid "Every table talks at once."
+#~ msgstr "Alle Tische reden gleichzeitig."
 
 #: src/components/pricing/questions.ts:158
 msgid "Every week for a year"
@@ -6054,6 +6094,14 @@ msgstr "Alle in Ihrer Organisation"
 #: src/components/training/TrainingRowActions.tsx:286
 msgid "Everyone on the roster is trained."
 msgstr "Alle auf der Liste sind geschult."
+
+#: src/components/explainers/popcorn.tsx:291
+msgid "Everyone sees what each table thinks."
+msgstr "Alle sehen, was jeder Tisch denkt."
+
+#: src/components/explainers/anonymise.tsx:351
+msgid "Everyone talks as they normally would."
+msgstr "Alle sprechen wie immer."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:391
@@ -6137,6 +6185,10 @@ msgstr "Erkunde Geschichten und Perspektiven mit der Chatvorlage Narratives, auf
 #: src/components/release/PilotHistory.tsx:41
 msgid "Explore the dembrane/pilot archive"
 msgstr "Das dembrane/pilot-Archiv erkunden"
+
+#: src/components/explainers/verify.tsx:743
+msgid "Explore them later in the dashboard."
+msgstr "Erkunde sie später im Dashboard."
 
 #: src/components/conversation/StatePill.tsx:25
 msgid "Exploring"
@@ -6950,8 +7002,16 @@ msgid "Get a reply during a conversation"
 msgstr "Während eines Gesprächs eine Antwort erhalten"
 
 #: src/components/explainers/explore.tsx:552
-msgid "Get a reply that digs deeper."
-msgstr "Eine Antwort, die tiefer geht."
+#~ msgid "Get a reply that digs deeper."
+#~ msgstr "Eine Antwort, die tiefer geht."
+
+#: src/components/explainers/explore.tsx:698
+msgid "Get a reply that goes deeper."
+msgstr "Erhalte eine Antwort, die tiefer geht."
+
+#: src/components/explainers/verify.tsx:739
+msgid "Get a summary of your conversation."
+msgstr "Erhalte eine Zusammenfassung deines Gesprächs."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:730
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
@@ -8087,8 +8147,8 @@ msgid "Keep this canvas fresh"
 msgstr "Diesen Canvas aktuell halten"
 
 #: src/components/explainers/anonymise.tsx:322
-msgid "Keep what was said, not names."
-msgstr "Was gesagt wurde, ohne Namen."
+#~ msgid "Keep what was said, not names."
+#~ msgstr "Was gesagt wurde, ohne Namen."
 
 #: src/components/release/releaseHistory.ts:567
 msgid "Keep working while audio uploads in the background."
@@ -8224,6 +8284,10 @@ msgstr "Feedback geben"
 #: src/routes/admin/AdminSettingsRoute.tsx:1106
 msgid "Leave now"
 msgstr "Jetzt verlassen"
+
+#: src/components/explainers/explore.tsx:701
+msgid "Leave with new insights to explore."
+msgstr "Geh mit neuen Erkenntnissen nach Hause."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1124
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1143
@@ -9270,6 +9334,10 @@ msgstr "Benannte Arbeitsweisen, die Ihr Team wiederverwenden kann."
 msgid "Names and key terms are spelled right, and the text is cleaned up."
 msgstr "Namen und Schlüsselbegriffe werden richtig geschrieben, und der Text wird bereinigt."
 
+#: src/components/explainers/anonymise.tsx:352
+msgid "Names and personal details are replaced."
+msgstr "Namen und persönliche Daten werden ersetzt."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:31
 msgid "Names on the legend"
 msgstr "Namen in der Legende"
@@ -9753,8 +9821,8 @@ msgid "No pending invites"
 msgstr "Keine ausstehenden Einladungen"
 
 #: src/components/explainers/anonymise.tsx:321
-msgid "No playback, no download."
-msgstr "Keine Wiedergabe, kein Download."
+#~ msgid "No playback, no download."
+#~ msgstr "Keine Wiedergabe, kein Download."
 
 #: src/components/map/attributes.ts:143
 msgid "No popcorn saved yet."
@@ -10046,8 +10114,8 @@ msgid "Not placed on the map"
 msgstr "Nicht auf der Karte platziert"
 
 #: src/components/explainers/verify.tsx:582
-msgid "Not quite? Talk more, tap Revise."
-msgstr "Nicht ganz? Weiterreden, Überarbeiten tippen."
+#~ msgid "Not quite? Talk more, tap Revise."
+#~ msgstr "Nicht ganz? Weiterreden, Überarbeiten tippen."
 
 #: src/components/results/curate/RowTools.tsx:39
 msgid "Not recognizable"
@@ -10283,8 +10351,12 @@ msgid "one quote only"
 msgstr "nur ein Zitat"
 
 #: src/components/explainers/report.tsx:473
-msgid "One report across all of them."
-msgstr "Ein Bericht über alle hinweg."
+#~ msgid "One report across all of them."
+#~ msgstr "Ein Bericht über alle hinweg."
+
+#: src/components/explainers/report.tsx:431
+msgid "One report covers all of them."
+msgstr "Ein Bericht über alle Gespräche."
 
 #: src/components/results/ResultRow.tsx:289
 msgid "One sentence, for the people you work with and anyone who checks later."
@@ -10392,6 +10464,10 @@ msgstr "Kontoaktionen öffnen"
 #~ msgid "Open all"
 #~ msgstr "Alle öffnen"
 
+#: src/components/explainers/map.tsx:481
+msgid "Open an idea to read quotes."
+msgstr "Öffne eine Idee, um Zitate zu lesen."
+
 #: src/features/processes/copy.ts:24
 msgid "Open chat"
 msgstr "Chat öffnen"
@@ -10462,8 +10538,8 @@ msgid "Open Mollie dashboard"
 msgstr "Mollie-Dashboard öffnen"
 
 #: src/components/explainers/map.tsx:493
-msgid "Open one to read the quotes."
-msgstr "Öffne eine für die Zitate."
+#~ msgid "Open one to read the quotes."
+#~ msgstr "Öffne eine für die Zitate."
 
 #: src/components/settings/MyAccessCard.tsx:177
 msgid "Open organisation"
@@ -11101,8 +11177,8 @@ msgstr "Zeitraum"
 #~ msgstr "Person"
 
 #: src/components/explainers/anonymise.tsx:320
-msgid "Personal details become placeholders."
-msgstr "Persönliches wird zu Platzhaltern."
+#~ msgid "Personal details become placeholders."
+#~ msgstr "Persönliches wird zu Platzhaltern."
 
 #: src/components/conversation/RetranscribeConversation.tsx:206
 msgid "Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
@@ -11164,8 +11240,8 @@ msgid "Pick the approach that fits your question"
 msgstr "Wähl den Ansatz, der zu deiner Frage passt"
 
 #: src/components/explainers/chat.tsx:422
-msgid "Pick the ones that matter."
-msgstr "Wähle die wichtigen Gespräche."
+#~ msgid "Pick the ones that matter."
+#~ msgstr "Wähle die wichtigen Gespräche."
 
 #: src/components/workspace/PilotBlockModal.tsx:36
 msgid "Pilot limit reached"
@@ -11926,6 +12002,10 @@ msgstr "Zitate ({quoteCount})"
 #~ msgid "Quotes ({quotes})"
 #~ msgstr "Zitate ({quotes})"
 
+#: src/components/explainers/report.tsx:433
+msgid "Quotes show people's own words."
+msgstr "Zitate zeigen die Worte der Leute."
+
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:616
 msgid "Ran {0} steps at once"
@@ -12333,8 +12413,12 @@ msgid "Register | dembrane"
 msgstr "Registrieren | dembrane"
 
 #: src/components/explainers/map.tsx:492
-msgid "Related ideas sit side by side."
-msgstr "Verwandte Ideen stehen beieinander."
+#~ msgid "Related ideas sit side by side."
+#~ msgstr "Verwandte Ideen stehen beieinander."
+
+#: src/components/explainers/map.tsx:480
+msgid "Related ideas sit together."
+msgstr "Verwandte Ideen stehen zusammen."
 
 #: src/components/map/panels/NodeDetailCard.tsx:325
 #: src/components/map/panels/NodeDetailCard.tsx:531
@@ -13571,8 +13655,8 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Sehen Sie die Argumente aus Ihren Gesprächen und die Zitate dahinter auf der Karte."
 
 #: src/components/explainers/map.tsx:491
-msgid "See the ideas people raised."
-msgstr "Sieh die Ideen der Leute."
+#~ msgid "See the ideas people raised."
+#~ msgstr "Sieh die Ideen der Leute."
 
 #: src/components/workspace/gateWalls.ts:134
 msgid "see transcripts"
@@ -13725,6 +13809,10 @@ msgstr "Projekt auswählen"
 #: src/components/conversation/ConversationDrilldownModal.tsx:201
 msgid "Select tags"
 msgstr "Tags auswählen"
+
+#: src/components/explainers/chat.tsx:768
+msgid "Select the conversations that matter."
+msgstr "Wähle die Gespräche, die zählen."
 
 #: src/components/project/ProjectPortalEditor.tsx:713
 msgid "Select the instructions that will be shown to participants when they start a conversation"
@@ -14610,6 +14698,10 @@ msgstr "Konkrete Details – ausgewählte Gespräche"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Der Chat für spezifische Details berücksichtigt nun die manuelle Auswahl von Gesprächen."
 
+#: src/components/explainers/verify.tsx:740
+msgid "Spot a mistake? Discuss and revise."
+msgstr "Etwas falsch? Besprich es und überarbeite es."
+
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
 #: src/components/map/panels/MapSettingsMenu.tsx:88
@@ -15130,29 +15222,46 @@ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag f
 msgid "participant.refine.make.concrete.description"
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält."
 
+#: src/components/explainers/explore.tsx:699
+msgid "Take the conversation somewhere new."
+msgstr "Lenke das Gespräch in eine neue Richtung."
+
 #: src/components/explainers/explore.tsx:550
-msgid "Talk a while together."
-msgstr "Redet eine Weile zusammen."
+#~ msgid "Talk a while together."
+#~ msgstr "Redet eine Weile zusammen."
 
 #: src/components/explainers/anonymise.tsx:319
-msgid "Talk freely, names and all."
-msgstr "Frei reden, mit allen Namen."
+#~ msgid "Talk freely, names and all."
+#~ msgstr "Frei reden, mit allen Namen."
+
+#: src/components/explainers/verify.tsx:737
+#: src/components/explainers/explore.tsx:696
+msgid "Talk it through at your table."
+msgstr "Besprich es gemeinsam am Tisch."
 
 #: src/components/explainers/verify.tsx:580
-msgid "Talk it through together."
-msgstr "Besprecht es gemeinsam."
+#~ msgid "Talk it through together."
+#~ msgstr "Besprecht es gemeinsam."
 
 #: src/components/explainers/explore.tsx:553
-msgid "Talk on from a new angle."
-msgstr "Redet aus neuem Blickwinkel weiter."
+#~ msgid "Talk on from a new angle."
+#~ msgstr "Redet aus neuem Blickwinkel weiter."
 
 #: src/components/explainers/explore.tsx:551
-msgid "Tap ECHO, then Explore."
-msgstr "Tippe ECHO, dann Erkunden."
+#~ msgid "Tap ECHO, then Explore."
+#~ msgstr "Tippe ECHO, dann Erkunden."
+
+#: src/components/explainers/explore.tsx:697
+msgid "Tap ECHO, then tap Explore."
+msgstr "Tippe auf ECHO, dann auf Erkunden."
+
+#: src/components/explainers/verify.tsx:738
+msgid "Tap ECHO, then tap Verify."
+msgstr "Tippe auf ECHO, dann auf Verifizieren."
 
 #: src/components/explainers/verify.tsx:581
-msgid "Tap ECHO, then Verify."
-msgstr "Tippe ECHO, dann Verifizieren."
+#~ msgid "Tap ECHO, then Verify."
+#~ msgstr "Tippe ECHO, dann Verifizieren."
 
 #: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
@@ -15334,6 +15443,10 @@ msgstr "Der Agent und das betreibende Unternehmen erhalten die von Ihnen freigeg
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "Die KI konnte diese Frage nicht beantworten. Versuchen Sie, sie umzuformulieren."
 
+#: src/components/explainers/chat.tsx:770
+msgid "The answer cites those conversations."
+msgstr "Die Antwort verweist auf diese Gespräche."
+
 #: src/components/release/releases.ts:72
 msgid "The app feels much faster overall."
 msgstr "Die App fühlt sich insgesamt deutlich schneller an."
@@ -15461,6 +15574,10 @@ msgstr "Der Bildschirm mit dem Host-Leitfaden zeigt den Code zum Mitmachen. Scha
 #: src/routes/project/present/PresentRoute.tsx:952
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Der Host hat noch keine Präsentation vorbereitet."
+
+#: src/components/explainers/anonymise.tsx:354
+msgid "The ideas stay. The names don't."
+msgstr "Die Ideen bleiben. Die Namen nicht."
 
 #: src/components/pricing/PricingConfigurator.tsx:906
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
@@ -15648,8 +15765,8 @@ msgid "The room screen is open, so changes wait until you show them."
 msgstr "Der Raumbildschirm ist offen, daher warten Änderungen, bis du sie zeigst."
 
 #: src/components/explainers/popcorn.tsx:334
-msgid "The room sees every table's thinking."
-msgstr "Der Saal sieht, was jeder Tisch denkt."
+#~ msgid "The room sees every table's thinking."
+#~ msgstr "Der Saal sieht, was jeder Tisch denkt."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
@@ -15804,9 +15921,13 @@ msgstr "Diese Arbeitsbereiche werden separat abgerechnet. Jede Person, die Sie h
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Diese Arbeitsbereiche haben ihren eigenen Tarif, der im jeweiligen Arbeitsbereich verwaltet wird. Sie sind nicht Teil des Tarifs dieser Organisation."
 
+#: src/components/explainers/popcorn.tsx:290
+msgid "They appear on the big screen."
+msgstr "Sie erscheinen auf dem großen Bildschirm."
+
 #: src/components/explainers/popcorn.tsx:333
-msgid "They pop onto the big screen."
-msgstr "Sie erscheinen auf der großen Leinwand."
+#~ msgid "They pop onto the big screen."
+#~ msgstr "Sie erscheinen auf der großen Leinwand."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:659
 msgid "They'll be added as members. You can add more later."
@@ -16821,6 +16942,10 @@ msgstr "Geben Sie <0>{0}</0> ein, um zu bestätigen."
 #: src/routes/project/chat/ProjectChatRoute.tsx:1019
 msgid "Type a message or press / for templates..."
 msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
+
+#: src/components/explainers/chat.tsx:769
+msgid "Type your question and send it."
+msgstr "Gib deine Frage ein und sende sie."
 
 #: src/components/participant/ParticipantConversationText.tsx:212
 msgid "Type your response here"
@@ -17842,8 +17967,8 @@ msgid "What are you trying to learn?"
 msgstr "Was möchten Sie herausfinden?"
 
 #: src/components/explainers/report.tsx:474
-msgid "What came up, question by question."
-msgstr "Was aufkam, Frage für Frage."
+#~ msgid "What came up, question by question."
+#~ msgstr "Was aufkam, Frage für Frage."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:748
 msgid "What data is sent?"
@@ -17995,8 +18120,8 @@ msgid "When finishing the conversation, participants who haven't verified yet wi
 msgstr "Wenn das Gespräch abgeschlossen wird, werden Teilnehmer, die noch nicht verifiziert haben, aufgefordert, zu verifizieren oder zu überspringen"
 
 #: src/components/explainers/verify.tsx:583
-msgid "When it's right, approve it."
-msgstr "Stimmt es? Dann bestätigen."
+#~ msgid "When it's right, approve it."
+#~ msgstr "Stimmt es? Dann bestätigen."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1989
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
@@ -18093,8 +18218,8 @@ msgid "With external clients"
 msgstr "Mit externen Kunden"
 
 #: src/components/explainers/report.tsx:475
-msgid "With quotes in people's own words."
-msgstr "Mit Zitaten in eigenen Worten."
+#~ msgid "With quotes in people's own words."
+#~ msgstr "Mit Zitaten in eigenen Worten."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:229
 msgid "With several lines, the first reads as a subtitle."
@@ -18699,7 +18824,7 @@ msgstr "Ihr Termin ist gebucht: {bookedTime}."
 msgid "Your call is booked."
 msgstr "Ihr Termin ist gebucht."
 
-#: src/components/explainers/map.tsx:490
+#: src/components/explainers/map.tsx:478
 msgid "Your conversations hold many ideas."
 msgstr "Deine Gespräche stecken voller Ideen."
 
