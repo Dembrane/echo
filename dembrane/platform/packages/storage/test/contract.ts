@@ -32,17 +32,6 @@ export function storageContract(
     await s.delete(`${prefix}/bin`);
   });
 
-  test(`${name}: copy makes an independent object`, async () => {
-    const s = make();
-    await s.put(`${prefix}/src.bin`, "first", "audio/webm");
-    await s.copy(`${prefix}/src.bin`, `${prefix}/frozen/dst.bin`);
-    await s.put(`${prefix}/src.bin`, "second, longer");
-    expect(await (await s.get(`${prefix}/frozen/dst.bin`))?.text()).toBe("first");
-    await expect(s.copy(`${prefix}/missing`, `${prefix}/x`)).rejects.toThrow();
-    await s.delete(`${prefix}/src.bin`);
-    await s.delete(`${prefix}/frozen/dst.bin`);
-  });
-
   test(`${name}: keys that could escape are refused`, async () => {
     const s = make();
     for (const bad of ["../x", "/abs", "a/../../b", ""]) {

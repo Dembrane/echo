@@ -12,7 +12,7 @@ import {
   withAllowanceLock,
 } from "@dembrane/allowance";
 import { AudioError, fileFormatOf, type Measured, measureSeconds } from "@dembrane/audio";
-import { BadRequestError, newId, StatusError } from "@dembrane/core";
+import { BadRequestError, StatusError } from "@dembrane/core";
 import { type Db, schema } from "@dembrane/db";
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type { ConversationsDeps } from "./deps";
@@ -125,89 +125,25 @@ async function measureFailed<T>(d: ConversationsDeps, conversationId: string, f:
   }
 }
 
-/** What confirm writes for a free chunk: the frozen copy and what it counted. */
-export interface FrozenChunk {
-  readonly key: string;
+/** What confirm counted for a free chunk. */
+export interface CountedChunk {
   readonly audioSeconds: number | null;
   readonly error: string | null;
 }
 /** Writes the chunk inside the caller's locked transaction. */
-export type InsertChunk = (tx: Db, row: FrozenChunk) => Promise<ChunkRow>;
+export type InsertChunk = (tx: Db, row: CountedChunk) => Promise<ChunkRow>;
 
-// A live chunk is small: a copy taking longer is a stuck bucket.
-const LIVE_COPY_TIMEOUT_MS = 15_000;
-
-// A presigned form stays writable for an hour: a free chunk is copied to a key no form names.
-async function freeze(
-  d: ConversationsDeps,
-  conversationId: string,
-  key: string,
-  timeoutMs?: number,
-) {
-  const frozen = `conversation/${conversationId}/audio/${newId()}-${key.slice(key.lastIndexOf("/") + 1)}`;
-  const opts = timeoutMs ? { timeoutMs } : {};
-  try {
-    await d.audio.copy(key, frozen, opts).catch(async (err) => {
-      d.logger.warn(
-        { err, conversationId, key, signal: "free_audio.freeze_retry" },
-        "copy failed, retrying",
-      );
-      await d.audio.copy(key, frozen, opts);
-    });
-  } catch (err) {
-    // A timed-out copy may still land; best effort against an orphan.
-    await drop(d, conversationId, [frozen]);
-    throw err;
-  }
-  return frozen;
-}
-
-/**
- * Freezes a live chunk. A recorder-sized chunk the bucket will not copy stays at its upload
- * key (rule 3); a larger one fails, since a big object is how a copy is made to time out.
- */
-export async function freezeLive(
-  d: ConversationsDeps,
-  conversationId: string,
-  key: string,
-  bytes: number,
-) {
-  try {
-    return await freeze(d, conversationId, key, LIVE_COPY_TIMEOUT_MS);
-  } catch (err) {
-    if (bytes >= LIVE_CHUNK_BYTES) throw err;
-    d.logger.error(
-      { err, conversationId, key, signal: "free_audio.freeze_failed" },
-      "freezing a live chunk failed; kept at its writable upload key",
+async function drop(d: ConversationsDeps, conversationId: string, key: string) {
+  await d.audio
+    .delete(key)
+    .catch((err) =>
+      d.logger.error({ err, key, conversationId }, "deleting a refused upload failed"),
     );
-    return key;
-  }
-}
-
-/** A free too-small upload is never measured or counted, but still frozen; null when unlimited. */
-export async function freezeUnplayable(
-  d: ConversationsDeps,
-  conv: { id: string; project_id: string },
-  key: string,
-): Promise<string | null> {
-  return measureFailed(d, conv.id, async () => {
-    if (!(await allowanceForProject(d.db, conv.project_id, d.now()))) return null;
-    return freeze(d, conv.id, key);
-  });
-}
-
-async function drop(d: ConversationsDeps, conversationId: string, keys: readonly string[]) {
-  for (const key of keys)
-    await d.audio
-      .delete(key)
-      .catch((err) =>
-        d.logger.error({ err, key, conversationId }, "deleting a confirmed upload's object failed"),
-      );
 }
 
 /**
- * Measures an upload's frozen copy and, under the account lock, reserves its seconds and
- * writes its chunk. Null for unlimited; a refused file is deleted from the bucket.
+ * Measures an upload and, under the account lock, reserves its seconds and writes its chunk.
+ * Null for unlimited; a refused file is deleted from the bucket.
  */
 export async function reserveUpload(
   d: ConversationsDeps,
@@ -226,32 +162,28 @@ export async function reserveUpload(
   const { a, limits } = pre;
   const fileLimit = limits.audio_seconds_conversation;
   const monthLimit = limits.audio_seconds_month;
-  const refuse = async (err: Error, keys: readonly string[]): Promise<never> => {
-    await drop(d, conv.id, keys);
+  const refuse = async (err: Error): Promise<never> => {
+    await drop(d, conv.id, key);
     throw err;
   };
   // Also for a conversation that already has audio: only the recording project takes files.
-  if (pre.home !== conv.project_id) return refuse(freeLimitError("recording_project"), [key]);
-  const frozen = await measureFailed(d, conv.id, () => freeze(d, conv.id, key));
-  const measured = await measureFailed(d, conv.id, () => measureUpload(d, frozen, bytes)).catch(
-    (err) => refuse(err, [frozen]),
-  );
+  if (pre.home !== conv.project_id) return refuse(freeLimitError("recording_project"));
+  const measured = await measureFailed(d, conv.id, () => measureUpload(d, key, bytes));
   if ("unreadable" in measured) {
     d.logger.warn(
       { conversationId: conv.id, reason: measured.reason, signal: "free_audio.upload_unreadable" },
       "upload could not be read as audio",
     );
-    return refuse(new BadRequestError("upload.unreadable"), [key, frozen]);
+    return refuse(new BadRequestError("upload.unreadable"));
   }
   const reserved = Math.round(measured.seconds);
   // A second of tolerance: decoders overrun an exact-length file by a few ms.
   if (measured.seconds > fileLimit + FILE_TOLERANCE_S)
     return refuse(
       freeLimitError("audio_conversation", { file_seconds: reserved, limit_seconds: fileLimit }),
-      [key, frozen],
     );
   try {
-    const chunk = await withAllowanceLock(d.db, a, async (tx) => {
+    return await withAllowanceLock(d.db, a, async (tx) => {
       const t = await take(tx, a, "audio_seconds", reserved, monthLimit);
       if (!t.ok)
         throw freeLimitError("audio_month", {
@@ -264,12 +196,11 @@ export async function reserveUpload(
           file_seconds: reserved,
           limit_seconds: fileLimit,
         });
-      return insert(tx, { key: frozen, audioSeconds: measured.seconds, error: null });
+      return insert(tx, { audioSeconds: measured.seconds, error: null });
     });
-    await drop(d, conv.id, [key]);
-    return chunk;
   } catch (err) {
-    return refuse(err as Error, isFreeLimit(err) ? [key, frozen] : [frozen]);
+    if (isFreeLimit(err)) return refuse(err as Error);
+    throw err;
   }
 }
 
@@ -351,7 +282,7 @@ export async function liveChunkCheck(
 }
 
 /**
- * A free account's live chunk: frozen, measured, then checked and counted under the account
+ * A free account's live chunk: measured, then checked and counted under the account
  * lock in the transaction that writes it, so confirms cannot outrun the limits. A failing
  * check or measurement keeps the chunk unmetered for the pipeline (rule 3).
  */
@@ -363,28 +294,26 @@ export async function confirmLiveChunk(
   bytes: number,
   insert: InsertChunk,
 ): Promise<{ chunk: ChunkRow; recordingStop: AudioRefusal | null }> {
-  const frozen = await freezeLive(d, conv.id, key, bytes);
-  const kept = frozen === key ? [key] : [key, frozen];
   const failed = (signal: string) => (err: unknown) => {
     d.logger.error({ err, conversationId: conv.id, signal }, "live chunk check failed");
     return null;
   };
   try {
-    const measured = await measureUpload(d, frozen, bytes).catch(
+    const measured = await measureUpload(d, key, bytes).catch(
       failed("free_audio.live_measure_failed"),
     );
     const s = measured && "seconds" in measured ? measured.seconds : null;
     const limits = await freeLimits(d.db, d.now, d.logger).catch(
       failed("free_audio.live_check_failed"),
     );
-    const out = await withAllowanceLock(d.db, a, async (tx) => {
+    return await withAllowanceLock(d.db, a, async (tx) => {
       const v = limits
         ? await tx
             .transaction((sp) => liveVerdict(sp as unknown as Db, a, limits, conv.id))
             .catch(failed("free_audio.live_check_failed"))
         : null;
       if (v?.refuse) throw freeLimitError(v.refuse);
-      let row: FrozenChunk = { key: frozen, audioSeconds: null, error: null };
+      let row: CountedChunk = { audioSeconds: null, error: null };
       if (v && limits && s !== null) {
         const seconds = Math.round(s);
         // add and take run in their own savepoint, so a ledger error leaves the insert usable.
@@ -410,11 +339,8 @@ export async function confirmLiveChunk(
       }
       return { chunk: await insert(tx, row), recordingStop: v?.stop ?? null };
     });
-    if (frozen !== key) await drop(d, conv.id, [key]);
-    return out;
   } catch (err) {
-    if (isFreeLimit(err)) await drop(d, conv.id, kept);
-    else if (frozen !== key) await drop(d, conv.id, [frozen]);
+    if (isFreeLimit(err)) await drop(d, conv.id, key);
     throw err;
   }
 }

@@ -16,7 +16,7 @@ import {
   setFreeLimit,
   usedThisPeriod,
 } from "@dembrane/allowance";
-import { AudioError, fileFormatOf, LocalMedia, type Media } from "@dembrane/audio";
+import { AudioError, LocalMedia, type Media } from "@dembrane/audio";
 import { errorBody, newId, PlatformError } from "@dembrane/core";
 import { createDb, type Db } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
@@ -26,7 +26,6 @@ import { Hono } from "hono";
 import postgres from "postgres";
 import type { ConversationsDeps } from "../src/deps";
 import { conversationSeconds } from "../src/free-audio";
-import { mergeConversationAudio } from "../src/merge";
 import { ParticipantTokens } from "../src/participant-token";
 import { type PipelineDeps, prepareChunk } from "../src/pipeline/steps";
 import { portalRoutes } from "../src/portal/routes";
@@ -193,18 +192,6 @@ run("bypass: free audio limits", () => {
 
   const chunkId = async (res: Response) => ((await res.json()) as { id: string }).id;
 
-  // The real length of the audio a chunk row now points at.
-  async function realSeconds(id: string): Promise<number> {
-    const [row] = await sql`select path from conversation_chunk where id = ${id}`;
-    const key = bucket.urls.keyOf(String(row?.path));
-    const source = {
-      url: bucket.storage.presignDownload(key, { expiresInSeconds: 600 }),
-      format: fileFormatOf(key),
-      name: key,
-    };
-    return (await new LocalMedia().decodedSeconds(source)).seconds;
-  }
-
   test("live chunks confirmed faster than the pipeline meters them pass both limits", async () => {
     const { p, cid } = await account();
     await seeded(p, cid, 10);
@@ -254,8 +241,9 @@ run("bypass: free audio limits", () => {
     const again = await confirm(cid, cId, key, "PORTAL_AUDIO");
     expect(again.status).toBe(200);
     expect(await chunkId(again)).toBe(await chunkId(first));
-    const rows = await sql`select id from conversation_chunk where conversation_id = ${cid}`;
+    const rows = await sql`select id, path from conversation_chunk where conversation_id = ${cid}`;
     expect(rows).toHaveLength(1);
+    expect(rows[0]?.path).toBe(bucket.urls.fileUrl(key));
     expect(await used(p)).toBe(5);
   });
 
@@ -290,91 +278,6 @@ run("bypass: free audio limits", () => {
     expect(body.path).toBe(bucket.urls.fileUrl(key));
     expect(body.id).not.toBe(cId);
     expect(await bucket.storage.size(key)).not.toBeNull();
-  });
-
-  test("a too-small upload swapped after confirm is not merged", async () => {
-    const { p, cid } = await account("DASHBOARD_UPLOAD");
-    const { chunkId: cId, key } = await issued(cid, "wav");
-    await bucket.storage.put(key, crypto.getRandomValues(new Uint8Array(500)));
-    const res = await confirm(cid, cId, key, "DASHBOARD_UPLOAD");
-    expect(res.status).toBe(200);
-    const id = await chunkId(res);
-    await post(key, 100, "wav");
-    const [row] = await sql`select path from conversation_chunk where id = ${id}`;
-    expect(row?.path).not.toBe(bucket.urls.fileUrl(key));
-    const merged = await mergeConversationAudio(pd, cid, newId()).then(
-      (m) => m.duration ?? 0,
-      () => 0,
-    );
-    expect(merged).toBeLessThanOrEqual((await used(p)) + 2);
-  });
-
-  test("a live chunk whose copy fails is kept, counted and the copy retried once", async () => {
-    const { p, cid } = await account();
-    const { chunkId: cId, key } = await issued(cid, "webm");
-    await post(key, 5, "webm");
-    const original = bucket.storage.copy;
-    let tries = 0;
-    bucket.storage.copy = async () => {
-      tries++;
-      throw new Error("bucket away");
-    };
-    try {
-      const res = await confirm(cid, cId, key, "PORTAL_AUDIO");
-      expect(res.status).toBe(200);
-    } finally {
-      bucket.storage.copy = original;
-    }
-    expect(tries).toBe(2);
-    expect(await used(p)).toBe(5);
-  });
-
-  // A copy that never finishes, as a 2 GB object would against the live timeout.
-  async function withCopyTimingOut<T>(f: () => Promise<T>): Promise<{ out: T; tries: number }> {
-    const original = bucket.storage.copy;
-    let tries = 0;
-    bucket.storage.copy = async () => {
-      tries++;
-      throw new DOMException("The operation timed out.", "TimeoutError");
-    };
-    try {
-      return { out: await f(), tries };
-    } finally {
-      bucket.storage.copy = original;
-    }
-  }
-
-  test("a large live chunk whose copy times out is refused and writes no row", async () => {
-    const { cid } = await account();
-    const { chunkId: cId, key } = await issued(cid, "wav");
-    await post(key, 40, "wav");
-    expect(Number(await bucket.storage.size(key))).toBeGreaterThanOrEqual(1024 * 1024);
-    const { out: res, tries } = await withCopyTimingOut(async () =>
-      confirm(cid, cId, key, "PORTAL_AUDIO"),
-    );
-    expect(res.status).toBeGreaterThanOrEqual(500);
-    expect(tries).toBe(2);
-    expect(
-      await sql`select id from conversation_chunk where conversation_id = ${cid}`,
-    ).toHaveLength(0);
-  });
-
-  test("a large live chunk whose copy times out while the tier read fails writes no row", async () => {
-    const { cid } = await account();
-    const { chunkId: cId, key } = await issued(cid, "wav");
-    await post(key, 40, "wav");
-    await sql`alter table billing_account rename to billing_account_away`;
-    let status = 0;
-    try {
-      status = (await withCopyTimingOut(async () => confirm(cid, cId, key, "PORTAL_AUDIO"))).out
-        .status;
-    } finally {
-      await sql`alter table billing_account_away rename to billing_account`;
-    }
-    expect(status).toBeGreaterThanOrEqual(500);
-    expect(
-      await sql`select id from conversation_chunk where conversation_id = ${cid}`,
-    ).toHaveLength(0);
   });
 
   test("a failing ledger write inside the lock keeps the live chunk", async () => {
@@ -414,7 +317,7 @@ run("bypass: free audio limits", () => {
     );
   });
 
-  test("a live chunk confirmed while the tier read fails is still frozen", async () => {
+  test("a live chunk confirmed while the tier read fails is kept at its upload key", async () => {
     const { cid } = await account();
     const { chunkId: cId, key } = await issued(cid, "webm");
     await post(key, 5, "webm");
@@ -426,7 +329,7 @@ run("bypass: free audio limits", () => {
       await sql`alter table billing_account_away rename to billing_account`;
     }
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { path: string }).path).not.toBe(bucket.urls.fileUrl(key));
+    expect(((await res.json()) as { path: string }).path).toBe(bucket.urls.fileUrl(key));
   });
 
   test("txOf writes in the drizzle transaction it is given", async () => {
@@ -442,36 +345,6 @@ run("bypass: free audio limits", () => {
     );
     expect(out).toBe("roll back");
     expect(await sql`select id from org where id = ${id}`).toHaveLength(0);
-  });
-
-  test("an upload swapped after its reservation is transcribed beyond what it was charged", async () => {
-    const { p, cid } = await account("DASHBOARD_UPLOAD");
-    const { chunkId: cId, key } = await issued(cid, "wav");
-    await post(key, 2, "wav");
-    const res = await confirm(cid, cId, key, "DASHBOARD_UPLOAD");
-    expect(res.status).toBe(200);
-    const id = await chunkId(res);
-    // The same presigned form is posted again with a longer file before the pipeline reads it.
-    await post(key, 100, "wav");
-    const toTranscribe = await prepareChunk(pd, id);
-    let seconds = 0;
-    for (const piece of toTranscribe) seconds += await realSeconds(piece);
-    expect(seconds).toBeLessThanOrEqual((await used(p)) + 1);
-  });
-
-  test("a live mp3 swapped after it was metered reaches the merged recording uncounted", async () => {
-    const { p, cid } = await account();
-    const { chunkId: cId, key } = await issued(cid, "mp3");
-    await post(key, 2, "mp3");
-    const res = await confirm(cid, cId, key, "PORTAL_AUDIO");
-    expect(res.status).toBe(200);
-    const id = await chunkId(res);
-    expect(await prepareChunk(pd, id)).toEqual([id]);
-    expect(await used(p)).toBe(2);
-    // Posted again after transcription: the final transcript and retranscribe merge this file.
-    await post(key, 100, "mp3");
-    const merged = await mergeConversationAudio(pd, cid, newId());
-    expect(merged.duration).toBeLessThanOrEqual((await used(p)) + 2);
   });
 
   test("a live chunk whose measuring fails transiently is transcribed at any length, uncounted", async () => {

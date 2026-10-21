@@ -12,10 +12,8 @@ import { ChunkError } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import {
   type AudioRefusal,
+  type CountedChunk,
   confirmLiveChunk,
-  type FrozenChunk,
-  freezeLive,
-  freezeUnplayable,
   hasAudioChunk,
   LIVE_SOURCE,
   liveChunkCheck,
@@ -110,8 +108,7 @@ export async function uploadUrl(
  * create the chunk. H-7: the Python accepted any key, so another conversation's audio
  * could be transcribed into this one and read back; the key must be the one issued for
  * this conversation and chunk. A live chunk also carries the free limit's stop signal.
- * A free account's chunk is stored under the issued id from a frozen copy of the object, so a
- * repeated confirm returns it and a later post to the form changes nothing.
+ * A free account's chunk is stored under the issued id, so a repeated confirm returns it.
  */
 export async function confirmUpload(
   d: ConversationsDeps,
@@ -161,42 +158,31 @@ export async function confirmUpload(
     fileUrl: input.fileUrl,
   };
   // A free chunk is written in the locked transaction that counted it, under the issued id.
-  const insert = (tx: Db, row: FrozenChunk) =>
+  const insert = (tx: Db, row: CountedChunk) =>
     addChunk(
       { ...d, db: tx },
       {
         ...chunkInput,
-        fileUrl: d.audioUrls.fileUrl(row.key),
         audioSeconds: row.audioSeconds,
         error: row.error ?? (tooSmall ? "Audio not playable" : null),
       },
       { chunkId: input.chunkId, tx: txOf(tx) },
     );
   try {
-    // Where the chunk points: a free one never at the form's writable key.
-    let fileKey = key;
     if (input.source === LIVE_SOURCE) {
       const free = await freeLive(d, conversationId);
-      if (free === "unknown") fileKey = await freezeLive(d, conversationId, key, size);
-      else if (free) return await confirmLiveChunk(d, free.a, free.conv, key, size, insert);
-    } else {
+      if (free) return await confirmLiveChunk(d, free.a, free.conv, key, size, insert);
+    } else if (!tooSmall) {
       const conv = await store.conversation(conversationId);
       if (!conv) throw new NotFoundError("conversation.not_found");
-      if (!tooSmall) {
-        const chunk = await reserveUpload(d, conv, key, size, insert);
-        if (chunk) return { chunk, recordingStop: null };
-      } else fileKey = (await freezeUnplayable(d, conv, key)) ?? key;
+      const chunk = await reserveUpload(d, conv, key, size, insert);
+      if (chunk) return { chunk, recordingStop: null };
     }
     const chunk = await addChunk(d, {
       ...chunkInput,
-      fileUrl: fileKey === key ? input.fileUrl : d.audioUrls.fileUrl(fileKey),
       // Marked in the same commit as the row, so the pipeline never spends a run on it.
       ...(tooSmall && { error: "Audio not playable" }),
     });
-    if (fileKey !== key)
-      await d.audio
-        .delete(key)
-        .catch((err) => d.logger.error({ err, key, conversationId }, "deleting an upload failed"));
     if (tooSmall)
       d.logger.warn(
         { conversationId, size, signal: "chunk.upload_rejected" },
@@ -230,6 +216,6 @@ async function freeLive(d: ConversationsDeps, conversationId: string) {
       { err, conversationId, signal: "free_audio.live_check_failed" },
       "live chunk limit check failed",
     );
-    return "unknown" as const;
+    return null;
   }
 }

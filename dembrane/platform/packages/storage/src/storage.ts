@@ -14,8 +14,6 @@ export interface ObjectStorage {
   exists(key: string): Promise<boolean>;
   delete(key: string): Promise<void>;
   size(key: string): Promise<number | null>;
-  /** A server-side copy; throws when the source is missing or it takes longer than timeoutMs. */
-  copy(from: string, to: string, opts?: { timeoutMs?: number }): Promise<void>;
   /** A URL a browser can PUT to directly, so uploads never pass through the API. */
   presignUpload(key: string, opts: { contentType: string; expiresInSeconds: number }): string;
   /** A time-limited URL a browser can GET. */
