@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useParams } from "react-router";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { Explainer } from "@/components/explainers/Explainer";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	liveBooking,
@@ -101,9 +102,11 @@ function PopcornSession({
 			<Stack gap="lg">
 				<Stack gap={2} className="min-w-0">
 					<Group gap="sm" align="center" wrap="nowrap">
-						<Title order={2} className="truncate">
-							{popcorn.name}
-						</Title>
+						<Explainer name="popcorn" label={t`How Popcorn works`}>
+							<Title order={2} className="truncate">
+								{popcorn.name}
+							</Title>
+						</Explainer>
 						<Badge size="sm" color="mauve" c="graphite">
 							<Trans>Beta</Trans>
 						</Badge>
