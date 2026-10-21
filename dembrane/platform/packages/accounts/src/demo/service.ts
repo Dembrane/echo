@@ -6,6 +6,7 @@ import {
   NotFoundError,
   newId,
   ValidationError,
+  withoutTrailingSlashes,
 } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -29,7 +30,7 @@ export function demoView(d: Pick<AccountsDeps, "settings">, row: Row) {
   const input = row.input as DemoInput;
   const steps = row.steps as Steps;
   const seed = row.seed as SeedOutput | null;
-  const dash = d.settings.dashboardUrl.replace(/\/+$/, "");
+  const dash = withoutTrailingSlashes(d.settings.dashboardUrl);
   const live = row.status === "published";
   const links = (seed?.links ?? {}) as Record<string, { public_link?: string }>;
   return {

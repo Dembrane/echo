@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
@@ -99,7 +100,7 @@ export function supportPayload(
     if (val) p[k] = String(val);
   }
   if (row.org_id) p.org_id = String(row.org_id);
-  const base = dashboardUrl.replace(/\/+$/, "");
+  const base = withoutTrailingSlashes(dashboardUrl);
   if (base && row.workspace_id && row.project_id)
     p.origin_link = `${base}/en-US/w/${row.workspace_id}/projects/${row.project_id}`;
   return p;

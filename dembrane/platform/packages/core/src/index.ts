@@ -3,4 +3,5 @@ export * from "./catalog";
 export { type Actor, type OperationContext, userId } from "./context";
 export * from "./errors";
 export { isUuid, newId } from "./ids";
+export { withoutTrailingSlashes } from "./url";
 export { unzip, type ZipEntry, zip } from "./zip";

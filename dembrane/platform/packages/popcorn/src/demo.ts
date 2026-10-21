@@ -1,4 +1,9 @@
-import { ForbiddenError, NotFoundError, ValidationError } from "@dembrane/core";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+  withoutTrailingSlashes,
+} from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { dict, isRecord, type Json, list, pyIso, pyStr, strip } from "./py";
 import { tokenUrlsafe, uuid5Url } from "./service";
@@ -94,7 +99,7 @@ function quotePlus(s: string): string {
 function portalStart(base: string, projectId: string, language: string, slug: string): string {
   const code = PARTICIPANT_CODES[language] as string;
   const query = `utm_source=popcorn_demo&utm_campaign=${quotePlus(slug)}`;
-  return `${base.replace(/\/+$/, "")}/${code}/${projectId}/start?${query}`;
+  return `${withoutTrailingSlashes(base)}/${code}/${projectId}/start?${query}`;
 }
 
 /** The feedback portal with the same campaign tag the sales portal links carry. */
@@ -381,7 +386,7 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
         result[language] = {
           project_id: pid,
           report_id: rid,
-          public_link: `${input.apiBaseUrl.replace(/\/+$/, "")}/api/v2/popcorn/public/${reportData.public_token}/`,
+          public_link: `${withoutTrailingSlashes(input.apiBaseUrl)}/api/v2/popcorn/public/${reportData.public_token}/`,
         };
       }
       const outcome = { result, plan };

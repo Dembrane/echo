@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import type { Access } from "@dembrane/access";
 import { MemoryStaffAudit } from "@dembrane/access";
+import { withoutTrailingSlashes } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -279,7 +280,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   >;
   const inputs = demoFromFixture(
     fixture,
-    `${o.portalUrl.replace(/\/+$/, "")}/${w.portal}/sales/start`,
+    `${withoutTrailingSlashes(o.portalUrl)}/${w.portal}/sales/start`,
   );
   const seeded = await seedDemo(
     o.db,

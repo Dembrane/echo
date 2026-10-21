@@ -112,8 +112,9 @@ export async function buildReportPrompt(
 
 /** The article between <article> tags, or the whole answer with stray tags removed. */
 export function extractArticle(response: string): string {
-  const m = /<article>([\s\S]*?)<\/article>/.exec(response);
-  if (m) return (m[1] as string).trim();
+  const open = response.indexOf("<article>");
+  const close = open < 0 ? -1 : response.indexOf("</article>", open + 9);
+  if (close >= 0) return response.slice(open + 9, close).trim();
   return response.replaceAll("<article>", "").replaceAll("</article>", "").trim();
 }
 

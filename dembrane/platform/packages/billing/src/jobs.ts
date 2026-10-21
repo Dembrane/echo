@@ -7,6 +7,7 @@ import {
   nextReset,
   periodStart,
 } from "@dembrane/allowance";
+import { withoutTrailingSlashes } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { translator } from "@dembrane/i18n";
 import { parseTime } from "@dembrane/legacy-shape";
@@ -133,13 +134,6 @@ export async function runReconcileAccountSeats(
 ): Promise<void> {
   if (!guard(d, reconcileAccountSeats.name)) return;
   await d.billing.service.reconcileAccountSeats(p.accountId);
-}
-
-/** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
-function withoutTrailingSlashes(url: string): string {
-  let end = url.length;
-  while (end > 0 && url[end - 1] === "/") end--;
-  return url.slice(0, end);
 }
 
 function workspaceUrl(base: string, workspaceId: string | undefined): string {

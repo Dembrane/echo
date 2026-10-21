@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 import { directusTime, parseTime, pyRound } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
@@ -999,7 +1000,7 @@ export class BillingService {
       );
     try {
       const recipients = await recipientsOf(this.store, audience);
-      const base = this.d.config.dashboardUrl.replace(/\/+$/, "");
+      const base = withoutTrailingSlashes(this.d.config.dashboardUrl);
       const url = account.workspace_id
         ? `${base}/w/${account.workspace_id}/settings/billing`
         : account.org_id

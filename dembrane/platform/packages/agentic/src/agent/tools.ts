@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 import { z } from "zod";
 import type { AgentData, Json, TurnContext } from "./data";
 import { type Knowledge, NO_DOCS, ValueError } from "./knowledge";
@@ -502,7 +503,7 @@ export const TOOLS: readonly ToolDef[] = [
   def("getPortalLink", "read", empty, async (_a, env) => {
     const current = await env.data.projectSettings();
     const language = normalizePortalLanguage(current.language);
-    const base = env.ctx.portalUrl.trim().replace(/\/+$/, "");
+    const base = withoutTrailingSlashes(env.ctx.portalUrl.trim());
     if (!base)
       return {
         project_id: env.ctx.projectId,

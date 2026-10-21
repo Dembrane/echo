@@ -49,7 +49,7 @@ function flatten(s: string): string {
 }
 
 function pyRstrip(s: string): string {
-  return s.replace(/\s+$/u, "");
+  return s.trimEnd();
 }
 
 export function summaryText(value: unknown, limit = TEXT_LIMIT): string | null {

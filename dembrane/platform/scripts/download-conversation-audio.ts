@@ -119,8 +119,11 @@ function die(message: string): never {
   process.exit(1);
 }
 
+/** A loop, not a regex: a regex over a URL is flagged as slow on many slashes. */
 function stripSlash(url: string) {
-  return url.replace(/\/+$/, "");
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
 }
 
 // ── where to start ───────────────────────────────────────────────────

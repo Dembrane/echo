@@ -10,7 +10,7 @@ import {
 import { pyRepr } from "../src/jinja";
 import { type GenerateDeps, markError, reportFailed } from "../src/jobs";
 import { renderPrompt } from "../src/prompts";
-import { cleanGeneratedTitle, projectContext, selectTagIds } from "../src/summarize";
+import { cleanGeneratedTitle, listItemText, projectContext, selectTagIds } from "../src/summarize";
 import recorded from "./recorded/prompts.json";
 
 describe("prompt templates render as Jinja rendered them", () => {
@@ -254,5 +254,49 @@ describe("a failed report", () => {
     });
     await markError(d, payload, "GENERATION_FAILED", "x");
     expect(logged).toHaveLength(1);
+  });
+});
+
+describe("linear-time parsing (CodeQL js/polynomial-redos)", () => {
+  test("extractArticle keeps the old lazy-regex results", () => {
+    expect(extractArticle("")).toBe("");
+    expect(extractArticle("<article> x </article>")).toBe("x");
+    expect(extractArticle("pre<article>a</article><article>b</article>")).toBe("a");
+    expect(extractArticle("<article>no close")).toBe("no close");
+    expect(extractArticle("</article><article>x</article>")).toBe("x");
+    expect(extractArticle("<article><article>x</article>")).toBe("<article>x");
+    expect(extractArticle(" plain ")).toBe("plain");
+  });
+
+  test("extractArticle is fast on many unclosed tags", () => {
+    const t = performance.now();
+    expect(extractArticle("<article>".repeat(100_000))).toBe("");
+    expect(performance.now() - t).toBeLessThan(500);
+  });
+
+  test("listItemText keeps the old list-item regex results", () => {
+    const cases: [string, string | null][] = [
+      ["- a", "a"],
+      ["* **Bold**", "**Bold**"],
+      ["• x", "x"],
+      ["12) item", "item"],
+      ["1.  spaced", "spaced"],
+      ["3: c", "c"],
+      ["-", null],
+      ["-x", null],
+      ["1.", null],
+      ["a - b", null],
+      ["- a\u2028b", null],
+      ["* \u2028x", "x"],
+      ["-\u00a0y", "y"],
+    ];
+    for (const [line, want] of cases) expect(listItemText(line)).toBe(want);
+  });
+
+  test("listItemText is fast on a long whitespace run", () => {
+    const t = performance.now();
+    expect(listItemText(`* ${" ".repeat(100_000)}b\u2028a`)).toBeNull();
+    expect(listItemText(`* ${" ".repeat(100_000)}a`)).toBe("a");
+    expect(performance.now() - t).toBeLessThan(500);
   });
 });

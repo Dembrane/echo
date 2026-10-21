@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { newId } from "@dembrane/core";
+import { newId, withoutTrailingSlashes } from "@dembrane/core";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   AUTH_CODE_TTL_SECONDS,
@@ -38,7 +38,7 @@ export interface OAuthDeps extends AgentDeps {
 
 /** The API host without a path: deployments give the public URL with or without /api. */
 export function apiOrigin(publicUrl: string): string {
-  let base = publicUrl.replace(/\/+$/, "");
+  let base = withoutTrailingSlashes(publicUrl);
   if (base.endsWith("/api")) base = base.slice(0, -4);
   return base;
 }
@@ -47,7 +47,7 @@ export const issuerUrl = (d: AgentDeps) => apiOrigin(d.publicUrl) + MCP_PATH;
 export const resourceMetadataUrl = (d: AgentDeps) =>
   `${apiOrigin(d.publicUrl)}/.well-known/oauth-protected-resource${MCP_PATH}`;
 const consentUrl = (d: AgentDeps, requestId: string) =>
-  `${d.dashboardUrl.replace(/\/+$/, "")}${CONSENT_PATH}?request=${quotePlus(requestId)}`;
+  `${withoutTrailingSlashes(d.dashboardUrl)}${CONSENT_PATH}?request=${quotePlus(requestId)}`;
 
 export function authorizationServerMetadata(d: AgentDeps) {
   const issuer = issuerUrl(d);

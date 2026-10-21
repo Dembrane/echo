@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 
 /** Events a project webhook can subscribe to. */
@@ -39,7 +40,7 @@ function projectData(p: ProjectBits) {
 
 function dashboard(base: string, p: ProjectBits, tail: string) {
   const locale = LOCALES[p.language || "en"] ?? "en-US";
-  return `${base.replace(/\/+$/, "")}/${locale}/w/${p.workspace_id}/projects/${p.id}/${tail}`;
+  return `${withoutTrailingSlashes(base)}/${locale}/w/${p.workspace_id}/projects/${p.id}/${tail}`;
 }
 
 export interface ConversationBits {

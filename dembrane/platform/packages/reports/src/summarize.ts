@@ -38,12 +38,11 @@ export function cleanGeneratedTitle(content: string): string {
     .map((l) => l.trim())
     .filter(Boolean);
   if (!lines.length) return "";
-  const listItem = /^(?:[-*•]\s+|\d+[.):]\s+)(.+)$/;
   let candidate = "";
   for (const line of lines) {
-    const m = listItem.exec(line);
-    if (m) {
-      candidate = m[1] as string;
+    const item = listItemText(line);
+    if (item) {
+      candidate = item;
       break;
     }
   }
@@ -56,6 +55,14 @@ export function cleanGeneratedTitle(content: string): string {
   }
   candidate = candidate.replace(/^\*\*(.+?)\*\*$/, "$1");
   return strip(strip(candidate.trim(), "\"'“”‘’").trim(), " \t\n\r");
+}
+
+/** `/^(?:[-*•]\s+|\d+[.):]\s+)(.+)$/` on a trimmed line, split so `\s+` and `.+` cannot backtrack. */
+export function listItemText(line: string): string | null {
+  const marker = /^(?:[-*•]|\d+[.):])\s+/.exec(line);
+  if (!marker) return null;
+  const rest = line.slice(marker[0].length);
+  return rest && !/[\n\r\u2028\u2029]/.test(rest) ? rest : null;
 }
 
 function strip(s: string, chars: string): string {

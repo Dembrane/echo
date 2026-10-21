@@ -75,4 +75,5 @@ export {
   TRANSLATION_SCHEMA,
   type TranslateOptions,
   translateTexts,
+  withoutClosingFence,
 } from "./translate";

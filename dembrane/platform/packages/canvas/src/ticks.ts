@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { AccessStore } from "@dembrane/access";
 import type { Completer } from "@dembrane/llm";
+import { withoutClosingFence } from "@dembrane/llm";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
 import { buildCanvasHistory } from "./history";
 import {
@@ -152,7 +153,7 @@ export function generationDetail(args: {
 export function jsonFromModelText(text: string): Json {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    cleaned = withoutClosingFence(cleaned.replace(/^```(?:json)?\s*/i, ""));
   }
   const parsed: unknown = JSON.parse(cleaned);
   if (!isRecord(parsed)) throw new Error("Canvas extraction response was not a JSON object");

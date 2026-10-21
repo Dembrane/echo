@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { assetPath } from "@dembrane/core";
+import { assetPath, withoutTrailingSlashes } from "@dembrane/core";
 
 /**
  * The assistant's read-only knowledge: the product docs corpus and the skill files shipped
@@ -216,7 +216,7 @@ export function createKnowledge(opts: { docsDir?: string } = {}): Knowledge {
     promptSection(docsBaseUrl) {
       const parts: string[] = [];
       if (docsRoot() !== null) {
-        const base = docsBaseUrl.trim().replace(/\/+$/, "");
+        const base = withoutTrailingSlashes(docsBaseUrl.trim());
         const citation = base
           ? "When you cite a doc, link to its published page: drop the .md " +
             `suffix, append .html, and prefix ${base}/ (so users/host/index.md ` +

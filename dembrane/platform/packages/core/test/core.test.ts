@@ -9,6 +9,7 @@ import {
   newId,
   PlatformError,
   StatusError,
+  withoutTrailingSlashes,
 } from "../src";
 
 test("errors carry status, code, params and the catalog's action", () => {
@@ -58,4 +59,14 @@ test("ids are uuid v7 and sort by creation time", () => {
   const b = newId();
   expect(a).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(a < b).toBe(true);
+});
+
+test("withoutTrailingSlashes trims only trailing slashes, linearly", () => {
+  expect(withoutTrailingSlashes("")).toBe("");
+  expect(withoutTrailingSlashes("///")).toBe("");
+  expect(withoutTrailingSlashes("https://a.b/x//")).toBe("https://a.b/x");
+  const many = `a${"/".repeat(100_000)}a`;
+  const t = performance.now();
+  expect(withoutTrailingSlashes(many)).toBe(many);
+  expect(performance.now() - t).toBeLessThan(500);
 });

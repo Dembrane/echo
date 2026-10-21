@@ -81,6 +81,13 @@ export interface Media {
   }): Promise<MergeResult>;
 }
 
+/** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
 async function download(url: string, path: string, signal?: AbortSignal): Promise<void> {
   let res: Response;
   try {
@@ -315,7 +322,7 @@ export class HttpMedia implements Media {
     if (this.opts.idToken) headers.authorization = `Bearer ${await this.opts.idToken()}`;
     let res: Response;
     try {
-      res = await fetch(`${this.baseUrl.replace(/\/+$/, "")}/${op}`, {
+      res = await fetch(`${withoutTrailingSlashes(this.baseUrl)}/${op}`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),

@@ -5,7 +5,7 @@ import {
   recipientsOf,
   workspaceAdmins,
 } from "@dembrane/billing";
-import { ConflictError, newId } from "@dembrane/core";
+import { ConflictError, newId, withoutTrailingSlashes } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { parseTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
@@ -65,7 +65,7 @@ export class SupportAccess {
   }
 
   private url(path: string) {
-    const base = this.d.dashboardUrl.replace(/\/+$/, "");
+    const base = withoutTrailingSlashes(this.d.dashboardUrl);
     return base ? `${base}${path}` : path;
   }
 
