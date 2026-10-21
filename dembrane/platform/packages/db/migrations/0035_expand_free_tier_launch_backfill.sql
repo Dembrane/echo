@@ -30,7 +30,8 @@ ANALYZE free_launch_project;
 INSERT INTO free_usage (billing_account_id, period_start, key, amount)
 SELECT f.account_id, f.period_start, 'audio_seconds', round(sum(coalesce(c.duration::float8, 0)))
 FROM conversation c JOIN free_launch_project f ON f.project_id = c.project_id
-WHERE c.created_at >= f.period_start
+-- Retranscribe copies (CLONE) are never charged at runtime.
+WHERE c.created_at >= f.period_start AND c.source IS DISTINCT FROM 'CLONE'
 GROUP BY f.account_id, f.period_start
 HAVING round(sum(coalesce(c.duration::float8, 0))) > 0
 ON CONFLICT (billing_account_id, period_start, key) DO UPDATE SET amount = greatest(free_usage.amount, excluded.amount), updated_at = now();

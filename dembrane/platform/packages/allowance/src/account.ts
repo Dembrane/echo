@@ -13,7 +13,7 @@ export interface AllowanceAccount {
 
 interface Row extends Record<string, unknown> {
   own_id: string;
-  own_tier: string | null;
+  own_tier: string;
   own_org_id: string | null;
   own_downgraded_at: string | null;
   pool_id: string | null;
@@ -81,4 +81,18 @@ export async function allowanceForProject(
     sql`p.id = ${projectId}`,
   );
   return pick(rows[0], now);
+}
+
+// The account a project's usage counts against; null when unlimited or a sample project.
+export async function allowanceForCountedProject(
+  db: Db,
+  projectId: string,
+  now: Date,
+): Promise<AllowanceAccount | null> {
+  const a = await allowanceForProject(db, projectId, now);
+  if (!a) return null;
+  const rows = await db.execute<{ is_sample: boolean | null }>(
+    sql`select is_sample from project where id = ${projectId}`,
+  );
+  return rows[0]?.is_sample === true ? null : a;
 }

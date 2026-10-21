@@ -148,15 +148,51 @@ run("free reports", () => {
     expect(await ledger(own)).toBe(1);
   });
 
-  test("deleting does not refill", async () => {
+  test("deleting a report that ran or is running does not refill", async () => {
+    for (const status of ["draft", "archived", "error"]) {
+      const { owner, own } = await seed();
+      const d = deps();
+      const r = await request(d, owner, own, LATER);
+      await sql`update project_report set status = ${status} where id = ${String(r.id)}`;
+      // An errored report waits for its own refund, not the delete's.
+      if (status === "error")
+        await sql`update project_report set free_period_start = null where id = ${String(r.id)}`;
+      await deleteReport(d, owner, own, Number(r.id));
+      expect(await rejection(request(d, owner, own, LATER))).toMatchObject({
+        status: 402,
+        details: { limit: "report" },
+      });
+    }
+  });
+
+  test("deleting a scheduled report that never ran gives it back once", async () => {
     const { owner, own } = await seed();
     const d = deps();
     const r = await request(d, owner, own, LATER);
     await deleteReport(d, owner, own, Number(r.id));
-    expect(await rejection(request(d, owner, own, LATER))).toMatchObject({
-      status: 402,
-      details: { limit: "report" },
-    });
+    expect(await ledger(own)).toBe(0);
+    const [row] =
+      await sql`select status, deleted_at from project_report where id = ${String(r.id)}`;
+    expect(row?.deleted_at).not.toBeNull();
+    const tasks =
+      await sql`select status from scheduled_task where payload->>'report_id' = ${String(r.id)}`;
+    expect(tasks.map((t) => t.status)).toEqual(["cancelled"]);
+    await deleteReport(d, owner, own, Number(r.id));
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(false);
+    expect(await ledger(own)).toBe(0);
+    await request(d, owner, own, LATER);
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("deleting a paid scheduled report touches no ledger", async () => {
+    const { owner, billing, own } = await seed("guardian");
+    const r = await request(deps(), owner, own, LATER);
+    await deleteReport(deps(), owner, own, Number(r.id));
+    expect(await usageRows(billing)).toBe(0);
+    const [row] =
+      await sql`select status, deleted_at from project_report where id = ${String(r.id)}`;
+    expect(row?.status).toBe("scheduled");
+    expect(row?.deleted_at).not.toBeNull();
   });
 
   test("the next period has a fresh report", async () => {
@@ -570,5 +606,100 @@ run("free reports", () => {
     expect(row?.status).toBe("cancelled");
     expect(await stamp(r.id)).toBeNull();
     expect(await ledger(own)).toBe(1);
+  });
+
+  // markError sets error, then asks for the refund; a PATCH can land in between.
+  const errored = async (d: ProjectDeps, who: Person, projectId: string) => {
+    const r = await request(d, who, projectId, LATER);
+    await sql`update project_report set status = 'error' where id = ${String(r.id)}`;
+    return r;
+  };
+
+  test("an errored report rescheduled before its refund is charged once", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await errored(d, owner, own);
+    await reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe(OCT);
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(false);
+    expect(await ledger(own)).toBe(1);
+    expect(await stamp(r.id)).toBe(OCT);
+  });
+
+  test("an errored report cancelled before its refund is refunded once", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await errored(d, owner, own);
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await ledger(own)).toBe(0);
+    expect(await stamp(r.id)).toBeNull();
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(false);
+    expect(await ledger(own)).toBe(0);
+    await reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 });
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("marking a report that ran as errored does not make it refundable", async () => {
+    const { owner, own } = await seed();
+    const d = deps();
+    const r = await request(d, owner, own, LATER);
+    await sql`update project_report set status = 'archived', content = '# Done' where id = ${String(r.id)}`;
+    await reschedule(d, owner, own, r.id, { status: "error" });
+    expect(
+      await rejection(
+        reschedule(d, owner, own, r.id, { status: "scheduled", scheduled_at: LATER2 }),
+      ),
+    ).toMatchObject({ status: 402, details: { limit: "report" } });
+    await reschedule(d, owner, own, r.id, { status: "cancelled" });
+    expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(false);
+    expect(await ledger(own)).toBe(1);
+  });
+
+  test("an errored report's refund racing a reschedule or cancel charges once", async () => {
+    for (let i = 0; i < 8; i++) {
+      const { owner, own } = await seed();
+      const d = deps();
+      const r = await errored(d, owner, own);
+      const body = i % 2 ? { status: "cancelled" } : { status: "scheduled", scheduled_at: LATER2 };
+      const refund = () => refundFreeReport(database.db, Number(r.id), now);
+      const patch = () => reschedule(d, owner, own, r.id, body);
+      // Either one starts first.
+      const results = await Promise.allSettled(
+        i % 4 < 2 ? [refund(), patch()] : [patch(), refund()],
+      );
+      for (const x of results) expect(x.status).toBe("fulfilled");
+      const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+      const paid = { status: row?.status, stamp: await stamp(r.id), used: await ledger(own) };
+      if (i % 2) expect(paid).toEqual({ status: "cancelled", stamp: null, used: 0 });
+      else expect(paid).toEqual({ status: "scheduled", stamp: OCT, used: 1 });
+    }
+  });
+
+  test("an errored report's refund landing between the charge and the update charges once", async () => {
+    for (const body of [{ status: "scheduled", scheduled_at: LATER2 }, { status: "cancelled" }]) {
+      const { owner, own } = await seed();
+      const r = await errored(deps(), owner, own);
+      const store = projectsStorage(database.db);
+      let landed = false;
+      const d = deps({
+        store: {
+          ...store,
+          transaction: async (fn: never) => {
+            if (!landed) {
+              landed = true;
+              expect(await refundFreeReport(database.db, Number(r.id), now)).toBe(true);
+            }
+            return store.transaction(fn);
+          },
+        } as ProjectDeps["store"],
+      });
+      await reschedule(d, owner, own, r.id, body);
+      const [row] = await sql`select status from project_report where id = ${String(r.id)}`;
+      const paid = { status: row?.status, stamp: await stamp(r.id), used: await ledger(own) };
+      if (body.status === "cancelled")
+        expect(paid).toEqual({ status: "cancelled", stamp: null, used: 0 });
+      else expect(paid).toEqual({ status: "scheduled", stamp: OCT, used: 1 });
+    }
   });
 });

@@ -11,9 +11,8 @@ import {
 } from "@/hooks/useProjectRecording";
 import { testId } from "@/lib/testUtils";
 
-// A recording project saved without a name still reads as a place.
-const projectName = (name: string | null | undefined) =>
-	name?.trim() || t`another project`;
+// Null (caller cannot open it) or empty: a neutral place.
+const projectName = (name: string | null) => name?.trim() || t`another project`;
 
 type RecordingPausedNoticeProps = {
 	projectId: string;
@@ -83,7 +82,7 @@ export const RecordingPausedNotice = ({
 };
 
 // Stands in for the upload button on a project that does not take recordings.
-export const RecordingPausedUploadButton = (props: { name: string }) => {
+export const RecordingPausedUploadButton = (props: { name: string | null }) => {
 	const name = projectName(props.name);
 	return (
 		<Tooltip label={t`On the free plan, uploads go to ${name}.`}>

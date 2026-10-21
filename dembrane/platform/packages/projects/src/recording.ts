@@ -13,7 +13,8 @@ import type { ProjectDeps } from "./projects";
 export type RecordingStatus = {
   free: boolean;
   is_recording_project: boolean;
-  recording_project: { id: string; name: string; workspace_id: string | null } | null;
+  // Fields are null when the caller cannot read the recording project.
+  recording_project: { id: string | null; name: string | null; workspace_id: string | null } | null;
   can_switch: boolean;
   audio_seconds_left: number | null;
   file_limit_seconds: number | null;
@@ -52,12 +53,17 @@ export async function recordingStatus(
   ]);
   const chosen = chosenId ? await d.store.project(chosenId) : null;
   const isIt = chosenId === project.id;
+  const visible = chosen
+    ? isIt || (await projectAllows(d.access, who, chosen.id, "project:read"))
+    : false;
   return {
     free: true,
     is_recording_project: isIt,
-    recording_project: chosen
-      ? { id: chosen.id, name: chosen.name ?? "", workspace_id: chosen.workspace_id }
-      : null,
+    recording_project: !chosen
+      ? null
+      : visible
+        ? { id: chosen.id, name: chosen.name ?? "", workspace_id: chosen.workspace_id }
+        : { id: null, name: null, workspace_id: null },
     can_switch:
       !isIt &&
       !project.is_sample &&

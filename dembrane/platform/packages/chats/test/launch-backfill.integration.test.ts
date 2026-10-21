@@ -97,9 +97,10 @@ run("free tier launch backfill", () => {
     duration: number,
     createdAt: string,
     deleted = false,
+    source: string | null = null,
   ) {
-    await sql`insert into conversation (id, project_id, duration, created_at, deleted_at)
-      values (${id()}, ${projectId}, ${duration}, ${createdAt}, ${deleted ? createdAt : null})`;
+    await sql`insert into conversation (id, project_id, duration, created_at, deleted_at, source)
+      values (${id()}, ${projectId}, ${duration}, ${createdAt}, ${deleted ? createdAt : null}, ${source})`;
   }
 
   async function chat(projectId: string, turns: string[], deleted = false) {
@@ -193,6 +194,16 @@ run("free tier launch backfill", () => {
       audio_seconds: { amount: 5400, period: M.toISOString() },
     });
     expect(await usage(s.own)).toEqual({});
+  });
+
+  test("retranscribe copies are never counted", async () => {
+    const s = await seed();
+    await conversation(s.project, 600, at(MIN), false, "PORTAL_AUDIO");
+    await conversation(s.project, 600, at(2 * MIN), false, "CLONE");
+    await backfill();
+    expect(await usage(s.pooled)).toEqual({
+      audio_seconds: { amount: 600, period: M.toISOString() },
+    });
   });
 
   test("the two most recently active chats this month are claimed, older ones freeze", async () => {

@@ -172,7 +172,13 @@ export async function runExpireTiers(d: BillingJobDeps): Promise<void> {
         // An org account with no workspaces: clear the expiry so it stops matching.
         await store.updateAccount(
           acc.id,
-          { tier: "free", tier_expires_at: null, pre_warning_sent: false },
+          {
+            tier: "free",
+            downgraded_at: pyIso(now),
+            downgraded_from_tier: fromTier,
+            tier_expires_at: null,
+            pre_warning_sent: false,
+          },
           now,
         );
         d.logger.info({ accountId: acc.id }, "expired org account to free (no workspaces)");

@@ -83,7 +83,7 @@ const labelOf = (key: FreeLimitKey): string => {
 		case "popcorn_analyses_month":
 			return t`Popcorn analyses per month`;
 		case "popcorn_cadence_minutes":
-			return t`Popcorn cadence floor`;
+			return t`Minimum popcorn interval`;
 	}
 };
 

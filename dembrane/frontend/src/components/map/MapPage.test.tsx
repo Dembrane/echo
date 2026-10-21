@@ -22,6 +22,7 @@ import {
 	vi,
 } from "vitest";
 import { ApiRequestError } from "@/lib/errors/read";
+import { fixtureMapResult } from "./data/fixture";
 import { MapPage } from "./MapPage";
 import { resetMapSettingsForTests } from "./state/settings";
 
@@ -65,6 +66,12 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-tier={currentTier}
 			/>
 		) : null,
+}));
+
+vi.mock("@/components/workspace/FreeAllowanceBanner", () => ({
+	FreeAllowanceBanner: ({ feature }: { feature: string }) => (
+		<div data-testid={`allowance-banner-${feature}`} />
+	),
 }));
 
 i18n.load("en-US", {});
@@ -208,5 +215,48 @@ describe("MapPage free tier", () => {
 		expect(modal.dataset.tier).toBe("free");
 		await waitFor(() => expect(bffMock.post).toHaveBeenCalledTimes(1));
 		expect(toastMock.error).not.toHaveBeenCalled();
+	});
+
+	const renderLive = (summary: unknown, graph: () => Promise<unknown>) => {
+		bffMock.get.mockImplementation((path: string) => {
+			if (path === "/map/projects/p1/graph") return graph();
+			if (path === "/map/projects/p1") return Promise.resolve(summary);
+			return Promise.resolve({ fact_checks: {} });
+		});
+		return render(
+			<MantineProvider>
+				<I18nProvider i18n={i18n}>
+					<QueryClientProvider
+						client={
+							new QueryClient({ defaultOptions: { queries: { retry: false } } })
+						}
+					>
+						<MemoryRouter>
+							<MapPage projectId="p1" workspaceId="w1" />
+						</MemoryRouter>
+					</QueryClientProvider>
+				</I18nProvider>
+			</MantineProvider>,
+		);
+	};
+
+	it("shows no map banner while the first map is generating", async () => {
+		renderLive(
+			{
+				attempt: { id: "a1", progress: {}, status: "extracting" },
+				current: null,
+				source: { conversations_with_transcripts: 2 },
+			},
+			() => Promise.resolve(null),
+		);
+		expect(await screen.findByText("Reading conversations")).toBeTruthy();
+		expect(screen.queryByTestId("allowance-banner-maps")).toBeNull();
+	});
+
+	it("shows the map banner once a map exists", async () => {
+		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
+			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
+		);
+		expect(await screen.findByTestId("allowance-banner-maps")).toBeTruthy();
 	});
 });

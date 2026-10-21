@@ -18,7 +18,7 @@ import {
 } from "./free";
 import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
-import { projectsStorage } from "./storage";
+import { type ProjectsStorage, projectsStorage } from "./storage";
 
 /** The scheduled_task type the scheduler runner turns into a report generation. */
 export const TASK_GENERATE_REPORT = "generate_report";
@@ -286,15 +286,25 @@ async function applyReportUpdate(
 /** Soft delete; needs report:delete (spec H-9: any reader could delete). */
 export async function deleteReport(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:delete", "v1");
-  await boundReport(d, projectId, rid);
+  const r = await boundReport(d, projectId, rid);
   const now = d.now();
-  await d.store.transaction(async ({ store }) => {
+  const softDelete = async (store: ProjectsStorage) => {
     await store.updateReport(reportId(rid), {
       deleted_at: now.toISOString(),
       date_updated: now.toISOString(),
     });
     await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
-  });
+  };
+  // A free scheduled report that never ran is cancelled first, which gives it back.
+  if (
+    r.status === "scheduled" &&
+    r.free_period_start &&
+    (await cancelScheduledReport(d.db, projectId, rid, now, (tx) =>
+      softDelete(projectsStorage(tx)),
+    ))
+  )
+    return { deleted: true };
+  await d.store.transaction(({ store }) => softDelete(store));
   return { deleted: true };
 }
 

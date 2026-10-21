@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { invalidateFreeLimits, setFreeLimit } from "@dembrane/allowance";
 import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -121,6 +122,23 @@ run("clone project", () => {
     const staff = { ...owner, isStaff: true };
     const id = await cloneProject(d, staff, src, { name: null, language: null }).finally(
       () => sql`update billing_account set tier = 'changemaker' where id = ${billing}`,
+    );
+    const [row] = await sql`select is_dembrane_event_cta_enabled from project where id = ${id}`;
+    expect(row?.is_dembrane_event_cta_enabled).toBe(true);
+  });
+
+  test("a free member with room under the project cap gets the event invitation too", async () => {
+    await sql`update billing_account set tier = 'free' where id = ${billing}`;
+    const [live] =
+      await sql`select count(*)::int as n from project where workspace_id = ${ws} and deleted_at is null`;
+    await setFreeLimit(database.db, "projects", (live?.n as number) + 1, null);
+    invalidateFreeLimits();
+    const id = await cloneProject(d, owner, src, { name: null, language: null }).finally(
+      async () => {
+        await sql`update billing_account set tier = 'changemaker' where id = ${billing}`;
+        await sql`delete from tier_limit where key = 'projects'`;
+        invalidateFreeLimits();
+      },
     );
     const [row] = await sql`select is_dembrane_event_cta_enabled from project where id = ${id}`;
     expect(row?.is_dembrane_event_cta_enabled).toBe(true);

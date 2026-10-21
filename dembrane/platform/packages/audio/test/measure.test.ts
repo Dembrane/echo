@@ -37,8 +37,8 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
     url: `http://127.0.0.1:${server.port}/${name}`,
     format,
   });
-  const measure = (name: string, format: AudioFormat, confirmAbove = 3600) =>
-    measureSeconds(media, src(name, format), Bun.file(at(name)).size, { confirmAbove });
+  const measure = (name: string, format: AudioFormat) =>
+    measureSeconds(media, src(name, format), Bun.file(at(name)).size);
 
   // Every upload format people send, each 20 s long.
   const formats: [string, AudioFormat, string[]][] = [
@@ -148,9 +148,9 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
 
   test("wrong declared length is decoded", async () => {
     // ffmpeg caps a WAV's declared data size at the file size, so this one reads true either way.
-    const wav = await measure("long-header.wav", "wav", 3600);
+    const wav = await measure("long-header.wav", "wav");
     expect("seconds" in wav ? wav.seconds : -1).toBeCloseTo(20, 0);
-    const webm = await measure("ten-hours.webm", "webm", 3600);
+    const webm = await measure("ten-hours.webm", "webm");
     expect(webm).toMatchObject({ how: "decoded" });
     expect("seconds" in webm ? webm.seconds : -1).toBeCloseTo(20, 0);
     const declared = await media.probe(src("concat.mp3", "mp3"));
@@ -174,7 +174,7 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
   });
 
   test("a long true length is not shortened", async () => {
-    const m = await measure("seventy.mp3", "mp3", 60);
+    const m = await measure("seventy.mp3", "mp3");
     expect(m).toMatchObject({ how: "decoded" });
     expect("seconds" in m ? m.seconds : -1).toBeCloseTo(70, 0);
   });
@@ -191,9 +191,7 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
         throw new AudioError("transient", "media away");
       },
     } as unknown as Media;
-    const err = await measureSeconds(flaky, src("cbr.mp3", "mp3"), 1000, {
-      confirmAbove: 3600,
-    }).then(
+    const err = await measureSeconds(flaky, src("cbr.mp3", "mp3"), 1000).then(
       () => null,
       (e) => e,
     );
@@ -211,9 +209,10 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
         throw new AudioError("value", "decode failed");
       },
     } as unknown as Media;
-    expect(
-      await measureSeconds(stub, src("cbr.mp3", "mp3"), 10_000_000, { confirmAbove: 3600 }),
-    ).toEqual({ seconds: 7200, how: "declared" });
+    expect(await measureSeconds(stub, src("cbr.mp3", "mp3"), 10_000_000)).toEqual({
+      seconds: 7200,
+      how: "declared",
+    });
   });
 
   test("convert reports the output length", async () => {

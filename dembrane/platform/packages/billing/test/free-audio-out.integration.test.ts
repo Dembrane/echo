@@ -240,13 +240,16 @@ run("the hours-run-out notice", () => {
     const org = randomUUID();
     const pool = randomUUID();
     const clientAcc = randomUUID();
-    const client = randomUUID();
-    const internal = randomUUID();
+    // The client sorts first by heap, id and creation time, so only the own-account preference picks internal.
+    const client = `00000000${randomUUID().slice(8)}`;
+    const internal = `ffffffff${randomUUID().slice(8)}`;
     await sql`insert into org (id, name) values (${org}, 'Pool')`;
     await sql`insert into billing_account (id, tier, org_id) values (${pool}, 'free', ${org})`;
     await sql`insert into billing_account (id, tier) values (${clientAcc}, 'free')`;
-    await sql`insert into workspace (id, name, org_id, billing_account_id) values (${client}, 'Client', ${org}, ${clientAcc})`;
-    await sql`insert into workspace (id, name, org_id, billing_account_id) values (${internal}, 'Internal', ${org}, ${pool})`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id, created_at)
+      values (${client}, 'Client', ${org}, ${clientAcc}, '2026-01-01T00:00:00Z')`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id, created_at)
+      values (${internal}, 'Internal', ${org}, ${pool}, '2026-06-01T00:00:00Z')`;
     await user(org, "owner", `owner-${pool}@acme.test`);
     await used(pool, "2026-10-01T00:00:00Z", 18000, OCT);
     const x = deps(OCT);

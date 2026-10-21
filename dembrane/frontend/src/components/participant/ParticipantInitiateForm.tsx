@@ -52,7 +52,13 @@ const autoStartedConversations = new Map<
 	ReturnType<typeof requestConversation>
 >();
 
-export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
+export const ParticipantInitiateForm = ({
+	project,
+	onRefusedChange,
+}: {
+	project: Project;
+	onRefusedChange?: (refused: boolean) => void;
+}) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
 
@@ -251,6 +257,10 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	// Continue would only repeat the refusal.
 	const refused =
 		Boolean(initiateError) && portalRecordingRefusal(initiateError);
+
+	useEffect(() => {
+		onRefusedChange?.(Boolean(refused));
+	}, [refused, onRefusedChange]);
 
 	return (
 		<form

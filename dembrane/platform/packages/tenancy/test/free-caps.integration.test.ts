@@ -299,6 +299,35 @@ run("free caps", () => {
       expect((await createOrg(p)).status).toBe(200);
     });
 
+    test("the refusal names the blocking free org and its default workspace", async () => {
+      const p = await person();
+      const paid = await org();
+      await workspace(paid, await account("changemaker", paid), p);
+      await orgMember(paid, p, "owner");
+      const f = await freeWorkspace();
+      await sql`update workspace set is_default = true where id = ${f.ws}`;
+      await workspace(f.org, f.account);
+      await orgMember(f.org, p, "admin");
+      const detail = (await expectRefused(await createOrg(p), "organisations")) as Detail & {
+        org_id?: string;
+        workspace_id?: string;
+      };
+      expect(detail.org_id).toBe(f.org);
+      expect(detail.workspace_id).toBe(f.ws);
+    });
+
+    test("parallel creates by a new user: exactly one succeeds", async () => {
+      const p = await person();
+      const statuses = (await Promise.all(Array.from({ length: 5 }, () => createOrg(p)))).map(
+        (r) => r.status,
+      );
+      expect(statuses.filter((s) => s === 200)).toHaveLength(1);
+      expect(statuses.filter((s) => s === 402)).toHaveLength(4);
+      const [r] = await sql<{ n: number }[]>`
+        select count(*)::int as n from org_membership where user_id = ${p.app}`;
+      expect(r?.n).toBe(1);
+    });
+
     test("a user with no org can", async () => {
       expect((await createOrg(await person())).status).toBe(200);
     });

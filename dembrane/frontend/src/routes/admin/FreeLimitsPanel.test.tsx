@@ -119,6 +119,11 @@ it("labels the chat turn and popcorn rows", async () => {
 		),
 	).toBeTruthy();
 	expect(current("popcorn_analyses_month")).toBe("12");
+	expect(
+		within(row("popcorn_cadence_minutes")).getByText(
+			"Minimum popcorn interval",
+		),
+	).toBeTruthy();
 	expect(screen.queryByText("Popcorn window")).toBeNull();
 });
 

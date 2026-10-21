@@ -229,6 +229,44 @@ run("free hours cap", () => {
     }
   });
 
+  test("a pooled free client workspace is not billed separately and hits the cap once", async () => {
+    const clientBa = n("ba", 3);
+    const client = n("c1", 4);
+    await sql`insert into billing_account (id, tier, org_id) values (${clientBa}, 'free', null)`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id) values
+      (${client}, 'Client', ${ORG}, ${clientBa})`;
+    try {
+      type Card = { id: string; bills_separately: boolean };
+      const sep = (rows: Card[]) => Object.fromEntries(rows.map((w) => [w.id, w.bills_separately]));
+      await audioUsed(18000);
+      const u = await get<OrgUsage & { workspaces: Card[] }>(`/api/v2/orgs/${ORG}/usage`);
+      expect(sep(u.workspaces)).toEqual({ [FREE_WS]: false, [client]: false, [PAID_WS]: true });
+      expect(u.workspaces.filter((w) => w.at_cap).length).toBe(2);
+      expect(u.workspaces_at_cap).toBe(1);
+      const past = await get<{ workspaces: Card[] }>(`/api/v2/orgs/${ORG}/usage?month_offset=1`);
+      expect(sep(past.workspaces)[client]).toBe(false);
+      expect(sep(await get<Card[]>(`/api/v2/orgs/${ORG}/workspaces`))).toEqual({
+        [FREE_WS]: false,
+        [client]: false,
+        [PAID_WS]: true,
+      });
+
+      await sql`update free_usage set amount = 15000`;
+      const near = await get<OrgUsage>(`/api/v2/orgs/${ORG}/usage`);
+      expect(near.workspaces.filter((w) => w.approaching_cap).length).toBe(2);
+      expect(near.workspaces_approaching_cap).toBe(1);
+
+      // A free client of a paid org keeps its own account and bills separately.
+      await sql`update billing_account set tier = 'changemaker' where id = ${FREE_BA}`;
+      const own = await get<{ workspaces: Card[] }>(`/api/v2/orgs/${ORG}/usage`);
+      expect(sep(own.workspaces)[client]).toBe(true);
+    } finally {
+      await sql`update billing_account set tier = 'free' where id = ${FREE_BA}`;
+      await sql`delete from workspace where id = ${client}`;
+      await sql`delete from billing_account where id = ${clientBa}`;
+    }
+  });
+
   test("a past month shows no free cap: the ledger only holds the current period", async () => {
     await audioUsed(18000);
     const u = await get<OrgUsage>(`/api/v2/orgs/${ORG}/usage?month_offset=1`);

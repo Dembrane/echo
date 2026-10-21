@@ -145,6 +145,18 @@ run("allowance snapshot", () => {
     });
   });
 
+  test("a previous period's ledger row is not counted", async () => {
+    const o = await org();
+    const acc = await account("free", o);
+    const ws = await workspace(o, acc);
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
+      (${acc}, '2026-09-01T00:00:00.000Z', 'audio_seconds', 9000),
+      (${acc}, '2026-09-01T00:00:00.000Z', 'chats', 2), (${acc}, ${OCT}, 'audio_seconds', 60)`;
+    const snap = await allowanceSnapshot(db, ws, NOW);
+    expect(snap.audio_seconds).toEqual({ used: 60, limit: 18000 });
+    expect(snap.chats).toEqual({ used: 0, limit: 2 });
+  });
+
   test("projects count across the pooled org and its free client workspaces", async () => {
     const o = await org();
     const pooled = await account("free", o);

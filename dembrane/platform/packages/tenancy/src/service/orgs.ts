@@ -24,7 +24,7 @@ import { isoTimestamp } from "@dembrane/legacy-shape";
 import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
 import { type Member, requireOnboarded, WorkspaceContext } from "../context";
-import { iso, isUuid } from "../db";
+import { type Conn, iso, isUuid } from "../db";
 import { clock, type TenancyDeps } from "../deps";
 import { orgInviteEmail } from "../emails";
 import { emailJob } from "../jobs";
@@ -47,6 +47,7 @@ import {
   insertOrgMembership,
   liveConversationDurations,
   liveProjectsIn,
+  lockOrgCreate,
   managedOrgTiers,
   partnerOrgNamesExternalOf,
   pinnedProjects,
@@ -162,6 +163,18 @@ export function orgService(deps: TenancyDeps) {
     return counts;
   }
 
+  /** False for a free client workspace pooled into its org's free account. */
+  async function billsSeparately(
+    account: { id: string; tier: string | null; org_id: string | null } | null,
+    workspaceId: string,
+    now: Date,
+  ) {
+    if (!account || account.org_id) return false;
+    if (!isFreeTier(account.tier)) return true;
+    const a = await allowanceForWorkspace(db, workspaceId, now);
+    return !a || a.accountId === account.id;
+  }
+
   /** {user: {workspace: role}} and {user: {workspace: membership id}}; a direct row wins a duplicate pair. */
   async function directRoles(orgId: string, userIds: readonly string[]) {
     const roles = new Map<string, Record<string, string>>();
@@ -218,12 +231,27 @@ export function orgService(deps: TenancyDeps) {
       const member = requireOnboarded(who);
       const name = oneLine(rawName);
       if (!name) throw new BadRequestError("organisation.name_required");
-      if (!who.isStaff && (await managedOrgTiers(db, member.appUserId)).some(isFreeTier))
-        throw freeLimitError("organisations");
+      // One free org per manager; the refusal names it so the wall upgrades that org.
+      const refuseIfFree = async (conn: Conn) => {
+        if (who.isStaff) return;
+        const free = (await managedOrgTiers(conn, member.appUserId)).find((o) =>
+          isFreeTier(o.tier),
+        );
+        if (free)
+          throw freeLimitError("organisations", {
+            org_id: free.org_id,
+            ...(free.workspace_id ? { workspace_id: free.workspace_id } : {}),
+          });
+      };
+      await refuseIfFree(db);
       const now = clock(deps);
       const orgId = newId();
       const wsId = newId();
       await db.transaction(async (tx) => {
+        if (!who.isStaff) {
+          await lockOrgCreate(tx, member.appUserId);
+          await refuseIfFree(tx);
+        }
         await insertOrg(tx, {
           id: orgId,
           name,
@@ -610,7 +638,7 @@ export function orgService(deps: TenancyDeps) {
           member_count: members.get(ws.id) ?? 0,
           is_private: isPrivate,
           visibility: ws.visibility || "open_to_organisation",
-          bills_separately: account !== null && !account.org_id,
+          bills_separately: await billsSeparately(account, ws.id, clock(deps)),
           seat_invite_blocked: false,
           seats_used_including_pending: seatsUsed,
           seat_cap: capacityOf(tier.toLowerCase())?.includedSeats ?? null,
@@ -745,6 +773,8 @@ export function orgService(deps: TenancyDeps) {
       const rows = [];
       const freeLimit = (await freeLimits(db)).audio_seconds_month;
       const counted = new Set<string>();
+      const atCapKeys = new Set<string>();
+      const approachingKeys = new Set<string>();
       for (const w of workspaces) {
         const [seats, , externals, observers] = seatState(await effectiveMembers(db, w.id));
         totalSeats += seats;
@@ -786,8 +816,12 @@ export function orgService(deps: TenancyDeps) {
           wsApproaching = pct >= 0.8;
         }
         if (!ledgerAccount) totalHours += h;
-        if (wsAtCap) atCap++;
-        if (wsApproaching) approaching++;
+        // Pooled rows share one meter, so they count as one.
+        const capKey = ledgerAccount ?? w.id;
+        if (wsAtCap && !atCapKeys.has(capKey)) atCap++;
+        if (wsApproaching && !approachingKeys.has(capKey)) approaching++;
+        if (wsAtCap) atCapKeys.add(capKey);
+        if (wsApproaching) approachingKeys.add(capKey);
         const seatsPct =
           seatsIncluded !== null && seatsIncluded > 0 ? pyRound(seats / seatsIncluded, 3) : null;
         const seatCapHit = seatsIncluded !== null && seats >= seatsIncluded;
@@ -812,7 +846,7 @@ export function orgService(deps: TenancyDeps) {
           at_cap: wsAtCap,
           approaching_cap: wsApproaching,
           downgraded_at: isoTimestamp(billing?.downgraded_at),
-          bills_separately: account !== null && !account.org_id,
+          bills_separately: await billsSeparately(account, w.id, now),
         });
       }
       // Hot workspaces first, then by hours; ties keep their order.

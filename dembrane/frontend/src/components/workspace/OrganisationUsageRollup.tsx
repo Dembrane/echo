@@ -113,6 +113,12 @@ interface OrgUsage {
 	workspaces: OrgUsageWorkspaceRow[];
 }
 
+/** The org's own (non separately billed) workspaces are all free. */
+export const orgIsFree = (rows: OrgUsageWorkspaceRow[]): boolean => {
+	const own = rows.filter((w) => !w.bills_separately);
+	return own.length > 0 && own.every((w) => w.tier === "free");
+};
+
 // Active = any activity this period. Matches the admin surface. Hoisted
 // to module scope so it's a stable reference for the useMemo dep arrays
 // below — defining inline would trigger react-hooks/exhaustive-deps and
@@ -522,12 +528,21 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				)}
 
 				<Text size="sm" c="dimmed">
-					<Trans>
-						{data.workspace_count} workspaces · {data.total_seat_count} paid
-						seats · {data.total_observer_count} free observers ·{" "}
-						{formatDurationFromHours(data.total_audio_hours)} in{" "}
-						{formatCycleMonth(data.cycle_start)}
-					</Trans>
+					{orgIsFree(data.workspaces) ? (
+						<Trans>
+							{data.workspace_count} workspaces · {data.total_seat_count} seats
+							· {data.total_observer_count} free observers ·{" "}
+							{formatDurationFromHours(data.total_audio_hours)} in{" "}
+							{formatCycleMonth(data.cycle_start)}
+						</Trans>
+					) : (
+						<Trans>
+							{data.workspace_count} workspaces · {data.total_seat_count} paid
+							seats · {data.total_observer_count} free observers ·{" "}
+							{formatDurationFromHours(data.total_audio_hours)} in{" "}
+							{formatCycleMonth(data.cycle_start)}
+						</Trans>
+					)}
 				</Text>
 
 				<Group gap="sm" wrap="wrap" align="center">
@@ -887,8 +902,19 @@ function formatHourFraction(hours: number, cap: number | null): string {
 
 // Items that genuinely need admin action: hard-block tiers at cap,
 // approaching-cap on hard-block tiers, recently-downgraded workspaces.
-function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
+export function buildAttention(
+	workspaces: OrgUsageWorkspaceRow[],
+): AttentionItem[] {
 	const out: AttentionItem[] = [];
+	// Pooled free rows share one meter: one hours item per account.
+	const pooled = new Map<string, number>();
+	for (const ws of workspaces)
+		if (ws.allowance_account_id)
+			pooled.set(
+				ws.allowance_account_id,
+				(pooled.get(ws.allowance_account_id) ?? 0) + 1,
+			);
+	const hoursRaised = new Set<string>();
 	// Only used by the disabled "recently downgraded" check below.
 	// const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000;
 	// const now = Date.now();
@@ -924,7 +950,35 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 		}
 
 		// Hour caps are free only, measured on the account's monthly allowance.
-		if (ws.at_cap) {
+		const account = ws.allowance_account_id ?? "";
+		const shared = (pooled.get(account) ?? 0) > 1;
+		if ((ws.at_cap || ws.approaching_cap) && shared) {
+			if (hoursRaised.has(account)) continue;
+			hoursRaised.add(account);
+		}
+		if (ws.at_cap && shared) {
+			out.push({
+				actionLabel: "Upgrade",
+				id: ws.id,
+				key: `${account}:hours_full`,
+				message: t`This organisation has used this month's free recording hours. Recording is paused until the month resets.`,
+				reason: "hours_full",
+				workspaceId: ws.id,
+			});
+		} else if (ws.approaching_cap && hardBlock && shared) {
+			const used = formatHourFraction(
+				ws.hours_counted ?? ws.audio_hours,
+				ws.hours_included,
+			);
+			out.push({
+				actionLabel: "Review",
+				id: ws.id,
+				key: `${account}:hours_near`,
+				message: t`This organisation is near this month's free recording hours (${used})`,
+				reason: "hours_near",
+				workspaceId: ws.id,
+			});
+		} else if (ws.at_cap) {
 			const name = ws.name;
 			out.push({
 				actionLabel: "Upgrade",

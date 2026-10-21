@@ -292,6 +292,22 @@ run("free projects", () => {
       expect(sample).toMatchObject({ is_recording_project: false, can_switch: false });
     });
 
+    test("a pooled client member does not see the recording project", async () => {
+      const r = await recordingSpace();
+      const client = await person();
+      const ownAccount = await account("free", null);
+      const clientWs = await workspace(r.org, ownAccount, [[client, "member"]]);
+      const mine = await project(clientWs);
+      const res = await status(client, mine);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({
+        free: true,
+        is_recording_project: false,
+        recording_project: { id: null, name: null, workspace_id: null },
+        can_switch: false,
+      });
+    });
+
     test("a member cannot switch", async () => {
       const r = await recordingSpace();
       expect((await choose(r.member, r.other)).status).toBe(403);

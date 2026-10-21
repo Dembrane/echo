@@ -116,6 +116,20 @@ describe("tier expiry", () => {
     );
   });
 
+  test("an org account with no workspaces drops to free and records the downgrade", async () => {
+    const w = world({ tier_expires_at: "2026-09-01T00:00:00Z", pre_warning_sent: true });
+    w.store.workspaces.clear();
+    await runExpireTiers(deps(w));
+    expect(w.acc()).toMatchObject({
+      tier: "free",
+      downgraded_from_tier: "changemaker",
+      tier_expires_at: null,
+      pre_warning_sent: false,
+    });
+    expect(w.acc().downgraded_at).toStartWith("2026-09-27T10:00:00");
+    expect(w.store.notifications).toHaveLength(0);
+  });
+
   test("managed accounts and unexpired tiers are left alone", async () => {
     const managed = world({ payment_mode: "offline", tier_expires_at: "2026-09-01T00:00:00Z" });
     await runExpireTiers(deps(managed));

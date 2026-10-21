@@ -157,6 +157,22 @@ run("staff tier moves", () => {
     expect(stamp(await account())).toEqual({ at: now.toISOString(), from: "pioneer" });
   });
 
+  test("set-managed from a legacy tier to free stamps the downgrade", async () => {
+    await reset({ tier: "pioneer", payment_mode: "none" });
+    expect((await managed("free")).status).toBe(200);
+    expect(stamp(await account())).toEqual({ at: now.toISOString(), from: "pioneer" });
+  });
+
+  test("set-managed paid to a lower paid tier stamps, to a higher one clears", async () => {
+    await reset({ tier: "guardian", payment_mode: "none" });
+    expect((await managed("innovator")).status).toBe(200);
+    expect(stamp(await account())).toEqual({ at: now.toISOString(), from: "guardian" });
+    expect((await managed("changemaker")).status).toBe(200);
+    const acc = await account();
+    expect(acc?.tier).toBe("changemaker");
+    expect(stamp(acc)).toEqual({ at: null, from: null });
+  });
+
   test("set-managed from free to a paid tier clears the downgrade", async () => {
     await reset({ tier: "free", downgraded_at: EARLIER, downgraded_from_tier: "guardian" });
     expect((await managed("innovator")).status).toBe(200);

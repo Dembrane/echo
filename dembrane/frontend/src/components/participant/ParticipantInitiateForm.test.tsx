@@ -208,3 +208,24 @@ it("keeps Continue after any other failure so the participant can retry", () => 
 	expect(screen.getByTestId("portal-initiate-name-input")).toBeTruthy();
 	expect(screen.getByTestId("portal-initiate-next-button")).toBeTruthy();
 });
+
+it("tells its parent when the start is refused", () => {
+	mutationError = refusal;
+	const onRefusedChange = vi.fn();
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider>
+				<MemoryRouter initialEntries={["/en-US/p1/start"]}>
+					<ParticipantInitiateForm
+						project={project({
+							default_conversation_ask_for_participant_name: true,
+						})}
+						onRefusedChange={onRefusedChange}
+					/>
+				</MemoryRouter>
+			</MantineProvider>
+		</I18nProvider>,
+	);
+
+	expect(onRefusedChange).toHaveBeenLastCalledWith(true);
+});

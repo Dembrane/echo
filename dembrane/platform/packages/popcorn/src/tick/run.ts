@@ -1,5 +1,4 @@
 import { type AccessStore, resolveProject } from "@dembrane/access";
-import { isFreeLimit } from "@dembrane/allowance";
 import type { ExecutorDeps } from "@dembrane/analysis";
 import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
@@ -1572,9 +1571,7 @@ export async function runPopcornTick(
         await d.requestMap(projectId, actingUser || null);
       } catch (exc) {
         // The read goes on without a new map; the next change asks again.
-        if (isFreeLimit(exc, "map"))
-          d.logger.debug({ project_id: projectId }, "map not requested: free map spent");
-        else d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
+        d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
       } finally {
         state.map_fingerprint = analysisFingerprint;
       }

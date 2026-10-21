@@ -91,13 +91,6 @@ export async function currentGoal(sql: postgres.Sql, projectId: string): Promise
   return typeof row?.content === "string" && row.content.trim() ? row.content.trim() : null;
 }
 
-/** A seeded sample copy (project.is_sample), which free-tier limits leave alone. */
-export async function isSampleProject(sql: postgres.Sql, projectId: string): Promise<boolean> {
-  if (!isUuid(projectId)) return false;
-  const [row] = await sql`select is_sample from project where id = ${projectId}`;
-  return row?.is_sample === true;
-}
-
 /** The global canvas flag and the project's beta toggle, as project_canvas_enabled. */
 export async function canvasEnabled(
   sql: postgres.Sql,

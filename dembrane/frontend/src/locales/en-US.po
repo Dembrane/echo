@@ -261,7 +261,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# conversation could not be added to this chat.} other {# conversations could not be added to this chat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:855
+#: src/components/map/MapPage.tsx:857
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 
@@ -279,7 +279,7 @@ msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# 
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:50
-#: src/components/workspace/OrganisationUsageRollup.tsx:836
+#: src/components/workspace/OrganisationUsageRollup.tsx:851
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
@@ -717,9 +717,18 @@ msgstr "{0} wants MCP access to dembrane"
 #. placeholder {2}: data.total_observer_count
 #. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
 #. placeholder {4}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/OrganisationUsageRollup.tsx:525
+#: src/components/workspace/OrganisationUsageRollup.tsx:539
 msgid "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
 msgstr "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
+
+#. placeholder {0}: data.workspace_count
+#. placeholder {1}: data.total_seat_count
+#. placeholder {2}: data.total_observer_count
+#. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
+#. placeholder {4}: formatCycleMonth(data.cycle_start)
+#: src/components/workspace/OrganisationUsageRollup.tsx:532
+msgid "{0} workspaces · {1} seats · {2} free observers · {3} in {4}"
+msgstr "{0} workspaces · {1} seats · {2} free observers · {3} in {4}"
 
 #. placeholder {0}: account.workspace_count
 #. placeholder {1}: account.seat_count + account.external_count
@@ -766,11 +775,11 @@ msgstr "{addedCount} added. Check the list below."
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} people were already invited. The project is shared once they join."
 
-#: src/components/map/MapPage.tsx:515
+#: src/components/map/MapPage.tsx:516
 msgid "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}}"
 
-#: src/components/map/MapPage.tsx:514
+#: src/components/map/MapPage.tsx:515
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 
@@ -933,7 +942,7 @@ msgstr "{m} min"
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:933
+#: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
 msgstr "{name} has used this month's free recording hours. Recording is paused until the month resets."
 
@@ -1024,7 +1033,7 @@ msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the 
 msgstr "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:260
-#: src/components/organisation/CreateOrganisationModal.tsx:143
+#: src/components/organisation/CreateOrganisationModal.tsx:155
 msgid "{sent} invites sent"
 msgstr "{sent} invites sent"
 
@@ -1068,7 +1077,7 @@ msgstr "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} of {total} translated, {failed} could not be translated"
 
-#: src/components/map/MapPage.tsx:794
+#: src/components/map/MapPage.tsx:796
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 
@@ -1090,12 +1099,12 @@ msgid "*Transcription in progress.*"
 msgstr "*Transcription in progress.*"
 
 #: src/lib/tiers.ts:200
-msgid "/seat/mo · billed annually"
-msgstr "/seat/mo · billed annually"
+#~ msgid "/seat/mo · billed annually"
+#~ msgstr "/seat/mo · billed annually"
 
 #: src/lib/tiers.ts:201
-msgid "/seat/mo · billed monthly"
-msgstr "/seat/mo · billed monthly"
+#~ msgid "/seat/mo · billed monthly"
+#~ msgstr "/seat/mo · billed monthly"
 
 #. placeholder {0}: convUsage.deleted.length - 8
 #. placeholder {0}: shareCount - 3
@@ -1516,8 +1525,8 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1707
 #: src/routes/admin/AdminSettingsRoute.tsx:2025
-#: src/components/workspace/OrganisationUsageRollup.tsx:417
-#: src/components/workspace/OrganisationUsageRollup.tsx:559
+#: src/components/workspace/OrganisationUsageRollup.tsx:423
+#: src/components/workspace/OrganisationUsageRollup.tsx:574
 #: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
@@ -1590,7 +1599,7 @@ msgstr "add a workspace"
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Add additional context (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:292
+#: src/components/participant/ParticipantInitiateForm.tsx:302
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
@@ -1935,7 +1944,7 @@ msgstr "Agentic chat"
 #: src/routes/organisation/OrganisationRoute.tsx:888
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
-#: src/components/workspace/OrganisationUsageRollup.tsx:558
+#: src/components/workspace/OrganisationUsageRollup.tsx:573
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -1972,7 +1981,7 @@ msgstr "All conversations"
 msgid "all eligible project conversations"
 msgstr "all eligible project conversations"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:925
+#: src/components/dropzone/UploadConversationDropzone.tsx:938
 msgid "All files were uploaded successfully."
 msgstr "All files were uploaded successfully."
 
@@ -2004,7 +2013,7 @@ msgstr "All seats are taken on this tier. Remove a member or external, or upgrad
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "All seats are taken. Free a seat or upgrade to invite more."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:338
+#: src/components/workspace/OrganisationUsageRollup.tsx:344
 msgid "All seats taken"
 msgstr "All seats taken"
 
@@ -2017,7 +2026,7 @@ msgstr "All templates"
 #~ msgstr "All Templates"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2012
-#: src/components/workspace/OrganisationUsageRollup.tsx:546
+#: src/components/workspace/OrganisationUsageRollup.tsx:561
 msgid "All tiers"
 msgstr "All tiers"
 
@@ -2113,8 +2122,8 @@ msgid "Amounts default to the account's seats times the per-seat price. Override
 msgstr "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 
 #: src/components/workspace/TierCapacityMatrix.tsx:210
-msgid "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
-msgstr "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
+#~ msgid "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
+#~ msgstr "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
 
 #: src/components/agent-access/AgentAccessSection.tsx:104
 msgid "An AI assistant you connect, and the company that runs it, will receive the conversations and projects you allow. dembrane is not responsible for what they do with that data. You can revoke a connection at any time."
@@ -2294,7 +2303,7 @@ msgstr "Anonymous visitor"
 msgid "Another admin or owner will need to restore you."
 msgstr "Another admin or owner will need to restore you."
 
-#: src/components/project/RecordingPausedNotice.tsx:16
+#: src/components/project/RecordingPausedNotice.tsx:15
 msgid "another project"
 msgstr "another project"
 
@@ -2371,7 +2380,7 @@ msgstr "Apply"
 msgid "Applying a template shows a confirmation with Undo."
 msgstr "Applying a template shows a confirmation with Undo."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:347
+#: src/components/workspace/OrganisationUsageRollup.tsx:353
 msgid "Approaching a limit this month"
 msgstr "Approaching a limit this month"
 
@@ -2819,13 +2828,13 @@ msgstr "Away"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
 #: src/components/pricing/PricingConfigurator.tsx:867
-#: src/components/dropzone/UploadConversationDropzone.tsx:948
+#: src/components/dropzone/UploadConversationDropzone.tsx:961
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:429
+#: src/components/participant/ParticipantOnboardingCards.tsx:437
 #: src/components/layout/ParticipantHeader.tsx:94
 msgid "participant.button.back"
 msgstr "Back"
@@ -2939,7 +2948,7 @@ msgstr "Before you connect an agent"
 #: src/components/project/ProjectPortalEditor.tsx:1380
 #: src/components/project/ProjectPortalEditor.tsx:1460
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:684
+#: src/components/map/MapPage.tsx:685
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2981,11 +2990,11 @@ msgstr "Billed annually"
 msgid "Billed monthly"
 msgstr "Billed monthly"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:366
+#: src/components/workspace/OrganisationUsageRollup.tsx:372
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:369
+#: src/components/workspace/OrganisationUsageRollup.tsx:375
 msgid "Billed separately"
 msgstr "Billed separately"
 
@@ -3137,14 +3146,14 @@ msgstr "Can you tell us more?"
 #: src/components/project/BulkMoveProjectsModal.tsx:134
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:477
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:631
-#: src/components/organisation/CreateOrganisationModal.tsx:232
+#: src/components/organisation/CreateOrganisationModal.tsx:244
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
 #: src/components/map/panels/SpotlightPanel.tsx:363
 #: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:821
-#: src/components/dropzone/UploadConversationDropzone.tsx:958
+#: src/components/dropzone/UploadConversationDropzone.tsx:834
+#: src/components/dropzone/UploadConversationDropzone.tsx:971
 #: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
@@ -3716,7 +3725,7 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2118
-#: src/components/workspace/OrganisationUsageRollup.tsx:619
+#: src/components/workspace/OrganisationUsageRollup.tsx:634
 msgid "Click to sort"
 msgstr "Click to sort"
 
@@ -3770,7 +3779,7 @@ msgstr "Clone project"
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
 #: src/components/map/panels/DetailsSheet.tsx:800
-#: src/components/dropzone/UploadConversationDropzone.tsx:958
+#: src/components/dropzone/UploadConversationDropzone.tsx:971
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3830,7 +3839,7 @@ msgid "Collapse sidebar"
 msgstr "Collapse sidebar"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:344
-#: src/components/organisation/CreateOrganisationModal.tsx:240
+#: src/components/organisation/CreateOrganisationModal.tsx:252
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Colleagues you invite can explore conversations, share insights, and build reports with you."
 
@@ -3871,7 +3880,7 @@ msgstr "Color graph by valence"
 msgid "Color nodes by"
 msgstr "Color nodes by"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:569
+#: src/components/workspace/OrganisationUsageRollup.tsx:584
 msgid "Columns"
 msgstr "Columns"
 
@@ -3936,7 +3945,7 @@ msgstr "Comped trial. €0 revenue."
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Comped trial. Expires {0}. €0 revenue."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:877
+#: src/components/dropzone/UploadConversationDropzone.tsx:890
 msgid "Complete"
 msgstr "Complete"
 
@@ -4095,7 +4104,7 @@ msgstr "Contextual suggestions"
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
-#: src/components/organisation/CreateOrganisationModal.tsx:224
+#: src/components/organisation/CreateOrganisationModal.tsx:236
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1469
@@ -4103,12 +4112,12 @@ msgid "Continue"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:416
+#: src/components/participant/ParticipantOnboardingCards.tsx:424
 msgid "participant.button.next"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:329
+#: src/components/participant/ParticipantInitiateForm.tsx:339
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
@@ -4718,7 +4727,7 @@ msgstr "create more organisations"
 #~ msgstr "Create new organisation"
 
 #: src/features/sidebar/shell/UserMenu.tsx:180
-#: src/components/organisation/CreateOrganisationModal.tsx:183
+#: src/components/organisation/CreateOrganisationModal.tsx:195
 msgid "Create organisation"
 msgstr "Create organisation"
 
@@ -5528,7 +5537,7 @@ msgstr "Draft next actions and organize them by priority"
 msgid "Drafting a note you can send to the dembrane team"
 msgstr "Drafting a note you can send to the dembrane team"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:654
+#: src/components/dropzone/UploadConversationDropzone.tsx:667
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
@@ -5546,7 +5555,6 @@ msgstr "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgid "Duplicate"
 msgstr "Duplicate"
 
-#: src/components/workspace/TierCapacityMatrix.tsx:103
 #: src/components/conversation/ConversationEdit.tsx:325
 msgid "Duration"
 msgstr "Duration"
@@ -5670,7 +5678,7 @@ msgstr "Edit custom topic"
 #~ msgid "Edit Custom Topic"
 #~ msgstr "Edit Custom Topic"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:738
+#: src/components/dropzone/UploadConversationDropzone.tsx:751
 msgid "Edit file name"
 msgstr "Edit file name"
 
@@ -5975,7 +5983,7 @@ msgstr "Enter a valid email address"
 msgid "Enter current password"
 msgstr "Enter current password"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:695
+#: src/components/dropzone/UploadConversationDropzone.tsx:708
 msgid "Enter filename (without extension)"
 msgstr "Enter filename (without extension)"
 
@@ -6010,8 +6018,8 @@ msgstr "Entered details"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/canvas/CanvasRoute.tsx:337
-#: src/components/dropzone/UploadConversationDropzone.tsx:793
-#: src/components/dropzone/UploadConversationDropzone.tsx:909
+#: src/components/dropzone/UploadConversationDropzone.tsx:806
+#: src/components/dropzone/UploadConversationDropzone.tsx:922
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:438
 #: src/components/chat/AgenticChatPanel.tsx:1846
@@ -6308,7 +6316,7 @@ msgstr "Factual status does not apply to this object."
 #: src/routes/admin/AdminSettingsRoute.tsx:2758
 #: src/features/sidebar/primitives/NavItem.tsx:281
 #: src/components/invite/InviteResultsList.tsx:61
-#: src/components/dropzone/UploadConversationDropzone.tsx:879
+#: src/components/dropzone/UploadConversationDropzone.tsx:892
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
 msgstr "Failed"
@@ -6540,36 +6548,36 @@ msgid "Felt heard"
 msgstr "Felt heard"
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:644
+#: src/components/dropzone/UploadConversationDropzone.tsx:657
 msgid "File \"{0}\" could not be added. Try another file."
 msgstr "File \"{0}\" could not be added. Try another file."
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:636
+#: src/components/dropzone/UploadConversationDropzone.tsx:649
 msgid "File \"{0}\" exceeds the maximum size of {1}."
 msgstr "File \"{0}\" exceeds the maximum size of {1}."
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:640
+#: src/components/dropzone/UploadConversationDropzone.tsx:653
 msgid "File \"{0}\" has an unsupported format. Only audio files are allowed."
 msgstr "File \"{0}\" has an unsupported format. Only audio files are allowed."
 
 #. placeholder {0}: file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:428
+#: src/components/dropzone/UploadConversationDropzone.tsx:441
 msgid "File \"{0}\" is not a supported audio format. Only audio files are allowed."
 msgstr "File \"{0}\" is not a supported audio format. Only audio files are allowed."
 
 #. placeholder {0}: file.name
 #. placeholder {1}: formatFileSize(file.size)
 #. placeholder {2}: formatFileSize(MIN_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:459
+#: src/components/dropzone/UploadConversationDropzone.tsx:472
 msgid "File \"{0}\" is too small ({1}). Minimum size is {2}."
 msgstr "File \"{0}\" is too small ({1}). Minimum size is {2}."
 
 #. placeholder {0}: formatFileSize(MIN_FILE_SIZE)
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:659
+#: src/components/dropzone/UploadConversationDropzone.tsx:672
 msgid "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 msgstr "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 
@@ -6834,8 +6842,8 @@ msgid "Framing"
 msgstr "Framing"
 
 #: src/lib/tiers.ts:190
-msgid "Free"
-msgstr "Free"
+#~ msgid "Free"
+#~ msgstr "Free"
 
 #: src/components/agent-access/AgentRiskNotice.tsx:49
 msgid "Free organisations have a monthly limit of {freeTierMonthlyCalls} calls."
@@ -7284,7 +7292,7 @@ msgstr "Hide detail"
 msgid "Hide from this presentation"
 msgstr "Hide from this presentation"
 
-#: src/components/map/MapPage.tsx:805
+#: src/components/map/MapPage.tsx:807
 msgid "Hide missing arguments"
 msgstr "Hide missing arguments"
 
@@ -7292,7 +7300,7 @@ msgstr "Hide missing arguments"
 msgid "Hide preview"
 msgstr "Hide preview"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:315
+#: src/components/workspace/OrganisationUsageRollup.tsx:321
 msgid "Hide projects"
 msgstr "Hide projects"
 
@@ -7387,8 +7395,7 @@ msgstr "Hosts can enable replies and customise their prompt in portal settings."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1564
 #: src/routes/admin/AdminSettingsRoute.tsx:1677
-#: src/components/workspace/TierCapacityMatrix.tsx:110
-#: src/components/workspace/OrganisationUsageRollup.tsx:397
+#: src/components/workspace/OrganisationUsageRollup.tsx:403
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
 msgstr "Hours"
@@ -7590,8 +7597,8 @@ msgstr "In your own words"
 #: src/routes/admin/AdminSettingsRoute.tsx:1503
 #: src/routes/admin/AdminSettingsRoute.tsx:1715
 #: src/routes/admin/AdminSettingsRoute.tsx:2026
-#: src/components/workspace/OrganisationUsageRollup.tsx:421
-#: src/components/workspace/OrganisationUsageRollup.tsx:560
+#: src/components/workspace/OrganisationUsageRollup.tsx:427
+#: src/components/workspace/OrganisationUsageRollup.tsx:575
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -7611,7 +7618,7 @@ msgstr "Include portal link"
 msgid "Included hours used up"
 msgstr "Included hours used up"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:337
+#: src/components/workspace/OrganisationUsageRollup.tsx:343
 msgid "Included hours used up this month"
 msgstr "Included hours used up this month"
 
@@ -7676,7 +7683,7 @@ msgstr "insight {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 
-#: src/components/map/MapPage.tsx:807
+#: src/components/map/MapPage.tsx:809
 msgid "Inspect missing arguments"
 msgstr "Inspect missing arguments"
 
@@ -7724,7 +7731,7 @@ msgstr "Invalid email"
 msgid "Invalid invite link"
 msgstr "Invalid invite link"
 
-#: src/components/participant/hooks/index.ts:316
+#: src/components/participant/hooks/index.ts:318
 msgid "Invalid PIN or email. Please try again."
 msgstr "Invalid PIN or email. Please try again."
 
@@ -7737,7 +7744,7 @@ msgid "Invitations waiting for you. Accept to get started."
 msgstr "Invitations waiting for you. Accept to get started."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:130
-#: src/components/organisation/CreateOrganisationModal.tsx:190
+#: src/components/organisation/CreateOrganisationModal.tsx:202
 msgid "Invite"
 msgstr "Invite"
 
@@ -7778,7 +7785,7 @@ msgid "Invite revoked"
 msgstr "Invite revoked"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:260
-#: src/components/organisation/CreateOrganisationModal.tsx:143
+#: src/components/organisation/CreateOrganisationModal.tsx:155
 msgid "Invite sent"
 msgstr "Invite sent"
 
@@ -8268,7 +8275,6 @@ msgstr "Latest release"
 msgid "Latest report"
 msgstr "Latest report"
 
-#: src/components/workspace/TierCapacityMatrix.tsx:220
 #: src/components/workspace/DowngradeBanner.tsx:96
 msgid "Learn more"
 msgstr "Learn more"
@@ -8612,11 +8618,11 @@ msgstr "Loading presentation"
 #~ msgid "Loading projects..."
 #~ msgstr "Loading projects..."
 
-#: src/components/map/MapPage.tsx:566
+#: src/components/map/MapPage.tsx:567
 msgid "Loading the map."
 msgstr "Loading the map."
 
-#: src/components/map/MapPage.tsx:874
+#: src/components/map/MapPage.tsx:876
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Loading the new scope. The current map stays until then."
 
@@ -8874,7 +8880,7 @@ msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
-#: src/components/map/MapPage.tsx:681
+#: src/components/map/MapPage.tsx:682
 #: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Map"
 msgstr "Map"
@@ -8903,7 +8909,7 @@ msgstr "Map display"
 msgid "Map failed"
 msgstr "Map failed"
 
-#: src/components/map/MapPage.tsx:608
+#: src/components/map/MapPage.tsx:609
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 
@@ -9110,6 +9116,10 @@ msgstr "min {minimum}"
 #: src/components/map/renderers/MstGraph.tsx:1230
 msgid "Minimum link length: {0}"
 msgstr "Minimum link length: {0}"
+
+#: src/routes/admin/FreeLimitsPanel.tsx:86
+msgid "Minimum popcorn interval"
+msgstr "Minimum popcorn interval"
 
 #: src/components/feedback/reasons.ts:19
 msgid "Missed the question"
@@ -9324,7 +9334,7 @@ msgstr "Name updated"
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 
-#: src/components/organisation/CreateOrganisationModal.tsx:202
+#: src/components/organisation/CreateOrganisationModal.tsx:214
 msgid "Name your organisation. You can invite people next, or do it later from settings."
 msgstr "Name your organisation. You can invite people next, or do it later from settings."
 
@@ -9374,7 +9384,7 @@ msgstr "Narratives (English)"
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:984
+#: src/components/workspace/OrganisationUsageRollup.tsx:1038
 msgid "Needs attention"
 msgstr "Needs attention"
 
@@ -9573,7 +9583,7 @@ msgstr "No agents connected yet."
 msgid "No arguments saved yet."
 msgstr "No arguments saved yet."
 
-#: src/components/map/MapPage.tsx:627
+#: src/components/map/MapPage.tsx:628
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "No arguments were found in this project's conversations."
@@ -9603,7 +9613,7 @@ msgid "No canvases yet. Ask in chat when you want a live view of the conversatio
 msgstr "No canvases yet. Ask in chat when you want a live view of the conversations. The first canvas will stay here."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:266
+#: src/components/participant/ParticipantOnboardingCards.tsx:270
 msgid "participant.onboarding.no.card"
 msgstr "No card available for the current language and section."
 
@@ -9733,7 +9743,7 @@ msgstr "No linked arguments."
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
-#: src/components/map/MapPage.tsx:604
+#: src/components/map/MapPage.tsx:605
 msgid "No map has been generated for this project yet."
 msgstr "No map has been generated for this project yet."
 
@@ -9864,7 +9874,7 @@ msgstr "No popcorn yet. They appear after the first analysis."
 msgid "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 msgstr "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:821
+#: src/components/workspace/OrganisationUsageRollup.tsx:836
 msgid "No project activity this period."
 msgstr "No project activity this period."
 
@@ -10009,7 +10019,7 @@ msgstr "No transcripts yet. You can run popcorn now; the screen fills as convers
 msgid "No usage yet this cycle."
 msgstr "No usage yet this cycle."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:437
+#: src/components/dropzone/UploadConversationDropzone.tsx:450
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 
@@ -10234,7 +10244,7 @@ msgstr "Nothing is hidden from this presentation."
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr "Nothing is sent until you send it. Edit anything below first."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:715
+#: src/components/workspace/OrganisationUsageRollup.tsx:730
 msgid "Nothing matches the filter."
 msgstr "Nothing matches the filter."
 
@@ -10338,7 +10348,7 @@ msgstr "On recording page"
 msgid "On the free plan one project takes recordings."
 msgstr "On the free plan one project takes recordings."
 
-#: src/components/project/RecordingPausedNotice.tsx:89
+#: src/components/project/RecordingPausedNotice.tsx:88
 msgid "On the free plan, uploads go to {name}."
 msgstr "On the free plan, uploads go to {name}."
 
@@ -10725,7 +10735,7 @@ msgstr "Org only"
 #: src/features/sidebar/views/org/OrgHomeView.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:146
-#: src/components/organisation/CreateOrganisationModal.tsx:189
+#: src/components/organisation/CreateOrganisationModal.tsx:201
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:174
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:348
 #: src/components/agent-access/YourOrganisations.tsx:55
@@ -10763,7 +10773,7 @@ msgstr "Organisation members load faster."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1117
 #: src/routes/onboarding/OnboardingRoute.tsx:688
-#: src/components/organisation/CreateOrganisationModal.tsx:209
+#: src/components/organisation/CreateOrganisationModal.tsx:221
 msgid "Organisation name"
 msgstr "Organisation name"
 
@@ -10776,7 +10786,7 @@ msgstr "Organisation not found"
 msgid "Organisation only"
 msgstr "Organisation only"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:512
+#: src/components/workspace/OrganisationUsageRollup.tsx:518
 msgid "Organisation usage"
 msgstr "Organisation usage"
 
@@ -10937,8 +10947,8 @@ msgid "partially completed"
 msgstr "partially completed"
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:130
-#: src/components/participant/ParticipantInitiateForm.tsx:191
+#: src/components/participant/ParticipantInitiateForm.tsx:136
+#: src/components/participant/ParticipantInitiateForm.tsx:197
 msgid "Participant"
 msgstr "Participant"
 
@@ -11305,8 +11315,8 @@ msgid "Planned"
 msgstr "Planned"
 
 #: src/components/workspace/TierCapacityMatrix.tsx:165
-msgid "Plans"
-msgstr "Plans"
+#~ msgid "Plans"
+#~ msgstr "Plans"
 
 #: src/components/chat/AgenticIntroModal.tsx:46
 msgid "Plans, gathers, and checks its work across many conversations."
@@ -11451,8 +11461,8 @@ msgid "Popcorn analyses per month"
 msgstr "Popcorn analyses per month"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:86
-msgid "Popcorn cadence floor"
-msgstr "Popcorn cadence floor"
+#~ msgid "Popcorn cadence floor"
+#~ msgstr "Popcorn cadence floor"
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:191
 msgid "Popcorn could not be loaded"
@@ -11687,8 +11697,8 @@ msgstr "Previous page"
 #~ msgstr "Previous results"
 
 #: src/components/workspace/TierCapacityMatrix.tsx:94
-msgid "Price"
-msgstr "Price"
+#~ msgid "Price"
+#~ msgstr "Price"
 
 #: src/routes/project/HostGuidePage.tsx:1528
 #~ msgid "Print / Save PDF"
@@ -11731,7 +11741,7 @@ msgid "Private project"
 msgstr "Private project"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1253
-#: src/components/workspace/OrganisationUsageRollup.tsx:352
+#: src/components/workspace/OrganisationUsageRollup.tsx:358
 msgid "Private workspace"
 msgstr "Private workspace"
 
@@ -12204,7 +12214,7 @@ msgstr "Ready by"
 #~ msgstr "Ready by {readyTime}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:326
+#: src/components/participant/ParticipantOnboardingCards.tsx:330
 msgid "participant.ready.to.begin"
 msgstr "Ready to begin?"
 
@@ -12291,7 +12301,7 @@ msgstr "Record another conversation"
 msgid "record in every project"
 msgstr "record in every project"
 
-#: src/components/project/RecordingPausedNotice.tsx:66
+#: src/components/project/RecordingPausedNotice.tsx:65
 msgid "Record in every project"
 msgstr "Record in every project"
 
@@ -12364,7 +12374,7 @@ msgstr "Recording stopped at the five minute limit. Turning what you recorded in
 msgid "Recording waits for audio uploads before finishing, preventing missing transcripts on affected browsers."
 msgstr "Recording waits for audio uploads before finishing, preventing missing transcripts on affected browsers."
 
-#: src/components/project/RecordingPausedNotice.tsx:44
+#: src/components/project/RecordingPausedNotice.tsx:43
 msgid "Recordings are paused for this project on the free plan. New recordings go to {name}."
 msgstr "Recordings are paused for this project on the free plan. New recordings go to {name}."
 
@@ -12563,7 +12573,7 @@ msgstr "Remove email"
 #~ msgid "Remove Email"
 #~ msgstr "Remove Email"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:756
+#: src/components/dropzone/UploadConversationDropzone.tsx:769
 msgid "Remove file"
 msgstr "Remove file"
 
@@ -13160,7 +13170,7 @@ msgstr "Review and edit below. This adds a check that runs against each conversa
 msgid "Review before creating."
 msgstr "Review before creating."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:673
+#: src/components/dropzone/UploadConversationDropzone.tsx:686
 msgid "Review files before uploading"
 msgstr "Review files before uploading"
 
@@ -13624,7 +13634,7 @@ msgstr "Search text:"
 msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:536
+#: src/components/workspace/OrganisationUsageRollup.tsx:551
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Search workspaces"
@@ -13667,8 +13677,7 @@ msgstr "seats"
 #: src/routes/admin/AdminSettingsRoute.tsx:1567
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/components/workspace/UsageCard.tsx:196
-#: src/components/workspace/TierCapacityMatrix.tsx:109
-#: src/components/workspace/OrganisationUsageRollup.tsx:409
+#: src/components/workspace/OrganisationUsageRollup.tsx:415
 #: src/components/billing/BillingManager.tsx:342
 #: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
@@ -13807,7 +13816,7 @@ msgstr "Select at least one event"
 msgid "Select at least one other topic before deleting this one"
 msgstr "Select at least one other topic before deleting this one"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:615
+#: src/components/dropzone/UploadConversationDropzone.tsx:628
 msgid "Select audio files"
 msgstr "Select audio files"
 
@@ -13898,7 +13907,7 @@ msgid "Selected"
 msgstr "Selected"
 
 #. placeholder {0}: selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:668
+#: src/components/dropzone/UploadConversationDropzone.tsx:681
 msgid "Selected files ({0}/{MAX_FILES})"
 msgstr "Selected files ({0}/{MAX_FILES})"
 
@@ -13962,7 +13971,7 @@ msgid "Send invite"
 msgstr "Send invite"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:368
-#: src/components/organisation/CreateOrganisationModal.tsx:257
+#: src/components/organisation/CreateOrganisationModal.tsx:269
 msgid "Send invites"
 msgstr "Send invites"
 
@@ -14012,7 +14021,7 @@ msgstr "Separate (client)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Separate with commas, spaces, or new lines."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:280
+#: src/components/participant/ParticipantInitiateForm.tsx:290
 msgid "Session name"
 msgstr "Session name"
 
@@ -14250,7 +14259,7 @@ msgstr "Show"
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Show \"made with dembrane\" on the screen"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:1011
+#: src/components/workspace/OrganisationUsageRollup.tsx:1065
 msgid "Show {hidden} more"
 msgstr "Show {hidden} more"
 
@@ -14289,7 +14298,7 @@ msgstr "Show all {0}"
 msgid "Show all {total}"
 msgstr "Show all {total}"
 
-#: src/components/map/MapPage.tsx:866
+#: src/components/map/MapPage.tsx:868
 msgid "Show all conversations"
 msgstr "Show all conversations"
 
@@ -14297,7 +14306,7 @@ msgstr "Show all conversations"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/map/MapPage.tsx:827
+#: src/components/map/MapPage.tsx:829
 msgid "Show current arguments"
 msgstr "Show current arguments"
 
@@ -14309,7 +14318,7 @@ msgstr "Show data"
 msgid "Show detail"
 msgstr "Show detail"
 
-#: src/components/map/MapPage.tsx:848
+#: src/components/map/MapPage.tsx:850
 msgid "Show every tag"
 msgstr "Show every tag"
 
@@ -14367,7 +14376,7 @@ msgstr "Show popcorn in up to three extra languages at once."
 msgid "Show preview"
 msgstr "Show preview"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:315
+#: src/components/workspace/OrganisationUsageRollup.tsx:321
 msgid "Show projects"
 msgstr "Show projects"
 
@@ -14450,11 +14459,11 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "Showing {rangeStart}-{rangeEnd} of {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:834
+#: src/components/map/MapPage.tsx:836
 msgid "Showing conversations tagged {0}."
 msgstr "Showing conversations tagged {0}."
 
-#: src/components/map/MapPage.tsx:820
+#: src/components/map/MapPage.tsx:822
 msgid "Showing the arguments of one result."
 msgstr "Showing the arguments of one result."
 
@@ -14507,7 +14516,7 @@ msgstr "Six weekends across seven months"
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
 #: src/components/pricing/PricingConfigurator.tsx:879
-#: src/components/organisation/CreateOrganisationModal.tsx:265
+#: src/components/organisation/CreateOrganisationModal.tsx:277
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
 msgstr "Skip"
@@ -14530,7 +14539,7 @@ msgstr "Slack community"
 msgid "Smoother recording and quicker questions"
 msgstr "Smoother recording and quicker questions"
 
-#: src/components/map/MapPage.tsx:814
+#: src/components/map/MapPage.tsx:816
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Some arguments are based on an earlier analysis."
 
@@ -14538,7 +14547,7 @@ msgstr "Some arguments are based on an earlier analysis."
 msgid "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
 msgstr "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:477
+#: src/components/dropzone/UploadConversationDropzone.tsx:490
 msgid "Some files were already selected and won't be added twice."
 msgstr "Some files were already selected and won't be added twice."
 
@@ -14875,7 +14884,7 @@ msgstr "Statement"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1672
 #: src/routes/admin/AdminSettingsRoute.tsx:2614
-#: src/components/workspace/OrganisationUsageRollup.tsx:424
+#: src/components/workspace/OrganisationUsageRollup.tsx:430
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
@@ -15026,7 +15035,7 @@ msgstr "Submitted via text input"
 msgid "Subscribe to report notifications."
 msgstr "Subscribe to report notifications."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:922
+#: src/components/dropzone/UploadConversationDropzone.tsx:935
 msgid "Success"
 msgstr "Success"
 
@@ -15131,7 +15140,7 @@ msgstr "Support access turned off after the session ended"
 msgid "Support access turned on"
 msgstr "Support access turned on"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:656
+#: src/components/dropzone/UploadConversationDropzone.tsx:669
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
@@ -15222,7 +15231,7 @@ msgid "Tag deleted"
 msgstr "Tag deleted"
 
 #: src/components/project/ProjectTagsInput.tsx:255
-#: src/components/participant/ParticipantInitiateForm.tsx:291
+#: src/components/participant/ParticipantInitiateForm.tsx:301
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:721
 #: src/components/conversation/ConversationsMiniList.tsx:189
@@ -15645,7 +15654,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:780
+#: src/components/map/MapPage.tsx:782
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "The last generation failed, so this is still the previous map. {0}"
 
@@ -15674,11 +15683,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "The live popcorn deck and the canvases built for this project live here."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:785
+#: src/components/map/MapPage.tsx:787
 msgid "The map could not be generated. {0}"
 msgstr "The map could not be generated. {0}"
 
-#: src/components/map/MapPage.tsx:578
+#: src/components/map/MapPage.tsx:579
 msgid "The map could not be loaded"
 msgstr "The map could not be loaded"
 
@@ -15694,7 +15703,7 @@ msgstr "The map could not be loaded."
 msgid "The map could not be started."
 msgstr "The map could not be started."
 
-#: src/components/map/MapPage.tsx:591
+#: src/components/map/MapPage.tsx:592
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "The map is being generated. It appears here when it is ready."
 
@@ -16243,6 +16252,14 @@ msgstr "This organisation"
 msgid "This organisation has no members to train yet."
 msgstr "This organisation has no members to train yet."
 
+#: src/components/workspace/OrganisationUsageRollup.tsx:964
+msgid "This organisation has used this month's free recording hours. Recording is paused until the month resets."
+msgstr "This organisation has used this month's free recording hours. Recording is paused until the month resets."
+
+#: src/components/workspace/OrganisationUsageRollup.tsx:977
+msgid "This organisation is near this month's free recording hours ({used})"
+msgstr "This organisation is near this month's free recording hours ({used})"
+
 #: src/routes/invite/AcceptInviteRoute.tsx:250
 #: src/routes/invite/AcceptInviteRoute.tsx:435
 msgid "This organisation no longer exists"
@@ -16292,8 +16309,8 @@ msgstr "This presentation is not available."
 msgid "This project could not be reached."
 msgstr "This project could not be reached."
 
-#: src/components/map/MapPage.tsx:597
-#: src/components/map/MapPage.tsx:622
+#: src/components/map/MapPage.tsx:598
+#: src/components/map/MapPage.tsx:623
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 
@@ -16511,7 +16528,7 @@ msgstr "Tick as many as relevant"
 #: src/routes/admin/AdminSettingsRoute.tsx:1561
 #: src/routes/admin/AdminSettingsRoute.tsx:2588
 #: src/routes/admin/AdminSettingsRoute.tsx:3010
-#: src/components/workspace/OrganisationUsageRollup.tsx:382
+#: src/components/workspace/OrganisationUsageRollup.tsx:388
 msgid "Tier"
 msgstr "Tier"
 
@@ -16684,7 +16701,7 @@ msgstr "Topic-based title describing what was discussed"
 msgid "total"
 msgstr "total"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:687
+#: src/components/workspace/OrganisationUsageRollup.tsx:702
 msgid "Total"
 msgstr "Total"
 
@@ -16908,7 +16925,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/components/map/MapPage.tsx:150
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:938
+#: src/components/dropzone/UploadConversationDropzone.tsx:951
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
 msgid "Try again"
@@ -17181,7 +17198,7 @@ msgstr "until {0}"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1667
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
-#: src/components/workspace/OrganisationUsageRollup.tsx:833
+#: src/components/workspace/OrganisationUsageRollup.tsx:848
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
 msgid "Untitled"
 msgstr "Untitled"
@@ -17350,11 +17367,11 @@ msgstr "Upgrade your workspace to view this conversation"
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr "Upgrade your workspace to view transcripts for new conversations."
 
-#: src/components/project/RecordingPausedNotice.tsx:98
+#: src/components/project/RecordingPausedNotice.tsx:97
 #: src/components/project/ProjectUploadSection.tsx:40
 #: src/components/project/ProjectUploadSection.tsx:53
-#: src/components/dropzone/UploadConversationDropzone.tsx:587
-#: src/components/dropzone/UploadConversationDropzone.tsx:601
+#: src/components/dropzone/UploadConversationDropzone.tsx:600
+#: src/components/dropzone/UploadConversationDropzone.tsx:614
 #: src/components/conversation/ProjectConversationsPanel.tsx:662
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
@@ -17373,7 +17390,7 @@ msgstr "Upload audio"
 msgid "Upload avatar"
 msgstr "Upload avatar"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:613
+#: src/components/dropzone/UploadConversationDropzone.tsx:626
 msgid "Upload complete"
 msgstr "Upload complete"
 
@@ -17381,15 +17398,15 @@ msgstr "Upload complete"
 #~ msgid "Upload Complete"
 #~ msgstr "Upload Complete"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:595
+#: src/components/dropzone/UploadConversationDropzone.tsx:608
 msgid "Upload conversations"
 msgstr "Upload conversations"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:351
+#: src/components/dropzone/UploadConversationDropzone.tsx:353
 msgid "Upload failed. Please try again."
 msgstr "Upload failed. Please try again."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:812
+#: src/components/dropzone/UploadConversationDropzone.tsx:825
 msgid "Upload files"
 msgstr "Upload files"
 
@@ -17416,7 +17433,7 @@ msgstr "Upload logo"
 msgid "upload recordings"
 msgstr "upload recordings"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:614
+#: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Uploading audio files"
 msgstr "Uploading audio files"
 
@@ -17524,7 +17541,7 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "Use the default budget"
 msgstr "Use the default budget"
 
-#: src/components/project/RecordingPausedNotice.tsx:57
+#: src/components/project/RecordingPausedNotice.tsx:56
 msgid "Use this project for recordings"
 msgstr "Use this project for recordings"
 
@@ -17756,7 +17773,7 @@ msgstr "Views"
 msgid "Views: {0}"
 msgstr "Views: {0}"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:574
+#: src/components/workspace/OrganisationUsageRollup.tsx:589
 msgid "Visible columns"
 msgstr "Visible columns"
 
@@ -17884,7 +17901,7 @@ msgstr "We couldn't find the page you were looking for. It may have moved."
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "We couldn't load this organisation. Try again in a moment."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:490
+#: src/components/workspace/OrganisationUsageRollup.tsx:496
 msgid "We couldn't load this organisation's usage."
 msgstr "We couldn't load this organisation's usage."
 
@@ -18396,7 +18413,7 @@ msgstr "Working on your answer..."
 #: src/routes/admin/AdminSettingsRoute.tsx:1667
 #: src/routes/admin/AdminSettingsRoute.tsx:2215
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/components/workspace/OrganisationUsageRollup.tsx:376
+#: src/components/workspace/OrganisationUsageRollup.tsx:382
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
 msgid "Workspace"
@@ -18574,7 +18591,7 @@ msgid "You are the data owner"
 msgstr "You are the data owner"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:687
-#: src/components/organisation/CreateOrganisationModal.tsx:210
+#: src/components/organisation/CreateOrganisationModal.tsx:222
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
 
@@ -18599,7 +18616,7 @@ msgid "You can navigate away and come back later. Your report will continue gene
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
 
 #. placeholder {0}: MAX_FILES - selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:446
+#: src/components/dropzone/UploadConversationDropzone.tsx:459
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 
@@ -19073,7 +19090,7 @@ msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Your organisation is waiting for you. Click continue to join."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:690
-#: src/components/organisation/CreateOrganisationModal.tsx:211
+#: src/components/organisation/CreateOrganisationModal.tsx:223
 msgid "Your organisation or company"
 msgstr "Your organisation or company"
 

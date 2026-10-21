@@ -1,18 +1,12 @@
 import {
-  allowanceForProject,
+  allowanceForCountedProject,
   freeLimitError,
   freeLimits,
   giveBack,
   take,
 } from "@dembrane/allowance";
-import { clientOf } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
-
-async function isSample(db: Db, projectId: string): Promise<boolean> {
-  const [row] = await clientOf(db)`select is_sample from project where id = ${projectId}::uuid`;
-  return row?.is_sample === true;
-}
 
 // Counts one free map per period; given back when start throws or starts nothing new.
 export async function startFreeMap<T>(
@@ -23,8 +17,8 @@ export async function startFreeMap<T>(
   opts: { logger?: Logger | undefined; pending?: () => Promise<T | null> } = {},
 ): Promise<T> {
   const { logger, pending } = opts;
-  const a = await allowanceForProject(db, projectId, now);
-  if (!a || (await isSample(db, projectId))) return (await start()).row;
+  const a = await allowanceForCountedProject(db, projectId, now);
+  if (!a) return (await start()).row;
   // Free only: work already in flight answers without counting.
   const inFlight = pending ? await pending() : null;
   if (inFlight !== null) return inFlight;

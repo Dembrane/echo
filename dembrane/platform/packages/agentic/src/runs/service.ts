@@ -1,5 +1,5 @@
 import type { Access } from "@dembrane/access";
-import { allowanceForProject, freeLimitError } from "@dembrane/allowance";
+import { allowanceForCountedProject, freeLimitError } from "@dembrane/allowance";
 import type { Admitted, ChatsStorage, FreeChats, UserTurn } from "@dembrane/chats";
 import {
   BadRequestError,
@@ -17,7 +17,7 @@ import type { Logger } from "@dembrane/observability";
 import type { Queue } from "@dembrane/queue";
 import { agentProject } from "../access";
 import { startTurn } from "../jobs";
-import { currentGoal, isSampleProject, liveProject, workspaceContext } from "./context";
+import { currentGoal, liveProject, workspaceContext } from "./context";
 import { type Focused, followupPrompt, initialPrompt, nonEmpty } from "./focus";
 import { publishEvent } from "./live";
 import {
@@ -125,11 +125,7 @@ async function admitHostTurn(
   if (!projectId) return null;
   const now = d.now();
   if (!chatId) {
-    if (
-      (await allowanceForProject(d.db, projectId, now)) &&
-      !(await isSampleProject(d.store.sql, projectId))
-    )
-      throw freeLimitError("chats");
+    if (await allowanceForCountedProject(d.db, projectId, now)) throw freeLimitError("chats");
     return null;
   }
   const turn = { projectId, chatId, messageId: newId(), text, now };

@@ -222,6 +222,32 @@ describe("a failed report", () => {
     }
   });
 
+  test("a failRun that throws sends no failure and no refund; the sweep ends it later", async () => {
+    const ids: number[] = [];
+    const { d, logged } = fake(async (id) => ids.push(id));
+    const published: unknown[] = [];
+    const emitted: unknown[] = [];
+    const store = d.store as unknown as Record<string, unknown>;
+    store.failRun = async () => {
+      throw new Error("db down");
+    };
+    store.sql = async (...args: unknown[]) => published.push(args);
+    store.report = async () => ({ user_created: "du" });
+    store.appUserByDirectusId = async () => ({ id: "u" });
+    store.project = async () => ({ workspace_id: "w" });
+    store.processingStatus = async () => {};
+    const deps = {
+      ...d,
+      notifier: { emit: async (e: unknown) => emitted.push(e) },
+    } as GenerateDeps;
+    expect(await markError(deps, payload, "GENERATION_FAILED", "x")).toBe(false);
+    await reportFailed(deps, payload, "boom", Date.now());
+    expect(ids).toEqual([]);
+    expect(published).toEqual([]);
+    expect(emitted).toEqual([]);
+    expect(logged).toHaveLength(2);
+  });
+
   test("a refund that throws is logged, not rethrown", async () => {
     const { d, logged } = fake(async () => {
       throw new Error("db down");

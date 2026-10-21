@@ -11,6 +11,7 @@ import { FakeTranscriber } from "@dembrane/transcription";
 import { Hono } from "hono";
 import postgres from "postgres";
 import type { ConversationsDeps } from "../src/deps";
+import { FREE_LIMIT_SKIPPED } from "../src/free-audio";
 import { ParticipantTokens } from "../src/participant-token";
 import { portalRoutes } from "../src/portal/routes";
 import { conversationAudioRoutes } from "../src/v1/audio-routes";
@@ -262,5 +263,28 @@ run("portal uploads and audio routes", () => {
     const links =
       await sql`select link_type from conversation_link where target_conversation_id = ${body.new_conversation_id}`;
     expect(links.map((l) => l.link_type)).toEqual(["CLONE"]);
+  });
+
+  test("a chunk the free limit refused serves no audio", async () => {
+    const cid = newId();
+    await seed(sql, cid);
+    await sql`insert into directus_users (id, email, status) values (${owner.directusUserId}, 'owner@example.test', 'active')
+      on conflict do nothing`;
+    await sql`update project set directus_user_id = ${owner.directusUserId} where id = ${PROJECT}`;
+    const [ok, refused] = [newId(), newId()];
+    for (const [id, error] of [
+      [ok, null],
+      [refused, FREE_LIMIT_SKIPPED],
+    ] as const) {
+      const url = bucket.urls.fileUrl(`conversation/${cid}/chunks/${id}-a.mp3`);
+      await sql`insert into conversation_chunk (id, conversation_id, timestamp, path, source, error)
+        values (${id}, ${cid}, now(), ${url}, 'PORTAL_AUDIO', ${error})`;
+    }
+    const url = (id: string) =>
+      `/api/conversations/${cid}/chunks/${id}/content?return_url=true&signed=false`;
+    expect((await app.request(url(ok))).status).toBe(200);
+    const res = await app.request(url(refused));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ detail: "No content found" });
   });
 });

@@ -32,3 +32,9 @@ test("periodStart ignores downgraded_at on a non-free tier and when null", () =>
   );
   expect(periodStart(now, "free", null).toISOString()).toBe("2026-10-01T00:00:00.000Z");
 });
+test("periodStart: a future downgraded_at counts from the 1st", () => {
+  const now = new Date("2026-10-25T10:00:00Z");
+  expect(periodStart(now, "free", "2026-10-26T12:00:00Z").toISOString()).toBe(
+    "2026-10-01T00:00:00.000Z",
+  );
+});

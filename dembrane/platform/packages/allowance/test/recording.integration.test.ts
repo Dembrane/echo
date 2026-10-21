@@ -2,9 +2,10 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { randomUUID } from "node:crypto";
 import { NotFoundError } from "@dembrane/core";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
+import { sql as dsql } from "drizzle-orm";
 import type postgres from "postgres";
 import { type AllowanceAccount, allowanceForWorkspace } from "../src/account";
-import { claimOnce, usedThisPeriod } from "../src/ledger";
+import { claimOnce, usedThisPeriod, withAllowanceLock } from "../src/ledger";
 import { recordingProject, setRecordingProject } from "../src/recording";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -172,6 +173,29 @@ run("recording project", () => {
     const ids = await Promise.all(Array.from({ length: 10 }, () => recordingProject(db, s.a)));
     expect(new Set(ids).size).toBe(1);
     expect(await stored(s.pool)).toBe(ids[0] as string);
+  });
+
+  test("the auto-choice waits for the lock and keeps a choice stored meanwhile", async () => {
+    const s = await seed();
+    const picked = await project(s.internal, { createdAt: "2026-10-01T00:00:00Z" });
+    await project(s.internal, { createdAt: "2026-10-10T00:00:00Z" });
+    let auto: Promise<string | null> | undefined;
+    await withAllowanceLock(db, s.a, async (tx) => {
+      await tx.execute(
+        dsql`update billing_account set recording_project_id = ${picked} where id = ${s.pool}`,
+      );
+      auto = recordingProject(db, s.a);
+      // Wait until the auto-choice is blocked on a lock we hold.
+      for (let i = 0; i < 200; i++) {
+        const [w] = await sql`select count(*)::int as n from pg_locks l
+          join pg_stat_activity x on x.pid = l.pid
+          where not l.granted and x.datname = current_database()`;
+        if (w?.n) break;
+        await Bun.sleep(10);
+      }
+    });
+    expect(await auto).toBe(picked);
+    expect(await stored(s.pool)).toBe(picked);
   });
 
   test("setRecordingProject refuses a sample or a foreign project", async () => {

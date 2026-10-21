@@ -102,7 +102,7 @@ function analytics(d: GenerateDeps, event: string, props: Record<string, unknown
   d.logger.info({ signal: "analytics", event, ...props }, "analytics event");
 }
 
-/** Ends the run's report in error; false when another run had already saved it. */
+/** Ends the run's report in error; false when another run had already saved it, or the write failed. */
 export async function markError(
   d: GenerateDeps,
   p: Payload,
@@ -113,7 +113,9 @@ export async function markError(
     // Never over a report another run saved.
     if (!(await d.store.failRun(p.reportId, code, message, d.now().toISOString()))) return false;
   } catch (err) {
+    // Still a draft: no notice now; the stuck-draft sweep errors and refunds it.
     d.logger.error({ err, reportId: p.reportId }, "failed to update report status to error");
+    return false;
   }
   try {
     await d.refundFreeReport(p.reportId);

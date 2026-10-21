@@ -37,6 +37,8 @@ import { useLocation, useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useProjectRecording } from "@/hooks/useProjectRecording";
+import { UploadFailedError } from "@/lib/api";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { readMediaSeconds } from "@/lib/mediaDuration";
 import { testId } from "@/lib/testUtils";
 import { precheckRefusalMessage, precheckUploads } from "@/lib/uploadPrecheck";
@@ -402,6 +404,17 @@ export const UploadConversationDropzone = (
 	]);
 
 	const hasRefusals = Object.keys(refusals).length > 0;
+	const allRefused =
+		selectedFiles.length > 0 &&
+		selectedFiles.every((file) => refusals[file.name]);
+	// A retry can only fail again when every failure is a free limit.
+	const failures =
+		uploader.error instanceof UploadFailedError
+			? uploader.error.failed.map((f) => f.error)
+			: uploader.error
+				? [uploader.error]
+				: [];
+	const canRetry = failures.some((e) => isFreeTierLimitError(e) == null);
 
 	// Automatically close the modal after 1.5 seconds on successful upload if we are on the upload page
 	useEffect(() => {
@@ -806,7 +819,7 @@ export const UploadConversationDropzone = (
 										onClick={handleUpload}
 										loading={checking}
 										rightSection={<ArrowRightIcon size={20} />}
-										disabled={fileEditor.editingIndex !== null}
+										disabled={fileEditor.editingIndex !== null || allRefused}
 										{...testId("conversation-upload-files-button")}
 									>
 										{t`Upload files`}
@@ -928,7 +941,7 @@ export const UploadConversationDropzone = (
 
 							{/* Action buttons */}
 							<Group justify="flex-start" mt="md">
-								{!uploader.isSuccess && uploader.isError && (
+								{!uploader.isSuccess && uploader.isError && canRetry && (
 									<Button
 										variant="filled"
 										onClick={handleUpload}

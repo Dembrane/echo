@@ -295,6 +295,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			: (graphQuery.data ?? null);
 	const graph = useStableGraph(response);
 	const attempt = fixtureData ? null : (mapQuery.data?.attempt ?? null);
+	const hasMap = Boolean(graph) || Boolean(mapQuery.data?.current);
 
 	const bounds = graph?.budgetBounds ?? LEGACY_BUDGET_BOUNDS;
 	const budgetResolution = useMemo(
@@ -746,7 +747,8 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				</Group>
 			</Group>
 
-			{!offline && allowanceApplies && linkWorkspaceId && (
+			{/* "Your current map stays here" needs a map to exist. */}
+			{!offline && allowanceApplies && hasMap && linkWorkspaceId && (
 				<div className="px-4 pb-2 empty:hidden md:px-6">
 					<FreeAllowanceBanner workspaceId={linkWorkspaceId} feature="maps" />
 				</div>

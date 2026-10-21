@@ -1,5 +1,6 @@
 import {
   type AllowanceAccount,
+  allowanceForCountedProject,
   allowanceForProject,
   freeLimitError,
   freeLimits,
@@ -54,6 +55,7 @@ export interface FreeChats {
 
 // Free chats: a monthly slot claimed at a chat's first user turn, then a per-chat turn cap.
 export function freeChats(db: Db): FreeChats {
+  // admitTurn still needs the account for samples (their own turn cap on free).
   async function isSample(projectId: string): Promise<boolean> {
     const [row] = await db
       .select({ is_sample: project.is_sample })
@@ -139,8 +141,8 @@ export function freeChats(db: Db): FreeChats {
 
   return {
     async canStartChat(projectId, now) {
-      const a = await allowanceForProject(db, projectId, now);
-      if (!a || (await isSample(projectId))) return;
+      const a = await allowanceForCountedProject(db, projectId, now);
+      if (!a) return;
       const limits = await freeLimits(db);
       const used = (await usedThisPeriod(db, a)).chats;
       if (used >= limits.chats_month)
@@ -220,8 +222,8 @@ export function freeChats(db: Db): FreeChats {
     },
 
     async turnStatus(chatId, projectId, now) {
-      const a = await allowanceForProject(db, projectId, now);
-      if (!a || (await isSample(projectId))) return null;
+      const a = await allowanceForCountedProject(db, projectId, now);
+      if (!a) return null;
       const [chat] = await db
         .select(stampOf(a))
         .from(project_chat)

@@ -21,7 +21,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import { freeLimitDetails, isFreeTierLimitError } from "@/lib/freeTier";
 import { InviteEmailList } from "./InviteEmailList";
 
 type CreatedOrg = { org_id: string; workspace_id: string };
@@ -77,6 +77,11 @@ export const CreateOrganisationModal = ({
 	const [emails, setEmails] = useState<string[]>([""]);
 	const [created, setCreated] = useState<CreatedOrg | null>(null);
 	const [upgradeOpened, setUpgradeOpened] = useState(false);
+	// The free org the 402 names; the wall upgrades it, not the active workspace.
+	const [blocking, setBlocking] = useState<{
+		orgId?: string;
+		workspaceId?: string;
+	}>({});
 	const { workspace } = useWorkspace();
 
 	const reset = () => {
@@ -101,6 +106,13 @@ export const CreateOrganisationModal = ({
 		mutationFn: (name: string) => createOrganisation(name),
 		onError: (err: Error) => {
 			if (isFreeTierLimitError(err) === "organisations") {
+				const d = freeLimitDetails(err);
+				const str = (v: unknown) =>
+					typeof v === "string" && v ? v : undefined;
+				setBlocking({
+					orgId: str(d?.org_id),
+					workspaceId: str(d?.workspace_id),
+				});
 				reset();
 				onClose();
 				setUpgradeOpened(true);
@@ -276,7 +288,8 @@ export const CreateOrganisationModal = ({
 				currentTier="free"
 				requiredTier="changemaker"
 				canRequestUpgrade
-				workspaceId={workspace?.id ?? ""}
+				orgId={blocking.orgId}
+				workspaceId={blocking.workspaceId ?? workspace?.id ?? ""}
 				wallKey="org_cap"
 			/>
 		</>

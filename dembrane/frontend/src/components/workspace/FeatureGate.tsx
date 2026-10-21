@@ -194,6 +194,8 @@ interface UpgradeModalProps {
 	/** Transcription is billed to a project. Passed where the mount has one,
 	 * so the voice answer works on the walls that sit inside a project. */
 	projectId?: string;
+	/** The org the upgrade is for, when it is not the active workspace's. */
+	orgId?: string;
 }
 
 /**
@@ -210,6 +212,7 @@ export function UpgradeModal({
 	entry = "modal_direct",
 	onClose,
 	opened,
+	orgId,
 	projectId,
 	requiredTier,
 	wallKey,
@@ -265,7 +268,7 @@ export function UpgradeModal({
 			onClose={onClose}
 			onEvent={emit}
 			opened={opened}
-			orgId={workspace?.org_id}
+			orgId={orgId ?? workspace?.org_id}
 			projectId={projectId}
 			variant={variantFor(wallKey)}
 			wallKey={wallKey}

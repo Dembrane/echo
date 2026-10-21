@@ -33,13 +33,17 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
 		currentTier,
 		opened,
+		orgId,
 		wallKey,
 		requiredTier,
+		workspaceId,
 	}: {
 		currentTier: string;
 		opened: boolean;
+		orgId?: string;
 		wallKey: string;
 		requiredTier: string;
+		workspaceId: string;
 	}) =>
 		opened ? (
 			<div
@@ -47,6 +51,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-wall={wallKey}
 				data-tier={requiredTier}
 				data-current={currentTier}
+				data-org={orgId ?? ""}
+				data-workspace={workspaceId}
 			/>
 		) : null,
 }));
@@ -122,10 +128,11 @@ const submit = async () => {
 	fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 };
 
-const orgLimit = () =>
+const orgLimit = (blocking: Record<string, string> = {}) =>
 	answer(402, {
 		code: "billing.tier_limit",
 		detail: {
+			...blocking,
 			error: "FREE_TIER_LIMIT",
 			limit: "organisations",
 			upgrade_cta_tier: "changemaker",
@@ -159,4 +166,26 @@ it("still toasts any other failure", async () => {
 	await submit();
 	await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+});
+
+it("targets the blocking free org, not the active paid workspace", async () => {
+	activeWorkspace.current = { id: "ws-paid", role: "owner", tier: "guardian" };
+	fetchMock.mockResolvedValue(
+		orgLimit({ org_id: "org-free", workspace_id: "ws-free" }),
+	);
+	renderModal();
+	await submit();
+	const modal = await screen.findByTestId("upgrade-modal");
+	expect(modal.dataset.org).toBe("org-free");
+	expect(modal.dataset.workspace).toBe("ws-free");
+});
+
+it("falls back to the active workspace when the refusal names none", async () => {
+	activeWorkspace.current = { id: "ws-active", role: "owner", tier: "free" };
+	fetchMock.mockResolvedValue(orgLimit());
+	renderModal();
+	await submit();
+	const modal = await screen.findByTestId("upgrade-modal");
+	expect(modal.dataset.org).toBe("");
+	expect(modal.dataset.workspace).toBe("ws-active");
 });

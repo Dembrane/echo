@@ -1,5 +1,5 @@
 import {
-  type AllowanceAccount,
+  allowanceForCountedProject,
   allowanceForProject,
   freeLimitError,
   freeLimits,
@@ -13,7 +13,7 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { Json } from "./py";
 import { MIN_CADENCE_MINUTES } from "./settings";
 
-const { agent_loop, agent_loop_run, project } = schema;
+const { agent_loop, agent_loop_run } = schema;
 
 /** periodStart is null when nothing was counted. */
 export type PopcornAdmit =
@@ -36,16 +36,7 @@ export interface PopcornAllowance {
 
 // Free popcorn: each analysis that runs takes one of the month's analyses.
 export function popcornAllowance(db: Db): PopcornAllowance {
-  // The counted account; null when the project is unlimited or a sample.
-  async function counted(projectId: string, now: Date): Promise<AllowanceAccount | null> {
-    const a = await allowanceForProject(db, projectId, now);
-    if (!a) return null;
-    const [p] = await db
-      .select({ is_sample: project.is_sample })
-      .from(project)
-      .where(eq(project.id, projectId));
-    return p?.is_sample === true ? null : a;
-  }
+  const counted = (projectId: string, now: Date) => allowanceForCountedProject(db, projectId, now);
 
   async function status(projectId: string, now: Date): Promise<FreePopcorn | null> {
     const a = await counted(projectId, now);

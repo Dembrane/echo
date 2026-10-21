@@ -57,6 +57,8 @@ export const useDeleteProjectReportMutation = () => {
 			reportId: number;
 		}) => deleteProjectReport(projectId, reportId),
 		onSuccess: (_, vars) => {
+			// Deleting a scheduled free report gives it back.
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});

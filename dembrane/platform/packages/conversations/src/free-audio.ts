@@ -95,19 +95,14 @@ export async function hasAudioChunk(db: Db, conversationId: string): Promise<boo
 const MEASURE_URL_EXPIRES_S = 600;
 const FILE_TOLERANCE_S = 1;
 
-async function measureUpload(
-  d: ConversationsDeps,
-  key: string,
-  bytes: number,
-  confirmAbove: number,
-) {
+async function measureUpload(d: ConversationsDeps, key: string, bytes: number) {
   try {
     const source = {
       url: d.audio.presignDownload(key, { expiresInSeconds: MEASURE_URL_EXPIRES_S }),
       format: fileFormatOf(key),
       name: key,
     };
-    return await measureSeconds(d.media, source, bytes, { confirmAbove });
+    return await measureSeconds(d.media, source, bytes);
   } catch (err) {
     if (err instanceof AudioError && err.terminal)
       return { unreadable: true, reason: err.message } satisfies Measured;
@@ -145,7 +140,7 @@ export async function reserveUpload(
     return {
       a,
       limits,
-      measured: await measureUpload(d, key, bytes, limits.audio_seconds_conversation),
+      measured: await measureUpload(d, key, bytes),
     };
   });
   if (!pre) return null;

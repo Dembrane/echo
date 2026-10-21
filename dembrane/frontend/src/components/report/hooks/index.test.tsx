@@ -6,11 +6,13 @@ import { expect, it, vi } from "vitest";
 import { freeAllowanceQueryKey } from "@/hooks/useFreeAllowance";
 import {
 	useCancelScheduledReportMutation,
+	useDeleteProjectReportMutation,
 	useUpdateProjectReportMutation,
 } from "./index";
 
 vi.mock("@/lib/api", () => ({
 	cancelScheduledReport: vi.fn(async () => ({ cancelled: true })),
+	deleteProjectReport: vi.fn(async () => ({ deleted: true })),
 	updateProjectReport: vi.fn(async () => ({})),
 }));
 vi.mock("@/lib/bff", () => ({ bff: { get: vi.fn() } }));
@@ -50,5 +52,14 @@ it("a report update (cancel or reschedule) refetches the free allowance", async 
 			reportId: 1,
 		}),
 	);
+	expect(allowanceStale()).toBe(true);
+});
+
+it("deleting a report refetches the free allowance", async () => {
+	const { allowanceStale, wrapper } = setup();
+	const { result } = renderHook(() => useDeleteProjectReportMutation(), {
+		wrapper,
+	});
+	await act(() => result.current.mutateAsync({ projectId: "p", reportId: 1 }));
 	expect(allowanceStale()).toBe(true);
 });

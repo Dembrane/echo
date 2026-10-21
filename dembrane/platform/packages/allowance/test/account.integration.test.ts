@@ -2,7 +2,11 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { randomUUID } from "node:crypto";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
 import type postgres from "postgres";
-import { allowanceForProject, allowanceForWorkspace } from "../src/account";
+import {
+  allowanceForCountedProject,
+  allowanceForProject,
+  allowanceForWorkspace,
+} from "../src/account";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -167,5 +171,24 @@ run("allowance account", () => {
   test("a malformed id is unlimited", async () => {
     expect(await allowanceForWorkspace(db, "not-a-uuid", NOW)).toBeNull();
     expect(await allowanceForProject(db, "not-a-uuid", NOW)).toBeNull();
+  });
+
+  test("counted project: samples and unlimited are null, free non-samples count", async () => {
+    const free = await seed("free", "free");
+    const counted = await project(free.internal);
+    const want = {
+      accountId: free.pooled,
+      free: true as const,
+      periodStart: OCT,
+      orgId: free.orgId,
+    };
+    expect(await allowanceForCountedProject(db, counted, NOW)).toEqual(want);
+    const sample = await project(free.internal);
+    await sql`update project set is_sample = true where id = ${sample}`;
+    expect(await allowanceForProject(db, sample, NOW)).toEqual(want);
+    expect(await allowanceForCountedProject(db, sample, NOW)).toBeNull();
+    const paid = await seed("paid", "paid");
+    expect(await allowanceForCountedProject(db, await project(paid.internal), NOW)).toBeNull();
+    expect(await allowanceForCountedProject(db, "not-a-uuid", NOW)).toBeNull();
   });
 });

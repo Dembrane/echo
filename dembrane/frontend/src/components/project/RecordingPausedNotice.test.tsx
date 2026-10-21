@@ -281,3 +281,39 @@ it("says another project on the upload button when the name is empty", async () 
 		await screen.findByText("On the free plan, uploads go to another project."),
 	).toBeTruthy();
 });
+
+it("says another project when the caller cannot open the recording project", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			status({
+				can_switch: false,
+				recording_project: { id: null, name: null, workspace_id: null },
+			}),
+		),
+	);
+	renderNotice();
+	expect(
+		await screen.findByText(
+			"Recordings are paused for this project on the free plan. New recordings go to another project.",
+		),
+	).toBeTruthy();
+	expect(screen.getByTestId("host").querySelector("a")).toBeNull();
+	expect(
+		screen.queryByRole("button", { name: "Use this project for recordings" }),
+	).toBeNull();
+});
+
+it("says another project on the upload button when the name is hidden", async () => {
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider>
+				<RecordingPausedUploadButton name={null} />
+			</MantineProvider>
+		</I18nProvider>,
+	);
+	fireEvent.mouseEnter(screen.getByTestId("recording-paused-upload-button"));
+	expect(
+		await screen.findByText("On the free plan, uploads go to another project."),
+	).toBeTruthy();
+});

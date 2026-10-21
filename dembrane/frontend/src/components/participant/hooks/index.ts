@@ -312,7 +312,9 @@ export const useUploadConversationTextChunk = () => {
 export const useInitiateConversationMutation = () => {
 	return useMutation({
 		mutationFn: initiateConversation,
-		onError: () => {
+		onError: (error) => {
+			// The form shows a refusal itself.
+			if (portalRecordingRefusal(error)) return;
 			toast.error(t`Invalid PIN or email. Please try again.`);
 		},
 	});

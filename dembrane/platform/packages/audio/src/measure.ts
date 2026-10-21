@@ -37,8 +37,6 @@ export async function measureSeconds(
   media: Media,
   source: MediaSource,
   bytes: number,
-  // Unused since every file is decoded; kept for callers.
-  _opts: { confirmAbove: number },
 ): Promise<Measured> {
   let failed: AudioError;
   try {

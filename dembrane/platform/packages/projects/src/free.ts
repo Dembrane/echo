@@ -1,5 +1,6 @@
 import {
   type AllowanceAccount,
+  allowanceForCountedProject,
   allowanceForProject,
   freeLimitError,
   freeLimits,
@@ -11,7 +12,7 @@ import { ConflictError } from "@dembrane/core";
 import { type Db, schema } from "@dembrane/db";
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
-const { project, project_report } = schema;
+const { project_report } = schema;
 
 // Takes the period's report; null when the project is unlimited or a sample.
 export async function takeFreeReport(
@@ -19,13 +20,8 @@ export async function takeFreeReport(
   projectId: string,
   now: Date,
 ): Promise<AllowanceAccount | null> {
-  const a = await allowanceForProject(db, projectId, now);
+  const a = await allowanceForCountedProject(db, projectId, now);
   if (!a) return null;
-  const [p] = await db
-    .select({ is_sample: project.is_sample })
-    .from(project)
-    .where(eq(project.id, projectId));
-  if (p?.is_sample === true) return null;
   const limits = await freeLimits(db);
   const t = await take(db, a, "reports", 1, limits.reports_month);
   if (!t.ok) throw freeLimitError("report", { used: t.used, cap: t.limit });
@@ -117,8 +113,9 @@ export type ReportCharge = {
 
 /**
  * Charges a status or schedule change of a free report: one that will generate again takes the
- * period's report unless this period's stamp covers a run that has not happened yet; a report
- * that ran, moved back to draft or cancelled, loses its stamp. `undo` is null when nothing changed.
+ * period's report unless this period's stamp covers a run that has not happened yet, or one
+ * that errored and is not refunded yet; a report that ran, moved back to draft or cancelled,
+ * loses its stamp. `undo` is null when nothing changed.
  */
 export async function chargeReportChange(
   db: Db,
@@ -127,13 +124,8 @@ export async function chargeReportChange(
   nextStatus: string | null,
   now: Date,
 ): Promise<{ free: boolean; undo: ReportCharge | null }> {
-  const a = await allowanceForProject(db, projectId, now);
+  const a = await allowanceForCountedProject(db, projectId, now);
   if (!a) return { free: false, undo: null };
-  const [p] = await db
-    .select({ is_sample: project.is_sample })
-    .from(project)
-    .where(eq(project.id, projectId));
-  if (p?.is_sample === true) return { free: false, undo: null };
   const limits = await freeLimits(db);
   const id = BigInt(reportId);
   const undo = await withAllowanceLock(db, a, async (tx): Promise<ReportCharge | null> => {
@@ -151,11 +143,14 @@ export async function chargeReportChange(
     if (!r) return null;
     const unrun = UNRUN.has(r.status);
     const status = nextStatus ?? r.status;
+    const current = r.stampMs !== null && Number(r.stampMs) === a.periodStart.getTime();
+    // A failed run whose refund has not landed yet: its stamp is still owed back.
+    const owed = r.status === "error" && current;
     if (status === "scheduled") {
       // A stamped draft is a run in progress; a second one would overlap it.
       if (r.status === "draft" && r.stamp !== null)
         throw new ConflictError("report.already_generating");
-      if (unrun && r.stampMs !== null && Number(r.stampMs) === a.periodStart.getTime()) return null;
+      if ((unrun || owed) && current) return null;
       const t = await take(tx, a, "reports", 1, limits.reports_month);
       if (!t.ok) throw freeLimitError("report", { used: t.used, cap: t.limit });
       const wrote = a.periodStart.toISOString();
@@ -166,8 +161,12 @@ export async function chargeReportChange(
         .where(eq(project_report.id, id));
       return { account: a, previous: r.stamp, wrote, status: r.status };
     }
-    // A report that ran, or a running draft moved off draft by hand, keeps no stamp to reuse.
-    const ran = (!unrun && UNRUN.has(status)) || (r.status === "draft" && status !== "draft");
+    // A report that ran, or a running draft moved off draft by hand, keeps no stamp to reuse;
+    // an owed one cancelled keeps it for the cancel refund.
+    const ran = owed
+      ? status !== "cancelled" && status !== "error"
+      : (!unrun && (UNRUN.has(status) || status === "error")) ||
+        (r.status === "draft" && status !== "draft");
     if (ran && r.stamp !== null) {
       await tx
         .update(project_report)
