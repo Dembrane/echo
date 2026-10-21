@@ -18,6 +18,7 @@ import {
 	useRef,
 } from "react";
 import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
+import { Explainer, type ExplainerName } from "@/components/explainers/Explainer";
 import { ShownTitleContext } from "@/components/form/FormLabel";
 import { testId } from "@/lib/testUtils";
 
@@ -34,6 +35,8 @@ export interface StepperOption {
 	body: ReactNode;
 	/** An early feature: "Beta" beside its name. */
 	beta?: boolean;
+	/** A short loop of what the feature does, behind an "i" at the end of its row. */
+	explainer?: { name: ExplainerName; label: string };
 }
 
 export type StepVia = "row" | "next" | "back";
@@ -119,17 +122,7 @@ export const OptionStepper = ({
 					const headerId = `${baseId}-${option.key}-header`;
 					const bodyId = `${baseId}-${option.key}-body`;
 					const Caret = isOpen ? CaretDownIcon : CaretRightIcon;
-					return (
-						<li
-							key={option.key}
-							style={{
-								border: isOpen ? RULE : undefined,
-								marginTop: i > 0 ? STEP_BACK : undefined,
-							}}
-							data-open={isOpen || undefined}
-							{...testId(`${testIdPrefix}-${option.key}`)}
-						>
-							<Title order={5} m={0}>
+					const row = (
 								<UnstyledButton
 									ref={(el) => {
 										headers.current[i] = el;
@@ -142,7 +135,7 @@ export const OptionStepper = ({
 									}}
 									onKeyDown={(e) => onRowKey(e, i)}
 									// Closed, the row is the box; open, the item around it is.
-									className={isOpen ? "block w-full" : "app-do block w-full"}
+									className={isOpen ? "block min-w-0 flex-1" : "app-do block min-w-0 flex-1"}
 									px="sm"
 									py="sm"
 									style={isOpen ? { cursor: "default" } : undefined}
@@ -184,6 +177,29 @@ export const OptionStepper = ({
 										)}
 									</span>
 								</UnstyledButton>
+					);
+					return (
+						<li
+							key={option.key}
+							style={{
+								border: isOpen ? RULE : undefined,
+								marginTop: i > 0 ? STEP_BACK : undefined,
+							}}
+							data-open={isOpen || undefined}
+							{...testId(`${testIdPrefix}-${option.key}`)}
+						>
+							<Title order={5} m={0}>
+								{option.explainer ? (
+									<Explainer
+										name={option.explainer.name}
+										label={option.explainer.label}
+										fill
+									>
+										{row}
+									</Explainer>
+								) : (
+									row
+								)}
 							</Title>
 							{isOpen && (
 								<section

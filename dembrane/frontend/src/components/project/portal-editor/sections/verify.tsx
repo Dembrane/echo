@@ -373,6 +373,7 @@ export const useVerifyOptions = ({
 				),
 				summary: onOff(v.is_verify_enabled, t`On`, t`Off`),
 				title: t({ id: "dashboard.dembrane.verify.title", message: "Verify" }),
+				explainer: { label: t`How Verify works`, name: "verify" },
 			},
 			"key-terms": {
 				body: (

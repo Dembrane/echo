@@ -347,6 +347,7 @@ export const PortalSectionEditor = ({
 									options={defs.map((def) => ({
 										beta: content.options[def.key]?.beta,
 										body: content.options[def.key]?.body,
+										explainer: content.options[def.key]?.explainer,
 										key: def.key,
 										summary: content.options[def.key]?.summary,
 										title: content.options[def.key]?.title ?? def.key,

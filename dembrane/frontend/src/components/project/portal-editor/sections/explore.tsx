@@ -64,6 +64,7 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 				),
 				summary: onOff(v.is_get_reply_enabled, t`On`, t`Off`),
 				title: t`Explore`,
+				explainer: { label: t`How Explore works`, name: "explore" },
 			},
 			mode: {
 				body: (
