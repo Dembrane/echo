@@ -8,6 +8,9 @@ import {
 	initiateAndUploadConversationChunk,
 	UploadFailedError,
 } from "@/lib/api";
+// Transform the lazy error catalog at collection, not inside a test's timeout.
+import "@/lib/errors/locales/en-US";
+import "@/lib/errors/messages";
 import { useConversationUploader, useUploadConversation } from "./index";
 
 vi.mock("@/lib/api", () => ({
@@ -176,7 +179,5 @@ it("a file the server cannot read shows the catalog message, not the raw error",
 		expect(result.current.uploadErrors["a.mp3"]).toBe(
 			"This file could not be read as audio. Choose another file.",
 		),
-		// The error messages load as their own chunk.
-		{ timeout: 10_000 },
 	);
 });
