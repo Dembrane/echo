@@ -71,7 +71,7 @@ run("allowance ledger", () => {
     expect(await take(db, a, "audio_seconds", 600, 3600)).toEqual({ ok: true, used: 3600 });
   });
 
-  test("take is serialised per account and period", async () => {
+  test("take is serialised per account", async () => {
     const a = account();
     const results = await Promise.all(Array.from({ length: 20 }, () => take(db, a, "chats", 1, 2)));
     expect(results.filter((r) => r.ok)).toHaveLength(2);
@@ -192,6 +192,33 @@ run("allowance ledger", () => {
     await held;
     let done = false;
     const waiting = take(db, a, "reports", 1, 1).then((r) => {
+      done = true;
+      return r;
+    });
+    await new Promise((r) => setTimeout(r, 300));
+    expect(done).toBe(false);
+    release();
+    await holder;
+    expect(await waiting).toEqual({ ok: true, used: 1 });
+  });
+
+  test("the same account in another period waits for a held lock", async () => {
+    const a = account();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    let locked!: () => void;
+    const held = new Promise<void>((r) => {
+      locked = r;
+    });
+    const holder = withAllowanceLock(db, a, async () => {
+      locked();
+      await gate;
+    });
+    await held;
+    let done = false;
+    const waiting = take(db, { ...a, periodStart: NOV }, "reports", 1, 1).then((r) => {
       done = true;
       return r;
     });

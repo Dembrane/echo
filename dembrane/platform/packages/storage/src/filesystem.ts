@@ -41,6 +41,13 @@ export class FilesystemStorage implements ObjectStorage {
     const f = Bun.file(this.path(key));
     return (await f.exists()) ? f.size : null;
   }
+  async copy(from: string, to: string) {
+    const src = Bun.file(this.path(from));
+    if (!(await src.exists())) throw new Error(`copy source ${from} not found`);
+    const p = this.path(to);
+    await mkdir(dirname(p), { recursive: true });
+    await Bun.write(p, src);
+  }
   presignUpload(key: string, opts: { contentType: string; expiresInSeconds: number }) {
     return `${this.publicBase}${this.routePath}/${encodeURI(checkKey(key))}?expires=${Date.now() + opts.expiresInSeconds * 1000}`;
   }

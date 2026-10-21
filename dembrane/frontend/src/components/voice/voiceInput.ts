@@ -62,6 +62,7 @@ export type VoiceErrorKind =
 	| "empty"
 	| "not_allowed"
 	| "not_found"
+	| "free_limit"
 	| "transcription_failed"
 	| "network"
 	| "unknown";
@@ -104,6 +105,7 @@ export const transcribeErrorKind = (error: unknown): VoiceErrorKind => {
 	if (!axios.isAxiosError(error)) return "unknown";
 	const status = error.response?.status;
 	if (status === undefined) return "network";
+	if (status === 402) return "free_limit";
 	if (status === 413) return "too_large";
 	if (status === 400) return "empty";
 	if (status === 403) return "not_allowed";

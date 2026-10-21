@@ -9,8 +9,10 @@ import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export type AnalysisRecipe = {
 	id: string;
@@ -544,7 +546,15 @@ export function useRequestAnalysisRun(projectId: string) {
 				...body,
 				idempotency_key: crypto.randomUUID(),
 			}),
-		onError: () => toast.error(t`Could not start this run. Try again.`),
+		onError: (error) => {
+			// The page opens the wall for a used-up month.
+			const limit = isFreeTierLimitError(error);
+			if (limit === "map" || limit === "popcorn") {
+				void invalidateFreeAllowance(queryClient);
+				return;
+			}
+			toast.error(t`Could not start this run. Try again.`);
+		},
 		onSuccess: (_data, body) => {
 			// Ids and kinds only: no scope key, no parameters, no participant text.
 			posthog.capture("analysis_run_requested", {
@@ -555,6 +565,8 @@ export function useRequestAnalysisRun(projectId: string) {
 			void queryClient.invalidateQueries({
 				queryKey: analysisKeys.runs(projectId),
 			});
+			// A free map or analysis may have been spent.
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 }

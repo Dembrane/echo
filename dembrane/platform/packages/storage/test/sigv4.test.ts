@@ -3,6 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FilesystemStorage, localStorageHandler, postPolicyFields } from "../src";
+import { signedHeaders } from "../src/sigv4";
 
 test("a POST policy is byte-identical to boto3's generate_presigned_post", () => {
   // boto3 1.x with no acl field or condition, region eu, endpoint http://127.0.0.1:9, clock frozen at 2026-09-27T10:11:12Z.
@@ -47,4 +48,19 @@ test("the local handler takes the portal's form post and serves the file back", 
   const put = s.presignUpload("p/probe", { contentType: "text/plain", expiresInSeconds: 60 });
   expect((await handle(new Request(put, { method: "PUT", body: "probe" }))).status).toBe(200);
   expect(await (await s.get("p/probe"))?.text()).toBe("probe");
+});
+
+test("header signing matches AWS's documented GET Object example", () => {
+  const h = signedHeaders({
+    method: "GET",
+    url: new URL("https://examplebucket.s3.amazonaws.com/test.txt"),
+    headers: { range: "bytes=0-9" },
+    region: "us-east-1",
+    accessKeyId: "AKIAIOSFODNN7EXAMPLE",
+    secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    now: new Date("2013-05-24T00:00:00Z"),
+  });
+  expect(h.authorization).toBe(
+    "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41",
+  );
 });

@@ -651,7 +651,7 @@ export function orgService(deps: TenancyDeps) {
       return out;
     },
 
-    /** Changes an org role. Only an owner makes or unmakes an owner; the last manager stays. */
+    /** Changes an org role. Only an owner makes or unmakes an owner; the last owner and manager stay. */
     async changeRole(who: Signed, orgId: string, userId: string, role: string) {
       if (!ORG_ROLES.has(role)) throw new BadRequestError("member.invalid_role");
       const member = requireOnboarded(who);
@@ -660,6 +660,12 @@ export function orgService(deps: TenancyDeps) {
       if (!target) throw new NotFoundError("member.not_found");
       if ((role === "owner" || target.role === "owner") && callerRole !== "owner")
         throw new ForbiddenError("member.owner_changes_owner");
+      if (
+        target.role === "owner" &&
+        role !== "owner" &&
+        (await countOrgMembers(db, orgId, "owner")) <= 1
+      )
+        throw new BadRequestError("member.last_owner_demote");
       if (MANAGERS.includes(target.role) && !MANAGERS.includes(role)) {
         const others = (await orgMembers(db, orgId, MANAGERS)).filter((m) => m.user_id !== userId);
         if (!others.length) throw new BadRequestError("member.last_admin");
@@ -705,6 +711,14 @@ export function orgService(deps: TenancyDeps) {
         if (callerRole !== "owner") throw new ForbiddenError("member.owner_removes_owner");
         if ((await countOrgMembers(db, orgId, "owner")) <= 1)
           throw new ConflictError("member.last_owner");
+      }
+      // An org never loses its last manager (B2: step down, leave, make a fresh free org).
+      if (MANAGERS.includes(target.role)) {
+        const others = (await orgMembers(db, orgId, MANAGERS)).filter((m) => m.user_id !== userId);
+        if (!others.length)
+          throw new BadRequestError(
+            userId === member.appUserId ? "member.sole_admin_leave" : "member.last_admin_remove",
+          );
       }
       const affected = await db.transaction(async (tx) => {
         await updateOrgMembership(tx, target.id, { deleted_at: iso(now), updated_at: iso(now) });

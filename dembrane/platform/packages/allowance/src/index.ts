@@ -4,6 +4,7 @@ export {
   allowanceForProject,
   allowanceForWorkspace,
 } from "./account";
+export { chargeFreeUnit, type FreeUnit, requireFreeUnitRoom, takeFreeUnit } from "./charge";
 export { type FreeLimitName, freeLimitError, isFreeLimit } from "./errors";
 export { isFreeTier } from "./free";
 export {

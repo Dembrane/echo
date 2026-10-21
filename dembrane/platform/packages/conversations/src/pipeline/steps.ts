@@ -22,7 +22,7 @@ import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@d
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
-import { FREE_LIMIT_SKIPPED, LIVE_SOURCE, meterLiveChunk } from "../free-audio";
+import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } from "../free-audio";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
@@ -78,8 +78,6 @@ const MAX_PIECES = 1500;
 // Convert refuses inputs above this, as convert_and_save_to_s3 did.
 const MAX_CONVERT_BYTES = 1000 * 1024 * 1024;
 const MIN_AUDIO_BYTES = 1024;
-/** The recorder hands over a chunk every 30 seconds; at any bitrate speech is recorded at, one is under this. */
-const LIVE_CHUNK_BYTES = 1024 * 1024;
 /** The lowest bitrate speech is recorded at (Opus at 6 kbps), in bytes per second: below this a file is not speech. */
 const MIN_SPEECH_BYTES_PER_SECOND = 750;
 const SPLIT_BATCH = 20;
@@ -364,16 +362,21 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   };
   let metered = chunk.audio_seconds !== null;
   if (chunk.source === LIVE_SOURCE) {
-    const r = await meterLiveChunk(d, chunk, async () => {
-      if (converted !== null) return converted;
-      // Decoded: an mp3 header can understate its length. The probe only when decoding can't.
-      try {
-        return (await d.media.decodedSeconds(mp3)).seconds;
-      } catch (err) {
-        if (!(err instanceof AudioError && err.terminal)) throw err;
-        return durationOf(await d.media.probe(mp3));
-      }
-    });
+    const r = await meterLiveChunk(
+      d,
+      chunk,
+      async () => {
+        if (converted !== null) return converted;
+        // Decoded: an mp3 header can understate its length. The probe only when decoding can't.
+        try {
+          return (await d.media.decodedSeconds(mp3)).seconds;
+        } catch (err) {
+          if (!(err instanceof AudioError && err.terminal)) throw err;
+          return durationOf(await d.media.probe(mp3));
+        }
+      },
+      size,
+    );
     if (r === "refused") return [];
     metered = r === "counted" || r === "already";
   }

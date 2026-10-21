@@ -201,17 +201,24 @@ export function freeChats(db: Db): FreeChats {
 
     async undoTurn(turn, admitted) {
       if (admitted.inserted === false) return;
-      await db
-        .delete(project_chat_message)
-        .where(
-          and(
-            eq(project_chat_message.id, turn.messageId),
-            eq(project_chat_message.project_chat_id, turn.chatId),
-          ),
-        );
+      const remove = (q: Db) =>
+        q
+          .delete(project_chat_message)
+          .where(
+            and(
+              eq(project_chat_message.id, turn.messageId),
+              eq(project_chat_message.project_chat_id, turn.chatId),
+            ),
+          );
       const a = admitted.account;
-      if (!a || !admitted.claimed) return;
+      if (!a || !admitted.claimed) {
+        await remove(db);
+        return;
+      }
       await withAllowanceLock(db, a, async (tx) => {
+        await remove(tx);
+        // Another turn in this chat was admitted, so the chat keeps its slot.
+        if ((await turnsSince(tx, turn.chatId, a.periodStart)) > 0) return;
         const cleared = await tx
           .update(project_chat)
           .set({ free_period_start: null })

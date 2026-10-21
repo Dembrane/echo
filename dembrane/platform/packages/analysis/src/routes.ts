@@ -49,6 +49,7 @@ export function analysisRoutes(deps: AnalysisRoutesDeps) {
     config: { embeddingModel: deps.embeddingModel, embeddingLocation: deps.embeddingLocation },
   });
   const d: bff.BffDeps = {
+    db: deps.db,
     rt,
     access: deps.access,
     limiter: deps.limiter,

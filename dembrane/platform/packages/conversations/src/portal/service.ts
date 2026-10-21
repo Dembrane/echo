@@ -9,7 +9,13 @@ import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import { audioOpen, requireAudioStart } from "../free-audio";
 import { finishConversation } from "../pipeline/defs";
-import { type ChunkRow, type ConversationRow, conversationStore, transaction } from "../storage";
+import {
+  type ChunkRow,
+  type ConversationRow,
+  conversationStore,
+  type Tx,
+  transaction,
+} from "../storage";
 import { portalStore } from "./storage";
 
 const { conversation, conversation_project_tag, project_tag } = schema;
@@ -234,11 +240,12 @@ export async function removeChunk(d: PortalDeps, projectId: string, id: string, 
 export async function addChunk(
   d: PortalDeps,
   input: NewChunk,
-  opts: { chunkId?: string; usePiiRedaction?: boolean } = {},
+  opts: { chunkId?: string; usePiiRedaction?: boolean; tx?: Tx } = {},
 ) {
   return createChunk(d, input, {
     chunkId: opts.chunkId ?? newId(),
     ...(opts.usePiiRedaction !== undefined && { usePiiRedaction: opts.usePiiRedaction }),
+    ...(opts.tx && { tx: opts.tx }),
   });
 }
 

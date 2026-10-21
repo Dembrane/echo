@@ -1,10 +1,4 @@
-import {
-  allowanceForCountedProject,
-  freeLimitError,
-  freeLimits,
-  giveBack,
-  take,
-} from "@dembrane/allowance";
+import { allowanceForCountedProject, giveBack, takeFreeUnit } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 
@@ -22,9 +16,7 @@ export async function startFreeMap<T>(
   // Free only: work already in flight answers without counting.
   const inFlight = pending ? await pending() : null;
   if (inFlight !== null) return inFlight;
-  const limits = await freeLimits(db, () => now);
-  const took = await take(db, a, "maps", 1, limits.maps_month);
-  if (!took.ok) throw freeLimitError("map", { used: took.used, cap: took.limit });
+  await takeFreeUnit(db, a, "maps", now);
   let out: { row: T; started: boolean };
   try {
     out = await start();

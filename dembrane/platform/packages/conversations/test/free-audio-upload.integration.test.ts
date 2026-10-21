@@ -416,6 +416,7 @@ run("free audio: uploads are measured and reserved", () => {
       { id: cid, project_id: p },
       key,
       1,
+      () => Promise.reject(new Error("never written")),
     ).then(
       () => null,
       (e) => e,

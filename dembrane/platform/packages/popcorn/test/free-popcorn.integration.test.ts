@@ -87,7 +87,11 @@ run("free popcorn", () => {
     return (await usedThisPeriod(database.db, a)).popcorn_analyses;
   }
 
-  async function insertRun(loopId: string, freePeriodStart: string | null) {
+  async function insertRun(
+    loopId: string,
+    freePeriodStart: string | null,
+    freeAccountId: string | null = null,
+  ) {
     const id = newId();
     await tickStore(sql).insertRun({
       id,
@@ -97,6 +101,7 @@ run("free popcorn", () => {
       startedAt: now.toISOString(),
       finishedAt: now.toISOString(),
       freePeriodStart,
+      freeAccountId,
     });
     return id;
   }
@@ -115,7 +120,7 @@ run("free popcorn", () => {
     const { projectId } = await seed();
     const pop = popcornAllowance(database.db);
     for (let i = 0; i < 12; i++)
-      expect(await pop.admit(projectId, now)).toEqual({ ok: true, periodStart: OCT });
+      expect(await pop.admit(projectId, now)).toMatchObject({ ok: true, periodStart: OCT });
     expect(await pop.admit(projectId, now)).toEqual({ ok: false, used: 12, limit: 12 });
     expect(await pop.status(projectId, now)).toEqual({ used: 12, limit: 12, exhausted: true });
     const err = await rejection(pop.requireRoom(projectId, now));
@@ -162,6 +167,47 @@ run("free popcorn", () => {
     expect(await ledger(projectId)).toBe(1);
   });
 
+  test("a pooled analysis is not refunded into the client's own account", async () => {
+    const [org, orgAccount, orgWs, clientAccount, clientWs, projectId, loopId] = [
+      newId(),
+      newId(),
+      newId(),
+      newId(),
+      newId(),
+      newId(),
+      newId(),
+    ];
+    const reportId = Math.floor(Math.random() * 1_000_000_000);
+    await sql`insert into org (id, name) values (${org}, 'Org')`;
+    await sql`insert into billing_account (id, org_id, tier, created_at)
+      values (${orgAccount}, ${org}, 'free', '2026-01-01T00:00:00Z')`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id)
+      values (${orgWs}, 'Org W', ${org}, ${orgAccount})`;
+    await sql`insert into billing_account (id, org_id, tier, created_at)
+      values (${clientAccount}, null, 'free', '2026-02-01T00:00:00Z')`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id)
+      values (${clientWs}, 'Client W', ${org}, ${clientAccount})`;
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed)
+      values (${projectId}, 'P', ${clientWs}, true)`;
+    await sql`insert into project_report (id, project_id, kind, status, content)
+      values (${reportId}, ${projectId}, 'popcorn', 'published', '')`;
+    await sql`insert into agent_loop (id, project_id, report_id, name, status, expires_at)
+      values (${loopId}, ${projectId}, ${reportId}, 'popcorn', 'active', '2026-12-31T00:00:00Z')`;
+    const pop = popcornAllowance(database.db);
+    const admitted = await pop.admit(projectId, now);
+    expect(admitted).toEqual({ ok: true, periodStart: OCT, accountId: orgAccount });
+    if (!admitted.ok) throw new Error("expected room");
+    const runId = await insertRun(loopId, admitted.periodStart, admitted.accountId);
+
+    // The org upgrades: the client counts against its own account, same period.
+    await sql`update billing_account set tier = 'changemaker' where id = ${orgAccount}`;
+    await pop.admit(projectId, now);
+    expect(await ledger(projectId)).toBe(1);
+    expect(await pop.refund(runId, now)).toBe(false);
+    expect(await ledger(projectId)).toBe(1);
+    expect(await stamp(runId)).toBeNull();
+  });
+
   test("concurrent refunds give back once", async () => {
     const { projectId, loopId } = await seed();
     const pop = popcornAllowance(database.db);
@@ -173,7 +219,7 @@ run("free popcorn", () => {
   });
 
   test("replaceRun writes the stamp", async () => {
-    const { loopId } = await seed();
+    const { billing, loopId } = await seed();
     const runId = await insertRun(loopId, null);
     await tickStore(sql).replaceRun({
       id: runId,
@@ -183,8 +229,11 @@ run("free popcorn", () => {
       startedAt: now.toISOString(),
       finishedAt: now.toISOString(),
       freePeriodStart: OCT,
+      freeAccountId: billing,
     });
     expect(await stamp(runId)).toBe(OCT);
+    const [row] = await sql`select free_account_id from agent_loop_run where id = ${runId}`;
+    expect(row?.free_account_id).toBe(billing);
   });
 
   test("a refund after the month rolled gives nothing back", async () => {
@@ -203,7 +252,7 @@ run("free popcorn", () => {
     for (let i = 0; i < 12; i++) await pop.admit(projectId, now);
     const nov = new Date("2026-11-02T10:00:00Z");
     expect(await pop.status(projectId, nov)).toEqual({ used: 0, limit: 12, exhausted: false });
-    expect(await pop.admit(projectId, nov)).toEqual({
+    expect(await pop.admit(projectId, nov)).toMatchObject({
       ok: true,
       periodStart: "2026-11-01T00:00:00.000Z",
     });
@@ -246,7 +295,11 @@ run("free popcorn", () => {
     ];
     for (const { billing, projectId, loopId } of cases) {
       for (let i = 0; i < 20; i++)
-        expect(await pop.admit(projectId, now)).toEqual({ ok: true, periodStart: null });
+        expect(await pop.admit(projectId, now)).toEqual({
+          ok: true,
+          periodStart: null,
+          accountId: null,
+        });
       expect(await pop.status(projectId, now)).toBeNull();
       expect(await rejection(pop.requireRoom(projectId, now))).toBeNull();
       expect(await pop.cadenceFloorMinutes(projectId, now)).toBe(1);

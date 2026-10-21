@@ -115,7 +115,9 @@ describe("chat reply stream", () => {
     expect(await body(res)).toBe('0:"Char"\n0:"ging \\u00e9"\n');
     expect(w.created[0]?.text).toBe("What now?");
     expect(w.named).toEqual(["Charging needs"]);
-    expect(w.updated).toContainEqual([w.created[0]?.id as string, { template_key: "t1" }]);
+    // Stored with the admitted turn, not after the model call.
+    expect(w.created[0]?.templateKey).toBe("t1");
+    expect(w.updated).toEqual([]);
     const prompt = calls[0]?.prompt ?? [];
     expect(prompt.slice(0, 3).map((m) => m.role)).toEqual(["system", "system", "system"]);
     const context = JSON.stringify(prompt[2]);

@@ -94,6 +94,7 @@ export async function createReport(
         user_created: who.directusUserId,
         date_created: now.toISOString(),
         free_period_start: account ? account.periodStart.toISOString() : null,
+        free_account_id: account?.accountId ?? null,
       });
       const extra = {
         ...(body.user_instructions && { user_instructions: body.user_instructions }),

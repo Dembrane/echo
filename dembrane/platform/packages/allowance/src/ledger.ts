@@ -52,14 +52,14 @@ async function upsert(tx: Db, a: AllowanceAccount, key: UsageKey, amount: number
   return Number(row?.amount ?? 0);
 }
 
-// One transaction holding the account+period lock; re-entrant when db is already a transaction.
+// One transaction holding the account lock (not per period: the project cap spans periods); re-entrant.
 export function withAllowanceLock<T>(
   db: Db,
   a: AllowanceAccount,
   fn: (tx: Db) => Promise<T>,
 ): Promise<T> {
   return db.transaction(async (tx) => {
-    const lockKey = `free_usage:${a.accountId}:${a.periodStart.toISOString()}`;
+    const lockKey = `free_usage:${a.accountId}`;
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`);
     // The transaction lacks Db's $client and batch, so it is not structurally a Db.
     return fn(tx as unknown as Db);

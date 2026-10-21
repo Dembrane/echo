@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 const hmac = (key: string | Buffer, data: string) =>
   createHmac("sha256", key).update(data).digest();
@@ -75,4 +75,59 @@ function pythonJson(v: unknown): string {
       .map(([k, x]) => `${JSON.stringify(k)}: ${pythonJson(x)}`)
       .join(", ")}}`;
   return JSON.stringify(v);
+}
+
+const EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+export interface SignInput {
+  readonly method: string;
+  readonly url: URL;
+  /** Lowercase names; host, x-amz-date and x-amz-content-sha256 are added. */
+  readonly headers: Readonly<Record<string, string>>;
+  readonly region: string;
+  readonly accessKeyId: string;
+  readonly secretAccessKey: string;
+  readonly now: Date;
+}
+
+/** The headers of a SigV4 header-signed request with an empty body (path already encoded). */
+export function signedHeaders(p: SignInput): Record<string, string> {
+  const amzDate = p.now
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+  const day = amzDate.slice(0, 8);
+  const headers: Record<string, string> = {
+    ...p.headers,
+    host: p.url.host,
+    "x-amz-content-sha256": EMPTY_SHA256,
+    "x-amz-date": amzDate,
+  };
+  const names = Object.keys(headers).sort();
+  const query = [...p.url.searchParams]
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .sort()
+    .join("&");
+  const canonical = [
+    p.method,
+    p.url.pathname,
+    query,
+    names.map((n) => `${n}:${String(headers[n]).trim()}\n`).join(""),
+    names.join(";"),
+    EMPTY_SHA256,
+  ].join("\n");
+  const scope = `${day}/${p.region}/s3/aws4_request`;
+  const toSign = [
+    "AWS4-HMAC-SHA256",
+    amzDate,
+    scope,
+    createHash("sha256").update(canonical).digest("hex"),
+  ].join("\n");
+  const signature = createHmac("sha256", signingKey(p.secretAccessKey, day, p.region))
+    .update(toSign)
+    .digest("hex");
+  return {
+    ...headers,
+    authorization: `AWS4-HMAC-SHA256 Credential=${p.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}`,
+  };
 }

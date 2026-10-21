@@ -180,6 +180,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/samples": "workspace:*",
         "@dembrane/storage": "workspace:*",
+        "@dembrane/tenancy": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
         "zod": "^4.1.0",
@@ -277,6 +278,7 @@
       "name": "@dembrane/analysis",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",

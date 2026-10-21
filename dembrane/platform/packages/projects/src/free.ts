@@ -8,7 +8,7 @@ import {
   take,
   withAllowanceLock,
 } from "@dembrane/allowance";
-import { ConflictError } from "@dembrane/core";
+import { BadRequestError, ConflictError } from "@dembrane/core";
 import { type Db, schema } from "@dembrane/db";
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
@@ -28,6 +28,17 @@ export async function takeFreeReport(
   return a;
 }
 
+const UNSTAMPED = { free_period_start: null, free_account_id: null };
+
+// Whether a stamp was taken from this account's period; legacy rows without an account match any.
+function chargedTo(a: AllowanceAccount, stampMs: string | null, accountId: string | null) {
+  return (
+    stampMs !== null &&
+    Number(stampMs) === a.periodStart.getTime() &&
+    (accountId === null || accountId === a.accountId)
+  );
+}
+
 // Gives back the stamp of a run that errored before saving, or was cancelled before it ran, once.
 export async function refundFreeReport(db: Db, reportId: number, now: Date): Promise<boolean> {
   const id = BigInt(reportId);
@@ -36,6 +47,7 @@ export async function refundFreeReport(db: Db, reportId: number, now: Date): Pro
     .select({
       projectId: project_report.project_id,
       stamp: project_report.free_period_start,
+      accountId: project_report.free_account_id,
       stampMs: sql<string>`(extract(epoch from ${project_report.free_period_start}) * 1000)::bigint`,
     })
     .from(project_report)
@@ -48,14 +60,14 @@ export async function refundFreeReport(db: Db, reportId: number, now: Date): Pro
     sql`${project_report.free_period_start} = ${r.stamp}::timestamptz`,
   );
   const a = r.projectId ? await allowanceForProject(db, r.projectId, now) : null;
-  if (!a || Number(r.stampMs) !== a.periodStart.getTime()) {
-    await db.update(project_report).set({ free_period_start: null }).where(asRead);
+  if (!a || !chargedTo(a, r.stampMs, r.accountId)) {
+    await db.update(project_report).set(UNSTAMPED).where(asRead);
     return false;
   }
   return withAllowanceLock(db, a, async (tx) => {
     const cleared = await tx
       .update(project_report)
-      .set({ free_period_start: null })
+      .set(UNSTAMPED)
       .where(asRead)
       .returning({ id: project_report.id });
     if (cleared.length === 0) return false;
@@ -83,6 +95,7 @@ export async function cancelScheduledReport(
         stampMs: sql<
           string | null
         >`(extract(epoch from ${project_report.free_period_start}) * 1000)::bigint`,
+        accountId: project_report.free_account_id,
       })
       .from(project_report)
       .where(and(eq(project_report.id, id), eq(project_report.status, "scheduled")))
@@ -90,11 +103,10 @@ export async function cancelScheduledReport(
     if (!r) return false;
     await tx
       .update(project_report)
-      .set({ status: "cancelled", free_period_start: null, date_updated: now.toISOString() })
+      .set({ status: "cancelled", ...UNSTAMPED, date_updated: now.toISOString() })
       .where(eq(project_report.id, id));
     await cancelTasks(tx);
-    if (a && r.stampMs !== null && Number(r.stampMs) === a.periodStart.getTime())
-      await giveBack(tx, a, "reports", 1);
+    if (a && chargedTo(a, r.stampMs, r.accountId)) await giveBack(tx, a, "reports", 1);
     return true;
   };
   // Allowance lock before the row lock, as chargeReportChange takes them.
@@ -107,6 +119,7 @@ const UNRUN = new Set(["scheduled", "draft", "cancelled"]);
 export type ReportCharge = {
   account: AllowanceAccount;
   previous: string | null;
+  previousAccount: string | null;
   wrote: string | null;
   status: string;
 };
@@ -114,8 +127,8 @@ export type ReportCharge = {
 /**
  * Charges a status or schedule change of a free report: one that will generate again takes the
  * period's report unless this period's stamp covers a run that has not happened yet, or one
- * that errored and is not refunded yet; a report that ran, moved back to draft or cancelled,
- * loses its stamp. `undo` is null when nothing changed.
+ * that errored and is not refunded yet; a report that ran, cancelled, loses its stamp; a move
+ * into draft by hand is refused. `undo` is null when nothing changed.
  */
 export async function chargeReportChange(
   db: Db,
@@ -133,6 +146,7 @@ export async function chargeReportChange(
       .select({
         status: project_report.status,
         stamp: project_report.free_period_start,
+        accountId: project_report.free_account_id,
         stampMs: sql<
           string | null
         >`(extract(epoch from ${project_report.free_period_start}) * 1000)::bigint`,
@@ -141,6 +155,9 @@ export async function chargeReportChange(
       .where(eq(project_report.id, id))
       .for("update");
     if (!r) return null;
+    // Only a run makes a draft; one set by hand could let a swept run save on a refunded report.
+    if (nextStatus === "draft" && r.status !== "draft")
+      throw new BadRequestError("request.invalid");
     const unrun = UNRUN.has(r.status);
     const status = nextStatus ?? r.status;
     const current = r.stampMs !== null && Number(r.stampMs) === a.periodStart.getTime();
@@ -157,9 +174,15 @@ export async function chargeReportChange(
       // The status moves with the stamp, so a concurrent change sees this one as unrun.
       await tx
         .update(project_report)
-        .set({ free_period_start: wrote, status })
+        .set({ free_period_start: wrote, free_account_id: a.accountId, status })
         .where(eq(project_report.id, id));
-      return { account: a, previous: r.stamp, wrote, status: r.status };
+      return {
+        account: a,
+        previous: r.stamp,
+        previousAccount: r.accountId,
+        wrote,
+        status: r.status,
+      };
     }
     // A report that ran, or a running draft moved off draft by hand, keeps no stamp to reuse;
     // an owed one cancelled keeps it for the cancel refund.
@@ -170,9 +193,15 @@ export async function chargeReportChange(
     if (ran && r.stamp !== null) {
       await tx
         .update(project_report)
-        .set({ free_period_start: null, status })
+        .set({ ...UNSTAMPED, status })
         .where(eq(project_report.id, id));
-      return { account: a, previous: r.stamp, wrote: null, status: r.status };
+      return {
+        account: a,
+        previous: r.stamp,
+        previousAccount: r.accountId,
+        wrote: null,
+        status: r.status,
+      };
     }
     return null;
   });
@@ -184,7 +213,7 @@ export async function undoReportCharge(db: Db, reportId: number, c: ReportCharge
   await withAllowanceLock(db, c.account, async (tx) => {
     const restored = await tx
       .update(project_report)
-      .set({ free_period_start: c.previous, status: c.status })
+      .set({ free_period_start: c.previous, free_account_id: c.previousAccount, status: c.status })
       .where(
         and(
           eq(project_report.id, BigInt(reportId)),

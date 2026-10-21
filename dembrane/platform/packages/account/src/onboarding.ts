@@ -3,6 +3,7 @@ import type { Signed } from "@dembrane/http";
 import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { type InviteCtx, notifyWorkspaceJoin, onboardedUser } from "./invites/accept";
 import { grantInviteProjectShare, isOutsider } from "./invites/membership";
+import { withOrgCreateLock } from "./invites/storage";
 import { sendEmail } from "./jobs";
 import { requestSeatReconcile } from "./seats";
 import { accountStorage } from "./storage";
@@ -139,35 +140,48 @@ export async function completeOnboarding(
   if (belongs) workspaceId = belongs.workspaceId;
 
   if (hasOwnProjects || (!invited && !belongs)) {
-    orgId = owned;
-    if (!orgId) {
-      // A code sign-in has no name to suggest one, so an unnamed org is named after the email.
-      const name = body.org_name?.trim() || defaultOrgName(email ?? profile?.email ?? "");
-      orgId = await store.createOrg({ name, createdBy: userId }, now);
-      await store.createMembership("org", { orgId, userId, role: "owner" }, now);
-    }
-    let personal = (await store.defaultWorkspace(orgId))?.id ?? null;
-    if (!personal) {
-      // The org manages billing: its default workspace attaches to the org's account.
-      const accountId =
-        (await store.orgAccountId(orgId)) ??
-        (await store.createOrgAccount(
-          { orgId, tier: "free", createdBy: userId, label: "Org billing" },
+    // One tx under tenancy's org-create lock, so parallel onboarding or POST /orgs make one org.
+    const made = await withOrgCreateLock(deps.db, userId, async (tx) => {
+      let id = await tx.ownedOrgId(userId);
+      if (!id) {
+        // A code sign-in has no name to suggest one, so an unnamed org is named after the email.
+        const name = body.org_name?.trim() || defaultOrgName(email ?? profile?.email ?? "");
+        id = await tx.createOrg({ name, createdBy: userId }, now);
+        await tx.createMembership("org", { orgId: id, userId, role: "owner" }, now);
+      }
+      let personal = (await tx.defaultWorkspace(id))?.id ?? null;
+      const fresh = !personal;
+      if (!personal) {
+        // The org manages billing: its default workspace attaches to the org's account.
+        const accountId =
+          (await tx.orgAccountId(id)) ??
+          (await tx.createOrgAccount(
+            { orgId: id, tier: "free", createdBy: userId, label: "Org billing" },
+            now,
+          ));
+        personal = await tx.createWorkspace(
+          {
+            orgId: id,
+            name: "Default",
+            isDefault: true,
+            createdBy: userId,
+            billingAccountId: accountId,
+          },
           now,
-        ));
-      personal = await store.createWorkspace(
-        { orgId, name: "Default", isDefault: true, createdBy: userId, billingAccountId: accountId },
-        now,
-      );
-      await requestSample(ctx, personal);
-    }
-    // Repairs a user whose earlier attempt created the workspace but not their row.
-    if (!(await store.workspaceMemberships(personal, userId, { activeOnly: true })).length)
-      await store.createMembership(
-        "workspace",
-        { workspaceId: personal, userId, role: "owner", source: "direct" },
-        now,
-      );
+        );
+      }
+      // Repairs a user whose earlier attempt created the workspace but not their row.
+      if (!(await tx.workspaceMemberships(personal, userId, { activeOnly: true })).length)
+        await tx.createMembership(
+          "workspace",
+          { workspaceId: personal, userId, role: "owner", source: "direct" },
+          now,
+        );
+      return { orgId: id, personal, fresh };
+    });
+    orgId = made.orgId;
+    const personal = made.personal;
+    if (made.fresh) await requestSample(ctx, personal);
     if (hasOwnProjects)
       for (const id of await store.orphanProjectIds(who.directusUserId))
         await store.moveProject(id, personal, now);

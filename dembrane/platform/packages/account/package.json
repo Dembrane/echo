@@ -8,7 +8,8 @@
     "allow": {
       "billing": "Accepting an invite or removing a member reconciles the org's paid seats.",
       "notifications": "Tells staff and admins about sign-ups and accepted invites.",
-      "samples": "A new personal workspace queues its copy of the best-practices sample."
+      "samples": "A new personal workspace queues its copy of the best-practices sample.",
+      "tenancy": "Onboarding creates an org under tenancy's per-user org-create lock."
     }
   },
   "exports": {
@@ -33,6 +34,7 @@
     "@dembrane/ratelimit": "workspace:*",
     "@dembrane/samples": "workspace:*",
     "@dembrane/storage": "workspace:*",
+    "@dembrane/tenancy": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
     "zod": "^4.1.0"

@@ -133,7 +133,8 @@ export function chatRoutes(deps: ChatRoutesDeps) {
             ),
           ),
         ),
-        template_key: optStr,
+        // The column is varchar(255); a longer key would fail the turn after admit.
+        template_key: optional(nullable(str({ max: 255 })), null),
       }),
     });
     return reply(d, who, c.req.param("chat_id"), body.data, query.protocol, query.language);

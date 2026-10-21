@@ -302,6 +302,112 @@ run("free popcorn in the tick", () => {
     expect(await stampOf(got.run.id)).toBeNull();
   });
 
+  // Extraction of "BROKEN" fails while `broken.on`; the stakeholders view always answers.
+  const broken = { on: true, reads: 0 };
+  const failingWithSlide = () =>
+    new FakeCompleter().on(
+      () => true,
+      (r: CompletionRequest) => {
+        const required = ((r.jsonSchema as { required?: string[] })?.required ?? []).join(",");
+        const user = typeof r.user === "string" ? r.user : r.user.join("\n");
+        if (required === "items" && user.includes("BROKEN")) {
+          broken.reads++;
+          if (broken.on) throw new Error("model refused");
+        }
+        if (required === "stakeholders,relations")
+          return JSON.stringify({
+            stakeholders: [
+              {
+                name: "Ferry riders",
+                role: "People who ride the night ferry",
+                stake: "Getting home after late shifts",
+                rung: "voiced",
+                stakeWeight: 0.8,
+                mentionsWeight: 0.6,
+                quotes: [],
+              },
+            ],
+            relations: [],
+          });
+        if (required === "items" && user.includes("bridge needs a cycle lane"))
+          return JSON.stringify({ items: [{ phrase: "the bridge needs a cycle lane" }] });
+        if (required === "items") return JSON.stringify({ items: [] });
+        // The second pass: rooted, with a kind.
+        return JSON.stringify({
+          grounded: true,
+          quote: "the bridge needs a cycle lane",
+          reason: "",
+          kind: "need",
+          qualifiers: [],
+          question_form: false,
+          target: "",
+        });
+      },
+    );
+
+  const entryOf = async (loopId: string, conv: string) => {
+    const [loop] = await sql`select popcorn_state from agent_loop where id = ${loopId}`;
+    const state = loop?.popcorn_state as { conversations: Record<string, Json> } | undefined;
+    return state?.conversations[conv];
+  };
+
+  test("free live ticks retry a failing conversation 3 times, then only a host read or new content does", async () => {
+    broken.on = true;
+    broken.reads = 0;
+    const s = await seed("free", { status: "active", blocks: ["popcorn", "stakeholders"] });
+    const conv = await addConversation(s.projectId, "BROKEN");
+    for (let i = 0; i < 6; i++)
+      await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    // Each retry remade the slide, so each counted: at most 3.
+    expect(broken.reads).toBe(3);
+    expect(await ledger(s.projectId)).toBe(3);
+
+    // The host's own read retries it, and counts.
+    await runPopcornTick(deps(failingWithSlide()), s.loopId, "manual", newId());
+    expect(broken.reads).toBe(4);
+    expect(await ledger(s.projectId)).toBe(4);
+    await runPopcornTick(deps(failingWithSlide()), s.loopId, "prepare:popcorn", newId());
+    expect(broken.reads).toBe(5);
+
+    // New content: read again, and once the model answers, the error clears.
+    await say(conv, "BROKEN and the bridge needs a cycle lane.");
+    broken.on = false;
+    const got = await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    expect(got.status).toBe("ok");
+    expect(broken.reads).toBe(6);
+    const entry = await entryOf(s.loopId, conv);
+    expect(entry?.error ?? null).toBeNull();
+    expect(entry?.failed_reads).toBeUndefined();
+  });
+
+  test("paid live ticks retry a failing conversation every time", async () => {
+    broken.on = true;
+    broken.reads = 0;
+    const s = await seed("guardian", { status: "active", blocks: ["popcorn", "stakeholders"] });
+    await addConversation(s.projectId, "BROKEN");
+    for (let i = 0; i < 5; i++)
+      await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    expect(broken.reads).toBe(5);
+  });
+
+  test("a conversation read before that now keeps failing leaves free ticks with nothing to do", async () => {
+    broken.on = false;
+    broken.reads = 0;
+    const s = await seed("free", { status: "active", blocks: ["popcorn", "stakeholders"] });
+    const conv = await addConversation(s.projectId, "BROKEN the bridge needs a cycle lane.");
+    await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    expect(((await entryOf(s.loopId, conv))?.items as unknown[] | undefined)?.length).toBe(1);
+    await say(conv, "BROKEN again, the ferry should run all night.");
+    broken.on = true;
+    for (let i = 0; i < 3; i++)
+      await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    const used = await ledger(s.projectId);
+    const got = await runPopcornTick(deps(failingWithSlide()), s.loopId, "scheduled");
+    expect(got.status).toBe("no_op");
+    expect(broken.reads).toBe(4);
+    expect(await ledger(s.projectId)).toBe(used);
+  });
+
   test("a crash after admitting is counted once when the step runs again", async () => {
     const s = await seed("free", { status: "active" });
     await say(s.conv, "Table 1 says the square needs trees.");

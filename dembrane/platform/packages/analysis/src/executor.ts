@@ -112,6 +112,8 @@ export interface RunRequest {
   readonly refreshDependencies?: boolean;
   /** Retry: which failed run (default: the scope's latest failed run). */
   readonly retryRunId?: string | null;
+  /** Called before a run of a recipe is started; its give-back runs when nothing new started. */
+  readonly charge?: (recipeId: string) => Promise<(() => Promise<void>) | null>;
 }
 
 /** created, existing (same key or equivalent work in flight), reused, or requeued. */
@@ -525,8 +527,19 @@ async function requestNode(
       inputFingerprint,
     };
   }
-  let [run, created] = await store.createRun(n);
-  if (!created) return { run, outcome: "existing", dependencies: [] };
+  const refund = await o.request.charge?.(recipe.id);
+  let run: Run;
+  let created: boolean;
+  try {
+    [run, created] = await store.createRun(n);
+  } catch (err) {
+    await refund?.();
+    throw err;
+  }
+  if (!created) {
+    await refund?.();
+    return { run, outcome: "existing", dependencies: [] };
+  }
   if (run.status === "waiting_for_inputs") {
     // A dependency may have finished between reading it and registering this waiter.
     const settled = await store.wakeWaitingRuns(run.projectId);
@@ -567,11 +580,23 @@ async function retry(
     : await store.latestRun(scopeId, ["failed"]);
   if (!target || target.scopeId !== scopeId || target.projectId !== request.projectId)
     throw new InvalidRecipeRequest("there is no failed run to retry in this scope");
+  const refund = await request.charge?.(target.recipeId);
   // The store binds the key to this run in the same transaction that requeues it.
-  const bound = await store.requeueRun(target.id, request.idempotencyKey ?? null);
-  if (!bound) throw new AnalysisStoreError(`run ${target.id} could not be queued again`);
-  if (bound.id !== target.id || target.status !== "failed" || bound.status !== "queued")
+  let bound: Run | null;
+  try {
+    bound = await store.requeueRun(target.id, request.idempotencyKey ?? null);
+  } catch (err) {
+    await refund?.();
+    throw err;
+  }
+  if (!bound) {
+    await refund?.();
+    throw new AnalysisStoreError(`run ${target.id} could not be queued again`);
+  }
+  if (bound.id !== target.id || target.status !== "failed" || bound.status !== "queued") {
+    await refund?.();
     return { run: bound, outcome: "existing", dependencies: [] };
+  }
   await dispatch(deps, bound);
   await deps.publishEvent(bound.projectId, {
     type: "queued",

@@ -14,10 +14,11 @@ import type { Json } from "./py";
 import { MIN_CADENCE_MINUTES } from "./settings";
 
 const { agent_loop, agent_loop_run } = schema;
+const UNSTAMPED = { free_period_start: null, free_account_id: null };
 
-/** periodStart is null when nothing was counted. */
+/** periodStart and accountId are null when nothing was counted. */
 export type PopcornAdmit =
-  | { readonly ok: true; readonly periodStart: string | null }
+  | { readonly ok: true; readonly periodStart: string | null; readonly accountId: string | null }
   | { readonly ok: false; readonly used: number; readonly limit: number };
 
 export interface FreePopcorn {
@@ -49,11 +50,11 @@ export function popcornAllowance(db: Db): PopcornAllowance {
   return {
     async admit(projectId, now) {
       const a = await counted(projectId, now);
-      if (!a) return { ok: true, periodStart: null };
+      if (!a) return { ok: true, periodStart: null, accountId: null };
       const limits = await freeLimits(db);
       const t = await take(db, a, "popcorn_analyses", 1, limits.popcorn_analyses_month);
       if (!t.ok) return { ok: false, used: t.used, limit: t.limit };
-      return { ok: true, periodStart: a.periodStart.toISOString() };
+      return { ok: true, periodStart: a.periodStart.toISOString(), accountId: a.accountId };
     },
 
     async refund(runId, now) {
@@ -61,6 +62,7 @@ export function popcornAllowance(db: Db): PopcornAllowance {
         .select({
           projectId: agent_loop.project_id,
           stampMs: sql<string>`(extract(epoch from ${agent_loop_run.free_period_start}) * 1000)::bigint`,
+          accountId: agent_loop_run.free_account_id,
         })
         .from(agent_loop_run)
         .leftJoin(agent_loop, eq(agent_loop.id, agent_loop_run.loop_id))
@@ -71,14 +73,19 @@ export function popcornAllowance(db: Db): PopcornAllowance {
         isNotNull(agent_loop_run.free_period_start),
       );
       const a = r.projectId ? await allowanceForProject(db, r.projectId, now) : null;
-      if (!a || Number(r.stampMs) !== a.periodStart.getTime()) {
-        await db.update(agent_loop_run).set({ free_period_start: null }).where(stamped);
+      // Legacy rows without an account match any.
+      const charged =
+        a &&
+        Number(r.stampMs) === a.periodStart.getTime() &&
+        (r.accountId === null || r.accountId === a.accountId);
+      if (!a || !charged) {
+        await db.update(agent_loop_run).set(UNSTAMPED).where(stamped);
         return false;
       }
       return withAllowanceLock(db, a, async (tx) => {
         const cleared = await tx
           .update(agent_loop_run)
-          .set({ free_period_start: null })
+          .set(UNSTAMPED)
           .where(stamped)
           .returning({ id: agent_loop_run.id });
         if (cleared.length === 0) return false;

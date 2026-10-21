@@ -66,7 +66,10 @@ import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { trackProcess } from "@/features/processes/store";
-import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
+import {
+	invalidateFreeAllowance,
+	useFreeAllowance,
+} from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -1167,6 +1170,17 @@ export const AgenticChatPanel = ({
 	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
 	const voiceCapReached = Boolean(usageGates?.uploads_locked);
 	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
+	// Free projects have no voice input (the server refuses it with a 402).
+	const voiceFree = Boolean(useFreeAllowance(workspace?.id).data?.free);
+	const [voiceFreeRefused, setVoiceFreeRefused] = useState(false);
+	const voiceLocked = voiceFree || voiceFreeRefused || voiceCapReached;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: react to a refusal only
+	useEffect(() => {
+		if (voice.errorKind !== "free_limit") return;
+		voice.dismissError();
+		setVoiceFreeRefused(true);
+		voiceCapHandlers.open();
+	}, [voice.errorKind]);
 	// Free tier: the server's turn meter for this chat.
 	const turnGate = chatTurnGate(chatQuery.data?.free_turns);
 	const atTurnLimit = turnGate.atLimit || turnRefusal !== null;
@@ -2261,9 +2275,9 @@ export const AgenticChatPanel = ({
 										<VoiceInputButton
 											ariaLabel={t`Record a voice message`}
 											disabled={atTurnLimit || voice.isStarting}
-											locked={voiceCapReached && !atTurnLimit}
+											locked={voiceLocked && !atTurnLimit}
 											onClick={
-												voiceCapReached && !atTurnLimit
+												voiceLocked && !atTurnLimit
 													? () => {
 															emitFrozenFeatureAttempt();
 															voiceCapHandlers.open();
@@ -2272,9 +2286,13 @@ export const AgenticChatPanel = ({
 											}
 											testId="chat-voice-record-button"
 											tooltip={
-												voiceCapReached && !atTurnLimit
-													? t`This workspace has used its recording hours. Upgrade to keep using voice.`
-													: undefined
+												atTurnLimit
+													? undefined
+													: voiceFree || voiceFreeRefused
+														? t`Voice input comes with a paid plan.`
+														: voiceCapReached
+															? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+															: undefined
 											}
 										/>
 										<Button
@@ -2396,6 +2414,7 @@ export const AgenticChatPanel = ({
 				opened={voiceCapOpened}
 				onClose={voiceCapHandlers.close}
 				upgradeTier={usageGates?.upgrade_cta_tier ?? null}
+				free={voiceFree || voiceFreeRefused}
 			/>
 		</Stack>
 	);

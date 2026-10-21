@@ -69,8 +69,8 @@ const {
 		note: "",
 		transcript: "what I said out loud",
 	})),
-	// Mutable so a test can put the workspace over its recording cap.
-	usageState: { uploadsLocked: false },
+	// Mutable so a test can put the workspace over its recording cap or on free.
+	usageState: { free: false, uploadsLocked: false },
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -182,6 +182,11 @@ vi.mock("@/hooks/useWorkspaceUsage", async (importOriginal) => {
 });
 
 // Children that carry their own data layer and nothing to do with run state.
+vi.mock("@/hooks/useFreeAllowance", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@/hooks/useFreeAllowance")>()),
+	useFreeAllowance: () => ({ data: { free: usageState.free } }),
+}));
+
 vi.mock("./FreeTierChatGate", async (importOriginal) => ({
 	...(await importOriginal<typeof import("./FreeTierChatGate")>()),
 	ChatUpgradeModal: ({
@@ -527,6 +532,7 @@ describe("AgenticChatPanel, voice input", () => {
 	beforeEach(() => {
 		clock = 0;
 		usageState.uploadsLocked = false;
+		usageState.free = false;
 		vi.spyOn(Date, "now").mockImplementation(() => clock);
 		vi.stubGlobal("MediaRecorder", FakeMediaRecorder);
 		Object.defineProperty(globalThis.navigator, "mediaDevices", {
@@ -648,6 +654,55 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(
 			await screen.findByText(/You were trying to use your voice in chat/),
 		).toBeTruthy();
+	});
+
+	it("locks the microphone on a free project and offers the upgrade", async () => {
+		usageState.free = true;
+		runState.status = "completed";
+		renderPanel();
+
+		const mic = await screen.findByTestId("chat-voice-record-button");
+		expect(mic.hasAttribute("data-disabled")).toBe(true);
+		await act(async () => {
+			fireEvent.click(mic);
+		});
+
+		expect(
+			globalThis.navigator.mediaDevices.getUserMedia,
+		).not.toHaveBeenCalled();
+		expect(transcribeMock).not.toHaveBeenCalled();
+		expect(
+			await screen.findByText(/You were trying to use your voice in chat/),
+		).toBeTruthy();
+	});
+
+	it("opens the upgrade wall when the server refuses a free voice note", async () => {
+		transcribeMock.mockRejectedValueOnce(
+			Object.assign(new Error("402"), {
+				isAxiosError: true,
+				response: {
+					data: {
+						code: "billing.tier_limit",
+						detail: { error: "FREE_TIER_LIMIT", limit: "audio_month" },
+						params: { limit: "audio_month" },
+					},
+					status: 402,
+				},
+			}),
+		);
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+
+		expect(
+			await screen.findByText(/You were trying to use your voice in chat/),
+		).toBeTruthy();
+		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
 	});
 
 	it("says the microphone is blocked rather than failing quietly", async () => {

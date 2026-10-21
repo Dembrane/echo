@@ -5,6 +5,7 @@ import { S3Storage } from "../src";
 // store actually sends. Path-style: /<bucket>/<key>.
 const objects = new Map<string, Uint8Array>();
 const seen: string[] = [];
+const copies: { from: string; auth: string | null }[] = [];
 const bucket = Bun.serve({
   port: 0,
   fetch: async (req) => {
@@ -12,9 +13,18 @@ const bucket = Bun.serve({
     seen.push(`${req.method} ${path}`);
     const body = objects.get(path);
     switch (req.method) {
-      case "PUT":
+      case "PUT": {
+        const from = req.headers.get("x-amz-copy-source");
+        if (from) {
+          copies.push({ from: decodeURIComponent(from), auth: req.headers.get("authorization") });
+          const src = objects.get(decodeURIComponent(from));
+          if (!src) return new Response("<Error><Code>NoSuchKey</Code></Error>", { status: 404 });
+          objects.set(path, src);
+          return new Response("<CopyObjectResult></CopyObjectResult>", { status: 200 });
+        }
         objects.set(path, new Uint8Array(await req.arrayBuffer()));
         return new Response(null, { status: 200 });
+      }
       case "DELETE":
         objects.delete(path);
         return new Response(null, { status: 204 });
@@ -79,4 +89,38 @@ test("no prefix writes at the bucket root, as before", async () => {
 test("a prefix that could escape the bucket is refused; bad keys still are", async () => {
   for (const bad of ["../x", "/abs", "a//b"]) expect(() => store(bad)).toThrow(/invalid storage/);
   await expect(store("pr-1").put("../x", "x")).rejects.toThrow("invalid storage key");
+});
+
+test("copy is a signed server-side copy of the prefixed key", async () => {
+  const s = store("pr-12");
+  seen.length = 0;
+  await s.put("conversation/c1/a b.webm", "audio");
+  await s.copy("conversation/c1/a b.webm", "conversation/c1/audio/x.webm");
+  expect(seen.at(-1)).toBe("PUT /b/pr-12/conversation/c1/audio/x.webm");
+  expect(copies.at(-1)?.from).toBe("/b/pr-12/conversation/c1/a b.webm");
+  expect(copies.at(-1)?.auth).toMatch(
+    /^AWS4-HMAC-SHA256 Credential=k\/\d{8}\/auto\/s3\/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-copy-source;x-amz-date, Signature=[0-9a-f]{64}$/,
+  );
+  expect(await (await s.get("conversation/c1/audio/x.webm"))?.text()).toBe("audio");
+  await expect(s.copy("conversation/c1/missing", "conversation/c1/y")).rejects.toThrow();
+  await s.delete("conversation/c1/a b.webm");
+  await s.delete("conversation/c1/audio/x.webm");
+});
+
+test("a copy that hangs gives up at its timeout", async () => {
+  const hung = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
+  try {
+    const s = new S3Storage({
+      endpoint: `http://127.0.0.1:${hung.port}`,
+      bucket: "b",
+      region: "auto",
+      accessKeyId: "k",
+      secretAccessKey: "s",
+    });
+    const started = Date.now();
+    await expect(s.copy("a", "b", { timeoutMs: 100 })).rejects.toThrow();
+    expect(Date.now() - started).toBeLessThan(5000);
+  } finally {
+    hung.stop(true);
+  }
 });

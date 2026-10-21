@@ -86,6 +86,7 @@ export function fakeFreeChats(
         chatId: turn.chatId,
         from: "user",
         text: turn.text,
+        templateKey: turn.templateKey ?? null,
         now: turn.now,
       });
       return { account: null, claimed: false };

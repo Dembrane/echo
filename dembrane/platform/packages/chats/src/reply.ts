@@ -57,7 +57,14 @@ export async function reply(
   const last = body.messages[body.messages.length - 1];
   if (!last) throw new Error("list index out of range");
   const messageId = d.newId();
-  const turn = { projectId, chatId, messageId, text: last.content, now: d.now() };
+  const turn = {
+    projectId,
+    chatId,
+    messageId,
+    text: last.content,
+    now: d.now(),
+    templateKey: body.template_key,
+  };
   const admitted = await d.freeChats.admitTurn(turn);
 
   let formatted: { role: "system" | "user" | "assistant"; content: string }[];
@@ -67,12 +74,7 @@ export async function reply(
       chatContext(d, who, chat),
       chat.name ? Promise.resolve(null) : generateTitle(d.models, last.content, language),
     ]);
-    await Promise.all([
-      title ? d.store.setChatName(chatId, title, d.now()) : null,
-      body.template_key !== null
-        ? d.store.updateMessage(messageId, { template_key: body.template_key }, d.now())
-        : null,
-    ]);
+    if (title) await d.store.setChatName(chatId, title, d.now());
     // Blank turns are dropped: Vertex refuses a prompt with an empty message in it.
     let convo = history
       .filter((m) => m.message_from === "user" || m.message_from === "assistant")

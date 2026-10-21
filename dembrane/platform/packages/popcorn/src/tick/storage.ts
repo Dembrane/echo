@@ -41,10 +41,11 @@ export function tickStore(sql: Sql) {
       startedAt: string;
       finishedAt: string;
       freePeriodStart?: string | null;
+      freeAccountId?: string | null;
     }): Promise<Row> {
       const [r] =
-        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at, free_period_start)
-        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt}, ${v.freePeriodStart ?? null})
+        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at, free_period_start, free_account_id)
+        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt}, ${v.freePeriodStart ?? null}, ${v.freeAccountId ?? null})
         returning *`;
       return r as Row;
     },
@@ -58,10 +59,12 @@ export function tickStore(sql: Sql) {
       startedAt: string;
       finishedAt: string;
       freePeriodStart?: string | null;
+      freeAccountId?: string | null;
     }): Promise<Row> {
       const [r] = await sql`update agent_loop_run set loop_id = ${v.loopId}, status = ${v.status},
         detail = ${v.detail}, started_at = ${v.startedAt}, finished_at = ${v.finishedAt},
-        free_period_start = ${v.freePeriodStart === undefined ? sql`free_period_start` : v.freePeriodStart}
+        free_period_start = ${v.freePeriodStart === undefined ? sql`free_period_start` : v.freePeriodStart},
+        free_account_id = ${v.freeAccountId === undefined ? sql`free_account_id` : v.freeAccountId}
         where id = ${v.id} returning *`;
       return r as Row;
     },

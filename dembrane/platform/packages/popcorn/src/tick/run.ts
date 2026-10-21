@@ -83,6 +83,8 @@ import { errText, f, failureText, Mutex, Semaphore, settle, sha1Hex, withTimeout
 
 // Parallel extractors per tick; the fast group keeps up with sixteen.
 export const MAX_PARALLEL_EXTRACTORS = 16;
+// Free live ticks stop retrying a conversation that failed this often on the same content.
+export const MAX_FAILED_READS = 3;
 // Second-pass calls in flight (two per phrase); the pass starts after every first phrase.
 export const MAX_PARALLEL_ENRICHMENT = 8;
 // Calls in flight for the tensions pipeline, beside the stakeholders call.
@@ -200,6 +202,7 @@ async function createRun(
     requestId?: string | null;
     /** The period an analysis counted in; omitted keeps a retried row's stamp. */
     freePeriodStart?: string;
+    freeAccountId?: string | null;
   },
 ): Promise<Row> {
   const id = o.requestId || newId();
@@ -211,7 +214,10 @@ async function createRun(
     detail,
     startedAt: pyIso(o.startedAt),
     finishedAt: utcNowIso(d.now()),
-    ...(o.freePeriodStart !== undefined && { freePeriodStart: o.freePeriodStart }),
+    ...(o.freePeriodStart !== undefined && {
+      freePeriodStart: o.freePeriodStart,
+      freeAccountId: o.freeAccountId ?? null,
+    }),
   };
   // An on-request tick's durable backup carries the same id; its retry replaces the
   // failed attempt instead of colliding with the row already written.
@@ -591,6 +597,8 @@ async function extractOne(
         extracted_at: utcNowIso(d.now()),
         error: null,
       });
+      delete entry.failed_fingerprint;
+      delete entry.failed_reads;
       const ms = Math.trunc(performance.now() - started);
       const held = suppressed.length ? `, ${suppressed.length} held back` : "";
       const again = redropped ? `, ${redropped} held back again` : "";
@@ -606,6 +614,11 @@ async function extractOne(
         done: true,
         extracted_at: utcNowIso(d.now()),
         error: [...errText(exc)].slice(0, 500).join(""),
+        failed_fingerprint: transcript.fingerprint,
+        failed_reads:
+          entry.failed_fingerprint === transcript.fingerprint
+            ? Number(entry.failed_reads ?? 0) + 1
+            : 1,
       });
       outcomes.push(`popcorn ${cid.slice(0, 8)}: FAILED ${errText(exc)}`);
     }
@@ -1312,6 +1325,7 @@ export async function runPopcornTick(
   );
   // The period this tick's analysis counted in, until it finishes or is given back.
   let counted: string | null = null;
+  let countedAccount: string | null = null;
   try {
     if (!reportId || !projectId || !actingUser)
       throw new Error("Popcorn loop is missing required ids");
@@ -1408,7 +1422,16 @@ export async function runPopcornTick(
     const inScope = (t: Json) => !named || named.has(String(t.id));
     const conversations = state.conversations as Json;
     const order = state.order as string[];
+    const isFree = async () => {
+      try {
+        return Boolean(d.free && (await d.free.status(projectId, startedAt)));
+      } catch {
+        return false;
+      }
+    };
     const changed: Json[] = [];
+    // Conversations that keep failing on the same content.
+    const givenUp = new Set<string>();
     for (const t of transcripts) {
       const cid = String(t.id);
       let entry = conversations[cid] as Json | undefined;
@@ -1424,7 +1447,18 @@ export async function runPopcornTick(
       entry.created_at = t.created_at;
       entry.duration = t.duration ?? null;
       if (entry.fingerprint !== t.fingerprint || !truthy(entry.done)) changed.push(t);
+      if (
+        truthy(entry.done) &&
+        truthy(entry.error) &&
+        entry.failed_fingerprint === t.fingerprint &&
+        Number(entry.failed_reads ?? 0) >= MAX_FAILED_READS
+      )
+        givenUp.add(cid);
     }
+    // Only free live ticks give up on them; a host read, a prepare or a paid session retries.
+    if (givenUp.size && (tickKind === "manual" || prepareKind !== null || !(await isFree())))
+      givenUp.clear();
+    const readable = (t: Json) => inScope(t) && !givenUp.has(String(t.id));
     // A conversation that vanished leaves the deck with it.
     const present = new Set(transcripts.map((t) => String(t.id)));
     const vanished = Object.keys(conversations).filter((cid) => !present.has(cid));
@@ -1450,8 +1484,8 @@ export async function runPopcornTick(
     const analysisStale =
       transcripts.length > 0 && staleViews(state, analysisFingerprint, analysisViews).length > 0;
     const preparesPopcorn = prepareKind === null || prepareKind === "popcorn";
-    const extractionWork = preparesPopcorn ? changed.filter(inScope) : [];
-    const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(inScope) : [];
+    const extractionWork = preparesPopcorn ? changed.filter(readable) : [];
+    const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(readable) : [];
     const analysisOwed = analysisStale && !cut;
     // A session saved before the map fingerprint: its map is as current as its last full read.
     if (d.requestMap && state.map_fingerprint === undefined) {
@@ -1534,6 +1568,7 @@ export async function runPopcornTick(
         return { status: "no_op", run };
       }
       counted = admit.periodStart;
+      countedAccount = admit.accountId;
       if (counted)
         await createRun(d, {
           loopId,
@@ -1541,6 +1576,7 @@ export async function runPopcornTick(
           startedAt,
           requestId: attemptId,
           freePeriodStart: counted,
+          freeAccountId: countedAccount,
         });
     }
 
@@ -1610,7 +1646,7 @@ export async function runPopcornTick(
 
     // Now that every first phrase is on the stage: the second pass and the analysis at once.
     const secondPass = async () => {
-      const pending = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(inScope) : [];
+      const pending = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(readable) : [];
       if (pending.length) {
         const slots = new Semaphore(MAX_PARALLEL_ENRICHMENT);
         await Promise.all(
@@ -1632,6 +1668,8 @@ export async function runPopcornTick(
           : staleViews(state, analysisFingerprint, analysisViews);
       const large = await largeSession(d, kept, projectId, transcripts);
       const fresh = await runAnalysisPass(d, transcripts, outcomes, book, views, publisher, large);
+      // A view made is an analysis had, whatever the extractors did.
+      if (Object.values(fresh).some((v) => v !== null && v !== undefined)) readNothing = false;
       commitViews(
         state,
         fresh,
@@ -1693,7 +1731,7 @@ export async function runPopcornTick(
       detail,
       startedAt,
       requestId: counted ? attemptId : requestId,
-      ...(counted ? { freePeriodStart: counted } : {}),
+      ...(counted ? { freePeriodStart: counted, freeAccountId: countedAccount } : {}),
     });
     if (counted && readNothing && d.free)
       try {
@@ -1743,7 +1781,9 @@ export async function runPopcornTick(
         status: "error",
         detail,
         startedAt,
-        ...(counted ? { requestId: attemptId, freePeriodStart: counted } : {}),
+        ...(counted
+          ? { requestId: attemptId, freePeriodStart: counted, freeAccountId: countedAccount }
+          : {}),
       });
     } finally {
       // A failed analysis gives its count back, whatever else failed with it.

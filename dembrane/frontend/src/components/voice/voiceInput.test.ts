@@ -41,6 +41,7 @@ it("maps each failure the endpoint can return onto its own message", () => {
 	expect(transcribeErrorKind(axiosErrorWithStatus(400))).toBe("empty");
 	expect(transcribeErrorKind(axiosErrorWithStatus(403))).toBe("not_allowed");
 	expect(transcribeErrorKind(axiosErrorWithStatus(404))).toBe("not_found");
+	expect(transcribeErrorKind(axiosErrorWithStatus(402))).toBe("free_limit");
 	expect(transcribeErrorKind(axiosErrorWithStatus(502))).toBe(
 		"transcription_failed",
 	);

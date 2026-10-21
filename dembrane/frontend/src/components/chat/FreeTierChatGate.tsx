@@ -46,13 +46,29 @@ export function VoiceCapUpgradeModal({
 	opened,
 	onClose,
 	upgradeTier,
+	free,
 }: {
 	opened: boolean;
 	onClose: () => void;
 	upgradeTier: string | null;
+	/** Voice input is not on the free plan: the free-limit wall. */
+	free?: boolean;
 }) {
 	const { workspace } = useWorkspace();
 	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
+	if (free)
+		return (
+			<UpgradeModal
+				opened={opened}
+				onClose={onClose}
+				currentTier="free"
+				requiredTier={null}
+				canRequestUpgrade
+				workspaceId={workspace?.id ?? ""}
+				wallKey="chat_voice_cap"
+				entry="modal_direct"
+			/>
+		);
 	return (
 		<UpgradeModal
 			opened={opened}

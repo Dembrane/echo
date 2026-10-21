@@ -154,6 +154,8 @@ export const agent_loop_run = pgTable(
     detail: text(),
     finished_at: timestamp({ withTimezone: true, mode: "string" }),
     free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account the stamped analysis was taken from. */
+    free_account_id: uuid(),
     generation_id: uuid(),
     id: uuid().primaryKey().notNull(),
     loop_id: uuid(),
@@ -2509,6 +2511,8 @@ export const project_report = pgTable(
     public_token: varchar({ length: 255 }).default(sql`NULL`),
     /** The free period whose report this report took; null when it took none. */
     free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that report was taken from; null on rows stamped before it existed. */
+    free_account_id: uuid(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

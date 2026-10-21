@@ -19,7 +19,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
@@ -53,6 +53,9 @@ import {
 	ResultsList,
 	useResultActions,
 } from "@/components/results";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { testId } from "@/lib/testUtils";
 import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
@@ -424,6 +427,23 @@ function RecipeCard({
 	onShowResults: () => void;
 }) {
 	const request = useRequestAnalysisRun(projectId);
+	const { workspaceId: routeWorkspaceId } = useParams<{
+		workspaceId?: string;
+	}>();
+	const { workspaceId: contextWorkspaceId } = useWorkspace();
+	const wallWorkspaceId = routeWorkspaceId ?? contextWorkspaceId;
+	// A used-up free month opens its wall; the modal stays mounted, as at every other wall.
+	const [wallKey, setWallKey] = useState<"map_cap" | "popcorn_cap">("map_cap");
+	const [wallOpened, wallHandlers] = useDisclosure(false);
+	const onRefused = (error: unknown) => {
+		const limit = isFreeTierLimitError(error);
+		if (limit !== "map" && limit !== "popcorn") return;
+		setWallKey(limit === "map" ? "map_cap" : "popcorn_cap");
+		wallHandlers.open();
+	};
+	const walled = ["map", "popcorn"].includes(
+		isFreeTierLimitError(request.error) ?? "",
+	);
 	const isConversationScoped = recipe.scopeKeyPattern.includes("conversation:");
 	const [conversationId, setConversationId] = useState<string | null>(null);
 	const defaults = useMemo(() => recipeDefaults(recipe, runs), [recipe, runs]);
@@ -457,7 +477,7 @@ function RecipeCard({
 				retry_run_id: isFailed ? latestRun?.id : undefined,
 				scope_key: scopeKey,
 			},
-			{ onSuccess: markRequested },
+			{ onError: onRefused, onSuccess: markRequested },
 		);
 	const runFresh = () =>
 		request.mutate(
@@ -467,7 +487,7 @@ function RecipeCard({
 				recipe_id: recipe.id,
 				scope_key: scopeKey,
 			},
-			{ onSuccess: markRequested },
+			{ onError: onRefused, onSuccess: markRequested },
 		);
 	const selectedSource = sources.find((source) => source.id === conversationId);
 	const scopeLabel = isConversationScoped
@@ -577,7 +597,8 @@ function RecipeCard({
 						canEdit={canRun}
 					/>
 				)}
-				{request.isError && <ErrorNotice error={request.error} />}
+				{/* The wall answers a used-up month. */}
+				{request.isError && !walled && <ErrorNotice error={request.error} />}
 				<Group>
 					{canRun && (
 						<Button
@@ -622,6 +643,19 @@ function RecipeCard({
 					</Accordion>
 				)}
 			</Stack>
+			{wallWorkspaceId && (
+				<UpgradeModal
+					opened={wallOpened}
+					onClose={wallHandlers.close}
+					currentTier="free"
+					requiredTier={null}
+					canRequestUpgrade
+					workspaceId={wallWorkspaceId}
+					projectId={projectId}
+					wallKey={wallKey}
+					entry="modal_direct"
+				/>
+			)}
 		</Card>
 	);
 }
