@@ -20,37 +20,65 @@ export function formatRelativeAgo(ms: number | undefined | null): string {
 	return t`${n(86_400_000)} d ago`;
 }
 
+// Each unit is its own message, so translators can change the abbreviations.
+const hoursPart = (h: number) =>
+	t({ comment: "Hours, abbreviated, as in 2h 10m", message: `${h}h` });
+const minutesPart = (m: number) =>
+	t({ comment: "Minutes after hours, as in 2h 10m", message: `${m}m` });
+const secondsPart = (s: number) =>
+	t({ comment: "Seconds after hours, as in 1h 0m 2s", message: `${s}s` });
+const minutesAlone = (m: number) =>
+	t({ comment: "Minutes under an hour, as in 45 min", message: `${m} min` });
+const secondsAlone = (s: number) =>
+	t({ comment: "Seconds under an hour, as in 3 min 20 s", message: `${s} s` });
+
+function renderDuration(h: number, m: number, s: number): string {
+	if (h > 0) {
+		const parts = [hoursPart(h)];
+		if (m > 0 || s > 0) parts.push(minutesPart(m));
+		if (s > 0) parts.push(secondsPart(s));
+		return parts.join(" ");
+	}
+	if (m > 0)
+		return s > 0 ? `${minutesAlone(m)} ${secondsAlone(s)}` : minutesAlone(m);
+	return secondsAlone(s);
+}
+
 /**
- * Format a duration given in hours as human-readable copy.
+ * Seconds as copy, the one duration format for usage, meters and upload refusals.
  *
- *   0            → "0 min"
- *   0.03 (~2m)   → "2 min"
- *   0.73 (~44m)  → "44 min"
- *   1            → "1h"
- *   1.5          → "1h 30m"
- *   2.17         → "2h 10m"
- *
- * Anything under a full hour renders as minutes; anything above drops
- * the minutes if they're zero to keep "3h" from reading "3h 0m".
- * Minimum one minute for any positive sub-minute value so "30 seconds
- * of audio" doesn't show as "0 min".
+ *   "minute": nearest minute, at least 1 for anything positive: "0 min", "44 min", "2h 10m"
+ *   "second": seconds under an hour, whole minutes above: "15 s", "3 min 45 s", "1h 30m"
+ *   "exact":  seconds everywhere: "1h 0m 2s"
  */
+export function formatDuration(
+	seconds: number | null | undefined,
+	precision: "minute" | "second" | "exact" = "minute",
+): string {
+	const valid = seconds != null && Number.isFinite(seconds) && seconds > 0;
+	if (precision === "minute") {
+		if (!valid) return minutesAlone(0);
+		const total = Math.max(1, Math.round(seconds / 60));
+		return renderDuration(Math.floor(total / 60), total % 60, 0);
+	}
+	const total = valid ? Math.round(seconds) : 0;
+	const h = Math.floor(total / 3600);
+	const m = Math.floor((total % 3600) / 60);
+	const s = precision === "second" && h > 0 ? 0 : total % 60;
+	return renderDuration(h, m, s);
+}
+
+/** Hours as copy: "44 min", "1h", "2h 10m". */
 export function formatDurationFromHours(
 	hours: number | null | undefined,
 ): string {
-	if (hours == null || !Number.isFinite(hours) || hours <= 0) return "0 min";
-	const totalMins = Math.max(1, Math.round(hours * 60));
-	if (totalMins < 60) return `${totalMins} min`;
-	const h = Math.floor(totalMins / 60);
-	const m = totalMins % 60;
-	if (m === 0) return `${h}h`;
-	return `${h}h ${m}m`;
+	return formatDuration(hours == null ? hours : hours * 3600);
 }
 
 /** Seconds as the usage API shows them: hours to two decimals, then formatted. */
 export function formatDurationFromSeconds(
 	seconds: number | null | undefined,
 ): string {
-	if (seconds == null || !Number.isFinite(seconds)) return "0 min";
+	if (seconds == null || !Number.isFinite(seconds)) return formatDuration(0);
 	return formatDurationFromHours(Math.round(seconds / 36) / 100);
 }

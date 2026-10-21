@@ -6,6 +6,7 @@ import {
   checkFromJson,
   checkJson,
   extraOf,
+  type FreeStamp,
   type Json,
   type NewRun,
   type ObjectRevision,
@@ -39,7 +40,7 @@ import {
   validateScopeKey,
 } from "./registry";
 import { RevisionService, type StagedRevision } from "./revisions";
-import type { AnalysisStore } from "./store";
+import type { AnalysisStore, Requeue } from "./store";
 import { validatePayload } from "./types";
 
 /**
@@ -91,6 +92,8 @@ export interface ExecutorDeps {
   readonly logger?: Logger;
   readonly clock?: () => number;
   readonly keepaliveMs?: number;
+  /** Gives back the charges of failed runs (a project's, or all with null); once each. */
+  readonly refundFailed?: ((projectId: string | null) => Promise<void>) | null;
 }
 
 const now = (deps: ExecutorDeps) => (deps.clock ?? Date.now)();
@@ -113,7 +116,13 @@ export interface RunRequest {
   /** Retry: which failed run (default: the scope's latest failed run). */
   readonly retryRunId?: string | null;
   /** Called before a run of a recipe is started; its give-back runs when nothing new started. */
-  readonly charge?: (recipeId: string) => Promise<(() => Promise<void>) | null>;
+  readonly charge?: (recipeId: string) => Promise<RunCharge | null>;
+}
+
+/** A free charge for one run; a stamped run gives it back if it fails. */
+export interface RunCharge {
+  readonly giveBack: () => Promise<void>;
+  readonly stamp: FreeStamp | null;
 }
 
 /** created, existing (same key or equivalent work in flight), reused, or requeued. */
@@ -527,17 +536,17 @@ async function requestNode(
       inputFingerprint,
     };
   }
-  const refund = await o.request.charge?.(recipe.id);
+  const charge = await o.request.charge?.(recipe.id);
   let run: Run;
   let created: boolean;
   try {
-    [run, created] = await store.createRun(n);
+    [run, created] = await store.createRun({ ...n, freeStamp: charge?.stamp ?? null });
   } catch (err) {
-    await refund?.();
+    await charge?.giveBack();
     throw err;
   }
   if (!created) {
-    await refund?.();
+    await charge?.giveBack();
     return { run, outcome: "existing", dependencies: [] };
   }
   if (run.status === "waiting_for_inputs") {
@@ -580,30 +589,46 @@ async function retry(
     : await store.latestRun(scopeId, ["failed"]);
   if (!target || target.scopeId !== scopeId || target.projectId !== request.projectId)
     throw new InvalidRecipeRequest("there is no failed run to retry in this scope");
-  const refund = await request.charge?.(target.recipeId);
+  const charge = await request.charge?.(target.recipeId);
   // The store binds the key to this run in the same transaction that requeues it.
-  let bound: Run | null;
+  let bound: Requeue | null;
   try {
-    bound = await store.requeueRun(target.id, request.idempotencyKey ?? null);
+    bound = await store.requeueRun(
+      target.id,
+      request.idempotencyKey ?? null,
+      charge?.stamp ?? null,
+    );
   } catch (err) {
-    await refund?.();
+    await charge?.giveBack();
     throw err;
   }
   if (!bound) {
-    await refund?.();
+    await charge?.giveBack();
     throw new AnalysisStoreError(`run ${target.id} could not be queued again`);
   }
-  if (bound.id !== target.id || target.status !== "failed" || bound.status !== "queued") {
-    await refund?.();
-    return { run: bound, outcome: "existing", dependencies: [] };
+  if (!bound.requeued) {
+    await charge?.giveBack();
+    return { run: bound.run, outcome: "existing", dependencies: [] };
   }
-  await dispatch(deps, bound);
-  await deps.publishEvent(bound.projectId, {
+  // The run still holds an earlier charge of this period: that one stands.
+  if (bound.chargeKept) await charge?.giveBack();
+  const run = bound.run;
+  await dispatch(deps, run);
+  await deps.publishEvent(run.projectId, {
     type: "queued",
-    run_id: bound.id,
-    recipe_id: bound.recipeId,
+    run_id: run.id,
+    recipe_id: run.recipeId,
   });
-  return { run: bound, outcome: "requeued", dependencies: [] };
+  return { run, outcome: "requeued", dependencies: [] };
+}
+
+async function refundQuietly(deps: ExecutorDeps, projectId: string | null): Promise<void> {
+  try {
+    await deps.refundFailed?.(projectId);
+  } catch (err) {
+    // The minute sweep tries again.
+    deps.logger?.error({ project_id: projectId, err }, "failed runs not given back");
+  }
 }
 
 /** Cancels a run: its worker stops at its next checkpoint; runs waiting on it fail. */
@@ -1458,6 +1483,8 @@ async function settleFailure(
     if (!(e instanceof AnalysisStoreError)) throw e;
     deps.logger?.warn({ run_id: run.id }, "analysis run: dependants not settled; the sweep will");
   }
+  // This run and any dependant just failed with it.
+  await refundQuietly(deps, run.projectId);
   await deps.publishEvent(run.projectId, {
     type: "failed",
     run_id: run.id,

@@ -27,9 +27,9 @@ import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
-import { useProjectById } from "@/components/project/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import {
 	invalidateFreeAllowance,
 	useFreeAllowance,
@@ -42,6 +42,7 @@ import {
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
@@ -92,15 +93,7 @@ export const UpdateReportModalButton = ({
 	// Free tier: this month's reports. Gate the "New Report" action on click.
 	const { workspace } = useWorkspace();
 	const queryClient = useQueryClient();
-	// Sample projects are exempt; until is_sample loads nothing is walled and the server's 402 decides.
-	const sampleQuery = useProjectById({
-		projectId: projectId ?? "",
-		query: { fields: ["id", "is_sample"] },
-	});
-	const allowanceApplies =
-		sampleQuery.isSuccess &&
-		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
-			?.is_sample !== true;
+	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspace?.id);
 	const effectivelyAtLimit =
 		allowanceApplies && allowanceSpent(freeAllowance.data, "reports");
@@ -409,7 +402,7 @@ export const UpdateReportModalButton = ({
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspace?.id ?? ""}
 				wallKey="report_cap"

@@ -92,6 +92,7 @@ import { bff } from "@/lib/bff";
 import { errorCode } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { blockLabel } from "./blockLabel";
 import { MapFreeNotice, presentsMap } from "./MapFreeNotice";
 import { PresentResultsPanel } from "./PresentResultsPanel";
@@ -801,7 +802,7 @@ function Session({
 						opened={wallOpened}
 						onClose={wall.close}
 						currentTier="free"
-						requiredTier={null}
+						requiredTier={SELLABLE_TIER}
 						canRequestUpgrade
 						workspaceId={workspaceId ?? ""}
 						projectId={projectId}

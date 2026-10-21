@@ -18,6 +18,8 @@ import {
 	type FreeMeter,
 	useFreeAllowance,
 } from "@/hooks/useFreeAllowance";
+import { audioUsedUp, formatResetDate } from "@/lib/freeTier";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { formatDurationFromSeconds } from "@/lib/time";
 
 type MeterKey = Exclude<
@@ -50,23 +52,21 @@ const labelOf = (key: MeterKey): string => {
 	}
 };
 
+const isFull = (key: MeterKey, meter: FreeMeter): boolean =>
+	key === "audio_seconds" ? audioUsedUp(meter) : meter.used >= meter.limit;
+
 const usageText = (key: MeterKey, meter: FreeMeter): string => {
 	if (key === "audio_seconds") {
-		const used = formatDurationFromSeconds(meter.used);
+		// Under a minute left is used up, so only then does it read as the full amount.
+		const shown = audioUsedUp(meter)
+			? Math.max(meter.used, meter.limit)
+			: meter.used;
+		const used = formatDurationFromSeconds(shown);
 		const limit = formatDurationFromSeconds(meter.limit);
 		return t`${used} of ${limit}`;
 	}
 	const { used, limit } = meter;
 	return t`${used} of ${limit}`;
-};
-
-const formatResets = (iso: string, locale: string): string => {
-	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) return iso;
-	return d.toLocaleString(locale, {
-		dateStyle: "medium",
-		timeStyle: "short",
-	});
 };
 
 function MeterRow({
@@ -81,7 +81,9 @@ function MeterRow({
 	hint?: string;
 }) {
 	const pct =
-		meter.limit > 0 ? Math.min(100, (meter.used / meter.limit) * 100) : 100;
+		!over && meter.limit > 0
+			? Math.min(100, (meter.used / meter.limit) * 100)
+			: 100;
 	return (
 		<Stack gap="xs" data-testid={`free-allowance-${meterKey}`}>
 			<Group justify="space-between">
@@ -122,7 +124,8 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 		return meter ? [{ key, meter }] : [];
 	});
 	// Projects is a standing cap (normally 1 of 1), so it never counts as full.
-	const anyFull = meters.some(({ meter }) => meter.used >= meter.limit);
+	const anyFull = meters.some(({ key, meter }) => isFull(key, meter));
+	const resets = formatResetDate(data.resets_at, i18n.locale);
 
 	return (
 		<Paper p="lg" withBorder radius="sm" data-testid="free-allowance-card">
@@ -145,13 +148,13 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 						key={key}
 						meterKey={key}
 						meter={meter}
-						over={meter.used >= meter.limit}
+						over={isFull(key, meter)}
 					/>
 				))}
 
-				{data.resets_at && (
+				{resets && (
 					<Text size="xs" c="dimmed" data-testid="free-allowance-resets">
-						<Trans>Resets on {formatResets(data.resets_at, i18n.locale)}</Trans>
+						<Trans>Resets on {resets}</Trans>
 					</Text>
 				)}
 
@@ -183,7 +186,7 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 				opened={configurator.opened}
 				onClose={configurator.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspaceId}
 				wallKey="free_allowance"

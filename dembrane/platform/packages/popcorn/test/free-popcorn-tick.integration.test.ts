@@ -536,6 +536,17 @@ run("free popcorn in the tick", () => {
     expect(await ledger(s.projectId)).toBe(0);
   });
 
+  test("the sweep leaves a stuck paid (unstamped) run exactly as it was", async () => {
+    const s = await seed("guardian", { status: "active" });
+    const id = newId();
+    await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at)
+      values (${id}, ${s.loopId}, 'running', 'paid read', now() - make_interval(secs => ${STUCK_RUN_MS / 1000 + 60}), now())`;
+    const row = async () => [...(await sql`select * from agent_loop_run where id = ${id}`)];
+    const before = await row();
+    await settleStuckRuns(deps(fake()));
+    expect(await row()).toEqual(before);
+  });
+
   test("a crash after the read was saved stays counted when the step runs again", async () => {
     const s = await seed("free", { status: "active" });
     await say(s.conv, "Table 1 says the tram should stop here.");

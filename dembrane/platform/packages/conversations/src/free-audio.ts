@@ -97,19 +97,21 @@ export async function hasAudioChunk(db: Db, conversationId: string): Promise<boo
 const MEASURE_URL_EXPIRES_S = 600;
 const FILE_TOLERANCE_S = 1;
 // Confirm measures inside the request, under the API's 255 s idle timeout.
-export const UPLOAD_MEASURE_TIMEOUT_MS = 120_000;
+export const UPLOAD_MEASURE_TIMEOUT_MS = 200_000;
 // A live chunk is about 30 s; past this it fails open like any measuring failure.
 export const LIVE_MEASURE_TIMEOUT_MS = 15_000;
 
-function deadline<T>(work: Promise<T>, ms: number): Promise<T> {
+// Past ms the work's signal aborts, so the media request (and its ffmpeg) stops too.
+function deadline<T>(work: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
+  const ctl = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new AudioError("transient", `measuring timed out after ${ms} ms`)),
-      ms,
-    );
+    timer = setTimeout(() => {
+      reject(new AudioError("transient", `measuring timed out after ${ms} ms`));
+      ctl.abort();
+    }, ms);
   });
-  return Promise.race([work, late]).finally(() => clearTimeout(timer));
+  return Promise.race([work(ctl.signal), late]).finally(() => clearTimeout(timer));
 }
 
 async function measureUpload(d: ConversationsDeps, key: string, bytes: number, live = false) {
@@ -121,7 +123,7 @@ async function measureUpload(d: ConversationsDeps, key: string, bytes: number, l
       format: fileFormatOf(key),
       name: key,
     };
-    return await deadline(measureSeconds(d.media, source, bytes), ms);
+    return await deadline((signal) => measureSeconds(d.media, source, bytes, signal), ms);
   } catch (err) {
     if (err instanceof AudioError && err.terminal)
       return { unreadable: true, reason: err.message } satisfies Measured;

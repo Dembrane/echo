@@ -69,10 +69,10 @@ export function tickStore(sql: Sql) {
       return r as Row;
     },
 
-    /** Runs still marked running since before `before`, on loops with no tick alive. */
+    /** Free-charged runs still running since before `before`, on loops with no tick alive. */
     async stuckRuns(before: string, limit: number): Promise<Row[]> {
       return sql`select r.* from agent_loop_run r
-        where r.status = 'running' and r.started_at < ${before}
+        where r.status = 'running' and r.started_at < ${before} and r.free_period_start is not null
           and not exists (select 1 from platform_rate_limit k
             where k.key in ('popcorn:alive:' || r.loop_id, 'popcorn:run:' || r.loop_id)
               and k.reset_at > now())
@@ -86,11 +86,12 @@ export function tickStore(sql: Sql) {
       return (r?.at as Date | null) ?? null;
     },
 
-    /** Ends a stuck run once; false when it finished or started again since it was read. */
+    /** Ends a stuck free-charged run once; false when it finished, restarted or holds no charge. */
     async closeStuckRun(id: string, before: string, detail: string, now: string): Promise<boolean> {
       const rows =
         await sql`update agent_loop_run set status = 'error', detail = ${detail}, finished_at = ${now}
-        where id = ${id} and status = 'running' and started_at < ${before} returning id`;
+        where id = ${id} and status = 'running' and started_at < ${before}
+          and free_period_start is not null returning id`;
       return rows.length > 0;
     },
 

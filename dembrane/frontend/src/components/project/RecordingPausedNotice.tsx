@@ -10,6 +10,7 @@ import {
 	useUseForRecordings,
 } from "@/hooks/useProjectRecording";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 
 // Null (caller cannot open it) or empty: a neutral place.
 const projectName = (name: string | null) => name?.trim() || t`another project`;
@@ -70,7 +71,7 @@ export const RecordingPausedNotice = ({
 				opened={configurator.opened}
 				onClose={configurator.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspaceId}
 				projectId={projectId}

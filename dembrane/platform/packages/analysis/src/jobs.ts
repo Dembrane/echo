@@ -91,6 +91,10 @@ export function analysisWorker(deps: Omit<RuntimeDeps, "jobs">): AnalysisWorker 
       });
       await queue.work(analysisSweep, { concurrency: 1 }, async () => {
         const report = await sweep(rt.store, rt.outbox, crypto.randomUUID().replaceAll("-", ""));
+        // Runs failed by expiry or a dependency outside a worker.
+        await rt.executor
+          .refundFailed?.(null)
+          .catch((err) => deps.logger.error({ err }, "failed analysis runs not given back"));
         if (
           report.events.claimed ||
           report.expiredRuns ||

@@ -52,7 +52,12 @@ export function mediaApp(media: Media, logger: Logger) {
       if (!parsed.success) return c.json({ kind: "value", message: parsed.error.message }, 400);
       const started = performance.now();
       try {
-        const result = await oneAtATime(() => dispatch(media, op, parsed.data));
+        // Aborts when the caller disconnects: a queued job is skipped, a running one killed.
+        const signal = c.req.raw.signal;
+        const result = await oneAtATime(() => {
+          if (signal.aborted) throw new AudioError("transient", "caller went away");
+          return dispatch(media, op, parsed.data, signal);
+        });
         logger.info({ op, ms: Math.round(performance.now() - started) }, "media job done");
         return c.json(result ?? null);
       } catch (err) {
@@ -72,16 +77,23 @@ export function mediaApp(media: Media, logger: Logger) {
   return app;
 }
 
-function dispatch(media: Media, op: keyof typeof schemas, body: unknown): Promise<unknown> {
+function dispatch(
+  media: Media,
+  op: keyof typeof schemas,
+  body: unknown,
+  signal: AbortSignal,
+): Promise<unknown> {
   switch (op) {
     case "probe":
-      return media.probe((body as z.output<typeof schemas.probe>).source);
+      return media.probe((body as z.output<typeof schemas.probe>).source, { signal });
     case "probe-url":
       return media.probeUrl((body as z.output<(typeof schemas)["probe-url"]>).url);
     case "convert":
       return media.convert(body as z.output<typeof schemas.convert>);
     case "decoded-seconds":
-      return media.decodedSeconds((body as z.output<(typeof schemas)["decoded-seconds"]>).source);
+      return media.decodedSeconds((body as z.output<(typeof schemas)["decoded-seconds"]>).source, {
+        signal,
+      });
     case "split":
       return media.split(body as z.output<typeof schemas.split>);
     case "silences":

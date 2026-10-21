@@ -10,6 +10,7 @@ import {
   type MediaSource,
   measureSeconds,
 } from "../src";
+import { decodeSeconds } from "../src/ffmpeg";
 
 setDefaultTimeout(120_000);
 
@@ -213,6 +214,35 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
       seconds: 7200,
       how: "declared",
     });
+  });
+
+  test("measuring hands its signal to the decode and the probe", async () => {
+    const seen: (AbortSignal | undefined)[] = [];
+    const stub = {
+      probe: async (_s: MediaSource, o?: { signal?: AbortSignal }) => {
+        seen.push(o?.signal);
+        return { format: { duration: "1" }, streams: [{ codec_type: "audio" }] };
+      },
+      decodedSeconds: async (_s: MediaSource, o?: { signal?: AbortSignal }) => {
+        seen.push(o?.signal);
+        throw new AudioError("value", "decode failed");
+      },
+    } as unknown as Media;
+    const signal = new AbortController().signal;
+    await measureSeconds(stub, src("cbr.mp3", "mp3"), 10_000, signal);
+    expect(seen).toEqual([signal, signal]);
+  });
+
+  test("an aborted measure stops the download and the decode", async () => {
+    const err = await media
+      .decodedSeconds(src("seventy.mp3", "mp3"), { signal: AbortSignal.abort() })
+      .catch((e) => e);
+    expect((err as AudioError).kind).toBe("transient");
+    const killed = await decodeSeconds(at("seventy.mp3"), "mp3", AbortSignal.abort()).catch(
+      (e) => e,
+    );
+    expect((killed as AudioError).kind).toBe("transient");
+    expect((killed as AudioError).message).toContain("killed");
   });
 
   test("convert reports the output length", async () => {

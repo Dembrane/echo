@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { freeLimitDetails, isFreeTierLimitError } from "./freeTier";
+import { formatDuration } from "./time";
 
 // The server allows this much over the per-file limit.
 const FILE_TOLERANCE_SECONDS = 1;
@@ -46,17 +47,9 @@ export function precheckUploads(
 	return refusals;
 }
 
-// Seconds under an hour; hours and minutes above, to the second when asked.
-const length = (seconds: number, toSecond = false) => {
-	const total = Math.max(0, Math.round(seconds));
-	const h = Math.floor(total / 3600);
-	const m = Math.floor((total % 3600) / 60);
-	const s = total % 60;
-	if (h === 0 && m === 0) return `${s} s`;
-	if (h === 0) return s === 0 ? `${m} min` : `${m} min ${s} s`;
-	if (toSecond && s > 0) return `${h}h ${m}m ${s}s`;
-	return m === 0 ? `${h}h` : `${h}h ${m}m`;
-};
+// Seconds under an hour, minutes above; to the second when asked.
+const length = (seconds: number, toSecond = false) =>
+	formatDuration(seconds, toSecond ? "exact" : "second");
 
 const lengths = (a: number, b: number): [string, string] => {
 	const pair: [string, string] = [length(a), length(b)];

@@ -31,7 +31,7 @@ export function ChatUpgradeModal({
 			opened={opened}
 			onClose={onClose}
 			currentTier="free"
-			requiredTier={null}
+			requiredTier={UPGRADE_TIER}
 			canRequestUpgrade
 			workspaceId={workspace?.id ?? ""}
 			wallKey={isChatLimit ? "chat_cap" : "chat_turn_cap"}
@@ -62,7 +62,7 @@ export function VoiceCapUpgradeModal({
 				opened={opened}
 				onClose={onClose}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={UPGRADE_TIER}
 				canRequestUpgrade
 				workspaceId={workspace?.id ?? ""}
 				wallKey="chat_voice_cap"

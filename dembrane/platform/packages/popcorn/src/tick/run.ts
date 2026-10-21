@@ -334,7 +334,7 @@ export function readBetween(state: unknown, from: Date, until: Date | null): boo
  * the loop's next run. `startedBefore` refunds only a row not started again since.
  */
 async function refundUnread(d: TickDeps, run: Row, startedBefore?: string): Promise<void> {
-  if (!d.free) return;
+  if (!d.free || run.free_period_start == null) return;
   const id = String(run.id);
   const loopId = String(run.loop_id);
   const startedAt = parseDt(run.started_at);
@@ -374,7 +374,8 @@ export const STUCK_RUN_MS =
 
 /**
  * A counted run whose step never ran again (DBOS cancelled or set it aside) ends in error
- * and gives its analysis back once, unless the session kept something it read.
+ * and gives its analysis back once, unless the session kept something it read. Paid
+ * (unstamped) runs are never touched.
  */
 export async function settleStuckRuns(d: TickDeps): Promise<number> {
   const now = d.now();

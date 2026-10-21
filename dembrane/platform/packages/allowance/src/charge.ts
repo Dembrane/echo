@@ -41,23 +41,34 @@ export async function requireFreeUnitRoom(
   if (used >= cap) throw freeLimitError(name, { used, cap });
 }
 
-/** Takes one unit for a counted project; the returned give-back runs at most once. Null when uncounted. */
+/** A taken unit: who it was taken from and a give-back that runs at most once. */
+export interface FreeCharge {
+  readonly accountId: string;
+  readonly periodStart: string;
+  readonly giveBack: () => Promise<void>;
+}
+
+/** Takes one unit for a counted project. Null when uncounted. */
 export async function chargeFreeUnit(
   db: Db,
   projectId: string,
   unit: FreeUnit,
   now: Date,
   logger?: Logger,
-): Promise<(() => Promise<void>) | null> {
+): Promise<FreeCharge | null> {
   const a = await allowanceForCountedProject(db, projectId, now);
   if (!a) return null;
   await takeFreeUnit(db, a, unit, now);
   let given = false;
-  return async () => {
-    if (given) return;
-    given = true;
-    await giveBack(db, a, unit, 1).catch((err) =>
-      logger?.error({ err, project_id: projectId, unit }, "free unit not given back"),
-    );
+  return {
+    accountId: a.accountId,
+    periodStart: a.periodStart.toISOString(),
+    giveBack: async () => {
+      if (given) return;
+      given = true;
+      await giveBack(db, a, unit, 1).catch((err) =>
+        logger?.error({ err, project_id: projectId, unit }, "free unit not given back"),
+      );
+    },
   };
 }

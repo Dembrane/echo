@@ -2,18 +2,12 @@ import { plural, t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { usePricingConfigurator } from "@/components/pricing";
-import { useProjectById } from "@/components/project/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
-import { allowanceSpent } from "@/lib/freeTier";
+import { allowanceSpent, formatResetDate } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-
-const formatDate = (iso: string | null | undefined, locale: string) => {
-	if (!iso) return null;
-	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) return null;
-	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
-};
+import { SELLABLE_TIER } from "@/lib/tiers";
 
 type BlockSettings = { presentation?: { blocks?: readonly string[] } };
 
@@ -35,22 +29,13 @@ export function MapFreeNotice({
 	projectId: string;
 }) {
 	const { i18n } = useLingui();
-	// Sample projects are exempt; until is_sample loads nothing shows.
-	const sampleQuery = useProjectById({
-		projectId,
-		query: { fields: ["id", "is_sample"] },
-	});
-	const applies =
-		mapOn &&
-		sampleQuery.isSuccess &&
-		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
-			?.is_sample !== true;
+	const applies = useAllowanceApplies(projectId).applies && mapOn;
 	const allowance = useFreeAllowance(applies ? workspaceId : null);
 	const configurator = usePricingConfigurator("map_cap");
 
 	if (!applies || !allowanceSpent(allowance.data, "maps")) return null;
 
-	const date = formatDate(allowance.data?.resets_at, i18n.locale);
+	const date = formatResetDate(allowance.data?.resets_at, i18n.locale);
 	const limit = allowance.data?.maps?.limit ?? 1;
 	return (
 		<Alert variant="light" color="gray" {...testId("map-free-notice")}>
@@ -86,7 +71,7 @@ export function MapFreeNotice({
 				opened={configurator.opened}
 				onClose={configurator.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspaceId}
 				projectId={projectId}

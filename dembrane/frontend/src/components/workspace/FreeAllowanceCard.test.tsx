@@ -19,8 +19,22 @@ const fetchMock = vi.fn();
 
 // The modal itself is covered by FeatureGate tests; here we only check it opens.
 vi.mock("@/components/workspace/FeatureGate", () => ({
-	UpgradeModal: ({ opened, wallKey }: { opened: boolean; wallKey: string }) =>
-		opened ? <div data-testid="upgrade-modal" data-wall={wallKey} /> : null,
+	UpgradeModal: ({
+		opened,
+		wallKey,
+		requiredTier,
+	}: {
+		opened: boolean;
+		wallKey: string;
+		requiredTier: string | null;
+	}) =>
+		opened ? (
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-tier={String(requiredTier)}
+			/>
+		) : null,
 }));
 
 const answer = (status: number, body: unknown) =>
@@ -233,6 +247,45 @@ it("offers the upgrade action when a meter is at its limit", async () => {
 	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe(
 		"free_allowance",
 	);
+	// Free-limit walls name the tier to upgrade to, like every other wall.
+	expect(screen.getByTestId("upgrade-modal").dataset.tier).toBe("changemaker");
+});
+
+it("reads audio as used up, red and with the upgrade action, under a minute short", async () => {
+	fetchMock.mockResolvedValue(
+		answer(200, snapshot({ audio_seconds: { limit: 18000, used: 17990 } })),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("audio_seconds")).getByTestId("free-allowance-value")
+			.textContent,
+	).toBe("5h of 5h");
+	expect(
+		within(meter("audio_seconds"))
+			.getByRole("progressbar")
+			.closest(".mantine-Progress-root")?.innerHTML,
+	).toContain("red");
+	expect(screen.getByTestId("free-allowance-upgrade")).toBeTruthy();
+});
+
+it("never reads the full amount with a minute or more left", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				audio_seconds: { limit: 18000, used: 17940 },
+				projects: { limit: 1, used: 0 },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("audio_seconds")).getByTestId("free-allowance-value")
+			.textContent,
+	).toBe("4h 59m of 5h");
+	expect(screen.queryByTestId("free-allowance-upgrade")).toBeNull();
 });
 
 it("hides the upgrade action while every meter has room", async () => {

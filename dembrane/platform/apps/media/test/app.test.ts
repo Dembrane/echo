@@ -39,6 +39,37 @@ test("bad input is 422 with its kind; a transient failure is 503", async () => {
   expect(invalid.status).toBe(400);
 });
 
+// A caller that gives up (the measure deadline) must stop the job, not leave ffmpeg running.
+test("a caller that gives up aborts the media job", async () => {
+  let aborted = false;
+  const hanging = {
+    decodedSeconds: (_s: unknown, o?: { signal?: AbortSignal }) =>
+      new Promise((_, reject) =>
+        o?.signal?.addEventListener("abort", () => {
+          aborted = true;
+          reject(new AudioError("transient", "aborted"));
+        }),
+      ),
+  } as unknown as Media;
+  const service = Bun.serve({ port: 0, fetch: mediaApp(hanging, logger).fetch });
+  try {
+    const media = new HttpMedia(`http://127.0.0.1:${service.port}`, { timeoutMs: 60_000 });
+    const started = performance.now();
+    const err = await media
+      .decodedSeconds(
+        { url: "http://x.test/a.mp4", format: "mp4" },
+        { signal: AbortSignal.timeout(200) },
+      )
+      .catch((e) => e);
+    expect((err as AudioError).kind).toBe("transient");
+    expect(performance.now() - started).toBeLessThan(2_000);
+    for (let i = 0; i < 40 && !aborted; i++) await Bun.sleep(50);
+    expect(aborted).toBe(true);
+  } finally {
+    service.stop(true);
+  }
+});
+
 // The worker's HTTP client against the real service and real ffmpeg, over presigned URLs.
 (Bun.which("ffmpeg") ? describe : describe.skip)("over HTTP", () => {
   const root = mkdtempSync(join(tmpdir(), "echo-media-"));

@@ -6,8 +6,9 @@ import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import type { WallKey } from "@/components/workspace/gateWalls";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
-import { allowanceSpent } from "@/lib/freeTier";
+import { allowanceSpent, formatResetDate } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 
 type Feature = "chats" | "reports" | "maps";
 
@@ -15,12 +16,6 @@ const WALLS: Record<Feature, WallKey> = {
 	chats: "chat_cap",
 	maps: "map_cap",
 	reports: "report_cap",
-};
-
-const formatDate = (iso: string | null, locale: string): string => {
-	const d = new Date(iso ?? "");
-	if (Number.isNaN(d.getTime())) return iso ?? "";
-	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 };
 
 // Shown on free accounts once this month's chats, report or map are used up.
@@ -37,7 +32,7 @@ export function FreeAllowanceBanner({
 	const configurator = usePricingConfigurator(wallKey);
 
 	if (!data || !allowanceSpent(data, feature)) return null;
-	const date = formatDate(data.resets_at, i18n.locale);
+	const date = formatResetDate(data.resets_at, i18n.locale) ?? "";
 	const limit = data[feature]?.limit ?? 1;
 
 	return (
@@ -83,7 +78,7 @@ export function FreeAllowanceBanner({
 				opened={configurator.opened}
 				onClose={configurator.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspaceId}
 				wallKey={wallKey}

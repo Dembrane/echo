@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { Json } from "./contracts";
 import { clientOf } from "./db";
 import { type ExecutorDeps, liveChannel } from "./executor";
+import { refundFailedRuns } from "./free";
 import { mapViewHook } from "./mapview";
 import type { OutboxDeps } from "./outbox";
 import {
@@ -114,6 +115,9 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
       [POPCORN_SOURCES_KEY]: sessionSources(store),
     },
     logger: d.logger,
+    refundFailed: async (projectId) => {
+      await refundFailedRuns(d.db, new Date(), projectId, d.logger);
+    },
   };
   return {
     store,

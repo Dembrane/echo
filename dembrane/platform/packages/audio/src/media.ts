@@ -37,12 +37,17 @@ export interface MergeResult {
   readonly skipped: readonly { readonly name: string; readonly error: string }[];
 }
 
+/** Lets a caller that gives up stop the job (the request, the download, ffmpeg). */
+export interface Cancel {
+  readonly signal?: AbortSignal | undefined;
+}
+
 /**
  * The ffmpeg work the pipeline hands over. Inputs and outputs are presigned URLs, so the
  * media service holds no bucket credentials and works against any S3 provider.
  */
 export interface Media {
-  probe(source: MediaSource): Promise<ProbeResult>;
+  probe(source: MediaSource, opts?: Cancel): Promise<ProbeResult>;
   /** ffprobe straight on a URL, without a format hint (duration of an upload). */
   probeUrl(url: string): Promise<ProbeResult>;
   convert(req: {
@@ -51,7 +56,7 @@ export interface Media {
     outputFormat: "mp3" | "ogg";
   }): Promise<{ bytes: number; seconds?: number | null }>;
   /** The decoded length of the first audio stream, for a file whose header cannot be trusted. */
-  decodedSeconds(source: MediaSource): Promise<{ seconds: number }>;
+  decodedSeconds(source: MediaSource, opts?: Cancel): Promise<{ seconds: number }>;
   /** Cuts the source into pieces of the given start and length, each to its own target. */
   split(req: {
     source: MediaSource;
@@ -76,17 +81,21 @@ export interface Media {
   }): Promise<MergeResult>;
 }
 
-async function download(url: string, path: string): Promise<void> {
+async function download(url: string, path: string, signal?: AbortSignal): Promise<void> {
   let res: Response;
   try {
-    res = await fetch(url);
+    res = await fetch(url, signal ? { signal } : {});
   } catch (err) {
     throw new AudioError("transient", `download failed: ${(err as Error).message}`);
   }
   if (res.status === 404 || res.status === 403)
     throw new AudioError("transient", `download failed: ${res.status}`);
   if (!res.ok) throw new AudioError("transient", `download failed: ${res.status}`);
-  await Bun.write(path, res);
+  try {
+    await Bun.write(path, res);
+  } catch (err) {
+    throw new AudioError("transient", `download failed: ${(err as Error).message}`);
+  }
   if (Bun.file(path).size === 0) throw new AudioError("value", "Input file is empty");
 }
 
@@ -118,11 +127,11 @@ async function inTemp<T>(fn: (dir: string) => Promise<T>): Promise<T> {
 
 /** Runs ffmpeg in this process: the media service itself, and local development. */
 export class LocalMedia implements Media {
-  probe(source: MediaSource) {
+  probe(source: MediaSource, opts?: Cancel) {
     return inTemp(async (dir) => {
       const p = join(dir, `input.${source.format}`);
-      await download(source.url, p);
-      return probeFile(p, source.format);
+      await download(source.url, p, opts?.signal);
+      return probeFile(p, source.format, opts?.signal);
     });
   }
 
@@ -146,11 +155,11 @@ export class LocalMedia implements Media {
     });
   }
 
-  decodedSeconds(source: MediaSource) {
+  decodedSeconds(source: MediaSource, opts?: Cancel) {
     return inTemp(async (dir) => {
       const p = join(dir, `input.${source.format}`);
-      await download(source.url, p);
-      return { seconds: await decodeSeconds(p, source.format) };
+      await download(source.url, p, opts?.signal);
+      return { seconds: await decodeSeconds(p, source.format, opts?.signal) };
     });
   }
 
@@ -266,8 +275,8 @@ export class HttpMedia implements Media {
     },
   ) {}
 
-  probe(source: MediaSource) {
-    return this.call<ProbeResult>("probe", { source });
+  probe(source: MediaSource, opts?: Cancel) {
+    return this.call<ProbeResult>("probe", { source }, opts?.signal);
   }
   probeUrl(url: string) {
     return this.call<ProbeResult>("probe-url", { url });
@@ -275,8 +284,8 @@ export class HttpMedia implements Media {
   convert(req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" }) {
     return this.call<{ bytes: number; seconds?: number | null }>("convert", req);
   }
-  decodedSeconds(source: MediaSource) {
-    return this.call<{ seconds: number }>("decoded-seconds", { source });
+  decodedSeconds(source: MediaSource, opts?: Cancel) {
+    return this.call<{ seconds: number }>("decoded-seconds", { source }, opts?.signal);
   }
   async split(req: {
     source: MediaSource;
@@ -301,7 +310,7 @@ export class HttpMedia implements Media {
     return this.call<MergeResult>("merge", req);
   }
 
-  private async call<T>(op: string, body: unknown): Promise<T> {
+  private async call<T>(op: string, body: unknown, signal?: AbortSignal): Promise<T> {
     const headers: Record<string, string> = { "content-type": "application/json" };
     if (this.opts.idToken) headers.authorization = `Bearer ${await this.opts.idToken()}`;
     let res: Response;
@@ -310,12 +319,20 @@ export class HttpMedia implements Media {
         method: "POST",
         headers,
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(this.opts.timeoutMs),
+        // MEDIA_TIMEOUT_SECONDS stays the outer cap; a caller's signal can end it sooner.
+        signal: signal
+          ? AbortSignal.any([AbortSignal.timeout(this.opts.timeoutMs), signal])
+          : AbortSignal.timeout(this.opts.timeoutMs),
       });
     } catch (err) {
       throw new AudioError("transient", `media ${op} unreachable: ${(err as Error).message}`);
     }
-    const text = await res.text();
+    let text: string;
+    try {
+      text = await res.text();
+    } catch (err) {
+      throw new AudioError("transient", `media ${op} aborted: ${(err as Error).message}`);
+    }
     if (res.ok) return (text ? JSON.parse(text) : null) as T;
     let payload: { kind?: AudioErrorKind; message?: string } = {};
     try {

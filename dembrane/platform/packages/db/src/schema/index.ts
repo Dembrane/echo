@@ -163,6 +163,16 @@ export const agent_loop_run = pgTable(
     status: varchar({ length: 255 }).default(sql`NULL`),
   },
   (table): PgTableExtraConfigValue[] => [
+    // The popcorn stuck-run sweep.
+    index("agent_loop_run_running_started")
+      .using("btree", table.started_at.asc().nullsLast())
+      .where(sql`((status)::text = 'running'::text)`),
+    // nextRunStart: a loop's runs by start.
+    index("agent_loop_run_loop_started").using(
+      "btree",
+      table.loop_id.asc().nullsLast(),
+      table.started_at.asc().nullsLast(),
+    ),
     foreignKey({
       columns: [table.generation_id],
       foreignColumns: [canvas_generation.id],
@@ -519,6 +529,10 @@ export const analysis_run = pgTable(
     epoch: integer().default(0).notNull(),
     error: text(),
     execution_ref: varchar({ length: 128 }).default(sql`NULL`),
+    /** The free period whose popcorn analysis this run took; null when it holds none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that analysis was taken from. */
+    free_account_id: uuid(),
     hash_version: varchar({ length: 16 }).default("c14n-v1").notNull(),
     id: uuid().primaryKey().notNull(),
     idempotency_key: varchar({ length: 255 }).default(sql`NULL`).notNull(),
@@ -572,6 +586,10 @@ export const analysis_run = pgTable(
       table.status.asc().nullsLast(),
       table.created_at.desc().nullsFirst(),
     ),
+    // Failed runs still holding a free charge.
+    index("analysis_run_free_charged")
+      .using("btree", table.status.asc().nullsLast())
+      .where(sql`(free_period_start IS NOT NULL)`),
     index("analysis_run_waiting_by_project")
       .using("btree", table.project_id.asc().nullsLast(), table.created_at.asc().nullsLast())
       .where(sql`((status)::text = 'waiting_for_inputs'::text)`),

@@ -37,17 +37,19 @@ export async function measureSeconds(
   media: Media,
   source: MediaSource,
   bytes: number,
+  signal?: AbortSignal,
 ): Promise<Measured> {
   let failed: AudioError;
   try {
-    return { seconds: (await media.decodedSeconds(source)).seconds, how: "decoded" };
+    return { seconds: (await media.decodedSeconds(source, { signal })).seconds, how: "decoded" };
   } catch (err) {
     if (!terminal(err)) throw err;
     failed = err;
   }
   let probe: ProbeResult;
   try {
-    probe = await media.probe(source);
+    if (signal?.aborted) throw new AudioError("transient", "measuring aborted");
+    probe = await media.probe(source, { signal });
   } catch (err) {
     if (!terminal(err)) throw err;
     return { unreadable: true, reason: failed.message };

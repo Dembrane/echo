@@ -25,12 +25,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useState } from "react";
 import { useParams } from "react-router";
-import { useProjectById } from "@/components/project/hooks";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import {
 	invalidateFreeAllowance,
 	useFreeAllowance,
@@ -43,6 +43,7 @@ import {
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useCreateProjectReportMutation } from "./hooks";
@@ -97,15 +98,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	// Free tier: this month's reports. Past the limit, generating opens the wall.
 	const { workspace } = useWorkspace();
 	const queryClient = useQueryClient();
-	// Sample projects are exempt; until is_sample loads nothing is walled and the server's 402 decides.
-	const sampleQuery = useProjectById({
-		projectId: projectId ?? "",
-		query: { fields: ["id", "is_sample"] },
-	});
-	const isSample =
-		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
-			?.is_sample === true;
-	const allowanceApplies = sampleQuery.isSuccess && !isSample;
+	const { applies: allowanceApplies, isSample } =
+		useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const isAtReportLimit =
@@ -399,7 +393,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspace?.id ?? ""}
 				wallKey="report_cap"

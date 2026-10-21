@@ -22,12 +22,13 @@ import {
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import { useProjectById } from "@/components/project/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import {
 	budgetState,
 	budgetsToAdmit,
@@ -249,15 +250,9 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	// Sample projects are exempt; until is_sample loads no banner shows and the server's 402 decides.
-	const sampleQuery = useProjectById({
-		projectId: offline ? "" : projectId,
-		query: { fields: ["id", "is_sample"] },
-	});
-	const allowanceApplies =
-		sampleQuery.isSuccess &&
-		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
-			?.is_sample !== true;
+	const { applies: allowanceApplies } = useAllowanceApplies(
+		offline ? "" : projectId,
+	);
 
 	const projectResultToken = mapQuery.data?.current
 		? resultToken(mapQuery.data.current)
@@ -758,7 +753,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					opened={upgradeOpened}
 					onClose={upgradeHandlers.close}
 					currentTier="free"
-					requiredTier={null}
+					requiredTier={SELLABLE_TIER}
 					canRequestUpgrade
 					workspaceId={linkWorkspaceId}
 					projectId={projectId}

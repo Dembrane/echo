@@ -37,6 +37,7 @@ export {
 } from "./formats";
 export { type Measured, MIN_SPEECH_BYTES_PER_SECOND, measureSeconds } from "./measure";
 export {
+  type Cancel,
   HttpMedia,
   LocalMedia,
   type Media,

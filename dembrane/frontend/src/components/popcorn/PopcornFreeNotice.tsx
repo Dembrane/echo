@@ -6,14 +6,9 @@ import type { FreePopcorn } from "@/components/popcorn/hooks";
 import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
+import { formatResetDate } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-
-const formatDate = (iso: string | null | undefined, locale: string) => {
-	if (!iso) return null;
-	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) return null;
-	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
-};
+import { SELLABLE_TIER } from "@/lib/tiers";
 
 // The host's free popcorn meter; once used up, a calm notice with the upgrade wall.
 export function PopcornFreeNotice({
@@ -42,7 +37,7 @@ export function PopcornFreeNotice({
 		);
 	}
 
-	const date = formatDate(allowance.data?.resets_at, i18n.locale);
+	const date = formatResetDate(allowance.data?.resets_at, i18n.locale);
 	return (
 		<Alert variant="light" color="gray" {...testId("popcorn-free-notice")}>
 			<Stack gap="sm">
@@ -74,7 +69,7 @@ export function PopcornFreeNotice({
 				opened={configurator.opened}
 				onClose={configurator.close}
 				currentTier="free"
-				requiredTier={null}
+				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
 				workspaceId={workspaceId}
 				projectId={projectId}

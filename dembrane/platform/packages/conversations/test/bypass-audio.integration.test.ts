@@ -25,7 +25,11 @@ import { FakeTranscriber } from "@dembrane/transcription";
 import { Hono } from "hono";
 import postgres from "postgres";
 import type { ConversationsDeps } from "../src/deps";
-import { conversationSeconds } from "../src/free-audio";
+import {
+  conversationSeconds,
+  LIVE_MEASURE_TIMEOUT_MS,
+  UPLOAD_MEASURE_TIMEOUT_MS,
+} from "../src/free-audio";
 import { ParticipantTokens } from "../src/participant-token";
 import { type PipelineDeps, prepareChunk } from "../src/pipeline/steps";
 import { portalRoutes } from "../src/portal/routes";
@@ -418,15 +422,18 @@ run("bypass: free audio limits", () => {
   });
 
   // Measuring that rejects (failing) or never answers (hanging); everything else works.
+  let measureSignals: (AbortSignal | undefined)[] = [];
   function brokenMedia(how: "failing" | "hanging") {
     const inner = new LocalMedia();
     return new Proxy(inner, {
       get(target, prop, receiver) {
         if (prop === "decodedSeconds" || prop === "probe")
-          return () =>
-            how === "hanging"
+          return (_s: unknown, o?: { signal?: AbortSignal }) => {
+            measureSignals.push(o?.signal);
+            return how === "hanging"
               ? new Promise(() => {})
               : Promise.reject(new AudioError("transient", "media away"));
+          };
         const v = Reflect.get(target, prop, receiver);
         return typeof v === "function" ? v.bind(target) : v;
       },
@@ -501,9 +508,13 @@ run("bypass: free audio limits", () => {
     await post(key, 5, "wav");
     timeouts = { upload: 300, live: 300 };
     media = brokenMedia("hanging");
+    measureSignals = [];
     const res = await confirm(cid, cId, key, "DASHBOARD_UPLOAD");
     expect(res.status).toBe(503);
     expect(((await res.json()) as { code?: string }).code).toBe("upload.measure_failed");
+    // The timed-out measure aborted the media request instead of leaving it decoding.
+    expect(measureSignals.length).toBe(1);
+    expect(measureSignals[0]?.aborted).toBe(true);
     expect(await bucket.storage.size(key)).not.toBeNull();
     expect(
       await sql`select id from conversation_chunk where conversation_id = ${cid}`,
@@ -514,6 +525,11 @@ run("bypass: free audio limits", () => {
     expect(again.status).toBe(200);
     expect(await used(p)).toBe(5);
   }, 10_000);
+
+  test("uploads get 200 s to measure, under the API's 255 s idle timeout; live chunks 15 s", () => {
+    expect(UPLOAD_MEASURE_TIMEOUT_MS).toBe(200_000);
+    expect(LIVE_MEASURE_TIMEOUT_MS).toBe(15_000);
+  });
 
   test("measuring a live chunk that never answers keeps the chunk", async () => {
     const { p, cid } = await account();

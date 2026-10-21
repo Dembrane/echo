@@ -73,6 +73,25 @@ export function freeReportsLine(s: FreeAllowance | undefined): string {
 	});
 }
 
+// Billing (free-audio-out) counts under a minute left as used up; refusals and rounding leave the ledger short.
+export const AUDIO_USED_UP_SLACK_SECONDS = 60;
+
+/** True when the month's audio is used up, the slack included. */
+export function audioUsedUp(meter: { used: number; limit: number }): boolean {
+	return meter.limit - meter.used < AUDIO_USED_UP_SLACK_SECONDS;
+}
+
+/** The allowance reset time in the reader's locale, or null when missing or unreadable. */
+export function formatResetDate(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
+
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
 
 /**

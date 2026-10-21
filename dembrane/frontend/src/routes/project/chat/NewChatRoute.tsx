@@ -63,10 +63,10 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	useAttachChatConversationsMutation,
 	useCreateChatMutation,
-	useProjectById,
 } from "@/components/project/hooks";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -272,15 +272,7 @@ export const NewChatRoute = () => {
 	const prefetchSuggestions = usePrefetchSuggestions();
 	const [isInitializing, setIsInitializing] = useState(false);
 	const [draft, setDraft] = useState("");
-	// Sample projects are exempt; until is_sample loads nothing is walled and the server's 402 decides.
-	const sampleQuery = useProjectById({
-		projectId: projectId ?? "",
-		query: { fields: ["id", "is_sample"] },
-	});
-	const allowanceApplies =
-		sampleQuery.isSuccess &&
-		(sampleQuery.data as { is_sample?: boolean | null } | undefined)
-			?.is_sample !== true;
+	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspaceId);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const atChatLimit =

@@ -18,7 +18,7 @@ import { createLogger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import type postgres from "postgres";
-import { analysisRoutes } from "../src";
+import { analysisRoutes, analysisRuntime, execute } from "../src";
 
 // The generic run route charges free maps and popcorn analyses for runs it starts.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -242,5 +242,124 @@ run("free runs on the generic analysis route", () => {
     });
     expect({ runs: await runs(pid), dispatched }).toEqual(before);
     expect(await used(accountId, "popcorn_analyses")).toBe(1);
+  });
+  // A failed popcorn-class run gives its analysis back once; a map run that started does not.
+  function runtime() {
+    return analysisRuntime({
+      db,
+      logger: createLogger(
+        { service: "t", release: "r", env: "test", level: "error" },
+        new Writable({ write: (_c, _e, cb) => cb() }),
+      ),
+      completer: new FakeCompleter(),
+      embedder: new FakeEmbedder(8),
+      jobs: { enqueue: async () => null },
+      config: { embeddingModel: "text-embedding-004", embeddingLocation: "europe-west4" },
+    });
+  }
+
+  // Fails the run through the worker: its recipe version is gone. `output` fakes a published manifest.
+  async function failRun(runId: string, output = false) {
+    const [r] = await sql`select recipe_version from analysis_run where id = ${runId}`;
+    await sql`update analysis_run set recipe_version = 'gone',
+      output_manifest = ${output ? sql`'{"objects":[]}'::json` : sql`output_manifest`} where id = ${runId}`;
+    const outcome = await execute(runtime().executor, runId, randomUUID().replaceAll("-", ""));
+    await sql`update analysis_run set recipe_version = ${r?.recipe_version as string} where id = ${runId}`;
+    return outcome;
+  }
+
+  async function spend(accountId: string, n: number) {
+    const [row] =
+      await sql`select period_start from free_usage where billing_account_id = ${accountId} limit 1`;
+    await sql`update free_usage set amount = amount + ${n}
+      where billing_account_id = ${accountId} and period_start = ${row?.period_start as Date}
+        and key = 'popcorn_analyses'`;
+  }
+
+  test("a failed stakeholders run gives its analysis back once", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    expect(first.status).toBe(202);
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    // Another analysis spent, so a second give-back would show.
+    await spend(accountId, 1);
+    expect(await failRun(first.runId as string)).toBe("failed");
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    // The minute sweep and a second settle find nothing left to give back.
+    await runtime().executor.refundFailed?.(null);
+    await runtime().executor.refundFailed?.(pid);
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+  });
+
+  test("retrying a refunded run takes one analysis; its second failure gives it back once", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    await failRun(first.runId as string);
+    expect(await used(accountId, "popcorn_analyses")).toBe(0);
+    expect(await post(pid, { recipe_id: "stakeholders", mode: "retry" })).toMatchObject({
+      status: 202,
+      outcome: "requeued",
+    });
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    expect(await failRun(first.runId as string)).toBe("failed");
+    expect(await used(accountId, "popcorn_analyses")).toBe(0);
+  });
+
+  test("retrying a failed run not yet given back nets one analysis", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    const runId = first.runId as string;
+    // Failed outside the worker: still holds its charge.
+    await sql`update analysis_run set status = 'failed', completed_at = now() where id = ${runId}`;
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    expect(
+      await post(pid, { recipe_id: "stakeholders", mode: "retry", retry_run_id: runId }),
+    ).toMatchObject({ status: 202, outcome: "requeued" });
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    await runtime().executor.refundFailed?.(null);
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    // The run still holds the one charge: failing again gives it back.
+    expect(await failRun(runId)).toBe("failed");
+    expect(await used(accountId, "popcorn_analyses")).toBe(0);
+  });
+
+  test("two concurrent retries of one failed run take one analysis", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    const runId = first.runId as string;
+    await failRun(runId);
+    expect(await used(accountId, "popcorn_analyses")).toBe(0);
+    const body = { recipe_id: "stakeholders", mode: "retry", retry_run_id: runId };
+    const outcomes = (await Promise.all([post(pid, body), post(pid, body)])).map((r) => r.outcome);
+    expect(outcomes.sort()).toEqual(["existing", "requeued"]);
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+  });
+
+  test("a failed run that produced output keeps its analysis", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    expect(await failRun(first.runId as string, true)).toBe("failed");
+    await runtime().executor.refundFailed?.(null);
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+  });
+
+  test("a map run that fails after starting keeps the map", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "arguments", mode: "regenerate" });
+    expect(await failRun(first.runId as string)).toBe("failed");
+    await runtime().executor.refundFailed?.(null);
+    expect(await used(accountId, "maps")).toBe(1);
+  });
+
+  test("a stamp from an earlier period is cleared without a give-back", async () => {
+    const { pid, accountId } = await project("free");
+    const first = await post(pid, { recipe_id: "stakeholders" });
+    await sql`update analysis_run set free_period_start = free_period_start - interval '1 month'
+      where id = ${first.runId as string}`;
+    expect(await failRun(first.runId as string)).toBe("failed");
+    expect(await used(accountId, "popcorn_analyses")).toBe(1);
+    const [r] =
+      await sql`select free_period_start from analysis_run where id = ${first.runId as string}`;
+    expect(r?.free_period_start).toBeNull();
   });
 });

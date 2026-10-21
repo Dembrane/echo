@@ -58,6 +58,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
@@ -648,7 +649,7 @@ function RecipeCard({
 					opened={wallOpened}
 					onClose={wallHandlers.close}
 					currentTier="free"
-					requiredTier={null}
+					requiredTier={SELLABLE_TIER}
 					canRequestUpgrade
 					workspaceId={wallWorkspaceId}
 					projectId={projectId}

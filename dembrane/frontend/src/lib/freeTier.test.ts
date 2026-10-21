@@ -4,7 +4,9 @@ import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { ApiRequestError } from "./errors/read";
 import {
 	allowanceSpent,
+	audioUsedUp,
 	chatTurnGate,
+	formatResetDate,
 	freeLimitDetails,
 	freeReportsLine,
 	isFreeTierLimitError,
@@ -220,5 +222,31 @@ describe("freeReportsLine", () => {
 		expect(freeReportsLine(undefined)).toBe(
 			"The free plan includes a monthly allowance of reports.",
 		);
+	});
+});
+
+describe("audioUsedUp", () => {
+	it("counts under a minute left as used up, as billing does", () => {
+		expect(audioUsedUp({ limit: 18000, used: 18000 })).toBe(true);
+		expect(audioUsedUp({ limit: 18000, used: 17941 })).toBe(true);
+		expect(audioUsedUp({ limit: 18000, used: 17940 })).toBe(false);
+		expect(audioUsedUp({ limit: 18000, used: 18300 })).toBe(true);
+	});
+});
+
+describe("formatResetDate", () => {
+	it("formats in the given locale", () => {
+		const iso = "2026-11-01T00:00:00Z";
+		expect(formatResetDate(iso, "nl-NL")).toBe(
+			new Date(iso).toLocaleString("nl-NL", {
+				dateStyle: "medium",
+				timeStyle: "short",
+			}),
+		);
+	});
+	it("is null when missing or unreadable", () => {
+		expect(formatResetDate(null, "en")).toBeNull();
+		expect(formatResetDate(undefined, "en")).toBeNull();
+		expect(formatResetDate("not a date", "en")).toBeNull();
 	});
 });
