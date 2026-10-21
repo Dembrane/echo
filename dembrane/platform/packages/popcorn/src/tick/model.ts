@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { popcornShared } from "@dembrane/analysis";
 import { assetPath } from "@dembrane/core";
-import { type Completer, type Completion, LANGUAGE_NAMES, translateTexts } from "@dembrane/llm";
+import {
+  type Completer,
+  type Completion,
+  LANGUAGE_NAMES,
+  translateTexts,
+  withoutClosingFence,
+} from "@dembrane/llm";
 import { type Json, pyJson } from "../py";
 import { KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_SCHEMA } from "./enrichment";
 import { POPCORN_SCHEMA, STAKEHOLDERS_SCHEMA } from "./shapes";
@@ -59,7 +65,7 @@ export function promptText(name: string): string {
 function jsonFromText(text: string): Json {
   let cleaned = text.trim();
   if (cleaned.startsWith("```"))
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    cleaned = withoutClosingFence(cleaned.replace(/^```(?:json)?\s*/i, ""));
   const parsed: unknown = JSON.parse(cleaned);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
     throw new Error("Popcorn model response was not a JSON object");

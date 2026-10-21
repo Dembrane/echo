@@ -25,11 +25,13 @@ vi.mock("@/lib/api", () => ({
 	initiateConversation: (...args: unknown[]) => initiate(...args),
 }));
 
+let mutationError: unknown = null;
+
 vi.mock("./hooks", () => ({
 	useInitiateConversationMutation: () => ({
 		data: undefined,
-		error: null,
-		isError: false,
+		error: mutationError,
+		isError: mutationError !== null,
 		isPending: false,
 		isSuccess: false,
 		mutate: () => {},
@@ -62,6 +64,7 @@ beforeAll(() => {
 
 afterEach(() => {
 	cleanup();
+	mutationError = null;
 	navigate.mockClear();
 	initiate.mockClear();
 });
@@ -143,4 +146,86 @@ it("leaves the Continue button alone when the project asks for a name", () => {
 
 	expect(initiate).not.toHaveBeenCalled();
 	expect(screen.getByTestId("portal-initiate-next-button")).toBeTruthy();
+});
+
+const refusal = {
+	response: {
+		data: {
+			code: "billing.tier_limit",
+			detail: {
+				error: "FREE_TIER_LIMIT",
+				limit: "recording_project",
+				upgrade_cta_tier: "changemaker",
+			},
+			params: { limit: "recording_project" },
+		},
+		status: 402,
+	},
+};
+
+it("shows the neutral notice when the project refuses recordings", async () => {
+	initiate.mockRejectedValue(refusal);
+	wrap(project());
+
+	await waitFor(() =>
+		expect(
+			screen.getByText("This project isn't taking recordings right now."),
+		).toBeTruthy(),
+	);
+	expect(document.querySelector("[data-error-code]")).toBeNull();
+});
+
+it("offers no Continue after an automatic start is refused", async () => {
+	initiate.mockRejectedValue(refusal);
+	wrap(project());
+
+	await waitFor(() =>
+		expect(screen.getByTestId("portal-not-taking-recordings")).toBeTruthy(),
+	);
+	expect(screen.queryByTestId("portal-initiate-next-button")).toBeNull();
+});
+
+it("offers no Continue after a submitted start is refused", () => {
+	mutationError = refusal;
+	wrap(
+		project({
+			default_conversation_ask_for_participant_name: true,
+			tags: [{ id: "t1", text: "Tag" }] as unknown as Project["tags"],
+		}),
+	);
+
+	expect(screen.getByTestId("portal-not-taking-recordings")).toBeTruthy();
+	expect(screen.queryByTestId("portal-initiate-next-button")).toBeNull();
+	expect(screen.queryByTestId("portal-initiate-name-input")).toBeNull();
+	expect(screen.queryByTestId("portal-initiate-tags-select")).toBeNull();
+});
+
+it("keeps Continue after any other failure so the participant can retry", () => {
+	mutationError = { response: { data: { detail: "boom" }, status: 500 } };
+	wrap(project({ default_conversation_ask_for_participant_name: true }));
+
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
+	expect(screen.getByTestId("portal-initiate-name-input")).toBeTruthy();
+	expect(screen.getByTestId("portal-initiate-next-button")).toBeTruthy();
+});
+
+it("tells its parent when the start is refused", () => {
+	mutationError = refusal;
+	const onRefusedChange = vi.fn();
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider>
+				<MemoryRouter initialEntries={["/en-US/p1/start"]}>
+					<ParticipantInitiateForm
+						project={project({
+							default_conversation_ask_for_participant_name: true,
+						})}
+						onRefusedChange={onRefusedChange}
+					/>
+				</MemoryRouter>
+			</MantineProvider>
+		</I18nProvider>,
+	);
+
+	expect(onRefusedChange).toHaveBeenLastCalledWith(true);
 });

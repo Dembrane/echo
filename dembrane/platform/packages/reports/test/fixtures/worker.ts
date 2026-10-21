@@ -55,6 +55,7 @@ await queue.workflow(
     maxContextTokens: 100_000,
     notifier: { emit: async (e) => log(`notify ${e.eventCode}`) },
     reportGenerated: async () => log("webhook"),
+    refundFreeReport: async () => false,
     pause: async (name) => {
       log(`step ${name}`);
       if (name === "generate" && process.env.HANG === "1") await Bun.sleep(600_000);

@@ -141,20 +141,31 @@ it("names the attempt, never the feature or the plan, because the popover named 
 	expect(text).not.toMatch(/report/i);
 });
 
+it("names the free allowance as the referent when opened from the allowance card", () => {
+	renderModal({ wallKey: "free_allowance" });
+	const text = modalText();
+	expect(text).toContain(
+		"You were trying to go beyond this month's free allowance.",
+	);
+	expect(text).toContain("That requires a paid plan.");
+	expect(text).not.toContain("You are on the free plan.");
+	expect(wallPopoverLine("free_allowance")).toBe("");
+});
+
 // 2. The locked data family is the only exception.
 
 it("puts the cap block above the opening for the transcription cap", () => {
 	renderModal({ wallKey: "transcription_cap" });
 	const text = modalText();
 
-	expect(text).toContain("Your free transcription hour is used up.");
+	expect(text).toContain("Your free transcription allowance is used up.");
 	expect(text).toContain(
 		"The portals will keep working! Your participants are never cut off and nothing they say is lost.",
 	);
 	// The cap block sits above the opening, not below it.
-	expect(text.indexOf("Your free transcription hour is used up.")).toBeLessThan(
-		text.indexOf("You were trying to"),
-	);
+	expect(
+		text.indexOf("Your free transcription allowance is used up."),
+	).toBeLessThan(text.indexOf("You were trying to"));
 });
 
 it("keeps every other wall byte for byte the same as every other", () => {
@@ -164,7 +175,9 @@ it("keeps every other wall byte for byte the same as every other", () => {
 
 	renderModal({ wallKey: "upload_cap" });
 	expect(modalText()).not.toBe(capText);
-	expect(modalText()).not.toContain("Your free transcription hour is used up.");
+	expect(modalText()).not.toContain(
+		"Your free transcription allowance is used up.",
+	);
 });
 
 it("carries an attempt for every wall, and none for the page that is not one", () => {
@@ -174,7 +187,13 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
+		"free_allowance",
+		"map_cap",
+		"org_cap",
+		"popcorn_cap",
 		"private_workspace",
+		"project_cap",
+		"recording_project",
 		"report_cap",
 		"transcription_cap",
 		"transcripts_view",
@@ -197,6 +216,35 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 	expect(wallActionLine(undefined)).toBe("");
 });
 
+it("states the free content limits without a number or an em dash", () => {
+	const lines: [WallKey, string][] = [
+		[
+			"chat_cap",
+			"The free plan includes a few chats a month, each with a set number of questions.",
+		],
+		[
+			"chat_turn_cap",
+			"The free plan includes a few chats a month, each with a set number of questions.",
+		],
+		["report_cap", "The free plan includes a monthly allowance of reports."],
+		["map_cap", "The free plan includes a monthly allowance of maps."],
+		[
+			"popcorn_cap",
+			"The free plan includes a monthly allowance of popcorn analyses.",
+		],
+		["project_cap", "The free plan includes a limited number of projects."],
+	];
+	for (const [wall, line] of lines) {
+		expect(wallPopoverLine(wall)).toBe(line);
+		// Staff edit these limits, so the lines state no number.
+		expect(wallPopoverLine(wall)).not.toMatch(/\d|\b(one|two)\b/);
+		expect(wallPopoverLine(wall)).not.toContain("\u2014");
+		expect(wallActionLine(wall)).not.toContain("\u2014");
+	}
+	expect(wallActionLine("map_cap")).toBe("generate another map");
+	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
+});
+
 // 3. No tier name anywhere on the gate path, and no price table.
 
 it("names no tier in any gate copy", () => {
@@ -206,7 +254,13 @@ it("names no tier in any gate copy", () => {
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
+		"free_allowance",
+		"map_cap",
+		"org_cap",
+		"popcorn_cap",
 		"private_workspace",
+		"project_cap",
+		"recording_project",
 		"report_cap",
 		"transcription_cap",
 		"transcripts_view",

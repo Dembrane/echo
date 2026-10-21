@@ -16,6 +16,7 @@ const media: Media = {
     trace("convert");
     return local.convert(req);
   },
+  decodedSeconds: (s) => local.decodedSeconds(s),
   split: (req) => local.split(req),
   silences: (req) => local.silences(req),
   merge: (req) => local.merge(req),

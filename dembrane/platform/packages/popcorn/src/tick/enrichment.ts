@@ -160,7 +160,7 @@ export async function enrichItem(
         });
         const candidate = pyStrip(orStr(out.phrase));
         if (questionOk(candidate) && !nameHits(candidate, o.names).length) {
-          rewritten = candidate.slice(0, -1).replace(/\s+$/u, "");
+          rewritten = candidate.slice(0, -1).trimEnd();
           kind.question = true;
         }
       } catch (exc) {

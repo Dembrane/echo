@@ -117,7 +117,7 @@ run("map on the seed", () => {
     const store = new MapStore(clientOf(database.db));
 
     // Generation is a refresh of the arguments recipe; the worker side executes it.
-    const attempt = await service.requestGeneration({ store, rt }, P1, "tester");
+    const attempt = await service.requestGeneration({ store, rt, db: database.db }, P1, "tester");
     expect(attempt?.status).toBe("queued");
     expect(await execute(rt.executor, String(attempt?.id), "lease-1")).toBe("ready");
     const snapshot = await advanceMapView(P1, rt.store, new MapViewReads(rt.store), {
@@ -138,7 +138,7 @@ run("map on the seed", () => {
     };
     const dispatched: Json[] = [];
     const started = await service.startFactCheck(
-      { store, rt, dispatch: async (job) => dispatched.push(job) },
+      { store, rt, db: database.db, dispatch: async (job) => dispatched.push(job) },
       target,
       String(claimRevision?.id),
       "tester",
@@ -174,7 +174,7 @@ run("map on the seed", () => {
       ((current?.manifest.assessments ?? []) as Json[]).map((a) => a.targetRevisionId),
     ).toEqual([claimRevision?.id]);
     const states = await service.snapshotFactCheckStates(
-      { store, rt },
+      { store, rt, db: database.db },
       { kind: "snapshot", snapshot: current as NonNullable<typeof current>, resultId: null },
     );
     expect((states[String(claimRevision?.id)] as Json).verdict).toBe("false");
@@ -186,6 +186,7 @@ run("map on the seed", () => {
     const titleDeps = {
       store,
       rt,
+      db: database.db,
       cache: new service.TitleCache(),
       modelIdentity: "vertex_ai/fake",
       generate: async () => "unused",

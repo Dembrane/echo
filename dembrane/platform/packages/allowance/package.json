@@ -1,0 +1,22 @@
+{
+  "name": "@dembrane/allowance",
+  "description": "The free tier: who is free, the limits, and what each account has used this month.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "postgres": "^3.4.9"
+  }
+}

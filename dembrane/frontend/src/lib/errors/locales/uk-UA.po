@@ -774,12 +774,17 @@ msgid "error.popcorn.feature_disabled"
 msgstr "Ця функція недоступна для цього проєкту."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:37
+msgid "error.upload.unreadable"
+msgstr "Цей файл не вдалося прочитати як аудіо. Виберіть інший файл."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
 msgstr "Цей файл порожній. Виберіть інший файл."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:25
+#: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.too_large"
 msgstr "Цей файл завеликий. Розмір файлу не може перевищувати {max_mb} МБ."
 
@@ -1029,7 +1034,7 @@ msgid "error.training.not_available"
 msgstr "Бронювання цього тренінгу ще не відкрите."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:33
+#: src/lib/errors/messages/upload.ts:41
 msgid "error.upload.unsupported_type"
 msgstr "Цей тип файлів не підтримується."
 
@@ -1149,12 +1154,17 @@ msgid "error.canvas.extraction_failed"
 msgstr "Не вдалося створити попередній перегляд полотна просто зараз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:21
+msgid "error.upload.measure_failed"
+msgstr "Не вдалося визначити тривалість цього файлу. Спробуйте ще раз."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
 msgstr "Не вдалося перевірити цей чат просто зараз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:21
+#: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.probe_url_failed"
 msgstr "Не вдалося перевірити ваше з'єднання. Спробуйте ще раз."
 
@@ -1429,12 +1439,12 @@ msgid "error.map.fact_check_not_started"
 msgstr "Не вдалося почати перевірку фактів. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:37
+#: src/lib/errors/messages/upload.ts:45
 msgid "error.upload.url_failed"
 msgstr "Не вдалося почати завантаження. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:29
+#: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.transcription_failed"
 msgstr "Не вдалося перетворити це аудіо на текст. Спробуйте ще раз."
 

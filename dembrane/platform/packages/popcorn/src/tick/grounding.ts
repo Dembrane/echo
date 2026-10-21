@@ -71,7 +71,7 @@ export function closestPassage(phrase: string, transcript: string): Json | null 
     text = `${cps
       .slice(0, PASSAGE_MAX_CHARS - 1)
       .join("")
-      .replace(/\s+$/u, "")}…`;
+      .trimEnd()}…`;
   return { text, score: pyRound(score, 3), matched };
 }
 

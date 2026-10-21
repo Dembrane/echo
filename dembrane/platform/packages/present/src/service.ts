@@ -35,6 +35,7 @@ import {
   translationTargets,
   truthy,
   updateSettingsUnlocked,
+  withFreePopcorn,
   writeSettings,
 } from "@dembrane/popcorn";
 import type { MapStore } from "./map";
@@ -209,7 +210,7 @@ export async function payload(d: PopcornDeps, report: Row, project: Row): Promis
     capture.state ?? freshState(),
     capture.run ?? null,
   );
-  return detail;
+  return withFreePopcorn(d.db, detail, String(report.project_id), d.now());
 }
 
 export async function draftPayload(
@@ -235,7 +236,7 @@ export async function draftPayload(
     capture.state ?? freshState(),
     capture.run ?? null,
   );
-  return detail;
+  return withFreePopcorn(d.db, detail, String(report.project_id), d.now());
 }
 
 export interface DraftState {

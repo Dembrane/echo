@@ -7,6 +7,7 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
+import { FREE_LIMIT_SKIPPED } from "../free-audio";
 import { liveServices } from "../live/routes";
 import { type MergeDeps, mergeConversationAudio } from "../merge";
 import { processChunk } from "../pipeline/defs";
@@ -88,7 +89,8 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
     const { query } = await p.validate(c.req, { query: ChunkContentQuery });
     const chunk = await conversationStore(d.db).chunk(c.req.param("chunk_id"));
     if (!chunk || chunk.conversation_id !== cid) throw new NotFoundError("conversation.not_found");
-    if (!chunk.path) throw new NotFoundError("conversation.no_content");
+    if (!chunk.path || chunk.error === FREE_LIMIT_SKIPPED)
+      throw new NotFoundError("conversation.no_content");
     if (!chunk.path.startsWith("http"))
       throw new BadRequestError("conversation.file_url_unsupported");
     const out = deliver(chunk.path, query.signed, query.return_url);

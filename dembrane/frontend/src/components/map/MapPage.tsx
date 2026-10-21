@@ -11,6 +11,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import {
 	type ReactNode,
@@ -21,8 +22,13 @@ import {
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import {
 	budgetState,
 	budgetsToAdmit,
@@ -243,6 +249,10 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const mapQuery = useProjectMapSummary(offline ? "" : projectId);
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const { applies: allowanceApplies } = useAllowanceApplies(
+		offline ? "" : projectId,
+	);
 
 	const projectResultToken = mapQuery.data?.current
 		? resultToken(mapQuery.data.current)
@@ -280,6 +290,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			: (graphQuery.data ?? null);
 	const graph = useStableGraph(response);
 	const attempt = fixtureData ? null : (mapQuery.data?.attempt ?? null);
+	const hasMap = Boolean(graph) || Boolean(mapQuery.data?.current);
 
 	const bounds = graph?.budgetBounds ?? LEGACY_BUDGET_BOUNDS;
 	const budgetResolution = useMemo(
@@ -688,7 +699,14 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							readOnly={readOnly}
 							isStarting={generate.isPending}
 							nothingToRead={nothingToRead}
-							onGenerate={() => generate.mutate()}
+							onGenerate={() =>
+								generate.mutate(undefined, {
+									onError: (error) => {
+										if (isFreeTierLimitError(error) === "map")
+											upgradeHandlers.open();
+									},
+								})
+							}
 						/>
 					)}
 					{graph && argumentCount > 0 && (
@@ -723,6 +741,26 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					)}
 				</Group>
 			</Group>
+
+			{/* "Your current map stays here" needs a map to exist. */}
+			{!offline && allowanceApplies && hasMap && linkWorkspaceId && (
+				<div className="px-4 pb-2 empty:hidden md:px-6">
+					<FreeAllowanceBanner workspaceId={linkWorkspaceId} feature="maps" />
+				</div>
+			)}
+			{!offline && linkWorkspaceId && (
+				<UpgradeModal
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
+					currentTier="free"
+					requiredTier={SELLABLE_TIER}
+					canRequestUpgrade
+					workspaceId={linkWorkspaceId}
+					projectId={projectId}
+					wallKey="map_cap"
+					entry="modal_direct"
+				/>
+			)}
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||

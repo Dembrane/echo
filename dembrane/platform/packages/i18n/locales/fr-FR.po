@@ -254,7 +254,6 @@ msgstr "Votre code de connexion est {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Votre code de connexion."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Votre code de connexion est {code}. Il expire dans 10 minutes."
@@ -266,7 +265,6 @@ msgstr "Si vous n'avez pas essayé de vous connecter, vous pouvez ignorer cet e-
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} vous demande de signer {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Ouvrir l'espace de travail"
 msgid "email.payment_failed.subject"
 msgstr "Votre paiement à dembrane n'a pas abouti"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Votre formule reste active. Mettez à jour votre moyen de paiement pour régler le solde."
@@ -604,7 +601,6 @@ msgstr "Mettez à jour votre moyen de paiement :"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} est maintenant en formule gratuite"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Demander une mise à niveau"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} passe à la formule gratuite le {date}"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Votre formule {tier} prend fin le {date}. Tout ce que vous avez créé est conservé."
@@ -658,6 +653,38 @@ msgstr "Tout ce que vous avez créé est conservé. Pour garder {tier}, demandez
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Demander une mise à niveau"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} a utilisé les heures d'enregistrement de ce mois"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Les nouveaux enregistrements et imports sont suspendus jusqu'au {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} a utilisé les heures d'enregistrement de ce mois"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Le forfait Free comprend {hours} d'enregistrement par mois, et {name} les a utilisées. Les nouveaux enregistrements et imports sont suspendus jusqu'au {reset_date}. Tout ce qui a été enregistré reste accessible."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} heures"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} heure"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Changer de forfait pour continuer à enregistrer"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Changer de forfait pour continuer à enregistrer :"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

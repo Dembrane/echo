@@ -1,13 +1,23 @@
 // @vitest-environment jsdom
+import { i18n } from "@lingui/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { toast } from "@/components/common/Toaster";
 import { bff } from "@/lib/bff";
-import { RESULTS_PAGE, useResultsList, useResultsVisit } from "./index";
+import {
+	RESULTS_PAGE,
+	useRequestAnalysisRun,
+	useResultsList,
+	useResultsVisit,
+} from "./index";
 
 vi.mock("@/lib/bff", () => ({
 	bff: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
+}));
+vi.mock("@/components/common/Toaster", () => ({
+	toast: { error: vi.fn() },
 }));
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
 
@@ -139,5 +149,44 @@ describe("a visit to the list", () => {
 		expect(vi.mocked(bff.put).mock.calls[0][0]).toBe(
 			"/analysis/projects/project-1/results/last-opened",
 		);
+	});
+});
+
+describe("requesting a run", () => {
+	beforeEach(() => i18n.loadAndActivate({ locale: "en-US", messages: {} }));
+	const refusal = (limit: string) => ({
+		response: {
+			data: { detail: { error: "FREE_TIER_LIMIT", limit } },
+			status: 402,
+		},
+	});
+
+	it.each(["map", "popcorn"])(
+		"leaves a used-up free %s to the page's wall",
+		async (limit) => {
+			vi.mocked(bff.post).mockRejectedValue(refusal(limit));
+			const run = renderHook(() => useRequestAnalysisRun("project-1"), {
+				wrapper,
+			});
+			await act(async () => {
+				await run.result.current
+					.mutateAsync({ recipe_id: "arguments" })
+					.catch(() => null);
+			});
+			expect(toast.error).not.toHaveBeenCalled();
+		},
+	);
+
+	it("says so when the run could not start for another reason", async () => {
+		vi.mocked(bff.post).mockRejectedValue(new Error("Network Error"));
+		const run = renderHook(() => useRequestAnalysisRun("project-1"), {
+			wrapper,
+		});
+		await act(async () => {
+			await run.result.current
+				.mutateAsync({ recipe_id: "arguments" })
+				.catch(() => null);
+		});
+		expect(toast.error).toHaveBeenCalledTimes(1);
 	});
 });

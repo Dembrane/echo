@@ -51,10 +51,10 @@ describe("add-context budget", () => {
     const half = Math.floor(MAX_CHAT_CONTEXT_LENGTH * 0.45);
     const { d, attached } = setup(
       "deep_dive",
-      { in: 0, a: half, b: half, c: half, long: MAX_CHAT_CONTEXT_LENGTH + 1 },
+      { in: 0, stamped: 0, a: half, b: half, c: half, long: MAX_CHAT_CONTEXT_LENGTH + 1 },
       [
         { id: "in", participant_name: "In" },
-        { id: "locked", participant_name: "L", is_over_cap: true },
+        { id: "stamped", participant_name: "S", is_over_cap: true },
         { id: "empty", participant_name: null },
         { id: "long", participant_name: "Long" },
         { id: "a", participant_name: "A" },
@@ -64,11 +64,11 @@ describe("add-context budget", () => {
       ],
     );
     const res = await addContext(d, host, CHAT, body);
-    expect(attached).toEqual([["a", "b"]]);
-    expect(res.added?.map((r) => r.conversation_id)).toEqual(["a", "b"]);
+    // The retired over-cap stamp never locks: a stamped conversation is added like any other.
+    expect(attached).toEqual([["stamped", "a", "b"]]);
+    expect(res.added?.map((r) => r.conversation_id)).toEqual(["stamped", "a", "b"]);
     expect(res.skipped?.map((r) => [r.conversation_id, r.reason])).toEqual([
       ["in", "already_in_context"],
-      ["locked", "locked"],
       ["empty", "empty"],
       ["long", "too_long"],
       ["c", "context_limit_reached"],

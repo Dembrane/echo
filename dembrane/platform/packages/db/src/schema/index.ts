@@ -153,6 +153,9 @@ export const agent_loop_run = pgTable(
   {
     detail: text(),
     finished_at: timestamp({ withTimezone: true, mode: "string" }),
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account the stamped analysis was taken from. */
+    free_account_id: uuid(),
     generation_id: uuid(),
     id: uuid().primaryKey().notNull(),
     loop_id: uuid(),
@@ -160,6 +163,16 @@ export const agent_loop_run = pgTable(
     status: varchar({ length: 255 }).default(sql`NULL`),
   },
   (table): PgTableExtraConfigValue[] => [
+    // The popcorn stuck-run sweep.
+    index("agent_loop_run_running_started")
+      .using("btree", table.started_at.asc().nullsLast())
+      .where(sql`((status)::text = 'running'::text)`),
+    // nextRunStart: a loop's runs by start.
+    index("agent_loop_run_loop_started").using(
+      "btree",
+      table.loop_id.asc().nullsLast(),
+      table.started_at.asc().nullsLast(),
+    ),
     foreignKey({
       columns: [table.generation_id],
       foreignColumns: [canvas_generation.id],
@@ -516,6 +529,10 @@ export const analysis_run = pgTable(
     epoch: integer().default(0).notNull(),
     error: text(),
     execution_ref: varchar({ length: 128 }).default(sql`NULL`),
+    /** The free period whose popcorn analysis this run took; null when it holds none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that analysis was taken from. */
+    free_account_id: uuid(),
     hash_version: varchar({ length: 16 }).default("c14n-v1").notNull(),
     id: uuid().primaryKey().notNull(),
     idempotency_key: varchar({ length: 255 }).default(sql`NULL`).notNull(),
@@ -569,6 +586,10 @@ export const analysis_run = pgTable(
       table.status.asc().nullsLast(),
       table.created_at.desc().nullsFirst(),
     ),
+    // Failed runs still holding a free charge.
+    index("analysis_run_free_charged")
+      .using("btree", table.status.asc().nullsLast())
+      .where(sql`(free_period_start IS NOT NULL)`),
     index("analysis_run_waiting_by_project")
       .using("btree", table.project_id.asc().nullsLast(), table.created_at.asc().nullsLast())
       .where(sql`((status)::text = 'waiting_for_inputs'::text)`),
@@ -1022,6 +1043,8 @@ export const billing_account = pgTable(
     updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
     workspace_id: uuid(),
     account_manager_id: uuid(),
+    // The free account's one recording project; checked on read, no foreign key.
+    recording_project_id: uuid(),
     billing_address_line1: varchar({ length: 255 }).default(sql`NULL`),
     billing_address_line2: varchar({ length: 255 }).default(sql`NULL`),
     billing_city: varchar({ length: 255 }).default(sql`NULL`),
@@ -1185,6 +1208,8 @@ export const conversation_chunk = pgTable(
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),
+    // Seconds of audio this chunk counted against a free allowance.
+    audio_seconds: real(),
     // Whisper's own sentences for this piece, with times from its start, and the piece's length.
     segments: jsonb(),
     silence_ratio: real().default(sql`'0'`),
@@ -2502,6 +2527,10 @@ export const project_report = pgTable(
     user_created: uuid(),
     kind: varchar({ length: 255 }).default("report").notNull(),
     public_token: varchar({ length: 255 }).default(sql`NULL`),
+    /** The free period whose report this report took; null when it took none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that report was taken from; null on rows stamped before it existed. */
+    free_account_id: uuid(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2761,6 +2790,8 @@ export const project_chat = pgTable(
     user_created: uuid(),
     user_updated: uuid(),
     is_private: boolean().default(false),
+    /** The free period whose chat slot this chat claimed; null when it claimed none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.project_id.asc().nullsLast()),

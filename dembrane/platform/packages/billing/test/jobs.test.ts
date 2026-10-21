@@ -37,6 +37,7 @@ test("schedules keep the old cadence", () => {
     ["billing.tier-prewarning", "0 * * * *", "singleton"],
     ["billing.overage-close", "*/2 * * * *", "singleton"],
     ["billing.overage-notify", "1-59/2 * * * *", "singleton"],
+    ["billing.free-audio-out", "*/5 * * * *", "singleton"],
   ]);
 });
 
@@ -113,6 +114,20 @@ describe("tier expiry", () => {
     expect(new Set(w.store.notifications.map((n) => n.ref_workspace_id))).toEqual(
       new Set([WS1, WS2]),
     );
+  });
+
+  test("an org account with no workspaces drops to free and records the downgrade", async () => {
+    const w = world({ tier_expires_at: "2026-09-01T00:00:00Z", pre_warning_sent: true });
+    w.store.workspaces.clear();
+    await runExpireTiers(deps(w));
+    expect(w.acc()).toMatchObject({
+      tier: "free",
+      downgraded_from_tier: "changemaker",
+      tier_expires_at: null,
+      pre_warning_sent: false,
+    });
+    expect(w.acc().downgraded_at).toStartWith("2026-09-27T10:00:00");
+    expect(w.store.notifications).toHaveLength(0);
   });
 
   test("managed accounts and unexpired tiers are left alone", async () => {

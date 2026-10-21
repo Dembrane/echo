@@ -64,13 +64,15 @@ import {
 	useAttachChatConversationsMutation,
 	useCreateChatMutation,
 } from "@/components/project/hooks";
+import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import type { ChatMode } from "@/lib/api";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import { allowanceSpent, isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -270,11 +272,11 @@ export const NewChatRoute = () => {
 	const prefetchSuggestions = usePrefetchSuggestions();
 	const [isInitializing, setIsInitializing] = useState(false);
 	const [draft, setDraft] = useState("");
-	const { freeTier } = useWorkspaceUsage(workspaceId);
+	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
+	const freeAllowance = useFreeAllowance(workspaceId);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	const atChatLimit = Boolean(
-		freeTier?.active && freeTier.chats_used >= freeTier.chats_limit,
-	);
+	const atChatLimit =
+		allowanceApplies && allowanceSpent(freeAllowance.data, "chats");
 	// Which mode the primary Start button (and the count line's wording)
 	// targets. Agentic stays available via the "Try Agentic instead" link
 	// regardless of this default.
@@ -334,7 +336,7 @@ export const NewChatRoute = () => {
 	) => {
 		if (!projectId) return;
 
-		// Free tier: one chat per workspace. Route to upgrade instead of creating.
+		// Free tier: this month's chats are used. Route to upgrade instead of creating.
 		if (atChatLimit) {
 			upgradeHandlers.open();
 			return;
@@ -416,8 +418,8 @@ export const NewChatRoute = () => {
 		// isPending only flips on the next render; two clicks in one tick would
 		// both pass it and create two drafts.
 		if (creatingDraftRef.current) return;
-		// Free tier: one chat per workspace. Route to upgrade before creating
-		// the draft, same as starting a chat would.
+		// Free tier: this month's chats. Route to upgrade before creating the
+		// draft, same as starting a chat would.
 		if (atChatLimit) {
 			upgradeHandlers.open();
 			return;
@@ -571,6 +573,9 @@ export const NewChatRoute = () => {
 						<Title order={2}>
 							<Trans>Where would you like to start?</Trans>
 						</Title>
+						{allowanceApplies && (
+							<FreeAllowanceBanner workspaceId={workspaceId} feature="chats" />
+						)}
 						<ChatTemplatesMenuConnected
 							chatMode={modeToStart}
 							projectId={projectId}

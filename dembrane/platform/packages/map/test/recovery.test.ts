@@ -126,6 +126,7 @@ run("fact-check recovery", () => {
       {
         store,
         rt,
+        db: database.db,
         dispatch: (job) =>
           queue.enqueue(mapFactCheck, job, { singletonKey: `${job.factCheckId}:${job.attempt}` }),
       },

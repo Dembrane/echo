@@ -7,7 +7,7 @@ import {
   seedBoardCardsFromQuotes,
   statePatch,
 } from "../src/ledgers";
-import { CanvasSanitizationError, sanitizeCanvasHtml } from "../src/sanitize";
+import { CanvasSanitizationError, sanitizeCanvasHtml, stripMarkdownFences } from "../src/sanitize";
 import { bannedVisibleCopy, generationDetail, windowedConversationBundles } from "../src/ticks";
 
 const bundle = {
@@ -191,4 +191,23 @@ describe("rendering and sanitising", () => {
     const first = (windows[0]?.conversations ?? []) as { latest_transcript: string }[];
     expect(first[0]?.latest_transcript).toHaveLength(1000);
   });
+});
+
+test("stripMarkdownFences keeps the old fence regex results and is linear", () => {
+  const cases: [string, string][] = [
+    ["", ""],
+    ["```", ""],
+    ["```html\n<p>x</p>\n```", "<p>x</p>"],
+    ["``` ```", ""],
+    ["````", "`"],
+    ["x```", "x"],
+    ["```HTML x ```  ", "x"],
+    ["<p>a</p>", "<p>a</p>"],
+    ["```\n\n```", ""],
+  ];
+  for (const [s, want] of cases) expect(stripMarkdownFences(s)).toBe(want);
+  const t = performance.now();
+  const spaces = `a${" ".repeat(100_000)}b`;
+  expect(stripMarkdownFences(spaces)).toBe(spaces);
+  expect(performance.now() - t).toBeLessThan(500);
 });

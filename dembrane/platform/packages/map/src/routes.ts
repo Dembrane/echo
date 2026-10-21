@@ -29,6 +29,7 @@ import {
 import {
   ConflictError,
   NotFoundError,
+  PaymentRequiredError,
   PlatformError,
   StatusError,
   UnavailableError,
@@ -142,6 +143,8 @@ export function mapRoutes(deps: MapRoutesDeps) {
   const d: service.FactCheckDeps & service.TitleDeps & service.GroupDeps = {
     store,
     rt,
+    db: deps.db,
+    logger: deps.logger,
     cache: new service.TitleCache(),
     modelIdentity: deps.completer.modelIdentity("multi_modal_fast"),
     generate: (lines, projectName, projectContext) =>
@@ -271,6 +274,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
     try {
       row = await service.requestGeneration(d, projectId, who.directusUserId);
     } catch (err) {
+      if (err instanceof PaymentRequiredError) throw err;
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       deps.logger.error(
         { project_id: projectId, err: { name: (err as Error)?.name } },

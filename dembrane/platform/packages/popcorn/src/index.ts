@@ -24,6 +24,13 @@ export { type DemoRoutesDeps, type ProspectHook, popcornDemoRoutes } from "./dem
 export { type DeckPart, type DraftDeckDeps, draftDeckRoutes } from "./draft-deck";
 export { publishNudge, updateStream } from "./events";
 export { FINISH_WINDOW_MS, finishReads, queueFinishRead } from "./finish";
+export {
+  type FreePopcorn,
+  type PopcornAdmit,
+  type PopcornAllowance,
+  popcornAllowance,
+  withFreePopcorn,
+} from "./free";
 export { popcornApiJobs, popcornTick, queueDispatch } from "./jobs";
 export {
   type AudienceMap,

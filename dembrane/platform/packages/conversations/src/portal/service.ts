@@ -7,8 +7,15 @@ import { enqueueConversationEvent, webhooksStorage } from "@dembrane/webhooks";
 import { and, eq, inArray } from "drizzle-orm";
 import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
+import { audioOpen, requireAudioStart } from "../free-audio";
 import { finishConversation } from "../pipeline/defs";
-import { type ChunkRow, type ConversationRow, conversationStore, transaction } from "../storage";
+import {
+  type ChunkRow,
+  type ConversationRow,
+  conversationStore,
+  type Tx,
+  transaction,
+} from "../storage";
 import { portalStore } from "./storage";
 
 const { conversation, conversation_project_tag, project_tag } = schema;
@@ -62,6 +69,8 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
   // project_service raised ProjectNotFoundException here, which the route did not catch.
   if (!project) throw new Error(`project ${projectId} not found`);
   if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
+  // Anything but typed text may record, so it is a start.
+  if (input.source !== "PORTAL_TEXT") await requireAudioStart(d, project.id);
   const id = newId();
   const now = d.now().toISOString();
   const row = await transaction(d.db, async (tx) => {
@@ -127,9 +136,10 @@ export async function publicProject(d: PortalDeps, projectId: string) {
   if (!project) throw new NotFoundError("project.not_found");
   if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
   const portal = portalStore(d.db);
-  const [tags, rows] = await Promise.all([
+  const [tags, rows, audio] = await Promise.all([
     portal.projectTags(project.id),
     portal.cascade(project.workspace_id, project.directus_user_id),
+    audioOpen(d, project.id),
   ]);
   const legal = effectiveLegalBasis({ project, workspace: rows.workspace, owner: rows.owner });
   let organiser: string | null = null;
@@ -172,6 +182,8 @@ export async function publicProject(d: PortalDeps, projectId: string) {
     legal_basis: legal.legal_basis,
     privacy_policy_url: legal.privacy_policy_url,
     organiser_name: organiser,
+    is_taking_recordings: audio.open,
+    conversation_limit_seconds: audio.conversationLimitSeconds,
   };
 }
 
@@ -228,11 +240,12 @@ export async function removeChunk(d: PortalDeps, projectId: string, id: string, 
 export async function addChunk(
   d: PortalDeps,
   input: NewChunk,
-  opts: { chunkId?: string; usePiiRedaction?: boolean } = {},
+  opts: { chunkId?: string; usePiiRedaction?: boolean; tx?: Tx } = {},
 ) {
   return createChunk(d, input, {
     chunkId: opts.chunkId ?? newId(),
     ...(opts.usePiiRedaction !== undefined && { usePiiRedaction: opts.usePiiRedaction }),
+    ...(opts.tx && { tx: opts.tx }),
   });
 }
 

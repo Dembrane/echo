@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 /**
  * How audio objects are named in rows. The Python API stored chunk and merged audio as
  * "<endpoint>/<bucket>/<key>" and parsed the key back out when reading; both APIs share
@@ -10,7 +11,7 @@ export class AudioUrls {
     readonly endpoint: string,
     readonly bucket: string,
   ) {
-    this.prefix = `${endpoint.replace(/\/+$/, "")}/${bucket}/`;
+    this.prefix = `${withoutTrailingSlashes(endpoint)}/${bucket}/`;
   }
 
   /** The stored path of an object key. */

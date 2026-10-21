@@ -5,6 +5,13 @@ import {
   type WorkspaceRole,
 } from "@dembrane/access";
 import {
+  allowanceForWorkspace,
+  freeLimitError,
+  freeLimits,
+  isFreeTier,
+  usedThisPeriod,
+} from "@dembrane/allowance";
+import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
@@ -17,7 +24,7 @@ import { isoTimestamp } from "@dembrane/legacy-shape";
 import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
 import { type Member, requireOnboarded, WorkspaceContext } from "../context";
-import { iso, isUuid } from "../db";
+import { type Conn, iso, isUuid } from "../db";
 import { clock, type TenancyDeps } from "../deps";
 import { orgInviteEmail } from "../emails";
 import { emailJob } from "../jobs";
@@ -40,6 +47,8 @@ import {
   insertOrgMembership,
   liveConversationDurations,
   liveProjectsIn,
+  lockOrgCreate,
+  managedOrgTiers,
   partnerOrgNamesExternalOf,
   pinnedProjects,
   referralLedger,
@@ -154,6 +163,18 @@ export function orgService(deps: TenancyDeps) {
     return counts;
   }
 
+  /** False for a free client workspace pooled into its org's free account. */
+  async function billsSeparately(
+    account: { id: string; tier: string | null; org_id: string | null } | null,
+    workspaceId: string,
+    now: Date,
+  ) {
+    if (!account || account.org_id) return false;
+    if (!isFreeTier(account.tier)) return true;
+    const a = await allowanceForWorkspace(db, workspaceId, now);
+    return !a || a.accountId === account.id;
+  }
+
   /** {user: {workspace: role}} and {user: {workspace: membership id}}; a direct row wins a duplicate pair. */
   async function directRoles(orgId: string, userIds: readonly string[]) {
     const roles = new Map<string, Record<string, string>>();
@@ -210,10 +231,27 @@ export function orgService(deps: TenancyDeps) {
       const member = requireOnboarded(who);
       const name = oneLine(rawName);
       if (!name) throw new BadRequestError("organisation.name_required");
+      // One free org per manager; the refusal names it so the wall upgrades that org.
+      const refuseIfFree = async (conn: Conn) => {
+        if (who.isStaff) return;
+        const free = (await managedOrgTiers(conn, member.appUserId)).find((o) =>
+          isFreeTier(o.tier),
+        );
+        if (free)
+          throw freeLimitError("organisations", {
+            org_id: free.org_id,
+            ...(free.workspace_id ? { workspace_id: free.workspace_id } : {}),
+          });
+      };
+      await refuseIfFree(db);
       const now = clock(deps);
       const orgId = newId();
       const wsId = newId();
       await db.transaction(async (tx) => {
+        if (!who.isStaff) {
+          await lockOrgCreate(tx, member.appUserId);
+          await refuseIfFree(tx);
+        }
         await insertOrg(tx, {
           id: orgId,
           name,
@@ -600,7 +638,7 @@ export function orgService(deps: TenancyDeps) {
           member_count: members.get(ws.id) ?? 0,
           is_private: isPrivate,
           visibility: ws.visibility || "open_to_organisation",
-          bills_separately: account !== null && !account.org_id,
+          bills_separately: await billsSeparately(account, ws.id, clock(deps)),
           seat_invite_blocked: false,
           seats_used_including_pending: seatsUsed,
           seat_cap: capacityOf(tier.toLowerCase())?.includedSeats ?? null,
@@ -613,7 +651,7 @@ export function orgService(deps: TenancyDeps) {
       return out;
     },
 
-    /** Changes an org role. Only an owner makes or unmakes an owner; the last manager stays. */
+    /** Changes an org role. Only an owner makes or unmakes an owner; the last owner and manager stay. */
     async changeRole(who: Signed, orgId: string, userId: string, role: string) {
       if (!ORG_ROLES.has(role)) throw new BadRequestError("member.invalid_role");
       const member = requireOnboarded(who);
@@ -622,6 +660,12 @@ export function orgService(deps: TenancyDeps) {
       if (!target) throw new NotFoundError("member.not_found");
       if ((role === "owner" || target.role === "owner") && callerRole !== "owner")
         throw new ForbiddenError("member.owner_changes_owner");
+      if (
+        target.role === "owner" &&
+        role !== "owner" &&
+        (await countOrgMembers(db, orgId, "owner")) <= 1
+      )
+        throw new BadRequestError("member.last_owner_demote");
       if (MANAGERS.includes(target.role) && !MANAGERS.includes(role)) {
         const others = (await orgMembers(db, orgId, MANAGERS)).filter((m) => m.user_id !== userId);
         if (!others.length) throw new BadRequestError("member.last_admin");
@@ -667,6 +711,14 @@ export function orgService(deps: TenancyDeps) {
         if (callerRole !== "owner") throw new ForbiddenError("member.owner_removes_owner");
         if ((await countOrgMembers(db, orgId, "owner")) <= 1)
           throw new ConflictError("member.last_owner");
+      }
+      // An org never loses its last manager (B2: step down, leave, make a fresh free org).
+      if (MANAGERS.includes(target.role)) {
+        const others = (await orgMembers(db, orgId, MANAGERS)).filter((m) => m.user_id !== userId);
+        if (!others.length)
+          throw new BadRequestError(
+            userId === member.appUserId ? "member.sole_admin_leave" : "member.last_admin_remove",
+          );
       }
       const affected = await db.transaction(async (tx) => {
         await updateOrgMembership(tx, target.id, { deleted_at: iso(now), updated_at: iso(now) });
@@ -730,9 +782,13 @@ export function orgService(deps: TenancyDeps) {
       let totalExternals = 0;
       let totalObservers = 0;
       let totalHours = 0;
-      const atCap = 0;
+      let atCap = 0;
       let approaching = 0;
       const rows = [];
+      const freeLimit = (await freeLimits(db)).audio_seconds_month;
+      const counted = new Set<string>();
+      const atCapKeys = new Set<string>();
+      const approachingKeys = new Set<string>();
       for (const w of workspaces) {
         const [seats, , externals, observers] = seatState(await effectiveMembers(db, w.id));
         totalSeats += seats;
@@ -742,20 +798,44 @@ export function orgService(deps: TenancyDeps) {
         const billing = commercial(account);
         const tier = billing?.tier ?? "";
         const h = hours.get(w.id) ?? 0;
-        totalHours += h;
         const cap = capacityOf(tier);
-        const included = cap?.includedHours ?? null;
+        let included = cap?.includedHours ?? null;
         const seatsIncluded = cap?.includedSeats ?? null;
         let hoursPct: number | null = null;
+        let hoursOver = included !== null ? pyRound(Math.max(0, h - included), 2) : 0;
+        // The hours measured against hours_included; null when there is no cap.
+        let hoursCounted = included !== null ? pyRound(h, 2) : null;
+        let wsAtCap = false;
         let wsApproaching = false;
-        if (cap && cap.includedHours !== null) {
+        // Free rows on the ledger share their account's meter; the total counts it once.
+        let ledgerAccount: string | null = null;
+        if (isFreeTier(tier)) {
+          // Free hours are the ledger's monthly meter, which only holds the current period.
+          const a = monthOffset === 0 ? await allowanceForWorkspace(db, w.id, now) : null;
+          const used = a ? (await usedThisPeriod(db, a)).audio_seconds : 0;
+          included = a ? pyRound(freeLimit / 3600, 2) : null;
+          hoursOver = pyRound(Math.max(0, used - freeLimit) / 3600, 2);
+          hoursCounted = a ? pyRound(used / 3600, 2) : null;
+          if (a) {
+            ledgerAccount = a.accountId;
+            if (!counted.has(a.accountId)) totalHours += used / 3600;
+            counted.add(a.accountId);
+            hoursPct = pyRound(freeLimit > 0 ? used / freeLimit : 1, 3);
+            wsAtCap = used >= freeLimit;
+            wsApproaching = !wsAtCap && hoursPct >= 0.8;
+          }
+        } else if (cap && cap.includedHours !== null) {
           const pct = cap.includedHours ? h / cap.includedHours : 0;
           hoursPct = pyRound(pct, 3);
-          if (pct >= 0.8) {
-            approaching++;
-            wsApproaching = true;
-          }
+          wsApproaching = pct >= 0.8;
         }
+        if (!ledgerAccount) totalHours += h;
+        // Pooled rows share one meter, so they count as one.
+        const capKey = ledgerAccount ?? w.id;
+        if (wsAtCap && !atCapKeys.has(capKey)) atCap++;
+        if (wsApproaching && !approachingKeys.has(capKey)) approaching++;
+        if (wsAtCap) atCapKeys.add(capKey);
+        if (wsApproaching) approachingKeys.add(capKey);
         const seatsPct =
           seatsIncluded !== null && seatsIncluded > 0 ? pyRound(seats / seatsIncluded, 3) : null;
         const seatCapHit = seatsIncluded !== null && seats >= seatsIncluded;
@@ -767,7 +847,9 @@ export function orgService(deps: TenancyDeps) {
           audio_hours: pyRound(h, 2),
           hours_included: included,
           hours_pct: hoursPct,
-          hours_over: included !== null ? pyRound(Math.max(0, h - included), 2) : 0,
+          hours_over: hoursOver,
+          hours_counted: hoursCounted,
+          allowance_account_id: ledgerAccount,
           seat_count: seats,
           seats_included: seatsIncluded,
           seats_pct: seatsPct,
@@ -775,18 +857,16 @@ export function orgService(deps: TenancyDeps) {
           approaching_seat_cap: seatsPct !== null && seatsPct >= 0.8 && !seatCapHit,
           external_count: externals,
           observer_count: observers,
-          at_cap: false,
+          at_cap: wsAtCap,
           approaching_cap: wsApproaching,
           downgraded_at: isoTimestamp(billing?.downgraded_at),
-          bills_separately: account !== null && !account.org_id,
+          bills_separately: await billsSeparately(account, w.id, now),
         });
       }
       // Hot workspaces first, then by hours; ties keep their order.
-      rows.sort(
-        (a, b) =>
-          (a.approaching_cap ? 1 : 2) - (b.approaching_cap ? 1 : 2) ||
-          b.audio_hours - a.audio_hours,
-      );
+      const heat = (r: { at_cap: boolean; approaching_cap: boolean }) =>
+        r.at_cap ? 0 : r.approaching_cap ? 1 : 2;
+      rows.sort((a, b) => heat(a) - heat(b) || b.audio_hours - a.audio_hours);
       return {
         cycle_start: pyIso(start),
         cycle_end_exclusive: pyIso(end),

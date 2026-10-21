@@ -180,6 +180,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/samples": "workspace:*",
         "@dembrane/storage": "workspace:*",
+        "@dembrane/tenancy": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
         "zod": "^4.1.0",
@@ -241,6 +242,7 @@
         "@ai-sdk/provider": "*",
         "@dbos-inc/dbos-sdk": "^5.1.10",
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/analytics": "workspace:*",
         "@dembrane/chats": "workspace:*",
         "@dembrane/config": "workspace:*",
@@ -262,10 +264,21 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/allowance": {
+      "name": "@dembrane/allowance",
+      "dependencies": {
+        "@dembrane/core": "workspace:*",
+        "@dembrane/db": "workspace:*",
+        "@dembrane/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/analysis": {
       "name": "@dembrane/analysis",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -275,6 +288,7 @@
         "@dembrane/queue": "workspace:*",
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
+        "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
@@ -305,6 +319,7 @@
       "name": "@dembrane/billing",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/config": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -349,6 +364,7 @@
       "dependencies": {
         "@ai-sdk/provider": "*",
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/analytics": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -378,6 +394,7 @@
       "name": "@dembrane/conversations",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/audio": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -481,6 +498,7 @@
       "name": "@dembrane/map",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/analysis": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -539,6 +557,7 @@
       "dependencies": {
         "@dbos-inc/dbos-sdk": "^5.1.10",
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/analysis": "workspace:*",
         "@dembrane/analytics": "workspace:*",
         "@dembrane/core": "workspace:*",
@@ -550,6 +569,7 @@
         "@dembrane/queue": "workspace:*",
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
+        "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
@@ -562,6 +582,7 @@
       "name": "@dembrane/present",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/analysis": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -595,6 +616,7 @@
       "name": "@dembrane/projects",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -696,6 +718,7 @@
       "name": "@dembrane/staff",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/billing": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -733,6 +756,7 @@
       "name": "@dembrane/tenancy",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/billing": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -882,6 +906,8 @@
     "@dembrane/agent-access": ["@dembrane/agent-access@workspace:packages/agent-access"],
 
     "@dembrane/agentic": ["@dembrane/agentic@workspace:packages/agentic"],
+
+    "@dembrane/allowance": ["@dembrane/allowance@workspace:packages/allowance"],
 
     "@dembrane/analysis": ["@dembrane/analysis@workspace:packages/analysis"],
 

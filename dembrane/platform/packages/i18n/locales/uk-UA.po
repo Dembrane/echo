@@ -254,7 +254,6 @@ msgstr "Ваш код для входу: {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Ваш код для входу."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Ваш код для входу: {code}. Він діє протягом 10 хвилин."
@@ -266,7 +265,6 @@ msgstr "Якщо ви не намагалися увійти, просто пр�
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} просить вас підписати {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Відкрити робочий простір"
 msgid "email.payment_failed.subject"
 msgstr "Ваш платіж dembrane не пройшов"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Ваш тариф залишається активним. Оновіть спосіб оплати, щоб погасити заборгованість."
@@ -604,7 +601,6 @@ msgstr "Оновіть свій спосіб оплати:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} тепер на безкоштовному тарифі"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Запросити підвищення тарифу"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} переходить на безкоштовний тариф {date}"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Ваш тариф {tier} завершується {date}. Усе, що ви створили, збережеться."
@@ -658,6 +653,38 @@ msgstr "Усе, що ви створили, збережеться. Щоб за�
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Запросити підвищення тарифу"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} вичерпав години запису за цей місяць"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Нові записи та завантаження призупинено до {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} вичерпав години запису за цей місяць"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Тариф Free містить {hours} запису на місяць, і {name} вже використав їх. Нові записи та завантаження призупинено до {reset_date}. Усе записане раніше залишається доступним."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} годин"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} година"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Змініть тариф, щоб записувати далі"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Змініть тариф, щоб записувати далі:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

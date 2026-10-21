@@ -23,6 +23,7 @@ import {
 	useProjectPopcorn,
 } from "@/components/popcorn/hooks";
 import { PopcornActions } from "@/components/popcorn/PopcornActions";
+import { PopcornFreeNotice } from "@/components/popcorn/PopcornFreeNotice";
 import { PopcornHistory } from "@/components/popcorn/PopcornHistory";
 import { PopcornIntroModal } from "@/components/popcorn/PopcornIntroModal";
 import { PopcornLanguageSettings } from "@/components/popcorn/PopcornLanguageSettings";
@@ -72,9 +73,11 @@ function statusLine(popcorn: PopcornDetail): string {
 // itself opens in its own tab, the presenter view.
 function PopcornSession({
 	projectId,
+	workspaceId,
 	popcorn,
 }: {
 	projectId: string;
+	workspaceId: string;
 	popcorn: PopcornDetail;
 }) {
 	const invalidate = useInvalidatePopcorn(projectId);
@@ -113,6 +116,11 @@ function PopcornSession({
 					</Text>
 				</Stack>
 				<PopcornActions projectId={projectId} popcorn={popcorn} />
+				<PopcornFreeNotice
+					status={popcorn.free_popcorn}
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
 				<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 					<PopcornStatus popcorn={popcorn} />
 					<PopcornScreenSettings projectId={projectId} popcorn={popcorn} />
@@ -195,5 +203,11 @@ export const PopcornRoute = () => {
 			/>
 		);
 	}
-	return <PopcornSession projectId={projectId} popcorn={popcorn} />;
+	return (
+		<PopcornSession
+			projectId={projectId}
+			workspaceId={workspaceId ?? ""}
+			popcorn={popcorn}
+		/>
+	);
 };

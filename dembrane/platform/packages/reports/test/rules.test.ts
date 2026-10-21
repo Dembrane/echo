@@ -8,8 +8,9 @@ import {
   ReportGenerationError,
 } from "../src/generation";
 import { pyRepr } from "../src/jinja";
+import { type GenerateDeps, markError, reportFailed } from "../src/jobs";
 import { renderPrompt } from "../src/prompts";
-import { cleanGeneratedTitle, projectContext, selectTagIds } from "../src/summarize";
+import { cleanGeneratedTitle, listItemText, projectContext, selectTagIds } from "../src/summarize";
 import recorded from "./recorded/prompts.json";
 
 describe("prompt templates render as Jinja rendered them", () => {
@@ -162,5 +163,140 @@ describe("summaries", () => {
       "project context: name: P\ncontext: C",
     );
     expect(projectContext({})).toBeNull();
+  });
+});
+
+describe("a failed report", () => {
+  const payload = { projectId: "p", reportId: 7, language: "en", userInstructions: "" };
+  const fake = (refundFreeReport: (id: number) => Promise<unknown>, status = "draft") => {
+    const logged: unknown[] = [];
+    const updates: unknown[] = [];
+    const d = {
+      store: {
+        updateReport: async (_id: number, v: unknown) => updates.push(v),
+        failRun: async (_id: number, error_code: string) =>
+          status === "draft" && updates.push({ status: "error", error_code }) > 0,
+        sql: async () => [],
+      },
+      logger: { error: (o: unknown) => logged.push(o), warn: () => {}, info: () => {} },
+      now: () => new Date("2026-10-20T10:00:00Z"),
+      refundFreeReport,
+    } as unknown as GenerateDeps;
+    return { d, logged, updates };
+  };
+
+  test("markError asks for a refund", async () => {
+    const ids: number[] = [];
+    const { d, updates } = fake(async (id) => ids.push(id));
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(ids).toEqual([7]);
+    expect(updates).toMatchObject([{ status: "error", error_code: "GENERATION_FAILED" }]);
+  });
+
+  test("markError on a report another run saved changes nothing", async () => {
+    const ids: number[] = [];
+    const { d, updates } = fake(async (id) => ids.push(id), "archived");
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(ids).toEqual([]);
+    expect(updates).toEqual([]);
+  });
+
+  test("REPORT_FAILED is sent only when the run ended the report in error", async () => {
+    for (const [status, sent] of [
+      ["draft", 1],
+      ["archived", 0],
+    ] as const) {
+      const { d } = fake(async () => {}, status);
+      const emitted: unknown[] = [];
+      const store = d.store as unknown as Record<string, unknown>;
+      store.report = async () => ({ user_created: "du" });
+      store.appUserByDirectusId = async () => ({ id: "u" });
+      store.project = async () => ({ workspace_id: "w" });
+      store.processingStatus = async () => {};
+      const deps = {
+        ...d,
+        notifier: { emit: async (e: unknown) => emitted.push(e) },
+      } as GenerateDeps;
+      await reportFailed(deps, payload, "boom", Date.now());
+      expect(emitted).toHaveLength(sent);
+    }
+  });
+
+  test("a failRun that throws sends no failure and no refund; the sweep ends it later", async () => {
+    const ids: number[] = [];
+    const { d, logged } = fake(async (id) => ids.push(id));
+    const published: unknown[] = [];
+    const emitted: unknown[] = [];
+    const store = d.store as unknown as Record<string, unknown>;
+    store.failRun = async () => {
+      throw new Error("db down");
+    };
+    store.sql = async (...args: unknown[]) => published.push(args);
+    store.report = async () => ({ user_created: "du" });
+    store.appUserByDirectusId = async () => ({ id: "u" });
+    store.project = async () => ({ workspace_id: "w" });
+    store.processingStatus = async () => {};
+    const deps = {
+      ...d,
+      notifier: { emit: async (e: unknown) => emitted.push(e) },
+    } as GenerateDeps;
+    expect(await markError(deps, payload, "GENERATION_FAILED", "x")).toBe(false);
+    await reportFailed(deps, payload, "boom", Date.now());
+    expect(ids).toEqual([]);
+    expect(published).toEqual([]);
+    expect(emitted).toEqual([]);
+    expect(logged).toHaveLength(2);
+  });
+
+  test("a refund that throws is logged, not rethrown", async () => {
+    const { d, logged } = fake(async () => {
+      throw new Error("db down");
+    });
+    await markError(d, payload, "GENERATION_FAILED", "x");
+    expect(logged).toHaveLength(1);
+  });
+});
+
+describe("linear-time parsing (CodeQL js/polynomial-redos)", () => {
+  test("extractArticle keeps the old lazy-regex results", () => {
+    expect(extractArticle("")).toBe("");
+    expect(extractArticle("<article> x </article>")).toBe("x");
+    expect(extractArticle("pre<article>a</article><article>b</article>")).toBe("a");
+    expect(extractArticle("<article>no close")).toBe("no close");
+    expect(extractArticle("</article><article>x</article>")).toBe("x");
+    expect(extractArticle("<article><article>x</article>")).toBe("<article>x");
+    expect(extractArticle(" plain ")).toBe("plain");
+  });
+
+  test("extractArticle is fast on many unclosed tags", () => {
+    const t = performance.now();
+    expect(extractArticle("<article>".repeat(100_000))).toBe("");
+    expect(performance.now() - t).toBeLessThan(500);
+  });
+
+  test("listItemText keeps the old list-item regex results", () => {
+    const cases: [string, string | null][] = [
+      ["- a", "a"],
+      ["* **Bold**", "**Bold**"],
+      ["• x", "x"],
+      ["12) item", "item"],
+      ["1.  spaced", "spaced"],
+      ["3: c", "c"],
+      ["-", null],
+      ["-x", null],
+      ["1.", null],
+      ["a - b", null],
+      ["- a\u2028b", null],
+      ["* \u2028x", "x"],
+      ["-\u00a0y", "y"],
+    ];
+    for (const [line, want] of cases) expect(listItemText(line)).toBe(want);
+  });
+
+  test("listItemText is fast on a long whitespace run", () => {
+    const t = performance.now();
+    expect(listItemText(`* ${" ".repeat(100_000)}b\u2028a`)).toBeNull();
+    expect(listItemText(`* ${" ".repeat(100_000)}a`)).toBe("a");
+    expect(performance.now() - t).toBeLessThan(500);
   });
 });

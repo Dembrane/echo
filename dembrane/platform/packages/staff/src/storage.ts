@@ -16,6 +16,7 @@ const {
   referral_ledger,
   support_access_request,
   support_access_event,
+  free_usage,
 } = schema;
 
 /** Staff console queries. Each mirrors the Directus query of the old route (id order, soft deletes filtered here). */
@@ -151,6 +152,24 @@ export function staffStorage(db: Db) {
         .where(eq(app_user.directus_user_id, directusUserId))
         .limit(1);
       return row ?? null;
+    },
+
+    /** Live accounts whose audio ledger reached `limit` in a period starting since `since`. */
+    async freeAudioAccountsAtLeast(limit: number, since: string) {
+      return db
+        .selectDistinct({ id: billing_account.id, org_id: billing_account.org_id })
+        .from(free_usage)
+        .innerJoin(billing_account, eq(billing_account.id, free_usage.billing_account_id))
+        .where(
+          and(
+            eq(free_usage.key, "audio_seconds"),
+            gte(free_usage.amount, limit),
+            gte(free_usage.period_start, since),
+            eq(billing_account.tier, "free"),
+            isNull(billing_account.deleted_at),
+          ),
+        )
+        .orderBy(asc(billing_account.id));
     },
 
     /**

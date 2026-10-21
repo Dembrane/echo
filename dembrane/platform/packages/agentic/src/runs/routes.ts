@@ -1,4 +1,4 @@
-import { chatsStorage, generateTitle } from "@dembrane/chats";
+import { chatsStorage, freeChats, generateTitle } from "@dembrane/chats";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { boundedEventStream } from "@dembrane/realtime";
@@ -38,9 +38,11 @@ export function runRoutes(deps: AgenticRoutesDeps) {
   const chats = chatsStorage(deps.db);
   const now = deps.now ?? (() => new Date());
   const d: runs.RunsDeps = {
+    db: deps.db,
     store,
     chats,
     access: deps.access,
+    freeChats: freeChats(deps.db),
     queue: deps.queue,
     logger: deps.logger,
     now,

@@ -401,6 +401,14 @@ export interface NewRun {
   readonly reusedRunId?: string | null;
   readonly outputManifest?: Json | null;
   readonly metrics?: Json;
+  /** The free charge this run holds, given back if it fails. */
+  readonly freeStamp?: FreeStamp | null;
+}
+
+/** Which account and period a run's free popcorn analysis was taken from. */
+export interface FreeStamp {
+  readonly accountId: string;
+  readonly periodStart: string;
 }
 
 export interface StepWrite {

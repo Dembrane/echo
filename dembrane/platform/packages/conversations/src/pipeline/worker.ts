@@ -63,8 +63,7 @@ export function conversationWorker(
           );
       });
       await queue.schedule(finishIdleConversations, "*/2 * * * *", {});
-      // A locked conversation summarises once its workspace upgrades; a summary that ran
-      // out of retries gets another chance.
+      // A summary that ran out of retries gets another chance.
       await queue.work(catchUpSummaries, { concurrency: 1 }, async () => {
         for (const conversationId of await unsummarizedConversations(d.db, d.now()))
           await queue.enqueue(

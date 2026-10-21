@@ -29,7 +29,14 @@ export type WallKey =
 	| "chat_voice_cap"
 	| "custom_logo"
 	| "event_cta"
+	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
+	| "free_allowance"
+	| "map_cap"
+	| "org_cap"
+	| "popcorn_cap"
 	| "private_workspace"
+	| "project_cap"
+	| "recording_project"
 	| "report_cap"
 	| "transcription_cap"
 	| "transcripts_view"
@@ -65,7 +72,8 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
  * The feature is named here and nowhere else. The modal never names it,
  * because the popover named it one click earlier.
  *
- * Every line says "a paid plan". No line names a tier.
+ * Every line says "a paid plan". No line names a tier. Staff edit the free
+ * limits, so no line states one.
  *
  * An empty string means this wall has no popover line, so the blocked control
  * carries no popover and the modal opens directly:
@@ -78,16 +86,20 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
 export function wallPopoverLine(wall: WallKey): string {
 	const lines: Record<WallKey, string> = {
 		billing_page: "",
-		// Both chat walls read the same line. The agreed copy has one entry for
-		// chat, and its wording already covers the turn limit: the free plan is
-		// one chat with three questions.
-		chat_cap: t`The free plan includes one chat with three questions.`,
-		chat_turn_cap: t`The free plan includes one chat with three questions.`,
+		// Both chat walls read the same line: it covers chats and turns.
+		chat_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
+		chat_turn_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
 		chat_voice_cap: "",
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
+		free_allowance: "",
+		map_cap: t`The free plan includes a monthly allowance of maps.`,
+		org_cap: t`The free plan includes one organisation.`,
+		popcorn_cap: t`The free plan includes a monthly allowance of popcorn analyses.`,
 		private_workspace: t`Private workspaces come with a paid plan.`,
-		report_cap: t`The free plan includes one report.`,
+		project_cap: t`The free plan includes a limited number of projects.`,
+		recording_project: t`On the free plan one project takes recordings.`,
+		report_cap: t`The free plan includes a monthly allowance of reports.`,
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
 		upload_cap: t`Uploading recordings comes with a paid plan.`,
@@ -125,7 +137,13 @@ export function wallActionLine(wall: WallKey | string | undefined): string {
 		chat_voice_cap: t`use your voice in chat`,
 		custom_logo: t`add your logo`,
 		event_cta: t`hide the dembrane event invitation`,
+		free_allowance: t`go beyond this month's free allowance`,
+		map_cap: t`generate another map`,
+		org_cap: t`create more organisations`,
+		popcorn_cap: t`keep analysing with popcorn`,
 		private_workspace: t`make a workspace private`,
+		project_cap: t`add more projects`,
+		recording_project: t`record in every project`,
 		report_cap: t`create another report`,
 		// The one locked data wall. Nothing was blocked in the room: the
 		// recording ran and the participants never met a wall. What stopped is

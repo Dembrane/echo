@@ -18,6 +18,10 @@ export const upload = {
 		id: "error.upload.file_not_found",
 		message: "We could not find this file. It may have been removed.",
 	}),
+	"upload.measure_failed": msg({
+		id: "error.upload.measure_failed",
+		message: "We could not check the length of this file. Try again.",
+	}),
 	"upload.probe_url_failed": msg({
 		id: "error.upload.probe_url_failed",
 		message: "We could not check your connection. Try again.",
@@ -29,6 +33,10 @@ export const upload = {
 	"upload.transcription_failed": msg({
 		id: "error.upload.transcription_failed",
 		message: "We could not turn this audio into text. Try again.",
+	}),
+	"upload.unreadable": msg({
+		id: "error.upload.unreadable",
+		message: "This file could not be read as audio. Choose another file.",
 	}),
 	"upload.unsupported_type": msg({
 		id: "error.upload.unsupported_type",

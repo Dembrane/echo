@@ -15,6 +15,7 @@ import {
   micros,
   type ObjectRevision,
   pyIso,
+  type RequestOutcome,
   type Run,
   requestRun,
   round6,
@@ -27,6 +28,9 @@ import {
   titleSelectionKey,
   VIEW_SCOPE_KEY,
 } from "@dembrane/analysis";
+import type { Db } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
+import { startFreeMap } from "./free";
 import { ACTIVE_STATUSES, type MapStore, type Row } from "./store";
 
 /**
@@ -69,6 +73,9 @@ export const targetProject = (t: Target) =>
 export interface MapDeps {
   readonly store: MapStore;
   readonly rt: AnalysisRuntime;
+  readonly db: Db;
+  readonly now?: () => Date;
+  readonly logger?: Logger;
 }
 
 export function attemptPayload(row: Row | null): Json | null {
@@ -316,16 +323,44 @@ export async function requestGeneration(
   await d.store.expireStale(projectId, STALE_ATTEMPT_SECONDS);
   const active = await d.store.activeAttempt(projectId);
   if (active) return active;
-  const outcome = await requestRun(
-    {
-      projectId,
-      recipeId: ARGUMENTS_RECIPE_ID,
-      scopeKey: VIEW_SCOPE_KEY,
-      mode: "refresh",
-      requestedBy,
+  const got = await startFreeMap<
+    { kind: "pending"; row: Row | null } | { kind: "run"; outcome: RequestOutcome }
+  >(
+    d.db,
+    projectId,
+    d.now?.() ?? new Date(),
+    async () => {
+      const outcome = await requestRun(
+        {
+          projectId,
+          recipeId: ARGUMENTS_RECIPE_ID,
+          scopeKey: VIEW_SCOPE_KEY,
+          mode: "refresh",
+          requestedBy,
+        },
+        d.rt.executor,
+      );
+      return {
+        row: { kind: "run", outcome },
+        started: outcome.outcome === "created" || outcome.outcome === "requeued",
+      };
     },
-    d.rt.executor,
+    {
+      logger: d.logger,
+      // A free map still generating answers a second click without counting.
+      pending: async () => {
+        let run: Run | null = null;
+        try {
+          run = await argumentsRun(d, projectId);
+        } catch (err) {
+          if (!(err instanceof AnalysisStoreError)) throw err;
+        }
+        return run && run.status !== "failed" ? { kind: "pending", row: runAttempt(run) } : null;
+      },
+    },
   );
+  if (got.kind === "pending") return got.row;
+  const { outcome } = got;
   await d.rt.publishMap(projectId, {
     type: "queued",
     run_id: outcome.run.id,

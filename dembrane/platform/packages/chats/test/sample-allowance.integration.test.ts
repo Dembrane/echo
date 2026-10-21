@@ -1,11 +1,9 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
-import { chatReads } from "../src/conversations";
 import { chatsStorage } from "../src/storage";
 
-// The free chat allowance counts chats with a user message. A sample copy's seeded chat
-// has one, and so may chats the user starts on it: neither spends the allowance.
+// A sample copy's chats share their own allowance of user turns.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const dbName = `chats_sample_allowance_${process.pid}`;
@@ -49,15 +47,6 @@ run("the free chat allowance and a sample project", () => {
     await sql`insert into project_chat_message (id, project_chat_id, message_from, text)
       values (${crypto.randomUUID()}, ${id}, 'user', 'a question')`;
   }
-
-  test("chats on the sample, seeded or the user's, spend none of it; the workspace's own do", async () => {
-    const reads = chatReads(database.db);
-    await chatWithQuestion(sample);
-    await chatWithQuestion(sample);
-    expect(await reads.workspaceChatsWithUserMessages(ws)).toBe(0);
-    await chatWithQuestion(own);
-    expect(await reads.workspaceChatsWithUserMessages(ws)).toBe(1);
-  });
 
   test("the sample's own allowance counts user turns across its live chats", async () => {
     const store = chatsStorage(database.db);

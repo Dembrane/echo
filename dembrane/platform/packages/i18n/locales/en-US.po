@@ -660,6 +660,38 @@ msgid "email.tier_expiring.cta"
 msgstr "Request an upgrade"
 
 #. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} has used this month's recording hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "New recordings and uploads are paused until {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} has used this month's recording hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "The free plan includes {hours} of recording a month, and {name} has used them. New recordings and uploads are paused until {reset_date}. Everything recorded so far stays available."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} hour"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Upgrade to keep recording"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Upgrade to keep recording:"
+
+#. js-lingui-explicit-id
 msgid "task.sign_offer.title"
 msgstr "Review and sign the offer"
 

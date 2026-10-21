@@ -1,11 +1,18 @@
 import type { Access } from "@dembrane/access";
 import {
+  chargeFreeUnit,
+  type FreeCharge,
+  type FreeUnit,
+  requireFreeUnitRoom,
+} from "@dembrane/allowance";
+import {
   ConflictError,
   NotFoundError,
   newId,
   UnavailableError,
   ValidationError,
 } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor } from "@dembrane/http";
 import type { RateLimiter } from "@dembrane/ratelimit";
@@ -22,7 +29,7 @@ import {
   sourceRefJson,
 } from "./contracts";
 import { isUuid, J, micros, one, pyIso, q } from "./db";
-import { cancelRun, requestRun } from "./executor";
+import { cancelRun, type RunCharge, requestRun } from "./executor";
 import {
   ARGUMENT_TYPES,
   currentMapSnapshot,
@@ -52,6 +59,7 @@ import { validatePayload } from "./types";
  */
 
 export interface BffDeps {
+  readonly db: Db;
   readonly rt: AnalysisRuntime;
   readonly access: Access;
   readonly limiter: RateLimiter;
@@ -219,6 +227,14 @@ export interface RunCreate {
   readonly retry_run_id: string | null;
 }
 
+// Free tier: maps come from these recipes, popcorn-class analyses from the rest.
+const FREE_UNITS: Readonly<Record<string, FreeUnit>> = {
+  arguments: "maps",
+  deduplicated_arguments: "maps",
+  stakeholders: "popcorn_analyses",
+  tensions: "popcorn_analyses",
+};
+
 export async function requestAnalysisRun(
   d: BffDeps,
   who: Signed,
@@ -229,9 +245,47 @@ export async function requestAnalysisRun(
   await requireUpdate(d, who, projectId);
   if (INTERNAL_RECIPES.has(body.recipe_id)) throw new ValidationError("analysis.recipe_internal");
   await d.limiter.check(RUN_LIMIT, who.directusUserId);
+  const now = d.now();
+  const rootUnit = FREE_UNITS[body.recipe_id];
+  // Refuse before any dependency starts.
+  if (rootUnit) await requireFreeUnitRoom(d.db, projectId, rootUnit, now);
+  const charges = new Map<FreeUnit, FreeCharge>();
+  // One charge per unit per request: arguments and deduplication share one map.
+  const held = new Map<FreeUnit, number>();
+  const charge = async (recipeId: string): Promise<RunCharge | null> => {
+    const unit = FREE_UNITS[recipeId];
+    if (!unit) return null;
+    const count = held.get(unit) ?? 0;
+    let first = false;
+    if (count === 0) {
+      const c = await chargeFreeUnit(d.db, projectId, unit, now, d.rt.executor.logger);
+      if (!c) return null;
+      held.set(unit, 1);
+      charges.set(unit, c);
+      first = true;
+    } else held.set(unit, count + 1);
+    const c = charges.get(unit);
+    let done = false;
+    return {
+      // Only the popcorn run that took the charge holds it; a started map is never given back.
+      stamp:
+        first && unit === "popcorn_analyses" && c
+          ? { accountId: c.accountId, periodStart: c.periodStart }
+          : null,
+      // Given back only when no run of this unit was started.
+      giveBack: async () => {
+        if (done) return;
+        done = true;
+        const left = (held.get(unit) ?? 1) - 1;
+        held.set(unit, left);
+        if (left === 0) await charges.get(unit)?.giveBack();
+      },
+    };
+  };
   try {
     const outcome = await requestRun(
       {
+        charge,
         projectId,
         recipeId: body.recipe_id,
         scopeKey: body.scope_key,

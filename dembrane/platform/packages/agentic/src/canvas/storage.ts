@@ -130,7 +130,7 @@ export function canvasStorage(db: Db) {
     async latestLoopRun(loopId: string): Promise<Row | null> {
       const [row] = await sql`
         select id, status, detail, started_at, finished_at from agent_loop_run
-        where loop_id = ${loopId} order by started_at desc limit 1`;
+        where loop_id = ${loopId} and status is distinct from 'running' order by started_at desc limit 1`;
       return row ? directusRow(row as Row) : null;
     },
 
@@ -155,7 +155,7 @@ export function canvasStorage(db: Db) {
       return rows(
         await sql`
         select status, detail, started_at from agent_loop_run
-        where loop_id = ${loopId} order by started_at desc limit ${limit}`,
+        where loop_id = ${loopId} and status is distinct from 'running' order by started_at desc limit ${limit}`,
       );
     },
 
@@ -184,7 +184,7 @@ export function canvasStorage(db: Db) {
     async historyRuns(loopId: string, limit: number): Promise<Row[]> {
       return rows(
         await sql`
-        select * from agent_loop_run where loop_id = ${loopId}
+        select * from agent_loop_run where loop_id = ${loopId} and status is distinct from 'running'
         order by started_at desc limit ${limit}`,
       );
     },

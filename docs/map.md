@@ -123,6 +123,7 @@ works.
 - [Background jobs and schedules](./users/developer-internal/background-jobs-and-scheduler.md)
 - [Chat and the assistant](./users/developer-internal/chat-and-agent.md)
 - [Roles and policies in code](./users/developer-internal/roles-and-policies.md)
+- [The free tier in code](./users/developer-internal/free-tier.md)
 - [Local development](./users/developer-internal/local-development.md)
 - [Deployment and releases](./users/developer-internal/deployment-and-releases.md)
 - [Maintaining the docs](./users/developer-internal/maintaining-docs.md)

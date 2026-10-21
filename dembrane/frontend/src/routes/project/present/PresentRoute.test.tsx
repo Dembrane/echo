@@ -60,6 +60,32 @@ vi.mock("@/components/popcorn/PopcornScreenSettings", () => ({
 vi.mock("@/components/popcorn/PopcornShare", () => ({
 	PopcornShare: () => <div>Sharing settings</div>,
 }));
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({
+		opened,
+		wallKey,
+		currentTier,
+	}: {
+		opened: boolean;
+		wallKey: string;
+		currentTier: string;
+	}) =>
+		opened ? (
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-tier={currentTier}
+			/>
+		) : null,
+}));
+const mapNotice = vi.fn();
+vi.mock("./MapFreeNotice", async (importOriginal) => ({
+	...(await importOriginal<typeof import("./MapFreeNotice")>()),
+	MapFreeNotice: (props: { mapOn: boolean }) => {
+		mapNotice(props);
+		return props.mapOn ? <div data-testid="map-free-notice-slot" /> : null;
+	},
+}));
 const saveSettings = vi.fn();
 const goLive = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
@@ -141,6 +167,135 @@ function show(entry = "/projects/empty/present") {
 		</I18nProvider>,
 	);
 }
+describe("The host's free map notice", () => {
+	const serve = (p: Record<string, unknown>) =>
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: false, presentation: p, revision: 0 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: p };
+		});
+	it("gets the map outcome's state, and the screen never gets the notice", async () => {
+		serve({
+			...presentation,
+			settings: {
+				...presentation.settings,
+				presentation: {
+					...presentation.settings.presentation,
+					blocks: ["popcorn", "map"],
+				},
+			},
+		});
+		show();
+		expect(await screen.findByTestId("map-free-notice-slot")).toBeTruthy();
+		expect(mapNotice).toHaveBeenLastCalledWith(
+			expect.objectContaining({ mapOn: true, projectId: "empty" }),
+		);
+		for (const [props] of screenProps.mock.calls)
+			expect(JSON.stringify(props)).not.toContain("free map");
+	});
+	it("is on when only the draft has the map outcome", async () => {
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return {
+					has_changes: true,
+					presentation: {
+						...presentation,
+						settings: {
+							...presentation.settings,
+							presentation: {
+								...presentation.settings.presentation,
+								blocks: ["popcorn", "map"],
+							},
+						},
+					},
+					revision: 1,
+				};
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation };
+		});
+		show();
+		expect(await screen.findByTestId("map-free-notice-slot")).toBeTruthy();
+	});
+	it("is off without the map outcome", async () => {
+		show();
+		await screen.findAllByText("Room preview");
+		expect(mapNotice).toHaveBeenCalled();
+		expect(mapNotice).toHaveBeenLastCalledWith(
+			expect.objectContaining({ mapOn: false }),
+		);
+		expect(screen.queryByTestId("map-free-notice-slot")).toBeNull();
+	});
+	it("is not shown to someone who can't edit", async () => {
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: false, presentation };
+		});
+		show();
+		await screen.findAllByText("Room preview");
+		expect(mapNotice).not.toHaveBeenCalled();
+	});
+});
+describe("A free host with this month's analyses used up", () => {
+	const usedUp = {
+		...presentation,
+		free_popcorn: { exhausted: true, limit: 12, used: 12 },
+	};
+	const serve = (p: Record<string, unknown>) =>
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: false, presentation: p, revision: 0 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: p };
+		});
+	it("still opens the screen, and shows the wall instead of going live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		serve(usedUp);
+		show();
+		expect(await screen.findByTestId("popcorn-free-notice")).toBeTruthy();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledWith(
+			"/present/screen/empty-screen",
+			"_blank",
+			"noopener",
+		);
+		expect(goLive).not.toHaveBeenCalled();
+		const modal = screen.getAllByTestId("upgrade-modal");
+		expect(modal).toHaveLength(1);
+		expect(modal[0].dataset.wall).toBe("popcorn_cap");
+		expect(modal[0].dataset.tier).toBe("free");
+	});
+	it("opens the screen with no wall while already live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		serve({ ...usedUp, loop: { mode: "live" } });
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledTimes(1);
+		expect(goLive).not.toHaveBeenCalled();
+		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	});
+	it("opens the wall when going live is refused for popcorn", async () => {
+		vi.spyOn(window, "open").mockReturnValue(null);
+		goLive.mockImplementation(
+			(_vars: unknown, opts?: { onError?: (e: unknown) => void }) =>
+				opts?.onError?.({
+					body: {
+						action: "upgrade",
+						code: "billing.tier_limit",
+						params: { cap: 12, limit: "popcorn", used: 12 },
+					},
+					status: 402,
+				}),
+		);
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(goLive).toHaveBeenCalledTimes(1);
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("popcorn_cap");
+		expect(modal.dataset.tier).toBe("free");
+		goLive.mockReset();
+	});
+});
 describe("Preparing the room before recordings", () => {
 	it("creates a presentation without starting analysis, then opens the full editor", async () => {
 		vi.mocked(bff.get).mockImplementation(async (url) => {
@@ -181,7 +336,10 @@ describe("Preparing the room before recordings", () => {
 			"_blank",
 			"noopener",
 		);
-		expect(goLive).toHaveBeenCalledExactlyOnceWith({ hours: 8 });
+		expect(goLive).toHaveBeenCalledExactlyOnceWith(
+			{ hours: 8 },
+			expect.anything(),
+		);
 	});
 	it("only opens the screen when popcorn is already live", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);

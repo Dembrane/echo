@@ -4,7 +4,13 @@ import { schema } from "@dembrane/db";
 import { and, eq, gt, isNull, ne, or } from "drizzle-orm";
 import type { ConversationsDeps } from "./deps";
 import { processChunk } from "./pipeline/defs";
-import { type ChunkRow, type ConversationRow, conversationStore, transaction } from "./storage";
+import {
+  type ChunkRow,
+  type ConversationRow,
+  conversationStore,
+  type Tx,
+  transaction,
+} from "./storage";
 
 const { conversation, conversation_chunk } = schema;
 
@@ -23,6 +29,8 @@ export interface NewChunk {
   readonly transcript?: string | null;
   /** Set on the row in the same commit, for audio the API already knows is unusable. */
   readonly error?: string | null;
+  /** Seconds a free account was charged for this audio. */
+  readonly audioSeconds?: number | null;
 }
 
 /**
@@ -34,7 +42,7 @@ export interface NewChunk {
 export async function createChunk(
   d: Pick<ConversationsDeps, "db" | "jobs" | "now">,
   input: NewChunk,
-  opts: { chunkId: string; usePiiRedaction?: boolean } = { chunkId: "" },
+  opts: { chunkId: string; usePiiRedaction?: boolean; tx?: Tx } = { chunkId: "" },
 ): Promise<ChunkRow> {
   const store = conversationStore(d.db);
   const conv = await store.conversation(input.conversationId);
@@ -56,7 +64,7 @@ export async function createChunk(
   const anonymize = Boolean(conv.is_anonymized || project.anonymize_transcripts);
   const redactTyped = hasTranscript && !hasFile && (anonymize || opts.usePiiRedaction === true);
 
-  return transaction(d.db, async (tx) => {
+  const write = async (tx: Tx) => {
     // A finished conversation that was finalized or merged gets more audio (the idle sweep
     // finished it during a pause, or before the first chunk): reset it so finishing again
     // merges, measures and summarises every segment. Read under the row lock that
@@ -93,6 +101,7 @@ export async function createChunk(
         transcript: redactTyped ? null : (input.transcript ?? null),
         pending_text: redactTyped ? (input.transcript as string) : null,
         error: input.error ?? null,
+        audio_seconds: input.audioSeconds ?? null,
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
       })
@@ -121,7 +130,8 @@ export async function createChunk(
         },
       );
     return { ...row, pending_text: null } as ChunkRow;
-  });
+  };
+  return opts.tx ? write(opts.tx) : transaction(d.db, write);
 }
 
 /**

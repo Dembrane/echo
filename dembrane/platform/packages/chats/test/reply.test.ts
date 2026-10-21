@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { reply } from "../src/reply";
-import { fakeDeps, fakeModel, host, P1 } from "./fakes";
+import { fakeDeps, fakeFreeChats, fakeModel, host, P1 } from "./fakes";
 
 const CHAT = "c3000000-0000-4000-8000-000000000001";
 const CONV = "c1000000-0000-4000-8000-000000000001";
@@ -14,15 +14,7 @@ const HISTORY: Stored[] = [
   { message_from: "dembrane", text: "You added 1 conversation" },
 ];
 
-function world(
-  opts: {
-    name?: string | null;
-    mode?: string | null;
-    tier?: string;
-    turns?: number;
-    history?: Stored[];
-  } = {},
-) {
+function world(opts: { name?: string | null; mode?: string | null; history?: Stored[] } = {}) {
   const created: Record<string, unknown>[] = [];
   const deleted: string[] = [];
   const named: string[] = [];
@@ -40,7 +32,6 @@ function world(
         { id: 1, conversation_id: { id: CONV, participant_name: "Resident 1", deleted_at: null } },
       ],
     }),
-    countUserTurns: async () => opts.turns ?? 0,
     createMessage: async (v: Record<string, unknown>) => {
       created.push(v);
       return v;
@@ -71,7 +62,7 @@ function world(
     },
   };
   const reads = {
-    projectTier: async () => opts.tier ?? "changemaker",
+    projectTier: async () => "changemaker",
     storedTokenCounts: async () => new Map([[CONV, 100]]),
     listByIds: async () => [
       {
@@ -124,7 +115,9 @@ describe("chat reply stream", () => {
     expect(await body(res)).toBe('0:"Char"\n0:"ging \\u00e9"\n');
     expect(w.created[0]?.text).toBe("What now?");
     expect(w.named).toEqual(["Charging needs"]);
-    expect(w.updated).toContainEqual([w.created[0]?.id as string, { template_key: "t1" }]);
+    // Stored with the admitted turn, not after the model call.
+    expect(w.created[0]?.templateKey).toBe("t1");
+    expect(w.updated).toEqual([]);
     const prompt = calls[0]?.prompt ?? [];
     expect(prompt.slice(0, 3).map((m) => m.role)).toEqual(["system", "system", "system"]);
     const context = JSON.stringify(prompt[2]);
@@ -163,10 +156,12 @@ describe("chat reply stream", () => {
   test("a failed stream reports the error and removes the host's message", async () => {
     const w = world();
     const captured: unknown[][] = [];
+    const free = fakeFreeChats(w.store);
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
       captured,
+      freeChats: free,
       model: fakeModel({ failStream: true }),
     });
     const res = await reply(
@@ -179,6 +174,9 @@ describe("chat reply stream", () => {
     );
     expect(await body(res)).toBe('3:"An error occurred while processing the chat response."\n');
     expect(w.deleted).toEqual([w.created[0]?.id as string]);
+    expect(free.undone).toHaveLength(1);
+    expect(free.undone[0]?.[0]).toMatchObject({ projectId: P1, chatId: CHAT, text: "Hi" });
+    expect(free.undone[0]?.[1]).toEqual({ account: null, claimed: false });
     expect((captured[0] as unknown[])[1]).toBe("server_chat_error");
     const textRes = await reply(
       d,
@@ -309,7 +307,7 @@ describe("chat reply stream", () => {
     expect(captured[0]?.[2]).toMatchObject({ error_code: "NO_ANSWER" });
   });
 
-  test("agentic chats and spent free-tier turns are refused before anything is stored", async () => {
+  test("agentic chats are refused before anything is stored", async () => {
     const agentic = world({ mode: "agentic" });
     await expect(
       reply(
@@ -321,20 +319,31 @@ describe("chat reply stream", () => {
         "en",
       ),
     ).rejects.toThrow("Agentic chats must use /api/agentic endpoints");
-    const free = world({ tier: "free", turns: 3 });
-    await expect(
-      reply(
-        fakeDeps({ store: free.store, reads: free.reads }),
-        host,
-        CHAT,
-        { messages: [{ role: "user", content: "x" }], template_key: null },
-        "data",
-        "en",
-      ),
-    ).rejects.toMatchObject({
-      status: 402,
-      details: { error: "FREE_TIER_LIMIT", limit: "chat_turns" },
+    expect(agentic.created.length).toBe(0);
+  });
+
+  test("spent free turns are refused before anything is stored", async () => {
+    const w = world();
+    const calls: LanguageModelV4CallOptions[] = [];
+    const d = fakeDeps({
+      store: w.store,
+      reads: w.reads,
+      freeChats: fakeFreeChats(w.store, { refuse: "chat_turns" }),
+      model: fakeModel({ calls }),
     });
-    expect(agentic.created.length + free.created.length).toBe(0);
+    const err = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "x" }], template_key: null },
+      "data",
+      "en",
+    ).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).toMatchObject({ status: 402, details: { limit: "chat_turns" } });
+    expect(w.created).toHaveLength(0);
+    expect(calls).toHaveLength(0);
   });
 });

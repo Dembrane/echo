@@ -15,10 +15,13 @@ import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
+import { freeLimitDetails, isFreeTierLimitError } from "@/lib/freeTier";
 import { InviteEmailList } from "./InviteEmailList";
 
 type CreatedOrg = { org_id: string; workspace_id: string };
@@ -73,6 +76,13 @@ export const CreateOrganisationModal = ({
 	const [orgName, setOrgName] = useState("");
 	const [emails, setEmails] = useState<string[]>([""]);
 	const [created, setCreated] = useState<CreatedOrg | null>(null);
+	const [upgradeOpened, setUpgradeOpened] = useState(false);
+	// The free org the 402 names; the wall upgrades it, not the active workspace.
+	const [blocking, setBlocking] = useState<{
+		orgId?: string;
+		workspaceId?: string;
+	}>({});
+	const { workspace } = useWorkspace();
 
 	const reset = () => {
 		setStep(0);
@@ -94,7 +104,22 @@ export const CreateOrganisationModal = ({
 
 	const createMutation = useMutation({
 		mutationFn: (name: string) => createOrganisation(name),
-		onError: (err: Error) => void notifyError(err),
+		onError: (err: Error) => {
+			if (isFreeTierLimitError(err) === "organisations") {
+				const d = freeLimitDetails(err);
+				const str = (v: unknown) =>
+					typeof v === "string" && v ? v : undefined;
+				setBlocking({
+					orgId: str(d?.org_id),
+					workspaceId: str(d?.workspace_id),
+				});
+				reset();
+				onClose();
+				setUpgradeOpened(true);
+				return;
+			}
+			void notifyError(err);
+		},
 		onSuccess: (result) => {
 			posthog.capture("org_created", {
 				org_id: result.org_id,
@@ -163,97 +188,110 @@ export const CreateOrganisationModal = ({
 	const canInvite = emails.some((e) => e.trim() && e.includes("@"));
 
 	return (
-		<Modal
-			opened={opened}
-			onClose={handleClose}
-			title={<Trans>Create organisation</Trans>}
-			size="lg"
-			data-testid="create-organisation-modal"
-		>
-			<Stack gap="lg">
-				<Stepper active={step} size="sm" iconSize={28}>
-					<Stepper.Step label={t`Organisation`} />
-					<Stepper.Step label={t`Invite`} />
-				</Stepper>
+		<>
+			<Modal
+				opened={opened}
+				onClose={handleClose}
+				title={<Trans>Create organisation</Trans>}
+				size="lg"
+				data-testid="create-organisation-modal"
+			>
+				<Stack gap="lg">
+					<Stepper active={step} size="sm" iconSize={28}>
+						<Stepper.Step label={t`Organisation`} />
+						<Stepper.Step label={t`Invite`} />
+					</Stepper>
 
-				{step === 0 ? (
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleCreate();
-						}}
-					>
+					{step === 0 ? (
+						<form
+							onSubmit={(e) => {
+								e.preventDefault();
+								handleCreate();
+							}}
+						>
+							<Stack gap="md">
+								<Text size="sm">
+									<Trans>
+										Name your organisation. You can invite people next, or do it
+										later from settings.
+									</Trans>
+								</Text>
+								<TextInput
+									autoFocus
+									label={t`Organisation name`}
+									description={t`You can change this anytime in settings.`}
+									placeholder={t`Your organisation or company`}
+									size="sm"
+									value={orgName}
+									onChange={(e) => setOrgName(e.currentTarget.value)}
+									data-testid="create-organisation-name-input"
+								/>
+								<Group justify="flex-start">
+									<Button
+										variant="filled"
+										type="submit"
+										loading={busy}
+										disabled={!orgName.trim()}
+									>
+										<Trans>Continue</Trans>
+									</Button>
+									<Button
+										variant="subtle"
+										color="gray"
+										onClick={handleClose}
+										disabled={busy}
+									>
+										<Trans>Cancel</Trans>
+									</Button>
+								</Group>
+							</Stack>
+						</form>
+					) : (
 						<Stack gap="md">
 							<Text size="sm">
 								<Trans>
-									Name your organisation. You can invite people next, or do it
-									later from settings.
+									Colleagues you invite can explore conversations, share
+									insights, and build reports with you.
 								</Trans>
 							</Text>
-							<TextInput
-								autoFocus
-								label={t`Organisation name`}
-								description={t`You can change this anytime in settings.`}
-								placeholder={t`Your organisation or company`}
-								size="sm"
-								value={orgName}
-								onChange={(e) => setOrgName(e.currentTarget.value)}
-								data-testid="create-organisation-name-input"
+							<InviteEmailList
+								emails={emails}
+								onChange={setEmails}
+								autoFocusFirst
 							/>
 							<Group justify="flex-start">
 								<Button
 									variant="filled"
-									type="submit"
 									loading={busy}
-									disabled={!orgName.trim()}
+									disabled={!canInvite}
+									onClick={handleSendInvites}
 								>
-									<Trans>Continue</Trans>
+									<Trans>Send invites</Trans>
 								</Button>
 								<Button
 									variant="subtle"
 									color="gray"
-									onClick={handleClose}
+									onClick={finish}
 									disabled={busy}
 								>
-									<Trans>Cancel</Trans>
+									<Trans>Skip</Trans>
 								</Button>
 							</Group>
 						</Stack>
-					</form>
-				) : (
-					<Stack gap="md">
-						<Text size="sm">
-							<Trans>
-								Colleagues you invite can explore conversations, share insights,
-								and build reports with you.
-							</Trans>
-						</Text>
-						<InviteEmailList
-							emails={emails}
-							onChange={setEmails}
-							autoFocusFirst
-						/>
-						<Group justify="flex-start">
-							<Button
-								variant="filled"
-								loading={busy}
-								disabled={!canInvite}
-								onClick={handleSendInvites}
-							>
-								<Trans>Send invites</Trans>
-							</Button>
-							<Button
-								variant="subtle"
-								color="gray"
-								onClick={finish}
-								disabled={busy}
-							>
-								<Trans>Skip</Trans>
-							</Button>
-						</Group>
-					</Stack>
-				)}
-			</Stack>
-		</Modal>
+					)}
+				</Stack>
+			</Modal>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={() => setUpgradeOpened(false)}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade
+				orgId={blocking.orgId}
+				workspaceId={blocking.workspaceId ?? workspace?.id ?? ""}
+				wallKey="org_cap"
+			/>
+		</>
 	);
 };

@@ -1,3 +1,4 @@
+import { allowanceForProject, freeLimitError } from "@dembrane/allowance";
 import { durationOf } from "@dembrane/audio";
 import { newId, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
@@ -92,8 +93,12 @@ export async function transcribeStateless(
 ): Promise<{ transcript: string; note: string }> {
   // Writing access, not reading: this spends the workspace's audio hours (Q H-14: staff
   // act through their own workspace role, as everywhere on the platform).
-  if (input.projectId) await projectFor(d.access, who, input.projectId, "project:update");
-  else await hooks.gate();
+  if (input.projectId) {
+    await projectFor(d.access, who, input.projectId, "project:update");
+    // Voice notes are not part of the free plan (sample projects included).
+    if (await allowanceForProject(d.db, input.projectId, d.now()))
+      throw freeLimitError("audio_month");
+  } else await hooks.gate();
   if ((input.file === null) === (input.audioFileUri === null))
     throw new StatusError(400, "upload.source_ambiguous");
   if (input.file) hooks.checkFile(input.file);

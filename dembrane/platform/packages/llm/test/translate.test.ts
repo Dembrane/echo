@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { FakeCompleter, translateTexts } from "../src";
+import { withoutClosingFence } from "../src/translate";
 
 test("translates in batches, keeps order, and leaves a failed batch's texts null", async () => {
   const fake = new FakeCompleter().on("translate", (r) => {
@@ -29,4 +30,21 @@ test("translates in batches, keeps order, and leaves a failed batch's texts null
   expect(first.glossary).toEqual({ workspace: "werkruimte" });
   expect(first.texts[0]).toEqual({ i: 0, text: "a", note: "first" });
   expect(fake.calls[0]?.jsonSchema).toBeDefined();
+});
+
+test("withoutClosingFence keeps the old trailing-fence regex results and is linear", () => {
+  const cases: [string, string][] = [
+    ["{}\n```", "{}"],
+    ["{}   \t\n```", "{}"],
+    ["```", ""],
+    ["{}", "{}"],
+    ["{} ``` x", "{} ``` x"],
+    ["````", "`"],
+    ["  ```", ""],
+  ];
+  for (const [s, want] of cases) expect(withoutClosingFence(s)).toBe(want);
+  const t = performance.now();
+  const spaces = `${" ".repeat(100_000)}x`;
+  expect(withoutClosingFence(spaces)).toBe(spaces);
+  expect(performance.now() - t).toBeLessThan(500);
 });

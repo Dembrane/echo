@@ -18,9 +18,11 @@ import { z } from "zod";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { initiateConversation as requestConversation } from "@/lib/api";
+import { portalRecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "./hooks";
+import { NotTakingRecordings } from "./NotTakingRecordings";
 import { resolvePortalMode } from "./recordingCap";
 
 const FormSchema = z.object({
@@ -50,7 +52,13 @@ const autoStartedConversations = new Map<
 	ReturnType<typeof requestConversation>
 >();
 
-export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
+export const ParticipantInitiateForm = ({
+	project,
+	onRefusedChange,
+}: {
+	project: Project;
+	onRefusedChange?: (refused: boolean) => void;
+}) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
 
@@ -244,6 +252,16 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		}
 	}, [isError, reset]);
 
+	const initiateError: unknown =
+		initiateConversationMutation.error ?? autoStartError;
+	// Continue would only repeat the refusal.
+	const refused =
+		Boolean(initiateError) && portalRecordingRefusal(initiateError);
+
+	useEffect(() => {
+		onRefusedChange?.(Boolean(refused));
+	}, [refused, onRefusedChange]);
+
 	return (
 		<form
 			onSubmit={handleSubmit(startConversation)}
@@ -251,15 +269,17 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			{...testId("portal-initiate-form")}
 		>
 			<Stack className="relative">
-				{Boolean(initiateConversationMutation.error || autoStartError) && (
-					<Box {...testId("portal-initiate-error-alert")}>
-						<ErrorNotice
-							error={initiateConversationMutation.error ?? autoStartError}
-						/>
-					</Box>
+				{refused ? (
+					<NotTakingRecordings />
+				) : (
+					Boolean(initiateError) && (
+						<Box {...testId("portal-initiate-error-alert")}>
+							<ErrorNotice error={initiateError} />
+						</Box>
+					)
 				)}
 
-				{project.default_conversation_ask_for_participant_name && (
+				{!refused && project.default_conversation_ask_for_participant_name && (
 					<TextInput
 						// this bug! haha. autoFocus was serioursly messing up the animations with the onboarding cards!
 						// autoFocus
@@ -276,7 +296,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						{...testId("portal-initiate-name-input")}
 					/>
 				)}
-				{project.tags.length > 0 && (
+				{!refused && project.tags.length > 0 && (
 					<MultiSelect
 						label={t`Tags`}
 						description={t`Add all that apply`}
@@ -297,27 +317,30 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						{...testId("portal-initiate-tags-select")}
 					/>
 				)}
-				{nothingToAsk &&
-				!initiateConversationMutation.error &&
-				!autoStartError ? (
-					// Nothing was asked, so the conversation is already starting. The
-					// button would only ever be pressed by the effect above; a spinner
-					// is the honest version of that.
-					<Group py="md" {...testId("portal-initiate-starting")}>
-						<Loader size="sm" />
-					</Group>
-				) : (
-					<Button
-						variant="filled"
-						type="submit"
-						size="lg"
-						loading={initiateConversationMutation.isPending}
-						fullWidth
-						{...testId("portal-initiate-next-button")}
-					>
-						<Trans id="participant.ready.to.begin.button.text">Continue</Trans>
-					</Button>
-				)}
+				{!refused &&
+					(nothingToAsk &&
+					!initiateConversationMutation.error &&
+					!autoStartError ? (
+						// Nothing was asked, so the conversation is already starting. The
+						// button would only ever be pressed by the effect above; a spinner
+						// is the honest version of that.
+						<Group py="md" {...testId("portal-initiate-starting")}>
+							<Loader size="sm" />
+						</Group>
+					) : (
+						<Button
+							variant="filled"
+							type="submit"
+							size="lg"
+							loading={initiateConversationMutation.isPending}
+							fullWidth
+							{...testId("portal-initiate-next-button")}
+						>
+							<Trans id="participant.ready.to.begin.button.text">
+								Continue
+							</Trans>
+						</Button>
+					))}
 			</Stack>
 		</form>
 	);

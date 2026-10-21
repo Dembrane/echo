@@ -62,11 +62,14 @@ export function useLiveChoices({
 	booking,
 	onGoLive,
 	onReadyBy,
+	disabled = false,
 }: {
 	live: boolean;
 	booking: LiveBooking | null;
 	onGoLive: (hours: LiveHours) => void;
 	onReadyBy: (hours: LiveHours, readyBy: Date) => void;
+	/** No new analysis can start: Book and Stay live for are off. */
+	disabled?: boolean;
 }) {
 	const { i18n } = useLingui();
 	const [opened, setOpened] = useState(false);
@@ -104,12 +107,12 @@ export function useLiveChoices({
 						value={time}
 						onChange={(event) => setTime(event.currentTarget.value)}
 						onKeyDown={(event) => {
-							if (event.key === "Enter") book();
+							if (event.key === "Enter" && !disabled) book();
 						}}
 						{...testId("live-ready-time")}
 					/>
 					<Button
-						disabled={!readyBy}
+						disabled={!readyBy || disabled}
 						onClick={book}
 						{...testId("live-ready-book")}
 					>
@@ -135,6 +138,7 @@ export function useLiveChoices({
 			{durations.map((option) => (
 				<Menu.Item
 					key={option.value}
+					disabled={disabled}
 					closeMenuOnClick={live}
 					rightSection={
 						!live && hours === option.value ? (
@@ -171,9 +175,12 @@ export function LiveButton({
 	onReadyBy,
 	onStop,
 	onAnalyseNow,
+	analysisDisabled = false,
 }: {
 	live: boolean;
 	pending: boolean;
+	/** No new analysis can start; Stop and Cancel still work. */
+	analysisDisabled?: boolean;
 	booking?: LiveBooking | null;
 	/** Live from now for the hours; while live it restarts the hours from now. */
 	onGoLive: (hours: LiveHours) => void;
@@ -184,7 +191,13 @@ export function LiveButton({
 	onAnalyseNow: () => void;
 }) {
 	const { hours, opened, readyByField, setOpened, stayLiveFor } =
-		useLiveChoices({ booking, live, onGoLive, onReadyBy });
+		useLiveChoices({
+			booking,
+			disabled: analysisDisabled,
+			live,
+			onGoLive,
+			onReadyBy,
+		});
 	const booked = !live && !!booking;
 	const state = live ? classes.live : booked ? classes.booked : "";
 
@@ -207,6 +220,7 @@ export function LiveButton({
 			className={classes.main}
 			leftSection={<PlayIcon size={20} />}
 			loading={pending}
+			disabled={analysisDisabled}
 			onClick={() => onGoLive(hours)}
 			{...testId("live-booked")}
 		>
@@ -218,6 +232,7 @@ export function LiveButton({
 			className={classes.main}
 			leftSection={<BroadcastIcon size={20} />}
 			loading={pending}
+			disabled={analysisDisabled}
 			onClick={() => onGoLive(hours)}
 			{...testId("live-go")}
 		>
@@ -239,6 +254,7 @@ export function LiveButton({
 						variant={live || booked ? "outline" : "filled"}
 						color={live ? "red" : booked ? "gray" : undefined}
 						className={classes.more}
+						disabled={analysisDisabled && !live && !booked}
 						aria-label={t`More ways to analyse`}
 						{...testId("live-more")}
 					>
@@ -250,6 +266,7 @@ export function LiveButton({
 						<>
 							<Menu.Item
 								leftSection={<ArrowsClockwiseIcon size={16} />}
+								disabled={analysisDisabled}
 								onClick={onAnalyseNow}
 								{...testId("live-analyse-now")}
 							>

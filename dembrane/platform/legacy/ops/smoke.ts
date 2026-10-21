@@ -16,15 +16,20 @@
  */
 import postgres from "postgres";
 
-const API = required("API_URL").replace(/\/+$/, "");
+const API = withoutTrailingSlashes(required("API_URL"));
 // Better Auth refuses a sign-in whose Origin is not the configured dashboard.
-const ORIGIN = (
-  process.env.SMOKE_ORIGIN ??
-  process.env.DASHBOARD_URL ??
-  "http://localhost:5173"
-).replace(/\/+$/, "");
+const ORIGIN = withoutTrailingSlashes(
+  process.env.SMOKE_ORIGIN ?? process.env.DASHBOARD_URL ?? "http://localhost:5173",
+);
 let failures = 0;
 const timings: number[] = [];
+
+/** A loop, not a regex: a regex over a URL is flagged as slow on many slashes. */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
 
 function required(k: string): string {
   const v = process.env[k];

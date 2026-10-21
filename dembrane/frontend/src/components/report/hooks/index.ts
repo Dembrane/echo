@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import {
 	cancelScheduledReport,
 	checkReportNeedsUpdate,
@@ -30,6 +31,8 @@ export const useUpdateProjectReportMutation = () => {
 			payload: Partial<ProjectReport>;
 		}) => updateProjectReport(projectId, reportId, payload),
 		onSuccess: (_, vars) => {
+			// Cancel gives the free report back; rescheduling a cancelled one takes it.
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -54,6 +57,8 @@ export const useDeleteProjectReportMutation = () => {
 			reportId: number;
 		}) => deleteProjectReport(projectId, reportId),
 		onSuccess: (_, vars) => {
+			// Deleting a scheduled free report gives it back.
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -72,6 +77,7 @@ export const useCreateProjectReportMutation = () => {
 	return useMutation({
 		mutationFn: createProjectReport,
 		onSuccess: (_, vars) => {
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -96,6 +102,7 @@ export const useCancelScheduledReportMutation = () => {
 			reportId: number;
 		}) => cancelScheduledReport(projectId, reportId),
 		onSuccess: (_, vars) => {
+			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});

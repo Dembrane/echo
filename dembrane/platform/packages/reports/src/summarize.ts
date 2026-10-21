@@ -22,8 +22,6 @@ export interface SummarizeDeps {
   readonly onSummarized?: (projectId: string, conversationId: string) => Promise<unknown>;
 }
 
-/** Tiers without an hour cap; a locked conversation on any other tier is never summarised. */
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   nl: "Dutch",
@@ -40,12 +38,11 @@ export function cleanGeneratedTitle(content: string): string {
     .map((l) => l.trim())
     .filter(Boolean);
   if (!lines.length) return "";
-  const listItem = /^(?:[-*•]\s+|\d+[.):]\s+)(.+)$/;
   let candidate = "";
   for (const line of lines) {
-    const m = listItem.exec(line);
-    if (m) {
-      candidate = m[1] as string;
+    const item = listItemText(line);
+    if (item) {
+      candidate = item;
       break;
     }
   }
@@ -58,6 +55,14 @@ export function cleanGeneratedTitle(content: string): string {
   }
   candidate = candidate.replace(/^\*\*(.+?)\*\*$/, "$1");
   return strip(strip(candidate.trim(), "\"'“”‘’").trim(), " \t\n\r");
+}
+
+/** `/^(?:[-*•]\s+|\d+[.):]\s+)(.+)$/` on a trimmed line, split so `\s+` and `.+` cannot backtrack. */
+export function listItemText(line: string): string | null {
+  const marker = /^(?:[-*•]|\d+[.):])\s+/.exec(line);
+  if (!marker) return null;
+  const rest = line.slice(marker[0].length);
+  return rest && !/[\n\r\u2028\u2029]/.test(rest) ? rest : null;
 }
 
 function strip(s: string, chars: string): string {
@@ -125,18 +130,12 @@ export function summarizeConversation(d: SummarizeDeps): Summarizer {
   const { sql } = d;
   return {
     async summarize(conversationId) {
-      const [conv] = await sql`select c.*, p.deleted_at as project_deleted_at, p.workspace_id,
-          ba.tier
+      const [conv] = await sql`select c.*, p.deleted_at as project_deleted_at
         from conversation c
         left join project p on p.id = c.project_id
-        left join workspace w on w.id = p.workspace_id
-        left join billing_account ba on ba.id = w.billing_account_id
         where c.id = ${conversationId} and c.deleted_at is null`;
       if (!conv?.project_id || conv.project_deleted_at) return "skipped";
       if (conv.is_finished && conv.summary) return "skipped";
-      // Free's hour cap locks a conversation; its summary waits for an upgrade.
-      if (conv.is_over_cap && conv.workspace_id && conv.tier && !OVERAGE_TIERS.has(conv.tier))
-        return "skipped";
 
       const started = performance.now();
       try {

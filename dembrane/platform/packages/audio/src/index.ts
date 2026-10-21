@@ -9,6 +9,7 @@ export {
   concatFiles,
   convertFile,
   cutFile,
+  decodeSeconds,
   demuxerOf,
   detectSilences,
   durationOf,
@@ -34,7 +35,9 @@ export {
   MAX_CHUNK_BYTES,
   mimeTypeOf,
 } from "./formats";
+export { type Measured, MIN_SPEECH_BYTES_PER_SECOND, measureSeconds } from "./measure";
 export {
+  type Cancel,
   HttpMedia,
   LocalMedia,
   type Media,

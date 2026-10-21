@@ -37,6 +37,12 @@ export async function transaction<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promis
   })) as T;
 }
 
+/** A Drizzle transaction as a Tx, so a chunk can be written inside a caller's transaction. */
+export function txOf(db: Db): Tx {
+  const client = (db as unknown as { session: { client: postgres.TransactionSql } }).session.client;
+  return { db, sql: client };
+}
+
 /** The conversation reads every surface shares. Soft-deleted rows are filtered here. */
 export function conversationStore(db: Db) {
   return {

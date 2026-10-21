@@ -1,0 +1,2 @@
+DELETE FROM "tier_limit" WHERE "tier" = 'free' AND "key" IN ('chat_turns_first', 'chat_turns_second', 'popcorn_sessions_month', 'popcorn_window_minutes');--> statement-breakpoint
+DELETE FROM "free_usage" WHERE "key" = 'popcorn_sessions'

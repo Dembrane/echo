@@ -39,6 +39,8 @@ const messageFor = (kind: VoiceErrorKind): string => {
 			return t`You do not have permission to transcribe in this project.`;
 		case "not_found":
 			return t`This project could not be reached.`;
+		case "free_limit":
+			return t`Voice input comes with a paid plan.`;
 		case "transcription_failed":
 			return t`The transcription did not finish. Try again.`;
 		case "network":

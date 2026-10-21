@@ -69,6 +69,8 @@ const ParticipantOnboardingCards = ({
 		{},
 	);
 	const [animationDirection, setAnimationDirection] = useState("");
+	// The form refused to start: nothing to begin and nowhere to go back to.
+	const [refused, setRefused] = useState(false);
 
 	const { language } = useLanguage();
 
@@ -98,7 +100,9 @@ const ParticipantOnboardingCards = ({
 	}, [searchParams, project.tags]);
 
 	const InitiateFormComponent = useMemo(
-		() => () => <ParticipantInitiateForm project={project} />,
+		() => () => (
+			<ParticipantInitiateForm project={project} onRefusedChange={setRefused} />
+		),
 		[project],
 	);
 
@@ -321,12 +325,15 @@ const ParticipantOnboardingCards = ({
 						className="w-full max-w-[400px] text-left"
 						{...testId("portal-onboarding-skip")}
 					>
-						{!nothingToAsk && (
+						{!nothingToAsk && !refused && (
 							<Title order={2}>
 								<Trans id="participant.ready.to.begin">Ready to begin?</Trans>
 							</Title>
 						)}
-						<ParticipantInitiateForm project={project} />
+						<ParticipantInitiateForm
+							project={project}
+							onRefusedChange={setRefused}
+						/>
 					</Stack>
 				) : (
 					<>
@@ -342,7 +349,8 @@ const ParticipantOnboardingCards = ({
 								React.createElement(currentCard.icon, { size: 64 })}
 
 							{!(
-								nothingToAsk && currentCard.component === InitiateFormComponent
+								(nothingToAsk || refused) &&
+								currentCard.component === InitiateFormComponent
 							) && <Title order={2}>{currentCard.title}</Title>}
 
 							{currentCard.content && (
@@ -417,7 +425,7 @@ const ParticipantOnboardingCards = ({
 									)}
 								</Button>
 							)}
-							{currentSlideIndex > 0 && (
+							{currentSlideIndex > 0 && !(refused && isLastSlide) && (
 								<Button
 									onClick={prevSlide}
 									variant="subtle"

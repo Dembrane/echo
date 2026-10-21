@@ -1,3 +1,4 @@
+import { type AllowanceAccount, freeLimitError, giveBack } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -7,9 +8,17 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
-import { directusRow, PaymentRequiredError, pythonIso } from "@dembrane/legacy-shape";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
+import {
+  cancelScheduledReport,
+  chargeReportChange,
+  refundFreeReport,
+  takeFreeReport,
+  undoReportCharge,
+} from "./free";
 import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
+import { type ProjectsStorage, projectsStorage } from "./storage";
 
 /** The scheduled_task type the scheduler runner turns into a report generation. */
 export const TASK_GENERATE_REPORT = "generate_report";
@@ -50,9 +59,8 @@ const ISO_FORMS =
 
 /**
  * Starts a report, now or at a scheduled time. Generating needs report:generate; a free
- * workspace gets one report, and its sample copy gets one of its own that does not spend
- * the workspace's. One
- * draft at a time per project, so a double click does not start two generations.
+ * account takes its period's report on request, and a sample copy keeps one report of its
+ * own. One draft at a time per project, so a double click does not start two generations.
  */
 export async function createReport(
   d: ProjectDeps,
@@ -61,70 +69,76 @@ export async function createReport(
   body: { language: string | null; user_instructions: string | null; scheduled_at: string | null },
 ) {
   const pa = await projectFor(d.access, who, projectId, "report:generate");
-  if (pa.tier === "free" && pa.project.workspaceId) {
-    const spent = pa.project.isSample
-      ? await d.store.countProjectReports(projectId)
-      : await d.store.countWorkspaceReports(pa.project.workspaceId);
-    if (spent >= 1)
-      throw new PaymentRequiredError("billing.tier_limit", {
-        params: { limit: "report" },
-        details: { error: "FREE_TIER_LIMIT", limit: "report", upgrade_cta_tier: "changemaker" },
-      });
-  }
+  if (
+    pa.project.isSample &&
+    pa.tier === "free" &&
+    (await d.store.countProjectReports(projectId)) >= 1
+  )
+    throw freeLimitError("report");
   const language = body.language || "en";
   const now = d.now();
   const scheduled = body.scheduled_at ? parseSchedule(body.scheduled_at, now) : null;
   if (!scheduled && (await d.store.hasDraftReport(projectId)))
     throw new ConflictError("report.already_generating");
+  const account: AllowanceAccount | null = pa.project.isSample
+    ? null
+    : await takeFreeReport(d.db, projectId, now);
 
-  return d.store.transaction(async ({ store, sql }) => {
-    const created = await store.insertReport({
-      project_id: projectId,
-      language,
-      content: "",
-      status: scheduled ? "scheduled" : "draft",
-      user_created: who.directusUserId,
-      date_created: now.toISOString(),
-    });
-    const extra = {
-      ...(body.user_instructions && { user_instructions: body.user_instructions }),
-      ...(scheduled && { scheduled_at: scheduled.toISOString() }),
-    };
-    if (Object.keys(extra).length)
-      await store.updateReport(created.id, { ...extra, date_updated: now.toISOString() });
-
-    if (!scheduled) {
-      await d.jobs.enqueue(
-        generateReport,
-        {
-          projectId,
-          reportId: Number(created.id),
-          language,
-          userInstructions: body.user_instructions ?? "",
-        },
-        { tx: sql },
-      );
-    } else {
-      await store.scheduleTask({
-        id: newId(),
-        task_type: TASK_GENERATE_REPORT,
-        // The id is the string Directus returned; the runner reads either form.
-        payload: {
-          report_id: String(created.id),
-          project_id: projectId,
-          language,
-          user_instructions: body.user_instructions ?? "",
-        },
-        scheduled_at: scheduled.toISOString(),
-        status: "scheduled",
-        attempts: 0,
-        created_at: pythonIso(now),
-        updated_at: pythonIso(now),
+  try {
+    return await d.store.transaction(async ({ store, sql }) => {
+      const created = await store.insertReport({
+        project_id: projectId,
+        language,
+        content: "",
+        status: scheduled ? "scheduled" : "draft",
+        user_created: who.directusUserId,
+        date_created: now.toISOString(),
+        free_period_start: account ? account.periodStart.toISOString() : null,
+        free_account_id: account?.accountId ?? null,
       });
-    }
-    // The response is the row as first written, before instructions and schedule were added.
-    return directusRow(created);
-  });
+      const extra = {
+        ...(body.user_instructions && { user_instructions: body.user_instructions }),
+        ...(scheduled && { scheduled_at: scheduled.toISOString() }),
+      };
+      if (Object.keys(extra).length)
+        await store.updateReport(created.id, { ...extra, date_updated: now.toISOString() });
+
+      if (!scheduled) {
+        await d.jobs.enqueue(
+          generateReport,
+          {
+            projectId,
+            reportId: Number(created.id),
+            language,
+            userInstructions: body.user_instructions ?? "",
+          },
+          { tx: sql },
+        );
+      } else {
+        await store.scheduleTask({
+          id: newId(),
+          task_type: TASK_GENERATE_REPORT,
+          // The id is the string Directus returned; the runner reads either form.
+          payload: {
+            report_id: String(created.id),
+            project_id: projectId,
+            language,
+            user_instructions: body.user_instructions ?? "",
+          },
+          scheduled_at: scheduled.toISOString(),
+          status: "scheduled",
+          attempts: 0,
+          created_at: pythonIso(now),
+          updated_at: pythonIso(now),
+        });
+      }
+      // The response is the row as first written, before instructions and schedule were added.
+      return directusRow(created);
+    });
+  } catch (err) {
+    if (account) await giveBack(d.db, account, "reports", 1);
+    throw err;
+  }
 }
 
 export async function listReports(d: ProjectDeps, who: Signed, projectId: string) {
@@ -196,11 +210,51 @@ export async function updateReport(
     payload.scheduled_at = scheduled.toISOString();
   }
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
+  // A report left scheduled generates again, so a free one pays for it.
+  const charging = body.status !== null || body.scheduled_at !== null;
+  let updated: Awaited<ReturnType<typeof applyReportUpdate>> | undefined;
+  for (let attempt = 0; !updated; attempt++) {
+    const charge = charging
+      ? await chargeReportChange(d.db, projectId, rid, body.status, now)
+      : { free: false, undo: null };
+    try {
+      updated = await applyReportUpdate(d, projectId, rid, payload, scheduled, now, charge.free);
+    } catch (err) {
+      if (charge.undo) await undoReportCharge(d.db, rid, charge.undo);
+      // The report moved between the charge and the update: charge again, once.
+      if (!(err instanceof StampMoved)) throw err;
+      if (attempt > 0) throw new ConflictError("report.already_generating");
+    }
+  }
+  // A report cancelled before it ran gives its report back; one that ran has no stamp left.
+  if (body.status === "cancelled") await refundFreeReport(d.db, rid, now);
+  return updated;
+}
 
+class StampMoved extends Error {}
+
+async function applyReportUpdate(
+  d: ProjectDeps,
+  projectId: string,
+  rid: number,
+  payload: Record<string, unknown>,
+  scheduled: Date | null,
+  now: Date,
+  free: boolean,
+) {
   return d.store.transaction(async ({ store, sql }) => {
     const stamp = now.toISOString();
     // Locked, so of two publishes at once only the first emails the subscribers.
-    const [before] = await sql`select status from project_report where id = ${rid} for update`;
+    const [before] =
+      await sql`select status, free_period_start from project_report where id = ${rid} for update`;
+    const next = payload.status ?? before?.status;
+    // The stamp the charge judged moved: a cancel refunded it, or a run started.
+    if (
+      free &&
+      ((next === "scheduled" && !before?.free_period_start) ||
+        (before?.status === "draft" && before.free_period_start && next !== "draft"))
+    )
+      throw new StampMoved();
     if (payload.status === "published")
       for (const other of await store.otherPublishedReports(projectId, reportId(rid)))
         await store.updateReport(other, { status: "archived", date_updated: stamp });
@@ -233,31 +287,46 @@ export async function updateReport(
 /** Soft delete; needs report:delete (spec H-9: any reader could delete). */
 export async function deleteReport(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:delete", "v1");
-  await boundReport(d, projectId, rid);
+  const r = await boundReport(d, projectId, rid);
   const now = d.now();
-  await d.store.transaction(async ({ store }) => {
+  const softDelete = async (store: ProjectsStorage) => {
     await store.updateReport(reportId(rid), {
       deleted_at: now.toISOString(),
       date_updated: now.toISOString(),
     });
     await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
-  });
+  };
+  // A free scheduled report that never ran is cancelled first, which gives it back.
+  if (
+    r.status === "scheduled" &&
+    r.free_period_start &&
+    (await cancelScheduledReport(d.db, projectId, rid, now, (tx) =>
+      softDelete(projectsStorage(tx)),
+    ))
+  )
+    return { deleted: true };
+  await d.store.transaction(({ store }) => softDelete(store));
   return { deleted: true };
 }
 
 /** Unschedules; needs report:publish, the policy that schedules (spec H-9). */
 export async function cancelSchedule(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:publish", "v1");
-  const r = await boundReport(d, projectId, rid);
-  if (r.status !== "scheduled") throw new BadRequestError("report.not_scheduled");
+  await boundReport(d, projectId, rid);
   const now = d.now();
-  await d.store.transaction(async ({ store }) => {
-    await store.updateReport(reportId(rid), {
-      status: "cancelled",
-      date_updated: now.toISOString(),
-    });
-    await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
-  });
+  const cancelled = await cancelScheduledReport(d.db, projectId, rid, now, (tx) =>
+    projectsStorage(tx).cancelScheduledTasks(
+      TASK_GENERATE_REPORT,
+      { report_id: rid },
+      pythonIso(now),
+    ),
+  );
+  if (!cancelled) {
+    // A retry of a cancel that already happened heals instead of failing.
+    const r = await boundReport(d, projectId, rid);
+    if (r.status !== "cancelled") throw new BadRequestError("report.not_scheduled");
+    await refundFreeReport(d.db, rid, now);
+  }
   return { cancelled: true };
 }
 

@@ -1,13 +1,8 @@
+import { allowanceSnapshot, freeLimits, isFreeTier } from "@dembrane/allowance";
+import type { Db } from "@dembrane/db";
 import type { Conn } from "./db";
 import { pyRound } from "./numbers";
-import {
-  cardAggregates,
-  countReports,
-  countUsedChats,
-  oldestLiveChat,
-  oldestReport,
-  workspaceProjects,
-} from "./storage/usage";
+import { cardAggregates, workspaceProjects } from "./storage/usage";
 import { capacityOf, nextTier, usageGates } from "./tiers";
 
 /** First instant of the calendar month `offset` months before the one holding `now`, UTC. */
@@ -72,7 +67,8 @@ export async function cardUsage(db: Conn, workspaceId: string, now: Date): Promi
 export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   const out = { ...usage };
   const cap = capacityOf(tier);
-  if (cap && cap.includedHours !== null) {
+  // Free hours are a monthly ledger meter (FreeAllowanceCard), not calendar hours.
+  if (cap && cap.includedHours !== null && !isFreeTier(tier)) {
     out.hours_included = cap.includedHours;
     const pct = cap.includedHours ? usage.audio_hours_this_month / cap.includedHours : 0;
     out.hours_pct = pyRound(pct, 3);
@@ -83,29 +79,24 @@ export function withCapSignals(usage: CardUsage, tier: string): CardUsage {
   return out;
 }
 
-export const FREE_TIER_MAX_CHATS = 1;
-export const FREE_TIER_MAX_REPORTS = 1;
+/** The free tier's included hours: the live monthly audio limit. */
+export async function freeIncludedHours(db: Db): Promise<number> {
+  return pyRound((await freeLimits(db)).audio_seconds_month / 3600, 2);
+}
+
 export const FREE_TIER_MAX_WORKSPACES = 1;
 
-/** The free tier block the frontend gates on; counted live so a deleted chat frees its slot at once. */
-export async function freeTierBlock(db: Conn, tier: string | null, projectIds: readonly string[]) {
-  const active = tier === "free";
-  const [chats, primaryChat, reports, primaryReport] = active
-    ? await Promise.all([
-        countUsedChats(db, projectIds),
-        oldestLiveChat(db, projectIds),
-        countReports(db, projectIds),
-        oldestReport(db, projectIds),
-      ])
-    : [0, null, 0, null];
+/** The free tier block the frontend gates on, read from the account's monthly allowance. */
+export async function freeTierBlock(db: Db, workspaceId: string, now: Date) {
+  const s = await allowanceSnapshot(db, workspaceId, now);
   return {
-    active,
-    chats_used: chats,
-    chats_limit: FREE_TIER_MAX_CHATS,
-    primary_chat_id: primaryChat,
-    reports_used: reports,
-    reports_limit: FREE_TIER_MAX_REPORTS,
-    primary_report_id: primaryReport,
+    active: s.free,
+    chats_used: s.chats?.used ?? 0,
+    chats_limit: s.chats?.limit ?? 0,
+    primary_chat_id: null,
+    reports_used: s.reports?.used ?? 0,
+    reports_limit: s.reports?.limit ?? 0,
+    primary_report_id: null,
   };
 }
 

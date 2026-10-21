@@ -25,6 +25,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
@@ -77,35 +78,23 @@ import {
 	API_BASE_URL,
 	ENABLE_AGENTIC_CHAT,
 } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import {
-	FREE_TIER_MAX_CHAT_USER_TURNS,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
+import { chatTurnGate } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
 import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
-
-// useChat hands back a failed response as an Error whose message is the body.
-const isTurnLimitResponse = (error: Error | undefined) => {
-	try {
-		return (
-			isFreeTierLimitError(JSON.parse(error?.message ?? "")) === "chat_turns"
-		);
-	} catch {
-		return false;
-	}
-};
+import { turnRefusalOf } from "./turnRefusal";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
 	const posthog = usePostHog();
+	const queryClient = useQueryClient();
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -186,6 +175,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 				},
 				{ onSuccess: swapToPersistedId(message.id) },
 			);
+
+			// The reply spent a turn: refresh the chat's meter and the allowance.
+			void queryClient.invalidateQueries({ queryKey: ["chats", chatId] });
+			void invalidateFreeAllowance(queryClient);
 
 			// scroll to the last message
 			lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -406,13 +399,12 @@ export const ProjectChatRoute = () => {
 	// modal below (workspace-scoped conversation list).
 	const projectForWorkspace = useProjectById({
 		projectId: projectId ?? "",
-		query: { fields: ["id", "workspace_id", "is_sample"] },
+		query: { fields: ["id", "workspace_id"] },
 	});
 	const projectRow = projectForWorkspace.data as
-		| { workspace_id?: string | null; is_sample?: boolean | null }
+		| { workspace_id?: string | null }
 		| undefined;
 	const projectWorkspaceId = projectRow?.workspace_id ?? null;
-	const isSample = projectRow?.is_sample === true;
 
 	// Language for suggestions
 	const { language } = useLanguage();
@@ -494,22 +486,18 @@ export const ProjectChatRoute = () => {
 		setInput,
 	]);
 
-	// Free tier: max 3 user turns per chat. The 4th routes to upgrade. A sample
-	// project's chats share their own allowance, which only the server counts, so
-	// there the limit shows once a reply comes back refused.
-	const { freeTier } = useWorkspaceUsage(routeWorkspaceId);
+	// Free tier: the server's turn meter, or a refused reply (sample chats only have the latter).
 	const [chatUpgradeOpened, chatUpgradeHandlers] = useDisclosure(false);
-	const userTurnCount = useMemo(
-		() => (messages ?? []).filter((m) => m.role === "user").length,
-		[messages],
-	);
-	const sampleTurnsSpent = isSample && isTurnLimitResponse(error);
-	const atTurnLimit = Boolean(
-		freeTier?.active &&
-			(isSample
-				? sampleTurnsSpent
-				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
-	);
+	const turnGate = chatTurnGate(chatQuery.data?.free_turns);
+	const turnRefusal = turnRefusalOf(error);
+	const atTurnLimit = turnGate.atLimit || turnRefusal !== null;
+	const turnsFrozen = turnGate.frozen || Boolean(turnRefusal?.frozen);
+	const monthlyRefusal = Boolean(turnRefusal?.monthly);
+	// The month's chats used up on a first message: show the wall at once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: opens once per refusal
+	useEffect(() => {
+		if (monthlyRefusal) chatUpgradeHandlers.open();
+	}, [monthlyRefusal]);
 	const guardedSubmit = () => {
 		if (atTurnLimit) {
 			chatUpgradeHandlers.open();
@@ -843,7 +831,7 @@ export const ProjectChatRoute = () => {
 							</div>
 						)}
 
-					{error && !sampleTurnsSpent && (
+					{error && !turnRefusal && (
 						<Alert
 							icon={<WarningCircleIcon size={20} />}
 							title={t`Error`}
@@ -940,7 +928,11 @@ export const ProjectChatRoute = () => {
 					)}
 					{atTurnLimit && (
 						<Box className="mb-2">
-							<ChatTurnLimitCard onUpgrade={chatUpgradeHandlers.open} />
+							<ChatTurnLimitCard
+								onUpgrade={chatUpgradeHandlers.open}
+								frozen={turnsFrozen}
+								monthly={monthlyRefusal}
+							/>
 						</Box>
 					)}
 					<form
@@ -1084,7 +1076,7 @@ export const ProjectChatRoute = () => {
 			<ChatUpgradeModal
 				opened={chatUpgradeOpened}
 				onClose={chatUpgradeHandlers.close}
-				reason="chat_turns"
+				reason={monthlyRefusal ? "chats" : "chat_turns"}
 			/>
 		</Stack>
 	);

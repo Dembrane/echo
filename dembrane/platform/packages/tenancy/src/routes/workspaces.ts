@@ -17,7 +17,7 @@ export function workspaceRoutes(deps: TenancyDeps) {
   const svc = workspaceService(deps);
   const h = helpers(deps);
   return new Hono<Env>()
-    .get("/api/v2/workspaces/tier-capacities", (c) => c.json(svc.tierCapacities()))
+    .get("/api/v2/workspaces/tier-capacities", async (c) => c.json(await svc.tierCapacities()))
     .get("/api/v2/workspaces", async (c) => c.json(await svc.list(h.user(c))))
     .post("/api/v2/workspaces", async (c) => {
       const who = h.user(c);
@@ -42,6 +42,9 @@ export function workspaceRoutes(deps: TenancyDeps) {
       const { query } = await p.validate(c.req, { query: UsageQuery });
       return c.json(await svc.usage(ctx, query.month_offset));
     })
+    .get("/api/v2/workspaces/:workspace_id/free-allowance", async (c) =>
+      c.json(await svc.freeAllowance(await h.ws(c))),
+    )
     .post("/api/v2/workspaces/:workspace_id/handoff/initiate", async (c) => {
       const ctx = await h.ws(c);
       const { body } = await p.validate(c.req, { body: HandoffInitiate });

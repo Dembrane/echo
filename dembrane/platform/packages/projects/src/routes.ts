@@ -9,6 +9,7 @@ import * as goals from "./goals";
 import { progressStream } from "./progress";
 import * as projects from "./projects";
 import { PROJECT_UPDATE_FIELDS, type ProjectDeps } from "./projects";
+import { recordingStatus, useForRecordings } from "./recording";
 import * as reports from "./reports";
 import { projectsStorage } from "./storage";
 import * as tags from "./tags";
@@ -62,6 +63,7 @@ const updateShape = Object.fromEntries(
  */
 export function projectRoutes(deps: ProjectRoutesDeps) {
   const d: ProjectDeps = {
+    db: deps.db,
     store: projectsStorage(deps.db),
     access: deps.access,
     jobs: deps.queue,
@@ -249,6 +251,16 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(
       await projects.moveProject(d, who, c.req.param("project_id"), body.data.target_workspace_id),
     );
+  });
+
+  app.get("/api/v2/projects/:project_id/recording", async (c) => {
+    const who = requireUser(c);
+    return c.json(await recordingStatus(d, who, c.req.param("project_id")));
+  });
+
+  app.post("/api/v2/projects/:project_id/recording", async (c) => {
+    const who = requireUser(c);
+    return c.json(await useForRecordings(d, who, c.req.param("project_id")));
   });
 
   app.patch("/api/v2/projects/:project_id/visibility", async (c) => {

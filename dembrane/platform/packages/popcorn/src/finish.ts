@@ -1,8 +1,9 @@
 import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
+import type { PopcornAllowance } from "./free";
 import { dict, list, pyIso } from "./py";
-import { isPopcornLoop, type PopcornFlags } from "./service";
+import { isPopcornLoop, liveBooking, loopMode, type PopcornFlags } from "./service";
 import { FINISH_TICK, popcornStore, type Sql } from "./storage";
 
 /**
@@ -11,7 +12,7 @@ import { FINISH_TICK, popcornStore, type Sql } from "./storage";
  * together share it; the worker's minute claim of due rows starts it with the row's request
  * id, and the tick's run lock serialises it with any other read of the loop. It runs whether
  * or not the loop is live, also after a host's Stop live, and never changes the mode or the
- * live window.
+ * live window. On free it is booked only while the loop is live or has a start booked.
  */
 
 /** Finishes this close together share one read. */
@@ -27,12 +28,21 @@ export async function queueFinishRead(
   projectId: string,
   now: Date,
   conversationId: string | null = null,
+  free: Pick<PopcornAllowance, "status"> | null = null,
 ): Promise<boolean> {
   const store = popcornStore(tx);
   const report = await store.popcornReport(projectId);
   if (!report) return false;
   const loop = await store.loopForReport(String(report.id));
   if (!loop || !isPopcornLoop(loop)) return false;
+  // A free read outside live or a booked start would spend the month's analyses unseen.
+  if (
+    free &&
+    loopMode(loop) !== "live" &&
+    !liveBooking(loop) &&
+    (await free.status(projectId, now))
+  )
+    return false;
   const loopId = String(loop.id);
   // Two transcripts completing at once would both see no waiting read.
   await tx`select pg_advisory_xact_lock(hashtextextended(${`popcorn:finish-read:${loopId}`}, 0))`;
@@ -71,6 +81,7 @@ export function finishReads(deps: {
   readonly flags: PopcornFlags;
   readonly logger: Logger;
   readonly now?: () => Date;
+  readonly free?: Pick<PopcornAllowance, "status">;
 }) {
   return async (
     tx: postgres.TransactionSql,
@@ -81,7 +92,13 @@ export function finishReads(deps: {
     try {
       // A savepoint, so a failed booking does not abort the claim's transaction.
       await tx.savepoint((sp) =>
-        queueFinishRead(sp, projectId, (deps.now ?? (() => new Date()))(), conversationId),
+        queueFinishRead(
+          sp,
+          projectId,
+          (deps.now ?? (() => new Date()))(),
+          conversationId,
+          deps.free ?? null,
+        ),
       );
     } catch (err) {
       deps.logger.warn(

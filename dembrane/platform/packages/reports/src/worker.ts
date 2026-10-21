@@ -2,7 +2,7 @@ import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
 import { Notifier } from "@dembrane/notifications";
 import type { Logger } from "@dembrane/observability";
-import { notifyReportSubscribers } from "@dembrane/projects";
+import { notifyReportSubscribers, refundFreeReport } from "@dembrane/projects";
 import type { Queue } from "@dembrane/queue";
 import { enqueueConversationEvent, enqueueReportEvent, webhooksStorage } from "@dembrane/webhooks";
 import type postgres from "postgres";
@@ -65,6 +65,7 @@ export function reportsWorker(deps: ReportsWorkerDeps) {
         notifier: new Notifier(deps.db, deps.logger),
         reportGenerated: (projectId, reportId) =>
           enqueueReportEvent(webhookDeps, projectId, reportId, "report.generated"),
+        refundFreeReport: (id) => refundFreeReport(deps.db, id, new Date()),
         jobs: { enqueue: (def, payload, opts) => queue.enqueue(def, payload, opts as never) },
       });
       await queue.work(notifyReportSubscribers, { concurrency: 2 }, async (p, job) => {

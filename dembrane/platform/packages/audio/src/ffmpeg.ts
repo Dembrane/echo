@@ -23,11 +23,16 @@ interface Run {
   readonly stderr: string;
 }
 
-async function run(cmd: readonly string[], timeoutMs?: number): Promise<Run> {
+const aborted = (what: string) => new AudioError("transient", `${what} killed (aborted)`);
+
+async function run(cmd: readonly string[], timeoutMs?: number, signal?: AbortSignal): Promise<Run> {
+  if (signal?.aborted) throw aborted(cmd[0] ?? "ffmpeg");
   const proc = Bun.spawn([...cmd], {
     stdout: "pipe",
     stderr: "pipe",
     ...(timeoutMs && { timeout: timeoutMs }),
+    // Kills the process when the caller gives up.
+    ...(signal && { signal }),
   });
   const [stdout, stderr, code] = await Promise.all([
     new Response(proc.stdout).text(),
@@ -67,20 +72,30 @@ export const muxerOf = (format: AudioFormat): string =>
  * probe_from_bytes on a local file: auto-detect first, then with the format hint, and a
  * failure classified as bad bytes or retryable.
  */
-export async function probeFile(path: string, hint: AudioFormat): Promise<ProbeResult> {
+export async function probeFile(
+  path: string,
+  hint: AudioFormat,
+  signal?: AbortSignal,
+): Promise<ProbeResult> {
   if (!isAudioFormat(hint))
     throw new AudioError("value", `Unsupported or invalid input format '${hint}'.`);
-  let r = await run(["ffprobe", ...PROBE_ARGS, path]);
+  let r = await run(["ffprobe", ...PROBE_ARGS, path], undefined, signal);
   if (r.code !== 0) {
-    r = await run([
-      "ffprobe",
-      ...PROBE_ARGS.slice(0, 5),
-      "-show_format",
-      "-show_streams",
-      "-f",
-      demuxerOf(hint),
-      path,
-    ]);
+    if (signal?.aborted) throw aborted("ffprobe");
+    r = await run(
+      [
+        "ffprobe",
+        ...PROBE_ARGS.slice(0, 5),
+        "-show_format",
+        "-show_streams",
+        "-f",
+        demuxerOf(hint),
+        path,
+      ],
+      undefined,
+      signal,
+    );
+    if (signal?.aborted) throw aborted("ffprobe");
     if (r.code !== 0) throw classifyFfprobeFailure(r.signal, r.stderr.trim());
   }
   if (!r.stdout) throw new AudioError("ffmpeg", "ffprobe returned empty output");
@@ -127,6 +142,54 @@ export async function probeUrl(url: string, timeoutMs = 120_000): Promise<ProbeR
     throw new AudioError("value", `ffprobe failed on url: ${stderr || "Unknown error"}`);
   if (!r.stdout) throw new AudioError("value", "ffprobe returned empty output");
   return JSON.parse(r.stdout) as ProbeResult;
+}
+
+/**
+ * The real length of a file's first audio stream: decodes it to nowhere and reads ffmpeg's last
+ * progress time. Auto-detect first, then with the format hint, as probeFile does.
+ */
+export async function decodeSeconds(
+  path: string,
+  hint: AudioFormat,
+  signal?: AbortSignal,
+): Promise<number> {
+  if (!isAudioFormat(hint))
+    throw new AudioError("value", `Unsupported or invalid input format '${hint}'.`);
+  const decode = (forced: string[]) =>
+    run(
+      [
+        "ffmpeg",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostats",
+        "-progress",
+        "pipe:1",
+        // convertFile's tolerance: a damaged file the pipeline converts still measures.
+        "-err_detect",
+        "ignore_err",
+        ...forced,
+        "-i",
+        path,
+        "-vn",
+        "-map",
+        "0:a:0",
+        "-f",
+        "null",
+        "-",
+      ],
+      undefined,
+      signal,
+    );
+  let r = await decode([]);
+  if (r.code !== 0 && !r.signal && !signal?.aborted) r = await decode(["-f", demuxerOf(hint)]);
+  if (signal?.aborted) throw aborted("ffmpeg decode");
+  if (r.signal) throw new AudioError("transient", `ffmpeg decode killed (${r.signal})`);
+  if (r.code !== 0)
+    throw new AudioError("value", `ffmpeg decode failed: ${r.stderr.trim() || "Unknown error"}`);
+  const last = [...r.stdout.matchAll(/^out_time_us=(\d+)$/gm)].at(-1)?.[1];
+  if (last === undefined) throw new AudioError("value", "ffmpeg decode reported no audio time");
+  return Number(last) / 1e6;
 }
 
 export function durationOf(p: ProbeResult): number | null {

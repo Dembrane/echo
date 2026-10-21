@@ -1,15 +1,96 @@
+import { plural, t } from "@lingui/core/macro";
+import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { readApiError } from "./errors/read";
 
 // Detects the shared free-tier 402 contract raised by the backend
 // (dembrane/free_tier.py free_tier_limit_error). Frontend gates and the
 // UpgradeModal key on this.
 
-export type FreeTierLimit = "chats" | "chat_turns" | "report" | "workspaces";
+export type FreeTierLimit =
+	| "chats"
+	| "chat_turns"
+	| "report"
+	| "workspaces"
+	| "projects"
+	| "organisations"
+	| "audio_month"
+	| "audio_conversation"
+	| "recording_project"
+	| "map"
+	| "popcorn";
 
-// Mirror of the backend limits in dembrane/free_tier.py. Kept in sync by hand;
-// the backend remains the source of truth and enforces these via 402.
-export const FREE_TIER_MAX_CHATS = 1;
-export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+/** The limits that stop a recording or an upload. */
+export type RecordingRefusal =
+	| "audio_month"
+	| "audio_conversation"
+	| "recording_project";
+
+const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
+	"chats",
+	"chat_turns",
+	"report",
+	"workspaces",
+	"projects",
+	"organisations",
+	"audio_month",
+	"audio_conversation",
+	"recording_project",
+	"map",
+	"popcorn",
+]);
+
+const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
+	"audio_month",
+	"audio_conversation",
+	"recording_project",
+]);
+
+/** A chat's turn meter: a frozen chat (opened before the free limits) takes no more turns. */
+export function chatTurnGate(
+	t: { limit: number; used: number; frozen: boolean } | null | undefined,
+): { atLimit: boolean; frozen: boolean } {
+	if (!t) return { atLimit: false, frozen: false };
+	return { atLimit: t.frozen || t.used >= t.limit, frozen: t.frozen };
+}
+
+/** True when a free account has used this month's meter up. */
+export function allowanceSpent(
+	s: FreeAllowance | undefined,
+	key: "chats" | "reports" | "maps" | "popcorn_analyses",
+): boolean {
+	const meter = s?.free ? s[key] : null;
+	return !!meter && meter.used >= meter.limit;
+}
+
+/** The monthly free report line, with the live limit when the snapshot has it. */
+export function freeReportsLine(s: FreeAllowance | undefined): string {
+	const limit = s?.free ? s.reports?.limit : undefined;
+	if (limit === undefined || limit <= 0)
+		return t`The free plan includes a monthly allowance of reports.`;
+	return plural(limit, {
+		one: "The free plan includes # report a month.",
+		other: "The free plan includes # reports a month.",
+	});
+}
+
+// Billing (free-audio-out) counts under a minute left as used up; refusals and rounding leave the ledger short.
+export const AUDIO_USED_UP_SLACK_SECONDS = 60;
+
+/** True when the month's audio is used up, the slack included. */
+export function audioUsedUp(meter: { used: number; limit: number }): boolean {
+	return meter.limit - meter.used < AUDIO_USED_UP_SLACK_SECONDS;
+}
+
+/** The allowance reset time in the reader's locale, or null when missing or unreadable. */
+export function formatResetDate(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
 
@@ -30,16 +111,33 @@ export function isFreeTierLimitError(err: unknown): FreeTierLimit | null {
 		(detail as { error?: unknown }).error === FREE_TIER_LIMIT_ERROR
 	) {
 		const limit = (detail as { limit?: unknown }).limit;
-		if (
-			limit === "chats" ||
-			limit === "chat_turns" ||
-			limit === "report" ||
-			limit === "workspaces"
-		) {
-			return limit;
-		}
+		if (isLimit(limit)) return limit;
 	}
 	return null;
+}
+
+/** The free-limit 402's details object (the body's `detail`), or null. */
+export function freeLimitDetails(
+	err: unknown,
+): Readonly<Record<string, unknown>> | null {
+	if (!isFreeTierLimitError(err)) return null;
+	const detail = extractDetail(err);
+	return detail && typeof detail === "object" && !Array.isArray(detail)
+		? (detail as Record<string, unknown>)
+		: null;
+}
+
+/** The recording reason of a free-limit 402, or null for anything else. */
+export function portalRecordingRefusal(err: unknown): RecordingRefusal | null {
+	const limit = isFreeTierLimitError(err);
+	return isRecordingRefusal(limit) ? limit : null;
+}
+
+/** Reads `recording_stop` off a live chunk confirm response. */
+export function recordingStopOf(chunk: unknown): RecordingRefusal | null {
+	if (!chunk || typeof chunk !== "object") return null;
+	const stop = (chunk as { recording_stop?: unknown }).recording_stop;
+	return isRecordingRefusal(stop) ? stop : null;
 }
 
 function extractDetail(err: unknown): unknown {
@@ -55,7 +153,9 @@ function extractDetail(err: unknown): unknown {
 }
 
 function isLimit(v: unknown): v is FreeTierLimit {
-	return (
-		v === "chats" || v === "chat_turns" || v === "report" || v === "workspaces"
-	);
+	return typeof v === "string" && LIMITS.has(v);
+}
+
+function isRecordingRefusal(v: unknown): v is RecordingRefusal {
+	return typeof v === "string" && RECORDING_REFUSALS.has(v);
 }

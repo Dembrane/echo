@@ -15,26 +15,35 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { usePostHog } from "@posthog/react";
 import {
 	ArrowLeftIcon,
 	ArrowSquareOutIcon,
 	ClockIcon,
 } from "@phosphor-icons/react";
+import { usePostHog } from "@posthog/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
+import {
+	invalidateFreeAllowance,
+	useFreeAllowance,
+} from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import {
+	allowanceSpent,
+	freeReportsLine,
+	isFreeTierLimitError,
+} from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import type { Tier } from "@/lib/tiers";
+import { SELLABLE_TIER } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useCreateProjectReportMutation } from "./hooks";
@@ -86,13 +95,15 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 	const posthog = usePostHog();
 
-	// Free tier: one report per workspace. Additional reports route to upgrade.
+	// Free tier: this month's reports. Past the limit, generating opens the wall.
 	const { workspace } = useWorkspace();
-	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const queryClient = useQueryClient();
+	const { applies: allowanceApplies, isSample } =
+		useAllowanceApplies(projectId);
+	const freeAllowance = useFreeAllowance(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	const isAtReportLimit = Boolean(
-		freeTier?.active && freeTier.reports_used >= freeTier.reports_limit,
-	);
+	const isAtReportLimit =
+		allowanceApplies && allowanceSpent(freeAllowance.data, "reports");
 	const is402ReportError = isFreeTierLimitError(error) === "report";
 
 	const hasConversations = conversationCounts && conversationCounts.total > 0;
@@ -104,6 +115,10 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 		error instanceof AxiosError && error.response?.status === 409;
 
 	const handleCreate = (schedule?: boolean) => {
+		if (isAtReportLimit) {
+			upgradeHandlers.open();
+			return;
+		}
 		posthog?.capture("report_generated", {
 			has_user_instructions: !!userInstructions,
 			language,
@@ -119,14 +134,15 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				userInstructions: userInstructions || undefined,
 			},
 			{
+				onError: (err) => {
+					if (isFreeTierLimitError(err) !== "report") return;
+					void invalidateFreeAllowance(queryClient);
+					upgradeHandlers.open();
+				},
 				onSuccess: () => onSuccess(),
 			},
 		);
 	};
-
-	// Non-destructive: the gate is shown inline (banner + disabled actions)
-	// inside the form so the rest of the reports page stays visible.
-	const showReportUpgrade = isAtReportLimit || is402ReportError;
 
 	if (error && !is402ReportError) {
 		return (
@@ -154,29 +170,22 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
 	return (
 		<Stack maw="540px" className="pt-4">
-			{showReportUpgrade && (
+			{workspace?.id && allowanceApplies && (
+				<FreeAllowanceBanner workspaceId={workspace.id} feature="reports" />
+			)}
+			{is402ReportError && !isAtReportLimit && (
 				<Alert title={t`Report limit reached`} color="primary" variant="light">
 					<Stack gap="sm" align="flex-start">
 						<Text size="sm">
-							<Trans>
-								Your free plan includes one report. Upgrade to create more.
-							</Trans>
-						</Text>
-						<FeatureGatePopover
-							canRequestUpgrade={
-								workspace?.role === "admin" || workspace?.role === "owner"
-							}
-							onStart={upgradeHandlers.open}
-							requiredTier="changemaker"
-							wallKey="report_cap"
-							workspaceId={workspace?.id ?? ""}
-						>
-							{({ onClick }) => (
-								<Button size="xs" onClick={onClick}>
-									{t`See upgrade options`}
-								</Button>
+							{isSample ? (
+								<Trans>This sample project includes one report.</Trans>
+							) : (
+								freeReportsLine(freeAllowance.data)
 							)}
-						</FeatureGatePopover>
+						</Text>
+						<Button size="xs" onClick={upgradeHandlers.open}>
+							{t`See upgrade options`}
+						</Button>
 					</Stack>
 				</Alert>
 			)}
@@ -294,9 +303,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							onClick={() => handleCreate(true)}
 							loading={isPending}
 							disabled={
-								isPending ||
-								!isDateFarEnough(scheduledDate) ||
-								showReportUpgrade
+								isPending || !isDateFarEnough(scheduledDate) || is402ReportError
 							}
 							fullWidth
 							variant="filled"
@@ -340,7 +347,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							<Button
 								onClick={() => handleCreate(false)}
 								loading={isPending}
-								disabled={isPending || !hasConversations || showReportUpgrade}
+								disabled={isPending || !hasConversations || is402ReportError}
 								variant="filled"
 								style={{ flex: 7 }}
 								{...testId("report-create-button")}
@@ -349,10 +356,12 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							</Button>
 						</Tooltip>
 						<Button
-							onClick={() => setShowSchedule(true)}
+							onClick={() =>
+								isAtReportLimit ? upgradeHandlers.open() : setShowSchedule(true)
+							}
 							leftSection={<ClockIcon size={20} />}
 							style={{ flex: 3 }}
-							disabled={showReportUpgrade}
+							disabled={is402ReportError}
 						>
 							<Trans>Schedule</Trans>
 						</Button>
@@ -383,14 +392,12 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			<UpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
-				currentTier={(workspace?.tier ?? "free") as Tier}
-				requiredTier="changemaker"
-				canRequestUpgrade={
-					workspace?.role === "admin" || workspace?.role === "owner"
-				}
+				currentTier="free"
+				requiredTier={SELLABLE_TIER}
+				canRequestUpgrade
 				workspaceId={workspace?.id ?? ""}
 				wallKey="report_cap"
-				entry="popover_link"
+				entry="modal_direct"
 				projectId={projectId}
 			/>
 		</Stack>

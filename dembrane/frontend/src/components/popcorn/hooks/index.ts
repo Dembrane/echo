@@ -4,8 +4,10 @@ import { useContext } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { bff } from "@/lib/bff";
 import { readApiError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { SettingsSaveContext } from "../SettingsSaveContext";
 
 export type PopcornLoop = {
@@ -129,6 +131,9 @@ export type PopcornCounts = {
 	run?: number | null;
 };
 
+// A free account's popcorn analyses this month; null when unlimited.
+export type FreePopcorn = { used: number; limit: number; exhausted: boolean };
+
 export type PopcornDetail = {
 	id: string;
 	kind: "popcorn";
@@ -142,6 +147,7 @@ export type PopcornDetail = {
 	public_token?: string | null;
 	loop?: PopcornLoop | null;
 	counts: PopcornCounts;
+	free_popcorn?: FreePopcorn | null;
 };
 
 // What a first read would find, before a session exists.
@@ -307,10 +313,14 @@ export const usePopcornSettingsMutation = (
 	});
 };
 
+// A free account's month of analyses is used up: the notice says so, no toast.
+const usedUp = (error: unknown) => isFreeTierLimitError(error) === "popcorn";
+
 export const useRefreshPopcornMutation = (
 	projectId: string,
 	popcornId: string,
 ) => {
+	const queryClient = useQueryClient();
 	const invalidate = useInvalidatePopcorn(projectId);
 	return useMutation({
 		mutationFn: () =>
@@ -318,6 +328,10 @@ export const useRefreshPopcornMutation = (
 				`/popcorn/${encodeURIComponent(popcornId)}/refresh`,
 			),
 		onError: (error: Error & { status?: number }) => {
+			if (usedUp(error)) {
+				invalidate();
+				return;
+			}
 			if (error.status === 429) {
 				toast.info(t`Just refreshed. Give it a moment.`);
 				return;
@@ -327,6 +341,7 @@ export const useRefreshPopcornMutation = (
 		onSuccess: () => {
 			toast.success(t`Reading the conversations again`);
 			invalidate();
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 };
@@ -335,6 +350,7 @@ export const useRerunPopcornMutation = (
 	projectId: string,
 	popcornId: string,
 ) => {
+	const queryClient = useQueryClient();
 	const invalidate = useInvalidatePopcorn(projectId);
 	return useMutation({
 		mutationFn: () =>
@@ -342,6 +358,10 @@ export const useRerunPopcornMutation = (
 				`/popcorn/${encodeURIComponent(popcornId)}/rerun`,
 			),
 		onError: (error: Error & { status?: number }) => {
+			if (usedUp(error)) {
+				invalidate();
+				return;
+			}
 			if (error.status === 429) {
 				toast.info(t`Just read. Give it a moment.`);
 				return;
@@ -351,6 +371,7 @@ export const useRerunPopcornMutation = (
 		onSuccess: () => {
 			toast.success(t`Reading everything again`);
 			invalidate();
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 };
@@ -367,12 +388,22 @@ export const usePopcornLiveMutation = (
 				`/popcorn/${encodeURIComponent(popcornId)}/live`,
 				readyBy ? { hours, ready_by: readyBy.toISOString() } : { hours },
 			),
-		onError: () => toast.error(t`Could not go live`),
+		onError: (error) => {
+			if (usedUp(error)) {
+				queryClient.invalidateQueries({ queryKey: projectKey(projectId) });
+				queryClient.invalidateQueries({
+					queryKey: ["project", projectId, "presentation"],
+				});
+				return;
+			}
+			toast.error(t`Could not go live`);
+		},
 		onSuccess: (detail) => {
 			putPopcorn(queryClient, projectId, detail);
 			queryClient.invalidateQueries({
 				queryKey: ["project", projectId, "presentation"],
 			});
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 };

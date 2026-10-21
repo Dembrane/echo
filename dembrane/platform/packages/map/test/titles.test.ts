@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { type ObjectRevision, titleLines, titleSelectionKey } from "@dembrane/analysis";
 import { FakeCompleter } from "@dembrane/llm";
-import { titleSelection } from "../src/model";
+import { stripQuotes, titleSelection } from "../src/model";
 import { TitleCache, typedTitleLines } from "../src/service";
 import python from "./python-titles.json" with { type: "json" };
 
@@ -108,4 +108,20 @@ test("a title is generated once per key, even when asked twice at once", async (
   expect([a.title, b.title]).toEqual(["One", "One"]);
   expect(calls).toBe(1);
   expect((await cache.once("k", produce)).cached).toBe(true);
+});
+
+test("stripQuotes keeps the old edge-quote regex results and is linear", () => {
+  const cases: [string, string][] = [
+    ["", ""],
+    ['"""', ""],
+    ['"Title"', "Title"],
+    ["“Title”", "Title"],
+    ["'a\"b'", 'a"b'],
+    ['a"b', 'a"b'],
+    ["''", ""],
+  ];
+  for (const [s, want] of cases) expect(stripQuotes(s)).toBe(want);
+  const t = performance.now();
+  expect(stripQuotes(`a${'"'.repeat(100_000)}a`)).toBe(`a${'"'.repeat(100_000)}a`);
+  expect(performance.now() - t).toBeLessThan(500);
 });

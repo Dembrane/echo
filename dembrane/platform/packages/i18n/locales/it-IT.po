@@ -254,7 +254,6 @@ msgstr "Il tuo codice di accesso è {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Il tuo codice di accesso."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Il tuo codice di accesso è {code}. Scade tra 10 minuti."
@@ -266,7 +265,6 @@ msgstr "Se non hai provato ad accedere, puoi tranquillamente ignorare questa ema
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} ti chiede di firmare {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Apri lo spazio di lavoro"
 msgid "email.payment_failed.subject"
 msgstr "Il tuo pagamento a dembrane non è andato a buon fine"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Il tuo piano resta attivo. Aggiorna il metodo di pagamento per saldare l'importo dovuto."
@@ -604,7 +601,6 @@ msgstr "Aggiorna il tuo metodo di pagamento:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} ora è sul piano gratuito"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Richiedi un upgrade"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} passa al piano gratuito il {date}"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Il tuo piano {tier} termina il {date}. Tutto ciò che hai creato resta."
@@ -658,6 +653,38 @@ msgstr "Tutto ciò che hai creato resta. Per mantenere {tier}, richiedi un upgra
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Richiedi un upgrade"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} ha esaurito le ore di registrazione di questo mese"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Nuove registrazioni e caricamenti sono in pausa fino al {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} ha esaurito le ore di registrazione di questo mese"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Il piano Free include {hours} di registrazione al mese e {name} le ha esaurite. Nuove registrazioni e caricamenti sono in pausa fino al {reset_date}. Tutto ciò che è stato registrato finora rimane disponibile."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} ore"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} ora"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Fai l'upgrade per continuare a registrare"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Fai l'upgrade per continuare a registrare:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"

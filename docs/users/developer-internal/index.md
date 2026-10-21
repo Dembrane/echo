@@ -44,6 +44,7 @@ If you integrate with dembrane or run it yourself, start at the [external develo
 | Add or debug a job | [Background jobs and schedules](./background-jobs-and-scheduler.md) |
 | Work on Ask or the assistant | [Chat and the assistant](./chat-and-agent.md) |
 | Change who may do what | [Roles and policies in code](./roles-and-policies.md) |
+| Add or change a free plan limit | [The free tier in code](./free-tier.md) |
 | Ship a change | [Deployment and releases](./deployment-and-releases.md) |
 | Change a page of these docs | [Maintaining the docs](./maintaining-docs.md) |
 
@@ -77,6 +78,7 @@ These pages summarise. The files below are the source of truth, so check them wh
 - [Architecture](./architecture.md)
 - [Local development](./local-development.md)
 - [Deployment and releases](./deployment-and-releases.md)
+- [The free tier in code](./free-tier.md)
 - [External developer guide](../developer-external/index.md)
 - [Contributing](../developer-external/contributing.md)
 - [Licensing](../developer-external/licensing.md)

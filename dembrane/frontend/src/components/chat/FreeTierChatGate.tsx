@@ -23,20 +23,19 @@ export function ChatUpgradeModal({
 	onClose: () => void;
 	reason: FreeTierLimit;
 }) {
-	// UpgradeModal resolves the workspace from context itself; we read it here
-	// only for the tier/role it needs as props.
 	const { workspace } = useWorkspace();
 	const isChatLimit = reason === "chats";
-	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
+	// Only a free limit opens this wall.
 	return (
 		<UpgradeModal
 			opened={opened}
 			onClose={onClose}
-			currentTier={(workspace?.tier ?? "free") as Tier}
+			currentTier="free"
 			requiredTier={UPGRADE_TIER}
-			canRequestUpgrade={isAdmin}
+			canRequestUpgrade
 			workspaceId={workspace?.id ?? ""}
 			wallKey={isChatLimit ? "chat_cap" : "chat_turn_cap"}
+			entry="modal_direct"
 		/>
 	);
 }
@@ -47,13 +46,29 @@ export function VoiceCapUpgradeModal({
 	opened,
 	onClose,
 	upgradeTier,
+	free,
 }: {
 	opened: boolean;
 	onClose: () => void;
 	upgradeTier: string | null;
+	/** Voice input is not on the free plan: the free-limit wall. */
+	free?: boolean;
 }) {
 	const { workspace } = useWorkspace();
 	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
+	if (free)
+		return (
+			<UpgradeModal
+				opened={opened}
+				onClose={onClose}
+				currentTier="free"
+				requiredTier={UPGRADE_TIER}
+				canRequestUpgrade
+				workspaceId={workspace?.id ?? ""}
+				wallKey="chat_voice_cap"
+				entry="modal_direct"
+			/>
+		);
 	return (
 		<UpgradeModal
 			opened={opened}
@@ -67,11 +82,16 @@ export function VoiceCapUpgradeModal({
 	);
 }
 
-/**
- * Inline card rendered in the chat thread in place of the 4th turn's reply.
- * Clicking it opens the upgrade path.
- */
-export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
+/** Inline card in the chat thread once its free turns or the month's chats are used, or it is frozen. */
+export function ChatTurnLimitCard({
+	onUpgrade,
+	frozen,
+	monthly,
+}: {
+	onUpgrade: () => void;
+	frozen?: boolean;
+	monthly?: boolean;
+}) {
 	return (
 		<Alert
 			color="gray"
@@ -80,10 +100,21 @@ export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 		>
 			<Stack gap="sm" align="flex-start">
 				<Text size="sm">
-					<Trans>
-						You've reached the free plan limit for this chat. Upgrade to keep
-						the conversation going.
-					</Trans>
+					{monthly ? (
+						<Trans>
+							You have used this month's free chats. Upgrade to keep chatting.
+						</Trans>
+					) : frozen ? (
+						<Trans>
+							This chat is from an earlier free period and can't take new
+							questions. Start a new chat or upgrade to keep going.
+						</Trans>
+					) : (
+						<Trans>
+							You've reached the free plan limit for this chat. Upgrade to keep
+							the conversation going.
+						</Trans>
+					)}
 				</Text>
 				<Button size="xs" onClick={onUpgrade}>
 					{t`See upgrade options`}

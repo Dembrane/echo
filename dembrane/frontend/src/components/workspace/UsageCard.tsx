@@ -110,9 +110,13 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 		);
 	}
 
+	// Free caps live in FreeAllowanceCard; the legacy hours cap is not shown here.
+	const isFree = data.tier === "free";
+	const hoursIncluded = isFree ? null : data.audio_hours_included;
+
 	const hoursPct =
-		data.audio_hours_included && data.audio_hours_included > 0
-			? Math.min(100, (data.audio_hours / data.audio_hours_included) * 100)
+		hoursIncluded && hoursIncluded > 0
+			? Math.min(100, (data.audio_hours / hoursIncluded) * 100)
 			: null;
 
 	const seatsPct =
@@ -120,7 +124,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 			? Math.min(100, (data.seat_count / data.seat_count_included) * 100)
 			: null;
 
-	const pilotExhausted = data.pilot_hard_block_active;
+	const pilotExhausted = !isFree && data.pilot_hard_block_active;
 
 	const audioColor =
 		pilotExhausted || (hoursPct != null && hoursPct >= 90)
@@ -170,10 +174,10 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 						<Text size="sm">
 							{formatDurationFromHours(data.audio_hours)}
-							{data.audio_hours_included != null && (
+							{hoursIncluded != null && (
 								<Text span c="dimmed" size="sm">
 									{" / "}
-									{data.audio_hours_included}h
+									{hoursIncluded}h
 								</Text>
 							)}
 						</Text>

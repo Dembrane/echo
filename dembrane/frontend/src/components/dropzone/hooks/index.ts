@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -6,7 +7,13 @@ import {
 	initiateAndUploadConversationChunk,
 	UploadFailedError,
 } from "@/lib/api";
+import { loadErrorMessages, presentErrorNow } from "@/lib/errors/present";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
+import { uploadRefusalMessage } from "@/lib/uploadPrecheck";
+
+// A failed file's words: the free-limit refusal, else the presented error, never raw text.
+const failedFileMessage = (err: Error) =>
+	uploadRefusalMessage(err) ?? presentErrorNow(err, i18n).message;
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -32,6 +39,17 @@ export const useUploadConversation = () => {
 			// When the mutation starts, cancel any in-progress queries
 			// to prevent them from overwriting our optimistic update
 			queryClient.cancelQueries({ queryKey: ["conversations"] });
+		},
+		// Uploads spend (or reserve) free audio, whether or not they finish.
+		onSettled: () => {
+			void queryClient.invalidateQueries({
+				predicate: ({ queryKey }) =>
+					queryKey[0] === "workspace" && queryKey[2] === "free-allowance",
+			});
+			void queryClient.invalidateQueries({
+				predicate: ({ queryKey }) =>
+					queryKey[0] === "project" && queryKey[2] === "recording",
+			});
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -190,7 +208,16 @@ export const useConversationUploader = () => {
 				const completed = { ...progressRef.current };
 				const failedNames = new Set(uploadError.failed.map((f) => f.name));
 				uploadError.failed.forEach((f) => {
-					newErrors[f.name] = f.error.message || "Upload failed";
+					newErrors[f.name] = failedFileMessage(f.error);
+				});
+				// Re-present once the error messages have loaded.
+				void loadErrorMessages(i18n).then(() => {
+					if (errorsRef.current !== newErrors) return;
+					const loaded = { ...newErrors };
+					for (const f of uploadError.failed)
+						loaded[f.name] = failedFileMessage(f.error);
+					errorsRef.current = loaded;
+					setUploadErrors(loaded);
 				});
 				fileNames.forEach((key) => {
 					if (!failedNames.has(key)) completed[key] = 100;

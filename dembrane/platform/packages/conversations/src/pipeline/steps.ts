@@ -22,10 +22,10 @@ import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@d
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
+import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } from "../free-audio";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
-import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
 import { finalizeConversation, finalTranscript, processChunk } from "./defs";
@@ -37,8 +37,6 @@ const {
   conversation_transcribe_retry,
   processing_status,
   project,
-  workspace,
-  billing_account,
 } = schema;
 
 /** Everything the pipeline's steps touch; built once by the worker, faked in tests. */
@@ -80,8 +78,6 @@ const MAX_PIECES = 1500;
 // Convert refuses inputs above this, as convert_and_save_to_s3 did.
 const MAX_CONVERT_BYTES = 1000 * 1024 * 1024;
 const MIN_AUDIO_BYTES = 1024;
-/** The recorder hands over a chunk every 30 seconds; at any bitrate speech is recorded at, one is under this. */
-const LIVE_CHUNK_BYTES = 1024 * 1024;
 /** The lowest bitrate speech is recorded at (Opus at 6 kbps), in bytes per second: below this a file is not speech. */
 const MIN_SPEECH_BYTES_PER_SECOND = 750;
 const SPLIT_BATCH = 20;
@@ -282,7 +278,8 @@ export async function prepareChunk(d: PipelineDeps, chunkId: string): Promise<st
   const store = conversationStore(d.db);
   const chunk = await store.chunk(chunkId);
   if (!chunk) return existingPieces(d.db, chunkId);
-  if (!chunk.path) return [];
+  // Refused by the free limit: a re-run must not count or transcribe it.
+  if (!chunk.path || chunk.error === FREE_LIMIT_SKIPPED) return [];
   try {
     return await withStatus(
       d,
@@ -318,6 +315,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const path = chunk.path as string;
   const format = fileFormatOf(path);
   let current = path;
+  let converted: number | null = null;
   if (format !== "mp3") {
     const originalKey = d.audioUrls.keyOf(path);
     // The Python replaced every occurrence of the extension in the key; kept, so both
@@ -333,7 +331,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
       );
     if (size < MIN_AUDIO_BYTES)
       throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
-    await d.media.convert({
+    const out = await d.media.convert({
       source: {
         url: d.audio.presignDownload(originalKey, { expiresInSeconds: URL_EXPIRES_S }),
         format,
@@ -348,6 +346,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
       },
       outputFormat: "mp3",
     });
+    converted = out.seconds ?? null;
     current = d.audioUrls.fileUrl(outKey);
     await updateChunk(d, chunk.id, chunk.conversation_id, { path: current }, false);
   }
@@ -356,6 +355,31 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   if (size === null) throw new AudioError("transient", `converted file ${key} not in the bucket`);
   if (size < MIN_AUDIO_BYTES)
     throw new AudioError("too_small", `File size ${size} bytes is too small to process`);
+  const mp3 = {
+    url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+    format: "mp3" as const,
+    name: key,
+  };
+  let metered = chunk.audio_seconds !== null;
+  if (chunk.source === LIVE_SOURCE) {
+    const r = await meterLiveChunk(
+      d,
+      chunk,
+      async () => {
+        if (converted !== null) return converted;
+        // Decoded: an mp3 header can understate its length. The probe only when decoding can't.
+        try {
+          return (await d.media.decodedSeconds(mp3)).seconds;
+        } catch (err) {
+          if (!(err instanceof AudioError && err.terminal)) throw err;
+          return durationOf(await d.media.probe(mp3));
+        }
+      },
+      size,
+    );
+    if (r === "refused") return [];
+    metered = r === "counted" || r === "already";
+  }
   const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
   // An upload whose improved transcript is its own first reading is cut, at pauses, into pieces
   // short enough for Whisper's sentence times; anything else keeps the provider's limits.
@@ -374,11 +398,7 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
   const small = size < maxSeconds * MIN_SPEECH_BYTES_PER_SECOND;
   if ((smallLive || small) && size <= limits.maxBytes) return [chunk.id];
 
-  const source = {
-    url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
-    format: "mp3" as const,
-    name: key,
-  };
+  const source = mp3;
   const probe = await d.media.probe(source);
   const duration = probe.format?.duration === undefined ? null : Number(probe.format.duration);
   if (duration === null || Number.isNaN(duration))
@@ -431,6 +451,8 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
           timestamp: shift(chunk.timestamp, p.start) as string,
           path: d.audioUrls.fileUrl(p.key),
           source: chunk.source,
+          // Pieces keep the seconds the original counted, so the conversation's total holds.
+          ...(metered && { audio_seconds: p.duration }),
           updated_at: d.now().toISOString(),
         })),
       )
@@ -758,41 +780,8 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
   return rows.length > 0;
 }
 
-/**
- * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
- * hours, deleted conversations included, since deleting keeps billable duration.
- * A sample copy's invented conversations are no one's audio and do not count.
- * Deterministic in the database's state, so a retry writes the same value.
- */
-export async function stampOverCap(d: PipelineDeps, conversationId: string): Promise<void> {
-  const [row] = await d.db
-    .select({
-      duration: conversation.duration,
-      workspaceId: project.workspace_id,
-      tier: billing_account.tier,
-    })
-    .from(conversation)
-    .innerJoin(project, and(eq(project.id, conversation.project_id), isNull(project.deleted_at)))
-    .leftJoin(workspace, eq(workspace.id, project.workspace_id))
-    .leftJoin(billing_account, eq(billing_account.id, workspace.billing_account_id))
-    .where(and(eq(conversation.id, conversationId), isNull(conversation.deleted_at)))
-    .limit(1);
-  if (!row?.workspaceId) return;
-  const [total] = await d.db
-    .select({ seconds: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
-    .from(conversation)
-    .innerJoin(project, eq(project.id, conversation.project_id))
-    .where(and(eq(project.workspace_id, row.workspaceId), eq(project.is_sample, false)));
-  const overCap = computeIsOverCap(
-    row.tier ?? "",
-    (total?.seconds ?? 0) / 3600,
-    (row.duration ?? 0) / 3600,
-  );
-  await d.db
-    .update(conversation)
-    .set({ is_over_cap: overCap, updated_at: d.now().toISOString() })
-    .where(eq(conversation.id, conversationId));
-}
+/** _stamp_over_cap: retired; kept as a no-op so the durable step replays by order. */
+export async function stampOverCap(_d: PipelineDeps, _conversationId: string): Promise<void> {}
 
 // ── finalize ─────────────────────────────────────────────────────────
 
@@ -933,8 +922,7 @@ export async function measureDuration(
 }
 
 /**
- * task_summarize_conversation: skips a finished conversation that has a summary and a
- * tier-locked one (it stays in the catch-up set and summarises after an upgrade). The
+ * task_summarize_conversation: skips a finished conversation that has a summary. The
  * no-transcript placeholder is not a summary: the catch-up retries it once text exists.
  * A finalize passes `fresh`: it claimed a new set of chunks, so a summary already there
  * is an earlier run's, written after the conversation reopened.
@@ -1019,10 +1007,9 @@ export async function idleConversations(db: Db, now: Date, limit = 100): Promise
 }
 
 /**
- * collect_unsummarized_conversations: transcribed, no summary, not locked (over the cap
- * on a tier without overage), not deleted, created over five minutes ago. The one
- * product-level catch-up kept: a locked conversation summarises once its workspace
- * upgrades, and a summary that failed all its retries gets another chance. The
+ * collect_unsummarized_conversations: transcribed, no summary, not deleted, created over
+ * five minutes ago, whatever the retired is_over_cap stamp says. The one product-level
+ * catch-up kept: a summary that failed all its retries gets another chance. The
  * no-transcript placeholder counts as no summary once a chunk has text, which repairs
  * conversations summarised before their last transcript landed.
  */
@@ -1031,15 +1018,11 @@ export async function unsummarizedConversations(db: Db, now: Date, limit = 50): 
   const rows = await db.execute<{ id: string }>(sql`
     select c.id from conversation c
     join project p on p.id = c.project_id and p.deleted_at is null
-    left join workspace w on w.id = p.workspace_id
-    left join billing_account b on b.id = w.billing_account_id
     where c.is_all_chunks_transcribed = true
       and (c.summary is null or c.summary = ''
            or (c.summary = ${NO_TRANSCRIPT_SUMMARY} and exists (
              select 1 from conversation_chunk ch
              where ch.conversation_id = c.id and octet_length(ch.transcript) > 0)))
-      and (c.is_over_cap is not true or b.tier is null
-           or b.tier in ('innovator', 'changemaker', 'guardian'))
       and c.deleted_at is null and c.created_at <= ${cutoff}
     order by c.created_at, c.id
     limit ${limit}`);

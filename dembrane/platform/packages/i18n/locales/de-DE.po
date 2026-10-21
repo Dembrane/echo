@@ -254,7 +254,6 @@ msgstr "Ihr Anmeldecode lautet {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Ihr Anmeldecode."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Ihr Anmeldecode lautet {code}. Er ist 10 Minuten lang gültig."
@@ -266,7 +265,6 @@ msgstr "Wenn Sie nicht versucht haben, sich anzumelden, können Sie diese E-Mail
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} bittet Sie, {document_title} zu unterschreiben"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Arbeitsbereich öffnen"
 msgid "email.payment_failed.subject"
 msgstr "Ihre Zahlung an dembrane ist nicht durchgegangen"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Ihr Tarif bleibt aktiv. Aktualisieren Sie Ihre Zahlungsmethode, um den offenen Betrag zu begleichen."
@@ -604,7 +601,6 @@ msgstr "Zahlungsmethode aktualisieren:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} ist jetzt im kostenlosen Tarif"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Upgrade beantragen"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} wechselt am {date} in den kostenlosen Tarif"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Ihr {tier}-Tarif endet am {date}. Alles, was Sie erstellt haben, bleibt erhalten."
@@ -658,6 +653,38 @@ msgstr "Alles, was Sie erstellt haben, bleibt erhalten. Um {tier} zu behalten, b
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Upgrade beantragen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} hat die Aufnahmezeit für diesen Monat aufgebraucht"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Neue Aufnahmen und Uploads sind bis zum {reset_date} pausiert."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} hat die Aufnahmezeit für diesen Monat aufgebraucht"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Der Free-Tarif enthält monatlich {hours} Aufnahmezeit, und {name} hat diese aufgebraucht. Neue Aufnahmen und Uploads sind bis zum {reset_date} pausiert. Alle bisherigen Aufnahmen bleiben verfügbar."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} Stunden"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} Stunde"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Upgraden, um weiter aufzunehmen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Upgraden, um weiter aufzunehmen:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
