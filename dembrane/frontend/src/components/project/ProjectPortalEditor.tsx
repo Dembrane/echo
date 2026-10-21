@@ -36,6 +36,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { Explainer } from "@/components/explainers/Explainer";
 import { ProjectLegalBasisSection } from "@/components/project/ProjectLegalBasisSection";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
@@ -745,9 +746,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 									<Stack gap="xl">
 										<Stack gap="md">
 											<Group>
-												<Title order={5}>
-													<Trans>Explore</Trans>
-												</Title>
+												<Explainer name="explore" label={t`How Explore works`}>
+													<Title order={5}>
+														<Trans>Explore</Trans>
+													</Title>
+												</Explainer>
 												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
@@ -902,11 +905,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 										<Stack gap="md">
 											<Group>
-												<Title order={5}>
-													<Trans id="dashboard.dembrane.verify.title">
-														Verify
-													</Trans>
-												</Title>
+												<Explainer name="verify" label={t`How Verify works`}>
+													<Title order={5}>
+														<Trans id="dashboard.dembrane.verify.title">
+															Verify
+														</Trans>
+													</Title>
+												</Explainer>
 												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.verify.beta">
 														Beta
@@ -1373,9 +1378,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 									<Stack gap="md">
 										<Group>
-											<Title order={5}>
-												<Trans>Anonymize transcripts</Trans>
-											</Title>
+											<Explainer
+												name="anonymise"
+												label={t`How anonymization works`}
+											>
+												<Title order={5}>
+													<Trans>Anonymize transcripts</Trans>
+												</Title>
+											</Explainer>
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>

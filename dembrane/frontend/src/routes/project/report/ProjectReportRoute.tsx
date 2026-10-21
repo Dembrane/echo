@@ -40,6 +40,7 @@ import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ExponentialProgress } from "@/components/common/ExponentialProgress";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { Explainer } from "@/components/explainers/Explainer";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import {
 	useAllProjectReports,
@@ -166,9 +167,11 @@ export const ReportLayout = ({
 						items={[
 							{
 								label: (
-									<Title order={2}>
-										<Trans>Report</Trans>
-									</Title>
+									<Explainer name="report" label={t`How reports work`}>
+										<Title order={2}>
+											<Trans>Report</Trans>
+										</Title>
+									</Explainer>
 								),
 							},
 						]}

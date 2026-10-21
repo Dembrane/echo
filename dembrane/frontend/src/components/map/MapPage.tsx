@@ -23,6 +23,7 @@ import {
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
+import { conversationColor, conversationSlotLabel } from "./attributes";
 import {
 	budgetState,
 	budgetsToAdmit,
@@ -36,19 +37,18 @@ import {
 	isMapPayloadV2,
 	type MapGraphData,
 } from "./data/adapter";
-import { conversationColor, conversationSlotLabel } from "./attributes";
 import { fixtureMapData, type MapFixtureId } from "./data/fixture";
-import {
-	buildTagIndex,
-	conversationsWithoutTags,
-	withTagSlots,
-} from "./data/tags";
 import {
 	filterNodesByConversation,
 	filterNodesByType,
 	typesKey,
 	zeroTypeCounts,
 } from "./data/scope";
+import {
+	buildTagIndex,
+	conversationsWithoutTags,
+	withTagSlots,
+} from "./data/tags";
 import {
 	type FactCheckStates,
 	isAttemptRunning,
@@ -71,14 +71,16 @@ import { MAP_LIGHT_VARS, MapExperience, MapSurface } from "./MapExperience";
 import { EmptyArgumentsState, OverBudgetState } from "./panels/BudgetStates";
 import {
 	MapFilterMenu,
-	MapSettingsMenu,
 	type MapSettingsControl,
+	MapSettingsMenu,
 } from "./panels/MapSettingsMenu";
 
 const MAP_PAGE_HIDDEN_CONTROLS: ReadonlyArray<MapSettingsControl> = [
 	"layout",
 	"showForceSettings",
 ];
+
+import { Explainer } from "@/components/explainers/Explainer";
 import type { ConversationHref } from "./panels/NodeDetailCard";
 import { ResultList } from "./panels/ResultList";
 import { MapInteractionProvider } from "./state/interactionStore";
@@ -662,9 +664,11 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				className="app-stack-narrow px-4 pb-2 pt-4 md:px-6"
 			>
 				<Group gap="sm" align="center" wrap="nowrap" className="min-w-0">
-					<Title order={2}>
-						<Trans>Map</Trans>
-					</Title>
+					<Explainer name="map" label={t`How the map works`}>
+						<Title order={2}>
+							<Trans>Map</Trans>
+						</Title>
+					</Explainer>
 					<Badge size="sm" color="mauve" c="graphite">
 						<Trans>Beta</Trans>
 					</Badge>
