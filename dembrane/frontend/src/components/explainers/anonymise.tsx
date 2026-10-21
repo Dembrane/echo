@@ -1,5 +1,6 @@
 import { t as translate } from "@lingui/core/macro";
 // Anonymisation loop: every value is a function of t. Throwaway, never committed.
+import { about, Person, span, Voice } from "./cast";
 import { C, clamp, type Loop, lerp, rng, smooth, spring } from "./kit";
 
 const GREY = C.muted;
@@ -9,91 +10,125 @@ const grow = (t: number, t0: number, from = 0.6, freq = 1.8) => ({
 	o: smooth((t - t0) / 0.3),
 	s: lerp(from, 1, spring(t, t0, freq)),
 });
-const about = (cx: number, cy: number, s: number) =>
-	`translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`;
+// The close-up table, drawn like Verify's: three people, the phone that records them.
+const PX = [40, 88, 136];
+const PERSON_Y = 96;
+const PH = { h: 84, w: 40, x: 190, y: 56 };
+const PCX = PH.x + PH.w / 2;
+const WAVE_Y = PH.y + 36;
+const WAVE_H = [6, 12, 9, 16, 10, 14, 7];
+const WAVE_X = WAVE_H.map((_, i) => PCX - 12 + i * 4);
+const REC = { cx: PCX, cy: PH.y + 16 };
+const TALK = [
+	{ a: 0.9, b: 1.8 },
+	{ a: 1.7, b: 2.6 },
+];
+const talkBlue = (t: number) =>
+	Math.max(...TALK.map((v) => span(t, v.a + 0.1, v.b, 0.25, 0.3)));
+/** The table moves aside, smaller, as the transcript card arrives. */
+const MOVE_AT = 1.7;
+const TABLE_S = 0.7;
+const TABLE_TX = -12.9;
+const TABLE_TY = 19.4;
+/** The lock arrives in beat 3, after the placeholders have settled (about 7.4 s). */
+const LOCK_AT = 9.0;
+const LOCK = { h: 20, w: 24, x: PCX - 12, y: PH.y + 38 };
+/** The phone's right edge and middle once the table has moved: where the link to the card starts. */
+const PHONE_OUT = {
+	x: (PH.x + PH.w) * TABLE_S + TABLE_TX,
+	y: (PH.y + PH.h / 2) * TABLE_S + TABLE_TY,
+};
 
-/** A person: head over a short rounded shoulder arc, graphite. */
-function Person({
-	x,
-	y,
-	t,
-	t0,
-}: {
-	x: number;
-	y: number;
-	t: number;
-	t0: number;
-}) {
-	const { s, o } = grow(t, t0);
-	if (o <= 0) return null;
+/** The phone: dot (blue while they talk), a small waveform; the lock closes over it in beat 3. */
+function Phone({ t }: { t: number }) {
+	const k = spring(t, 0.55, 1.7, 0.82);
+	if (k <= 0) return null;
+	const talk = talkBlue(t);
+	const op =
+		lerp(1, 0.25, smooth((t - 9.1) / 1.2)) * (1 - smooth((t - 12.2) / 0.9));
 	return (
 		<g
-			opacity={o}
-			transform={about(x, y + 8, s)}
-			fill="none"
-			stroke={C.text}
-			strokeWidth={1.5}
+			transform={about(PCX, PH.y + PH.h / 2, lerp(0.6, 1, k))}
+			opacity={clamp(k * 1.4)}
 			strokeLinecap="round"
 			strokeLinejoin="round"
 		>
-			<circle cx={x} cy={y} r={6} />
-			<path
-				d={`M${x - 11} ${y + 22} Q${x - 11} ${y + 11} ${x} ${y + 11} Q${x + 11} ${y + 11} ${x + 11} ${y + 22}`}
+			<rect
+				x={PH.x}
+				y={PH.y}
+				width={PH.w}
+				height={PH.h}
+				rx={8}
+				fill={C.surface}
+				stroke={C.text}
+				strokeWidth={1.5}
 			/>
+			<line
+				x1={PCX - 6}
+				x2={PCX + 6}
+				y1={PH.y + 7}
+				y2={PH.y + 7}
+				stroke={C.text}
+				strokeWidth={1.5}
+			/>
+			<circle cx={REC.cx} cy={REC.cy} r={2.6} fill={C.muted} opacity={0.7} />
+			{talk > 0.01 && (
+				<circle
+					cx={REC.cx}
+					cy={REC.cy}
+					r={2.6}
+					fill={C.action}
+					opacity={talk}
+				/>
+			)}
+			{op > 0 &&
+				WAVE_H.map((h, i) => {
+					const x = WAVE_X[i] ?? 0;
+					const breathe = 0.55 + 0.45 * Math.sin(t * 4.2 + i * 1.3);
+					const hh = h * (0.45 + 0.55 * talk * breathe);
+					return (
+						<rect
+							key={`w${h}-${x}`}
+							x={x - 1.3}
+							y={WAVE_Y - hh / 2}
+							width={2.6}
+							height={hh}
+							rx={1.3}
+							fill={C.muted}
+							opacity={0.75 * op}
+						/>
+					);
+				})}
 		</g>
 	);
 }
 
-const PEOPLE = [30, 74, 118];
-const PEOPLE_AT = [0.2, 0.4, 0.6];
-
-/** The recording: one waveform of pill bars under the people. */
-const WAVE = [
-	8, 14, 10, 20, 12, 16, 8, 18, 12, 22, 10, 14, 18, 8, 16, 12, 20, 10,
-];
-const WAVE_X = 14;
-const WAVE_Y = 118;
-const WAVE_AT = 0.9;
-/** The lock arrives in beat 3, after the placeholders have settled (about 7.4 s). */
-const LOCK_AT = 9.0;
-const LOCK = { h: 24, w: 28, x: 112, y: 106 };
-
-/** Bars grow in left to right, then fold toward the lock and fade as it closes. */
-function Wave({ t }: { t: number }) {
-	const fold = 0.55 * smooth((t - 9.1) / 1.2) + 0.45 * smooth((t - 12.2) / 0.9);
-	const op =
-		lerp(1, 0.25, smooth((t - 9.1) / 1.2)) * (1 - smooth((t - 12.2) / 0.9));
-	if (op <= 0 || t < WAVE_AT) return null;
-	const target = LOCK.x + LOCK.w / 2;
+/** The table: people talk, the phone records, then it slides aside to make room for the card. */
+function Table({ t }: { t: number }) {
+	const m = spring(t, MOVE_AT, 1.8);
+	const s = lerp(1, TABLE_S, m);
 	return (
-		<g opacity={op * 0.7} fill={GREY}>
-			{WAVE.map((h0, i) => {
-				const id = `${i}-${h0}`;
-				const at = WAVE_AT + i * 0.04;
-				const k = spring(t, at, 2.2);
-				if (k <= 0) return null;
-				const x0 = WAVE_X + i * 7;
-				const x = x0 + (target - x0) * fold;
-				const h = Math.max(3, h0 * k * (1 - 0.6 * fold));
-				return (
-					<rect
-						key={id}
-						x={x}
-						y={WAVE_Y - h / 2}
-						width={3}
-						height={h}
-						rx={1.5}
-						opacity={smooth((t - at) / 0.2)}
-					/>
-				);
-			})}
+		<g transform={`translate(${TABLE_TX * m} ${TABLE_TY * m}) scale(${s})`}>
+			{PX.map((x, i) => (
+				<Person
+					key={x}
+					x={x}
+					y={PERSON_Y}
+					k={spring(t, 0.15 + i * 0.15, 1.7, 0.82)}
+				/>
+			))}
+			{TALK.map((v, i) => (
+				<Voice key={v.a} x={PX[i * 2] ?? 0} y={63} t={t} a={v.a} b={v.b} />
+			))}
+			<Phone t={t} />
+			<Lock t={t} />
 		</g>
 	);
 }
 
 /**
- * A soft lock: rounded body, curved shackle. It grows in blue, the shackle drops shut,
- * then it turns grey once the recording is gone.
+ * A soft lock on the phone: rounded body, curved shackle. It grows in blue, the shackle drops
+ * shut, then it turns grey once the recording is gone.
  */
 function Lock({ t }: { t: number }) {
 	const { x, y, w, h } = LOCK;
@@ -111,7 +146,7 @@ function Lock({ t }: { t: number }) {
 			strokeLinejoin="round"
 		>
 			<path
-				d={`M${x + 7} ${y + lift} L${x + 7} ${y - 6 + lift} A7 7 0 0 1 ${x + w - 7} ${y - 6 + lift} L${x + w - 7} ${y + lift}`}
+				d={`M${x + 6} ${y + lift} L${x + 6} ${y - 6 + lift} A6 6 0 0 1 ${x + w - 6} ${y - 6 + lift} L${x + w - 6} ${y + lift}`}
 				fill="none"
 			/>
 			<rect x={x} y={y} width={w} height={h} rx={6} />
@@ -150,14 +185,14 @@ const DETAILS: Record<number, number[]> = {
 	4: [1],
 	5: [3],
 };
-const PH = 22;
+const PILL = 22;
 const ROWS: Word[][] = [0, 1, 2, 3, 4, 5].map((r) => {
 	const rand = rng(31 + r * 7);
 	const out: Word[] = [];
 	let dx = 14;
 	for (let i = 0; ; i++) {
 		const detail = DETAILS[r]?.includes(i) ?? false;
-		const w = detail ? PH : 10 + rand() * 16;
+		const w = detail ? PILL : 10 + rand() * 16;
 		const real = detail ? 14 + rand() * 8 : w;
 		if (dx + w > CW - 14) break;
 		out.push({ detail, dx, dy: 22 + r * 20, id: `${r}-${dx}`, real, w });
@@ -262,14 +297,15 @@ function Card({ t }: { t: number }) {
 	);
 }
 
-/** A gentle curved hairline from the recording into the card; it draws along its curve, fades when the recording is locked. */
+/** A gentle curved hairline from the phone into the card; it draws along its curve, fades when the recording is locked. */
 function Link({ t }: { t: number }) {
-	const k = smooth((t - 1.5) / 0.6);
+	const k = smooth((t - 2.1) / 0.5);
 	const op = 1 - smooth((t - 8.2) / 0.4);
 	if (k <= 0 || op <= 0) return null;
+	const { x, y } = PHONE_OUT;
 	return (
 		<path
-			d={`M${WAVE_X + WAVE.length * 7 + 4} ${WAVE_Y} Q${CARD_X - 6} ${WAVE_Y} ${CARD_X} ${CARD_Y + CH / 2 + 10}`}
+			d={`M${x + 3} ${y} Q${CARD_X - 8} ${y} ${CARD_X} ${CARD_Y + CH / 2 + 10}`}
 			pathLength={1}
 			strokeDasharray="1 1"
 			strokeDashoffset={1 - k}
@@ -305,21 +341,17 @@ function Sweep({ t }: { t: number }) {
 export const anonymise: Loop = {
 	draw: (t) => (
 		<g>
-			{PEOPLE.map((x, i) => (
-				<Person key={x} x={x} y={36} t={t} t0={PEOPLE_AT[i] ?? 0} />
-			))}
+			<Table t={t} />
 			<Link t={t} />
-			<Wave t={t} />
-			<Lock t={t} />
 			<Card t={t} />
 			<Sweep t={t} />
 		</g>
 	),
 	lines: () => [
-		translate`Talk freely, names and all.`,
-		translate`Personal details become placeholders.`,
-		translate`No playback, no download.`,
-		translate`Keep what was said, not names.`,
+		translate`Everyone talks as they normally would.`,
+		translate`Names and personal details are replaced.`,
+		translate`Audio playback and download are off.`,
+		translate`The ideas stay. The names don't.`,
 	],
 	out: 15.36,
 	scenes: [0, 4, 8, 12],

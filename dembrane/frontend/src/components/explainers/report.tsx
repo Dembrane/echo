@@ -1,8 +1,9 @@
 import { t as translate } from "@lingui/core/macro";
 // Explainer loop: many conversations go in, one report comes out. Every value is a function of t.
+import { CARD, ConvCard, litBy, span } from "./cast";
 import { C, clamp, type Loop, lerp, smooth, spring } from "./kit";
 
-type Box = { x: number; y: number; w: number; h: number };
+type Box = { x: number; y: number; s: number };
 
 /** One pill bar of text, revealed left to right by k; grey unless a person's own words. */
 function Pill({
@@ -84,104 +85,22 @@ function Grow({
 	);
 }
 
-const W1 = [0.92, 0.78, 0.86, 0.72];
-const W2 = [0.55, 0.66, 0.48, 0.6];
-
-/** A conversation, the same shape in every loop: rounded card, a head at its left, two short grey bars. */
-function convo(b: Box, i: number) {
-	const s = b.h / 34;
-	const bx = b.x + 30 * s;
-	const room = b.x + b.w - 12 - bx;
-	return {
-		bx,
-		hx: b.x + 15 * s,
-		hy: b.y + b.h / 2 - 5 * s,
-		s,
-		w1: room * W1[i]!,
-		w2: room * W2[i]!,
-		y1: b.y + b.h / 2 - 6,
-		y2: b.y + b.h / 2 + 3,
-	};
-}
-function Conversation({
-	b,
-	i,
-	o = 1,
-	k1 = 1,
-	k2 = 1,
-	scanY = -1,
-	scanHold = 0,
-}: {
-	b: Box;
-	i: number;
-	o?: number;
-	k1?: number;
-	k2?: number;
-	scanY?: number;
-	scanHold?: number;
-}) {
-	const c = convo(b, i);
-	// A bar turns blue the moment the scan crosses it, and eases back to grey as the scan settles.
-	const lit = (y: number) => smooth((scanY - y) / 12) * (1 - scanHold);
-	return (
-		<g opacity={o}>
-			<rect
-				x={b.x}
-				y={b.y}
-				width={b.w}
-				height={b.h}
-				rx={6}
-				fill={C.surface}
-				stroke={C.quiet}
-				strokeWidth={1}
-			/>
-			<g fill="none" stroke={C.text} strokeWidth={1.3} strokeLinecap="round">
-				<circle cx={c.hx} cy={c.hy} r={4.2 * c.s} />
-				<path
-					d={`M${c.hx - 7.5 * c.s} ${c.hy + 14 * c.s} Q${c.hx} ${c.hy + 3.5 * c.s} ${c.hx + 7.5 * c.s} ${c.hy + 14 * c.s}`}
-				/>
-			</g>
-			<Pill x={c.bx} y={c.y1} w={c.w1} k={k1} o={0.6 * (1 - lit(c.y1))} />
-			<Pill x={c.bx} y={c.y2} w={c.w2} k={k2} o={0.6 * (1 - lit(c.y2))} />
-			<Pill
-				x={c.bx}
-				y={c.y1}
-				w={c.w1}
-				k={k1}
-				fill={C.action}
-				o={0.9 * lit(c.y1)}
-			/>
-			<Pill
-				x={c.bx}
-				y={c.y2}
-				w={c.w2}
-				k={k2}
-				fill={C.action}
-				o={0.9 * lit(c.y2)}
-			/>
-		</g>
-	);
-}
-
 // Beat 1: four conversations spread out. Beats 2 to 4: the same four stacked at the left.
 const SPREAD: Box[] = [0, 1, 2, 3].map((i) => ({
-	h: 44,
-	w: 136,
-	x: 36 + (i % 2) * 152,
-	y: 34 + Math.floor(i / 2) * 60,
+	s: 1.5,
+	x: 64 + (i % 2) * 136,
+	y: 36 + Math.floor(i / 2) * 62,
 }));
-const STACK: Box[] = [0, 1, 2, 3].map((i) => ({
-	h: 34,
-	w: 104,
-	x: 12,
-	y: 8 + i * 42,
-}));
-const REPORT: Box = { h: 160, w: 188, x: 160, y: 8 };
+// Cards 0 and 2 were verified by their table: they carry the approved outcome.
+const STACK: Box[] = [6, 56, 86, 136].map((y) => ({ s: 1.1, x: 12, y }));
+const VERIFIED = [0, 2];
+const CARD_W = CARD.w * 1.1;
+const CARD_H = CARD.h * 1.1;
+const REPORT = { h: 160, w: 188, x: 160, y: 8 };
 const RX = REPORT.x + 14;
 const FULL = REPORT.x + REPORT.w - 14 - RX;
 const lerpBox = (a: Box, b: Box, k: number): Box => ({
-	h: lerp(a.h, b.h, k),
-	w: lerp(a.w, b.w, k),
+	s: lerp(a.s, b.s, k),
 	x: lerp(a.x, b.x, k),
 	y: lerp(a.y, b.y, k),
 });
@@ -196,6 +115,8 @@ const SCAN_B = 6.8;
 const SCAN_SETTLE = 7.0;
 const SCAN_FADE = 0.5;
 const WRITE_AT = 7.5;
+const OUTCOME_IN = 4.9;
+const TRACE_AT = 12.95;
 const LINK_IN = (i: number) => 6.9 + i * 0.12;
 const LINKS_OUT = 8.0;
 const DIM_AT = 8.0;
@@ -211,7 +132,7 @@ type Line = {
 	y4: number | null;
 };
 const LINES: Line[] = [
-	{ kind: "title", w: 92, y3: 20, y4: 20 },
+	{ kind: "title", w: FULL * 0.75, y3: 19, y4: 19 },
 	{ kind: "q", w: 78, y3: 40, y4: 37 },
 	{ kind: "a", w: FULL, y3: 51, y4: 47 },
 	{ kind: "a", w: FULL * 0.7, y3: 59, y4: 55 },
@@ -223,7 +144,7 @@ const LINES: Line[] = [
 	// The last answer gives its place to the second quote.
 	{ kind: "a", w: FULL * 0.4, y3: 135, y4: null },
 ];
-const lineH = (l: Line) => (l.kind === "title" ? 7 : l.kind === "q" ? 5 : 4);
+const lineH = (l: Line) => (l.kind === "title" ? 6 : l.kind === "q" ? 5 : 4);
 
 /** When each report line is written: the title and first question in beat 2, the rest in beat 3. */
 const SPEED = 520;
@@ -319,7 +240,7 @@ function Quote({
 export const report: Loop = {
 	draw: (t) => {
 		// Conversations: grow in spread out, then slide into a stack, then step back.
-		const dim = lerp(1, 0.25, smooth((t - DIM_AT) / 0.6));
+		const dimK = smooth((t - DIM_AT) / 0.6);
 		// The left column slides straight into place; the right column first drops to its row, then slides in along a free lane.
 		const boxes = SPREAD.map((a, i) => {
 			const k = spring(t, STACK_AT, 1.3, 0.86);
@@ -331,53 +252,77 @@ export const report: Loop = {
 		const scanY = lerp(4, 172, smooth((t - SCAN_A) / (SCAN_B - SCAN_A)));
 		const scanHold = smooth((t - SCAN_SETTLE) / SCAN_FADE);
 		const scanO = smooth((t - SCAN_A) / 0.25) * (1 - scanHold);
+		const trace = span(t, TRACE_AT, 14.4, 0.3, 0.4);
 		const cards = boxes.map((b, i) => {
-			const a = CARD_IN(i);
-			const last = i === 3;
-			const k1 = (t - a - 0.3) / 0.45;
-			const k2 = last ? (t - 2.05) / 1.25 : (t - a - 0.6) / 0.35;
 			const at = SPREAD[i]!;
+			const st = STACK[i]!;
+			const verified = VERIFIED.includes(i);
+			const oK = verified ? smooth((t - OUTCOME_IN - i * 0.12) / 0.4) : 0;
+			const cardLit = litBy(scanY, st.y + CARD_H / 2, t, SCAN_SETTLE);
+			// The scan reads the approved outcome too, as it passes.
+			const outLit = litBy(scanY, st.y + CARD_H + 10, t, SCAN_SETTLE);
+			const faded = dimK * (i === 0 ? 1 - trace : 1);
 			return (
 				<Grow
-					key={`card-${SPREAD[i]!.x}-${SPREAD[i]!.y}`}
-					cx={at.x + at.w / 2}
-					cy={at.y + at.h / 2}
+					key={`card-${at.x}-${at.y}`}
+					cx={at.x + (CARD.w * at.s) / 2}
+					cy={at.y + (CARD.h * at.s) / 2}
 					t={t}
-					t0={a}
+					t0={CARD_IN(i)}
 					from={0.82}
 					freq={1.9}
 				>
-					<Conversation
-						b={b}
-						i={i}
-						o={dim}
-						k1={k1}
-						k2={k2}
-						scanY={scanY}
-						scanHold={scanHold}
-					/>
+					<g transform={`translate(${b.x} ${b.y}) scale(${b.s})`}>
+						<ConvCard
+							x={0}
+							y={0}
+							k={1}
+							lit={cardLit}
+							faded={faded}
+							picked={i === 0 ? trace : 0}
+							outcome={oK}
+						/>
+						{oK > 0.99 && outLit > 0.01 && (
+							<g fill={C.action} opacity={outLit * (1 - faded * 0.75)}>
+								<rect x={14} y={CARD.h + 7} width={24} height={2.6} rx={1.3} />
+								<rect
+									x={14}
+									y={CARD.h + 11.4}
+									width={16}
+									height={2.6}
+									rx={1.3}
+								/>
+							</g>
+						)}
+					</g>
 				</Grow>
 			);
 		});
 
-		// The caret in beat 1, writing the last conversation's second line.
-		const c3 = convo(boxes[3]!, 3);
-		const pen1 = {
-			o: smooth((t - 1.85) / 0.25) * (1 - smooth((t - 3.45) / 0.35)),
-			x: c3.bx + c3.w2 * clamp((t - 2.05) / 1.25) + 4,
-			y: c3.y2,
-		};
+		// The caret in beat 1, writing each conversation as it arrives.
+		const pens = SPREAD.map((at, i) => {
+			const a = CARD_IN(i) + 0.3;
+			const end = i === 3 ? 3.45 : a + 0.35;
+			return (
+				<Pen
+					key={`pen-${at.x}-${at.y}`}
+					x={at.x + 22 * at.s + 22 * at.s + 4}
+					y={at.y + 14 * at.s}
+					o={span(t, a, end, 0.15, 0.2)}
+				/>
+			);
+		});
 
 		// Links from every conversation to the one report, drawn along their curve.
 		const linksOut = 1 - smooth((t - LINKS_OUT) / 0.5);
 		const links = STACK.map((b, i) => {
 			const k = smooth((t - LINK_IN(i)) / 0.6);
 			if (k <= 0 || linksOut <= 0) return null;
-			const y0 = b.y + b.h / 2;
+			const y0 = b.y + CARD_H / 2;
 			return (
 				<path
 					key={`link-${b.y}`}
-					d={`M${b.x + b.w + 4} ${y0} Q${REPORT.x - 8} ${y0} ${REPORT.x - 4} 88`}
+					d={`M${b.x + CARD_W + 4} ${y0} Q${REPORT.x - 8} ${y0} ${REPORT.x - 4} 88`}
 					pathLength={1}
 					strokeDasharray="1 1"
 					strokeDashoffset={1 - k}
@@ -410,7 +355,6 @@ export const report: Loop = {
 			);
 		});
 
-		const pen = pen1.o > 0.01 ? pen1 : pen2;
 		// Everything has gone a little before the loop wraps, so the last frame equals the first.
 		return (
 			<g opacity={1 - smooth((t - OUT - 0.05) / 0.45)}>
@@ -418,7 +362,7 @@ export const report: Loop = {
 				{scanO > 0.01 && (
 					<line
 						x1={STACK[0]!.x - 2}
-						x2={STACK[0]!.x + STACK[0]!.w + 2}
+						x2={STACK[0]!.x + CARD_W + 2}
 						y1={scanY}
 						y2={scanY}
 						stroke={C.action}
@@ -464,15 +408,29 @@ export const report: Loop = {
 						t0={QUOTE_IN[1]!}
 					/>
 				</Grow>
-				<Pen x={pen.x} y={pen.y} o={pen.o} />
+				{trace > 0.01 && (
+					<path
+						d={`M${RX + 2} 69 Q${RX - 50} 66 ${STACK[0]!.x + CARD_W + 3} ${STACK[0]!.y + CARD_H / 2}`}
+						fill="none"
+						stroke={C.action}
+						strokeWidth={1.5}
+						strokeLinecap="round"
+						pathLength={1}
+						strokeDasharray="1 1"
+						strokeDashoffset={1 - smooth((t - TRACE_AT - 0.1) / 0.7)}
+						opacity={trace}
+					/>
+				)}
+				{pens}
+				<Pen x={pen2.x} y={pen2.y} o={pen2.o} />
 			</g>
 		);
 	},
 	lines: () => [
-		translate`Every conversation, written down.`,
-		translate`One report across all of them.`,
-		translate`What came up, question by question.`,
-		translate`With quotes in people's own words.`,
+		translate`Every conversation becomes a transcript.`,
+		translate`One report covers all of them.`,
+		translate`Each question gets its own answer.`,
+		translate`Quotes show people's own words.`,
 	],
 	out: OUT,
 	scenes: [0.2, 4, 8, 12],

@@ -1,79 +1,19 @@
 import { t as translate } from "@lingui/core/macro";
 // Explore, animated: every value is a function of t, so any frame renders on its own. Throwaway, never committed.
+import { about, MapMini, Person, ReportMini, span, Table, Voice } from "./cast";
 import { C, clamp, type Loop, lerp, smooth, spring, win } from "./kit";
 
 const GREY = C.muted;
 
 // Beat starts; each beat's change happens inside its four seconds.
-const BEATS = [0, 4, 9.4, 12.4];
-const OUT = 15.3;
+const BEATS = [0, 4, 9.4, 12.4, 16, 19.8];
+const OUT = 23.8;
+// The first table zooms out to become one of many.
+const ZOOM = 15.5;
 
 /** Grow in from a point with a soft spring: 0 before t0, about 1 after. */
 const grow = (t: number, t0: number, freq = 1.8) =>
 	Math.max(0, spring(t, t0, freq));
-/** Scale transform about (cx, cy). */
-const about = (cx: number, cy: number, s: number) =>
-	`translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`;
-
-/** A person: head over a short rounded shoulder arc, graphite. */
-function Person({ x, y, k }: { x: number; y: number; k: number }) {
-	if (k <= 0) return null;
-	return (
-		<g
-			transform={about(x, y + 12, 0.6 + 0.4 * k)}
-			opacity={clamp(k)}
-			fill="none"
-			stroke={C.text}
-			strokeWidth={1.5}
-			strokeLinecap="round"
-			strokeLinejoin="round"
-		>
-			<circle cx={x} cy={y} r={6.5} />
-			<path
-				d={`M${x - 11} ${y + 23} Q${x - 11} ${y + 11} ${x} ${y + 11} Q${x + 11} ${y + 11} ${x + 11} ${y + 23}`}
-			/>
-		</g>
-	);
-}
-
-/** A voice: a short row of graphite wave pills that breathe slowly while the person talks. */
-function Voice({
-	x,
-	y,
-	hs,
-	t,
-	live,
-	phase,
-}: {
-	x: number;
-	y: number;
-	hs: number[];
-	t: number;
-	live: number;
-	phase: number;
-}) {
-	if (live <= 0.01) return null;
-	return (
-		<g fill={C.text} opacity={0.75 * live}>
-			{hs.map((h, i) => {
-				const breathe =
-					0.55 + 0.45 * (0.5 + 0.5 * Math.sin(t * 3.2 + phase + i * 1.9));
-				const hh = Math.max(4, h * breathe * live);
-				return (
-					<rect
-						key={`voice-${x}-${h}-${i * 5.5}`}
-						x={x + i * 5.5}
-						y={y - hh / 2}
-						width={3}
-						height={hh}
-						rx={1.5}
-					/>
-				);
-			})}
-		</g>
-	);
-}
-
 // The group, always talking once it is in: the conversation never stops in this loop.
 const PEOPLE = [
 	{ at: 0.15, x: 28, y: 112 },
@@ -81,14 +21,13 @@ const PEOPLE = [
 	{ at: 0.45, x: 104, y: 112 },
 ];
 function Group({ t }: { t: number }) {
-	const live = smooth((t - 1.0) / 0.5);
 	return (
 		<g>
 			{PEOPLE.map((p) => (
-				<Person key={p.x} x={p.x} y={p.y} k={grow(t, p.at, 1.6)} />
+				<Person key={p.x} x={p.x} y={p.y + 11} k={grow(t, p.at, 1.6)} />
 			))}
-			<Voice x={36} y={94} hs={[6, 12, 8, 14]} t={t} live={live} phase={0} />
-			<Voice x={112} y={94} hs={[10, 6, 12]} t={t} live={live} phase={1.7} />
+			<Voice x={48} y={94} t={t} a={1.0} b={ZOOM} s={0.7} />
+			<Voice x={124} y={94} t={t} a={1.3} b={ZOOM} s={0.6} />
 		</g>
 	);
 }
@@ -174,7 +113,7 @@ function Ripple({
 	const k = clamp((t - t0) / 0.6);
 	if (k <= 0 || k >= 1) return null;
 	const e = 1 - (1 - k) ** 2;
-	const pad = 2 + e * 7;
+	const pad = 2 + e * 3;
 	return (
 		<rect
 			x={cx - w / 2 - pad}
@@ -511,8 +450,22 @@ function NewAngle({ t }: { t: number }) {
 		y: (1 - u) ** 2 * p0.y + 2 * (1 - u) * u * c.y + u * u * p1.y,
 	});
 	const us = [0.08, 0.36, 0.64, 0.92];
+	const end = grow(t, 14.35, 2);
 	return (
 		<g fill={GREY} opacity={0.85}>
+			{end > 0.01 && (
+				<rect
+					x={p1.x - 8}
+					y={p1.y + 4}
+					width={16}
+					height={7}
+					rx={3.5}
+					fill={C.surface}
+					stroke={C.quiet}
+					strokeWidth={1}
+					opacity={clamp(end)}
+				/>
+			)}
 			{us.map((u, i) => {
 				const k = grow(t, 12.75 + i * 0.38, 2);
 				if (k <= 0) return null;
@@ -534,25 +487,220 @@ function NewAngle({ t }: { t: number }) {
 	);
 }
 
-export const explore: Loop = {
-	draw: (t) => (
-		<g transform="translate(0 9)">
-			<Group t={t} />
-			<Trail t={t} />
-			<Link t={t} />
-			<Reply t={t} />
-			<NewAngle t={t} />
-			<Phone t={t} />
-			<Fingertip t={t} />
+// Beat 5: four tables, each with its own trail that branches into two ideas as its Explore reply arrives.
+// Every table owns a 36 px band; its two ideas sit one above and one below the table's line, so no branch
+// crosses another pill and no pill touches another.
+const TABLES = [
+	{ at: 16.1, to: "map", y: 34 },
+	{ at: 16.9, to: "map", y: 70 },
+	{ at: 17.7, to: "report", y: 106 },
+	{ at: 18.5, to: "report", y: 142 },
+];
+const IDEA_X = [164, 204];
+const IDEA_DY = [-9, 9];
+const TX = 12;
+const BRANCH_FROM = 108;
+const SMALL = [
+	{ w: 8, x: 60 },
+	{ w: 5, x: 71 },
+	{ w: 9, x: 79 },
+	{ w: 6, x: 91 },
+];
+// Beat 6, step one: the ideas come back to the table and settle beside it.
+const BACK = 19.95;
+const BACK_DUR = 0.9;
+const BACK_STAGGER = 0.08;
+const SETTLE_X = 86;
+const SETTLE_DY = [-5, 5];
+// Step two, after the session: copies of the insights go to Map and Report.
+const MAP_AT = { x: 290, y: 14 };
+const REPORT_AT = { x: 296, y: 84 };
+const LAND_X = 276;
+const LAND_Y = [24, 40, 98, 114];
+const FLY = [21.25, 21.4, 21.9, 22.05];
+const FLY_DUR = 0.7;
+const AWAY = { dur: 0.5, from: 23.25 };
+const IDEA_PILL = { h: 7, w: 18 };
+
+function Idea({
+	x,
+	y,
+	s = 1,
+	op = 1,
+	stroke = C.text,
+}: {
+	x: number;
+	y: number;
+	s?: number;
+	op?: number;
+	stroke?: string;
+}) {
+	return (
+		<rect
+			x={-9}
+			y={-3.5}
+			width={IDEA_PILL.w}
+			height={IDEA_PILL.h}
+			rx={3.5}
+			fill={C.surface}
+			stroke={stroke}
+			strokeWidth={1}
+			opacity={op}
+			transform={`translate(${x} ${y}) scale(${s})`}
+		/>
+	);
+}
+
+function Explored({ t }: { t: number }) {
+	if (t < ZOOM || t > OUT + 0.3) return null;
+	const zoom = smooth((t - ZOOM) / 0.9);
+	const gone = 1 - smooth((t - AWAY.from) / AWAY.dur);
+	return (
+		<g opacity={gone}>
+			{TABLES.map((tb, ti) => {
+				const blue =
+					smooth((t - tb.at) / 0.15) * (1 - smooth((t - tb.at - 0.7) / 0.2));
+				const k = ti === 0 ? zoom : grow(t, tb.at - 0.4, 1.6);
+				const back = BACK + ti * BACK_STAGGER;
+				const ret = smooth((t - back) / BACK_DUR);
+				const trail =
+					smooth((t - tb.at + 0.2) / 0.5) * (1 - smooth((t - back) / 0.3));
+				return (
+					<g key={tb.y}>
+						<Table x={TX} y={tb.y} t={t} k={k} talk={1} dot={blue} lit={blue} />
+						<g fill={GREY} opacity={0.6 * trail}>
+							{SMALL.map((b) => (
+								<rect
+									key={b.x}
+									x={b.x}
+									y={tb.y - 1.75}
+									width={Math.max(2, b.w * trail)}
+									height={3.5}
+									rx={1.75}
+								/>
+							))}
+						</g>
+						{IDEA_X.map((ex, bi) => {
+							const ey = tb.y + IDEA_DY[bi];
+							const s0 = tb.at + 0.15 + bi * 0.18;
+							const draw = smooth((t - s0) / 0.6);
+							if (draw <= 0) return null;
+							const stroke = blue > 0.01 ? C.action : GREY;
+							const pill = grow(t, s0 + 0.5, 2);
+							// Coming back: the line fades and the pill glides straight home, staying in its half of the band.
+							const sx = SETTLE_X;
+							const sy = tb.y + SETTLE_DY[bi];
+							const px = lerp(ex, sx, ret);
+							const py = lerp(ey, sy, ret);
+							const rest = ret <= 0.001;
+							const lineOp = 1 - smooth(ret / 0.3);
+							return (
+								<g key={ex}>
+									{lineOp > 0.01 && (
+										<path
+											d={`M${BRANCH_FROM} ${tb.y} Q${(BRANCH_FROM + ex - 9) / 2} ${tb.y} ${ex - 9} ${ey}`}
+											fill="none"
+											stroke={stroke}
+											strokeWidth={1.2}
+											strokeLinecap="round"
+											pathLength={1}
+											strokeDasharray="1 1"
+											strokeDashoffset={1 - draw}
+											opacity={lineOp}
+										/>
+									)}
+									{pill > 0.01 && (
+										<Idea
+											x={rest ? ex : px}
+											y={rest ? ey : py}
+											s={rest ? Math.max(0.3, pill) : 1}
+											op={clamp(pill)}
+											stroke={ret > 0.3 ? C.text : stroke}
+										/>
+									)}
+								</g>
+							);
+						})}
+					</g>
+				);
+			})}
 		</g>
-	),
+	);
+}
+
+/** Beat 6, after the session: copies of each table's insights glide into Map and Report, each lighting blue once. */
+function Gather({ t }: { t: number }) {
+	if (t < 20.9 || t > OUT + 0.3) return null;
+	const mapK = grow(t, 21.0, 1.6);
+	const repK = grow(t, 21.65, 1.6);
+	const away = 1 - smooth((t - AWAY.from) / AWAY.dur);
+	const mapLit = span(t, 21.95, 22.4, 0.15, 0.3);
+	const repLit = span(t, 22.6, 23.05, 0.15, 0.3);
+	return (
+		<g>
+			<g opacity={away}>
+				<MapMini {...MAP_AT} k={mapK} lit={mapLit} />
+				<ReportMini {...REPORT_AT} k={repK} lit={repLit} />
+			</g>
+			{TABLES.flatMap((tb, ti) =>
+				IDEA_DY.map((dy, bi) => {
+					const u = smooth((t - FLY[ti]) / FLY_DUR);
+					if (u <= 0 || u >= 1) return null;
+					const x0 = SETTLE_X + 20;
+					const y0 = tb.y + SETTLE_DY[bi];
+					const x1 = LAND_X;
+					const y1 = LAND_Y[ti] + (bi === 0 ? -4 : 4);
+					const x = lerp(x0, x1, u);
+					const y = lerp(y0, y1, u);
+					return (
+						<Idea
+							key={`${tb.y}-${dy}`}
+							x={x}
+							y={y}
+							s={lerp(0.3, 1, smooth(u / 0.25)) * lerp(1, 0.6, u)}
+							op={smooth(u / 0.2) * (1 - smooth((u - 0.8) / 0.2))}
+						/>
+					);
+				}),
+			)}
+		</g>
+	);
+}
+
+export const explore: Loop = {
+	draw: (t) => {
+		const zk = smooth((t - ZOOM) / 0.9);
+		const scene = 1 - smooth((zk - 0.55) / 0.45);
+		return (
+			<g transform="translate(0 9)">
+				{t < ZOOM + 1.2 && (
+					<g
+						opacity={scene}
+						transform={`translate(${1.4 * zk} ${-12 * zk}) scale(${lerp(1, 0.38, zk)})`}
+					>
+						<Group t={t} />
+						<Trail t={t} />
+						<Link t={t} />
+						<Reply t={t} />
+						<NewAngle t={t} />
+						<Phone t={t} />
+						<Fingertip t={t} />
+					</g>
+				)}
+				<Explored t={t} />
+				<Gather t={t} />
+			</g>
+		);
+	},
 	lines: () => [
-		translate`Talk a while together.`,
-		translate`Tap ECHO, then Explore.`,
-		translate`Get a reply that digs deeper.`,
-		translate`Talk on from a new angle.`,
+		translate`Talk it through at your table.`,
+		translate`Tap ECHO, then tap Explore.`,
+		translate`Get a reply that goes deeper.`,
+		translate`Take the conversation somewhere new.`,
+		translate`Every table explores more ideas.`,
+		translate`Leave with new insights to explore.`,
 	],
 	out: OUT,
 	scenes: BEATS,
-	seconds: 16,
+	seconds: 24.3,
 };
