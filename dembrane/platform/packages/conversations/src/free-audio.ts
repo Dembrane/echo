@@ -14,7 +14,7 @@ import {
 import { AudioError, fileFormatOf, type Measured, measureSeconds } from "@dembrane/audio";
 import { BadRequestError, StatusError } from "@dembrane/core";
 import { type Db, schema } from "@dembrane/db";
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import type { ConversationsDeps } from "./deps";
 import type { PipelineDeps } from "./pipeline/steps";
 import { type ChunkRow, conversationStore } from "./storage";
@@ -96,15 +96,32 @@ export async function hasAudioChunk(db: Db, conversationId: string): Promise<boo
 
 const MEASURE_URL_EXPIRES_S = 600;
 const FILE_TOLERANCE_S = 1;
+// Confirm measures inside the request, under the API's 255 s idle timeout.
+export const UPLOAD_MEASURE_TIMEOUT_MS = 120_000;
+// A live chunk is about 30 s; past this it fails open like any measuring failure.
+export const LIVE_MEASURE_TIMEOUT_MS = 15_000;
 
-async function measureUpload(d: ConversationsDeps, key: string, bytes: number) {
+function deadline<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new AudioError("transient", `measuring timed out after ${ms} ms`)),
+      ms,
+    );
+  });
+  return Promise.race([work, late]).finally(() => clearTimeout(timer));
+}
+
+async function measureUpload(d: ConversationsDeps, key: string, bytes: number, live = false) {
+  const t = d.settings.measureTimeoutMs;
+  const ms = live ? (t?.live ?? LIVE_MEASURE_TIMEOUT_MS) : (t?.upload ?? UPLOAD_MEASURE_TIMEOUT_MS);
   try {
     const source = {
       url: d.audio.presignDownload(key, { expiresInSeconds: MEASURE_URL_EXPIRES_S }),
       format: fileFormatOf(key),
       name: key,
     };
-    return await measureSeconds(d.media, source, bytes);
+    return await deadline(measureSeconds(d.media, source, bytes), ms);
   } catch (err) {
     if (err instanceof AudioError && err.terminal)
       return { unreadable: true, reason: err.message } satisfies Measured;
@@ -130,15 +147,32 @@ export interface CountedChunk {
   readonly audioSeconds: number | null;
   readonly error: string | null;
 }
-/** Writes the chunk inside the caller's locked transaction. */
-export type InsertChunk = (tx: Db, row: CountedChunk) => Promise<ChunkRow>;
+/** The issued chunk id, and how to write it inside the caller's locked transaction. */
+export interface ChunkWrite {
+  readonly id: string;
+  readonly insert: (tx: Db, row: CountedChunk) => Promise<ChunkRow>;
+}
 
-async function drop(d: ConversationsDeps, conversationId: string, key: string) {
-  await d.audio
-    .delete(key)
-    .catch((err) =>
-      d.logger.error({ err, key, conversationId }, "deleting a refused upload failed"),
-    );
+// A confirm retried while the first one ran: the chunk it already wrote.
+async function written(tx: Db, conversationId: string, id: string): Promise<ChunkRow | null> {
+  const row = await conversationStore(tx).chunk(id);
+  return row?.conversation_id === conversationId ? { ...row, pending_text: null } : null;
+}
+
+// Never deletes an object a chunk row points at.
+async function drop(d: ConversationsDeps, conversationId: string, key: string, chunkId: string) {
+  const c = schema.conversation_chunk;
+  try {
+    const held = await d.db
+      .select({ id: c.id })
+      .from(c)
+      .where(or(eq(c.id, chunkId), eq(c.path, d.audioUrls.fileUrl(key))))
+      .limit(1);
+    if (held.length) return;
+    await d.audio.delete(key);
+  } catch (err) {
+    d.logger.error({ err, key, conversationId }, "deleting a refused upload failed");
+  }
 }
 
 /**
@@ -150,7 +184,7 @@ export async function reserveUpload(
   conv: { id: string; project_id: string },
   key: string,
   bytes: number,
-  insert: InsertChunk,
+  write: ChunkWrite,
 ): Promise<ChunkRow | null> {
   const pre = await measureFailed(d, conv.id, async () => {
     const a = await allowanceForProject(d.db, conv.project_id, d.now());
@@ -163,7 +197,7 @@ export async function reserveUpload(
   const fileLimit = limits.audio_seconds_conversation;
   const monthLimit = limits.audio_seconds_month;
   const refuse = async (err: Error): Promise<never> => {
-    await drop(d, conv.id, key);
+    await drop(d, conv.id, key, write.id);
     throw err;
   };
   // Also for a conversation that already has audio: only the recording project takes files.
@@ -184,6 +218,8 @@ export async function reserveUpload(
     );
   try {
     return await withAllowanceLock(d.db, a, async (tx) => {
+      const prior = await written(tx, conv.id, write.id);
+      if (prior) return prior;
       const t = await take(tx, a, "audio_seconds", reserved, monthLimit);
       if (!t.ok)
         throw freeLimitError("audio_month", {
@@ -191,12 +227,15 @@ export async function reserveUpload(
           remaining_seconds: Math.max(0, t.limit - t.used),
         });
       // The file joins whatever the conversation already holds.
-      if ((await recordedSeconds(tx, conv.id)) + measured.seconds > fileLimit + FILE_TOLERANCE_S)
+      if (
+        (await conversationSeconds(tx, conv.id)) + measured.seconds >
+        fileLimit + FILE_TOLERANCE_S
+      )
         throw freeLimitError("audio_conversation", {
           file_seconds: reserved,
           limit_seconds: fileLimit,
         });
-      return insert(tx, { audioSeconds: measured.seconds, error: null });
+      return write.insert(tx, { audioSeconds: measured.seconds, error: null });
     });
   } catch (err) {
     if (isFreeLimit(err)) return refuse(err as Error);
@@ -207,6 +246,7 @@ export async function reserveUpload(
 // The recorder cuts at 30 s (60 s at most); a longer "live" chunk is counted as an upload.
 export const LIVE_CHUNK_MAX_SECONDS = 90;
 
+// Metered seconds; a live chunk confirm could not measure counts 0 until the pipeline meters it.
 export async function conversationSeconds(db: Db, conversationId: string): Promise<number> {
   const { conversation_chunk } = schema;
   const [row] = await db
@@ -218,20 +258,6 @@ export async function conversationSeconds(db: Db, conversationId: string): Promi
 
 // The recorder's 30 s chunk is under this at any speech bitrate; larger never passes unmeasured.
 export const LIVE_CHUNK_BYTES = 1024 * 1024;
-
-/** Metered seconds, plus each live chunk still waiting for its length at the most one holds. */
-export async function recordedSeconds(db: Db, conversationId: string): Promise<number> {
-  const c = schema.conversation_chunk;
-  const [row] = await db
-    .select({
-      s: sql<string>`coalesce(sum(${c.audio_seconds}), 0) + ${sql.raw(String(LIVE_CHUNK_MAX_SECONDS))} * count(*) filter (
-        where ${c.audio_seconds} is null and ${c.path} is not null and ${c.error} is null
-          and ${c.transcript} is null and ${c.source} = ${LIVE_SOURCE})`,
-    })
-    .from(c)
-    .where(eq(c.conversation_id, conversationId));
-  return Number(row?.s ?? 0);
-}
 
 interface LiveVerdict {
   readonly refuse: AudioRefusal | null;
@@ -245,7 +271,7 @@ async function liveVerdict(
   limits: FreeLimits,
   conversationId: string,
 ): Promise<LiveVerdict> {
-  const conv = await recordedSeconds(db, conversationId);
+  const conv = await conversationSeconds(db, conversationId);
   const used = (await usedThisPeriod(db, a)).audio_seconds;
   const convLimit = limits.audio_seconds_conversation;
   const monthLimit = limits.audio_seconds_month;
@@ -264,12 +290,16 @@ async function liveVerdict(
 export async function liveChunkCheck(
   d: Pick<ConversationsDeps, "db" | "now" | "logger">,
   conv: { id: string; project_id: string },
+  opts: { home?: boolean } = {},
 ): Promise<AudioRefusal | null> {
   let v: LiveVerdict;
   try {
     const a = await allowanceForProject(d.db, conv.project_id, d.now());
     if (!a) return null;
-    v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
+    // A started recording with no audio yet still belongs to the recording project.
+    if (opts.home && (await recordingProject(d.db, a)) !== conv.project_id)
+      v = { refuse: "recording_project", stop: null, conv: 0 };
+    else v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
   } catch (err) {
     d.logger.error(
       { err, conversationId: conv.id, signal: "free_audio.live_check_failed" },
@@ -292,14 +322,14 @@ export async function confirmLiveChunk(
   conv: { id: string; project_id: string },
   key: string,
   bytes: number,
-  insert: InsertChunk,
+  write: ChunkWrite,
 ): Promise<{ chunk: ChunkRow; recordingStop: AudioRefusal | null }> {
   const failed = (signal: string) => (err: unknown) => {
     d.logger.error({ err, conversationId: conv.id, signal }, "live chunk check failed");
     return null;
   };
   try {
-    const measured = await measureUpload(d, key, bytes).catch(
+    const measured = await measureUpload(d, key, bytes, true).catch(
       failed("free_audio.live_measure_failed"),
     );
     const s = measured && "seconds" in measured ? measured.seconds : null;
@@ -307,11 +337,13 @@ export async function confirmLiveChunk(
       failed("free_audio.live_check_failed"),
     );
     return await withAllowanceLock(d.db, a, async (tx) => {
+      const prior = await written(tx, conv.id, write.id);
       const v = limits
         ? await tx
             .transaction((sp) => liveVerdict(sp as unknown as Db, a, limits, conv.id))
             .catch(failed("free_audio.live_check_failed"))
         : null;
+      if (prior) return { chunk: prior, recordingStop: v ? (v.refuse ?? v.stop) : null };
       if (v?.refuse) throw freeLimitError(v.refuse);
       let row: CountedChunk = { audioSeconds: null, error: null };
       if (v && limits && s !== null) {
@@ -337,10 +369,10 @@ export async function confirmLiveChunk(
             row = fits ? { ...row, audioSeconds: s } : { ...row, error: FREE_LIMIT_SKIPPED };
         }
       }
-      return { chunk: await insert(tx, row), recordingStop: v?.stop ?? null };
+      return { chunk: await write.insert(tx, row), recordingStop: v?.stop ?? null };
     });
   } catch (err) {
-    if (isFreeLimit(err)) await drop(d, conv.id, key);
+    if (isFreeLimit(err)) await drop(d, conv.id, key, write.id);
     throw err;
   }
 }
@@ -420,7 +452,7 @@ export async function meterLiveChunk(
       const convLimit = limits.audio_seconds_conversation + FILE_TOLERANCE_S;
       const fits =
         s <= convLimit &&
-        (await recordedSeconds(db, chunk.conversation_id)) <= convLimit &&
+        (await conversationSeconds(db, chunk.conversation_id)) <= convLimit &&
         (await take(db, a, "audio_seconds", seconds, limits.audio_seconds_month)).ok;
       if (fits) return "counted";
       await db

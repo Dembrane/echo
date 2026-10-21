@@ -69,6 +69,31 @@ export function tickStore(sql: Sql) {
       return r as Row;
     },
 
+    /** Runs still marked running since before `before`, on loops with no tick alive. */
+    async stuckRuns(before: string, limit: number): Promise<Row[]> {
+      return sql`select r.* from agent_loop_run r
+        where r.status = 'running' and r.started_at < ${before}
+          and not exists (select 1 from platform_rate_limit k
+            where k.key in ('popcorn:alive:' || r.loop_id, 'popcorn:run:' || r.loop_id)
+              and k.reset_at > now())
+        order by r.started_at limit ${limit}`;
+    },
+
+    /** When the loop's next run after `after` started, other than `id`; null when none did. */
+    async nextRunStart(loopId: string, id: string, after: Date): Promise<Date | null> {
+      const [r] = await sql`select min(started_at) as at from agent_loop_run
+        where loop_id = ${loopId} and id <> ${id} and started_at > ${after.toISOString()}`;
+      return (r?.at as Date | null) ?? null;
+    },
+
+    /** Ends a stuck run once; false when it finished or started again since it was read. */
+    async closeStuckRun(id: string, before: string, detail: string, now: string): Promise<boolean> {
+      const rows =
+        await sql`update agent_loop_run set status = 'error', detail = ${detail}, finished_at = ${now}
+        where id = ${id} and status = 'running' and started_at < ${before} returning id`;
+      return rows.length > 0;
+    },
+
     async insertVersion(v: {
       reportId: string;
       configId: string | null;

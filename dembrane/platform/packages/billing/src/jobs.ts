@@ -309,6 +309,8 @@ export async function runTierPrewarning(d: BillingJobDeps): Promise<void> {
 }
 
 const CANDIDATE_WINDOW_MS = 35 * 86_400_000;
+// Refused uploads and rounding leave the ledger short of the limit: under a minute left is used up.
+const AUDIO_MONTH_USED_UP_SLACK_SECONDS = 60;
 
 /** Tells a free account's owners and admins, once per period, that its recording hours are used. */
 export async function runFreeAudioOut(d: BillingJobDeps): Promise<void> {
@@ -320,7 +322,7 @@ export async function runFreeAudioOut(d: BillingJobDeps): Promise<void> {
   const limit = (await freeLimits(db, clock, d.logger)).audio_seconds_month;
   const since = new Date(now.getTime() - CANDIDATE_WINDOW_MS);
   for (const c of await store.freeAudioCandidates(since)) {
-    if (c.amount < limit) continue;
+    if (limit - c.amount >= AUDIO_MONTH_USED_UP_SLACK_SECONDS) continue;
     try {
       const acc = await store.account(c.accountId);
       if (!acc || acc.deleted_at || !isFreeTier(acc.tier)) continue;

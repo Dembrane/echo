@@ -7,6 +7,7 @@ import { buildBundle } from "../bundle";
 import { applyPublishedObjects, type DeckAnalysis } from "../deck";
 import { publishNudge } from "../events";
 import type { PopcornAllowance } from "../free";
+import { popcornTick } from "../jobs";
 import {
   asIdTruthy,
   dict,
@@ -315,13 +316,43 @@ async function pauseUsedUp(d: TickDeps, loop: Row, at: Date): Promise<void> {
   });
 }
 
+/** Whether the saved session holds a phrase or a view read in [from, until). */
+export function readBetween(state: unknown, from: Date, until: Date | null): boolean {
+  const s = dict(state);
+  const within = (v: unknown) => {
+    const t = parseDt(v)?.getTime() ?? -1;
+    return t >= from.getTime() && (until === null || t < until.getTime());
+  };
+  const read = Object.values(dict(s.conversations)).some(
+    (c) => !truthy(dict(c).error) && within(dict(c).extracted_at),
+  );
+  return read || Object.values(dict(dict(s.analysis).updated)).some(within);
+}
+
+/**
+ * A run that never finished is given back unless the session kept something it read before
+ * the loop's next run. `startedBefore` refunds only a row not started again since.
+ */
+async function refundUnread(d: TickDeps, run: Row, startedBefore?: string): Promise<void> {
+  if (!d.free) return;
+  const id = String(run.id);
+  const loopId = String(run.loop_id);
+  const startedAt = parseDt(run.started_at);
+  if (startedAt) {
+    const until = parseDt(await d.ticks.nextRunStart(loopId, id, startedAt));
+    const loop = await d.store.loop(loopId);
+    if (readBetween(loop?.popcorn_state, startedAt, until)) return;
+  }
+  await d.free.refund(id, d.now(), startedBefore === undefined ? undefined : { startedBefore });
+}
+
 /** A crashed attempt's analysis never finished: its count comes back and its row is closed. */
 async function settleInterrupted(d: TickDeps, loopId: string, attemptId: string, at: Date) {
   if (!d.free) return;
   try {
     const prior = await d.ticks.run(attemptId);
     if (!prior || asIdTruthy(prior.loop_id) !== loopId || prior.status !== RUNNING) return;
-    await d.free.refund(attemptId, d.now());
+    await refundUnread(d, prior);
     await createRun(d, {
       loopId,
       status: "error",
@@ -335,6 +366,31 @@ async function settleInterrupted(d: TickDeps, loopId: string, attemptId: string,
       "popcorn interrupted attempt not settled",
     );
   }
+}
+
+/** Past the tick job's deadline, plus a margin: a run this old is no longer alive. */
+export const STUCK_RUN_MS =
+  popcornTick.expireInSeconds * 1000 * (popcornTick.retryLimit + 1) + 30 * 60_000;
+
+/**
+ * A counted run whose step never ran again (DBOS cancelled or set it aside) ends in error
+ * and gives its analysis back once, unless the session kept something it read.
+ */
+export async function settleStuckRuns(d: TickDeps): Promise<number> {
+  const now = d.now();
+  const before = pyIso(new Date(now.getTime() - STUCK_RUN_MS));
+  let closed = 0;
+  for (const run of await d.ticks.stuckRuns(before, 50)) {
+    try {
+      if (!(await d.ticks.closeStuckRun(String(run.id), before, "Interrupted", utcNowIso(now))))
+        continue;
+      closed++;
+      await refundUnread(d, run, before);
+    } catch (exc) {
+      d.logger.warn({ err: errText(exc), run_id: run.id }, "stuck popcorn run not settled");
+    }
+  }
+  return closed;
 }
 
 /** Whether the session is live at `at`: on, and its window not yet over. */
@@ -1550,7 +1606,10 @@ export async function runPopcornTick(
       return { status: "no_op", run };
     }
 
-    if (d.free) {
+    // A read that only asks for the map is counted by the map's own allowance.
+    const analyses =
+      extractionWork.length > 0 || analysisOwed || owed.length > 0 || tickKind === "rerun";
+    if (d.free && analyses) {
       // A re-run of an attempt that counted gives that count back first.
       const prior = await d.ticks.run(attemptId);
       if (prior && asIdTruthy(prior.loop_id) === loopId) await d.free.refund(attemptId, d.now());

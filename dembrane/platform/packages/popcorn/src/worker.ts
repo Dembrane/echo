@@ -33,7 +33,13 @@ import { dict, list, orStr, pyIso } from "./py";
 import type { PopcornFlags } from "./service";
 import { client, popcornStore, type Row } from "./storage";
 import { PopcornModel } from "./tick/model";
-import { reconcileMissingTicks, runPopcornTick, type SimilarFor, type TickDeps } from "./tick/run";
+import {
+  reconcileMissingTicks,
+  runPopcornTick,
+  type SimilarFor,
+  settleStuckRuns,
+  type TickDeps,
+} from "./tick/run";
 import { tickStore } from "./tick/storage";
 
 /**
@@ -54,7 +60,7 @@ export const popcornScheduledTicks = defineJob("popcorn.scheduled-ticks", z.obje
   expireInSeconds: 5 * 60,
 });
 
-/** Every minute: an active loop without a pending row gets one. */
+/** Every minute: an active loop without a pending row gets one, and stuck runs end. */
 export const popcornReconcileTicks = defineJob("popcorn.reconcile-ticks", z.object({}), {
   policy: "singleton",
   retryLimit: 0,
@@ -316,8 +322,11 @@ export function popcornWorker(deps: PopcornWorkerDeps): {
         if (n) deps.logger.info({ ticks: n }, "popcorn ticks dispatched");
       });
       await queue.work(popcornReconcileTicks, { concurrency: 1 }, async () => {
-        const n = await reconcileMissingTicks(tickDeps(deps, "popcorn-reconcile", analysis));
+        const d = tickDeps(deps, "popcorn-reconcile", analysis);
+        const n = await reconcileMissingTicks(d);
         if (n) deps.logger.info({ loops: n }, "backfilled popcorn tick rows");
+        const stuck = await settleStuckRuns(d);
+        if (stuck) deps.logger.warn({ stuck }, "stuck popcorn runs ended in error");
       });
       await queue.schedule(popcornScheduledTicks, "* * * * *", {});
       await queue.schedule(popcornReconcileTicks, "* * * * *", {});

@@ -148,7 +148,8 @@ async function recordedMigrations(sql: postgres.Sql): Promise<Set<number>> {
 }
 
 /**
- * Runs the pending migrations in journal order in one transaction and records each as
+ * Runs the pending migrations in journal order in one transaction (retried on a lock
+ * timeout) and records each as
  * drizzle's migrator does (same table, hash and created_at), so drizzle-kit and older
  * builds read the same history.
  */
@@ -156,14 +157,34 @@ async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<
   await sql`create schema if not exists drizzle`;
   await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
   if (!pending.length) return;
-  await drizzle(sql).transaction(async (tx) => {
-    for (const m of pending) {
-      for (const statement of m.sql) await tx.execute(raw.raw(statement));
-      await tx.execute(
-        raw`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`,
-      );
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await drizzle(sql).transaction(async (tx) => {
+        // Fail fast instead of queueing live traffic behind a lock we wait for.
+        await tx.execute(raw.raw(`set local lock_timeout = '${LOCK_TIMEOUT}'`));
+        for (const m of pending) {
+          for (const statement of m.sql) await tx.execute(raw.raw(statement));
+          await tx.execute(
+            raw`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`,
+          );
+        }
+      });
+      return;
+    } catch (err) {
+      // The whole run rolled back, so trying again is safe.
+      if (!isLockTimeout(err) || attempt >= LOCK_ATTEMPTS) throw err;
+      await Bun.sleep(LOCK_BACKOFF_MS * attempt + Math.random() * LOCK_BACKOFF_MS);
     }
-  });
+  }
+}
+
+const LOCK_TIMEOUT = "5s";
+export const LOCK_ATTEMPTS = 3;
+const LOCK_BACKOFF_MS = 1000;
+
+function isLockTimeout(err: unknown): boolean {
+  const e = err as { code?: string; cause?: { code?: string } } | null;
+  return (e?.code ?? e?.cause?.code) === "55P03";
 }
 
 async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {

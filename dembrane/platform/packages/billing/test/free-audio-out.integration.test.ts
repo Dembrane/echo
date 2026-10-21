@@ -154,7 +154,7 @@ run("the hours-run-out notice", () => {
 
   test("below the limit, paid, or an old period: nothing", async () => {
     const below = await seed();
-    await used(below.acc, "2026-10-01T00:00:00Z", 17999, OCT);
+    await used(below.acc, "2026-10-01T00:00:00Z", 17940, OCT);
     const paid = await seed("innovator");
     await used(paid.acc, "2026-10-01T00:00:00Z", 18000, OCT);
     const old = await seed();
@@ -163,6 +163,16 @@ run("the hours-run-out notice", () => {
     await runFreeAudioOut(x.d);
     expect(x.mailer.sent).toHaveLength(0);
     for (const s of [below, paid, old]) expect(await notices(s.acc)).toHaveLength(0);
+  });
+
+  test("a month left under a minute short is used up", async () => {
+    // Refused uploads and rounding leave the ledger a few seconds below the limit.
+    const s = await seed();
+    await used(s.acc, "2026-10-01T00:00:00Z", 17941, OCT);
+    const x = deps(OCT);
+    await runFreeAudioOut(x.d);
+    expect(x.mailer.sent).toHaveLength(2);
+    expect(await notices(s.acc)).toHaveLength(2);
   });
 
   test("a downgraded account counts from its downgrade", async () => {

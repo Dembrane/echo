@@ -705,6 +705,34 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
 	});
 
+	it("shows any other 402 as a voice error, not the free wall", async () => {
+		transcribeMock.mockRejectedValueOnce(
+			Object.assign(new Error("402"), {
+				isAxiosError: true,
+				response: {
+					data: { code: "conversation.locked", detail: "locked" },
+					status: 402,
+				},
+			}),
+		);
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+
+		const alert = await screen.findByTestId("chat-voice-error");
+		expect(alert.textContent).toContain(
+			"Something went wrong while transcribing",
+		);
+		expect(
+			screen.queryByText(/You were trying to use your voice in chat/),
+		).toBeNull();
+	});
+
 	it("says the microphone is blocked rather than failing quietly", async () => {
 		Object.defineProperty(globalThis.navigator, "mediaDevices", {
 			configurable: true,

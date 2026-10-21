@@ -12,6 +12,7 @@ import { ChunkError } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import {
   type AudioRefusal,
+  type ChunkWrite,
   type CountedChunk,
   confirmLiveChunk,
   hasAudioChunk,
@@ -78,9 +79,11 @@ export async function uploadUrl(
     }
     const { conv, open } = await openConversation(d, conversationId);
     if (!open) throw new StatusError(500, "upload.url_failed");
-    // A conversation's first audio starts a recording; uploads always do.
-    const live = conv.source === "PORTAL_TEXT" || conv.source === LIVE_SOURCE;
-    if (live && (await hasAudioChunk(d.db, conversationId))) await liveChunkCheck(d, conv);
+    // Initiate gated a live recording, so its chunks get the grace; other first audio is a start.
+    if (conv.source === LIVE_SOURCE)
+      await liveChunkCheck(d, conv, { home: !(await hasAudioChunk(d.db, conversationId)) });
+    else if (conv.source === "PORTAL_TEXT" && (await hasAudioChunk(d.db, conversationId)))
+      await liveChunkCheck(d, conv);
     else await requireAudioStart(d, conv.project_id);
     const chunkId = newId();
     const safe = d.audioUrls.keyOf(filename);
@@ -158,24 +161,27 @@ export async function confirmUpload(
     fileUrl: input.fileUrl,
   };
   // A free chunk is written in the locked transaction that counted it, under the issued id.
-  const insert = (tx: Db, row: CountedChunk) =>
-    addChunk(
-      { ...d, db: tx },
-      {
-        ...chunkInput,
-        audioSeconds: row.audioSeconds,
-        error: row.error ?? (tooSmall ? "Audio not playable" : null),
-      },
-      { chunkId: input.chunkId, tx: txOf(tx) },
-    );
+  const write: ChunkWrite = {
+    id: input.chunkId,
+    insert: (tx: Db, row: CountedChunk) =>
+      addChunk(
+        { ...d, db: tx },
+        {
+          ...chunkInput,
+          audioSeconds: row.audioSeconds,
+          error: row.error ?? (tooSmall ? "Audio not playable" : null),
+        },
+        { chunkId: input.chunkId, tx: txOf(tx) },
+      ),
+  };
   try {
     if (input.source === LIVE_SOURCE) {
       const free = await freeLive(d, conversationId);
-      if (free) return await confirmLiveChunk(d, free.a, free.conv, key, size, insert);
+      if (free) return await confirmLiveChunk(d, free.a, free.conv, key, size, write);
     } else if (!tooSmall) {
       const conv = await store.conversation(conversationId);
       if (!conv) throw new NotFoundError("conversation.not_found");
-      const chunk = await reserveUpload(d, conv, key, size, insert);
+      const chunk = await reserveUpload(d, conv, key, size, write);
       if (chunk) return { chunk, recordingStop: null };
     }
     const chunk = await addChunk(d, {

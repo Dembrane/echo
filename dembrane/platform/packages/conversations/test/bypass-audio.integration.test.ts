@@ -50,6 +50,7 @@ run("bypass: free audio limits", () => {
   let media: Media = new LocalMedia();
   const bucket = localBucket();
   const transcriber = new FakeTranscriber();
+  let timeouts = { upload: 120_000, live: 15_000 };
 
   beforeAll(async () => {
     const url = await freshDatabase("conv_bypass_audio_test");
@@ -78,6 +79,9 @@ run("bypass: free audio limits", () => {
         monitorEnabled: false,
         webhooksEnabled: false,
         dashboardUrl: "http://dashboard.test",
+        get measureTimeoutMs() {
+          return timeouts;
+        },
       },
       now: () => new Date(),
     };
@@ -113,6 +117,7 @@ run("bypass: free audio limits", () => {
   beforeEach(() => {
     invalidateFreeLimits();
     media = new LocalMedia();
+    timeouts = { upload: 120_000, live: 15_000 };
   });
 
   async function project(org: string, acc: string) {
@@ -410,6 +415,173 @@ run("bypass: free audio limits", () => {
     await post(key, 15, "wav");
     const res = await confirm(cid, chunk_id, key, "DASHBOARD_UPLOAD");
     expect(res.status).toBe(402);
+  });
+
+  // Measuring that rejects (failing) or never answers (hanging); everything else works.
+  function brokenMedia(how: "failing" | "hanging") {
+    const inner = new LocalMedia();
+    return new Proxy(inner, {
+      get(target, prop, receiver) {
+        if (prop === "decodedSeconds" || prop === "probe")
+          return () =>
+            how === "hanging"
+              ? new Promise(() => {})
+              : Promise.reject(new AudioError("transient", "media away"));
+        const v = Reflect.get(target, prop, receiver);
+        return typeof v === "function" ? v.bind(target) : v;
+      },
+    });
+  }
+
+  test("a retried upload confirm that would be refused keeps the saved file", async () => {
+    const { p, cid } = await account("DASHBOARD_UPLOAD");
+    await fill(p, 30);
+    const { chunkId: cId, key } = await issued(cid, "wav");
+    await post(key, 50, "wav");
+    // Both pass the early duplicate check; the second sees the first's 50 s under the lock.
+    const [a, b] = await Promise.all([
+      confirm(cid, cId, key, "DASHBOARD_UPLOAD"),
+      confirm(cid, cId, key, "DASHBOARD_UPLOAD"),
+    ]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(await chunkId(a)).toBe(cId);
+    expect(await chunkId(b)).toBe(cId);
+    expect(await bucket.storage.size(key)).not.toBeNull();
+    expect(
+      await sql`select id from conversation_chunk where conversation_id = ${cid}`,
+    ).toHaveLength(1);
+    expect(await used(p)).toBe(80);
+  });
+
+  test("a retried live confirm that would be refused keeps the saved chunk", async () => {
+    const { p, cid } = await account();
+    await seeded(p, cid, CONV_LIMIT + GRACE - 20);
+    const { chunkId: cId, key } = await issued(cid, "webm");
+    await post(key, 30, "webm");
+    const [a, b] = await Promise.all([
+      confirm(cid, cId, key, "PORTAL_AUDIO"),
+      confirm(cid, cId, key, "PORTAL_AUDIO"),
+    ]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(await bucket.storage.size(key)).not.toBeNull();
+    const rows =
+      await sql`select id from conversation_chunk where conversation_id = ${cid} and id = ${cId}`;
+    expect(rows).toHaveLength(1);
+    expect(await used(p)).toBe(CONV_LIMIT + GRACE - 20 + 30);
+  });
+
+  test("live chunks confirmed while measuring fails never stop the recording", async () => {
+    const { p, cid } = await account();
+    await seeded(p, cid, 10);
+    const bytes = await (await audioOf(30, "webm")).arrayBuffer();
+    media = brokenMedia("failing");
+    for (let i = 0; i < 50; i++) {
+      const { chunkId: cId, key } = await issued(cid, "webm");
+      await bucket.storage.put(key, new Blob([bytes]));
+      const res = await confirm(cid, cId, key, "PORTAL_AUDIO");
+      expect(res.status).toBe(200);
+      expect(((await res.json()) as { recording_stop?: string }).recording_stop).toBeUndefined();
+    }
+    const url = await app.request(`/api/participant/conversations/${cid}/get-upload-url`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        filename: "rec.webm",
+        content_type: "audio/webm",
+        conversation_id: cid,
+      }),
+    });
+    expect(url.status).toBe(200);
+    expect(await used(p)).toBe(10);
+  });
+
+  test("measuring an upload that never answers is a retryable 503", async () => {
+    const { p, cid } = await account("DASHBOARD_UPLOAD");
+    const { chunkId: cId, key } = await issued(cid, "wav");
+    await post(key, 5, "wav");
+    timeouts = { upload: 300, live: 300 };
+    media = brokenMedia("hanging");
+    const res = await confirm(cid, cId, key, "DASHBOARD_UPLOAD");
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as { code?: string }).code).toBe("upload.measure_failed");
+    expect(await bucket.storage.size(key)).not.toBeNull();
+    expect(
+      await sql`select id from conversation_chunk where conversation_id = ${cid}`,
+    ).toHaveLength(0);
+    expect(await used(p)).toBe(0);
+    media = new LocalMedia();
+    const again = await confirm(cid, cId, key, "DASHBOARD_UPLOAD");
+    expect(again.status).toBe(200);
+    expect(await used(p)).toBe(5);
+  }, 10_000);
+
+  test("measuring a live chunk that never answers keeps the chunk", async () => {
+    const { p, cid } = await account();
+    const { chunkId: cId, key } = await issued(cid, "webm");
+    await post(key, 5, "webm");
+    timeouts = { upload: 300, live: 300 };
+    media = brokenMedia("hanging");
+    const res = await confirm(cid, cId, key, "PORTAL_AUDIO");
+    expect(res.status).toBe(200);
+    const [row] = await sql`select audio_seconds from conversation_chunk where id = ${cId}`;
+    expect(row?.audio_seconds).toBeNull();
+    expect(await used(p)).toBe(0);
+  }, 10_000);
+
+  const startLive = async (p: string) => {
+    const res = await app.request(`/api/participant/projects/${p}/conversations/initiate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "P", pin: "", source: "PORTAL_AUDIO" }),
+    });
+    expect(res.status).toBe(200);
+    return ((await res.json()) as { id: string }).id;
+  };
+  const uploadUrl = (cid: string) =>
+    app.request(`/api/participant/conversations/${cid}/get-upload-url`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        filename: "rec.webm",
+        content_type: "audio/webm",
+        conversation_id: cid,
+      }),
+    });
+
+  test("a month spent right after Record still takes the first chunk with a stop", async () => {
+    const { p } = await account();
+    const cid = await startLive(p);
+    await fill(p, MONTH_LIMIT);
+    const url = await uploadUrl(cid);
+    expect(url.status).toBe(200);
+    const { chunk_id, file_url } = (await url.json()) as { chunk_id: string; file_url: string };
+    const key = bucket.urls.keyOf(file_url);
+    await post(key, 30, "webm");
+    const res = await confirm(cid, chunk_id, key, "PORTAL_AUDIO");
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { recording_stop?: string }).recording_stop).toBe("audio_month");
+    expect(await used(p)).toBe(MONTH_LIMIT + 30);
+  });
+
+  test("a started recording with no audio yet is refused past the grace", async () => {
+    const { p } = await account();
+    const cid = await startLive(p);
+    await fill(p, MONTH_LIMIT + GRACE);
+    const res = await uploadUrl(cid);
+    expect(res.status).toBe(402);
+    expect(((await res.json()) as { detail: { limit?: string } }).detail.limit).toBe("audio_month");
+  });
+
+  test("a started recording with no audio stays in the recording project", async () => {
+    const { org, acc, p } = await account();
+    const cid = await startLive(p);
+    const other = await project(org, acc);
+    await sql`update billing_account set recording_project_id = ${other} where id = ${acc}`;
+    const res = await uploadUrl(cid);
+    expect(res.status).toBe(402);
+    expect(((await res.json()) as { detail: { limit?: string } }).detail.limit).toBe(
+      "recording_project",
+    );
   });
 
   // A7: project-billed stateless transcription is refused on free outright.

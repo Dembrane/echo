@@ -29,7 +29,8 @@ export interface FreePopcorn {
 
 export interface PopcornAllowance {
   admit(projectId: string, now: Date): Promise<PopcornAdmit>;
-  refund(runId: string, now: Date): Promise<boolean>;
+  /** `startedBefore` gives back only a run not started again since. */
+  refund(runId: string, now: Date, opts?: { startedBefore: string }): Promise<boolean>;
   status(projectId: string, now: Date): Promise<FreePopcorn | null>;
   requireRoom(projectId: string, now: Date): Promise<void>;
   cadenceFloorMinutes(projectId: string, now: Date): Promise<number>;
@@ -57,7 +58,12 @@ export function popcornAllowance(db: Db): PopcornAllowance {
       return { ok: true, periodStart: a.periodStart.toISOString(), accountId: a.accountId };
     },
 
-    async refund(runId, now) {
+    async refund(runId, now, opts) {
+      const stamped = and(
+        eq(agent_loop_run.id, runId),
+        isNotNull(agent_loop_run.free_period_start),
+        opts ? sql`${agent_loop_run.started_at} < ${opts.startedBefore}::timestamptz` : undefined,
+      );
       const [r] = await db
         .select({
           projectId: agent_loop.project_id,
@@ -66,12 +72,8 @@ export function popcornAllowance(db: Db): PopcornAllowance {
         })
         .from(agent_loop_run)
         .leftJoin(agent_loop, eq(agent_loop.id, agent_loop_run.loop_id))
-        .where(and(eq(agent_loop_run.id, runId), isNotNull(agent_loop_run.free_period_start)));
+        .where(stamped);
       if (!r) return false;
-      const stamped = and(
-        eq(agent_loop_run.id, runId),
-        isNotNull(agent_loop_run.free_period_start),
-      );
       const a = r.projectId ? await allowanceForProject(db, r.projectId, now) : null;
       // Legacy rows without an account match any.
       const charged =

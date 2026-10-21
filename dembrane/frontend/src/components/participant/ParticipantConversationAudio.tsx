@@ -271,6 +271,12 @@ export const ParticipantConversationAudio = () => {
 		stoppedRecordingTime,
 	};
 
+	// Sticky: a stop resets recordingTime, and a limit stop may leave no chunk.
+	const [startedHere, setStartedHere] = useState(false);
+	useEffect(() => {
+		if (isRecording || isStarting) setStartedHere(true);
+	}, [isRecording, isStarting]);
+
 	// Recorded time when the current run started, so the beacon can report how
 	// long THIS run has been going (segment_seconds); resets on resume.
 	const segmentBaselineRef = useRef(0);
@@ -771,7 +777,8 @@ export const ParticipantConversationAudio = () => {
 	if (
 		recordingClosed({
 			chunkCount: chunks.data?.length,
-			recordingStarted: isRecording || isStarting || recordingTime > 0,
+			recordingStarted:
+				startedHere || isRecording || isStarting || recordingTime > 0,
 			takingRecordings,
 		})
 	) {

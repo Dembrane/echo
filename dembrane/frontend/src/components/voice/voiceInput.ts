@@ -6,6 +6,7 @@
  */
 
 import axios from "axios";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 /** Hard stop on how long one voice note may run.
  *
@@ -99,13 +100,14 @@ export const captureErrorKind = (error: unknown): VoiceErrorKind => {
  * The status codes are the endpoint's own: 413 is its size ceiling, 502 is a
  * TranscriptionError from the pipeline, 403 is write access it does not have,
  * and 404 is a project it is not a member of (the access ladder answers
- * "not found" rather than confirming the project exists).
+ * "not found" rather than confirming the project exists). Only the free-tier
+ * 402 is the free wall; any other 402 stays generic.
  */
 export const transcribeErrorKind = (error: unknown): VoiceErrorKind => {
 	if (!axios.isAxiosError(error)) return "unknown";
 	const status = error.response?.status;
 	if (status === undefined) return "network";
-	if (status === 402) return "free_limit";
+	if (status === 402 && isFreeTierLimitError(error)) return "free_limit";
 	if (status === 413) return "too_large";
 	if (status === 400) return "empty";
 	if (status === 403) return "not_allowed";

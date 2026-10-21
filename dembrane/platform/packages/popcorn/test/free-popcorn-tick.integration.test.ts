@@ -21,7 +21,13 @@ import type { Json } from "../src/py";
 import { popcornRoutes } from "../src/routes";
 import { finishReadState, goLive, type PopcornDeps, popcornDeps } from "../src/service";
 import { client, popcornStore } from "../src/storage";
-import { enqueueNextIfDue, runPopcornTick, type TickDeps } from "../src/tick/run";
+import {
+  enqueueNextIfDue,
+  runPopcornTick,
+  STUCK_RUN_MS,
+  settleStuckRuns,
+  type TickDeps,
+} from "../src/tick/run";
 import { tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
 import { freshDatabase } from "./fixtures/tick/seed";
@@ -48,9 +54,15 @@ run("free popcorn in the tick", () => {
     );
 
   // crash: the process dies after admitting, so nothing after it is written or given back.
+  // crashAfterRead: it dies once the read is saved, before the run is closed.
   const deps = (
     completer: FakeCompleter,
-    o: { workflowId?: string; failErrorRow?: boolean; crash?: boolean } = {},
+    o: {
+      workflowId?: string;
+      failErrorRow?: boolean;
+      crash?: boolean;
+      crashAfterRead?: boolean;
+    } = {},
   ): TickDeps => {
     const base = tickDeps(
       {
@@ -68,6 +80,8 @@ run("free popcorn in the tick", () => {
     );
     const failDeck = failExtraction || o.crash;
     const failRow = o.failErrorRow || o.crash;
+    const closeFails = (status: string) =>
+      (failRow && status === "error") || (o.crashAfterRead && status !== "running");
     // A deck write that fails after the read was admitted fails the whole tick.
     const store = {
       ...base.store,
@@ -79,23 +93,24 @@ run("free popcorn in the tick", () => {
     const ticks = {
       ...base.ticks,
       insertRun: (v: Parameters<TickDeps["ticks"]["insertRun"]>[0]) => {
-        if (failRow && v.status === "error") throw new Error("run write failed");
+        if (closeFails(v.status)) throw new Error("run write failed");
         return base.ticks.insertRun(v);
       },
       replaceRun: (v: Parameters<TickDeps["ticks"]["replaceRun"]>[0]) => {
-        if (failRow && v.status === "error") throw new Error("run write failed");
+        if (closeFails(v.status)) throw new Error("run write failed");
         return base.ticks.replaceRun(v);
       },
     } as TickDeps["ticks"];
     const allowance = popcornAllowance(database.db);
-    const free = o.crash
-      ? {
-          ...allowance,
-          refund: async () => {
-            throw new Error("worker gone");
-          },
-        }
-      : allowance;
+    const free =
+      o.crash || o.crashAfterRead
+        ? {
+            ...allowance,
+            refund: async () => {
+              throw new Error("worker gone");
+            },
+          }
+        : allowance;
     return { ...base, store, ticks, free, heartbeatMs: 1000 };
   };
 
@@ -450,6 +465,177 @@ run("free popcorn in the tick", () => {
     const running = await sql`select id from agent_loop_run
       where loop_id = ${s.loopId} and status = 'running'`;
     expect(running.length).toBe(0);
+  });
+
+  const crashOnce = async (
+    s: { loopId: string },
+    o: { crash?: boolean; crashAfterRead?: boolean },
+  ) => {
+    const workflowId = `popcorn-tick-task:${newId()}`;
+    const crashed = await Promise.resolve(
+      runPopcornTick(deps(fake(), { workflowId, ...o }), s.loopId, "scheduled"),
+    ).then(
+      () => null,
+      (e) => e,
+    );
+    expect(crashed).toBeInstanceOf(Error);
+    return workflowId;
+  };
+  // DBOS cancelled it (set aside, deadline): the step never runs again.
+  const abandon = (loopId: string) =>
+    sql`update agent_loop_run set started_at = now() - make_interval(secs => ${STUCK_RUN_MS / 1000 + 60})
+      where loop_id = ${loopId} and status = 'running'`;
+  const runRows = async (loopId: string) =>
+    sql`select status, detail, free_period_start from agent_loop_run where loop_id = ${loopId}`;
+
+  test("a counted run that never ran again is given back once by the sweep", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the bridge needs lights.");
+    await crashOnce(s, { crash: true });
+    expect(await ledger(s.projectId)).toBe(1);
+    await abandon(s.loopId);
+    expect(await settleStuckRuns(deps(fake()))).toBe(1);
+    expect(await ledger(s.projectId)).toBe(0);
+    const [row] = await runRows(s.loopId);
+    expect(row?.status).toBe("error");
+    expect(row?.detail).toBe("Interrupted");
+    expect(row?.free_period_start).toBeNull();
+    expect((await popcornStore(sql).latestRun(s.loopId))?.status).toBe("error");
+    // A later analysis takes again; a second sweep gives nothing more back.
+    await popcornAllowance(database.db).admit(s.projectId, new Date());
+    expect(await settleStuckRuns(deps(fake()))).toBe(0);
+    expect(await ledger(s.projectId)).toBe(1);
+  });
+
+  test("the sweep keeps the count of a stuck run whose read was saved", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the library should open on Sundays.");
+    await crashOnce(s, { crashAfterRead: true });
+    expect(await ledger(s.projectId)).toBe(1);
+    await abandon(s.loopId);
+    expect(await settleStuckRuns(deps(fake()))).toBe(1);
+    expect(await ledger(s.projectId)).toBe(1);
+    const [row] = await runRows(s.loopId);
+    expect(row?.status).toBe("error");
+    expect(row?.free_period_start).not.toBeNull();
+  });
+
+  test("the sweep leaves a recent run and a run whose loop is still beating", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the pool is too cold.");
+    await crashOnce(s, { crash: true });
+    expect(await settleStuckRuns(deps(fake()))).toBe(0);
+    await abandon(s.loopId);
+    await sql`insert into platform_rate_limit (key, count, reset_at)
+      values (${`popcorn:alive:${s.loopId}`}, 1, now() + interval '90 seconds')`;
+    expect(await settleStuckRuns(deps(fake()))).toBe(0);
+    expect(await ledger(s.projectId)).toBe(1);
+    expect((await runRows(s.loopId))[0]?.status).toBe("running");
+    await sql`delete from platform_rate_limit where key = ${`popcorn:alive:${s.loopId}`}`;
+    expect(await settleStuckRuns(deps(fake()))).toBe(1);
+    expect(await ledger(s.projectId)).toBe(0);
+  });
+
+  test("a crash after the read was saved stays counted when the step runs again", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the tram should stop here.");
+    const workflowId = await crashOnce(s, { crashAfterRead: true });
+    expect(await ledger(s.projectId)).toBe(1);
+    const again = await runPopcornTick(deps(fake(), { workflowId }), s.loopId, "scheduled");
+    expect(again.status).toBe("no_op");
+    expect(await ledger(s.projectId)).toBe(1);
+  });
+
+  const secondConversation = async (projectId: string, text: string) => {
+    const conv = newId();
+    await sql`insert into conversation (id, project_id, participant_name, created_at, duration)
+      values (${conv}, ${projectId}, 'Table 2', now() - interval '1 hour', 600)`;
+    await say(conv, text);
+  };
+
+  test("a stuck run that read nothing is given back though later ticks on the loop read", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the dunes need fences.");
+    await crashOnce(s, { crash: true });
+    await abandon(s.loopId);
+    const later = await runPopcornTick(deps(fake()), s.loopId, "manual", newId());
+    expect(later.status).toBe("ok");
+    expect(await ledger(s.projectId)).toBe(2);
+    expect(await settleStuckRuns(deps(fake()))).toBe(1);
+    expect(await ledger(s.projectId)).toBe(1);
+  });
+
+  test("a stuck run that read stays counted though later ticks on the loop read too", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the canal needs a lock.");
+    await crashOnce(s, { crashAfterRead: true });
+    await abandon(s.loopId);
+    await secondConversation(s.projectId, "Table 2 says the mill should reopen.");
+    expect((await runPopcornTick(deps(fake()), s.loopId, "manual", newId())).status).toBe("ok");
+    expect(await ledger(s.projectId)).toBe(2);
+    expect(await settleStuckRuns(deps(fake()))).toBe(1);
+    expect(await ledger(s.projectId)).toBe(2);
+  });
+
+  test("a re-run gives back an attempt that read nothing though other ticks read meanwhile", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the station needs a roof.");
+    const workflowId = await crashOnce(s, { crash: true });
+    expect((await runPopcornTick(deps(fake()), s.loopId, "manual", newId())).status).toBe("ok");
+    expect(await ledger(s.projectId)).toBe(2);
+    const again = await runPopcornTick(deps(fake(), { workflowId }), s.loopId, "scheduled");
+    expect(again.status).toBe("no_op");
+    expect(await ledger(s.projectId)).toBe(1);
+  });
+
+  test("the sweep leaves a run a recovered attempt counted again after the close", async () => {
+    const s = await seed("free", { status: "active" });
+    await say(s.conv, "Table 1 says the quay is too short.");
+    await crashOnce(s, { crash: true });
+    await abandon(s.loopId);
+    const base = deps(fake());
+    // The recovered attempt gave its old count back and took a new one: the ledger holds 1.
+    const racing: TickDeps = {
+      ...base,
+      ticks: {
+        ...base.ticks,
+        closeStuckRun: async (...a: Parameters<TickDeps["ticks"]["closeStuckRun"]>) => {
+          const closed = await base.ticks.closeStuckRun(...a);
+          await sql`update agent_loop_run set status = 'running', started_at = now(),
+            free_period_start = ${new Date(period()).toISOString()} where id = ${a[0]}`;
+          return closed;
+        },
+      } as TickDeps["ticks"],
+    };
+    expect(await settleStuckRuns(racing)).toBe(1);
+    expect(await ledger(s.projectId)).toBe(1);
+    const [row] = await runRows(s.loopId);
+    expect(row?.free_period_start).not.toBeNull();
+  });
+
+  test("a read that only refreshes the map takes no analysis", async () => {
+    const s = await seed("free", { blocks: ["popcorn", "map"] });
+    const maps: string[] = [];
+    const withMap = (): TickDeps => ({
+      ...deps(fake()),
+      requestMap: async (projectId) => {
+        maps.push(projectId);
+      },
+    });
+    expect((await runPopcornTick(withMap(), s.loopId, "manual", newId())).status).toBe("ok");
+    expect(await ledger(s.projectId)).toBe(1);
+    expect(maps.length).toBe(1);
+    // The conversations are read; only the map is behind them.
+    await sql`update agent_loop set popcorn_state = jsonb_set(popcorn_state::jsonb, '{map_fingerprint}', '"older"')::json
+      where id = ${s.loopId}`;
+    expect((await runPopcornTick(withMap(), s.loopId, "manual", newId())).status).toBe("ok");
+    expect(maps.length).toBe(2);
+    expect(await ledger(s.projectId)).toBe(1);
+    // New content is an analysis and a map.
+    await say(s.conv, "Table 1 says the harbour needs a ferry.");
+    expect((await runPopcornTick(withMap(), s.loopId, "manual", newId())).status).toBe("ok");
+    expect(maps.length).toBe(3);
+    expect(await ledger(s.projectId)).toBe(2);
   });
 
   test("a failure whose error row cannot be written still gives the count back", async () => {

@@ -9,6 +9,7 @@ import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
 
 const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
+	isRecording: false,
 	taking: false as boolean | undefined,
 }));
 
@@ -42,7 +43,7 @@ vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 		getChunkHistory: () => [],
 		hadInterruption: false,
 		isPaused: false,
-		isRecording: false,
+		isRecording: state.isRecording,
 		isStarting: false,
 		permissionError: null,
 		recordingTime: 0,
@@ -114,23 +115,25 @@ beforeAll(() => {
 
 afterEach(() => {
 	cleanup();
+	state.isRecording = false;
 });
 
-const renderPage = () =>
-	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<MemoryRouter initialEntries={["/p-1/conversation/c-1"]}>
-					<Routes>
-						<Route
-							path="/:projectId/conversation/:conversationId"
-							element={<ParticipantConversationAudio />}
-						/>
-					</Routes>
-				</MemoryRouter>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+const page = () => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider>
+			<MemoryRouter initialEntries={["/p-1/conversation/c-1"]}>
+				<Routes>
+					<Route
+						path="/:projectId/conversation/:conversationId"
+						element={<ParticipantConversationAudio />}
+					/>
+				</Routes>
+			</MemoryRouter>
+		</MantineProvider>
+	</I18nProvider>
+);
+
+const renderPage = () => render(page());
 
 it("shows the not-taking page for an empty conversation on a closed project", () => {
 	state.taking = false;
@@ -154,4 +157,17 @@ it("shows the recorder on a project taking recordings", () => {
 	renderPage();
 	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
 	expect(screen.getByTestId("portal-audio-record-button")).toBeTruthy();
+});
+
+// A 402 on the first chunk stops the recorder (time back to 0, no chunk), then a
+// focus refetch closes the project: the page must stay, not swap to not-taking.
+it("keeps the page after a recording here stopped with no chunk on a now-closed project", () => {
+	state.taking = true;
+	state.chunks = [];
+	state.isRecording = true;
+	const { rerender } = renderPage();
+	state.isRecording = false;
+	state.taking = false;
+	rerender(page());
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
 });

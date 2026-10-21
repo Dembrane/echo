@@ -30,6 +30,8 @@ export interface ConversationSettings {
   readonly dashboardUrl: string;
   /** What the transcription profile improves once a conversation ends: recorded ones, uploaded ones. */
   readonly improves?: { readonly recordings: boolean; readonly uploads: boolean };
+  /** How long confirm waits for a free upload's or live chunk's length; defaults in free-audio. */
+  readonly measureTimeoutMs?: { readonly upload: number; readonly live: number };
 }
 
 /** Everything the conversation routes need; built once by the API, faked in tests. */
