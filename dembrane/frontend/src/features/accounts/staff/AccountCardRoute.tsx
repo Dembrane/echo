@@ -197,6 +197,19 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 						<Trans>Review and send</Trans>
 					</Menu.Item>
 				)}
+				{doc.kind === "offer" &&
+					["sent", "viewed", "declined"].includes(doc.status) && (
+						<Menu.Item
+							onClick={() =>
+								navigate(
+									`/admin/accounts/${orgId}/documents/${doc.id}?revise=1`,
+								)
+							}
+							data-testid="doc-revise"
+						>
+							<Trans>Revise</Trans>
+						</Menu.Item>
+					)}
 				{doc.status === "draft" &&
 					doc.kind !== "offer" &&
 					doc.requires_signature && (
@@ -347,6 +360,7 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 									)}
 									<Text size="xs" c="dimmed" truncate>
 										{documentKindLabel(doc.kind)} ·{" "}
+										{doc.version > 1 && `${t`Version ${doc.version}`} · `}
 										{formatDate(doc.signed_at ?? doc.sent_at, i18n.locale) ||
 											t`Not sent`}
 										{doc.signer?.email ? ` · ${doc.signer.email}` : ""}

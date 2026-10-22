@@ -893,4 +893,107 @@ run("an offer draft, and the invoice request after the signature", () => {
     );
     expect(cleared.content?.processing_terms).toBeUndefined();
   });
+
+  test("a staff change keeps a title of its own and the currency when they are not given", async () => {
+    const doc = await draft(w.orgId, {
+      reference: "OFFER-KEEP",
+      title: "Pilot for Testdorp",
+      currency: "USD",
+    });
+    expect(doc.title).toBe("Pilot for Testdorp");
+    const path = `${S()}/offers/${doc.id}`;
+    const { currency: _c, ...noCurrency } = offer({ reference: null, person_name: "Bo" });
+    const kept = K.DocumentDetail.parse((await call(w, "PUT", path, "staff", noCurrency)).data);
+    expect(kept.title).toBe("Pilot for Testdorp");
+    expect(kept.currency).toBe("USD");
+    expect(kept.content?.currency).toBe("USD");
+    expect(kept.content?.person_name).toBe("Bo");
+    // Given, they change; a generated title follows the new words.
+    const plain = await draft(w.orgId, { reference: "OFFER-GEN" });
+    expect(plain.title).toBe("Yearly license offer OFFER-GEN");
+    const moved = K.DocumentDetail.parse(
+      (
+        await call(w, "PUT", `${S()}/offers/${plain.id}`, "staff", {
+          ...offer({ reference: null, language: "nl" }),
+          currency: "GBP",
+        })
+      ).data,
+    );
+    expect(moved.title).toBe("Offerte jaarlicentie OFFER-GEN");
+    expect(moved.currency).toBe("GBP");
+  });
+
+  test("revising a sent offer: the new version replaces it under the same reference and title", async () => {
+    const first = await draft(w.orgId, {
+      template: "custom",
+      reference: "OFFER-REV",
+      title: "Pilot for Testdorp",
+      vat_treatment: "reverse_charge",
+      items: [
+        {
+          description: "Licence",
+          quantity: 3,
+          unit: "months",
+          unit_price_cents: 40000,
+          vat_rate_bps: 0,
+        },
+      ],
+      amendments: [{ title: "Start", body: "The pilot starts on the first of the month." }],
+    });
+    await send(first.id);
+    const revised = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ template: "custom", reference: "OFFER-REV", external_ref: null, send: false }),
+          supersedes_id: first.id,
+          vat_treatment: "reverse_charge",
+          items: [
+            {
+              description: "Licence",
+              quantity: 3,
+              unit: "months",
+              unit_price_cents: 30000,
+              vat_rate_bps: 0,
+            },
+          ],
+          amendments: [{ title: "Start", body: "The pilot starts on the first of the month." }],
+        })
+      ).data,
+    ).document;
+    expect(revised.version).toBe(2);
+    expect(revised.reference).toBe("OFFER-REV");
+    expect(revised.title).toBe("Pilot for Testdorp");
+    expect(revised.content?.vat_treatment).toBe("reverse_charge");
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("void");
+    const row = await store.document(w.db, w.orgId, revised.id);
+    expect(row?.supersedesId).toBe(first.id);
+    expect(row?.externalRef).toBe("deal-900");
+  });
+
+  test("staff make a new organisation with its contact, and it takes an offer", async () => {
+    const body = {
+      organisation_name: "Voorbeeld Holding (sample)",
+      contact_email: "Jan@Voorbeeld.example",
+      contact_name: "Jan Jansen",
+      language: "en",
+    };
+    for (const who of ["admin", "member", "outsider"] as const)
+      expect((await call(w, "POST", "/api/v2/admin/accounts", who, body)).status).toBe(403);
+    expect(
+      (await call(w, "POST", "/api/v2/admin/accounts", "staff", { ...body, contact_email: "x" }))
+        .status,
+    ).toBe(422);
+    const r = await call(w, "POST", "/api/v2/admin/accounts", "staff", body);
+    expect(r.status).toBe(201);
+    const made = K.CreateAccountResponse.parse(r.data);
+    expect(made.created).toBe(true);
+    const card = K.AccountCard.parse((await call(w, "GET", S(made.org_id), "staff")).data);
+    expect(card.organisation.name).toBe("Voorbeeld Holding (sample)");
+    expect(card.organisation.account_stage).toBe("prospect");
+    expect(card.members.map((m) => [m.email, m.role])).toEqual([
+      ["jan@voorbeeld.example", "admin"],
+    ]);
+    const doc = await draft(made.org_id, { reference: "OFFER-NEW" });
+    expect(doc.status).toBe("draft");
+  });
 });

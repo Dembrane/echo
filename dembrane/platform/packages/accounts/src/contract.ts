@@ -878,10 +878,13 @@ export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task
 
 /**
  * PUT .../offers/:docId replaces what a draft offer says, in place: the document id, its
- * reference and its staff page stay. `reference`, `date` and `external_ref` keep the
- * draft's value when absent. A sent offer answers 409.
+ * reference and its staff page stay. `reference`, `date`, `external_ref`, `currency` and a
+ * title of its own keep the draft's value when absent. A sent offer answers 409.
  */
-export const UpdateOfferRequest = PushOfferRequest.omit({ send: true, supersedes_id: true });
+export const UpdateOfferRequest = PushOfferRequest.omit({
+  send: true,
+  supersedes_id: true,
+}).extend({ currency: Currency.optional() });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),

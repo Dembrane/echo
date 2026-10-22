@@ -16,10 +16,11 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { openPdf } from "../api/client";
 import {
 	useAccountCard,
@@ -62,7 +63,13 @@ function DocumentPage() {
 	const pdf = usePdfData(doc.data?.file_url, doc.data?.sha256);
 	const fileHref = usePdfHref(doc.data?.file_url);
 	const send = useAccountsMutation("sendDocument", { orgId: orgId ?? "" });
+	const [params, setParams] = useSearchParams();
 	const [editing, setEditing] = useState(false);
+	// The account card's "Revise" lands here with ?revise=1, so the new version opens over the old.
+	const revising = params.get("revise") === "1";
+	const setRevising = (on: boolean) =>
+		setParams(on ? { revise: "1" } : {}, { replace: true });
+	const navigate = useI18nNavigate();
 	const [confirming, setConfirming] = useState(false);
 	const [emailOpen, setEmailOpen] = useState(false);
 	useDocumentTitle(doc.data ? `${doc.data.title} | dembrane` : "dembrane");
@@ -78,10 +85,14 @@ function DocumentPage() {
 	const d = doc.data;
 	const draft = d.status === "draft";
 	const draftOffer = draft && d.kind === "offer";
+	// A sent offer is fixed; a new version replaces it until it is signed.
+	const revisable =
+		d.kind === "offer" && ["sent", "viewed", "declined"].includes(d.status);
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
 		d.reference,
+		d.version > 1 ? t`Version ${d.version}` : null,
 		d.total_cents === null
 			? null
 			: t`${formatMoney(d.total_cents, d.currency, i18n.locale)} incl. VAT`,
@@ -156,6 +167,15 @@ function DocumentPage() {
 									<Trans>Send offer</Trans>
 								</Button>
 							</>
+						)}
+						{revisable && (
+							<Button
+								variant="default"
+								onClick={() => setRevising(true)}
+								data-testid="offer-revise"
+							>
+								<Trans>Revise</Trans>
+							</Button>
 						)}
 						{draft && !draftOffer && d.requires_signature && (
 							<Button
@@ -283,6 +303,16 @@ function DocumentPage() {
 					orgId={orgId}
 					orgName={orgName}
 					draft={d}
+				/>
+			)}
+			{revisable && (
+				<PushOfferModal
+					opened={revising}
+					onClose={() => setRevising(false)}
+					orgId={orgId}
+					orgName={orgName}
+					revise={d}
+					onDraft={(id) => navigate(`/admin/accounts/${orgId}/documents/${id}`)}
 				/>
 			)}
 		</Box>

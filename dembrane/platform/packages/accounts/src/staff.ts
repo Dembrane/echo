@@ -526,14 +526,19 @@ export async function pushOffer(
       id,
       orgId: org.id,
       kind: "offer",
-      title: input.title ?? offerTitle(content),
+      title:
+        input.title ??
+        (prev?.content
+          ? keptTitle(prev.title, prev.content as OfferContent, content)
+          : offerTitle(content)),
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
       ...offerColumns(content, pinned),
       ...file,
       requiresSignature: true,
       status: "draft",
-      externalRef: input.external_ref,
+      // A new version belongs to the same deal unless it names another.
+      externalRef: input.external_ref ?? prev?.externalRef ?? null,
       createdBy: who.directusUserId,
       createdAt: now,
       updatedAt: now,
@@ -558,7 +563,17 @@ export async function pushOffer(
   };
 }
 
-export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send">;
+export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send" | "currency"> & {
+  /** Absent keeps the draft's. */
+  readonly currency?: string | undefined;
+};
+
+/**
+ * The title a changed or revised offer gets when none is given: one staff or sam set
+ * themselves stays, a generated one follows the new content.
+ */
+const keptTitle = (title: string, before: OfferContent, content: OfferContent) =>
+  title === offerTitle(before) ? offerTitle(content) : title;
 
 /**
  * Changes a draft offer in place: the same document, reference and staff link, a new PDF.
@@ -588,6 +603,7 @@ export async function updateOffer(
     pinned,
     {
       ...input,
+      currency: input.currency ?? before.currency,
       date: input.date ?? before.date,
       reference: input.reference ?? before.reference,
       processing_terms:
@@ -603,7 +619,7 @@ export async function updateOffer(
     if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
     const file = await storeRendered(d, doc.orgId, doc.id, rendered);
     await store.updateDocument(tx, doc.id, {
-      title: input.title ?? offerTitle(content),
+      title: input.title ?? keptTitle(doc.title, before, content),
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,

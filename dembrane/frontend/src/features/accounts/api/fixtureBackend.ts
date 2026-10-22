@@ -483,6 +483,20 @@ function priced(raw: unknown) {
 	};
 }
 
+type OfferContentT = NonNullable<DocumentDetailT["content"]>;
+
+/** The VAT treatment, amendments and processing terms an offer request carries. */
+function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
+	const amendments = (body.amendments ?? []) as OfferContentT["amendments"];
+	return {
+		vat_treatment:
+			(body.vat_treatment as OfferContentT["vat_treatment"]) ?? "standard",
+		...(amendments?.length && { amendments }),
+		...(typeof body.processing_terms === "string" &&
+			body.processing_terms && { processing_terms: body.processing_terms }),
+	};
+}
+
 /** The locked billing details step that comes with a sent offer, named after it. */
 function billingStepFor(s: Store, d: DocumentDetailT) {
 	const billing = s.tasks.find(
@@ -1637,7 +1651,10 @@ export async function handle(
 					person_name: (body.person_name as string | null) ?? null,
 					reference,
 					template: body.template as "subscription" | "event",
+					...offerTerms(body),
 				};
+				// Absent keeps the draft's currency, as the API does.
+				d.currency = (body.currency as string | undefined) ?? d.currency;
 				d.language = language;
 				d.reference = reference;
 				d.lines = lines;
@@ -1707,6 +1724,7 @@ export async function handle(
 						person_name: (body.person_name as string | null) ?? null,
 						reference,
 						template: body.template as "subscription" | "event",
+						...offerTerms(body),
 					},
 					currency: (body.currency as string) ?? "EUR",
 					fields: offerFields(language),
