@@ -6,19 +6,20 @@ import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import type { WallKey } from "@/components/workspace/gateWalls";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
-import { allowanceSpent, formatResetDate } from "@/lib/freeTier";
+import { allowanceSpent, audioUsedUp, formatResetDate } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER } from "@/lib/tiers";
 
-type Feature = "chats" | "reports" | "maps";
+type Feature = "chats" | "reports" | "maps" | "audio";
 
 const WALLS: Record<Feature, WallKey> = {
+	audio: "free_allowance",
 	chats: "chat_cap",
 	maps: "map_cap",
 	reports: "report_cap",
 };
 
-// Shown on free accounts once this month's chats, report or map are used up.
+// Shown on free accounts once this month's chats, report, map or audio are used up.
 export function FreeAllowanceBanner({
 	workspaceId,
 	feature,
@@ -31,14 +32,24 @@ export function FreeAllowanceBanner({
 	const wallKey = WALLS[feature];
 	const configurator = usePricingConfigurator(wallKey);
 
-	if (!data || !allowanceSpent(data, feature)) return null;
+	const spent =
+		feature === "audio"
+			? !!data?.free && !!data.audio_seconds && audioUsedUp(data.audio_seconds)
+			: allowanceSpent(data, feature);
+	if (!data || !spent) return null;
 	const date = formatResetDate(data.resets_at, i18n.locale) ?? "";
-	const limit = data[feature]?.limit ?? 1;
+	const limit = feature === "audio" ? 1 : (data[feature]?.limit ?? 1);
 
 	return (
 		<Alert variant="light" color="gray" {...testId("free-allowance-banner")}>
 			<Stack gap="sm">
 				<Text size="sm">
+					{feature === "audio" && (
+						<Trans>
+							You have used this month's free recording time. New recordings and
+							uploads are paused until it resets on {date}.
+						</Trans>
+					)}
 					{feature === "chats" && (
 						<Trans>
 							You have used this month's free chats. They reset on {date}.

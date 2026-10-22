@@ -93,7 +93,7 @@ afterEach(() => {
 	cleanup();
 });
 
-const renderBanner = (feature: "chats" | "reports" | "maps") => {
+const renderBanner = (feature: "chats" | "reports" | "maps" | "audio") => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -228,4 +228,28 @@ it("states no number when staff set the limit to 0", async () => {
 	expect(maps.textContent).toContain(
 		`You have used this month's free maps. Your current maps stay here. They reset on ${resetDate}.`,
 	);
+});
+
+it("says the month's recording time is used and when it resets", async () => {
+	fetchMock.mockResolvedValue(
+		answer(200, snapshot({ audio_seconds: { limit: 18000, used: 17950 } })),
+	);
+	renderBanner("audio");
+	const banner = await screen.findByTestId("free-allowance-banner");
+	expect(banner.textContent).toContain(
+		`You have used this month's free recording time. New recordings and uploads are paused until it resets on ${resetDate}.`,
+	);
+	fireEvent.click(screen.getByTestId("free-allowance-banner-upgrade"));
+	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe(
+		"free_allowance",
+	);
+});
+
+it("renders nothing while recording time is left", async () => {
+	fetchMock.mockResolvedValue(
+		answer(200, snapshot({ audio_seconds: { limit: 18000, used: 17000 } })),
+	);
+	const client = renderBanner("audio");
+	await settled(client);
+	expect(screen.getByTestId("host").innerHTML).toBe("");
 });

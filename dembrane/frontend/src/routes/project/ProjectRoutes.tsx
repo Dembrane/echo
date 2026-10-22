@@ -63,6 +63,7 @@ export const ProjectConversationsRoute = () => {
 					projectId={projectId}
 					workspaceId={workspaceId}
 					showUpload={canEdit}
+					showAudioNotice
 					selectionMode={pickerMode}
 					selection={selectedConversationIds}
 					onSelectionChange={setSelectedConversationIds}

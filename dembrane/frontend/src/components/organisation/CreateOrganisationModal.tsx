@@ -18,6 +18,7 @@ import { notifyError } from "@/components/error/notifyError";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useManagedFreeOrg } from "@/hooks/useManagedFreeOrg";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
@@ -83,6 +84,9 @@ export const CreateOrganisationModal = ({
 		workspaceId?: string;
 	}>({});
 	const { workspace } = useWorkspace();
+	const freeOrg = useManagedFreeOrg();
+	// Already at the cap: skip the form and show the wall on open.
+	const wallUpFront = opened && !!freeOrg && !created;
 
 	const reset = () => {
 		setStep(0);
@@ -190,7 +194,7 @@ export const CreateOrganisationModal = ({
 	return (
 		<>
 			<Modal
-				opened={opened}
+				opened={opened && !wallUpFront}
 				onClose={handleClose}
 				title={<Trans>Create organisation</Trans>}
 				size="lg"
@@ -282,14 +286,19 @@ export const CreateOrganisationModal = ({
 				</Stack>
 			</Modal>
 			<UpgradeModal
-				opened={upgradeOpened}
-				onClose={() => setUpgradeOpened(false)}
+				opened={upgradeOpened || wallUpFront}
+				onClose={() => {
+					setUpgradeOpened(false);
+					if (wallUpFront) onClose();
+				}}
 				// The 402 proves the account is free, whatever this workspace shows.
 				currentTier="free"
 				requiredTier="changemaker"
 				canRequestUpgrade
-				orgId={blocking.orgId}
-				workspaceId={blocking.workspaceId ?? workspace?.id ?? ""}
+				orgId={blocking.orgId ?? freeOrg?.orgId}
+				workspaceId={
+					blocking.workspaceId ?? freeOrg?.workspaceId ?? workspace?.id ?? ""
+				}
 				wallKey="org_cap"
 			/>
 		</>

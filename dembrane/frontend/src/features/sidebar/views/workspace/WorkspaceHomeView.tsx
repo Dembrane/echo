@@ -1,8 +1,13 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { AppWindow, Gear, Plus, PushPin, Users } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { wallPopoverLine } from "@/components/workspace/gateWalls";
+import { UnavailableInfo } from "@/components/workspace/UnavailableInfo";
+import { useProjectCap } from "@/hooks/useProjectCap";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { isAdminRole, isOutsiderRole } from "@/lib/roles";
@@ -24,6 +29,8 @@ export const WorkspaceHomeView = () => {
 		() => projectsQuery.data?.pages.flatMap((page) => page.pinned) ?? [],
 		[projectsQuery.data],
 	);
+	const atProjectCap = useProjectCap(workspace);
+	const [capWallOpened, capWall] = useDisclosure(false);
 
 	if (!workspaceId) return null;
 
@@ -65,8 +72,26 @@ export const WorkspaceHomeView = () => {
 			{canCreateProject && (
 				<NavItem
 					to={`${base}/projects/new`}
-					label={<Trans>Create project</Trans>}
+					label={
+						atProjectCap ? (
+							<span className="inline-flex items-center gap-1">
+								<Trans>Create project</Trans>
+								<UnavailableInfo label={wallPopoverLine("project_cap")} />
+							</span>
+						) : (
+							<Trans>Create project</Trans>
+						)
+					}
 					icon={Plus}
+					muted={atProjectCap}
+					onClick={
+						atProjectCap
+							? (event) => {
+									event.preventDefault();
+									capWall.open();
+								}
+							: undefined
+					}
 				/>
 			)}
 			{/* Settings is the last clickable item under the workspace title,
@@ -102,6 +127,15 @@ export const WorkspaceHomeView = () => {
 					))}
 				</FullOnly>
 			)}
+			<UpgradeModal
+				opened={capWallOpened}
+				onClose={capWall.close}
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdmin}
+				workspaceId={workspaceId}
+				wallKey="project_cap"
+			/>
 		</nav>
 	);
 };

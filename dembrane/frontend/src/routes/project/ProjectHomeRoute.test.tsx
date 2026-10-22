@@ -9,6 +9,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ProjectHomeRoute } from "./ProjectHomeRoute";
 
 const role = vi.hoisted(() => ({ current: "owner" }));
+const sample = vi.hoisted(() => ({ current: false }));
 
 vi.mock("@/hooks/useWorkspace", () => ({
 	useWorkspace: () => ({
@@ -17,7 +18,9 @@ vi.mock("@/hooks/useWorkspace", () => ({
 }));
 vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => vi.fn() }));
 vi.mock("@/components/project/hooks", () => ({
-	useProjectById: () => ({ data: { id: "p1", name: "Alpha" } }),
+	useProjectById: () => ({
+		data: { id: "p1", is_sample: sample.current, name: "Alpha" },
+	}),
 	useUpdateProjectByIdMutation: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock("@/components/report/hooks", () => ({
@@ -29,6 +32,11 @@ vi.mock("@/components/conversation/ConversationsMiniList", () => ({
 vi.mock("@/components/project/PortalSettingsOverview", () => ({
 	PortalSettingsOverview: () => null,
 }));
+vi.mock("@/components/project/AudioUsedUpNotice", () => ({
+	AudioUsedUpNotice: ({ projectId }: { projectId: string }) => (
+		<div data-testid="audio-used-up-notice" data-project={projectId} />
+	),
+}));
 vi.mock("@/components/project/ProjectQRCode", () => ({
 	ProjectQRCode: () => null,
 }));
@@ -39,6 +47,7 @@ i18n.activate("en-US");
 afterEach(() => {
 	cleanup();
 	role.current = "owner";
+	sample.current = false;
 });
 
 beforeAll(() => {
@@ -92,5 +101,20 @@ describe("ProjectHomeRoute jump-to role gating", () => {
 		);
 		// Reading stays open to everyone.
 		expect(screen.getByRole("link", { name: "Report" })).toBeTruthy();
+	});
+});
+
+describe("ProjectHomeRoute audio used up notice", () => {
+	it("shows the audio used up notice on a non-sample project", () => {
+		renderHome();
+		expect(screen.getByTestId("audio-used-up-notice").dataset.project).toBe(
+			"p1",
+		);
+	});
+
+	it("leaves it off a sample project", () => {
+		sample.current = true;
+		renderHome();
+		expect(screen.queryByTestId("audio-used-up-notice")).toBeNull();
 	});
 });

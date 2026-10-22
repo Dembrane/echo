@@ -42,6 +42,7 @@ import { EntityListRow } from "@/components/common/EntityListRow";
 import { toast } from "@/components/common/Toaster";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
+import { AudioUsedUpNotice } from "@/components/project/AudioUsedUpNotice";
 import { RecordingPausedUploadButton } from "@/components/project/RecordingPausedNotice";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
@@ -84,6 +85,8 @@ type ProjectConversationsPanelProps = {
 	selectionChatId?: string;
 	selectionMode?: boolean;
 	showUpload?: boolean;
+	/** Free month's audio used up banner; the Conversations tab only. */
+	showAudioNotice?: boolean;
 	/** Selection before a chat exists. With `onSelectionChange` set, the ticked
 	 * ids live in the parent's state and nothing is written to a chat: pass
 	 * `selectionChatId` instead to write straight through to an existing chat. */
@@ -490,6 +493,7 @@ export const ProjectConversationsPanel = ({
 	selectionChatId,
 	selectionMode = false,
 	showUpload = false,
+	showAudioNotice = false,
 	selection,
 	onSelectionChange,
 	onAskAboutSelection,
@@ -672,6 +676,13 @@ export const ProjectConversationsPanel = ({
 						</Box>
 					)}
 				</Group>
+
+				{showAudioNotice && resolvedWorkspaceId && (
+					<AudioUsedUpNotice
+						projectId={projectId}
+						workspaceId={resolvedWorkspaceId}
+					/>
+				)}
 
 				{showUpload && usageGates.uploads_locked && resolvedWorkspaceId && (
 					<UploadLockedCard
