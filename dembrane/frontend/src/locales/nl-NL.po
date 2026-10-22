@@ -569,7 +569,7 @@ msgid "{0} deleted"
 msgstr "{0} verwijderd"
 
 #. placeholder {0}: failed.length
-#: src/lib/api.ts:622
+#: src/lib/api.ts:624
 msgid "{0} file(s) failed to upload. Try those again."
 msgstr "{0} bestand(en) uploaden mislukt. Probeer die opnieuw."
 
@@ -1627,7 +1627,7 @@ msgstr "een werkruimte toe te voegen"
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Voeg extra context toe (Optioneel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/components/participant/ParticipantInitiateForm.tsx:309
 msgid "Add all that apply"
 msgstr "Vink aan wat van toepassing is"
 
@@ -1980,7 +1980,7 @@ msgid "All"
 msgstr "Alles"
 
 #. placeholder {0}: payload.chunks.length
-#: src/lib/api.ts:752
+#: src/lib/api.ts:754
 msgid "All {0} file(s) uploaded successfully"
 msgstr "Alle {0} bestand(en) succesvol geüpload"
 
@@ -2859,7 +2859,7 @@ msgid "Back"
 msgstr "Terug"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:437
+#: src/components/participant/ParticipantOnboardingCards.tsx:445
 #: src/components/layout/ParticipantHeader.tsx:94
 msgid "participant.button.back"
 msgstr "Terug"
@@ -4137,12 +4137,12 @@ msgid "Continue"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:424
+#: src/components/participant/ParticipantOnboardingCards.tsx:432
 msgid "participant.button.next"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
+#: src/components/participant/ParticipantInitiateForm.tsx:346
 msgid "participant.ready.to.begin.button.text"
 msgstr "Doorgaan"
 
@@ -9638,7 +9638,7 @@ msgid "No canvases yet. Ask in chat when you want a live view of the conversatio
 msgstr "Nog geen canvassen. Vraag het in de chat als je een live beeld van de gesprekken wilt. Het eerste canvas komt hier te staan."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:270
+#: src/components/participant/ParticipantOnboardingCards.tsx:277
 msgid "participant.onboarding.no.card"
 msgstr "Geen kaart beschikbaar voor de huidige taal en sectie."
 
@@ -10972,8 +10972,8 @@ msgid "partially completed"
 msgstr "deels afgerond"
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:136
-#: src/components/participant/ParticipantInitiateForm.tsx:197
+#: src/components/participant/ParticipantInitiateForm.tsx:141
+#: src/components/participant/ParticipantInitiateForm.tsx:203
 msgid "Participant"
 msgstr "Deelnemer"
 
@@ -12239,7 +12239,7 @@ msgstr "Klaar om"
 #~ msgstr "Klaar om {readyTime}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:330
+#: src/components/participant/ParticipantOnboardingCards.tsx:338
 msgid "participant.ready.to.begin"
 msgstr "Klaar om te beginnen?"
 
@@ -14045,7 +14045,7 @@ msgstr "Apart (klant)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Scheid met komma's, spaties of nieuwe regels."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/components/participant/ParticipantInitiateForm.tsx:297
 msgid "Session name"
 msgstr "Sessienaam"
 
@@ -15255,7 +15255,7 @@ msgid "Tag deleted"
 msgstr "Tag verwijderd"
 
 #: src/components/project/ProjectTagsInput.tsx:255
-#: src/components/participant/ParticipantInitiateForm.tsx:301
+#: src/components/participant/ParticipantInitiateForm.tsx:308
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:721
 #: src/components/conversation/ConversationsMiniList.tsx:189

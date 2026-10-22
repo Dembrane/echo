@@ -568,7 +568,7 @@ msgid "{0} deleted"
 msgstr "Видалено: {0}"
 
 #. placeholder {0}: failed.length
-#: src/lib/api.ts:622
+#: src/lib/api.ts:624
 msgid "{0} file(s) failed to upload. Try those again."
 msgstr "Не вдалося завантажити {0} файл(ів). Спробуйте ще раз."
 
@@ -1626,7 +1626,7 @@ msgstr "додати робочий простір"
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Add additional context (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/components/participant/ParticipantInitiateForm.tsx:309
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
@@ -1979,7 +1979,7 @@ msgid "All"
 msgstr "All"
 
 #. placeholder {0}: payload.chunks.length
-#: src/lib/api.ts:752
+#: src/lib/api.ts:754
 msgid "All {0} file(s) uploaded successfully"
 msgstr "Усі файли ({0}) успішно завантажено"
 
@@ -2861,7 +2861,7 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:437
+#: src/components/participant/ParticipantOnboardingCards.tsx:445
 #: src/components/layout/ParticipantHeader.tsx:94
 msgid "participant.button.back"
 msgstr "Back"
@@ -4139,12 +4139,12 @@ msgid "Continue"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:424
+#: src/components/participant/ParticipantOnboardingCards.tsx:432
 msgid "participant.button.next"
 msgstr "Продовжити"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
+#: src/components/participant/ParticipantInitiateForm.tsx:346
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
@@ -9640,7 +9640,7 @@ msgid "No canvases yet. Ask in chat when you want a live view of the conversatio
 msgstr "Полотен ще немає. Запитайте в чаті, коли захочете переглянути розмови наживо. Перше полотно залишиться тут."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:270
+#: src/components/participant/ParticipantOnboardingCards.tsx:277
 msgid "participant.onboarding.no.card"
 msgstr "Для поточної мови та розділу немає картки."
 
@@ -10974,8 +10974,8 @@ msgid "partially completed"
 msgstr "завершено частково"
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:136
-#: src/components/participant/ParticipantInitiateForm.tsx:197
+#: src/components/participant/ParticipantInitiateForm.tsx:141
+#: src/components/participant/ParticipantInitiateForm.tsx:203
 msgid "Participant"
 msgstr "Participant"
 
@@ -12241,7 +12241,7 @@ msgstr "Готово о"
 #~ msgstr "Готово о {readyTime}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:330
+#: src/components/participant/ParticipantOnboardingCards.tsx:338
 msgid "participant.ready.to.begin"
 msgstr "Готові почати?"
 
@@ -14047,7 +14047,7 @@ msgstr "Окремий (клієнт)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Розділяйте комами, пробілами або новими рядками."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/components/participant/ParticipantInitiateForm.tsx:297
 msgid "Session name"
 msgstr "Назва сесії"
 
@@ -15257,7 +15257,7 @@ msgid "Tag deleted"
 msgstr "Тег видалено"
 
 #: src/components/project/ProjectTagsInput.tsx:255
-#: src/components/participant/ParticipantInitiateForm.tsx:301
+#: src/components/participant/ParticipantInitiateForm.tsx:308
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:721
 #: src/components/conversation/ConversationsMiniList.tsx:189
