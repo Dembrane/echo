@@ -10,6 +10,7 @@ import {
   integer,
   json,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -60,6 +61,39 @@ export const legal_text_source = pgTable("legal_text_source", {
   checkedAt: timestamp("checked_at", { withTimezone: true }),
   lastError: text("last_error"),
 });
+
+/**
+ * The words of an offer template that staff changed (/admin/accounts/offer-templates), one
+ * row per template and language. No row means the built-in words (DEFAULT_TEXT in
+ * accounts/offer.ts). A draft copies these when it is made, so a change reaches new drafts
+ * only, never one already drafted or sent.
+ */
+export const offer_template = pgTable(
+  "offer_template",
+  {
+    template: text("template").notNull(),
+    language: text("language").notNull(),
+    kind: text("kind").notNull(),
+    greeting: text("greeting").notNull(),
+    /** Paragraphs separated by a blank line; "## " starts a heading. */
+    intro: text("intro").notNull(),
+    closing: text("closing").notNull(),
+    /** Description, quantity, unit price and amount, as the table heads them. */
+    columns: json("columns").$type<[string, string, string, string]>().notNull(),
+    validDays: integer("valid_days").notNull(),
+    updatedAt: updated(),
+    /** The staff member who changed it last; null for a staff key. */
+    updatedBy: uuid("updated_by"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.template, t.language] }),
+    check(
+      "offer_template_template_check",
+      sql`${t.template} in ('subscription', 'event', 'custom')`,
+    ),
+    check("offer_template_language_check", sql`${t.language} in ('en', 'nl')`),
+  ],
+);
 
 /**
  * An offer, DPA, invoice or other document. Once sent, what the customer reads is frozen

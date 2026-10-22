@@ -19,7 +19,7 @@ import { and, eq } from "drizzle-orm";
 import type { AccountsDeps, Company } from "./deps";
 import { emit } from "./events";
 import { seedLegalTexts } from "./legal/store";
-import { offerTitle } from "./offer";
+import { offerKind } from "./offer";
 import { createAccount, ensureUser } from "./prospect";
 import { sha256Hex } from "./signing";
 import { MemoryJobs } from "./sink";
@@ -321,7 +321,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   const current = (doc: NonNullable<typeof waiting>) =>
     doc.language === lang &&
     (doc.content as { offer_name?: string } | null)?.offer_name === ORG_NAME &&
-    doc.title === offerTitle("subscription", lang, doc.reference ?? "");
+    doc.title === `${offerKind("subscription", lang)} ${doc.reference ?? ""}`;
   if (waiting && !current(waiting)) {
     await store.updateDocument(o.db, waiting.id, {
       status: "void",

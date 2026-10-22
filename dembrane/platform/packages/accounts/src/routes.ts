@@ -38,6 +38,7 @@ import {
 import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
+import { changeOfferTemplate, listOfferTemplates, resetOfferTemplate } from "./offer-template";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
@@ -240,6 +241,20 @@ export function accountsRoutes(d: AccountsDeps) {
     return who;
   };
 
+  // Offer templates first: their paths would otherwise match /:orgId.
+  app.get(R.listOfferTemplates.path, async (c) => {
+    await staff(c, "accounts.offer_template.list", false);
+    return c.json(await listOfferTemplates(d));
+  });
+  app.put(R.changeOfferTemplate.path, async (c) => {
+    const who = await staff(c, "accounts.offer_template.change", false);
+    const b = await body(c, K.OfferTemplateChange);
+    return c.json(await changeOfferTemplate(d, who, p(c, "template"), p(c, "language"), b));
+  });
+  app.post(R.resetOfferTemplate.path, async (c) => {
+    await staff(c, "accounts.offer_template.reset", false);
+    return c.json(await resetOfferTemplate(d, p(c, "template"), p(c, "language")));
+  });
   // Demos first: their paths would otherwise match /:orgId.
   const requireDemoSettings = () => {
     if (!d.settings.demo) throw new UnavailableError("demo.not_configured");

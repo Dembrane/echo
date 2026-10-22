@@ -33,6 +33,31 @@ export type Language = (typeof LANGUAGES)[number];
 export interface OfferItem extends OfferLine {
   /** The bulleted lines under the description ("Unlimited recording hours"). */
   readonly bullets: readonly string[];
+  /** What the quantity counts, next to it in the table: "12 months", "8 hours". */
+  readonly unit?: string | undefined;
+}
+
+/**
+ * The words of an offer that staff and sam may change: a template's defaults (the
+ * offer_template row, else DEFAULT_TEXT), copied into each offer when it is drafted and
+ * changed there for that customer alone. Sending freezes them with the PDF.
+ */
+export interface OfferText {
+  /** Above the customer's name, and the document's name with its number: "Offer", "Offerte". */
+  readonly kind: string;
+  /** The word before the person's name: "Hi", "Dear", "Beste". */
+  readonly greeting: string;
+  /** Paragraphs separated by a blank line; one that starts with "## " is a heading. */
+  readonly intro: string;
+  /** One line each; an empty line leaves space above the next ("Best regards,"). */
+  readonly closing: string;
+  /** Description, quantity, unit price, amount. */
+  readonly columns: readonly [string, string, string, string];
+}
+
+/** A template's words and how many days its offers stay valid. */
+export interface OfferTemplateText extends OfferText {
+  readonly valid_days: number;
 }
 
 export interface PinnedText {
@@ -89,6 +114,11 @@ export interface OfferContent {
     readonly dpa: PinnedText;
   };
   readonly items: readonly OfferItem[];
+  /**
+   * The offer's own words. Absent on offers drafted before templates were data: those keep
+   * their template's words and columns from COPY until they are saved again.
+   */
+  readonly text?: OfferText;
   /** Absent on offers made before it existed: Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
   /** Subscription offers: what the quantity counts. Absent means seats, as before it existed. */
@@ -407,6 +437,8 @@ const NL_FRAME = {
   months: NL_MONTHS,
 };
 
+// The frame of each template and language. Its greeting, intro, columns and closing are what
+// offers drafted before OfferText printed (legacyText); new offers take DEFAULT_TEXT.
 const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
   subscription: {
     en: {
@@ -485,6 +517,97 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
   },
 };
 
+const EN_COLUMNS = ["Description", "Quantity", "Unit price", "Amount"] as const;
+const NL_COLUMNS = ["Omschrijving", "Aantal", "Prijs per stuk", "Bedrag"] as const;
+const EN_ASK = "If anything is unclear, ask us; we are happy to talk it through.";
+const NL_ASK = "Is iets niet duidelijk? Vraag het ons gerust; we lichten het graag toe.";
+
+/**
+ * The words a template gives a new offer while it has no offer_template row. Every template
+ * opens the same way, with what the offer includes and what it costs, and has the same table;
+ * the template itself only decides these defaults and which legal documents apply.
+ */
+export const DEFAULT_TEXT: Record<OfferTemplate, Record<Language, OfferTemplateText>> = {
+  subscription: {
+    en: {
+      kind: "Yearly license offer",
+      greeting: "Hi",
+      intro: `Here is what your dembrane subscription includes and what it costs. ${EN_ASK}`,
+      closing: "We look forward to working with you.\n\nBest regards,\nTeam dembrane",
+      columns: EN_COLUMNS,
+      valid_days: 14,
+    },
+    nl: {
+      kind: "Offerte jaarlicentie",
+      greeting: "Beste",
+      intro: `Hieronder staat wat het dembrane-abonnement inhoudt en wat het kost. ${NL_ASK}`,
+      closing: "We kijken uit naar de samenwerking.\n\nMet vriendelijke groet,\nTeam dembrane",
+      columns: NL_COLUMNS,
+      valid_days: 14,
+    },
+  },
+  event: {
+    en: {
+      kind: "Event offer",
+      greeting: "Dear",
+      intro: `Here is what dembrane at your event includes and what it costs. ${EN_ASK}`,
+      closing: "We look forward to working with you.\n\nKind regards,\nTeam dembrane",
+      columns: EN_COLUMNS,
+      valid_days: 14,
+    },
+    nl: {
+      kind: "Offerte evenement",
+      greeting: "Beste",
+      intro: `Hieronder staat wat dembrane op jullie evenement inhoudt en wat het kost. ${NL_ASK}`,
+      closing: "We kijken uit naar de samenwerking.\n\nMet vriendelijke groet,\nTeam dembrane",
+      columns: NL_COLUMNS,
+      valid_days: 14,
+    },
+  },
+  custom: {
+    en: {
+      kind: "Offer",
+      greeting: "Dear",
+      intro: `Here is what your dembrane offer includes and what it costs. ${EN_ASK}`,
+      closing: "We look forward to working with you.\n\nKind regards,\nTeam dembrane",
+      columns: EN_COLUMNS,
+      valid_days: 14,
+    },
+    nl: {
+      kind: "Offerte",
+      greeting: "Beste",
+      intro: `Hieronder staat wat ons aanbod inhoudt en wat het kost. ${NL_ASK}`,
+      closing: "We kijken uit naar de samenwerking.\n\nMet vriendelijke groet,\nTeam dembrane",
+      columns: NL_COLUMNS,
+      valid_days: 14,
+    },
+  },
+};
+
+/** The words of an offer drafted before templates were data, as COPY printed them. */
+function legacyText(content: OfferContent): OfferText {
+  const copy = COPY[content.template][content.language];
+  const perMonth = content.template === "subscription" && content.billing_unit === "month";
+  // An event's second paragraph was its heading.
+  const [opening, heading, ...rest] = copy.intro;
+  const intro = [opening, ...(heading ? [`## ${heading}`] : []), ...rest].join("\n\n");
+  const [thanks, ...signOff] = copy.closing;
+  return {
+    kind: OFFER_KIND[content.template][content.language],
+    greeting: copy.greeting,
+    intro,
+    closing: [thanks, "", ...signOff].join("\n"),
+    columns: (perMonth && copy.monthColumns) || copy.columns,
+  };
+}
+
+/** Paragraphs of an intro: blank lines split them, and none is empty. */
+export const paragraphsOf = (s: string): string[] =>
+  s
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
 /** "28 September 2026" or "28 september 2026". */
 function longDate(iso: string, months: readonly string[]): string {
   const [y, m, d] = iso.split("-");
@@ -516,11 +639,9 @@ export interface OfferLayout {
   /** Reference, date, valid until and, when there is one, who it is for: label and value. */
   readonly facts: readonly (readonly [string, string])[];
   readonly greeting: string;
-  /** Paragraphs; an event offer's second paragraph is a heading over its third. */
+  /** Paragraphs; one that starts with "## " is a heading over the next. */
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
-  /** Subscription offers billed per month instead of per seat. */
-  readonly monthColumns?: readonly [string, string, string, string];
   readonly rows: readonly {
     readonly description: string;
     readonly bullets: readonly string[];
@@ -538,6 +659,7 @@ export interface OfferLayout {
     readonly title: string;
     readonly paragraphs: readonly string[];
   }[];
+  /** Lines; an empty one is space above the next. */
   readonly closing: readonly string[];
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
@@ -563,12 +685,13 @@ const OFFER_KIND: Record<OfferTemplate, Record<Language, string>> = {
 export const offerKind = (template: OfferTemplate, language: Language): string =>
   OFFER_KIND[template][language];
 
-/** The document's name: its kind and its number. */
-export const offerTitle = (
-  template: OfferTemplate,
-  language: Language,
-  reference: string,
-): string => `${offerKind(template, language)} ${reference}`;
+/** The words an offer prints: its own, or for an older draft its template's from COPY. */
+export const offerTextOf = (content: OfferContent): OfferText =>
+  content.text ?? legacyText(content);
+
+/** The document's name: the offer's kind and its number. */
+export const offerTitle = (content: OfferContent): string =>
+  `${offerTextOf(content).kind} ${content.reference}`;
 
 export function offerTotals(content: OfferContent): Totals {
   return priceLines(content.items);
@@ -576,11 +699,11 @@ export function offerTotals(content: OfferContent): Totals {
 
 export function layoutOffer(content: OfferContent): OfferLayout {
   const copy = COPY[content.template][content.language];
+  const text = offerTextOf(content);
   const totals = offerTotals(content);
   const c = content.company;
-  const unitFirst = content.template === "subscription";
-  // A flat monthly price has no seats, so the table must not call its quantity "Seats".
-  const perMonth = unitFirst && content.billing_unit === "month";
+  // Only an older subscription draft puts the price per seat (or month) before the quantity.
+  const unitFirst = !content.text && content.template === "subscription";
   const clause = buildClause(copy.words, content);
   const money = (cents: number) => euro(cents, content.currency, content.language);
   const treatment = content.vat_treatment ?? "standard";
@@ -602,16 +725,16 @@ export function layoutOffer(content: OfferContent): OfferLayout {
         `KvK ${c.kvk} · ${copy.totals.vat} ${c.vat} · IBAN ${c.iban} · BIC ${c.bic}`,
       ],
     },
-    kind: offerKind(content.template, content.language),
+    kind: text.kind,
     title: content.offer_name,
     facts,
-    greeting: `${copy.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
-    intro: copy.intro,
-    // Subscriptions put the price per seat (or month) before the quantity; events the reverse.
-    columns: (perMonth && copy.monthColumns) || copy.columns,
+    greeting: `${text.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
+    intro: paragraphsOf(text.intro),
+    columns: text.columns,
     rows: totals.lines.map((l: PricedLine, i) => {
       const unit = money(l.unit_price_cents);
-      const quantity = String(l.quantity);
+      const counts = content.items[i]?.unit;
+      const quantity = counts ? `${l.quantity} ${counts}` : String(l.quantity);
       return {
         description: l.description,
         bullets: content.items[i]?.bullets ?? [],
@@ -637,7 +760,7 @@ export function layoutOffer(content: OfferContent): OfferLayout {
         .map((p) => p.replace(/\s+/g, " ").trim())
         .filter(Boolean),
     })),
-    closing: copy.closing,
+    closing: text.closing.split("\n").map((line) => line.trim()),
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
     acceptance: copy.acceptance,

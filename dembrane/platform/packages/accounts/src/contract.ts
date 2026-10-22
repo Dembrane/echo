@@ -173,9 +173,50 @@ export const OfferItem = z.object({
   /** Bulleted lines under the description, as on the offer templates. */
   bullets: z.array(text(300)).max(20).default([]),
   quantity: z.number().int().min(1),
+  /** What the quantity counts, printed next to it: "months" gives "12 months". */
+  unit: z.string().trim().max(30).optional(),
   unit_price_cents: Cents,
   vat_rate_bps: z.number().int(),
 });
+
+/**
+ * The words of an offer staff and sam may change, in the offer's language. A template gives
+ * them to every new draft; each draft can then change them for its customer alone.
+ */
+export const OfferText = z.object({
+  /** Above the customer's name, and the document's name with its number: "Offer". */
+  kind: text(60),
+  /** The word before the person's name: "Hi", "Dear", "Beste". */
+  greeting: text(40),
+  /** Paragraphs separated by a blank line; one starting with "## " is a heading. */
+  intro: z.string().trim().max(4000),
+  /** One line each; an empty line leaves space above the next ("Best regards,"). */
+  closing: z.string().trim().max(500),
+  /** The table's heads: description, quantity, unit price, amount. */
+  columns: z.tuple([text(40), text(40), text(40), text(40)]),
+});
+/** Only the words that change; the rest stay as they are. */
+export const OfferTextChange = OfferText.partial();
+
+export const OfferTemplateText = OfferText.extend({
+  /** Days an offer stays valid from its date. */
+  valid_days: z.number().int().min(1).max(365),
+});
+
+/** A template's words now: the staff's, or the built-in ones while nobody changed them. */
+export const OfferTemplateView = OfferTemplateText.extend({
+  template: OfferTemplate,
+  language: Language,
+  /** False while these are the built-in words. */
+  changed: z.boolean(),
+  updated_at: IsoTime.nullable(),
+});
+export const OfferTemplateList = z.object({ templates: z.array(OfferTemplateView) });
+/**
+ * PUT .../offer-templates/:template/:language: the words to change; the rest stay. New drafts
+ * of that template take them; drafts already made keep theirs.
+ */
+export const OfferTemplateChange = OfferTemplateText.partial();
 
 export const PricedLine = OfferItem.extend({
   net_cents: z.number().int(),
@@ -209,6 +250,8 @@ export const OfferContent = z.object({
   company: Company,
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
+  /** The offer's own words; absent on offers drafted before they were data. */
+  text: OfferText.optional(),
   vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
   /** Subscription offers: what the quantity counts. Absent means seats. */
   billing_unit: BillingUnit.optional(),
@@ -779,9 +822,17 @@ export const PushOfferRequest = z.object({
   reference: optText(64),
   title: optText(255),
   currency: Currency.default("EUR"),
-  /** The offer date; today when absent. Valid for 14 days from it. */
+  /** The offer date; today when absent. Valid for `valid_days` from it. */
   date: nullish(IsoDate),
   items: z.array(OfferItem).min(1).max(50),
+  /**
+   * The offer's own words over its template's (GET .../offer-templates): give only what
+   * differs. On a change, absent keeps the draft's words, a field changes that one, and null
+   * goes back to the template's. Changing the template without words takes the new one's.
+   */
+  text: OfferTextChange.nullable().optional(),
+  /** Days the offer stays valid; the template's (14) when absent. On a change, absent keeps the draft's. */
+  valid_days: z.number().int().min(1).max(365).nullable().optional(),
   /**
    * Dutch VAT on the lines (default), reverse-charged within the EU, or none outside it.
    * The last two take only 0% lines, and the offer says why there is no VAT.
@@ -1433,6 +1484,26 @@ export const ROUTES = {
     path: "/api/v2/account/tasks-summary",
     permission: "signed-in",
     response: TasksSummary,
+  },
+  listOfferTemplates: {
+    method: "GET",
+    path: `${S}/offer-templates`,
+    permission: "staff:accounts",
+    response: OfferTemplateList,
+  },
+  changeOfferTemplate: {
+    method: "PUT",
+    path: `${S}/offer-templates/:template/:language`,
+    permission: "staff:accounts",
+    request: OfferTemplateChange,
+    response: OfferTemplateView,
+  },
+  /** Back to the built-in words. */
+  resetOfferTemplate: {
+    method: "POST",
+    path: `${S}/offer-templates/:template/:language/reset`,
+    permission: "staff:accounts",
+    response: OfferTemplateView,
   },
   listDemos: {
     method: "GET",
