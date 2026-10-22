@@ -75,7 +75,6 @@ import {
 	TIER_ORDER,
 	type Tier,
 } from "@/lib/tiers";
-import { FreeLimitsPanel } from "./FreeLimitsPanel";
 
 const _tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
@@ -3119,6 +3118,12 @@ const AccountsPanel = lazy(() =>
 	})),
 );
 
+const FreeLimitsPanel = lazy(() =>
+	import("./FreeLimitsPanel").then((m) => ({
+		default: m.FreeLimitsPanel,
+	})),
+);
+
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -3174,11 +3179,12 @@ export const AdminSettingsRoute = () => {
 					keepMounted={false}
 				>
 					<Tabs.Panel value="usage-and-billing" pt="md">
-						<Stack gap="xl">
-							<UsageAndBillingPanel />
-							{/* Tier-wide, so it sits beside the rollup, not per workspace. */}
+						<UsageAndBillingPanel />
+					</Tabs.Panel>
+					<Tabs.Panel value="free-tier-limits" pt="md">
+						<Suspense fallback={<Skeleton h={240} />}>
 							<FreeLimitsPanel />
-						</Stack>
+						</Suspense>
 					</Tabs.Panel>
 					<Tabs.Panel value="payments" pt="md">
 						<PaymentsPanel />

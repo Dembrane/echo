@@ -135,12 +135,12 @@ it("shows audio as hours and minutes and edits it in minutes", async () => {
 	await screen.findByTestId("free-limit-row-audio_seconds_month");
 	const r = row("audio_seconds_month");
 	expect(within(r).getByTestId("free-limit-current").textContent).toBe("5 h");
-	expect(within(r).getByRole("textbox")).toHaveProperty("value", "300");
+	expect(within(r).getByRole("textbox")).toHaveProperty("value", "300 min");
 	const c = row("audio_seconds_conversation");
 	expect(within(c).getByTestId("free-limit-current").textContent).toBe(
 		"1 h 30 min",
 	);
-	expect(within(c).getByRole("textbox")).toHaveProperty("value", "90");
+	expect(within(c).getByRole("textbox")).toHaveProperty("value", "90 min");
 });
 
 const putBody = async () => {
