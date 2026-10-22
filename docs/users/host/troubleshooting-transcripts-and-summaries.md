@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting transcripts & summaries
-description: What to do when a transcript has mistakes, a summary misses the point, or a conversation shows no text, an error or a lock.
+description: What to do when a transcript has mistakes, a summary misses the point, or a conversation shows no text or an error.
 audience: host
 ---
 
@@ -13,7 +13,7 @@ point, or there is no text at all. Find yours below.
 |---|---|
 | Names or jargon are misspelt, or passages read badly | 1. The transcript has mistakes |
 | The summary is vague, off topic or in the wrong language | 2. The summary misses the point |
-| "Transcribing", "Empty", "Transcription error", "Locked", or nothing at all | 3. There is no transcript or summary |
+| "Transcribing", "Empty", "Transcription error", or nothing at all | 3. There is no transcript or summary |
 
 ## 1. The transcript has mistakes
 
@@ -43,8 +43,8 @@ Adding key terms does not change transcripts that already exist. Retranscribing 
   has no audio playback, no audio download and cannot be retranscribed again.
 - "Attach verified artifacts" shows when the original has approved outcomes. Switch it on to
   copy them to the new conversation.
-- The new conversation counts toward your audio hours like any other. On the free plan that
-  uses up part of the hour again.
+- The new conversation shows in your usage like any other. On the free plan it does not use
+  up the month's hours.
 - An anonymised conversation cannot be retranscribed.
 
 ### Marks you can find in a transcript
@@ -92,7 +92,6 @@ Other things to know:
 | "Transcription error", and "Unable to process this chunk" in the transcript | Part of the audio could not be transcribed. The rest was transcribed and summarised, and the recording is saved. | Retranscribe to give the whole recording a fresh pass. If the same part fails again, tell us with "Give feedback". |
 | "Generate summary" is greyed out | The summary needs transcript text first. | Wait for the transcript, then press "Generate summary". |
 | A finished conversation has no summary yet | The summary is not written yet, or the attempt failed. | dembrane tries again every 5 minutes. You can also press "Generate summary". |
-| "Locked", with "You've reached your transcript limit" | The free plan's one hour of audio was used before this conversation finished. | Nothing is lost. The conversation opens when the workspace is on a paid plan. See [tiers, billing and usage](./tiers-billing-and-usage.md). |
 
 ## Still stuck?
 

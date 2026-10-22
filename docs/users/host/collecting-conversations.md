@@ -18,19 +18,20 @@ already have. Both become conversations in the same project.
 
 ## Check your plan before the session
 
-The free plan includes one hour of audio for the whole life of the workspace, not per month.
-Uploads count, and so do conversations you deleted.
+The free plan includes 5 hours of audio a month for your whole account, and at most 1 hour
+per conversation. The month starts on the 1st (UTC). Uploads count, and so do conversations
+you deleted. Only one project takes recordings: the others show "Recordings are paused for
+this project on the free plan." Press "Use this project for recordings" on the one you need.
 
-The portal never stops anyone from recording. What changes is what you can read. A
-conversation that finishes after the workspace has reached its hour is locked: the
-transcript and the summary are hidden and the conversation carries the badge "Locked". The
-conversation that crosses the hour stays readable.
+When a limit is reached, recording stops and the participant sees "That's a wrap".
+Everything recorded up to then is saved, transcribed and summarised. Once the month's hours
+are used, the portal shows "This project isn't taking recordings right now." until the 1st.
 
-An example: four groups record 40 minutes each on a new free workspace. The first two to
-finish are readable. The other two are recorded, but locked.
+An example: eight groups record 40 minutes each at the same time, on an account with 5 hours
+left. Together they reach 5 hours after about 37 minutes, so every recording stops there.
 
-Locked conversations open once the workspace is on a paid plan. Getting there takes a short
-form and a call with the dembrane team, not a button, so arrange it before the day. See
+A paid plan takes a short form and a call with the dembrane team, not a button, so arrange
+it before the day. See
 [tiers, billing and usage](./tiers-billing-and-usage.md).
 
 ## Share the portal
@@ -138,8 +139,9 @@ straight away and marks the conversation with an "Upload" badge.
 Upload takes audio only. There is no upload for documents, transcripts or text files. Written
 input comes in through the text screen of the portal.
 
-With the "Observer" role you cannot upload. On a free workspace that has used its hour,
-upload is locked and shows "Upload limit reached".
+With the "Observer" role you cannot upload. On the free plan, dembrane checks each file's
+length first. A file that is too long shows, for example, "This file is {file} long. You have
+{left} of recording left this month."
 
 ## dembrane Go
 
@@ -161,4 +163,4 @@ no new audio has arrived for five minutes. It then gets its summary. Read on in
 - [The participant portal](../../features/portal-and-participant-experience.md): the portal, screen by screen.
 - [Recording](../../features/recording.md): how audio is sent and what happens on a bad connection.
 - [The live monitor](../../features/live-monitor.md): every state and warning.
-- [Tiers, billing and usage](./tiers-billing-and-usage.md): the free hour and paid plans.
+- [Tiers, billing and usage](./tiers-billing-and-usage.md): the free plan's hours and paid plans.

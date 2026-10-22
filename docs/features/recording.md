@@ -1,6 +1,6 @@
 ---
 title: Recording
-description: How audio gets into dembrane. Recording in the participant portal, uploading audio files, the real limits, the free plan's one hour, and what happens on a bad connection.
+description: How audio gets into dembrane. Recording in the participant portal, uploading audio files, the real limits, the free plan's monthly hours, and what happens on a bad connection.
 audience: all
 ---
 
@@ -99,23 +99,28 @@ summarised straight away, carries an "Upload" badge, and does not appear on the
 Upload takes audio only. There is no upload for documents, transcripts or text files.
 Observers cannot upload.
 
-## The free plan's one hour
+## The free plan's hours
 
-A workspace on the free plan gets one hour of audio in total. The hour is counted over the
-life of the workspace, not per month, and deleted conversations still count. Paid plans
-have no cap on hours.
+An account on the free plan gets 5 hours of audio a month, shared by all its workspaces.
+One conversation can be at most 1 hour long. The month starts on the 1st (UTC). Deleted
+conversations still count. Paid plans have no cap on hours.
 
-Recording never stops at the cap, and participants notice nothing. What changes is on the
-host's side:
+- Only one project in the account takes recordings. Other projects show "Recordings are
+  paused for this project on the free plan. New recordings go to {name}." and "Use this
+  project for recordings" switches it.
+- At 1 hour the portal stops the recording and shows "That's a wrap": "This conversation
+  has reached its maximum length. Everything you recorded is saved."
+- When the month's hours run out during a recording, the portal shows "Recording has
+  stopped for now. Everything you recorded is saved."
+- A portal with no hours left, or of a project that does not take recordings, shows "This
+  project isn't taking recordings right now." It never mentions plans. A portal for
+  typed text still works.
+- Upload checks each file's length first: "This file is {file} long. You have {left} of
+  recording left this month."
+- Everything that was recorded is transcribed and summarised as usual. No conversation is
+  locked.
 
-- A conversation finished after the hour was used is marked "Locked". Its transcript and
-  summary are hidden. A conversation that started under the cap stays open, even if it ran
-  past it.
-- Upload is locked, with the message "Upload limit reached".
-- Tiles on the monitor are locked.
-
-After an upgrade the locked conversations open and their summaries are written. See
-[tiers and billing](./tiers-and-billing.md).
+See [tiers and billing](./tiers-and-billing.md).
 
 ## The iOS app
 

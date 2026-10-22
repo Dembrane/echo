@@ -12,7 +12,8 @@ page has no prices: [ask dembrane](#move-to-a-paid-plan) for those.
 
 A plan belongs to a billing account, not to a single workspace. The workspaces your
 organisation uses itself share one plan. A workspace made for an external organisation has its
-own plan and starts on Free.
+own plan and starts on Free. While your organisation is on Free too, that workspace shares your
+free allowance.
 
 ## The plans
 
@@ -21,9 +22,13 @@ includes everything a lower one has.
 
 | What you want | Plan you need |
 |---|---|
-| More than 1 hour of recording | Any paid plan |
-| More than one chat, or more than three questions in a chat | Any paid plan |
-| More than one report | Any paid plan |
+| More than 5 hours of recording a month, or conversations longer than 1 hour | Any paid plan |
+| Recording in more than one project | Any paid plan |
+| More than one project | Any paid plan |
+| More than two chats a month, or more than 20 questions in a chat | Any paid plan |
+| More than one report or one map a month | Any paid plan |
+| More than 12 popcorn analyses a month | Any paid plan |
+| The microphone in chat | Any paid plan |
 | A second workspace on your organisation's plan | Any paid plan |
 | Hide the dembrane event invitation in the portal | Any paid plan |
 | Private projects, and sharing them with chosen people | Innovator or higher |
@@ -39,23 +44,34 @@ No plan caps the number of seats, and paid plans have no cap on recording hours.
 
 | Limit | Free plan |
 |---|---|
-| Recording | 1 hour per workspace, counted over the life of the workspace and not per month. Deleted conversations still count. |
-| Chats | 1 chat per workspace, 3 questions in it. Deleting the chat frees the slot. |
-| Reports | 1 per workspace. A deleted report does not count. |
+| Recording | 5 hours a month, and at most 1 hour per conversation. Deleted conversations still count. |
+| Projects | 1. Sample projects do not count. Deleting the project frees the slot. |
+| Recording project | One project takes recordings and uploads. "Use this project for recordings" switches it. |
+| Chats | 2 new chats a month, 20 questions in each. Deleting a chat does not free the slot. |
+| Reports | 1 a month. A deleted report still counts. |
+| Maps | 1 a month. |
+| Popcorn | 12 analyses a month. |
+| Organisations | 1. You cannot create a second free organisation. |
 | Workspaces | 1 on your organisation's plan. |
 | People | No limit. |
 | Agent (MCP) tool calls | 1,000 per calendar month per organisation. |
 
-When the free hour is used up:
+The limits cover all the workspaces of your billing account together. They start again on the
+1st of each month (UTC). A chat from an earlier month stays readable, but takes no new
+questions. Workspace "Settings", "Usage and billing" shows "Free plan allowance", with what you
+used and "Resets on {date}".
 
-- Participants are never cut off. They can keep recording.
-- Conversations recorded past the hour are locked for you. Their transcripts and summaries are
-  held back until the workspace is on a paid plan. A conversation that started inside the hour
-  stays open.
-- Uploads are blocked, with "Upload limit reached".
+When the month's hours are used up:
+
+- A recording that is going on stops. The participant reads "Recording has stopped for now.
+  Everything you recorded is saved."
+- The portal shows "This project isn't taking recordings right now." Uploads pause too.
+- Nothing is locked. Every transcript and summary stays readable.
+- Owners and admins get a notice and the email "{name} has used this month's recording hours".
 
 > [!TIP]
-> Planning a session longer than an hour? Sort out your plan before the event. The way to a
+> Planning a session longer than an hour, or more hours than you have left? Sort out your plan
+> before the event. The way to a
 > paid plan includes a call and an offer to sign, so it is not something to start during a
 > recording.
 
@@ -78,7 +94,7 @@ Add and remove people on each workspace's "Members" page. See
 
 | Where | What it shows | Who sees it |
 |---|---|---|
-| Workspace "Settings", "Usage and billing" | This month's "Audio", "Seats", "Members", "Externals", "Observers (free)", "Pending invites" and "Projects" | "Admin", "Member", "Billing" |
+| Workspace "Settings", "Usage and billing" | On the free plan, "Free plan allowance". Then this month's "Audio", "Seats", "Members", "Externals", "Observers (free)", "Pending invites" and "Projects" | "Admin", "Member", "Billing" |
 | Organisation "Settings", "Usage" | "Organisation usage": one row per workspace with "Tier", "Hours", "Seats" and "Status" | Organisation admins and billing |
 | A project's "Manage" menu, "Usage" | "Audio" and "Conversations" for the project, with a breakdown per conversation | People who can open the project |
 

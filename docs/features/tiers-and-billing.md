@@ -28,29 +28,47 @@ Changemaker.
 
 | | On the free plan |
 |---|---|
-| Recorded audio | 1 hour for each workspace, counted over the whole life of the workspace, not each month. Deleted conversations still count |
+| Recorded audio | 5 hours a month, and at most 1 hour per conversation. Deleted conversations still count |
+| Projects | 1. Sample projects do not count. Deleting the project frees the place |
+| Recording | One project takes recordings and uploads. You choose which one |
+| Organisations | 1. A person who owns or runs a free organisation cannot create another |
 | Workspaces | 1 on your organisation's plan. A workspace for an external organisation is not counted |
-| Chat | 1 chat for each workspace, with 3 questions. Deleting the chat frees the place |
-| Reports | 1 for each workspace. Deleted reports do not count |
+| Chat | 2 new chats a month, each with 20 questions. Deleting a chat does not free the place |
+| Reports | 1 a month. Deleted reports still count |
+| Maps | 1 map a month |
+| Popcorn | 12 analyses a month. Live analysis runs at most every 5 minutes |
 | [Agent (MCP)](./mcp-and-bring-your-own-llm.md) tool calls | 1,000 each calendar month for the whole organisation |
 | People | No limit. The free plan is not limited to one user |
 
-The free plan does not include the features in the next table.
+The limits are counted for the whole billing account, across all its workspaces. The
+month starts on the 1st (UTC). Workspace settings, "Usage and billing", shows "Free plan
+allowance": what you used, of how much, and "Resets on {date}". dembrane can change the
+numbers, and that card always shows the current ones.
 
-When the free hour is used up:
+- A chat from an earlier month stays readable but takes no new questions.
+- A report or popcorn analysis that fails before it produces anything is given back. So is a
+  map that fails to start.
+- An account that moves down to Free gets the full allowance from that moment.
+- Nothing is ever locked. Every transcript and summary stays readable.
 
-- Participants are never stopped. The portal keeps working.
-- A conversation that started inside the hour stays open to you.
-- Later conversations are locked for the host: the transcript and the summary are held
-  back. A locked conversation gets its summary after the workspace moves to a paid plan.
-- You cannot upload recordings ("Upload limit reached") or use the microphone in chat.
-- dembrane tells you: "Your free transcription hour is used up."
+When the month's hours are used up:
+
+- A recording that is going on stops. The participant sees "That's a wrap" and "Recording
+  has stopped for now. Everything you recorded is saved."
+- The portal shows "This project isn't taking recordings right now." It never mentions
+  plans.
+- Uploads are paused until the 1st.
+- The account's owners and admins get a notice and the email "{name} has used this month's
+  recording hours".
+
+The microphone in chat needs a paid plan.
 
 ## What needs a paid plan
 
 | Feature | Plan | Who can use it |
 |---|---|---|
-| More than 1 hour of audio, 1 workspace, 1 chat with 3 questions, 1 report | any paid plan | |
+| More audio, projects, workspaces, chats, reports, maps and popcorn analyses than the free plan includes | any paid plan | |
+| Recording in every project, and the microphone in chat | any paid plan | |
 | Agent (MCP) tool calls that are not counted | any paid plan, on at least one workspace of the organisation | |
 | Hide the dembrane event invitation in the portal | any paid plan | anyone who can edit the project |
 | A workspace that is "Invite only" or "Private" | Innovator or above | workspace admins, and organisation admins when they create it |
@@ -64,7 +82,7 @@ Going back is always free: making a project visible to the workspace again, or s
 workspace back to "Everyone in your organisation", needs no plan.
 
 A feature your plan does not include shows the badge "Available on a paid plan". A control
-you cannot use opens one short line, such as "The free plan includes one report.", with the
+you cannot use opens one short line, such as "The free plan includes a monthly allowance of reports.", with the
 link "Tell us what you need".
 
 ## How you get a paid plan
@@ -111,8 +129,9 @@ Every workspace is paid for by one billing account, and the plan sits on that ac
 - A workspace "For an external organisation" has its own account. It starts on the free
   plan, whatever plan your organisation has. Its plan badge reads "{Tier} (partner)":
   "Billed separately, not part of the organisation's plan." Someone who is in that
-  workspace and in your internal workspaces holds a seat on each account. See
-  [the partner program](./partner-program.md).
+  workspace and in your internal workspaces holds a seat on each account. While both your
+  organisation and that workspace are on Free, the workspace uses your organisation's free
+  allowance. See [the partner program](./partner-program.md).
 
 ## Where you see usage and billing
 

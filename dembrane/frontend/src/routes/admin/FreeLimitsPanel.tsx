@@ -166,7 +166,7 @@ function FreeLimitRow({ limit }: { limit: FreeLimit }) {
 			</Table.Td>
 			<Table.Td>
 				<Stack gap="xs">
-					<Group gap="xs" wrap="nowrap">
+					<Group gap="lg" wrap="nowrap">
 						<NumberInput
 							size="xs"
 							w={110}
@@ -178,13 +178,7 @@ function FreeLimitRow({ limit }: { limit: FreeLimit }) {
 							value={draft}
 							onChange={setDraft}
 							aria-label={labelOf(limit.key)}
-							rightSection={
-								unit === "count" ? undefined : (
-									<Text size="xs" c="dimmed">
-										{t`min`}
-									</Text>
-								)
-							}
+							suffix={unit === "count" ? undefined : ` ${t`min`}`}
 						/>
 						<Button
 							size="xs"

@@ -35,7 +35,7 @@ dembrane then:
 | | "For internal use" | "For an external organisation" |
 |---|---|---|
 | Billing | Your organisation's plan and seats | Its own account, plan and seats. The badge reads "{Tier} (partner)": "Billed separately, not part of the organisation's plan." |
-| Plan at the start | Your organisation's plan | Free. The free plan's limits apply until this workspace has a paid plan of its own |
+| Plan at the start | Your organisation's plan | Free. The free plan's limits apply until this workspace has a paid plan of its own. While your organisation is on Free too, the workspace shares your organisation's free allowance |
 | Access setting at the start | Any your plan includes | "Everyone in your organisation" only |
 | Observers | Cannot be invited | Can be invited, for free |
 | Data owner | None | The client you named |
