@@ -1441,8 +1441,12 @@ msgstr "Онлайн"
 #~ msgstr "Лише якщо ви отримуєте рахунки через Peppol"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:181
-msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
-msgstr "Цю чернетку бачать лише працівники. Коли ви її надішлете, вона отримає дату того дня і буде дійсна 14 днів."
+#~ msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
+#~ msgstr "Цю чернетку бачать лише працівники. Коли ви її надішлете, вона отримає дату того дня і буде дійсна 14 днів."
+
+#: src/features/accounts/staff/DocumentRoute.tsx:181
+msgid "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
+msgstr ""
 
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Лише адміністратори організації та контактні особи з питань оплати бачать цей акаунт."

@@ -1441,8 +1441,12 @@ msgstr "Online"
 #~ msgstr "Alleen als je facturen via Peppol ontvangt"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:181
-msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
-msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
+#~ msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
+#~ msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
+
+#: src/features/accounts/staff/DocumentRoute.tsx:181
+msgid "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
+msgstr ""
 
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien het account."

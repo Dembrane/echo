@@ -180,7 +180,7 @@ function DocumentPage() {
 					<Text size="sm" c="dimmed" data-testid="draft-note">
 						<Trans>
 							Only staff see this draft. When you send it, it gets that day's
-							date and is valid for 14 days.
+							date and its validity counts from then.
 						</Trans>
 					</Text>
 				)}

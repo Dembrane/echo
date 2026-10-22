@@ -1441,8 +1441,12 @@ msgstr "Online"
 #~ msgstr "Jen pokud dostáváte faktury přes Peppol"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:181
-msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
-msgstr "Tento koncept vidí jen zaměstnanci. Po odeslání dostane datum toho dne a platí 14 dní."
+#~ msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
+#~ msgstr "Tento koncept vidí jen zaměstnanci. Po odeslání dostane datum toho dne a platí 14 dní."
+
+#: src/features/accounts/staff/DocumentRoute.tsx:181
+msgid "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
+msgstr ""
 
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Účet vidí pouze správci a fakturační kontakty organizace."
