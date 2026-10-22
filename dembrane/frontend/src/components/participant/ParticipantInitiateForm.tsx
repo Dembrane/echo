@@ -55,9 +55,13 @@ const autoStartedConversations = new Map<
 export const ParticipantInitiateForm = ({
 	project,
 	onRefusedChange,
+	consentGiven = false,
 }: {
 	project: Project;
 	onRefusedChange?: (refused: boolean) => void;
+	/** The participant ticked the deck's consent checkbox. Never true when
+	 * ?skipOnboarding=1 skipped the deck. */
+	consentGiven?: boolean;
 }) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
@@ -130,6 +134,7 @@ export const ParticipantInitiateForm = ({
 			});
 			initiateConversation(
 				{
+					consentGiven,
 					email: data.email || undefined,
 					// `??` not `||`: an empty name is intentional when the project does
 					// not ask for one, and keeps the dashboard's auto-title fallback
@@ -147,7 +152,7 @@ export const ParticipantInitiateForm = ({
 				},
 			);
 		},
-		[project.id, initiateConversation, portalSource],
+		[project.id, initiateConversation, portalSource, consentGiven],
 	);
 
 	const nothingToAsk = portalHasNothingToAsk(project);
@@ -193,6 +198,7 @@ export const ParticipantInitiateForm = ({
 				source: portalSource,
 			});
 			pending = requestConversation({
+				consentGiven,
 				email: defaultEmail || undefined,
 				name: defaultName || t`Participant`,
 				pin: "",
@@ -232,6 +238,7 @@ export const ParticipantInitiateForm = ({
 		searchParams,
 		goToConversation,
 		portalSource,
+		consentGiven,
 	]);
 
 	useEffect(() => {

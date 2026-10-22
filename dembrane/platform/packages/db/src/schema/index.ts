@@ -1144,6 +1144,7 @@ export const conversation = pgTable(
     move_history: json(),
     token_count: integer(),
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
+    consent_given_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

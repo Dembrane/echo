@@ -19,7 +19,7 @@ import {
 } from "./service";
 import { confirmUpload, probeUrl, uploadUrl } from "./uploads";
 
-const { model, optional, required, nullable, str, list, datetime } = p;
+const { model, optional, required, nullable, str, list, datetime, bool } = p;
 
 const InitiateBody = model({
   name: required(str()),
@@ -30,6 +30,7 @@ const InitiateBody = model({
   tag_id_list: optional(nullable(list(str())), [] as string[]),
   source: optional(nullable(str()), null),
   visitor_id: optional(nullable(str()), null),
+  consent_given: optional(bool(), false),
 });
 
 const UploadTextBody = model({
@@ -72,6 +73,7 @@ export function portalRoutes(d: ConversationsDeps) {
       userAgent: b.user_agent,
       tagIds: b.tag_id_list ?? [],
       source: b.source,
+      consentGiven: b.consent_given,
     });
     const live = liveServices(d);
     // The funnel dot this conversation grew out of leaves the monitor's lanes at once.

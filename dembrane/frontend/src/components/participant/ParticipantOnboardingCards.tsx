@@ -71,6 +71,9 @@ const ParticipantOnboardingCards = ({
 	const [animationDirection, setAnimationDirection] = useState("");
 	// The form refused to start: nothing to begin and nowhere to go back to.
 	const [refused, setRefused] = useState(false);
+	// Set when the participant advances past a required checkbox, which comes
+	// on a slide before the form, so the form mounts already knowing.
+	const [consentGiven, setConsentGiven] = useState(false);
 
 	const { language } = useLanguage();
 
@@ -101,9 +104,13 @@ const ParticipantOnboardingCards = ({
 
 	const InitiateFormComponent = useMemo(
 		() => () => (
-			<ParticipantInitiateForm project={project} onRefusedChange={setRefused} />
+			<ParticipantInitiateForm
+				project={project}
+				onRefusedChange={setRefused}
+				consentGiven={consentGiven}
+			/>
 		),
-		[project],
+		[project, consentGiven],
 	);
 
 	// With no name and no tags to collect, the last card starts the conversation
@@ -284,6 +291,7 @@ const ParticipantOnboardingCards = ({
 		// Advancing past a required checkbox is the participant accepting consent.
 		if (currentCard.checkbox?.required) {
 			posthog.capture("consent_given", { project_id: project.id });
+			setConsentGiven(true);
 		}
 		if (currentSlideIndex < allSlides.length - 1) {
 			setAnimationDirection("slide-left");

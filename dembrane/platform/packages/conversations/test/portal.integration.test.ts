@@ -139,6 +139,25 @@ run("portal uploads and audio routes", () => {
     expect(links.map((l) => l.project_tag_id)).toEqual([tag]);
   });
 
+  test("initiate stamps consent only when the participant ticked it", async () => {
+    await seed(sql, newId());
+    const start = async (body: Record<string, unknown>) => {
+      const res = await post(`/api/participant/projects/${PROJECT}/conversations/initiate`, {
+        name: "P",
+        pin: "",
+        ...body,
+      });
+      expect(res.status).toBe(200);
+      const { id } = (await res.json()) as { id: string };
+      const [row] = await sql`select consent_given_at from conversation where id = ${id}`;
+      return row?.consent_given_at as Date | null;
+    };
+    expect(await start({ consent_given: true })).toBeInstanceOf(Date);
+    // A skipped deck sends nothing, and an older portal never knew the field.
+    expect(await start({})).toBeNull();
+    expect(await start({ consent_given: false })).toBeNull();
+  });
+
   test("replies: oldest first, only through the conversation's own project", async () => {
     const conv = newId();
     await seed(sql, conv);

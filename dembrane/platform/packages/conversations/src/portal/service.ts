@@ -56,6 +56,8 @@ export interface InitiateInput {
   readonly userAgent: string | null;
   readonly tagIds: readonly string[];
   readonly source: string | null;
+  /** The participant ticked the portal's consent checkbox; false when the deck was skipped. */
+  readonly consentGiven: boolean;
 }
 
 /**
@@ -84,6 +86,8 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
         participant_user_agent: input.userAgent,
         source: input.source,
         is_anonymized: Boolean(project.anonymize_transcripts),
+        // Stamped by the server: the portal says whether, never when.
+        consent_given_at: input.consentGiven ? now : null,
         created_at: now,
         updated_at: now,
       })
