@@ -902,7 +902,8 @@ run("an offer draft, and the invoice request after the signature", () => {
     });
     expect(doc.title).toBe("Pilot for Testdorp");
     const path = `${S()}/offers/${doc.id}`;
-    const { currency: _c, ...noCurrency } = offer({ reference: null, person_name: "Bo" });
+    // offer() names no currency, so the change leaves it out.
+    const noCurrency = offer({ reference: null, person_name: "Bo" });
     const kept = K.DocumentDetail.parse((await call(w, "PUT", path, "staff", noCurrency)).data);
     expect(kept.title).toBe("Pilot for Testdorp");
     expect(kept.currency).toBe("USD");
