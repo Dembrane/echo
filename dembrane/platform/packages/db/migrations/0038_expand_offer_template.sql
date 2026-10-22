@@ -1,4 +1,4 @@
-CREATE TABLE "offer_template" (
+CREATE TABLE IF NOT EXISTS "offer_template" (
 	"template" text NOT NULL,
 	"language" text NOT NULL,
 	"kind" text NOT NULL,
