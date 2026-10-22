@@ -975,10 +975,33 @@ run("an offer draft, and the invoice request after the signature", () => {
       );
     expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("sent");
     expect((await openFor(first.id)).map((t) => t.code)).toContain("sign_offer");
+    // The deal still reads as sent: the draft waits beside the offer, not in its place.
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.organisation.deal_stage).toBe("offer_sent");
+    expect(card.organisation.milestones.offer_sent).not.toBeNull();
+    // A second revision of the same offer may be drafted, but only one of them is sent.
+    const other = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ template: "custom", reference: "OFFER-REV", send: false }),
+          supersedes_id: first.id,
+          vat_treatment: "reverse_charge",
+          items: [
+            { description: "Licence", quantity: 3, unit_price_cents: 20000, vat_rate_bps: 0 },
+          ],
+        })
+      ).data,
+    ).document;
     // Sending the revision replaces it.
     expect((await send(revised.id)).status).toBe("sent");
     expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("void");
     expect(await openFor(first.id)).toEqual([]);
+    // The other revision of that offer is refused now, and nothing changes.
+    const twice = await call(w, "POST", `${S()}/documents/${other.id}/send`, "staff", {});
+    expect(twice.status).toBe(409);
+    expect(JSON.stringify(twice.data)).toContain("already replaced");
+    expect((await store.document(w.db, w.orgId, other.id))?.status).toBe("draft");
+    expect((await store.document(w.db, w.orgId, revised.id))?.status).toBe("sent");
     // Pushed and sent in one go, the old offer is replaced at once, as before.
     const third = K.PushOfferResponse.parse(
       (

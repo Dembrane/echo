@@ -57,6 +57,28 @@ describe("the deal stage of an account", () => {
     expect(stage([signed, invoice("void")])).toBe("offer_accepted");
   });
 
+  test("a draft revision waits beside the offer it replaces; that offer still decides", () => {
+    const sent = doc({ id: "offer-1" });
+    const revision = doc({
+      id: "offer-2",
+      status: "draft",
+      createdAt: at(3),
+      sentAt: null,
+      supersedesId: "offer-1",
+    });
+    expect(stage([sent, revision])).toBe("offer_sent");
+    const m = dealMilestones({
+      isAccount: true,
+      documents: [sent, revision],
+      billingComplete: false,
+    });
+    expect([m.offer_drafted, m.offer_sent]).toEqual([at(1).toISOString(), at(2).toISOString()]);
+    // Once that offer is withdrawn, the revision is what stands.
+    expect(stage([{ ...sent, status: "void" }, revision])).toBe("offer_drafted");
+    // A draft that replaces nothing is the newest offer, as before.
+    expect(stage([sent, { ...revision, supersedesId: null }])).toBe("offer_drafted");
+  });
+
   test("the dates behind the stage: each step from when it happened, nothing before", () => {
     const day = (n: number) => at(n).toISOString();
     expect(dealMilestones({ isAccount: true, documents: [], billingComplete: false })).toEqual({

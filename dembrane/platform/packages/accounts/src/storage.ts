@@ -339,6 +339,8 @@ export const store = {
     const [documents, billing, billingSaved] = await Promise.all([
       c
         .select({
+          id: doc.id,
+          supersedesId: doc.supersedesId,
           orgId: doc.orgId,
           kind: doc.kind,
           status: doc.status,

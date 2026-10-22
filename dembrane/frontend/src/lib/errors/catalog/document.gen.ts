@@ -160,6 +160,13 @@ export const document = {
     audience: "staff",
     description: "Signed documents are final; a replacement is a new document.",
   },
+  "document.already_replaced": {
+    action: "none",
+    detail: "This document was already replaced by another version",
+    audience: "staff",
+    description:
+      "A second revision of an offer another sent version already replaced; revise the newer one.",
+  },
   "document.title_required": {
     action: "fix_input",
     detail: "A document needs a title",

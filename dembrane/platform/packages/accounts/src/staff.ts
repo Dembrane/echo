@@ -678,8 +678,20 @@ async function sendOfferIn(
   if (notify) assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
-  // A revision drafted earlier replaces its offer now; one signed meanwhile stops the send.
-  if (doc.supersedesId) await supersede(d, tx, orgId, doc.supersedesId, "offer");
+  // A revision drafted earlier replaces its offer now. One signed meanwhile stops the send,
+  // and so does another version sent first: two live versions of one offer never exist.
+  if (doc.supersedesId) {
+    const prev = await replaceable(tx, orgId, doc.supersedesId, "offer");
+    const replaced = (await store.documents(tx, orgId)).some(
+      (x) =>
+        x.id !== doc.id &&
+        x.supersedesId === prev.id &&
+        x.status !== "draft" &&
+        x.status !== "void",
+    );
+    if (replaced) throw new ConflictError("document.already_replaced");
+    await supersede(d, tx, orgId, prev.id, "offer");
+  }
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
