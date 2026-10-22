@@ -145,11 +145,11 @@ page built from recent conversations.
 
 ## Limits
 
-- Free plan: one chat per workspace and three questions per chat. At the limit the chat shows
-  "Upgrade to continue" and "See upgrade options". See
+- Free plan: two new chats a month and 20 questions per chat, for the whole account. At the
+  limit the chat shows "Upgrade to continue" and "See upgrade options". See
   [tiers, billing and usage](./tiers-billing-and-usage.md).
-- Free plan: a conversation recorded after your free recording hour is used up cannot be added
-  to a chat.
+- Free plan: a chat from an earlier month stays readable but takes no new questions. Start a
+  new chat instead.
 - No paid plan is needed for either chat mode.
 
 Answers in both modes come from Gemini language models served from an EU endpoint.

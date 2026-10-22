@@ -41,13 +41,18 @@ workspace instead."
 
 ## Billing and limits
 
-The workspace starts on its own free plan, whatever plan your organisation has. The free limits
-count for this workspace alone. The ones you meet first:
+The workspace starts on its own free plan, whatever plan your organisation has. Who counts the
+free limits depends on your organisation's plan:
 
-- One hour of recorded audio in total. Participants are never stopped, but conversations finished
-  after that hour are locked for you: their transcript and summary stay hidden until the
-  workspace is on a paid plan.
-- One chat with three questions, and one report.
+- Your organisation is on a paid plan: the limits count for this workspace alone.
+- Your organisation is on Free too: the workspace shares your organisation's free allowance. Its
+  "Free plan allowance" card reads "Shared across all workspaces in this organisation".
+
+The ones you meet first:
+
+- 5 hours of recorded audio a month, and at most 1 hour per conversation. Nothing that was
+  recorded is ever locked.
+- One project, two chats a month with 20 questions each, and one report a month.
 
 To arrange a paid plan, open the workspace's settings and go to "Usage and billing". It reads
 "This workspace is billed separately". Choose "Tell us what you need": a short form, then a call

@@ -24,7 +24,7 @@ For what a host sees, read [chat and Ask](../../features/chat-and-ask.md).
 
 A third mode, `overview`, is still stored on older chats. Those chats still open, and nothing creates a new one. A chat's mode is set once and cannot be changed. New chats start as "Specific Details", and a host opts in to the assistant from the Ask screen.
 
-Both paths need the `chat:use` policy on the project. See [roles and policies in code](./roles-and-policies.md). On the free tier both allow one chat per workspace and three questions per chat.
+Both paths need the `chat:use` policy on the project. See [roles and policies in code](./roles-and-policies.md). On the free tier both share one gate: 2 new chats a month per billing account and 20 user turns per chat. See [the free tier in code](./free-tier.md).
 
 ## Plain chat
 
@@ -34,7 +34,7 @@ Both paths need the `chat:use` policy on the project. See [roles and policies in
 - The host's message is stored first and removed again when the reply fails. The reply itself is written by the dashboard through the chat BFF (`/api/v2/bff/chat-messages`) when the stream ends.
 - Replies run on the `multi_modal_pro` model group. Chat titles and follow-up suggestions run on `multi_modal_fast`.
 - One reply may take 300 seconds.
-- The free tier limits are in `packages/chats/src/tiers.ts`.
+- The free tier gate is `freeChats` in `packages/chats/src/free.ts`. `packages/chats/src/tiers.ts` holds the sample project cap (`FREE_TIER_MAX_SAMPLE_USER_TURNS`).
 
 ## The assistant
 

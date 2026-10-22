@@ -92,9 +92,9 @@ The recording itself is saved. For what to try next, see
 
 ## On the free plan
 
-Once a free workspace has used its one hour of audio, transcripts and summaries of later
-conversations are hidden and the conversation is marked "Locked". Recording goes on. See
-[recording](./recording.md).
+Every conversation is transcribed and summarised, on every plan. The free plan limits how
+much audio comes in: 5 hours a month for the account, and 1 hour per conversation. Nothing
+that was recorded is hidden. See [recording](./recording.md).
 
 ## Related
 

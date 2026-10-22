@@ -94,7 +94,7 @@ is on in the [portal editor](./portal-editor.md).
 | Publish, cancel a schedule | "Admin", "Member" |
 | Delete | "Admin" |
 
-Reports need no paid plan. The free plan includes one report per workspace. After that you see
+Reports need no paid plan. The free plan includes one report a month for your account. After that you see
 "Report limit reached" and "See upgrade options". See
 [tiers, billing and usage](./tiers-billing-and-usage.md).
 
