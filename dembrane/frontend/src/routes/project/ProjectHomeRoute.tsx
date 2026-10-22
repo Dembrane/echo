@@ -30,6 +30,7 @@ import { InputModal } from "@/components/common/InputModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ConversationsMiniList } from "@/components/conversation/ConversationsMiniList";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AudioUsedUpNotice } from "@/components/project/AudioUsedUpNotice";
 import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
@@ -166,6 +167,9 @@ export const ProjectHomeRoute = () => {
 				</Stack>
 
 				{isSample && <SampleProjectNotice />}
+				{!isSample && projectId && workspaceId && (
+					<AudioUsedUpNotice projectId={projectId} workspaceId={workspaceId} />
+				)}
 				{!isSample && projectId && workspaceId && (
 					<RecordingPausedNotice
 						projectId={projectId}

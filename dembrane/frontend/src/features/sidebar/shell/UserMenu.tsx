@@ -24,7 +24,10 @@ import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { ColorSchemeControl } from "@/components/settings/ColorSchemeSettingsCard";
+import { wallPopoverLine } from "@/components/workspace/gateWalls";
+import { UnavailableInfo } from "@/components/workspace/UnavailableInfo";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useManagedFreeOrg } from "@/hooks/useManagedFreeOrg";
 import { useV2Me } from "@/hooks/useV2Me";
 import { cn } from "@/lib/utils";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "./rail";
@@ -42,6 +45,8 @@ export const UserMenu = () => {
 	const { runTransition } = useTransitionCurtain();
 	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
 	const inRail = useInRail();
+	// Click still opens the modal, which shows the org wall in place.
+	const orgCapped = !!useManagedFreeOrg();
 
 	if (!isAuthenticated || !user) return null;
 
@@ -175,6 +180,12 @@ export const UserMenu = () => {
 					</Menu.Item>
 					<Menu.Item
 						leftSection={<Buildings size={16} />}
+						rightSection={
+							orgCapped ? (
+								<UnavailableInfo label={wallPopoverLine("org_cap")} />
+							) : undefined
+						}
+						opacity={orgCapped ? 0.8 : 1}
 						onClick={createOrgHandlers.open}
 					>
 						<Trans>Create organisation</Trans>

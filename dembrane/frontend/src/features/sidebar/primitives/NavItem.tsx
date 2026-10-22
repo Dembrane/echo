@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { CaretRight, type Icon } from "@phosphor-icons/react";
 import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
 import { brandColors, roles } from "@/colors";
 import { SUPPORTED_LANGUAGES } from "@/config";
@@ -31,6 +31,7 @@ interface NavItemProps {
 	inset?: boolean;
 	/** Work this tool is doing: a dial while it runs, a chit once it's done. */
 	process?: { tool: Tool; status?: ToolStatus };
+	onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
 export const BADGE_TONES = {
@@ -94,6 +95,7 @@ export const NavItem = ({
 	disabled,
 	inset,
 	process,
+	onClick,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
@@ -174,6 +176,7 @@ export const NavItem = ({
 				<NavLink
 					to={localePath}
 					end={end}
+					onClick={onClick}
 					className={cn(
 						RAIL_ITEM_CLASS,
 						!active && "hover:bg-[var(--app-quiet)]",
@@ -230,6 +233,7 @@ export const NavItem = ({
 		<NavLink
 			to={localePath}
 			end={end}
+			onClick={onClick}
 			className={cn(
 				"relative flex h-[30px] items-center gap-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]",
 				inset ? "pr-2 pl-8" : "px-2",

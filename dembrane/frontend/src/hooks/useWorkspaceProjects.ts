@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -154,6 +155,8 @@ export const useCreateWorkspaceProject = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			// The project count drives the create buttons' cap look.
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 };

@@ -8,6 +8,7 @@ import {
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	addChatContext,
@@ -171,6 +172,7 @@ export const useCloneProjectByIdMutation = () => {
 					queryKey: ["projects", newProjectId],
 				});
 			}
+			void invalidateFreeAllowance(queryClient);
 			toast.success("Project cloned successfully");
 		},
 	});
@@ -214,6 +216,7 @@ export const useMoveProjectMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-projects"],
 			});
+			void invalidateFreeAllowance(queryClient);
 			toast.success(t`Project moved`);
 		},
 	});
@@ -252,6 +255,7 @@ export const useBulkMoveProjectsMutation = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			void invalidateFreeAllowance(queryClient);
 			toast.success(t`Projects moved`);
 		},
 	});

@@ -17,7 +17,10 @@ const role = vi.hoisted(() => ({ current: "owner" }));
 const usageCalls = vi.hoisted(
 	() => [] as { id: unknown; opts?: { enabled?: boolean } }[],
 );
-const panelProps = vi.hoisted(() => ({ showUpload: undefined as unknown }));
+const panelProps = vi.hoisted(() => ({
+	showAudioNotice: undefined as unknown,
+	showUpload: undefined as unknown,
+}));
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
 vi.mock("@/hooks/useWorkspace", () => ({
@@ -102,8 +105,12 @@ vi.mock("@/components/dropzone/UploadConversationDropzone", () => ({
 	UploadConversationDropzone: () => <div data-testid="upload-dropzone" />,
 }));
 vi.mock("@/components/conversation/ProjectConversationsPanel", () => ({
-	ProjectConversationsPanel: (props: { showUpload?: boolean }) => {
+	ProjectConversationsPanel: (props: {
+		showUpload?: boolean;
+		showAudioNotice?: boolean;
+	}) => {
 		panelProps.showUpload = props.showUpload;
+		panelProps.showAudioNotice = props.showAudioNotice;
 		return null;
 	},
 }));
@@ -116,6 +123,7 @@ afterEach(() => {
 	role.current = "owner";
 	usageCalls.length = 0;
 	panelProps.showUpload = undefined;
+	panelProps.showAudioNotice = undefined;
 });
 
 beforeAll(() => {
@@ -231,4 +239,13 @@ describe("Upload controls role gating", () => {
 		renderAt(<ProjectConversationsRoute />);
 		expect(panelProps.showUpload).toBe(expected);
 	});
+
+	it.each(["observer", "member", "owner"])(
+		"%s: conversations tab shows the audio used up notice",
+		(r) => {
+			role.current = r;
+			renderAt(<ProjectConversationsRoute />);
+			expect(panelProps.showAudioNotice).toBe(true);
+		},
+	);
 });

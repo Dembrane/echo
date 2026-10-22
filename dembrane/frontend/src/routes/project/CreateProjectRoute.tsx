@@ -16,7 +16,7 @@ import {
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -31,6 +31,7 @@ import {
 } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useProjectCapStatus } from "@/hooks/useProjectCap";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -98,6 +99,20 @@ export const CreateProjectRoute = () => {
 	useDocumentTitle(t`Create project | dembrane`);
 
 	const tier = workspace?.tier ?? "pilot";
+	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
+	const cap = useProjectCapStatus(workspace);
+	const capDecided = useRef(false);
+	const wizardStarted = step > 0 || name.trim() !== "";
+	const [atProjectCap, setAtProjectCap] = useState(false);
+	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
+	useEffect(() => {
+		if (capDecided.current || !cap.settled) return;
+		capDecided.current = true;
+		if (cap.atCap && !wizardStarted) {
+			setAtProjectCap(true);
+			upgradeHandlers.open();
+		}
+	}, [cap.atCap, cap.settled, wizardStarted, upgradeHandlers.open]);
 	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
 	const privateAvailable = privateTiers.has(tier);
 
@@ -454,7 +469,7 @@ export const CreateProjectRoute = () => {
 			</Stack>
 			<UpgradeModal
 				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
+				onClose={atProjectCap ? backToProjects : upgradeHandlers.close}
 				// The 402 proves the account is free, whatever this workspace shows.
 				currentTier="free"
 				requiredTier="changemaker"
