@@ -160,7 +160,6 @@ export function LinesEditor({
 							/>
 							<TextInput
 								label={t`Unit`}
-								placeholder={t`months`}
 								value={line.unit}
 								onChange={(e) => update(i, { unit: e.currentTarget.value })}
 								error={fields[`items.${i}.unit`]}

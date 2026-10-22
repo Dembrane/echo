@@ -197,7 +197,7 @@ msgstr "Azioni"
 msgid "Add a change"
 msgstr "Aggiungi una modifica"
 
-#: src/features/accounts/staff/LinesEditor.tsx:229
+#: src/features/accounts/staff/LinesEditor.tsx:228
 msgid "Add a discount"
 msgstr "Aggiungi uno sconto"
 
@@ -205,7 +205,7 @@ msgstr "Aggiungi uno sconto"
 msgid "Add a field"
 msgstr "Aggiungi un campo"
 
-#: src/features/accounts/staff/LinesEditor.tsx:210
+#: src/features/accounts/staff/LinesEditor.tsx:209
 msgid "Add a line"
 msgstr "Aggiungi una riga"
 
@@ -670,11 +670,11 @@ msgstr "Demo"
 msgid "Description"
 msgstr "Descrizione"
 
-#: src/features/accounts/staff/LinesEditor.tsx:221
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "Discount"
 msgstr "Sconto"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:171
 msgid "Discount ({currency})"
 msgstr "Sconto ({currency})"
 
@@ -1214,7 +1214,7 @@ msgstr "Permetti loro di accedere con un codice via email"
 msgid "Liability cap"
 msgstr "Limite di responsabilità"
 
-#: src/features/accounts/staff/LinesEditor.tsx:194
+#: src/features/accounts/staff/LinesEditor.tsx:193
 msgid "Line total"
 msgstr "Totale riga"
 
@@ -1254,8 +1254,8 @@ msgstr "Messaggio"
 #~ msgstr "Mese"
 
 #: src/features/accounts/staff/LinesEditor.tsx:163
-msgid "months"
-msgstr "mesi"
+#~ msgid "months"
+#~ msgstr "mesi"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 msgid "Name"
@@ -2041,6 +2041,10 @@ msgstr "Inviaci il tuo numero d'ordine (PO)"
 #~ msgid "Sending failed"
 #~ msgstr ""
 
+#: src/features/accounts/staff/PushOfferModal.tsx:459
+msgid "Sending replaces the sent version."
+msgstr "L'invio sostituisce la versione inviata."
+
 #: src/features/accounts/format.ts:62
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
@@ -2460,10 +2464,6 @@ msgstr "Il promemoria non è stato inviato. Riprova tra poco."
 msgid "The same person who signs the offer"
 msgstr "La stessa persona che firma l’offerta"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:459
-msgid "The sent version is withdrawn."
-msgstr "La versione inviata viene ritirata."
-
 #: src/features/accounts/signing/SignRoute.tsx:1164
 msgid "The signed copy is in your documents."
 msgstr "La copia firmata si trova tra i tuoi documenti."
@@ -2664,7 +2664,7 @@ msgstr "Prima scrivi il tuo nome."
 msgid "Unit"
 msgstr "Unità"
 
-#: src/features/accounts/staff/LinesEditor.tsx:173
+#: src/features/accounts/staff/LinesEditor.tsx:172
 msgid "Unit price ({currency})"
 msgstr "Prezzo unitario ({currency})"
 
@@ -2740,7 +2740,7 @@ msgstr "Valido fino al {validUntil}"
 msgid "VAT"
 msgstr "IVA"
 
-#: src/features/accounts/staff/LinesEditor.tsx:184
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "VAT %"
 msgstr "% IVA"
 

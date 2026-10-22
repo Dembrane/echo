@@ -197,7 +197,7 @@ msgstr "Akce"
 msgid "Add a change"
 msgstr "Přidat změnu"
 
-#: src/features/accounts/staff/LinesEditor.tsx:229
+#: src/features/accounts/staff/LinesEditor.tsx:228
 msgid "Add a discount"
 msgstr "Přidat slevu"
 
@@ -205,7 +205,7 @@ msgstr "Přidat slevu"
 msgid "Add a field"
 msgstr "Přidat pole"
 
-#: src/features/accounts/staff/LinesEditor.tsx:210
+#: src/features/accounts/staff/LinesEditor.tsx:209
 msgid "Add a line"
 msgstr "Přidat řádek"
 
@@ -670,11 +670,11 @@ msgstr "Dema"
 msgid "Description"
 msgstr "Popis"
 
-#: src/features/accounts/staff/LinesEditor.tsx:221
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "Discount"
 msgstr "Sleva"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:171
 msgid "Discount ({currency})"
 msgstr "Sleva ({currency})"
 
@@ -1214,7 +1214,7 @@ msgstr "Nechat je přihlásit se pomocí kódu z e-mailu"
 msgid "Liability cap"
 msgstr "Limit odpovědnosti"
 
-#: src/features/accounts/staff/LinesEditor.tsx:194
+#: src/features/accounts/staff/LinesEditor.tsx:193
 msgid "Line total"
 msgstr "Celkem za položku"
 
@@ -1254,8 +1254,8 @@ msgstr "Zpráva"
 #~ msgstr "Měsíc"
 
 #: src/features/accounts/staff/LinesEditor.tsx:163
-msgid "months"
-msgstr "měsíce"
+#~ msgid "months"
+#~ msgstr "měsíce"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 msgid "Name"
@@ -2041,6 +2041,10 @@ msgstr "Pošlete nám číslo objednávky"
 #~ msgid "Sending failed"
 #~ msgstr ""
 
+#: src/features/accounts/staff/PushOfferModal.tsx:459
+msgid "Sending replaces the sent version."
+msgstr "Odesláním se nahradí odeslaná verze."
+
 #: src/features/accounts/format.ts:62
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
@@ -2460,10 +2464,6 @@ msgstr "Připomínka se neodeslala. Zkuste to za chvíli znovu."
 msgid "The same person who signs the offer"
 msgstr "Stejná osoba, která podepisuje nabídku"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:459
-msgid "The sent version is withdrawn."
-msgstr "Odeslaná verze se stáhne."
-
 #: src/features/accounts/signing/SignRoute.tsx:1164
 msgid "The signed copy is in your documents."
 msgstr "Podepsaná kopie je ve vašich dokumentech."
@@ -2664,7 +2664,7 @@ msgstr "Nejprve napište své jméno."
 msgid "Unit"
 msgstr "Jednotka"
 
-#: src/features/accounts/staff/LinesEditor.tsx:173
+#: src/features/accounts/staff/LinesEditor.tsx:172
 msgid "Unit price ({currency})"
 msgstr "Jednotková cena ({currency})"
 
@@ -2740,7 +2740,7 @@ msgstr "Platí do {validUntil}"
 msgid "VAT"
 msgstr "DPH"
 
-#: src/features/accounts/staff/LinesEditor.tsx:184
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "VAT %"
 msgstr "VAT %"
 

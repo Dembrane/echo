@@ -456,7 +456,7 @@ function OfferForm({
 					</Text>
 					<Text size="xs" c="dimmed">
 						{revise ? (
-							<Trans>The sent version is withdrawn.</Trans>
+							<Trans>Sending replaces the sent version.</Trans>
 						) : (
 							<Trans>
 								The terms, SLA and DPA versions in force today are pinned.

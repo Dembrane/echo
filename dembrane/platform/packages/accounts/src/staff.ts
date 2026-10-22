@@ -356,6 +356,22 @@ function offerReference(dateIso: string, id: string): string {
   return `DMB-${dateIso.replace(/-/g, "")}-${id.slice(-4).toUpperCase()}`;
 }
 
+/**
+ * The document a new one replaces, locked against a signature at the same moment. A signed
+ * one cannot be replaced.
+ */
+async function replaceable(
+  tx: Parameters<typeof store.org>[0],
+  orgId: string,
+  id: string,
+  kind: string,
+) {
+  const prev = isUuid(id) ? await store.documentForUpdate(tx, orgId, id) : null;
+  if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
+  if (prev.status === "signed") throw new ConflictError("document.signed_cannot_supersede");
+  return prev;
+}
+
 /** Voids a document that supersedes, withdrawing its signing task; a signed one stays. */
 async function supersede(
   d: AccountsDeps,
@@ -364,9 +380,7 @@ async function supersede(
   id: string,
   kind: string,
 ) {
-  const prev = isUuid(id) ? await store.document(tx, orgId, id) : null;
-  if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
-  if (prev.status === "signed") throw new ConflictError("document.signed_cannot_supersede");
+  const prev = await replaceable(tx, orgId, id, kind);
   const now = d.now();
   if (prev.status !== "void")
     await store.updateDocument(tx, prev.id, { status: "void", voidedAt: now, updatedAt: now });
@@ -519,9 +533,13 @@ export async function pushOffer(
   const file = await storeRendered(d, org.id, id, rendered);
   let taskId = "";
   await d.db.transaction(async (tx) => {
-    const prev = input.supersedes_id
-      ? await supersede(d, tx, org.id, input.supersedes_id, "offer")
-      : null;
+    // A draft only names the offer it replaces: that one stays with the customer until the
+    // draft is sent, and the send replaces it (sendOfferIn).
+    const prev = !input.supersedes_id
+      ? null
+      : input.send === false
+        ? await replaceable(tx, org.id, input.supersedes_id, "offer")
+        : await supersede(d, tx, org.id, input.supersedes_id, "offer");
     await store.insertDocument(tx, {
       id,
       orgId: org.id,
@@ -660,6 +678,8 @@ async function sendOfferIn(
   if (notify) assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
+  // A revision drafted earlier replaces its offer now; one signed meanwhile stops the send.
+  if (doc.supersedesId) await supersede(d, tx, orgId, doc.supersedesId, "offer");
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);

@@ -197,7 +197,7 @@ msgstr "Дії"
 msgid "Add a change"
 msgstr "Додати зміну"
 
-#: src/features/accounts/staff/LinesEditor.tsx:229
+#: src/features/accounts/staff/LinesEditor.tsx:228
 msgid "Add a discount"
 msgstr "Додати знижку"
 
@@ -205,7 +205,7 @@ msgstr "Додати знижку"
 msgid "Add a field"
 msgstr "Додати поле"
 
-#: src/features/accounts/staff/LinesEditor.tsx:210
+#: src/features/accounts/staff/LinesEditor.tsx:209
 msgid "Add a line"
 msgstr "Додати рядок"
 
@@ -670,11 +670,11 @@ msgstr "Демо"
 msgid "Description"
 msgstr "Опис"
 
-#: src/features/accounts/staff/LinesEditor.tsx:221
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "Discount"
 msgstr "Знижка"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:171
 msgid "Discount ({currency})"
 msgstr "Знижка ({currency})"
 
@@ -1214,7 +1214,7 @@ msgstr "Дозволити вхід за кодом з електронної п
 msgid "Liability cap"
 msgstr "Межа відповідальності"
 
-#: src/features/accounts/staff/LinesEditor.tsx:194
+#: src/features/accounts/staff/LinesEditor.tsx:193
 msgid "Line total"
 msgstr "Підсумок рядка"
 
@@ -1254,8 +1254,8 @@ msgstr "Повідомлення"
 #~ msgstr "Місяць"
 
 #: src/features/accounts/staff/LinesEditor.tsx:163
-msgid "months"
-msgstr "місяці"
+#~ msgid "months"
+#~ msgstr "місяці"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 msgid "Name"
@@ -2041,6 +2041,10 @@ msgstr "Надішліть нам номер замовлення (PO)"
 #~ msgid "Sending failed"
 #~ msgstr ""
 
+#: src/features/accounts/staff/PushOfferModal.tsx:459
+msgid "Sending replaces the sent version."
+msgstr "Надсилання замінить надіслану версію."
+
 #: src/features/accounts/format.ts:62
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
@@ -2460,10 +2464,6 @@ msgstr "Нагадування не надіслано. Спробуйте ще 
 msgid "The same person who signs the offer"
 msgstr "Та сама особа, що підписує пропозицію"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:459
-msgid "The sent version is withdrawn."
-msgstr "Надіслану версію буде відкликано."
-
 #: src/features/accounts/signing/SignRoute.tsx:1164
 msgid "The signed copy is in your documents."
 msgstr "Підписана копія міститься у ваших документах."
@@ -2664,7 +2664,7 @@ msgstr "Спершу введіть ім'я."
 msgid "Unit"
 msgstr "Одиниця"
 
-#: src/features/accounts/staff/LinesEditor.tsx:173
+#: src/features/accounts/staff/LinesEditor.tsx:172
 msgid "Unit price ({currency})"
 msgstr "Ціна за одиницю ({currency})"
 
@@ -2740,7 +2740,7 @@ msgstr "Дійсна до {validUntil}"
 msgid "VAT"
 msgstr "ПДВ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:184
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "VAT %"
 msgstr "VAT %"
 

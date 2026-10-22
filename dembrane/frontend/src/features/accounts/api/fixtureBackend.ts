@@ -1694,7 +1694,8 @@ export async function handle(
 				const title =
 					(body.title as string | null) ?? `${body.offer_name} x dembrane`;
 				const sha = randomHex();
-				if (body.supersedes_id) {
+				// A draft revision leaves the sent offer with the customer until it is sent.
+				if (body.supersedes_id && body.send !== false) {
 					const old = s.docs.find((x) => x.id === body.supersedes_id);
 					if (old && old.status !== "signed") {
 						old.status = "void";

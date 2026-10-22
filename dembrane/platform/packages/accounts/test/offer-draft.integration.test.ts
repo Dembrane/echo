@@ -965,10 +965,49 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(revised.reference).toBe("OFFER-REV");
     expect(revised.title).toBe("Pilot for Testdorp");
     expect(revised.content?.vat_treatment).toBe("reverse_charge");
-    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("void");
     const row = await store.document(w.db, w.orgId, revised.id);
     expect(row?.supersedesId).toBe(first.id);
     expect(row?.externalRef).toBe("deal-900");
+    // While the revision is a draft the customer keeps the sent offer and its task.
+    const openFor = async (docId: string) =>
+      (await store.tasks(w.db, w.orgId)).filter(
+        (t) => t.documentId === docId && !["done", "withdrawn"].includes(t.status),
+      );
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("sent");
+    expect((await openFor(first.id)).map((t) => t.code)).toContain("sign_offer");
+    // Sending the revision replaces it.
+    expect((await send(revised.id)).status).toBe("sent");
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("void");
+    expect(await openFor(first.id)).toEqual([]);
+    // Pushed and sent in one go, the old offer is replaced at once, as before.
+    const third = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ reference: "OFFER-REV" }),
+          supersedes_id: revised.id,
+        })
+      ).data,
+    ).document;
+    expect(third.status).toBe("sent");
+    expect(third.version).toBe(3);
+    expect((await store.document(w.db, w.orgId, revised.id))?.status).toBe("void");
+  });
+
+  test("a revision is not sent when the offer it replaces was signed meanwhile", async () => {
+    const first = await draft(w.orgId, { reference: "OFFER-SIGNED" });
+    await send(first.id);
+    const revision = await draft(w.orgId, { reference: "OFFER-SIGNED", supersedes_id: first.id });
+    expect((await sign(first.id)).status).toBe(200);
+    const refused = await call(w, "POST", `${S()}/documents/${revision.id}/send`, "staff", {});
+    expect(refused.status).toBe(409);
+    expect((await store.document(w.db, w.orgId, revision.id))?.status).toBe("draft");
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("signed");
+    // Nor can a signed offer get a new draft revision.
+    const late = await call(w, "POST", `${S()}/offers`, "staff", {
+      ...offer({ reference: "OFFER-SIGNED", send: false }),
+      supersedes_id: first.id,
+    });
+    expect(late.status).toBe(409);
   });
 
   test("staff make a new organisation with its contact, and it takes an offer", async () => {

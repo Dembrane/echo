@@ -857,7 +857,10 @@ export const PushOfferRequest = z.object({
   billing_unit: BillingUnit.optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
-  /** An unsigned offer this one replaces; it is voided. */
+  /**
+   * An unsigned offer this one replaces; it is voided when this one is sent. A draft leaves
+   * it with the customer until then, and its send answers 409 if that offer was signed.
+   */
   supersedes_id: nullish(Uuid),
   /**
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
