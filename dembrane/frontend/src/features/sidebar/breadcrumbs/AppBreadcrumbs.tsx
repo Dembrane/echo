@@ -29,6 +29,7 @@ const truncateMiddle = (text: string, maxLength = MAX_CRUMB_LABEL_LENGTH) => {
 
 const ADMIN_TAB_LABELS: Record<string, string> = {
 	accounts: "Accounts",
+	"free-tier-limits": "Free tier limits",
 	partners: "Partners",
 	upgrades: "Upgrades",
 	"usage-and-billing": "Usage and billing",
