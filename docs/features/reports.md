@@ -139,8 +139,8 @@ hours.
 The billing role has no access to projects. See
 [roles & permissions](./roles-and-permissions.md).
 
-Reports need no paid plan. On the Free plan a workspace has one report: "Your free plan
-includes one report. Upgrade to create more." See [tiers & billing](./tiers-and-billing.md).
+Reports need no paid plan. On the Free plan an account has one report a month: "The free
+plan includes 1 report a month." See [tiers & billing](./tiers-and-billing.md).
 
 A finished report can also trigger a webhook, "Report generated". Webhooks are set up under
 "Automation" (Beta) by a workspace admin and need the Changemaker plan or higher. See

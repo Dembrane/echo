@@ -181,10 +181,9 @@ wrong?". Your feedback and the reply go to the dembrane team.
 
 - Admins, members and external collaborators can chat. Observers do not see "Ask" in the
   sidebar. See [roles & permissions](./roles-and-permissions.md).
-- Ask needs no paid plan. On the Free plan a workspace has one chat, and a chat takes three
-  questions. After that the chat shows "Upgrade to continue". On the Free plan, a
-  conversation recorded after the free recording hour is used up cannot be attached. See
-  [tiers & billing](./tiers-and-billing.md).
+- Ask needs no paid plan. On the Free plan an account starts two new chats a month, and a
+  chat takes 20 questions. After that the chat shows "Upgrade to continue". A chat from an
+  earlier month takes no new questions. See [tiers & billing](./tiers-and-billing.md).
 - Replies are written by Gemini models served from an EU endpoint.
 
 ## Related

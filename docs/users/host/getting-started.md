@@ -11,10 +11,10 @@ organisation, create a project, share its portal, and read what comes back. Run 
 once with a test recording before you put it in front of a room.
 
 > [!IMPORTANT]
-> A new account starts on the free plan. It includes one hour of audio in total, not per
-> month. After that hour people can still record, but the transcripts and summaries of new
-> conversations stay hidden until the workspace is on a paid plan. If your session will pass
-> an hour, arrange the plan first. See [tiers, billing and usage](./tiers-billing-and-usage.md).
+> A new account starts on the free plan. It includes 5 hours of audio a month, at most 1 hour
+> per conversation, and one project. When the hours run out, recording stops until the 1st of
+> the next month. Everything recorded stays readable. If your session needs more, arrange the
+> plan first. See [tiers, billing and usage](./tiers-billing-and-usage.md).
 
 ## 1. Create your account
 
@@ -111,10 +111,10 @@ A name came out wrong? Add it as a key term and transcribe again. See
 ## Then make sense of it
 
 - "Ask" in the sidebar opens a chat about your conversations. Press "Select conversations",
-  type a question and press "Send". The free plan includes one chat with three questions.
+  type a question and press "Send". The free plan includes two chats a month, with 20 questions each.
   See [chat and Ask](./chat-and-ask.md).
 - "Report" in the sidebar writes an article from the project's conversations. Press
-  "Generate now". The free plan includes one report. See [reports](./reports.md).
+  "Generate now". The free plan includes one report a month. See [reports](./reports.md).
 - "Present" prepares a screen for the room, and "Map" lays out the arguments people made.
   Both are Beta. See [present and map](./present-and-map.md).
 

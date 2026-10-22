@@ -25,7 +25,7 @@ Good to know:
 - The zip leaves out conversations that have no transcript text.
 - Each file in the zip is named with the date and time, the participant's name and the
   start of the conversation's ID, so the files sort by time.
-- "Download audio" is not available for anonymised, text-only or locked conversations.
+- "Download audio" is not available for anonymised or text-only conversations.
 
 ## What does not exist
 
