@@ -120,10 +120,12 @@ export const initiateConversation = async (payload: {
 	source: string;
 	tagIdList: string[];
 	visitorId?: string;
+	consentGiven?: boolean;
 }) => {
 	return apiNoAuth.post<unknown, TConversation>(
 		`/participant/projects/${payload.projectId}/conversations/initiate`,
 		{
+			consent_given: payload.consentGiven ?? false,
 			email: payload.email ?? undefined,
 			name: payload.name,
 			pin: payload.pin,

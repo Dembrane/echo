@@ -77,12 +77,12 @@ const project = (overrides: Partial<Project> = {}) =>
 		...overrides,
 	}) as unknown as Project;
 
-const wrap = (p: Project) =>
+const wrap = (p: Project, consentGiven?: boolean) =>
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
 				<MemoryRouter initialEntries={["/en-US/p1/start"]}>
-					<ParticipantInitiateForm project={p} />
+					<ParticipantInitiateForm project={p} consentGiven={consentGiven} />
 				</MemoryRouter>
 			</MantineProvider>
 		</I18nProvider>,
@@ -114,6 +114,20 @@ it("starts the conversation itself when nothing is asked", async () => {
 	);
 	// No question was asked, so no button was offered.
 	expect(screen.queryByTestId("portal-initiate-next-button")).toBeNull();
+	expect(initiate).toHaveBeenCalledWith(
+		expect.objectContaining({ consentGiven: false }),
+	);
+});
+
+it("passes the deck's consent on to the start", async () => {
+	initiate.mockResolvedValue({ id: "c1" });
+	wrap(project(), true);
+
+	await waitFor(() =>
+		expect(initiate).toHaveBeenCalledWith(
+			expect.objectContaining({ consentGiven: true }),
+		),
+	);
 });
 
 it("creates one conversation even if the form is torn down mid-request", async () => {
