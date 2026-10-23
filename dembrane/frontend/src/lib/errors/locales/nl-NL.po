@@ -24,7 +24,7 @@ msgid "error.request.field_empty"
 msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_date_invalid"
 msgstr "{label} moet een echte datum zijn, niet in de toekomst en niet van voor het versturen van het document."
 
@@ -54,12 +54,12 @@ msgid "error.offer.bill_to_vat_format"
 msgstr "{vat_id} lijkt geen btw-nummer uit {country}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:67
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {De afbeelding van je paraaf} other {De afbeelding van je handtekening}} is te groot. Houd deze onder 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:62
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Je paraaf} other {Je handtekening}} moet een PNG-afbeelding zijn."
 
@@ -129,7 +129,7 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Voeg de naam toe van de organisatie die eigenaar is van de gegevens."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:59
+#: src/lib/errors/messages/offer.ts:63
 msgid "error.offer.no_charge_invoiced"
 msgstr "Een kosteloze offerte heeft geen factuurplan en geen betalende partij."
 
@@ -174,7 +174,7 @@ msgid "error.map.groups_need_snapshot"
 msgstr "Clusters bewaar je op een opnieuw gegenereerde kaart. Genereer de kaart opnieuw en probeer het nog eens."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:27
+#: src/lib/errors/messages/document.ts:31
 msgid "error.document.dpa_not_authorised"
 msgstr "Bevestig dat je bevoegd bent om namens je organisatie akkoord te gaan met gegevensverwerking."
 
@@ -224,7 +224,7 @@ msgid "error.field.invalid_url"
 msgstr "Voer een webadres in dat begint met http:// of https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:45
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_text_invalid"
 msgstr "Voer tekst in voor {label}."
 
@@ -239,7 +239,7 @@ msgid "error.request.field_required"
 msgstr "Vul {field} in."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:41
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_required"
 msgstr "Vul {label} in om door te gaan."
 
@@ -254,7 +254,7 @@ msgid "error.access.not_onboarded"
 msgstr "Voltooi het instellen van je account om door te gaan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:33
+#: src/lib/errors/messages/offer.ts:37
 msgid "error.offer.invoice_part_share"
 msgstr "Geef deel {part} een aandeel boven nul."
 
@@ -274,17 +274,22 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:42
+#: src/lib/errors/messages/offer.ts:46
 msgid "error.offer.invoice_parts_count"
 msgstr "Factureer in {min} tot {max} delen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:54
+#: src/lib/errors/messages/offer.ts:72
+msgid "error.offer.option_not_optional"
+msgstr "Regel {line} heeft een optienaam. Maak de regel optioneel, of wis de naam."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:58
 msgid "error.offer.line_no_amount"
 msgstr "Regel {line} heeft geen prijs. Kies voor een gratis offerte Kosteloos onder Zo factureren we."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:68
+#: src/lib/errors/messages/offer.ts:82
 msgid "error.offer.section_missing"
 msgstr "Regel {line} heeft geen sectie. Zet elke regel onder een kop, of geen enkele."
 
@@ -294,7 +299,7 @@ msgid "error.conversation.no_summary"
 msgstr "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:63
+#: src/lib/errors/messages/offer.ts:67
 msgid "error.offer.no_charge_total"
 msgstr "Kosteloos betekent een totaal van nul. Zet de prijzen op 0, of kies een andere manier van factureren."
 
@@ -324,12 +329,12 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online betalingen zijn momenteel niet beschikbaar. Neem contact met ons op om je abonnement te wijzigen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:19
+#: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Alleen {signer_email} kan dit document weigeren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:107
 msgid "error.document.signer_only"
 msgstr "Alleen {signer_email} kan dit document ondertekenen. Vraag diegene om te tekenen, of vraag ons om de ondertekenaar te wijzigen."
 
@@ -429,7 +434,12 @@ msgid "error.project.share_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:37
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.options_not_here"
+msgstr "Opties die bij ondertekening gekozen worden, gaan niet samen met maandelijks, in termijnen of kosteloos factureren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:41
 msgid "error.offer.invoice_part_when"
 msgstr "Deel {part}: alleen het eerste deel kan bij ondertekening, en elke datum komt na de vorige."
 
@@ -624,7 +634,7 @@ msgid "error.rate_limit.exceeded"
 msgstr "Dat waren veel verzoeken in korte tijd. Wacht heel even en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:14
+#: src/lib/errors/messages/document.ts:18
 msgid "error.document.confirmation_mismatch"
 msgstr "De bevestigingstekst komt niet overeen. Typ het precies zoals weergegeven: {expected}"
 
@@ -644,7 +654,7 @@ msgid "error.agent.insight_content_blank"
 msgstr "Het inzicht mag niet leeg zijn. Schrijf iets of verwijder het."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:73
+#: src/lib/errors/messages/offer.ts:87
 msgid "error.offer.section_split"
 msgstr "De regels van {section} moeten bij elkaar staan."
 
@@ -669,12 +679,12 @@ msgid "error.map.selection_other_snapshot"
 msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:50
+#: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "De delen tellen op tot {total}. Laat ze optellen tot 100%."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:72
 msgid "error.document.no_pdf"
 msgstr "De pdf van dit document is niet beschikbaar. Neem contact met ons op, dan sturen we hem opnieuw."
 
@@ -684,7 +694,7 @@ msgid "error.billing.invoice_pdf_missing"
 msgstr "De pdf van deze factuur is nog niet klaar. Probeer het over een tijdje opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:77
+#: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "Het totaal is nul. Kies voor een gratis offerte Kosteloos onder Zo factureren we."
 
@@ -804,12 +814,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Deze data-eigenaar zit al in je organisatie. Kies voor een externe klant iemand daarbuiten, of maak in plaats daarvan een interne werkruimte aan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:81
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_declinable"
 msgstr "Dit document kan niet meer worden geweigerd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:112
 msgid "error.document.signing_unavailable"
 msgstr "Dit document kan op dit moment niet worden ondertekend. We zijn op de hoogte en lossen het op."
 
@@ -819,12 +829,12 @@ msgid "error.document.changed"
 msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en lees het opnieuw voordat je ondertekent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:57
 msgid "error.document.field_unknown"
 msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:73
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.no_signature_needed"
 msgstr "Dit document heeft geen handtekening nodig."
 
@@ -834,22 +844,22 @@ msgid "error.document.already_signed"
 msgstr "Dit document is al ondertekend. Er hoeft niets meer te gebeuren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:93
 msgid "error.document.not_signed"
 msgstr "Dit document is nog niet ondertekend, dus er is geen ondertekende kopie om te downloaden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:77
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_awaiting_signature"
 msgstr "Dit document wacht niet meer op een handtekening."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:23
+#: src/lib/errors/messages/document.ts:27
 msgid "error.document.declined"
 msgstr "Dit document is geweigerd en kan niet meer worden ondertekend."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:121
 msgid "error.document.withdrawn"
 msgstr "Dit document is ingetrokken en kan niet meer worden ondertekend."
 
@@ -939,7 +949,7 @@ msgid "error.billing.tier_required"
 msgstr "Hiervoor is het {required}-abonnement nodig. Upgrade om het te gebruiken."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:94
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.offer_expired"
 msgstr "Deze aanbieding is verlopen op {valid_until}. Neem contact met ons op voor een nieuwe."
 
@@ -1169,17 +1179,27 @@ msgid "error.workspace.has_projects"
 msgstr "Deze werkruimte bevat nog {count, plural, one {# project} other {# projecten}}. Verwijder of verplaats ze eerst via de Projecten-pagina van je organisatie."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:37
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_must_tick"
 msgstr "Vink {label} aan om door te gaan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:49
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.choose_one"
+msgstr "Kruis precies één van de opties aan en onderteken dan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_tick_invalid"
 msgstr "Vink {label} aan of uit."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:46
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.choose_one_needs_two"
+msgstr "Geef minstens twee opties om er één te laten kiezen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
 msgid "error.offer.invoice_parts_vat"
 msgstr "Geef elke betaalde regel hetzelfde btw-tarief om in delen te factureren."
 
@@ -1189,7 +1209,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Om projecten te verplaatsen, moet je beheerder of eigenaar zijn van de {side} werkruimte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:113
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.verified_email_required"
 msgstr "Log in met een geverifieerd e-mailadres om te ondertekenen."
 
@@ -1324,7 +1344,7 @@ msgid "error.conversation.not_found"
 msgstr "We konden dit gesprek niet vinden. Mogelijk is het verwijderd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:85
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_found"
 msgstr "We konden dit document niet vinden. Mogelijk is het ingetrokken."
 
@@ -1499,7 +1519,7 @@ msgid "error.internal.unavailable"
 msgstr "We konden een deel van dembrane op dit moment niet bereiken. Probeer het zo opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:102
 msgid "error.document.signature_unreadable"
 msgstr "We konden je handtekening niet lezen. Zet hem opnieuw en probeer het nog een keer."
 

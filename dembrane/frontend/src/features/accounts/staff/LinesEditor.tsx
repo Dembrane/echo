@@ -37,6 +37,8 @@ export interface Line {
 	 * section share its id and sit together; the title is sent on each.
 	 */
 	section: Section | null;
+	/** An optional line's option name; the customer may tick it when signing. Empty for none. */
+	option: string;
 }
 
 export type LineKind = "charged" | "optional" | "included";
@@ -52,6 +54,7 @@ export const emptyLine = (): Line => ({
 	discount: false,
 	id: crypto.randomUUID(),
 	kind: "charged",
+	option: "",
 	quantity: 1,
 	section: null,
 	unit: "",
@@ -86,6 +89,7 @@ export const toLines = (
 		vat_rate_bps: number;
 		kind?: "optional" | "included" | null;
 		section?: string | null;
+		option?: string | null;
 	}[],
 ): Line[] => {
 	// Lines under the same heading, one after another, are one section.
@@ -100,6 +104,7 @@ export const toLines = (
 			discount: item.unit_price_cents < 0,
 			id: crypto.randomUUID(),
 			kind: item.kind ?? "charged",
+			option: item.option ?? "",
 			quantity: item.quantity,
 			section: item.section
 				? { id: ids[i] as string, title: item.section }
@@ -122,6 +127,8 @@ export const toItems = (lines: Line[]) =>
 		quantity: l.quantity,
 		...(l.kind !== "charged" && { kind: l.kind }),
 		...(l.section && { section: l.section.title.trim() }),
+		...(l.kind === "optional" &&
+			l.option.trim() && { option: l.option.trim() }),
 		...(l.unit.trim() && { unit: l.unit.trim() }),
 		// An included line has no price; the one typed stays in the form for a switch back.
 		unit_price_cents:
@@ -153,6 +160,7 @@ export function LinesEditor({
 	currency = "EUR",
 	discounts = false,
 	sections = false,
+	choices = false,
 	vatFixed = false,
 }: {
 	lines: Line[];
@@ -161,6 +169,8 @@ export function LinesEditor({
 	currency?: string;
 	discounts?: boolean;
 	sections?: boolean;
+	/** An optional line can be named as an option the customer ticks when signing. */
+	choices?: boolean;
 	vatFixed?: boolean;
 }) {
 	const { i18n } = useLingui();
@@ -259,6 +269,18 @@ export function LinesEditor({
 					value={line.bullets}
 					onChange={(e) => update(i, { bullets: e.currentTarget.value })}
 				/>
+				{choices && line.kind === "optional" && (
+					<TextInput
+						label={t`Option name`}
+						description={t`Empty: not ticked at signing`}
+						placeholder={t`Scenario A`}
+						maxLength={60}
+						value={line.option}
+						onChange={(e) => update(i, { option: e.currentTarget.value })}
+						error={fields[`items.${i}.option`]}
+						data-testid="line-option"
+					/>
+				)}
 				<SimpleGrid cols={{ base: 2, sm: 5 }} spacing="xs">
 					<NumberInput
 						label={t`Quantity`}

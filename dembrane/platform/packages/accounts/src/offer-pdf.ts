@@ -450,6 +450,35 @@ class Sheet {
     });
     return lineY;
   }
+
+  /**
+   * A box to tick with its label beside it, the field on the box. Returns the bottom of the
+   * line.
+   */
+  tick(field: AcceptanceField, x: number, top: number): number {
+    const SIZE = 12;
+    this.page.drawRectangle({
+      x,
+      y: PAGE_H - top - SIZE,
+      width: SIZE,
+      height: SIZE,
+      borderColor: CONTROL,
+      borderWidth: STROKE * 1.5,
+    });
+    this.at(field.label, x + SIZE + 8, top + (SIZE - T.body) / 2 - 1, { s: T.body, c: TEXT });
+    this.fields.push({
+      page: this.pageNumber,
+      x: x / PAGE_W,
+      y: top / PAGE_H,
+      width: SIZE / PAGE_W,
+      height: SIZE / PAGE_H,
+      kind: field.kind,
+      label: field.label,
+      required: field.required,
+      key: field.key,
+    });
+    return top + SIZE;
+  }
 }
 
 const BODY: Style = { s: T.body, c: TEXT };
@@ -560,12 +589,15 @@ function lines(s: Sheet, l: OfferLayout) {
 
   s.gap(24);
   s.room(80);
-  s.rule(MARGIN, RIGHT, s.y, TEXT);
-  row(
-    l.columns.map((c, i) => [
-      { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
-    ]),
-  );
+  // Only options to pick from: no table here, they follow with their own.
+  if (l.groups.length) {
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
+    );
+  }
   const cells = (r: OfferLayout["rows"][number]): Para[][] => [
     [
       text(r.description),
@@ -651,6 +683,26 @@ function lines(s: Sheet, l: OfferLayout) {
     );
     for (const g of l.optional.groups) group(g);
   }
+
+  // The options to pick from: each under its name, with its amount and, when exactly one is
+  // picked, the total the offer comes to with it. The ticks are in the acceptance.
+  if (l.choices) {
+    s.gap(28);
+    s.room(130);
+    s.para({ runs: runs(l.choices.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 2 });
+    s.para({ runs: runs(l.choices.note, CAPTION), leading: 1.4, after: 10 });
+    s.gap(0);
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
+    );
+    for (const o of l.choices.options) {
+      group({ title: o.label, rows: o.rows, subtotal: o.amount });
+      if (o.total) row([[text(o.total[0])], [], [], [text(o.total[1], { align: "right" })]]);
+    }
+  }
   s.done(36);
 }
 
@@ -662,6 +714,15 @@ function acceptance(s: Sheet, l: OfferLayout) {
   s.para(text(l.acceptanceIntro, { before: 14 }));
   s.para(text(l.acceptance.statement, { before: 6 }));
   s.gap(18);
+  if (l.choices) {
+    s.room(30 + 22 * l.choices.fields.length);
+    s.para({ runs: runs(l.choices.acceptanceTitle, CAPTION), leading: 1.4, after: 8 });
+    for (const field of l.choices.fields) {
+      s.room(22);
+      s.y = s.tick(field, MARGIN, s.y) + 10;
+    }
+    s.y += 8;
+  }
   for (const field of l.acceptance.fields) {
     s.room(36);
     s.y = s.blank(field, MARGIN, CONTENT_W, s.y, 26) + 11;

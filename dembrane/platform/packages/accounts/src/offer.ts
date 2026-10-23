@@ -10,6 +10,7 @@ import {
   type Totals,
   type VatTreatment,
 } from "./money";
+import { type ChooseMode, optionAmounts, optionKey, optionsOf } from "./options";
 
 /**
  * The words of an offer, from the Google Doc templates of sales (packages/accounts/reference:
@@ -39,6 +40,8 @@ export interface OfferItem extends OfferLine {
   readonly bullets: readonly string[];
   /** What the quantity counts, next to it in the table: "12 months", "8 hours". */
   readonly unit?: string | undefined;
+  /** An optional line's option, which the customer may tick when signing ("Scenario A"). */
+  readonly option?: string | undefined;
 }
 
 /**
@@ -159,6 +162,8 @@ export interface OfferContent {
    * offer, it asks for no billing details and is never invoiced. Absent on every other.
    */
   readonly no_charge?: true;
+  /** With options on its lines: the signer ticks exactly one, or any. */
+  readonly choose?: ChooseMode;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -189,6 +194,17 @@ interface Copy {
   readonly sectionSubtotal: string;
   /** Under the total of an offer of zero on purpose: why nothing is invoiced. */
   readonly noCharge: string;
+  /** The options the signer picks from: headings, notes and the words on their amounts. */
+  readonly choices: {
+    readonly title: Record<ChooseMode, string>;
+    readonly note: Record<ChooseMode, string>;
+    /** "{option}, excl. VAT" */
+    readonly amount: string;
+    /** "Total with {option} (incl. VAT)" */
+    readonly total: string;
+    /** Over the tick boxes in the acceptance. */
+    readonly acceptance: Record<ChooseMode, string>;
+  };
   /** The block of optional lines under the totals: its heading and the line under it. */
   readonly optional: { readonly title: string; readonly note: string };
   /** The party invoiced in place of the customer: its heading and the words on its lines. */
@@ -460,6 +476,16 @@ const EN_FRAME = {
   included: "Included",
   sectionSubtotal: "Subtotal",
   noCharge: "No charge: nothing is invoiced for this offer.",
+  choices: {
+    title: { one: "Choose one", any: "Options to choose" },
+    note: {
+      one: "Tick one in the acceptance when you sign. Only the one you tick is charged.",
+      any: "Tick any you want in the acceptance when you sign. Only those are charged.",
+    },
+    amount: "{option}, excl. VAT",
+    total: "Total with {option} (incl. VAT)",
+    acceptance: { one: "Your choice (tick one)", any: "Your choice (tick any)" },
+  },
   optional: { title: "Optional", note: "Not in the total above." },
   billTo: { title: "Invoiced to", reference: "Reference" },
   parts: {
@@ -495,6 +521,16 @@ const NL_FRAME = {
   included: "Inbegrepen",
   sectionSubtotal: "Subtotaal",
   noCharge: "Kosteloos: voor deze offerte wordt niets gefactureerd.",
+  choices: {
+    title: { one: "Kies er één", any: "Opties om te kiezen" },
+    note: {
+      one: "Kruis er bij het ondertekenen één aan. Alleen wat u aankruist, wordt gerekend.",
+      any: "Kruis bij het ondertekenen aan wat u wilt. Alleen dat wordt gerekend.",
+    },
+    amount: "{option}, excl. btw",
+    total: "Totaal met {option} (incl. btw)",
+    acceptance: { one: "Uw keuze (kruis er één aan)", any: "Uw keuze (kruis aan wat u wilt)" },
+  },
   optional: { title: "Optioneel", note: "Niet in het totaal hierboven." },
   billTo: { title: "Factuur aan", reference: "Referentie" },
   parts: {
@@ -776,6 +812,23 @@ export interface OfferLayout {
     /** The same rows under their section headings, without subtotals. */
     readonly groups: readonly OfferGroup[];
   } | null;
+  /**
+   * The options the signer picks from when signing, each with its lines and amount, and
+   * with `one` the offer's total with it; their tick boxes go in the acceptance.
+   */
+  readonly choices: {
+    readonly title: string;
+    readonly note: string;
+    readonly options: readonly {
+      readonly label: string;
+      readonly rows: readonly OfferRow[];
+      readonly amount: readonly [string, string];
+      readonly total: readonly [string, string] | null;
+    }[];
+    /** Over the tick boxes. */
+    readonly acceptanceTitle: string;
+    readonly fields: readonly AcceptanceField[];
+  } | null;
   /** Who the invoice goes to when it is not the customer: a heading over one line each. */
   readonly billTo: { readonly title: string; readonly lines: readonly string[] } | null;
   /** How an offer invoiced in parts is invoiced: one row per part; null when all at once. */
@@ -869,9 +922,37 @@ export function layoutOffer(content: OfferContent): OfferLayout {
         included ? copy.included : money(l.net_cents),
       ],
     };
-    return { kind: l.kind, row };
+    return { kind: l.kind, option: content.items[i]?.option, row };
   });
-  const optional = rows.filter((r) => r.kind === "optional").map((r) => r.row);
+  const optional = rows.filter((r) => r.kind === "optional" && !r.option).map((r) => r.row);
+  // Options the signer picks from: their own block, each with its amount and, when exactly
+  // one is picked, the total the offer comes to with it.
+  const options = optionsOf(content.items);
+  const mode = content.choose ?? "any";
+  const choices = options.length
+    ? {
+        title: copy.choices.title[mode],
+        note: copy.choices.note[mode],
+        options: options.map((o) => {
+          const amounts = optionAmounts(content.items, o);
+          const words = (w: string) => w.replace("{option}", o.label);
+          return {
+            label: o.label,
+            rows: o.lines.map((i) => (rows[i] as { row: OfferRow }).row),
+            amount: [words(copy.choices.amount), money(amounts.net_cents)] as const,
+            total:
+              mode === "one"
+                ? ([
+                    words(copy.choices.total),
+                    money(totals.total_cents + amounts.net_cents + amounts.vat_cents),
+                  ] as const)
+                : null,
+          };
+        }),
+        acceptanceTitle: copy.choices.acceptance[mode],
+        fields: options.map((o) => f(o.label, "checkbox", optionKey(o.number), false)),
+      }
+    : null;
   // Each section's rows, in order; its subtotal speaks for its charged lines, and only
   // when there is more than one section, since one would repeat the subtotal below it.
   const sections = sectionsOf(totals.lines);
@@ -906,11 +987,16 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     columns: text.columns,
     rows: rows.filter((r) => r.kind !== "optional").map((r) => r.row),
     groups: grouped((kind) => kind !== "optional", true),
-    totals: [
-      [copy.totals.subtotal, money(totals.subtotal_cents)],
-      [vatLabel, money(totals.vat_cents)],
-      [copy.totals.total, money(totals.total_cents)],
-    ],
+    choices,
+    // Every line an option to pick: no table of zeros, each option carries its own total.
+    totals:
+      choices && !rows.some((r) => r.kind !== "optional")
+        ? []
+        : [
+            [copy.totals.subtotal, money(totals.subtotal_cents)],
+            [vatLabel, money(totals.vat_cents)],
+            [copy.totals.total, money(totals.total_cents)],
+          ],
     vatNote: treatment === "standard" ? null : copy.vatNote[treatment],
     chargeNote: content.no_charge ? copy.noCharge : null,
     optional: optional.length
@@ -918,7 +1004,12 @@ export function layoutOffer(content: OfferContent): OfferLayout {
           title: copy.optional.title,
           note: copy.optional.note,
           rows: optional,
-          groups: grouped((kind) => kind === "optional", false),
+          groups: grouped((kind) => kind === "optional", false)
+            .map((g) => ({
+              ...g,
+              rows: g.rows.filter((r) => optional.includes(r)),
+            }))
+            .filter((g) => g.rows.length),
         }
       : null,
     billTo: content.bill_to
@@ -1001,9 +1092,9 @@ export function offerText(content: OfferContent): string {
     l.greeting,
     "",
     ...l.intro.flatMap((p) => [p, ""]),
-    `| ${l.columns.join(" | ")} |`,
-    "| --- | --- | --- | --- |",
-    ...groupLines(l.groups),
+    ...(l.groups.length
+      ? [`| ${l.columns.join(" | ")} |`, "| --- | --- | --- | --- |", ...groupLines(l.groups)]
+      : []),
   ];
   out.push(
     "",
@@ -1020,6 +1111,23 @@ export function offerText(content: OfferContent): string {
           "| --- | --- | --- | --- |",
           ...groupLines(l.optional.groups),
           "",
+        ]
+      : []),
+    ...(l.choices
+      ? [
+          `## ${l.choices.title}`,
+          l.choices.note,
+          "",
+          ...l.choices.options.flatMap((o) => [
+            `### ${o.label}`,
+            `| ${l.columns.join(" | ")} |`,
+            "| --- | --- | --- | --- |",
+            ...groupLines([{ title: null, rows: o.rows, subtotal: null }]),
+            "",
+            `${o.amount[0]}: ${o.amount[1]}`,
+            ...(o.total ? [`${o.total[0]}: ${o.total[1]}`] : []),
+            "",
+          ]),
         ]
       : []),
     ...(l.billTo ? [`## ${l.billTo.title}`, ...l.billTo.lines, ""] : []),
@@ -1043,6 +1151,9 @@ export function offerText(content: OfferContent): string {
     `## ${l.acceptanceTitle}`,
     l.acceptanceIntro,
     l.acceptance.statement,
+    ...(l.choices
+      ? [l.choices.acceptanceTitle, ...l.choices.fields.map((a) => `[ ] ${a.label}`)]
+      : []),
     ...[...l.acceptance.fields, ...l.acceptance.signing].map((a) => `${a.label}: ${blank}`),
     "",
     ...l.clause,

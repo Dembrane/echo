@@ -2,9 +2,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
+	Checkbox,
 	FileButton,
 	Group,
 	Modal,
+	Radio,
 	SegmentedControl,
 	Stack,
 	Text,
@@ -14,7 +16,7 @@ import {
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import { useAccountsMutation } from "../api/hooks";
+import { useAccountsMutation, useDocument } from "../api/hooks";
 import type { DocumentSummaryT } from "../contract/contract.gen";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -88,6 +90,17 @@ export function AcceptedOutsideModal({
 	const [file, setFile] = useState<File | null>(null);
 	const [fileError, setFileError] = useState<string | null>(null);
 	const accept = useAccountsMutation("acceptOutside", { orgId });
+	// An offer with options: what the customer chose, as their letter or email says it.
+	const detail = useDocument(orgId, isDpa ? undefined : doc.id, true);
+	const options = [
+		...new Set(
+			(detail.data?.content?.items ?? []).flatMap((i) =>
+				i.option ? [i.option] : [],
+			),
+		),
+	];
+	const pickOne = detail.data?.content?.choose === "one";
+	const [chosen, setChosen] = useState<string[]>([]);
 
 	const pick = (f: File | null) => {
 		setFileError(null);
@@ -105,6 +118,7 @@ export function AcceptedOutsideModal({
 				body: {
 					accepted_on: on,
 					customer_reference: isDpa ? null : ref.trim() || null,
+					...(options.length && { chosen_options: chosen }),
 					email: email.trim(),
 					evidence_base64: await toBase64(file),
 					evidence_name: file.name,
@@ -188,6 +202,34 @@ export function AcceptedOutsideModal({
 						data-testid="outside-reference"
 					/>
 				)}
+				{options.length > 0 &&
+					(pickOne ? (
+						<Radio.Group
+							label={t`They chose`}
+							value={chosen[0] ?? null}
+							onChange={(v) => setChosen([v])}
+							data-testid="outside-options"
+						>
+							<Stack gap={6} mt={6}>
+								{options.map((o) => (
+									<Radio key={o} value={o} label={o} />
+								))}
+							</Stack>
+						</Radio.Group>
+					) : (
+						<Checkbox.Group
+							label={t`They chose`}
+							value={chosen}
+							onChange={setChosen}
+							data-testid="outside-options"
+						>
+							<Stack gap={6} mt={6}>
+								{options.map((o) => (
+									<Checkbox key={o} value={o} label={o} />
+								))}
+							</Stack>
+						</Checkbox.Group>
+					))}
 				<Stack gap={4}>
 					<Text size="sm">
 						<Trans>Evidence</Trans>
@@ -224,7 +266,13 @@ export function AcceptedOutsideModal({
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button
-						disabled={!file || !name.trim() || !email.trim() || !on}
+						disabled={
+							!file ||
+							!name.trim() ||
+							!email.trim() ||
+							!on ||
+							(pickOne && chosen.length !== 1)
+						}
 						loading={accept.isPending}
 						onClick={submit}
 						data-testid="outside-submit"

@@ -7,6 +7,7 @@ import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } f
 import { joinOnSigning } from "./invite";
 import { requestInvoices } from "./invoice";
 import type { FieldKind, OfferContent } from "./offer";
+import { chosenOptions, optionsOf, signedTotals } from "./options";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
 import { emailSignedCopy } from "./signed-copy";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
@@ -219,6 +220,9 @@ export async function signDocument(
   // Stamped and kept the way the documents print dates, whichever form the page sent.
   const values = printedDates(fields, input.values);
   const facts = signerFacts(fields, values, org.name);
+  // An offer with options: what the signer ticked is their choice, and the totals follow it.
+  const offered = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const choice = offered ? choiceOf(offered, fields, values) : null;
   const identity = await store.identity(d.db, who.directusUserId);
   const name = facts.name ?? identity?.name ?? access.email;
   // With no organisation field, the signature is for the organisation the document is in.
@@ -275,6 +279,7 @@ export async function signDocument(
         : [],
     ),
     trail: await auditTrail(d, doc, access.email, signedAt),
+    ...(choice && { choices: choice.record }),
   };
   let pdf: Uint8Array;
   try {
@@ -332,7 +337,12 @@ export async function signDocument(
         signedPdfSha256: sha256Hex(pdf),
         language,
       });
-      await store.updateDocument(tx, doc.id, { status: "signed", signedAt: now, updatedAt: now });
+      await store.updateDocument(tx, doc.id, {
+        status: "signed",
+        signedAt: now,
+        updatedAt: now,
+        ...choice?.columns,
+      });
       await afterSigned(d, tx, org, doc, input.dpa_authorised, who.directusUserId);
       if (access.via === "signer")
         await joinOnSigning(
@@ -372,7 +382,7 @@ export async function signDocument(
           signature: signaturePayload(sig, `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`),
           billing: billingPayload(await store.billing(tx, org.id)),
         },
-        slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${doc.totalCents !== null ? `, ${(doc.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}.`,
+        slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${fresh.totalCents !== null ? `, ${(fresh.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}${choice?.chosen.length ? `, choosing ${choice.chosen.join(", ")}` : ""}.`,
       });
       // An offer or a DPA can be the last thing the invoice waited for: a returning
       // customer's billing details are on file, and a DPA is often signed after the offer.
@@ -385,6 +395,25 @@ export async function signDocument(
     throw err;
   }
   return { signature_id: signatureId, signed_at: signedAt, confirmation_text: expected };
+}
+
+/**
+ * The choice an offer with options was signed with: the options ticked, a line per option for
+ * the signature record, and the document's lines and totals as signed. Null without options.
+ */
+export function choiceOf(
+  content: OfferContent,
+  fields: readonly { readonly id: string; readonly key: string | null }[],
+  values: Readonly<Record<string, string | boolean>>,
+) {
+  const options = optionsOf(content.items);
+  if (!options.length) return null;
+  const chosen = chosenOptions(content.items, content.choose, fields, values);
+  return {
+    chosen,
+    record: options.map((o) => ({ label: o.label, chosen: chosen.includes(o.label) })),
+    columns: signedTotals(content.items, chosen),
+  };
 }
 
 /**

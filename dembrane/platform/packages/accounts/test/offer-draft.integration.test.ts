@@ -1861,4 +1861,158 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(card.organisation.deal_stage).toBe("offer_accepted");
     expect((await store.documents(w.db, org)).find((d) => d.id === doc.id)?.status).toBe("signed");
   });
+  test("two scenarios, one ticked at signing: the signed copy, the totals and the invoice follow the choice", async () => {
+    const org = await freshOrg("Stichting Scenario");
+    const scenario = (description: string, cents: number, option: string) => ({
+      description,
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional",
+      option,
+    });
+    const items = [
+      scenario("Three workshops", 150000, "Scenario 1"),
+      scenario("Report", 100000, "Scenario 1"),
+      scenario("One workshop", 89500, "Scenario 2"),
+    ];
+    // One to pick needs two options; an option is an optional line.
+    const refused = async (over: Record<string, unknown>, says: string) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-SC0", template: "custom", ...over }),
+      );
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain(says);
+    };
+    await refused({ items: [items[0]], choose: "one" }, "at least two options");
+    await refused(
+      { items: [{ ...items[0], kind: undefined }, items[2]], choose: "one" },
+      "has an option name",
+    );
+    await refused(
+      { items, choose: "one", invoice_plan: { kind: "monthly", parts: 2 } },
+      "invoice plan",
+    );
+
+    const doc = await draft(org, {
+      reference: "OFFER-SC1",
+      template: "custom",
+      items,
+      choose: "one",
+    });
+    expect(doc.content?.choose).toBe("one");
+    expect(doc.total_cents).toBe(0);
+    expect(doc.body).toContain("Total with Scenario 1 (incl. VAT): €3,025.00");
+    expect(doc.fields.filter((f) => f.kind === "checkbox").map((f) => f.key)).toEqual([
+      "option:1",
+      "option:2",
+    ]);
+    const sentDoc = await send(doc.id, org);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+
+    /** Signs, ticking the options named. */
+    const signWith = async (ticked: string[]) => {
+      const detail = K.DocumentDetail.parse(
+        (await call(w, "GET", `${C(org)}/documents/${doc.id}`, "outsider")).data,
+      );
+      const values: Record<string, string | boolean> = {};
+      for (const f of detail.fields) {
+        if (f.kind === "name") values[f.id] = "Anna de Vries";
+        else if (f.kind === "role") values[f.id] = "Wethouder";
+        else if (f.kind === "date")
+          values[f.id] = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
+        else if (f.kind === "checkbox") values[f.id] = ticked.includes(f.label);
+        else if (f.kind === "text" && f.key !== "po_number")
+          values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
+      }
+      return call(w, "POST", `${C(org)}/documents/${doc.id}/sign`, "outsider", {
+        sha256: detail.sha256,
+        values,
+        signature: { png_base64: pngB64(), method: "drawn" },
+        initials: null,
+        dpa_authorised: true,
+        confirmation_text: (detail.confirmation?.dpa_authorised ?? "")
+          .replace("{name}", "Anna de Vries")
+          .replace("{role}", "Wethouder")
+          .replace("{organisation}", "Testdorp"),
+      });
+    };
+    for (const ticked of [[], ["Scenario 1", "Scenario 2"]]) {
+      const r = await signWith(ticked);
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain("exactly one");
+    }
+    expect((await signWith(["Scenario 2"])).status).toBe(200);
+
+    // The document now asks for what was chosen; what was offered is still what was hashed.
+    const signed = K.DocumentDetail.parse(
+      (await call(w, "GET", `${S(org)}/documents/${doc.id}`, "staff")).data,
+    );
+    expect(signed.sha256).toBe(sentDoc.sha256);
+    expect([signed.subtotal_cents, signed.vat_cents, signed.total_cents]).toEqual([
+      89500, 18795, 108295,
+    ]);
+    expect(signed.lines?.map((l) => [l.description, l.kind ?? "charged", l.chosen])).toEqual([
+      ["Three workshops", "optional", false],
+      ["Report", "optional", false],
+      ["One workshop", "charged", true],
+    ]);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+    const message = requestedFor(org)[0] as {
+      document: { total_cents: number };
+      invoice: {
+        items: { description: string }[];
+        options: { label: string; chosen: boolean; net_cents: number }[];
+      };
+    };
+    expect(message.document.total_cents).toBe(108295);
+    expect(message.invoice.items.map((i) => i.description)).toEqual(["One workshop"]);
+    expect(message.invoice.options).toEqual([
+      { label: "Scenario 1", chosen: false, net_cents: 250000 },
+      { label: "Scenario 2", chosen: true, net_cents: 89500 },
+    ]);
+    // The ticks are the record of the choice, kept with the signature.
+    const record = await store.signatureOf(w.db, doc.id);
+    const checkbox = (await store.fields(w.db, doc.id)).filter((f) => f.kind === "checkbox");
+    expect(
+      checkbox.map((f) => (record?.fieldValues as Record<string, boolean> | undefined)?.[f.id]),
+    ).toEqual([false, true]);
+  });
+
+  test("an add-on the customer may tick: charged when ticked, left out when not", async () => {
+    const org = await freshOrg("Gemeente Optie");
+    const items = [
+      { description: "Event day", quantity: 1, unit_price_cents: 500000, vat_rate_bps: 2100 },
+      {
+        description: "On-call support",
+        quantity: 2,
+        unit_price_cents: 180000,
+        vat_rate_bps: 2100,
+        kind: "optional",
+        option: "On-call support",
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-AO1", template: "custom", items });
+    expect(doc.content?.choose).toBe("any");
+    expect(doc.total_cents).toBe(605000);
+    await send(doc.id, org);
+    // The usual signing ticks every box: the add-on is chosen.
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const signed = await store.document(w.db, org, doc.id);
+    expect([signed?.subtotalCents, signed?.totalCents]).toEqual([860000, 1040600]);
+    // Once signed, the totals are as fixed as the rest of what was sent.
+    await expect(
+      w.db
+        .update(schema.account_document)
+        .set({ totalCents: 1 })
+        .where(eq(schema.account_document.id, doc.id))
+        .then(() => "updated"),
+    ).rejects.toThrow();
+  });
 });

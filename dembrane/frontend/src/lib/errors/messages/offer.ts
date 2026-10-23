@@ -30,6 +30,10 @@ export const offer = {
 		id: "error.offer.bill_to_vat_number",
 		message: "Reverse charge needs the VAT number of {name}.",
 	}),
+	"offer.choose_one_needs_two": msg({
+		id: "error.offer.choose_one_needs_two",
+		message: "To have one picked, give at least two options.",
+	}),
 	"offer.invoice_part_share": msg({
 		id: "error.offer.invoice_part_share",
 		message: "Give part {part} a share above zero.",
@@ -64,6 +68,16 @@ export const offer = {
 		id: "error.offer.no_charge_total",
 		message:
 			"No charge means a total of zero. Set the prices to 0, or choose another way to invoice.",
+	}),
+	"offer.option_not_optional": msg({
+		id: "error.offer.option_not_optional",
+		message:
+			"Line {line} has an option name. Make it optional, or clear the name.",
+	}),
+	"offer.options_not_here": msg({
+		id: "error.offer.options_not_here",
+		message:
+			"Options picked at signing do not go with monthly, instalment or no-charge invoicing.",
 	}),
 	"offer.section_missing": msg({
 		id: "error.offer.section_missing",

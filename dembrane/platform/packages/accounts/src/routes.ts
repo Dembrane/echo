@@ -384,6 +384,7 @@ export function accountsRoutes(d: AccountsDeps) {
         email: b.email,
         accepted_on: b.accepted_on,
         customer_reference: b.customer_reference,
+        chosen_options: b.chosen_options ?? null,
         evidence: { name: b.evidence_name, bytes },
       }),
     );

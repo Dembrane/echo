@@ -68,6 +68,8 @@ export interface AuditRecord {
   }[];
   /** What happened to the document up to this signature, oldest first. */
   readonly trail: readonly { at: string; what: string }[];
+  /** An offer with options: each option and whether the signer chose it. */
+  readonly choices?: readonly { label: string; chosen: boolean }[];
 }
 
 const A4: [number, number] = [595.28, 841.89];
@@ -606,6 +608,11 @@ function drawAudit(w: Writer, a: AuditRecord) {
             a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
           ],
         ] as [string, string][])),
+    // The choice is part of what was signed: each option, chosen or not.
+    ...(a.choices ?? []).map((c): [string, string] => [
+      `Option: ${c.label}`,
+      c.chosen ? "chosen" : "not chosen",
+    ]),
     ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
     ["Signature made", a.method],
     ["SHA-256 of the signature image", a.imageSha256],
@@ -681,6 +688,7 @@ export interface AcceptanceRecord {
   readonly statement: string;
   readonly legal: AuditRecord["legal"];
   readonly trail: AuditRecord["trail"];
+  readonly choices?: AuditRecord["choices"];
 }
 
 /** "22-10-2026", as the documents print a day. */
@@ -719,6 +727,10 @@ export async function acceptedPdf(sent: Uint8Array, a: AcceptanceRecord): Promis
     ...(a.customerReference
       ? ([["Their reference", a.customerReference]] as [string, string][])
       : []),
+    ...(a.choices ?? []).map((c): [string, string] => [
+      `Option: ${c.label}`,
+      c.chosen ? "chosen" : "not chosen",
+    ]),
     ["Evidence", `${a.evidence.name} (${a.evidence.type}), attached to this PDF`],
     ["SHA-256 of the evidence", a.evidence.sha256],
     ["Recorded by", a.recordedBy],

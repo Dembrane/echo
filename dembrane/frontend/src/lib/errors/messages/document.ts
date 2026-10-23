@@ -11,6 +11,10 @@ export const document = {
 		message:
 			"This document changed since you opened it. Reload the page and read it again before you sign.",
 	}),
+	"document.choose_one": msg({
+		id: "error.document.choose_one",
+		message: "Tick exactly one of the options, then sign.",
+	}),
 	"document.confirmation_mismatch": msg({
 		id: "error.document.confirmation_mismatch",
 		message:

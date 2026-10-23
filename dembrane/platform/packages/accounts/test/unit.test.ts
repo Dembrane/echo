@@ -31,6 +31,7 @@ import {
   quantityText,
 } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
+import { checkOptions, chosenOptions, optionsOf, signedTotals, withChoice } from "../src/options";
 import { legalBlocks, offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { candidates, lookupPeppol } from "../src/peppol";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
@@ -467,6 +468,102 @@ describe("the offer", () => {
       offerPdf(offer({ items })),
     ]);
     expect(sectioned.bytes.length).toBeGreaterThan(flat.bytes.length);
+  });
+
+  test("options picked at signing: one of two scenarios, each with its total", async () => {
+    const line = (description: string, cents: number, option: string, extra = {}) => ({
+      description,
+      bullets: [],
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional" as const,
+      option,
+      ...extra,
+    });
+    const items = [
+      line("Three workshops", 150000, "Scenario 1"),
+      line("Report", 100000, "Scenario 1"),
+      line("One workshop", 89500, "Scenario 2"),
+    ];
+    const l = layoutOffer(offer({ items, template: "custom", choose: "one" }));
+    // Nothing is charged until one is picked; the table above is empty and totals zero.
+    expect(l.rows).toEqual([]);
+    expect(l.optional).toBeNull();
+    expect(l.choices?.title).toBe("Choose one");
+    expect(
+      l.choices?.options.map((o) => [o.label, o.rows.length, o.amount[1], o.total?.[1]]),
+    ).toEqual([
+      ["Scenario 1", 2, "€2,500.00", "€3,025.00"],
+      ["Scenario 2", 1, "€895.00", "€1,082.95"],
+    ]);
+    expect(l.choices?.fields.map((f) => [f.label, f.kind, f.key, f.required])).toEqual([
+      ["Scenario 1", "checkbox", "option:1", false],
+      ["Scenario 2", "checkbox", "option:2", false],
+    ]);
+    const text = offerText(offer({ items, template: "custom", choose: "one" }));
+    expect(text).toContain("## Choose one");
+    expect(text).toContain("Total with Scenario 2 (incl. VAT): €1,082.95");
+    expect(text).toContain("[ ] Scenario 1");
+    // The ticks are fields of the PDF, on the acceptance page.
+    const pdf = await offerPdf(offer({ items, template: "custom", choose: "one" }));
+    expect(pdf.fields.filter((f) => f.kind === "checkbox").map((f) => f.key)).toEqual([
+      "option:1",
+      "option:2",
+    ]);
+
+    // As signed with Scenario 2: its line is charged, the others stay optional.
+    const signed = signedTotals(items, ["Scenario 2"]);
+    expect([signed.subtotalCents, signed.vatCents, signed.totalCents]).toEqual([
+      89500, 18795, 108295,
+    ]);
+    expect(signed.lines.map((x) => [x.kind ?? "charged", x.chosen])).toEqual([
+      ["optional", false],
+      ["optional", false],
+      ["charged", true],
+    ]);
+    expect(withChoice(items, [])[0]?.chosen).toBe(false);
+
+    // The ticks say the choice; one asks for exactly one.
+    const fields = [
+      { id: "a", key: "option:1" },
+      { id: "b", key: "option:2" },
+    ];
+    expect(chosenOptions(items, "one", fields, { b: true, a: false })).toEqual(["Scenario 2"]);
+    expect(() => chosenOptions(items, "one", fields, { a: true, b: true })).toThrow(/exactly one/);
+    expect(() => chosenOptions(items, "one", fields, {})).toThrow(/exactly one/);
+    expect(chosenOptions(items, "any", fields, {})).toEqual([]);
+    expect(optionsOf(items).map((o) => o.lines)).toEqual([[0, 1], [2]]);
+  });
+
+  test("options are checked when an offer is drafted", () => {
+    const rules = { noCharge: false, plan: false, require: requireAmounts };
+    const opt = (cents: number, option: string) => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional" as const,
+      option,
+    });
+    const base = {
+      description: "Licence",
+      quantity: 1,
+      unit_price_cents: 10000,
+      vat_rate_bps: 2100,
+    };
+    expect(checkOptions([opt(100, "A"), opt(200, "B")], "one", rules)).toBe("one");
+    expect(checkOptions([base, opt(100, "A")], undefined, rules)).toBe("any");
+    expect(checkOptions([base], "one", rules)).toBeNull();
+    // Options alone with any picked could come to nothing.
+    expect(() => checkOptions([opt(100, "A")], "any", rules)).toThrow(/more than zero/);
+    expect(() => checkOptions([opt(100, "A")], "one", rules)).toThrow(/at least two options/);
+    expect(() => checkOptions([{ ...base, option: "A" }, opt(100, "B")], "one", rules)).toThrow(
+      /Line 1 has an option name/,
+    );
+    expect(() => checkOptions([base, opt(100, "A")], "any", { ...rules, plan: true })).toThrow(
+      /invoice plan/,
+    );
   });
 
   test("an offer of no charge says nothing is invoiced", () => {
