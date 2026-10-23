@@ -170,7 +170,7 @@ export async function documentDetail(
         }
       : null,
     signature: sig ? signatureView(sig) : null,
-    prefill: signingPrefill(org?.name ?? null, billing, doc.language),
+    prefill: signingPrefill(org?.name ?? null, billing, doc),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
@@ -186,9 +186,11 @@ export async function documentDetail(
 
 /**
  * What the signer need not type: the organisation as it is billed (else its name) and the
- * billing address, when we have them. The signer still sees and may change both.
+ * billing address, when we have them, and the reference the offer carries. The billing PO
+ * is never offered: it may be another order's. The signer still sees and may change each.
  */
-function signingPrefill(orgName: string | null, b: BillingRow | null, language: string) {
+function signingPrefill(orgName: string | null, b: BillingRow | null, doc: DocumentRow) {
+  const language = doc.language;
   const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
   // The country reads in the document's language; details without a code keep what was typed.
   const country = b?.billing_country_code
@@ -200,6 +202,7 @@ function signingPrefill(orgName: string | null, b: BillingRow | null, language: 
   return {
     organisation: b?.billing_legal_name || orgName || null,
     address: b?.billing_address_line1 ? address : null,
+    po_number: (doc.content as OfferContent | null)?.customer_reference ?? null,
   };
 }
 

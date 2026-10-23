@@ -92,7 +92,7 @@ function demoStore(): Store {
 		legal: [],
 		lines: null,
 		page_count: 1,
-		prefill: { address: null, organisation: null },
+		prefill: { address: null, organisation: null, po_number: null },
 		sha256: null,
 		signature: null,
 		signing_note: null,
@@ -485,7 +485,7 @@ function priced(raw: unknown) {
 
 type OfferContentT = NonNullable<DocumentDetailT["content"]>;
 
-/** The VAT treatment, amendments and processing terms an offer request carries. */
+/** The VAT treatment, amendments, processing terms and reference an offer request carries. */
 function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 	const amendments = (body.amendments ?? []) as OfferContentT["amendments"];
 	return {
@@ -494,6 +494,10 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 		...(amendments?.length && { amendments }),
 		...(typeof body.processing_terms === "string" &&
 			body.processing_terms && { processing_terms: body.processing_terms }),
+		...(typeof body.customer_reference === "string" &&
+			body.customer_reference && {
+				customer_reference: body.customer_reference,
+			}),
 	};
 }
 
@@ -1810,7 +1814,7 @@ export async function handle(
 					legal: [],
 					lines: null,
 					page_count: bytes ? await pageCountOf(bytes) : 1,
-					prefill: { address: null, organisation: null },
+					prefill: { address: null, organisation: null, po_number: null },
 					reference: (body.reference as string | null) ?? null,
 					requires_signature: requires,
 					sent_at: sendNow ? now() : null,

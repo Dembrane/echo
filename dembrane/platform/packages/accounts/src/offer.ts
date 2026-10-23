@@ -135,6 +135,11 @@ export interface OfferContent {
    * all they sign, and no DPA of its own is sent.
    */
   readonly processing_terms?: string;
+  /**
+   * The customer's purchase order or reference for this offer, printed beside ours. The
+   * signer may confirm or change it; their value goes on the invoice.
+   */
+  readonly customer_reference?: string;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -151,6 +156,7 @@ interface Copy {
     readonly date: string;
     readonly validUntil: string;
     readonly attention: string;
+    readonly customerReference: string;
   };
   readonly greeting: string;
   readonly intro: readonly string[];
@@ -353,6 +359,7 @@ const EN_ACCEPT: Acceptance = {
     f("Organisation", "text", "organisation"),
     f("Address", "text", "address"),
     f("Role", "role"),
+    f("Your reference (PO number)", "text", "po_number", false),
   ],
   statement:
     "By signing, the person named below accepts this offer on behalf of the organisation named below.",
@@ -366,6 +373,7 @@ const NL_ACCEPT = (withVat: boolean): Acceptance => ({
     f("Adres", "text", "address"),
     ...(withVat ? [f("Btw-nummer", "text", "vat_number", false)] : []),
     f("Functie", "role"),
+    f("Uw referentie (inkoopnummer)", "text", "po_number", false),
   ],
   statement:
     "Met ondertekening aanvaardt de hieronder genoemde persoon deze offerte namens de hieronder genoemde organisatie.",
@@ -407,6 +415,7 @@ const EN_FRAME = {
     date: "Date",
     validUntil: "Valid until",
     attention: "For the attention of",
+    customerReference: "Your reference",
   },
   totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
   vatNote: {
@@ -423,7 +432,13 @@ const EN_FRAME = {
   months: EN_MONTHS,
 };
 const NL_FRAME = {
-  facts: { reference: "Referentie", date: "Datum", validUntil: "Geldig tot", attention: "T.a.v." },
+  facts: {
+    reference: "Referentie",
+    date: "Datum",
+    validUntil: "Geldig tot",
+    attention: "T.a.v.",
+    customerReference: "Uw referentie",
+  },
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
   vatNote: {
     reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
@@ -636,7 +651,10 @@ export interface OfferLayout {
   readonly company: { readonly name: string; readonly lines: readonly string[] };
   readonly kind: string;
   readonly title: string;
-  /** Reference, date, valid until and, when there is one, who it is for: label and value. */
+  /**
+   * Reference, date, valid until and, when they are given, who it is for and the customer's
+   * own reference: label and value.
+   */
   readonly facts: readonly (readonly [string, string])[];
   readonly greeting: string;
   /** Paragraphs; one that starts with "## " is a heading over the next. */
@@ -717,6 +735,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     [copy.facts.validUntil, longDate(validUntil(content.date, content.valid_days), copy.months)],
   ];
   if (content.attention) facts.push([copy.facts.attention, content.attention]);
+  if (content.customer_reference)
+    facts.push([copy.facts.customerReference, content.customer_reference]);
   return {
     company: {
       name: c.name,

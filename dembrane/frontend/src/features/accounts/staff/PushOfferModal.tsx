@@ -152,6 +152,9 @@ function OfferForm({
 	const [processingTerms, setProcessingTerms] = useState(
 		from?.processing_terms ?? "",
 	);
+	const [customerReference, setCustomerReference] = useState(
+		from?.customer_reference ?? "",
+	);
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -183,6 +186,7 @@ function OfferForm({
 		// Shown for event offers only; any other keeps what the draft had.
 		attention: template === "event" ? attention : (from?.attention ?? null),
 		currency,
+		customer_reference: customerReference.trim() || null,
 		items: toItems(priced),
 		language,
 		offer_name: offerName,
@@ -326,6 +330,15 @@ function OfferForm({
 					value={validDays}
 					onChange={(v) => setValidDays(Number(v) || 14)}
 					data-testid="offer-valid-days"
+				/>
+				<TextInput
+					label={t`Customer reference`}
+					description={t`PO, order or project number`}
+					value={customerReference}
+					onChange={(e) => setCustomerReference(e.currentTarget.value)}
+					error={fields.customer_reference}
+					maxLength={64}
+					data-testid="offer-customer-reference"
 				/>
 				{template === "event" && (
 					<TextInput

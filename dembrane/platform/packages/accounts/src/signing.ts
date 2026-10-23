@@ -50,7 +50,10 @@ export function pngBytes(b64: string, what: string): Uint8Array {
   return bytes;
 }
 
-/** Reads the signer's name, role, organisation, address and VAT number from the fields. */
+/**
+ * Reads the signer's name, role, organisation, address, VAT number and the PO or reference
+ * they confirmed from the fields.
+ */
 export function signerFacts(
   fields: readonly FieldRow[],
   values: Readonly<Record<string, string | boolean>>,
@@ -68,6 +71,7 @@ export function signerFacts(
       value((f) => f.kind === "text" && f.key === "organisation") ?? fallbackOrganisation,
     address: value((f) => f.kind === "text" && f.key === "address"),
     vatNumber: value((f) => f.kind === "text" && f.key === "vat_number"),
+    poNumber: value((f) => f.kind === "text" && f.key === "po_number"),
   };
 }
 

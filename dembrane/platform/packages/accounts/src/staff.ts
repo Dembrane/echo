@@ -338,6 +338,8 @@ export interface PushOfferInput {
   readonly amendments?: readonly Amendment[];
   /** The customer's own terms for data processing, in place of our DPA. */
   readonly processing_terms?: string | null | undefined;
+  /** The customer's PO or reference for this offer. */
+  readonly customer_reference?: string | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -419,6 +421,7 @@ function offerContent(
     | "billing_unit"
     | "amendments"
     | "processing_terms"
+    | "customer_reference"
   > & { date: string; reference: string },
   words: OfferTemplateText,
   before?: OfferContent,
@@ -440,6 +443,7 @@ function offerContent(
     ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
     ...(amendments.length && { amendments }),
     ...(o.processing_terms && { processing_terms: o.processing_terms }),
+    ...(o.customer_reference && { customer_reference: o.customer_reference }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -626,6 +630,10 @@ export async function updateOffer(
       reference: input.reference ?? before.reference,
       processing_terms:
         input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
+      customer_reference:
+        input.customer_reference === undefined
+          ? before.customer_reference
+          : input.customer_reference,
     },
     words,
     before,
