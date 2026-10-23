@@ -46,11 +46,19 @@ export const offer = {
     audience: "staff",
     description: "A line's unit price is zero. line counts from 1.",
   },
+  "offer.included_has_price": {
+    action: "fix_input",
+    detail: "Line {line} is included at no charge: leave its price at 0",
+    audience: "staff",
+    description:
+      "A line marked included carries a unit price; an included line is shown without one and never counts. line counts from 1.",
+  },
   "offer.zero_total": {
     action: "fix_input",
     detail: "An offer must total more than zero",
     audience: "staff",
-    description: "The offer's lines add up to zero, so there is nothing to ask the customer for.",
+    description:
+      "The offer's charged lines add up to zero (optional and included lines do not count), so there is nothing to ask the customer for.",
   },
   "offer.amendments_custom_only": {
     action: "fix_input",

@@ -1,6 +1,7 @@
 import type { AccountsDeps, Conn } from "./deps";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
 import { accountPageUrl, dashboardBase } from "./jobs";
+import { charged } from "./money";
 import type { OfferContent } from "./offer";
 import {
   type BillingRow,
@@ -146,8 +147,8 @@ export function signedReference(fields: readonly FieldRow[], sig: SignatureRow):
 
 /**
  * What Exact's invoice is made of, as the offer said it: its language, how VAT applies,
- * the customer's PO number, and the lines with the bullets under each (seats, months,
- * the period), which the invoice line carries as its extra description. The priced lines
+ * the customer's PO number, and the charged lines with the bullets under each (seats,
+ * months, the period), which the invoice line carries as its extra description. The priced lines
  * and totals are on `document`; Exact rounds VAT per line the same way (money.ts).
  *
  * The PO is this offer's: what the signer confirmed, else what the offer carried, and only
@@ -163,7 +164,8 @@ export function invoicePayload(
     language: doc.language,
     vat_treatment: content?.vat_treatment ?? "standard",
     po_number: signed ?? content?.customer_reference ?? billing?.po_number ?? null,
-    items: content?.items ?? [],
+    // What is invoiced: optional and included lines were shown, never charged.
+    items: (content?.items ?? []).filter(charged),
   };
 }
 

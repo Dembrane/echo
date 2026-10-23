@@ -197,7 +197,7 @@ msgstr "Дії"
 msgid "Add a change"
 msgstr "Додати зміну"
 
-#: src/features/accounts/staff/LinesEditor.tsx:228
+#: src/features/accounts/staff/LinesEditor.tsx:273
 msgid "Add a discount"
 msgstr "Додати знижку"
 
@@ -205,7 +205,7 @@ msgstr "Додати знижку"
 msgid "Add a field"
 msgstr "Додати поле"
 
-#: src/features/accounts/staff/LinesEditor.tsx:209
+#: src/features/accounts/staff/LinesEditor.tsx:254
 msgid "Add a line"
 msgstr "Додати рядок"
 
@@ -357,7 +357,7 @@ msgstr "створюється"
 msgid "Building the demo. This page follows along."
 msgstr "Створюємо демо. Ця сторінка оновлюється автоматично."
 
-#: src/features/accounts/staff/LinesEditor.tsx:146
+#: src/features/accounts/staff/LinesEditor.tsx:182
 msgid "Bullets"
 msgstr "Маркери списку"
 
@@ -409,6 +409,10 @@ msgstr "Змінити чернетку"
 #: src/features/accounts/staff/PushOfferModal.tsx:388
 msgid "Changes to our terms"
 msgstr "Зміни до наших умов"
+
+#: src/features/accounts/staff/LinesEditor.tsx:161
+msgid "Charged"
+msgstr "Нараховано"
 
 #: src/features/accounts/format.ts:176
 msgid "Check out the demo we made for you"
@@ -670,15 +674,15 @@ msgstr "Публікацію демо скасовано"
 msgid "Demos"
 msgstr "Демо"
 
-#: src/features/accounts/staff/LinesEditor.tsx:124
+#: src/features/accounts/staff/LinesEditor.tsx:142
 msgid "Description"
 msgstr "Опис"
 
-#: src/features/accounts/staff/LinesEditor.tsx:220
+#: src/features/accounts/staff/LinesEditor.tsx:265
 msgid "Discount"
 msgstr "Знижка"
 
-#: src/features/accounts/staff/LinesEditor.tsx:171
+#: src/features/accounts/staff/LinesEditor.tsx:207
 msgid "Discount ({currency})"
 msgstr "Знижка ({currency})"
 
@@ -1045,6 +1049,11 @@ msgstr "вкл. ПДВ {0}"
 msgid "incl. {vat} VAT"
 msgstr "зокрема ПДВ {vat}"
 
+#: src/features/accounts/staff/LinesEditor.tsx:163
+#: src/features/accounts/staff/LinesEditor.tsx:238
+msgid "Included"
+msgstr "Включено"
+
 #: src/features/accounts/customer/NextSteps.tsx:269
 #: src/features/accounts/customer/NextSteps.tsx:399
 #: src/features/accounts/customer/NextSteps.tsx:492
@@ -1218,7 +1227,7 @@ msgstr "Дозволити вхід за кодом з електронної п
 msgid "Liability cap"
 msgstr "Межа відповідальності"
 
-#: src/features/accounts/staff/LinesEditor.tsx:193
+#: src/features/accounts/staff/LinesEditor.tsx:233
 msgid "Line total"
 msgstr "Підсумок рядка"
 
@@ -1402,6 +1411,10 @@ msgstr "Ще не вказано."
 #~ msgid "Not in the Peppol directory: invoices go by email."
 #~ msgstr "Немає в каталозі Peppol: рахунки надсилаються електронною поштою."
 
+#: src/features/accounts/staff/LinesEditor.tsx:231
+msgid "Not in the total"
+msgstr "Не входить у суму"
+
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "недоступно, доки ви не опублікуєте"
@@ -1474,7 +1487,7 @@ msgstr "Додано завдання для початку роботи"
 msgid "Onboarding tasks withdrawn"
 msgstr "Завдання для початку роботи відкликано"
 
-#: src/features/accounts/staff/LinesEditor.tsx:147
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "One per line"
 msgstr "По одному на рядок"
 
@@ -1593,6 +1606,7 @@ msgstr "необов'язково"
 #: src/features/accounts/staff/TaskModals.tsx:52
 #: src/features/accounts/staff/PushOfferModal.tsx:293
 #: src/features/accounts/staff/PushOfferModal.tsx:346
+#: src/features/accounts/staff/LinesEditor.tsx:162
 #: src/features/accounts/signing/SignRoute.tsx:738
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
@@ -1733,6 +1747,10 @@ msgstr "Поштовий індекс"
 msgid "Prepare an offer"
 msgstr "Підготувати пропозицію"
 
+#: src/features/accounts/staff/LinesEditor.tsx:154
+msgid "Price"
+msgstr "Ціна"
+
 #: src/features/accounts/signing/SignRoute.tsx:456
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
@@ -1802,7 +1820,7 @@ msgstr "Надіслати пропозицію"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Вкажіть призначення платежу в переказі, щоб ми могли зіставити вашу оплату."
 
-#: src/features/accounts/staff/LinesEditor.tsx:155
+#: src/features/accounts/staff/LinesEditor.tsx:191
 msgid "Quantity"
 msgstr "Кількість"
 
@@ -1873,7 +1891,7 @@ msgstr "Видалити зміну"
 msgid "Remove field"
 msgstr "Видалити поле"
 
-#: src/features/accounts/staff/LinesEditor.tsx:137
+#: src/features/accounts/staff/LinesEditor.tsx:173
 msgid "Remove line"
 msgstr "Видалити рядок"
 
@@ -2668,11 +2686,11 @@ msgstr "Спершу введіть ініціали."
 msgid "Type your name first."
 msgstr "Спершу введіть ім'я."
 
-#: src/features/accounts/staff/LinesEditor.tsx:162
+#: src/features/accounts/staff/LinesEditor.tsx:198
 msgid "Unit"
 msgstr "Одиниця"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:208
 msgid "Unit price ({currency})"
 msgstr "Ціна за одиницю ({currency})"
 
@@ -2748,7 +2766,7 @@ msgstr "Дійсна до {validUntil}"
 msgid "VAT"
 msgstr "ПДВ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:183
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "VAT %"
 msgstr "VAT %"
 

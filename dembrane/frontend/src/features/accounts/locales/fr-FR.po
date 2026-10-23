@@ -197,7 +197,7 @@ msgstr "Actions"
 msgid "Add a change"
 msgstr "Ajouter une modification"
 
-#: src/features/accounts/staff/LinesEditor.tsx:228
+#: src/features/accounts/staff/LinesEditor.tsx:273
 msgid "Add a discount"
 msgstr "Ajouter une remise"
 
@@ -205,7 +205,7 @@ msgstr "Ajouter une remise"
 msgid "Add a field"
 msgstr "Ajouter un champ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:209
+#: src/features/accounts/staff/LinesEditor.tsx:254
 msgid "Add a line"
 msgstr "Ajouter une ligne"
 
@@ -357,7 +357,7 @@ msgstr "génération"
 msgid "Building the demo. This page follows along."
 msgstr "Création de la démo en cours. Cette page suit l'avancement."
 
-#: src/features/accounts/staff/LinesEditor.tsx:146
+#: src/features/accounts/staff/LinesEditor.tsx:182
 msgid "Bullets"
 msgstr "Puces"
 
@@ -409,6 +409,10 @@ msgstr "Modifier le brouillon"
 #: src/features/accounts/staff/PushOfferModal.tsx:388
 msgid "Changes to our terms"
 msgstr "Modifications de nos conditions"
+
+#: src/features/accounts/staff/LinesEditor.tsx:161
+msgid "Charged"
+msgstr "Facturé"
 
 #: src/features/accounts/format.ts:176
 msgid "Check out the demo we made for you"
@@ -670,15 +674,15 @@ msgstr "Démo dépubliée"
 msgid "Demos"
 msgstr "Démos"
 
-#: src/features/accounts/staff/LinesEditor.tsx:124
+#: src/features/accounts/staff/LinesEditor.tsx:142
 msgid "Description"
 msgstr "Description"
 
-#: src/features/accounts/staff/LinesEditor.tsx:220
+#: src/features/accounts/staff/LinesEditor.tsx:265
 msgid "Discount"
 msgstr "Remise"
 
-#: src/features/accounts/staff/LinesEditor.tsx:171
+#: src/features/accounts/staff/LinesEditor.tsx:207
 msgid "Discount ({currency})"
 msgstr "Remise ({currency})"
 
@@ -1045,6 +1049,11 @@ msgstr "dont {0} de TVA"
 msgid "incl. {vat} VAT"
 msgstr "dont {vat} de TVA"
 
+#: src/features/accounts/staff/LinesEditor.tsx:163
+#: src/features/accounts/staff/LinesEditor.tsx:238
+msgid "Included"
+msgstr "Inclus"
+
 #: src/features/accounts/customer/NextSteps.tsx:269
 #: src/features/accounts/customer/NextSteps.tsx:399
 #: src/features/accounts/customer/NextSteps.tsx:492
@@ -1218,7 +1227,7 @@ msgstr "Leur permettre de se connecter avec un code par e-mail"
 msgid "Liability cap"
 msgstr "Plafond de responsabilité"
 
-#: src/features/accounts/staff/LinesEditor.tsx:193
+#: src/features/accounts/staff/LinesEditor.tsx:233
 msgid "Line total"
 msgstr "Total de la ligne"
 
@@ -1402,6 +1411,10 @@ msgstr "Pas encore indiqué."
 #~ msgid "Not in the Peppol directory: invoices go by email."
 #~ msgstr "Absent de l’annuaire Peppol : les factures partent par e-mail."
 
+#: src/features/accounts/staff/LinesEditor.tsx:231
+msgid "Not in the total"
+msgstr "Hors total"
+
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "pas en ligne tant que vous n'avez pas publié"
@@ -1474,7 +1487,7 @@ msgstr "Tâches d'accueil ajoutées"
 msgid "Onboarding tasks withdrawn"
 msgstr "Tâches d'accueil retirées"
 
-#: src/features/accounts/staff/LinesEditor.tsx:147
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "One per line"
 msgstr "Un par ligne"
 
@@ -1593,6 +1606,7 @@ msgstr "facultatif"
 #: src/features/accounts/staff/TaskModals.tsx:52
 #: src/features/accounts/staff/PushOfferModal.tsx:293
 #: src/features/accounts/staff/PushOfferModal.tsx:346
+#: src/features/accounts/staff/LinesEditor.tsx:162
 #: src/features/accounts/signing/SignRoute.tsx:738
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
@@ -1733,6 +1747,10 @@ msgstr "Code postal"
 msgid "Prepare an offer"
 msgstr "Préparer une offre"
 
+#: src/features/accounts/staff/LinesEditor.tsx:154
+msgid "Price"
+msgstr "Prix"
+
 #: src/features/accounts/signing/SignRoute.tsx:456
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
@@ -1802,7 +1820,7 @@ msgstr "Envoyer l'offre"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Indiquez la référence sur le virement pour que nous puissions associer votre paiement."
 
-#: src/features/accounts/staff/LinesEditor.tsx:155
+#: src/features/accounts/staff/LinesEditor.tsx:191
 msgid "Quantity"
 msgstr "Quantité"
 
@@ -1873,7 +1891,7 @@ msgstr "Supprimer la modification"
 msgid "Remove field"
 msgstr "Supprimer le champ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:137
+#: src/features/accounts/staff/LinesEditor.tsx:173
 msgid "Remove line"
 msgstr "Supprimer la ligne"
 
@@ -2668,11 +2686,11 @@ msgstr "Saisissez d'abord vos initiales."
 msgid "Type your name first."
 msgstr "Saisissez d'abord votre nom."
 
-#: src/features/accounts/staff/LinesEditor.tsx:162
+#: src/features/accounts/staff/LinesEditor.tsx:198
 msgid "Unit"
 msgstr "Unité"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:208
 msgid "Unit price ({currency})"
 msgstr "Prix unitaire ({currency})"
 
@@ -2748,7 +2766,7 @@ msgstr "Valable jusqu'au {validUntil}"
 msgid "VAT"
 msgstr "TVA"
 
-#: src/features/accounts/staff/LinesEditor.tsx:183
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "VAT %"
 msgstr "% VAT"
 

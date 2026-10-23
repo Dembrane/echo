@@ -197,7 +197,7 @@ msgstr "Acties"
 msgid "Add a change"
 msgstr "Wijziging toevoegen"
 
-#: src/features/accounts/staff/LinesEditor.tsx:228
+#: src/features/accounts/staff/LinesEditor.tsx:273
 msgid "Add a discount"
 msgstr "Korting toevoegen"
 
@@ -205,7 +205,7 @@ msgstr "Korting toevoegen"
 msgid "Add a field"
 msgstr "Veld toevoegen"
 
-#: src/features/accounts/staff/LinesEditor.tsx:209
+#: src/features/accounts/staff/LinesEditor.tsx:254
 msgid "Add a line"
 msgstr "Regel toevoegen"
 
@@ -357,7 +357,7 @@ msgstr "wordt gebouwd"
 msgid "Building the demo. This page follows along."
 msgstr "De demo wordt gebouwd. Deze pagina volgt mee."
 
-#: src/features/accounts/staff/LinesEditor.tsx:146
+#: src/features/accounts/staff/LinesEditor.tsx:182
 msgid "Bullets"
 msgstr "Opsomming"
 
@@ -409,6 +409,10 @@ msgstr "Concept wijzigen"
 #: src/features/accounts/staff/PushOfferModal.tsx:388
 msgid "Changes to our terms"
 msgstr "Wijzigingen in onze voorwaarden"
+
+#: src/features/accounts/staff/LinesEditor.tsx:161
+msgid "Charged"
+msgstr "Berekend"
 
 #: src/features/accounts/format.ts:176
 msgid "Check out the demo we made for you"
@@ -670,15 +674,15 @@ msgstr "Publicatie van demo ingetrokken"
 msgid "Demos"
 msgstr "Demo's"
 
-#: src/features/accounts/staff/LinesEditor.tsx:124
+#: src/features/accounts/staff/LinesEditor.tsx:142
 msgid "Description"
 msgstr "Omschrijving"
 
-#: src/features/accounts/staff/LinesEditor.tsx:220
+#: src/features/accounts/staff/LinesEditor.tsx:265
 msgid "Discount"
 msgstr "Korting"
 
-#: src/features/accounts/staff/LinesEditor.tsx:171
+#: src/features/accounts/staff/LinesEditor.tsx:207
 msgid "Discount ({currency})"
 msgstr "Korting ({currency})"
 
@@ -1045,6 +1049,11 @@ msgstr "incl. {0} btw"
 msgid "incl. {vat} VAT"
 msgstr "incl. {vat} btw"
 
+#: src/features/accounts/staff/LinesEditor.tsx:163
+#: src/features/accounts/staff/LinesEditor.tsx:238
+msgid "Included"
+msgstr "Inbegrepen"
+
 #: src/features/accounts/customer/NextSteps.tsx:269
 #: src/features/accounts/customer/NextSteps.tsx:399
 #: src/features/accounts/customer/NextSteps.tsx:492
@@ -1218,7 +1227,7 @@ msgstr "Laat ze inloggen met een e-mailcode"
 msgid "Liability cap"
 msgstr "Aansprakelijkheidsgrens"
 
-#: src/features/accounts/staff/LinesEditor.tsx:193
+#: src/features/accounts/staff/LinesEditor.tsx:233
 msgid "Line total"
 msgstr "Regeltotaal"
 
@@ -1402,6 +1411,10 @@ msgstr "Nog niet ingevuld."
 #~ msgid "Not in the Peppol directory: invoices go by email."
 #~ msgstr "Niet in de Peppol-directory: facturen gaan per e-mail."
 
+#: src/features/accounts/staff/LinesEditor.tsx:231
+msgid "Not in the total"
+msgstr "Niet in het totaal"
+
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "pas live als je publiceert"
@@ -1474,7 +1487,7 @@ msgstr "Onboardingtaken toegevoegd"
 msgid "Onboarding tasks withdrawn"
 msgstr "Onboardingtaken ingetrokken"
 
-#: src/features/accounts/staff/LinesEditor.tsx:147
+#: src/features/accounts/staff/LinesEditor.tsx:183
 msgid "One per line"
 msgstr "Een per regel"
 
@@ -1593,6 +1606,7 @@ msgstr "optioneel"
 #: src/features/accounts/staff/TaskModals.tsx:52
 #: src/features/accounts/staff/PushOfferModal.tsx:293
 #: src/features/accounts/staff/PushOfferModal.tsx:346
+#: src/features/accounts/staff/LinesEditor.tsx:162
 #: src/features/accounts/signing/SignRoute.tsx:738
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
@@ -1733,6 +1747,10 @@ msgstr "Postcode"
 msgid "Prepare an offer"
 msgstr "Offerte klaarzetten"
 
+#: src/features/accounts/staff/LinesEditor.tsx:154
+msgid "Price"
+msgstr "Prijs"
+
 #: src/features/accounts/signing/SignRoute.tsx:456
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
@@ -1802,7 +1820,7 @@ msgstr "Offerte versturen"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Zet het kenmerk bij je overboeking, dan kunnen we je betaling koppelen."
 
-#: src/features/accounts/staff/LinesEditor.tsx:155
+#: src/features/accounts/staff/LinesEditor.tsx:191
 msgid "Quantity"
 msgstr "Aantal"
 
@@ -1873,7 +1891,7 @@ msgstr "Wijziging verwijderen"
 msgid "Remove field"
 msgstr "Veld verwijderen"
 
-#: src/features/accounts/staff/LinesEditor.tsx:137
+#: src/features/accounts/staff/LinesEditor.tsx:173
 msgid "Remove line"
 msgstr "Regel verwijderen"
 
@@ -2668,11 +2686,11 @@ msgstr "Typ eerst je initialen."
 msgid "Type your name first."
 msgstr "Typ eerst je naam."
 
-#: src/features/accounts/staff/LinesEditor.tsx:162
+#: src/features/accounts/staff/LinesEditor.tsx:198
 msgid "Unit"
 msgstr "Eenheid"
 
-#: src/features/accounts/staff/LinesEditor.tsx:172
+#: src/features/accounts/staff/LinesEditor.tsx:208
 msgid "Unit price ({currency})"
 msgstr "Stukprijs ({currency})"
 
@@ -2748,7 +2766,7 @@ msgstr "Geldig tot {validUntil}"
 msgid "VAT"
 msgstr "Btw"
 
-#: src/features/accounts/staff/LinesEditor.tsx:183
+#: src/features/accounts/staff/LinesEditor.tsx:220
 msgid "VAT %"
 msgstr "Btw %"
 

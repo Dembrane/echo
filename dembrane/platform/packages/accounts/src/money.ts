@@ -3,14 +3,28 @@ import { ValidationError } from "@dembrane/core";
 /**
  * Offer lines and their totals, in integer cents so no amount is ever a float. VAT is a
  * rate in basis points (2100 is 21%) and is rounded per line, half away from zero, which
- * is how the invoice lines in Exact round; the document total is the sum of the lines.
+ * is how the invoice lines in Exact round; the document total is the sum of the lines
+ * that are charged.
  */
+
+/**
+ * A line that is not charged: `optional` shows its price apart from the rest and counts
+ * only once the customer asks for it (in a revised offer); `included` is shown at no
+ * charge ("Onboarding, included") and has no price. Absent: charged, as every line was.
+ */
+export const LINE_KINDS = ["optional", "included"] as const;
+export type LineKind = (typeof LINE_KINDS)[number];
+
 export interface OfferLine {
   readonly description: string;
   readonly quantity: number;
   readonly unit_price_cents: number;
   readonly vat_rate_bps: number;
+  readonly kind?: LineKind | undefined;
 }
+
+/** Whether a line counts in the totals and on the invoice. */
+export const charged = (l: Pick<OfferLine, "kind">) => !l.kind;
 
 export interface PricedLine extends OfferLine {
   readonly net_cents: number;
@@ -61,14 +75,18 @@ export function priceLines(lines: readonly OfferLine[]): Totals {
       throw new ValidationError("offer.line_vat_rate", {
         params: { line: i + 1, rates: VAT_RATES_BPS.join(", ") },
       });
+    if (l.kind === "included" && l.unit_price_cents !== 0)
+      throw new ValidationError("offer.included_has_price", { params: { line: i + 1 } });
     const net = l.quantity * l.unit_price_cents;
     if (!Number.isSafeInteger(net))
       throw new ValidationError("offer.line_amount_too_large", { params: { line: i + 1 } });
     const vat = vatOf(net, l.vat_rate_bps);
     return { ...l, net_cents: net, vat_cents: vat, total_cents: net + vat };
   });
-  const subtotal = priced.reduce((s, l) => s + l.net_cents, 0);
-  const vat = priced.reduce((s, l) => s + l.vat_cents, 0);
+  // An optional line carries its own amount, for the customer to see; only charged lines add up.
+  const counted = priced.filter(charged);
+  const subtotal = counted.reduce((s, l) => s + l.net_cents, 0);
+  const vat = counted.reduce((s, l) => s + l.vat_cents, 0);
   // A discount line may be negative (a scholarship); the offer as a whole may not.
   if (subtotal + vat < 0) throw new ValidationError("offer.negative_total");
   return { lines: priced, subtotal_cents: subtotal, vat_cents: vat, total_cents: subtotal + vat };
@@ -76,14 +94,15 @@ export function priceLines(lines: readonly OfferLine[]): Totals {
 
 /**
  * An offer that goes to a customer asks for money: every line carries an amount (a discount
- * may be negative) and the whole comes to more than zero. A missing price is a question for
- * whoever drafts the offer, never a line that reads 0,00. Checked when an offer is drafted
- * or changed, not when an old one is rendered.
+ * may be negative), except one included at no charge, and the charged lines come to more
+ * than zero, so an offer of optional lines alone is refused. A missing price is a question
+ * for whoever drafts the offer, never a line that reads 0,00. Checked when an offer is
+ * drafted or changed, not when an old one is rendered.
  */
 export function requireAmounts(lines: readonly OfferLine[]): Totals {
   const totals = priceLines(lines);
   totals.lines.forEach((l, i) => {
-    if (l.unit_price_cents === 0)
+    if (l.unit_price_cents === 0 && l.kind !== "included")
       throw new ValidationError("offer.line_no_amount", { params: { line: i + 1 } });
   });
   if (totals.total_cents === 0) throw new ValidationError("offer.zero_total");

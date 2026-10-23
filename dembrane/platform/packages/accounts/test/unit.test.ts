@@ -109,6 +109,30 @@ describe("money", () => {
     expect(() => requireAmounts([line(10000), line(-10000)])).toThrow(/more than zero/);
     expect(requireAmounts([line(10000), line(-2500)]).total_cents).toBe(9075);
   });
+  test("optional and included lines are shown, never counted", () => {
+    const line = (unit_price_cents: number, kind?: "optional" | "included") => ({
+      description: "x",
+      quantity: 2,
+      unit_price_cents,
+      vat_rate_bps: 2100,
+      ...(kind && { kind }),
+    });
+    const t = requireAmounts([line(10000), line(5000, "optional"), line(0, "included")]);
+    expect([t.subtotal_cents, t.vat_cents, t.total_cents]).toEqual([20000, 4200, 24200]);
+    // The optional line still carries its own amount, for the customer to read.
+    expect(t.lines.map((l) => l.net_cents)).toEqual([20000, 10000, 0]);
+    // A line included at no charge is accepted at 0, and refused with a price.
+    expect(() => requireAmounts([line(10000), line(5000, "included")])).toThrow(
+      /Line 2 is included at no charge/,
+    );
+    // Options alone, or only included lines, ask nothing.
+    expect(() => requireAmounts([line(5000, "optional")])).toThrow(/more than zero/);
+    expect(() => requireAmounts([line(0, "included")])).toThrow(/more than zero/);
+    // An optional line without a price says nothing.
+    expect(() => requireAmounts([line(10000), line(0, "optional")])).toThrow(
+      /Line 2: give a price/,
+    );
+  });
   test("amounts as the templates write them", () => {
     expect(euro(8600)).toBe("€86.00");
     expect(euro(125000)).toBe("€1,250.00");
@@ -240,6 +264,57 @@ describe("the offer", () => {
       }),
     );
     expect(long.pageCount).toBeGreaterThan(0);
+  });
+
+  test("optional lines print apart under the total; included ones in the table, without a price", async () => {
+    const items = [
+      {
+        description: "Licence",
+        bullets: [],
+        quantity: 12,
+        unit: "months",
+        unit_price_cents: 20000,
+        vat_rate_bps: 2100,
+      },
+      {
+        description: "Onboarding",
+        bullets: [],
+        quantity: 1,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included" as const,
+      },
+      {
+        description: "Extra report",
+        bullets: ["In print"],
+        quantity: 1,
+        unit_price_cents: 75000,
+        vat_rate_bps: 2100,
+        kind: "optional" as const,
+      },
+    ];
+    const l = layoutOffer(offer({ items, template: "custom" }));
+    expect(l.rows.map((r) => [r.description, ...r.cells])).toEqual([
+      ["Licence", "12 months", "€200.00", "€2,400.00"],
+      ["Onboarding", "1", "", "Included"],
+    ]);
+    expect(l.totals.at(-1)).toEqual(["Total (incl. VAT)", "€2,904.00"]);
+    expect(l.optional?.title).toBe("Optional");
+    expect(l.optional?.rows.map((r) => [r.description, ...r.cells])).toEqual([
+      ["Extra report", "1", "€750.00", "€750.00"],
+    ]);
+    const text = offerText(offer({ items }));
+    expect(text).toContain("## Optional\nNot in the total above.");
+    expect(text.indexOf("## Optional")).toBeGreaterThan(text.indexOf("Total (incl. VAT)"));
+    const nl = layoutOffer(offer({ items, language: "nl" }));
+    expect([nl.optional?.title, nl.rows[1]?.cells[2]]).toEqual(["Optioneel", "Inbegrepen"]);
+    // Without optional lines there is no block; the PDF draws one when there are.
+    expect(layoutOffer(offer()).optional).toBeNull();
+    const [plain, withOptions] = await Promise.all([
+      offerPdf(offer({ items: items.slice(0, 2) })),
+      offerPdf(offer({ items })),
+    ]);
+    expect(withOptions.bytes.length).toBeGreaterThan(plain.bytes.length);
   });
 
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {

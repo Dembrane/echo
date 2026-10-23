@@ -1,5 +1,6 @@
 import { dutchDate } from "./legal/parse";
 import {
+  charged,
   type OfferLine,
   type PricedLine,
   priceLines,
@@ -164,6 +165,10 @@ interface Copy {
   /** Subscription offers billed per month instead of per seat. */
   readonly monthColumns?: readonly [string, string, string, string];
   readonly totals: { readonly subtotal: string; readonly vat: string; readonly total: string };
+  /** The amount cell of a line included at no charge. */
+  readonly included: string;
+  /** The block of optional lines under the totals: its heading and the line under it. */
+  readonly optional: { readonly title: string; readonly note: string };
   /** Why there is no VAT, in the words the invoice uses. */
   readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
   readonly closing: readonly string[];
@@ -418,6 +423,8 @@ const EN_FRAME = {
     customerReference: "Your reference",
   },
   totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
+  included: "Included",
+  optional: { title: "Optional", note: "Not in the total above." },
   vatNote: {
     reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
     outside_eu:
@@ -440,6 +447,8 @@ const NL_FRAME = {
     customerReference: "Uw referentie",
   },
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
+  included: "Inbegrepen",
+  optional: { title: "Optioneel", note: "Niet in het totaal hierboven." },
   vatNote: {
     reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
     outside_eu:
@@ -645,6 +654,14 @@ export function euro(cents: number, currency = "EUR", language: Language = "en")
   return `${sign}${symbol}${whole}${decimal}${frac}`;
 }
 
+/** One line of the table. */
+export interface OfferRow {
+  readonly description: string;
+  readonly bullets: readonly string[];
+  /** The three number columns, in the order `columns` names them. */
+  readonly cells: readonly [string, string, string];
+}
+
 /** The parts of an offer both renderers lay out, in reading order. */
 export interface OfferLayout {
   /** dembrane's company details: the footer of every page. */
@@ -660,16 +677,21 @@ export interface OfferLayout {
   /** Paragraphs; one that starts with "## " is a heading over the next. */
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
-  readonly rows: readonly {
-    readonly description: string;
-    readonly bullets: readonly string[];
-    /** The three number columns, in the order `columns` names them. */
-    readonly cells: readonly [string, string, string];
-  }[];
+  /** The charged lines and those included at no charge ("Included" where the amount goes). */
+  readonly rows: readonly OfferRow[];
   /** Subtotal, VAT and total, label and amount; the last is what is paid. */
   readonly totals: readonly (readonly [string, string])[];
   /** Why there is no VAT, when it is reverse-charged or the service is outside the EU. */
   readonly vatNote: string | null;
+  /**
+   * The optional lines, apart under the totals with their prices, which no total counts;
+   * null when there are none.
+   */
+  readonly optional: {
+    readonly title: string;
+    readonly note: string;
+    readonly rows: readonly OfferRow[];
+  } | null;
   /** The amendments under their heading, numbered; none on most offers. */
   readonly amendmentsTitle: string;
   readonly amendments: readonly {
@@ -725,7 +747,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const clause = buildClause(copy.words, content);
   const money = (cents: number) => euro(cents, content.currency, content.language);
   const treatment = content.vat_treatment ?? "standard";
-  const rates = new Set(content.items.map((i) => i.vat_rate_bps));
+  // The VAT row speaks for the lines it adds up: the charged ones.
+  const rates = new Set(content.items.filter(charged).map((i) => i.vat_rate_bps));
   const onlyRate = rates.size === 1 ? [...rates][0] : undefined;
   const vatLabel =
     onlyRate === undefined ? copy.totals.vat : `${copy.totals.vat} ${onlyRate / 100}%`;
@@ -737,6 +760,25 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   if (content.attention) facts.push([copy.facts.attention, content.attention]);
   if (content.customer_reference)
     facts.push([copy.facts.customerReference, content.customer_reference]);
+  const rows = totals.lines.map((l: PricedLine, i) => {
+    const unit = money(l.unit_price_cents);
+    const counts = content.items[i]?.unit;
+    const quantity = counts ? `${l.quantity} ${counts}` : String(l.quantity);
+    // Included at no charge: no price, and the word where the amount goes.
+    const included = l.kind === "included";
+    const price = included ? "" : unit;
+    const row: OfferRow = {
+      description: l.description,
+      bullets: content.items[i]?.bullets ?? [],
+      cells: [
+        unitFirst ? price : quantity,
+        unitFirst ? quantity : price,
+        included ? copy.included : money(l.net_cents),
+      ],
+    };
+    return { kind: l.kind, row };
+  });
+  const optional = rows.filter((r) => r.kind === "optional").map((r) => r.row);
   return {
     company: {
       name: c.name,
@@ -751,26 +793,16 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     greeting: `${text.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
     intro: paragraphsOf(text.intro),
     columns: text.columns,
-    rows: totals.lines.map((l: PricedLine, i) => {
-      const unit = money(l.unit_price_cents);
-      const counts = content.items[i]?.unit;
-      const quantity = counts ? `${l.quantity} ${counts}` : String(l.quantity);
-      return {
-        description: l.description,
-        bullets: content.items[i]?.bullets ?? [],
-        cells: [
-          unitFirst ? unit : quantity,
-          unitFirst ? quantity : unit,
-          money(l.net_cents),
-        ] as const,
-      };
-    }),
+    rows: rows.filter((r) => r.kind !== "optional").map((r) => r.row),
     totals: [
       [copy.totals.subtotal, money(totals.subtotal_cents)],
       [vatLabel, money(totals.vat_cents)],
       [copy.totals.total, money(totals.total_cents)],
     ],
     vatNote: treatment === "standard" ? null : copy.vatNote[treatment],
+    optional: optional.length
+      ? { title: copy.optional.title, note: copy.optional.note, rows: optional }
+      : null,
     amendmentsTitle: copy.amendmentsTitle,
     amendments: (content.amendments ?? []).map((a, i) => ({
       label: `${copy.words.amendment} ${i + 1}`,
@@ -819,6 +851,20 @@ export function offerText(content: OfferContent): string {
     ...l.totals.map(([k, v]) => `${k}: ${v}`),
     ...(l.vatNote ? [l.vatNote] : []),
     "",
+    ...(l.optional
+      ? [
+          `## ${l.optional.title}`,
+          l.optional.note,
+          "",
+          `| ${l.columns.join(" | ")} |`,
+          "| --- | --- | --- | --- |",
+          ...l.optional.rows.map(
+            (r) =>
+              `| ${[r.description, ...r.bullets.map((b) => `• ${b}`)].join("<br>")} | ${r.cells.join(" | ")} |`,
+          ),
+          "",
+        ]
+      : []),
     ...(l.amendments.length
       ? [
           `## ${l.amendmentsTitle}`,
