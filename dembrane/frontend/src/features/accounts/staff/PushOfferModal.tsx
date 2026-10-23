@@ -25,6 +25,7 @@ import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
+import { BillToFields, billToBody, billToForm } from "./BillToFields";
 import {
 	emptyLine,
 	type Line,
@@ -155,6 +156,8 @@ function OfferForm({
 	const [customerReference, setCustomerReference] = useState(
 		from?.customer_reference ?? "",
 	);
+	const [billsOther, setBillsOther] = useState(Boolean(from?.bill_to));
+	const [billTo, setBillTo] = useState(() => billToForm(from?.bill_to));
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -185,6 +188,7 @@ function OfferForm({
 	const body = {
 		// Shown for event offers only; any other keeps what the draft had.
 		attention: template === "event" ? attention : (from?.attention ?? null),
+		bill_to: billToBody(billsOther, billTo),
 		currency,
 		customer_reference: customerReference.trim() || null,
 		items: toItems(priced),
@@ -369,6 +373,15 @@ function OfferForm({
 				currency={currency}
 				discounts
 				vatFixed={vatFixed}
+			/>
+
+			<Divider label={t`Invoicing`} labelPosition="left" />
+			<BillToFields
+				on={billsOther}
+				onToggle={setBillsOther}
+				value={billTo}
+				onChange={setBillTo}
+				errors={fields}
 			/>
 
 			<Divider label={t`Terms`} labelPosition="left" />

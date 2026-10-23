@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} debe ser una fecha real, no futura y no anterior al envío del documento."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} es una empresa de otro país de la UE. Elige inversión del sujeto pasivo."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} está en la UE, así que Fuera de la UE no se aplica."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} está en los Países Bajos. Elige IVA neerlandés."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} está fuera de la UE, así que la inversión del sujeto pasivo no se aplica."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} no parece un número de IVA de {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {La imagen de tus iniciales} other {La imagen de tu firma}} es demasiado grande. Procura que pese menos de 512 KB."
@@ -127,6 +152,11 @@ msgstr "Los lienzos no están activados para este proyecto."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Revisa este campo e inténtalo de nuevo."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Elige el país de la organización a la que se factura."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "El acceso rápido admite hasta {max} plantillas. Quita una primero."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Quitar la marca de dembrane está incluido en el plan Changemaker. Actualiza tu plan para usarlo."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "La inversión del sujeto pasivo necesita el número de IVA de {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} moet een echte datum zijn, niet in de toekomst en niet van voor het versturen van het document."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} is een bedrijf elders in de EU. Kies btw verlegd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} zit in de EU, dus Buiten de EU is niet van toepassing."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} zit in Nederland. Kies Nederlandse btw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} zit buiten de EU, dus btw verleggen is niet van toepassing."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} lijkt geen btw-nummer uit {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {De afbeelding van je paraaf} other {De afbeelding van je handtekening}} is te groot. Houd deze onder 512 KB."
@@ -127,6 +152,11 @@ msgstr "Canvassen staan niet ingeschakeld voor dit project."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Controleer dit veld en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Kies het land van de organisatie die de factuur krijgt."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "Snelle toegang biedt plaats aan maximaal {max} sjablonen. Verwijder er e
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Het dembrane-watermerk verwijderen is onderdeel van het Changemaker-abonnement. Upgrade om dit te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Voor btw verleggen is het btw-nummer van {name} nodig."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

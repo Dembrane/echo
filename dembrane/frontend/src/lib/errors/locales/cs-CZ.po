@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} musí být skutečné datum, ne v budoucnosti a ne před odesláním dokumentu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} je firma z jiné země EU. Zvolte přenesenou daňovou povinnost."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} sídlí v EU, takže Mimo EU neplatí."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} sídlí v Nizozemsku. Zvolte nizozemské DPH."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} sídlí mimo EU, takže přenesená daňová povinnost neplatí."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} nevypadá jako DIČ ze země {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Obrázek s vašimi iniciálami} other {Obrázek s vaším podpisem}} je příliš velký. Zmenšete jej pod 512 KB."
@@ -127,6 +152,11 @@ msgstr "Plátna nejsou pro tento projekt zapnutá."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Zkontrolujte toto pole a zkuste to znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Vyberte zemi organizace, které se fakturuje."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "Rychlý přístup pojme maximálně {max} šablon. Nejprve jednu odebert
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Odstranění značky dembrane je součástí tarifu Changemaker. Pro využití této možnosti přejděte na vyšší tarif."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Přenesená daňová povinnost vyžaduje DIČ organizace {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

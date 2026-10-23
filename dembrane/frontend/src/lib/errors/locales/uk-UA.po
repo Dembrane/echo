@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} має бути справжньою датою, не в майбутньому і не раніше за день надсилання документа."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} є компанією з іншої країни ЄС. Виберіть зворотне оподаткування."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} знаходиться в ЄС, тому «Поза ЄС» не застосовується."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} знаходиться в Нідерландах. Виберіть нідерландський ПДВ."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} знаходиться поза ЄС, тому зворотне оподаткування не застосовується."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} не схожий на номер ПДВ з {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Зображення ваших ініціалів} other {Зображення вашого підпису}} завелике. Розмір має бути менше 512 КБ."
@@ -127,6 +152,11 @@ msgstr "Полотна не ввімкнено для цього проєкту.
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Перевірте це поле та спробуйте знову."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Виберіть країну організації, якій виставляється рахунок."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "Швидкий доступ може містити щонайбільш
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Видалення логотипа dembrane доступне в тарифі Changemaker. Оновіть тариф, щоб скористатися цією можливістю."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Для зворотного оподаткування потрібен номер ПДВ {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

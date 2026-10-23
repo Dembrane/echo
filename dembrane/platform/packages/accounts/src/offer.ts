@@ -1,3 +1,4 @@
+import { type BillTo, billToLines } from "./bill-to";
 import { dutchDate } from "./legal/parse";
 import {
   charged,
@@ -141,6 +142,11 @@ export interface OfferContent {
    * signer may confirm or change it; their value goes on the invoice.
    */
   readonly customer_reference?: string;
+  /**
+   * Who is invoiced when it is not the customer, printed as "Invoiced to" so the customer
+   * sees it before signing; the invoice request carries it in place of their billing details.
+   */
+  readonly bill_to?: BillTo;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -169,6 +175,8 @@ interface Copy {
   readonly included: string;
   /** The block of optional lines under the totals: its heading and the line under it. */
   readonly optional: { readonly title: string; readonly note: string };
+  /** The party invoiced in place of the customer: its heading and the words on its lines. */
+  readonly billTo: { readonly title: string; readonly reference: string };
   /** Why there is no VAT, in the words the invoice uses. */
   readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
   readonly closing: readonly string[];
@@ -425,6 +433,7 @@ const EN_FRAME = {
   totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
   included: "Included",
   optional: { title: "Optional", note: "Not in the total above." },
+  billTo: { title: "Invoiced to", reference: "Reference" },
   vatNote: {
     reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
     outside_eu:
@@ -449,6 +458,7 @@ const NL_FRAME = {
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
   included: "Inbegrepen",
   optional: { title: "Optioneel", note: "Niet in het totaal hierboven." },
+  billTo: { title: "Factuur aan", reference: "Referentie" },
   vatNote: {
     reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
     outside_eu:
@@ -692,6 +702,8 @@ export interface OfferLayout {
     readonly note: string;
     readonly rows: readonly OfferRow[];
   } | null;
+  /** Who the invoice goes to when it is not the customer: a heading over one line each. */
+  readonly billTo: { readonly title: string; readonly lines: readonly string[] } | null;
   /** The amendments under their heading, numbered; none on most offers. */
   readonly amendmentsTitle: string;
   readonly amendments: readonly {
@@ -803,6 +815,15 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     optional: optional.length
       ? { title: copy.optional.title, note: copy.optional.note, rows: optional }
       : null,
+    billTo: content.bill_to
+      ? {
+          title: copy.billTo.title,
+          lines: billToLines(content.bill_to, content.language, {
+            vat: copy.totals.vat,
+            reference: copy.billTo.reference,
+          }),
+        }
+      : null,
     amendmentsTitle: copy.amendmentsTitle,
     amendments: (content.amendments ?? []).map((a, i) => ({
       label: `${copy.words.amendment} ${i + 1}`,
@@ -865,6 +886,7 @@ export function offerText(content: OfferContent): string {
           "",
         ]
       : []),
+    ...(l.billTo ? [`## ${l.billTo.title}`, ...l.billTo.lines, ""] : []),
     ...(l.amendments.length
       ? [
           `## ${l.amendmentsTitle}`,

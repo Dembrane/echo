@@ -453,10 +453,14 @@ async function afterSigned(
       !["done", "withdrawn"].includes(t.status)
     )
       await settleTask(d, tx, t.id, "done");
+  // An offer another party pays for leaves the customer's billing details task locked: the
+  // invoice does not need it. A later offer the customer pays opens it.
+  const billsOther = Boolean((doc.content as OfferContent | null)?.bill_to);
   for (const t of tasks)
     if (
       t.status === "locked" &&
-      (t.unlockOnDocumentId === doc.id || (t.unlockOnDocumentId === null && doc.kind === "offer"))
+      (t.unlockOnDocumentId === doc.id ||
+        (t.unlockOnDocumentId === null && doc.kind === "offer" && !billsOther))
     )
       await unlockTask(d, tx, t);
   if (doc.kind !== "offer") return;

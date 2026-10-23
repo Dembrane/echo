@@ -195,14 +195,20 @@ export function fieldView(f: FieldRow) {
 
 /**
  * What a locked task waits for: its own document, or, for the billing details task that
- * opens on the first signed offer, the newest offer waiting for a signature.
+ * opens on the first signed offer, the newest offer waiting for a signature that the
+ * customer pays for themselves (one another party pays for does not open it).
  */
 function lockedUntil(t: TaskRow, docs: readonly DocumentRow[]) {
   if (t.status !== "locked") return null;
   if (t.unlockOnDocumentId) return docs.find((x) => x.id === t.unlockOnDocumentId) ?? null;
   return (
     docs
-      .filter((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status))
+      .filter(
+        (x) =>
+          x.kind === "offer" &&
+          ["sent", "viewed"].includes(x.status) &&
+          !(x.content as { bill_to?: unknown } | null)?.bill_to,
+      )
       .sort((a, b) => (b.sentAt?.getTime() ?? 0) - (a.sentAt?.getTime() ?? 0))[0] ?? null
   );
 }
