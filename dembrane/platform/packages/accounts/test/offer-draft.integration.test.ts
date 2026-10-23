@@ -1489,6 +1489,7 @@ run("an offer draft, and the invoice request after the signature", () => {
         bullets: string[];
         quantity: number;
         unit_price_cents: number;
+        net_cents: number;
         vat_rate_bps: number;
       }[];
     };
