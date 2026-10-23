@@ -84,7 +84,15 @@ export const FieldKind = z.enum([
   "text",
   "checkbox",
 ]);
-export const SignatureMethod = z.enum(["drawn", "typed", "uploaded"]);
+/** How a signature image was made on the signing screen. */
+export const SignatureImageMethod = z.enum(["drawn", "typed", "uploaded"]);
+/** `outside`: accepted outside dembrane and recorded by staff, with no signature image. */
+export const SignatureMethod = z.enum(["drawn", "typed", "uploaded", "outside"]);
+/**
+ * How a customer accepted outside dembrane: an offer by their own order letter or purchase
+ * order, by email, or by signing it on paper; a DPA on paper or as their own agreement.
+ */
+export const OutsideVia = z.enum(["order_letter", "email", "paper", "own_document"]);
 
 export const Issue = z.object({
   type: z.string(),
@@ -151,6 +159,8 @@ export const DocumentSummary = z.object({
   file_url: z.string().nullable(),
   /** The signed PDF (values and signature stamped on, audit page appended), once signed. */
   signed_pdf_url: z.string().nullable(),
+  /** Accepted outside dembrane rather than signed here: how, and the day the customer accepted. */
+  accepted_outside: z.object({ via: OutsideVia, accepted_on: IsoDate }).nullable(),
   /** Invoices only. */
   invoice: InvoiceInfo.optional(),
 });
@@ -373,10 +383,24 @@ export const Signature = z.object({
   /** SHA-256 of the unsigned PDF that was signed. */
   sha256: z.string(),
   method: SignatureMethod,
-  /** SHA-256 of the signature image. */
-  image_sha256: z.string(),
+  /** SHA-256 of the signature image; null when accepted outside dembrane. */
+  image_sha256: z.string().nullable(),
   /** The field values as submitted, by field id. */
   values: z.record(z.string(), z.union([z.string(), z.boolean()])),
+  /**
+   * Null for a signature made here. Accepted outside dembrane: how, the day, their reference,
+   * and the evidence file staff recorded with it (`evidence_url` for staff only).
+   */
+  outside: z
+    .object({
+      via: OutsideVia,
+      accepted_on: IsoDate,
+      customer_reference: z.string().nullable(),
+      evidence_name: z.string(),
+      evidence_sha256: z.string(),
+      evidence_url: z.string().nullable(),
+    })
+    .nullable(),
 });
 
 export const DocumentDetail = DocumentSummary.extend({
@@ -598,7 +622,7 @@ export const ViewResponse = z.object({ status: DocumentStatus });
 /** A PNG, base64 without the data: prefix, at most 512 KB decoded. */
 export const SignatureImage = z.object({
   png_base64: z.string().min(100).max(700_000),
-  method: SignatureMethod,
+  method: SignatureImageMethod,
 });
 
 export const SignRequest = z.object({
@@ -1011,7 +1035,28 @@ export const PushDocumentRequest = z.object({
 });
 export const PushDocumentResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
 
+/** A reason is optional, except to void a document accepted outside dembrane. */
 export const VoidRequest = z.object({ reason: optText(2000) });
+
+/**
+ * Staff record that the customer accepted a sent offer or DPA outside dembrane: their order
+ * letter or purchase order, an email, a signature on paper, or (a DPA) their own agreement
+ * signed. It has the effects of a signature made here, and is undone only by voiding the
+ * document with a reason. `accepted_on` is the day their letter, email or signature gives:
+ * not in the future, not before the document was sent. The evidence is a PDF or the email
+ * saved as EML, at most 10 MB. `customer_reference` (offers) is their PO or reference, which
+ * goes on the invoice before the one the offer carried.
+ */
+export const AcceptOutsideRequest = z.object({
+  via: OutsideVia,
+  name: text(200),
+  role: optText(200),
+  email: z.email().max(255),
+  accepted_on: IsoDate,
+  customer_reference: optText(64),
+  evidence_name: text(255),
+  evidence_base64: z.string().min(1).max(14_000_000),
+});
 
 /**
  * A message to the people who run an account, sent by its account manager from the staff
@@ -1524,6 +1569,19 @@ export const ROUTES = {
     permission: "staff:accounts",
     request: VoidRequest,
     response: DocumentDetail,
+  },
+  acceptOutside: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/accepted-outside`,
+    permission: "staff:accounts",
+    request: AcceptOutsideRequest,
+    response: DocumentDetail,
+  },
+  /** The evidence of an acceptance outside dembrane: the PDF or EML staff recorded. */
+  staffEvidence: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId/evidence`,
+    permission: "staff:accounts",
   },
   /** The account manager emails the account's people: see SendMessageRequest. */
   sendMessage: {

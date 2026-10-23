@@ -78,6 +78,12 @@ export function documentSummary(
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
     signed_pdf_url: sig ? `${base}/documents/${doc.id}/signed.pdf` : null,
+    accepted_outside: sig?.outsideVia
+      ? {
+          via: sig.outsideVia as "order_letter" | "email" | "paper" | "own_document",
+          accepted_on: sig.acceptedOn as string,
+        }
+      : null,
     ...(doc.kind === "invoice" && {
       invoice: {
         number: doc.reference,
@@ -158,7 +164,8 @@ export function legalView(kind: string, row: LegalRow | null, textUrl: string | 
     : null;
 }
 
-export function signatureView(s: SignatureRow) {
+/** A signature as read back; `evidenceUrl` only for staff, where the evidence is served. */
+export function signatureView(s: SignatureRow, evidenceUrl?: string) {
   return {
     id: s.id,
     name: s.typedName,
@@ -170,9 +177,19 @@ export function signatureView(s: SignatureRow) {
     dpa_authorised: s.dpaAuthorised,
     signed_at: iso(s.signedAt),
     sha256: s.sha256,
-    method: s.method as "drawn" | "typed" | "uploaded",
+    method: s.method as "drawn" | "typed" | "uploaded" | "outside",
     image_sha256: s.imageSha256,
     values: (s.fieldValues ?? {}) as Record<string, string | boolean>,
+    outside: s.outsideVia
+      ? {
+          via: s.outsideVia as "order_letter" | "email" | "paper" | "own_document",
+          accepted_on: s.acceptedOn as string,
+          customer_reference: s.customerReference,
+          evidence_name: s.evidenceName as string,
+          evidence_sha256: s.evidenceSha256 as string,
+          evidence_url: evidenceUrl ?? null,
+        }
+      : null,
   };
 }
 

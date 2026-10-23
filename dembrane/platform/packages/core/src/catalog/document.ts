@@ -208,6 +208,38 @@ export const document = {
     audience: "staff",
     description: "Signed documents are final and cannot be withdrawn.",
   },
+  "document.outside_via_invalid": {
+    action: "fix_input",
+    detail: "A document of this kind cannot be accepted that way",
+    audience: "staff",
+    description:
+      "An offer is accepted outside dembrane by order letter, email or paper; a DPA on paper or as their own document.",
+  },
+  "document.outside_date_invalid": {
+    action: "fix_input",
+    detail: "The acceptance date cannot be in the future or before the document was sent",
+    audience: "staff",
+    description: "The day given for an acceptance outside dembrane falls outside the window.",
+  },
+  "document.evidence_invalid": {
+    action: "fix_input",
+    detail: "The evidence must be a PDF or an email saved as EML",
+    audience: "staff",
+    description:
+      "The evidence file of an acceptance outside dembrane is neither a PDF nor an email.",
+  },
+  "document.no_evidence": {
+    action: "none",
+    detail: "This document has no evidence of an acceptance outside dembrane",
+    audience: "staff",
+    description: "Evidence was asked for a document that was not accepted outside dembrane.",
+  },
+  "document.void_reason_required": {
+    action: "fix_input",
+    detail: "Give a reason to void an acceptance",
+    audience: "staff",
+    description: "Voiding a document accepted outside dembrane needs a reason for the record.",
+  },
   "document.not_withdrawn": {
     action: "none",
     detail: "This document has not been withdrawn",

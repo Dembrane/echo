@@ -349,7 +349,8 @@ export const store = {
           sql`(${doc.content}->'invoice_plan') is not null`,
         ),
       );
-    if (!docs.length) return { docs, asked: new Set<string>() };
+    if (!docs.length)
+      return { docs, asked: new Set<string>(), acceptedOn: new Map<string, string>() };
     const rows = await c
       .select({ id: event.subjectId })
       .from(event)
@@ -359,7 +360,26 @@ export const store = {
           eq(event.type, "invoice.requested"),
         ),
       );
-    return { docs, asked: new Set(rows.flatMap((r) => (r.id ? [r.id] : []))) };
+    // Accepted outside dembrane: the parts count from the day the customer accepted.
+    const outside = await c
+      .select({ documentId: signature.documentId, acceptedOn: signature.acceptedOn })
+      .from(signature)
+      .where(
+        and(
+          inArray(
+            signature.documentId,
+            docs.map((x) => x.id),
+          ),
+          eq(signature.method, "outside"),
+        ),
+      );
+    return {
+      docs,
+      asked: new Set(rows.flatMap((r) => (r.id ? [r.id] : []))),
+      acceptedOn: new Map(
+        outside.flatMap((r) => (r.acceptedOn ? [[r.documentId, r.acceptedOn] as const] : [])),
+      ),
+    };
   },
 
   /** What the deal stage and its dates are read from, for many organisations in three reads. */

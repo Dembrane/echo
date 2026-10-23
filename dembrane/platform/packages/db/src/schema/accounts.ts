@@ -211,8 +211,11 @@ export const account_document = pgTable(
 );
 
 /**
- * One simple electronic signature. Insert-only: a trigger refuses every update, delete and
- * truncate, so the evidence cannot be edited after the fact.
+ * One simple electronic signature, or an acceptance the customer gave outside dembrane (their
+ * order letter, an email, a signature on paper) that staff recorded with its evidence file.
+ * Insert-only: a trigger refuses every update, delete and truncate, so the evidence cannot be
+ * edited after the fact. An acceptance outside dembrane is undone only by voiding its
+ * document, with a reason on the timeline; the row stays as the record.
  */
 export const account_signature = pgTable(
   "account_signature",
@@ -221,8 +224,8 @@ export const account_signature = pgTable(
     documentId: uuid("document_id").notNull(),
     orgId: uuid("org_id").notNull(),
     documentVersion: integer("document_version").notNull(),
-    /** Better Auth user id (same as directus_users.id) of the signer. */
-    signerUserId: uuid("signer_user_id").notNull(),
+    /** Better Auth user id (same as directus_users.id) of the signer; null when accepted outside. */
+    signerUserId: uuid("signer_user_id"),
     /** From the document's name and role fields. */
     typedName: text("typed_name").notNull(),
     typedRole: text("typed_role"),
@@ -236,10 +239,11 @@ export const account_signature = pgTable(
     sha256: text("sha256").notNull(),
     /** Every field's value as submitted, by field id. */
     fieldValues: json("field_values").notNull(),
-    /** `drawn`, `typed` or `uploaded`. */
+    /** `drawn`, `typed` or `uploaded`; `outside` for an acceptance recorded by staff. */
     method: text("method").notNull(),
-    imageKey: text("image_key").notNull(),
-    imageSha256: text("image_sha256").notNull(),
+    /** The signature image; null when accepted outside, where the evidence file stands in. */
+    imageKey: text("image_key"),
+    imageSha256: text("image_sha256"),
     initialsImageKey: text("initials_image_key"),
     signedAt: timestamp("signed_at", { withTimezone: true }).notNull(),
     ip: text("ip"),
@@ -249,6 +253,22 @@ export const account_signature = pgTable(
     signedPdfSha256: text("signed_pdf_sha256").notNull(),
     /** The language the document was signed in (`en` or `nl`); null on rows from before it was kept. */
     language: text("language"),
+    /**
+     * Accepted outside dembrane: how (`order_letter`, `email`, `paper`, or for a DPA
+     * `own_document`, their own agreement signed). Null for a signature made here.
+     */
+    outsideVia: text("outside_via"),
+    /** The day the customer accepted, as their letter, email or signature dates it. */
+    acceptedOn: date("accepted_on", { mode: "string" }),
+    /** The evidence as staff uploaded it (PDF, or the email saved as EML) and its SHA-256. */
+    evidenceKey: text("evidence_key"),
+    evidenceSha256: text("evidence_sha256"),
+    evidenceName: text("evidence_name"),
+    evidenceType: text("evidence_type"),
+    /** Their purchase order or reference for this offer, from their letter or email. */
+    customerReference: text("customer_reference"),
+    /** The staff member who recorded an acceptance outside dembrane. */
+    recordedBy: uuid("recorded_by"),
   },
   (t) => [
     unique("account_signature_document_id_unique").on(t.documentId),
@@ -258,7 +278,18 @@ export const account_signature = pgTable(
       foreignColumns: [account_document.id],
       name: "account_signature_document_id_foreign",
     }),
-    check("account_signature_method_check", sql`${t.method} in ('drawn', 'typed', 'uploaded')`),
+    check(
+      "account_signature_method_check",
+      sql`${t.method} in ('drawn', 'typed', 'uploaded', 'outside')`,
+    ),
+    check(
+      "account_signature_outside_check",
+      sql`(${t.method} = 'outside') = (${t.outsideVia} is not null) and (${t.outsideVia} is null or (${t.outsideVia} in ('order_letter', 'email', 'paper', 'own_document') and ${t.acceptedOn} is not null and ${t.evidenceKey} is not null and ${t.evidenceSha256} is not null))`,
+    ),
+    check(
+      "account_signature_image_check",
+      sql`${t.method} = 'outside' or (${t.signerUserId} is not null and ${t.imageKey} is not null and ${t.imageSha256} is not null)`,
+    ),
   ],
 );
 

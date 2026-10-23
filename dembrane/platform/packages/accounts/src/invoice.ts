@@ -100,7 +100,7 @@ export function dueRequests(
 ): (InvoicePart | null)[] {
   const parts = partsOf(doc);
   if (!parts.length) return asked.has(doc.id) ? [] : [null];
-  const signedOn = amsterdamDay(sig.signedAt);
+  const signedOn = acceptedDay(sig);
   return parts.filter(
     (p) => !asked.has(requestSubject(doc, p).id) && dueOn(p.due, signedOn) <= today,
   );
@@ -186,13 +186,7 @@ export async function requestInvoices(d: InvoiceDeps, tx: Conn, org: OrgRow): Pr
           signature: signaturePayload(sig, signedPdf),
           billing: invoicedParty(doc, billing),
           invoice: part
-            ? partPayload(
-                doc,
-                billing,
-                reference,
-                part,
-                dueOn(part.due, amsterdamDay(sig.signedAt)),
-              )
+            ? partPayload(doc, billing, reference, part, dueOn(part.due, acceptedDay(sig)))
             : invoicePayload(doc, billing, reference),
           links: {
             /** The organisation's card in the staff console, as a dashboard address. */
@@ -212,8 +206,19 @@ export async function requestInvoices(d: InvoiceDeps, tx: Conn, org: OrgRow): Pr
   return out;
 }
 
-/** The PO or reference the signer left in the offer's reference field, frozen with it. */
+/**
+ * The day an offer was accepted, which its parts count from: the day it was signed here, or
+ * the day the customer's letter, email or paper signature gives when accepted outside.
+ */
+export const acceptedDay = (sig: SignatureRow): string =>
+  sig.acceptedOn ?? amsterdamDay(sig.signedAt);
+
+/**
+ * The PO or reference the signer left in the offer's reference field, frozen with it, or the
+ * one their order letter or email carried when accepted outside dembrane.
+ */
 export function signedReference(fields: readonly FieldRow[], sig: SignatureRow): string | null {
+  if (sig.customerReference?.trim()) return sig.customerReference.trim();
   const field = fields.find((f) => f.kind === "text" && f.key === "po_number");
   const value = field ? (sig.fieldValues as Record<string, unknown>)[field.id] : undefined;
   return typeof value === "string" && value.trim() ? value.trim() : null;

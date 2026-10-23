@@ -1269,7 +1269,7 @@ export async function handle(
 				const signedAt = now();
 				d.status = "signed";
 				d.signed_at = signedAt;
-				d.signature = {
+				const signature = {
 					address: pick("text", "address"),
 					dpa_authorised: dpaAuthorised,
 					email: "robin@example-town.example",
@@ -1280,12 +1280,14 @@ export async function handle(
 					method: sig.method,
 					name: pick("name") ?? "",
 					organisation: pick("text", "organisation") ?? s.name,
+					outside: null,
 					role: pick("role") ?? "",
 					sha256: d.sha256 ?? "",
 					signed_at: signedAt,
 					values,
 					vat_number: pick("text", "vat_number"),
 				};
+				d.signature = signature;
 				s.signatures[d.id] = {
 					confirmation: String(body.confirmation_text),
 					png: sig.png_base64,
@@ -1323,7 +1325,7 @@ export async function handle(
 					separateDpaFor(s, d, signedAt);
 				return {
 					confirmation_text: body.confirmation_text,
-					signature_id: d.signature.id,
+					signature_id: signature.id,
 					signed_at: signedAt,
 				};
 			}
@@ -1807,6 +1809,7 @@ export async function handle(
 				const sendNow =
 					body.send !== false && (!requires || (fields?.length ?? 0) > 0);
 				const d: DocumentDetailT = {
+					accepted_outside: null,
 					access: "staff",
 					body: (body.body as string | null) ?? null,
 					confirmation: null,

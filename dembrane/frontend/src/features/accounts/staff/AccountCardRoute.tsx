@@ -55,6 +55,11 @@ import {
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { Section } from "../ui";
+import {
+	AcceptedOutsideModal,
+	outsideViaLabel,
+	VoidAcceptanceModal,
+} from "./AcceptedOutsideModals";
 import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
@@ -179,6 +184,8 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const send = useAccountsMutation("sendDocument", { orgId });
 	const voidDoc = useAccountsMutation("voidDocument", { orgId });
 	const [emailing, setEmailing] = useState<EmailSubject | null>(null);
+	const [accepting, setAccepting] = useState<DocumentSummaryT | null>(null);
+	const [voiding, setVoiding] = useState<string | null>(null);
 
 	const actions = (doc: DocumentSummaryT) => (
 		<Menu position="bottom-end" withinPortal>
@@ -236,6 +243,20 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 						<Trans>Send</Trans>
 					</Menu.Item>
 				)}
+				{(doc.kind === "offer" || doc.kind === "dpa") &&
+					doc.requires_signature &&
+					["sent", "viewed"].includes(doc.status) && (
+						<Menu.Item
+							onClick={() => setAccepting(doc)}
+							data-testid="doc-accepted-outside"
+						>
+							{doc.kind === "dpa" ? (
+								<Trans>Signed outside dembrane</Trans>
+							) : (
+								<Trans>Accepted outside dembrane</Trans>
+							)}
+						</Menu.Item>
+					)}
 				{doc.file_url && (
 					<Menu.Item onClick={() => void openPdf(doc.file_url as string)}>
 						<Trans>Open PDF</Trans>
@@ -261,6 +282,15 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							<Trans>Withdraw</Trans>
 						</Menu.Item>
 					)}
+				{doc.accepted_outside && doc.status === "signed" && (
+					<Menu.Item
+						color="red"
+						onClick={() => setVoiding(doc.id)}
+						data-testid="doc-void-acceptance"
+					>
+						<Trans>Void acceptance</Trans>
+					</Menu.Item>
+				)}
 				{doc.status === "void" && doc.sent_at && (
 					<Menu.Item
 						onClick={() =>
@@ -363,7 +393,11 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 										{doc.version > 1 && `${t`Version ${doc.version}`} · `}
 										{formatDate(doc.signed_at ?? doc.sent_at, i18n.locale) ||
 											t`Not sent`}
-										{doc.signer?.email ? ` · ${doc.signer.email}` : ""}
+										{doc.accepted_outside
+											? ` · ${outsideViaLabel(doc.accepted_outside.via)}`
+											: doc.signer?.email
+												? ` · ${doc.signer.email}`
+												: ""}
 									</Text>
 								</Table.Td>
 								<Table.Td>
@@ -410,6 +444,22 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 				onClose={() => setEmailing(null)}
 				orgId={orgId}
 			/>
+			{accepting && (
+				<AcceptedOutsideModal
+					opened
+					onClose={() => setAccepting(null)}
+					orgId={orgId}
+					doc={accepting}
+				/>
+			)}
+			{voiding && (
+				<VoidAcceptanceModal
+					opened
+					onClose={() => setVoiding(null)}
+					orgId={orgId}
+					docId={voiding}
+				/>
+			)}
 		</Section>
 	);
 }
@@ -870,11 +920,14 @@ const eventLabel = (type: string): string =>
 		"demo.published": t`Demo published`,
 		"demo.seeded": t`Demo seeded`,
 		"demo.unpublished": t`Demo unpublished`,
+		"document.acceptance_voided": t`Acceptance voided`,
+		"document.accepted_outside": t`Accepted outside dembrane`,
 		"document.declined": t`Document declined`,
 		"document.drafted": t`Document drafted`,
 		"document.fields_set": t`Signature fields placed`,
 		"document.sent": t`Document sent`,
 		"document.signed": t`Document signed`,
+		"document.signed_outside": t`Signed outside dembrane`,
 		"document.signer_named": t`Signer named`,
 		"document.signer_reminded": t`Signer reminded`,
 		"document.signer_replaced": t`Signer replaced`,
