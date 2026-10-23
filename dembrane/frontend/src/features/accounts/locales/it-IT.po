@@ -111,7 +111,7 @@ msgstr "{label} è vuoto."
 #~ msgstr "{mine, plural, one {C'è una cosa per te.} other {Ci sono # cose per te.}}"
 
 #. placeholder {0}: money(monthly)
-#: src/features/accounts/staff/InvoicePlanFields.tsx:136
+#: src/features/accounts/staff/InvoicePlanFields.tsx:143
 msgid "{months} × {0}, first on signing"
 msgstr "{months} × {0}, la prima alla firma"
 
@@ -214,7 +214,7 @@ msgstr "Aggiungi un campo"
 msgid "Add a line"
 msgstr "Aggiungi una riga"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:217
+#: src/features/accounts/staff/InvoicePlanFields.tsx:224
 msgid "Add a part"
 msgstr "Aggiungi una rata"
 
@@ -286,7 +286,7 @@ msgstr "Assegnato a {who}. Solo questa persona può firmarlo."
 #~ msgid "At least one of the three."
 #~ msgstr "Almeno uno dei tre."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:116
+#: src/features/accounts/staff/InvoicePlanFields.tsx:123
 msgid "At once"
 msgstr "In un'unica volta"
 
@@ -640,7 +640,7 @@ msgstr "Stato cliente"
 msgid "Data processing agreement"
 msgstr "Accordo sul trattamento dei dati"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:168
+#: src/features/accounts/staff/InvoicePlanFields.tsx:176
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
 msgstr "Data"
@@ -1032,7 +1032,7 @@ msgstr "Come vuoi ricevere le fatture?"
 msgid "How we handle your details"
 msgstr "Come trattiamo i tuoi dati"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:110
+#: src/features/accounts/staff/InvoicePlanFields.tsx:117
 msgid "How we invoice"
 msgstr "Come fatturiamo"
 
@@ -1057,7 +1057,7 @@ msgstr "Se ne hai uno"
 msgid "If your finance team uses one"
 msgstr "Se il tuo team finanziario ne usa uno"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:118
+#: src/features/accounts/staff/InvoicePlanFields.tsx:125
 msgid "In instalments"
 msgstr "A rate"
 
@@ -1301,7 +1301,7 @@ msgstr "Messaggio"
 #~ msgid "Month"
 #~ msgstr "Mese"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:117
+#: src/features/accounts/staff/InvoicePlanFields.tsx:124
 msgid "Monthly"
 msgstr "Mensile"
 
@@ -1478,7 +1478,7 @@ msgstr "Nota"
 msgid "Nothing to do right now."
 msgstr "Niente da fare al momento."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:126
+#: src/features/accounts/staff/InvoicePlanFields.tsx:133
 msgid "Number of months"
 msgstr "Numero di mesi"
 
@@ -1522,11 +1522,11 @@ msgstr "Offerta inviata. Il cliente la vedrà al prossimo accesso."
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Offerte, accordi e fatture compaiono qui appena li inviamo."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:160
+#: src/features/accounts/staff/InvoicePlanFields.tsx:168
 msgid "On a date"
 msgstr "A una data"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:159
+#: src/features/accounts/staff/InvoicePlanFields.tsx:167
 msgid "On signing"
 msgstr "Alla firma"
 
@@ -1956,7 +1956,7 @@ msgstr "Rimuovi campo"
 msgid "Remove line"
 msgstr "Rimuovi riga"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:196
+#: src/features/accounts/staff/InvoicePlanFields.tsx:203
 msgid "Remove part"
 msgstr "Rimuovi rata"
 
@@ -2194,12 +2194,13 @@ msgstr "Accordo sul livello di servizio"
 msgid "Set up a project of your own for your first real session."
 msgstr "Imposta un progetto tutto tuo per la tua prima sessione reale."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:178
+#: src/features/accounts/staff/InvoicePlanFields.tsx:186
+#: src/features/accounts/staff/InvoicePlanFields.tsx:187
 msgid "Share (%)"
 msgstr "Quota (%)"
 
 #. placeholder {0}: totalBps / 100
-#: src/features/accounts/staff/InvoicePlanFields.tsx:225
+#: src/features/accounts/staff/InvoicePlanFields.tsx:232
 msgid "Shares add up to {0}%"
 msgstr "Le quote sommano a {0}%"
 
@@ -3049,7 +3050,7 @@ msgstr "Cosa chiediamo"
 msgid "What we put on your invoices."
 msgstr "Cosa mettiamo sulle tue fatture."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:152
+#: src/features/accounts/staff/InvoicePlanFields.tsx:161
 msgid "When"
 msgstr "Quando"
 

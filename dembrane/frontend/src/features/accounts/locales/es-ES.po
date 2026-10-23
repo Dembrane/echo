@@ -111,7 +111,7 @@ msgstr "{label} está vacío."
 #~ msgstr "{mine, plural, one {Hay una cosa pendiente para ti.} other {Hay # cosas pendientes para ti.}}"
 
 #. placeholder {0}: money(monthly)
-#: src/features/accounts/staff/InvoicePlanFields.tsx:136
+#: src/features/accounts/staff/InvoicePlanFields.tsx:143
 msgid "{months} × {0}, first on signing"
 msgstr "{months} × {0}, el primero al firmar"
 
@@ -214,7 +214,7 @@ msgstr "Añadir un campo"
 msgid "Add a line"
 msgstr "Añadir una línea"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:217
+#: src/features/accounts/staff/InvoicePlanFields.tsx:224
 msgid "Add a part"
 msgstr "Añadir un plazo"
 
@@ -286,7 +286,7 @@ msgstr "Asignado a {who}. Solo esa persona puede firmarlo."
 #~ msgid "At least one of the three."
 #~ msgstr "Al menos uno de los tres."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:116
+#: src/features/accounts/staff/InvoicePlanFields.tsx:123
 msgid "At once"
 msgstr "De una vez"
 
@@ -640,7 +640,7 @@ msgstr "Estado del cliente"
 msgid "Data processing agreement"
 msgstr "Acuerdo de tratamiento de datos"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:168
+#: src/features/accounts/staff/InvoicePlanFields.tsx:176
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
 msgstr "Fecha"
@@ -1032,7 +1032,7 @@ msgstr "¿Cómo quieres recibir las facturas?"
 msgid "How we handle your details"
 msgstr "Cómo tratamos tus datos"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:110
+#: src/features/accounts/staff/InvoicePlanFields.tsx:117
 msgid "How we invoice"
 msgstr "Cómo facturamos"
 
@@ -1057,7 +1057,7 @@ msgstr "Si tienes uno"
 msgid "If your finance team uses one"
 msgstr "Si tu equipo financiero utiliza uno"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:118
+#: src/features/accounts/staff/InvoicePlanFields.tsx:125
 msgid "In instalments"
 msgstr "A plazos"
 
@@ -1301,7 +1301,7 @@ msgstr "Mensaje"
 #~ msgid "Month"
 #~ msgstr "Mes"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:117
+#: src/features/accounts/staff/InvoicePlanFields.tsx:124
 msgid "Monthly"
 msgstr "Mensual"
 
@@ -1478,7 +1478,7 @@ msgstr "Nota"
 msgid "Nothing to do right now."
 msgstr "Nada pendiente por ahora."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:126
+#: src/features/accounts/staff/InvoicePlanFields.tsx:133
 msgid "Number of months"
 msgstr "Número de meses"
 
@@ -1522,11 +1522,11 @@ msgstr "Oferta enviada. El cliente la verá la próxima vez que inicie sesión."
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Las ofertas, acuerdos y facturas aparecen aquí en cuanto los enviamos."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:160
+#: src/features/accounts/staff/InvoicePlanFields.tsx:168
 msgid "On a date"
 msgstr "En una fecha"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:159
+#: src/features/accounts/staff/InvoicePlanFields.tsx:167
 msgid "On signing"
 msgstr "Al firmar"
 
@@ -1956,7 +1956,7 @@ msgstr "Eliminar campo"
 msgid "Remove line"
 msgstr "Eliminar línea"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:196
+#: src/features/accounts/staff/InvoicePlanFields.tsx:203
 msgid "Remove part"
 msgstr "Quitar plazo"
 
@@ -2194,12 +2194,13 @@ msgstr "Acuerdo de nivel de servicio"
 msgid "Set up a project of your own for your first real session."
 msgstr "Configura un proyecto propio para tu primera sesión real."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:178
+#: src/features/accounts/staff/InvoicePlanFields.tsx:186
+#: src/features/accounts/staff/InvoicePlanFields.tsx:187
 msgid "Share (%)"
 msgstr "Parte (%)"
 
 #. placeholder {0}: totalBps / 100
-#: src/features/accounts/staff/InvoicePlanFields.tsx:225
+#: src/features/accounts/staff/InvoicePlanFields.tsx:232
 msgid "Shares add up to {0}%"
 msgstr "Las partes suman {0}%"
 
@@ -3049,7 +3050,7 @@ msgstr "Qué pedimos"
 msgid "What we put on your invoices."
 msgstr "Lo que ponemos en tus facturas."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:152
+#: src/features/accounts/staff/InvoicePlanFields.tsx:161
 msgid "When"
 msgstr "Cuándo"
 

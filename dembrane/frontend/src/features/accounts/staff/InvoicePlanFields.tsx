@@ -103,13 +103,20 @@ export function InvoicePlanFields({
 	);
 	const months = Math.max(2, value.months || 2);
 	const monthly = Math.floor(net / months);
+	// What each instalment comes to, the last taking what rounding leaves, as the API cuts it.
+	const amounts = value.rows.map((r) =>
+		Math.floor((net * Math.round(r.percent * 100)) / 10_000),
+	);
+	if (totalBps === 10_000 && amounts.length)
+		amounts[amounts.length - 1] =
+			net - amounts.slice(0, -1).reduce((s, a) => s + a, 0);
 
 	return (
 		<Stack gap="xs" data-testid="offer-invoice-plan">
-			<Group gap="sm" align="center" wrap="wrap">
+			<Stack gap={4}>
 				<Text size="sm">{t`How we invoice`}</Text>
 				<SegmentedControl
-					size="xs"
+					style={{ alignSelf: "flex-start" }}
 					value={value.kind}
 					onChange={(v) => set({ kind: v as PlanForm["kind"] })}
 					data={[
@@ -119,7 +126,7 @@ export function InvoicePlanFields({
 					]}
 					data-testid="invoice-plan-kind"
 				/>
-			</Group>
+			</Stack>
 			{value.kind === "monthly" && (
 				<Group gap="sm" align="flex-end">
 					<NumberInput
@@ -140,42 +147,44 @@ export function InvoicePlanFields({
 			{value.kind === "instalments" && (
 				<Stack gap="xs">
 					{value.rows.map((r, i) => (
+						// A table: labels on the first row only, so each column lines up.
 						<Group
 							key={r.id}
 							gap="sm"
-							align="flex-end"
+							align="flex-start"
 							wrap="nowrap"
 							data-testid="invoice-plan-row"
 						>
-							{i === 0 ? (
-								<Select
-									label={t`When`}
-									w={150}
-									value={r.on}
-									onChange={(v) =>
-										v && setRow(i, { on: v as InstalmentRow["on"] })
-									}
-									data={[
-										{ label: t`On signing`, value: "signing" },
-										{ label: t`On a date`, value: "date" },
-									]}
-									allowDeselect={false}
-									data-testid="invoice-plan-when"
-								/>
-							) : null}
-							{(i > 0 || r.on === "date") && (
-								<TextInput
-									label={t`Date`}
-									type="date"
-									w={160}
-									value={r.date}
-									onChange={(e) => setRow(i, { date: e.currentTarget.value })}
-									error={errors[`invoice_plan.parts.${i}.on`]}
-									data-testid="invoice-plan-date"
-								/>
-							)}
+							<Stack gap={6} w={170}>
+								{i === 0 && (
+									<Select
+										label={t`When`}
+										value={r.on}
+										onChange={(v) =>
+											v && setRow(i, { on: v as InstalmentRow["on"] })
+										}
+										data={[
+											{ label: t`On signing`, value: "signing" },
+											{ label: t`On a date`, value: "date" },
+										]}
+										allowDeselect={false}
+										data-testid="invoice-plan-when"
+									/>
+								)}
+								{(i > 0 || r.on === "date") && (
+									<TextInput
+										aria-label={t`Date`}
+										type="date"
+										value={r.date}
+										onChange={(e) => setRow(i, { date: e.currentTarget.value })}
+										error={errors[`invoice_plan.parts.${i}.on`]}
+										data-testid="invoice-plan-date"
+									/>
+								)}
+							</Stack>
 							<NumberInput
-								label={t`Share (%)`}
+								label={i === 0 ? t`Share (%)` : undefined}
+								aria-label={t`Share (%)`}
 								min={0.01}
 								max={100}
 								decimalScale={2}
@@ -184,10 +193,8 @@ export function InvoicePlanFields({
 								onChange={(v) => setRow(i, { percent: Number(v) || 0 })}
 								data-testid="invoice-plan-share"
 							/>
-							<Text size="sm" c="dimmed" pb={8}>
-								{money(
-									Math.floor((net * Math.round(r.percent * 100)) / 10_000),
-								)}
+							<Text size="sm" c="dimmed" mt={i === 0 ? 32 : 8} miw={90}>
+								{money(amounts[i] ?? 0)}
 							</Text>
 							{value.rows.length > 2 && (
 								<ActionIcon
@@ -197,7 +204,7 @@ export function InvoicePlanFields({
 									onClick={() =>
 										set({ rows: value.rows.filter((_, j) => j !== i) })
 									}
-									mb={6}
+									mt={i === 0 ? 30 : 6}
 								>
 									<TrashIcon size={16} />
 								</ActionIcon>

@@ -111,7 +111,7 @@ msgstr "{label} je prázdné."
 #~ msgstr "{mine, plural, one {Čeká na vás jedna věc.} few {Čekají na vás # věci.} many {Čeká na vás # věcí.} other {Čeká na vás # věcí.}}"
 
 #. placeholder {0}: money(monthly)
-#: src/features/accounts/staff/InvoicePlanFields.tsx:136
+#: src/features/accounts/staff/InvoicePlanFields.tsx:143
 msgid "{months} × {0}, first on signing"
 msgstr "{months} × {0}, první při podpisu"
 
@@ -214,7 +214,7 @@ msgstr "Přidat pole"
 msgid "Add a line"
 msgstr "Přidat řádek"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:217
+#: src/features/accounts/staff/InvoicePlanFields.tsx:224
 msgid "Add a part"
 msgstr "Přidat splátku"
 
@@ -286,7 +286,7 @@ msgstr "Přiděleno: {who}. Podepsat to může jen tato osoba."
 #~ msgid "At least one of the three."
 #~ msgstr "Alespoň jedno ze tří."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:116
+#: src/features/accounts/staff/InvoicePlanFields.tsx:123
 msgid "At once"
 msgstr "Najednou"
 
@@ -640,7 +640,7 @@ msgstr "Stav zákazníka"
 msgid "Data processing agreement"
 msgstr "Smlouva o zpracování údajů"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:168
+#: src/features/accounts/staff/InvoicePlanFields.tsx:176
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
 msgstr "Datum"
@@ -1032,7 +1032,7 @@ msgstr "Jak chcete dostávat faktury?"
 msgid "How we handle your details"
 msgstr "Jak nakládáme s vašimi údaji"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:110
+#: src/features/accounts/staff/InvoicePlanFields.tsx:117
 msgid "How we invoice"
 msgstr "Jak fakturujeme"
 
@@ -1057,7 +1057,7 @@ msgstr "Pokud nějaké máte"
 msgid "If your finance team uses one"
 msgstr "Pokud jej vaše finanční oddělení používá"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:118
+#: src/features/accounts/staff/InvoicePlanFields.tsx:125
 msgid "In instalments"
 msgstr "Ve splátkách"
 
@@ -1301,7 +1301,7 @@ msgstr "Zpráva"
 #~ msgid "Month"
 #~ msgstr "Měsíc"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:117
+#: src/features/accounts/staff/InvoicePlanFields.tsx:124
 msgid "Monthly"
 msgstr "Měsíčně"
 
@@ -1478,7 +1478,7 @@ msgstr "Poznámka"
 msgid "Nothing to do right now."
 msgstr "V tuto chvíli není co dělat."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:126
+#: src/features/accounts/staff/InvoicePlanFields.tsx:133
 msgid "Number of months"
 msgstr "Počet měsíců"
 
@@ -1522,11 +1522,11 @@ msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlá
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Nabídky, smlouvy a faktury se zde zobrazí, jakmile je odešleme."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:160
+#: src/features/accounts/staff/InvoicePlanFields.tsx:168
 msgid "On a date"
 msgstr "K datu"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:159
+#: src/features/accounts/staff/InvoicePlanFields.tsx:167
 msgid "On signing"
 msgstr "Při podpisu"
 
@@ -1956,7 +1956,7 @@ msgstr "Odebrat pole"
 msgid "Remove line"
 msgstr "Odebrat položku"
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:196
+#: src/features/accounts/staff/InvoicePlanFields.tsx:203
 msgid "Remove part"
 msgstr "Odebrat splátku"
 
@@ -2194,12 +2194,13 @@ msgstr "Smlouva o úrovni služeb"
 msgid "Set up a project of your own for your first real session."
 msgstr "Založte si vlastní projekt pro své první skutečné setkání."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:178
+#: src/features/accounts/staff/InvoicePlanFields.tsx:186
+#: src/features/accounts/staff/InvoicePlanFields.tsx:187
 msgid "Share (%)"
 msgstr "Podíl (%)"
 
 #. placeholder {0}: totalBps / 100
-#: src/features/accounts/staff/InvoicePlanFields.tsx:225
+#: src/features/accounts/staff/InvoicePlanFields.tsx:232
 msgid "Shares add up to {0}%"
 msgstr "Podíly dávají dohromady {0}%"
 
@@ -3049,7 +3050,7 @@ msgstr "Náš požadavek"
 msgid "What we put on your invoices."
 msgstr "Co uvádíme na vašich fakturách."
 
-#: src/features/accounts/staff/InvoicePlanFields.tsx:152
+#: src/features/accounts/staff/InvoicePlanFields.tsx:161
 msgid "When"
 msgstr "Kdy"
 
