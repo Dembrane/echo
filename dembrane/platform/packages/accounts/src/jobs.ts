@@ -147,11 +147,11 @@ export async function runInvoicePartsTick(d: {
 }): Promise<string[]> {
   if (!d.settings.offerMessages) return [];
   const today = amsterdamDay(d.now());
-  const { docs, asked } = await store.offersInParts(d.db);
+  const { docs, asked, acceptedOn } = await store.offersInParts(d.db);
   const orgs = new Set<string>();
   for (const doc of docs) {
     if (orgs.has(doc.orgId) || !doc.signedAt) continue;
-    const signedOn = amsterdamDay(doc.signedAt);
+    const signedOn = acceptedOn.get(doc.id) ?? amsterdamDay(doc.signedAt);
     const due = partsOf(doc).some(
       (p) => !asked.has(requestSubject(doc, p).id) && dueOn(p.due, signedOn) <= today,
     );

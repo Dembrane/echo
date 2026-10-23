@@ -240,6 +240,21 @@ export function signaturePayload(s: SignatureRow, signedPdfPath: string) {
     signed_pdf_sha256: s.signedPdfSha256,
     /** Staff API path; sam fetches it with its staff key. */
     signed_pdf: signedPdfPath,
+    /**
+     * Null for a signature made in dembrane. Accepted outside dembrane (their order letter, an
+     * email, a signature on paper or on their own DPA) and recorded by staff: how, the day the
+     * customer accepted, the evidence file's SHA-256 and the staff API path to fetch it.
+     */
+    outside: s.outsideVia
+      ? {
+          via: s.outsideVia,
+          accepted_on: s.acceptedOn,
+          customer_reference: s.customerReference,
+          evidence_name: s.evidenceName,
+          evidence_sha256: s.evidenceSha256,
+          evidence: signedPdfPath.replace(/signed\.pdf$/, "evidence"),
+        }
+      : null,
   };
 }
 

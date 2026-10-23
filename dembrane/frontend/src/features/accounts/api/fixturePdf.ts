@@ -500,7 +500,7 @@ export async function renderSigned(
 			["Signed at", sig.signed_at],
 			["Method", sig.method],
 			["SHA-256 of the unsigned document", sig.sha256],
-			["SHA-256 of the signature image", sig.image_sha256],
+			["SHA-256 of the signature image", sig.image_sha256 ?? "none"],
 			["Authorised for data processing", sig.dpa_authorised ? "yes" : "no"],
 		]) {
 			y = para(audit, k, y + 8, { color: MUTED, font: fonts.regular, size: 8 });

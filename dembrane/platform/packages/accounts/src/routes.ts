@@ -39,6 +39,7 @@ import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
 import { changeOfferTemplate, listOfferTemplates, resetOfferTemplate } from "./offer-template";
+import { acceptOutside, staffEvidence } from "./outside";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
@@ -370,6 +371,32 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = await staff(c, "accounts.document.void");
     const b = await body(c, K.VoidRequest);
     return c.json(await voidDocument(d, who, p(c, "orgId"), p(c, "docId"), b.reason));
+  });
+  app.post(R.acceptOutside.path, async (c) => {
+    const who = await staff(c, "accounts.document.accept_outside");
+    const b = await body(c, K.AcceptOutsideRequest);
+    const bytes = new Uint8Array(Buffer.from(b.evidence_base64, "base64"));
+    return c.json(
+      await acceptOutside(d, who, p(c, "orgId"), p(c, "docId"), {
+        via: b.via,
+        name: b.name,
+        role: b.role,
+        email: b.email,
+        accepted_on: b.accepted_on,
+        customer_reference: b.customer_reference,
+        evidence: { name: b.evidence_name, bytes },
+      }),
+    );
+  });
+  app.get(R.staffEvidence.path, async (c) => {
+    await staff(c, "accounts.document.evidence");
+    const r = await staffEvidence(d, p(c, "orgId"), p(c, "docId"));
+    return c.body(r.bytes as unknown as ArrayBuffer, 200, {
+      "content-type": r.type,
+      "content-disposition": `attachment; filename="${r.name.replace(/[^A-Za-z0-9._ -]+/g, "_")}"`,
+      "x-content-type-options": "nosniff",
+      "cache-control": "private, no-store",
+    });
   });
   app.post(R.sendMessage.path, async (c) => {
     const who = await staff(c, "accounts.message.send");

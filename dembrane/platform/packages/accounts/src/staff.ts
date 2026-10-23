@@ -41,6 +41,7 @@ import {
   type OnboardingCode,
   withdrawOnboarding,
 } from "./onboarding";
+import { voidAcceptance } from "./outside";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
@@ -1125,7 +1126,18 @@ export async function voidDocument(
   const org = await staffOrg(d, orgId);
   const doc = isUuid(docId) ? await store.document(d.db, org.id, docId) : null;
   if (!doc) throw new NotFoundError("document.not_found");
-  if (doc.status === "signed") throw new ConflictError("document.signed_cannot_void");
+  if (doc.status === "signed") {
+    // A signature made here is final; an acceptance staff recorded may be voided, with a reason.
+    const sig = await store.signatureOf(d.db, doc.id);
+    if (sig?.method !== "outside") throw new ConflictError("document.signed_cannot_void");
+    await voidAcceptance(d, who, org, doc, sig, reason);
+    return documentDetail(
+      d,
+      (await store.document(d.db, org.id, doc.id)) as DocumentRow,
+      "staff",
+      who,
+    );
+  }
   if (doc.status === "void") return documentDetail(d, doc, "staff", who);
   await d.db.transaction(async (tx) => {
     await supersede(d, tx, org.id, doc.id, doc.kind);

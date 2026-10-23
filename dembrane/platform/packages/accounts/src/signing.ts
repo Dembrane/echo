@@ -333,7 +333,7 @@ export async function signDocument(
         language,
       });
       await store.updateDocument(tx, doc.id, { status: "signed", signedAt: now, updatedAt: now });
-      await afterSigned(d, tx, org, doc, input, who);
+      await afterSigned(d, tx, org, doc, input.dpa_authorised, who.directusUserId);
       if (access.via === "signer")
         await joinOnSigning(
           tx,
@@ -397,6 +397,8 @@ export async function auditTrail(
   doc: DocumentRow,
   signer: string,
   signedAt: string,
+  /** The last line, when it is not a signature made here. */
+  last = `Signed by ${signer}`,
 ): Promise<{ at: string; what: string }[]> {
   const rows = await store.documentEvents(d.db, doc.orgId, doc.id);
   const ids = [...new Set(rows.flatMap((e) => (e.actorUserId ? [e.actorUserId] : [])))];
@@ -431,18 +433,21 @@ export async function auditTrail(
     else if (e.type === "document.signer_replaced")
       trail.push({ at: at(e), what: `Signer changed to ${named} by ${who(e)}` });
   }
-  trail.push({ at: signedAt, what: `Signed by ${signer}` });
+  trail.push({ at: signedAt, what: last });
   return trail;
 }
 
-/** What signing sets in motion: the sign task is done, locked tasks open, and the DPA follows. */
-async function afterSigned(
+/**
+ * What signing sets in motion, and an acceptance recorded outside dembrane the same: the sign
+ * task is done, locked tasks open, a prospect becomes a customer, and the DPA follows.
+ */
+export async function afterSigned(
   d: AccountsDeps,
   tx: Conn,
   org: OrgRow,
   doc: DocumentRow,
-  input: SignInput,
-  who: Signed,
+  dpaAuthorised: boolean,
+  actorId: string | null,
 ) {
   const tasks = await store.tasks(tx, org.id);
   // Signed without saying who signs first: the signer answered it by signing.
@@ -471,8 +476,8 @@ async function afterSigned(
     });
   // Offers from before the DPA was its own document asked the signer whether they may also
   // agree to data processing; a no sends the DPA on its own to someone who may.
-  if ((doc.content as OfferContent | null)?.dpa_separate || input.dpa_authorised) return;
-  await openDpa(d, tx, org.id, doc, who.directusUserId);
+  if ((doc.content as OfferContent | null)?.dpa_separate || dpaAuthorised) return;
+  await openDpa(d, tx, org.id, doc, actorId);
 }
 
 /**

@@ -619,6 +619,15 @@ function drawAudit(w: Writer, a: AuditRecord) {
       `Pinned ${t.kind}`,
       `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
     ]);
+  drawRows(w, rows);
+  drawTrail(w, a.trail);
+  w.space(10);
+  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
+  w.text(a.confirmationText, { size: 9.5 });
+}
+
+/** Label and value side by side, the label muted, each row as tall as its longer side. */
+function drawRows(w: Writer, rows: readonly (readonly [string, string])[]) {
   for (const [k, value] of rows) {
     const before = w.y;
     const page = w.page;
@@ -628,20 +637,111 @@ function drawAudit(w: Writer, a: AuditRecord) {
     w.text(value, { size: 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
   }
-  if (a.trail.length) {
-    w.space(10);
-    w.text("Audit trail (UTC)", { size: brand.type.print.lead, gap: 4 });
-    for (const t of a.trail) {
-      const before = w.y;
-      const page = w.page;
-      w.text(t.at, { size: 9, width: 150, color: MUTED });
-      const after = w.y;
-      if (w.page === page) w.y = before;
-      w.text(t.what, { size: 9, x: MARGIN + 160 });
-      w.y = Math.min(after, w.y) - 3;
-    }
-  }
+}
+
+function drawTrail(w: Writer, trail: readonly { at: string; what: string }[]) {
+  if (!trail.length) return;
   w.space(10);
-  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
-  w.text(a.confirmationText, { size: 9.5 });
+  w.text("Audit trail (UTC)", { size: brand.type.print.lead, gap: 4 });
+  drawRows(
+    w,
+    trail.map((t) => [t.at, t.what] as const),
+  );
+}
+
+/** How the customer accepted outside dembrane, as the record and the timeline word it. */
+export const OUTSIDE_VIA = {
+  order_letter: "by order letter",
+  email: "by email",
+  paper: "by signature on paper",
+  own_document: "by signing their own data processing agreement",
+} as const;
+export type OutsideVia = keyof typeof OUTSIDE_VIA;
+
+/** What the acceptance record page of a document accepted outside dembrane states. */
+export interface AcceptanceRecord {
+  readonly documentTitle: string;
+  readonly documentId: string;
+  readonly reference: string | null;
+  readonly version: number;
+  /** SHA-256 of the PDF as sent: what the customer accepted. */
+  readonly sha256: string;
+  readonly via: OutsideVia;
+  /** ISO day the customer accepted. */
+  readonly acceptedOn: string;
+  readonly name: string;
+  readonly role: string | null;
+  readonly email: string;
+  readonly organisation: string;
+  readonly customerReference: string | null;
+  readonly evidence: { name: string; type: string; sha256: string; bytes: Uint8Array };
+  readonly recordedBy: string;
+  readonly recordedAt: string;
+  readonly acceptanceId: string;
+  readonly statement: string;
+  readonly legal: AuditRecord["legal"];
+  readonly trail: AuditRecord["trail"];
+}
+
+/** "22-10-2026", as the documents print a day. */
+const printedDay = (iso: string) => `${iso.slice(8, 10)}-${iso.slice(5, 7)}-${iso.slice(0, 4)}`;
+
+/** The one line the record leads with: "Accepted by order letter on 22-10-2026, evidence attached." */
+export const acceptanceLine = (via: OutsideVia, acceptedOn: string) =>
+  `Accepted ${OUTSIDE_VIA[via]} on ${printedDay(acceptedOn)}, evidence attached.`;
+
+/**
+ * The copy of a document accepted outside dembrane: the PDF as sent, unchanged and with no
+ * drawn signature, then a page saying how and when the customer accepted it, who recorded
+ * it, and the evidence's SHA-256. The evidence file rides inside as an attachment, so the
+ * copy proves itself without our database.
+ */
+export async function acceptedPdf(sent: Uint8Array, a: AcceptanceRecord): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(sent, { updateMetadata: false });
+  const { regular, bold, chars } = await embedFonts(doc);
+  const w = new Writer(doc, regular, bold, chars);
+  w.text("Acceptance record", { bold: true, size: brand.type.print.title, gap: 6 });
+  w.text(acceptanceLine(a.via, a.acceptedOn), { size: 11, gap: 4 });
+  w.text(
+    "The customer accepted this document outside dembrane. Nothing was signed here; dembrane staff recorded the acceptance with the evidence below.",
+    { size: 9, color: MUTED, gap: 12 },
+  );
+  const rows: [string, string][] = [
+    ["Document", a.documentTitle],
+    ["Document id", a.documentId],
+    ...(a.reference ? ([["Reference", a.reference]] as [string, string][]) : []),
+    ["Version", String(a.version)],
+    ["SHA-256 of the PDF as sent", a.sha256],
+    ["Accepted", `${OUTSIDE_VIA[a.via]}, on ${printedDay(a.acceptedOn)}`],
+    ["Accepted by", a.role ? `${a.name}, ${a.role}` : a.name],
+    ["Email", a.email],
+    ["Organisation", a.organisation],
+    ...(a.customerReference
+      ? ([["Their reference", a.customerReference]] as [string, string][])
+      : []),
+    ["Evidence", `${a.evidence.name} (${a.evidence.type}), attached to this PDF`],
+    ["SHA-256 of the evidence", a.evidence.sha256],
+    ["Recorded by", a.recordedBy],
+    ["Recorded at (UTC)", a.recordedAt],
+    ["Record id", a.acceptanceId],
+  ];
+  for (const t of a.legal)
+    rows.push([
+      `Pinned ${t.kind}`,
+      `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
+    ]);
+  drawRows(w, rows);
+  drawTrail(w, a.trail);
+  w.space(10);
+  w.text("Recorded statement", { size: brand.type.print.lead, gap: 4 });
+  w.text(a.statement, { size: 9.5 });
+  await doc.attach(a.evidence.bytes, a.evidence.name, {
+    mimeType: a.evidence.type,
+    description: "Evidence of acceptance",
+    creationDate: new Date(a.recordedAt),
+    modificationDate: new Date(a.recordedAt),
+  });
+  doc.setSubject(`Accepted ${OUTSIDE_VIA[a.via]} by ${a.name} for ${a.organisation}`);
+  doc.setModificationDate(new Date(a.recordedAt));
+  return doc.save({ useObjectStreams: false });
 }

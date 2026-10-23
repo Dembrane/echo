@@ -149,6 +149,7 @@ const offerSummary: Out<typeof DocumentSummary> = {
   signer: null,
   file_url: `${C}/documents/${OFFER}/file`,
   signed_pdf_url: null,
+  accepted_outside: null,
 };
 
 export const offerDetail: Out<typeof DocumentDetail> = {
@@ -256,6 +257,7 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   },
   file_url: `${C}/documents/${DPA}/file`,
   signed_pdf_url: `${C}/documents/${DPA}/signed.pdf`,
+  accepted_outside: null,
 };
 
 export const signedDpaDetail: Out<typeof DocumentDetail> = {
@@ -371,6 +373,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
       "0199a1b9-0000-7000-8000-000000000003": "Example Town Council (sample)",
       "0199a1b9-0000-7000-8000-000000000004": "21-09-2026",
     },
+    outside: null,
   },
   prefill: { organisation: "Example Town Council (sample)", address: null, po_number: null },
   access: "member",
@@ -401,6 +404,7 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
   signer: null,
   file_url: `${C}/documents/${INVOICE}/file`,
   signed_pdf_url: null,
+  accepted_outside: null,
   invoice: {
     number: "2026-0421",
     exact_id: "DEMO-EXACT-0001",

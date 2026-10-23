@@ -60,7 +60,8 @@ export const documentStatusLabel = (doc: DocumentSummaryT): string => {
 		declined: t`Declined`,
 		draft: t`Draft`,
 		sent: doc.requires_signature ? t`To sign` : t`Sent`,
-		signed: t`Signed`,
+		signed:
+			doc.accepted_outside && doc.kind === "offer" ? t`Accepted` : t`Signed`,
 		viewed: doc.requires_signature ? t`To sign` : t`Viewed`,
 		void: t`Withdrawn`,
 	}[doc.status];

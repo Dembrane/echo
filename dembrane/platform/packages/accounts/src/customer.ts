@@ -169,7 +169,14 @@ export async function documentDetail(
               : null,
         }
       : null,
-    signature: sig ? signatureView(sig) : null,
+    signature: sig
+      ? signatureView(
+          sig,
+          via === "staff" && sig.evidenceKey
+            ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
+            : undefined,
+        )
+      : null,
     prefill: signingPrefill(org?.name ?? null, billing, doc),
     access: via,
     staff_url:

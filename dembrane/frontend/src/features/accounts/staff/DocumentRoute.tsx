@@ -38,6 +38,11 @@ import {
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { PdfPages } from "../pdf/PdfPages";
+import {
+	AcceptedOutsideModal,
+	outsideFact,
+	VoidAcceptanceModal,
+} from "./AcceptedOutsideModals";
 import { StaffOnly } from "./AccountCardRoute";
 import { PushOfferModal } from "./PushOfferModal";
 import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
@@ -72,6 +77,8 @@ function DocumentPage() {
 	const navigate = useI18nNavigate();
 	const [confirming, setConfirming] = useState(false);
 	const [emailOpen, setEmailOpen] = useState(false);
+	const [accepting, setAccepting] = useState(false);
+	const [voiding, setVoiding] = useState(false);
 	useDocumentTitle(doc.data ? `${doc.data.title} | dembrane` : "dembrane");
 
 	if (doc.isLoading) return <Loader m="xl" size="sm" />;
@@ -88,6 +95,12 @@ function DocumentPage() {
 	// A sent offer is fixed; a new version replaces it until it is signed.
 	const revisable =
 		d.kind === "offer" && ["sent", "viewed", "declined"].includes(d.status);
+	// Accepted outside dembrane: their order letter, an email, paper, or their own DPA.
+	const acceptable =
+		(d.kind === "offer" || d.kind === "dpa") &&
+		d.requires_signature &&
+		["sent", "viewed"].includes(d.status);
+	const outside = d.signature?.outside ?? null;
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
@@ -98,11 +111,16 @@ function DocumentPage() {
 			: t`${formatMoney(d.total_cents, d.currency, i18n.locale)} incl. VAT`,
 		draft
 			? null
-			: d.signed_at
-				? t`Signed ${formatDate(d.signed_at, i18n.locale)}`
-				: d.sent_at
-					? t`Sent ${formatDate(d.sent_at, i18n.locale)}`
-					: null,
+			: outside
+				? outsideFact(outside.via, formatDate(outside.accepted_on, i18n.locale))
+				: d.signed_at
+					? t`Signed ${formatDate(d.signed_at, i18n.locale)}`
+					: d.sent_at
+						? t`Sent ${formatDate(d.sent_at, i18n.locale)}`
+						: null,
+		outside?.customer_reference
+			? t`Their reference ${outside.customer_reference}`
+			: null,
 		!draft && d.kind === "offer" && d.valid_until && !d.signed_at
 			? t`Valid until ${formatDate(d.valid_until, i18n.locale)}`
 			: null,
@@ -186,12 +204,48 @@ function DocumentPage() {
 								<Trans>Place fields</Trans>
 							</Button>
 						)}
+						{acceptable && (
+							<Button
+								variant="default"
+								onClick={() => setAccepting(true)}
+								data-testid="accepted-outside-open"
+							>
+								{d.kind === "dpa" ? (
+									<Trans>Signed outside dembrane</Trans>
+								) : (
+									<Trans>Accepted outside dembrane</Trans>
+								)}
+							</Button>
+						)}
+						{outside?.evidence_url && (
+							<Button
+								variant="default"
+								onClick={() => void openPdf(outside.evidence_url as string)}
+								data-testid="open-evidence"
+							>
+								<Trans>Open evidence</Trans>
+							</Button>
+						)}
 						{d.signed_pdf_url && (
 							<Button
 								variant="default"
 								onClick={() => void openPdf(d.signed_pdf_url as string)}
 							>
-								<Trans>Open signed PDF</Trans>
+								{outside ? (
+									<Trans>Open the record</Trans>
+								) : (
+									<Trans>Open signed PDF</Trans>
+								)}
+							</Button>
+						)}
+						{outside && d.status === "signed" && (
+							<Button
+								variant="subtle"
+								color="red"
+								onClick={() => setVoiding(true)}
+								data-testid="void-acceptance-open"
+							>
+								<Trans>Void acceptance</Trans>
 							</Button>
 						)}
 					</Group>
@@ -296,6 +350,23 @@ function DocumentPage() {
 						?.name ?? null
 				}
 			/>
+			{acceptable && (
+				<AcceptedOutsideModal
+					opened={accepting}
+					onClose={() => setAccepting(false)}
+					orgId={orgId}
+					doc={d}
+					reference={d.content?.customer_reference ?? null}
+				/>
+			)}
+			{outside && d.status === "signed" && (
+				<VoidAcceptanceModal
+					opened={voiding}
+					onClose={() => setVoiding(false)}
+					orgId={orgId}
+					docId={d.id}
+				/>
+			)}
 			{draftOffer && (
 				<PushOfferModal
 					opened={editing}
