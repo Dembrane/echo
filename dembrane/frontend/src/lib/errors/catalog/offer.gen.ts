@@ -114,6 +114,39 @@ export const offer = {
     audience: "staff",
     description: "The offer is reverse-charged to a party outside the EU.",
   },
+  "offer.invoice_parts_vat": {
+    action: "fix_input",
+    detail: "An offer invoiced in parts needs one VAT rate on its charged lines",
+    audience: "staff",
+    description:
+      "An invoice plan was given to an offer whose charged lines carry different VAT rates; parts are cut from one total at one rate.",
+  },
+  "offer.invoice_parts_count": {
+    action: "fix_input",
+    detail: "Invoice in {min} to {max} parts",
+    audience: "staff",
+    description:
+      "An invoice plan has too few or too many parts: 2 to 24 monthly parts, 2 to 12 instalments.",
+  },
+  "offer.invoice_part_when": {
+    action: "fix_input",
+    detail: "Part {part}: only the first part falls on signing, and the dates follow each other",
+    audience: "staff",
+    description:
+      "An instalment is neither on signing (first part only) nor a valid ISO date on or after the part before it. part counts from 1.",
+  },
+  "offer.invoice_part_share": {
+    action: "fix_input",
+    detail: "Part {part} needs a share above zero",
+    audience: "staff",
+    description: "An instalment's share is not a whole number of basis points above zero.",
+  },
+  "offer.invoice_shares_total": {
+    action: "fix_input",
+    detail: "The parts add up to {total}; they must add up to 100%",
+    audience: "staff",
+    description: "The instalments' shares do not add up to 10000 basis points.",
+  },
   "offer.template_not_found": {
     action: "none",
     detail: "No such offer template",

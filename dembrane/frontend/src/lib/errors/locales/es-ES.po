@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Elige el país de la organización a la que se factura."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Elige adónde va este webhook: una dirección web o la bandeja de entrada de sam con un código conocido."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Termina de configurar tu cuenta para continuar."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Da al plazo {part} una parte mayor que cero."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Ponle un nombre a tu organización."
@@ -262,6 +267,11 @@ msgstr "Ocultar la invitación a eventos de dembrane requiere un plan de pago. M
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Factura en {min} a {max} plazos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden compartir proyectos."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Plazo {part}: solo el primero puede ser al firmar, y cada fecha va después de la anterior."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Parte de tu selección ya no está en el mapa. Recarga el mapa y vuelve a seleccionar."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Elige un estado para este webhook: publicado, borrador o archivado."
 
@@ -627,6 +642,11 @@ msgstr "El mapa aún se está creando. Espera un momento e inténtalo de nuevo."
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "El mapa se ha actualizado desde que hiciste esta selección. Recarga el mapa y vuelve a seleccionar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "Los plazos suman {total}. Deben sumar 100%."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Marca {label} para continuar."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Marca o desmarca {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "Para facturar a plazos, pon el mismo tipo de IVA en cada línea cobrada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37

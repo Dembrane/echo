@@ -333,6 +333,35 @@ export const store = {
       .orderBy(desc(doc.createdAt), desc(doc.id));
   },
 
+  /**
+   * Signed offers invoiced in parts, with the subjects of the requests their organisation
+   * already made, for the tick that asks for each part on its day. Offers whose every part
+   * was asked for are left out by the caller; there are few, one per deal.
+   */
+  async offersInParts(c: Conn) {
+    const docs = await c
+      .select()
+      .from(doc)
+      .where(
+        and(
+          eq(doc.kind, "offer"),
+          eq(doc.status, "signed"),
+          sql`(${doc.content}->'invoice_plan') is not null`,
+        ),
+      );
+    if (!docs.length) return { docs, asked: new Set<string>() };
+    const rows = await c
+      .select({ id: event.subjectId })
+      .from(event)
+      .where(
+        and(
+          inArray(event.orgId, [...new Set(docs.map((x) => x.orgId))]),
+          eq(event.type, "invoice.requested"),
+        ),
+      );
+    return { docs, asked: new Set(rows.flatMap((r) => (r.id ? [r.id] : []))) };
+  },
+
   /** What the deal stage and its dates are read from, for many organisations in three reads. */
   async stageFacts(c: Conn, orgIds: readonly string[]) {
     if (!orgIds.length) return { documents: [], billing: [], billingSaved: [] };

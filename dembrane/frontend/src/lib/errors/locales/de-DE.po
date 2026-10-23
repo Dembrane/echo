@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Wähle das Land der Organisation, die die Rechnung erhält."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Schließen Sie die Einrichtung Ihres Kontos ab, um fortzufahren."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Gib Teil {part} einen Anteil über null."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Geben Sie Ihrer Organisation einen Namen."
@@ -262,6 +267,11 @@ msgstr "Das Ausblenden der dembrane-Event-Einladung erfordert einen kostenpflich
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Stelle in {min} bis {max} Teilen in Rechnung."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Nur Administratoren des Arbeitsbereichs können Projekte teilen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Teil {part}: Nur der erste Teil kann bei Unterschrift fällig sein, und jedes Datum folgt auf das vorherige."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Ein Teil Ihrer Auswahl befindet sich nicht mehr auf der Karte. Laden Sie die Karte neu und wählen Sie erneut aus."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Wählen Sie einen Status für diesen Webhook: veröffentlicht, Entwurf oder archiviert."
 
@@ -627,6 +642,11 @@ msgstr "Die Map wird noch erstellt. Warten Sie einen Moment und versuchen Sie es
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Die Map wurde seit Ihrer Auswahl aktualisiert. Laden Sie die Map neu und wählen Sie erneut aus."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "Die Teile ergeben {total}. Sie müssen 100% ergeben."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Wählen Sie {label} aus, um fortzufahren."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Aktivieren oder deaktivieren Sie {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "Für Teilrechnungen braucht jede berechnete Zeile denselben MwSt.-Satz."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37

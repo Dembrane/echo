@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Виберіть країну організації, якій виставляється рахунок."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Завершіть налаштування облікового запису, щоб продовжити."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Дайте частині {part} частку більше нуля."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Вкажіть назву вашої організації."
@@ -262,6 +267,11 @@ msgstr "Приховування запрошення на подію dembrane �
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Виставляйте рахунок частинами: від {min} до {max}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Частина {part}: лише перша частина може бути під час підписання, і кожна дата йде після попередньої."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Частина вибраного більше не відображається на мапі. Оновіть мапу та виберіть знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Виберіть статус для цього вебхука: опублікований, чернетка або в архіві."
 
@@ -627,6 +642,11 @@ msgstr "Карта все ще створюється. Зачекайте хви
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Карту було оновлено після вашого вибору. Оновіть карту та зробіть вибір знову."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "Частини разом становлять {total}. Вони мають становити 100%."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Позначте {label}, щоб продовжити."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Позначте або зніміть позначку з {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "Щоб виставляти рахунок частинами, дайте всім платним рядкам однакову ставку ПДВ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37

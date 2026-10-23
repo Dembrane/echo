@@ -3,6 +3,13 @@ import { assetPath } from "@dembrane/core";
 import { LOCALES } from "@dembrane/i18n";
 import { PDFDocument } from "pdf-lib";
 import { walkOrder } from "../src/documents";
+import {
+  addMonths,
+  amsterdamDay,
+  checkInvoicePlan,
+  dueOn,
+  invoiceParts,
+} from "../src/invoice-plan";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
@@ -716,5 +723,44 @@ describe("peppol", () => {
       throw new Error("down");
     };
     expect(await lookupPeppol({ fetchText, logger }, { kvk_number: "12345678" })).toBeNull();
+  });
+});
+
+describe("invoice parts", () => {
+  const line = (cents: number, bps = 2100) => ({
+    description: "Licence",
+    quantity: 1,
+    unit_price_cents: cents,
+    vat_rate_bps: bps,
+  });
+
+  test("twelve monthly parts of a year's licence: equal cents, the rest in the last", () => {
+    const parts = invoiceParts({ kind: "monthly", parts: 12 }, [line(250000)]);
+    expect(parts.slice(0, 11).every((p) => p.subtotal_cents === 20833)).toBe(true);
+    expect(parts[11]?.subtotal_cents).toBe(20837);
+    expect(parts.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(250000);
+    expect(parts.reduce((s, p) => s + p.vat_cents, 0)).toBe(52500);
+    expect(parts.map((p) => p.due)).toContainEqual({ kind: "months_after", months: 11 });
+  });
+
+  test("instalments by share: thirds that add up, at the offer's one rate", () => {
+    const plan = {
+      kind: "instalments" as const,
+      parts: [
+        { on: "signing", share_bps: 3333 },
+        { on: "2026-12-01", share_bps: 3333 },
+        { on: "2027-01-01", share_bps: 3334 },
+      ],
+    };
+    const parts = invoiceParts(checkInvoicePlan(plan, [line(100001)]), [line(100001)]);
+    expect(parts.map((p) => p.subtotal_cents)).toEqual([33330, 33330, 33341]);
+    expect(parts.reduce((s, p) => s + p.total_cents, 0)).toBe(100001 + vatOf(100001, 2100));
+  });
+
+  test("a month later is the same day, or the month's last", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2026-11-15", 2)).toBe("2027-01-15");
+    expect(dueOn({ kind: "date", date: "2026-01-01" }, "2026-03-01")).toBe("2026-03-01");
+    expect(amsterdamDay(new Date("2026-10-24T22:30:00Z"))).toBe("2026-10-25");
   });
 });

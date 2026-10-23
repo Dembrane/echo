@@ -1,4 +1,5 @@
 import { type BillTo, billToLines } from "./bill-to";
+import { type InvoicePlan, invoiceParts } from "./invoice-plan";
 import { dutchDate } from "./legal/parse";
 import {
   charged,
@@ -147,6 +148,11 @@ export interface OfferContent {
    * sees it before signing; the invoice request carries it in place of their billing details.
    */
   readonly bill_to?: BillTo;
+  /**
+   * How the offer is invoiced when not all at once: monthly parts or instalments, printed
+   * as "How we invoice". After signing, echo asks for each part's invoice when it falls due.
+   */
+  readonly invoice_plan?: InvoicePlan;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -177,6 +183,15 @@ interface Copy {
   readonly optional: { readonly title: string; readonly note: string };
   /** The party invoiced in place of the customer: its heading and the words on its lines. */
   readonly billTo: { readonly title: string; readonly reference: string };
+  /** The table of an offer invoiced in parts: heading, columns and how each part is named. */
+  readonly parts: {
+    readonly title: string;
+    readonly columns: readonly [string, string, string];
+    readonly partOf: string;
+    readonly signing: string;
+    readonly monthAfter: string;
+    readonly monthsAfter: string;
+  };
   /** Why there is no VAT, in the words the invoice uses. */
   readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
   readonly closing: readonly string[];
@@ -434,6 +449,14 @@ const EN_FRAME = {
   included: "Included",
   optional: { title: "Optional", note: "Not in the total above." },
   billTo: { title: "Invoiced to", reference: "Reference" },
+  parts: {
+    title: "How we invoice",
+    columns: ["Part", "When", "Amount (excl. VAT)"] as const,
+    partOf: "{n} of {of}",
+    signing: "On signing",
+    monthAfter: "1 month after signing",
+    monthsAfter: "{n} months after signing",
+  },
   vatNote: {
     reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
     outside_eu:
@@ -459,6 +482,14 @@ const NL_FRAME = {
   included: "Inbegrepen",
   optional: { title: "Optioneel", note: "Niet in het totaal hierboven." },
   billTo: { title: "Factuur aan", reference: "Referentie" },
+  parts: {
+    title: "Zo factureren we",
+    columns: ["Deel", "Wanneer", "Bedrag (excl. btw)"] as const,
+    partOf: "{n} van {of}",
+    signing: "Bij ondertekening",
+    monthAfter: "1 maand na ondertekening",
+    monthsAfter: "{n} maanden na ondertekening",
+  },
   vatNote: {
     reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
     outside_eu:
@@ -704,6 +735,12 @@ export interface OfferLayout {
   } | null;
   /** Who the invoice goes to when it is not the customer: a heading over one line each. */
   readonly billTo: { readonly title: string; readonly lines: readonly string[] } | null;
+  /** How an offer invoiced in parts is invoiced: one row per part; null when all at once. */
+  readonly parts: {
+    readonly title: string;
+    readonly columns: readonly [string, string, string];
+    readonly rows: readonly (readonly [string, string, string])[];
+  } | null;
   /** The amendments under their heading, numbered; none on most offers. */
   readonly amendmentsTitle: string;
   readonly amendments: readonly {
@@ -824,6 +861,29 @@ export function layoutOffer(content: OfferContent): OfferLayout {
           }),
         }
       : null,
+    parts: content.invoice_plan
+      ? {
+          title: copy.parts.title,
+          columns: copy.parts.columns,
+          rows: invoiceParts(content.invoice_plan, content.items).map((p) => {
+            const words = copy.parts;
+            const when =
+              p.due.kind === "signing"
+                ? words.signing
+                : p.due.kind === "date"
+                  ? longDate(p.due.date, copy.months)
+                  : (p.due.months === 1 ? words.monthAfter : words.monthsAfter).replace(
+                      "{n}",
+                      String(p.due.months),
+                    );
+            return [
+              words.partOf.replace("{n}", String(p.number)).replace("{of}", String(p.of)),
+              when,
+              money(p.subtotal_cents),
+            ] as const;
+          }),
+        }
+      : null,
     amendmentsTitle: copy.amendmentsTitle,
     amendments: (content.amendments ?? []).map((a, i) => ({
       label: `${copy.words.amendment} ${i + 1}`,
@@ -887,6 +947,15 @@ export function offerText(content: OfferContent): string {
         ]
       : []),
     ...(l.billTo ? [`## ${l.billTo.title}`, ...l.billTo.lines, ""] : []),
+    ...(l.parts
+      ? [
+          `## ${l.parts.title}`,
+          `| ${l.parts.columns.join(" | ")} |`,
+          "| --- | --- | --- |",
+          ...l.parts.rows.map((r) => `| ${r.join(" | ")} |`),
+          "",
+        ]
+      : []),
     ...(l.amendments.length
       ? [
           `## ${l.amendmentsTitle}`,

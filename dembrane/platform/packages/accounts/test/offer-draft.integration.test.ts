@@ -7,6 +7,8 @@ import { deliverSamMessage } from "@dembrane/webhooks";
 import { eq, sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import type { AccountsDeps } from "../src/deps";
+import { addMonths } from "../src/invoice-plan";
+import { runInvoicePartsTick } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, pngB64, silent, type World, world } from "./helpers";
@@ -405,6 +407,8 @@ run("an offer draft, and the invoice request after the signature", () => {
     });
     const invoice = message.invoice as { items: { description: string; quantity: number }[] };
     expect(invoice.items.map((x) => x.quantity)).toEqual([12]);
+    // Invoiced at once: no part.
+    expect(invoice).not.toHaveProperty("part");
     expect((message.document as { lines: unknown[] }).lines).toHaveLength(1);
 
     // Saving the details again asks nothing new.
@@ -1441,5 +1445,250 @@ run("an offer draft, and the invoice request after the signature", () => {
       ],
     });
     expect(one.body).toContain("| Changemaker seat | 1 seat |");
+  });
+
+  /** The hourly tick that asks for each part on its day, as the worker runs it. */
+  const tick = () =>
+    runInvoicePartsTick({
+      db: w.db,
+      jobs: w.deps.jobs,
+      now: () => w.clock.now,
+      logger: silent,
+      settings: w.deps.settings,
+    });
+  /** A new organisation with billing details on file, so only the parts' days decide. */
+  const billedOrg = async (name: string) => {
+    const org = await freshOrg(name);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    return org;
+  };
+  /** Sends and signs an offer and its DPA. */
+  const signAll = async (docId: string, org: string) => {
+    await send(docId, org);
+    expect((await sign(docId, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find(
+      (d) => d.kind === "dpa" && d.status !== "signed",
+    );
+    if (dpa) expect((await sign(dpa.id, "outsider", org)).status).toBe(200);
+  };
+  type PartRequest = {
+    document: { id: string; subtotal_cents: number };
+    invoice: {
+      po_number: string | null;
+      part: {
+        number: number;
+        of: number;
+        label: string;
+        due_on: string;
+        subtotal_cents: number;
+        vat_cents: number;
+        total_cents: number;
+      };
+      items: {
+        description: string;
+        bullets: string[];
+        quantity: number;
+        unit_price_cents: number;
+        vat_rate_bps: number;
+      }[];
+    };
+  };
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const later = (days: number) => new Date(w.clock.now.getTime() + days * 86_400_000);
+
+  test("an offer in three monthly parts: printed, the first asked on signing, each next on its day, once, adding up to the cent", async () => {
+    const start = w.clock.now;
+    try {
+      const org = await billedOrg("Gemeente Maand BV");
+      const doc = await draft(org, {
+        reference: "OFFER-P3",
+        customer_reference: "PO-3-PARTS",
+        items: [
+          { description: "Licence", quantity: 1, unit_price_cents: 100000, vat_rate_bps: 2100 },
+        ],
+        invoice_plan: { kind: "monthly", parts: 3 },
+      });
+      expect(doc.content?.invoice_plan).toEqual({ kind: "monthly", parts: 3 });
+      expect(doc.body).toContain("## How we invoice");
+      expect(doc.body).toContain("| 1 of 3 | On signing | €333.33 |");
+      expect(doc.body).toContain("| 2 of 3 | 1 month after signing | €333.33 |");
+      expect(doc.body).toContain("| 3 of 3 | 2 months after signing | €333.34 |");
+
+      await signAll(doc.id, org);
+      const parts = () => requestedFor(org) as unknown as PartRequest[];
+      expect(parts()).toHaveLength(1);
+      const first = parts()[0] as PartRequest;
+      expect(first.invoice.part).toEqual({
+        number: 1,
+        of: 3,
+        label: "1 of 3",
+        due_on: day(start),
+        subtotal_cents: 33333,
+        vat_cents: 7000,
+        total_cents: 40333,
+      });
+      expect(first.invoice.po_number).toBe("PO-3-PARTS");
+      expect(first.invoice.items).toEqual([
+        {
+          description: "Part 1 of 3: Yearly license offer OFFER-P3",
+          bullets: ["1 x Licence"],
+          quantity: 1,
+          unit_price_cents: 33333,
+          vat_rate_bps: 2100,
+        },
+      ]);
+      expect(first.document.subtotal_cents).toBe(100000);
+
+      // Nothing else is due today: a tick, a second tick and another billing save ask nothing.
+      expect(await tick()).toEqual([]);
+      expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+      expect(parts()).toHaveLength(1);
+
+      // The day before a month has passed: still nothing. On the day: the second part, once.
+      const second = addMonths(day(start), 1);
+      w.clock.now = new Date(`${second}T09:00:00.000Z`);
+      w.clock.now = later(-1);
+      expect(await tick()).toEqual([]);
+      w.clock.now = new Date(`${second}T09:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      expect(parts().map((p) => p.invoice.part.label)).toEqual(["1 of 3", "2 of 3"]);
+      expect(parts()[1]?.invoice.part.due_on).toBe(second);
+
+      // A worker down for weeks catches up with what fell due, each part once.
+      w.clock.now = new Date(`${addMonths(day(start), 3)}T09:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      const all = parts().map((p) => p.invoice.part);
+      expect(all.map((p) => p.label)).toEqual(["1 of 3", "2 of 3", "3 of 3"]);
+      expect(all.map((p) => p.due_on)).toEqual([0, 1, 2].map((m) => addMonths(day(start), m)));
+      expect(all.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(100000);
+      expect(all.reduce((s, p) => s + p.total_cents, 0)).toBe(doc.total_cents as number);
+      expect(
+        (await store.events(w.db, org)).filter((e) => e.type === "invoice.requested"),
+      ).toHaveLength(3);
+    } finally {
+      w.clock.now = start;
+    }
+  });
+
+  test("instalments fall on signing and on their dates, and a part waits for the billing details like a whole offer", async () => {
+    const start = w.clock.now;
+    try {
+      const org = await freshOrg("Gemeente Termijn BV");
+      const date = day(later(20));
+      const doc = await draft(org, {
+        reference: "OFFER-I2",
+        language: "nl",
+        items: [
+          {
+            description: "Begeleiding",
+            quantity: 1,
+            unit_price_cents: 1150000,
+            vat_rate_bps: 2100,
+          },
+        ],
+        invoice_plan: {
+          kind: "instalments",
+          parts: [
+            { on: "signing", share_bps: 8000 },
+            { on: date, share_bps: 2000 },
+          ],
+        },
+      });
+      expect(doc.body).toContain("## Zo factureren we");
+      expect(doc.body).toContain("| 1 van 2 | Bij ondertekening | € 9.200,00 |");
+      const [y, m, dd] = date.split("-").map(Number) as [number, number, number];
+      const month = new Intl.DateTimeFormat("nl-NL", { month: "long", timeZone: "UTC" }).format(
+        new Date(Date.UTC(y, m - 1, 1)),
+      );
+      expect(doc.body).toContain(`| 2 van 2 | ${dd} ${month} ${y} | € 2.300,00 |`);
+
+      // Signed before the billing details: the first part waits for them, the second for its day.
+      await signAll(doc.id, org);
+      const parts = () => requestedFor(org) as unknown as PartRequest[];
+      expect(parts()).toHaveLength(0);
+      expect(await cardWaits(org)).toEqual([
+        { document_id: doc.id, waits_for: ["billing_details"] },
+      ]);
+      expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+      expect(parts().map((p) => p.invoice.part.label)).toEqual(["1 van 2"]);
+      expect(parts()[0]?.invoice.items[0]?.description).toBe(
+        "Deel 1 van 2: Offerte jaarlicentie OFFER-I2",
+      );
+
+      w.clock.now = new Date(`${date}T05:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      const second = parts()[1]?.invoice.part;
+      expect(second).toMatchObject({ number: 2, of: 2, due_on: date, subtotal_cents: 230000 });
+      expect(parts()[0]?.invoice.part.subtotal_cents).toBe(920000);
+      expect(await cardWaits(org)).toEqual([]);
+    } finally {
+      w.clock.now = start;
+    }
+  });
+
+  test("a plan whose parts do not add up, out of order, or over lines of mixed VAT is refused", async () => {
+    const org = await freshOrg("Gemeente Plan BV");
+    const attempt = async (
+      n: number,
+      invoice_plan: unknown,
+      over: Record<string, unknown> = {},
+    ) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: `OFFER-PL${n}`, invoice_plan, ...over }),
+      );
+      return r.status === 201 ? "ok" : `${r.status} ${(r.data as { detail: unknown }).detail}`;
+    };
+    const parts = (...xs: [string, number][]) => ({
+      kind: "instalments",
+      parts: xs.map(([on, share_bps]) => ({ on, share_bps })),
+    });
+    expect(await attempt(1, parts(["signing", 5000], ["2026-12-01", 4500]))).toBe(
+      "422 The parts add up to 95%; they must add up to 100%",
+    );
+    expect(await attempt(2, parts(["2026-12-01", 5000], ["signing", 5000]))).toBe(
+      "422 Part 2: only the first part falls on signing, and the dates follow each other",
+    );
+    expect(await attempt(3, parts(["2027-01-01", 5000], ["2026-12-01", 5000]))).toBe(
+      "422 Part 2: only the first part falls on signing, and the dates follow each other",
+    );
+    expect(
+      await attempt(
+        4,
+        { kind: "monthly", parts: 2 },
+        {
+          items: [
+            { description: "Licence", quantity: 1, unit_price_cents: 100000, vat_rate_bps: 2100 },
+            { description: "Book", quantity: 1, unit_price_cents: 2000, vat_rate_bps: 900 },
+          ],
+        },
+      ),
+    ).toBe("422 An offer invoiced in parts needs one VAT rate on its charged lines");
+    expect(
+      await attempt(5, parts(["signing", 3333], ["2026-12-01", 3333], ["2027-01-01", 3334])),
+    ).toBe("ok");
+    // A change that leaves the plan out keeps it; null invoices at once again.
+    const doc = await draft(org, {
+      reference: "OFFER-PL6",
+      invoice_plan: { kind: "monthly", parts: 12 },
+    });
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-PL6", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.invoice_plan).toEqual({ kind: "monthly", parts: 12 });
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-PL6", invoice_plan: null })))
+        .data,
+    );
+    expect(dropped.content?.invoice_plan).toBeUndefined();
+    expect(dropped.body).not.toContain("How we invoice");
   });
 });
