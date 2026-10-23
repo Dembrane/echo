@@ -1389,5 +1389,18 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(doc.body).toContain("| Onboarding | 1 |  | Included |");
     expect(doc.body).toContain("| Training | 1 |");
     expect(doc.body).not.toContain("1 seats");
+    // One seat reads as one.
+    const one = await draft(org, {
+      reference: "OFFER-SEAT1",
+      items: [
+        {
+          description: "Changemaker seat",
+          quantity: 1,
+          unit_price_cents: 8600,
+          vat_rate_bps: 2100,
+        },
+      ],
+    });
+    expect(one.body).toContain("| Changemaker seat | 1 seat |");
   });
 });

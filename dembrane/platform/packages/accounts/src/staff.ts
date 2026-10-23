@@ -396,9 +396,9 @@ async function supersede(
 }
 
 /** What a subscription line counted before lines had units: seats unless billed per month. */
-const SUBSCRIPTION_UNIT: Record<BillingUnit, Record<Language, string>> = {
-  seat: { en: "seats", nl: "seats" },
-  month: { en: "months", nl: "maanden" },
+const SUBSCRIPTION_UNIT: Record<BillingUnit, Record<Language, readonly [string, string]>> = {
+  seat: { en: ["seat", "seats"], nl: ["seat", "seats"] },
+  month: { en: ["month", "months"], nl: ["maand", "maanden"] },
 };
 
 /**
@@ -445,7 +445,9 @@ function offerContent(
   // Only the seat line counts seats (or months): the first charged line. Onboarding, a
   // discount or an included line counts nothing, so it prints its quantity alone.
   const seatLine = o.items.findIndex(charged);
-  const items = o.items.map((i, n) => (i.unit || !unit || n !== seatLine ? i : { ...i, unit }));
+  const items = o.items.map((i, n) =>
+    i.unit || !unit || n !== seatLine ? i : { ...i, unit: unit[i.quantity === 1 ? 0 : 1] },
+  );
   return {
     vat_treatment: vatTreatment,
     ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
