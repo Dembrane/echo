@@ -740,7 +740,7 @@ describe("invoice parts", () => {
     expect(parts[11]?.subtotal_cents).toBe(20837);
     expect(parts.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(250000);
     expect(parts.reduce((s, p) => s + p.vat_cents, 0)).toBe(52500);
-    expect(parts.map((p) => p.due)).toContainEqual({ kind: "months_after", months: 11 });
+    expect(parts.map((p) => p.due)).toContainEqual({ kind: "month_start", months: 11 });
   });
 
   test("instalments by share: thirds that add up, at the offer's one rate", () => {
@@ -761,6 +761,9 @@ describe("invoice parts", () => {
     expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
     expect(addMonths("2026-11-15", 2)).toBe("2027-01-15");
     expect(dueOn({ kind: "date", date: "2026-01-01" }, "2026-03-01")).toBe("2026-03-01");
+    // Monthly parts fall on the 1st of the following calendar months.
+    expect(dueOn({ kind: "month_start", months: 1 }, "2026-10-23")).toBe("2026-11-01");
+    expect(dueOn({ kind: "month_start", months: 3 }, "2026-11-30")).toBe("2027-02-01");
     expect(amsterdamDay(new Date("2026-10-24T22:30:00Z"))).toBe("2026-10-25");
   });
 });

@@ -262,9 +262,9 @@ export const BillTo = z.object({
 
 /**
  * How an offer is invoiced when not all at once: `monthly` in equal parts, the first on
- * signing and each next one a month later; `instalments` each on signing (the first only)
- * or on a date, with a share of the total in basis points that add up to 10000. The last
- * part takes the cents left by rounding.
+ * signing and each next one on the 1st of the following calendar month; `instalments` each
+ * on signing (the first only) or on a date, with a share of the total in basis points that
+ * add up to 10000. The last part takes the cents left by rounding.
  */
 export const InvoicePlan = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("monthly"), parts: z.number().int().min(2).max(24) }),

@@ -189,8 +189,9 @@ interface Copy {
     readonly columns: readonly [string, string, string];
     readonly partOf: string;
     readonly signing: string;
-    readonly monthAfter: string;
-    readonly monthsAfter: string;
+    /** The 1st of the month after the month of signing, and of a month further on. */
+    readonly nextMonth: string;
+    readonly laterMonth: string;
   };
   /** Why there is no VAT, in the words the invoice uses. */
   readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
@@ -454,8 +455,8 @@ const EN_FRAME = {
     columns: ["Part", "When", "Amount (excl. VAT)"] as const,
     partOf: "{n} of {of}",
     signing: "On signing",
-    monthAfter: "1 month after signing",
-    monthsAfter: "{n} months after signing",
+    nextMonth: "1st of the next month",
+    laterMonth: "1st of the month, {n} months on",
   },
   vatNote: {
     reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
@@ -487,8 +488,8 @@ const NL_FRAME = {
     columns: ["Deel", "Wanneer", "Bedrag (excl. btw)"] as const,
     partOf: "{n} van {of}",
     signing: "Bij ondertekening",
-    monthAfter: "1 maand na ondertekening",
-    monthsAfter: "{n} maanden na ondertekening",
+    nextMonth: "1e van de volgende maand",
+    laterMonth: "1e van de maand, {n} maanden later",
   },
   vatNote: {
     reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
@@ -872,7 +873,7 @@ export function layoutOffer(content: OfferContent): OfferLayout {
                 ? words.signing
                 : p.due.kind === "date"
                   ? longDate(p.due.date, copy.months)
-                  : (p.due.months === 1 ? words.monthAfter : words.monthsAfter).replace(
+                  : (p.due.months === 1 ? words.nextMonth : words.laterMonth).replace(
                       "{n}",
                       String(p.due.months),
                     );

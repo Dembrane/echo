@@ -3,7 +3,8 @@ import { charged, type OfferLine, priceLines, vatOf } from "./money";
 
 /**
  * How an offer is invoiced when it is not all at once: in equal monthly parts (the
- * subscription shape, a year's licence as twelve invoices), or in instalments that each
+ * subscription shape, a year's licence as twelve invoices: the first on signing, each next
+ * on the 1st of the following month), or in instalments that each
  * fall on signing or on a date and carry a share of the total (half on signing, half on
  * 1 December). One in eleven signed offers was invoiced in parts, each part by hand, so the
  * plan is agreed on the offer and echo asks for each part's invoice when it falls due.
@@ -20,10 +21,13 @@ export interface Instalment {
   readonly share_bps: number;
 }
 
-/** When a part falls due: on signing, a number of months after it, or on a date. */
+/**
+ * When a part falls due: on signing, on the 1st of a later calendar month (`months` after
+ * the month of signing, as subscriptions were invoiced per month), or on a date.
+ */
 export type PartDue =
   | { readonly kind: "signing" }
-  | { readonly kind: "months_after"; readonly months: number }
+  | { readonly kind: "month_start"; readonly months: number }
   | { readonly kind: "date"; readonly date: string };
 
 /** One part of an offer's invoice, with its amounts in cents. */
@@ -97,7 +101,7 @@ export function invoiceParts(plan: InvoicePlan, lines: readonly OfferLine[]): In
   const shares: { due: PartDue; bps: number }[] =
     plan.kind === "monthly"
       ? Array.from({ length: plan.parts }, (_, i) => ({
-          due: i === 0 ? { kind: "signing" } : { kind: "months_after", months: i },
+          due: i === 0 ? { kind: "signing" } : { kind: "month_start", months: i },
           bps: 0,
         }))
       : plan.parts.map((p) => ({
@@ -149,7 +153,7 @@ export function addMonths(iso: string, months: number): string {
 /** The day a part falls due for an offer signed on `signedOn` (an ISO date). */
 export function dueOn(due: PartDue, signedOn: string): string {
   if (due.kind === "signing") return signedOn;
-  if (due.kind === "months_after") return addMonths(signedOn, due.months);
+  if (due.kind === "month_start") return `${addMonths(signedOn, due.months).slice(0, 8)}01`;
   // A date before the signature falls due the day it is signed.
   return due.date < signedOn ? signedOn : due.date;
 }

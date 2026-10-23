@@ -1511,8 +1511,8 @@ run("an offer draft, and the invoice request after the signature", () => {
       expect(doc.content?.invoice_plan).toEqual({ kind: "monthly", parts: 3 });
       expect(doc.body).toContain("## How we invoice");
       expect(doc.body).toContain("| 1 of 3 | On signing | €333.33 |");
-      expect(doc.body).toContain("| 2 of 3 | 1 month after signing | €333.33 |");
-      expect(doc.body).toContain("| 3 of 3 | 2 months after signing | €333.34 |");
+      expect(doc.body).toContain("| 2 of 3 | 1st of the next month | €333.33 |");
+      expect(doc.body).toContain("| 3 of 3 | 1st of the month, 2 months on | €333.34 |");
 
       await signAll(doc.id, org);
       const parts = () => requestedFor(org) as unknown as PartRequest[];
@@ -1544,8 +1544,10 @@ run("an offer draft, and the invoice request after the signature", () => {
       expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
       expect(parts()).toHaveLength(1);
 
-      // The day before a month has passed: still nothing. On the day: the second part, once.
-      const second = addMonths(day(start), 1);
+      // The second part falls on the 1st of the next calendar month: the day before, nothing;
+      // on the day, the second part, once.
+      const firstOf = (m: number) => `${addMonths(day(start), m).slice(0, 8)}01`;
+      const second = firstOf(1);
       w.clock.now = new Date(`${second}T09:00:00.000Z`);
       w.clock.now = later(-1);
       expect(await tick()).toEqual([]);
@@ -1561,7 +1563,7 @@ run("an offer draft, and the invoice request after the signature", () => {
       expect(await tick()).toEqual([]);
       const all = parts().map((p) => p.invoice.part);
       expect(all.map((p) => p.label)).toEqual(["1 of 3", "2 of 3", "3 of 3"]);
-      expect(all.map((p) => p.due_on)).toEqual([0, 1, 2].map((m) => addMonths(day(start), m)));
+      expect(all.map((p) => p.due_on)).toEqual([day(start), firstOf(1), firstOf(2)]);
       expect(all.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(100000);
       expect(all.reduce((s, p) => s + p.total_cents, 0)).toBe(doc.total_cents as number);
       expect(

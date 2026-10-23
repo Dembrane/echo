@@ -112,8 +112,8 @@ msgstr "{label} is leeg."
 
 #. placeholder {0}: money(monthly)
 #: src/features/accounts/staff/InvoicePlanFields.tsx:143
-msgid "{months} × {0}, first on signing"
-msgstr "{months} × {0}, de eerste bij ondertekening"
+msgid "{months} × {0}: signing, then each 1st"
+msgstr "{months} × {0}: bij ondertekening, daarna elke 1e"
 
 #: src/features/accounts/signing/SignGate.tsx:346
 msgid "{org} invited you to sign"

@@ -73,8 +73,8 @@ export const planBody = (f: PlanForm) =>
 
 /**
  * Staff: how the offer is invoiced. At once is the default; monthly cuts the total into
- * equal parts, the first on signing; instalments each fall on signing (the first only) or
- * on a date, with a share. The last part takes the cents rounding leaves, as the API does.
+ * equal parts, the first on signing and the rest on the 1st of each following month;
+ * instalments each fall on signing (the first only) or on a date, with a share. The last part takes the cents rounding leaves, as the API does.
  */
 export function InvoicePlanFields({
 	value,
@@ -140,7 +140,7 @@ export function InvoicePlanFields({
 						data-testid="invoice-plan-months"
 					/>
 					<Text size="xs" c="dimmed" pb={8}>
-						{t`${months} × ${money(monthly)}, first on signing`}
+						{t`${months} × ${money(monthly)}: signing, then each 1st`}
 					</Text>
 				</Group>
 			)}
