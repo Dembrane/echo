@@ -159,7 +159,10 @@ function OfferForm({
 	);
 	const [billsOther, setBillsOther] = useState(Boolean(from?.bill_to));
 	const [billTo, setBillTo] = useState(() => billToForm(from?.bill_to));
-	const [plan, setPlan] = useState(() => planForm(from?.invoice_plan));
+	const [plan, setPlan] = useState(() =>
+		planForm(from?.invoice_plan, from?.no_charge === true),
+	);
+	const noCharge = plan.kind === "none";
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -190,12 +193,13 @@ function OfferForm({
 	const body = {
 		// Shown for event offers only; any other keeps what the draft had.
 		attention: template === "event" ? attention : (from?.attention ?? null),
-		bill_to: billToBody(billsOther, billTo),
+		bill_to: noCharge ? null : billToBody(billsOther, billTo),
 		currency,
 		customer_reference: customerReference.trim() || null,
 		invoice_plan: planBody(plan),
 		items: toItems(priced),
 		language,
+		no_charge: noCharge,
 		offer_name: offerName,
 		person_name: personName,
 		processing_terms: processingTerms.trim() || null,
@@ -375,6 +379,7 @@ function OfferForm({
 				errors={fields}
 				currency={currency}
 				discounts
+				sections
 				vatFixed={vatFixed}
 			/>
 
@@ -386,13 +391,15 @@ function OfferForm({
 				currency={currency}
 				errors={fields}
 			/>
-			<BillToFields
-				on={billsOther}
-				onToggle={setBillsOther}
-				value={billTo}
-				onChange={setBillTo}
-				errors={fields}
-			/>
+			{!noCharge && (
+				<BillToFields
+					on={billsOther}
+					onToggle={setBillsOther}
+					value={billTo}
+					onChange={setBillTo}
+					errors={fields}
+				/>
+			)}
 
 			<Divider label={t`Terms`} labelPosition="left" />
 			<TextInput

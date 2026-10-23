@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Додайте назву організації, якій належать дані."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "Безкоштовна пропозиція не має плану рахунків і сторони, що платить."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "Як адміністратор організації ви можете приєднатися до цього робочого простору напряму, без запиту."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Виставляйте рахунок частинами: від {min} до {max}."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "Рядок {line} не має ціни. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "Рядок {line} не має розділу. Розмістіть кожен рядок під заголовком або жоден."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "Безкоштовно означає нульовий підсумок. Встановіть ціни на 0 або виберіть інший спосіб виставлення рахунку."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "Інсайт не може бути порожнім. Напишіть щось або видаліть його."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "Рядки розділу {section} мають іти разом."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "Карта для цієї презентації недоступна."
@@ -657,6 +682,11 @@ msgstr "PDF цього документа недоступний. Зв'яжіт�
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF цього рахунка ще не готовий. Спробуйте трохи пізніше."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "Підсумок нульовий. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Ajoutez le nom de l'organisation propriétaire des données."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "Une offre gratuite n'a ni plan de facturation ni tiers payeur."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "En tant qu'administrateur de l'organisation, vous pouvez rejoindre cet espace de travail directement, sans demande."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Facturez en {min} à {max} échéances."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "La ligne {line} n'a pas de prix. Pour une offre gratuite, choisissez Gratuit sous Notre facturation."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "La ligne {line} n'a pas de section. Placez chaque ligne sous un titre, ou aucune."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Créez d'abord un résumé de cette conversation, puis réessayez."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "Gratuit signifie un total de zéro. Mettez les prix à 0 ou choisissez une autre façon de facturer."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "L'insight ne peut pas être vide. Écrivez quelque chose ou supprimez-le."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "Les lignes de {section} doivent se suivre."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "La carte pour cette présentation n'est pas disponible."
@@ -657,6 +682,11 @@ msgstr "Le PDF de ce document n'est pas disponible. Contactez-nous et nous vous 
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "Le PDF de cette facture n'est pas encore prêt. Réessayez dans un court instant."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "Le total est de zéro. Pour une offre gratuite, choisissez Gratuit sous Notre facturation."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

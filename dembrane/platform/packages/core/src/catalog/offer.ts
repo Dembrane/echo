@@ -10,9 +10,10 @@ export const offer = {
   },
   "offer.line_quantity": {
     action: "fix_input",
-    detail: "Line {line}: quantity must be a whole number of at least 1",
+    detail: "Line {line}: the quantity must be above 0, with at most two decimals",
     audience: "staff",
-    description: "A line's quantity is not a positive whole number. line counts from 1.",
+    description:
+      "A line's quantity is zero, negative or has more than two decimals (1.5 and 0.25 are fine). line counts from 1.",
   },
   "offer.line_unit_price": {
     action: "fix_input",
@@ -53,10 +54,36 @@ export const offer = {
   },
   "offer.zero_total": {
     action: "fix_input",
-    detail: "An offer must total more than zero",
+    detail: "An offer must total more than zero; for a free offer, choose No charge",
     audience: "staff",
     description:
-      "The offer's charged lines add up to zero (optional and included lines do not count), so there is nothing to ask the customer for.",
+      "The offer's charged lines add up to zero (optional and included lines do not count), so there is nothing to ask the customer for. An offer meant to be free is drafted with no_charge.",
+  },
+  "offer.no_charge_total": {
+    action: "fix_input",
+    detail: "A no-charge offer totals zero: set the prices to 0 or turn off No charge",
+    audience: "staff",
+    description:
+      "An offer drafted with no_charge has charged lines that add up to more or less than zero.",
+  },
+  "offer.no_charge_invoiced": {
+    action: "fix_input",
+    detail: "A no-charge offer is never invoiced, so it takes no invoice plan or paying party",
+    audience: "staff",
+    description: "An offer drafted with no_charge also carries an invoice_plan or bill_to.",
+  },
+  "offer.section_missing": {
+    action: "fix_input",
+    detail: "Line {line} has no section: put every line under a heading, or none",
+    audience: "staff",
+    description: "Some lines carry a section and others do not. line counts from 1.",
+  },
+  "offer.section_split": {
+    action: "fix_input",
+    detail: "The lines of section {section} must sit together",
+    audience: "staff",
+    description:
+      "A section's lines are interrupted by another section's; each heading is written once, over all its lines.",
   },
   "offer.amendments_custom_only": {
     action: "fix_input",

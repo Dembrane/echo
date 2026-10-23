@@ -6,6 +6,7 @@ import {
   type OfferLine,
   type PricedLine,
   priceLines,
+  sectionsOf,
   type Totals,
   type VatTreatment,
 } from "./money";
@@ -153,6 +154,11 @@ export interface OfferContent {
    * as "How we invoice". After signing, echo asks for each part's invoice when it falls due.
    */
   readonly invoice_plan?: InvoicePlan;
+  /**
+   * An offer of zero staff chose on purpose (a free pilot, a scholarship): signed as any
+   * offer, it asks for no billing details and is never invoiced. Absent on every other.
+   */
+  readonly no_charge?: true;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -179,6 +185,10 @@ interface Copy {
   readonly totals: { readonly subtotal: string; readonly vat: string; readonly total: string };
   /** The amount cell of a line included at no charge. */
   readonly included: string;
+  /** The label of a section's subtotal, under its lines. */
+  readonly sectionSubtotal: string;
+  /** Under the total of an offer of zero on purpose: why nothing is invoiced. */
+  readonly noCharge: string;
   /** The block of optional lines under the totals: its heading and the line under it. */
   readonly optional: { readonly title: string; readonly note: string };
   /** The party invoiced in place of the customer: its heading and the words on its lines. */
@@ -448,6 +458,8 @@ const EN_FRAME = {
   },
   totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
   included: "Included",
+  sectionSubtotal: "Subtotal",
+  noCharge: "No charge: nothing is invoiced for this offer.",
   optional: { title: "Optional", note: "Not in the total above." },
   billTo: { title: "Invoiced to", reference: "Reference" },
   parts: {
@@ -481,6 +493,8 @@ const NL_FRAME = {
   },
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
   included: "Inbegrepen",
+  sectionSubtotal: "Subtotaal",
+  noCharge: "Kosteloos: voor deze offerte wordt niets gefactureerd.",
   optional: { title: "Optioneel", note: "Niet in het totaal hierboven." },
   billTo: { title: "Factuur aan", reference: "Referentie" },
   parts: {
@@ -696,12 +710,34 @@ export function euro(cents: number, currency = "EUR", language: Language = "en")
   return `${sign}${symbol}${whole}${decimal}${frac}`;
 }
 
+/**
+ * A quantity as the reader's language writes it: whole numbers as they are, others with
+ * their decimals ("1.5", "0.25"; Dutch "1,5").
+ */
+export function quantityText(quantity: number, language: Language = "en"): string {
+  if (Number.isInteger(quantity)) return String(quantity);
+  const text = quantity.toFixed(2).replace(/0$/, "");
+  return language === "nl" ? text.replace(".", ",") : text;
+}
+
 /** One line of the table. */
 export interface OfferRow {
   readonly description: string;
   readonly bullets: readonly string[];
   /** The three number columns, in the order `columns` names them. */
   readonly cells: readonly [string, string, string];
+}
+
+/**
+ * The table's lines under one heading, and what the charged ones come to. An offer
+ * without sections has one group without a title or subtotal; a section's subtotal is
+ * printed only when there is more than one section.
+ */
+export interface OfferGroup {
+  readonly title: string | null;
+  readonly rows: readonly OfferRow[];
+  /** Label and amount, before VAT; null when not printed. */
+  readonly subtotal: readonly [string, string] | null;
 }
 
 /** The parts of an offer both renderers lay out, in reading order. */
@@ -721,10 +757,14 @@ export interface OfferLayout {
   readonly columns: readonly [string, string, string, string];
   /** The charged lines and those included at no charge ("Included" where the amount goes). */
   readonly rows: readonly OfferRow[];
+  /** The same rows under their section headings, each with its subtotal: what is drawn. */
+  readonly groups: readonly OfferGroup[];
   /** Subtotal, VAT and total, label and amount; the last is what is paid. */
   readonly totals: readonly (readonly [string, string])[];
   /** Why there is no VAT, when it is reverse-charged or the service is outside the EU. */
   readonly vatNote: string | null;
+  /** Under the total of an offer of zero on purpose: that nothing is invoiced. */
+  readonly chargeNote: string | null;
   /**
    * The optional lines, apart under the totals with their prices, which no total counts;
    * null when there are none.
@@ -733,6 +773,8 @@ export interface OfferLayout {
     readonly title: string;
     readonly note: string;
     readonly rows: readonly OfferRow[];
+    /** The same rows under their section headings, without subtotals. */
+    readonly groups: readonly OfferGroup[];
   } | null;
   /** Who the invoice goes to when it is not the customer: a heading over one line each. */
   readonly billTo: { readonly title: string; readonly lines: readonly string[] } | null;
@@ -813,7 +855,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const rows = totals.lines.map((l: PricedLine, i) => {
     const unit = money(l.unit_price_cents);
     const counts = content.items[i]?.unit;
-    const quantity = counts ? `${l.quantity} ${counts}` : String(l.quantity);
+    const amount = quantityText(l.quantity, content.language);
+    const quantity = counts ? `${amount} ${counts}` : amount;
     // Included at no charge: no price, and the word where the amount goes.
     const included = l.kind === "included";
     const price = included ? "" : unit;
@@ -829,6 +872,24 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     return { kind: l.kind, row };
   });
   const optional = rows.filter((r) => r.kind === "optional").map((r) => r.row);
+  // Each section's rows, in order; its subtotal speaks for its charged lines, and only
+  // when there is more than one section, since one would repeat the subtotal below it.
+  const sections = sectionsOf(totals.lines);
+  const grouped = (wanted: (kind: PricedLine["kind"]) => boolean, withSubtotal: boolean) =>
+    sections.flatMap((sec): OfferGroup[] => {
+      const picked = sec.lines.filter(({ line }) => wanted(line.kind));
+      if (!picked.length) return [];
+      return [
+        {
+          title: sec.title,
+          rows: picked.map(({ index }) => (rows[index] as { row: OfferRow }).row),
+          subtotal:
+            withSubtotal && sections.length > 1 && sec.title
+              ? [`${copy.sectionSubtotal} ${sec.title}`, money(sec.subtotal_cents)]
+              : null,
+        },
+      ];
+    });
   return {
     company: {
       name: c.name,
@@ -844,14 +905,21 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     intro: paragraphsOf(text.intro),
     columns: text.columns,
     rows: rows.filter((r) => r.kind !== "optional").map((r) => r.row),
+    groups: grouped((kind) => kind !== "optional", true),
     totals: [
       [copy.totals.subtotal, money(totals.subtotal_cents)],
       [vatLabel, money(totals.vat_cents)],
       [copy.totals.total, money(totals.total_cents)],
     ],
     vatNote: treatment === "standard" ? null : copy.vatNote[treatment],
+    chargeNote: content.no_charge ? copy.noCharge : null,
     optional: optional.length
-      ? { title: copy.optional.title, note: copy.optional.note, rows: optional }
+      ? {
+          title: copy.optional.title,
+          note: copy.optional.note,
+          rows: optional,
+          groups: grouped((kind) => kind === "optional", false),
+        }
       : null,
     billTo: content.bill_to
       ? {
@@ -907,6 +975,18 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   };
 }
 
+/** Table rows as markdown: a heading row per section, its lines, then its subtotal. */
+function groupLines(groups: readonly OfferGroup[]): string[] {
+  return groups.flatMap((g) => [
+    ...(g.title ? [`| **${g.title}** |  |  |  |`] : []),
+    ...g.rows.map(
+      (r) =>
+        `| ${[r.description, ...r.bullets.map((b) => `• ${b}`)].join("<br>")} | ${r.cells.join(" | ")} |`,
+    ),
+    ...(g.subtotal ? [`| ${g.subtotal[0]} |  |  | ${g.subtotal[1]} |`] : []),
+  ]);
+}
+
 /**
  * The offer as text, for screen readers and search. The PDF rendered from the same layout
  * is what is signed; the acceptance blanks are its fields.
@@ -923,15 +1003,13 @@ export function offerText(content: OfferContent): string {
     ...l.intro.flatMap((p) => [p, ""]),
     `| ${l.columns.join(" | ")} |`,
     "| --- | --- | --- | --- |",
+    ...groupLines(l.groups),
   ];
-  for (const r of l.rows) {
-    const desc = [r.description, ...r.bullets.map((b) => `• ${b}`)].join("<br>");
-    out.push(`| ${desc} | ${r.cells.join(" | ")} |`);
-  }
   out.push(
     "",
     ...l.totals.map(([k, v]) => `${k}: ${v}`),
     ...(l.vatNote ? [l.vatNote] : []),
+    ...(l.chargeNote ? [l.chargeNote] : []),
     "",
     ...(l.optional
       ? [
@@ -940,10 +1018,7 @@ export function offerText(content: OfferContent): string {
           "",
           `| ${l.columns.join(" | ")} |`,
           "| --- | --- | --- | --- |",
-          ...l.optional.rows.map(
-            (r) =>
-              `| ${[r.description, ...r.bullets.map((b) => `• ${b}`)].join("<br>")} | ${r.cells.join(" | ")} |`,
-          ),
+          ...groupLines(l.optional.groups),
           "",
         ]
       : []),

@@ -51,4 +51,32 @@ export const offer = {
 		id: "error.offer.invoice_shares_total",
 		message: "The parts add up to {total}. Make them add up to 100%.",
 	}),
+	"offer.line_no_amount": msg({
+		id: "error.offer.line_no_amount",
+		message:
+			"Line {line} has no price. For a free offer, choose No charge under How we invoice.",
+	}),
+	"offer.no_charge_invoiced": msg({
+		id: "error.offer.no_charge_invoiced",
+		message: "An offer of no charge has no invoice plan and no paying party.",
+	}),
+	"offer.no_charge_total": msg({
+		id: "error.offer.no_charge_total",
+		message:
+			"No charge means a total of zero. Set the prices to 0, or choose another way to invoice.",
+	}),
+	"offer.section_missing": msg({
+		id: "error.offer.section_missing",
+		message:
+			"Line {line} has no section. Put every line under a heading, or none.",
+	}),
+	"offer.section_split": msg({
+		id: "error.offer.section_split",
+		message: "The lines of {section} must sit together.",
+	}),
+	"offer.zero_total": msg({
+		id: "error.offer.zero_total",
+		message:
+			"The total is zero. For a free offer, choose No charge under How we invoice.",
+	}),
 } satisfies Messages<"offer">;

@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Geben Sie den Namen der Organisation an, die Eigentümer der Daten ist."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "Ein kostenloses Angebot hat keinen Rechnungsplan und keine zahlende Partei."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "Als Organisations-Administrator können Sie diesem Arbeitsbereich direkt beitreten, ohne Anfrage."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Stelle in {min} bis {max} Teilen in Rechnung."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "Zeile {line} hat keinen Preis. Wählen Sie für ein kostenloses Angebot Kostenlos unter So stellen wir in Rechnung."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "Zeile {line} hat keinen Abschnitt. Stellen Sie jede Zeile unter eine Überschrift, oder keine."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Erstellen Sie zuerst eine Zusammenfassung dieses Gesprächs und versuchen Sie es dann erneut."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "Kostenlos heißt eine Summe von null. Setzen Sie die Preise auf 0 oder wählen Sie eine andere Art der Rechnung."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "Die Erkenntnis darf nicht leer sein. Schreiben Sie etwas oder entfernen Sie sie."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "Die Zeilen von {section} müssen zusammenstehen."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "Die Map für diese Präsentation ist nicht verfügbar."
@@ -657,6 +682,11 @@ msgstr "Die PDF-Datei dieses Dokuments ist nicht verfügbar. Kontaktieren Sie un
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "Die PDF-Datei dieser Rechnung ist noch nicht fertig. Versuchen Sie es gleich noch einmal."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "Die Summe ist null. Wählen Sie für ein kostenloses Angebot Kostenlos unter So stellen wir in Rechnung."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

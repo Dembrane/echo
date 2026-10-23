@@ -10,8 +10,8 @@ import {
 } from "./events";
 import { amsterdamDay, dueOn, type InvoicePart, invoiceParts } from "./invoice-plan";
 import { accountPageUrl, dashboardBase } from "./jobs";
-import { charged } from "./money";
-import type { OfferContent } from "./offer";
+import { charged, priceLines } from "./money";
+import { type OfferContent, quantityText } from "./offer";
 import {
   type BillingRow,
   type DocumentRow,
@@ -250,8 +250,13 @@ export function invoicePayload(
       : (signed ?? content?.customer_reference ?? billing?.po_number ?? null),
     /** True when `billing` is a party named on the offer, not the customer's own details. */
     bill_to: Boolean(other),
-    // What is invoiced: optional and included lines were shown, never charged.
-    items: (content?.items ?? []).filter(charged),
+    // What is invoiced: optional and included lines were shown, never charged. Each line
+    // carries its amount as the offer rounded it (a quantity may be 1.5), and its section.
+    items: content?.items.length
+      ? priceLines(content.items)
+          .lines.filter(charged)
+          .map(({ vat_cents: _v, total_cents: _t, ...line }) => line)
+      : [],
   };
 }
 
@@ -290,9 +295,10 @@ export function partPayload(
     items: [
       {
         description: PART_LINE[language](part, doc.title),
-        bullets: whole.items.map((i) => `${i.quantity} x ${i.description}`),
+        bullets: whole.items.map((i) => `${quantityText(i.quantity, language)} x ${i.description}`),
         quantity: 1,
         unit_price_cents: part.subtotal_cents,
+        net_cents: part.subtotal_cents,
         vat_rate_bps: whole.items[0]?.vat_rate_bps ?? 0,
       },
     ],

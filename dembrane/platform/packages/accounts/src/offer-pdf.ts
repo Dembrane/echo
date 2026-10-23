@@ -4,7 +4,7 @@ import { PDFDocument, type PDFFont, type PDFImage, type PDFPage, PDFString, rgb 
 import displayTtf from "../assets/fonts/DMSans-Display.ttf" with { type: "file" };
 import textTtf from "../assets/fonts/DMSans-Text.ttf" with { type: "file" };
 import wordmarkPng from "../assets/offer/wordmark.png" with { type: "file" };
-import type { AcceptanceField, ClauseLine, OfferContent, OfferLayout } from "./offer";
+import type { AcceptanceField, ClauseLine, OfferContent, OfferGroup, OfferLayout } from "./offer";
 import { layoutOffer } from "./offer";
 import type { PlacedField, RenderedPdf } from "./pdf";
 
@@ -580,7 +580,31 @@ function lines(s: Sheet, l: OfferLayout) {
     ],
     ...r.cells.map((c): Para[] => [text(c, { align: "right" })]),
   ];
-  for (const r of l.rows) row(cells(r));
+  // A section: its heading across the table, a step up, then its lines and, ruled like a
+  // row, its subtotal in the amount column.
+  const group = (g: OfferGroup) => {
+    if (g.title) {
+      const laid = s.lay({ runs: runs(g.title, { s: T.lead, c: TEXT }), leading: 1.3 }, CONTENT_W);
+      const height = 16 + laid.height + 6;
+      // The heading never ends a page alone: room for it and a line under it.
+      if (s.y + height + 40 > BODY_BOTTOM) {
+        s.newPage();
+        s.rule(MARGIN, RIGHT, s.y, TEXT);
+      }
+      s.drawLaid(laid, MARGIN, s.y + 16);
+      s.y += height;
+      s.rule(MARGIN, RIGHT, s.y);
+    }
+    for (const r of g.rows) row(cells(r));
+    if (g.subtotal)
+      row([
+        [{ runs: runs(g.subtotal[0], { ...BODY, c: MUTED }), leading: BODY_LEADING }],
+        [],
+        [],
+        [text(g.subtotal[1], { align: "right" })],
+      ]);
+  };
+  for (const g of l.groups) group(g);
 
   // Subtotal and VAT, then the total over a rule in the text colour, one step up.
   const labelX = (xs[1] as number) + GUTTER / 2;
@@ -605,11 +629,12 @@ function lines(s: Sheet, l: OfferLayout) {
     }
   });
   // Without VAT, the reason sits under the total, as the invoice puts it.
-  if (l.vatNote)
-    s.para(
-      { runs: runs(l.vatNote, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
-      { x: labelX, width: RIGHT - labelX },
-    );
+  for (const note of [l.vatNote, l.chargeNote])
+    if (note)
+      s.para(
+        { runs: runs(note, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
+        { x: labelX, width: RIGHT - labelX },
+      );
 
   // Optional lines apart, under their own heading and table, after the total they are not in.
   if (l.optional) {
@@ -624,7 +649,7 @@ function lines(s: Sheet, l: OfferLayout) {
         { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
       ]),
     );
-    for (const r of l.optional.rows) row(cells(r));
+    for (const g of l.optional.groups) group(g);
   }
   s.done(36);
 }

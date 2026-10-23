@@ -27,9 +27,12 @@ export interface InstalmentRow {
 	percent: number;
 }
 
-/** The plan as the form holds it; `once` invoices the whole offer when it is signed. */
+/**
+ * The plan as the form holds it; `once` invoices the whole offer when it is signed, `none`
+ * is an offer of no charge, signed and never invoiced.
+ */
 export interface PlanForm {
-	kind: "once" | "monthly" | "instalments";
+	kind: "once" | "monthly" | "instalments" | "none";
 	months: number;
 	rows: InstalmentRow[];
 }
@@ -42,8 +45,8 @@ const row = (over: Partial<InstalmentRow> = {}): InstalmentRow => ({
 	...over,
 });
 
-export const planForm = (saved?: Saved | null): PlanForm => ({
-	kind: saved?.kind ?? "once",
+export const planForm = (saved?: Saved | null, noCharge = false): PlanForm => ({
+	kind: noCharge ? "none" : (saved?.kind ?? "once"),
 	months: saved?.kind === "monthly" ? saved.parts : 12,
 	rows:
 		saved?.kind === "instalments"
@@ -57,7 +60,10 @@ export const planForm = (saved?: Saved | null): PlanForm => ({
 			: [row({ on: "signing" }), row()],
 });
 
-/** The request's `invoice_plan`: null invoices at once. Percent goes as basis points. */
+/**
+ * The request's `invoice_plan`: null invoices at once, or not at all with no charge.
+ * Percent goes as basis points.
+ */
 export const planBody = (f: PlanForm) =>
 	f.kind === "monthly"
 		? { kind: "monthly" as const, parts: f.months }
@@ -123,10 +129,16 @@ export function InvoicePlanFields({
 						{ label: t`At once`, value: "once" },
 						{ label: t`Monthly`, value: "monthly" },
 						{ label: t`In instalments`, value: "instalments" },
+						{ label: t`No charge`, value: "none" },
 					]}
 					data-testid="invoice-plan-kind"
 				/>
 			</Stack>
+			{value.kind === "none" && (
+				<Text size="xs" c="dimmed" data-testid="invoice-plan-none">
+					{t`Signed, never invoiced`}
+				</Text>
+			)}
 			{value.kind === "monthly" && (
 				<Group gap="sm" align="flex-end">
 					<NumberInput
