@@ -468,17 +468,35 @@ export const store = {
     if (rows.length) await c.insert(field).values(rows);
   },
 
+  /** The customer's signature of each signed document of an organisation. */
   async signatures(c: Conn, orgId: string): Promise<SignatureRow[]> {
-    return c.select().from(signature).where(eq(signature.orgId, orgId));
+    return c
+      .select()
+      .from(signature)
+      .where(and(eq(signature.orgId, orgId), eq(signature.slot, "customer")));
   },
 
+  /**
+   * The customer's signature of a document: the first, and on a document that asks for one
+   * signature the only one. Its signer, values and reference are what the document's
+   * acceptance says.
+   */
   async signatureOf(c: Conn, documentId: string): Promise<SignatureRow | null> {
     const [row] = await c
       .select()
       .from(signature)
-      .where(eq(signature.documentId, documentId))
+      .where(and(eq(signature.documentId, documentId), eq(signature.slot, "customer")))
       .limit(1);
     return row ?? null;
+  },
+
+  /** Every signature of a document, in the order they were made. */
+  async signaturesOf(c: Conn, documentId: string): Promise<SignatureRow[]> {
+    return c
+      .select()
+      .from(signature)
+      .where(eq(signature.documentId, documentId))
+      .orderBy(asc(signature.signedAt), asc(signature.id));
   },
 
   async insertSignature(c: Conn, row: typeof signature.$inferInsert) {

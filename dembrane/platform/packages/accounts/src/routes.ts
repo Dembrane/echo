@@ -2,7 +2,9 @@ import { UnavailableError, ValidationError } from "@dembrane/core";
 import { type Ctx, clientIp, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
+import { addAnnex, removeAnnex } from "./annex";
 import * as K from "./contract";
+import { countersign } from "./countersign";
 import {
   accountPage,
   answerWhoSigns,
@@ -388,6 +390,22 @@ export function accountsRoutes(d: AccountsDeps) {
         evidence: { name: b.evidence_name, bytes },
       }),
     );
+  });
+  app.post(R.addAnnex.path, async (c) => {
+    const who = await staff(c, "accounts.offer.annex_add");
+    const b = await body(c, K.AddAnnexRequest);
+    const bytes = new Uint8Array(Buffer.from(b.pdf_base64, "base64"));
+    return c.json(await addAnnex(d, who, p(c, "orgId"), p(c, "docId"), { name: b.name, bytes }));
+  });
+  app.post(R.removeAnnex.path, async (c) => {
+    const who = await staff(c, "accounts.offer.annex_remove");
+    const number = Number(p(c, "number"));
+    return c.json(await removeAnnex(d, who, p(c, "orgId"), p(c, "docId"), number));
+  });
+  app.post(R.countersign.path, async (c) => {
+    const who = await staff(c, "accounts.document.countersign");
+    const b = await body(c, K.CountersignRequest);
+    return c.json(await countersign(d, who, p(c, "orgId"), p(c, "docId"), b, requestMeta(c)));
   });
   app.get(R.staffEvidence.path, async (c) => {
     await staff(c, "accounts.document.evidence");

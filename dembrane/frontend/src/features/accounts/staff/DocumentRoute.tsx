@@ -21,6 +21,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useV2Me } from "@/hooks/useV2Me";
 import { openPdf } from "../api/client";
 import {
 	useAccountCard,
@@ -44,6 +45,7 @@ import {
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
 import { StaffOnly } from "./AccountCardRoute";
+import { AnnexesPanel, CountersignModal } from "./OfferExtras";
 import { PushOfferModal } from "./PushOfferModal";
 import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
 
@@ -79,6 +81,8 @@ function DocumentPage() {
 	const [emailOpen, setEmailOpen] = useState(false);
 	const [accepting, setAccepting] = useState(false);
 	const [voiding, setVoiding] = useState(false);
+	const [countersigning, setCountersigning] = useState(false);
+	const { data: me } = useV2Me();
 	useDocumentTitle(doc.data ? `${doc.data.title} | dembrane` : "dembrane");
 
 	if (doc.isLoading) return <Loader m="xl" size="sm" />;
@@ -94,13 +98,33 @@ function DocumentPage() {
 	const draftOffer = draft && d.kind === "offer";
 	// A sent offer is fixed; a new version replaces it until it is signed.
 	const revisable =
-		d.kind === "offer" && ["sent", "viewed", "declined"].includes(d.status);
+		d.kind === "offer" &&
+		["sent", "viewed", "declined"].includes(d.status) &&
+		!d.signatures.length;
 	// Accepted outside dembrane: their order letter, an email, paper, or their own DPA.
 	const acceptable =
 		(d.kind === "offer" || d.kind === "dpa") &&
 		d.requires_signature &&
 		["sent", "viewed"].includes(d.status);
 	const outside = d.signature?.outside ?? null;
+	// An offer that asks for dembrane's counter-signature, by the staff member it names.
+	const ours =
+		d.content?.second_signer?.kind === "dembrane"
+			? d.content.second_signer
+			: null;
+	const mayCountersign =
+		Boolean(ours) &&
+		d.awaiting_signatures.includes("dembrane") &&
+		ours?.email.toLowerCase() === me?.email?.toLowerCase();
+	const waitingFor = d.awaiting_signatures
+		.map((s) =>
+			s === "dembrane"
+				? t`dembrane's signature`
+				: s === "second"
+					? t`their second signatory`
+					: t`the customer`,
+		)
+		.join(", ");
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
@@ -120,6 +144,9 @@ function DocumentPage() {
 						: null,
 		outside?.customer_reference
 			? t`Their reference ${outside.customer_reference}`
+			: null,
+		d.awaiting_signatures.length && d.signatures.length
+			? t`Waiting for ${waitingFor}`
 			: null,
 		!draft && d.kind === "offer" && d.valid_until && !d.signed_at
 			? t`Valid until ${formatDate(d.valid_until, i18n.locale)}`
@@ -204,7 +231,16 @@ function DocumentPage() {
 								<Trans>Place fields</Trans>
 							</Button>
 						)}
-						{acceptable && (
+						{mayCountersign && (
+							<Button
+								variant="filled"
+								onClick={() => setCountersigning(true)}
+								data-testid="countersign-open"
+							>
+								<Trans>Sign for dembrane</Trans>
+							</Button>
+						)}
+						{acceptable && !d.signatures.length && (
 							<Button
 								variant="default"
 								onClick={() => setAccepting(true)}
@@ -250,6 +286,7 @@ function DocumentPage() {
 						)}
 					</Group>
 				</Group>
+				{draftOffer && <AnnexesPanel orgId={orgId} doc={d} />}
 				{draftOffer && (
 					<Text size="sm" c="dimmed" data-testid="draft-note">
 						<Trans>
@@ -350,6 +387,15 @@ function DocumentPage() {
 						?.name ?? null
 				}
 			/>
+			{mayCountersign && ours && (
+				<CountersignModal
+					opened={countersigning}
+					onClose={() => setCountersigning(false)}
+					orgId={orgId}
+					doc={d}
+					name={ours.name}
+				/>
+			)}
 			{acceptable && (
 				<AcceptedOutsideModal
 					opened={accepting}

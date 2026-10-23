@@ -153,6 +153,7 @@ function Header({
 function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const viewed = useRef(false);
 	const queryClient = useQueryClient();
+	const { data: me } = useV2Me();
 	useEffect(() => {
 		// Marks the offer as viewed for the staff timeline, once per visit.
 		if (viewed.current || doc.status !== "sent") return;
@@ -182,9 +183,57 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			</>
 		);
 	}
+	// A document that asks for more than one signature: once the viewer's is in, or none
+	// is left for the customer, they wait for the others.
+	const signedByMe = doc.signatures.some(
+		(s) => me?.email && s.email.toLowerCase() === me.email.toLowerCase(),
+	);
+	if (doc.awaiting_signatures.length && (signedByMe || !doc.fields.length))
+		return <PartlySigned doc={doc} orgId={orgId} />;
 	if (doc.access === "member" && doc.signer)
 		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/** Signed by some, waiting for the rest: who signed, and whose signature comes next. */
+function PartlySigned({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+	const { i18n } = useLingui();
+	const next = doc.awaiting_signatures.includes("dembrane")
+		? t`dembrane signs next.`
+		: t`Someone else from your organisation signs next.`;
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="xs" pt="10vh" px="md">
+				<Stack align="center" gap="md" ta="center" data-testid="sign-partly">
+					<Title order={3}>
+						<Trans>Your signature is in</Trans>
+					</Title>
+					{doc.signatures.map((s) => {
+						const when = formatDateTime(s.signed_at, i18n.locale);
+						const name = s.name;
+						return (
+							<Text key={`${s.slot}-${s.email}`} c="dimmed">
+								<Trans>
+									{name} signed on {when}.
+								</Trans>
+							</Text>
+						);
+					})}
+					<Text>{next}</Text>
+					{doc.access !== "signer" && (
+						<Button
+							component={I18nLink}
+							to={`/o/${orgId}/account`}
+							variant="default"
+						>
+							<Trans>Back to account</Trans>
+						</Button>
+					)}
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /**

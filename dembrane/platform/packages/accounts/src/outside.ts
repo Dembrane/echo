@@ -10,7 +10,8 @@ import { amsterdamDay } from "./invoice-plan";
 import type { OfferContent } from "./offer";
 import { optionKey, optionsOf } from "./options";
 import { acceptanceLine, acceptedPdf, OUTSIDE_VIA, type OutsideVia } from "./pdf";
-import { afterSigned, auditTrail, choiceOf } from "./signing";
+import { awaitingSlots } from "./signers";
+import { afterSigned, auditTrail, choiceOf, signatureAdded } from "./signing";
 import { type DocumentRow, type OrgRow, type SignatureRow, store } from "./storage";
 import { settleTask } from "./tasks";
 import { staffBase } from "./views";
@@ -226,6 +227,21 @@ export async function acceptOutside(
         customerReference: reference,
         recordedBy: who.directusUserId,
       });
+      // An offer that also asks for dembrane's counter-signature waits for it: the timeline
+      // records the acceptance, and the counter-signature completes the offer.
+      if (kind === "offer") {
+        const awaiting = awaitingSlots(content, await store.signaturesOf(tx, doc.id));
+        if (awaiting.length) {
+          await signatureAdded(d, tx, org, doc, {
+            actor: { kind: "staff", userId: who.directusUserId },
+            slot: "customer",
+            name: input.name,
+            email: input.email,
+            awaiting,
+          });
+          return;
+        }
+      }
       await store.updateDocument(tx, doc.id, {
         status: "signed",
         signedAt: now,

@@ -151,6 +151,7 @@ function OfferForm({
 	const [vatTreatment, setVatTreatment] = useState<VatTreatment>(
 		from?.vat_treatment ?? "standard",
 	);
+	const [termsOpen, setTermsOpen] = useState(Boolean(from?.processing_terms));
 	const [processingTerms, setProcessingTerms] = useState(
 		from?.processing_terms ?? "",
 	);
@@ -164,6 +165,15 @@ function OfferForm({
 	);
 	const noCharge = plan.kind === "none";
 	const [choose, setChoose] = useState<"any" | "one">(from?.choose ?? "any");
+	const savedSecond = from?.second_signer ?? null;
+	const [second, setSecond] = useState<"none" | "customer" | "dembrane">(
+		savedSecond?.kind ?? "none",
+	);
+	const [secondName, setSecondName] = useState(savedSecond?.name ?? "");
+	const [secondEmail, setSecondEmail] = useState(savedSecond?.email ?? "");
+	const [secondRole, setSecondRole] = useState(
+		savedSecond?.kind === "dembrane" ? (savedSecond.role ?? "") : "",
+	);
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -204,6 +214,21 @@ function OfferForm({
 		items: toItems(priced),
 		language,
 		no_charge: noCharge,
+		second_signer:
+			second === "customer"
+				? {
+						email: secondEmail.trim() || null,
+						kind: "customer" as const,
+						name: secondName.trim() || null,
+					}
+				: second === "dembrane"
+					? {
+							email: secondEmail.trim(),
+							kind: "dembrane" as const,
+							name: secondName.trim(),
+							role: secondRole.trim() || null,
+						}
+					: null,
 		...(hasOptions && { choose }),
 		offer_name: offerName,
 		person_name: personName,
@@ -424,16 +449,81 @@ function OfferForm({
 				/>
 			)}
 
+			<Divider label={t`Signatures`} labelPosition="left" />
+			<Stack gap="xs" data-testid="offer-second-signer">
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>Second signature</Trans>
+					</Text>
+					<SegmentedControl
+						style={{ alignSelf: "flex-start" }}
+						value={second}
+						onChange={(v) => setSecond(v as typeof second)}
+						data={[
+							{ label: t`None`, value: "none" },
+							{ label: t`Another signer of theirs`, value: "customer" },
+							{ label: t`dembrane signs too`, value: "dembrane" },
+						]}
+						data-testid="second-signer-kind"
+					/>
+				</Stack>
+				{second !== "none" && (
+					<SimpleGrid cols={{ base: 1, sm: second === "dembrane" ? 3 : 2 }}>
+						<TextInput
+							label={t`Name`}
+							placeholder={second === "customer" ? t`Optional` : undefined}
+							value={secondName}
+							onChange={(e) => setSecondName(e.currentTarget.value)}
+							error={fields["second_signer.name"]}
+							data-testid="second-signer-name"
+						/>
+						<TextInput
+							label={t`Email`}
+							description={
+								second === "customer"
+									? t`Empty: any other signer`
+									: t`Their @dembrane.com address`
+							}
+							value={secondEmail}
+							onChange={(e) => setSecondEmail(e.currentTarget.value)}
+							error={fields["second_signer.email"]}
+							data-testid="second-signer-email"
+						/>
+						{second === "dembrane" && (
+							<TextInput
+								label={t`Role`}
+								placeholder={t`Optional`}
+								value={secondRole}
+								onChange={(e) => setSecondRole(e.currentTarget.value)}
+								data-testid="second-signer-role"
+							/>
+						)}
+					</SimpleGrid>
+				)}
+			</Stack>
+
 			<Divider label={t`Terms`} labelPosition="left" />
-			<TextInput
-				label={t`Their data processing terms`}
-				description={t`Optional, replaces our DPA`}
-				value={processingTerms}
-				onChange={(e) => setProcessingTerms(e.currentTarget.value)}
-				error={fields.processing_terms}
-				maxLength={500}
-				data-testid="offer-processing-terms"
-			/>
+			{termsOpen || processingTerms ? (
+				<TextInput
+					label={t`Their data processing terms`}
+					description={t`Optional, replaces our DPA`}
+					value={processingTerms}
+					onChange={(e) => setProcessingTerms(e.currentTarget.value)}
+					error={fields.processing_terms}
+					maxLength={500}
+					data-testid="offer-processing-terms"
+				/>
+			) : (
+				<Button
+					variant="subtle"
+					size="xs"
+					style={{ alignSelf: "flex-start" }}
+					onClick={() => setTermsOpen(true)}
+					data-testid="add-processing-terms"
+				>
+					<Trans>Add their DPA</Trans>
+				</Button>
+			)}
 			{template === "custom" && (
 				<Stack gap="xs" data-testid="offer-amendments">
 					<Stack gap={0}>

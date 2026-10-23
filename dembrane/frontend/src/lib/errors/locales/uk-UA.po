@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Онлайн-оплата зараз недоступна. Зв'яжіться з нами, щоб змінити тариф."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Лише {email} може підписати другим."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Лише {signer_email} може відхилити цей документ."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Лише {signer_email} може підписати цей документ. Попросіть підписати його або зверніться до нас, щоб змінити підписанта."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Цей документ більше не можна відхилити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Цей документ зараз не можна підписати. Ми вже знаємо про проблему та виправляємо її."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Цей документ було відхилено, тому його більше не можна підписати."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Цей документ було відкликано, тому його більше не можна підписати."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Щоб переміщувати проєкти, ви маєте бути адміністратором або власником {side} робочого простору."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Щоб підписати, увійдіть із підтвердженою електронною адресою."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "Не вдалося зв'язатися з частиною сервісів dembrane. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "Не вдалося розпізнати ваш підпис. Намалюйте його ще раз і повторіть спробу."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Ви вибрали забагато елементів. Виберіть менше та спробуйте знову."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "Ви вже підписали. Другим підписує хтось інший із вашої організації."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Вас видалили з цього робочого простору. Попросіть адміністратора робочого простору запросити вас знову."
@@ -1762,3 +1772,8 @@ msgstr "Ваш запис ще не дійшов до нас. Зачекайте
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Ваш сеанс завершився. Увійдіть знову, щоб продовжити."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Ваш підпис отримано. Інший підпис ще очікується."

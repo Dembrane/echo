@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Les paiements en ligne ne sont pas disponibles pour le moment. Contactez-nous pour changer de forfait."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Seul(e) {email} peut signer en second."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Seul {signer_email} peut refuser ce document."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Seul {signer_email} peut signer ce document. Invitez cette personne à signer ou contactez-nous pour changer de signataire."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Ce document ne peut plus être refusé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Ce document ne peut pas être signé pour le moment. Nous avons été prévenus et allons régler cela."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Ce document a été refusé et ne peut plus être signé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Ce document a été retiré et ne peut plus être signé."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Pour déplacer des projets, vous devez être administrateur ou propriétaire de l'espace de travail {side}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Pour signer, connectez-vous avec une adresse e-mail vérifiée."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "Une partie de dembrane est inaccessible pour le moment. Réessayez dans un instant."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "Impossible de lire votre signature. Dessinez-la à nouveau et réessayez."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Vous avez sélectionné trop d'éléments. Sélectionnez-en moins et réessayez."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "Vous avez déjà signé. Une autre personne de votre organisation signe en second."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Vous avez été retiré de cet espace de travail. Demandez à un administrateur de l'espace de travail de vous réinviter."
@@ -1762,3 +1772,8 @@ msgstr "Votre enregistrement ne nous est pas encore parvenu. Patientez un instan
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Votre session a expiré. Connectez-vous à nouveau pour continuer."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Votre signature est enregistrée. L'autre signature doit encore suivre."

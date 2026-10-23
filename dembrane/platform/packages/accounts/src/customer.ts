@@ -22,6 +22,7 @@ import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { lookupPeppol, type TaxIds } from "./peppol";
 import { continueUrl } from "./prospect";
+import { awaitingSlots, customerSlot, fieldsOf, type Slot, slotsOf } from "./signers";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -103,14 +104,26 @@ export async function documentDetail(
   /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
   withEmail = true,
 ) {
-  const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
+  const [sig, allFields, terms, sla, dpa, reminded, all] = await Promise.all([
     store.signatureOf(d.db, doc.id),
     store.fields(d.db, doc.id),
     store.legalById(d.db, doc.termsTextId),
     store.legalById(d.db, doc.slaTextId),
     store.legalById(d.db, doc.dpaTextId),
     store.lastReminders(d.db, doc.orgId, doc.id),
+    store.signaturesOf(d.db, doc.id),
   ]);
+  // A document that asks for more than one signature: staff see every field; the customer
+  // the fields of the signature that is theirs to make next, none once theirs are in.
+  const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const awaiting = doc.status === "signed" ? [] : awaitingSlots(content, all);
+  const mine = customerSlot(awaiting);
+  const fields =
+    via === "staff" || slotsOf(content).length === 1
+      ? allFields
+      : mine
+        ? fieldsOf(allFields, mine)
+        : [];
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
   const [org, billing] = await Promise.all([
@@ -169,6 +182,14 @@ export async function documentDetail(
               : null,
         }
       : null,
+    signatures: all.map((x) => ({
+      slot: x.slot as Slot,
+      name: x.typedName,
+      role: x.typedRole,
+      email: x.email,
+      signed_at: x.signedAt.toISOString(),
+    })),
+    awaiting_signatures: doc.requiresSignature && doc.status !== "draft" ? awaiting : [],
     signature: sig
       ? signatureView(
           sig,
@@ -531,9 +552,13 @@ export async function fileBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-/** The signed PDF, once signed. */
+/**
+ * The signed PDF, once signed: the copy the last signature made, which carries every
+ * signature of a document that asked for more than one.
+ */
 export async function signedBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint8Array> {
-  const sig = await store.signatureOf(d.db, doc.id);
+  const done = doc.status !== "sent" && doc.status !== "viewed";
+  const sig = done ? (await store.signaturesOf(d.db, doc.id)).at(-1) : null;
   const blob = sig ? await d.files.get(sig.signedPdfKey) : null;
   if (!blob) throw new NotFoundError("document.not_signed");
   return new Uint8Array(await blob.arrayBuffer());

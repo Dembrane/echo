@@ -29,6 +29,8 @@ export interface PlacedField {
   readonly label: string;
   readonly required: boolean;
   readonly key: string | null;
+  /** Who fills it; the customer's signer when absent. */
+  readonly role?: "signer" | "second" | "dembrane";
 }
 
 export interface RenderedPdf {

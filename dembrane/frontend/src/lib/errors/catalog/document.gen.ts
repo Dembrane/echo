@@ -115,6 +115,55 @@ export const document = {
     detail: "{label}: tick or untick",
     description: "A checkbox field got a value that is not true or false.",
   },
+  "document.signed_awaiting": {
+    action: "none",
+    detail: "Your signature is in; the other signature is still to come",
+    description:
+      "A document that asks for more than one signature has every customer signature it asks for; the rest is dembrane's.",
+  },
+  "document.second_signer_same": {
+    action: "none",
+    detail: "You signed already; someone else from your organisation signs second",
+    description:
+      "The first signer of a document that asks for a second signatory tried to sign again.",
+  },
+  "document.second_signer_only": {
+    action: "none",
+    detail: "Only {email} can sign second",
+    description: "Someone other than the second signatory the offer names tried to sign second.",
+  },
+  "document.countersign_not_asked": {
+    action: "none",
+    detail: "This document asks for no counter-signature, or it is in already",
+    audience: "staff",
+    description:
+      "Staff tried to counter-sign a document that does not ask for dembrane's signature, or has it.",
+  },
+  "document.countersign_not_you": {
+    action: "none",
+    detail: "Only {email} can counter-sign this offer",
+    audience: "staff",
+    description:
+      "A staff member other than the one the offer names, or a staff key, tried to counter-sign.",
+  },
+  "document.annex_invalid": {
+    action: "fix_input",
+    detail: "An annex must be a PDF of at most 10 MB",
+    audience: "staff",
+    description: "The file given as an annex is not a readable PDF, or is too large.",
+  },
+  "document.annex_limit": {
+    action: "fix_input",
+    detail: "An offer takes at most {max} annexes",
+    audience: "staff",
+    description: "A draft offer already has the most annexes it can carry.",
+  },
+  "document.annex_not_found": {
+    action: "none",
+    detail: "This offer has no annex {number}",
+    audience: "staff",
+    description: "An annex number that is not on the draft.",
+  },
   "document.choose_one": {
     action: "fix_input",
     detail: "Tick exactly one of the options",

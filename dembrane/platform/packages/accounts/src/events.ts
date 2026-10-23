@@ -228,6 +228,8 @@ export function documentPayload(doc: DocumentRow) {
 export function signaturePayload(s: SignatureRow, signedPdfPath: string) {
   return {
     id: s.id,
+    /** `customer` (every document), `second` (their second signatory) or `dembrane`. */
+    slot: s.slot as "customer" | "second" | "dembrane",
     name: s.typedName,
     role: s.typedRole,
     email: s.email,

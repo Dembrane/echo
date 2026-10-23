@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online platby momentálně nejsou dostupné. Pro změnu tarifu nás kontaktujte."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Jako druhý může podepsat jen {email}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Tento dokument může odmítnout pouze {signer_email}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Tento dokument může podepsat pouze {signer_email}. Požádejte dotyčného o podpis, nebo nás požádejte o změnu podepisující osoby."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Tento dokument už nelze odmítnout."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Tento dokument právě nelze podepsat. Víme o tom a pracujeme na nápravě."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Tento dokument byl odmítnut, takže ho již nelze podepsat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Tento dokument byl stažen, takže ho již nelze podepsat."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Pro přesun projektů musíte být správcem nebo vlastníkem pracovního prostoru ({side})."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Pro podepsání se přihlaste pomocí ověřené e-mailové adresy."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "Část služby dembrane je právě nedostupná. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "Váš podpis se nepodařilo přečíst. Nakreslete ho znovu a zkuste to ještě jednou."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Vybrali jste příliš mnoho položek. Vyberte jich méně a zkuste to znovu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "Už jste podepsali. Jako druhý podepisuje někdo jiný z vaší organizace."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Byli jste odebráni z tohoto pracovního prostoru. Požádejte správce pracovního prostoru o opětovné pozvání."
@@ -1762,3 +1772,8 @@ msgstr "Vaše nahrávka k nám ještě nedorazila. Počkejte chvilku a zkuste to
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Vaše relace vypršela. Chcete-li pokračovat, znovu se přihlaste."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Váš podpis je zaznamenán. Druhý podpis teprve přijde."

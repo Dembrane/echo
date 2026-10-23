@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online betalingen zijn momenteel niet beschikbaar. Neem contact met ons op om je abonnement te wijzigen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Alleen {email} kan als tweede ondertekenen."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Alleen {signer_email} kan dit document weigeren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Alleen {signer_email} kan dit document ondertekenen. Vraag diegene om te tekenen, of vraag ons om de ondertekenaar te wijzigen."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Dit document kan niet meer worden geweigerd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Dit document kan op dit moment niet worden ondertekend. We zijn op de hoogte en lossen het op."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Dit document is geweigerd en kan niet meer worden ondertekend."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Dit document is ingetrokken en kan niet meer worden ondertekend."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Om projecten te verplaatsen, moet je beheerder of eigenaar zijn van de {side} werkruimte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Log in met een geverifieerd e-mailadres om te ondertekenen."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "We konden een deel van dembrane op dit moment niet bereiken. Probeer het zo opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "We konden je handtekening niet lezen. Zet hem opnieuw en probeer het nog een keer."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Je hebt te veel items geselecteerd. Selecteer er minder en probeer het opnieuw."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "U hebt al ondertekend. Iemand anders van uw organisatie ondertekent als tweede."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Je bent verwijderd uit deze werkruimte. Vraag een beheerder van de werkruimte om je opnieuw uit te nodigen."
@@ -1762,3 +1772,8 @@ msgstr "Je opname is nog niet bij ons binnengekomen. Wacht even en probeer het o
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Je sessie is verlopen. Log opnieuw in om verder te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Uw handtekening staat erop. De andere handtekening volgt nog."
