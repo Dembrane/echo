@@ -398,7 +398,7 @@ export const store = {
           signedAt: doc.signedAt,
           dpaTextId: doc.dpaTextId,
           invoiceStatus: doc.invoiceStatus,
-          billsOther: sql<boolean>`(${doc.content}->'bill_to') is not null`,
+          billsOther: sql<boolean>`(${doc.content}->'bill_to') is not null or (${doc.content}->'no_charge') is not null`,
         })
         .from(doc)
         .where(

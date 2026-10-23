@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Add the name of the organisation that owns the data."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "An offer of no charge has no invoice plan and no paying party."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "As an organisation admin you can join this workspace directly, no request needed."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Invoice in {min} to {max} parts."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "Line {line} has no price. For a free offer, choose No charge under How we invoice."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "Line {line} has no section. Put every line under a heading, or none."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Make a summary of this conversation first, then try again."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "No charge means a total of zero. Set the prices to 0, or choose another way to invoice."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "The insight cannot be empty. Write something or remove it."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "The lines of {section} must sit together."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "The map for this presentation is not available."
@@ -657,6 +682,11 @@ msgstr "The PDF of this document is not available. Contact us and we will send i
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "The PDF of this invoice is not ready yet. Try again in a little while."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "The total is zero. For a free offer, choose No charge under How we invoice."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

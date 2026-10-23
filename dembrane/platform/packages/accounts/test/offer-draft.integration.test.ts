@@ -1534,6 +1534,7 @@ run("an offer draft, and the invoice request after the signature", () => {
           bullets: ["1 x Licence"],
           quantity: 1,
           unit_price_cents: 33333,
+          net_cents: 33333,
           vat_rate_bps: 2100,
         },
       ]);
@@ -1692,5 +1693,171 @@ run("an offer draft, and the invoice request after the signature", () => {
     );
     expect(dropped.content?.invoice_plan).toBeUndefined();
     expect(dropped.body).not.toContain("How we invoice");
+  });
+  test("sections, half quantities and included lines: subtotals per section, the total exact, the invoice line by line", async () => {
+    const org = await freshOrg("Gemeente Secties BV");
+    const items = [
+      {
+        section: "Stewardship",
+        description: "Hosting",
+        quantity: 4,
+        unit: "months",
+        unit_price_cents: 25000,
+        vat_rate_bps: 2100,
+      },
+      {
+        section: "Stewardship",
+        description: "External workspaces",
+        quantity: 2,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included",
+      },
+      {
+        section: "Co-development",
+        description: "Session",
+        quantity: 0.5,
+        unit_price_cents: 49900,
+        vat_rate_bps: 2100,
+      },
+      {
+        section: "Co-development",
+        description: "Facilitation",
+        quantity: 1.5,
+        unit: "days",
+        unit_price_cents: 33333,
+        vat_rate_bps: 2100,
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-SEC1", template: "custom", items });
+    // 4 x 250.00 + 0.5 x 499.00 (249.50) + 1.5 x 333.33 (499.995, up to 500.00) = 1,749.50.
+    expect(doc.lines?.map((l) => l.net_cents)).toEqual([100000, 0, 24950, 50000]);
+    expect([doc.subtotal_cents, doc.vat_cents, doc.total_cents]).toEqual([174950, 36740, 211690]);
+    expect(doc.content?.items.map((i) => i.section)).toEqual([
+      "Stewardship",
+      "Stewardship",
+      "Co-development",
+      "Co-development",
+    ]);
+    expect(doc.body).toContain("| **Co-development** |  |  |  |");
+    expect(doc.body).toContain("| Subtotal Stewardship |  |  | €1,000.00 |");
+    expect(doc.body).toContain("| Subtotal Co-development |  |  | €749.50 |");
+    expect(doc.body).toContain("| Facilitation | 1.5 days | €333.33 | €500.00 |");
+
+    await send(doc.id, org);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+    const message = requestedFor(org)[0] as {
+      document: { total_cents: number };
+      invoice: {
+        items: { description: string; quantity: number; net_cents: number; section: string }[];
+      };
+    };
+    expect(message.document.total_cents).toBe(211690);
+    // The charged lines, each with the amount the offer rounded and its section.
+    expect(
+      message.invoice.items.map((i) => [i.section, i.description, i.quantity, i.net_cents]),
+    ).toEqual([
+      ["Stewardship", "Hosting", 4, 100000],
+      ["Co-development", "Session", 0.5, 24950],
+      ["Co-development", "Facilitation", 1.5, 50000],
+    ]);
+
+    // Sections all or none, together; quantities in hundredths at most.
+    const refused = async (over: Record<string, unknown>, says: string) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-SEC2", ...over }),
+      );
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain(says);
+    };
+    await refused({ items: [items[0], { ...items[2], section: undefined }] }, "has no section");
+    await refused({ items: [items[0], items[2], items[1]] }, "must sit together");
+    await refused({ items: [{ ...items[0], quantity: 1.234 }] }, "two decimals");
+  });
+
+  test("an offer of no charge is sent and signed, asks for no billing details and is never invoiced", async () => {
+    const org = await freshOrg("Stichting Gratis Pilot");
+    const pilot = [
+      { description: "Pilot, three months", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 },
+    ];
+    // A zero offer is refused unless staff say it is of no charge.
+    const plain = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-NC0", items: pilot }),
+    );
+    expect(plain.status).toBe(422);
+    const scholarship = [
+      { description: "Pilot", quantity: 1, unit_price_cents: 41500, vat_rate_bps: 2100 },
+      { description: "Scholarship", quantity: 1, unit_price_cents: -41500, vat_rate_bps: 2100 },
+    ];
+    const zeroed = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-NC0", items: scholarship }),
+    );
+    expect(JSON.stringify(zeroed.data)).toContain("choose No charge");
+    // Of no charge, a price left in is refused, and so is a plan or a paying party.
+    for (const over of [
+      { items: [{ ...pilot[0], unit_price_cents: 100 }] },
+      { invoice_plan: { kind: "monthly", parts: 3 } },
+    ]) {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-NC0", items: pilot, no_charge: true, ...over }),
+      );
+      expect(r.status).toBe(422);
+    }
+
+    const doc = await draft(org, { reference: "OFFER-NC1", items: scholarship, no_charge: true });
+    expect(doc.content?.no_charge).toBe(true);
+    expect(doc.total_cents).toBe(0);
+    expect(doc.body).toContain("No charge: nothing is invoiced for this offer.");
+    // A change that leaves it out keeps it; false turns it off, and the zero is refused.
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: "OFFER-NC1", items: pilot, person_name: "Bo" }),
+    );
+    expect(K.DocumentDetail.parse(kept.data).content?.no_charge).toBe(true);
+    const off = await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: "OFFER-NC1", items: pilot, no_charge: false }),
+    );
+    expect(off.status).toBe(422);
+
+    await send(doc.id, org);
+    const kinds = async () => (await store.tasks(w.db, org)).map((t) => t.kind);
+    expect(await kinds()).not.toContain("billing_details");
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(await kinds()).not.toContain("billing_details");
+    expect(requestedFor(org)).toEqual([]);
+    const card = K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data);
+    expect(card.invoice_waits).toEqual([]);
+    expect(card.organisation.deal_stage).toBe("offer_accepted");
+    expect((await store.documents(w.db, org)).find((d) => d.id === doc.id)?.status).toBe("signed");
   });
 });

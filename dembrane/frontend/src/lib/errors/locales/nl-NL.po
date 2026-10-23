@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Voeg de naam toe van de organisatie die eigenaar is van de gegevens."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "Een kosteloze offerte heeft geen factuurplan en geen betalende partij."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "Als organisatiebeheerder kun je direct lid worden van deze werkruimte, zonder verzoek."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Factureer in {min} tot {max} delen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "Regel {line} heeft geen prijs. Kies voor een gratis offerte Kosteloos onder Zo factureren we."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "Regel {line} heeft geen sectie. Zet elke regel onder een kop, of geen enkele."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "Kosteloos betekent een totaal van nul. Zet de prijzen op 0, of kies een andere manier van factureren."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "Het inzicht mag niet leeg zijn. Schrijf iets of verwijder het."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "De regels van {section} moeten bij elkaar staan."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "De kaart voor deze presentatie is niet beschikbaar."
@@ -657,6 +682,11 @@ msgstr "De pdf van dit document is niet beschikbaar. Neem contact met ons op, da
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "De pdf van deze factuur is nog niet klaar. Probeer het over een tijdje opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "Het totaal is nul. Kies voor een gratis offerte Kosteloos onder Zo factureren we."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

@@ -347,6 +347,8 @@ export interface PushOfferInput {
   readonly bill_to?: BillToInput | null | undefined;
   /** Monthly parts or instalments; absent or null invoices at once. */
   readonly invoice_plan?: InvoicePlan | null | undefined;
+  /** An offer of zero on purpose; never invoiced. On a change, absent keeps the draft's. */
+  readonly no_charge?: boolean | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -431,12 +433,17 @@ function offerContent(
     | "customer_reference"
     | "bill_to"
     | "invoice_plan"
+    | "no_charge"
   > & { date: string; reference: string },
   words: OfferTemplateText,
   before?: OfferContent,
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
-  requireAmounts(o.items);
+  const noCharge = o.no_charge === true;
+  requireAmounts(o.items, noCharge);
+  // Nothing is invoiced, so nobody is invoiced and nothing is split.
+  if (noCharge && (o.bill_to || o.invoice_plan))
+    throw new ValidationError("offer.no_charge_invoiced");
   if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
   // Amendments change the standard documents, so they make an offer custom: a subscription
   // or event offer is the standard documents as they are.
@@ -462,6 +469,7 @@ function offerContent(
     ...(o.customer_reference && { customer_reference: o.customer_reference }),
     ...(billTo && { bill_to: billTo }),
     ...(plan && { invoice_plan: plan }),
+    ...(noCharge && { no_charge: true as const }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -654,6 +662,7 @@ export async function updateOffer(
           : input.customer_reference,
       bill_to: input.bill_to === undefined ? before.bill_to : input.bill_to,
       invoice_plan: input.invoice_plan === undefined ? before.invoice_plan : input.invoice_plan,
+      no_charge: input.no_charge === undefined ? before.no_charge === true : input.no_charge,
     },
     words,
     before,
@@ -754,9 +763,10 @@ async function sendOfferIn(
     documentId: docId,
     createdBy: who.directusUserId,
   });
-  // Invoiced to another party: the offer names who pays, so the customer is not asked for
-  // billing details nobody would use. Their next offer without a paying party asks.
-  if (!content?.bill_to) await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  // Invoiced to another party, or not invoiced at all: the customer is not asked for
+  // billing details nobody would use. Their next offer that they pay for asks.
+  if (!content?.bill_to && !content?.no_charge)
+    await ensureBillingTask(d, tx, orgId, who.directusUserId);
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
   if (content?.dpa_separate && !content.processing_terms)

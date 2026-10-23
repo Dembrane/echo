@@ -471,7 +471,10 @@ type OfferItems = NonNullable<DocumentDetailT["content"]>["items"];
 function priced(raw: unknown) {
 	const items = raw as OfferItems;
 	const lines = items.map((it) => {
-		const net = it.quantity * it.unit_price_cents;
+		// A quantity may be 1.5: counted in hundredths, rounded to the cent half up.
+		const net = Math.round(
+			(Math.round(it.quantity * 100) * it.unit_price_cents) / 100,
+		);
 		const vat = Math.round((net * it.vat_rate_bps) / 10_000);
 		return { ...it, net_cents: net, total_cents: net + vat, vat_cents: vat };
 	});
@@ -506,13 +509,14 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 		...(body.invoice_plan && typeof body.invoice_plan === "object"
 			? { invoice_plan: body.invoice_plan as OfferContentT["invoice_plan"] }
 			: {}),
+		...(body.no_charge === true && { no_charge: true as const }),
 	};
 }
 
 /** The locked billing details step that comes with a sent offer, named after it. */
 function billingStepFor(s: Store, d: DocumentDetailT) {
-	// Another party pays: nobody asks the customer for billing details.
-	if (d.content?.bill_to) return;
+	// Another party pays, or nobody does: nobody asks the customer for billing details.
+	if (d.content?.bill_to || d.content?.no_charge) return;
 	const billing = s.tasks.find(
 		(x) => x.kind === "billing_details" && x.status === "locked",
 	);

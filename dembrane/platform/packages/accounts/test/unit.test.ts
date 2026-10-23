@@ -13,8 +13,23 @@ import {
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
-import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
+import {
+  fitsVatTreatment,
+  hundredthsOf,
+  netOf,
+  priceLines,
+  requireAmounts,
+  sectionsOf,
+  vatOf,
+} from "../src/money";
+import {
+  euro,
+  layoutOffer,
+  legalKinds,
+  type OfferContent,
+  offerText,
+  quantityText,
+} from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { legalBlocks, offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { candidates, lookupPeppol } from "../src/peppol";
@@ -139,6 +154,83 @@ describe("money", () => {
     expect(() => requireAmounts([line(10000), line(0, "optional")])).toThrow(
       /Line 2: give a price/,
     );
+  });
+  test("a quantity has up to two decimals, and a line rounds to the cent half up", () => {
+    expect([hundredthsOf(1.5), hundredthsOf(0.25), hundredthsOf(0.29), hundredthsOf(12)]).toEqual([
+      150, 25, 29, 1200,
+    ]);
+    for (const bad of [0, -1, 0.001, 1.255, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(hundredthsOf(bad)).toBeNull();
+    // 0.5 x 499 cents is 249.5: half up to 250; 1.5 x 333 is 499.5: 500; 0.25 x 1 is 0.25: 0.
+    expect([netOf(0.5, 499), netOf(1.5, 333), netOf(0.25, 1), netOf(0.75, 1)]).toEqual([
+      250, 500, 0, 1,
+    ]);
+    // A discount rounds the same way, away from zero.
+    expect(netOf(0.5, -499)).toBe(-250);
+    // 0.29 is 28.999... as a float; counted in hundredths it is exactly 29.
+    expect(netOf(0.29, 10000)).toBe(2900);
+    const t = priceLines([
+      { description: "Facilitation", quantity: 1.5, unit_price_cents: 99900, vat_rate_bps: 2100 },
+      { description: "Analysis", quantity: 0.25, unit_price_cents: 12345, vat_rate_bps: 2100 },
+    ]);
+    // 1.5 x 999.00 = 1498.50; 0.25 x 123.45 = 30.8625, rounded to 30.86.
+    expect(t.lines.map((l) => [l.net_cents, l.vat_cents])).toEqual([
+      [149850, 31469],
+      [3086, 648],
+    ]);
+    expect([t.subtotal_cents, t.vat_cents, t.total_cents]).toEqual([152936, 32117, 185053]);
+    expect(() =>
+      priceLines([{ description: "x", quantity: 1.234, unit_price_cents: 100, vat_rate_bps: 0 }]),
+    ).toThrow(/at most two decimals/);
+    expect([
+      quantityText(1.5),
+      quantityText(1.5, "nl"),
+      quantityText(0.25),
+      quantityText(3),
+    ]).toEqual(["1.5", "1,5", "0.25", "3"]);
+  });
+  test("sections group lines, each with the subtotal of its charged lines", () => {
+    const line = (section: string | undefined, cents: number, kind?: "optional" | "included") => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      ...(section && { section }),
+      ...(kind && { kind }),
+    });
+    const t = requireAmounts([
+      line("A", 10000),
+      line("A", 0, "included"),
+      line("A", 5000, "optional"),
+      line("B", 2550),
+      line("B", -550),
+    ]);
+    const sections = sectionsOf(t.lines);
+    expect(sections.map((x) => [x.title, x.lines.length, x.subtotal_cents])).toEqual([
+      ["A", 3, 10000],
+      ["B", 2, 2000],
+    ]);
+    // The subtotals add up to the offer's subtotal exactly.
+    expect(sections.reduce((s, x) => s + x.subtotal_cents, 0)).toBe(t.subtotal_cents);
+    expect(() => requireAmounts([line("A", 100), line(undefined, 100)])).toThrow(
+      /Line 2 has no section/,
+    );
+    expect(() => requireAmounts([line("A", 100), line("B", 100), line("A", 100)])).toThrow(
+      /section A must sit together/,
+    );
+  });
+  test("an offer of zero only on purpose, and then exactly zero", () => {
+    const line = (cents: number) => ({
+      description: "Pilot",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+    });
+    expect(() => requireAmounts([line(0)])).toThrow(/give a price/);
+    expect(() => requireAmounts([line(41500), line(-41500)])).toThrow(/choose No charge/);
+    expect(requireAmounts([line(0)], true).total_cents).toBe(0);
+    expect(requireAmounts([line(41500), line(-41500)], true).total_cents).toBe(0);
+    expect(() => requireAmounts([line(100)], true)).toThrow(/no-charge offer totals zero/);
   });
   test("amounts as the templates write them", () => {
     expect(euro(8600)).toBe("€86.00");
@@ -322,6 +414,73 @@ describe("the offer", () => {
       offerPdf(offer({ items })),
     ]);
     expect(withOptions.bytes.length).toBeGreaterThan(plain.bytes.length);
+  });
+
+  test("sections print a heading over their lines and a subtotal under them", async () => {
+    const item = (
+      section: string,
+      description: string,
+      quantity: number,
+      cents: number,
+      extra: Record<string, unknown> = {},
+    ) => ({
+      section,
+      description,
+      bullets: [],
+      quantity,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      ...extra,
+    });
+    const items = [
+      item("Stewardship", "Hosting", 4, 25000, { unit: "months" }),
+      item("Stewardship", "External workspaces", 2, 0, { kind: "included" }),
+      item("Co-development", "Workshop", 0.5, 49900, { unit: "days" }),
+      item("Co-development", "Report in print", 1, 30000, { kind: "optional" }),
+    ];
+    const l = layoutOffer(offer({ items, template: "custom" }));
+    expect(
+      l.groups.map((g) => [g.title, g.rows.map((r) => r.cells.join(" / ")), g.subtotal]),
+    ).toEqual([
+      [
+        "Stewardship",
+        ["4 months / €250.00 / €1,000.00", "2 /  / Included"],
+        ["Subtotal Stewardship", "€1,000.00"],
+      ],
+      ["Co-development", ["0.5 days / €499.00 / €249.50"], ["Subtotal Co-development", "€249.50"]],
+    ]);
+    expect(l.totals[0]).toEqual(["Subtotal (excl. VAT)", "€1,249.50"]);
+    expect(l.optional?.groups.map((g) => [g.title, g.rows.length, g.subtotal])).toEqual([
+      ["Co-development", 1, null],
+    ]);
+    const text = offerText(offer({ items, template: "custom" }));
+    expect(text).toContain("| **Stewardship** |  |  |  |");
+    expect(text).toContain("| Subtotal Co-development |  |  | €249.50 |");
+    const nl = layoutOffer(offer({ items, template: "custom", language: "nl" }));
+    expect(nl.groups[1]?.rows[0]?.cells[0]).toBe("0,5 days");
+    expect(nl.groups[1]?.subtotal?.[0]).toBe("Subtotaal Co-development");
+    // One section prints its heading, not a subtotal that repeats the one below.
+    const one = layoutOffer(offer({ items: items.slice(0, 1), template: "custom" }));
+    expect([one.groups[0]?.title, one.groups[0]?.subtotal]).toEqual(["Stewardship", null]);
+    const [flat, sectioned] = await Promise.all([
+      offerPdf(offer({ items: items.map(({ section: _s, ...i }) => i) })),
+      offerPdf(offer({ items })),
+    ]);
+    expect(sectioned.bytes.length).toBeGreaterThan(flat.bytes.length);
+  });
+
+  test("an offer of no charge says nothing is invoiced", () => {
+    const free = offer({
+      no_charge: true,
+      items: [
+        { description: "Pilot", bullets: [], quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 },
+      ],
+    });
+    const l = layoutOffer(free);
+    expect(l.totals.at(-1)).toEqual(["Total (incl. VAT)", "€0.00"]);
+    expect(l.chargeNote).toBe("No charge: nothing is invoiced for this offer.");
+    expect(offerText(free)).toContain("No charge: nothing is invoiced for this offer.");
+    expect(layoutOffer(offer()).chargeNote).toBeNull();
   });
 
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {

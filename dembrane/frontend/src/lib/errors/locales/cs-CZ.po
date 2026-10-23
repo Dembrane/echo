@@ -129,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Přidejte název organizace, která data vlastní."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:59
+msgid "error.offer.no_charge_invoiced"
+msgstr "Nabídka zdarma nemá plán fakturace ani plátce."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "Jako správce organizace se můžete k tomuto pracovnímu prostoru připojit přímo, bez žádosti."
@@ -274,9 +279,24 @@ msgid "error.offer.invoice_parts_count"
 msgstr "Fakturujte v {min} až {max} splátkách."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.line_no_amount"
+msgstr "Řádek {line} nemá cenu. Pro nabídku zdarma zvolte Zdarma v části Jak fakturujeme."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:68
+msgid "error.offer.section_missing"
+msgstr "Řádek {line} nemá oddíl. Dejte každý řádek pod nadpis, nebo žádný."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Nejprve vytvořte shrnutí tohoto rozhovoru a pak to zkuste znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_total"
+msgstr "Zdarma znamená celkem nula. Nastavte ceny na 0, nebo zvolte jiný způsob fakturace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
@@ -624,6 +644,11 @@ msgid "error.agent.insight_content_blank"
 msgstr "Postřeh nemůže být prázdný. Něco napište, nebo ho smažte."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:73
+msgid "error.offer.section_split"
+msgstr "Řádky oddílu {section} musí být pohromadě."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
 msgstr "Mapa pro tuto prezentaci není k dispozici."
@@ -657,6 +682,11 @@ msgstr "PDF tohoto dokumentu není k dispozici. Kontaktujte nás a my vám ho po
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF této faktury ještě není připraveno. Zkuste to za chvíli znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.zero_total"
+msgstr "Celkem je nula. Pro nabídku zdarma zvolte Zdarma v části Jak fakturujeme."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13

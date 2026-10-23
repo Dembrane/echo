@@ -184,7 +184,15 @@ export const OfferItem = z.object({
   description: text(500),
   /** Bulleted lines under the description, as on the offer templates. */
   bullets: z.array(text(300)).max(20).default([]),
-  quantity: z.number().int().min(1),
+  /**
+   * Above zero, with at most two decimals (1.5 days, 0.25 hours). The amount is quantity
+   * times unit price, rounded to the cent half up.
+   */
+  quantity: z
+    .number()
+    .positive()
+    .max(1_000_000)
+    .refine((q) => Math.abs(q * 100 - Math.round(q * 100)) < 1e-6, "At most two decimals"),
   /** What the quantity counts, printed next to it: "months" gives "12 months". */
   unit: z.string().trim().max(30).optional(),
   unit_price_cents: Cents,
@@ -196,6 +204,12 @@ export const OfferItem = z.object({
    * request and the rule that an offer totals more than zero count charged lines only.
    */
   kind: z.enum(["optional", "included"]).optional(),
+  /**
+   * The heading this line sits under ("Co-development"). Give every line one, or none;
+   * a section's lines sit together, and the offer prints each heading once, over its
+   * lines, with their subtotal under them.
+   */
+  section: z.string().trim().min(1).max(120).optional(),
 });
 
 /**
@@ -326,6 +340,8 @@ export const OfferContent = z.object({
   bill_to: BillTo.optional(),
   /** How the offer is invoiced when not all at once, printed as "How we invoice". */
   invoice_plan: InvoicePlan.optional(),
+  /** True for an offer of zero staff chose on purpose: it is signed, never invoiced. */
+  no_charge: z.literal(true).optional(),
 });
 
 export const LegalPin = z.object({
@@ -972,6 +988,13 @@ export const PushOfferRequest = z.object({
    * a change, absent keeps the draft's and null drops it.
    */
   invoice_plan: InvoicePlan.nullable().optional(),
+  /**
+   * An offer of zero on purpose (a free pilot, a scholarship, an agreement with no price):
+   * lines may be 0 and the total must be exactly 0. It is sent and signed as any offer,
+   * asks the customer for no billing details and never produces an invoice request. Without
+   * it a total of zero answers 422 `offer.zero_total`. On a change, absent keeps the draft's.
+   */
+  no_charge: z.boolean().optional(),
   /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.
