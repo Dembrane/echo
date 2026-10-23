@@ -15,6 +15,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { TrashIcon } from "@phosphor-icons/react";
+import { useState } from "react";
 import { formatMoney } from "../format";
 
 /** One offer line as staff edit it: euros and percent, converted to cents and bps on send. */
@@ -179,6 +180,12 @@ export function LinesEditor({
 	const update = (i: number, patch: Partial<Line>) =>
 		setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 	const money = (c: number) => formatMoney(c, currency, i18n.locale);
+	// The bullets box shows on a line that has bullets, or once staff ask for it.
+	const [bulletsOpen, setBulletsOpen] = useState<ReadonlySet<string>>(
+		new Set(),
+	);
+	const showBullets = (l: Line) =>
+		Boolean(l.bullets.trim()) || bulletsOpen.has(l.id);
 	const blocks = blocksOf(lines);
 	const sectioned = lines.some((l) => l.section);
 	/** A new line at the end of a section (the last one when not given). */
@@ -261,14 +268,27 @@ export function LinesEditor({
 						</ActionIcon>
 					)}
 				</Group>
-				<Textarea
-					label={t`Bullets`}
-					description={t`One per line`}
-					autosize
-					minRows={2}
-					value={line.bullets}
-					onChange={(e) => update(i, { bullets: e.currentTarget.value })}
-				/>
+				{showBullets(line) ? (
+					<Textarea
+						label={t`Bullets`}
+						description={t`One per line`}
+						autosize
+						minRows={2}
+						value={line.bullets}
+						onChange={(e) => update(i, { bullets: e.currentTarget.value })}
+						data-testid="line-bullets"
+					/>
+				) : (
+					<Button
+						variant="subtle"
+						size="xs"
+						style={{ alignSelf: "flex-start" }}
+						onClick={() => setBulletsOpen((s) => new Set(s).add(line.id))}
+						data-testid="line-add-bullets"
+					>
+						<Trans>Add bullets</Trans>
+					</Button>
+				)}
 				{choices && line.kind === "optional" && (
 					<TextInput
 						label={t`Option name`}

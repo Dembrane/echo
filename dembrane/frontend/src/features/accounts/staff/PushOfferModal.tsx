@@ -151,6 +151,7 @@ function OfferForm({
 	const [vatTreatment, setVatTreatment] = useState<VatTreatment>(
 		from?.vat_treatment ?? "standard",
 	);
+	const [termsOpen, setTermsOpen] = useState(Boolean(from?.processing_terms));
 	const [processingTerms, setProcessingTerms] = useState(
 		from?.processing_terms ?? "",
 	);
@@ -502,15 +503,27 @@ function OfferForm({
 			</Stack>
 
 			<Divider label={t`Terms`} labelPosition="left" />
-			<TextInput
-				label={t`Their data processing terms`}
-				description={t`Optional, replaces our DPA`}
-				value={processingTerms}
-				onChange={(e) => setProcessingTerms(e.currentTarget.value)}
-				error={fields.processing_terms}
-				maxLength={500}
-				data-testid="offer-processing-terms"
-			/>
+			{termsOpen || processingTerms ? (
+				<TextInput
+					label={t`Their data processing terms`}
+					description={t`Optional, replaces our DPA`}
+					value={processingTerms}
+					onChange={(e) => setProcessingTerms(e.currentTarget.value)}
+					error={fields.processing_terms}
+					maxLength={500}
+					data-testid="offer-processing-terms"
+				/>
+			) : (
+				<Button
+					variant="subtle"
+					size="xs"
+					style={{ alignSelf: "flex-start" }}
+					onClick={() => setTermsOpen(true)}
+					data-testid="add-processing-terms"
+				>
+					<Trans>Add their DPA</Trans>
+				</Button>
+			)}
 			{template === "custom" && (
 				<Stack gap="xs" data-testid="offer-amendments">
 					<Stack gap={0}>

@@ -47,7 +47,7 @@ msgstr "Надіслано листів: {0}"
 
 #. placeholder {0}: formatMoney(net, currency, i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, currency, i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:595
+#: src/features/accounts/staff/PushOfferModal.tsx:608
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} без ПДВ, {1} з ПДВ"
 
@@ -239,11 +239,11 @@ msgstr "Не вдалося завантажити облікові записи
 msgid "Actions"
 msgstr "Дії"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:586
+#: src/features/accounts/staff/PushOfferModal.tsx:599
 msgid "Add a change"
 msgstr "Додати зміну"
 
-#: src/features/accounts/staff/LinesEditor.tsx:424
+#: src/features/accounts/staff/LinesEditor.tsx:444
 msgid "Add a discount"
 msgstr "Додати знижку"
 
@@ -251,8 +251,8 @@ msgstr "Додати знижку"
 msgid "Add a field"
 msgstr "Додати поле"
 
-#: src/features/accounts/staff/LinesEditor.tsx:397
-#: src/features/accounts/staff/LinesEditor.tsx:408
+#: src/features/accounts/staff/LinesEditor.tsx:417
+#: src/features/accounts/staff/LinesEditor.tsx:428
 msgid "Add a line"
 msgstr "Додати рядок"
 
@@ -264,12 +264,20 @@ msgstr "Додати частину"
 msgid "Add a PDF"
 msgstr "Додати PDF"
 
-#: src/features/accounts/staff/LinesEditor.tsx:434
+#: src/features/accounts/staff/LinesEditor.tsx:454
 msgid "Add a section"
 msgstr "Додати розділ"
 
 #~ msgid "add a signature field to send"
 #~ msgstr ""
+
+#: src/features/accounts/staff/LinesEditor.tsx:289
+msgid "Add bullets"
+msgstr "Додати пункти"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:524
+msgid "Add their DPA"
+msgstr "Додати їхню угоду про обробку даних"
 
 #: src/features/accounts/signing/SignRoute.tsx:471
 msgid "Add your signature first."
@@ -308,7 +316,7 @@ msgstr "Назва додатка"
 msgid "Annexes"
 msgstr "Додатки"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:463
+#: src/features/accounts/staff/PushOfferModal.tsx:464
 msgid "Another signer of theirs"
 msgstr "Ще один їхній підписант"
 
@@ -324,7 +332,7 @@ msgstr "Дайте відповідь на питання"
 msgid "Answered"
 msgstr "З відповіддю"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:425
+#: src/features/accounts/staff/PushOfferModal.tsx:426
 msgid "Any options"
 msgstr "Будь-які варіанти"
 
@@ -356,7 +364,7 @@ msgstr "Призначено: {who}. Підписати може лише ця �
 msgid "At once"
 msgstr "Одразу"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:418
+#: src/features/accounts/staff/PushOfferModal.tsx:419
 msgid "At signing, they tick"
 msgstr "Під час підписання вони позначають"
 
@@ -442,7 +450,7 @@ msgstr "створюється"
 msgid "Building the demo. This page follows along."
 msgstr "Створюємо демо. Ця сторінка оновлюється автоматично."
 
-#: src/features/accounts/staff/LinesEditor.tsx:265
+#: src/features/accounts/staff/LinesEditor.tsx:273
 msgid "Bullets"
 msgstr "Маркери списку"
 
@@ -494,11 +502,11 @@ msgstr "Змінити"
 msgid "Change the draft"
 msgstr "Змінити чернетку"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:518
+#: src/features/accounts/staff/PushOfferModal.tsx:531
 msgid "Changes to our terms"
 msgstr "Зміни до наших умов"
 
-#: src/features/accounts/staff/LinesEditor.tsx:244
+#: src/features/accounts/staff/LinesEditor.tsx:251
 msgid "Charged"
 msgstr "Нараховано"
 
@@ -597,7 +605,7 @@ msgstr "Закрити"
 msgid "Closed"
 msgstr "Закрито"
 
-#: src/features/accounts/staff/LinesEditor.tsx:352
+#: src/features/accounts/staff/LinesEditor.tsx:372
 msgid "Co-development"
 msgstr "Спільна розробка"
 
@@ -690,11 +698,11 @@ msgstr "Створити організацію"
 msgid "Create task"
 msgstr "Створити завдання"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:354
+#: src/features/accounts/staff/PushOfferModal.tsx:355
 msgid "Currency"
 msgstr "Валюта"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:306
+#: src/features/accounts/staff/PushOfferModal.tsx:307
 msgid "Custom"
 msgstr "Індивідуальний"
 
@@ -711,11 +719,11 @@ msgstr "Клієнт"
 msgid "Customer emailed"
 msgstr "Клієнту надіслано лист"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:324
+#: src/features/accounts/staff/PushOfferModal.tsx:325
 msgid "Customer name in the title"
 msgstr "Ім'я клієнта в назві"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:375
+#: src/features/accounts/staff/PushOfferModal.tsx:376
 msgid "Customer reference"
 msgstr "Референс клієнта"
 
@@ -757,7 +765,7 @@ msgstr "dembrane не надсилає листів. Лист надсилаєт
 msgid "dembrane signs next."
 msgstr "Далі підписує dembrane."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:464
+#: src/features/accounts/staff/PushOfferModal.tsx:465
 msgid "dembrane signs too"
 msgstr "dembrane теж підписує"
 
@@ -804,15 +812,15 @@ msgstr "Публікацію демо скасовано"
 msgid "Demos"
 msgstr "Демо"
 
-#: src/features/accounts/staff/LinesEditor.tsx:227
+#: src/features/accounts/staff/LinesEditor.tsx:234
 msgid "Description"
 msgstr "Опис"
 
-#: src/features/accounts/staff/LinesEditor.tsx:417
+#: src/features/accounts/staff/LinesEditor.tsx:437
 msgid "Discount"
 msgstr "Знижка"
 
-#: src/features/accounts/staff/LinesEditor.tsx:304
+#: src/features/accounts/staff/LinesEditor.tsx:324
 msgid "Discount ({currency})"
 msgstr "Знижка ({currency})"
 
@@ -903,8 +911,8 @@ msgstr "Чернетку змінено"
 msgid "Draft ready"
 msgstr "Чернетка готова"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:264
-#: src/features/accounts/staff/PushOfferModal.tsx:278
+#: src/features/accounts/staff/PushOfferModal.tsx:265
+#: src/features/accounts/staff/PushOfferModal.tsx:279
 msgid "Draft saved"
 msgstr "Чернетку збережено"
 
@@ -941,7 +949,7 @@ msgstr "Спершу намалюйте підпис у полі."
 msgid "Due {due}"
 msgstr "Сплатити до {due}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:346
+#: src/features/accounts/staff/PushOfferModal.tsx:347
 msgid "Dutch VAT"
 msgstr "Нідерландський ПДВ"
 
@@ -949,7 +957,7 @@ msgstr "Нідерландський ПДВ"
 msgid "Edit"
 msgstr "Редагувати"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:480
+#: src/features/accounts/staff/PushOfferModal.tsx:481
 #: src/features/accounts/staff/AccountCardRoute.tsx:821
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:181
 msgid "Email"
@@ -972,15 +980,15 @@ msgstr "Лист надіслано"
 msgid "Email the customer"
 msgstr "Написати клієнту"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:483
+#: src/features/accounts/staff/PushOfferModal.tsx:484
 msgid "Empty: any other signer"
 msgstr "Порожньо: будь-хто інший"
 
-#: src/features/accounts/staff/LinesEditor.tsx:275
+#: src/features/accounts/staff/LinesEditor.tsx:295
 msgid "Empty: not ticked at signing"
 msgstr "Порожньо: не позначається"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:395
+#: src/features/accounts/staff/PushOfferModal.tsx:396
 msgid "Empty: the template's. A blank line starts a paragraph."
 msgstr "Порожньо: текст шаблону. Порожній рядок починає новий абзац."
 
@@ -996,7 +1004,7 @@ msgstr "Порожньо: текст шаблону. Порожній рядок
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Введіть шестизначний код, який ми надіслали на {email}."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:305
+#: src/features/accounts/staff/PushOfferModal.tsx:306
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Подія"
@@ -1009,7 +1017,7 @@ msgstr "Приклад події або клієнта"
 msgid "Evidence"
 msgstr "Підтвердження"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:426
+#: src/features/accounts/staff/PushOfferModal.tsx:427
 msgid "Exactly one"
 msgstr "Рівно один"
 
@@ -1115,7 +1123,7 @@ msgstr "Наприклад, {example}"
 msgid "For example an invoice portal"
 msgstr "Наприклад, портал рахунків"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:385
+#: src/features/accounts/staff/PushOfferModal.tsx:386
 msgid "For the attention of"
 msgstr "До уваги"
 
@@ -1217,8 +1225,8 @@ msgstr "вкл. ПДВ {0}"
 msgid "incl. {vat} VAT"
 msgstr "зокрема ПДВ {vat}"
 
-#: src/features/accounts/staff/LinesEditor.tsx:246
-#: src/features/accounts/staff/LinesEditor.tsx:333
+#: src/features/accounts/staff/LinesEditor.tsx:253
+#: src/features/accounts/staff/LinesEditor.tsx:353
 msgid "Included"
 msgstr "Включено"
 
@@ -1236,7 +1244,7 @@ msgstr "Ініціали"
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Поля ініціалів використовують цей підпис, якщо ви не намалюєте окремі ініціали."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:394
+#: src/features/accounts/staff/PushOfferModal.tsx:395
 msgid "Intro"
 msgstr "Вступ"
 
@@ -1326,7 +1334,7 @@ msgstr "Рахунки надходитимуть електронною пош�
 msgid "Invoices will come via Peppol"
 msgstr "Рахунки надходитимуть через Peppol"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:433
+#: src/features/accounts/staff/PushOfferModal.tsx:434
 msgid "Invoicing"
 msgstr "Виставлення рахунків"
 
@@ -1372,7 +1380,7 @@ msgid "Label"
 msgstr "Мітка"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:312
+#: src/features/accounts/staff/PushOfferModal.tsx:313
 #: src/features/accounts/staff/NewOrganisationModal.tsx:101
 msgid "Language"
 msgstr "Мова"
@@ -1400,15 +1408,15 @@ msgstr "Юридична назва вашої організації"
 msgid "Let them sign in with an email code"
 msgstr "Дозволити вхід за кодом з електронної пошти"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:536
+#: src/features/accounts/staff/PushOfferModal.tsx:549
 msgid "Liability cap"
 msgstr "Межа відповідальності"
 
-#: src/features/accounts/staff/LinesEditor.tsx:328
+#: src/features/accounts/staff/LinesEditor.tsx:348
 msgid "Line total"
 msgstr "Підсумок рядка"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:404
+#: src/features/accounts/staff/PushOfferModal.tsx:405
 msgid "Lines"
 msgstr "Рядки"
 
@@ -1451,13 +1459,13 @@ msgstr "Щомісяця"
 #~ msgid "months"
 #~ msgstr "місяці"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:472
+#: src/features/accounts/staff/PushOfferModal.tsx:473
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:166
 msgid "Name"
 msgstr "Назва"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:332
+#: src/features/accounts/staff/PushOfferModal.tsx:333
 msgid "Name in the greeting"
 msgstr "Ім'я у привітанні"
 
@@ -1590,7 +1598,7 @@ msgstr "Ні, підписує хтось інший"
 msgid "Nobody on this account has an email address yet."
 msgstr "Ніхто в цьому обліковому записі ще не має адреси електронної пошти."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:462
+#: src/features/accounts/staff/PushOfferModal.tsx:463
 msgid "None"
 msgstr "Немає"
 
@@ -1606,7 +1614,7 @@ msgstr "Ще не вказано."
 #~ msgid "Not in the Peppol directory: invoices go by email."
 #~ msgstr "Немає в каталозі Peppol: рахунки надсилаються електронною поштою."
 
-#: src/features/accounts/staff/LinesEditor.tsx:326
+#: src/features/accounts/staff/LinesEditor.tsx:346
 msgid "Not in the total"
 msgstr "Не входить у суму"
 
@@ -1668,7 +1676,7 @@ msgstr "Пропозицію надіслано"
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Пропозицію надіслано. Вона в обліковому записі клієнта; лист не надсилався."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:277
+#: src/features/accounts/staff/PushOfferModal.tsx:278
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
 
@@ -1695,7 +1703,7 @@ msgstr "Додано завдання для початку роботи"
 msgid "Onboarding tasks withdrawn"
 msgstr "Завдання для початку роботи відкликано"
 
-#: src/features/accounts/staff/LinesEditor.tsx:266
+#: src/features/accounts/staff/LinesEditor.tsx:274
 msgid "One per line"
 msgstr "По одному на рядок"
 
@@ -1815,7 +1823,7 @@ msgstr "Відкриється, коли ви повідомите, хто пі�
 #~ msgid "Opens after you tell us who signs."
 #~ msgstr "Відкриється, коли ви повідомите, хто підписує."
 
-#: src/features/accounts/staff/LinesEditor.tsx:274
+#: src/features/accounts/staff/LinesEditor.tsx:294
 msgid "Option name"
 msgstr "Назва варіанта"
 
@@ -1824,11 +1832,11 @@ msgid "optional"
 msgstr "необов'язково"
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:333
-#: src/features/accounts/staff/PushOfferModal.tsx:386
-#: src/features/accounts/staff/PushOfferModal.tsx:473
-#: src/features/accounts/staff/PushOfferModal.tsx:494
-#: src/features/accounts/staff/LinesEditor.tsx:245
+#: src/features/accounts/staff/PushOfferModal.tsx:334
+#: src/features/accounts/staff/PushOfferModal.tsx:387
+#: src/features/accounts/staff/PushOfferModal.tsx:474
+#: src/features/accounts/staff/PushOfferModal.tsx:495
+#: src/features/accounts/staff/LinesEditor.tsx:252
 #: src/features/accounts/staff/BillToFields.tsx:144
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
 #: src/features/accounts/signing/SignRoute.tsx:859
@@ -1836,7 +1844,7 @@ msgstr "необов'язково"
 msgid "Optional"
 msgstr "Необов'язково"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:507
+#: src/features/accounts/staff/PushOfferModal.tsx:509
 msgid "Optional, replaces our DPA"
 msgstr "Необов'язково, замінює нашу угоду про обробку даних"
 
@@ -1869,7 +1877,7 @@ msgstr "Назва організації"
 msgid "Our answer appears here, on this page."
 msgstr "Наша відповідь з’явиться тут, на цій сторінці."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:348
+#: src/features/accounts/staff/PushOfferModal.tsx:349
 msgid "Outside the EU"
 msgstr "Поза ЄС"
 
@@ -1971,7 +1979,7 @@ msgstr "Тариф"
 msgid "PO number"
 msgstr "Номер замовлення (PO)"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:376
+#: src/features/accounts/staff/PushOfferModal.tsx:377
 #: src/features/accounts/staff/BillToFields.tsx:153
 msgid "PO, order or project number"
 msgstr "Номер замовлення, закупівлі або проєкту"
@@ -1985,7 +1993,7 @@ msgstr "Поштовий індекс"
 msgid "Prepare an offer"
 msgstr "Підготувати пропозицію"
 
-#: src/features/accounts/staff/LinesEditor.tsx:237
+#: src/features/accounts/staff/LinesEditor.tsx:244
 msgid "Price"
 msgstr "Ціна"
 
@@ -2062,7 +2070,7 @@ msgstr "Надіслати пропозицію"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Вкажіть призначення платежу в переказі, щоб ми могли зіставити вашу оплату."
 
-#: src/features/accounts/staff/LinesEditor.tsx:286
+#: src/features/accounts/staff/LinesEditor.tsx:306
 msgid "Quantity"
 msgstr "Кількість"
 
@@ -2086,7 +2094,7 @@ msgstr "Запитання"
 #~ msgstr "Ознайомтеся з пропозицією та підпишіть її тут. За вашу організацію підписує хтось інший? Вкажіть цю людину в пропозиції, і вона отримає власне посилання."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:325
+#: src/features/accounts/staff/PushOfferModal.tsx:326
 msgid "Reads \"{0} x dembrane\""
 msgstr "Відображається як \"{0} x dembrane\""
 
@@ -2141,7 +2149,7 @@ msgstr "Нагадано"
 msgid "Remove annex"
 msgstr "Вилучити додаток"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:549
+#: src/features/accounts/staff/PushOfferModal.tsx:562
 msgid "Remove change"
 msgstr "Видалити зміну"
 
@@ -2149,7 +2157,7 @@ msgstr "Видалити зміну"
 msgid "Remove field"
 msgstr "Видалити поле"
 
-#: src/features/accounts/staff/LinesEditor.tsx:256
+#: src/features/accounts/staff/LinesEditor.tsx:263
 msgid "Remove line"
 msgstr "Видалити рядок"
 
@@ -2157,7 +2165,7 @@ msgstr "Видалити рядок"
 msgid "Remove part"
 msgstr "Видалити частину"
 
-#: src/features/accounts/staff/LinesEditor.tsx:381
+#: src/features/accounts/staff/LinesEditor.tsx:401
 msgid "Remove section"
 msgstr "Вилучити розділ"
 
@@ -2184,7 +2192,7 @@ msgstr "Дослідження"
 msgid "Retry"
 msgstr "Повторити"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:347
+#: src/features/accounts/staff/PushOfferModal.tsx:348
 msgid "Reverse charge"
 msgstr "Зворотне оподаткування"
 
@@ -2223,7 +2231,7 @@ msgstr "Переглянути"
 msgid "Revise the offer"
 msgstr "Переглянути пропозицію"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:493
+#: src/features/accounts/staff/PushOfferModal.tsx:494
 #: src/features/accounts/staff/FieldEditorRoute.tsx:67
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:172
 msgid "Role"
@@ -2237,7 +2245,7 @@ msgstr "Зберегти"
 msgid "Save billing details"
 msgstr "Зберегти платіжні дані"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:619
+#: src/features/accounts/staff/PushOfferModal.tsx:632
 msgid "Save draft"
 msgstr "Зберегти чернетку"
 
@@ -2247,7 +2255,7 @@ msgstr "Зберегти чернетку"
 #~ msgid "Saving failed"
 #~ msgstr ""
 
-#: src/features/accounts/staff/LinesEditor.tsx:276
+#: src/features/accounts/staff/LinesEditor.tsx:296
 msgid "Scenario A"
 msgstr "Сценарій A"
 
@@ -2262,11 +2270,11 @@ msgstr "Пошук організацій"
 #~ msgid "Seat"
 #~ msgstr "Місце"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:455
+#: src/features/accounts/staff/PushOfferModal.tsx:456
 msgid "Second signature"
 msgstr "Другий підпис"
 
-#: src/features/accounts/staff/LinesEditor.tsx:351
+#: src/features/accounts/staff/LinesEditor.tsx:371
 msgid "Section"
 msgstr "Розділ"
 
@@ -2313,7 +2321,7 @@ msgstr "Повернути"
 msgid "Send by email instead"
 msgstr "Надсилати електронною поштою"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:628
+#: src/features/accounts/staff/PushOfferModal.tsx:641
 #: src/features/accounts/staff/DocumentRoute.tsx:212
 msgid "Send offer"
 msgstr "Надіслати пропозицію"
@@ -2347,7 +2355,7 @@ msgstr "Надішліть нам номер замовлення (PO)"
 #~ msgid "Sending failed"
 #~ msgstr ""
 
-#: src/features/accounts/staff/PushOfferModal.tsx:602
+#: src/features/accounts/staff/PushOfferModal.tsx:615
 msgid "Sending replaces the sent version."
 msgstr "Надсилання замінить надіслану версію."
 
@@ -2484,7 +2492,7 @@ msgstr "Підпис"
 msgid "Signature fields placed"
 msgstr "Поля для підпису розміщено"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:451
+#: src/features/accounts/staff/PushOfferModal.tsx:452
 msgid "Signatures"
 msgstr "Підписи"
 
@@ -2630,12 +2638,12 @@ msgstr "Тема"
 msgid "Submitted"
 msgstr "Надіслано"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:304
+#: src/features/accounts/staff/PushOfferModal.tsx:305
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Підписка"
 
-#: src/features/accounts/staff/LinesEditor.tsx:367
+#: src/features/accounts/staff/LinesEditor.tsx:387
 msgid "Subtotal"
 msgstr "Проміжний підсумок"
 
@@ -2714,12 +2722,12 @@ msgstr "Повідомте, хто підписує пропозицію"
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Повідомте, хто підписує пропозицію річної ліцензії {number}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:298
+#: src/features/accounts/staff/PushOfferModal.tsx:299
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Шаблон"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:504
+#: src/features/accounts/staff/PushOfferModal.tsx:505
 msgid "Terms"
 msgstr "Умови"
 
@@ -2843,19 +2851,19 @@ msgstr "Та сама особа, що підписує пропозицію"
 msgid "The signed copy is in your documents."
 msgstr "Підписана копія міститься у ваших документах."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:559
+#: src/features/accounts/staff/PushOfferModal.tsx:572
 msgid "The term"
 msgstr "Умова"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:604
+#: src/features/accounts/staff/PushOfferModal.tsx:617
 msgid "The terms, SLA and DPA versions in force today are pinned."
 msgstr "Фіксуються версії умов, SLA та DPA, чинні сьогодні."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:484
+#: src/features/accounts/staff/PushOfferModal.tsx:485
 msgid "Their @dembrane.com address"
 msgstr "Їхня адреса @dembrane.com"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:506
+#: src/features/accounts/staff/PushOfferModal.tsx:508
 msgid "Their data processing terms"
 msgstr "Їхні умови обробки даних"
 
@@ -2900,7 +2908,7 @@ msgstr "Їхній номер {0}"
 msgid "their second signatory"
 msgstr "їхнього другого підписанта"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:521
+#: src/features/accounts/staff/PushOfferModal.tsx:534
 msgid "These win over our standard terms"
 msgstr "Мають перевагу над нашими стандартними умовами"
 
@@ -3070,11 +3078,11 @@ msgstr "Спершу введіть ініціали."
 msgid "Type your name first."
 msgstr "Спершу введіть ім'я."
 
-#: src/features/accounts/staff/LinesEditor.tsx:295
+#: src/features/accounts/staff/LinesEditor.tsx:315
 msgid "Unit"
 msgstr "Одиниця"
 
-#: src/features/accounts/staff/LinesEditor.tsx:305
+#: src/features/accounts/staff/LinesEditor.tsx:325
 msgid "Unit price ({currency})"
 msgstr "Ціна за одиницю ({currency})"
 
@@ -3133,7 +3141,7 @@ msgstr "Використати цей підпис"
 #~ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 #~ msgstr "Діє 14 днів. Закріплено версії умов, SLA та DPA, чинні сьогодні."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:367
+#: src/features/accounts/staff/PushOfferModal.tsx:368
 msgid "Valid for (days)"
 msgstr "Дійсна (днів)"
 
@@ -3146,11 +3154,11 @@ msgstr "Дійсна до {0}"
 msgid "Valid until {validUntil}"
 msgstr "Дійсна до {validUntil}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:340
+#: src/features/accounts/staff/PushOfferModal.tsx:341
 msgid "VAT"
 msgstr "ПДВ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:315
+#: src/features/accounts/staff/LinesEditor.tsx:335
 msgid "VAT %"
 msgstr "VAT %"
 
@@ -3345,7 +3353,7 @@ msgstr "Вебсайт"
 msgid "What each of your organisations still has to do for dembrane."
 msgstr "Що кожна з ваших організацій ще має зробити для dembrane."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:535
+#: src/features/accounts/staff/PushOfferModal.tsx:548
 msgid "What it changes"
 msgstr "Що змінює"
 
