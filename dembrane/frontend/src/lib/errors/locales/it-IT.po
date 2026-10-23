@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} deve essere una data reale, non futura e non precedente all'invio del documento."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} è un'azienda di un altro paese dell'UE. Scegli inversione contabile."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} si trova nell'UE, quindi Fuori dall'UE non si applica."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} si trova nei Paesi Bassi. Scegli IVA olandese."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} si trova fuori dall'UE, quindi l'inversione contabile non si applica."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} non sembra una partita IVA di {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'immagine delle tue iniziali} other {L'immagine della tua firma}} è troppo grande. Mantienila sotto i 512 KB."
@@ -127,6 +152,11 @@ msgstr "I canvas non sono abilitati per questo progetto."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Controlla questo campo e riprova."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Scegli il paese dell'organizzazione a cui si fattura."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "L'accesso rapido supporta fino a {max} modelli. Rimuovine prima uno."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "La rimozione del marchio dembrane è inclusa nel piano Changemaker. Effettua l'upgrade per utilizzarla."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "L'inversione contabile richiede la partita IVA di {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

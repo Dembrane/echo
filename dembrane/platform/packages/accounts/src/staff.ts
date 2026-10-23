@@ -10,6 +10,7 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
+import { type BillToInput, checkBillTo } from "./bill-to";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type DealStage, dealMilestones, dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
@@ -17,7 +18,7 @@ import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, invoiceWaits, staffDocumentUrl, uninvoicedOffers } from "./invoice";
 import { legalForPush } from "./legal/store";
-import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
+import { charged, fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
   type Amendment,
   type BillingUnit,
@@ -340,6 +341,8 @@ export interface PushOfferInput {
   readonly processing_terms?: string | null | undefined;
   /** The customer's PO or reference for this offer. */
   readonly customer_reference?: string | null | undefined;
+  /** Who is invoiced when it is not the customer. */
+  readonly bill_to?: BillToInput | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -422,6 +425,7 @@ function offerContent(
     | "amendments"
     | "processing_terms"
     | "customer_reference"
+    | "bill_to"
   > & { date: string; reference: string },
   words: OfferTemplateText,
   before?: OfferContent,
@@ -434,16 +438,21 @@ function offerContent(
   const amendments = o.amendments ?? [];
   if (amendments.length && o.template !== "custom")
     throw new ValidationError("offer.amendments_custom_only");
+  const billTo = o.bill_to ? checkBillTo(o.bill_to, vatTreatment) : null;
   const same = before?.template === o.template && before?.language === o.language;
   const unit =
     o.template === "subscription" ? SUBSCRIPTION_UNIT[o.billing_unit ?? "seat"][o.language] : null;
-  const items = o.items.map((i) => (i.unit || !unit ? i : { ...i, unit }));
+  // Only the seat line counts seats (or months): the first charged line. Onboarding, a
+  // discount or an included line counts nothing, so it prints its quantity alone.
+  const seatLine = o.items.findIndex(charged);
+  const items = o.items.map((i, n) => (i.unit || !unit || n !== seatLine ? i : { ...i, unit }));
   return {
     vat_treatment: vatTreatment,
     ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
     ...(amendments.length && { amendments }),
     ...(o.processing_terms && { processing_terms: o.processing_terms }),
     ...(o.customer_reference && { customer_reference: o.customer_reference }),
+    ...(billTo && { bill_to: billTo }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -634,6 +643,7 @@ export async function updateOffer(
         input.customer_reference === undefined
           ? before.customer_reference
           : input.customer_reference,
+      bill_to: input.bill_to === undefined ? before.bill_to : input.bill_to,
     },
     words,
     before,

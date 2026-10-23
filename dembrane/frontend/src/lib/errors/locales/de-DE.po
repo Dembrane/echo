@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} muss ein gültiges Datum sein, nicht in der Zukunft und nicht vor dem Versand des Dokuments."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} ist ein Unternehmen in einem anderen EU-Land. Wähle Reverse Charge."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} sitzt in der EU, daher gilt Außerhalb der EU nicht."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} sitzt in den Niederlanden. Wähle niederländische MwSt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} sitzt außerhalb der EU, daher gilt Reverse Charge nicht."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} sieht nicht wie eine USt-IdNr. aus {country} aus."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Das Bild Ihrer Initialen} other {Das Bild Ihrer Unterschrift}} ist zu groß. Bitte unter 512 KB halten."
@@ -127,6 +152,11 @@ msgstr "Canvases sind für dieses Projekt nicht aktiviert."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Überprüfen Sie dieses Feld und versuchen Sie es erneut."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Wähle das Land der Organisation, die die Rechnung erhält."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "Der Schnellzugriff fasst bis zu {max} Vorlagen. Entfernen Sie zuerst ein
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Das Entfernen des dembrane-Logos ist Teil des Changemaker-Tarifs. Führen Sie ein Upgrade durch, um es zu nutzen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Für Reverse Charge wird die USt-IdNr. von {name} benötigt."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} doit être une vraie date, pas dans le futur et pas avant l'envoi du document."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} est une entreprise d'un autre pays de l'UE. Choisissez l'autoliquidation."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} est dans l'UE, donc Hors de l'UE ne s'applique pas."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} est aux Pays-Bas. Choisissez la TVA néerlandaise."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} est hors de l'UE, donc l'autoliquidation ne s'applique pas."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} ne ressemble pas à un numéro de TVA de {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'image de vos initiales} other {L'image de votre signature}} est trop volumineuse. Elle doit faire moins de 512 Ko."
@@ -127,6 +152,11 @@ msgstr "Les canevas ne sont pas activés pour ce projet."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Vérifiez ce champ et réessayez."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Choisissez le pays de l'organisation facturée."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "L'accès rapide peut contenir jusqu'à {max} modèles. Retirez-en un d'a
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "La suppression de la marque dembrane est incluse dans le forfait Changemaker. Changez de forfait pour l'utiliser."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "L'autoliquidation nécessite le numéro de TVA de {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

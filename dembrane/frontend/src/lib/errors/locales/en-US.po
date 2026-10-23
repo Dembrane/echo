@@ -29,6 +29,31 @@ msgid "error.document.field_date_invalid"
 msgstr "{label} must be a real date, not in the future and not before the document was sent."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} is a business elsewhere in the EU. Choose reverse charge."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} is in the EU, so Outside the EU does not apply."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} is in the Netherlands. Choose Dutch VAT."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} is outside the EU, so reverse charge does not apply."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} does not look like a VAT number from {country}."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Your initials image} other {Your signature image}} is too large. Keep it under 512 KB."
@@ -127,6 +152,11 @@ msgstr "Canvases are not switched on for this project."
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
 msgstr "Check this field and try again."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Choose the country of the organisation that is invoiced."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
@@ -442,6 +472,11 @@ msgstr "Quick access holds up to {max} templates. Remove one first."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Removing the dembrane mark is part of the Changemaker plan. Upgrade to use it."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Reverse charge needs the VAT number of {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27

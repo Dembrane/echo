@@ -395,7 +395,7 @@ run("an offer draft, and the invoice request after the signature", () => {
           country_code: "NL",
         },
       },
-      invoice: { vat_treatment: "standard", po_number: "PO-77" },
+      invoice: { vat_treatment: "standard", po_number: "PO-77", bill_to: false },
       links: {
         account: `https://dash.test/admin/accounts/${org}`,
         document: `https://dash.test/admin/accounts/${org}/documents/${docId}`,
@@ -1211,5 +1211,183 @@ run("an offer draft, and the invoice request after the signature", () => {
     );
     expect(pricedIncluded.status).toBe(422);
     expect(JSON.stringify(pricedIncluded.data)).toContain("included at no charge");
+  });
+
+  test("an offer invoiced to another party: printed, carried by the request in place of the customer's details, which it does not wait for", async () => {
+    const org = await freshOrg("Gemeente Derde BV");
+    const party = {
+      name: "Voorbeeld Evenementen BV",
+      address: "Kade 4",
+      postal_code: "3011 AA",
+      city: "Rotterdam",
+      country_code: "nl",
+      vat_id: "nl 1234.56789.b01",
+      email: "facturen@voorbeeld.example",
+      reference: "PRJ-2026-14",
+    };
+    const doc = await draft(org, { reference: "OFFER-BT1", bill_to: party });
+    expect(doc.content?.bill_to).toEqual({
+      ...party,
+      country_code: "NL",
+      vat_id: "NL123456789B01",
+    });
+    expect(doc.body).toContain(
+      "## Invoiced to\nVoorbeeld Evenementen BV\nKade 4\n3011 AA Rotterdam",
+    );
+    expect(doc.body).toContain("VAT NL123456789B01");
+    expect(doc.body).toContain("Reference: PRJ-2026-14");
+
+    // A change that leaves it out keeps it; null drops it and a value sets it again.
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.bill_to?.name).toBe("Voorbeeld Evenementen BV");
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", bill_to: null }))).data,
+    );
+    expect(dropped.content?.bill_to).toBeUndefined();
+    expect(dropped.body).not.toContain("Invoiced to");
+    await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", bill_to: party }));
+
+    // Signed with its DPA, and the customer never saved billing details: the request goes.
+    await send(doc.id, org);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["dpa"] }]);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(await store.billing(w.db, org).then((b) => b?.billing_legal_name ?? null)).toBeNull();
+    expect(requestedFor(org)).toHaveLength(1);
+    expect(requestedFor(org)[0]).toMatchObject({
+      org: { id: org, name: "Gemeente Derde BV" },
+      document: { id: doc.id, reference: "OFFER-BT1" },
+      billing: {
+        legal_name: "Voorbeeld Evenementen BV",
+        vat_id: "NL123456789B01",
+        no_vat_number: false,
+        billing_email: "facturen@voorbeeld.example",
+        po_number: "PRJ-2026-14",
+        invoice_delivery: "email",
+        address: {
+          line1: "Kade 4",
+          postal_code: "3011 AA",
+          city: "Rotterdam",
+          country: "Netherlands",
+          country_code: "NL",
+        },
+      },
+      invoice: { po_number: "PRJ-2026-14", bill_to: true },
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data);
+    expect(card.invoice_waits).toEqual([]);
+    expect(card.organisation.deal_stage).toBe("offer_accepted");
+  });
+
+  test("the VAT choice is judged on the party invoiced, and one that contradicts its country is refused", async () => {
+    const org = await freshOrg("Gemeente Btw BV");
+    const zero = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 0 },
+    ];
+    const party = (over: Record<string, unknown>) => ({
+      name: "Voorbeeld Partner",
+      address: "Rue 1",
+      postal_code: "1000",
+      city: "Brussel",
+      country_code: "BE",
+      vat_id: "BE0123456789",
+      email: "factuur@partner.example",
+      ...over,
+    });
+    const attempt = async (n: number, vat_treatment: string, over: Record<string, unknown>) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({
+          send: false,
+          reference: `OFFER-BTV${n}`,
+          vat_treatment,
+          ...(vat_treatment === "standard" ? {} : { items: zero }),
+          bill_to: party(over),
+        }),
+      );
+      return r.status === 201 ? "ok" : `${r.status} ${(r.data as { detail: string }).detail}`;
+    };
+    expect(await attempt(1, "standard", { country_code: "NL", vat_id: null })).toBe("ok");
+    expect(await attempt(2, "reverse_charge", { country_code: "NL", vat_id: null })).toBe(
+      "422 Voorbeeld Partner is in the Netherlands: choose Dutch VAT",
+    );
+    expect(await attempt(3, "standard", {})).toBe(
+      "422 Voorbeeld Partner is a business elsewhere in the EU: choose reverse charge",
+    );
+    expect(await attempt(4, "reverse_charge", {})).toBe("ok");
+    expect(await attempt(5, "reverse_charge", { vat_id: null })).toBe(
+      "422 Reverse charge needs the VAT number of Voorbeeld Partner",
+    );
+    expect(await attempt(6, "standard", { vat_id: null })).toBe("ok");
+    expect(await attempt(7, "outside_eu", { country_code: "DE", vat_id: null })).toBe(
+      "422 Voorbeeld Partner is in the EU: outside the EU does not apply",
+    );
+    expect(await attempt(8, "reverse_charge", { country_code: "US", vat_id: "12-3456789" })).toBe(
+      "422 Voorbeeld Partner is outside the EU: reverse charge does not apply",
+    );
+    expect(await attempt(9, "outside_eu", { country_code: "US", vat_id: null })).toBe("ok");
+    expect(await attempt(10, "reverse_charge", { vat_id: "BE12" })).toBe(
+      "422 BE12 does not look like a VAT number from Belgium",
+    );
+    expect(await attempt(11, "standard", { country_code: "XX" })).toBe(
+      "422 Choose the country of the organisation that is invoiced",
+    );
+
+    // A change of the VAT choice alone is judged again on the party the draft keeps.
+    const ok = await draft(org, { reference: "OFFER-BTV12", bill_to: party({ vat_id: null }) });
+    const changed = await call(
+      w,
+      "PUT",
+      `${S(org)}/offers/${ok.id}`,
+      "staff",
+      offer({ reference: "OFFER-BTV12", vat_treatment: "reverse_charge", items: zero }),
+    );
+    expect(changed.status).toBe(422);
+    expect((changed.data as { detail: string }).detail).toBe(
+      "Reverse charge needs the VAT number of Voorbeeld Partner",
+    );
+  });
+
+  test("on a subscription only the seat line counts seats: other lines print their quantity alone", async () => {
+    const org = await freshOrg("Gemeente Stoel BV");
+    const doc = await draft(org, {
+      reference: "OFFER-SEAT",
+      items: [
+        {
+          description: "Changemaker seat",
+          quantity: 3,
+          unit_price_cents: 8600,
+          vat_rate_bps: 2100,
+        },
+        {
+          description: "Onboarding",
+          quantity: 1,
+          unit_price_cents: 0,
+          vat_rate_bps: 2100,
+          kind: "included",
+        },
+        { description: "Training", quantity: 1, unit_price_cents: 67500, vat_rate_bps: 2100 },
+        {
+          description: "Extra hours",
+          quantity: 8,
+          unit: "hours",
+          unit_price_cents: 12500,
+          vat_rate_bps: 2100,
+        },
+      ],
+    });
+    expect(doc.content?.items.map((i) => i.unit ?? null)).toEqual(["seats", null, null, "hours"]);
+    expect(doc.body).toContain("| Changemaker seat | 3 seats |");
+    expect(doc.body).toContain("| Onboarding | 1 |  | Included |");
+    expect(doc.body).toContain("| Training | 1 |");
+    expect(doc.body).not.toContain("1 seats");
   });
 });

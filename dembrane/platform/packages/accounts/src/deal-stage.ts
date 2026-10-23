@@ -26,7 +26,10 @@ export type StageDocument = Pick<
   DocumentRow,
   "kind" | "status" | "createdAt" | "sentAt" | "signedAt" | "dpaTextId" | "invoiceStatus"
 > &
-  Partial<Pick<DocumentRow, "id" | "supersedesId">>;
+  Partial<Pick<DocumentRow, "id" | "supersedesId" | "content">> & {
+    /** The offer names another party to invoice; read from `content` when that is loaded. */
+    readonly billsOther?: boolean;
+  };
 
 export interface StageFacts {
   /** The organisation is managed as an account (it has a stage of its own). */
@@ -72,7 +75,10 @@ export function dealStage(f: StageFacts): DealStage | null {
       x.dpaTextId === offer.dpaTextId &&
       (x.status === "sent" || x.status === "viewed"),
   );
-  if (!f.billingComplete || dpaOpen) return "offer_sent";
+  // Invoiced to another party: the offer names who pays, so the customer's details are not awaited.
+  const billsOther =
+    offer.billsOther ?? Boolean((offer.content as { bill_to?: unknown } | null)?.bill_to);
+  if ((!f.billingComplete && !billsOther) || dpaOpen) return "offer_sent";
   // An invoice belongs to this offer when it came after the signature.
   const invoices = f.documents.filter(
     (x) =>

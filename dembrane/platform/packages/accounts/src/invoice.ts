@@ -1,3 +1,4 @@
+import { billToPayload } from "./bill-to";
 import type { AccountsDeps, Conn } from "./deps";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
 import { accountPageUrl, dashboardBase } from "./jobs";
@@ -33,8 +34,9 @@ export function invoiceWaits(
   docs: readonly DocumentRow[],
 ): InvoiceWait[] {
   const waits: InvoiceWait[] = [];
-  if (!billingComplete(billing)) waits.push("billing_details");
   const content = offer.content as OfferContent | null;
+  // Invoiced to another party: the offer carries everything about who pays.
+  if (!content?.bill_to && !billingComplete(billing)) waits.push("billing_details");
   // The customer's own processing terms stand in for our DPA: there is none to wait for.
   const separate =
     !content?.processing_terms && (Boolean(content?.dpa_separate) || !sig.dpaAuthorised);
@@ -119,7 +121,7 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
         org: orgPayload(org),
         document: documentPayload(doc),
         signature: signaturePayload(sig, signedPdf),
-        billing: billingPayload(billing),
+        billing: invoicedParty(doc, billing),
         invoice: invoicePayload(doc, billing, signedReference(await store.fields(tx, doc.id), sig)),
         links: {
           /** The organisation's card in the staff console, as a dashboard address. */
@@ -160,13 +162,29 @@ export function invoicePayload(
   signed: string | null,
 ) {
   const content = doc.content as OfferContent | null;
+  const other = content?.bill_to;
   return {
     language: doc.language,
     vat_treatment: content?.vat_treatment ?? "standard",
-    po_number: signed ?? content?.customer_reference ?? billing?.po_number ?? null,
+    // Another party pays: its own reference comes first, and the customer's billing PO
+    // belongs to the customer's orders, never on this invoice.
+    po_number: other
+      ? (other.reference ?? signed ?? content?.customer_reference ?? null)
+      : (signed ?? content?.customer_reference ?? billing?.po_number ?? null),
+    /** True when `billing` is a party named on the offer, not the customer's own details. */
+    bill_to: Boolean(other),
     // What is invoiced: optional and included lines were shown, never charged.
     items: (content?.items ?? []).filter(charged),
   };
+}
+
+/**
+ * Who the invoice is addressed to, in one shape: the party the offer names when another one
+ * pays, else the customer's own billing details.
+ */
+export function invoicedParty(doc: DocumentRow, billing: BillingRow | null) {
+  const other = (doc.content as OfferContent | null)?.bill_to;
+  return other ? billToPayload(other) : billingPayload(billing);
 }
 
 /** The organisation's card in the staff console. */

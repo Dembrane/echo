@@ -243,6 +243,23 @@ export const OfferAmendment = z.object({
   body: text(4000),
 });
 
+/**
+ * Who is invoiced when it is not the customer: an agency, a sponsor, the customer's other
+ * entity. As the offer stores it: the VAT number cleaned, empty values null.
+ */
+export const BillTo = z.object({
+  name: z.string(),
+  address: z.string(),
+  postal_code: z.string().nullable(),
+  city: z.string(),
+  /** ISO 3166-1 alpha-2. */
+  country_code: z.string(),
+  vat_id: z.string().nullable(),
+  email: z.string(),
+  /** Their own reference for the invoice: a PO, project code or cost centre. */
+  reference: z.string().nullable(),
+});
+
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
   template: OfferTemplate,
@@ -270,6 +287,8 @@ export const OfferContent = z.object({
   processing_terms: z.string().optional(),
   /** The customer's PO or reference for this offer, printed beside ours. */
   customer_reference: z.string().optional(),
+  /** Who is invoiced in place of the customer, printed as "Invoiced to". */
+  bill_to: BillTo.optional(),
 });
 
 export const LegalPin = z.object({
@@ -872,6 +891,29 @@ export const PushOfferRequest = z.object({
    * the draft's and null drops it.
    */
   customer_reference: z.string().trim().max(64).nullable().optional(),
+  /**
+   * Who is invoiced when it is not the customer (an agency, a sponsor, a shared service
+   * centre): printed on the offer as "Invoiced to", and carried by the invoice request as its
+   * `billing` in place of the customer's details, which it then does not wait for. The VAT
+   * treatment is judged on this party: one that contradicts its country answers 422
+   * `offer.bill_to_*`. Its `reference` goes on the invoice before any other. On a change,
+   * absent keeps the draft's and null drops it.
+   */
+  bill_to: z
+    .object({
+      name: text(200),
+      address: text(200),
+      postal_code: optText(20),
+      city: text(100),
+      /** ISO 3166-1 alpha-2. */
+      country_code: z.string().trim().length(2),
+      /** Absent: they have none. Cleaned and checked against the country's format. */
+      vat_id: optText(32),
+      email: z.email().max(255),
+      reference: optText(64),
+    })
+    .nullable()
+    .optional(),
   /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.

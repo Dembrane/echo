@@ -700,6 +700,18 @@ function clause(s: Sheet, l: OfferLayout) {
   for (const p of closing) s.para(small(p, { before: 6 }));
 }
 
+/**
+ * Who the invoice goes to when it is not the customer: under the totals, where the reader
+ * has just seen what is paid, a heading and the party one line each.
+ */
+function billing(s: Sheet, l: OfferLayout) {
+  if (!l.billTo) return;
+  s.room(40 + 16 * l.billTo.lines.length);
+  s.para({ runs: runs(l.billTo.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 4 });
+  for (const line of l.billTo.lines) s.para({ runs: runs(line, BODY), leading: BODY_LEADING });
+  s.done(36);
+}
+
 /** The one layout of an offer; `l` carries the words of its template and language. */
 function draw(s: Sheet, l: OfferLayout) {
   heading(s, l.kind, l.title, T.display);
@@ -717,6 +729,7 @@ function draw(s: Sheet, l: OfferLayout) {
     else s.para(text(p, { before: i === 0 ? 8 : 6 }));
   });
   lines(s, l);
+  billing(s, l);
   amendments(s, l);
   // An empty line is the space above the sign-off ("Best regards," and the team).
   l.closing.forEach((line, i) => {
