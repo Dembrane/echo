@@ -746,7 +746,9 @@ async function sendOfferIn(
     documentId: docId,
     createdBy: who.directusUserId,
   });
-  await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  // Invoiced to another party: the offer names who pays, so the customer is not asked for
+  // billing details nobody would use. Their next offer without a paying party asks.
+  if (!content?.bill_to) await ensureBillingTask(d, tx, orgId, who.directusUserId);
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
   if (content?.dpa_separate && !content.processing_terms)

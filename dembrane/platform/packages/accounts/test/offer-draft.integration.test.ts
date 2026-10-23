@@ -1252,8 +1252,12 @@ run("an offer draft, and the invoice request after the signature", () => {
     await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", bill_to: party }));
 
     // Signed with its DPA, and the customer never saved billing details: the request goes.
+    // Nobody asks the customer for billing details: the offer says who pays.
     await send(doc.id, org);
+    const kinds = async () => (await store.tasks(w.db, org)).map((t) => t.kind);
+    expect(await kinds()).not.toContain("billing_details");
     expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await kinds()).not.toContain("billing_details");
     expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["dpa"] }]);
     const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
     expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
@@ -1282,6 +1286,41 @@ run("an offer draft, and the invoice request after the signature", () => {
     const card = K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data);
     expect(card.invoice_waits).toEqual([]);
     expect(card.organisation.deal_stage).toBe("offer_accepted");
+
+    // The customer's next offer, which they pay themselves, asks for their details again.
+    const own = await draft(org, { reference: "OFFER-BT2" });
+    await send(own.id, org);
+    const task = (await store.tasks(w.db, org)).find((t) => t.kind === "billing_details");
+    expect(task?.status).toBe("locked");
+    expect((await sign(own.id, "outsider", org)).status).toBe(200);
+    expect((await store.taskById(w.db, task?.id as string))?.status).toBe("open");
+  });
+
+  test("a customer's billing details task waiting from the start stays locked when another party pays", async () => {
+    const org = await freshOrg("Gemeente Wacht BV");
+    expect((await call(w, "POST", `${S(org)}/enable`, "staff", { stage: "customer" })).status).toBe(
+      200,
+    );
+    const doc = await draft(org, {
+      reference: "OFFER-BT3",
+      bill_to: {
+        name: "Voorbeeld Sponsor",
+        address: "Laan 2",
+        city: "Utrecht",
+        country_code: "NL",
+        email: "factuur@sponsor.example",
+      },
+    });
+    await send(doc.id, org);
+    const before = (await store.tasks(w.db, org)).filter((t) => t.kind === "billing_details");
+    expect(before.map((t) => t.status)).toEqual(["locked"]);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const after = (await store.tasks(w.db, org)).filter((t) => t.kind === "billing_details");
+    expect(after.map((t) => t.status)).toEqual(before.map(() => "locked"));
+    // Its page does not say it waits for the offer another party pays for.
+    const page = K.AccountPage.parse((await call(w, "GET", C(org), "outsider")).data);
+    for (const t of page.tasks.filter((x) => x.kind === "billing_details"))
+      expect(t.locked_until_document_id ?? null).not.toBe(doc.id);
   });
 
   test("the VAT choice is judged on the party invoiced, and one that contradicts its country is refused", async () => {

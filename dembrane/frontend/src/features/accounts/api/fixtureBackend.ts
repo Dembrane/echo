@@ -508,6 +508,8 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 
 /** The locked billing details step that comes with a sent offer, named after it. */
 function billingStepFor(s: Store, d: DocumentDetailT) {
+	// Another party pays: nobody asks the customer for billing details.
+	if (d.content?.bill_to) return;
 	const billing = s.tasks.find(
 		(x) => x.kind === "billing_details" && x.status === "locked",
 	);
