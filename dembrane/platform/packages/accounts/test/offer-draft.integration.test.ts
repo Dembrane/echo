@@ -56,12 +56,13 @@ run("an offer draft, and the invoice request after the signature", () => {
       (await call(w, "POST", `${S(org)}/documents/${docId}/send`, "staff", body)).data,
     );
 
-  /** Signs as the organisation's admin, filling every field. */
+  /** Signs as the organisation's admin, filling every field but the optional reference. */
   async function sign(
     docId: string,
     as: keyof World["people"] = "admin",
     org = w.orgId,
     dpaAuthorised = true,
+    reference?: string,
   ) {
     const detail = K.DocumentDetail.parse(
       (await call(w, "GET", `${C(org)}/documents/${docId}`, as)).data,
@@ -73,7 +74,9 @@ run("an offer draft, and the invoice request after the signature", () => {
       else if (f.kind === "date")
         values[f.id] = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
       else if (f.kind === "checkbox") values[f.id] = true;
-      else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
+      else if (f.kind === "text" && f.key === "po_number") {
+        if (reference !== undefined) values[f.id] = reference;
+      } else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
     }
     const confirmation_text = (
       (dpaAuthorised
@@ -1058,5 +1061,86 @@ run("an offer draft, and the invoice request after the signature", () => {
     ]);
     const doc = await draft(made.org_id, { reference: "OFFER-NEW" });
     expect(doc.status).toBe("draft");
+  });
+
+  test("an offer carries the customer's reference: printed, offered to the signer, and on its invoice before the billing PO", async () => {
+    const org = w.otherOrgId;
+    const requested = () => inbox("echo_account_invoice_requested_v1");
+    const lastInvoice = () =>
+      (requested().at(-1) as { invoice: { po_number: string | null } }).invoice;
+    const signedValue = async (docId: string) => {
+      const fields = await store.fields(w.db, docId);
+      const sig = await store.signatureOf(w.db, docId);
+      const id = fields.find((f) => f.key === "po_number")?.id as string;
+      return (sig?.fieldValues as Record<string, unknown> | undefined)?.[id];
+    };
+
+    // Set by staff, printed on the offer, and offered to the signer to confirm.
+    const a = await draft(org, { reference: "OFFER-PO1", customer_reference: "PO-4500-01" });
+    expect(a.content?.customer_reference).toBe("PO-4500-01");
+    expect(a.body).toContain("Your reference: PO-4500-01");
+    expect(a.fields.find((f) => f.key === "po_number")?.required).toBe(false);
+    // A change that leaves it out keeps it; null drops it; a value sets it again.
+    const path = `${S(org)}/offers/${a.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: null, person_name: "Bo" }))).data,
+    );
+    expect(kept.content?.customer_reference).toBe("PO-4500-01");
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: null, customer_reference: null })))
+        .data,
+    );
+    expect(dropped.content?.customer_reference).toBeUndefined();
+    expect(dropped.body).not.toContain("Your reference: ");
+    await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: null, customer_reference: "PO-4500-01" }),
+    );
+    await send(a.id, org);
+    const seen = K.DocumentDetail.parse(
+      (await call(w, "GET", `${C(org)}/documents/${a.id}`, "outsider")).data,
+    );
+    expect(seen.prefill.po_number).toBe("PO-4500-01");
+
+    // Confirmed at signing: frozen with the signature and on the invoice request.
+    const before = requested().length;
+    expect((await sign(a.id, "outsider", org, true, "PO-4500-01")).status).toBe(200);
+    expect(requested()).toHaveLength(before + 1);
+    expect(lastInvoice().po_number).toBe("PO-4500-01");
+    expect(await signedValue(a.id)).toBe("PO-4500-01");
+
+    // A second offer for the same organisation keeps its own reference, and the signer's
+    // change wins over the one staff typed.
+    const b = await draft(org, { reference: "OFFER-PO2", customer_reference: "PO-4500-02" });
+    await send(b.id, org);
+    expect((await sign(b.id, "outsider", org, true, "PO-4500-02/1")).status).toBe(200);
+    expect(lastInvoice().po_number).toBe("PO-4500-02/1");
+    expect(await signedValue(b.id)).toBe("PO-4500-02/1");
+    const docs = await store.documents(w.db, org);
+    const refOf = (r: string) =>
+      (docs.find((d) => d.reference === r)?.content as { customer_reference?: string } | undefined)
+        ?.customer_reference;
+    expect([refOf("OFFER-PO1"), refOf("OFFER-PO2")]).toEqual(["PO-4500-01", "PO-4500-02"]);
+
+    // A signer who fills one in where staff gave none: theirs goes on the invoice.
+    const c = await draft(org, { reference: "OFFER-PO3" });
+    await send(c.id, org);
+    const blank = K.DocumentDetail.parse(
+      (await call(w, "GET", `${C(org)}/documents/${c.id}`, "outsider")).data,
+    );
+    expect(blank.prefill.po_number).toBeNull();
+    expect((await sign(c.id, "outsider", org, true, "ORDER-77")).status).toBe(200);
+    expect(lastInvoice().po_number).toBe("ORDER-77");
+
+    // With none on the offer and none at signing, the organisation's billing PO stands in.
+    const onFile = (await store.billing(w.db, org))?.po_number;
+    expect(onFile).toBeTruthy();
+    const e = await draft(org, { reference: "OFFER-PO4" });
+    await send(e.id, org);
+    expect((await sign(e.id, "outsider", org)).status).toBe(200);
+    expect(lastInvoice().po_number).toBe(onFile as string);
   });
 });

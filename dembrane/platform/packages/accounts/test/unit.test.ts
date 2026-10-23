@@ -215,6 +215,33 @@ describe("the offer", () => {
     expect(fitsVatTreatment("standard", zero)).toBe(true);
   });
 
+  test("a customer reference prints beside ours, and the signer is asked for it, optionally", async () => {
+    const en = layoutOffer(offer({ customer_reference: "PO 4500135224" }));
+    expect(en.facts.at(-1)).toEqual(["Your reference", "PO 4500135224"]);
+    expect(offerText(offer({ customer_reference: "PO 4500135224" }))).toContain(
+      "Your reference: PO 4500135224",
+    );
+    const nl = layoutOffer(offer({ language: "nl", customer_reference: "B-2026-1" }));
+    expect(nl.facts.at(-1)).toEqual(["Uw referentie", "B-2026-1"]);
+    // Without one the facts are as before.
+    expect(layoutOffer(offer()).facts.map(([k]) => k)).toEqual([
+      "Reference",
+      "Date",
+      "Valid until",
+    ]);
+    const field = (await offerPdf(offer())).fields.find((f) => f.key === "po_number");
+    expect([field?.kind, field?.required]).toEqual(["text", false]);
+    // A long reference beside the attention line still fits the page.
+    const long = await offerPdf(
+      offer({
+        template: "event",
+        attention: "Afdeling Inkoop en Aanbesteding",
+        customer_reference: "SAP1260013012-KOSTENPLAATS-4471-PROJECT-88",
+      }),
+    );
+    expect(long.pageCount).toBeGreaterThan(0);
+  });
+
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {
     const r = await offerPdf(offer({ language: "nl" }));
     expect(r.fields.map((f) => f.kind)).toEqual([
@@ -223,6 +250,7 @@ describe("the offer", () => {
       "text",
       "text",
       "role",
+      "text",
       "date",
       "signature",
     ]);

@@ -53,7 +53,7 @@ run("signing follows the review", () => {
       if (f.kind === "name") values[f.id] = "Anna de Vries";
       else if (f.kind === "role") values[f.id] = "Wethouder";
       else if (f.kind === "date") values[f.id] = date;
-      else if (f.kind === "text")
+      else if (f.kind === "text" && f.key !== "po_number")
         values[f.id] = f.key === "organisation" ? "Gemeente Testdorp" : "Dorpsstraat 1, Testdorp";
     }
     const confirmation_text = (detail.confirmation?.dpa_authorised ?? "")

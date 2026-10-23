@@ -70,7 +70,8 @@ run("accounts routes against Postgres", () => {
       else if (f.kind === "role") values[f.id] = "Wethouder";
       else if (f.kind === "date") values[f.id] = "28-09-2026";
       else if (f.kind === "checkbox") values[f.id] = true;
-      else if (f.kind === "text")
+      // The reference is optional and left empty here; offer-draft tests fill it.
+      else if (f.kind === "text" && f.key !== "po_number")
         values[f.id] =
           f.key === "organisation"
             ? "Gemeente Testdorp"
@@ -216,6 +217,7 @@ run("accounts routes against Postgres", () => {
       "text",
       "text",
       "role",
+      "text",
       "date",
       "signature",
     ]);
@@ -1107,6 +1109,7 @@ run("accounts routes against Postgres", () => {
     ).toEqual({
       organisation: "Gemeente Testdorp",
       address: "Dorpsstraat 1, 1234 AB Testdorp, Nederland",
+      po_number: null,
     });
   });
 

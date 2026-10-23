@@ -49,9 +49,9 @@ import { type PageBox, PdfPages } from "../pdf/PdfPages";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
+	documentDate,
 	fillConfirmation,
 	type Images,
-	documentDate,
 	inputDate,
 	isFilled,
 	localIsoDate,
@@ -277,8 +277,9 @@ function MaybeWaiting({
 const HEADER_HEIGHT = 50;
 
 /**
- * The signer's own values to start from: today's date, and the organisation and address
- * when we know them. Their name follows once their profile has loaded.
+ * The signer's own values to start from: today's date, the organisation and address when
+ * we know them, and the reference the offer carries, to confirm or change. Their name
+ * follows once their profile has loaded.
  */
 const initialValues = (doc: DocumentDetailT): Values => {
 	const initial: Values = {};
@@ -292,6 +293,8 @@ const initialValues = (doc: DocumentDetailT): Values => {
 			initial[f.id] = doc.prefill.organisation;
 		if (f.kind === "text" && f.key === "address" && doc.prefill.address)
 			initial[f.id] = doc.prefill.address;
+		if (f.kind === "text" && f.key === "po_number" && doc.prefill.po_number)
+			initial[f.id] = doc.prefill.po_number;
 	}
 	return initial;
 };

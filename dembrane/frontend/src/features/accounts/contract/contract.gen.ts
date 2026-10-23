@@ -263,6 +263,8 @@ export const OfferContent = z.object({
   dpa_separate: z.boolean().optional(),
   /** The customer's own terms for data processing, named in place of our DPA. */
   processing_terms: z.string().optional(),
+  /** The customer's PO or reference for this offer, printed beside ours. */
+  customer_reference: z.string().optional(),
 });
 
 export const LegalPin = z.object({
@@ -350,9 +352,15 @@ export const DocumentDetail = DocumentSummary.extend({
   signature: Signature.nullable(),
   /**
    * What the signing screen fills in for the `organisation` and `address` text fields: the
-   * billed name (else the organisation's) and the billing address, null when unknown.
+   * billed name (else the organisation's) and the billing address, null when unknown; and
+   * for the `po_number` field the reference the offer carries, never the billing PO, which
+   * may belong to another order.
    */
-  prefill: z.object({ organisation: z.string().nullable(), address: z.string().nullable() }),
+  prefill: z.object({
+    organisation: z.string().nullable(),
+    address: z.string().nullable(),
+    po_number: z.string().nullable(),
+  }),
   /** How the caller reaches it: as a member, as the named signer, or as staff. */
   access: z.enum(["member", "signer", "staff"]),
   /**
@@ -852,6 +860,13 @@ export const PushOfferRequest = z.object({
    * nobody is asked who signs it. On a change, absent keeps the draft's line and null drops it.
    */
   processing_terms: z.string().trim().max(500).nullable().optional(),
+  /**
+   * The customer's purchase order or reference for this offer ("PO 4500135224"), printed
+   * beside ours and asked again, filled in, when they sign; what they sign goes on the
+   * invoice, before the PO in the organisation's billing details. On a change, absent keeps
+   * the draft's and null drops it.
+   */
+  customer_reference: z.string().trim().max(64).nullable().optional(),
   /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.

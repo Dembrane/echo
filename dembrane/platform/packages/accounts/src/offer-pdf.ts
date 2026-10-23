@@ -14,9 +14,9 @@ import type { PlacedField, RenderedPdf } from "./pdf";
  * language choose the words (offer.ts), never the layout.
  *
  * Page one reads top to bottom: the wordmark, what this is and its title, the facts in a
- * ruled row (reference, date, valid until), the greeting, the lines table ruled above and
- * below with the numbers right-aligned, and subtotal, VAT and total with the total the
- * largest number on the page. The acceptance starts its own page: labelled lines to write
+ * ruled row (reference, date, valid until, and the customer's own reference when given),
+ * the greeting, the lines table ruled above and below with the numbers right-aligned, and
+ * subtotal, VAT and total with the total the largest number on the page. The acceptance starts its own page: labelled lines to write
  * on, which become the fields, then the incorporation clause. dembrane's company details
  * and the page number sit in the footer of every page.
  *
@@ -482,21 +482,47 @@ function heading(s: Sheet, kind: string | null, title: string, size: number) {
   s.para({ runs: runs(title, { s: size, c: TEXT }), leading: brand.type.leading.title });
 }
 
-/** The facts in one row ruled above and below: label over value, in equal columns. */
+/**
+ * The facts ruled above and below: label over value, in equal columns while every one fits
+ * its column. When one does not (a long customer reference), each column takes what it needs
+ * plus an equal share of what is left, and facts that still do not fit go to a second row.
+ */
 function facts(s: Sheet, l: OfferLayout) {
   s.gap(20);
   const height = 44;
-  s.room(height);
+  const GAP = 12;
+  const need = ([label, value]: readonly [string, string]) =>
+    Math.max(s.width(label, CAPTION.s), s.width(value, BODY.s)) + GAP;
+  const rows: (readonly [string, string])[][] = [[]];
+  let used = 0;
+  for (const f of l.facts) {
+    const row = rows[rows.length - 1] as (readonly [string, string])[];
+    if (row.length && used + need(f) > CONTENT_W) {
+      rows.push([f]);
+      used = need(f);
+    } else {
+      row.push(f);
+      used += need(f);
+    }
+  }
+  s.room(height * rows.length);
   const top = s.y;
   s.rule(MARGIN, RIGHT, top);
-  const col = CONTENT_W / l.facts.length;
-  l.facts.forEach(([label, value], i) => {
-    const x = MARGIN + i * col;
-    s.at(label, x, top + 9, CAPTION);
-    s.at(value, x, top + 23, BODY);
+  rows.forEach((row, r) => {
+    const y = top + r * height;
+    if (r) s.rule(MARGIN, RIGHT, y);
+    const equal = CONTENT_W / row.length;
+    const fits = row.every((f) => need(f) <= equal);
+    const spare = CONTENT_W - row.reduce((sum, f) => sum + need(f), 0);
+    let x = MARGIN;
+    for (const f of row) {
+      s.at(f[0], x, y + 9, CAPTION);
+      s.at(f[1], x, y + 23, BODY);
+      x += fits ? equal : need(f) + spare / row.length;
+    }
   });
-  s.rule(MARGIN, RIGHT, top + height);
-  s.y = top + height;
+  s.rule(MARGIN, RIGHT, top + height * rows.length);
+  s.y = top + height * rows.length;
   s.done(28);
 }
 

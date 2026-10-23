@@ -5,6 +5,7 @@ import type { OfferContent } from "./offer";
 import {
   type BillingRow,
   type DocumentRow,
+  type FieldRow,
   type OrgRow,
   type SignatureRow,
   store,
@@ -118,7 +119,7 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
         document: documentPayload(doc),
         signature: signaturePayload(sig, signedPdf),
         billing: billingPayload(billing),
-        invoice: invoicePayload(doc, billing),
+        invoice: invoicePayload(doc, billing, signedReference(await store.fields(tx, doc.id), sig)),
         links: {
           /** The organisation's card in the staff console, as a dashboard address. */
           account: staffAccountUrl(d.settings.dashboardUrl, org.id),
@@ -136,18 +137,32 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
   return out;
 }
 
+/** The PO or reference the signer left in the offer's reference field, frozen with it. */
+export function signedReference(fields: readonly FieldRow[], sig: SignatureRow): string | null {
+  const field = fields.find((f) => f.kind === "text" && f.key === "po_number");
+  const value = field ? (sig.fieldValues as Record<string, unknown>)[field.id] : undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 /**
  * What Exact's invoice is made of, as the offer said it: its language, how VAT applies,
  * the customer's PO number, and the lines with the bullets under each (seats, months,
  * the period), which the invoice line carries as its extra description. The priced lines
  * and totals are on `document`; Exact rounds VAT per line the same way (money.ts).
+ *
+ * The PO is this offer's: what the signer confirmed, else what the offer carried, and only
+ * when it had none the organisation's billing PO, which a second order would otherwise reuse.
  */
-function invoicePayload(doc: DocumentRow, billing: BillingRow | null) {
+export function invoicePayload(
+  doc: DocumentRow,
+  billing: BillingRow | null,
+  signed: string | null,
+) {
   const content = doc.content as OfferContent | null;
   return {
     language: doc.language,
     vat_treatment: content?.vat_treatment ?? "standard",
-    po_number: billing?.po_number ?? null,
+    po_number: signed ?? content?.customer_reference ?? billing?.po_number ?? null,
     items: content?.items ?? [],
   };
 }
