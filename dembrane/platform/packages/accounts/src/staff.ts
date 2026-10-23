@@ -25,11 +25,14 @@ import {
   type OfferContent,
   type OfferItem,
   type OfferTemplate,
+  type OfferTemplateText,
+  type OfferText,
   offerText,
   offerTitle,
   offerTotals,
   validUntil,
 } from "./offer";
+import { type Change, draftText, templateText } from "./offer-template";
 import {
   ensureOnboardingTasks,
   isOnboardingCode,
@@ -323,6 +326,10 @@ export interface PushOfferInput {
   readonly currency: string;
   readonly date: string | null;
   readonly items: readonly OfferItem[];
+  /** Words over the template's; on a change absent keeps the draft's, null the template's. */
+  readonly text?: Change<OfferText> | null | undefined;
+  /** Absent: the template's; on a change, the draft's. */
+  readonly valid_days?: number | null | undefined;
   /** Absent means Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
   /** Subscription offers: absent means seats. */
@@ -369,7 +376,17 @@ async function supersede(
   return prev;
 }
 
-/** What an offer says, from what staff or sam gave and the legal texts in force. */
+/** What a subscription line counted before lines had units: seats unless billed per month. */
+const SUBSCRIPTION_UNIT: Record<BillingUnit, Record<Language, string>> = {
+  seat: { en: "seats", nl: "seats" },
+  month: { en: "months", nl: "maanden" },
+};
+
+/**
+ * What an offer says, from what staff or sam gave, the template's words and the legal texts
+ * in force. `before` is the draft being changed: its own words and validity stay unless the
+ * change gives others, or it moves to another template or language.
+ */
 function offerContent(
   d: AccountsDeps,
   pinned: Awaited<ReturnType<typeof legalForPush>>,
@@ -382,11 +399,15 @@ function offerContent(
     | "attention"
     | "currency"
     | "items"
+    | "text"
+    | "valid_days"
     | "vat_treatment"
     | "billing_unit"
     | "amendments"
     | "processing_terms"
   > & { date: string; reference: string },
+  words: OfferTemplateText,
+  before?: OfferContent,
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
   requireAmounts(o.items);
@@ -396,6 +417,10 @@ function offerContent(
   const amendments = o.amendments ?? [];
   if (amendments.length && o.template !== "custom")
     throw new ValidationError("offer.amendments_custom_only");
+  const same = before?.template === o.template && before?.language === o.language;
+  const unit =
+    o.template === "subscription" ? SUBSCRIPTION_UNIT[o.billing_unit ?? "seat"][o.language] : null;
+  const items = o.items.map((i) => (i.unit || !unit ? i : { ...i, unit }));
   return {
     vat_treatment: vatTreatment,
     ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
@@ -410,7 +435,11 @@ function offerContent(
     person_name: o.person_name,
     attention: o.attention,
     currency: o.currency,
-    valid_days: OFFER_VALID_DAYS,
+    text: draftText(words, same ? before?.text : undefined, o.text),
+    valid_days:
+      o.valid_days ??
+      (same && o.valid_days === undefined ? before?.valid_days : undefined) ??
+      words.valid_days,
     company: {
       name: d.settings.company.name,
       address: d.settings.company.address,
@@ -424,11 +453,9 @@ function offerContent(
       sla: pin(pinned.sla),
       dpa: pin(pinned.dpa),
     },
-    items: o.items,
+    items,
   };
 }
-
-const OFFER_VALID_DAYS = 14;
 
 /** The columns of an offer that follow from its content. */
 function offerColumns(content: OfferContent, pinned: Awaited<ReturnType<typeof legalForPush>>) {
@@ -485,7 +512,8 @@ export async function pushOffer(
   const id = ids.document ?? newId();
   const date = input.date ?? now.toISOString().slice(0, 10);
   const reference = input.reference ?? offerReference(date, id);
-  const content = offerContent(d, pinned, { ...input, date, reference });
+  const words = await templateText(d.db, input.template, input.language);
+  const content = offerContent(d, pinned, { ...input, date, reference }, words);
   // The PDF rendered now is what the customer sees and what a signature binds.
   const rendered = await offerPdf(content);
   const file = await storeRendered(d, org.id, id, rendered);
@@ -498,7 +526,7 @@ export async function pushOffer(
       id,
       orgId: org.id,
       kind: "offer",
-      title: input.title ?? offerTitle(content.template, content.language, content.reference),
+      title: input.title ?? offerTitle(content),
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
       ...offerColumns(content, pinned),
@@ -554,13 +582,20 @@ export async function updateOffer(
     logger: d.logger,
     now: d.now,
   });
-  const content = offerContent(d, pinned, {
-    ...input,
-    date: input.date ?? before.date,
-    reference: input.reference ?? before.reference,
-    processing_terms:
-      input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
-  });
+  const words = await templateText(d.db, input.template, input.language);
+  const content = offerContent(
+    d,
+    pinned,
+    {
+      ...input,
+      date: input.date ?? before.date,
+      reference: input.reference ?? before.reference,
+      processing_terms:
+        input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
+    },
+    words,
+    before,
+  );
   const rendered = await offerPdf(content);
   await d.db.transaction(async (tx) => {
     // Held while the PDF is replaced, so a send at the same moment cannot freeze half of it.
@@ -568,7 +603,7 @@ export async function updateOffer(
     if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
     const file = await storeRendered(d, doc.orgId, doc.id, rendered);
     await store.updateDocument(tx, doc.id, {
-      title: input.title ?? offerTitle(content.template, content.language, content.reference),
+      title: input.title ?? offerTitle(content),
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,

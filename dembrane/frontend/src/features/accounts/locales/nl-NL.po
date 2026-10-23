@@ -47,7 +47,7 @@ msgstr "{0} e-mails verstuurd"
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:253
+#: src/features/accounts/staff/PushOfferModal.tsx:265
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} excl. btw, {1} incl."
 
@@ -197,7 +197,7 @@ msgstr "Acties"
 msgid "Add a field"
 msgstr "Veld toevoegen"
 
-#: src/features/accounts/staff/LinesEditor.tsx:155
+#: src/features/accounts/staff/LinesEditor.tsx:167
 msgid "Add a line"
 msgstr "Regel toevoegen"
 
@@ -297,8 +297,8 @@ msgid "Before {due}"
 msgstr "Vóór {due}"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:209
-msgid "Billed per"
-msgstr "Gefactureerd per"
+#~ msgid "Billed per"
+#~ msgstr "Gefactureerd per"
 
 #: src/features/accounts/format.ts:171
 #: src/features/accounts/staff/AccountsPanel.tsx:147
@@ -350,7 +350,7 @@ msgstr "wordt gebouwd"
 msgid "Building the demo. This page follows along."
 msgstr "De demo wordt gebouwd. Deze pagina volgt mee."
 
-#: src/features/accounts/staff/LinesEditor.tsx:103
+#: src/features/accounts/staff/LinesEditor.tsx:107
 msgid "Bullets"
 msgstr "Opsomming"
 
@@ -395,7 +395,7 @@ msgstr "Geannuleerd"
 msgid "Change"
 msgstr "Wijzigen"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:71
+#: src/features/accounts/staff/PushOfferModal.tsx:74
 msgid "Change the draft"
 msgstr "Concept wijzigen"
 
@@ -560,7 +560,7 @@ msgstr "Maak een project"
 msgid "Create task"
 msgstr "Taak aanmaken"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:189
+#: src/features/accounts/staff/PushOfferModal.tsx:198
 msgid "Custom"
 msgstr "Maatwerk"
 
@@ -577,7 +577,7 @@ msgstr "Klant"
 msgid "Customer emailed"
 msgstr "Klant gemaild"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:223
+#: src/features/accounts/staff/PushOfferModal.tsx:216
 msgid "Customer name in the title"
 msgstr "Klantnaam in de titel"
 
@@ -645,7 +645,7 @@ msgstr "Publicatie van demo ingetrokken"
 msgid "Demos"
 msgstr "Demo's"
 
-#: src/features/accounts/staff/LinesEditor.tsx:81
+#: src/features/accounts/staff/LinesEditor.tsx:85
 msgid "Description"
 msgstr "Omschrijving"
 
@@ -732,8 +732,8 @@ msgstr "Concept gewijzigd"
 msgid "Draft ready"
 msgstr "Concept klaar"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:149
-#: src/features/accounts/staff/PushOfferModal.tsx:163
+#: src/features/accounts/staff/PushOfferModal.tsx:158
+#: src/features/accounts/staff/PushOfferModal.tsx:172
 msgid "Draft saved"
 msgstr "Concept opgeslagen"
 
@@ -795,6 +795,10 @@ msgstr "E-mail verstuurd"
 msgid "Email the customer"
 msgstr "De klant mailen"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:250
+msgid "Empty: the template's. A blank line starts a paragraph."
+msgstr "Leeg: die van de sjabloon. Een lege regel begint een nieuwe alinea."
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:626
 #~ msgid "Enable account"
 #~ msgstr "Account inschakelen"
@@ -807,7 +811,7 @@ msgstr "De klant mailen"
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Vul de code van zes cijfers in die we naar {email} stuurden."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:188
+#: src/features/accounts/staff/PushOfferModal.tsx:197
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Evenement"
@@ -918,7 +922,7 @@ msgstr "Bijvoorbeeld {example}"
 msgid "For example an invoice portal"
 msgstr "Bijvoorbeeld een factuurportaal"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:239
+#: src/features/accounts/staff/PushOfferModal.tsx:240
 msgid "For the attention of"
 msgstr "Ter attentie van"
 
@@ -1017,6 +1021,10 @@ msgstr "Paraaf"
 #: src/features/accounts/signing/SignRoute.tsx:808
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Paraafvelden gebruiken deze handtekening, tenzij je een paraaf tekent."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:249
+msgid "Intro"
+msgstr "Inleiding"
 
 #~ msgid "Invite"
 #~ msgstr "Uitnodigen"
@@ -1141,7 +1149,7 @@ msgid "Label"
 msgstr "Label"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:195
+#: src/features/accounts/staff/PushOfferModal.tsx:204
 msgid "Language"
 msgstr "Taal"
 
@@ -1168,11 +1176,11 @@ msgstr "Juridische naam van je organisatie"
 msgid "Let them sign in with an email code"
 msgstr "Laat ze inloggen met een e-mailcode"
 
-#: src/features/accounts/staff/LinesEditor.tsx:135
+#: src/features/accounts/staff/LinesEditor.tsx:147
 msgid "Line total"
 msgstr "Regeltotaal"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:247
+#: src/features/accounts/staff/PushOfferModal.tsx:259
 msgid "Lines"
 msgstr "Regels"
 
@@ -1205,14 +1213,18 @@ msgid "Message"
 msgstr "Bericht"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:216
-msgid "Month"
-msgstr "Maand"
+#~ msgid "Month"
+#~ msgstr "Maand"
+
+#: src/features/accounts/staff/LinesEditor.tsx:124
+msgid "months"
+msgstr "maanden"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 msgid "Name"
 msgstr "Naam"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:231
+#: src/features/accounts/staff/PushOfferModal.tsx:224
 msgid "Name in the greeting"
 msgstr "Naam in de aanhef"
 
@@ -1397,7 +1409,7 @@ msgstr "Offerte verzonden"
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Offerte verzonden. Ze staat in het account van de klant; er is geen e-mail verstuurd."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:162
+#: src/features/accounts/staff/PushOfferModal.tsx:171
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerte verstuurd. De klant ziet hem bij de volgende keer inloggen."
 
@@ -1416,7 +1428,7 @@ msgstr "Onboardingtaken toegevoegd"
 msgid "Onboarding tasks withdrawn"
 msgstr "Onboardingtaken ingetrokken"
 
-#: src/features/accounts/staff/LinesEditor.tsx:104
+#: src/features/accounts/staff/LinesEditor.tsx:108
 msgid "One per line"
 msgstr "Een per regel"
 
@@ -1429,8 +1441,12 @@ msgstr "Online"
 #~ msgstr "Alleen als je facturen via Peppol ontvangt"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:181
-msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
-msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
+#~ msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
+#~ msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
+
+#: src/features/accounts/staff/DocumentRoute.tsx:181
+msgid "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
+msgstr "Alleen medewerkers zien dit concept. Bij verzenden krijgt het de datum van die dag en telt de geldigheid vanaf dan."
 
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien het account."
@@ -1529,8 +1545,8 @@ msgid "optional"
 msgstr "optioneel"
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:232
-#: src/features/accounts/staff/PushOfferModal.tsx:240
+#: src/features/accounts/staff/PushOfferModal.tsx:225
+#: src/features/accounts/staff/PushOfferModal.tsx:241
 #: src/features/accounts/signing/SignRoute.tsx:735
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
@@ -1715,7 +1731,7 @@ msgstr "Publiceren zet de demo live. Er gaat geen e-mail uit."
 msgid "Publishing sends them the sign-in invitation. Off: no email goes out."
 msgstr "Publiceren stuurt ze de uitnodiging om in te loggen. Uit: er gaat geen e-mail uit."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:71
+#: src/features/accounts/staff/PushOfferModal.tsx:74
 msgid "Push an offer"
 msgstr "Offerte versturen"
 
@@ -1727,7 +1743,7 @@ msgstr "Offerte versturen"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Zet het kenmerk bij je overboeking, dan kunnen we je betaling koppelen."
 
-#: src/features/accounts/staff/LinesEditor.tsx:112
+#: src/features/accounts/staff/LinesEditor.tsx:116
 msgid "Quantity"
 msgstr "Aantal"
 
@@ -1751,7 +1767,7 @@ msgstr "Vragen"
 #~ msgstr "Lees de offerte en onderteken hem hier. Tekent iemand anders voor je organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:224
+#: src/features/accounts/staff/PushOfferModal.tsx:217
 msgid "Reads \"{0} x dembrane\""
 msgstr "Wordt \"{0} x dembrane\""
 
@@ -1794,7 +1810,7 @@ msgstr "Herinnerd"
 msgid "Remove field"
 msgstr "Veld verwijderen"
 
-#: src/features/accounts/staff/LinesEditor.tsx:94
+#: src/features/accounts/staff/LinesEditor.tsx:98
 msgid "Remove line"
 msgstr "Regel verwijderen"
 
@@ -1859,7 +1875,7 @@ msgstr "Opslaan"
 msgid "Save billing details"
 msgstr "Factuurgegevens opslaan"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:274
+#: src/features/accounts/staff/PushOfferModal.tsx:285
 msgid "Save draft"
 msgstr "Concept opslaan"
 
@@ -1878,8 +1894,8 @@ msgid "Search organisations"
 msgstr "Organisaties zoeken"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:215
-msgid "Seat"
-msgstr "Seat"
+#~ msgid "Seat"
+#~ msgstr "Seat"
 
 #: src/features/accounts/format.ts:180
 msgid "See how dembrane works, from setting up a project to reading what people said."
@@ -1924,7 +1940,7 @@ msgstr "Terugsturen"
 msgid "Send by email instead"
 msgstr "Liever per e-mail"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:283
+#: src/features/accounts/staff/PushOfferModal.tsx:294
 #: src/features/accounts/staff/DocumentRoute.tsx:156
 msgid "Send offer"
 msgstr "Offerte versturen"
@@ -2182,7 +2198,7 @@ msgstr "Onderwerp"
 msgid "Submitted"
 msgstr "Ingediend"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:187
+#: src/features/accounts/staff/PushOfferModal.tsx:196
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Abonnement"
@@ -2262,7 +2278,7 @@ msgstr "Laat weten wie de offerte tekent"
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Laat weten wie offerte jaarlicentie {number} tekent"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:181
+#: src/features/accounts/staff/PushOfferModal.tsx:190
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Sjabloon"
@@ -2376,6 +2392,10 @@ msgstr "Dezelfde persoon die de offerte tekent"
 #: src/features/accounts/signing/SignRoute.tsx:1164
 msgid "The signed copy is in your documents."
 msgstr "Het ondertekende exemplaar staat bij je documenten."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:271
+msgid "The terms, SLA and DPA versions in force today are pinned."
+msgstr "De versies van de voorwaarden, SLA en verwerkersovereenkomst die vandaag gelden worden vastgelegd."
 
 #: src/features/accounts/customer/WhoSigns.tsx:426
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:169
@@ -2549,7 +2569,11 @@ msgstr "Typ eerst je initialen."
 msgid "Type your name first."
 msgstr "Typ eerst je naam."
 
-#: src/features/accounts/staff/LinesEditor.tsx:119
+#: src/features/accounts/staff/LinesEditor.tsx:123
+msgid "Unit"
+msgstr "Eenheid"
+
+#: src/features/accounts/staff/LinesEditor.tsx:131
 msgid "Unit price (EUR)"
 msgstr "Stukprijs (EUR)"
 
@@ -2602,8 +2626,12 @@ msgid "Use this signature"
 msgstr "Deze handtekening gebruiken"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:259
-msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
-msgstr "14 dagen geldig. De versies van voorwaarden, SLA en verwerkersovereenkomst van vandaag worden vastgelegd."
+#~ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
+#~ msgstr "14 dagen geldig. De versies van voorwaarden, SLA en verwerkersovereenkomst van vandaag worden vastgelegd."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:231
+msgid "Valid for (days)"
+msgstr "Geldig (dagen)"
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
 #: src/features/accounts/staff/DocumentRoute.tsx:96
@@ -2614,7 +2642,7 @@ msgstr "Geldig tot {0}"
 msgid "Valid until {validUntil}"
 msgstr "Geldig tot {validUntil}"
 
-#: src/features/accounts/staff/LinesEditor.tsx:127
+#: src/features/accounts/staff/LinesEditor.tsx:139
 msgid "VAT %"
 msgstr "Btw %"
 

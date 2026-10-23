@@ -22,6 +22,8 @@ export interface Line {
 	description: string;
 	bullets: string;
 	quantity: number;
+	/** What the quantity counts ("months", "hours"); empty for none. */
+	unit: string;
 	unitPrice: number;
 	vatPercent: number;
 }
@@ -31,6 +33,7 @@ export const emptyLine = (): Line => ({
 	description: "",
 	id: crypto.randomUUID(),
 	quantity: 1,
+	unit: "",
 	unitPrice: 0,
 	vatPercent: 21,
 });
@@ -46,6 +49,7 @@ export const toItems = (lines: Line[]) =>
 			.filter(Boolean),
 		description: l.description,
 		quantity: l.quantity,
+		...(l.unit.trim() && { unit: l.unit.trim() }),
 		unit_price_cents: cents(l.unitPrice),
 		vat_rate_bps: Math.round(l.vatPercent * 100),
 	}));
@@ -107,13 +111,21 @@ export function LinesEditor({
 							value={line.bullets}
 							onChange={(e) => update(i, { bullets: e.currentTarget.value })}
 						/>
-						<SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xs">
+						<SimpleGrid cols={{ base: 2, sm: 5 }} spacing="xs">
 							<NumberInput
 								label={t`Quantity`}
 								min={1}
 								value={line.quantity}
 								onChange={(v) => update(i, { quantity: Number(v) || 1 })}
 								data-testid="line-quantity"
+							/>
+							<TextInput
+								label={t`Unit`}
+								placeholder={t`months`}
+								value={line.unit}
+								onChange={(e) => update(i, { unit: e.currentTarget.value })}
+								error={fields[`items.${i}.unit`]}
+								data-testid="line-unit"
 							/>
 							<NumberInput
 								label={t`Unit price (EUR)`}

@@ -6,10 +6,12 @@ import {
 	Divider,
 	Group,
 	Modal,
+	NumberInput,
 	SegmentedControl,
 	SimpleGrid,
 	Stack,
 	Text,
+	Textarea,
 	TextInput,
 } from "@mantine/core";
 import { useState } from "react";
@@ -35,6 +37,7 @@ const toLines = (content: Content): Line[] =>
 		description: item.description,
 		id: crypto.randomUUID(),
 		quantity: item.quantity,
+		unit: item.unit ?? "",
 		unitPrice: item.unit_price_cents / 100,
 		vatPercent: item.vat_rate_bps / 100,
 	}));
@@ -103,9 +106,10 @@ function OfferForm({
 		from?.template ?? "subscription",
 	);
 	const [language, setLanguage] = useState<"en" | "nl">(from?.language ?? "nl");
-	const [billingUnit, setBillingUnit] = useState<"seat" | "month">(
-		from?.billing_unit ?? "seat",
-	);
+	// Empty means the template's intro; a draft shows its own.
+	const firstIntro = from?.text?.intro ?? "";
+	const [intro, setIntro] = useState(firstIntro);
+	const [validDays, setValidDays] = useState<number>(from?.valid_days ?? 14);
 	const [offerName, setOfferName] = useState(from?.offer_name ?? orgName);
 	const [personName, setPersonName] = useState(from?.person_name ?? "");
 	const [attention, setAttention] = useState(from?.attention ?? "");
@@ -135,9 +139,14 @@ function OfferForm({
 		// Amendments and VAT treatment come from sam; editing a draft here keeps them.
 		...(template === "custom" &&
 			from?.amendments && { amendments: from.amendments }),
-		// Only a subscription has a unit; seats is what an absent value means.
-		...(template === "subscription" && { billing_unit: billingUnit }),
+		...(template === "subscription" &&
+			from?.billing_unit && { billing_unit: from.billing_unit }),
 		...(from?.vat_treatment && { vat_treatment: from.vat_treatment }),
+		// Only a changed intro is sent; the draft keeps the rest of its words.
+		...(intro.trim() !== firstIntro.trim() && {
+			text: intro.trim() ? { intro: intro.trim() } : null,
+		}),
+		valid_days: validDays,
 	};
 
 	const submit = (send: boolean) => {
@@ -203,22 +212,6 @@ function OfferForm({
 						]}
 					/>
 				</Stack>
-				{template === "subscription" && (
-					<Stack gap={4}>
-						<Text size="sm">
-							<Trans>Billed per</Trans>
-						</Text>
-						<SegmentedControl
-							value={billingUnit}
-							onChange={(v) => setBillingUnit(v as typeof billingUnit)}
-							data={[
-								{ label: t`Seat`, value: "seat" },
-								{ label: t`Month`, value: "month" },
-							]}
-							data-testid="offer-billing-unit"
-						/>
-					</Stack>
-				)}
 				<TextInput
 					label={t`Customer name in the title`}
 					description={t`Reads "${offerName || "..."} x dembrane"`}
@@ -234,6 +227,14 @@ function OfferForm({
 					onChange={(e) => setPersonName(e.currentTarget.value)}
 					data-testid="offer-person"
 				/>
+				<NumberInput
+					label={t`Valid for (days)`}
+					min={1}
+					max={365}
+					value={validDays}
+					onChange={(v) => setValidDays(Number(v) || 14)}
+					data-testid="offer-valid-days"
+				/>
 				{template === "event" && (
 					<TextInput
 						label={t`For the attention of`}
@@ -243,6 +244,17 @@ function OfferForm({
 					/>
 				)}
 			</SimpleGrid>
+
+			<Textarea
+				label={t`Intro`}
+				description={t`Empty: the template's. A blank line starts a paragraph.`}
+				autosize
+				minRows={2}
+				value={intro}
+				onChange={(e) => setIntro(e.currentTarget.value)}
+				error={fields["text.intro"]}
+				data-testid="offer-intro"
+			/>
 
 			<Divider label={t`Lines`} labelPosition="left" />
 			<LinesEditor lines={lines} onChange={setLines} errors={fields} />
@@ -257,8 +269,7 @@ function OfferForm({
 					</Text>
 					<Text size="xs" c="dimmed">
 						<Trans>
-							Valid 14 days. The terms, SLA and DPA versions in force today are
-							pinned.
+							The terms, SLA and DPA versions in force today are pinned.
 						</Trans>
 					</Text>
 				</Stack>

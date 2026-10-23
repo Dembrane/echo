@@ -664,19 +664,22 @@ function draw(s: Sheet, l: OfferLayout) {
   heading(s, l.kind, l.title, T.display);
   facts(s, l);
   s.para(text(l.greeting));
-  // An event offer's introduction has a heading as its second paragraph, a step up.
-  const [opening, ...rest] = l.intro;
-  s.para(text(opening ?? "", { before: 8 }));
-  if (rest.length) {
-    const [title, ...paragraphs] = rest;
-    s.para({ runs: runs(title ?? "", { s: T.lead, c: TEXT }), leading: 1.3, before: 18, after: 4 });
-    for (const p of paragraphs) s.para(text(p, { before: 6 }));
-  }
+  // A paragraph that starts with "## " is a heading, a step up, over the ones after it.
+  l.intro.forEach((p, i) => {
+    if (p.startsWith("## "))
+      s.para({
+        runs: runs(p.slice(3), { s: T.lead, c: TEXT }),
+        leading: 1.3,
+        before: 18,
+        after: 4,
+      });
+    else s.para(text(p, { before: i === 0 ? 8 : 6 }));
+  });
   lines(s, l);
   amendments(s, l);
+  // An empty line is the space above the sign-off ("Best regards," and the team).
   l.closing.forEach((line, i) => {
-    // A line's space above the sign-off ("Best regards," and the team).
-    s.para(text(line, { before: i === 1 ? 14 : 0 }));
+    if (line) s.para(text(line, { before: l.closing[i - 1] === "" ? 14 : 0 }));
   });
 
   // The acceptance starts its own page.

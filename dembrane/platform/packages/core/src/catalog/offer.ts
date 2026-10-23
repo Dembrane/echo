@@ -57,4 +57,11 @@ export const offer = {
     description:
       "A subscription or event offer was given amendments; they change the standard documents, so the offer must be custom.",
   },
+  "offer.template_not_found": {
+    action: "none",
+    detail: "No such offer template",
+    audience: "staff",
+    description:
+      "The template is not subscription, event or custom, or the language is not en or nl.",
+  },
 } as const satisfies Codes<"offer">;
