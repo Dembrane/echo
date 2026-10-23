@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Kies het land van de organisatie die de factuur krijgt."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Voltooi het instellen van je account om door te gaan."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Geef deel {part} een aandeel boven nul."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Geef je organisatie een naam."
@@ -262,6 +267,11 @@ msgstr "Het verbergen van de dembrane-evenementuitnodiging is inbegrepen bij een
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Factureer in {min} tot {max} delen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Deel {part}: alleen het eerste deel kan bij ondertekening, en elke datum komt na de vorige."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Een deel van je selectie staat niet meer op de kaart. Vernieuw de kaart en selecteer opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Kies een status voor deze webhook: gepubliceerd, concept of gearchiveerd."
 
@@ -627,6 +642,11 @@ msgstr "De kaart wordt nog gemaakt. Wacht heel even en probeer het opnieuw."
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "De delen tellen op tot {total}. Laat ze optellen tot 100%."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Vink {label} aan om door te gaan."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Vink {label} aan of uit."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "Geef elke betaalde regel hetzelfde btw-tarief om in delen te factureren."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37

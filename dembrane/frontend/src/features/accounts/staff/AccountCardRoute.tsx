@@ -901,6 +901,15 @@ const eventLabel = (type: string): string =>
 		"ticket.replied": t`Question answered`,
 	})[type] ?? type;
 
+/** An invoice part's subject is its offer's id and the part's number: the offer's id. */
+const subjectDocument = (id: string | null) => id?.split(":")[0] ?? null;
+
+/** ", part 2 of 3" after the offer, for the request of one part of its invoice. */
+const partOf = (detail: unknown) => {
+	const d = detail as { part?: number; of?: number } | null;
+	return d?.part && d.of ? `, ${t`part ${d.part} of ${d.of}`}` : null;
+};
+
 function Timeline({ card }: { card: AccountCardT }) {
 	const { i18n } = useLingui();
 	const [all, setAll] = useState(false);
@@ -924,10 +933,11 @@ function Timeline({ card }: { card: AccountCardT }) {
 												?.waits_for ?? [],
 										)
 									: eventLabel(e.type)}
-								{title(e.subject_id) ? (
+								{title(subjectDocument(e.subject_id)) ? (
 									<Text span c="dimmed" size="sm">
 										{" "}
-										· {title(e.subject_id)}
+										· {title(subjectDocument(e.subject_id))}
+										{partOf(e.detail)}
 									</Text>
 								) : null}
 							</Text>

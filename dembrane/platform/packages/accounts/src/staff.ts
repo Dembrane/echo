@@ -17,6 +17,7 @@ import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, invoiceWaits, staffDocumentUrl, uninvoicedOffers } from "./invoice";
+import { checkInvoicePlan, type InvoicePlan } from "./invoice-plan";
 import { legalForPush } from "./legal/store";
 import { charged, fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
@@ -343,6 +344,8 @@ export interface PushOfferInput {
   readonly customer_reference?: string | null | undefined;
   /** Who is invoiced when it is not the customer. */
   readonly bill_to?: BillToInput | null | undefined;
+  /** Monthly parts or instalments; absent or null invoices at once. */
+  readonly invoice_plan?: InvoicePlan | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -426,6 +429,7 @@ function offerContent(
     | "processing_terms"
     | "customer_reference"
     | "bill_to"
+    | "invoice_plan"
   > & { date: string; reference: string },
   words: OfferTemplateText,
   before?: OfferContent,
@@ -439,6 +443,7 @@ function offerContent(
   if (amendments.length && o.template !== "custom")
     throw new ValidationError("offer.amendments_custom_only");
   const billTo = o.bill_to ? checkBillTo(o.bill_to, vatTreatment) : null;
+  const plan = o.invoice_plan ? checkInvoicePlan(o.invoice_plan, o.items) : null;
   const same = before?.template === o.template && before?.language === o.language;
   const unit =
     o.template === "subscription" ? SUBSCRIPTION_UNIT[o.billing_unit ?? "seat"][o.language] : null;
@@ -455,6 +460,7 @@ function offerContent(
     ...(o.processing_terms && { processing_terms: o.processing_terms }),
     ...(o.customer_reference && { customer_reference: o.customer_reference }),
     ...(billTo && { bill_to: billTo }),
+    ...(plan && { invoice_plan: plan }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -646,6 +652,7 @@ export async function updateOffer(
           ? before.customer_reference
           : input.customer_reference,
       bill_to: input.bill_to === undefined ? before.bill_to : input.bill_to,
+      invoice_plan: input.invoice_plan === undefined ? before.invoice_plan : input.invoice_plan,
     },
     words,
     before,

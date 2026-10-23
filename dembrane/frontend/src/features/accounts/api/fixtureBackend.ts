@@ -487,7 +487,7 @@ function priced(raw: unknown) {
 
 type OfferContentT = NonNullable<DocumentDetailT["content"]>;
 
-/** The VAT treatment, amendments, processing terms, reference and payer an offer request carries. */
+/** The VAT treatment, amendments, processing terms, reference, payer and invoice plan an offer request carries. */
 function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 	const amendments = (body.amendments ?? []) as OfferContentT["amendments"];
 	return {
@@ -502,6 +502,9 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 			}),
 		...(body.bill_to && typeof body.bill_to === "object"
 			? { bill_to: body.bill_to as OfferContentT["bill_to"] }
+			: {}),
+		...(body.invoice_plan && typeof body.invoice_plan === "object"
+			? { invoice_plan: body.invoice_plan as OfferContentT["invoice_plan"] }
 			: {}),
 	};
 }

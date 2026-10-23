@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Vyberte zemi organizace, které se fakturuje."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Chcete-li pokračovat, dokončete nastavení svého účtu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Dejte splátce {part} podíl větší než nula."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Pojmenujte svou organizaci."
@@ -262,6 +267,11 @@ msgstr "Skrytí pozvánky na událost dembrane je součástí placeného tarifu.
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Fakturujte v {min} až {max} splátkách."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Splátka {part}: jen první splátka může být při podpisu a každé datum následuje po předchozím."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Část vašeho výběru už na mapě není. Načtěte mapu znovu a proveďte výběr."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Vyberte pro tento webhook stav: publikováno, koncept nebo archivováno."
 
@@ -627,6 +642,11 @@ msgstr "Mapa se stále vytváří. Chvíli počkejte a zkuste to znovu."
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Mapa byla od vašeho výběru aktualizována. Obnovte mapu a vyberte položky znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "Splátky dávají dohromady {total}. Musí dát 100%."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Pro pokračování zaškrtněte pole {label}."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Zaškrtněte nebo zrušte zaškrtnutí pole {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "Pro fakturaci ve splátkách dejte všem účtovaným řádkům stejnou sazbu DPH."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37

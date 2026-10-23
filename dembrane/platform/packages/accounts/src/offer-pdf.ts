@@ -712,6 +712,34 @@ function billing(s: Sheet, l: OfferLayout) {
   s.done(36);
 }
 
+/**
+ * How an offer invoiced in parts is invoiced: a heading, then one ruled row per part with
+ * its name, when it falls due and its amount, right-aligned like the lines above.
+ */
+function parts(s: Sheet, l: OfferLayout) {
+  if (!l.parts) return;
+  const ROW = 22;
+  const whenX = MARGIN + 90;
+  s.room(40 + ROW * (l.parts.rows.length + 1));
+  s.para({ runs: runs(l.parts.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+  const [part, when, amount] = l.parts.columns;
+  s.rule(MARGIN, RIGHT, s.y, TEXT);
+  s.at(part, MARGIN, s.y + 7, CAPTION);
+  s.at(when, whenX, s.y + 7, CAPTION);
+  s.atRight(amount, RIGHT, s.y + 7, CAPTION);
+  s.y += ROW;
+  for (const [name, due, money] of l.parts.rows) {
+    s.room(ROW);
+    s.rule(MARGIN, RIGHT, s.y);
+    s.at(name, MARGIN, s.y + 6, BODY);
+    s.at(due, whenX, s.y + 6, BODY);
+    s.atRight(money, RIGHT, s.y + 6, BODY);
+    s.y += ROW;
+  }
+  s.rule(MARGIN, RIGHT, s.y);
+  s.done(36);
+}
+
 /** The one layout of an offer; `l` carries the words of its template and language. */
 function draw(s: Sheet, l: OfferLayout) {
   heading(s, l.kind, l.title, T.display);
@@ -730,6 +758,7 @@ function draw(s: Sheet, l: OfferLayout) {
   });
   lines(s, l);
   billing(s, l);
+  parts(s, l);
   amendments(s, l);
   // An empty line is the space above the sign-off ("Best regards," and the team).
   l.closing.forEach((line, i) => {

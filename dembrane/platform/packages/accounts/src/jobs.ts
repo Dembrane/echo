@@ -14,7 +14,15 @@ import {
   orgPayload,
   waitingTaskPayload,
 } from "./events";
-import { staffAccountUrl, staffDocumentUrl } from "./invoice";
+import {
+  type InvoiceDeps,
+  partsOf,
+  requestInvoices,
+  requestSubject,
+  staffAccountUrl,
+  staffDocumentUrl,
+} from "./invoice";
+import { amsterdamDay, dueOn } from "./invoice-plan";
 import { refreshLegalTexts } from "./legal/store";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
@@ -54,6 +62,17 @@ export const taskReminder = defineJob(
   z.object({ taskId: z.string(), dueAt: z.string() }),
   { retryLimit: 3, retryDelaySeconds: 60, expireInSeconds: 120 },
 );
+
+/**
+ * Every hour: ask for the invoice of each part of a signed offer whose day has come. The
+ * first part goes with the signature; this catches the later ones.
+ */
+export const invoicePartsTick = defineJob("accounts.invoice-parts-tick", z.object({}), {
+  policy: "singleton",
+  retryLimit: 2,
+  retryDelaySeconds: 300,
+  expireInSeconds: 5 * 60,
+});
 
 /** Once a day: fetch the legal pages and store any text that changed. */
 export const legalRefresh = defineJob("accounts.legal-refresh", z.object({}), {
@@ -111,6 +130,49 @@ export async function runRemindersTick(d: {
   }
   if (queued) d.logger.info({ check_ins: queued }, "account task check-ins queued");
   return queued;
+}
+
+/**
+ * Asks for every part whose day has come. Each organisation with one is handled in its own
+ * transaction under its lock, the way a signature or a billing save asks (requestInvoices),
+ * and the request is recorded in that transaction: a tick that runs twice, a retry, or a
+ * signature at the same moment asks once per part. Returns the organisations asked for.
+ */
+export async function runInvoicePartsTick(d: {
+  db: Db;
+  jobs: AccountsJobs;
+  now: () => Date;
+  logger: Logger;
+  settings: InvoiceDeps["settings"];
+}): Promise<string[]> {
+  if (!d.settings.offerMessages) return [];
+  const today = amsterdamDay(d.now());
+  const { docs, asked } = await store.offersInParts(d.db);
+  const orgs = new Set<string>();
+  for (const doc of docs) {
+    if (orgs.has(doc.orgId) || !doc.signedAt) continue;
+    const signedOn = amsterdamDay(doc.signedAt);
+    const due = partsOf(doc).some(
+      (p) => !asked.has(requestSubject(doc, p).id) && dueOn(p.due, signedOn) <= today,
+    );
+    if (due) orgs.add(doc.orgId);
+  }
+  const done: string[] = [];
+  for (const orgId of orgs) {
+    await d.db.transaction(async (tx) => {
+      await store.lockOrg(tx, orgId);
+      const org = await store.org(tx, orgId);
+      if (!org || org.deleted_at) return;
+      const asked = await requestInvoices(
+        { jobs: d.jobs, now: d.now, settings: d.settings },
+        tx,
+        org,
+      );
+      if (asked.length) done.push(orgId);
+    });
+  }
+  if (done.length) d.logger.info({ organisations: done.length }, "invoice parts asked for");
+  return done;
 }
 
 /**
@@ -294,7 +356,7 @@ export interface AccountsWorkerDeps {
   readonly demos?: (queue: Queue) => DemoBuildDeps;
 }
 
-/** The worker's registration: handlers and the two schedules. */
+/** The worker's registration: handlers and the three schedules. */
 export function accountsWorker(deps: AccountsWorkerDeps) {
   const now = deps.now ?? (() => new Date());
   const jobs: JobDefinition[] = [
@@ -303,6 +365,7 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
     remindersTick,
     taskReminder,
     legalRefresh,
+    invoicePartsTick,
   ];
   return {
     jobs,
@@ -353,6 +416,21 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
           p,
         );
       });
+      await queue.work(invoicePartsTick, { concurrency: 1 }, async () => {
+        await runInvoicePartsTick({
+          db: deps.db,
+          jobs: deps.jobs,
+          now,
+          logger: deps.logger,
+          settings: {
+            dashboardUrl: deps.dashboardUrl,
+            offerMessages: Boolean(deps.offerMessages),
+            samInbox: Boolean(deps.samInbox),
+            eventsEnabled: Boolean(deps.eventsUrl),
+            slackEnabled: Boolean(deps.slackWebhookUrl),
+          },
+        });
+      });
       await queue.work(legalRefresh, { concurrency: 1 }, async () => {
         await refreshLegalTexts({
           db: deps.db,
@@ -371,6 +449,7 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
       }
       await queue.schedule(remindersTick, "*/15 * * * *", {});
       await queue.schedule(legalRefresh, "17 5 * * *", {});
+      await queue.schedule(invoicePartsTick, "7 * * * *", {});
     },
   };
 }

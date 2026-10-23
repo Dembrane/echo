@@ -262,6 +262,29 @@ export const BillTo = z.object({
   reference: z.string().nullable(),
 });
 
+/**
+ * How an offer is invoiced when not all at once: `monthly` in equal parts, the first on
+ * signing and each next one on the 1st of the following calendar month; `instalments` each
+ * on signing (the first only) or on a date, with a share of the total in basis points that
+ * add up to 10000. The last part takes the cents left by rounding.
+ */
+export const InvoicePlan = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("monthly"), parts: z.number().int().min(2).max(24) }),
+  z.object({
+    kind: z.literal("instalments"),
+    parts: z
+      .array(
+        z.object({
+          /** "signing", or the ISO date the part falls due. */
+          on: z.union([z.literal("signing"), IsoDate]),
+          share_bps: z.number().int().min(1).max(10_000),
+        }),
+      )
+      .min(2)
+      .max(12),
+  }),
+]);
+
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
   template: OfferTemplate,
@@ -291,6 +314,8 @@ export const OfferContent = z.object({
   customer_reference: z.string().optional(),
   /** Who is invoiced in place of the customer, printed as "Invoiced to". */
   bill_to: BillTo.optional(),
+  /** How the offer is invoiced when not all at once, printed as "How we invoice". */
+  invoice_plan: InvoicePlan.optional(),
 });
 
 export const LegalPin = z.object({
@@ -916,6 +941,13 @@ export const PushOfferRequest = z.object({
     })
     .nullable()
     .optional(),
+  /**
+   * How the offer is invoiced when not all at once (absent or null: at once). Printed as
+   * "How we invoice". After signing echo asks for one invoice per part when it falls due,
+   * each request saying which part it is. Parts need one VAT rate on the charged lines. On
+   * a change, absent keeps the draft's and null drops it.
+   */
+  invoice_plan: InvoicePlan.nullable().optional(),
   /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.

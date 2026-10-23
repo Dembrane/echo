@@ -26,6 +26,7 @@ import { useAccountsMutation } from "../api/hooks";
 import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
 import { BillToFields, billToBody, billToForm } from "./BillToFields";
+import { InvoicePlanFields, planBody, planForm } from "./InvoicePlanFields";
 import {
 	emptyLine,
 	type Line,
@@ -158,6 +159,7 @@ function OfferForm({
 	);
 	const [billsOther, setBillsOther] = useState(Boolean(from?.bill_to));
 	const [billTo, setBillTo] = useState(() => billToForm(from?.bill_to));
+	const [plan, setPlan] = useState(() => planForm(from?.invoice_plan));
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -191,6 +193,7 @@ function OfferForm({
 		bill_to: billToBody(billsOther, billTo),
 		currency,
 		customer_reference: customerReference.trim() || null,
+		invoice_plan: planBody(plan),
 		items: toItems(priced),
 		language,
 		offer_name: offerName,
@@ -376,6 +379,13 @@ function OfferForm({
 			/>
 
 			<Divider label={t`Invoicing`} labelPosition="left" />
+			<InvoicePlanFields
+				value={plan}
+				onChange={setPlan}
+				net={net}
+				currency={currency}
+				errors={fields}
+			/>
 			<BillToFields
 				on={billsOther}
 				onToggle={setBillsOther}

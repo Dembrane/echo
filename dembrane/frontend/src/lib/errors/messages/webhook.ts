@@ -7,14 +7,14 @@ export const webhook = {
 		message:
 			"One of the chosen events is not available. Pick the events again.",
 	}),
+	"webhook.invalid_status": msg({
+		id: "error.webhook.invalid_status",
+		message: "Pick a status for this webhook: published, draft or archived.",
+	}),
 	"webhook.invalid_target": msg({
 		id: "error.webhook.invalid_target",
 		message:
 			"Choose where this webhook goes: a web address, or sam's inbox with a known code.",
-	}),
-	"webhook.invalid_status": msg({
-		id: "error.webhook.invalid_status",
-		message: "Pick a status for this webhook: published, draft or archived.",
 	}),
 	"webhook.invalid_url": msg({
 		id: "error.webhook.invalid_url",

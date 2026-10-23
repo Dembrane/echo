@@ -159,7 +159,7 @@ msgid "error.offer.bill_to_country"
 msgstr "Choose the country of the organisation that is invoiced."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Choose where this webhook goes: a web address, or sam's inbox with a known code."
 
@@ -249,6 +249,11 @@ msgid "error.access.not_onboarded"
 msgstr "Finish setting up your account to continue."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.invoice_part_share"
+msgstr "Give part {part} a share above zero."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
 msgstr "Give your organisation a name."
@@ -262,6 +267,11 @@ msgstr "Hiding the dembrane event invitation comes with a paid plan. Upgrade to 
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
 msgstr "Invite-only and private workspaces need the Innovator plan or higher. Create it as open for now, or upgrade first."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:42
+msgid "error.offer.invoice_parts_count"
+msgstr "Invoice in {min} to {max} parts."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
@@ -399,12 +409,17 @@ msgid "error.project.share_admin_only"
 msgstr "Only workspace admins can share projects."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_when"
+msgstr "Part {part}: only the first part can be on signing, and each date comes after the one before."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Part of your selection is no longer on the map. Reload the map and select again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Pick a status for this webhook: published, draft or archived."
 
@@ -627,6 +642,11 @@ msgstr "The map is still being made. Wait a moment and try again."
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "The map was updated since you made this selection. Reload the map and select again."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_shares_total"
+msgstr "The parts add up to {total}. Make them add up to 100%."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
@@ -1127,6 +1147,11 @@ msgstr "Tick {label} to continue."
 #: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Tick or untick {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_vat"
+msgstr "To invoice in parts, give every charged line the same VAT rate."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37
