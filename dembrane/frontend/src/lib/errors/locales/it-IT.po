@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "I pagamenti online non sono al momento disponibili. Contattaci per cambiare piano."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Solo {email} può firmare per secondo."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Solo {signer_email} può rifiutare questo documento."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Solo {signer_email} può firmare questo documento. Chiedi a questa persona di firmare o contattaci per cambiare il firmatario."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Questo documento non può più essere rifiutato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Questo documento non può essere firmato al momento. Abbiamo ricevuto la segnalazione e risolveremo il problema."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Questo documento è stato rifiutato, quindi non può più essere firmato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Questo documento è stato ritirato, quindi non può più essere firmato."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Per spostare i progetti, devi essere un amministratore o proprietario dello spazio di lavoro {side}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Per firmare, accedi con un indirizzo email verificato."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "Non siamo riusciti a raggiungere una parte di dembrane in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "Non siamo riusciti a leggere la tua firma. Disegnala di nuovo e riprova."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Hai selezionato troppi elementi. Selezionane di meno e riprova."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "Hai già firmato. Un'altra persona della tua organizzazione firma per seconda."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Non fai più parte di questo spazio di lavoro. Chiedi a un amministratore dello spazio di lavoro di invitarti di nuovo."
@@ -1762,3 +1772,8 @@ msgstr "La tua registrazione non è ancora arrivata. Attendi un momento e riprov
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "La tua sessione è scaduta. Accedi di nuovo per continuare."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "La tua firma è registrata. L'altra firma deve ancora arrivare."

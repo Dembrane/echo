@@ -99,10 +99,23 @@ export const document = {
 		id: "error.document.offer_expired",
 		message: "This offer expired on {valid_until}. Contact us for a new one.",
 	}),
+	"document.second_signer_only": msg({
+		id: "error.document.second_signer_only",
+		message: "Only {email} can sign second.",
+	}),
+	"document.second_signer_same": msg({
+		id: "error.document.second_signer_same",
+		message:
+			"You signed already. Someone else from your organisation signs second.",
+	}),
 	"document.signature_unreadable": msg({
 		id: "error.document.signature_unreadable",
 		message:
 			"We could not read your signature. Draw it again and try once more.",
+	}),
+	"document.signed_awaiting": msg({
+		id: "error.document.signed_awaiting",
+		message: "Your signature is in. The other signature is still to come.",
 	}),
 	"document.signer_only": msg({
 		id: "error.document.signer_only",

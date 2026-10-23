@@ -10,6 +10,7 @@ import type { FieldKind, OfferContent } from "./offer";
 import { chosenOptions, optionsOf, signedTotals } from "./options";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
 import { emailSignedCopy } from "./signed-copy";
+import { awaitingSlots, customerSlot, fieldsOf, type Slot } from "./signers";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
 import { createTask, settleTask, unlockTask } from "./tasks";
 import { confirmationText, sameText, staffBase } from "./views";
@@ -188,13 +189,27 @@ export async function signDocument(
   meta: RequestMeta,
 ) {
   const access = await documentFor(d, who, orgId, docId, "account:sign");
-  assertMaySign(access);
   const { doc, org } = access;
   if (!access.email) throw new ForbiddenError("document.verified_email_required");
+  // Which signature this is: the customer's, or on an offer that asks for one, their second
+  // signatory's once the first is in. dembrane's counter-signature is signed by staff.
+  const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const before = await store.signaturesOf(d.db, doc.id);
+  const slot = customerSlot(awaitingSlots(content, before));
+  if (slot === "customer") assertMaySign(access);
   if (!doc.requiresSignature) throw new ConflictError("document.no_signature_needed");
   if (doc.status === "signed") throw new ConflictError("document.already_signed");
   if (doc.status === "declined") throw new ConflictError("document.declined");
   if (doc.status === "void") throw new ConflictError("document.withdrawn");
+  if (!slot) throw new ConflictError("document.signed_awaiting");
+  if (slot === "second") {
+    const first = before.find((x) => x.slot === "customer");
+    const named = content?.second_signer?.kind === "customer" ? content.second_signer.email : null;
+    if (first?.email.toLowerCase() === access.email)
+      throw new ForbiddenError("document.second_signer_same");
+    if (named && named.toLowerCase() !== access.email)
+      throw new ForbiddenError("document.second_signer_only", { params: { email: named } });
+  }
   const now = d.now();
   if (doc.kind === "offer" && doc.validUntil && doc.validUntil < now.toISOString().slice(0, 10))
     throw new ConflictError("document.offer_expired", { params: { valid_until: doc.validUntil } });
@@ -215,14 +230,14 @@ export async function signDocument(
   const dpaSeparate =
     doc.kind === "offer" && Boolean((doc.content as OfferContent | null)?.dpa_separate);
   const dpaAuthorised = dpaSeparate ? false : input.dpa_authorised;
-  const fields = await store.fields(d.db, doc.id);
+  const allFields = await store.fields(d.db, doc.id);
+  const fields = fieldsOf(allFields, slot);
   checkValues(fields, input.values, { now, sentAt: doc.sentAt });
   // Stamped and kept the way the documents print dates, whichever form the page sent.
   const values = printedDates(fields, input.values);
   const facts = signerFacts(fields, values, org.name);
   // An offer with options: what the signer ticked is their choice, and the totals follow it.
-  const offered = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
-  const choice = offered ? choiceOf(offered, fields, values) : null;
+  const choice = content && slot === "customer" ? choiceOf(content, fields, values) : null;
   const identity = await store.identity(d.db, who.directusUserId);
   const name = facts.name ?? identity?.name ?? access.email;
   // With no organisation field, the signature is for the organisation the document is in.
@@ -281,10 +296,14 @@ export async function signDocument(
     trail: await auditTrail(d, doc, access.email, signedAt),
     ...(choice && { choices: choice.record }),
   };
+  // A second signature stamps the copy the first one made, so the signed PDF carries both.
+  const last = before.at(-1);
+  const lastFile = last ? await d.files.get(last.signedPdfKey) : null;
+  const base = lastFile ? new Uint8Array(await lastFile.arrayBuffer()) : unsigned;
   let pdf: Uint8Array;
   try {
     pdf = await signedPdf(
-      unsigned,
+      base,
       fields.map((f) => ({ ...f, kind: f.kind as FieldKind })),
       values,
       { signature: signaturePng, initials: initialsPng },
@@ -296,10 +315,10 @@ export async function signDocument(
       throw new ValidationError("document.signature_unreadable");
     throw err;
   }
-  const base = `accounts/${org.id}/documents/${doc.id}`;
-  const imageKey = `${base}/signature-${signatureId}.png`;
-  const initialsKey = initialsPng ? `${base}/initials-${signatureId}.png` : null;
-  const pdfKey = `${base}/signed-${signatureId}.pdf`;
+  const folder = `accounts/${org.id}/documents/${doc.id}`;
+  const imageKey = `${folder}/signature-${signatureId}.png`;
+  const initialsKey = initialsPng ? `${folder}/initials-${signatureId}.png` : null;
+  const pdfKey = `${folder}/signed-${signatureId}.pdf`;
   await d.files.put(imageKey, signaturePng, "image/png");
   if (initialsKey && initialsPng) await d.files.put(initialsKey, initialsPng, "image/png");
   await d.files.put(pdfKey, pdf, "application/pdf");
@@ -310,7 +329,11 @@ export async function signDocument(
       const locked = await store.documentForUpdate(tx, org.id, doc.id);
       if (!locked || !["sent", "viewed"].includes(locked.status))
         throw new ConflictError("document.already_signed");
+      // Another signature made meanwhile changes whose this one is: sign again.
+      const now2 = await store.signaturesOf(tx, doc.id);
+      if (now2.length !== before.length) throw new ConflictError("document.changed");
       await store.insertSignature(tx, {
+        slot,
         id: signatureId,
         documentId: doc.id,
         orgId: org.id,
@@ -337,13 +360,6 @@ export async function signDocument(
         signedPdfSha256: sha256Hex(pdf),
         language,
       });
-      await store.updateDocument(tx, doc.id, {
-        status: "signed",
-        signedAt: now,
-        updatedAt: now,
-        ...choice?.columns,
-      });
-      await afterSigned(d, tx, org, doc, input.dpa_authorised, who.directusUserId);
       if (access.via === "signer")
         await joinOnSigning(
           tx,
@@ -351,42 +367,27 @@ export async function signDocument(
           { directusUserId: who.directusUserId, email: access.email as string },
           now,
         );
-      const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
-      const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
-      // Read again: signing an offer makes a prospect a customer.
-      const signedFor = (await store.org(tx, org.id)) as OrgRow;
-      // The signer and the people who run the account hold the signed copy and its details.
-      const copySentTo = await emailSignedCopy(d, tx, signedFor, doc, {
+      const awaiting = awaitingSlots(content, await store.signaturesOf(tx, doc.id));
+      if (awaiting.length) {
+        await signatureAdded(d, tx, org, doc, {
+          actor: { kind: "customer", userId: who.directusUserId },
+          slot,
+          name,
+          email: access.email as string,
+          awaiting,
+        });
+        return;
+      }
+      await allSigned(d, tx, org, doc, {
+        actor: { kind: "customer", userId: who.directusUserId },
         signerName: name,
         signerEmail: access.email as string,
         signedAt,
-        pdfKey,
-        pdfSha256: sha256Hex(pdf),
-        pdfBytes: pdf.byteLength,
+        pdf: { key: pdfKey, sha256: sha256Hex(pdf), bytes: pdf.byteLength },
+        detail: { signer: access.email, via: access.via },
+        slack: (total) =>
+          `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${total}.`,
       });
-      await emit(d, tx, {
-        orgId: org.id,
-        actor: { kind: "customer", userId: who.directusUserId },
-        type: "document.signed",
-        subject: { type: "document", id: doc.id },
-        detail: {
-          title: doc.title,
-          signer: access.email,
-          via: access.via,
-          copy_sent_to: copySentTo,
-        },
-        webhook: {
-          event: "account.document.signed",
-          org: orgPayload(signedFor),
-          document: documentPayload(fresh),
-          signature: signaturePayload(sig, `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`),
-          billing: billingPayload(await store.billing(tx, org.id)),
-        },
-        slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${fresh.totalCents !== null ? `, ${(fresh.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}${choice?.chosen.length ? `, choosing ${choice.chosen.join(", ")}` : ""}.`,
-      });
-      // An offer or a DPA can be the last thing the invoice waited for: a returning
-      // customer's billing details are on file, and a DPA is often signed after the offer.
-      if (doc.kind === "offer" || doc.kind === "dpa") await requestInvoices(d, tx, signedFor);
     });
   } catch (err) {
     // Two signatures racing: the unique document id lets exactly one row in.
@@ -395,6 +396,107 @@ export async function signDocument(
     throw err;
   }
   return { signature_id: signatureId, signed_at: signedAt, confirmation_text: expected };
+}
+
+/** Who did it, as the timeline records it. */
+type Actor = { readonly kind: "customer" | "staff"; readonly userId: string | null };
+
+/**
+ * One signature of several is in: the timeline and Slack say whose, and which are still to
+ * come. Nothing else moves until the last one: the document stays sent.
+ */
+export async function signatureAdded(
+  d: AccountsDeps,
+  tx: Conn,
+  org: OrgRow,
+  doc: DocumentRow,
+  s: { actor: Actor; slot: Slot; name: string; email: string; awaiting: readonly Slot[] },
+) {
+  await emit(d, tx, {
+    orgId: org.id,
+    actor: s.actor,
+    type: "document.signature_added",
+    subject: { type: "document", id: doc.id },
+    detail: { title: doc.title, slot: s.slot, signer: s.email, awaiting: s.awaiting },
+    slack: `:black_nib: ${s.name} (${s.email}) signed "${doc.title}" for ${org.name}; waiting for ${s.awaiting.map((x) => (x === "dembrane" ? "dembrane's counter-signature" : "the second signatory")).join(" and ")}.`,
+  });
+}
+
+/**
+ * The last signature a document asked for is in: it is signed, with every effect a signature
+ * had (tasks, the customer stage, the DPA), the choice made at signing counted, the signed
+ * copy emailed, sam and Slack told, and the invoice asked for when it can be.
+ */
+export async function allSigned(
+  d: AccountsDeps,
+  tx: Conn,
+  org: OrgRow,
+  doc: DocumentRow,
+  s: {
+    actor: Actor;
+    signerName: string;
+    signerEmail: string;
+    signedAt: string;
+    pdf: { key: string; sha256: string; bytes: number };
+    detail: Record<string, unknown>;
+    slack: (total: string) => string;
+  },
+) {
+  const now = new Date(s.signedAt);
+  const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
+  const all = await store.signaturesOf(tx, doc.id);
+  // The choice is the customer's, in the ticks of their signature.
+  const fields = await store.fields(tx, doc.id);
+  const choice = content
+    ? choiceOf(content, fields, sig.fieldValues as Record<string, string | boolean>)
+    : null;
+  await store.updateDocument(tx, doc.id, {
+    status: "signed",
+    signedAt: now,
+    updatedAt: now,
+    ...choice?.columns,
+  });
+  await afterSigned(d, tx, org, doc, sig.dpaAuthorised, s.actor.userId);
+  const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
+  // Read again: signing an offer makes a prospect a customer.
+  const signedFor = (await store.org(tx, org.id)) as OrgRow;
+  // The signer and the people who run the account hold the signed copy and its details.
+  const copySentTo = await emailSignedCopy(d, tx, signedFor, doc, {
+    signerName: s.signerName,
+    signerEmail: s.signerEmail,
+    signedAt: s.signedAt,
+    pdfKey: s.pdf.key,
+    pdfSha256: s.pdf.sha256,
+    pdfBytes: s.pdf.bytes,
+  });
+  const path = `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`;
+  const total =
+    fresh.totalCents !== null
+      ? `, ${(fresh.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT`
+      : "";
+  await emit(d, tx, {
+    orgId: org.id,
+    actor: s.actor,
+    type: "document.signed",
+    subject: { type: "document", id: doc.id },
+    detail: { title: doc.title, ...s.detail, copy_sent_to: copySentTo },
+    webhook: {
+      event: "account.document.signed",
+      org: orgPayload(signedFor),
+      document: documentPayload(fresh),
+      // The customer's signature, as always; every signature when there are more.
+      signature: signaturePayload(sig, path),
+      signatures: all.map((x) => signaturePayload(x, path)),
+      billing: billingPayload(await store.billing(tx, org.id)),
+    },
+    slack: s.slack(
+      `${total}${choice?.chosen.length ? `, choosing ${choice.chosen.join(", ")}` : ""}`,
+    ),
+  });
+  // An offer or a DPA can be the last thing the invoice waited for: a returning
+  // customer's billing details are on file, and a DPA is often signed after the offer.
+  if (doc.kind === "offer" || doc.kind === "dpa") await requestInvoices(d, tx, signedFor);
 }
 
 /**

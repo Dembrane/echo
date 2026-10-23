@@ -93,6 +93,12 @@ export const offer = {
     audience: "staff",
     description: "An offer with choose one has fewer than two options.",
   },
+  "offer.second_signer_staff": {
+    action: "fix_input",
+    detail: "dembrane's signatory must be a staff member: give their @dembrane.com address",
+    audience: "staff",
+    description: "The counter-signature names an email outside dembrane.",
+  },
   "offer.section_missing": {
     action: "fix_input",
     detail: "Line {line} has no section: put every line under a heading, or none",

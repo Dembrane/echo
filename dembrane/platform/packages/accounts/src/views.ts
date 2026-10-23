@@ -77,7 +77,11 @@ export function documentSummary(
         }
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
-    signed_pdf_url: sig ? `${base}/documents/${doc.id}/signed.pdf` : null,
+    // Once every signature it asks for is in: before that the document is still sent.
+    signed_pdf_url:
+      sig && doc.status !== "sent" && doc.status !== "viewed"
+        ? `${base}/documents/${doc.id}/signed.pdf`
+        : null,
     accepted_outside: sig?.outsideVia
       ? {
           via: sig.outsideVia as "order_letter" | "email" | "paper" | "own_document",
@@ -204,7 +208,7 @@ export function fieldView(f: FieldRow) {
     kind: f.kind as "signature" | "initials" | "name" | "role" | "date" | "text" | "checkbox",
     label: f.label,
     required: f.required,
-    signer_role: "signer" as const,
+    signer_role: (f.signerRole ?? "signer") as "signer" | "second" | "dembrane",
     key: f.key,
     sort: f.sort,
   };

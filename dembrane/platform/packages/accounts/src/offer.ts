@@ -92,6 +92,33 @@ export interface AcceptanceField {
   readonly key: string | null;
   readonly label: string;
   readonly required: boolean;
+  /** Who fills it, on an offer with a second signature; the customer's signer when absent. */
+  readonly role?: "second" | "dembrane";
+}
+
+/**
+ * A second signature an offer asks for: another signatory of the customer, named or not, or
+ * dembrane's counter-signature by the staff member named.
+ */
+export type SecondSigner =
+  | { readonly kind: "customer"; readonly name: string | null; readonly email: string | null }
+  | {
+      readonly kind: "dembrane";
+      readonly name: string;
+      readonly email: string;
+      readonly role: string | null;
+    };
+
+/** A PDF attached to an offer: in its clause, after its pages, part of its hash. */
+export interface OfferAnnex {
+  /** From 1. */
+  readonly number: number;
+  readonly name: string;
+  readonly pages: number;
+  readonly sha256: string;
+  readonly bytes: number;
+  /** Where its file is kept. */
+  readonly key: string;
 }
 
 export interface Acceptance {
@@ -164,6 +191,10 @@ export interface OfferContent {
   readonly no_charge?: true;
   /** With options on its lines: the signer ticks exactly one, or any. */
   readonly choose?: ChooseMode;
+  /** A second signature: the offer is accepted once both are in. */
+  readonly second_signer?: SecondSigner;
+  /** PDFs attached after the offer's pages, listed in its clause. */
+  readonly annexes?: readonly OfferAnnex[];
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -225,6 +256,15 @@ interface Copy {
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
   readonly acceptance: Acceptance;
+  /** A second signature: its heading for each kind, and the labels of what it prints. */
+  readonly second: {
+    readonly customer: string;
+    readonly dembrane: string;
+    readonly name: string;
+    readonly role: string;
+    readonly date: string;
+    readonly signature: string;
+  };
   readonly amendmentsTitle: string;
   readonly words: ClauseWords;
   readonly months: readonly string[];
@@ -300,6 +340,8 @@ interface ClauseWords {
   readonly dpaSeparate: string;
   /** An amendment wins over the documents above it. */
   readonly amendmentsFirst: string;
+  /** After an attached annex's name: one page, or {n} pages. */
+  readonly attached: readonly [string, string];
   readonly precedence: string;
   readonly received: string;
 }
@@ -322,6 +364,7 @@ const EN_SUB_WORDS: ClauseWords = {
   amendmentWhere: ", as set out in this offer",
   dpaSeparate: EN_DPA_SEPARATE,
   amendmentsFirst: EN_AMENDMENTS_FIRST,
+  attached: [", attached to this offer (1 page)", ", attached to this offer ({n} pages)"],
   precedence:
     "In the event of any conflict, the order of precedence as set out in article 2.4 of the General Terms and Conditions shall apply.",
   received:
@@ -355,11 +398,28 @@ const NL_WORDS: ClauseWords = {
     "De Verwerkersovereenkomst wordt apart ondertekend, door iemand die namens de organisatie verwerkingsafspraken mag aangaan; deze offerte ondertekent die niet. De Overeenkomst is pas volledig als ook de Verwerkersovereenkomst is ondertekend (art. 3.6 van de Algemene Voorwaarden).",
   amendmentsFirst:
     "Waar een aanvulling in deze offerte afwijkt van de hierboven genoemde documenten, geldt de aanvulling.",
+  attached: [
+    ", bijgevoegd bij deze offerte (1 pagina)",
+    ", bijgevoegd bij deze offerte ({n} pagina's)",
+  ],
   precedence:
     "In geval van strijdigheid geldt de rangorde zoals bepaald in artikel 2.4 van de Algemene Voorwaarden.",
   received:
     "Door ondertekening verklaart u bovengenoemde documenten te hebben ontvangen dan wel via de bovenstaande links te kunnen raadplegen.",
 };
+
+/**
+ * How an attached annex is named on its pages and in the clause: "Annex C: Project plan",
+ * lettered on from the standard annexes the offer lists.
+ */
+export function annexLabel(content: OfferContent, annex: OfferAnnex): string {
+  const words = COPY[content.template][content.language].words;
+  const standard = (["sla", "dpa"] as const).filter(
+    (k) => legalKinds(content.template).includes(k) && !(k === "dpa" && content.processing_terms),
+  ).length;
+  const i = (content.annexes ?? []).findIndex((a) => a.number === annex.number);
+  return `${words.annex} ${String.fromCharCode(65 + standard + Math.max(i, 0))}: ${annex.name}`;
+}
 
 /** The standard documents an offer of this kind incorporates: an event has no SLA. */
 export function legalKinds(template: OfferTemplate): readonly ("terms" | "sla" | "dpa")[] {
@@ -391,6 +451,10 @@ function buildClause(w: ClauseWords, content: OfferContent): Clause {
       `${w.annex} ${String.fromCharCode(65 + i)}: `,
       linked(k === "sla" ? w.sla : w.dpa, l[k]),
       ...version(l[k]),
+    ]),
+    // The PDFs attached to this offer, lettered on from the standard annexes.
+    ...(content.annexes ?? []).map((a, i) => [
+      `${w.annex} ${String.fromCharCode(65 + annexes.length + i)}: ${a.name}${(a.pages === 1 ? w.attached[0] : w.attached[1]).replace("{n}", String(a.pages))}`,
     ]),
     ...(own ? [[own]] : []),
     ...amendments.map((a, i) => [`${w.amendment} ${i + 1}: ${a.title}${w.amendmentWhere}`]),
@@ -502,6 +566,14 @@ const EN_FRAME = {
       "No Dutch VAT: the service is supplied outside the EU (Article 44, Directive 2006/112/EC).",
   },
   amendmentsTitle: "Amendments to the standard documents",
+  second: {
+    customer: "Second signature",
+    dembrane: "For dembrane B.V.",
+    name: "Name",
+    role: "Role",
+    date: "Date",
+    signature: "Signature",
+  },
   acceptanceTitle: "Accept this offer",
   // The e-signing clause sits where the reader signs.
   acceptanceIntro:
@@ -547,6 +619,14 @@ const NL_FRAME = {
       "Geen Nederlandse btw: de dienst wordt buiten de EU verricht (artikel 44, Richtlijn 2006/112/EG).",
   },
   amendmentsTitle: "Aanvullingen op de standaarddocumenten",
+  second: {
+    customer: "Tweede handtekening",
+    dembrane: "Namens dembrane B.V.",
+    name: "Naam",
+    role: "Functie",
+    date: "Datum",
+    signature: "Handtekening",
+  },
   acceptanceTitle: "Offerte accepteren",
   acceptanceIntro:
     "Vul de velden hieronder in en onderteken elektronisch om deze offerte te accepteren. Partijen komen overeen dat die handtekening hen bindt zoals een handgeschreven handtekening (artikel 3:15a BW).",
@@ -849,6 +929,16 @@ export interface OfferLayout {
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
   readonly acceptance: Acceptance;
+  /**
+   * A second signature under the first: its heading, what it prints (dembrane's signatory
+   * by name and role), and its fields, which the second signer fills in.
+   */
+  readonly second: {
+    readonly title: string;
+    readonly printed: readonly (readonly [string, string])[];
+    readonly fields: readonly AcceptanceField[];
+    readonly signing: readonly AcceptanceField[];
+  } | null;
   /** The clause as plain lines, numbered, for the text. */
   readonly clause: readonly string[];
   /** The same clause in parts, for the PDF: linked names, underlined words. */
@@ -1057,12 +1147,45 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
     acceptance: copy.acceptance,
+    second: secondBlock(copy, content.second_signer),
     clause: [
       clause.opening,
       ...clause.items.map((line, i) => `${i + 1}. ${clauseText(line)}`),
       ...clause.closing,
     ],
     clauseParts: clause,
+  };
+}
+
+/**
+ * The block of a second signature. Another signatory of the customer fills in their name,
+ * role, date and signature; dembrane's signatory is printed by name and role and fills in
+ * the date and signature.
+ */
+function secondBlock(copy: Copy, second: SecondSigner | undefined): OfferLayout["second"] {
+  if (!second) return null;
+  const w = copy.second;
+  if (second.kind === "customer")
+    return {
+      title: w.customer,
+      printed: [],
+      fields: [
+        { ...f(w.name, "name"), role: "second" },
+        { ...f(w.role, "role"), role: "second" },
+      ],
+      signing: [
+        { ...f(w.date, "date"), role: "second" },
+        { ...f(w.signature, "signature"), role: "second" },
+      ],
+    };
+  return {
+    title: w.dembrane,
+    printed: [[w.name, second.name], ...(second.role ? [[w.role, second.role] as const] : [])],
+    fields: [],
+    signing: [
+      { ...f(w.date, "date"), role: "dembrane" },
+      { ...f(w.signature, "signature"), role: "dembrane" },
+    ],
   };
 }
 
@@ -1155,6 +1278,14 @@ export function offerText(content: OfferContent): string {
       ? [l.choices.acceptanceTitle, ...l.choices.fields.map((a) => `[ ] ${a.label}`)]
       : []),
     ...[...l.acceptance.fields, ...l.acceptance.signing].map((a) => `${a.label}: ${blank}`),
+    ...(l.second
+      ? [
+          "",
+          `### ${l.second.title}`,
+          ...l.second.printed.map(([k, v]) => `${k}: ${v}`),
+          ...[...l.second.fields, ...l.second.signing].map((a) => `${a.label}: ${blank}`),
+        ]
+      : []),
     "",
     ...l.clause,
     "",

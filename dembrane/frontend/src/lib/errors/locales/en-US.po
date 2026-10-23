@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online payments are not available right now. Contact us to change your plan."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Only {email} can sign second."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Only {signer_email} can decline this document."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Only {signer_email} can sign this document. Ask them to sign it, or ask us to change the signer."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "This document can no longer be declined."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "This document cannot be signed right now. We have been told and will fix it."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "This document was declined, so it can no longer be signed."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "This document was withdrawn, so it can no longer be signed."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "To move projects, you need to be an admin or owner of the {side} workspace."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "To sign, sign in with a verified email address."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "We could not reach part of dembrane just now. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "We could not read your signature. Draw it again and try once more."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "You selected too many items. Select fewer and try again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "You signed already. Someone else from your organisation signs second."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "You were removed from this workspace. Ask a workspace admin to invite you back."
@@ -1762,3 +1772,8 @@ msgstr "Your recording has not reached us yet. Wait a moment and try again."
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Your session has ended. Log in again to continue."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Your signature is in. The other signature is still to come."

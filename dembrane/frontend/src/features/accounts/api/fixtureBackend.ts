@@ -83,6 +83,7 @@ function demoStore(): Store {
 	const invoice: DocumentDetailT = {
 		...(clone(invoiceSummary) as DocumentSummaryT),
 		access: "member",
+		awaiting_signatures: [],
 		body: null,
 		confirmation: null,
 		content: null,
@@ -95,6 +96,7 @@ function demoStore(): Store {
 		prefill: { address: null, organisation: null, po_number: null },
 		sha256: null,
 		signature: null,
+		signatures: [],
 		signing_note: null,
 		staff_url: null,
 	};
@@ -1815,6 +1817,7 @@ export async function handle(
 				const d: DocumentDetailT = {
 					accepted_outside: null,
 					access: "staff",
+					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
 					confirmation: null,
 					content: null,
@@ -1837,6 +1840,7 @@ export async function handle(
 					sent_at: sendNow ? now() : null,
 					sha256: bytes ? await sha256Hex(bytes) : randomHex(),
 					signature: null,
+					signatures: [],
 					signed_at: null,
 					signed_pdf_url: null,
 					signer: null,

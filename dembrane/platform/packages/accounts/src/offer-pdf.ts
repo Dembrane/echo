@@ -447,6 +447,7 @@ class Sheet {
       label: field.label,
       required: field.required,
       key: field.key,
+      ...(field.role && { role: field.role }),
     });
     return lineY;
   }
@@ -739,6 +740,32 @@ function acceptance(s: Sheet, l: OfferLayout) {
     bottom = s.blank(signature, x, RIGHT - x, top, 48);
   }
   s.y = bottom;
+  // A second signature under the first: another signatory of theirs, or dembrane's.
+  const second = l.second;
+  if (second) {
+    s.gap(26);
+    s.room(80 + 36 * (second.printed.length + second.fields.length));
+    s.para({ runs: runs(second.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+    for (const [label, value] of second.printed) {
+      s.at(label, MARGIN, s.y, CAPTION);
+      s.at(value, MARGIN, s.y + 13, BODY);
+      s.y += 34;
+    }
+    for (const field of second.fields) {
+      s.room(36);
+      s.y = s.blank(field, MARGIN, CONTENT_W, s.y, 26) + 11;
+    }
+    s.room(56);
+    const [sDate, sSignature] = second.signing;
+    const sTop = s.y;
+    let sBottom = sTop;
+    if (sDate) sBottom = s.blank(sDate, MARGIN, dateW, sTop, 48);
+    if (sSignature) {
+      const x = MARGIN + dateW + 24;
+      sBottom = s.blank(sSignature, x, RIGHT - x, sTop, 48);
+    }
+    s.y = sBottom;
+  }
   s.done(32);
 }
 

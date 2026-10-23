@@ -269,15 +269,22 @@ export const account_signature = pgTable(
     customerReference: text("customer_reference"),
     /** The staff member who recorded an acceptance outside dembrane. */
     recordedBy: uuid("recorded_by"),
+    /**
+     * Whose signature this is on a document that asks for more than one: `customer` (the
+     * first, as every document has), `second` (a second signatory of the customer) or
+     * `dembrane` (our counter-signature). One row per document and slot.
+     */
+    slot: text("slot").notNull().default("customer"),
   },
   (t) => [
-    unique("account_signature_document_id_unique").on(t.documentId),
+    unique("account_signature_document_slot_unique").on(t.documentId, t.slot),
     index("account_signature_org_id_index").on(t.orgId),
     foreignKey({
       columns: [t.documentId],
       foreignColumns: [account_document.id],
       name: "account_signature_document_id_foreign",
     }),
+    check("account_signature_slot_check", sql`${t.slot} in ('customer', 'second', 'dembrane')`),
     check(
       "account_signature_method_check",
       sql`${t.method} in ('drawn', 'typed', 'uploaded', 'outside')`,

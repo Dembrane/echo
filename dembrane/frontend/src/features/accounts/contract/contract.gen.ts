@@ -303,6 +303,42 @@ export const BillTo = z.object({
  * on signing (the first only) or on a date, with a share of the total in basis points that
  * add up to 10000. The last part takes the cents left by rounding.
  */
+/**
+ * Who signs a field: `signer`, the customer (every document); `second`, a second signatory of
+ * the customer; `dembrane`, our counter-signature. The last two only on offers that ask.
+ */
+export const SignerRole = z.enum(["signer", "second", "dembrane"]);
+/** Whose signature a row is, on a document that asks for more than one. */
+export const SignatureSlot = z.enum(["customer", "second", "dembrane"]);
+
+/**
+ * A second signature an offer asks for: another signatory of the customer (named, or any
+ * other member who may sign), or dembrane's counter-signature by the staff member named.
+ */
+export const SecondSigner = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("customer"),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+  }),
+  z.object({
+    kind: z.literal("dembrane"),
+    name: z.string(),
+    email: z.string(),
+    role: z.string().nullable(),
+  }),
+]);
+
+/** A PDF attached to an offer, listed in its clause and part of the PDF the customer signs. */
+export const OfferAnnex = z.object({
+  /** From 1, as the clause and the annex's pages name it. */
+  number: z.number().int(),
+  name: z.string(),
+  pages: z.number().int(),
+  sha256: z.string(),
+  bytes: z.number().int(),
+});
+
 export const InvoicePlan = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("monthly"), parts: z.number().int().min(2).max(24) }),
   z.object({
@@ -355,6 +391,10 @@ export const OfferContent = z.object({
   no_charge: z.literal(true).optional(),
   /** With options on its lines: the customer ticks exactly one, or any, when signing. */
   choose: z.enum(["any", "one"]).optional(),
+  /** A second signature the offer asks for; accepted once every signature is in. */
+  second_signer: SecondSigner.optional(),
+  /** PDFs attached to the offer, in order: in its clause, its hash and the signed PDF. */
+  annexes: z.array(OfferAnnex).optional(),
 });
 
 export const LegalPin = z.object({
@@ -389,8 +429,8 @@ export const DocumentFieldInput = z.object({
   kind: FieldKind,
   label: text(120),
   required: z.boolean().default(true),
-  /** Who fills it; one signer per document today, so always "signer". */
-  signer_role: z.literal("signer").default("signer"),
+  /** Who fills it: the customer's signer, unless an offer asks for a second signature. */
+  signer_role: SignerRole.default("signer"),
   key: optText(64),
 });
 export const DocumentField = DocumentFieldInput.extend({
@@ -454,6 +494,21 @@ export const DocumentDetail = DocumentSummary.extend({
     .object({ dpa_authorised: z.string(), dpa_not_authorised: z.string().nullable() })
     .nullable(),
   signature: Signature.nullable(),
+  /** Every signature made so far, in order: one on most documents. */
+  signatures: z.array(
+    z.object({
+      slot: SignatureSlot,
+      name: z.string(),
+      role: z.string().nullable(),
+      email: z.string(),
+      signed_at: IsoTime,
+    }),
+  ),
+  /**
+   * The signatures still to come on a sent document that asks for more than one, in the
+   * order they are asked for; empty once all are in, or on a document that asks for one.
+   */
+  awaiting_signatures: z.array(SignatureSlot),
   /**
    * What the signing screen fills in for the `organisation` and `address` text fields: the
    * billed name (else the organisation's) and the billing address, null when unknown; and
@@ -1018,6 +1073,33 @@ export const PushOfferRequest = z.object({
    */
   choose: z.enum(["any", "one"]).optional(),
   /**
+   * A second signature: `customer`, another signatory of theirs (name and email when known;
+   * without an email any other member who may sign), or `dembrane`, our counter-signature by
+   * the staff member named, who signs from the staff page. The offer is accepted, and its
+   * tasks and invoice follow, once every signature is in; each is its own record. On a
+   * change, absent keeps the draft's and null drops it.
+   */
+  second_signer: z
+    .discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("customer"),
+        name: optText(200),
+        email: z
+          .email()
+          .max(255)
+          .nullish()
+          .transform((v) => v ?? null),
+      }),
+      z.object({
+        kind: z.literal("dembrane"),
+        name: text(200),
+        email: z.email().max(255),
+        role: optText(200),
+      }),
+    ])
+    .nullable()
+    .optional(),
+  /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.
    */
@@ -1079,6 +1161,23 @@ export const PushDocumentRequest = z.object({
   send: z.boolean().default(true),
 });
 export const PushDocumentResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
+
+/**
+ * POST .../offers/:docId/annexes: a PDF attached to a draft offer, at most 10 MB, 5 per
+ * offer. It is listed in the offer's clause by its name and pages, follows the offer's pages
+ * in the PDF the customer reads and signs, and is part of the hash fixed when it is sent.
+ */
+export const AddAnnexRequest = z.object({
+  name: text(120),
+  pdf_base64: z.string().min(1).max(14_000_000),
+});
+
+/**
+ * POST .../documents/:docId/countersign: dembrane's counter-signature of an offer that asks
+ * for it, by the staff member it names, signed in as themselves (a staff key cannot). The
+ * date is today; name and role are the offer's.
+ */
+export const CountersignRequest = z.object({ signature: SignatureImage });
 
 /** A reason is optional, except to void a document accepted outside dembrane. */
 export const VoidRequest = z.object({ reason: optText(2000) });
@@ -1622,6 +1721,29 @@ export const ROUTES = {
     path: `${S}/:orgId/documents/:docId/accepted-outside`,
     permission: "staff:accounts",
     request: AcceptOutsideRequest,
+    response: DocumentDetail,
+  },
+  /** Attaches a PDF to a draft offer; answers the draft as it now is. */
+  addAnnex: {
+    method: "POST",
+    path: `${S}/:orgId/offers/:docId/annexes`,
+    permission: "staff:accounts",
+    request: AddAnnexRequest,
+    response: DocumentDetail,
+  },
+  /** Takes an annex off a draft offer; the ones after it move up one. */
+  removeAnnex: {
+    method: "POST",
+    path: `${S}/:orgId/offers/:docId/annexes/:number/remove`,
+    permission: "staff:accounts",
+    response: DocumentDetail,
+  },
+  /** dembrane's counter-signature, by the staff member the offer names. */
+  countersign: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/countersign`,
+    permission: "staff:accounts",
+    request: CountersignRequest,
     response: DocumentDetail,
   },
   /** The evidence of an acceptance outside dembrane: the PDF or EML staff recorded. */

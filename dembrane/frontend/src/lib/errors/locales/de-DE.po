@@ -329,12 +329,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online-Zahlungen sind derzeit nicht verfügbar. Kontaktieren Sie uns, um Ihren Tarif zu ändern."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Nur {email} kann als Zweite(r) unterzeichnen."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Nur {signer_email} kann dieses Dokument ablehnen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:107
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Nur {signer_email} kann dieses Dokument unterschreiben. Bitten Sie die Person zu unterschreiben oder bitten Sie uns, die unterzeichnende Person zu ändern."
 
@@ -819,7 +824,7 @@ msgid "error.document.not_declinable"
 msgstr "Dieses Dokument kann nicht mehr abgelehnt werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "Dieses Dokument kann derzeit nicht unterzeichnet werden. Wir wurden benachrichtigt und beheben das Problem."
 
@@ -859,7 +864,7 @@ msgid "error.document.declined"
 msgstr "Dieses Dokument wurde abgelehnt und kann daher nicht mehr unterzeichnet werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:121
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "Dieses Dokument wurde zurückgezogen und kann daher nicht mehr unterzeichnet werden."
 
@@ -1209,7 +1214,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Um Projekte zu verschieben, müssen Sie Administrator oder Eigentümer des Arbeitsbereichs {side} sein."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "Um zu unterschreiben, melden Sie sich mit einer verifizierten E-Mail-Adresse an."
 
@@ -1519,7 +1524,7 @@ msgid "error.internal.unavailable"
 msgstr "Wir konnten einen Teil von dembrane gerade nicht erreichen. Versuchen Sie es gleich noch einmal."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:102
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "Wir konnten Ihre Unterschrift nicht erkennen. Zeichnen Sie sie neu und versuchen Sie es noch einmal."
 
@@ -1714,6 +1719,11 @@ msgid "error.map.selection_too_large"
 msgstr "Sie haben zu viele Elemente ausgewählt. Wählen Sie weniger aus und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "Sie haben bereits unterzeichnet. Jemand anderes aus Ihrer Organisation unterzeichnet als Zweite(r)."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "Sie wurden aus diesem Arbeitsbereich entfernt. Bitten Sie einen Arbeitsbereich-Administrator, Sie erneut einzuladen."
@@ -1762,3 +1772,8 @@ msgstr "Ihre Aufnahme hat uns noch nicht erreicht. Warten Sie einen Moment und v
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um fortzufahren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Ihre Unterschrift ist da. Die andere Unterschrift folgt noch."
