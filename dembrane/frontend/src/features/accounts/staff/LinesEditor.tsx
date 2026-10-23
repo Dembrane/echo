@@ -7,6 +7,7 @@ import {
 	Group,
 	NumberInput,
 	Paper,
+	SegmentedControl,
 	SimpleGrid,
 	Stack,
 	Text,
@@ -29,13 +30,18 @@ export interface Line {
 	vatPercent: number;
 	/** A discount: sent as a negative unit price. */
 	discount: boolean;
+	/** Charged; optional (shown with its price, not counted); included (shown, no price). */
+	kind: LineKind;
 }
+
+export type LineKind = "charged" | "optional" | "included";
 
 export const emptyLine = (): Line => ({
 	bullets: "",
 	description: "",
 	discount: false,
 	id: crypto.randomUUID(),
+	kind: "charged",
 	quantity: 1,
 	unit: "",
 	unitPrice: 0,
@@ -44,9 +50,15 @@ export const emptyLine = (): Line => ({
 
 export const cents = (euros: number) => Math.round(euros * 100);
 
-/** What a line counts toward the total, in cents: below zero for a discount. */
+/** A line's own amount, in cents: below zero for a discount, zero when included. */
+export const lineAmount = (l: Line) =>
+	l.kind === "included"
+		? 0
+		: l.quantity * cents(l.unitPrice) * (l.discount ? -1 : 1);
+
+/** What a line counts toward the total, in cents: only a charged line counts. */
 export const lineCents = (l: Line) =>
-	l.quantity * cents(l.unitPrice) * (l.discount ? -1 : 1);
+	l.kind === "charged" ? lineAmount(l) : 0;
 
 /** The editor's lines from the contract's OfferItem list. */
 export const toLines = (
@@ -57,6 +69,7 @@ export const toLines = (
 		unit?: string | null;
 		unit_price_cents: number;
 		vat_rate_bps: number;
+		kind?: "optional" | "included" | null;
 	}[],
 ): Line[] =>
 	items.map((item) => ({
@@ -64,6 +77,7 @@ export const toLines = (
 		description: item.description,
 		discount: item.unit_price_cents < 0,
 		id: crypto.randomUUID(),
+		kind: item.kind ?? "charged",
 		quantity: item.quantity,
 		unit: item.unit ?? "",
 		unitPrice: Math.abs(item.unit_price_cents) / 100,
@@ -79,14 +93,18 @@ export const toItems = (lines: Line[]) =>
 			.filter(Boolean),
 		description: l.description,
 		quantity: l.quantity,
+		...(l.kind !== "charged" && { kind: l.kind }),
 		...(l.unit.trim() && { unit: l.unit.trim() }),
-		unit_price_cents: cents(l.unitPrice) * (l.discount ? -1 : 1),
+		// An included line has no price; the one typed stays in the form for a switch back.
+		unit_price_cents:
+			l.kind === "included" ? 0 : cents(l.unitPrice) * (l.discount ? -1 : 1),
 		vat_rate_bps: Math.round(l.vatPercent * 100),
 	}));
 
 /**
  * The offer lines, shared by "Push offer" and the demo's "Prepare an offer". `discounts`
- * adds discount lines; `vatFixed` holds every line at 0% (reverse charge, outside the EU).
+ * adds discount lines and the choice per line of charged, optional or included;
+ * `vatFixed` holds every line at 0% (reverse charge, outside the EU).
  */
 export function LinesEditor({
 	lines,
@@ -130,6 +148,24 @@ export function LinesEditor({
 								error={fields[`items.${i}.description`]}
 								data-testid="line-description"
 							/>
+							{discounts && !line.discount && (
+								<Stack gap={4}>
+									<Text size="sm">
+										<Trans>Price</Trans>
+									</Text>
+									<SegmentedControl
+										size="sm"
+										value={line.kind}
+										onChange={(v) => update(i, { kind: v as LineKind })}
+										data={[
+											{ label: t`Charged`, value: "charged" },
+											{ label: t`Optional`, value: "optional" },
+											{ label: t`Included`, value: "included" },
+										]}
+										data-testid="line-kind"
+									/>
+								</Stack>
+							)}
 							{lines.length > 1 && (
 								<ActionIcon
 									variant="subtle"
@@ -173,7 +209,8 @@ export function LinesEditor({
 								}
 								min={0}
 								decimalScale={2}
-								value={line.unitPrice}
+								value={line.kind === "included" ? 0 : line.unitPrice}
+								disabled={line.kind === "included"}
 								onChange={(v) =>
 									update(i, { unitPrice: Math.abs(Number(v)) || 0 })
 								}
@@ -190,10 +227,18 @@ export function LinesEditor({
 							/>
 							<Stack gap={2} justify="flex-end">
 								<Text size="xs" c="dimmed">
-									<Trans>Line total</Trans>
+									{line.kind === "optional" ? (
+										<Trans>Not in the total</Trans>
+									) : (
+										<Trans>Line total</Trans>
+									)}
 								</Text>
 								<Text size="sm" data-testid="line-total">
-									{formatMoney(lineCents(line), currency, i18n.locale)}
+									{line.kind === "included" ? (
+										<Trans>Included</Trans>
+									) : (
+										formatMoney(lineAmount(line), currency, i18n.locale)
+									)}
 								</Text>
 							</Stack>
 						</SimpleGrid>

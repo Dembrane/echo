@@ -566,22 +566,21 @@ function lines(s: Sheet, l: OfferLayout) {
       { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
     ]),
   );
-  for (const r of l.rows) {
-    row([
-      [
-        text(r.description),
-        ...r.bullets.map(
-          (b): Para => ({
-            runs: runs(b, { ...BODY, c: MUTED }),
-            leading: BODY_LEADING,
-            left: 11,
-            marker: { at: 1, draw: { disc: T.body, c: MUTED } },
-          }),
-        ),
-      ],
-      ...r.cells.map((c): Para[] => [text(c, { align: "right" })]),
-    ]);
-  }
+  const cells = (r: OfferLayout["rows"][number]): Para[][] => [
+    [
+      text(r.description),
+      ...r.bullets.map(
+        (b): Para => ({
+          runs: runs(b, { ...BODY, c: MUTED }),
+          leading: BODY_LEADING,
+          left: 11,
+          marker: { at: 1, draw: { disc: T.body, c: MUTED } },
+        }),
+      ),
+    ],
+    ...r.cells.map((c): Para[] => [text(c, { align: "right" })]),
+  ];
+  for (const r of l.rows) row(cells(r));
 
   // Subtotal and VAT, then the total over a rule in the text colour, one step up.
   const labelX = (xs[1] as number) + GUTTER / 2;
@@ -611,6 +610,22 @@ function lines(s: Sheet, l: OfferLayout) {
       { runs: runs(l.vatNote, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
       { x: labelX, width: RIGHT - labelX },
     );
+
+  // Optional lines apart, under their own heading and table, after the total they are not in.
+  if (l.optional) {
+    s.gap(28);
+    s.room(110);
+    s.para({ runs: runs(l.optional.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 2 });
+    s.para({ runs: runs(l.optional.note, CAPTION), leading: 1.4, after: 10 });
+    s.gap(0);
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
+    );
+    for (const r of l.optional.rows) row(cells(r));
+  }
   s.done(36);
 }
 

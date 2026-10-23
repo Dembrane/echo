@@ -1143,4 +1143,73 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect((await sign(e.id, "outsider", org)).status).toBe(200);
     expect(lastInvoice().po_number).toBe(onFile as string);
   });
+
+  test("optional and included lines are shown but neither stored totals nor the invoice count them", async () => {
+    const org = w.otherOrgId;
+    const requested = () => inbox("echo_account_invoice_requested_v1");
+    const items = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 2100 },
+      {
+        description: "Onboarding",
+        quantity: 1,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included",
+      },
+      {
+        description: "Extra workshop",
+        quantity: 1,
+        unit_price_cents: 95000,
+        vat_rate_bps: 2100,
+        kind: "optional",
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-OPT1", template: "custom", items });
+    expect([doc.subtotal_cents, doc.vat_cents, doc.total_cents]).toEqual([103200, 21672, 124872]);
+    expect(doc.content?.items.map((i) => i.kind ?? "charged")).toEqual([
+      "charged",
+      "included",
+      "optional",
+    ]);
+    expect(doc.body).toContain("| Onboarding | 1 |  | Included |");
+    expect(doc.body).toContain("## Optional");
+    const row = await store.document(w.db, org, doc.id);
+    expect([row?.subtotalCents, row?.totalCents]).toEqual([103200, 124872]);
+
+    // Signed, the invoice asks for the charged line only.
+    await send(doc.id, org);
+    const before = requested().length;
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(requested()).toHaveLength(before + 1);
+    const message = requested().at(-1) as {
+      document: { total_cents: number };
+      invoice: { items: { description: string }[] };
+    };
+    expect(message.document.total_cents).toBe(124872);
+    expect(message.invoice.items.map((i) => i.description)).toEqual(["Licence"]);
+
+    // Options alone ask for nothing, and an included line carries no price.
+    const onlyOptions = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-OPT2", items: [items[2]] }),
+    );
+    expect(onlyOptions.status).toBe(422);
+    expect(JSON.stringify(onlyOptions.data)).toContain("more than zero");
+    const pricedIncluded = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({
+        send: false,
+        reference: "OFFER-OPT3",
+        items: [items[0], { ...items[1], unit_price_cents: 5000 }],
+      }),
+    );
+    expect(pricedIncluded.status).toBe(422);
+    expect(JSON.stringify(pricedIncluded.data)).toContain("included at no charge");
+  });
 });

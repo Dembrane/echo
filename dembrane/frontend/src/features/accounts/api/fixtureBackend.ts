@@ -475,11 +475,13 @@ function priced(raw: unknown) {
 		const vat = Math.round((net * it.vat_rate_bps) / 10_000);
 		return { ...it, net_cents: net, total_cents: net + vat, vat_cents: vat };
 	});
+	// Optional and included lines are shown, never counted.
+	const counted = lines.filter((l) => !l.kind);
 	return {
 		items,
 		lines,
-		subtotal: lines.reduce((a, l) => a + l.net_cents, 0),
-		vat: lines.reduce((a, l) => a + l.vat_cents, 0),
+		subtotal: counted.reduce((a, l) => a + l.net_cents, 0),
+		vat: counted.reduce((a, l) => a + l.vat_cents, 0),
 	};
 }
 

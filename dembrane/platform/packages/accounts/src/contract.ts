@@ -177,6 +177,13 @@ export const OfferItem = z.object({
   unit: z.string().trim().max(30).optional(),
   unit_price_cents: Cents,
   vat_rate_bps: z.number().int(),
+  /**
+   * Left out, the line is charged. `optional`: shown with its price apart under the totals,
+   * counted nowhere (the customer who wants it gets a revised offer). `included`: shown at
+   * no charge with no price (`unit_price_cents` 0), counted nowhere. Totals, the invoice
+   * request and the rule that an offer totals more than zero count charged lines only.
+   */
+  kind: z.enum(["optional", "included"]).optional(),
 });
 
 /**
