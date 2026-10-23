@@ -24,7 +24,7 @@ msgid "error.request.field_empty"
 msgstr "{field} non può essere vuoto. Compilalo o rimuovilo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_date_invalid"
 msgstr "{label} deve essere una data reale, non futura e non precedente all'invio del documento."
 
@@ -54,12 +54,12 @@ msgid "error.offer.bill_to_vat_format"
 msgstr "{vat_id} non sembra una partita IVA di {country}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:67
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'immagine delle tue iniziali} other {L'immagine della tua firma}} è troppo grande. Mantienila sotto i 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:62
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Le tue iniziali devono} other {La tua firma deve}} essere un'immagine PNG."
 
@@ -129,7 +129,7 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Aggiungi il nome dell'organizzazione titolare dei dati."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:59
+#: src/lib/errors/messages/offer.ts:63
 msgid "error.offer.no_charge_invoiced"
 msgstr "Un'offerta gratuita non ha un piano di fatturazione né una parte pagante."
 
@@ -174,7 +174,7 @@ msgid "error.map.groups_need_snapshot"
 msgstr "I gruppi si salvano su una mappa rigenerata. Rigenera la mappa e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:27
+#: src/lib/errors/messages/document.ts:31
 msgid "error.document.dpa_not_authorised"
 msgstr "Conferma di essere autorizzato ad accettare il trattamento dei dati per la tua organizzazione."
 
@@ -224,7 +224,7 @@ msgid "error.field.invalid_url"
 msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:45
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_text_invalid"
 msgstr "Inserisci il testo per {label}."
 
@@ -239,7 +239,7 @@ msgid "error.request.field_required"
 msgstr "Compila {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:41
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_required"
 msgstr "Compila {label} per continuare."
 
@@ -254,7 +254,7 @@ msgid "error.access.not_onboarded"
 msgstr "Completa la configurazione del tuo account per continuare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:33
+#: src/lib/errors/messages/offer.ts:37
 msgid "error.offer.invoice_part_share"
 msgstr "Dai alla rata {part} una quota superiore a zero."
 
@@ -274,17 +274,22 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:42
+#: src/lib/errors/messages/offer.ts:46
 msgid "error.offer.invoice_parts_count"
 msgstr "Fattura in {min}-{max} rate."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:54
+#: src/lib/errors/messages/offer.ts:72
+msgid "error.offer.option_not_optional"
+msgstr "La riga {line} ha un nome di opzione. Rendila opzionale o cancella il nome."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:58
 msgid "error.offer.line_no_amount"
 msgstr "La riga {line} non ha un prezzo. Per un'offerta gratuita, scegli Gratuito in Come fatturiamo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:68
+#: src/lib/errors/messages/offer.ts:82
 msgid "error.offer.section_missing"
 msgstr "La riga {line} non ha una sezione. Metti ogni riga sotto un titolo, oppure nessuna."
 
@@ -294,7 +299,7 @@ msgid "error.conversation.no_summary"
 msgstr "Crea prima un riassunto di questa conversazione, poi riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:63
+#: src/lib/errors/messages/offer.ts:67
 msgid "error.offer.no_charge_total"
 msgstr "Gratuito significa un totale pari a zero. Imposta i prezzi a 0 o scegli un altro modo di fatturare."
 
@@ -324,12 +329,12 @@ msgid "error.billing.payments_unavailable"
 msgstr "I pagamenti online non sono al momento disponibili. Contattaci per cambiare piano."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:19
+#: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Solo {signer_email} può rifiutare questo documento."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:107
 msgid "error.document.signer_only"
 msgstr "Solo {signer_email} può firmare questo documento. Chiedi a questa persona di firmare o contattaci per cambiare il firmatario."
 
@@ -429,7 +434,12 @@ msgid "error.project.share_admin_only"
 msgstr "Solo gli amministratori dello spazio di lavoro possono condividere i progetti."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:37
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.options_not_here"
+msgstr "Le opzioni scelte alla firma non vanno con fatturazione mensile, a rate o gratuita."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:41
 msgid "error.offer.invoice_part_when"
 msgstr "Rata {part}: solo la prima può essere alla firma, e ogni data viene dopo la precedente."
 
@@ -624,7 +634,7 @@ msgid "error.rate_limit.exceeded"
 msgstr "Troppe richieste in poco tempo. Aspetta un attimo e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:14
+#: src/lib/errors/messages/document.ts:18
 msgid "error.document.confirmation_mismatch"
 msgstr "Il testo di conferma non corrisponde. Scrivilo esattamente così: {expected}"
 
@@ -644,7 +654,7 @@ msgid "error.agent.insight_content_blank"
 msgstr "L'insight non può essere vuoto. Scrivi qualcosa o eliminalo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:73
+#: src/lib/errors/messages/offer.ts:87
 msgid "error.offer.section_split"
 msgstr "Le righe di {section} devono stare insieme."
 
@@ -669,12 +679,12 @@ msgid "error.map.selection_other_snapshot"
 msgstr "La mappa è stata aggiornata dopo la tua selezione. Ricarica la mappa e seleziona di nuovo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:50
+#: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "Le rate sommano a {total}. Devono sommare a 100%."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:72
 msgid "error.document.no_pdf"
 msgstr "Il PDF di questo documento non è disponibile. Contattaci e te lo invieremo di nuovo."
 
@@ -684,7 +694,7 @@ msgid "error.billing.invoice_pdf_missing"
 msgstr "Il PDF di questa fattura non è ancora pronto. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:77
+#: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "Il totale è zero. Per un'offerta gratuita, scegli Gratuito in Come fatturiamo."
 
@@ -804,12 +814,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Questo proprietario dei dati fa già parte della tua organizzazione. Per un cliente esterno, indica qualcuno all'esterno, oppure crea uno spazio di lavoro interno."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:81
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_declinable"
 msgstr "Questo documento non può più essere rifiutato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:112
 msgid "error.document.signing_unavailable"
 msgstr "Questo documento non può essere firmato al momento. Abbiamo ricevuto la segnalazione e risolveremo il problema."
 
@@ -819,12 +829,12 @@ msgid "error.document.changed"
 msgstr "Questo documento è stato modificato dopo l'apertura. Ricarica la pagina e rileggilo prima di firmare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:57
 msgid "error.document.field_unknown"
 msgstr "Questo documento è stato modificato dopo l'apertura. Ricarica la pagina e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:73
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.no_signature_needed"
 msgstr "Questo documento non richiede una firma."
 
@@ -834,22 +844,22 @@ msgid "error.document.already_signed"
 msgstr "Questo documento è già firmato. Non c'è altro da fare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:93
 msgid "error.document.not_signed"
 msgstr "Questo documento non è ancora firmato, quindi non c'è una copia firmata da scaricare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:77
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_awaiting_signature"
 msgstr "Questo documento non è più in attesa di firma."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:23
+#: src/lib/errors/messages/document.ts:27
 msgid "error.document.declined"
 msgstr "Questo documento è stato rifiutato, quindi non può più essere firmato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:121
 msgid "error.document.withdrawn"
 msgstr "Questo documento è stato ritirato, quindi non può più essere firmato."
 
@@ -939,7 +949,7 @@ msgid "error.billing.tier_required"
 msgstr "È richiesto il piano {required}. Fai l'upgrade per usarlo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:94
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.offer_expired"
 msgstr "Questa offerta è scaduta il {valid_until}. Contattaci per riceverne una nuova."
 
@@ -1169,17 +1179,27 @@ msgid "error.workspace.has_projects"
 msgstr "Questo spazio di lavoro contiene ancora {count, plural, one {# progetto} other {# progetti}}. Eliminali o spostali prima dalla pagina Progetti della tua organizzazione."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:37
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_must_tick"
 msgstr "Seleziona {label} per continuare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:49
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.choose_one"
+msgstr "Spunta esattamente una delle opzioni, poi firma."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_tick_invalid"
 msgstr "Seleziona o deseleziona {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:46
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.choose_one_needs_two"
+msgstr "Per farne scegliere una, indica almeno due opzioni."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
 msgid "error.offer.invoice_parts_vat"
 msgstr "Per fatturare a rate, dai la stessa aliquota IVA a ogni riga addebitata."
 
@@ -1189,7 +1209,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Per spostare i progetti, devi essere un amministratore o proprietario dello spazio di lavoro {side}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:113
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.verified_email_required"
 msgstr "Per firmare, accedi con un indirizzo email verificato."
 
@@ -1324,7 +1344,7 @@ msgid "error.conversation.not_found"
 msgstr "Non siamo riusciti a trovare questa conversazione. Potrebbe essere stata eliminata."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:85
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_found"
 msgstr "Non siamo riusciti a trovare questo documento. Potrebbe essere stato revocato."
 
@@ -1499,7 +1519,7 @@ msgid "error.internal.unavailable"
 msgstr "Non siamo riusciti a raggiungere una parte di dembrane in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:102
 msgid "error.document.signature_unreadable"
 msgstr "Non siamo riusciti a leggere la tua firma. Disegnala di nuovo e riprova."
 

@@ -208,6 +208,12 @@ export const OfferItem = z.object({
    * lines, with their subtotal under them.
    */
   section: z.string().trim().min(1).max(120).optional(),
+  /**
+   * Optional lines only: the name of an option the customer may tick when they sign
+   * ("Scenario A"). Lines with the same name are one option, chosen together; a chosen
+   * option's lines are charged. The offer's `choose` says whether one or any are picked.
+   */
+  option: z.string().trim().min(1).max(60).optional(),
 });
 
 /**
@@ -253,6 +259,11 @@ export const PricedLine = OfferItem.extend({
   net_cents: z.number().int(),
   vat_cents: z.number().int(),
   total_cents: z.number().int(),
+  /**
+   * After signing, on a line of an option: whether the customer chose it. A chosen line has
+   * no `kind` any more and counts in the totals; one not chosen stays optional.
+   */
+  chosen: z.boolean().optional(),
 });
 
 /**
@@ -340,6 +351,8 @@ export const OfferContent = z.object({
   invoice_plan: InvoicePlan.optional(),
   /** True for an offer of zero staff chose on purpose: it is signed, never invoiced. */
   no_charge: z.literal(true).optional(),
+  /** With options on its lines: the customer ticks exactly one, or any, when signing. */
+  choose: z.enum(["any", "one"]).optional(),
 });
 
 export const LegalPin = z.object({
@@ -994,6 +1007,15 @@ export const PushOfferRequest = z.object({
    */
   no_charge: z.boolean().optional(),
   /**
+   * With options on optional lines (`items[].option`): `one` (the customer ticks exactly one
+   * when signing, as between two scenarios) or `any` (none, some or all; the default). The
+   * ticks are fields of the PDF, recorded with the signature and stamped on the signed copy;
+   * the chosen lines become charged and the document's totals and the invoice request follow.
+   * With `one`, every choice must make an offer above zero. Not with an invoice plan or
+   * `no_charge`. On a change, absent keeps the draft's.
+   */
+  choose: z.enum(["any", "one"]).optional(),
+  /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.
    */
@@ -1075,6 +1097,8 @@ export const AcceptOutsideRequest = z.object({
   email: z.email().max(255),
   accepted_on: IsoDate,
   customer_reference: optText(64),
+  /** An offer with options: the names of those the customer chose (`one`: exactly one). */
+  chosen_options: z.array(z.string().trim().max(60)).max(20).optional(),
   evidence_name: text(255),
   evidence_base64: z.string().min(1).max(14_000_000),
 });

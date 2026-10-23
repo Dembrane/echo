@@ -24,7 +24,7 @@ msgid "error.request.field_empty"
 msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_date_invalid"
 msgstr "{label} має бути справжньою датою, не в майбутньому і не раніше за день надсилання документа."
 
@@ -54,12 +54,12 @@ msgid "error.offer.bill_to_vat_format"
 msgstr "{vat_id} не схожий на номер ПДВ з {country}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:67
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Зображення ваших ініціалів} other {Зображення вашого підпису}} завелике. Розмір має бути менше 512 КБ."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:62
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Ваші ініціали мають} other {Ваш підпис має}} бути зображенням у форматі PNG."
 
@@ -129,7 +129,7 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Додайте назву організації, якій належать дані."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:59
+#: src/lib/errors/messages/offer.ts:63
 msgid "error.offer.no_charge_invoiced"
 msgstr "Безкоштовна пропозиція не має плану рахунків і сторони, що платить."
 
@@ -174,7 +174,7 @@ msgid "error.map.groups_need_snapshot"
 msgstr "Кластери зберігаються на перегенерованій мапі. Перегенеруйте мапу й спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:27
+#: src/lib/errors/messages/document.ts:31
 msgid "error.document.dpa_not_authorised"
 msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
 
@@ -224,7 +224,7 @@ msgid "error.field.invalid_url"
 msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:45
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_text_invalid"
 msgstr "Введіть текст для «{label}»."
 
@@ -239,7 +239,7 @@ msgid "error.request.field_required"
 msgstr "Заповніть {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:41
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_required"
 msgstr "Заповніть «{label}», щоб продовжити."
 
@@ -254,7 +254,7 @@ msgid "error.access.not_onboarded"
 msgstr "Завершіть налаштування облікового запису, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:33
+#: src/lib/errors/messages/offer.ts:37
 msgid "error.offer.invoice_part_share"
 msgstr "Дайте частині {part} частку більше нуля."
 
@@ -274,17 +274,22 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:42
+#: src/lib/errors/messages/offer.ts:46
 msgid "error.offer.invoice_parts_count"
 msgstr "Виставляйте рахунок частинами: від {min} до {max}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:54
+#: src/lib/errors/messages/offer.ts:72
+msgid "error.offer.option_not_optional"
+msgstr "Рядок {line} має назву варіанта. Зробіть його необов'язковим або зітріть назву."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:58
 msgid "error.offer.line_no_amount"
 msgstr "Рядок {line} не має ціни. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:68
+#: src/lib/errors/messages/offer.ts:82
 msgid "error.offer.section_missing"
 msgstr "Рядок {line} не має розділу. Розмістіть кожен рядок під заголовком або жоден."
 
@@ -294,7 +299,7 @@ msgid "error.conversation.no_summary"
 msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:63
+#: src/lib/errors/messages/offer.ts:67
 msgid "error.offer.no_charge_total"
 msgstr "Безкоштовно означає нульовий підсумок. Встановіть ціни на 0 або виберіть інший спосіб виставлення рахунку."
 
@@ -324,12 +329,12 @@ msgid "error.billing.payments_unavailable"
 msgstr "Онлайн-оплата зараз недоступна. Зв'яжіться з нами, щоб змінити тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:19
+#: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Лише {signer_email} може відхилити цей документ."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:107
 msgid "error.document.signer_only"
 msgstr "Лише {signer_email} може підписати цей документ. Попросіть підписати його або зверніться до нас, щоб змінити підписанта."
 
@@ -429,7 +434,12 @@ msgid "error.project.share_admin_only"
 msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:37
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.options_not_here"
+msgstr "Варіанти, вибрані під час підписання, не поєднуються з щомісячними, розстроченими чи безкоштовними рахунками."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:41
 msgid "error.offer.invoice_part_when"
 msgstr "Частина {part}: лише перша частина може бути під час підписання, і кожна дата йде після попередньої."
 
@@ -624,7 +634,7 @@ msgid "error.rate_limit.exceeded"
 msgstr "Забагато запитів за короткий час. Зачекайте мить і спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:14
+#: src/lib/errors/messages/document.ts:18
 msgid "error.document.confirmation_mismatch"
 msgstr "Текст підтвердження не збігається. Введіть його точно так, як показано: {expected}"
 
@@ -644,7 +654,7 @@ msgid "error.agent.insight_content_blank"
 msgstr "Інсайт не може бути порожнім. Напишіть щось або видаліть його."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:73
+#: src/lib/errors/messages/offer.ts:87
 msgid "error.offer.section_split"
 msgstr "Рядки розділу {section} мають іти разом."
 
@@ -669,12 +679,12 @@ msgid "error.map.selection_other_snapshot"
 msgstr "Карту було оновлено після вашого вибору. Оновіть карту та зробіть вибір знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:50
+#: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "Частини разом становлять {total}. Вони мають становити 100%."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:72
 msgid "error.document.no_pdf"
 msgstr "PDF цього документа недоступний. Зв'яжіться з нами, і ми надішлемо його знову."
 
@@ -684,7 +694,7 @@ msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF цього рахунка ще не готовий. Спробуйте трохи пізніше."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:77
+#: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "Підсумок нульовий. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
 
@@ -804,12 +814,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Цей власник даних уже є у вашій організації. Для зовнішнього клієнта вкажіть когось за її межами або натомість створіть внутрішній робочий простір."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:81
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_declinable"
 msgstr "Цей документ більше не можна відхилити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:112
 msgid "error.document.signing_unavailable"
 msgstr "Цей документ зараз не можна підписати. Ми вже знаємо про проблему та виправляємо її."
 
@@ -819,12 +829,12 @@ msgid "error.document.changed"
 msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та прочитайте його знову перед підписанням."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:57
 msgid "error.document.field_unknown"
 msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:73
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.no_signature_needed"
 msgstr "Цей документ не потребує підпису."
 
@@ -834,22 +844,22 @@ msgid "error.document.already_signed"
 msgstr "Цей документ уже підписано. Більше нічого робити не потрібно."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:93
 msgid "error.document.not_signed"
 msgstr "Цей документ ще не підписано, тому підписаної копії для завантаження немає."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:77
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_awaiting_signature"
 msgstr "Цей документ більше не очікує на підпис."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:23
+#: src/lib/errors/messages/document.ts:27
 msgid "error.document.declined"
 msgstr "Цей документ було відхилено, тому його більше не можна підписати."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:121
 msgid "error.document.withdrawn"
 msgstr "Цей документ було відкликано, тому його більше не можна підписати."
 
@@ -939,7 +949,7 @@ msgid "error.billing.tier_required"
 msgstr "Для цього потрібен тариф {required}. Оновіть тариф, щоб скористатися цією можливістю."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:94
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.offer_expired"
 msgstr "Термін дії цієї пропозиції закінчився {valid_until}. Зв’яжіться з нами, щоб отримати нову."
 
@@ -1169,17 +1179,27 @@ msgid "error.workspace.has_projects"
 msgstr "У цьому робочому просторі все ще є {count, plural, one {# проєкт} few {# проєкти} other {# проєктів}}. Спочатку видаліть або перемістіть їх зі сторінки «Проєкти» вашої організації."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:37
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_must_tick"
 msgstr "Позначте {label}, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:49
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.choose_one"
+msgstr "Позначте рівно один із варіантів, а потім підпишіть."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_tick_invalid"
 msgstr "Позначте або зніміть позначку з {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:46
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.choose_one_needs_two"
+msgstr "Щоб вибрали один, дайте щонайменше два варіанти."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
 msgid "error.offer.invoice_parts_vat"
 msgstr "Щоб виставляти рахунок частинами, дайте всім платним рядкам однакову ставку ПДВ."
 
@@ -1189,7 +1209,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Щоб переміщувати проєкти, ви маєте бути адміністратором або власником {side} робочого простору."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:113
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.verified_email_required"
 msgstr "Щоб підписати, увійдіть із підтвердженою електронною адресою."
 
@@ -1324,7 +1344,7 @@ msgid "error.conversation.not_found"
 msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:85
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_found"
 msgstr "Не вдалося знайти цей документ. Можливо, його було відкликано."
 
@@ -1499,7 +1519,7 @@ msgid "error.internal.unavailable"
 msgstr "Не вдалося зв'язатися з частиною сервісів dembrane. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:102
 msgid "error.document.signature_unreadable"
 msgstr "Не вдалося розпізнати ваш підпис. Намалюйте його ще раз і повторіть спробу."
 

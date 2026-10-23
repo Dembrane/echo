@@ -41,6 +41,7 @@ import {
   type OnboardingCode,
   withdrawOnboarding,
 } from "./onboarding";
+import { type ChooseMode, checkOptions } from "./options";
 import { voidAcceptance } from "./outside";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
@@ -349,6 +350,8 @@ export interface PushOfferInput {
   readonly invoice_plan?: InvoicePlan | null | undefined;
   /** An offer of zero on purpose; never invoiced. On a change, absent keeps the draft's. */
   readonly no_charge?: boolean | undefined;
+  /** With options on lines: one or any picked at signing. On a change, absent keeps the draft's. */
+  readonly choose?: ChooseMode | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -434,13 +437,19 @@ function offerContent(
     | "bill_to"
     | "invoice_plan"
     | "no_charge"
+    | "choose"
   > & { date: string; reference: string },
   words: OfferTemplateText,
   before?: OfferContent,
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
   const noCharge = o.no_charge === true;
-  requireAmounts(o.items, noCharge);
+  // Every pick the signer may make must leave an offer that asks for money.
+  const choose = checkOptions(o.items, o.choose, {
+    noCharge,
+    plan: Boolean(o.invoice_plan),
+    require: (lines) => requireAmounts(lines, noCharge),
+  });
   // Nothing is invoiced, so nobody is invoiced and nothing is split.
   if (noCharge && (o.bill_to || o.invoice_plan))
     throw new ValidationError("offer.no_charge_invoiced");
@@ -470,6 +479,7 @@ function offerContent(
     ...(billTo && { bill_to: billTo }),
     ...(plan && { invoice_plan: plan }),
     ...(noCharge && { no_charge: true as const }),
+    ...(choose && { choose }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -663,6 +673,7 @@ export async function updateOffer(
       bill_to: input.bill_to === undefined ? before.bill_to : input.bill_to,
       invoice_plan: input.invoice_plan === undefined ? before.invoice_plan : input.invoice_plan,
       no_charge: input.no_charge === undefined ? before.no_charge === true : input.no_charge,
+      choose: input.choose === undefined ? before.choose : input.choose,
     },
     words,
     before,

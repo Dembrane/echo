@@ -47,7 +47,7 @@ msgstr "{0} e-mails envoyés"
 
 #. placeholder {0}: formatMoney(net, currency, i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, currency, i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:495
+#: src/features/accounts/staff/PushOfferModal.tsx:518
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} hors VAT, {1} avec."
 
@@ -72,7 +72,7 @@ msgstr "{0} sur {1} terminées"
 
 #. placeholder {0}: doc.signature.name
 #. placeholder {1}: formatDateTime(doc.signature.signed_at, i18n.locale)
-#: src/features/accounts/signing/SignRoute.tsx:1161
+#: src/features/accounts/signing/SignRoute.tsx:1266
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} a signé le {1}. L'exemplaire signé est dans vos documents."
 
@@ -95,7 +95,7 @@ msgstr "{days, plural, one {# jour de retard} other {# jours de retard}}"
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# jour} other {# jours}}"
 
-#: src/features/accounts/signing/SignRoute.tsx:464
+#: src/features/accounts/signing/SignRoute.tsx:487
 msgid "{done} of {total} filled"
 msgstr "{done} sur {total} remplis"
 
@@ -103,7 +103,7 @@ msgstr "{done} sur {total} remplis"
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} de {org} vous invite à signer"
 
-#: src/features/accounts/signing/SignRoute.tsx:696
+#: src/features/accounts/signing/SignRoute.tsx:761
 msgid "{label} is empty."
 msgstr "{label} est vide."
 
@@ -156,7 +156,7 @@ msgid "A text answer"
 msgstr "Une réponse textuelle"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:923
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:293
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:341
 msgid "Acceptance voided"
 msgstr "Acceptation annulée"
 
@@ -164,22 +164,22 @@ msgstr "Acceptation annulée"
 msgid "Accepted"
 msgstr "Acceptée"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:151
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:165
 msgid "Accepted by"
 msgstr "Acceptée par"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:36
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:38
 msgid "Accepted by email, {day}"
 msgstr "Acceptée par e-mail, {day}"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:37
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:39
 msgid "Accepted by order letter, {day}"
 msgstr "Acceptée par bon de commande, {day}"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:216
 #: src/features/accounts/staff/AccountCardRoute.tsx:256
 #: src/features/accounts/staff/AccountCardRoute.tsx:924
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:130
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:144
 msgid "Accepted outside dembrane"
 msgstr "Acceptée hors de dembrane"
 
@@ -226,11 +226,11 @@ msgstr "Impossible de charger les comptes."
 msgid "Actions"
 msgstr "Actions"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:486
+#: src/features/accounts/staff/PushOfferModal.tsx:509
 msgid "Add a change"
 msgstr "Ajouter une modification"
 
-#: src/features/accounts/staff/LinesEditor.tsx:402
+#: src/features/accounts/staff/LinesEditor.tsx:424
 msgid "Add a discount"
 msgstr "Ajouter une remise"
 
@@ -238,8 +238,8 @@ msgstr "Ajouter une remise"
 msgid "Add a field"
 msgstr "Ajouter un champ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:375
-#: src/features/accounts/staff/LinesEditor.tsx:386
+#: src/features/accounts/staff/LinesEditor.tsx:397
+#: src/features/accounts/staff/LinesEditor.tsx:408
 msgid "Add a line"
 msgstr "Ajouter une ligne"
 
@@ -247,14 +247,14 @@ msgstr "Ajouter une ligne"
 msgid "Add a part"
 msgstr "Ajouter une échéance"
 
-#: src/features/accounts/staff/LinesEditor.tsx:412
+#: src/features/accounts/staff/LinesEditor.tsx:434
 msgid "Add a section"
 msgstr "Ajouter une section"
 
 #~ msgid "add a signature field to send"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:405
+#: src/features/accounts/signing/SignRoute.tsx:422
 msgid "Add your signature first."
 msgstr "Ajoutez d'abord votre signature."
 
@@ -287,13 +287,17 @@ msgstr "Montant"
 msgid "Another way"
 msgstr "Autrement"
 
-#: src/features/accounts/signing/SignRoute.tsx:996
+#: src/features/accounts/signing/SignRoute.tsx:1101
 msgid "Answer the question"
 msgstr "Répondre à la question"
 
 #: src/features/accounts/format.ts:100
 msgid "Answered"
 msgstr "Répondu"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:401
+msgid "Any options"
+msgstr "N'importe quelles options"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:575
 msgid "Approve"
@@ -323,15 +327,19 @@ msgstr "Attribué à {who}. Seule cette personne peut le signer."
 msgid "At once"
 msgstr "En une fois"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:394
+msgid "At signing, they tick"
+msgstr "À la signature, ils cochent"
+
 #: src/features/accounts/signing/SignatureCapture.tsx:233
-#: src/features/accounts/signing/SignRoute.tsx:647
+#: src/features/accounts/signing/SignRoute.tsx:712
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 msgid "Back"
 msgstr "Retour"
 
 #: src/features/accounts/signing/SignRoute.tsx:138
-#: src/features/accounts/signing/SignRoute.tsx:1187
+#: src/features/accounts/signing/SignRoute.tsx:1292
 msgid "Back to account"
 msgstr "Retour au compte"
 
@@ -404,7 +412,7 @@ msgstr "génération"
 msgid "Building the demo. This page follows along."
 msgstr "Création de la démo en cours. Cette page suit l'avancement."
 
-#: src/features/accounts/staff/LinesEditor.tsx:255
+#: src/features/accounts/staff/LinesEditor.tsx:265
 msgid "Bullets"
 msgstr "Puces"
 
@@ -415,12 +423,12 @@ msgstr "Puces"
 msgid "By bank transfer"
 msgstr "Par virement bancaire"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:27
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:29
 #: src/features/accounts/customer/BillingForm.tsx:469
 msgid "By email"
 msgstr "Par e-mail"
 
-#: src/features/accounts/signing/SignRoute.tsx:955
+#: src/features/accounts/signing/SignRoute.tsx:1060
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "En sélectionnant Signer, vous signez électroniquement. Votre signature électronique a la même valeur qu'une signature manuscrite."
 
@@ -434,8 +442,8 @@ msgstr "Appel réservé"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:224
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:281
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 #: src/features/accounts/customer/Questions.tsx:250
@@ -448,7 +456,7 @@ msgid "Cancelled"
 msgstr "Annulé"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:178
-#: src/features/accounts/signing/SignRoute.tsx:805
+#: src/features/accounts/signing/SignRoute.tsx:877
 msgid "Change"
 msgstr "Modifier"
 
@@ -456,11 +464,11 @@ msgstr "Modifier"
 msgid "Change the draft"
 msgstr "Modifier le brouillon"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:418
+#: src/features/accounts/staff/PushOfferModal.tsx:441
 msgid "Changes to our terms"
 msgstr "Modifications de nos conditions"
 
-#: src/features/accounts/staff/LinesEditor.tsx:234
+#: src/features/accounts/staff/LinesEditor.tsx:244
 msgid "Charged"
 msgstr "Facturé"
 
@@ -498,7 +506,7 @@ msgstr "Vérification de l’annuaire Peppol…"
 msgid "Choose a country"
 msgstr "Choisissez un pays"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:207
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:249
 #: src/features/accounts/customer/NextSteps.tsx:647
 msgid "Choose a file"
 msgstr "Choisir un fichier"
@@ -515,7 +523,12 @@ msgstr "Choisissez une réponse"
 msgid "Choose an image"
 msgstr "Choisir une image"
 
-#: src/features/accounts/signing/SignRoute.tsx:930
+#: src/features/accounts/signing/SignRoute.tsx:903
+msgid "Choose one"
+msgstr "Choisissez-en une"
+
+#: src/features/accounts/signing/SignRoute.tsx:904
+#: src/features/accounts/signing/SignRoute.tsx:1035
 msgid "Choose one to continue."
 msgstr "Choisissez une option pour continuer."
 
@@ -554,7 +567,7 @@ msgstr "Fermer"
 msgid "Closed"
 msgstr "Fermé"
 
-#: src/features/accounts/staff/LinesEditor.tsx:330
+#: src/features/accounts/staff/LinesEditor.tsx:352
 msgid "Co-development"
 msgstr "Co-développement"
 
@@ -627,7 +640,7 @@ msgstr "Corpus"
 msgid "Country"
 msgstr "Pays"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:135
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:149
 msgid "Counts as their signature."
 msgstr "Vaut leur signature."
 
@@ -643,11 +656,11 @@ msgstr "Créer l'organisation"
 msgid "Create task"
 msgstr "Créer une tâche"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:325
+#: src/features/accounts/staff/PushOfferModal.tsx:330
 msgid "Currency"
 msgstr "Devise"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:277
+#: src/features/accounts/staff/PushOfferModal.tsx:282
 msgid "Custom"
 msgstr "Sur mesure"
 
@@ -664,11 +677,11 @@ msgstr "Client"
 msgid "Customer emailed"
 msgstr "E-mail envoyé au client"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:295
+#: src/features/accounts/staff/PushOfferModal.tsx:300
 msgid "Customer name in the title"
 msgstr "Nom du client dans le titre"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:346
+#: src/features/accounts/staff/PushOfferModal.tsx:351
 msgid "Customer reference"
 msgstr "Référence du client"
 
@@ -681,7 +694,7 @@ msgstr "Statut client"
 #~ msgid "Customers"
 #~ msgstr "Clients"
 
-#: src/features/accounts/signing/SignRoute.tsx:1015
+#: src/features/accounts/signing/SignRoute.tsx:1120
 msgid "Data processing agreement"
 msgstr "Accord de traitement des données"
 
@@ -690,11 +703,11 @@ msgstr "Accord de traitement des données"
 msgid "Date"
 msgstr "Date"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:174
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:188
 msgid "Date accepted"
 msgstr "Date d'acceptation"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:174
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:188
 msgid "Date signed"
 msgstr "Date de signature"
 
@@ -745,15 +758,15 @@ msgstr "Démo dépubliée"
 msgid "Demos"
 msgstr "Démos"
 
-#: src/features/accounts/staff/LinesEditor.tsx:217
+#: src/features/accounts/staff/LinesEditor.tsx:227
 msgid "Description"
 msgstr "Description"
 
-#: src/features/accounts/staff/LinesEditor.tsx:395
+#: src/features/accounts/staff/LinesEditor.tsx:417
 msgid "Discount"
 msgstr "Remise"
 
-#: src/features/accounts/staff/LinesEditor.tsx:282
+#: src/features/accounts/staff/LinesEditor.tsx:304
 msgid "Discount ({currency})"
 msgstr "Remise ({currency})"
 
@@ -800,7 +813,7 @@ msgstr "Document retiré"
 msgid "Documents"
 msgstr "Documents"
 
-#: src/features/accounts/signing/SignRoute.tsx:1028
+#: src/features/accounts/signing/SignRoute.tsx:1133
 msgid "Documents that form the agreement"
 msgstr "Documents qui font partie de l'accord"
 
@@ -826,7 +839,7 @@ msgstr "Télécharger la facture en PDF"
 msgid "DPA"
 msgstr "DPA"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:120
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:134
 msgid "DPA recorded as signed"
 msgstr "DPA enregistré comme signé"
 
@@ -844,8 +857,8 @@ msgstr "Brouillon modifié"
 msgid "Draft ready"
 msgstr "Brouillon prêt"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:235
-#: src/features/accounts/staff/PushOfferModal.tsx:249
+#: src/features/accounts/staff/PushOfferModal.tsx:240
+#: src/features/accounts/staff/PushOfferModal.tsx:254
 msgid "Draft saved"
 msgstr "Brouillon enregistré"
 
@@ -853,7 +866,7 @@ msgstr "Brouillon enregistré"
 msgid "Draw"
 msgstr "Dessiner"
 
-#: src/features/accounts/signing/SignRoute.tsx:803
+#: src/features/accounts/signing/SignRoute.tsx:875
 msgid "Draw initials instead"
 msgstr "Dessiner plutôt vos initiales"
 
@@ -882,7 +895,7 @@ msgstr "Dessinez d'abord votre signature dans le cadre."
 msgid "Due {due}"
 msgstr "À payer avant le {due}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:317
+#: src/features/accounts/staff/PushOfferModal.tsx:322
 msgid "Dutch VAT"
 msgstr "TVA néerlandaise"
 
@@ -891,7 +904,7 @@ msgid "Edit"
 msgstr "Modifier"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:821
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:167
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:181
 msgid "Email"
 msgstr "E-mail"
 
@@ -912,7 +925,11 @@ msgstr "E-mail envoyé"
 msgid "Email the customer"
 msgstr "Écrire au client"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:366
+#: src/features/accounts/staff/LinesEditor.tsx:275
+msgid "Empty: not ticked at signing"
+msgstr "Vide : pas à cocher"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:371
 msgid "Empty: the template's. A blank line starts a paragraph."
 msgstr "Vide : celle du modèle. Une ligne vide commence un nouveau paragraphe."
 
@@ -928,7 +945,7 @@ msgstr "Vide : celle du modèle. Une ligne vide commence un nouveau paragraphe."
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Saisissez le code à six chiffres envoyé à {email}."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:276
+#: src/features/accounts/staff/PushOfferModal.tsx:281
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Événement"
@@ -937,9 +954,13 @@ msgstr "Événement"
 msgid "Event or customer example"
 msgstr "Exemple d'événement ou de client"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:193
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
 msgid "Evidence"
 msgstr "Justificatif"
+
+#: src/features/accounts/staff/PushOfferModal.tsx:402
+msgid "Exactly one"
+msgstr "Une seule"
 
 #~ msgid "Explore your demo"
 #~ msgstr "Découvrez votre démo"
@@ -967,7 +988,7 @@ msgstr "Champs enregistrés"
 #~ msgid "Fill in"
 #~ msgstr "Remplir"
 
-#: src/features/accounts/signing/SignRoute.tsx:696
+#: src/features/accounts/signing/SignRoute.tsx:761
 msgid "Fill in {label}"
 msgstr "Remplir {label}"
 
@@ -975,7 +996,7 @@ msgstr "Remplir {label}"
 msgid "Fill in billing details"
 msgstr "Remplir les coordonnées de facturation"
 
-#: src/features/accounts/signing/SignRoute.tsx:670
+#: src/features/accounts/signing/SignRoute.tsx:735
 msgid "Fill in the date"
 msgstr "Indiquer la date"
 
@@ -991,11 +1012,11 @@ msgstr "Indiquer son e-mail"
 msgid "Fill in their name"
 msgstr "Indiquer son nom"
 
-#: src/features/accounts/signing/SignRoute.tsx:978
+#: src/features/accounts/signing/SignRoute.tsx:1083
 msgid "Fill in what is left"
 msgstr "Remplir ce qui manque"
 
-#: src/features/accounts/signing/SignRoute.tsx:681
+#: src/features/accounts/signing/SignRoute.tsx:746
 msgid "Fill in your address"
 msgstr "Indiquer votre adresse"
 
@@ -1003,23 +1024,23 @@ msgstr "Indiquer votre adresse"
 msgid "Fill in your first name."
 msgstr "Saisissez votre prénom."
 
-#: src/features/accounts/signing/SignRoute.tsx:666
+#: src/features/accounts/signing/SignRoute.tsx:731
 msgid "Fill in your job title"
 msgstr "Indiquer votre fonction"
 
-#: src/features/accounts/signing/SignRoute.tsx:663
+#: src/features/accounts/signing/SignRoute.tsx:728
 msgid "Fill in your name"
 msgstr "Indiquer votre nom"
 
-#: src/features/accounts/signing/SignRoute.tsx:676
+#: src/features/accounts/signing/SignRoute.tsx:741
 msgid "Fill in your organisation"
 msgstr "Indiquer votre organisation"
 
-#: src/features/accounts/signing/SignRoute.tsx:691
+#: src/features/accounts/signing/SignRoute.tsx:756
 msgid "Fill in your PO number"
 msgstr "Indiquer votre numéro de bon de commande"
 
-#: src/features/accounts/signing/SignRoute.tsx:686
+#: src/features/accounts/signing/SignRoute.tsx:751
 msgid "Fill in your VAT number"
 msgstr "Indiquer votre numéro de TVA"
 
@@ -1043,11 +1064,11 @@ msgstr "Par exemple {example}"
 msgid "For example an invoice portal"
 msgstr "Par exemple un portail de facturation"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:356
+#: src/features/accounts/staff/PushOfferModal.tsx:361
 msgid "For the attention of"
 msgstr "À l'attention de"
 
-#: src/features/accounts/signing/SignRoute.tsx:1012
+#: src/features/accounts/signing/SignRoute.tsx:1117
 msgid "General terms and conditions"
 msgstr "Conditions générales"
 
@@ -1062,7 +1083,7 @@ msgstr "Pour commencer"
 msgid "Give feedback"
 msgstr "Donner votre avis"
 
-#: src/features/accounts/signing/SignRoute.tsx:1252
+#: src/features/accounts/signing/SignRoute.tsx:1357
 msgid "Go to the account page"
 msgstr "Aller à la page du compte"
 
@@ -1073,7 +1094,7 @@ msgstr "Aller à la page du compte"
 msgid "Go to your tasks"
 msgstr "Voir vos tâches"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:184
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:198
 msgid "Goes on the invoice"
 msgstr "Figure sur la facture"
 
@@ -1090,7 +1111,7 @@ msgstr "Figure sur la facture"
 msgid "Hide finished"
 msgstr "Masquer les tâches terminées"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:139
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:153
 msgid "How"
 msgstr "Comment"
 
@@ -1111,7 +1132,7 @@ msgstr "Notre facturation"
 msgid "I do"
 msgstr "Moi"
 
-#: src/features/accounts/signing/SignRoute.tsx:929
+#: src/features/accounts/signing/SignRoute.tsx:1034
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Si ce n'est pas le cas, l'accord de traitement des données deviendra un document distinct destiné à une personne habilitée."
 
@@ -1145,8 +1166,8 @@ msgstr "dont {0} de TVA"
 msgid "incl. {vat} VAT"
 msgstr "dont {vat} de TVA"
 
-#: src/features/accounts/staff/LinesEditor.tsx:236
-#: src/features/accounts/staff/LinesEditor.tsx:311
+#: src/features/accounts/staff/LinesEditor.tsx:246
+#: src/features/accounts/staff/LinesEditor.tsx:333
 msgid "Included"
 msgstr "Inclus"
 
@@ -1160,11 +1181,11 @@ msgstr "Inclut l'accord de traitement des données"
 msgid "Initials"
 msgstr "Initiales"
 
-#: src/features/accounts/signing/SignRoute.tsx:811
+#: src/features/accounts/signing/SignRoute.tsx:883
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Les champs d'initiales utilisent cette signature, à moins que vous ne dessiniez des initiales."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:365
+#: src/features/accounts/staff/PushOfferModal.tsx:370
 msgid "Intro"
 msgstr "Introduction"
 
@@ -1254,7 +1275,7 @@ msgstr "Les factures arriveront par e-mail"
 msgid "Invoices will come via Peppol"
 msgstr "Les factures arriveront via Peppol"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:386
+#: src/features/accounts/staff/PushOfferModal.tsx:409
 msgid "Invoicing"
 msgstr "Facturation"
 
@@ -1300,7 +1321,7 @@ msgid "Label"
 msgstr "Libellé"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:283
+#: src/features/accounts/staff/PushOfferModal.tsx:288
 #: src/features/accounts/staff/NewOrganisationModal.tsx:101
 msgid "Language"
 msgstr "Langue"
@@ -1328,15 +1349,15 @@ msgstr "Nom légal de votre organisation"
 msgid "Let them sign in with an email code"
 msgstr "Leur permettre de se connecter avec un code par e-mail"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:436
+#: src/features/accounts/staff/PushOfferModal.tsx:459
 msgid "Liability cap"
 msgstr "Plafond de responsabilité"
 
-#: src/features/accounts/staff/LinesEditor.tsx:306
+#: src/features/accounts/staff/LinesEditor.tsx:328
 msgid "Line total"
 msgstr "Total de la ligne"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:375
+#: src/features/accounts/staff/PushOfferModal.tsx:380
 msgid "Lines"
 msgstr "Lignes"
 
@@ -1360,7 +1381,7 @@ msgstr "Connectez-vous pour télécharger l'exemplaire signé."
 msgid "Lost"
 msgstr "Perdu"
 
-#: src/features/accounts/signing/SignRoute.tsx:928
+#: src/features/accounts/signing/SignRoute.tsx:1033
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Pouvez-vous également accepter le traitement des données pour votre organisation ?"
 
@@ -1380,11 +1401,11 @@ msgstr "Mensuellement"
 #~ msgstr "mois"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:152
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:166
 msgid "Name"
 msgstr "Nom"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:303
+#: src/features/accounts/staff/PushOfferModal.tsx:308
 msgid "Name in the greeting"
 msgstr "Nom dans la formule de salutation"
 
@@ -1428,7 +1449,7 @@ msgid "New task"
 msgstr "Nouvelle tâche"
 
 #: src/features/accounts/FitLabel.tsx:11
-#: src/features/accounts/signing/SignRoute.tsx:765
+#: src/features/accounts/signing/SignRoute.tsx:837
 #: src/features/accounts/customer/WhoSigns.tsx:383
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:240
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:246
@@ -1490,6 +1511,10 @@ msgstr "Aucun fichier choisi"
 msgid "No needs form or demo linked."
 msgstr "Aucun formulaire des besoins ou démo associé."
 
+#: src/features/accounts/signing/SignRoute.tsx:691
+msgid "No options chosen. Total {total} incl. VAT."
+msgstr "Aucune option choisie. Total {total} TTC."
+
 #: src/features/accounts/staff/AccountsPanel.tsx:132
 msgid "No organisations match."
 msgstr "Aucune organisation correspondante."
@@ -1505,7 +1530,7 @@ msgstr "Aucune question pour l'instant."
 msgid "No tasks."
 msgstr "Aucune tâche."
 
-#: src/features/accounts/signing/SignRoute.tsx:936
+#: src/features/accounts/signing/SignRoute.tsx:1041
 msgid "No, someone else signs it"
 msgstr "Non, quelqu'un d'autre signe"
 
@@ -1525,7 +1550,7 @@ msgstr "Pas encore indiqué."
 #~ msgid "Not in the Peppol directory: invoices go by email."
 #~ msgstr "Absent de l’annuaire Peppol : les factures partent par e-mail."
 
-#: src/features/accounts/staff/LinesEditor.tsx:304
+#: src/features/accounts/staff/LinesEditor.tsx:326
 msgid "Not in the total"
 msgstr "Hors total"
 
@@ -1563,7 +1588,7 @@ msgid "Offer"
 msgstr "Offre"
 
 #: src/features/accounts/format.ts:110
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:120
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:134
 msgid "Offer accepted"
 msgstr "Offre acceptée"
 
@@ -1587,7 +1612,7 @@ msgstr "Offre envoyée"
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Offre envoyée. Elle se trouve dans le compte du client ; aucun e-mail n'a été envoyé."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:248
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
 
@@ -1614,7 +1639,7 @@ msgstr "Tâches d'accueil ajoutées"
 msgid "Onboarding tasks withdrawn"
 msgstr "Tâches d'accueil retirées"
 
-#: src/features/accounts/staff/LinesEditor.tsx:256
+#: src/features/accounts/staff/LinesEditor.tsx:266
 msgid "One per line"
 msgstr "Un par ligne"
 
@@ -1697,7 +1722,7 @@ msgstr "Ouvrir le PDF"
 msgid "Open the record"
 msgstr "Ouvrir le dossier"
 
-#: src/features/accounts/signing/SignRoute.tsx:1179
+#: src/features/accounts/signing/SignRoute.tsx:1284
 msgid "Open the signed PDF"
 msgstr "Ouvrir le PDF signé"
 
@@ -1734,22 +1759,26 @@ msgstr "S'ouvre une fois que vous nous avez dit qui signe"
 #~ msgid "Opens after you tell us who signs."
 #~ msgstr "S’ouvre une fois que vous nous avez dit qui signe."
 
+#: src/features/accounts/staff/LinesEditor.tsx:274
+msgid "Option name"
+msgstr "Nom de l'option"
+
 #: src/features/accounts/customer/NextSteps.tsx:123
 msgid "optional"
 msgstr "facultatif"
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:304
-#: src/features/accounts/staff/PushOfferModal.tsx:357
-#: src/features/accounts/staff/LinesEditor.tsx:235
+#: src/features/accounts/staff/PushOfferModal.tsx:309
+#: src/features/accounts/staff/PushOfferModal.tsx:362
+#: src/features/accounts/staff/LinesEditor.tsx:245
 #: src/features/accounts/staff/BillToFields.tsx:144
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:159
-#: src/features/accounts/signing/SignRoute.tsx:738
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
+#: src/features/accounts/signing/SignRoute.tsx:810
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
 msgstr "Facultatif"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:407
+#: src/features/accounts/staff/PushOfferModal.tsx:430
 msgid "Optional, replaces our DPA"
 msgstr "Facultatif, remplace notre DPA"
 
@@ -1782,7 +1811,7 @@ msgstr "Nom de l'organisation"
 msgid "Our answer appears here, on this page."
 msgstr "Notre réponse apparaît ici, sur cette page."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:319
+#: src/features/accounts/staff/PushOfferModal.tsx:324
 msgid "Outside the EU"
 msgstr "Hors de l'UE"
 
@@ -1849,7 +1878,7 @@ msgstr "Payer en ligne"
 #~ msgid "Payment details"
 #~ msgstr "Détails du paiement"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:212
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:254
 msgid "PDF, or the email as EML"
 msgstr "PDF, ou l'e-mail en EML"
 
@@ -1878,13 +1907,13 @@ msgstr "Formule"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:873
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:185
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:199
 #: src/features/accounts/customer/BillingForm.tsx:524
 #: src/features/accounts/customer/BillingForm.tsx:589
 msgid "PO number"
 msgstr "Numéro de bon de commande"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:347
+#: src/features/accounts/staff/PushOfferModal.tsx:352
 #: src/features/accounts/staff/BillToFields.tsx:153
 msgid "PO, order or project number"
 msgstr "Numéro de bon de commande, de commande ou de projet"
@@ -1898,11 +1927,11 @@ msgstr "Code postal"
 msgid "Prepare an offer"
 msgstr "Préparer une offre"
 
-#: src/features/accounts/staff/LinesEditor.tsx:227
+#: src/features/accounts/staff/LinesEditor.tsx:237
 msgid "Price"
 msgstr "Prix"
 
-#: src/features/accounts/signing/SignRoute.tsx:456
+#: src/features/accounts/signing/SignRoute.tsx:479
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Progression"
@@ -1971,7 +2000,7 @@ msgstr "Envoyer l'offre"
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Indiquez la référence sur le virement pour que nous puissions associer votre paiement."
 
-#: src/features/accounts/staff/LinesEditor.tsx:264
+#: src/features/accounts/staff/LinesEditor.tsx:286
 msgid "Quantity"
 msgstr "Quantité"
 
@@ -1995,7 +2024,7 @@ msgstr "Questions"
 #~ msgstr "Lisez l'offre et signez-la ici. Quelqu'un d'autre signe pour votre organisation ? Indiquez son nom sur l'offre ; cette personne recevra son propre lien."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:296
+#: src/features/accounts/staff/PushOfferModal.tsx:301
 msgid "Reads \"{0} x dembrane\""
 msgstr "Affiche « {0} x dembrane »"
 
@@ -2007,18 +2036,18 @@ msgstr "Prêt à facturer"
 msgid "ready to publish"
 msgstr "prêt à publier"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:270
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:318
 msgid "Reason"
 msgstr "Motif"
 
 #~ msgid "Record a test conversation"
 #~ msgstr "Enregistrez une conversation test"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:283
 msgid "Record acceptance"
 msgstr "Enregistrer l'acceptation"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:233
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:281
 msgid "Record signature"
 msgstr "Enregistrer la signature"
 
@@ -2046,7 +2075,7 @@ msgstr "Relancer {name}"
 msgid "Reminded"
 msgstr "Relancé"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:449
+#: src/features/accounts/staff/PushOfferModal.tsx:472
 msgid "Remove change"
 msgstr "Supprimer la modification"
 
@@ -2054,7 +2083,7 @@ msgstr "Supprimer la modification"
 msgid "Remove field"
 msgstr "Supprimer le champ"
 
-#: src/features/accounts/staff/LinesEditor.tsx:246
+#: src/features/accounts/staff/LinesEditor.tsx:256
 msgid "Remove line"
 msgstr "Supprimer la ligne"
 
@@ -2062,7 +2091,7 @@ msgstr "Supprimer la ligne"
 msgid "Remove part"
 msgstr "Supprimer l'échéance"
 
-#: src/features/accounts/staff/LinesEditor.tsx:359
+#: src/features/accounts/staff/LinesEditor.tsx:381
 msgid "Remove section"
 msgstr "Supprimer la section"
 
@@ -2089,7 +2118,7 @@ msgstr "Recherche"
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:318
+#: src/features/accounts/staff/PushOfferModal.tsx:323
 msgid "Reverse charge"
 msgstr "Autoliquidation"
 
@@ -2097,7 +2126,7 @@ msgstr "Autoliquidation"
 msgid "Review and send"
 msgstr "Relire et envoyer"
 
-#: src/features/accounts/signing/SignRoute.tsx:916
+#: src/features/accounts/signing/SignRoute.tsx:1016
 #: src/features/accounts/customer/WhoSigns.tsx:257
 #: src/features/accounts/customer/NextSteps.tsx:295
 msgid "Review and sign"
@@ -2129,7 +2158,7 @@ msgid "Revise the offer"
 msgstr "Réviser l'offre"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:67
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:158
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:172
 msgid "Role"
 msgstr "Rôle"
 
@@ -2141,7 +2170,7 @@ msgstr "Enregistrer"
 msgid "Save billing details"
 msgstr "Enregistrer les informations de facturation"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:519
+#: src/features/accounts/staff/PushOfferModal.tsx:542
 msgid "Save draft"
 msgstr "Enregistrer le brouillon"
 
@@ -2150,6 +2179,10 @@ msgstr "Enregistrer le brouillon"
 
 #~ msgid "Saving failed"
 #~ msgstr ""
+
+#: src/features/accounts/staff/LinesEditor.tsx:276
+msgid "Scenario A"
+msgstr "Scénario A"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:82
 msgid "Search by name or member email"
@@ -2162,7 +2195,7 @@ msgstr "Rechercher des organisations"
 #~ msgid "Seat"
 #~ msgstr "Siège"
 
-#: src/features/accounts/staff/LinesEditor.tsx:329
+#: src/features/accounts/staff/LinesEditor.tsx:351
 msgid "Section"
 msgstr "Section"
 
@@ -2209,7 +2242,7 @@ msgstr "Renvoyer"
 msgid "Send by email instead"
 msgstr "Envoyer plutôt par e-mail"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:528
+#: src/features/accounts/staff/PushOfferModal.tsx:551
 #: src/features/accounts/staff/DocumentRoute.tsx:185
 msgid "Send offer"
 msgstr "Envoyer l'offre"
@@ -2243,7 +2276,7 @@ msgstr "Envoyez-nous votre numéro de bon de commande"
 #~ msgid "Sending failed"
 #~ msgstr ""
 
-#: src/features/accounts/staff/PushOfferModal.tsx:502
+#: src/features/accounts/staff/PushOfferModal.tsx:525
 msgid "Sending replaces the sent version."
 msgstr "L'envoi remplace la version envoyée."
 
@@ -2297,7 +2330,7 @@ msgstr "envoyé aujourd'hui"
 msgid "Sent. The customer has a signing task."
 msgstr "Envoyé. Le client a une tâche de signature."
 
-#: src/features/accounts/signing/SignRoute.tsx:1014
+#: src/features/accounts/signing/SignRoute.tsx:1119
 msgid "Service level agreement"
 msgstr "Accord de niveau de service"
 
@@ -2342,7 +2375,7 @@ msgstr "Affiché tel quel, sous l'introduction. Écrivez-le dans la langue du cl
 msgid "Shown on the offer before signing"
 msgstr "Figure sur l'offre avant la signature"
 
-#: src/features/accounts/signing/SignRoute.tsx:999
+#: src/features/accounts/signing/SignRoute.tsx:1104
 msgid "Sign"
 msgstr "Signer"
 
@@ -2378,7 +2411,7 @@ msgstr "Champs de signature placés"
 #: src/features/accounts/format.ts:64
 #: src/features/accounts/staff/AccountsPanel.tsx:161
 #: src/features/accounts/staff/AccountCardRoute.tsx:641
-#: src/features/accounts/signing/SignRoute.tsx:1157
+#: src/features/accounts/signing/SignRoute.tsx:1262
 msgid "Signed"
 msgstr "Signé"
 
@@ -2387,22 +2420,22 @@ msgstr "Signé"
 msgid "Signed {0}"
 msgstr "Signé le {0}"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:151
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:165
 msgid "Signed by"
 msgstr "Signé par"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:30
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:32
 msgid "Signed on paper"
 msgstr "Signée sur papier"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:39
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:41
 msgid "Signed on paper, {day}"
 msgstr "Signé sur papier, {day}"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:214
 #: src/features/accounts/staff/AccountCardRoute.tsx:254
 #: src/features/accounts/staff/AccountCardRoute.tsx:930
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:130
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:144
 msgid "Signed outside dembrane"
 msgstr "Signé hors de dembrane"
 
@@ -2434,7 +2467,7 @@ msgstr "Depuis le {0}"
 msgid "So the signature record can read it"
 msgstr "Pour que le registre des signatures puisse le lire"
 
-#: src/features/accounts/signing/SignRoute.tsx:920
+#: src/features/accounts/signing/SignRoute.tsx:1020
 msgid "Some required fields are still empty."
 msgstr "Certains champs obligatoires sont encore vides."
 
@@ -2473,7 +2506,7 @@ msgstr "Étape"
 msgid "Stage set"
 msgstr "Étape définie"
 
-#: src/features/accounts/signing/SignRoute.tsx:484
+#: src/features/accounts/signing/SignRoute.tsx:507
 msgid "Start"
 msgstr "Commencer"
 
@@ -2508,12 +2541,12 @@ msgstr "Objet"
 msgid "Submitted"
 msgstr "Envoyé"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:275
+#: src/features/accounts/staff/PushOfferModal.tsx:280
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Abonnement"
 
-#: src/features/accounts/staff/LinesEditor.tsx:345
+#: src/features/accounts/staff/LinesEditor.tsx:367
 msgid "Subtotal"
 msgstr "Sous-total"
 
@@ -2592,12 +2625,12 @@ msgstr "Dites-nous qui signe l’offre"
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Dites-nous qui signe l’offre de licence annuelle {number}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:269
+#: src/features/accounts/staff/PushOfferModal.tsx:274
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Modèle"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:404
+#: src/features/accounts/staff/PushOfferModal.tsx:427
 msgid "Terms"
 msgstr "Conditions"
 
@@ -2612,7 +2645,7 @@ msgstr "Merci"
 #~ msgid "That did not go through. Try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:95
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:108
 msgid "That file is over 10 MB."
 msgstr "Ce fichier dépasse 10 Mo."
 
@@ -2631,7 +2664,7 @@ msgstr "Le compte"
 #~ msgid "The account could not be loaded. Try again in a moment."
 #~ msgstr "Impossible de charger le compte. Réessayez dans un instant."
 
-#: src/features/accounts/signing/SignRoute.tsx:672
+#: src/features/accounts/signing/SignRoute.tsx:737
 msgid "The box is not ticked yet."
 msgstr "La case n'est pas encore cochée."
 
@@ -2658,11 +2691,11 @@ msgstr "Le client ne reçoit aucun rappel automatique. Après sept jours, le res
 msgid "The customer has no VAT number"
 msgstr "Le client n’a pas de numéro de VAT"
 
-#: src/features/accounts/signing/SignRoute.tsx:670
+#: src/features/accounts/signing/SignRoute.tsx:735
 msgid "The date is empty."
 msgstr "La date est vide."
 
-#: src/features/accounts/signing/SignRoute.tsx:1229
+#: src/features/accounts/signing/SignRoute.tsx:1334
 msgid "The document could not be loaded. Check your connection and try again."
 msgstr "Impossible de charger le document. Vérifiez votre connexion et réessayez."
 
@@ -2683,7 +2716,7 @@ msgstr "Le brouillon est prêt. Vérifiez-le, puis publiez."
 msgid "The email address is empty."
 msgstr "L'adresse e-mail est vide."
 
-#: src/features/accounts/signing/SignRoute.tsx:1223
+#: src/features/accounts/signing/SignRoute.tsx:1328
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Le fichier de ce document est manquant de notre côté, il ne peut donc pas encore être signé. Signalez-le-nous via une question sur la page de votre compte et nous vous le renverrons."
 
@@ -2703,7 +2736,7 @@ msgstr "Le nom est vide."
 msgid "The offer and its documents appear in {org}'s dembrane space."
 msgstr "L'offre et ses documents apparaissent dans l'espace dembrane de {org}."
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:271
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:319
 msgid "The record keeps your reason."
 msgstr "Le dossier garde votre motif."
 
@@ -2715,19 +2748,19 @@ msgstr "La relance n'est pas partie. Réessayez dans un instant."
 msgid "The same person who signs the offer"
 msgstr "La personne qui signe l’offre"
 
-#: src/features/accounts/signing/SignRoute.tsx:1167
+#: src/features/accounts/signing/SignRoute.tsx:1272
 msgid "The signed copy is in your documents."
 msgstr "L'exemplaire signé se trouve dans vos documents."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:459
+#: src/features/accounts/staff/PushOfferModal.tsx:482
 msgid "The term"
 msgstr "La clause"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:504
+#: src/features/accounts/staff/PushOfferModal.tsx:527
 msgid "The terms, SLA and DPA versions in force today are pinned."
 msgstr "Les versions des conditions, du SLA et du DPA en vigueur aujourd'hui sont figées."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:406
+#: src/features/accounts/staff/PushOfferModal.tsx:429
 msgid "Their data processing terms"
 msgstr "Leurs conditions de traitement des données"
 
@@ -2746,20 +2779,20 @@ msgstr "Sa fonction"
 msgid "Their name"
 msgstr "Son nom"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:28
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:30
 msgid "Their order letter"
 msgstr "Leur bon de commande"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:29
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:31
 msgid "Their own DPA"
 msgstr "Leur propre DPA"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:38
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:40
 msgid "Their own DPA signed, {day}"
 msgstr "Leur propre DPA signé, {day}"
 
 #: src/features/accounts/staff/BillToFields.tsx:152
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:183
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:197
 msgid "Their reference"
 msgstr "Leur référence"
 
@@ -2768,13 +2801,18 @@ msgstr "Leur référence"
 msgid "Their reference {0}"
 msgstr "Leur référence {0}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:421
+#: src/features/accounts/staff/PushOfferModal.tsx:444
 msgid "These win over our standard terms"
 msgstr "Elles priment sur nos conditions standard"
 
 #: src/features/accounts/staff/NewOrganisationModal.tsx:92
 msgid "They can sign the offer"
 msgstr "Cette personne peut signer l'offre"
+
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:208
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:221
+msgid "They chose"
+msgstr "Ils ont choisi"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:106
 msgid "This account could not be loaded."
@@ -2856,7 +2894,7 @@ msgstr "Cette page n'a pas pu être chargée. Réessayez dans un instant."
 msgid "Through Peppol"
 msgstr "Via Peppol"
 
-#: src/features/accounts/signing/SignRoute.tsx:672
+#: src/features/accounts/signing/SignRoute.tsx:737
 msgid "Tick the box"
 msgstr "Cocher la case"
 
@@ -2916,7 +2954,7 @@ msgstr "À : {0}"
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1243
+#: src/features/accounts/signing/SignRoute.tsx:1348
 #: src/features/accounts/pdf/PdfPages.tsx:94
 msgid "Try again"
 msgstr "Réessayer"
@@ -2933,11 +2971,11 @@ msgstr "Saisissez d'abord vos initiales."
 msgid "Type your name first."
 msgstr "Saisissez d'abord votre nom."
 
-#: src/features/accounts/staff/LinesEditor.tsx:273
+#: src/features/accounts/staff/LinesEditor.tsx:295
 msgid "Unit"
 msgstr "Unité"
 
-#: src/features/accounts/staff/LinesEditor.tsx:283
+#: src/features/accounts/staff/LinesEditor.tsx:305
 msgid "Unit price ({currency})"
 msgstr "Prix unitaire ({currency})"
 
@@ -2996,7 +3034,7 @@ msgstr "Utiliser cette signature"
 #~ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 #~ msgstr "Valable 14 jours. Les versions actuelles des conditions générales, du SLA et du DPA sont associées."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:338
+#: src/features/accounts/staff/PushOfferModal.tsx:343
 msgid "Valid for (days)"
 msgstr "Valable (jours)"
 
@@ -3009,11 +3047,11 @@ msgstr "Valable jusqu'au {0}"
 msgid "Valid until {validUntil}"
 msgstr "Valable jusqu'au {validUntil}"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:311
+#: src/features/accounts/staff/PushOfferModal.tsx:316
 msgid "VAT"
 msgstr "TVA"
 
-#: src/features/accounts/staff/LinesEditor.tsx:293
+#: src/features/accounts/staff/LinesEditor.tsx:315
 msgid "VAT %"
 msgstr "% VAT"
 
@@ -3060,11 +3098,11 @@ msgstr "Consulté"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:248
 #: src/features/accounts/staff/AccountCardRoute.tsx:291
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:300
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:348
 msgid "Void acceptance"
 msgstr "Annuler l'acceptation"
 
-#: src/features/accounts/staff/AcceptedOutsideModals.tsx:265
+#: src/features/accounts/staff/AcceptedOutsideModals.tsx:313
 msgid "Void this acceptance"
 msgstr "Annuler cette acceptation"
 
@@ -3204,7 +3242,7 @@ msgstr "Site web"
 msgid "What each of your organisations still has to do for dembrane."
 msgstr "Ce qu'il reste à faire pour dembrane dans chacune de vos organisations."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:435
+#: src/features/accounts/staff/PushOfferModal.tsx:458
 msgid "What it changes"
 msgstr "Ce que cela modifie"
 
@@ -3270,7 +3308,7 @@ msgstr "Rédiger une réponse"
 msgid "Yes"
 msgstr "Oui"
 
-#: src/features/accounts/signing/SignRoute.tsx:933
+#: src/features/accounts/signing/SignRoute.tsx:1038
 msgid "Yes, I may"
 msgstr "Oui, je le peux"
 
@@ -3289,6 +3327,10 @@ msgstr "Vous avez déjà un compte dembrane avec {email}. Nous vous enverrons pa
 msgid "You can review and sign the offer now."
 msgstr "Vous pouvez maintenant relire et signer l’offre."
 
+#: src/features/accounts/signing/SignRoute.tsx:693
+msgid "You chose {names}. Total {total} incl. VAT."
+msgstr "Vous avez choisi {names}. Total {total} TTC."
+
 #: src/features/accounts/signing/SignGate.tsx:458
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Vous signerez électroniquement. Votre signature électronique engage autant qu'une signature manuscrite."
@@ -3302,7 +3344,7 @@ msgstr "Vous êtes connecté en tant que {0}. Déconnectez-vous pour l'ouvrir en
 msgid "Your active devices changed. Choose a device again."
 msgstr "Vos appareils actifs ont changé. Choisissez à nouveau un appareil."
 
-#: src/features/accounts/signing/SignRoute.tsx:682
+#: src/features/accounts/signing/SignRoute.tsx:747
 msgid "Your address is empty."
 msgstr "Votre adresse est vide."
 
@@ -3314,11 +3356,15 @@ msgstr "Votre réponse"
 msgid "Your browser could not display this document. Try again, or open the PDF on its own."
 msgstr "Votre navigateur n'a pas pu afficher ce document. Réessayez ou ouvrez le PDF séparément."
 
+#: src/features/accounts/signing/SignRoute.tsx:331
+msgid "Your choice"
+msgstr "Votre choix"
+
 #: src/features/accounts/signing/SignatureCapture.tsx:316
 msgid "Your initials"
 msgstr "Vos initiales"
 
-#: src/features/accounts/signing/SignRoute.tsx:667
+#: src/features/accounts/signing/SignRoute.tsx:732
 msgid "Your job title is empty."
 msgstr "Votre fonction est vide."
 
@@ -3326,7 +3372,7 @@ msgstr "Votre fonction est vide."
 msgid "Your name"
 msgstr "Votre nom"
 
-#: src/features/accounts/signing/SignRoute.tsx:663
+#: src/features/accounts/signing/SignRoute.tsx:728
 msgid "Your name is empty."
 msgstr "Votre nom est vide."
 
@@ -3334,7 +3380,7 @@ msgstr "Votre nom est vide."
 #~ msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
 #~ msgstr "Vos numéros ne figurent pas dans l’annuaire Peppol. Les factures arrivent par e-mail, sauf si vous indiquez un identifiant Peppol ci-dessous."
 
-#: src/features/accounts/signing/SignRoute.tsx:677
+#: src/features/accounts/signing/SignRoute.tsx:742
 msgid "Your organisation is empty."
 msgstr "Votre organisation est vide."
 
@@ -3342,7 +3388,7 @@ msgstr "Votre organisation est vide."
 msgid "Your own line (optional)"
 msgstr "Votre propre ligne (facultatif)"
 
-#: src/features/accounts/signing/SignRoute.tsx:692
+#: src/features/accounts/signing/SignRoute.tsx:757
 msgid "Your PO number is empty."
 msgstr "Votre numéro de bon de commande est vide."
 
@@ -3350,10 +3396,10 @@ msgstr "Votre numéro de bon de commande est vide."
 msgid "Your question"
 msgstr "Votre question"
 
-#: src/features/accounts/signing/SignRoute.tsx:474
+#: src/features/accounts/signing/SignRoute.tsx:497
 msgid "Your signature completes the agreement."
 msgstr "Votre signature valide l'accord."
 
-#: src/features/accounts/signing/SignRoute.tsx:687
+#: src/features/accounts/signing/SignRoute.tsx:752
 msgid "Your VAT number is empty."
 msgstr "Votre numéro de TVA est vide."

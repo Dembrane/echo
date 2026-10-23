@@ -43,7 +43,7 @@ import { mayRemind, RemindSigner } from "../customer/RemindSigner";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
 import { FitLabel, fitting } from "../FitLabel";
-import { formatDateTime } from "../format";
+import { formatDateTime, formatMoney } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
 import {
@@ -314,7 +314,24 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	// Only for showing the file when the browser cannot draw it; there is no download
 	// before signing, only of the signed copy.
 	const fileHref = usePdfHref(pdf.data ? doc.file_url : null);
-	const fields = useMemo(() => orderFields(doc.fields), [doc.fields]);
+	const allFields = useMemo(() => orderFields(doc.fields), [doc.fields]);
+	// Exactly one option to pick: their tick boxes are one step, a choice between them.
+	const pickOne = doc.content?.choose === "one";
+	const optionFields = useMemo(
+		() => allFields.filter(isOptionField),
+		[allFields],
+	);
+	const fields = useMemo(() => {
+		const first = optionFields[0];
+		if (!pickOne || !first) return allFields;
+		return allFields.flatMap((f) =>
+			!isOptionField(f)
+				? [f]
+				: f.id === first.id
+					? [{ ...f, id: PICK_STEP, label: t`Your choice`, required: true }]
+					: [],
+		);
+	}, [allFields, optionFields, pickOne]);
 
 	const [values, setValues] = useState<Values>(() => initialValues(doc));
 	const [signature, setSignature] = useState<CapturedImage | null>(null);
@@ -412,7 +429,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 						: null,
 					sha256: doc.sha256,
 					signature: { method: sig.method, png_base64: sig.png_base64 },
-					values: requestValues(fields, values),
+					values: requestValues(allFields, values),
 				},
 				params: { docId: doc.id, orgId },
 			});
@@ -425,7 +442,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	};
 
 	const overlay = (box: PageBox) =>
-		fields
+		allFields
 			.filter((f) => f.page === box.page)
 			.map((f) => (
 				<FieldBox
@@ -442,7 +459,13 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 								? (initials ?? signature)
 								: null
 					}
-					onClick={() => goTo(f)}
+					onClick={() =>
+						goTo(
+							pickOne && isOptionField(f)
+								? (fields.find((x) => x.id === PICK_STEP) ?? null)
+								: f,
+						)
+					}
 				/>
 			));
 
@@ -493,6 +516,17 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 					value={values[field.id]}
 					onValue={(v) => setValues((old) => ({ ...old, [field.id]: v }))}
 					filled={isFilled(field, values, images)}
+					options={field.id === PICK_STEP ? optionFields : null}
+					values={values}
+					onPick={(id) =>
+						setValues((old) => ({
+							...old,
+							[PICK_STEP]: true,
+							...Object.fromEntries(
+								optionFields.map((f) => [f.id, f.id === id]),
+							),
+						}))
+					}
 					signature={signature}
 					initials={initials}
 					nameForSignature={nameValue}
@@ -533,6 +567,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			{finishing && (
 				<FinishStep
 					doc={doc}
+					choice={choiceLine(doc, optionFields, values, i18n.locale)}
 					complete={complete}
 					asksDpa={asksDpa}
 					dpa={dpa}
@@ -628,6 +663,36 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	);
 }
 
+/** The step that stands for the tick boxes of an offer whose signer picks exactly one. */
+const PICK_STEP = "pick-one-option";
+
+const isOptionField = (f: DocumentFieldT) =>
+	f.kind === "checkbox" && Boolean(f.key?.startsWith("option:"));
+
+/**
+ * What the signer chose and what the offer then comes to, for the last step: the offer's
+ * total with the chosen options' lines added. Null for an offer without options.
+ */
+function choiceLine(
+	doc: DocumentDetailT,
+	optionFields: readonly DocumentFieldT[],
+	values: Values,
+	locale: string,
+): string | null {
+	if (!optionFields.length || doc.total_cents == null || !doc.currency)
+		return null;
+	const chosen = optionFields
+		.filter((f) => values[f.id] === true)
+		.map((f) => f.label);
+	const extra = (doc.lines ?? [])
+		.filter((l) => l.option && chosen.includes(l.option))
+		.reduce((sum, l) => sum + l.total_cents, 0);
+	const total = formatMoney(doc.total_cents + extra, doc.currency, locale);
+	if (!chosen.length) return t`No options chosen. Total ${total} incl. VAT.`;
+	const names = chosen.join(", ");
+	return t`You chose ${names}. Total ${total} incl. VAT.`;
+}
+
 /** Back on the left, the one primary action on the right, always on one row. */
 function ActionRow({
 	onBack,
@@ -709,11 +774,18 @@ function FieldPanel({
 	onInitials,
 	onBack,
 	onNext,
+	options = null,
+	values = {},
+	onPick = () => {},
 }: {
 	field: DocumentFieldT;
 	value: string | boolean | undefined;
 	onValue: (v: string | boolean) => void;
 	filled: boolean;
+	/** The options to pick exactly one of, on the step that stands for their tick boxes. */
+	options?: readonly DocumentFieldT[] | null;
+	values?: Values;
+	onPick?: (fieldId: string) => void;
 	signature: CapturedImage | null;
 	initials: CapturedImage | null;
 	nameForSignature: string;
@@ -818,6 +890,31 @@ function FieldPanel({
 		);
 	}
 
+	if (options) {
+		const picked = options.find((o) => values[o.id] === true)?.id ?? null;
+		return (
+			<Stack gap="sm">
+				<Radio.Group
+					value={picked}
+					onChange={(v) => {
+						onPick(v);
+						setTried(false);
+					}}
+					label={t`Choose one`}
+					error={tried && !picked ? t`Choose one to continue.` : undefined}
+					data-testid="sign-choice"
+				>
+					<Stack gap={6} mt={6}>
+						{options.map((o) => (
+							<Radio key={o.id} value={o.id} label={o.label} />
+						))}
+					</Stack>
+				</Radio.Group>
+				{row}
+			</Stack>
+		);
+	}
+
 	if (field.kind === "checkbox") {
 		return (
 			<Stack gap="sm">
@@ -885,6 +982,7 @@ function FieldPanel({
  */
 function FinishStep({
 	doc,
+	choice,
 	complete,
 	asksDpa,
 	dpa,
@@ -897,6 +995,8 @@ function FinishStep({
 	onSign,
 }: {
 	doc: DocumentDetailT;
+	/** What the signer chose and the total it comes to; null without options. */
+	choice: string | null;
 	complete: boolean;
 	asksDpa: boolean;
 	dpa: "yes" | "no" | null;
@@ -918,6 +1018,11 @@ function FinishStep({
 			{!complete && (
 				<Text size="sm" c="var(--app-warning)">
 					<Trans>Some required fields are still empty.</Trans>
+				</Text>
+			)}
+			{choice && (
+				<Text size="sm" data-testid="sign-choice-summary">
+					{choice}
 				</Text>
 			)}
 			<LegalDocuments doc={doc} />

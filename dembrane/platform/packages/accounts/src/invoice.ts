@@ -10,8 +10,9 @@ import {
 } from "./events";
 import { amsterdamDay, dueOn, type InvoicePart, invoiceParts } from "./invoice-plan";
 import { accountPageUrl, dashboardBase } from "./jobs";
-import { charged, priceLines } from "./money";
+import { charged, type PricedLine, priceLines } from "./money";
 import { type OfferContent, quantityText } from "./offer";
+import { optionsOf } from "./options";
 import {
   type BillingRow,
   type DocumentRow,
@@ -22,6 +23,9 @@ import {
 } from "./storage";
 import { billingComplete } from "./tasks";
 import { staffBase } from "./views";
+
+/** A priced line as the signed document keeps it: an option's line says if it was chosen. */
+type SignedLine = PricedLine & { option?: string; chosen?: boolean };
 
 /** What a signed offer's invoice request can still wait for. */
 export type InvoiceWait = "billing_details" | "dpa";
@@ -240,6 +244,14 @@ export function invoicePayload(
 ) {
   const content = doc.content as OfferContent | null;
   const other = content?.bill_to;
+  // The lines as signed: with the options chosen at signing charged.
+  const lines = ((doc.lines as SignedLine[] | null) ??
+    (content?.items.length ? priceLines(content.items).lines : [])) as SignedLine[];
+  const options = optionsOf(lines).map((o) => ({
+    label: o.label,
+    chosen: o.lines.every((i) => lines[i]?.chosen === true),
+    net_cents: o.lines.reduce((sum, i) => sum + (lines[i]?.net_cents ?? 0), 0),
+  }));
   return {
     language: doc.language,
     vat_treatment: content?.vat_treatment ?? "standard",
@@ -250,13 +262,12 @@ export function invoicePayload(
       : (signed ?? content?.customer_reference ?? billing?.po_number ?? null),
     /** True when `billing` is a party named on the offer, not the customer's own details. */
     bill_to: Boolean(other),
-    // What is invoiced: optional and included lines were shown, never charged. Each line
-    // carries its amount as the offer rounded it (a quantity may be 1.5), and its section.
-    items: content?.items.length
-      ? priceLines(content.items)
-          .lines.filter(charged)
-          .map(({ vat_cents: _v, total_cents: _t, ...line }) => line)
-      : [],
+    // What is invoiced: optional and included lines were shown, never charged, except the
+    // options the signer chose, which the signed document's lines count. Each line carries
+    // its amount as the offer rounded it (a quantity may be 1.5), and its section.
+    items: lines.filter(charged).map(({ vat_cents: _v, total_cents: _t, chosen: _c, ...l }) => l),
+    // An offer with options: each one, whether it was chosen, and what it adds before VAT.
+    ...(options.length && { options }),
   };
 }
 

@@ -431,4 +431,29 @@ run("an offer or DPA accepted outside dembrane", () => {
     // Voided, it cannot be accepted again.
     expect((await accept(org, doc.id)).status).toBe(409);
   });
+  test("an offer with options accepted by letter records what the customer chose", async () => {
+    const org = await freshOrg("Gemeente Keuze Brief");
+    const scenario = (description: string, cents: number, option: string) => ({
+      description,
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional",
+      option,
+    });
+    const doc = await sent(org, {
+      template: "custom",
+      choose: "one",
+      items: [scenario("Groot", 250000, "Scenario 1"), scenario("Klein", 89500, "Scenario 2")],
+    });
+    const unknown = await accept(org, doc.id, { chosen_options: ["Scenario 3"] });
+    expect(unknown.status).toBe(422);
+    expect((await accept(org, doc.id, { chosen_options: [] })).status).toBe(422);
+    const res = await accept(org, doc.id, { chosen_options: ["Scenario 1"] });
+    expect(res.status).toBe(200);
+    const row = await store.document(w.db, org, doc.id);
+    expect([row?.subtotalCents, row?.totalCents]).toEqual([250000, 302500]);
+    const sig = await store.signatureOf(w.db, doc.id);
+    expect(sig?.confirmationText).toContain("They chose Scenario 1.");
+  });
 });

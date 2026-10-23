@@ -115,6 +115,18 @@ export const document = {
     detail: "{label}: tick or untick",
     description: "A checkbox field got a value that is not true or false.",
   },
+  "document.choose_one": {
+    action: "fix_input",
+    detail: "Tick exactly one of the options",
+    description:
+      "An offer that asks the signer to pick one option was signed with none or several ticked.",
+  },
+  "document.option_unknown": {
+    action: "fix_input",
+    detail: "{option} is not one of this offer's options",
+    audience: "staff",
+    description: "An acceptance recorded outside dembrane names an option the offer does not have.",
+  },
   "document.field_must_tick": {
     action: "fix_input",
     detail: "{label} must be ticked",

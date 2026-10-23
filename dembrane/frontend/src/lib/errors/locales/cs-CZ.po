@@ -24,7 +24,7 @@ msgid "error.request.field_empty"
 msgstr "Pole {field} nesmí být prázdné. Vyplňte ho nebo smažte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_date_invalid"
 msgstr "{label} musí být skutečné datum, ne v budoucnosti a ne před odesláním dokumentu."
 
@@ -54,12 +54,12 @@ msgid "error.offer.bill_to_vat_format"
 msgstr "{vat_id} nevypadá jako DIČ ze země {country}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:67
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Obrázek s vašimi iniciálami} other {Obrázek s vaším podpisem}} je příliš velký. Zmenšete jej pod 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:62
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Vaše iniciály} other {Váš podpis}} musí být obrázek ve formátu PNG."
 
@@ -129,7 +129,7 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Přidejte název organizace, která data vlastní."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:59
+#: src/lib/errors/messages/offer.ts:63
 msgid "error.offer.no_charge_invoiced"
 msgstr "Nabídka zdarma nemá plán fakturace ani plátce."
 
@@ -174,7 +174,7 @@ msgid "error.map.groups_need_snapshot"
 msgstr "Shluky lze uložit na znovu vygenerované mapě. Vygenerujte mapu znovu a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:27
+#: src/lib/errors/messages/document.ts:31
 msgid "error.document.dpa_not_authorised"
 msgstr "Potvrďte, že jste oprávněni schválit zpracování osobních údajů za svou organizaci."
 
@@ -224,7 +224,7 @@ msgid "error.field.invalid_url"
 msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:45
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_text_invalid"
 msgstr "Zadejte text pro pole {label}."
 
@@ -239,7 +239,7 @@ msgid "error.request.field_required"
 msgstr "Vyplňte pole {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:41
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_required"
 msgstr "Chcete-li pokračovat, vyplňte pole {label}."
 
@@ -254,7 +254,7 @@ msgid "error.access.not_onboarded"
 msgstr "Chcete-li pokračovat, dokončete nastavení svého účtu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:33
+#: src/lib/errors/messages/offer.ts:37
 msgid "error.offer.invoice_part_share"
 msgstr "Dejte splátce {part} podíl větší než nula."
 
@@ -274,17 +274,22 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:42
+#: src/lib/errors/messages/offer.ts:46
 msgid "error.offer.invoice_parts_count"
 msgstr "Fakturujte v {min} až {max} splátkách."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:54
+#: src/lib/errors/messages/offer.ts:72
+msgid "error.offer.option_not_optional"
+msgstr "Řádek {line} má název možnosti. Označte ho jako volitelný, nebo název smažte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:58
 msgid "error.offer.line_no_amount"
 msgstr "Řádek {line} nemá cenu. Pro nabídku zdarma zvolte Zdarma v části Jak fakturujeme."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:68
+#: src/lib/errors/messages/offer.ts:82
 msgid "error.offer.section_missing"
 msgstr "Řádek {line} nemá oddíl. Dejte každý řádek pod nadpis, nebo žádný."
 
@@ -294,7 +299,7 @@ msgid "error.conversation.no_summary"
 msgstr "Nejprve vytvořte shrnutí tohoto rozhovoru a pak to zkuste znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:63
+#: src/lib/errors/messages/offer.ts:67
 msgid "error.offer.no_charge_total"
 msgstr "Zdarma znamená celkem nula. Nastavte ceny na 0, nebo zvolte jiný způsob fakturace."
 
@@ -324,12 +329,12 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online platby momentálně nejsou dostupné. Pro změnu tarifu nás kontaktujte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:19
+#: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Tento dokument může odmítnout pouze {signer_email}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:107
 msgid "error.document.signer_only"
 msgstr "Tento dokument může podepsat pouze {signer_email}. Požádejte dotyčného o podpis, nebo nás požádejte o změnu podepisující osoby."
 
@@ -429,7 +434,12 @@ msgid "error.project.share_admin_only"
 msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:37
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.options_not_here"
+msgstr "Možnosti volené při podpisu nejdou dohromady s měsíční, splátkovou ani bezplatnou fakturací."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:41
 msgid "error.offer.invoice_part_when"
 msgstr "Splátka {part}: jen první splátka může být při podpisu a každé datum následuje po předchozím."
 
@@ -624,7 +634,7 @@ msgid "error.rate_limit.exceeded"
 msgstr "Příliš mnoho požadavků za krátký čas. Chvíli počkejte a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:14
+#: src/lib/errors/messages/document.ts:18
 msgid "error.document.confirmation_mismatch"
 msgstr "Potvrzovací text se neshoduje. Napište ho přesně tak, jak je zobrazen: {expected}"
 
@@ -644,7 +654,7 @@ msgid "error.agent.insight_content_blank"
 msgstr "Postřeh nemůže být prázdný. Něco napište, nebo ho smažte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:73
+#: src/lib/errors/messages/offer.ts:87
 msgid "error.offer.section_split"
 msgstr "Řádky oddílu {section} musí být pohromadě."
 
@@ -669,12 +679,12 @@ msgid "error.map.selection_other_snapshot"
 msgstr "Mapa byla od vašeho výběru aktualizována. Obnovte mapu a vyberte položky znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:50
+#: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "Splátky dávají dohromady {total}. Musí dát 100%."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:72
 msgid "error.document.no_pdf"
 msgstr "PDF tohoto dokumentu není k dispozici. Kontaktujte nás a my vám ho pošleme znovu."
 
@@ -684,7 +694,7 @@ msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF této faktury ještě není připraveno. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:77
+#: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "Celkem je nula. Pro nabídku zdarma zvolte Zdarma v části Jak fakturujeme."
 
@@ -804,12 +814,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Tento vlastník dat už je ve vaší organizaci. Pro externího klienta vyberte někoho mimo ni, nebo místo toho vytvořte interní pracovní prostor."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:81
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_declinable"
 msgstr "Tento dokument už nelze odmítnout."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:112
 msgid "error.document.signing_unavailable"
 msgstr "Tento dokument právě nelze podepsat. Víme o tom a pracujeme na nápravě."
 
@@ -819,12 +829,12 @@ msgid "error.document.changed"
 msgstr "Tento dokument se od vašeho otevření změnil. Před podpisem stránku znovu načtěte a dokument si ještě jednou přečtěte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:57
 msgid "error.document.field_unknown"
 msgstr "Tento dokument se od vašeho otevření změnil. Načtěte stránku znovu a zkuste to ještě jednou."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:73
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.no_signature_needed"
 msgstr "Tento dokument nevyžaduje podpis."
 
@@ -834,22 +844,22 @@ msgid "error.document.already_signed"
 msgstr "Tento dokument je již podepsán. Není potřeba nic dalšího dělat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:93
 msgid "error.document.not_signed"
 msgstr "Tento dokument ještě není podepsán, takže podepsanou kopii nelze stáhnout."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:77
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_awaiting_signature"
 msgstr "Tento dokument už nečeká na podpis."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:23
+#: src/lib/errors/messages/document.ts:27
 msgid "error.document.declined"
 msgstr "Tento dokument byl odmítnut, takže ho již nelze podepsat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:117
+#: src/lib/errors/messages/document.ts:121
 msgid "error.document.withdrawn"
 msgstr "Tento dokument byl stažen, takže ho již nelze podepsat."
 
@@ -939,7 +949,7 @@ msgid "error.billing.tier_required"
 msgstr "Tato funkce vyžaduje tarif {required}. Chcete-li ji využívat, přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:94
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.offer_expired"
 msgstr "Platnost této nabídky vypršela {valid_until}. Kontaktujte nás a my vám vystavíme novou."
 
@@ -1169,17 +1179,27 @@ msgid "error.workspace.has_projects"
 msgstr "Tento pracovní prostor stále obsahuje {count, plural, one {# projekt} few {# projekty} other {# projektů}}. Nejprve je smažte nebo přesuňte na stránce Projekty vaší organizace."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:37
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_must_tick"
 msgstr "Pro pokračování zaškrtněte pole {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:49
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.choose_one"
+msgstr "Zaškrtněte právě jednu z možností a pak podepište."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_tick_invalid"
 msgstr "Zaškrtněte nebo zrušte zaškrtnutí pole {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/offer.ts:46
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.choose_one_needs_two"
+msgstr "Aby šlo vybrat jednu, zadejte aspoň dvě možnosti."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
 msgid "error.offer.invoice_parts_vat"
 msgstr "Pro fakturaci ve splátkách dejte všem účtovaným řádkům stejnou sazbu DPH."
 
@@ -1189,7 +1209,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Pro přesun projektů musíte být správcem nebo vlastníkem pracovního prostoru ({side})."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:113
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.verified_email_required"
 msgstr "Pro podepsání se přihlaste pomocí ověřené e-mailové adresy."
 
@@ -1324,7 +1344,7 @@ msgid "error.conversation.not_found"
 msgstr "Tento rozhovor se nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:85
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_found"
 msgstr "Tento dokument se nepodařilo najít. Možná byl stažen."
 
@@ -1499,7 +1519,7 @@ msgid "error.internal.unavailable"
 msgstr "Část služby dembrane je právě nedostupná. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:102
 msgid "error.document.signature_unreadable"
 msgstr "Váš podpis se nepodařilo přečíst. Nakreslete ho znovu a zkuste to ještě jednou."
 

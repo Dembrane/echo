@@ -8,8 +8,9 @@ import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } f
 import { requestInvoices } from "./invoice";
 import { amsterdamDay } from "./invoice-plan";
 import type { OfferContent } from "./offer";
+import { optionKey, optionsOf } from "./options";
 import { acceptanceLine, acceptedPdf, OUTSIDE_VIA, type OutsideVia } from "./pdf";
-import { afterSigned, auditTrail } from "./signing";
+import { afterSigned, auditTrail, choiceOf } from "./signing";
 import { type DocumentRow, type OrgRow, type SignatureRow, store } from "./storage";
 import { settleTask } from "./tasks";
 import { staffBase } from "./views";
@@ -31,6 +32,8 @@ export interface OutsideInput {
   /** ISO day the customer accepted. */
   readonly accepted_on: string;
   readonly customer_reference: string | null;
+  /** An offer with options: the names of those the customer chose. */
+  readonly chosen_options?: readonly string[] | null;
   readonly evidence: { readonly name: string; readonly bytes: Uint8Array };
 }
 
@@ -97,6 +100,20 @@ export async function acceptOutside(
   if (input.accepted_on > latest || (earliest && input.accepted_on < earliest))
     throw new ValidationError("document.outside_date_invalid");
   const evidence = evidenceFile(input.evidence.name, input.evidence.bytes);
+  // An offer with options: staff say what the customer chose, as ticks on its option fields,
+  // so the record reads as a signature made here would.
+  const content = kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const fields = await store.fields(d.db, doc.id);
+  const ticks: Record<string, boolean> = {};
+  const options = content ? optionsOf(content.items) : [];
+  for (const name of input.chosen_options ?? [])
+    if (!options.some((o) => o.label === name))
+      throw new ValidationError("document.option_unknown", { params: { option: name } });
+  for (const o of options) {
+    const f = fields.find((x) => x.key === optionKey(o.number));
+    if (f) ticks[f.id] = (input.chosen_options ?? []).includes(o.label);
+  }
+  const choice = content ? choiceOf(content, fields, ticks) : null;
   const sent = doc.fileKey ? await d.files.get(doc.fileKey) : null;
   const sentBytes = sent ? new Uint8Array(await sent.arrayBuffer()) : null;
   if (!sentBytes || sha256Hex(sentBytes) !== doc.sha256) {
@@ -115,7 +132,8 @@ export async function acceptOutside(
   const accepted = input.role ? `${input.name}, ${input.role}` : input.name;
   const ref = doc.reference ? ` (${doc.reference})` : "";
   // What the record states, in the words of the record page: kept on the row verbatim.
-  const statement = `Recorded by ${staff}: "${doc.title}"${ref}, SHA-256 ${doc.sha256}, was accepted ${OUTSIDE_VIA[input.via]} on ${input.accepted_on} by ${accepted} (${input.email}) for ${org.name}. Evidence: ${evidence.name}, SHA-256 ${evidenceSha256}.`;
+  const chose = choice?.chosen.length ? ` They chose ${choice.chosen.join(", ")}.` : "";
+  const statement = `Recorded by ${staff}: "${doc.title}"${ref}, SHA-256 ${doc.sha256}, was accepted ${OUTSIDE_VIA[input.via]} on ${input.accepted_on} by ${accepted} (${input.email}) for ${org.name}.${chose} Evidence: ${evidence.name}, SHA-256 ${evidenceSha256}.`;
   const [terms, sla, dpa] = await Promise.all([
     store.legalById(d.db, doc.termsTextId),
     store.legalById(d.db, doc.slaTextId),
@@ -140,6 +158,7 @@ export async function acceptOutside(
     recordedAt,
     acceptanceId: id,
     statement,
+    ...(choice && { choices: choice.record }),
     legal: (
       [
         ["terms", terms],
@@ -186,7 +205,7 @@ export async function acceptOutside(
         // An acceptance outside says nothing about data processing: the DPA stands alone.
         dpaAuthorised: false,
         sha256: doc.sha256 as string,
-        fieldValues: {},
+        fieldValues: ticks,
         method: "outside",
         imageKey: null,
         imageSha256: null,
@@ -207,7 +226,12 @@ export async function acceptOutside(
         customerReference: reference,
         recordedBy: who.directusUserId,
       });
-      await store.updateDocument(tx, doc.id, { status: "signed", signedAt: now, updatedAt: now });
+      await store.updateDocument(tx, doc.id, {
+        status: "signed",
+        signedAt: now,
+        updatedAt: now,
+        ...choice?.columns,
+      });
       await afterSigned(d, tx, org, doc, false, who.directusUserId);
       const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
       const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
@@ -236,7 +260,7 @@ export async function acceptOutside(
           signature: signaturePayload(sig, `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`),
           billing: billingPayload(await store.billing(tx, org.id)),
         },
-        slack: `:inbox_tray: Accepted outside dembrane: ${accepted} (${input.email}) accepted "${doc.title}" for ${org.name} ${OUTSIDE_VIA[input.via]} on ${input.accepted_on}${reference ? `, reference ${reference}` : ""}${doc.totalCents !== null ? `, ${(doc.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}. Recorded by ${staff}, evidence attached.`,
+        slack: `:inbox_tray: Accepted outside dembrane: ${accepted} (${input.email}) accepted "${doc.title}" for ${org.name} ${OUTSIDE_VIA[input.via]} on ${input.accepted_on}${reference ? `, reference ${reference}` : ""}${fresh.totalCents !== null ? `, ${(fresh.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}. Recorded by ${staff}, evidence attached.`,
       });
       // As after a signature: the offer or the DPA may be the last thing the invoice waited for.
       await requestInvoices(d, tx, acceptedFor);

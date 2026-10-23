@@ -72,6 +72,25 @@ export const offer = {
     audience: "staff",
     description: "An offer drafted with no_charge also carries an invoice_plan or bill_to.",
   },
+  "offer.option_not_optional": {
+    action: "fix_input",
+    detail: "Line {line} has an option name: make it optional, or clear the name",
+    audience: "staff",
+    description:
+      "A line that is charged or included carries an option name; only an optional line can be chosen at signing. line counts from 1.",
+  },
+  "offer.options_not_here": {
+    action: "fix_input",
+    detail: "Options chosen at signing do not go with an invoice plan or No charge",
+    audience: "staff",
+    description: "An offer with options also carries an invoice_plan or no_charge.",
+  },
+  "offer.choose_one_needs_two": {
+    action: "fix_input",
+    detail: "To have one picked, give at least two options",
+    audience: "staff",
+    description: "An offer with choose one has fewer than two options.",
+  },
   "offer.section_missing": {
     action: "fix_input",
     detail: "Line {line} has no section: put every line under a heading, or none",

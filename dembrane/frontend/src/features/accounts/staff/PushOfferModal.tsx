@@ -163,6 +163,7 @@ function OfferForm({
 		planForm(from?.invoice_plan, from?.no_charge === true),
 	);
 	const noCharge = plan.kind === "none";
+	const [choose, setChoose] = useState<"any" | "one">(from?.choose ?? "any");
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -183,6 +184,9 @@ function OfferForm({
 	const error = push.error ?? update.error;
 	const fields = error instanceof AccountsApiError ? error.fields : {};
 
+	const hasOptions = lines.some(
+		(l) => l.kind === "optional" && l.option.trim(),
+	);
 	const net = priced.reduce((a, l) => a + lineCents(l), 0);
 	const vat = priced.reduce(
 		(a, l) => a + Math.round((lineCents(l) * l.vatPercent) / 100),
@@ -200,6 +204,7 @@ function OfferForm({
 		items: toItems(priced),
 		language,
 		no_charge: noCharge,
+		...(hasOptions && { choose }),
 		offer_name: offerName,
 		person_name: personName,
 		processing_terms: processingTerms.trim() || null,
@@ -380,8 +385,26 @@ function OfferForm({
 				currency={currency}
 				discounts
 				sections
+				choices
 				vatFixed={vatFixed}
 			/>
+			{hasOptions && (
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>At signing, they tick</Trans>
+					</Text>
+					<SegmentedControl
+						style={{ alignSelf: "flex-start" }}
+						value={choose}
+						onChange={(v) => setChoose(v as typeof choose)}
+						data={[
+							{ label: t`Any options`, value: "any" },
+							{ label: t`Exactly one`, value: "one" },
+						]}
+						data-testid="offer-choose"
+					/>
+				</Stack>
+			)}
 
 			<Divider label={t`Invoicing`} labelPosition="left" />
 			<InvoicePlanFields
