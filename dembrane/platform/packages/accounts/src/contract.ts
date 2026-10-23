@@ -857,7 +857,10 @@ export const PushOfferRequest = z.object({
   billing_unit: BillingUnit.optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
-  /** An unsigned offer this one replaces; it is voided. */
+  /**
+   * An unsigned offer this one replaces; it is voided when this one is sent. A draft leaves
+   * it with the customer until then, and its send answers 409 if that offer was signed.
+   */
   supersedes_id: nullish(Uuid),
   /**
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
@@ -878,10 +881,13 @@ export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task
 
 /**
  * PUT .../offers/:docId replaces what a draft offer says, in place: the document id, its
- * reference and its staff page stay. `reference`, `date` and `external_ref` keep the
- * draft's value when absent. A sent offer answers 409.
+ * reference and its staff page stay. `reference`, `date`, `external_ref`, `currency` and a
+ * title of its own keep the draft's value when absent. A sent offer answers 409.
  */
-export const UpdateOfferRequest = PushOfferRequest.omit({ send: true, supersedes_id: true });
+export const UpdateOfferRequest = PushOfferRequest.omit({
+  send: true,
+  supersedes_id: true,
+}).extend({ currency: Currency.optional() });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),

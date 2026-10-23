@@ -25,7 +25,8 @@ export type DealStage = (typeof DEAL_STAGES)[number];
 export type StageDocument = Pick<
   DocumentRow,
   "kind" | "status" | "createdAt" | "sentAt" | "signedAt" | "dpaTextId" | "invoiceStatus"
->;
+> &
+  Partial<Pick<DocumentRow, "id" | "supersedesId">>;
 
 export interface StageFacts {
   /** The organisation is managed as an account (it has a stage of its own). */
@@ -39,11 +40,23 @@ export interface StageFacts {
 
 const time = (d: Date | string | null) => (d ? new Date(d).getTime() : 0);
 
-/** The newest offer that still stands decides; a withdrawn one says nothing. */
-const standingOffer = (f: StageFacts) =>
-  f.documents
-    .filter((x) => x.kind === "offer" && x.status !== "void")
+/**
+ * The newest offer that still stands decides; a withdrawn one says nothing, and neither does
+ * a draft revision while the offer it replaces is still with the customer.
+ */
+const standingOffer = (f: StageFacts) => {
+  const live = new Set(
+    f.documents.filter((x) => x.kind === "offer" && x.status !== "void").map((x) => x.id),
+  );
+  return f.documents
+    .filter(
+      (x) =>
+        x.kind === "offer" &&
+        x.status !== "void" &&
+        !(x.status === "draft" && x.supersedesId && live.has(x.supersedesId)),
+    )
     .sort((a, b) => time(b.createdAt) - time(a.createdAt))[0];
+};
 
 export function dealStage(f: StageFacts): DealStage | null {
   const offer = standingOffer(f);

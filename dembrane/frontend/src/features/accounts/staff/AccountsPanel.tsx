@@ -24,6 +24,7 @@ import { call } from "../api/client";
 import { useAccountList } from "../api/hooks";
 import { dealStageLabel, formatDate } from "../format";
 import { AccountsI18n } from "../i18n";
+import { NewOrganisationModal } from "./NewOrganisationModal";
 
 /**
  * Staff: every account in one bounded table under the deal stages the team uses in Attio,
@@ -70,6 +71,7 @@ function AccountsTable() {
 	const [q] = useDebouncedValue(search.trim(), 250);
 	const { data, isLoading, error } = useAccountList(stage, q);
 	const navigate = useI18nNavigate();
+	const [newOrgOpen, setNewOrgOpen] = useState(false);
 
 	return (
 		<Stack gap="sm" data-testid="accounts-panel">
@@ -95,14 +97,29 @@ function AccountsTable() {
 						data-testid="accounts-stage"
 					/>
 				</Group>
-				<Button
-					size="xs"
-					onClick={() => navigate("/admin/accounts/new-demo")}
-					data-testid="new-demo"
-				>
-					<Trans>New demo</Trans>
-				</Button>
+				<Group gap="xs">
+					<Button
+						size="xs"
+						variant="default"
+						onClick={() => setNewOrgOpen(true)}
+						data-testid="new-organisation"
+					>
+						<Trans>New organisation</Trans>
+					</Button>
+					<Button
+						size="xs"
+						onClick={() => navigate("/admin/accounts/new-demo")}
+						data-testid="new-demo"
+					>
+						<Trans>New demo</Trans>
+					</Button>
+				</Group>
 			</Group>
+			<NewOrganisationModal
+				opened={newOrgOpen}
+				onClose={() => setNewOrgOpen(false)}
+				onCreated={(orgId) => navigate(`/admin/accounts/${orgId}`)}
+			/>
 			<OpenDemos />
 			{isLoading && <Loader size="sm" />}
 			{error && (
