@@ -9,6 +9,7 @@ import { requestInvoices } from "./invoice";
 import type { FieldKind, OfferContent } from "./offer";
 import { chosenOptions, optionsOf, signedTotals } from "./options";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
+import { dembraneSignature, isPresigned, recordDembraneSignature, signedBy } from "./presign";
 import { emailSignedCopy } from "./signed-copy";
 import { awaitingSlots, customerSlot, fieldsOf, type Slot } from "./signers";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
@@ -564,6 +565,14 @@ export async function auditTrail(
     else if (e.type === "document.signer_replaced")
       trail.push({ at: at(e), what: `Signer changed to ${named} by ${who(e)}` });
   }
+  // dembrane's signature, applied when the document was sent, in its place in time.
+  for (const s of await store.signaturesOf(d.db, doc.id))
+    if (isPresigned(s))
+      trail.push({
+        at: s.signedAt.toISOString(),
+        what: `Signed for ${s.organisation} by ${s.typedName}${s.typedRole ? `, ${s.typedRole}` : ""} (${s.email}), signed electronically when sent`,
+      });
+  trail.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
   trail.push({ at: signedAt, what: last });
   return trail;
 }
@@ -615,8 +624,9 @@ export async function afterSigned(
 /**
  * The DPA as its own document, with its own "Review and sign" task, for someone who may
  * agree to data processing on behalf of the organisation (art. 3.6 of the terms). It
- * carries the DPA text the offer pinned. One per organisation and text: an offer sent
- * again, or a second offer on the same text, opens nothing new.
+ * carries the DPA text the offer pinned and, with a signatory configured, dembrane's
+ * signature. One per organisation and text: an offer sent again, or a second offer on the
+ * same text, opens nothing new.
  */
 export async function openDpa(
   d: AccountsDeps,
@@ -635,7 +645,12 @@ export async function openDpa(
   const id = newId();
   const now = d.now();
   const title = `${dpa.title} ${dpa.version}`;
-  const rendered = await textPdf(title, dpa.body, { signing: true, language: lang });
+  const signature = await dembraneSignature(d, tx, now);
+  const rendered = await textPdf(title, dpa.body, {
+    signing: true,
+    language: lang,
+    signed: signature && signedBy(d, signature),
+  });
   const file = await storeRendered(d, orgId, id, rendered);
   await store.insertDocument(tx, {
     id,
@@ -655,6 +670,13 @@ export async function openDpa(
   });
   await writeFields(tx, id, rendered.fields);
   await store.updateDocument(tx, id, { status: "sent", sentAt: now, updatedAt: now });
+  if (signature)
+    await recordDembraneSignature(
+      d,
+      tx,
+      (await store.document(tx, orgId, id)) as DocumentRow,
+      signature,
+    );
   await createTask(d, tx, {
     orgId,
     code: "sign_dpa",

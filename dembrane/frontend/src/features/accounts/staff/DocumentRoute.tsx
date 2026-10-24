@@ -96,11 +96,13 @@ function DocumentPage() {
 	const d = doc.data;
 	const draft = d.status === "draft";
 	const draftOffer = draft && d.kind === "offer";
+	// The customer's signatures. dembrane's own, applied when sending, holds nothing back.
+	const theirs = d.signatures.filter((s) => s.slot !== "dembrane");
 	// A sent offer is fixed; a new version replaces it until it is signed.
 	const revisable =
 		d.kind === "offer" &&
 		["sent", "viewed", "declined"].includes(d.status) &&
-		!d.signatures.length;
+		!theirs.length;
 	// Accepted outside dembrane: their order letter, an email, paper, or their own DPA.
 	const acceptable =
 		(d.kind === "offer" || d.kind === "dpa") &&
@@ -145,7 +147,7 @@ function DocumentPage() {
 		outside?.customer_reference
 			? t`Their reference ${outside.customer_reference}`
 			: null,
-		d.awaiting_signatures.length && d.signatures.length
+		d.awaiting_signatures.length && theirs.length
 			? t`Waiting for ${waitingFor}`
 			: null,
 		!draft && d.kind === "offer" && d.valid_until && !d.signed_at
@@ -240,7 +242,7 @@ function DocumentPage() {
 								<Trans>Sign for dembrane</Trans>
 							</Button>
 						)}
-						{acceptable && !d.signatures.length && (
+						{acceptable && !theirs.length && (
 							<Button
 								variant="default"
 								onClick={() => setAccepting(true)}

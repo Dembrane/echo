@@ -393,6 +393,18 @@ export const OfferContent = z.object({
   second_signer: SecondSigner.optional(),
   /** PDFs attached to the offer, in order: in its clause, its hash and the signed PDF. */
   annexes: z.array(OfferAnnex).optional(),
+  /**
+   * dembrane's signature, applied when the offer was sent and printed under the customer's
+   * blanks; absent on a draft and on offers sent before dembrane signed what it sends.
+   */
+  dembrane_signature: z
+    .object({
+      name: z.string(),
+      role: z.string().nullable(),
+      email: z.string(),
+      signed_at: IsoTime,
+    })
+    .optional(),
 });
 
 export const LegalPin = z.object({
