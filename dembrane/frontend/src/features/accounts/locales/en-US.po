@@ -55,7 +55,7 @@ msgstr "{0} excl. VAT, {1} incl."
 #~ msgstr "{0} fictional conversations authored."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:135
+#: src/features/accounts/staff/DocumentRoute.tsx:137
 msgid "{0} incl. VAT"
 msgstr "{0} incl. VAT"
 
@@ -189,7 +189,7 @@ msgstr "Accepted by email, {day}"
 msgid "Accepted by order letter, {day}"
 msgstr "Accepted by order letter, {day}"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:252
+#: src/features/accounts/staff/DocumentRoute.tsx:254
 #: src/features/accounts/staff/AccountCardRoute.tsx:256
 #: src/features/accounts/staff/AccountCardRoute.tsx:924
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:144
@@ -382,7 +382,7 @@ msgid "Back to account"
 msgstr "Back to account"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:178
+#: src/features/accounts/staff/DocumentRoute.tsx:180
 msgid "Back to the account"
 msgstr "Back to the account"
 
@@ -493,7 +493,7 @@ msgstr "Cancel"
 msgid "Cancelled"
 msgstr "Cancelled"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:205
+#: src/features/accounts/staff/DocumentRoute.tsx:207
 #: src/features/accounts/signing/SignRoute.tsx:926
 msgid "Change"
 msgstr "Change"
@@ -636,20 +636,20 @@ msgstr "Contact name"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:106
 #: src/features/accounts/staff/SendOfferModals.tsx:167
-#: src/features/accounts/staff/DocumentRoute.tsx:335
+#: src/features/accounts/staff/DocumentRoute.tsx:337
 #: src/features/accounts/staff/AccountCardRoute.tsx:722
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Copied"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:106
-#: src/features/accounts/staff/DocumentRoute.tsx:335
+#: src/features/accounts/staff/DocumentRoute.tsx:337
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Copy"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:104
-#: src/features/accounts/staff/DocumentRoute.tsx:333
+#: src/features/accounts/staff/DocumentRoute.tsx:335
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Copy {label}"
@@ -769,7 +769,7 @@ msgstr "dembrane signs next."
 msgid "dembrane signs too"
 msgstr "dembrane signs too"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:122
+#: src/features/accounts/staff/DocumentRoute.tsx:124
 msgid "dembrane's signature"
 msgstr "dembrane's signature"
 
@@ -1558,7 +1558,7 @@ msgstr "No country found"
 msgid "No documents yet."
 msgstr "No documents yet."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:301
+#: src/features/accounts/staff/DocumentRoute.tsx:303
 msgid "No email went to the customer. Send them these links in your own email."
 msgstr "No email went to the customer. Send them these links in your own email."
 
@@ -1664,7 +1664,7 @@ msgstr "Offer drafted"
 msgid "Offer language"
 msgstr "Offer language"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:320
+#: src/features/accounts/staff/DocumentRoute.tsx:322
 msgid "Offer link"
 msgstr "Offer link"
 
@@ -1672,7 +1672,7 @@ msgstr "Offer link"
 msgid "Offer sent"
 msgstr "Offer sent"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:373
+#: src/features/accounts/staff/DocumentRoute.tsx:375
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Offer sent. It is in the customer's account; no email went out."
 
@@ -1719,7 +1719,7 @@ msgstr "Online"
 #~ msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 #~ msgstr "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:292
+#: src/features/accounts/staff/DocumentRoute.tsx:294
 msgid "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
 msgstr "Only staff see this draft. When you send it, it gets that day's date and its validity counts from then."
 
@@ -1735,7 +1735,7 @@ msgstr "Only the organisation's admins and billing contacts see this page."
 msgid "Open"
 msgstr "Open"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:262
+#: src/features/accounts/staff/DocumentRoute.tsx:264
 msgid "Open evidence"
 msgstr "Open evidence"
 
@@ -1747,7 +1747,7 @@ msgstr "Open in your mail app"
 msgid "Open PDF"
 msgstr "Open PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:273
+#: src/features/accounts/staff/DocumentRoute.tsx:275
 #: src/features/accounts/staff/AccountCardRoute.tsx:267
 msgid "Open signed PDF"
 msgstr "Open signed PDF"
@@ -1782,7 +1782,7 @@ msgstr "Open the PDF"
 #~ msgid "Open the public demo"
 #~ msgstr "Open the public demo"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:271
+#: src/features/accounts/staff/DocumentRoute.tsx:273
 msgid "Open the record"
 msgstr "Open the record"
 
@@ -1962,7 +1962,7 @@ msgstr "Pick a time that suits you."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Pick a time. {host} reads your account before the call."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:231
+#: src/features/accounts/staff/DocumentRoute.tsx:233
 #: src/features/accounts/staff/AccountCardRoute.tsx:228
 msgid "Place fields"
 msgstr "Place fields"
@@ -2222,7 +2222,7 @@ msgstr "Review and sign the offer"
 msgid "Review and sign yearly license offer {number}"
 msgstr "Review and sign yearly license offer {number}"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:222
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Revise"
 msgstr "Revise"
@@ -2322,7 +2322,7 @@ msgid "Send by email instead"
 msgstr "Send by email instead"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:641
-#: src/features/accounts/staff/DocumentRoute.tsx:212
+#: src/features/accounts/staff/DocumentRoute.tsx:214
 msgid "Send offer"
 msgstr "Send offer"
 
@@ -2368,7 +2368,7 @@ msgid "Sent"
 msgstr "Sent"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:143
+#: src/features/accounts/staff/DocumentRoute.tsx:145
 msgid "Sent {0}"
 msgstr "Sent {0}"
 
@@ -2442,7 +2442,7 @@ msgstr "Show finished ({0})"
 msgid "Show less"
 msgstr "Show less"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:314
+#: src/features/accounts/staff/DocumentRoute.tsx:316
 msgid "Show the email again"
 msgstr "Show the email again"
 
@@ -2468,7 +2468,7 @@ msgid "Sign | dembrane"
 msgstr "Sign | dembrane"
 
 #: src/features/accounts/staff/OfferExtras.tsx:183
-#: src/features/accounts/staff/DocumentRoute.tsx:240
+#: src/features/accounts/staff/DocumentRoute.tsx:242
 msgid "Sign for dembrane"
 msgstr "Sign for dembrane"
 
@@ -2480,7 +2480,7 @@ msgstr "Sign out and continue"
 msgid "Sign the data processing agreement"
 msgstr "Sign the data processing agreement"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:319
+#: src/features/accounts/staff/DocumentRoute.tsx:321
 msgid "Sign-in link"
 msgstr "Sign-in link"
 
@@ -2504,7 +2504,7 @@ msgid "Signed"
 msgstr "Signed"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:141
+#: src/features/accounts/staff/DocumentRoute.tsx:143
 msgid "Signed {0}"
 msgstr "Signed {0}"
 
@@ -2520,7 +2520,7 @@ msgstr "Signed on paper"
 msgid "Signed on paper, {day}"
 msgstr "Signed on paper, {day}"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:250
+#: src/features/accounts/staff/DocumentRoute.tsx:252
 #: src/features/accounts/staff/AccountCardRoute.tsx:254
 #: src/features/accounts/staff/AccountCardRoute.tsx:930
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:144
@@ -2767,7 +2767,7 @@ msgid "The box is not ticked yet."
 msgstr "The box is not ticked yet."
 
 #: src/features/accounts/staff/SendOfferModals.tsx:34
-#: src/features/accounts/staff/DocumentRoute.tsx:125
+#: src/features/accounts/staff/DocumentRoute.tsx:127
 msgid "the customer"
 msgstr "the customer"
 
@@ -2900,11 +2900,11 @@ msgid "Their reference"
 msgstr "Their reference"
 
 #. placeholder {0}: outside.customer_reference
-#: src/features/accounts/staff/DocumentRoute.tsx:146
+#: src/features/accounts/staff/DocumentRoute.tsx:148
 msgid "Their reference {0}"
 msgstr "Their reference {0}"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:124
+#: src/features/accounts/staff/DocumentRoute.tsx:126
 msgid "their second signatory"
 msgstr "their second signatory"
 
@@ -2938,7 +2938,7 @@ msgstr "This document could not be loaded."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr "This document could not be shown. Reload the page to try again."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:351
+#: src/features/accounts/staff/DocumentRoute.tsx:353
 msgid "This document has no PDF."
 msgstr "This document has no PDF."
 
@@ -3146,7 +3146,7 @@ msgid "Valid for (days)"
 msgstr "Valid for (days)"
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:152
+#: src/features/accounts/staff/DocumentRoute.tsx:154
 msgid "Valid until {0}"
 msgstr "Valid until {0}"
 
@@ -3176,7 +3176,7 @@ msgstr "VAT or tax number"
 
 #. placeholder {0}: d.version
 #. placeholder {0}: doc.version
-#: src/features/accounts/staff/DocumentRoute.tsx:132
+#: src/features/accounts/staff/DocumentRoute.tsx:134
 #: src/features/accounts/staff/AccountCardRoute.tsx:393
 msgid "Version {0}"
 msgstr "Version {0}"
@@ -3203,7 +3203,7 @@ msgstr "View offer"
 msgid "Viewed"
 msgstr "Viewed"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:284
+#: src/features/accounts/staff/DocumentRoute.tsx:286
 #: src/features/accounts/staff/AccountCardRoute.tsx:291
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:348
 msgid "Void acceptance"
@@ -3213,7 +3213,7 @@ msgstr "Void acceptance"
 msgid "Void this acceptance"
 msgstr "Void this acceptance"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:149
+#: src/features/accounts/staff/DocumentRoute.tsx:151
 msgid "Waiting for {waitingFor}"
 msgstr "Waiting for {waitingFor}"
 
