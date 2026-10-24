@@ -309,6 +309,48 @@ class Writer {
     });
     this.y -= height + 6;
   }
+
+  /** A blank already filled in: the words, the value on the line, and no field. */
+  filled(label: string, value: string) {
+    const height = 18;
+    this.ensure(height + 8);
+    const words = this.clean(label);
+    const bottom = this.y - height;
+    this.page.drawText(words, {
+      x: MARGIN,
+      y: bottom + 4,
+      size: 10,
+      font: this.regular,
+      color: INK,
+    });
+    const x = Math.max(MARGIN + this.width(words, 10, this.regular) + 8, MARGIN + 170);
+    // Where and how large a signature stamps a value, so both signatures read alike.
+    this.page.drawText(this.clean(value), {
+      x: x + 2,
+      y: bottom + 4.5,
+      size: 11,
+      font: this.regular,
+      color: INK,
+    });
+    this.page.drawLine({
+      start: { x, y: bottom + 2 },
+      end: { x: A4[0] - MARGIN, y: bottom + 2 },
+      thickness: 0.6,
+      color: FIELD_LINE,
+    });
+    this.y -= height + 6;
+  }
+
+  /** dembrane's signature applied when sending, under the customer's blanks, filled in. */
+  signed(by: SignedBy, words: (typeof SIGNED_BLOCK)[Language]) {
+    this.space(18);
+    this.ensure(150);
+    this.text(`${words.for} ${by.company}`, { bold: true, size: brand.type.print.lead, gap: 6 });
+    this.filled(words.name, by.name);
+    if (by.role) this.filled(words.role, by.role);
+    this.filled(words.date, by.day);
+    this.filled(words.signature, words.signed);
+  }
 }
 
 async function start() {
@@ -460,14 +502,47 @@ export function legalBlocks(body: string): LegalBlock[] {
   return out;
 }
 
+/** The words around dembrane's signature applied when sending, as a text document prints it. */
+const SIGNED_BLOCK: Record<
+  Language,
+  { for: string; name: string; role: string; date: string; signature: string; signed: string }
+> = {
+  en: {
+    for: "For",
+    name: "Name:",
+    role: "Role:",
+    date: "Date:",
+    signature: "Signature:",
+    signed: "Signed electronically",
+  },
+  nl: {
+    for: "Namens",
+    name: "Naam:",
+    role: "Functie:",
+    date: "Datum:",
+    signature: "Handtekening:",
+    signed: "Elektronisch ondertekend",
+  },
+};
+
+/** dembrane's signature on a text document: who, for which company, and the day. */
+export interface SignedBy {
+  readonly company: string;
+  readonly name: string;
+  readonly role: string | null;
+  /** Day-month-year, as the documents print dates. */
+  readonly day: string;
+}
+
 /**
  * A text document (a DPA, a plan) as a PDF. With `signing`, a signing block follows the
- * text and its blanks are the document's fields.
+ * text and its blanks are the document's fields. With `signed`, dembrane's signature,
+ * applied when the document is sent, follows the customer's blanks, filled in.
  */
 export async function textPdf(
   title: string,
   body: string,
-  opts: { signing: boolean; language: Language },
+  opts: { signing: boolean; language: Language; signed?: SignedBy | null },
 ): Promise<RenderedPdf> {
   const w = await start();
   w.text(title, { bold: true, size: brand.type.print.display, gap: 14 });
@@ -516,6 +591,7 @@ export async function textPdf(
     w.ensure(230);
     w.text(block.title, { bold: true, size: brand.type.print.title, gap: 10 });
     for (const a of block.fields) w.blank(a);
+    if (opts.signed) w.signed(opts.signed, SIGNED_BLOCK[opts.language]);
   }
   return finish(w, title);
 }
