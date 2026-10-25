@@ -42,16 +42,20 @@ const {
 	createAgenticRunMock,
 	runState,
 	stopAgenticRunMock,
+	streamState,
 	streamOptionsRef,
 	transcribeMock,
 	usageState,
 } = vi.hoisted(() => ({
 	appendAgenticRunMessageMock: vi.fn(),
 	createAgenticRunMock: vi.fn(),
-	runState: { events: [], status: "running" } as {
+	runState: { events: [], pollFails: false, status: "running" } as {
 		events: AgenticRunEvent[];
+		pollFails: boolean;
 		status: AgenticRunStatus;
 	},
+	// "hang" keeps the stream open; "drop" fails it the way a cut connection does.
+	streamState: { mode: "hang" } as { mode: "drop" | "hang" },
 	stopAgenticRunMock: vi.fn(async () => ({
 		run_id: "run-1",
 		status: "stopping" as const,
@@ -86,13 +90,16 @@ vi.mock("@/lib/api", async (importOriginal) => {
 			id: RUN_ID,
 			status: runState.status,
 		})),
-		getAgenticRunEvents: vi.fn(async (_runId: string, afterSeq: number) => ({
-			done: false,
-			events: runState.events.filter((event) => event.seq > afterSeq),
-			next_seq: runState.events.at(-1)?.seq ?? 0,
-			run_id: RUN_ID,
-			status: runState.status,
-		})),
+		getAgenticRunEvents: vi.fn(async (_runId: string, afterSeq: number) => {
+			if (runState.pollFails) throw new Error("network down");
+			return {
+				done: false,
+				events: runState.events.filter((event) => event.seq > afterSeq),
+				next_seq: runState.events.at(-1)?.seq ?? 0,
+				run_id: RUN_ID,
+				status: runState.status,
+			};
+		}),
 		getDismissedAgentInsightIds: vi.fn(async () => []),
 		getLatestAgenticRunForChat: vi.fn(async () => ({
 			id: RUN_ID,
@@ -105,6 +112,9 @@ vi.mock("@/lib/api", async (importOriginal) => {
 			(...args: Parameters<typeof actual.streamAgenticRun>) => {
 				streamOptionsRef.current =
 					args[1] as unknown as typeof streamOptionsRef.current;
+				if (streamState.mode === "drop") {
+					return Promise.reject(new Error("stream dropped"));
+				}
 				return new Promise(() => {});
 			},
 		),
@@ -302,7 +312,9 @@ beforeEach(() => {
 	createAgenticRunMock.mockClear();
 	transcribeMock.mockClear();
 	runState.events = [];
+	runState.pollFails = false;
 	runState.status = "running";
+	streamState.mode = "hang";
 });
 
 afterEach(() => {
@@ -525,6 +537,66 @@ class FakeMediaRecorder {
 		this.onstop?.();
 	}
 }
+
+describe("AgenticChatPanel, fallback to polling", () => {
+	beforeEach(() => {
+		streamState.mode = "drop";
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("shows no error when the stream drops and polling delivers the answer", async () => {
+		runState.events = [messageEvent(1, "user", "hello")];
+		renderPanel();
+		await screen.findByText("hello");
+
+		runState.events = [
+			...runState.events,
+			messageEvent(2, "assistant", "polled answer"),
+		];
+		await screen.findByText("polled answer", {}, { timeout: 5000 });
+
+		expect(screen.queryByText("Error")).toBeNull();
+		expect(screen.queryByText(/Falling back/)).toBeNull();
+		expect(screen.queryByText(/Connection lost/)).toBeNull();
+	}, 15000);
+
+	it("shows the error when the stream drops and polling fails too", async () => {
+		runState.events = [messageEvent(1, "user", "hello")];
+		renderPanel();
+		await screen.findByText("hello");
+
+		runState.pollFails = true;
+		await screen.findByText(
+			"Connection lost. Reload to see the answer.",
+			{},
+			{ timeout: 10000 },
+		);
+		expect(screen.getByText("Error")).toBeTruthy();
+	}, 20000);
+
+	it("clears the error once polling recovers", async () => {
+		runState.events = [messageEvent(1, "user", "hello")];
+		renderPanel();
+		await screen.findByText("hello");
+
+		runState.pollFails = true;
+		await screen.findByText(
+			"Connection lost. Reload to see the answer.",
+			{},
+			{ timeout: 10000 },
+		);
+
+		runState.pollFails = false;
+		await waitFor(
+			() => expect(screen.queryByText(/Connection lost/)).toBeNull(),
+			{ timeout: 5000 },
+		);
+	}, 25000);
+});
 
 describe("AgenticChatPanel, voice input", () => {
 	let clock = 0;

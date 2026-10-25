@@ -421,7 +421,7 @@ msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Zeptat se na tento rozhovor} few {Zeptat se na tyto rozhovory (#)} many {Zeptat se na tyto rozhovory (#)} other {Zeptat se na tyto rozhovory (#)}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2210
+#: src/components/chat/AgenticChatPanel.tsx:2222
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Zaměřeno na # rozhovor:} few {Zaměřeno na # rozhovory:} other {Zaměřeno na # rozhovorů:}}"
 
@@ -967,11 +967,11 @@ msgstr "{name} vyčerpal bezplatné hodiny nahrávání pro tento měsíc. Nahr�
 msgid "{name}: {rowDone} of {rowTotal}"
 msgstr "{name}: {rowDone} z {rowTotal}"
 
-#: src/components/chat/AgenticChatPanel.tsx:281
+#: src/components/chat/AgenticChatPanel.tsx:285
 msgid "{name}'s conversation"
 msgstr "Rozhovor uživatele {name}"
 
-#: src/components/chat/AgenticChatPanel.tsx:280
+#: src/components/chat/AgenticChatPanel.tsx:284
 msgid "{name}'s transcript excerpt"
 msgstr "Úryvek přepisu uživatele {name}"
 
@@ -1950,7 +1950,7 @@ msgstr "Proti"
 msgid "Agent"
 msgstr "Agent"
 
-#: src/components/chat/AgenticChatPanel.tsx:417
+#: src/components/chat/AgenticChatPanel.tsx:421
 msgid "Agent run failed"
 msgstr "Spuštění agenta se nezdařilo"
 
@@ -2412,7 +2412,7 @@ msgid "Approaching a limit this month"
 msgstr "Approaching a limit this month"
 
 #. placeholder {0}: input.length.toLocaleString()
-#: src/components/chat/AgenticChatPanel.tsx:2367
+#: src/components/chat/AgenticChatPanel.tsx:2379
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Blížíte se k limitu: {0} / 32 000 znaků"
 
@@ -2549,7 +2549,7 @@ msgstr "Ask"
 msgid "Ask | dembrane"
 msgstr "Ask | dembrane"
 
-#: src/components/chat/AgenticChatPanel.tsx:1909
+#: src/components/chat/AgenticChatPanel.tsx:1921
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Zeptejte se na rozhovory v tomto projektu nebo si nechte pomoct s nastavením. Každá změna se nejprve předloží ke kontrole a nic se neuloží bez vašeho schválení."
 
@@ -2574,7 +2574,7 @@ msgid "Ask about these"
 msgstr "Zeptat se na tyto"
 
 #: src/routes/project/chat/NewChatRoute.tsx:678
-#: src/components/chat/AgenticChatPanel.tsx:2343
+#: src/components/chat/AgenticChatPanel.tsx:2355
 msgid "Ask about your conversations..."
 msgstr "Zeptejte se na své rozhovory..."
 
@@ -3187,8 +3187,8 @@ msgstr "Můžete nám říct víc?"
 #: src/components/common/ImageCropModal.tsx:146
 #: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:730
-#: src/components/chat/AgenticChatPanel.tsx:756
-#: src/components/chat/AgenticChatPanel.tsx:2248
+#: src/components/chat/AgenticChatPanel.tsx:760
+#: src/components/chat/AgenticChatPanel.tsx:2260
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -3226,7 +3226,7 @@ msgstr "Cancel"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Zrušte kdykoli. Přístup vám zůstane až do konce období."
 
-#: src/components/chat/AgenticChatPanel.tsx:744
+#: src/components/chat/AgenticChatPanel.tsx:748
 msgid "Cancel current run"
 msgstr "Zrušit aktuální běh"
 
@@ -3455,7 +3455,7 @@ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1758
+#: src/components/chat/AgenticChatPanel.tsx:1770
 msgid "Chat"
 msgstr "Chat"
 
@@ -4059,6 +4059,10 @@ msgstr "Připojení agenti"
 #: src/components/participant/ParticipantConversationAudio.tsx:870
 msgid "participant.modal.s3check.title"
 msgstr "Connection issue"
+
+#: src/components/chat/AgenticChatPanel.tsx:1874
+msgid "Connection lost. Reload to see the answer."
+msgstr "Spojení bylo ztraceno. Načtěte stránku znovu, abyste viděli odpověď."
 
 #: src/components/agent-access/hooks/index.ts:211
 msgid "Connection revoked"
@@ -5216,7 +5220,7 @@ msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1042
 #: src/routes/project/chat/ProjectChatRoute.tsx:1052
-#: src/components/chat/AgenticChatPanel.tsx:2386
+#: src/components/chat/AgenticChatPanel.tsx:2398
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane can make mistakes. Please double-check responses."
 
@@ -5469,7 +5473,7 @@ msgstr "Neaktualizuje se automaticky. Aktualizováno {updatedAgo}."
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
-#: src/components/chat/AgenticChatPanel.tsx:436
+#: src/components/chat/AgenticChatPanel.tsx:440
 msgid "Done"
 msgstr "Done"
 
@@ -6048,8 +6052,8 @@ msgstr "Zadané údaje"
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
 #: src/components/dropzone/UploadConversationDropzone.tsx:922
 #: src/components/conversation/LiveMonitorSection.tsx:274
-#: src/components/chat/AgenticChatPanel.tsx:441
-#: src/components/chat/AgenticChatPanel.tsx:1860
+#: src/components/chat/AgenticChatPanel.tsx:445
+#: src/components/chat/AgenticChatPanel.tsx:1872
 msgid "Error"
 msgstr "Error"
 
@@ -6497,11 +6501,11 @@ msgstr "Failed to retranscribe conversation. Please try again."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
-#: src/components/chat/AgenticChatPanel.tsx:1751
+#: src/components/chat/AgenticChatPanel.tsx:1763
 msgid "Failed to stop run"
 msgstr "Běh se nepodařilo zastavit"
 
-#: src/components/chat/AgenticChatPanel.tsx:1697
+#: src/components/chat/AgenticChatPanel.tsx:1709
 msgid "Failed to submit agentic message"
 msgstr "Zprávu agenta se nepodařilo odeslat"
 
@@ -6729,13 +6733,13 @@ msgstr "Předloha"
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2252
-#: src/components/chat/AgenticChatPanel.tsx:2253
-#: src/components/chat/AgenticChatPanel.tsx:2396
+#: src/components/chat/AgenticChatPanel.tsx:2264
+#: src/components/chat/AgenticChatPanel.tsx:2265
+#: src/components/chat/AgenticChatPanel.tsx:2408
 msgid "Focus on conversations"
 msgstr "Zaměřit se na rozhovory"
 
-#: src/components/chat/AgenticChatPanel.tsx:254
+#: src/components/chat/AgenticChatPanel.tsx:258
 msgid "Focusing on:"
 msgstr "Zaměřeno na:"
 
@@ -7335,7 +7339,7 @@ msgstr "Hide projects"
 msgid "Hide revision data"
 msgstr "Hide revision data"
 
-#: src/components/chat/AgenticChatPanel.tsx:647
+#: src/components/chat/AgenticChatPanel.tsx:651
 msgid "Hide steps"
 msgstr "Skrýt kroky"
 
@@ -7473,11 +7477,11 @@ msgstr "Napište to vlastními slovy. Datum, roční období nebo že zatím nev
 msgid "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 msgstr "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 
-#: src/components/chat/AgenticChatPanel.tsx:2032
+#: src/components/chat/AgenticChatPanel.tsx:2044
 msgid "I applied the canvas."
 msgstr "Plátno bylo použito."
 
-#: src/components/chat/AgenticChatPanel.tsx:2048
+#: src/components/chat/AgenticChatPanel.tsx:2060
 msgid "I applied the goal."
 msgstr "Cíl byl použit."
 
@@ -7593,7 +7597,7 @@ msgstr "Importováno z dřívější analýzy"
 msgid "Imported from an earlier analysis, {day}"
 msgstr "Importováno z dřívější analýzy, {day}"
 
-#: src/components/chat/AgenticChatPanel.tsx:1929
+#: src/components/chat/AgenticChatPanel.tsx:1941
 msgid "Improve my setup"
 msgstr "Vylepšit nastavení"
 
@@ -8449,11 +8453,11 @@ msgstr "Link copied"
 msgid "Link to the privacy policy shown to participants"
 msgstr "Odkaz na zásady ochrany osobních údajů zobrazené účastníkům"
 
-#: src/components/chat/AgenticChatPanel.tsx:1919
+#: src/components/chat/AgenticChatPanel.tsx:1931
 msgid "List my conversations"
 msgstr "Zobrazit mé rozhovory"
 
-#: src/components/chat/AgenticChatPanel.tsx:1920
+#: src/components/chat/AgenticChatPanel.tsx:1932
 msgid "List the conversations in this project."
 msgstr "Zobrazit rozhovory v tomto projektu."
 
@@ -8547,8 +8551,8 @@ msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr "Živý přenos byl odpojen. Až do opětovného připojení probíhá pomalejší aktualizace dotazováním."
 
 #: src/components/chat/AgenticChatPanel.tsx:1370
-msgid "Live stream interrupted. Falling back to polling."
-msgstr "Živý přenos byl přerušen. Přechází se na dotazování."
+#~ msgid "Live stream interrupted. Falling back to polling."
+#~ msgstr "Živý přenos byl přerušen. Přechází se na dotazování."
 
 #. placeholder {0}: formatWhen(until, i18n.locale)
 #: src/components/sharing/StatusLine.tsx:103
@@ -8653,7 +8657,7 @@ msgstr "Mapa se načítá."
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Načítá se nový rozsah. Do té doby zůstane stávající mapa."
 
-#: src/components/chat/AgenticChatPanel.tsx:1871
+#: src/components/chat/AgenticChatPanel.tsx:1883
 msgid "Loading this chat..."
 msgstr "Načítání chatu…"
 
@@ -9096,7 +9100,7 @@ msgstr "Paměť"
 msgid "Memory removed"
 msgstr "Paměť odstraněna"
 
-#: src/components/chat/AgenticChatPanel.tsx:2362
+#: src/components/chat/AgenticChatPanel.tsx:2374
 msgid "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
 msgstr "Zpráva je příliš dlouhá (maximum je 32 000 znaků). Připojte prosím rozhovory jako přílohu nebo zprávu zkraťte."
 
@@ -12074,7 +12078,7 @@ msgstr "Citace ({quoteCount})"
 #~ msgstr "Citace ({quotes})"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:621
+#: src/components/chat/AgenticChatPanel.tsx:625
 msgid "Ran {0} steps at once"
 msgstr "Provedeno {0} kroků najednou"
 
@@ -12316,7 +12320,7 @@ msgstr "Record"
 
 #: src/components/pricing/PricingTextInput.tsx:255
 #: src/components/feedback/ReportIssueModal.tsx:248
-#: src/components/chat/AgenticChatPanel.tsx:2276
+#: src/components/chat/AgenticChatPanel.tsx:2288
 msgid "Record a voice message"
 msgstr "Nahrát hlasovou zprávu"
 
@@ -12393,7 +12397,7 @@ msgstr "Nahrávání pozastaveno"
 msgid "Recording started"
 msgstr "Nahrávání začalo"
 
-#: src/components/chat/AgenticChatPanel.tsx:890
+#: src/components/chat/AgenticChatPanel.tsx:895
 msgid "Recording stopped at the five minute limit. Turning what you recorded into text."
 msgstr "Nahrávání se zastavilo na limitu pěti minut. Převádíme nahrávku na text."
 
@@ -12660,7 +12664,7 @@ msgid "project.sidebar.chat.rename"
 msgstr "Rename"
 
 #: src/components/chat/ChatAccordion.tsx:139
-#: src/components/chat/AgenticChatPanel.tsx:1821
+#: src/components/chat/AgenticChatPanel.tsx:1833
 msgid "Rename chat"
 msgstr "Rename chat"
 
@@ -13200,7 +13204,7 @@ msgstr "Před vytvořením zkontrolujte."
 msgid "Review files before uploading"
 msgstr "Review files before uploading"
 
-#: src/components/chat/AgenticChatPanel.tsx:1930
+#: src/components/chat/AgenticChatPanel.tsx:1942
 msgid "Review my project settings and suggest improvements."
 msgstr "Zkontrolujte nastavení mého projektu a navrhněte vylepšení."
 
@@ -13338,7 +13342,7 @@ msgid "Run transcription again for an existing conversation."
 msgstr "Spustit přepis znovu pro existující rozhovor."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:101
-#: src/components/chat/AgenticChatPanel.tsx:446
+#: src/components/chat/AgenticChatPanel.tsx:450
 msgid "Running"
 msgstr "Běží"
 
@@ -13966,7 +13970,7 @@ msgstr "Samoobslužné"
 #: src/routes/project/chat/ProjectChatRoute.tsx:1002
 #: src/routes/project/chat/NewChatRoute.tsx:652
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
-#: src/components/chat/AgenticChatPanel.tsx:2317
+#: src/components/chat/AgenticChatPanel.tsx:2329
 msgid "Send"
 msgstr "Send"
 
@@ -14423,7 +14427,7 @@ msgstr "Show references"
 msgid "Show revision data"
 msgstr "Show revision data"
 
-#: src/components/chat/AgenticChatPanel.tsx:647
+#: src/components/chat/AgenticChatPanel.tsx:651
 msgid "Show steps"
 msgstr "Zobrazit kroky"
 
@@ -14652,7 +14656,7 @@ msgstr "Something went wrong generating your latest report."
 msgid "Something went wrong generating your report."
 msgstr "Something went wrong generating your report."
 
-#: src/components/chat/AgenticChatPanel.tsx:220
+#: src/components/chat/AgenticChatPanel.tsx:224
 msgid "Something went wrong on my side. Send your message again and I'll retry."
 msgstr "Na mé straně došlo k chybě. Pošlete zprávu znovu a já to zkusím ještě jednou."
 
@@ -14966,7 +14970,7 @@ msgstr "Still stuck? Email <0>support@dembrane.com</0>."
 #: src/routes/project/chat/ProjectChatRoute.tsx:800
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:244
-#: src/components/chat/AgenticChatPanel.tsx:2271
+#: src/components/chat/AgenticChatPanel.tsx:2283
 msgid "Stop"
 msgstr "Stop"
 
@@ -14998,7 +15002,7 @@ msgstr "Zastavit živý přenos"
 
 #: src/components/pricing/PricingTextInput.tsx:242
 #: src/components/feedback/ReportIssueModal.tsx:236
-#: src/components/chat/AgenticChatPanel.tsx:2262
+#: src/components/chat/AgenticChatPanel.tsx:2274
 msgid "Stop recording and turn it into text"
 msgstr "Zastavit nahrávání a převést na text"
 
@@ -15326,7 +15330,7 @@ msgstr "Dejte nám vědět, co potřebujete"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:578
 #: src/routes/project/chat/NewChatRoute.tsx:311
-#: src/components/chat/AgenticChatPanel.tsx:1728
+#: src/components/chat/AgenticChatPanel.tsx:1740
 msgid "Template applied"
 msgstr "Template applied"
 
@@ -16409,7 +16413,7 @@ msgstr "This report was opened by {0} people"
 msgid "This request has expired"
 msgstr "Platnost této žádosti vypršela"
 
-#: src/components/chat/AgenticChatPanel.tsx:218
+#: src/components/chat/AgenticChatPanel.tsx:222
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
 msgstr "Tento požadavek trval příliš dlouho, proto jsem ho zastavil. Pošlete ho znovu a zkusím to ještě jednou."
 
@@ -16497,7 +16501,7 @@ msgstr "this workspace"
 msgid "This workspace has reached its recording cap. Upgrade to upload more audio."
 msgstr "This workspace has reached its recording cap. Upgrade to upload more audio."
 
-#: src/components/chat/AgenticChatPanel.tsx:2294
+#: src/components/chat/AgenticChatPanel.tsx:2306
 msgid "This workspace has used its recording hours. Upgrade to keep using voice."
 msgstr "Tento pracovní prostor vyčerpal své nahrávací hodiny. Chcete-li pokračovat v používání hlasu, upgradujte tarif."
 
@@ -16672,7 +16676,7 @@ msgstr "Příliš dlouhé nebo nejasné"
 #~ msgid "Too many reports. Wait a few minutes and try again"
 #~ msgstr "Příliš mnoho hlášení. Počkejte několik minut a zkuste to znovu"
 
-#: src/components/chat/AgenticChatPanel.tsx:2226
+#: src/components/chat/AgenticChatPanel.tsx:2238
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Příliš mnoho položek k zobrazení. Asistent je prochází po částech."
 
@@ -16800,7 +16804,7 @@ msgstr "Probíhá přepis"
 msgid "Transcribing..."
 msgstr "Transcribing..."
 
-#: src/components/chat/AgenticChatPanel.tsx:284
+#: src/components/chat/AgenticChatPanel.tsx:288
 msgid "transcript"
 msgstr "přepis"
 
@@ -16820,7 +16824,7 @@ msgstr "Anonymizace přepisů a opětovný přepis používají jednotná nastav
 msgid "Transcript copied to clipboard"
 msgstr "Transcript copied to clipboard"
 
-#: src/components/chat/AgenticChatPanel.tsx:283
+#: src/components/chat/AgenticChatPanel.tsx:287
 msgid "transcript excerpt"
 msgstr "výňatek z přepisu"
 
@@ -17127,7 +17131,7 @@ msgstr "Pod vaší organizací"
 #: src/routes/project/chat/NewChatRoute.tsx:313
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
-#: src/components/chat/AgenticChatPanel.tsx:1730
+#: src/components/chat/AgenticChatPanel.tsx:1742
 msgid "Undo"
 msgstr "Undo"
 
@@ -17559,7 +17563,7 @@ msgstr "Používejte připnuté a uložené šablony otázek z Ask, včetně zkr
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1039
 #: src/routes/project/chat/ProjectChatRoute.tsx:1049
-#: src/components/chat/AgenticChatPanel.tsx:2382
+#: src/components/chat/AgenticChatPanel.tsx:2394
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -17842,7 +17846,7 @@ msgid "Voice changes apply the next time you prepare or update Popcorn results."
 msgstr "Změny hlasu se projeví při příští přípravě nebo aktualizaci výsledků v Popcorn."
 
 #: src/components/voice/VoiceInputError.tsx:43
-#: src/components/chat/AgenticChatPanel.tsx:2292
+#: src/components/chat/AgenticChatPanel.tsx:2304
 msgid "Voice input comes with a paid plan."
 msgstr "Hlasový vstup je součástí placeného tarifu."
 
@@ -18168,11 +18172,11 @@ msgstr "What should ECHO analyse or generate from the conversations?"
 msgid "What should we know? Paste a screenshot here to attach it"
 msgstr "Co bychom měli vědět? Vložte sem snímek obrazovky a připojte ho"
 
-#: src/components/chat/AgenticChatPanel.tsx:1925
+#: src/components/chat/AgenticChatPanel.tsx:1937
 msgid "What themes came up across the conversations in this project?"
 msgstr "Jaká témata se v rozhovorech v tomto projektu objevila?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1924
+#: src/components/chat/AgenticChatPanel.tsx:1936
 msgid "What themes came up?"
 msgstr "Jaká témata se objevila?"
 
@@ -18305,7 +18309,7 @@ msgid "Where would you like to go?"
 msgstr "Where would you like to go?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:574
-#: src/components/chat/AgenticChatPanel.tsx:1906
+#: src/components/chat/AgenticChatPanel.tsx:1918
 msgid "Where would you like to start?"
 msgstr "Kde byste chtěli začít?"
 
@@ -18424,7 +18428,7 @@ msgid "Work with the new conversational assistant."
 msgstr "Pracujte s novým konverzačním asistentem."
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:622
+#: src/components/chat/AgenticChatPanel.tsx:626
 msgid "Worked through {0} steps"
 msgstr "Zpracováno {0} kroků"
 
@@ -18432,7 +18436,7 @@ msgstr "Zpracováno {0} kroků"
 msgid "working"
 msgstr "probíhá"
 
-#: src/components/chat/AgenticChatPanel.tsx:1783
+#: src/components/chat/AgenticChatPanel.tsx:1795
 msgid "Working on your answer..."
 msgstr "Pracujeme na vaší odpovědi..."
 
@@ -18845,7 +18849,7 @@ msgstr "You need an invitation from a colleague"
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
-#: src/components/chat/AgenticChatPanel.tsx:216
+#: src/components/chat/AgenticChatPanel.tsx:220
 msgid "You stopped this run."
 msgstr "Tento běh jste zastavili."
 
