@@ -3,7 +3,24 @@ import { z } from "zod";
 import type { ChatDeps, Suggestion } from "./deps";
 import { renderPrompt } from "./prompts/render";
 
+/**
+ * Fresh chats: their inputs rarely change, so a short cache is enough.
+ * Chats with history: the key carries the last reply and recent questions, so a new message
+ * is a new key and an old entry can live long. Reopening a chat then costs no model call.
+ */
 const CACHE_TTL_MS = 180_000;
+const HISTORY_CACHE_TTL_MS = 30 * 60_000;
+/** Oldest entries go first, so the per-process cache cannot grow without bound. */
+const CACHE_MAX_ENTRIES = 1000;
+
+/**
+ * Longest a suggestions call may take. Suggestions are a nicety, so a stalled model must
+ * not hold the chat screen: past this the call answers an empty list. Normal calls (a short
+ * prompt, at most ten 300-character summaries, three small items back from the fast model)
+ * finish within a few seconds, and 125 of 130 production requests in one day answered fine;
+ * the other five ran into the old 30 s limit. 8 s leaves room for a slow but healthy call.
+ */
+export const SUGGESTIONS_TIMEOUT_MS = 8_000;
 
 const schema = z.object({
   suggestions: z.array(
@@ -15,8 +32,20 @@ const schema = z.object({
   ),
 });
 
-function cacheKey(mode: string, language: string, ids: string[], hasHistory: boolean) {
-  const raw = [mode, language, hasHistory ? "True" : "False", [...ids].sort().join(",")].join("|");
+function cacheKey(
+  mode: string,
+  language: string,
+  ids: string[],
+  hasHistory: boolean,
+  history: string,
+) {
+  const raw = [
+    mode,
+    language,
+    hasHistory ? "True" : "False",
+    [...ids].sort().join(","),
+    history,
+  ].join("|");
   const hash = new Bun.CryptoHasher("sha256").update(raw).digest("hex").slice(0, 32);
   return `suggestions:${mode}:${hash}`;
 }
@@ -24,8 +53,9 @@ function cacheKey(mode: string, language: string, ids: string[], hasHistory: boo
 /**
  * Up to three follow-up questions for a chat, from its conversations' summaries, the
  * last reply and recent questions (generate_suggestions). No mode, no context or any
- * failure answers an empty list: suggestions are a nicety, never an error. Fresh chats
- * (no history) are cached for three minutes because their inputs rarely change.
+ * failure (a stalled model included, after SUGGESTIONS_TIMEOUT_MS) answers an empty list:
+ * suggestions are a nicety, never an error. Results are cached per chat state, see the
+ * TTLs above.
  */
 export async function generateSuggestions(
   d: ChatDeps,
@@ -49,11 +79,11 @@ export async function generateSuggestions(
       language,
       conversations.map((c) => String(c.id ?? "")),
       hasHistory,
+      hasHistory ? JSON.stringify([lastResponse, recentQueries]) : "",
     );
-    if (!hasHistory) {
-      const hit = d.suggestionCache.get(key);
-      if (hit && Date.now() - hit.at < CACHE_TTL_MS && hit.value.length) return hit.value;
-    }
+    const ttl = hasHistory ? HISTORY_CACHE_TTL_MS : CACHE_TTL_MS;
+    const hit = d.suggestionCache.get(key);
+    if (hit && Date.now() - hit.at < ttl && hit.value.length) return hit.value;
 
     const summaries: string[] = [];
     for (const conv of conversations.slice(0, 10)) {
@@ -84,14 +114,21 @@ export async function generateSuggestions(
       ],
       allowSystemInMessages: true,
       output: Output.object({ schema, name: "suggestions_response" }),
-      timeout: 30_000,
+      timeout: d.suggestionTimeoutMs ?? SUGGESTIONS_TIMEOUT_MS,
     });
     const out = res.output.suggestions.slice(0, 3).map((s) => ({
       icon: s.icon,
       label: [...s.label].slice(0, 50).join(""),
       prompt: s.prompt,
     }));
-    if (!hasHistory && out.length) d.suggestionCache.set(key, { at: Date.now(), value: out });
+    if (out.length) {
+      d.suggestionCache.set(key, { at: Date.now(), value: out });
+      while (d.suggestionCache.size > CACHE_MAX_ENTRIES) {
+        const oldest = d.suggestionCache.keys().next().value;
+        if (oldest === undefined) break;
+        d.suggestionCache.delete(oldest);
+      }
+    }
     return out;
   } catch (err) {
     d.logger.warn({ err, chatId }, "suggestions failed");
