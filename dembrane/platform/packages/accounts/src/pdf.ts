@@ -666,49 +666,98 @@ function drawAudit(w: Writer, a: AuditRecord) {
     color: MUTED,
     gap: 12,
   });
-  const rows: [string, string][] = [
-    ["Document", a.documentTitle],
-    ["Document id", a.documentId],
-    ...(a.reference ? ([["Reference", a.reference]] as [string, string][]) : []),
-    ["Version", String(a.version)],
-    ["SHA-256 of the unsigned PDF", a.sha256],
-    ["Signer", a.signerName],
-    ...(a.signerRole ? ([["Role", a.signerRole]] as [string, string][]) : []),
-    ["Email (verified at sign-in)", a.email],
-    ["Organisation", a.organisation],
-    ...(a.address ? ([["Address", a.address]] as [string, string][]) : []),
-    ...(a.vatNumber ? ([["VAT number", a.vatNumber]] as [string, string][]) : []),
-    ...(a.dpaAuthorised === null
-      ? []
-      : ([
-          [
-            "May agree to data processing",
-            a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
-          ],
-        ] as [string, string][])),
-    // The choice is part of what was signed: each option, chosen or not.
-    ...(a.choices ?? []).map((c): [string, string] => [
-      `Option: ${c.label}`,
-      c.chosen ? "chosen" : "not chosen",
-    ]),
-    ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
-    ["Signature made", a.method],
-    ["SHA-256 of the signature image", a.imageSha256],
-    ["Signed at (UTC)", a.signedAt],
-    ["IP address", a.ip ?? "not recorded"],
-    ["User agent", a.userAgent ?? "not recorded"],
-    ["Signature id", a.signatureId],
-  ];
-  for (const t of a.legal)
-    rows.push([
-      `Pinned ${t.kind}`,
-      `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
-    ]);
-  drawRows(w, rows);
+  const row = (label: string, value: string | null | undefined): [string, string][] =>
+    value ? [[label, value]] : [];
+  const pinned = a.legal.map((t): [string, string] => [
+    LEGAL_LABEL[t.kind] ?? t.kind,
+    `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
+  ]);
+  // Plain headings first; the ids and hashes that only matter when checking the record
+  // come last. Every recorded value stays.
+  drawGroups(w, [
+    [
+      "The document",
+      [
+        ["Title", a.documentTitle],
+        ...row("Reference", a.reference),
+        ["Version", String(a.version)],
+      ],
+    ],
+    [
+      "Who signed",
+      [
+        ["Name", a.signerName],
+        ...row("Role", a.signerRole),
+        ["Email (verified at sign-in)", a.email],
+        ["Organisation", a.organisation],
+        ...row("Address", a.address),
+        ...row("VAT number", a.vatNumber),
+        ...(a.dpaAuthorised === null
+          ? []
+          : ([
+              [
+                "May agree to data processing",
+                a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
+              ],
+            ] as [string, string][])),
+      ],
+    ],
+    [
+      "What was agreed",
+      [
+        // The choice is part of what was signed: each option, chosen or not.
+        ...(a.choices ?? []).map((c): [string, string] => [
+          `Option: ${c.label}`,
+          c.chosen ? "chosen" : "not chosen",
+        ]),
+        ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
+        ...pinned,
+      ],
+    ],
+    [
+      "When and where",
+      [
+        ["Signed at (UTC)", a.signedAt],
+        ["How the signature was made", a.method],
+        ["IP address", a.ip ?? "not recorded"],
+        ["Browser and device", a.userAgent ?? "not recorded"],
+      ],
+    ],
+    [
+      "Verification",
+      [
+        ["Document id", a.documentId],
+        ["Fingerprint (SHA-256) of the unsigned PDF", a.sha256],
+        ["Fingerprint (SHA-256) of the signature image", a.imageSha256],
+        ["Signature id", a.signatureId],
+      ],
+    ],
+  ]);
   drawTrail(w, a.trail);
   w.space(10);
   w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
   w.text(a.confirmationText, { size: 9.5 });
+}
+
+/** What the pinned legal texts are called on the record; an unknown kind prints as it is. */
+const LEGAL_LABEL: Record<string, string> = { terms: "Terms", sla: "SLA", dpa: "DPA" };
+
+/** A heading that never sits alone at the foot of a page. */
+function heading(w: Writer, text: string) {
+  w.space(10);
+  w.ensure(60);
+  w.text(text, { size: brand.type.print.lead, gap: 4 });
+}
+
+function drawGroups(
+  w: Writer,
+  groups: readonly (readonly [string, readonly (readonly [string, string])[]])[],
+) {
+  for (const [title, rows] of groups) {
+    if (!rows.length) continue;
+    heading(w, title);
+    drawRows(w, rows);
+  }
 }
 
 /** Label and value side by side, the label muted, each row as tall as its longer side. */
@@ -726,8 +775,7 @@ function drawRows(w: Writer, rows: readonly (readonly [string, string])[]) {
 
 function drawTrail(w: Writer, trail: readonly { at: string; what: string }[]) {
   if (!trail.length) return;
-  w.space(10);
-  w.text("Audit trail (UTC)", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Audit trail (UTC)");
   drawRows(
     w,
     trail.map((t) => [t.at, t.what] as const),
