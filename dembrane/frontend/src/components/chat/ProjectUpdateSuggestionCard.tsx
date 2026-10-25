@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
@@ -24,7 +25,12 @@ import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
+import { presentError } from "@/lib/errors/present";
 import { testId } from "@/lib/testUtils";
+
+/** Why the server refused the apply: one line per field it named, or the one
+ * general line when the refusal was not about a field. */
+type Refusal = { lines: string[] };
 
 export type ProjectUpdateSuggestionChange = {
 	field: string;
@@ -442,6 +448,7 @@ export const ProjectUpdateSuggestionCard = ({
 	const [expanded, setExpanded] = useState(false);
 	const [noteOpen, setNoteOpen] = useState(false);
 	const [note, setNote] = useState("");
+	const [refusal, setRefusal] = useState<Refusal | null>(null);
 
 	const effectiveValue = (change: ProjectUpdateSuggestionChange) =>
 		change.field in edited ? edited[change.field] : change.proposed;
@@ -476,6 +483,7 @@ export const ProjectUpdateSuggestionCard = ({
 		const payload = Object.fromEntries(
 			selectedChanges.map((c) => [c.field, effectiveValue(c)]),
 		);
+		setRefusal(null);
 		try {
 			await updateProjectMutation.mutateAsync({
 				id: suggestion.projectId,
@@ -485,8 +493,17 @@ export const ProjectUpdateSuggestionCard = ({
 			toast.success(
 				t`Changes applied. You can fine-tune them anytime in project settings.`,
 			);
-		} catch {
-			toast.error(t`Could not apply the changes. Nothing was saved.`);
+		} catch (error) {
+			// The card keeps the server's reason on screen: a toast is gone before
+			// the host can act on it, and the generic line gave them nothing to fix.
+			// The wording comes from the shared error messages, never raw server text.
+			const presented = await presentError(error, i18n);
+			const fieldLines = Object.entries(presented.fields).map(
+				([field, message]) => `${fieldLabel(field)}: ${message}`,
+			);
+			setRefusal({
+				lines: fieldLines.length > 0 ? fieldLines : [presented.message],
+			});
 		}
 	};
 
@@ -685,6 +702,19 @@ export const ProjectUpdateSuggestionCard = ({
 							only the ticked ones.
 						</Trans>
 					</Text>
+				) : null}
+
+				{refusal ? (
+					<Stack gap={4} role="alert" {...testId("suggestion-refusal")}>
+						<Text size="sm" style={{ color: "var(--app-danger)" }}>
+							<Trans>Could not apply the changes. Nothing was saved.</Trans>
+						</Text>
+						{refusal.lines.map((line) => (
+							<Text key={line} size="sm">
+								{line}
+							</Text>
+						))}
+					</Stack>
 				) : null}
 
 				{/* Writing a note is its own step, so it takes the action row over
