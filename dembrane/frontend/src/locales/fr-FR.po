@@ -1988,11 +1988,11 @@ msgstr "Les {0} fichier(s) ont bien été importés"
 msgid "All {total} texts translated into {language}"
 msgstr "L'ensemble des {total} textes a été traduit en {language}"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "All actions"
 msgstr "Toutes les actions"
 
-#: src/components/settings/AuditLogsCard.tsx:456
+#: src/components/settings/AuditLogsCard.tsx:437
 msgid "All collections"
 msgstr "Toutes les collections"
 
@@ -2749,15 +2749,15 @@ msgstr "L'import audio vous ramène à la liste des conversations."
 msgid "Audio was coming in but stopped. They may have lost connection or locked their phone."
 msgstr "Le son arrivait mais s'est interrompu. La personne a peut-être perdu la connexion ou verrouillé son téléphone."
 
-#: src/components/settings/AuditLogsCard.tsx:383
+#: src/components/settings/AuditLogsCard.tsx:364
 msgid "Audit logs"
 msgstr "Journaux d'audit"
 
-#: src/components/settings/AuditLogsCard.tsx:357
+#: src/components/settings/AuditLogsCard.tsx:342
 msgid "Audit logs exported to CSV"
 msgstr "Journaux d'audit exportés en CSV"
 
-#: src/components/settings/AuditLogsCard.tsx:358
+#: src/components/settings/AuditLogsCard.tsx:343
 msgid "Audit logs exported to JSON"
 msgstr "Journaux d'audit exportés en JSON"
 
@@ -5498,7 +5498,7 @@ msgstr "Téléchargez toutes les transcriptions de conversations générées pou
 msgid "Download all transcripts"
 msgstr "Télécharger toutes les transcriptions"
 
-#: src/components/settings/AuditLogsCard.tsx:414
+#: src/components/settings/AuditLogsCard.tsx:395
 msgid "Download as"
 msgstr "Download as"
 
@@ -6246,7 +6246,7 @@ msgstr "Exploration"
 #~ msgstr "Exploration de {conversationCount} conversations"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:41
-#: src/components/settings/AuditLogsCard.tsx:409
+#: src/components/settings/AuditLogsCard.tsx:390
 #: src/components/project/ProjectExportSection.tsx:18
 #: src/components/layout/ProjectOverviewLayout.tsx:55
 msgid "Export"
@@ -6626,19 +6626,19 @@ msgstr "Filtrer"
 msgid "Filter and sort"
 msgstr "Filtrer et trier"
 
-#: src/components/settings/AuditLogsCard.tsx:447
+#: src/components/settings/AuditLogsCard.tsx:428
 msgid "Filter audit logs by action"
 msgstr "Filtrer les journaux d'audit par action"
 
-#: src/components/settings/AuditLogsCard.tsx:465
+#: src/components/settings/AuditLogsCard.tsx:446
 msgid "Filter audit logs by collection"
 msgstr "Filtrer les journaux d'audit par collection"
 
-#: src/components/settings/AuditLogsCard.tsx:436
+#: src/components/settings/AuditLogsCard.tsx:417
 msgid "Filter by action"
 msgstr "Filtrer par action"
 
-#: src/components/settings/AuditLogsCard.tsx:452
+#: src/components/settings/AuditLogsCard.tsx:433
 msgid "Filter by collection"
 msgstr "Filtrer par collection"
 
@@ -8592,7 +8592,7 @@ msgstr "Charger plus"
 msgid "Loading"
 msgstr "Chargement"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "Loading actions..."
 msgstr "Chargement des actions..."
 
@@ -8605,7 +8605,7 @@ msgstr "Chargement de l'artefact"
 #~ msgid "Loading audit logs…"
 #~ msgstr "Chargement des journaux d'audit…"
 
-#: src/components/settings/AuditLogsCard.tsx:455
+#: src/components/settings/AuditLogsCard.tsx:436
 msgid "Loading collections..."
 msgstr "Chargement des collections..."
 
@@ -9553,6 +9553,7 @@ msgstr "Les plus récents d'abord"
 msgid "Newest First"
 msgstr "Plus récent en premier"
 
+#: src/components/settings/AuditLogsCard.tsx:628
 #: src/components/release/ReleaseTimeline.tsx:48
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:314
 msgid "Next"
@@ -9591,7 +9592,7 @@ msgstr "Aucun accès"
 msgid "No accounts"
 msgstr "Aucun compte"
 
-#: src/components/settings/AuditLogsCard.tsx:445
+#: src/components/settings/AuditLogsCard.tsx:426
 msgid "No actions found"
 msgstr "Aucune action trouvée"
 
@@ -9620,7 +9621,7 @@ msgstr "Aucun argument n’a été trouvé dans les conversations de ce projet."
 msgid "No arguments yet. They appear after the first analysis."
 msgstr "Aucun argument pour le moment. Ils apparaîtront après la première analyse."
 
-#: src/components/settings/AuditLogsCard.tsx:601
+#: src/components/settings/AuditLogsCard.tsx:582
 msgid "No audit logs match the current filters."
 msgstr "Aucun journal d'audit ne correspond aux filtres actuels."
 
@@ -9662,7 +9663,7 @@ msgstr "Aucune discussion ne correspond à votre recherche."
 msgid "No chats yet."
 msgstr "Aucune discussion pour le moment."
 
-#: src/components/settings/AuditLogsCard.tsx:463
+#: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "Aucune collection trouvée"
 
@@ -9963,7 +9964,7 @@ msgstr "Aucun rapport trouvé"
 msgid "No reports yet"
 msgstr "Pas encore de rapports"
 
-#: src/components/settings/AuditLogsCard.tsx:623
+#: src/components/settings/AuditLogsCard.tsx:604
 msgid "No results"
 msgstr "Aucun résultat"
 
@@ -11712,6 +11713,7 @@ msgstr "Aperçu de la PR #{number}"
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Aperçu : Le rapide brun fox saute sur le chien paresseux."
 
+#: src/components/settings/AuditLogsCard.tsx:620
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:305
 msgid "Previous"
 msgstr "Précédent"
@@ -12435,7 +12437,7 @@ msgstr "Le bouton Affiner affiche le bon libellé et ne peut pas être lancé pe
 msgid "Refresh"
 msgstr "Actualiser"
 
-#: src/components/settings/AuditLogsCard.tsx:395
+#: src/components/settings/AuditLogsCard.tsx:376
 msgid "Refresh audit logs"
 msgstr "Actualiser les journaux d'audit"
 
@@ -13178,7 +13180,7 @@ msgstr "Revenir à la présentation"
 msgid "Review"
 msgstr "Vérification"
 
-#: src/components/settings/AuditLogsCard.tsx:386
+#: src/components/settings/AuditLogsCard.tsx:367
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Examinez l'activité de votre espace de travail. Filtrez par collection ou action, et exportez la vue actuelle pour une investigation plus approfondie."
 
@@ -13235,7 +13237,7 @@ msgstr "Réviser"
 #~ msgid "Revision {0}"
 #~ msgstr ""
 
-#: src/components/settings/AuditLogsCard.tsx:575
+#: src/components/settings/AuditLogsCard.tsx:556
 msgid "Revision #{revisionNumber}"
 msgstr "Révision #{revisionNumber}"
 
@@ -13305,7 +13307,7 @@ msgstr "Estimation approximative pour terminer la transcription en attente"
 msgid "Roughly how many?"
 msgstr "Environ combien ?"
 
-#: src/components/settings/AuditLogsCard.tsx:613
+#: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
 msgstr "Lignes par page"
 
@@ -14357,7 +14359,7 @@ msgstr "Afficher toutes les étiquettes"
 msgid "Show introduction"
 msgstr "Afficher l’introduction"
 
-#: src/components/settings/AuditLogsCard.tsx:470
+#: src/components/settings/AuditLogsCard.tsx:451
 msgid "Show IP addresses"
 msgstr "Afficher les adresses IP"
 
@@ -14473,9 +14475,13 @@ msgstr "Vitrine"
 msgid "Showing {0} of {1}"
 msgstr "Affichage de {0} sur {1}"
 
+#: src/components/settings/AuditLogsCard.tsx:606
+msgid "Showing {displayFrom}–{displayTo}"
+msgstr "Affichage de {displayFrom} à {displayTo}"
+
 #: src/components/settings/AuditLogsCard.tsx:625
-msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
-msgstr "Affichage de {displayFrom}–{displayTo} sur {totalItems} entrées"
+#~ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
+#~ msgstr "Affichage de {displayFrom}–{displayTo} sur {totalItems} entrées"
 
 #: src/components/map/MapExperience.tsx:109
 msgid "Showing {drawn} of {available} connections"
@@ -15222,7 +15228,7 @@ msgid "Switching to another tool"
 msgstr "Je passe à un autre outil"
 
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
-#: src/components/settings/AuditLogsCard.tsx:88
+#: src/components/settings/AuditLogsCard.tsx:87
 msgid "System"
 msgstr "Système"
 
