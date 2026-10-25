@@ -35,8 +35,9 @@ function excerpt(text: string | null): string | null {
 
 /**
  * GET /api/home/search: the dashboard's command palette over projects, conversations,
- * transcripts and chats. Rows are read broadly, then kept only where the caller may
- * read the project, staff included, so a hit never 404s on click. M-5: the Python API
+ * transcripts and chats. Transcripts are searched only in projects the caller might
+ * reach; every row is then kept only where the caller may read the project, staff
+ * included, so a hit never 404s on click. M-5: the Python API
  * kept any role on the project, workspace billing included; project:read decides now.
  */
 export function searchRoutes(d: ConversationsDeps) {
@@ -56,15 +57,16 @@ export function searchRoutes(d: ConversationsDeps) {
     const term = query.query.trim();
     if (!term) return c.json(empty);
     const limit = Math.max(1, Math.min(query.limit, 25));
+    // Not onboarded: nothing is reachable, answered as empty rather than an error.
+    if (!who.appUserId) return c.json(empty);
     const fetch = limit * 3;
+    const searcher = { appUserId: who.appUserId, directusUserId: who.directusUserId };
     const [projects, conversations, chunks, chats] = await Promise.all([
       store.projects(term, fetch),
       store.conversations(term, fetch),
-      store.chunks(term, fetch),
+      store.chunks(term, fetch, searcher),
       store.chats(term, fetch),
     ]);
-    // Not onboarded: nothing is reachable, answered as empty rather than an error.
-    if (!who.appUserId) return c.json(empty);
 
     const allowed = new Map<string, boolean>();
     const can = async (projectId: string | null) => {
