@@ -2008,7 +2008,7 @@ msgstr "Všechny rozhovory"
 msgid "all eligible project conversations"
 msgstr "všechny způsobilé rozhovory projektu"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:938
+#: src/components/dropzone/UploadConversationDropzone.tsx:957
 msgid "All files were uploaded successfully."
 msgstr "All files were uploaded successfully."
 
@@ -2855,7 +2855,7 @@ msgstr "Pryč"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
 #: src/components/pricing/PricingConfigurator.tsx:867
-#: src/components/dropzone/UploadConversationDropzone.tsx:961
+#: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
 msgstr "Back"
@@ -3179,8 +3179,8 @@ msgstr "Můžete nám říct víc?"
 #: src/components/map/panels/SpotlightPanel.tsx:363
 #: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:834
-#: src/components/dropzone/UploadConversationDropzone.tsx:971
+#: src/components/dropzone/UploadConversationDropzone.tsx:853
+#: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
@@ -3806,7 +3806,7 @@ msgstr "Clone project"
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
 #: src/components/map/panels/DetailsSheet.tsx:800
-#: src/components/dropzone/UploadConversationDropzone.tsx:971
+#: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3972,7 +3972,7 @@ msgstr "Bezplatná zkušební verze. Výnos 0 €."
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Bezplatná zkušební verze. Vyprší {0}. Výnos 0 €."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:890
+#: src/components/dropzone/UploadConversationDropzone.tsx:909
 msgid "Complete"
 msgstr "Complete"
 
@@ -5564,7 +5564,7 @@ msgstr "Draft next actions and organize them by priority"
 msgid "Drafting a note you can send to the dembrane team"
 msgstr "Připravuje se zpráva, kterou můžete poslat týmu dembrane"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:667
+#: src/components/dropzone/UploadConversationDropzone.tsx:686
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
@@ -5705,7 +5705,7 @@ msgstr "Upravit vlastní téma"
 #~ msgid "Edit Custom Topic"
 #~ msgstr "Edit Custom Topic"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:751
+#: src/components/dropzone/UploadConversationDropzone.tsx:770
 msgid "Edit file name"
 msgstr "Edit file name"
 
@@ -6010,7 +6010,7 @@ msgstr "Enter a valid email address"
 msgid "Enter current password"
 msgstr "Enter current password"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:708
+#: src/components/dropzone/UploadConversationDropzone.tsx:727
 msgid "Enter filename (without extension)"
 msgstr "Enter filename (without extension)"
 
@@ -6045,8 +6045,8 @@ msgstr "Zadané údaje"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/canvas/CanvasRoute.tsx:337
-#: src/components/dropzone/UploadConversationDropzone.tsx:806
-#: src/components/dropzone/UploadConversationDropzone.tsx:922
+#: src/components/dropzone/UploadConversationDropzone.tsx:825
+#: src/components/dropzone/UploadConversationDropzone.tsx:941
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:441
 #: src/components/chat/AgenticChatPanel.tsx:1860
@@ -6343,7 +6343,7 @@ msgstr "Na tento objekt se faktický stav nevztahuje."
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
-#: src/components/dropzone/UploadConversationDropzone.tsx:892
+#: src/components/dropzone/UploadConversationDropzone.tsx:911
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
 msgstr "Failed"
@@ -6575,36 +6575,36 @@ msgid "Felt heard"
 msgstr "Pocit vyslyšení"
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:657
+#: src/components/dropzone/UploadConversationDropzone.tsx:676
 msgid "File \"{0}\" could not be added. Try another file."
 msgstr "Soubor „{0}“ se nepodařilo přidat. Zkuste jiný soubor."
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:649
+#: src/components/dropzone/UploadConversationDropzone.tsx:668
 msgid "File \"{0}\" exceeds the maximum size of {1}."
 msgstr "File \"{0}\" exceeds the maximum size of {1}."
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:653
+#: src/components/dropzone/UploadConversationDropzone.tsx:672
 msgid "File \"{0}\" has an unsupported format. Only audio files are allowed."
 msgstr "File \"{0}\" has an unsupported format. Only audio files are allowed."
 
 #. placeholder {0}: file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:441
+#: src/components/dropzone/UploadConversationDropzone.tsx:459
 msgid "File \"{0}\" is not a supported audio format. Only audio files are allowed."
 msgstr "File \"{0}\" is not a supported audio format. Only audio files are allowed."
 
 #. placeholder {0}: file.name
 #. placeholder {1}: formatFileSize(file.size)
 #. placeholder {2}: formatFileSize(MIN_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:472
+#: src/components/dropzone/UploadConversationDropzone.tsx:491
 msgid "File \"{0}\" is too small ({1}). Minimum size is {2}."
 msgstr "File \"{0}\" is too small ({1}). Minimum size is {2}."
 
 #. placeholder {0}: formatFileSize(MIN_FILE_SIZE)
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:672
+#: src/components/dropzone/UploadConversationDropzone.tsx:691
 msgid "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 msgstr "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 
@@ -10046,7 +10046,7 @@ msgstr "Zatím žádné přepisy. Popcorn můžete spustit hned; obrazovka se bu
 msgid "No usage yet this cycle."
 msgstr "No usage yet this cycle."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:450
+#: src/components/dropzone/UploadConversationDropzone.tsx:469
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 
@@ -12600,7 +12600,7 @@ msgstr "Odebrat e-mail"
 #~ msgid "Remove Email"
 #~ msgstr "Remove Email"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:769
+#: src/components/dropzone/UploadConversationDropzone.tsx:788
 msgid "Remove file"
 msgstr "Remove file"
 
@@ -13196,7 +13196,7 @@ msgstr "Zkontrolujte a upravte níže. Tím přidáte kontrolu, která proběhne
 msgid "Review before creating."
 msgstr "Před vytvořením zkontrolujte."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:686
+#: src/components/dropzone/UploadConversationDropzone.tsx:705
 msgid "Review files before uploading"
 msgstr "Review files before uploading"
 
@@ -13842,7 +13842,7 @@ msgstr "Select at least one event"
 msgid "Select at least one other topic before deleting this one"
 msgstr "Select at least one other topic before deleting this one"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:628
+#: src/components/dropzone/UploadConversationDropzone.tsx:647
 msgid "Select audio files"
 msgstr "Vybrat zvukové soubory"
 
@@ -13933,7 +13933,7 @@ msgid "Selected"
 msgstr "Vybráno"
 
 #. placeholder {0}: selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:681
+#: src/components/dropzone/UploadConversationDropzone.tsx:700
 msgid "Selected files ({0}/{MAX_FILES})"
 msgstr "Vybrané soubory ({0}/{MAX_FILES})"
 
@@ -14573,7 +14573,7 @@ msgstr "Některé argumenty vycházejí z dřívější analýzy."
 msgid "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
 msgstr "Část zvuku v tomto rozhovoru se nepodařilo přepsat. Otevřete ho a zjistěte, které části selhaly."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:490
+#: src/components/dropzone/UploadConversationDropzone.tsx:509
 msgid "Some files were already selected and won't be added twice."
 msgstr "Some files were already selected and won't be added twice."
 
@@ -15061,7 +15061,7 @@ msgstr "Odesláno textem"
 msgid "Subscribe to report notifications."
 msgstr "Přihlaste se k odběru upozornění na zprávy."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:935
+#: src/components/dropzone/UploadConversationDropzone.tsx:954
 msgid "Success"
 msgstr "Success"
 
@@ -15167,8 +15167,12 @@ msgid "Support access turned on"
 msgstr "Přístup podpory byl zapnut"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:669
-msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
-msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+#~ msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+#~ msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+
+#: src/components/dropzone/UploadConversationDropzone.tsx:688
+msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS, QTA"
+msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS, QTA"
 
 #: src/components/map/panels/NodeDetailCard.tsx:306
 msgid "Supporting pole A"
@@ -16951,7 +16955,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/components/map/MapPage.tsx:151
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:951
+#: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
 msgid "Try again"
@@ -17396,8 +17400,8 @@ msgstr "Upgrade your workspace to view transcripts for new conversations."
 #: src/components/project/RecordingPausedNotice.tsx:98
 #: src/components/project/ProjectUploadSection.tsx:40
 #: src/components/project/ProjectUploadSection.tsx:53
-#: src/components/dropzone/UploadConversationDropzone.tsx:600
-#: src/components/dropzone/UploadConversationDropzone.tsx:614
+#: src/components/dropzone/UploadConversationDropzone.tsx:619
+#: src/components/dropzone/UploadConversationDropzone.tsx:633
 #: src/components/conversation/ProjectConversationsPanel.tsx:666
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
@@ -17416,7 +17420,7 @@ msgstr "Nahrát zvuk"
 msgid "Upload avatar"
 msgstr "Upload avatar"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:626
+#: src/components/dropzone/UploadConversationDropzone.tsx:645
 msgid "Upload complete"
 msgstr "Nahrávání dokončeno"
 
@@ -17424,15 +17428,15 @@ msgstr "Nahrávání dokončeno"
 #~ msgid "Upload Complete"
 #~ msgstr "Upload Complete"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:608
+#: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Upload conversations"
 msgstr "Upload conversations"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:353
+#: src/components/dropzone/UploadConversationDropzone.tsx:370
 msgid "Upload failed. Please try again."
 msgstr "Upload failed. Please try again."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:825
+#: src/components/dropzone/UploadConversationDropzone.tsx:844
 msgid "Upload files"
 msgstr "Nahrát soubory"
 
@@ -17459,7 +17463,7 @@ msgstr "Upload logo"
 msgid "upload recordings"
 msgstr "nahrát nahrávky"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:627
+#: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
 msgstr "Nahrávání zvukových souborů"
 
@@ -18647,7 +18651,7 @@ msgid "You can navigate away and come back later. Your report will continue gene
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
 
 #. placeholder {0}: MAX_FILES - selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:459
+#: src/components/dropzone/UploadConversationDropzone.tsx:478
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 

@@ -2009,7 +2009,7 @@ msgstr "Alle gesprekken"
 msgid "all eligible project conversations"
 msgstr "alle geschikte projectgesprekken"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:938
+#: src/components/dropzone/UploadConversationDropzone.tsx:957
 msgid "All files were uploaded successfully."
 msgstr "Alle bestanden zijn succesvol geüpload."
 
@@ -2853,7 +2853,7 @@ msgstr "Afwezig"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
 #: src/components/pricing/PricingConfigurator.tsx:867
-#: src/components/dropzone/UploadConversationDropzone.tsx:961
+#: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
 msgstr "Terug"
@@ -3177,8 +3177,8 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/map/panels/SpotlightPanel.tsx:363
 #: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:834
-#: src/components/dropzone/UploadConversationDropzone.tsx:971
+#: src/components/dropzone/UploadConversationDropzone.tsx:853
+#: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
@@ -3804,7 +3804,7 @@ msgstr "Project klonen"
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
 #: src/components/map/panels/DetailsSheet.tsx:800
-#: src/components/dropzone/UploadConversationDropzone.tsx:971
+#: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3970,7 +3970,7 @@ msgstr "Gratis proefperiode. €0 omzet."
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Gratis proefperiode. Verloopt op {0}. €0 omzet."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:890
+#: src/components/dropzone/UploadConversationDropzone.tsx:909
 msgid "Complete"
 msgstr "Voltooid"
 
@@ -5562,7 +5562,7 @@ msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
 msgid "Drafting a note you can send to the dembrane team"
 msgstr "Een notitie opstellen die je naar het dembrane-team kunt sturen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:667
+#: src/components/dropzone/UploadConversationDropzone.tsx:686
 msgid "Drag audio files here or click to select files"
 msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 
@@ -5703,7 +5703,7 @@ msgstr "Aangepast onderwerp bewerken"
 #~ msgid "Edit Custom Topic"
 #~ msgstr "Aangepast onderwerp bewerken"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:751
+#: src/components/dropzone/UploadConversationDropzone.tsx:770
 msgid "Edit file name"
 msgstr "Bestandsnaam bewerken"
 
@@ -6008,7 +6008,7 @@ msgstr "Voer een geldig e-mailadres in"
 msgid "Enter current password"
 msgstr "Voer het huidige wachtwoord in"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:708
+#: src/components/dropzone/UploadConversationDropzone.tsx:727
 msgid "Enter filename (without extension)"
 msgstr "Voer bestandsnaam (zonder extensie) in"
 
@@ -6043,8 +6043,8 @@ msgstr "Gegevens ingevuld"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/canvas/CanvasRoute.tsx:337
-#: src/components/dropzone/UploadConversationDropzone.tsx:806
-#: src/components/dropzone/UploadConversationDropzone.tsx:922
+#: src/components/dropzone/UploadConversationDropzone.tsx:825
+#: src/components/dropzone/UploadConversationDropzone.tsx:941
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:441
 #: src/components/chat/AgenticChatPanel.tsx:1860
@@ -6341,7 +6341,7 @@ msgstr "Feitelijke status is niet van toepassing op dit object."
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
-#: src/components/dropzone/UploadConversationDropzone.tsx:892
+#: src/components/dropzone/UploadConversationDropzone.tsx:911
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
 msgstr "Mislukt"
@@ -6573,36 +6573,36 @@ msgid "Felt heard"
 msgstr "Voelde me gehoord"
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:657
+#: src/components/dropzone/UploadConversationDropzone.tsx:676
 msgid "File \"{0}\" could not be added. Try another file."
 msgstr "Bestand \"{0}\" kon niet worden toegevoegd. Probeer een ander bestand."
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:649
+#: src/components/dropzone/UploadConversationDropzone.tsx:668
 msgid "File \"{0}\" exceeds the maximum size of {1}."
 msgstr "Bestand \"{0}\" overschrijdt de maximale grootte van {1}."
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:653
+#: src/components/dropzone/UploadConversationDropzone.tsx:672
 msgid "File \"{0}\" has an unsupported format. Only audio files are allowed."
 msgstr "Bestand \"{0}\" heeft een ongeldig formaat. Alleen audio bestanden zijn toegestaan."
 
 #. placeholder {0}: file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:441
+#: src/components/dropzone/UploadConversationDropzone.tsx:459
 msgid "File \"{0}\" is not a supported audio format. Only audio files are allowed."
 msgstr "Bestand \"{0}\" is geen ondersteund audioformaat. Alleen audio bestanden zijn toegestaan."
 
 #. placeholder {0}: file.name
 #. placeholder {1}: formatFileSize(file.size)
 #. placeholder {2}: formatFileSize(MIN_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:472
+#: src/components/dropzone/UploadConversationDropzone.tsx:491
 msgid "File \"{0}\" is too small ({1}). Minimum size is {2}."
 msgstr "Bestand \"{0}\" is te klein ({1}). Minimum grootte is {2}."
 
 #. placeholder {0}: formatFileSize(MIN_FILE_SIZE)
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:672
+#: src/components/dropzone/UploadConversationDropzone.tsx:691
 msgid "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 msgstr "Bestandsgrootte: Min {0}, Max {1}, maximaal {MAX_FILES} bestanden"
 
@@ -10044,7 +10044,7 @@ msgstr "Nog geen transcripten. Je kunt Popcorn nu starten; het scherm vult zich 
 msgid "No usage yet this cycle."
 msgstr "Nog geen verbruik deze cyclus."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:450
+#: src/components/dropzone/UploadConversationDropzone.tsx:469
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "Er zijn geen geldige audiobestanden geselecteerd. Selecteer alleen audiobestanden (MP3, WAV, OGG, etc)."
 
@@ -12598,7 +12598,7 @@ msgstr "E-mail verwijderen"
 #~ msgid "Remove Email"
 #~ msgstr "E-mail verwijderen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:769
+#: src/components/dropzone/UploadConversationDropzone.tsx:788
 msgid "Remove file"
 msgstr "Bestand verwijderen"
 
@@ -13194,7 +13194,7 @@ msgstr "Bekijk en bewerk hieronder. Dit voegt een controle toe die bij elk gespr
 msgid "Review before creating."
 msgstr "Controleer voordat je aanmaakt."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:686
+#: src/components/dropzone/UploadConversationDropzone.tsx:705
 msgid "Review files before uploading"
 msgstr "Bestanden bekijken voordat u uploadt"
 
@@ -13840,7 +13840,7 @@ msgstr "Selecteer ten minste één gebeurtenis"
 msgid "Select at least one other topic before deleting this one"
 msgstr "Selecteer ten minste één ander onderwerp voordat u dit verwijdert"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:628
+#: src/components/dropzone/UploadConversationDropzone.tsx:647
 msgid "Select audio files"
 msgstr "Audiobestanden selecteren"
 
@@ -13931,7 +13931,7 @@ msgid "Selected"
 msgstr "Gekozen"
 
 #. placeholder {0}: selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:681
+#: src/components/dropzone/UploadConversationDropzone.tsx:700
 msgid "Selected files ({0}/{MAX_FILES})"
 msgstr "Geselecteerde bestanden ({0}/{MAX_FILES})"
 
@@ -14571,7 +14571,7 @@ msgstr "Sommige argumenten zijn gebaseerd op een eerdere analyse."
 msgid "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
 msgstr "Een deel van de audio in dit gesprek kon niet worden getranscribeerd. Open het gesprek om te zien welke delen misgingen."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:490
+#: src/components/dropzone/UploadConversationDropzone.tsx:509
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
 
@@ -15059,7 +15059,7 @@ msgstr "Ingediend via tekstinvoer"
 msgid "Subscribe to report notifications."
 msgstr "Abonneer je op rapportmeldingen."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:935
+#: src/components/dropzone/UploadConversationDropzone.tsx:954
 msgid "Success"
 msgstr "Succes"
 
@@ -15165,8 +15165,12 @@ msgid "Support access turned on"
 msgstr "Supporttoegang aangezet"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:669
-msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
-msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+#~ msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+#~ msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
+
+#: src/components/dropzone/UploadConversationDropzone.tsx:688
+msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS, QTA"
+msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS, QTA"
 
 #: src/components/map/panels/NodeDetailCard.tsx:306
 msgid "Supporting pole A"
@@ -16947,7 +16951,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 #: src/components/map/MapPage.tsx:151
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:951
+#: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
 msgid "Try again"
@@ -17392,8 +17396,8 @@ msgstr "Upgrade je werkruimte om transcripties van nieuwe gesprekken te bekijken
 #: src/components/project/RecordingPausedNotice.tsx:98
 #: src/components/project/ProjectUploadSection.tsx:40
 #: src/components/project/ProjectUploadSection.tsx:53
-#: src/components/dropzone/UploadConversationDropzone.tsx:600
-#: src/components/dropzone/UploadConversationDropzone.tsx:614
+#: src/components/dropzone/UploadConversationDropzone.tsx:619
+#: src/components/dropzone/UploadConversationDropzone.tsx:633
 #: src/components/conversation/ProjectConversationsPanel.tsx:666
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
@@ -17412,7 +17416,7 @@ msgstr "Audio uploaden"
 msgid "Upload avatar"
 msgstr "Avatar uploaden"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:626
+#: src/components/dropzone/UploadConversationDropzone.tsx:645
 msgid "Upload complete"
 msgstr "Upload voltooid"
 
@@ -17420,15 +17424,15 @@ msgstr "Upload voltooid"
 #~ msgid "Upload Complete"
 #~ msgstr "Upload voltooid"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:608
+#: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Upload conversations"
 msgstr "Gesprekken uploaden"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:353
+#: src/components/dropzone/UploadConversationDropzone.tsx:370
 msgid "Upload failed. Please try again."
 msgstr "Upload mislukt. Probeer het opnieuw."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:825
+#: src/components/dropzone/UploadConversationDropzone.tsx:844
 msgid "Upload files"
 msgstr "Bestanden uploaden"
 
@@ -17455,7 +17459,7 @@ msgstr "Logo uploaden"
 msgid "upload recordings"
 msgstr "opnames te uploaden"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:627
+#: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
 msgstr "Audiobestanden uploaden"
 
@@ -18643,7 +18647,7 @@ msgid "You can navigate away and come back later. Your report will continue gene
 msgstr "Je kunt wegnavigeren en later terugkomen. Je rapport wordt op de achtergrond verder gegenereerd."
 
 #. placeholder {0}: MAX_FILES - selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:459
+#: src/components/dropzone/UploadConversationDropzone.tsx:478
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Je kunt maximaal {MAX_FILES} bestanden tegelijk uploaden. Alleen de eerste {0} bestanden worden toegevoegd."
 
