@@ -153,7 +153,11 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 
 	const [tagInput, setTagInput] = useState("");
 	const [localOrder, setLocalOrder] = useState<string[] | null>(null);
-	const pendingDrops = useRef(0);
+	// Drops since the screen last matched the server. Only the latest drop
+	// hands the screen back, so a quick second drag keeps its order on screen.
+	const dropGeneration = useRef(0);
+	const orderIsLocal = useRef(false);
+	const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
 	const failedDrop = useRef<unknown>(null);
 	const sentSort = useRef(new Map<string, number | null | undefined>());
 
@@ -226,7 +230,10 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		// a refetch of a half-saved order cannot move the tags back.
 		setLocalOrder(newTags.map((tag) => tag.id));
 
-		if (pendingDrops.current === 0) {
+		// The tags to save come from the order on screen, not the cache, which
+		// can still hold values from before an earlier drop.
+		if (!orderIsLocal.current) {
+			orderIsLocal.current = true;
 			sentSort.current = new Map(sortedTags.map((tag) => [tag.id, tag.sort]));
 		}
 
@@ -238,35 +245,43 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			return [{ id: tag.id, sort }];
 		});
 
-		pendingDrops.current += 1;
-		void Promise.allSettled(
-			changed.map(({ id, sort }) =>
-				updateTagMutation.mutateAsync({
-					deferInvalidate: true,
-					id,
-					payload: { sort },
-					project_id: props.project.id,
-				}),
-			),
-		).then(async (results) => {
-			pendingDrops.current -= 1;
-			const failed = results.find((r) => r.status === "rejected");
-			if (failed && failed.status === "rejected") {
-				failedDrop.current = failed.reason;
-			}
-			if (pendingDrops.current > 0) return;
+		dropGeneration.current += 1;
+		const generation = dropGeneration.current;
 
-			// Refetch once, then hand the screen back to the server's order. A
-			// failed save drops the local order, which shows what was saved.
-			await queryClient.invalidateQueries({
-				queryKey: ["projects", props.project.id],
+		// Saves run one drop at a time so the last drop is the last write.
+		saveQueue.current = saveQueue.current
+			.then(() =>
+				Promise.allSettled(
+					changed.map(({ id, sort }) =>
+						updateTagMutation.mutateAsync({
+							deferInvalidate: true,
+							id,
+							payload: { sort },
+							project_id: props.project.id,
+						}),
+					),
+				),
+			)
+			.then(async (results) => {
+				const failed = results.find((r) => r.status === "rejected");
+				if (failed && failed.status === "rejected") {
+					failedDrop.current = failed.reason;
+				}
+				if (generation !== dropGeneration.current) return;
+
+				// Refetch once, then hand the screen back to the server's order. A
+				// failed save drops the local order, which shows what was saved.
+				await queryClient.invalidateQueries({
+					queryKey: ["projects", props.project.id],
+				});
+				if (generation !== dropGeneration.current) return;
+				orderIsLocal.current = false;
+				setLocalOrder(null);
+				if (failedDrop.current) {
+					void notifyError(failedDrop.current);
+					failedDrop.current = null;
+				}
 			});
-			setLocalOrder(null);
-			if (failedDrop.current) {
-				void notifyError(failedDrop.current);
-				failedDrop.current = null;
-			}
-		});
 	};
 
 	if (projectQuery.isLoading) {

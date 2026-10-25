@@ -85,6 +85,8 @@ const stubServer = () => {
 	const saved: Record<string, number> = { a: 1, b: 2, c: 3 };
 	const patches: Patch[] = [];
 	let gets = 0;
+	let gate: Promise<void> | null = null;
+	let release = () => {};
 	vi.stubGlobal(
 		"fetch",
 		vi.fn(async (url: string, init?: RequestInit) => {
@@ -104,19 +106,33 @@ const stubServer = () => {
 				});
 			}
 			gets += 1;
-			return new Response(
-				JSON.stringify({
-					id: "p1",
-					tags: ["a", "b", "c"].map((id) => ({
-						id,
-						sort: saved[id],
-						text: `tag-${id}`,
-					})),
-				}),
-			);
+			const body = JSON.stringify({
+				id: "p1",
+				tags: ["a", "b", "c"].map((id) => ({
+					id,
+					sort: saved[id],
+					text: `tag-${id}`,
+				})),
+			});
+			await gate;
+			return new Response(body);
 		}),
 	);
-	return { gets: () => gets, patches };
+	return {
+		gets: () => gets,
+		// Holds the next refetches until release() is called.
+		hold: () => {
+			gate = new Promise<void>((resolve) => {
+				release = () => {
+					gate = null;
+					resolve();
+				};
+			});
+		},
+		patches,
+		release: () => release(),
+		saved,
+	};
 };
 
 const renderTags = () => {
@@ -192,5 +208,37 @@ describe("ProjectTagsInput reordering", () => {
 		});
 		await waitFor(() => expect(notify).toHaveBeenCalledTimes(1));
 		await waitFor(() => expect(order()).toEqual(["tag-a", "tag-b", "tag-c"]));
+	});
+
+	it("keeps a second drag on screen when it lands before the first refetch is done", async () => {
+		notify.mockClear();
+		const server = stubServer();
+		renderTags();
+		await screen.findByText("tag-a");
+		const getsBefore = server.gets();
+
+		drop("a", "c");
+		await waitFor(() => expect(server.patches).toHaveLength(3));
+		server.hold();
+		await act(async () => {
+			for (const patch of server.patches) patch.resolve();
+		});
+		await waitFor(() => expect(server.gets()).toBe(getsBefore + 1));
+
+		// The first refetch is still out; its data does not know the second drop.
+		drop("c", "b");
+		expect(order()).toEqual(["tag-c", "tag-b", "tag-a"]);
+		await act(async () => server.release());
+		expect(order()).toEqual(["tag-c", "tag-b", "tag-a"]);
+
+		await waitFor(() => expect(server.patches).toHaveLength(5));
+		await act(async () => {
+			for (const patch of server.patches.slice(3)) patch.resolve();
+		});
+
+		await waitFor(() => expect(server.gets()).toBe(getsBefore + 2));
+		await waitFor(() => expect(order()).toEqual(["tag-c", "tag-b", "tag-a"]));
+		expect(server.saved).toEqual({ a: 3, b: 2, c: 1 });
+		expect(notify).not.toHaveBeenCalled();
 	});
 });
