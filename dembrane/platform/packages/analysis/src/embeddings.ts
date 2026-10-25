@@ -1,4 +1,4 @@
-import type { Embedder } from "@dembrane/llm";
+import { type Embedder, retryAfterMs } from "@dembrane/llm";
 import { AnalysisStoreError, type Json, type ObjectRevision } from "./contracts";
 import { sha256Hex } from "./hashing";
 import { sortedStrings } from "./registry";
@@ -86,19 +86,59 @@ export async function probeIdentity(embedder: Embedder): Promise<EmbeddingIdenti
   };
 }
 
-/** The Python embed_text retried every failure up to five tries with exponential backoff. */
+/** Tries for a rate limit: the quota is per minute, so the wait has to span most of one. */
+export const RATE_LIMIT_TRIES = 8;
+
+export interface RetryOptions {
+  readonly sleep?: (ms: number) => Promise<void>;
+  readonly now?: () => number;
+  readonly random?: () => number;
+}
+
+/** When each embedder may be called again after a 429: one answer slows every worker on it. */
+const pausedUntil = new WeakMap<Embedder, number>();
+
+/** Seconds or HTTP date from a Retry-After header on the error the model client raised. */
+function retryAfterOf(err: unknown, now: number): number | null {
+  const headers = (err as { responseHeaders?: Record<string, string> } | null)?.responseHeaders;
+  return retryAfterMs(headers?.["retry-after"], now);
+}
+
+const isRateLimit = (err: unknown) => (err as { statusCode?: number } | null)?.statusCode === 429;
+
+/**
+ * Embeds one text, retrying a failure. The Python embed_text retried every failure up to five
+ * tries with exponential backoff; a rate limit now waits as Retry-After says (else a growing,
+ * jittered while) and holds every other caller of the same embedder, so a large run slows down
+ * instead of failing after seconds against a per-minute quota.
+ */
 export async function embedWithRetry(
   embedder: Embedder,
   text: string,
   tries = 5,
+  opts: RetryOptions = {},
 ): Promise<number[]> {
+  const sleep = opts.sleep ?? Bun.sleep;
+  const now = opts.now ?? Date.now;
+  const random = opts.random ?? Math.random;
+  const limitTries = Math.max(tries, RATE_LIMIT_TRIES);
   let last: unknown;
-  for (let attempt = 0; attempt < tries; attempt++) {
+  for (let attempt = 0; attempt < limitTries; attempt++) {
+    const hold = (pausedUntil.get(embedder) ?? 0) - now();
+    if (hold > 0) await sleep(hold);
     try {
       return await embedder.embed(text);
     } catch (err) {
       last = err;
-      if (attempt + 1 < tries) await Bun.sleep(Math.min(2 ** attempt, 30) * 1000 * Math.random());
+      const limited = isRateLimit(err);
+      if (attempt + 1 >= (limited ? limitTries : tries)) break;
+      if (!limited) {
+        await sleep(Math.min(2 ** attempt, 30) * 1000 * random());
+        continue;
+      }
+      const grown = Math.min(2 ** attempt, 30) * 1000;
+      const wait = Math.max(retryAfterOf(err, now()) ?? 0, grown / 2 + (grown / 2) * random());
+      pausedUntil.set(embedder, Math.max(pausedUntil.get(embedder) ?? 0, now() + wait));
     }
   }
   throw last;
