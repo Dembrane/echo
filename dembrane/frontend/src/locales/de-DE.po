@@ -1479,7 +1479,7 @@ msgstr "Zugriffsanfragen"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/shell/UserMenu.tsx:87
-#: src/features/sidebar/hooks/useSearchHits.ts:146
+#: src/features/sidebar/hooks/useSearchHits.ts:148
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
 msgstr "Konto"
@@ -3452,10 +3452,10 @@ msgstr "Ladungsabstand (Viewport-Anteil): {0}"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:693
 #: src/routes/project/chat/ProjectChatRoute.tsx:699
-#: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
-#: src/features/sidebar/hooks/useSearchHits.ts:257
-#: src/features/sidebar/hooks/useSearchHits.ts:262
+#: src/features/sidebar/hooks/useSearchHits.ts:258
+#: src/features/sidebar/hooks/useSearchHits.ts:259
+#: src/features/sidebar/hooks/useSearchHits.ts:264
 #: src/components/chat/AgenticChatPanel.tsx:1758
 msgid "Chat"
 msgstr "Chat"
@@ -4176,7 +4176,7 @@ msgstr "Bestimmt die Reichweite der Ladungskräfte (höher = globaler)"
 msgid "conversation"
 msgstr "Gespräch"
 
-#: src/features/sidebar/hooks/useSearchHits.ts:224
+#: src/features/sidebar/hooks/useSearchHits.ts:226
 #: src/components/results/curate/ArgumentsTab.tsx:236
 #: src/components/map/attributes.ts:422
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:431
@@ -10761,7 +10761,7 @@ msgstr "Nur Organisation"
 #: src/routes/organisation/OrganisationExternalView.tsx:39
 #: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/features/sidebar/views/org/OrgHomeView.tsx:80
-#: src/features/sidebar/hooks/useSearchHits.ts:134
+#: src/features/sidebar/hooks/useSearchHits.ts:136
 #: src/components/training/StaffTrainingPanel.tsx:146
 #: src/components/organisation/CreateOrganisationModal.tsx:205
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:174
@@ -11808,12 +11808,12 @@ msgid "project"
 msgstr "Projekt"
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:76
-#: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/features/sidebar/hooks/useSearchHits.ts:207
-#: src/features/sidebar/hooks/useSearchHits.ts:208
-#: src/features/sidebar/hooks/useSearchHits.ts:213
-#: src/features/sidebar/hooks/useSearchHits.ts:221
-#: src/features/sidebar/hooks/useSearchHits.ts:254
+#: src/features/sidebar/hooks/useSearchHits.ts:166
+#: src/features/sidebar/hooks/useSearchHits.ts:209
+#: src/features/sidebar/hooks/useSearchHits.ts:210
+#: src/features/sidebar/hooks/useSearchHits.ts:215
+#: src/features/sidebar/hooks/useSearchHits.ts:223
+#: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/components/workspace/OrganisationProjectsTable.tsx:210
 msgid "Project"
 msgstr "Projekt"
@@ -16806,9 +16806,9 @@ msgstr "Transcribieren..."
 msgid "transcript"
 msgstr "Transkript"
 
-#: src/features/sidebar/hooks/useSearchHits.ts:237
-#: src/features/sidebar/hooks/useSearchHits.ts:238
-#: src/features/sidebar/hooks/useSearchHits.ts:246
+#: src/features/sidebar/hooks/useSearchHits.ts:239
+#: src/features/sidebar/hooks/useSearchHits.ts:240
+#: src/features/sidebar/hooks/useSearchHits.ts:248
 #: src/components/conversation/ConversationTranscriptSection.tsx:215
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
@@ -18444,7 +18444,7 @@ msgstr "Antwort wird erstellt..."
 #: src/routes/project/CreateProjectRoute.tsx:395
 #: src/routes/admin/AdminSettingsRoute.tsx:1666
 #: src/routes/admin/AdminSettingsRoute.tsx:2214
-#: src/features/sidebar/hooks/useSearchHits.ts:164
+#: src/features/sidebar/hooks/useSearchHits.ts:166
 #: src/components/workspace/OrganisationUsageRollup.tsx:382
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
