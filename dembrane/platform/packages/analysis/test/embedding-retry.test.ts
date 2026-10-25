@@ -76,3 +76,33 @@ test("other failures keep five tries", async () => {
   await expect(embedWithRetry(e, "text", 5, { ...c, random: () => 1 })).rejects.toThrow("boom");
   expect(calls).toHaveLength(5);
 });
+
+test("Retry-After of an hour waits a minute", async () => {
+  const { e } = embedder(1, () => busy("3600"));
+  const c = clock();
+  await embedWithRetry(e, "text", 5, { ...c, random: () => 0 });
+  expect(c.waits).toEqual([60000]);
+});
+
+test("an HTTP-date Retry-After is read and capped", async () => {
+  const date = new Date(Date.now() + 3_600_000).toUTCString();
+  const { e } = embedder(1, () => busy(date));
+  const c = clock();
+  await embedWithRetry(e, "text", 5, { ...c, now: () => Date.now() + 0, random: () => 0 });
+  expect(c.waits).toEqual([60000]);
+  const near = new Date(Date.now() + 10_000).toUTCString();
+  const again = embedder(1, () => busy(near));
+  const d = clock();
+  await embedWithRetry(again.e, "text", 5, { ...d, now: () => Date.now(), random: () => 0 });
+  expect(d.waits[0]).toBeGreaterThan(8000);
+  expect(d.waits[0]).toBeLessThanOrEqual(10000);
+});
+
+test("a rate limit that outlasts the deadline raises before the last try", async () => {
+  const { e, calls } = embedder(100, () => busy("60"));
+  const c = clock();
+  await expect(embedWithRetry(e, "text", 5, { ...c, random: () => 0 })).rejects.toThrow("busy");
+  // 60 s waits: the third would end past 180 s.
+  expect(c.waits).toEqual([60000, 60000, 60000]);
+  expect(calls).toHaveLength(4);
+});

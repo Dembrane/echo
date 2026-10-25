@@ -88,6 +88,10 @@ export async function probeIdentity(embedder: Embedder): Promise<EmbeddingIdenti
 
 /** Tries for a rate limit: the quota is per minute, so the wait has to span most of one. */
 export const RATE_LIMIT_TRIES = 8;
+/** No single wait on a rate limit is longer than this, whatever Retry-After asks for. */
+export const MAX_WAIT_MS = 60_000;
+/** One embedding gives up after this long on rate limits, so a stuck quota fails the run instead of stalling it. */
+export const RETRY_DEADLINE_MS = 180_000;
 
 export interface RetryOptions {
   readonly sleep?: (ms: number) => Promise<void>;
@@ -122,6 +126,7 @@ export async function embedWithRetry(
   const now = opts.now ?? Date.now;
   const random = opts.random ?? Math.random;
   const limitTries = Math.max(tries, RATE_LIMIT_TRIES);
+  const deadline = now() + RETRY_DEADLINE_MS;
   let last: unknown;
   for (let attempt = 0; attempt < limitTries; attempt++) {
     const hold = (pausedUntil.get(embedder) ?? 0) - now();
@@ -137,7 +142,11 @@ export async function embedWithRetry(
         continue;
       }
       const grown = Math.min(2 ** attempt, 30) * 1000;
-      const wait = Math.max(retryAfterOf(err, now()) ?? 0, grown / 2 + (grown / 2) * random());
+      const wait = Math.min(
+        MAX_WAIT_MS,
+        Math.max(retryAfterOf(err, now()) ?? 0, grown / 2 + (grown / 2) * random()),
+      );
+      if (now() + wait > deadline) break;
       pausedUntil.set(embedder, Math.max(pausedUntil.get(embedder) ?? 0, now() + wait));
     }
   }
