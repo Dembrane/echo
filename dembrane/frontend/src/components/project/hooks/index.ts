@@ -320,6 +320,10 @@ export const useUpdateProjectTagByIdMutation = () => {
 			id: string;
 			project_id: string;
 			payload: Partial<ProjectTag>;
+			// Reordering sends one request per tag: the caller refetches once
+			// after they all settle, so a half-saved order never overwrites the
+			// screen.
+			deferInvalidate?: boolean;
 		}) => {
 			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/${id}`, {
 				body: JSON.stringify(payload),
@@ -334,6 +338,7 @@ export const useUpdateProjectTagByIdMutation = () => {
 			return (await res.json()) as ProjectTag;
 		},
 		onSuccess: (_values, variables) => {
+			if (variables.deferInvalidate) return;
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id],
 			});
