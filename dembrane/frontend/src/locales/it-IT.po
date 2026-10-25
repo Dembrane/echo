@@ -261,7 +261,7 @@ msgid "{0, plural, one {# audio stopped} other {# audio stopped}}"
 msgstr "{0, plural, one {# audio interrotto} other {# audio interrotti}}"
 
 #. placeholder {0}: skipped.length
-#: src/components/project/hooks/index.ts:475
+#: src/components/project/hooks/index.ts:480
 msgid "{0, plural, one {# conversation could not be added to this chat.} other {# conversations could not be added to this chat.}}"
 msgstr "{0, plural, one {Non è stato possibile aggiungere # conversazione a questa chat.} other {Non è stato possibile aggiungere # conversazioni a questa chat.}}"
 
@@ -875,7 +875,7 @@ msgstr "{email} ha già un invito in sospeso per un altro progetto. Condividi qu
 msgid "{email} was added to the pending list but the invite email could not be sent. Resend it from Members."
 msgstr "{email} è nella lista degli inviti in sospeso, ma l'email non è stata inviata. Reinviala da Membri."
 
-#: src/components/project/hooks/index.ts:465
+#: src/components/project/hooks/index.ts:470
 msgid "{empty, plural, one {# conversation has no transcript yet, so it was left out.} other {# conversations have no transcript yet, so they were left out.}}"
 msgstr "{empty, plural, one {# conversazione non ha ancora una trascrizione ed è stata esclusa.} other {# conversazioni non hanno ancora una trascrizione e sono state escluse.}}"
 
@@ -992,7 +992,7 @@ msgstr "{nextCadence} min"
 msgid "{overflow} more people"
 msgstr "altre {overflow} persone"
 
-#: src/components/project/hooks/index.ts:454
+#: src/components/project/hooks/index.ts:459
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# conversazione non rientrava in questa chat. Avviane un'altra per includere il resto.} other {# conversazioni non rientravano in questa chat. Avviane un'altra per includere il resto.}}"
 
@@ -1687,7 +1687,7 @@ msgstr "Aggiungi persone dalla tua organizzazione"
 msgid "Add step"
 msgstr "Aggiungi passaggio"
 
-#: src/components/project/ProjectTagsInput.tsx:275
+#: src/components/project/ProjectTagsInput.tsx:327
 msgid "Add tag"
 msgstr "Aggiungi tag"
 
@@ -1700,7 +1700,7 @@ msgstr "Aggiungi tag"
 msgid "add.tag.filter.modal.title"
 msgstr "Aggiungi tag ai filtri"
 
-#: src/components/project/ProjectTagsInput.tsx:275
+#: src/components/project/ProjectTagsInput.tsx:327
 msgid "Add tags"
 msgstr "Aggiungi tag"
 
@@ -2468,7 +2468,7 @@ msgstr "Are you sure you want to delete this project? This action cannot be undo
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Are you sure you want to delete this report? This action cannot be undone."
 
-#: src/components/project/ProjectTagsInput.tsx:118
+#: src/components/project/ProjectTagsInput.tsx:120
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 
@@ -3467,7 +3467,7 @@ msgstr "Chat | dembrane"
 msgid "Chat context includes conversation dates and durations."
 msgstr "Il contesto della chat include date e durate delle conversazioni."
 
-#: src/components/project/hooks/index.ts:402
+#: src/components/project/hooks/index.ts:407
 msgid "Chat created"
 msgstr "Chat creata"
 
@@ -4412,7 +4412,7 @@ msgstr "Copia URL"
 msgid "Copying…"
 msgstr "Copia in corso…"
 
-#: src/components/project/hooks/index.ts:434
+#: src/components/project/hooks/index.ts:439
 msgid "Could not add your conversations to this chat"
 msgstr "Impossibile aggiungere le tue conversazioni a questa chat"
 
@@ -4558,7 +4558,7 @@ msgstr "Impossibile salvare i tag"
 msgid "Could not save the change. Try again."
 msgstr "Impossibile salvare la modifica. Riprova."
 
-#: src/components/project/hooks/index.ts:539
+#: src/components/project/hooks/index.ts:544
 msgid "Could not save the host guide"
 msgstr "Impossibile salvare la guida per l'host"
 
@@ -5077,7 +5077,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1272
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
-#: src/components/project/ProjectTagsInput.tsx:119
+#: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:590
@@ -5137,7 +5137,7 @@ msgstr "Delete project"
 msgid "Delete report"
 msgstr "Delete report"
 
-#: src/components/project/ProjectTagsInput.tsx:116
+#: src/components/project/ProjectTagsInput.tsx:118
 msgid "Delete tag"
 msgstr "Delete tag"
 
@@ -10002,7 +10002,7 @@ msgstr "Nessun tag"
 msgid "No tags found"
 msgstr "No tags found"
 
-#: src/components/project/ProjectTagsInput.tsx:281
+#: src/components/project/ProjectTagsInput.tsx:333
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "No tags have been added to this project yet. Add a tag using the text input above to get started."
 
@@ -11045,7 +11045,7 @@ msgstr "I partecipanti possono verificare i risultati e perfezionare le risposte
 msgid "Participants receive a reminder to verify before ending a conversation."
 msgstr "I partecipanti ricevono un promemoria per verificare prima di terminare una conversazione."
 
-#: src/components/project/ProjectTagsInput.tsx:259
+#: src/components/project/ProjectTagsInput.tsx:311
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
@@ -15252,11 +15252,11 @@ msgstr "Tag"
 msgid "Tag {0}"
 msgstr "Tag {0}"
 
-#: src/components/project/hooks/index.ts:357
+#: src/components/project/hooks/index.ts:362
 msgid "Tag deleted"
 msgstr "Tag eliminato"
 
-#: src/components/project/ProjectTagsInput.tsx:255
+#: src/components/project/ProjectTagsInput.tsx:307
 #: src/components/participant/ParticipantInitiateForm.tsx:301
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
@@ -16700,11 +16700,11 @@ msgstr "Strumento"
 msgid "Tools"
 msgstr "Strumenti"
 
-#: src/components/project/hooks/index.ts:690
+#: src/components/project/hooks/index.ts:695
 msgid "Topic created successfully"
 msgstr "Topic created successfully"
 
-#: src/components/project/hooks/index.ts:738
+#: src/components/project/hooks/index.ts:743
 msgid "Topic deleted successfully"
 msgstr "Topic deleted successfully"
 
@@ -16712,7 +16712,7 @@ msgstr "Topic deleted successfully"
 msgid "Topic label"
 msgstr "Topic label"
 
-#: src/components/project/hooks/index.ts:715
+#: src/components/project/hooks/index.ts:720
 msgid "Topic updated successfully"
 msgstr "Topic updated successfully"
 
