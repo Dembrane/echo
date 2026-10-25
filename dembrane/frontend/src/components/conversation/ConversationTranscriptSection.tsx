@@ -36,6 +36,7 @@ import {
 } from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
+import { scrollToTranscriptEnd } from "./scrollToTranscriptEnd";
 import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
 
 type ConversationTranscriptSectionProps = {
@@ -135,6 +136,23 @@ export const ConversationTranscriptSection = ({
 		isFetchingNextPage,
 		status,
 	} = useInfiniteConversationChunks(conversationId);
+
+	const [isScrollingToEnd, setIsScrollingToEnd] = useState(false);
+	const handleScrollToBottom = useCallback(async () => {
+		if (isScrollingToEnd) return;
+		setIsScrollingToEnd(true);
+		try {
+			await scrollToTranscriptEnd({
+				// Join a page that is already loading instead of restarting it.
+				fetchNextPage: () => fetchNextPage({ cancelRefetch: false }),
+				hasNextPage,
+				scrollToEnd: () =>
+					bottomTargetRef.current?.scrollIntoView({ behavior: "smooth" }),
+			});
+		} finally {
+			setIsScrollingToEnd(false);
+		}
+	}, [fetchNextPage, hasNextPage, isScrollingToEnd]);
 
 	useEffect(() => {
 		if (inView && hasNextPage && !isFetchingNextPage) {
@@ -358,11 +376,8 @@ export const ConversationTranscriptSection = ({
 						>
 							<ScrollToBottomButton
 								visible={!isBottomVisible}
-								onClick={() =>
-									bottomTargetRef.current?.scrollIntoView({
-										behavior: "smooth",
-									})
-								}
+								loading={isScrollingToEnd}
+								onClick={handleScrollToBottom}
 							/>
 						</Group>
 					) : null}

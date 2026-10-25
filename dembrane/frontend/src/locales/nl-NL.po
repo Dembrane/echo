@@ -2193,7 +2193,7 @@ msgstr "Er is een fout opgetreden."
 msgid "An event or a workshop."
 msgstr "Een evenement of workshop."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:301
+#: src/components/conversation/ConversationTranscriptSection.tsx:319
 msgid "An improved transcript is on its way."
 msgstr "Een verbeterd transcript is onderweg."
 
@@ -2712,7 +2712,7 @@ msgstr "Audio per gesprek"
 msgid "Audio per month"
 msgstr "Audio per maand"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:267
+#: src/components/conversation/ConversationTranscriptSection.tsx:285
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-afspelen niet beschikbaar voor anonieme gesprekken"
 
@@ -5897,7 +5897,7 @@ msgid "emptied out"
 msgstr "leeggemaakt"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:223
+#: src/components/conversation/ConversationTranscriptSection.tsx:241
 msgid "Empty"
 msgstr "Leeg"
 
@@ -7437,7 +7437,7 @@ msgstr "Uren vanaf nu"
 msgid "How Ask works and what it can do."
 msgstr "Hoe Vragen werkt en wat je ermee kunt."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:67
+#: src/components/conversation/ConversationTranscriptSection.tsx:68
 msgid "How dembrane improves your transcript"
 msgstr "Hoe dembrane je transcript verbetert"
 
@@ -7595,7 +7595,7 @@ msgstr "Overgenomen uit een eerdere analyse, {day}"
 msgid "Improve my setup"
 msgstr "Verbeter mijn instellingen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:60
+#: src/components/conversation/ConversationTranscriptSection.tsx:61
 msgid "Improved"
 msgstr "Verbeterd"
 
@@ -10032,7 +10032,7 @@ msgstr "Nog geen trainingen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Geen transcript beschikbaar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:313
+#: src/components/conversation/ConversationTranscriptSection.tsx:331
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -10840,7 +10840,7 @@ msgstr "Orden projecten in werkruimtes binnen je organisatie."
 msgid "Organization"
 msgstr "Organisatie"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:61
+#: src/components/conversation/ConversationTranscriptSection.tsx:62
 msgid "Original"
 msgstr "Origineel"
 
@@ -13537,8 +13537,8 @@ msgstr "Taal van het scherm"
 #~ msgid "Screen theme"
 #~ msgstr ""
 
-#: src/components/common/ScrollToBottom.tsx:19
 #: src/components/common/ScrollToBottom.tsx:22
+#: src/components/common/ScrollToBottom.tsx:25
 msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
@@ -14326,7 +14326,7 @@ msgstr "Toon alle {total}"
 msgid "Show all conversations"
 msgstr "Alle gesprekken tonen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:277
+#: src/components/conversation/ConversationTranscriptSection.tsx:295
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
@@ -15897,7 +15897,7 @@ msgstr "De titel kon niet worden gegenereerd."
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "Het transcript kwam niet terug. Controleer je verbinding en probeer het opnieuw."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:303
+#: src/components/conversation/ConversationTranscriptSection.tsx:321
 msgid "The transcript is improved once the conversation ends."
 msgstr "Het transcript wordt verbeterd zodra het gesprek is afgelopen."
 
@@ -16790,7 +16790,7 @@ msgstr "Een gesprek opnieuw transcriberen"
 #~ msgstr "Opnieuw getranscribeerd op basis van de hele opname."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
-#: src/components/conversation/ConversationTranscriptSection.tsx:232
+#: src/components/conversation/ConversationTranscriptSection.tsx:250
 msgid "Transcribing"
 msgstr "Wordt getranscribeerd"
 
@@ -16805,7 +16805,7 @@ msgstr "transcript"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:215
+#: src/components/conversation/ConversationTranscriptSection.tsx:233
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcriptie"
