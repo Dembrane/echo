@@ -38,6 +38,15 @@ export interface FallbackOptions {
 /** Per-call providerOptions: a refused answer moves on to the next deployment. */
 export const FALL_BACK_ON_REFUSAL = { fallback: { onRefusal: true } };
 
+/**
+ * Per-call providerOptions: each attempt on a deployment is cut after this long. The cut is a
+ * TimeoutError, which is retryable, so it takes the same retry and next-deployment path as any
+ * other failure and is metered as one failed call. Every attempt gets a fresh clock.
+ */
+export function attemptTimeout(ms: number) {
+  return { fallback: { attemptTimeoutMs: ms } };
+}
+
 /** Every deployment declined to answer (a content filter or safety stop). */
 export class ModelRefusalError extends Error {
   override name = "ModelRefusalError";
@@ -96,12 +105,23 @@ export class FallbackModel implements LanguageModelV4 {
 
   doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const onRefusal = options.providerOptions?.fallback?.onRefusal === true;
+    const limit = options.providerOptions?.fallback?.attemptTimeoutMs;
+    const attemptMs = typeof limit === "number" && limit > 0 ? limit : null;
     return this.run(async (d, meta) => {
       const startedAt = new Date();
       const t0 = performance.now();
       let result: LanguageModelV4GenerateResult;
       try {
-        result = await d.model.doGenerate(options);
+        result = await d.model.doGenerate(
+          attemptMs === null
+            ? options
+            : {
+                ...options,
+                abortSignal: options.abortSignal
+                  ? AbortSignal.any([options.abortSignal, AbortSignal.timeout(attemptMs)])
+                  : AbortSignal.timeout(attemptMs),
+              },
+        );
       } catch (err) {
         this.report(() => failedCall(meta, "generate", startedAt, t0, err));
         throw err;

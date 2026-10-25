@@ -38,7 +38,7 @@ export {
   type Proposals,
   proposeEdits,
 } from "./final-edit";
-export { GeminiTranscriber, parseTranscriptJson } from "./gemini";
+export { GeminiTranscriber, parseTranscriptJson, TRANSCRIBE_CALL_TIMEOUT_MS } from "./gemini";
 export { regexRedactPii } from "./pii";
 export {
   ANSWER_SECONDS_PER_AUDIO_SECOND,

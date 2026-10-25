@@ -4,6 +4,7 @@ import type {
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
 import {
+  attemptTimeout,
   FALL_BACK_ON_REFUSAL,
   isRetryable,
   ModelRefusalError,
@@ -33,6 +34,9 @@ const SCHEMA = {
 
 // Filters off did not lower 3.8-flash refusals in replay; the fallback is what recovers them (ECHO-980).
 const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" } };
+// A stalled Vertex call otherwise holds a chunk about 300 s (up to 12 minutes with retries) before the retry runs.
+// Successful chunk calls over 14 days to 25 Oct (n=50024): p50 11.9 s, p90 28.4 s, p99 79.2 s, p99.9 209 s (incident days), max 348 s; about 1 in 1000 healthy calls passes 180 s.
+export const TRANSCRIBE_CALL_TIMEOUT_MS = 180_000;
 // The redaction pass copies a transcript with names masked; reasoning adds time and
 // answer tokens and nothing else. Read by the OpenAI-compatible provider only.
 const NO_REASONING = { openaiCompatible: { reasoningEffort: "none" } };
@@ -89,7 +93,7 @@ export class GeminiTranscriber implements Transcriber {
   constructor(
     private readonly models: Models,
     private readonly logger: Logger,
-    private readonly opts: { retry?: RetryPolicy | null } = {},
+    private readonly opts: { retry?: RetryPolicy | null; callTimeoutMs?: number } = {},
   ) {}
 
   async transcribe(input: TranscribeInput): Promise<TranscribeResult> {
@@ -296,6 +300,10 @@ export class GeminiTranscriber implements Transcriber {
           responseFormat: { type: "json", schema: SCHEMA as never },
           providerOptions: {
             ...PROVIDER_OPTIONS,
+            fallback: {
+              ...FALL_BACK_ON_REFUSAL.fallback,
+              ...attemptTimeout(this.opts.callTimeoutMs ?? TRANSCRIBE_CALL_TIMEOUT_MS).fallback,
+            },
             ...speechHint(this.models, language),
             ...extraOptions,
           },
