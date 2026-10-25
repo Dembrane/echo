@@ -1871,7 +1871,7 @@ export const AgenticChatPanel = ({
 							icon={<WarningCircleIcon size={20} />}
 							title={<Trans>Error</Trans>}
 						>
-							{error ?? t`Connection lost. Reload to see the answer.`}
+							{error ?? t`Connection lost. Reload for the answer.`}
 						</Alert>
 					)}
 

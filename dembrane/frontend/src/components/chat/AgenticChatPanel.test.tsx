@@ -571,7 +571,7 @@ describe("AgenticChatPanel, fallback to polling", () => {
 
 		runState.pollFails = true;
 		await screen.findByText(
-			"Connection lost. Reload to see the answer.",
+			"Connection lost. Reload for the answer.",
 			{},
 			{ timeout: 10000 },
 		);
@@ -585,7 +585,7 @@ describe("AgenticChatPanel, fallback to polling", () => {
 
 		runState.pollFails = true;
 		await screen.findByText(
-			"Connection lost. Reload to see the answer.",
+			"Connection lost. Reload for the answer.",
 			{},
 			{ timeout: 10000 },
 		);
