@@ -407,6 +407,8 @@ export function projectsStorage(db: Db) {
             eq(project_report.project_id, projectId),
             isNull(project_report.deleted_at),
             eq(project_report.kind, "report"),
+            // A schedule the host cancelled never generated, so it is not the free report.
+            ne(project_report.status, "cancelled"),
           ),
         );
       return row?.n ?? 0;
