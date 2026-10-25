@@ -355,7 +355,7 @@ const initialValues = (doc: DocumentDetailT): Values => {
  * field the panel asks for is brought to the middle of the screen. On a phone the panel
  * sits at the bottom instead.
  */
-function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+export function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const { data: me } = useV2Me();
 	const wide = useMediaQuery("(min-width: 62em)") ?? false;
@@ -613,6 +613,10 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				/>
 			)}
 
+			{/* From the first step, so the terms can be read before anything is signed. The
+			    last step shows them in its own place, so no screen has them twice. */}
+			{!finishing && <LegalDocuments doc={doc} />}
+
 			{finishing && (
 				<FinishStep
 					doc={doc}
@@ -687,7 +691,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				</Group>
 			) : (
 				<>
-					<Box maw={860} mx="auto" px={8} pt="md" pb={380}>
+					<Box maw={860} mx="auto" px={8} pt="md" pb={440}>
 						{pages}
 					</Box>
 					<Paper
