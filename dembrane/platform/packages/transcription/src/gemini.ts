@@ -37,7 +37,7 @@ const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" }
 // A stalled Vertex call otherwise holds a chunk about 300 s (up to 12 minutes with retries) before the retry runs.
 // Successful chunk calls over 14 days to 25 Oct (n=50024): p50 11.9 s, p90 28.4 s, p99 79.2 s, p99.9 209 s (incident days), max 348 s; about 1 in 1000 healthy calls passes 180 s.
 export const TRANSCRIBE_CALL_TIMEOUT_MS = 180_000;
-// The last attempt of the last deployment has nothing to fall back to, so it waits past the slowest success ever seen (348 s).
+// The final attempt of the last group in the chain (multi_modal_fast) has nothing to fall back to, so it waits past the slowest success ever seen (348 s); the pro group keeps the short bound.
 export const TRANSCRIBE_FINAL_CALL_TIMEOUT_MS = 400_000;
 // The redaction pass copies a transcript with names masked; reasoning adds time and
 // answer tokens and nothing else. Read by the OpenAI-compatible provider only.
@@ -298,7 +298,10 @@ export class GeminiTranscriber implements Transcriber {
     language: string | null | undefined,
     extraOptions: Record<string, Record<string, unknown>>,
   ) {
-    const run = async (m: LanguageModelV4) => {
+    const bound = this.opts.callTimeoutMs ?? TRANSCRIBE_CALL_TIMEOUT_MS;
+    // Only the final attempt of the last group in the chain waits the long bound; the pro group
+    // keeps the short one, or a stall there would cost the long wait and then the fast group too.
+    const run = async (m: LanguageModelV4, lastInChain: boolean) => {
       let r: LanguageModelV4GenerateResult;
       try {
         r = await m.doGenerate({
@@ -309,8 +312,10 @@ export class GeminiTranscriber implements Transcriber {
             fallback: {
               ...FALL_BACK_ON_REFUSAL.fallback,
               ...attemptTimeout(
-                this.opts.callTimeoutMs ?? TRANSCRIBE_CALL_TIMEOUT_MS,
-                this.opts.finalCallTimeoutMs ?? TRANSCRIBE_FINAL_CALL_TIMEOUT_MS,
+                bound,
+                lastInChain
+                  ? (this.opts.finalCallTimeoutMs ?? TRANSCRIBE_FINAL_CALL_TIMEOUT_MS)
+                  : bound,
               ).fallback,
             },
             ...speechHint(this.models, language),
@@ -333,14 +338,14 @@ export class GeminiTranscriber implements Transcriber {
       };
     };
     try {
-      return await run(this.models.model("multi_modal_pro"));
+      return await run(this.models.model("multi_modal_pro"), false);
     } catch (err) {
       if (!isRetryable(err)) throw err;
       this.logger.warn(
         { err: (err as Error).message },
         "transcription falls back to multi_modal_fast",
       );
-      return run(this.models.model("multi_modal_fast"));
+      return run(this.models.model("multi_modal_fast"), true);
     }
   }
 }
