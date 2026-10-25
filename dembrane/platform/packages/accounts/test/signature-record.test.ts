@@ -103,7 +103,6 @@ describe("signature record", () => {
     const headings = [
       "The document",
       "Who signed",
-      "What was agreed",
       "When and where",
       "Verification",
       "Audit trail (UTC)",

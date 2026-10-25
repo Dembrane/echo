@@ -681,6 +681,13 @@ function drawAudit(w: Writer, a: AuditRecord) {
         ["Title", a.documentTitle],
         ...row("Reference", a.reference),
         ["Version", String(a.version)],
+        // The choice is part of what was signed: each option, chosen or not.
+        ...(a.choices ?? []).map((c): [string, string] => [
+          `Option: ${c.label}`,
+          c.chosen ? "chosen" : "not chosen",
+        ]),
+        ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
+        ...pinned,
       ],
     ],
     [
@@ -703,18 +710,6 @@ function drawAudit(w: Writer, a: AuditRecord) {
       ],
     ],
     [
-      "What was agreed",
-      [
-        // The choice is part of what was signed: each option, chosen or not.
-        ...(a.choices ?? []).map((c): [string, string] => [
-          `Option: ${c.label}`,
-          c.chosen ? "chosen" : "not chosen",
-        ]),
-        ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
-        ...pinned,
-      ],
-    ],
-    [
       "When and where",
       [
         ["Signed at (UTC)", a.signedAt],
@@ -727,8 +722,8 @@ function drawAudit(w: Writer, a: AuditRecord) {
       "Verification",
       [
         ["Document id", a.documentId],
-        ["Fingerprint (SHA-256) of the unsigned PDF", a.sha256],
-        ["Fingerprint (SHA-256) of the signature image", a.imageSha256],
+        ["Unsigned PDF (SHA-256)", a.sha256, HASH_SIZE],
+        ["Signature image (SHA-256)", a.imageSha256, HASH_SIZE],
         ["Signature id", a.signatureId],
       ],
     ],
@@ -744,15 +739,18 @@ const LEGAL_LABEL: Record<string, string> = { terms: "Terms", sla: "SLA", dpa: "
 
 /** A heading that never sits alone at the foot of a page. */
 function heading(w: Writer, text: string) {
-  w.space(10);
-  w.ensure(60);
-  w.text(text, { size: brand.type.print.lead, gap: 4 });
+  w.space(6);
+  w.ensure(48);
+  w.text(text, { size: 11, gap: 3 });
 }
 
-function drawGroups(
-  w: Writer,
-  groups: readonly (readonly [string, readonly (readonly [string, string])[]])[],
-) {
+/** A row: label, value, and the size to print the value at when it is not the usual 9. */
+type Row = readonly [label: string, value: string, size?: number];
+
+/** A 64 character hash fits one line at this size, so a hash row is not two lines tall. */
+const HASH_SIZE = 7.5;
+
+function drawGroups(w: Writer, groups: readonly (readonly [string, readonly Row[]])[]) {
   for (const [title, rows] of groups) {
     if (!rows.length) continue;
     heading(w, title);
@@ -761,14 +759,14 @@ function drawGroups(
 }
 
 /** Label and value side by side, the label muted, each row as tall as its longer side. */
-function drawRows(w: Writer, rows: readonly (readonly [string, string])[]) {
-  for (const [k, value] of rows) {
+function drawRows(w: Writer, rows: readonly Row[]) {
+  for (const [k, value, size] of rows) {
     const before = w.y;
     const page = w.page;
     w.text(k, { size: 9, width: 150, color: MUTED });
     const after = w.y;
     if (w.page === page) w.y = before;
-    w.text(value, { size: 9, x: MARGIN + 160 });
+    w.text(value, { size: size ?? 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
   }
 }
