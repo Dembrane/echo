@@ -19,8 +19,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type FormEvent, useRef, useState } from "react";
+import { useForm, useFormState, useWatch } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
@@ -41,16 +41,24 @@ export const RegisterRoute = () => {
 	// auto-accepts and the user gets a stray personal organisation).
 	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
 	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
-	const { register, handleSubmit, trigger, getValues, watch, control } =
-		useForm<{
-			email: string;
-			password: string;
-			confirmPassword: string;
-			first_name: string;
-			last_name: string;
-		}>({
-			defaultValues: lockedEmail ? { email: invitedEmail } : undefined,
-		});
+	const { register, handleSubmit, trigger, watch, control } = useForm<{
+		email: string;
+		password: string;
+		confirmPassword: string;
+		first_name: string;
+		last_name: string;
+	}>({
+		defaultValues: lockedEmail ? { email: invitedEmail } : undefined,
+	});
+
+	// Read at the top of the component: react-hook-form only repaints for the
+	// errors that are read during render, and React Compiler defers reads that
+	// sit inside conditional steps.
+	const { errors } = useFormState({ control });
+	const firstNameError = errors.first_name?.message;
+	const emailError = errors.email?.message;
+	const passwordFieldError = errors.password?.message;
+	const confirmFieldError = errors.confirmPassword?.message;
 
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
@@ -59,23 +67,27 @@ export const RegisterRoute = () => {
 	// ISSUE-013: explicit acceptance of the general terms. Required before
 	// continuing; the timestamp is recorded server-side at app_user creation.
 	const [termsAccepted, setTermsAccepted] = useState(false);
+	// Continue and Create account stay enabled so a missing answer is named on
+	// the field instead of the button silently doing nothing.
+	const [termsError, setTermsError] = useState("");
+	const [passwordError, setPasswordError] = useState("");
+	const [confirmError, setConfirmError] = useState("");
+	const termsRef = useRef<HTMLInputElement>(null);
 
 	const registerMutation = useRegisterMutation();
 	const posthog = usePostHog();
 
 	const handleNext = async () => {
 		setError("");
-		const valid = await trigger(["first_name", "email"]);
-		if (!valid) return;
-		const { email } = getValues();
-		if (!email.includes("@")) {
-			setError(t`Enter a valid email address`);
-			return;
-		}
+		const valid = await trigger(["first_name", "email"], {
+			shouldFocus: true,
+		});
 		if (!termsAccepted) {
-			setError(t`Please accept the terms to continue.`);
+			setTermsError(t`Accept the terms to continue`);
+			if (valid) termsRef.current?.focus();
 			return;
 		}
+		if (!valid) return;
 		// Funnel step: $pageview (/register) -> registration_details_completed
 		// -> user_registered. Time between steps shows where people stall.
 		posthog?.capture("registration_details_completed", {
@@ -84,14 +96,16 @@ export const RegisterRoute = () => {
 		setStep(1);
 	};
 
-	const onSubmit = handleSubmit(async (data) => {
+	const submitPassword = handleSubmit(async (data) => {
 		setError("");
+		setPasswordError("");
+		setConfirmError("");
 		if (!validatePassword(data.password).isValid) {
-			setError(t`Password does not meet the requirements.`);
+			setPasswordError(t`Password does not meet the requirements.`);
 			return;
 		}
 		if (data.password !== data.confirmPassword) {
-			setError(t`Passwords do not match`);
+			setConfirmError(t`Passwords do not match`);
 			return;
 		}
 
@@ -117,6 +131,14 @@ export const RegisterRoute = () => {
 		);
 	});
 
+	// Enter submits whichever step is showing. The password fields only exist on
+	// step 2, so the password handler must not run before then.
+	const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		if (step === 0) return handleNext();
+		if (step === 1) return submitPassword(e);
+	};
+
 	const emailWatch = watch("email");
 	// useWatch, not watch(): React Compiler memoizes watch() so it never updates.
 	const password = useWatch({ control, name: "password" }) ?? "";
@@ -139,7 +161,7 @@ export const RegisterRoute = () => {
 					<Stepper.Step label={t`Verify email`} />
 				</Stepper>
 
-				<form onSubmit={onSubmit}>
+				<form onSubmit={onSubmit} noValidate>
 					<Stack gap="md">
 						{error && <Alert color="red">{error}</Alert>}
 						{registerMutation.error && (
@@ -152,7 +174,12 @@ export const RegisterRoute = () => {
 									size="md"
 									autoFocus
 									label={t`First name`}
-									{...register("first_name", { required: true })}
+									error={firstNameError}
+									{...register("first_name", {
+										required: t`Enter your first name`,
+										validate: (v) =>
+											v.trim().length > 0 || t`Enter your first name`,
+									})}
 									{...testId("auth-register-first-name-input")}
 									placeholder={t`John`}
 								/>
@@ -167,7 +194,12 @@ export const RegisterRoute = () => {
 								<TextInput
 									size="md"
 									label={t`Email address`}
-									{...register("email", { required: true })}
+									error={emailError}
+									{...register("email", {
+										required: t`Enter your email`,
+										validate: (v) =>
+											v.includes("@") || t`Enter a valid email address`,
+									})}
 									{...testId("auth-register-email-input")}
 									placeholder={t`john@doe.com`}
 									type="email"
@@ -180,8 +212,13 @@ export const RegisterRoute = () => {
 								/>
 								<Checkbox
 									size="md"
+									ref={termsRef}
 									checked={termsAccepted}
-									onChange={(e) => setTermsAccepted(e.currentTarget.checked)}
+									error={termsError || undefined}
+									onChange={(e) => {
+										setTermsAccepted(e.currentTarget.checked);
+										if (e.currentTarget.checked) setTermsError("");
+									}}
 									{...testId("auth-register-terms-checkbox")}
 									label={
 										<Text size="sm">
@@ -201,8 +238,8 @@ export const RegisterRoute = () => {
 								<Button
 									variant="filled"
 									size="md"
-									onClick={handleNext}
-									disabled={!termsAccepted}
+									type="submit"
+									{...testId("auth-register-continue-button")}
 								>
 									<Trans>Continue</Trans>
 								</Button>
@@ -215,14 +252,22 @@ export const RegisterRoute = () => {
 									size="md"
 									autoFocus
 									label={t`Password`}
-									{...register("password", { required: true })}
+									error={passwordFieldError || passwordError || undefined}
+									{...register("password", {
+										onChange: () => setPasswordError(""),
+										required: t`Enter a password`,
+									})}
 									{...testId("auth-register-password-input")}
 								/>
 								<PasswordRequirements value={password} />
 								<PasswordInput
 									size="md"
 									label={t`Confirm password`}
-									{...register("confirmPassword", { required: true })}
+									error={confirmFieldError || confirmError || undefined}
+									{...register("confirmPassword", {
+										onChange: () => setConfirmError(""),
+										required: t`Confirm your password`,
+									})}
 									{...testId("auth-register-confirm-password-input")}
 								/>
 								<Group gap="md" wrap="nowrap">
@@ -232,7 +277,6 @@ export const RegisterRoute = () => {
 										size="md"
 										type="submit"
 										loading={registerMutation.isPending}
-										disabled={!validatePassword(password).isValid}
 										{...testId("auth-register-submit-button")}
 									>
 										<Trans>Create account</Trans>

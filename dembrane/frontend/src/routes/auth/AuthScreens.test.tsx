@@ -201,6 +201,80 @@ it("the register check-your-email step can resend the link", async () => {
 	});
 });
 
+const fillDetails = () => {
+	fireEvent.change(screen.getByTestId("auth-register-first-name-input"), {
+		target: { value: "Reg" },
+	});
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg@example.com" },
+	});
+};
+
+it("submitting an empty register form names what is missing", async () => {
+	const calls = stubFetch(() => undefined);
+	wrap(<RegisterRoute />, "/register");
+	const button = screen.getByTestId("auth-register-continue-button");
+	expect((button as HTMLButtonElement).disabled).toBe(false);
+	fireEvent.click(button);
+	await screen.findByText("Enter your first name");
+	expect(screen.getByText("Enter your email")).toBeTruthy();
+	expect(screen.getByText("Accept the terms to continue")).toBeTruthy();
+	expect(screen.queryByTestId("auth-register-password-input")).toBeNull();
+	expect(calls).toHaveLength(0);
+});
+
+it("unticked terms show the terms error and stay on the first step", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Accept the terms to continue");
+	expect(screen.queryByText("Enter your email")).toBeNull();
+	expect(screen.queryByTestId("auth-register-password-input")).toBeNull();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	await waitFor(() =>
+		expect(screen.queryByText("Accept the terms to continue")).toBeNull(),
+	);
+});
+
+it("a bad email address is named on the field", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Enter a valid email address");
+});
+
+it("Enter moves through the register steps without throwing", async () => {
+	const calls = stubFetch((url) =>
+		url.endsWith("/v2/auth/register")
+			? new Response(null, { status: 204 })
+			: undefined,
+	);
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.submit(screen.getByTestId("auth-register-first-name-input"));
+	const pw = await screen.findByTestId("auth-register-password-input");
+
+	// Enter on an empty password step names the problem and sends nothing.
+	fireEvent.submit(pw);
+	await screen.findByText("Enter a password");
+	expect(calls).toHaveLength(0);
+
+	fireEvent.change(pw, { target: { value: "Abcdefgh1!xyz" } });
+	fireEvent.change(screen.getByTestId("auth-register-confirm-password-input"), {
+		target: { value: "Abcdefgh1!xyz" },
+	});
+	fireEvent.submit(pw);
+	await screen.findByTestId("auth-register-verify-step");
+	expect(calls.filter((c) => c.url.endsWith("/v2/auth/register"))).toHaveLength(
+		1,
+	);
+});
+
 it("a failed registration shows its notice without a second toast", async () => {
 	stubFetch((url) =>
 		url.endsWith("/v2/auth/register")
