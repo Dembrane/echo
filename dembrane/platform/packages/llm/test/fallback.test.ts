@@ -206,6 +206,41 @@ describe("fallback", () => {
     expect(calls).toEqual(["a:stalled", "b:ok"]);
   });
 
+  test("only the last attempt of the last deployment gets the final bound", async () => {
+    const seen: number[] = [];
+    const probe = (id: string): LanguageModelV4 => ({
+      ...model(id, [], []),
+      doGenerate: async (o) => {
+        const t0 = Date.now();
+        await new Promise<void>((resolve) => {
+          const done = () => resolve();
+          o.abortSignal?.addEventListener("abort", done);
+          setTimeout(done, 200);
+        });
+        seen.push(Date.now() - t0);
+        throw Object.assign(new Error("slow"), { statusCode: 503 });
+      },
+    });
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: probe("a") },
+        { label: "b", model: probe("b") },
+      ],
+      fast,
+    );
+    await generateText({
+      model: m,
+      prompt: "hi",
+      maxRetries: 0,
+      providerOptions: attemptTimeout(20, 150),
+    }).catch(() => {});
+    // Three attempts are cut near 20 ms; the fourth, the last, runs to about 150 ms.
+    expect(seen).toHaveLength(4);
+    for (const ms of seen.slice(0, 3)) expect(ms).toBeLessThan(100);
+    expect(seen[3]).toBeGreaterThanOrEqual(120);
+  });
+
   test("the caller's own abort is not retried", async () => {
     const calls: string[] = [];
     const hangs: LanguageModelV4 = {

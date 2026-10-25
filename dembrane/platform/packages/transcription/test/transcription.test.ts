@@ -20,6 +20,7 @@ import {
   spansOf,
   splitLong,
   TRANSCRIBE_CALL_TIMEOUT_MS,
+  TRANSCRIBE_FINAL_CALL_TIMEOUT_MS,
   TranscriptParseError,
   TranscriptRefusedError,
   tidy,
@@ -370,6 +371,30 @@ test("the default bound is set on every transcription call", async () => {
   const t = new GeminiTranscriber({ model: () => m, embedding: () => ({}) as never }, logger);
   await t.transcribe({ audio: new Uint8Array([1]) });
   expect(seen[0]?.providerOptions?.fallback?.attemptTimeoutMs).toBe(TRANSCRIBE_CALL_TIMEOUT_MS);
+  expect(seen[0]?.providerOptions?.fallback?.finalAttemptTimeoutMs).toBe(
+    TRANSCRIBE_FINAL_CALL_TIMEOUT_MS,
+  );
+  expect(TRANSCRIBE_FINAL_CALL_TIMEOUT_MS).toBeGreaterThan(348_174);
+});
+
+test("the last attempt of the last deployment waits longer than the earlier ones", async () => {
+  const calls: string[] = [];
+  // gemini-a stalls and is cut at the short bound; gemini-b, the last, answers after it.
+  const group = new FallbackModel(
+    "multi_modal_pro",
+    [
+      { label: "a", model: slow("gemini-a", null, calls) },
+      { label: "b", model: slow("gemini-b", 120, calls) },
+    ],
+    { ...noWait, attemptsPerDeployment: 1 },
+  );
+  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+    callTimeoutMs: 30,
+    finalCallTimeoutMs: 2000,
+  });
+  const out = await t.transcribe({ audio: new Uint8Array([1]) });
+  expect(out.models).toEqual(["gemini-b"]);
+  expect(calls).toEqual(["gemini-a", "gemini-b"]);
 });
 
 test("a chunk every deployment refuses ends with a refusal, not a parse error", async () => {
