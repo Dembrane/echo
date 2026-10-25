@@ -1343,8 +1343,8 @@ export const getChatSuggestions = async (
 		`/chats/${chatId}/suggestions`,
 		{
 			params: { language },
-			// The server gives up after 8 s; a request that outlives it is not worth waiting for.
-			timeout: 10_000,
+			// The server gives up after 15 s; a request that outlives it is not worth waiting for.
+			timeout: 17_000,
 		},
 	);
 };

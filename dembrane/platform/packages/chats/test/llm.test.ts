@@ -105,7 +105,7 @@ describe("suggestions limits", () => {
     const started = Date.now();
     expect(await generateSuggestions(d, "p1", "chat", "deep_dive", "en")).toEqual([]);
     expect(Date.now() - started).toBeLessThan(2_000);
-    expect(SUGGESTIONS_TIMEOUT_MS).toBeLessThanOrEqual(10_000);
+    expect(SUGGESTIONS_TIMEOUT_MS).toBe(15_000);
   });
 
   test("reopening a chat with history reuses its suggestions; a new reply asks again", async () => {

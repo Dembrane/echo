@@ -15,12 +15,10 @@ const CACHE_MAX_ENTRIES = 1000;
 
 /**
  * Longest a suggestions call may take. Suggestions are a nicety, so a stalled model must
- * not hold the chat screen: past this the call answers an empty list. Normal calls (a short
- * prompt, at most ten 300-character summaries, three small items back from the fast model)
- * finish within a few seconds, and 125 of 130 production requests in one day answered fine;
- * the other five ran into the old 30 s limit. 8 s leaves room for a slow but healthy call.
+ * not hold the chat screen: past this the call answers an empty list.
+ * Production timings: p90 12 s, 5% of successful calls exceed 15 s, 14 days to 2026-10-25.
  */
-export const SUGGESTIONS_TIMEOUT_MS = 8_000;
+export const SUGGESTIONS_TIMEOUT_MS = 15_000;
 
 const schema = z.object({
   suggestions: z.array(
