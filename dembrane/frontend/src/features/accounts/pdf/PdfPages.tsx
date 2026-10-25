@@ -3,6 +3,7 @@ import { Alert, Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
 import {
 	GlobalWorkerOptions,
 	getDocument,
+	type PageViewport,
 	type PDFDocumentProxy,
 	type RenderTask,
 } from "pdfjs-dist";
@@ -17,6 +18,45 @@ export interface PageBox {
 	page: number;
 	width: number;
 	height: number;
+}
+
+export interface PageLink {
+	href: string;
+	left: number;
+	top: number;
+	width: number;
+	height: number;
+}
+
+// Only addresses a person would expect to open from a document; anything else a PDF can
+// carry (scripts, local files) stays inert.
+const SAFE_LINK = /^(https?:|mailto:)/i;
+
+/**
+ * The clickable links of one page, in the pixels of the viewport it is drawn at. The canvas
+ * has no link layer of its own, so this is what makes the links printed in a document work.
+ */
+export function pageLinks(
+	annotations: ReadonlyArray<Record<string, unknown>>,
+	viewport: Pick<PageViewport, "convertToViewportRectangle">,
+): PageLink[] {
+	const links: PageLink[] = [];
+	for (const a of annotations) {
+		const href = typeof a.url === "string" ? a.url : "";
+		if (a.subtype !== "Link" || !SAFE_LINK.test(href)) continue;
+		if (!Array.isArray(a.rect) || a.rect.length !== 4) continue;
+		const [x1, y1, x2, y2] = viewport.convertToViewportRectangle(
+			a.rect as number[],
+		);
+		links.push({
+			height: Math.abs(y2 - y1),
+			href,
+			left: Math.min(x1, x2),
+			top: Math.min(y1, y2),
+			width: Math.abs(x2 - x1),
+		});
+	}
+	return links;
 }
 
 /**
@@ -144,6 +184,7 @@ function PdfPage({
 }) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [height, setHeight] = useState<number | null>(null);
+	const [links, setLinks] = useState<PageLink[]>([]);
 
 	useEffect(() => {
 		let live = true;
@@ -153,6 +194,16 @@ function PdfPage({
 			const base = p.getViewport({ scale: 1 });
 			const cssHeight = Math.round((width * base.height) / base.width);
 			setHeight(cssHeight);
+			// Same scale as the page box, so the links sit on the words they belong to.
+			const cssViewport = p.getViewport({ scale: width / base.width });
+			p.getAnnotations().then(
+				(annotations) => {
+					if (live) setLinks(pageLinks(annotations, cssViewport));
+				},
+				() => {
+					if (live) setLinks([]);
+				},
+			);
 			const ratio = window.devicePixelRatio || 1;
 			const viewport = p.getViewport({ scale: (width / base.width) * ratio });
 			const canvas = canvasRef.current;
@@ -188,6 +239,39 @@ function PdfPage({
 				ref={canvasRef}
 				style={{ display: "block", height: "100%", width: "100%" }}
 			/>
+			{links.length > 0 && (
+				<Box pos="absolute" inset={0} style={{ pointerEvents: "none" }}>
+					{links.map((l) => (
+						<a
+							key={`${l.href}-${l.left}-${l.top}`}
+							href={l.href}
+							target="_blank"
+							rel="noopener noreferrer"
+							data-pdf-link=""
+							style={{
+								height: l.height,
+								left: l.left,
+								pointerEvents: "auto",
+								position: "absolute",
+								top: l.top,
+								width: l.width,
+								zIndex: 2,
+							}}
+						>
+							<span
+								style={{
+									height: 1,
+									overflow: "hidden",
+									position: "absolute",
+									width: 1,
+								}}
+							>
+								{l.href}
+							</span>
+						</a>
+					))}
+				</Box>
+			)}
 			{height !== null && overlay && (
 				<Box pos="absolute" inset={0}>
 					{overlay({ height, page, width })}
