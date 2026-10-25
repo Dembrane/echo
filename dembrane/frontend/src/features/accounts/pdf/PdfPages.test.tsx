@@ -2,7 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const annotations = vi.hoisted(() => ({ current: [] as unknown[] }));
@@ -65,11 +65,11 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const show = () =>
+const show = (props: Partial<Parameters<typeof PdfPages>[0]> = {}) =>
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
-				<PdfPages data={new Uint8Array([1])} />
+				<PdfPages data={new Uint8Array([1])} {...props} />
 			</MantineProvider>
 		</I18nProvider>,
 	);
@@ -122,5 +122,68 @@ describe("links inside a document page", () => {
 		expect(
 			container.querySelector("a[data-pdf-link]")?.getAttribute("href"),
 		).toBe("mailto:hello@example.com");
+	});
+});
+
+// jsdom does no hit testing, so this walks up the way the browser resolves the property:
+// the nearest ancestor that sets pointer-events decides.
+const takesPointer = (el: Element) => {
+	for (let n: Element | null = el; n; n = n.parentElement) {
+		const v = (n as HTMLElement).style?.pointerEvents;
+		if (v) return v !== "none";
+	}
+	return true;
+};
+
+describe("links and fields on the same page", () => {
+	const overlapping = [
+		{
+			rect: [100, 600, 300, 620],
+			subtype: "Link",
+			url: "https://example.com/sla",
+		},
+	];
+
+	it("gives a field over a link the click, and leaves the rest of the link reachable", async () => {
+		annotations.current = overlapping;
+		const onField = vi.fn();
+		const { container, getByTestId } = show({
+			overlay: () => (
+				<button
+					type="button"
+					data-testid="field"
+					style={{ left: 50, position: "absolute", top: 90 }}
+					onClick={onField}
+				/>
+			),
+		});
+		await waitFor(() =>
+			expect(container.querySelectorAll("a[data-pdf-link]").length).toBe(1),
+		);
+		const field = getByTestId("field");
+		fireEvent.click(field);
+		expect(onField).toHaveBeenCalledTimes(1);
+		expect(takesPointer(field)).toBe(true);
+		// The link layer sits before the field layer, so the field is painted over it.
+		const layers = Array.from(
+			container.querySelector("[data-pdf-page]")?.children ?? [],
+		);
+		const links = container.querySelector("[data-pdf-links]") as Element;
+		const fields = container.querySelector("[data-pdf-overlay]") as Element;
+		expect(layers.indexOf(links)).toBeLessThan(layers.indexOf(fields));
+		// Neither layer blocks the page, so the part of the link outside a field still opens.
+		expect(takesPointer(fields)).toBe(false);
+		expect(
+			takesPointer(container.querySelector("a[data-pdf-link]") as Element),
+		).toBe(true);
+	});
+
+	it("draws no links where fields are placed", async () => {
+		annotations.current = overlapping;
+		const { container } = show({ links: false, overlay: () => <i /> });
+		await waitFor(() =>
+			expect(container.querySelector("[data-pdf-overlay]")).toBeTruthy(),
+		);
+		expect(container.querySelector("a[data-pdf-link]")).toBeNull();
 	});
 });
