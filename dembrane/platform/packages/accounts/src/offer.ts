@@ -109,14 +109,19 @@ export type SecondSigner =
       readonly role: string | null;
     };
 
-/**
- * dembrane's signature as the offer carries it: applied when the offer is sent, by the
- * signatory configured, so the customer's signature completes the offer.
- */
-export interface DembraneSignature {
+/** Who signs an offer for dembrane when it is sent: a staff member, chosen per offer. */
+export interface DembraneSigner {
   readonly name: string;
   readonly role: string | null;
   readonly email: string;
+}
+
+/**
+ * dembrane's signature as the offer carries it: applied when the offer is sent, by the
+ * signer staff chose or else the signatory configured, so the customer's signature
+ * completes the offer.
+ */
+export interface DembraneSignature extends DembraneSigner {
   /** When it was applied: the moment the offer was sent. */
   readonly signed_at: string;
 }
@@ -207,6 +212,8 @@ export interface OfferContent {
   readonly second_signer?: SecondSigner;
   /** PDFs attached after the offer's pages, listed in its clause. */
   readonly annexes?: readonly OfferAnnex[];
+  /** Who signs for dembrane when it is sent; absent takes the configured signatory then. */
+  readonly dembrane_signer?: DembraneSigner;
   /**
    * dembrane's signature, printed under the customer's blanks. Set when the offer is sent;
    * absent on a draft and on an offer sent before dembrane signed what it sends.

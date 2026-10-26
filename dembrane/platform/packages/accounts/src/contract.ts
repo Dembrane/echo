@@ -327,6 +327,13 @@ export const SecondSigner = z.discriminatedUnion("kind", [
   }),
 ]);
 
+/** Who signs an offer and its DPA for dembrane when it is sent: a staff member. */
+export const DembraneSigner = z.object({
+  name: z.string(),
+  role: z.string().nullable(),
+  email: z.string(),
+});
+
 /** A PDF attached to an offer, listed in its clause and part of the PDF the customer signs. */
 export const OfferAnnex = z.object({
   /** From 1, as the clause and the annex's pages name it. */
@@ -393,6 +400,11 @@ export const OfferContent = z.object({
   second_signer: SecondSigner.optional(),
   /** PDFs attached to the offer, in order: in its clause, its hash and the signed PDF. */
   annexes: z.array(OfferAnnex).optional(),
+  /**
+   * Who signs for dembrane when it is sent, as staff chose; absent takes the configured
+   * signatory then.
+   */
+  dembrane_signer: DembraneSigner.optional(),
   /**
    * dembrane's signature, applied when the offer was sent and printed under the customer's
    * blanks; absent on a draft and on offers sent before dembrane signed what it sends.
@@ -956,6 +968,8 @@ export const AccountCard = z.object({
   tasks: z.array(Task),
   tickets: z.array(Ticket),
   timeline: z.array(TimelineEvent),
+  /** Who signs a new offer for dembrane unless staff choose another; null: nobody set. */
+  dembrane_signer: DembraneSigner.nullable(),
 });
 
 /** The `prospect` block of POST /api/v2/admin/popcorn/demos. */
@@ -1107,6 +1121,15 @@ export const PushOfferRequest = z.object({
         role: optText(200),
       }),
     ])
+    .nullable()
+    .optional(),
+  /**
+   * Who signs the offer, and the DPA it sends, for dembrane when it is sent: a staff member,
+   * printed with name and role. Absent or null takes the configured signatory at sending. On
+   * a change, absent keeps the draft's and null drops it.
+   */
+  dembrane_signer: z
+    .object({ name: text(200), email: z.email().max(255), role: optText(200) })
     .nullable()
     .optional(),
   /**

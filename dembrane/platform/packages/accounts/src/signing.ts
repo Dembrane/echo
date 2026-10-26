@@ -624,9 +624,9 @@ export async function afterSigned(
 /**
  * The DPA as its own document, with its own "Review and sign" task, for someone who may
  * agree to data processing on behalf of the organisation (art. 3.6 of the terms). It
- * carries the DPA text the offer pinned and, with a signatory configured, dembrane's
- * signature. One per organisation and text: an offer sent again, or a second offer on the
- * same text, opens nothing new.
+ * carries the DPA text the offer pinned and dembrane's signature, by whoever signed the
+ * offer for dembrane. One per organisation and text: an offer sent again, or a second offer
+ * on the same text, opens nothing new.
  */
 export async function openDpa(
   d: AccountsDeps,
@@ -645,7 +645,11 @@ export async function openDpa(
   const id = newId();
   const now = d.now();
   const title = `${dpa.title} ${dpa.version}`;
-  const signature = await dembraneSignature(d, tx, now);
+  // Signed by whoever signed the offer, at the same moment; an offer without dembrane's
+  // signature leaves the DPA to the configured signatory.
+  const signature =
+    (offer.content as OfferContent | null)?.dembrane_signature ??
+    (await dembraneSignature(d, tx, now));
   const rendered = await textPdf(title, dpa.body, {
     signing: true,
     language: lang,

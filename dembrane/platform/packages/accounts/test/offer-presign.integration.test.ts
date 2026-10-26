@@ -211,6 +211,84 @@ run("dembrane's signature on what it sends", () => {
     expect(requested(doc.id)).toHaveLength(1);
   });
 
+  test("staff choose who signs for dembrane: the draft keeps them and the offer and its DPA carry them", async () => {
+    signatory(configured);
+    // The card offers the configured signatory as the default for a new offer.
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.dembrane_signer).toEqual({
+      name: "Robin Signatory",
+      role: "Director",
+      email: "staff@dembrane.com",
+    });
+    // Only a staff member signs for dembrane.
+    const outsider = await call(
+      w,
+      "POST",
+      `${S()}/offers`,
+      "staff",
+      offer({ send: false, dembrane_signer: { name: "Kim Buiten", email: "kim@example.org" } }),
+    );
+    expect(outsider.status).toBe(422);
+
+    // An account of its own, so its DPA (one per account and text) opens with this offer.
+    const created = await call(w, "POST", "/api/v2/admin/accounts", "staff", {
+      organisation_name: "Stichting Voorbeeld",
+      contact_email: "contact@voorbeeld.example",
+      stage: "customer",
+    });
+    expect(created.status).toBe(201);
+    const orgId = K.CreateAccountResponse.parse(created.data).org_id;
+    const O = `/api/v2/admin/accounts/${orgId}`;
+    const chosen = { name: "Jamie Voorbeeld", role: "Sales", email: "Jamie@dembrane.com" };
+    const pushed = await call(
+      w,
+      "POST",
+      `${O}/offers`,
+      "staff",
+      offer({ send: false, dembrane_signer: chosen }),
+    );
+    expect(pushed.status).toBe(201);
+    const doc = K.PushOfferResponse.parse(pushed.data).document;
+    expect(doc.content?.dembrane_signer).toEqual({ ...chosen, email: "jamie@dembrane.com" });
+    expect(doc.content?.dembrane_signature).toBeUndefined();
+    // A change that leaves the signer out keeps the draft's.
+    const changed = await call(w, "PUT", `${O}/offers/${doc.id}`, "staff", {
+      ...offer({ reference: doc.reference }),
+      person_name: "Anna de Vries",
+    });
+    expect(changed.status).toBe(200);
+    expect(K.DocumentDetail.parse(changed.data).content?.dembrane_signer?.name).toBe(
+      "Jamie Voorbeeld",
+    );
+
+    w.clock.now = new Date(w.clock.now.getTime() + 60_000);
+    const sentAt = w.clock.now.toISOString();
+    const sending = await call(w, "POST", `${O}/documents/${doc.id}/send`, "staff", {});
+    expect(sending.status).toBe(200);
+    const sent = K.DocumentDetail.parse(sending.data);
+    expect(sent.content?.dembrane_signature).toEqual({
+      name: "Jamie Voorbeeld",
+      role: "Sales",
+      email: "jamie@dembrane.com",
+      signed_at: sentAt,
+    });
+    expect(sent.body).toContain("### For dembrane B.V.\nName: Jamie Voorbeeld\nRole: Sales\n");
+    const [ours] = await store.signaturesOf(w.db, doc.id);
+    expect(ours).toMatchObject({
+      slot: "dembrane",
+      method: "presigned",
+      typedName: "Jamie Voorbeeld",
+      email: "jamie@dembrane.com",
+      signerUserId: null,
+    });
+    const dpa = (await store.documents(w.db, orgId)).find((x) => x.kind === "dpa");
+    const dpaSigs = await store.signaturesOf(w.db, dpa?.id as string);
+    expect(dpaSigs.map((s) => [s.typedName, s.typedRole, s.email])).toEqual([
+      ["Jamie Voorbeeld", "Sales", "jamie@dembrane.com"],
+    ]);
+    expect(dpaSigs[0]?.signedAt.toISOString()).toBe(sentAt);
+  });
+
   test("an offer signed only by dembrane can still be revised or withdrawn", async () => {
     signatory(configured);
     const doc = await draft();

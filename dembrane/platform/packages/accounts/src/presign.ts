@@ -1,26 +1,29 @@
 import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
-import { type DembraneSignature, printedDay } from "./offer";
+import { type DembraneSignature, type DembraneSigner, printedDay } from "./offer";
 import type { SignedBy } from "./pdf";
 import { type DocumentRow, type SignatureRow, store } from "./storage";
 
 /**
- * dembrane signs what it sends. With a signatory configured, every offer and every DPA echo
- * sends carries dembrane's signature from the moment it is sent: the PDF prints it under the
+ * dembrane signs what it sends. With a signer chosen on the offer, or a signatory configured,
+ * every offer and every DPA echo sends carries dembrane's signature from the moment it is sent: the PDF prints it under the
  * customer's blanks (name, role, date, signed electronically) and it is its own insert-only
  * signature row in the `dembrane` slot. The customer's signature then completes the document
- * and nobody at dembrane has a step after it. Without a signatory, documents go out as before.
+ * and nobody at dembrane has a step after it. Without either, documents go out as before.
  */
 
 /**
- * dembrane's signature as applied now, or null when no signatory is configured. A name not
- * configured is read from the signatory's own account; with neither, nothing is signed.
+ * dembrane's signature as applied now: by the signer staff chose on the offer, else the
+ * configured signatory, else null. A configured name may be left out and is then read from
+ * the signatory's own account; with neither, nothing is signed.
  */
 export async function dembraneSignature(
   d: AccountsDeps,
   c: Conn,
   now: Date,
+  chosen?: DembraneSigner | null,
 ): Promise<DembraneSignature | null> {
+  if (chosen) return { ...chosen, signed_at: now.toISOString() };
   const s = d.settings.signatory;
   if (!s?.email) return null;
   const email = s.email.trim().toLowerCase();

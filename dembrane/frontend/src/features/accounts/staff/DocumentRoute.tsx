@@ -127,6 +127,7 @@ function DocumentPage() {
 					: t`the customer`,
 		)
 		.join(", ");
+	const signedFor = d.content?.dembrane_signature?.name;
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
@@ -150,6 +151,7 @@ function DocumentPage() {
 		d.awaiting_signatures.length && theirs.length
 			? t`Waiting for ${waitingFor}`
 			: null,
+		signedFor ? t`Signed for dembrane by ${signedFor}` : null,
 		!draft && d.kind === "offer" && d.valid_until && !d.signed_at
 			? t`Valid until ${formatDate(d.valid_until, i18n.locale)}`
 			: null,
