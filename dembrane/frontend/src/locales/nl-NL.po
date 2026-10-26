@@ -3370,7 +3370,7 @@ msgstr "projectinstellingen wijzigen"
 msgid "Change role"
 msgstr "Rol wijzigen"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:139
+#: src/routes/project/present/PresentResultsPanel.tsx:150
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Pas de woorden aan, lees het bewijs, of houd een bevinding uit deze presentatie. Gedeelde resultaten blijven beschikbaar in Analyse."
 
@@ -4516,7 +4516,7 @@ msgstr "Kon het doel van dit project niet laden."
 msgid "Could not open the conversation list. Try again."
 msgstr "De gesprekkenlijst kon niet worden geopend. Probeer het opnieuw."
 
-#: src/components/present/hooks/index.ts:69
+#: src/components/present/hooks/index.ts:76
 msgid "Could not open the presentation. Try again."
 msgstr "Kon de presentatie niet openen. Probeer het opnieuw."
 
@@ -4560,7 +4560,7 @@ msgstr "Feedback niet opgeslagen"
 msgid "Could not save tags"
 msgstr "Kon tags niet opslaan"
 
-#: src/components/analysis/hooks/index.ts:471
+#: src/components/analysis/hooks/index.ts:489
 msgid "Could not save the change. Try again."
 msgstr "Kon de wijziging niet opslaan. Probeer het opnieuw."
 
@@ -4588,7 +4588,7 @@ msgstr "De uitnodigings-e-mail kon niet worden verstuurd. Controleer de e-mailco
 msgid "Could not send your feedback. Try again"
 msgstr "Je feedback kon niet worden verstuurd. Probeer het opnieuw"
 
-#: src/components/analysis/hooks/index.ts:556
+#: src/components/analysis/hooks/index.ts:574
 msgid "Could not start this run. Try again."
 msgstr "Kon deze run niet starten. Probeer het opnieuw."
 
@@ -4596,7 +4596,7 @@ msgstr "Kon deze run niet starten. Probeer het opnieuw."
 msgid "Could not stop live"
 msgstr "Kon live niet stoppen"
 
-#: src/components/analysis/hooks/index.ts:578
+#: src/components/analysis/hooks/index.ts:596
 msgid "Could not stop this run. Try again."
 msgstr "Kon deze run niet stoppen. Probeer het opnieuw."
 
@@ -13103,7 +13103,7 @@ msgstr "Die formulering wordt hersteld."
 msgid "Results"
 msgstr "Resultaten"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:155
+#: src/routes/project/present/PresentResultsPanel.tsx:166
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 msgid "Results could not be loaded."
 msgstr "De resultaten konden niet worden geladen."
@@ -13229,8 +13229,8 @@ msgstr "Bekijk mijn projectinstellingen en stel verbeteringen voor."
 #~ msgid "Review processing status for every conversation collected in this project."
 #~ msgstr "Bekijk de verwerkingsstatus voor elk gesprek dat in dit project is verzameld."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:130
-#: src/routes/project/present/PresentResultsPanel.tsx:136
+#: src/routes/project/present/PresentResultsPanel.tsx:141
+#: src/routes/project/present/PresentResultsPanel.tsx:147
 msgid "Review results"
 msgstr "Resultaten nakijken"
 
@@ -16966,7 +16966,7 @@ msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:1005
-#: src/routes/project/present/PresentResultsPanel.tsx:158
+#: src/routes/project/present/PresentResultsPanel.tsx:169
 #: src/routes/project/chat/ProjectChatRoute.tsx:856
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:169
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:470

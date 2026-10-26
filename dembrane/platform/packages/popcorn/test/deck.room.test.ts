@@ -9,6 +9,7 @@ import {
   NO_OBJECTS,
 } from "../src/deck";
 import type { Json } from "../src/py";
+import { RoomRulesBroken, reportRoomViolations, roomViolations } from "../src/room";
 
 /**
  * What the room may be shown, as rules every built deck keeps. Each rule closes a way the
@@ -110,44 +111,8 @@ const registry = (files: Json) =>
     ]),
   );
 
-/**
- * The rules, checked over one built deck. Returns what broke, so a failure names it.
- * - every tension and stakeholder on a published deck is an object, by its object id
- * - every phrase is an object, or its whole file is marked provisional
- * - every quote id resolves, and a phrase's quote is its own conversation's
- * - every quote id is the one its words and conversation derive
- */
-function broken(files: Json, published: boolean): string[] {
-  const out: string[] = [];
-  const quotes = registry(files);
-  const cite = (where: string, id: unknown, conversation?: string) => {
-    const q = quotes.get(String(id));
-    if (!q) return out.push(`${where}: quote ${String(id)} is not in the registry`);
-    if (conversation && q.transcript !== conversation)
-      out.push(`${where}: quote of ${String(q.transcript)} beside ${conversation}'s phrase`);
-    if (id !== deckQuoteId(String(q.transcript), String(q.text)))
-      out.push(`${where}: quote id ${String(id)} is not derived from its words`);
-  };
-  for (const [name, raw] of Object.entries(files)) {
-    const file = raw as Json;
-    if (name.startsWith("popcorn/")) {
-      const conversation = name.slice("popcorn/".length, -".json".length);
-      for (const item of (file.items as Json[] | undefined) ?? []) {
-        if (published && !item.objectId && file.provisional !== true)
-          out.push(`${name}: phrase ${String(item.id)} has no object and is not provisional`);
-        if (item.quoteId) cite(name, item.quoteId, conversation);
-      }
-    }
-    for (const key of ["tensions", "stakeholders"] as const)
-      if (name === `${key}.json`)
-        for (const item of (file[key] as Json[] | undefined) ?? []) {
-          if (published && (!item.objectId || item.id !== item.objectId))
-            out.push(`${name}: ${String(item.id)} is not named by its object`);
-          for (const id of (item.quoteIds as unknown[] | undefined) ?? []) cite(name, id);
-        }
-  }
-  return out;
-}
+/** The room's rules (src/room.ts) over one built deck: what broke, so a failure names it. */
+const broken = (files: Json) => roomViolations(files);
 
 describe("once a session publishes, the room shows only published objects", () => {
   const deck = () =>
@@ -157,14 +122,14 @@ describe("once a session publishes, the room shows only published objects", () =
     const files = applyPublishedObjects(sessionBundle(), deck(), args).files as Json;
     expect(files["tensions.json"]).toBeUndefined();
     expect(files["stakeholders.json"]).toBeUndefined();
-    expect(broken(files, true)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 
   test("a conversation not published yet is provisional, its quotes still its own", () => {
     const files = applyPublishedObjects(sessionBundle(), deck(), args).files as Json;
     expect((files["popcorn/c1.json"] as Json).provisional).toBe(true);
     expect((files["popcorn/c3.json"] as Json).provisional).toBeUndefined();
-    expect(broken(files, true)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 
   test("published tensions and stakeholders are named by their objects", () => {
@@ -192,14 +157,14 @@ describe("once a session publishes, the room shows only published objects", () =
       "o-staff~o-riders",
       "o-staff~o-riders~1",
     ]);
-    expect(broken(files, true)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 
   test("a synthetic demo has no objects and keeps its own slides", () => {
     const demo = sessionBundle({ "session.json": { title: "t", demo: { synthetic: true } } });
     const files = applyPublishedObjects(demo, deck(), args).files as Json;
     expect(files["tensions.json"]).toBeDefined();
-    expect(broken(files, false)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 
   test("before anything is published the session's slides stand, with derived quote ids", () => {
@@ -210,7 +175,7 @@ describe("once a session publishes, the room shows only published objects", () =
       deckQuoteId("c1", "we need buses at night"),
       deckQuoteId("c2", "no money for staff"),
     ]);
-    expect(broken(files, false)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 });
 
@@ -240,8 +205,8 @@ describe("a quote id means the same quote in every read", () => {
       const q = quotes.get(String(item.quoteId));
       expect(q?.transcript).toBe("c4");
     }
-    expect(broken(first, true)).toEqual([]);
-    expect(broken(later, true)).toEqual([]);
+    expect(broken(first)).toEqual([]);
+    expect(broken(later)).toEqual([]);
   });
 });
 
@@ -281,7 +246,7 @@ describe("a pinned slide is a snapshot of objects", () => {
     ]);
     // The phrase and the pinned tension cite one quote: it is listed once.
     expect(((files["quotes.json"] as Json).quotes as Json[]).length).toBe(1);
-    expect(broken(files, true)).toEqual([]);
+    expect(broken(files)).toEqual([]);
   });
 
   test("a pin to a saved session copy is not honoured: the slide follows the objects", async () => {
@@ -294,5 +259,32 @@ describe("a pinned slide is a snapshot of objects", () => {
     expect(((files["tensions.json"] as Json).tensions as Json[]).map((t) => t.id)).toEqual([
       "o-live",
     ]);
+  });
+});
+
+describe("every deck the server builds is checked", () => {
+  const bad = {
+    "quotes.json": { quotes: [{ id: "q1", transcript: "c3", text: "three" }] },
+    "popcorn/c4.json": { items: [{ id: "p", phrase: "four", objectId: "o", quoteId: "q1" }] },
+  };
+
+  test("under bun test a broken deck throws, so any test that builds one fails", () => {
+    expect(process.env.NODE_ENV).toBe("test");
+    expect(() => reportRoomViolations({ error: () => {} }, "r1", bad)).toThrow(RoomRulesBroken);
+  });
+
+  test("in production a broken deck is logged once a minute and still served", () => {
+    const was = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const logged: object[] = [];
+      const logger = { error: (o: object) => logged.push(o) };
+      expect(reportRoomViolations(logger, "r2", bad, 1_000_000).length).toBe(2);
+      reportRoomViolations(logger, "r2", bad, 1_030_000);
+      expect(logged.length).toBe(1);
+    } finally {
+      if (was === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = was;
+    }
   });
 });

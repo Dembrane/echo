@@ -27,6 +27,7 @@ import {
   strip,
   truthy,
 } from "./py";
+import { reportRoomViolations } from "./room";
 import {
   DEFAULT_CADENCE_MINUTES,
   defaultSettings,
@@ -812,6 +813,8 @@ export async function bundleForReport(
     projectId,
     deck: d.deck,
   });
+  // Checked before translation, which rewords the quotes their ids were derived from.
+  reportRoomViolations(d.logger, key, dict(bundle.files));
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));
   bundle = curatePresentation(bundle, settings);

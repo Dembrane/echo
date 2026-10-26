@@ -3373,7 +3373,7 @@ msgstr "Projekteinstellungen ändern"
 msgid "Change role"
 msgstr "Rolle ändern"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:139
+#: src/routes/project/present/PresentResultsPanel.tsx:150
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Ändere die Worte, lies die Belege, oder halte eine Erkenntnis aus dieser Präsentation heraus. Geteilte Ergebnisse bleiben in der Analyse verfügbar."
 
@@ -4519,7 +4519,7 @@ msgstr "Ziel dieses Projekts konnte nicht geladen werden."
 msgid "Could not open the conversation list. Try again."
 msgstr "Die Gesprächsliste konnte nicht geöffnet werden. Versuche es erneut."
 
-#: src/components/present/hooks/index.ts:69
+#: src/components/present/hooks/index.ts:76
 msgid "Could not open the presentation. Try again."
 msgstr "Präsentation konnte nicht geöffnet werden. Bitte erneut versuchen."
 
@@ -4563,7 +4563,7 @@ msgstr "Feedback wurde nicht gespeichert"
 msgid "Could not save tags"
 msgstr "Tags konnten nicht gespeichert werden"
 
-#: src/components/analysis/hooks/index.ts:471
+#: src/components/analysis/hooks/index.ts:489
 msgid "Could not save the change. Try again."
 msgstr "Die Änderung konnte nicht gespeichert werden. Versuchen Sie es erneut."
 
@@ -4591,7 +4591,7 @@ msgstr "Die Einladungs-E-Mail konnte nicht gesendet werden. Überprüfen Sie die
 msgid "Could not send your feedback. Try again"
 msgstr "Dein Feedback konnte nicht gesendet werden. Versuche es erneut"
 
-#: src/components/analysis/hooks/index.ts:556
+#: src/components/analysis/hooks/index.ts:574
 msgid "Could not start this run. Try again."
 msgstr "Dieser Durchlauf konnte nicht gestartet werden. Versuchen Sie es erneut."
 
@@ -4599,7 +4599,7 @@ msgstr "Dieser Durchlauf konnte nicht gestartet werden. Versuchen Sie es erneut.
 msgid "Could not stop live"
 msgstr "Live konnte nicht beendet werden"
 
-#: src/components/analysis/hooks/index.ts:578
+#: src/components/analysis/hooks/index.ts:596
 msgid "Could not stop this run. Try again."
 msgstr "Dieser Durchlauf konnte nicht beendet werden. Versuchen Sie es erneut."
 
@@ -13106,7 +13106,7 @@ msgstr "Diese Formulierung wird wiederhergestellt."
 msgid "Results"
 msgstr "Ergebnisse"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:155
+#: src/routes/project/present/PresentResultsPanel.tsx:166
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 msgid "Results could not be loaded."
 msgstr "Die Ergebnisse konnten nicht geladen werden."
@@ -13232,8 +13232,8 @@ msgstr "Meine Projekteinstellungen prüfen und Verbesserungen vorschlagen."
 #~ msgid "Review processing status for every conversation collected in this project."
 #~ msgstr "Überprüfen Sie den Status der Verarbeitung für jedes Gespräch, das in diesem Projekt gesammelt wurde."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:130
-#: src/routes/project/present/PresentResultsPanel.tsx:136
+#: src/routes/project/present/PresentResultsPanel.tsx:141
+#: src/routes/project/present/PresentResultsPanel.tsx:147
 msgid "Review results"
 msgstr "Ergebnisse prüfen"
 
@@ -16970,7 +16970,7 @@ msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Probleme bei der Anmeldung? Wenden Sie sich an support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:1005
-#: src/routes/project/present/PresentResultsPanel.tsx:158
+#: src/routes/project/present/PresentResultsPanel.tsx:169
 #: src/routes/project/chat/ProjectChatRoute.tsx:856
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:169
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:470

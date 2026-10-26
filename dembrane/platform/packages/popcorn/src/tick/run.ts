@@ -22,6 +22,7 @@ import {
   truthy,
   utcNowIso,
 } from "../py";
+import { reportRoomViolations } from "../room";
 import {
   forgetBundle,
   isPopcornLoop,
@@ -1163,7 +1164,9 @@ async function roomBundle(
   } catch {
     d.logger.warn({ project_id: projectId }, "popcorn deck: published objects unavailable");
   }
-  return applyPublishedObjects(bundle, objects, { settings, project, host: false });
+  const room = applyPublishedObjects(bundle, objects, { settings, project, host: false });
+  reportRoomViolations(d.logger, `${reportId}:saved`, dict(room.files));
+  return room;
 }
 
 /** The files as Python held them: a transcript's duration is float(duration). */
