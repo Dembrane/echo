@@ -24,10 +24,13 @@ export {
   ASSESSMENT_RECIPE_ID,
   countConversationsWithTranscripts,
   POPCORN_SOURCES_KEY,
+  POPCORN_TENSIONS_SOURCES_KEY,
   type PopcornSources,
+  type PopcornTensionSources,
   PRODUCERS_KEY,
   type ProducerServices,
   recordAssessment,
+  type SessionTension,
 } from "./recipes";
 export { dataBlock, jsonFromText } from "./recipes/model";
 export {
@@ -36,6 +39,10 @@ export {
   RECIPE_ID as POPCORN_RECIPE_ID,
   scopeKeyFor as popcornScopeKey,
 } from "./recipes/popcorn";
+export {
+  RECIPE_ID as POPCORN_TENSIONS_RECIPE_ID,
+  SCOPE_KEY as POPCORN_TENSIONS_SCOPE_KEY,
+} from "./recipes/popcorn-tensions";
 export * from "./registry";
 export { type AnalysisRoutesDeps, analysisRoutes } from "./routes";
 export * from "./runtime";

@@ -9,6 +9,8 @@ import {
   applyResultBindings,
   curatePresentation,
   type DeckAnalysis,
+  type DeckObjects,
+  NO_OBJECTS,
   withoutObjects,
 } from "./deck";
 import { publishNudge } from "./events";
@@ -710,19 +712,21 @@ export async function publishedBundle(
   bundle: Json,
   args: { projectId: string | null; settings: Json; project: Json; host: boolean },
 ): Promise<Json> {
-  if (!args.projectId) return bundle;
-  try {
-    const objects = await d.deck.deckObjects(args.projectId);
-    return applyPublishedObjects(bundle, objects, {
+  const apply = (objects: DeckObjects) =>
+    applyPublishedObjects(bundle, objects, {
       settings: args.settings,
       project: args.project,
       host: args.host,
       adminBaseUrl: d.adminBaseUrl,
     });
+  if (!args.projectId) return apply(NO_OBJECTS);
+  try {
+    return apply(await d.deck.deckObjects(args.projectId));
   } catch (err) {
     // The deck is polled several times a second: say it plainly and once per read.
     d.logger.warn({ reason: (err as Error).name }, "popcorn deck: published objects unavailable");
-    return bundle;
+    // The session's own files, with their quote ids derived like every other read's.
+    return apply(NO_OBJECTS);
   }
 }
 
@@ -807,7 +811,6 @@ export async function bundleForReport(
     settings,
     projectId,
     deck: d.deck,
-    versionFiles: (v) => versionFiles(store, reportId, v),
   });
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));

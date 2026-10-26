@@ -80,6 +80,8 @@ const TIME = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d/;
  * order decides which id a quote gets, in Python as here), times become T, and the
  * outcome lines after the first are a set with their millisecond counts dropped.
  */
+const BEYOND_PYTHON = new Set(["identity", "quotePoles"]);
+
 function canonical(state: Json): unknown {
   const byId = new Map<string, string>();
   for (const q of (state.quotes as Json[] | undefined) ?? [])
@@ -103,6 +105,8 @@ function walk(v: unknown, byId: ReadonlyMap<string, string>, key = ""): unknown 
   if (v && typeof v === "object") {
     const out: Json = {};
     for (const [k, x] of Object.entries(v as Json)) {
+      // What a tension carries beyond the Python's, for publishing it (tick/tensions.ts).
+      if (BEYOND_PYTHON.has(k)) continue;
       if (k === "quoteId") out[k] = byId.get(String(x)) ?? x;
       else if (k === "id" && typeof x === "string" && byId.has(x) && key === "quotes")
         out[k] = byId.get(x);

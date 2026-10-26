@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Json } from "../src/py";
+import { dict, type Json, list } from "../src/py";
 import { promptText } from "../src/tick/model";
 import { emptyCache, FOCAL_BATCH, positionKey } from "../src/tick/scale";
 import { QuoteBook } from "../src/tick/shapes";
@@ -43,7 +43,21 @@ test("the tensions pipeline asks and answers what the Python did", async () => {
     concurrency: 3,
     maxTensions: 3,
   });
-  expect(JSON.parse(JSON.stringify(result))).toEqual(fixture.result);
+  // Beyond the Python's output, each tension carries what publishing it needs: an identity
+  // from the two positions it connects, and the pole each quote holds.
+  const slide = JSON.parse(JSON.stringify(result)) as Json;
+  const tensions = list(dict(slide.tensions).tensions).map(dict);
+  for (const t of tensions) {
+    expect(String(t.identity)).toMatch(/^[0-9a-f]{24}$/);
+    expect(Object.keys(dict(t.quotePoles)).sort()).toEqual(list(t.quoteIds).map(String).sort());
+    delete t.identity;
+    delete t.quotePoles;
+  }
+  expect(new Set(list(dict(result.tensions).tensions).map((t) => dict(t).identity)).size).toBe(
+    tensions.length,
+  );
+  dict(slide.tensions).tensions = tensions;
+  expect(slide).toEqual(fixture.result);
   expect(book.quotes).toEqual(fixture.quotes);
   expect(asked.sort()).toEqual(fixture.calls.map((c) => c.user).sort());
 });

@@ -120,6 +120,29 @@ describe("the results list", () => {
 		);
 	});
 
+	it("asks each kind for the snapshot it is given, and the map view's otherwise", async () => {
+		// Present's list reads what its preview is drawn from: a pinned tensions
+		// slide its pin, popcorn the deck's current snapshot.
+		const list = renderHook(
+			() =>
+				useResultsList("project-1", {
+					snapshots: { popcorn: "deck-2", tension: "deck-1" },
+				}),
+			{ wrapper },
+		);
+		await waitFor(() => expect(list.result.current.items).toHaveLength(50));
+		const asked = Object.fromEntries(
+			params().map((query) => [query.type, query.snapshot_id]),
+		);
+		expect(asked).toEqual({
+			argument: undefined,
+			deduplicated_argument: undefined,
+			popcorn: "deck-2",
+			stakeholder: undefined,
+			tension: "deck-1",
+		});
+	});
+
 	it("keeps to one kind where the host filtered for one", async () => {
 		const list = renderHook(
 			() => useResultsList("project-1", { type: "popcorn" }),

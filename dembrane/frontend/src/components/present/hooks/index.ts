@@ -44,6 +44,13 @@ export type Presentation = PopcornDetail & {
 		fallback: "multilingual" | "not_set" | null;
 	};
 	translation_status?: TranslationStatus;
+	/**
+	 * The analysis snapshot each block of the preview is drawn from (the draft
+	 * only). Empty while nothing is published.
+	 */
+	result_snapshots?: Partial<
+		Record<"popcorn" | "tensions" | "stakeholders", string>
+	>;
 };
 export const presentationKey = (projectId: string) => [
 	"project",

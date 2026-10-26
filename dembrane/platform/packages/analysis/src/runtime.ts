@@ -13,8 +13,10 @@ import type { OutboxDeps } from "./outbox";
 import {
   defaultProducerServices,
   POPCORN_SOURCES_KEY,
+  POPCORN_TENSIONS_SOURCES_KEY,
   PRODUCERS_KEY,
   sessionSources,
+  sessionTensionSources,
 } from "./recipes";
 import type { SnapshotHook } from "./snapshots";
 import { AnalysisStore } from "./store";
@@ -113,6 +115,7 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
       }),
       // A popcorn run requested outside a tick reads its session from the popcorn report.
       [POPCORN_SOURCES_KEY]: sessionSources(store),
+      [POPCORN_TENSIONS_SOURCES_KEY]: sessionTensionSources(store),
     },
     logger: d.logger,
     refundFailed: async (projectId) => {

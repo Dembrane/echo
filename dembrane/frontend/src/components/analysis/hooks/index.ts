@@ -178,6 +178,7 @@ export const analysisKeys = {
 		type?: string,
 		membership = "active",
 		offset = 0,
+		snapshotId?: string | null,
 	) =>
 		[
 			...analysisKeys.all,
@@ -186,6 +187,8 @@ export const analysisKeys = {
 			type ?? "all",
 			membership,
 			offset,
+			// Last, so a save that invalidates a kind reaches every snapshot of it.
+			...(snapshotId ? [snapshotId] : []),
 		] as const,
 	recipes: () => [...analysisKeys.all, "recipes"] as const,
 	run: (runId: string) => [...analysisKeys.all, "run", runId] as const,
@@ -307,7 +310,20 @@ export type ResultsList = {
  */
 export function useResultsList(
 	projectId: string,
-	{ membership = "active", type }: { membership?: string; type?: string } = {},
+	{
+		membership = "active",
+		type,
+		snapshots,
+	}: {
+		membership?: string;
+		type?: string;
+		/**
+		 * The analysis snapshot to read each kind from. Present passes the ones its
+		 * preview is drawn from, so the list holds what the room is shown; a kind
+		 * left out reads the map view's.
+		 */
+		snapshots?: Partial<Record<string, string>>;
+	} = {},
 ): ResultsList {
 	const [pages, setPages] = useState<Record<string, number>>({});
 	const types = type ? [type] : RESULT_TYPES;
@@ -326,6 +342,7 @@ export function useResultsList(
 						offset: page * RESULTS_PAGE,
 						sort: "attention",
 						type: kind,
+						...(snapshots?.[kind] && { snapshot_id: snapshots[kind] }),
 					},
 				),
 			queryKey: analysisKeys.objects(
@@ -333,6 +350,7 @@ export function useResultsList(
 				kind,
 				membership,
 				page * RESULTS_PAGE,
+				snapshots?.[kind],
 			),
 		})),
 	});

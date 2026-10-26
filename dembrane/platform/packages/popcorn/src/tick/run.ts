@@ -4,7 +4,7 @@ import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { buildBundle } from "../bundle";
-import { applyPublishedObjects, type DeckAnalysis } from "../deck";
+import { applyPublishedObjects, type DeckAnalysis, NO_OBJECTS } from "../deck";
 import { publishNudge } from "../events";
 import type { PopcornAllowance } from "../free";
 import { popcornTick } from "../jobs";
@@ -767,6 +767,29 @@ async function enrichOne(
   if (publisher) await publisher.conversation(writer.state, transcript);
 }
 
+/** The session holds a tensions slide that has not reached the shared store as it stands. */
+export function unpublishedTensions(state: Json): boolean {
+  const analysis = dict(state.analysis);
+  return (
+    truthy(analysis.tensions) &&
+    dict(analysis.published).tensions !== (dict(analysis.fingerprints).tensions ?? null)
+  );
+}
+
+/** Read conversations whose current phrases never reached the shared store. */
+export function unpublishedConversations(state: Json, transcripts: readonly Json[]): Json[] {
+  const conversations = dict(state.conversations);
+  return transcripts.filter((t) => {
+    const conv = conversations[String(t.id)];
+    return (
+      isRecord(conv) &&
+      truthy(conv.done) &&
+      conv.fingerprint === t.fingerprint &&
+      conv.published_revision !== (conv.revision ?? null)
+    );
+  });
+}
+
 /** The conversations still owed a second pass on the transcript as it stands. */
 export function pendingEnrichment(state: Json, transcripts: readonly Json[]): Json[] {
   const conversations = dict(state.conversations);
@@ -918,14 +941,19 @@ async function runAnalysisPass(
       ...(d.callTimeoutMs !== undefined && { callTimeoutMs: d.callTimeoutMs }),
       ...(large && { large }),
     });
-    shaped.tensions = result.tensions;
+    // The room reads tensions as published objects: the slide is the one they make.
+    const published = publisher
+      ? await publisher.tensions(result.tensions, transcripts, book)
+      : null;
+    shaped.tensions = published ?? result.tensions;
     outcomes.push(...(result.notes ?? []));
     const c = result.counts;
     const ms = Math.trunc(performance.now() - started);
     outcomes.push(
       `tensions: ${list(result.tensions.tensions).length} items in ${ms} ms ` +
         `(${c.positions ?? 0} positions, ${c.candidates ?? 0} pairs, ${c.cross_table ?? 0} across tables, ${c.verified ?? 0} verified)` +
-        (result.gate_flags.length ? `, ${result.gate_flags.length} screen flag(s) left` : ""),
+        (result.gate_flags.length ? `, ${result.gate_flags.length} screen flag(s) left` : "") +
+        (published ? ", published" : ""),
     );
   };
 
@@ -1060,6 +1088,8 @@ export function commitViews(
   const fingerprints: Json = { ...dict(previous.fingerprints) };
   const updated: Json = { ...dict(previous.updated) };
   const analysis: Json = { fingerprints, updated };
+  // Which slide reached the shared store, by fingerprint (unpublishedTensions).
+  if (isRecord(previous.published)) analysis.published = previous.published;
   for (const kind of ANALYSIS_VIEWS) {
     const slide = fresh[kind];
     if (slide !== null && slide !== undefined) {
@@ -1116,7 +1146,7 @@ async function roomBundle(
     row ? projectJson(row) : { id: projectId },
     settings,
   );
-  let bundle = buildBundle({
+  const bundle = buildBundle({
     state,
     settings,
     report: report ?? { id: reportId },
@@ -1127,13 +1157,13 @@ async function roomBundle(
     host: false,
     now: d.now(),
   });
+  let objects = NO_OBJECTS;
   try {
-    const objects = await d.deck.deckObjects(projectId);
-    bundle = applyPublishedObjects(bundle, objects, { settings, project, host: false });
+    objects = await d.deck.deckObjects(projectId);
   } catch {
     d.logger.warn({ project_id: projectId }, "popcorn deck: published objects unavailable");
   }
-  return bundle;
+  return applyPublishedObjects(bundle, objects, { settings, project, host: false });
 }
 
 /** The files as Python held them: a transcript's duration is float(duration). */
@@ -1544,6 +1574,12 @@ export async function runPopcornTick(
     const extractionWork = preparesPopcorn ? changed.filter(readable) : [];
     const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(readable) : [];
     const analysisOwed = analysisStale && !cut;
+    // Conversations whose phrases did not reach the shared store: the deck shows them as
+    // provisional until a read publishes them.
+    const unpublished = d.analysis ? unpublishedConversations(state, transcripts) : [];
+    // A session's tensions found before they were published as objects (or whose
+    // publication failed): published now, without asking the model again.
+    const tensionsOwed = Boolean(d.analysis) && unpublishedTensions(state);
     // A session saved before the map fingerprint: its map is as current as its last full read.
     if (d.requestMap && state.map_fingerprint === undefined) {
       const held = Object.values(dict(dict(state.analysis).fingerprints)).find(
@@ -1568,6 +1604,8 @@ export async function runPopcornTick(
       !analysisOwed &&
       !mapOwed &&
       !owed.length &&
+      !unpublished.length &&
+      !tensionsOwed &&
       tickKind !== "rerun"
     ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
@@ -1767,6 +1805,26 @@ export async function runPopcornTick(
       }
     };
     await Promise.all([secondPass(), analysisPass(), preparePass()]);
+    // What this read's passes did not publish, and what an earlier read failed to.
+    if (publisher) {
+      for (const t of unpublishedConversations(state, transcripts))
+        await publisher.conversation(writer.state, t);
+      const analysis = dict(state.analysis);
+      if (!publisher.tensionsSettled && unpublishedTensions(state))
+        try {
+          const slide = await publisher.tensions(dict(analysis.tensions), transcripts, book);
+          if (slide) analysis.tensions = slide;
+          outcomes.push("tensions: published the session's slide as objects");
+        } catch (exc) {
+          outcomes.push(`tensions: publishing FAILED ${failureText(exc)}`);
+        }
+      // The slide as it stands is in the store: nothing owed until it changes.
+      if (publisher.tensionsSettled && isRecord(state.analysis))
+        state.analysis.published = {
+          ...dict(analysis.published),
+          tensions: dict(analysis.fingerprints).tensions ?? null,
+        };
+    }
     if (transcripts.length) {
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();
