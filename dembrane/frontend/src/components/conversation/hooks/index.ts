@@ -112,10 +112,26 @@ type AddChatContextMutationContext = {
 	previousChatContext?: TProjectChatContext;
 };
 
+// A refetch reloads every loaded page, so stop once the parts can no longer change.
+export const transcriptRefetchInterval = (
+	isFinished: boolean,
+	pages:
+		| { chunks: Pick<ConversationChunk, "error" | "transcript">[] }[]
+		| undefined,
+	interval: number | false,
+): number | false => {
+	if (!isFinished) return interval;
+	const isTranscribing = (pages ?? []).some((page) =>
+		page.chunks.some((chunk) => !chunk.transcript?.trim() && !chunk.error),
+	);
+	return isTranscribing ? interval : false;
+};
+
 export const useInfiniteConversationChunks = (
 	conversationId: string,
 	options?: {
 		initialLimit?: number;
+		isFinished?: boolean;
 		refetchInterval?: number | false;
 	},
 ) => {
@@ -124,7 +140,10 @@ export const useInfiniteConversationChunks = (
 		refetchInterval: 30000,
 	};
 
-	const { initialLimit, refetchInterval } = { ...defaultOptions, ...options };
+	const { initialLimit, isFinished, refetchInterval } = {
+		...defaultOptions,
+		...options,
+	};
 
 	return useInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
@@ -148,7 +167,14 @@ export const useInfiniteConversationChunks = (
 			};
 		},
 		queryKey: ["conversations", conversationId, "chunks", "infinite"],
-		refetchInterval,
+		refetchInterval: (query) =>
+			isFinished === undefined
+				? refetchInterval
+				: transcriptRefetchInterval(
+						isFinished,
+						query.state.data?.pages,
+						refetchInterval,
+					),
 	});
 };
 
