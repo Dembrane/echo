@@ -1084,7 +1084,7 @@ msgstr "{tag} (попередньо вибрано)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} з # розмови} few {{done} з # розмов} many {{done} з # розмов} other {{done} з # розмови}}"
 
-#: src/components/conversation/hooks/index.ts:545
+#: src/components/conversation/hooks/index.ts:571
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {Очищено {cleared} з # розмови} few {Очищено {cleared} з # розмов} many {Очищено {cleared} з # розмов} other {Очищено {cleared} з # розмови}}"
 
@@ -2196,7 +2196,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "Подія або воркшоп."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:319
+#: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
 msgstr "Покращена транскрипція вже готується."
 
@@ -2718,7 +2718,7 @@ msgstr "Аудіо на розмову"
 msgid "Audio per month"
 msgstr "Аудіо на місяць"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:285
+#: src/components/conversation/ConversationTranscriptSection.tsx:283
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -4199,7 +4199,7 @@ msgstr "Розмова"
 msgid "Conversation {0}"
 msgstr "Розмова {0}"
 
-#: src/components/conversation/hooks/index.ts:390
+#: src/components/conversation/hooks/index.ts:416
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
@@ -4228,7 +4228,7 @@ msgstr "Назви розмов відображаються в Бібліоте
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Сторінки розмов і завантаження даних оптимізовано."
 
-#: src/components/conversation/hooks/index.ts:498
+#: src/components/conversation/hooks/index.ts:524
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
@@ -4291,7 +4291,7 @@ msgstr "conversations"
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:534
+#: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
 msgstr "Розмови очищено"
 
@@ -5907,7 +5907,7 @@ msgid "emptied out"
 msgstr "очищено"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:241
+#: src/components/conversation/ConversationTranscriptSection.tsx:239
 msgid "Empty"
 msgstr "Empty"
 
@@ -6387,8 +6387,8 @@ msgstr "Failed to add conversations to context"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Failed to approve outcome. Please try again."
 
-#: src/components/conversation/hooks/index.ts:525
-#: src/components/conversation/hooks/index.ts:541
+#: src/components/conversation/hooks/index.ts:551
+#: src/components/conversation/hooks/index.ts:567
 msgid "Failed to clear conversations"
 msgstr "Не вдалося очистити розмови"
 
@@ -6506,7 +6506,7 @@ msgstr "Failed to remove logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Не вдалося перепланувати. Будь ласка, оберiть час далi у майбутньому та спробуйте знову."
 
-#: src/components/conversation/hooks/index.ts:644
+#: src/components/conversation/hooks/index.ts:670
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
@@ -8697,7 +8697,7 @@ msgstr "Завантаження робочих просторів…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:138
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:363
+#: src/components/conversation/hooks/index.ts:389
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -10055,7 +10055,7 @@ msgstr "Тренінгів ще немає."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:331
+#: src/components/conversation/ConversationTranscriptSection.tsx:329
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -14349,7 +14349,7 @@ msgstr "Показати всі {total}"
 msgid "Show all conversations"
 msgstr "Показати всі розмови"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:295
+#: src/components/conversation/ConversationTranscriptSection.tsx:293
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -15925,7 +15925,7 @@ msgstr "Не вдалося згенерувати назву."
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "Стенограму не вдалося отримати. Перевірте з'єднання та спробуйте ще раз."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:321
+#: src/components/conversation/ConversationTranscriptSection.tsx:319
 msgid "The transcript is improved once the conversation ends."
 msgstr "Транскрипцію буде покращено, щойно розмова закінчиться."
 
@@ -16818,7 +16818,7 @@ msgstr "Транскрибуйте розмову повторно"
 #~ msgstr "Розшифровано повторно з повного запису."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
-#: src/components/conversation/ConversationTranscriptSection.tsx:250
+#: src/components/conversation/ConversationTranscriptSection.tsx:248
 msgid "Transcribing"
 msgstr "Транскрибується"
 
@@ -16833,7 +16833,7 @@ msgstr "стенограма"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:233
+#: src/components/conversation/ConversationTranscriptSection.tsx:231
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"

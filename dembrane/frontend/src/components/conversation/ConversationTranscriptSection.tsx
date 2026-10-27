@@ -135,23 +135,21 @@ export const ConversationTranscriptSection = ({
 		hasNextPage,
 		isFetchingNextPage,
 		status,
-	} = useInfiniteConversationChunks(conversationId);
+	} = useInfiniteConversationChunks(conversationId, { isFinished });
 
 	const [isScrollingToEnd, setIsScrollingToEnd] = useState(false);
 	const handleScrollToBottom = useCallback(async () => {
 		if (isScrollingToEnd) return;
 		setIsScrollingToEnd(true);
-		try {
-			await scrollToTranscriptEnd({
-				// Join a page that is already loading instead of restarting it.
-				fetchNextPage: () => fetchNextPage({ cancelRefetch: false }),
-				hasNextPage,
-				scrollToEnd: () =>
-					bottomTargetRef.current?.scrollIntoView({ behavior: "smooth" }),
-			});
-		} finally {
-			setIsScrollingToEnd(false);
-		}
+		// No try/finally: it makes the React Compiler skip this component, and this never throws.
+		await scrollToTranscriptEnd({
+			// Join a page that is already loading instead of restarting it.
+			fetchNextPage: () => fetchNextPage({ cancelRefetch: false }),
+			hasNextPage,
+			scrollToEnd: () =>
+				bottomTargetRef.current?.scrollIntoView({ behavior: "smooth" }),
+		});
+		setIsScrollingToEnd(false);
 	}, [fetchNextPage, hasNextPage, isScrollingToEnd]);
 
 	useEffect(() => {

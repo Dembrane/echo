@@ -23,7 +23,10 @@ export const ScrollToBottomButton = ({
 			<ActionIcon
 				variant="outline"
 				aria-label={t`Scroll to bottom`}
-				style={{ backgroundColor: "var(--app-background)" }}
+				style={{
+					backgroundColor: "var(--app-background)",
+					border: "var(--ai-bd)",
+				}}
 				loading={loading}
 				onClick={onClick}
 			>

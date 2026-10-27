@@ -1085,7 +1085,7 @@ msgstr "{tag} (preseleccionado)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} de # conversación} other {{done} de # conversaciones}}"
 
-#: src/components/conversation/hooks/index.ts:545
+#: src/components/conversation/hooks/index.ts:571
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {{cleared} de # conversación eliminada} other {{cleared} de # conversaciones eliminadas}}"
 
@@ -2197,7 +2197,7 @@ msgstr "Ocurrió un error."
 msgid "An event or a workshop."
 msgstr "Un evento o un taller."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:319
+#: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
 msgstr "Una transcripción mejorada está en camino."
 
@@ -2719,7 +2719,7 @@ msgstr "Audio por conversación"
 msgid "Audio per month"
 msgstr "Audio al mes"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:285
+#: src/components/conversation/ConversationTranscriptSection.tsx:283
 msgid "Audio playback not available for anonymized conversations"
 msgstr "La reproducción de audio no está disponible para conversaciones anónimas"
 
@@ -4200,7 +4200,7 @@ msgstr "Conversación"
 msgid "Conversation {0}"
 msgstr "Conversación {0}"
 
-#: src/components/conversation/hooks/index.ts:390
+#: src/components/conversation/hooks/index.ts:416
 msgid "Conversation added to chat"
 msgstr "Conversación añadida al chat"
 
@@ -4229,7 +4229,7 @@ msgstr "Los nombres de las conversaciones aparecen en la biblioteca y la pantall
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Las páginas de conversación y la carga de datos son más ágiles."
 
-#: src/components/conversation/hooks/index.ts:498
+#: src/components/conversation/hooks/index.ts:524
 msgid "Conversation removed from chat"
 msgstr "Conversación eliminada del chat"
 
@@ -4292,7 +4292,7 @@ msgstr "conversaciones"
 msgid "Conversations"
 msgstr "Conversaciones"
 
-#: src/components/conversation/hooks/index.ts:534
+#: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
 msgstr "Conversaciones borradas"
 
@@ -5908,7 +5908,7 @@ msgid "emptied out"
 msgstr "se ha vaciado"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:241
+#: src/components/conversation/ConversationTranscriptSection.tsx:239
 msgid "Empty"
 msgstr "Vacío"
 
@@ -6388,8 +6388,8 @@ msgstr "Error al añadir conversaciones al contexto"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Error al aprobar el resultado. Por favor, inténtalo de nuevo."
 
-#: src/components/conversation/hooks/index.ts:525
-#: src/components/conversation/hooks/index.ts:541
+#: src/components/conversation/hooks/index.ts:551
+#: src/components/conversation/hooks/index.ts:567
 msgid "Failed to clear conversations"
 msgstr "Error al borrar las conversaciones"
 
@@ -6507,7 +6507,7 @@ msgstr "Error al eliminar el logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Error al reprogramar. Por favor, elija un horario mas lejano e intentelo de nuevo."
 
-#: src/components/conversation/hooks/index.ts:644
+#: src/components/conversation/hooks/index.ts:670
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
 
@@ -8698,7 +8698,7 @@ msgstr "Cargando espacios de trabajo…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:138
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:363
+#: src/components/conversation/hooks/index.ts:389
 msgid "Loading..."
 msgstr "Cargando..."
 
@@ -10056,7 +10056,7 @@ msgstr "Aún no hay formaciones."
 #~ msgid "No Transcript Available"
 #~ msgstr "No hay transcripción disponible"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:331
+#: src/components/conversation/ConversationTranscriptSection.tsx:329
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
@@ -14350,7 +14350,7 @@ msgstr "Mostrar los {total}"
 msgid "Show all conversations"
 msgstr "Mostrar todas las conversaciones"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:295
+#: src/components/conversation/ConversationTranscriptSection.tsx:293
 msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
@@ -15926,7 +15926,7 @@ msgstr "No se pudo generar el título."
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "No se recibió la transcripción. Comprueba tu conexión e inténtalo de nuevo."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:321
+#: src/components/conversation/ConversationTranscriptSection.tsx:319
 msgid "The transcript is improved once the conversation ends."
 msgstr "La transcripción se mejora cuando termina la conversación."
 
@@ -16819,7 +16819,7 @@ msgstr "Transcribe de nuevo una conversación"
 #~ msgstr "Transcrito de nuevo a partir de la grabación completa."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
-#: src/components/conversation/ConversationTranscriptSection.tsx:250
+#: src/components/conversation/ConversationTranscriptSection.tsx:248
 msgid "Transcribing"
 msgstr "Transcribiendo"
 
@@ -16834,7 +16834,7 @@ msgstr "transcripción"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:233
+#: src/components/conversation/ConversationTranscriptSection.tsx:231
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcripción"
