@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Anchor,
 	Box,
 	Button,
@@ -41,7 +40,7 @@ export const RegisterRoute = () => {
 	// auto-accepts and the user gets a stray personal organisation).
 	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
 	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
-	const { register, handleSubmit, trigger, watch, control } = useForm<{
+	const { register, handleSubmit, watch, control } = useForm<{
 		email: string;
 		password: string;
 		confirmPassword: string;
@@ -61,7 +60,6 @@ export const RegisterRoute = () => {
 	const confirmFieldError = errors.confirmPassword?.message;
 
 	const [step, setStep] = useState(0);
-	const [error, setError] = useState("");
 	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 	const [orgHelpOpen, { toggle: toggleOrgHelp }] = useDisclosure(false);
 	// ISSUE-013: explicit acceptance of the general terms. Required before
@@ -77,27 +75,28 @@ export const RegisterRoute = () => {
 	const registerMutation = useRegisterMutation();
 	const posthog = usePostHog();
 
-	const handleNext = async () => {
-		setError("");
-		const valid = await trigger(["first_name", "email"], {
-			shouldFocus: true,
-		});
-		if (!termsAccepted) {
-			setTermsError(t`Accept the terms to continue`);
-			if (valid) termsRef.current?.focus();
-			return;
-		}
-		if (!valid) return;
-		// Funnel step: $pageview (/register) -> registration_details_completed
-		// -> user_registered. Time between steps shows where people stall.
-		posthog?.capture("registration_details_completed", {
-			from_invite: lockedEmail,
-		});
-		setStep(1);
+	const checkTerms = () => {
+		if (!termsAccepted) setTermsError(t`Accept the terms to continue`);
+		return termsAccepted;
 	};
 
+	// handleSubmit, not trigger(): only a submitted form re-validates as you type.
+	// Built per event, not at render, so React Compiler accepts the ref read.
+	const submitDetails = (e: FormEvent<HTMLFormElement>) =>
+		handleSubmit(() => {
+			if (!checkTerms()) {
+				termsRef.current?.focus();
+				return;
+			}
+			// Funnel step: $pageview (/register) -> registration_details_completed
+			// -> user_registered. Time between steps shows where people stall.
+			posthog?.capture("registration_details_completed", {
+				from_invite: lockedEmail,
+			});
+			setStep(1);
+		}, checkTerms)(e);
+
 	const submitPassword = handleSubmit(async (data) => {
-		setError("");
 		setPasswordError("");
 		setConfirmError("");
 		if (!validatePassword(data.password).isValid) {
@@ -135,7 +134,7 @@ export const RegisterRoute = () => {
 	// step 2, so the password handler must not run before then.
 	const onSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (step === 0) return handleNext();
+		if (step === 0) return submitDetails(e);
 		if (step === 1) return submitPassword(e);
 	};
 
@@ -163,7 +162,6 @@ export const RegisterRoute = () => {
 
 				<form onSubmit={onSubmit} noValidate>
 					<Stack gap="md">
-						{error && <Alert color="red">{error}</Alert>}
 						{registerMutation.error && (
 							<ErrorNotice error={registerMutation.error} />
 						)}

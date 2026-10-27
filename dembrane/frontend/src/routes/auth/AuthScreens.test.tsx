@@ -236,6 +236,26 @@ it("unticked terms show the terms error and stay on the first step", async () =>
 	);
 });
 
+it("a named field error updates as the field is fixed", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Enter your first name");
+	fireEvent.change(screen.getByTestId("auth-register-first-name-input"), {
+		target: { value: "Reg" },
+	});
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg" },
+	});
+	await screen.findByText("Enter a valid email address");
+	expect(screen.queryByText("Enter your first name")).toBeNull();
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg@example.com" },
+	});
+	await waitFor(() =>
+		expect(screen.queryByText("Enter a valid email address")).toBeNull(),
+	);
+});
+
 it("a bad email address is named on the field", async () => {
 	wrap(<RegisterRoute />, "/register");
 	fillDetails();
