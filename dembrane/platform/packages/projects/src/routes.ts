@@ -298,6 +298,14 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(await tags.createTag(d, who, body.data));
   });
 
+  app.post("/api/v2/bff/tags/reorder", async (c) => {
+    const who = requireUser(c);
+    const { body } = await p.validate(c.req, {
+      body: model({ project_id: required(str()), tag_ids: required(list(str())) }),
+    });
+    return c.json(await tags.reorderTags(d, who, body.data));
+  });
+
   app.patch("/api/v2/bff/tags/:tag_id", async (c) => {
     const who = requireUser(c);
     const { body } = await p.validate(c.req, {
