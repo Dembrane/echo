@@ -220,6 +220,55 @@ run("portal uploads and audio routes", () => {
     ).toBe(200);
   });
 
+  test("no file name or browser breaks an upload: long names, dots, over-long name and user agent", async () => {
+    // A dashboard upload: the conversation is named after the file, then the file is posted.
+    const long =
+      "(Audio) Jan Peeters - Voorbereidend gesprek thematafel Wanneer begint zorg - interview met de buurtwerking en het lokaal dienstencentrum 2026-10.m4a";
+    for (const filename of [long, "Interview... deel 2.M4A", `${"x".repeat(300)}.m4a`]) {
+      await seed(sql, newId());
+      const started = await post(`/api/participant/projects/${PROJECT}/conversations/initiate`, {
+        name: filename,
+        pin: "",
+        source: "DASHBOARD_UPLOAD",
+        user_agent: `Mozilla/5.0 ${"[FBAN/FBIOS;FBAV/1]".repeat(20)}`,
+      });
+      expect(started.status).toBe(200);
+      const { id: cid } = (await started.json()) as { id: string };
+      const url = await post(`/api/participant/conversations/${cid}/get-upload-url`, {
+        filename,
+        content_type: "audio/x-m4a",
+        conversation_id: cid,
+      });
+      expect(url.status).toBe(200);
+      const issued = (await url.json()) as {
+        chunk_id: string;
+        upload_url: string;
+        fields: Record<string, string>;
+        file_url: string;
+      };
+      const form = new FormData();
+      for (const [k, v] of Object.entries(issued.fields)) form.append(k, v);
+      form.append("file", new Blob([new Uint8Array(5000)], { type: "audio/x-m4a" }), filename);
+      expect((await fetch(issued.upload_url, { method: "POST", body: form })).status).toBe(204);
+      const done = await post(`/api/participant/conversations/${cid}/confirm-upload`, {
+        chunk_id: issued.chunk_id,
+        file_url: issued.file_url,
+        timestamp: new Date().toISOString(),
+      });
+      expect(done.status).toBe(200);
+      const key = bucket.urls.keyOf(issued.file_url);
+      expect(key.startsWith(`conversation/${cid}/chunks/${issued.chunk_id}-`)).toBe(true);
+      expect(key.endsWith(".m4a")).toBe(true);
+      expect(key.length).toBeLessThan(200);
+      const [row] = await sql`select path from conversation_chunk where conversation_id = ${cid}`;
+      expect(row?.path).toBe(issued.file_url);
+      const [conv] =
+        await sql`select participant_name, participant_user_agent from conversation where id = ${cid}`;
+      expect(conv?.participant_name).toBe(filename.slice(0, 255));
+      expect(conv?.participant_user_agent).toHaveLength(255);
+    }
+  });
+
   test("the first play merges the chunks; later plays reuse the merged file; retranscribe clones it", async () => {
     const cid = newId();
     await seed(sql, cid);
