@@ -22,7 +22,7 @@ import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
-import { useAccountsMutation } from "../api/hooks";
+import { useAccountCard, useAccountsMutation } from "../api/hooks";
 import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
 import { BillToFields, billToBody, billToForm } from "./BillToFields";
@@ -50,6 +50,21 @@ const CURRENCIES = [
 	"PLN",
 	"CZK",
 ];
+
+/** Who signs for dembrane as the form holds it: empty strings where nothing is set. */
+interface Signer {
+	email: string;
+	name: string;
+	role: string;
+}
+
+const signerForm = (
+	s: { email: string; name: string; role: string | null } | null | undefined,
+): Signer => ({
+	email: s?.email ?? "",
+	name: s?.name ?? "",
+	role: s?.role ?? "",
+});
 
 /** The most amendments one offer carries (contract: PushOfferRequest.amendments). */
 const MAX_AMENDMENTS = 10;
@@ -174,6 +189,16 @@ function OfferForm({
 	const [secondRole, setSecondRole] = useState(
 		savedSecond?.kind === "dembrane" ? (savedSecond.role ?? "") : "",
 	);
+	// Who signs for dembrane: the offer's own, else the default the account card gives once
+	// it loads. Typing makes it the offer's own.
+	const card = useAccountCard(orgId);
+	const [signerEdit, setSignerEdit] = useState<Signer | null>(
+		from?.dembrane_signer ? signerForm(from.dembrane_signer) : null,
+	);
+	const signer = signerEdit ?? signerForm(card.data?.dembrane_signer);
+	const setSigner = (patch: Partial<Signer>) =>
+		setSignerEdit({ ...signer, ...patch });
+	const signs = Boolean(signer.name.trim() && signer.email.trim());
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -210,6 +235,13 @@ function OfferForm({
 		bill_to: noCharge ? null : billToBody(billsOther, billTo),
 		currency,
 		customer_reference: customerReference.trim() || null,
+		dembrane_signer: signs
+			? {
+					email: signer.email.trim(),
+					name: signer.name.trim(),
+					role: signer.role.trim() || null,
+				}
+			: null,
 		invoice_plan: planBody(plan),
 		items: toItems(priced),
 		language,
@@ -450,6 +482,37 @@ function OfferForm({
 			)}
 
 			<Divider label={t`Signatures`} labelPosition="left" />
+			<Stack gap="xs" data-testid="offer-dembrane-signer">
+				<Text size="sm">
+					<Trans>Signed for dembrane by</Trans>
+				</Text>
+				<SimpleGrid cols={{ base: 1, sm: 3 }}>
+					<TextInput
+						label={t`Name`}
+						value={signer.name}
+						onChange={(e) => setSigner({ name: e.currentTarget.value })}
+						error={fields["dembrane_signer.name"]}
+						data-testid="dembrane-signer-name"
+					/>
+					<TextInput
+						label={t`Email`}
+						description={t`Their @dembrane.com address`}
+						// Under the input, so the three inputs line up.
+						inputWrapperOrder={["label", "input", "description", "error"]}
+						value={signer.email}
+						onChange={(e) => setSigner({ email: e.currentTarget.value })}
+						error={fields["dembrane_signer.email"]}
+						data-testid="dembrane-signer-email"
+					/>
+					<TextInput
+						label={t`Role`}
+						placeholder={t`Optional`}
+						value={signer.role}
+						onChange={(e) => setSigner({ role: e.currentTarget.value })}
+						data-testid="dembrane-signer-role"
+					/>
+				</SimpleGrid>
+			</Stack>
 			<Stack gap="xs" data-testid="offer-second-signer">
 				<Stack gap={4}>
 					<Text size="sm">
@@ -462,7 +525,10 @@ function OfferForm({
 						data={[
 							{ label: t`None`, value: "none" },
 							{ label: t`Another signer of theirs`, value: "customer" },
-							{ label: t`dembrane signs too`, value: "dembrane" },
+							// dembrane's signature above makes a later one of ours redundant.
+							...(signs && second !== "dembrane"
+								? []
+								: [{ label: t`dembrane signs too`, value: "dembrane" }]),
 						]}
 						data-testid="second-signer-kind"
 					/>
