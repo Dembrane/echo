@@ -512,6 +512,9 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 			? { invoice_plan: body.invoice_plan as OfferContentT["invoice_plan"] }
 			: {}),
 		...(body.no_charge === true && { no_charge: true as const }),
+		...(body.dembrane_signs_offer === true && {
+			dembrane_signs_offer: true as const,
+		}),
 		...(body.dembrane_signer && typeof body.dembrane_signer === "object"
 			? {
 					dembrane_signer:

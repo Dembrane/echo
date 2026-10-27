@@ -48,7 +48,7 @@ import {
 import { type ChooseMode, checkOptions } from "./options";
 import { voidAcceptance } from "./outside";
 import { type PlacedField, pageCountOf, textPdf } from "./pdf";
-import { dembraneSignature, recordDembraneSignature } from "./presign";
+import { dembraneSignature, offerSignature, recordDembraneSignature } from "./presign";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
 import { openDpa } from "./signing";
@@ -368,6 +368,8 @@ export interface PushOfferInput {
   readonly second_signer?: SecondSigner | null | undefined;
   /** Who signs for dembrane when it is sent; on a change absent keeps the draft's. */
   readonly dembrane_signer?: DembraneSigner | null | undefined;
+  /** dembrane signs the offer itself when it is sent; on a change absent keeps the draft's. */
+  readonly dembrane_signs_offer?: boolean | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -462,6 +464,7 @@ function offerContent(
     | "choose"
     | "second_signer"
     | "dembrane_signer"
+    | "dembrane_signs_offer"
   > & { date: string; reference: string; annexes?: readonly OfferAnnex[] | undefined },
   words: OfferTemplateText,
   before?: OfferContent,
@@ -508,6 +511,7 @@ function offerContent(
     ...(choose && { choose }),
     ...(second && { second_signer: second }),
     ...(signer && { dembrane_signer: signer }),
+    ...(o.dembrane_signs_offer === true && { dembrane_signs_offer: true as const }),
     ...(o.annexes?.length && { annexes: o.annexes }),
     dpa_separate: true,
     template: o.template,
@@ -582,6 +586,15 @@ function offerColumns(content: OfferContent, pinned: Awaited<ReturnType<typeof l
 }
 
 /**
+ * The offer as its PDF is drawn: with dembrane's signature applied at `now` when staff chose
+ * that dembrane signs it, else as it is.
+ */
+async function signedForRender(d: AccountsDeps, now: Date, content: OfferContent) {
+  const signature = await offerSignature(d, d.db, now, content);
+  return signature ? { ...content, dembrane_signature: signature } : content;
+}
+
+/**
  * Pushes an offer from lines and a template: renders it, pins the newest terms, SLA and
  * DPA (refreshed first when the last check is over an hour old; a failed fetch falls back
  * to the stored texts), sends it, and creates "Review and sign the offer" plus the locked
@@ -623,12 +636,12 @@ export async function pushOffer(
       : null;
   const annexes = (replaced?.content as OfferContent | null)?.annexes;
   const drafted = offerContent(d, pinned, { ...input, date, reference, annexes }, words);
-  // Sent now: it carries dembrane's signature. A draft carries none until it is sent.
-  const signature =
-    input.send === false ? null : await dembraneSignature(d, d.db, now, drafted.dembrane_signer);
-  const content = signature ? { ...drafted, dembrane_signature: signature } : drafted;
+  // Sent now: it carries dembrane's signature when staff chose that. A draft keeps none in
+  // its content until it is sent, but its PDF shows the block as the customer will see it.
+  const signed = await signedForRender(d, now, drafted);
+  const content = input.send === false ? drafted : signed;
   // The PDF rendered now is what the customer sees and what a signature binds.
-  const rendered = await renderOffer(d, content);
+  const rendered = await renderOffer(d, signed);
   const file = await storeRendered(d, org.id, id, rendered);
   let taskId = "";
   await d.db.transaction(async (tx) => {
@@ -736,12 +749,17 @@ export async function updateOffer(
       second_signer: input.second_signer === undefined ? before.second_signer : input.second_signer,
       dembrane_signer:
         input.dembrane_signer === undefined ? before.dembrane_signer : input.dembrane_signer,
+      dembrane_signs_offer:
+        input.dembrane_signs_offer === undefined
+          ? before.dembrane_signs_offer === true
+          : input.dembrane_signs_offer,
       annexes: before.annexes,
     },
     words,
     before,
   );
-  const rendered = await renderOffer(d, content);
+  // The draft's PDF shows dembrane's block as the customer will see it, dated today.
+  const rendered = await renderOffer(d, await signedForRender(d, d.now(), content));
   await d.db.transaction(async (tx) => {
     // Held while the PDF is replaced, so a send at the same moment cannot freeze half of it.
     const locked = await store.documentForUpdate(tx, doc.orgId, doc.id);
@@ -948,8 +966,8 @@ async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string
  * A draft offer carries the day it is sent and the texts in force that day: when the
  * draft is from an earlier day, a text changed since, or it predates the DPA being its own
  * document, its PDF, text and fields are rendered again before it freezes. A date set in
- * the future stays. With a signer chosen or a signatory configured, it is rendered again
- * with dembrane's signature, applied now.
+ * the future stays. When dembrane signs the offer, it is rendered again with dembrane's
+ * signature, applied now, so the sent copy carries the send date and its hash covers it.
  */
 async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
@@ -961,7 +979,7 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
   const before = doc.content as OfferContent;
   const today = d.now().toISOString().slice(0, 10);
   const date = before.date < today ? today : before.date;
-  const signature = await dembraneSignature(d, d.db, d.now(), before.dembrane_signer);
+  const signature = await offerSignature(d, d.db, d.now(), before);
   if (
     !signature &&
     !before.dembrane_signature &&

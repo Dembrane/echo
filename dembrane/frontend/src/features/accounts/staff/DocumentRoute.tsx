@@ -127,7 +127,12 @@ function DocumentPage() {
 					: t`the customer`,
 		)
 		.join(", ");
-	const signedFor = d.content?.dembrane_signature?.name;
+	// Sent: who signed. A draft dembrane will sign: who will, as the PDF above shows.
+	const signedFor =
+		d.content?.dembrane_signature?.name ??
+		(draftOffer && d.content?.dembrane_signs_offer
+			? (d.content.dembrane_signer ?? card.data?.dembrane_signer)?.name
+			: undefined);
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
