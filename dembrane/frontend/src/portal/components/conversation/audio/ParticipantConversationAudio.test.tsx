@@ -683,6 +683,39 @@ describe("conversation removed mid-recording", () => {
 	});
 });
 
+describe("refetch fails mid-recording", () => {
+	const failRefetch = () => {
+		conversationQuery = {
+			data: { id: "c1" },
+			error: { message: "flaky", response: { status: 500 } },
+			isError: true,
+			isFetching: false,
+			isLoading: false,
+		};
+	};
+
+	it("keeps the recorder and its meter", async () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		const { rerender } = renderAudio();
+		await startRecording();
+
+		failRefetch();
+		rerender(tree());
+
+		expect(screen.getByTestId("portal-audio-stop-button")).toBeTruthy();
+		expect(screen.getByTestId("meter")).toBeTruthy();
+		expect(screen.queryByText("Something went wrong")).toBeNull();
+		expect(wakeLock.releaseWakeLock).not.toHaveBeenCalled();
+	});
+
+	it("still shows the error before recording starts", async () => {
+		failRefetch();
+		renderAudio();
+
+		expect(await screen.findByText("Something went wrong")).toBeTruthy();
+	});
+});
+
 describe("interruption", () => {
 	const interrupt = () => {
 		recorder.hadInterruption = true;
