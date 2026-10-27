@@ -8,6 +8,7 @@ import {
   StatusError,
 } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
+import { uploadKeyName } from "../audio-urls";
 import { ChunkError } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import {
@@ -86,8 +87,7 @@ export async function uploadUrl(
       await liveChunkCheck(d, conv);
     else await requireAudioStart(d, conv.project_id);
     const chunkId = newId();
-    const safe = d.audioUrls.keyOf(filename);
-    const key = `conversation/${conversationId}/chunks/${chunkId}-${safe}`;
+    const key = `conversation/${conversationId}/chunks/${chunkId}-${uploadKeyName(filename)}`;
     const post = d.audio.presignPost(key, {
       contentType,
       maxBytes: UPLOAD_MAX_BYTES,

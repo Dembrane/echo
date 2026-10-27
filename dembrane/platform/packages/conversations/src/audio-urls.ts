@@ -50,3 +50,18 @@ export class AudioUrls {
 export function sanitizeFilenameComponent(v: string): string {
   return [...v].filter((c) => /[\p{L}\p{N}_-]/u.test(c)).join("");
 }
+
+const KEY_NAME_MAX = 80;
+
+/** An upload's key name: up to 80 safe characters of the file's name, then its extension. */
+export function uploadKeyName(filename: string): string {
+  const base = filename.normalize("NFC").split(/[/\\]/).pop()?.trim() ?? "";
+  const dot = base.lastIndexOf(".");
+  const ext = dot >= 0 ? sanitizeFilenameComponent(base.slice(dot + 1)).toLowerCase() : "";
+  const safe = (dot >= 0 ? base.slice(0, dot) : base).replace(/[^\p{L}\p{N}_]+/gu, "-");
+  const stem = [...safe]
+    .slice(0, KEY_NAME_MAX)
+    .join("")
+    .replace(/^-+|-+$/g, "");
+  return `${stem || "audio"}${ext ? `.${ext.slice(0, 10)}` : ""}`;
+}

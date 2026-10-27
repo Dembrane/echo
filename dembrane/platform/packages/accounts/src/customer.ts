@@ -558,7 +558,9 @@ export async function fileBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint
  */
 export async function signedBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint8Array> {
   const done = doc.status !== "sent" && doc.status !== "viewed";
-  const sig = done ? (await store.signaturesOf(d.db, doc.id)).at(-1) : null;
+  const all = done ? await store.signaturesOf(d.db, doc.id) : [];
+  // dembrane's signature applied when sending is not a signed copy of its own.
+  const sig = all.some((x) => x.slot === "customer") ? all.at(-1) : null;
   const blob = sig ? await d.files.get(sig.signedPdfKey) : null;
   if (!blob) throw new NotFoundError("document.not_signed");
   return new Uint8Array(await blob.arrayBuffer());
