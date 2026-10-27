@@ -1084,7 +1084,7 @@ msgstr "{tag} (předvybráno)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} z # rozhovoru} few {{done} z # rozhovorů} other {{done} z # rozhovorů}}"
 
-#: src/components/conversation/hooks/index.ts:545
+#: src/components/conversation/hooks/index.ts:571
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {Smazáno {cleared} z # rozhovoru} few {Smazáno {cleared} z # rozhovorů} other {Smazáno {cleared} z # rozhovorů}}"
 
@@ -2196,7 +2196,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "Akce nebo workshop."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:301
+#: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
 msgstr "Vylepšený přepis je na cestě."
 
@@ -2718,7 +2718,7 @@ msgstr "Zvuk na rozhovor"
 msgid "Audio per month"
 msgstr "Zvuk za měsíc"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:267
+#: src/components/conversation/ConversationTranscriptSection.tsx:283
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -4199,7 +4199,7 @@ msgstr "Conversation"
 msgid "Conversation {0}"
 msgstr "Rozhovor {0}"
 
-#: src/components/conversation/hooks/index.ts:390
+#: src/components/conversation/hooks/index.ts:416
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
@@ -4228,7 +4228,7 @@ msgstr "Názvy rozhovorů se zobrazují v Knihovně a závěrečná obrazovka po
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Stránky rozhovorů a načítání dat jsou přehlednější a rychlejší."
 
-#: src/components/conversation/hooks/index.ts:498
+#: src/components/conversation/hooks/index.ts:524
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
@@ -4291,7 +4291,7 @@ msgstr "conversations"
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:534
+#: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
 msgstr "Rozhovory smazány"
 
@@ -5907,7 +5907,7 @@ msgid "emptied out"
 msgstr "vyprázdněno"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:223
+#: src/components/conversation/ConversationTranscriptSection.tsx:239
 msgid "Empty"
 msgstr "Empty"
 
@@ -6387,8 +6387,8 @@ msgstr "Failed to add conversations to context"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Failed to approve outcome. Please try again."
 
-#: src/components/conversation/hooks/index.ts:525
-#: src/components/conversation/hooks/index.ts:541
+#: src/components/conversation/hooks/index.ts:551
+#: src/components/conversation/hooks/index.ts:567
 msgid "Failed to clear conversations"
 msgstr "Rozhovory se nepodařilo vymazat"
 
@@ -6506,7 +6506,7 @@ msgstr "Failed to remove logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Failed to reschedule. Please choose a time further in the future and try again."
 
-#: src/components/conversation/hooks/index.ts:644
+#: src/components/conversation/hooks/index.ts:670
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
@@ -7460,7 +7460,7 @@ msgstr "Hodin od této chvíle"
 msgid "How Ask works and what it can do."
 msgstr "Jak funguje Ask a co všechno dokáže."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:67
+#: src/components/conversation/ConversationTranscriptSection.tsx:68
 msgid "How dembrane improves your transcript"
 msgstr "Jak dembrane vylepšuje váš přepis"
 
@@ -7618,7 +7618,7 @@ msgstr "Importováno z dřívější analýzy, {day}"
 msgid "Improve my setup"
 msgstr "Vylepšit nastavení"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:60
+#: src/components/conversation/ConversationTranscriptSection.tsx:61
 msgid "Improved"
 msgstr "Vylepšený"
 
@@ -8697,7 +8697,7 @@ msgstr "Loading workspaces…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:138
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:363
+#: src/components/conversation/hooks/index.ts:389
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -10055,7 +10055,7 @@ msgstr "Zatím žádná školení."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:313
+#: src/components/conversation/ConversationTranscriptSection.tsx:329
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -10863,7 +10863,7 @@ msgstr "Uspořádejte si projekty do pracovních prostorů v rámci organizace."
 msgid "Organization"
 msgstr "Organizace"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:61
+#: src/components/conversation/ConversationTranscriptSection.tsx:62
 msgid "Original"
 msgstr "Původní"
 
@@ -13560,8 +13560,8 @@ msgstr "Jazyk obrazovky"
 #~ msgid "Screen theme"
 #~ msgstr ""
 
-#: src/components/common/ScrollToBottom.tsx:19
 #: src/components/common/ScrollToBottom.tsx:22
+#: src/components/common/ScrollToBottom.tsx:25
 msgid "Scroll to bottom"
 msgstr "Scroll to bottom"
 
@@ -14349,7 +14349,7 @@ msgstr "Zobrazit všech {total}"
 msgid "Show all conversations"
 msgstr "Zobrazit všechny konverzace"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:277
+#: src/components/conversation/ConversationTranscriptSection.tsx:293
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -15924,7 +15924,7 @@ msgstr "Název se nepodařilo vygenerovat."
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "Přepis se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:303
+#: src/components/conversation/ConversationTranscriptSection.tsx:319
 msgid "The transcript is improved once the conversation ends."
 msgstr "Přepis se vylepší, jakmile rozhovor skončí."
 
@@ -16817,7 +16817,7 @@ msgstr "Přepiš rozhovor znovu"
 #~ msgstr "Znovu přepsáno z celého záznamu."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
-#: src/components/conversation/ConversationTranscriptSection.tsx:232
+#: src/components/conversation/ConversationTranscriptSection.tsx:248
 msgid "Transcribing"
 msgstr "Probíhá přepis"
 
@@ -16832,7 +16832,7 @@ msgstr "přepis"
 #: src/features/sidebar/hooks/useSearchHits.ts:239
 #: src/features/sidebar/hooks/useSearchHits.ts:240
 #: src/features/sidebar/hooks/useSearchHits.ts:248
-#: src/components/conversation/ConversationTranscriptSection.tsx:215
+#: src/components/conversation/ConversationTranscriptSection.tsx:231
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"
