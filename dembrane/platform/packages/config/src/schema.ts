@@ -572,6 +572,20 @@ export const schema = defineSchema({
     companyKvk: key("ACCOUNTS_COMPANY_KVK", z.string().default("89391438"), {
       description: "dembrane's KvK (Chamber of Commerce) number on the offer letterhead.",
     }),
+    signatoryEmail: key("ACCOUNTS_SIGNATORY_EMAIL", z.email().default("evelien@dembrane.com"), {
+      description:
+        "dembrane's default signatory: every offer and DPA echo sends carries their signature from the moment it is sent, so the customer's signature completes it. Staff can name someone else per offer.",
+    }),
+    signatoryName: key(
+      "ACCOUNTS_SIGNATORY_NAME",
+      z.string().min(1).default("Evelien Nieuwenburg"),
+      {
+        description: "Name printed in dembrane's default signature.",
+      },
+    ),
+    signatoryRole: key("ACCOUNTS_SIGNATORY_ROLE", z.string().min(1).default("Director"), {
+      description: "Role printed under the name in dembrane's default signature.",
+    }),
     reminderIntervalDays: key("ACCOUNTS_REMINDER_INTERVAL_DAYS", int.min(1).max(365).default(7), {
       description:
         "Days an open customer task may wait before the account's owner at dembrane is asked to check in, and between later asks; a task can set its own interval. The customer gets no email.",
