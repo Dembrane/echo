@@ -141,6 +141,13 @@ export function buildApp(deps: Deps) {
         bic: deps.config.accounts.bankBic,
         accountName: deps.config.accounts.bankAccountName,
       },
+      signatory: deps.config.accounts.signatoryEmail
+        ? {
+            email: deps.config.accounts.signatoryEmail,
+            name: deps.config.accounts.signatoryName ?? null,
+            role: deps.config.accounts.signatoryRole ?? null,
+          }
+        : null,
       eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
       // The config check sets SAM_INBOX_* together, so the URL stands for all three.
