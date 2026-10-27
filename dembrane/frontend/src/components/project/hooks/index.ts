@@ -310,41 +310,24 @@ export const useCreateProjectTagMutation = () => {
 	});
 };
 
-export const useUpdateProjectTagByIdMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async ({
-			id,
-			payload,
-		}: {
-			id: string;
-			project_id: string;
-			payload: Partial<ProjectTag>;
-			// Reordering sends one request per tag: the caller refetches once
-			// after they all settle, so a half-saved order never overwrites the
-			// screen.
-			deferInvalidate?: boolean;
-		}) => {
-			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/${id}`, {
+// Saves the whole tag order in one request: every tag moves or none does. The
+// caller refetches, since it decides when the screen goes back to the server.
+export const useReorderProjectTagsMutation = () =>
+	useMutation({
+		mutationFn: async (payload: { project_id: string; tag_ids: string[] }) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/reorder`, {
 				body: JSON.stringify(payload),
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
-				method: "PATCH",
+				method: "POST",
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
 				throw new ApiRequestError(res.status, data);
 			}
-			return (await res.json()) as ProjectTag;
-		},
-		onSuccess: (_values, variables) => {
-			if (variables.deferInvalidate) return;
-			queryClient.invalidateQueries({
-				queryKey: ["projects", variables.project_id],
-			});
+			return (await res.json()) as ProjectTag[];
 		},
 	});
-};
 
 export const useDeleteTagByIdMutation = () => {
 	const queryClient = useQueryClient();

@@ -41,7 +41,7 @@ import { FormLabel } from "../form/FormLabel";
 import {
 	useCreateProjectTagMutation,
 	useDeleteTagByIdMutation,
-	useUpdateProjectTagByIdMutation,
+	useReorderProjectTagsMutation,
 } from "./hooks";
 
 export const ProjectTagPill = ({
@@ -147,19 +147,16 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		},
 	});
 	const createTagMutation = useCreateProjectTagMutation();
-	const updateTagMutation = useUpdateProjectTagByIdMutation();
+	const reorderTagsMutation = useReorderProjectTagsMutation();
 
 	const queryClient = useQueryClient();
 
 	const [tagInput, setTagInput] = useState("");
 	const [localOrder, setLocalOrder] = useState<string[] | null>(null);
-	// Drops since the screen last matched the server. Only the latest drop
-	// hands the screen back, so a quick second drag keeps its order on screen.
+	// Only the latest drop hands the screen back to the server's order.
 	const dropGeneration = useRef(0);
-	const orderIsLocal = useRef(false);
-	const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
-	const failedDrop = useRef<unknown>(null);
-	const sentSort = useRef(new Map<string, number | null | undefined>());
+	const saveQueue = useRef<Promise<void>>(Promise.resolve());
+	const lastSaveError = useRef<unknown>(null);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -224,63 +221,40 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 
 		if (oldIndex === -1 || newIndex === -1) return;
 
-		const newTags = arrayMove(displayedTags, oldIndex, newIndex);
+		const order = arrayMove(displayedTags, oldIndex, newIndex).map(
+			(tag) => tag.id,
+		);
 
-		// Show the new order right away and keep it until the saves settle, so
-		// a refetch of a half-saved order cannot move the tags back.
-		setLocalOrder(newTags.map((tag) => tag.id));
-
-		// The tags to save come from the order on screen, not the cache, which
-		// can still hold values from before an earlier drop.
-		if (!orderIsLocal.current) {
-			orderIsLocal.current = true;
-			sentSort.current = new Map(sortedTags.map((tag) => [tag.id, tag.sort]));
-		}
-
-		// Sort starts from 1; only tags whose place changed are saved.
-		const changed = newTags.flatMap((tag, index) => {
-			const sort = index + 1;
-			if (sentSort.current.get(tag.id) === sort) return [];
-			sentSort.current.set(tag.id, sort);
-			return [{ id: tag.id, sort }];
-		});
-
+		// Keep the dropped order on screen until its save is done.
+		setLocalOrder(order);
 		dropGeneration.current += 1;
 		const generation = dropGeneration.current;
 
-		// Saves run one drop at a time so the last drop is the last write.
+		// One drop saves at a time, so the last drop is the last write.
 		saveQueue.current = saveQueue.current
 			.then(() =>
-				Promise.allSettled(
-					changed.map(({ id, sort }) =>
-						updateTagMutation.mutateAsync({
-							deferInvalidate: true,
-							id,
-							payload: { sort },
-							project_id: props.project.id,
-						}),
-					),
-				),
+				reorderTagsMutation.mutateAsync({
+					project_id: props.project.id,
+					tag_ids: order,
+				}),
 			)
-			.then(async (results) => {
-				const failed = results.find((r) => r.status === "rejected");
-				if (failed && failed.status === "rejected") {
-					failedDrop.current = failed.reason;
-				}
+			.then(
+				() => {
+					lastSaveError.current = null;
+				},
+				(error) => {
+					lastSaveError.current = error;
+				},
+			)
+			.then(async () => {
 				if (generation !== dropGeneration.current) return;
-
-				// Refetch once, then hand the screen back to the server's order. A
-				// failed save drops the local order, which shows what was saved.
 				await queryClient.invalidateQueries({
 					queryKey: ["projects", props.project.id],
 				});
 				if (generation !== dropGeneration.current) return;
-				orderIsLocal.current = false;
+				// A failed save changed nothing, so the server's order is the old one.
 				setLocalOrder(null);
-				if (failedDrop.current) {
-					void notifyError(failedDrop.current);
-					failedDrop.current = null;
-				}
+				if (lastSaveError.current) void notifyError(lastSaveError.current);
 			});
 	};
 
