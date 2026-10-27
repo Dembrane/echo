@@ -274,3 +274,40 @@ it("recovers when recorder.start() fails after the ref was assigned", async () =
 	});
 	consoleError.mockRestore();
 });
+
+it("reports an interruption when a chunk restart fails", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	const onRecordingInterrupted = vi.fn();
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+	const { result, rerender } = renderHook(() =>
+		useChunkedAudioRecorder({ onChunk: vi.fn(), onRecordingInterrupted }),
+	);
+
+	await act(async () => {
+		await result.current.startRecording();
+	});
+	expect(result.current.isRecording).toBe(true);
+
+	// the mic ends between chunks, so the next chunk's start() throws
+	recorderFailure.failNextStart = true;
+
+	// the chunk timer stops the recorder; its onstop starts the next chunk
+	await act(async () => {
+		vi.advanceTimersByTime(30000);
+		await Promise.resolve();
+	});
+	rerender();
+
+	expect(onRecordingInterrupted).toHaveBeenCalledTimes(1);
+	expect(result.current.hadInterruption).toBe(true);
+
+	// the screen reacts to the callback by stopping, so nothing claims to record
+	act(() => {
+		result.current.stopRecording();
+	});
+	expect(result.current.isRecording).toBe(false);
+	vi.useRealTimers();
+	consoleError.mockRestore();
+});
