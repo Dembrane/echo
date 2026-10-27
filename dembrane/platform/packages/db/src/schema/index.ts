@@ -1221,6 +1221,13 @@ export const conversation_chunk = pgTable(
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.timestamp.asc().nullsLast()),
+    // Chunks are read by conversation (home search, pipeline, transcripts) and cascade-deleted
+    // with it. Hand-applied on prod under this name before it was in the repo.
+    index("idx_chunk_conv_timestamp").using(
+      "btree",
+      table.conversation_id.asc().nullsLast(),
+      table.timestamp.desc().nullsFirst(),
+    ),
     foreignKey({
       columns: [table.conversation_id],
       foreignColumns: [conversation.id],
