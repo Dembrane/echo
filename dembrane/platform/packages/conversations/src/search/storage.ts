@@ -36,8 +36,8 @@ export interface Searcher {
  * of these conversations, so a rare phrase is no longer matched against every chunk of
  * every project.
  */
-function reachableConversations(who: Searcher): SQL {
-  return sql`array(
+async function reachableConversations(db: Db, who: Searcher): Promise<string[]> {
+  const rows = await db.execute<{ id: string }>(sql`
     select c.id from conversation c
     join project p on p.id = c.project_id
     where p.deleted_at is null and (
@@ -48,7 +48,8 @@ function reachableConversations(who: Searcher): SQL {
         select w.id from workspace w
         join org_membership om on om.org_id = w.org_id
         where om.user_id = ${who.appUserId} and om.deleted_at is null and w.deleted_at is null)
-      or (p.workspace_id is null and p.directus_user_id = ${who.directusUserId})))`;
+      or (p.workspace_id is null and p.directus_user_id = ${who.directusUserId}))`);
+  return [...rows].map((r) => r.id);
 }
 
 /** The four home search sources, newest first, over-fetched so access filtering can trim them. */
@@ -106,9 +107,16 @@ export function searchStorage(db: Db) {
     /**
      * Phrase match on transcripts: a spoken phrase is contiguous. Only chunks of projects
      * the searcher might read are matched, and the newest ones are cut to the limit before
-     * the conversation and project are joined, so the joins run for a handful of rows.
+     * the conversation and project are joined, so the joins run for a handful of rows. The
+     * ids go in as one array value, which Postgres hashes and sizes when planning. Inlined,
+     * `= any(array(subquery))` was checked row by row (minutes for 90k conversations) and
+     * `in (subquery)` walked every chunk by timestamp for a rare phrase (4.5 s).
      */
-    chunks(term: string, limit: number, who: Searcher) {
+    async chunks(term: string, limit: number, who: Searcher) {
+      const reachable = await reachableConversations(db, who);
+      if (!reachable.length) return [];
+      // One bound parameter however many ids, unlike inArray's one per id.
+      const reachableIds = `{${reachable.join(",")}}`;
       const hit = db
         .select({
           id: conversation_chunk.id,
@@ -120,7 +128,7 @@ export function searchStorage(db: Db) {
         .from(conversation_chunk)
         .where(
           and(
-            sql`${conversation_chunk.conversation_id} = any (${reachableConversations(who)})`,
+            sql`${conversation_chunk.conversation_id} = any (${reachableIds}::uuid[])`,
             or(
               icontains(conversation_chunk.transcript, term),
               icontains(conversation_chunk.raw_transcript, term),

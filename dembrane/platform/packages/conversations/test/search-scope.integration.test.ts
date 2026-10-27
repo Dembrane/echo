@@ -14,6 +14,7 @@ run("search transcript scope", () => {
   setDefaultTimeout(60_000);
   let sql: postgres.Sql;
   let database: ReturnType<typeof createDb>;
+  let url: string;
 
   const person = () => ({ appUserId: newId(), directusUserId: newId() });
   const [member, orgOwner, outsider, creator, former] = [
@@ -45,7 +46,7 @@ run("search transcript scope", () => {
   }
 
   beforeAll(async () => {
-    const url = await freshDatabase("conv_search_scope_test");
+    url = await freshDatabase("conv_search_scope_test");
     database = createDb({ url, poolMax: 2 });
     sql = postgres(url, { max: 1, onnotice: () => {} });
     for (const p of [member, orgOwner, outsider, creator, former]) {
@@ -142,5 +143,47 @@ run("search transcript scope", () => {
       expect(found.filter((id) => allowed.includes(id))).toEqual(allowed);
       expect(found.every((id) => everywhere.some((r) => r.id === id))).toBe(true);
     }
+  });
+
+  test("an org with 100k conversations is searched quickly", async () => {
+    // Past Postgres's 65,535 bind parameters; a row-by-row id check over them took 10 s.
+    const owner = person();
+    const [org, ws, billing, proj] = [newId(), newId(), newId(), newId()];
+    await sql`insert into directus_users (id) values (${owner.directusUserId})`;
+    await sql`insert into app_user (id, directus_user_id) values (${owner.appUserId}, ${owner.directusUserId})`;
+    await sql`insert into org (id, name) values (${org}, 'Big')`;
+    await sql`insert into billing_account (id, org_id) values (${billing}, ${org})`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id, visibility)
+      values (${ws}, 'W', ${org}, ${billing}, 'private')`;
+    await sql`insert into org_membership (id, org_id, user_id, role) values
+      (${newId()}, ${org}, ${owner.appUserId}, 'owner')`;
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values
+      (${proj}, 'Big', ${ws}, true)`;
+    await sql`insert into conversation (id, project_id, participant_name, created_at, updated_at)
+      select gen_random_uuid(), ${proj}, 'p' || n, now(), now() from generate_series(1, 100000) n`;
+    await sql`insert into conversation_chunk (id, conversation_id, transcript, timestamp)
+      select gen_random_uuid(), c.id, 'the tidal survey ' || c.participant_name,
+        '2026-01-01T00:00:00Z'::timestamptz + (substr(c.participant_name, 2)::int * interval '1 minute')
+      from conversation c where c.project_id = ${proj}`;
+    await sql`analyze conversation_chunk`;
+    // Prod's chunk table overflows work_mem; a tiny one reproduces that at test scale. Only
+    // this pool connects while it is set, so no other test sees it.
+    await sql`do $$ begin
+      execute format('alter database %I set work_mem = ''64kB''', current_database()); end $$`;
+    const small = createDb({ url, poolMax: 1 });
+    const search = async () => {
+      const started = performance.now();
+      const rows = await searchStorage(small.db).chunks("tidal survey", 15, owner);
+      return { found: rows, elapsed: performance.now() - started };
+    };
+    const { found, elapsed } = await search().finally(async () => {
+      await sql`do $$ begin
+        execute format('alter database %I reset work_mem', current_database()); end $$`;
+      await small.close();
+    });
+    expect(found.map((r) => r.participant_name)).toEqual(
+      Array.from({ length: 15 }, (_, i) => `p${100000 - i}`),
+    );
+    expect(elapsed).toBeLessThan(5_000);
   });
 });
