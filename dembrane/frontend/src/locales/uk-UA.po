@@ -1991,11 +1991,11 @@ msgstr "Усі файли ({0}) успішно завантажено"
 msgid "All {total} texts translated into {language}"
 msgstr "Усі {total} текстів перекладено на таку мову: {language}"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "All actions"
 msgstr "All actions"
 
-#: src/components/settings/AuditLogsCard.tsx:456
+#: src/components/settings/AuditLogsCard.tsx:437
 msgid "All collections"
 msgstr "All collections"
 
@@ -2752,15 +2752,15 @@ msgstr "Після завантаження аудіо ви повертаєте
 msgid "Audio was coming in but stopped. They may have lost connection or locked their phone."
 msgstr "Аудіо надходило, але припинилося. Можливо, зник зв'язок або заблоковано телефон."
 
-#: src/components/settings/AuditLogsCard.tsx:383
+#: src/components/settings/AuditLogsCard.tsx:364
 msgid "Audit logs"
 msgstr "Audit logs"
 
-#: src/components/settings/AuditLogsCard.tsx:357
+#: src/components/settings/AuditLogsCard.tsx:342
 msgid "Audit logs exported to CSV"
 msgstr "Audit logs exported to CSV"
 
-#: src/components/settings/AuditLogsCard.tsx:358
+#: src/components/settings/AuditLogsCard.tsx:343
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
@@ -5505,7 +5505,7 @@ msgstr "Download all conversation transcripts generated for this project."
 msgid "Download all transcripts"
 msgstr "Завантажити всі стенограми"
 
-#: src/components/settings/AuditLogsCard.tsx:414
+#: src/components/settings/AuditLogsCard.tsx:395
 msgid "Download as"
 msgstr "Download as"
 
@@ -6266,7 +6266,7 @@ msgstr "Дослідження"
 #~ msgstr "Exploring {conversationCount} conversations"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:41
-#: src/components/settings/AuditLogsCard.tsx:409
+#: src/components/settings/AuditLogsCard.tsx:390
 #: src/components/project/ProjectExportSection.tsx:18
 #: src/components/layout/ProjectOverviewLayout.tsx:55
 msgid "Export"
@@ -6646,19 +6646,19 @@ msgstr "Фільтр"
 msgid "Filter and sort"
 msgstr "Фільтрувати й сортувати"
 
-#: src/components/settings/AuditLogsCard.tsx:447
+#: src/components/settings/AuditLogsCard.tsx:428
 msgid "Filter audit logs by action"
 msgstr "Filter audit logs by action"
 
-#: src/components/settings/AuditLogsCard.tsx:465
+#: src/components/settings/AuditLogsCard.tsx:446
 msgid "Filter audit logs by collection"
 msgstr "Filter audit logs by collection"
 
-#: src/components/settings/AuditLogsCard.tsx:436
+#: src/components/settings/AuditLogsCard.tsx:417
 msgid "Filter by action"
 msgstr "Filter by action"
 
-#: src/components/settings/AuditLogsCard.tsx:452
+#: src/components/settings/AuditLogsCard.tsx:433
 msgid "Filter by collection"
 msgstr "Filter by collection"
 
@@ -8612,7 +8612,7 @@ msgstr "Завантажити ще"
 msgid "Loading"
 msgstr "Завантаження"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "Loading actions..."
 msgstr "Loading actions..."
 
@@ -8625,7 +8625,7 @@ msgstr "Loading artefact"
 #~ msgid "Loading audit logs…"
 #~ msgstr "Loading audit logs…"
 
-#: src/components/settings/AuditLogsCard.tsx:455
+#: src/components/settings/AuditLogsCard.tsx:436
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
@@ -9573,6 +9573,7 @@ msgstr "Спочатку нові"
 msgid "Newest First"
 msgstr "Newest First"
 
+#: src/components/settings/AuditLogsCard.tsx:628
 #: src/components/release/ReleaseTimeline.tsx:48
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:314
 msgid "Next"
@@ -9611,7 +9612,7 @@ msgstr "Немає доступу"
 msgid "No accounts"
 msgstr "Немає облікових записів"
 
-#: src/components/settings/AuditLogsCard.tsx:445
+#: src/components/settings/AuditLogsCard.tsx:426
 msgid "No actions found"
 msgstr "No actions found"
 
@@ -9640,7 +9641,7 @@ msgstr "У розмовах цього проєкту не знайдено ар
 msgid "No arguments yet. They appear after the first analysis."
 msgstr "Аргументів ще немає. Вони з'являться після першого аналізу."
 
-#: src/components/settings/AuditLogsCard.tsx:601
+#: src/components/settings/AuditLogsCard.tsx:582
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
 
@@ -9682,7 +9683,7 @@ msgstr "За вашим запитом чатів не знайдено."
 msgid "No chats yet."
 msgstr "Чатів ще немає."
 
-#: src/components/settings/AuditLogsCard.tsx:463
+#: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No collections found"
 
@@ -9983,7 +9984,7 @@ msgstr "No report found"
 msgid "No reports yet"
 msgstr "No reports yet"
 
-#: src/components/settings/AuditLogsCard.tsx:623
+#: src/components/settings/AuditLogsCard.tsx:604
 msgid "No results"
 msgstr "No results"
 
@@ -11732,6 +11733,7 @@ msgstr "Попередній перегляд PR #{number}"
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Preview: The quick brown fox jumps over the lazy dog."
 
+#: src/components/settings/AuditLogsCard.tsx:620
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:305
 msgid "Previous"
 msgstr "Попередній"
@@ -12455,7 +12457,7 @@ msgstr "Кнопка «Уточнити» відображає правильн�
 msgid "Refresh"
 msgstr "Refresh"
 
-#: src/components/settings/AuditLogsCard.tsx:395
+#: src/components/settings/AuditLogsCard.tsx:376
 msgid "Refresh audit logs"
 msgstr "Refresh audit logs"
 
@@ -13198,7 +13200,7 @@ msgstr "Повернутися до презентації"
 msgid "Review"
 msgstr "Перевірка"
 
-#: src/components/settings/AuditLogsCard.tsx:386
+#: src/components/settings/AuditLogsCard.tsx:367
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 
@@ -13255,7 +13257,7 @@ msgstr "Revise"
 #~ msgid "Revision {0}"
 #~ msgstr ""
 
-#: src/components/settings/AuditLogsCard.tsx:575
+#: src/components/settings/AuditLogsCard.tsx:556
 msgid "Revision #{revisionNumber}"
 msgstr "Revision #{revisionNumber}"
 
@@ -13325,7 +13327,7 @@ msgstr "Орієнтовний час завершення транскрибу�
 msgid "Roughly how many?"
 msgstr "Приблизно скільки?"
 
-#: src/components/settings/AuditLogsCard.tsx:613
+#: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
 msgstr "Rows per page"
 
@@ -14377,7 +14379,7 @@ msgstr "Показати всі теги"
 msgid "Show introduction"
 msgstr "Показати вступ"
 
-#: src/components/settings/AuditLogsCard.tsx:470
+#: src/components/settings/AuditLogsCard.tsx:451
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
@@ -14493,9 +14495,13 @@ msgstr "Вітрина"
 msgid "Showing {0} of {1}"
 msgstr "Показано {0} із {1}"
 
+#: src/components/settings/AuditLogsCard.tsx:606
+msgid "Showing {displayFrom}–{displayTo}"
+msgstr "Показано {displayFrom}–{displayTo}"
+
 #: src/components/settings/AuditLogsCard.tsx:625
-msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
-msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
+#~ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
+#~ msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
 #: src/components/map/MapExperience.tsx:109
 msgid "Showing {drawn} of {available} connections"
@@ -15246,7 +15252,7 @@ msgid "Switching to another tool"
 msgstr "Переходжу на інший інструмент"
 
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
-#: src/components/settings/AuditLogsCard.tsx:88
+#: src/components/settings/AuditLogsCard.tsx:87
 msgid "System"
 msgstr "Система"
 

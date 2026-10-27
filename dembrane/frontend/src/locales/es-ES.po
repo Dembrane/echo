@@ -1992,11 +1992,11 @@ msgstr "Los {0} archivo(s) se subieron correctamente"
 msgid "All {total} texts translated into {language}"
 msgstr "Los {total} textos se han traducido al {language}"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "All actions"
 msgstr "Todas las acciones"
 
-#: src/components/settings/AuditLogsCard.tsx:456
+#: src/components/settings/AuditLogsCard.tsx:437
 msgid "All collections"
 msgstr "Todas las colecciones"
 
@@ -2753,15 +2753,15 @@ msgstr "Al subir audio, vuelves a la lista de conversaciones."
 msgid "Audio was coming in but stopped. They may have lost connection or locked their phone."
 msgstr "Llegaba señal de audio, pero se ha detenido. Es posible que hayan perdido la conexión o bloqueado el teléfono."
 
-#: src/components/settings/AuditLogsCard.tsx:383
+#: src/components/settings/AuditLogsCard.tsx:364
 msgid "Audit logs"
 msgstr "Registros de auditoría"
 
-#: src/components/settings/AuditLogsCard.tsx:357
+#: src/components/settings/AuditLogsCard.tsx:342
 msgid "Audit logs exported to CSV"
 msgstr "Registros de auditoría exportados a CSV"
 
-#: src/components/settings/AuditLogsCard.tsx:358
+#: src/components/settings/AuditLogsCard.tsx:343
 msgid "Audit logs exported to JSON"
 msgstr "Registros de auditoría exportados a JSON"
 
@@ -5506,7 +5506,7 @@ msgstr "Descargar todas las transcripciones de conversaciones generadas para est
 msgid "Download all transcripts"
 msgstr "Descargar todas las transcripciones"
 
-#: src/components/settings/AuditLogsCard.tsx:414
+#: src/components/settings/AuditLogsCard.tsx:395
 msgid "Download as"
 msgstr "Descargar como"
 
@@ -6267,7 +6267,7 @@ msgstr "Explorando"
 #~ msgstr "Explorando {conversationCount} conversaciones"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:41
-#: src/components/settings/AuditLogsCard.tsx:409
+#: src/components/settings/AuditLogsCard.tsx:390
 #: src/components/project/ProjectExportSection.tsx:18
 #: src/components/layout/ProjectOverviewLayout.tsx:55
 msgid "Export"
@@ -6647,19 +6647,19 @@ msgstr "Filtrar"
 msgid "Filter and sort"
 msgstr "Filtrar y ordenar"
 
-#: src/components/settings/AuditLogsCard.tsx:447
+#: src/components/settings/AuditLogsCard.tsx:428
 msgid "Filter audit logs by action"
 msgstr "Filtrar registros de auditoría por acción"
 
-#: src/components/settings/AuditLogsCard.tsx:465
+#: src/components/settings/AuditLogsCard.tsx:446
 msgid "Filter audit logs by collection"
 msgstr "Filtrar registros de auditoría por colección"
 
-#: src/components/settings/AuditLogsCard.tsx:436
+#: src/components/settings/AuditLogsCard.tsx:417
 msgid "Filter by action"
 msgstr "Filtrar por acción"
 
-#: src/components/settings/AuditLogsCard.tsx:452
+#: src/components/settings/AuditLogsCard.tsx:433
 msgid "Filter by collection"
 msgstr "Filtrar por colección"
 
@@ -8613,7 +8613,7 @@ msgstr "Cargar más"
 msgid "Loading"
 msgstr "Cargando"
 
-#: src/components/settings/AuditLogsCard.tsx:438
+#: src/components/settings/AuditLogsCard.tsx:419
 msgid "Loading actions..."
 msgstr "Cargando acciones..."
 
@@ -8626,7 +8626,7 @@ msgstr "Cargando artefacto"
 #~ msgid "Loading audit logs…"
 #~ msgstr "Cargando registros de auditoría…"
 
-#: src/components/settings/AuditLogsCard.tsx:455
+#: src/components/settings/AuditLogsCard.tsx:436
 msgid "Loading collections..."
 msgstr "Cargando colecciones..."
 
@@ -9574,6 +9574,7 @@ msgstr "Más recientes primero"
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
+#: src/components/settings/AuditLogsCard.tsx:628
 #: src/components/release/ReleaseTimeline.tsx:48
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:314
 msgid "Next"
@@ -9612,7 +9613,7 @@ msgstr "Sin acceso"
 msgid "No accounts"
 msgstr "No hay cuentas"
 
-#: src/components/settings/AuditLogsCard.tsx:445
+#: src/components/settings/AuditLogsCard.tsx:426
 msgid "No actions found"
 msgstr "No se encontraron acciones"
 
@@ -9641,7 +9642,7 @@ msgstr "No se encontraron argumentos en las conversaciones de este proyecto."
 msgid "No arguments yet. They appear after the first analysis."
 msgstr "Aún no hay argumentos. Aparecerán tras el primer análisis."
 
-#: src/components/settings/AuditLogsCard.tsx:601
+#: src/components/settings/AuditLogsCard.tsx:582
 msgid "No audit logs match the current filters."
 msgstr "No hay registros de auditoría que coincidan con los filtros actuales."
 
@@ -9683,7 +9684,7 @@ msgstr "Ningún chat coincide con tu búsqueda."
 msgid "No chats yet."
 msgstr "Aún no hay chats."
 
-#: src/components/settings/AuditLogsCard.tsx:463
+#: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No se encontraron colecciones"
 
@@ -9984,7 +9985,7 @@ msgstr "No se encontró ningún informe"
 msgid "No reports yet"
 msgstr "Aún no hay informes"
 
-#: src/components/settings/AuditLogsCard.tsx:623
+#: src/components/settings/AuditLogsCard.tsx:604
 msgid "No results"
 msgstr "Sin resultados"
 
@@ -11733,6 +11734,7 @@ msgstr "Vista previa de la PR #{number}"
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Vista previa: El zorro rápido salta sobre el perro perezoso."
 
+#: src/components/settings/AuditLogsCard.tsx:620
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:305
 msgid "Previous"
 msgstr "Anterior"
@@ -12456,7 +12458,7 @@ msgstr "Refinar muestra la etiqueta correcta y no se puede ejecutar mientras se 
 msgid "Refresh"
 msgstr "Actualizar"
 
-#: src/components/settings/AuditLogsCard.tsx:395
+#: src/components/settings/AuditLogsCard.tsx:376
 msgid "Refresh audit logs"
 msgstr "Actualizar registros de auditoría"
 
@@ -13199,7 +13201,7 @@ msgstr "Volver a la presentación"
 msgid "Review"
 msgstr "Revisar"
 
-#: src/components/settings/AuditLogsCard.tsx:386
+#: src/components/settings/AuditLogsCard.tsx:367
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Revisa la actividad de tu espacio de trabajo. Filtra por colección o acción, y exporta la vista actual para una investigación más detallada."
 
@@ -13256,7 +13258,7 @@ msgstr "revisar"
 #~ msgid "Revision {0}"
 #~ msgstr ""
 
-#: src/components/settings/AuditLogsCard.tsx:575
+#: src/components/settings/AuditLogsCard.tsx:556
 msgid "Revision #{revisionNumber}"
 msgstr "Revisión #{revisionNumber}"
 
@@ -13326,7 +13328,7 @@ msgstr "Estimación aproximada para terminar de transcribir lo pendiente"
 msgid "Roughly how many?"
 msgstr "¿Aproximadamente cuántos?"
 
-#: src/components/settings/AuditLogsCard.tsx:613
+#: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
 msgstr "Filas por página"
 
@@ -14378,7 +14380,7 @@ msgstr "Mostrar todas las etiquetas"
 msgid "Show introduction"
 msgstr "Mostrar introducción"
 
-#: src/components/settings/AuditLogsCard.tsx:470
+#: src/components/settings/AuditLogsCard.tsx:451
 msgid "Show IP addresses"
 msgstr "Mostrar direcciones IP"
 
@@ -14494,9 +14496,13 @@ msgstr "Escaparate"
 msgid "Showing {0} of {1}"
 msgstr "Mostrando {0} de {1}"
 
+#: src/components/settings/AuditLogsCard.tsx:606
+msgid "Showing {displayFrom}–{displayTo}"
+msgstr "Mostrando {displayFrom}–{displayTo}"
+
 #: src/components/settings/AuditLogsCard.tsx:625
-msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
-msgstr "Mostrando {displayFrom}–{displayTo} de {totalItems} entradas"
+#~ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
+#~ msgstr "Mostrando {displayFrom}–{displayTo} de {totalItems} entradas"
 
 #: src/components/map/MapExperience.tsx:109
 msgid "Showing {drawn} of {available} connections"
@@ -15247,7 +15253,7 @@ msgid "Switching to another tool"
 msgstr "Me cambio a otra herramienta"
 
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
-#: src/components/settings/AuditLogsCard.tsx:88
+#: src/components/settings/AuditLogsCard.tsx:87
 msgid "System"
 msgstr "Sistema"
 
