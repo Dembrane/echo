@@ -28,6 +28,7 @@ import {
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { LegacyProjectRedirect } from "./routes/project/LegacyProjectRedirect";
+import { NewProjectRedirect } from "./routes/project/NewProjectRedirect";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
@@ -622,6 +623,16 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "projects",
+			},
+			{
+				// Static link for emails and sites: opens project creation in the
+				// person's workspace. Ranked above the :projectId splat.
+				element: (
+					<Protected>
+						<NewProjectRedirect />
+					</Protected>
+				),
+				path: "projects/new",
 			},
 			{
 				element: (
