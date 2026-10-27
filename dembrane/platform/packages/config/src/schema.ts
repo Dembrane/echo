@@ -572,16 +572,19 @@ export const schema = defineSchema({
     companyKvk: key("ACCOUNTS_COMPANY_KVK", z.string().default("89391438"), {
       description: "dembrane's KvK (Chamber of Commerce) number on the offer letterhead.",
     }),
-    signatoryEmail: key("ACCOUNTS_SIGNATORY_EMAIL", z.email().optional(), {
+    signatoryEmail: key("ACCOUNTS_SIGNATORY_EMAIL", z.email().default("evelien@dembrane.com"), {
       description:
-        "dembrane's signatory: every offer and DPA echo sends carries their signature from the moment it is sent, so the customer's signature completes it. Unset, documents go out unsigned by dembrane, as before.",
+        "dembrane's default signatory: every offer and DPA echo sends carries their signature from the moment it is sent, so the customer's signature completes it. Staff can name someone else per offer.",
     }),
-    signatoryName: key("ACCOUNTS_SIGNATORY_NAME", z.string().min(1).optional(), {
-      description:
-        "Name printed in dembrane's signature. Unset takes the name of the account with ACCOUNTS_SIGNATORY_EMAIL; with neither, documents go out unsigned by dembrane.",
-    }),
-    signatoryRole: key("ACCOUNTS_SIGNATORY_ROLE", z.string().min(1).optional(), {
-      description: "Role printed under the name in dembrane's signature, e.g. Director.",
+    signatoryName: key(
+      "ACCOUNTS_SIGNATORY_NAME",
+      z.string().min(1).default("Evelien Nieuwenburg"),
+      {
+        description: "Name printed in dembrane's default signature.",
+      },
+    ),
+    signatoryRole: key("ACCOUNTS_SIGNATORY_ROLE", z.string().min(1).default("Director"), {
+      description: "Role printed under the name in dembrane's default signature.",
     }),
     reminderIntervalDays: key("ACCOUNTS_REMINDER_INTERVAL_DAYS", int.min(1).max(365).default(7), {
       description:
