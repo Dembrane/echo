@@ -512,6 +512,12 @@ function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
 			? { invoice_plan: body.invoice_plan as OfferContentT["invoice_plan"] }
 			: {}),
 		...(body.no_charge === true && { no_charge: true as const }),
+		...(body.dembrane_signer && typeof body.dembrane_signer === "object"
+			? {
+					dembrane_signer:
+						body.dembrane_signer as OfferContentT["dembrane_signer"],
+				}
+			: {}),
 	};
 }
 
@@ -639,6 +645,7 @@ function card(s: Store) {
 	return {
 		account_manager: null,
 		billing: s.billing,
+		dembrane_signer: clone(fx.accountCard.dembrane_signer),
 		demo: s.demo,
 		documents: s.docs.map((d) => summary(withUrls(d, base, "staff"))),
 		// The fixture account asks for no invoice, so nothing waits.
