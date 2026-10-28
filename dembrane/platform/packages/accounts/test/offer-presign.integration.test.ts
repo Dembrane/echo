@@ -9,8 +9,8 @@ import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, pngB64, type World, world } from "./helpers";
 
-// dembrane signs what it sends: with a signatory configured, an offer and its DPA carry
-// dembrane's signature from the moment they are sent, and the customer's completes them.
+// dembrane signs what it sends: its DPA always, its offer when staff chose that. Either
+// carries dembrane's signature from the moment it is sent, and the customer's completes it.
 const run = admin ? describe : describe.skip;
 const DB = `accounts_presign_${process.pid}`;
 
@@ -26,6 +26,7 @@ run("dembrane's signature on what it sends", () => {
     offer_name: "Gemeente Testdorp",
     person_name: "Anna",
     reference: `OFFER-PRE-${++n}`,
+    dembrane_signs_offer: true,
     items: [{ description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 2100 }],
     ...over,
   });
@@ -41,6 +42,21 @@ run("dembrane's signature on what it sends", () => {
   };
   const staffView = async (id: string) =>
     K.DocumentDetail.parse((await call(w, "GET", `${S()}/documents/${id}`, "staff")).data);
+  /** An account of its own, so its DPA (one per account and text) opens with its offer. */
+  const account = async (name: string) => {
+    const created = await call(w, "POST", "/api/v2/admin/accounts", "staff", {
+      organisation_name: name,
+      contact_email: `contact@${name.toLowerCase().replace(/\W+/g, "-")}.example`,
+      stage: "customer",
+    });
+    expect(created.status).toBe(201);
+    return `/api/v2/admin/accounts/${K.CreateAccountResponse.parse(created.data).org_id}`;
+  };
+  const text = (bytes: Uint8Array) => {
+    const out = Bun.spawnSync(["pdftotext", "-layout", "-", "-"], { stdin: bytes });
+    return out.stdout.toString();
+  };
+  const pdftotext = Boolean(Bun.which("pdftotext"));
   const signatory = (s: Signatory | null) => {
     (w.deps as { settings: AccountsDeps["settings"] }).settings = {
       ...w.deps.settings,
@@ -124,6 +140,20 @@ run("dembrane's signature on what it sends", () => {
     expect(doc.content?.dembrane_signature).toBeUndefined();
     expect(doc.body).not.toContain("Signed electronically");
     expect(await store.signaturesOf(w.db, doc.id)).toEqual([]);
+    // Its PDF already shows the block as the customer will see it, dated the day it is drawn.
+    const unsigned = await draft({ dembrane_signs_offer: false });
+    const preview = await call(w, "GET", `${S()}/documents/${doc.id}/file`, "staff");
+    expect(preview.status).toBe(200);
+    expect(doc.sha256).not.toBe(unsigned.sha256);
+    if (pdftotext) {
+      const day = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
+      const shown = text(preview.data as Uint8Array);
+      expect(shown).toContain("Robin Signatory");
+      expect(shown).toContain("Signed electronically");
+      expect(shown).toContain(day);
+      const plain = await call(w, "GET", `${S()}/documents/${unsigned.id}/file`, "staff");
+      expect(text(plain.data as Uint8Array)).not.toContain("Signed electronically");
+    }
 
     w.clock.now = new Date(w.clock.now.getTime() + 60_000);
     const sentAt = w.clock.now.toISOString();
@@ -321,8 +351,8 @@ run("dembrane's signature on what it sends", () => {
         role: "Co-founder",
       },
     });
-    // The draft still shows the blanks a counter-signature would fill.
-    expect(doc.fields.some((f) => f.signer_role === "dembrane")).toBe(true);
+    // The draft already shows dembrane's signature, so no blanks wait for a counter-signature.
+    expect(doc.fields.some((f) => f.signer_role === "dembrane")).toBe(false);
     const sent = await send(doc.id);
     expect(sent.fields.some((f) => f.signer_role === "dembrane")).toBe(false);
     expect(sent.body).toContain("### For dembrane B.V.\nName: Robin Signatory");
@@ -415,5 +445,107 @@ run("dembrane's signature on what it sends", () => {
     expect((await sign(doc.id, "admin", "Anna de Vries")).res.status).toBe(200);
     const after = await staffView(doc.id);
     expect([after.status, after.signatures.map((s) => s.slot)]).toEqual(["signed", ["customer"]]);
+  });
+
+  test("sending draws the PDF again: a draft sent on a later day carries that day", async () => {
+    signatory(configured);
+    const doc = await draft();
+    w.clock.now = new Date(w.clock.now.getTime() + 2 * 86_400_000);
+    const sentAt = w.clock.now.toISOString();
+    const sent = await send(doc.id);
+    expect(sent.content?.dembrane_signature?.signed_at).toBe(sentAt);
+    expect(sent.sha256).not.toBe(doc.sha256);
+    const [ours] = await store.signaturesOf(w.db, doc.id);
+    expect(ours?.sha256).toBe(sent.sha256 as string);
+    if (pdftotext) {
+      const day = sentAt.slice(0, 10).split("-").reverse().join("-");
+      const file = await call(w, "GET", `${S()}/documents/${doc.id}/file`, "staff");
+      expect(text(file.data as Uint8Array)).toContain(day);
+    }
+  });
+
+  test("by default dembrane does not sign the offer, and still signs its DPA", async () => {
+    signatory(configured);
+    const O = await account("Stichting Standaard");
+    const chosen = { name: "Jamie Voorbeeld", role: "Sales", email: "jamie@dembrane.com" };
+    const r = await call(
+      w,
+      "POST",
+      `${O}/offers`,
+      "staff",
+      offer({ send: false, dembrane_signs_offer: undefined, dembrane_signer: chosen }),
+    );
+    expect(r.status).toBe(201);
+    const doc = K.PushOfferResponse.parse(r.data).document;
+    // The signer is kept for the DPA; the offer is not marked as signed by dembrane.
+    expect(doc.content?.dembrane_signs_offer).toBeUndefined();
+    expect(doc.content?.dembrane_signer?.name).toBe("Jamie Voorbeeld");
+    if (pdftotext) {
+      const file = await call(w, "GET", `${O}/documents/${doc.id}/file`, "staff");
+      expect(text(file.data as Uint8Array)).not.toContain("Signed electronically");
+    }
+    const sending = await call(w, "POST", `${O}/documents/${doc.id}/send`, "staff", {});
+    expect(sending.status).toBe(200);
+    const sent = K.DocumentDetail.parse(sending.data);
+    expect(sent.content?.dembrane_signature).toBeUndefined();
+    expect(sent.body).not.toContain("For dembrane B.V.");
+    expect(sent.signatures).toEqual([]);
+    expect(sent.awaiting_signatures).toEqual(["customer"]);
+    const dpa = (await store.documents(w.db, O.split("/").at(-1) as string)).find(
+      (x) => x.kind === "dpa",
+    );
+    const dpaSigs = await store.signaturesOf(w.db, dpa?.id as string);
+    expect(dpaSigs.map((s) => [s.slot, s.typedName, s.email])).toEqual([
+      ["dembrane", "Jamie Voorbeeld", "jamie@dembrane.com"],
+    ]);
+  });
+
+  test("the DPA falls back to the configured signatory when the offer names no signer", async () => {
+    signatory(configured);
+    const O = await account("Stichting Terugval");
+    const r = await call(w, "POST", `${O}/offers`, "staff", offer({ dembrane_signs_offer: false }));
+    expect(r.status).toBe(201);
+    const doc = K.PushOfferResponse.parse(r.data).document;
+    expect(doc.content?.dembrane_signature).toBeUndefined();
+    const dpa = (await store.documents(w.db, O.split("/").at(-1) as string)).find(
+      (x) => x.kind === "dpa",
+    );
+    const dpaSigs = await store.signaturesOf(w.db, dpa?.id as string);
+    expect(dpaSigs.map((s) => s.typedName)).toEqual(["Robin Signatory"]);
+  });
+
+  test("dembrane signs too stays a second signature when dembrane does not sign the offer", async () => {
+    signatory(configured);
+    const doc = await draft({
+      dembrane_signs_offer: false,
+      second_signer: {
+        kind: "dembrane",
+        name: "Jordan Staff",
+        email: "staff@dembrane.com",
+        role: "Co-founder",
+      },
+    });
+    const sent = await send(doc.id);
+    expect(sent.content?.dembrane_signature).toBeUndefined();
+    expect(sent.fields.some((f) => f.signer_role === "dembrane")).toBe(true);
+    expect(sent.awaiting_signatures).toContain("dembrane");
+  });
+
+  test("a change keeps the draft's choice unless it names another", async () => {
+    signatory(configured);
+    const doc = await draft();
+    expect(doc.content?.dembrane_signs_offer).toBe(true);
+    const kept = await call(w, "PUT", `${S()}/offers/${doc.id}`, "staff", {
+      ...offer({ reference: doc.reference }),
+      dembrane_signs_offer: undefined,
+    });
+    expect(K.DocumentDetail.parse(kept.data).content?.dembrane_signs_offer).toBe(true);
+    const off = await call(w, "PUT", `${S()}/offers/${doc.id}`, "staff", {
+      ...offer({ reference: doc.reference }),
+      dembrane_signs_offer: false,
+    });
+    expect(K.DocumentDetail.parse(off.data).content?.dembrane_signs_offer).toBeUndefined();
+    const sent = await send(doc.id);
+    expect(sent.content?.dembrane_signature).toBeUndefined();
   });
 });

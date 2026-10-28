@@ -645,11 +645,11 @@ export async function openDpa(
   const id = newId();
   const now = d.now();
   const title = `${dpa.title} ${dpa.version}`;
-  // Signed by whoever signed the offer, at the same moment; an offer without dembrane's
-  // signature leaves the DPA to the configured signatory.
+  // Signed by whoever signed the offer, at the same moment; an offer dembrane does not sign
+  // leaves the DPA to the signer staff chose on it, else the configured signatory.
+  const content = offer.content as OfferContent | null;
   const signature =
-    (offer.content as OfferContent | null)?.dembrane_signature ??
-    (await dembraneSignature(d, tx, now));
+    content?.dembrane_signature ?? (await dembraneSignature(d, tx, now, content?.dembrane_signer));
   const rendered = await textPdf(title, dpa.body, {
     signing: true,
     language: lang,
