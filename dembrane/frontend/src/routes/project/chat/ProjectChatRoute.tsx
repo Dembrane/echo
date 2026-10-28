@@ -98,6 +98,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	// Bumped once a reply is saved, so ChatTemplatesMenuConnected refetches suggestions.
+	const [assistantResponseTick, setAssistantResponseTick] = useState(0);
 
 	const addChatMessageMutation = useAddChatMessageMutation();
 	const lockConversationsMutation = useLockConversationsMutation();
@@ -173,11 +175,15 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					project_chat_id: chatId,
 					text: message.content,
 				},
-				{ onSuccess: swapToPersistedId(message.id) },
+				{ onSuccess: onReplySaved(message.id) },
 			);
 
 			// The reply spent a turn: refresh the chat's meter and the allowance.
-			void queryClient.invalidateQueries({ queryKey: ["chats", chatId] });
+			// Suggestions wait for the saved reply (onReplySaved), else they read the old one.
+			void queryClient.invalidateQueries({
+				predicate: (q) => q.queryKey[2] !== "suggestions",
+				queryKey: ["chats", chatId],
+			});
 			void invalidateFreeAllowance(queryClient);
 
 			// scroll to the last message
@@ -205,6 +211,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		);
 	};
 
+	const onReplySaved = (streamedId: string) => (created: unknown) => {
+		swapToPersistedId(streamedId)(created);
+		setAssistantResponseTick((n) => n + 1);
+	};
+
 	const customHandleStop = () => {
 		stop();
 
@@ -222,7 +233,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		};
 
 		addChatMessageMutation.mutate(body as Partial<ProjectChatMessage>, {
-			onSuccess: swapToPersistedId(incompleteMessage.id),
+			onSuccess: onReplySaved(incompleteMessage.id),
 		});
 	};
 
@@ -283,6 +294,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	]);
 
 	return {
+		assistantResponseTick,
 		contextToBeAdded,
 		error,
 		handleInputChange,
@@ -411,6 +423,7 @@ export const ProjectChatRoute = () => {
 	const prefetchSuggestions = usePrefetchSuggestions();
 
 	const {
+		assistantResponseTick,
 		isInitializing,
 		isLoading,
 		isSubmitting,
@@ -594,24 +607,6 @@ export const ProjectChatRoute = () => {
 		}
 	}, [normalizedInput, templateKey, setTemplateKey]);
 
-	// Bump this whenever the assistant finishes responding, so
-	// ChatTemplatesMenuConnected knows to refetch suggestions.
-	const [assistantResponseTick, setAssistantResponseTick] = useState(0);
-	const prevIsLoadingRef = useRef(isLoading);
-	const lastMessageRole = messages?.[messages.length - 1]?.role;
-
-	useEffect(() => {
-		// Detect transition from loading to not loading with assistant message
-		if (
-			prevIsLoadingRef.current &&
-			!isLoading &&
-			lastMessageRole === "assistant"
-		) {
-			setAssistantResponseTick((n) => n + 1);
-		}
-		prevIsLoadingRef.current = isLoading;
-	}, [isLoading, lastMessageRole]);
-
 	if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading) {
 		return (
 			<div className="flex h-full items-center justify-center">
@@ -665,7 +660,7 @@ export const ProjectChatRoute = () => {
 						// Only prefetch suggestions for overview mode
 						// Deep dive mode will fetch suggestions when conversations are added
 						if (chatId && mode === "overview") {
-							prefetchSuggestions(chatId, language, 5000);
+							prefetchSuggestions(chatId, language, 3000);
 						}
 						chatContextQuery.refetch();
 					}}
