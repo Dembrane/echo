@@ -386,10 +386,10 @@ export const NewChatRoute = () => {
 				});
 			}
 
-			// Step 4: For overview mode, prefetch suggestions (wait up to 5s for better UX)
+			// Step 4: For overview mode, prefetch suggestions (wait up to 3s; they show up later if slower)
 			// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
 			if (mode === "overview") {
-				await prefetchSuggestions(chatId, language, 5000);
+				await prefetchSuggestions(chatId, language, 3000);
 			}
 
 			// Step 5: Navigate to the new chat; the panel sends the typed

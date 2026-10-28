@@ -177,6 +177,10 @@ const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
 // the rest, so say that instead of listing them.
 const FOCUS_CHIP_LIMIT = 12;
 
+// Fallback polls run every 1.5 s; three misses in a row is the point where
+// the answer has stopped arriving rather than a single slow request.
+const POLL_FAILURES_BEFORE_BANNER = 3;
+
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
 
@@ -845,6 +849,7 @@ export const AgenticChatPanel = ({
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
+	const [pollFailureCount, setPollFailureCount] = useState(0);
 	// Snapshot of the message being written; the durable assistant.message
 	// with the same message_id replaces it in place.
 	const [liveDraft, setLiveDraft] = useState<{
@@ -1337,6 +1342,7 @@ export const AgenticChatPanel = ({
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						setPollFailureCount(0);
 						if (event.event_type === "assistant.message") {
 							// Same React batch as the merge: draft and durable swap in one paint.
 							const payload = asObject(event.payload);
@@ -1364,13 +1370,10 @@ export const AgenticChatPanel = ({
 					return;
 				}
 
-				setStreamFailureCount((count) => {
-					const next = count + 1;
-					if (next >= 2) {
-						setError(t`Live stream interrupted. Falling back to polling.`);
-					}
-					return next;
-				});
+				// Two dropped streams hand over to polling. That is a normal path and
+				// the answer keeps arriving, so it shows nothing. The banner is for
+				// polling failing too (see connectionLost).
+				setStreamFailureCount((count) => count + 1);
 
 				if (streamError instanceof Error) {
 					console.warn("Agentic stream failed", streamError);
@@ -1408,6 +1411,7 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
+		setPollFailureCount(0);
 		setLiveDraft(null);
 	}, [chatId, stopStream]);
 
@@ -1474,6 +1478,13 @@ export const AgenticChatPanel = ({
 		};
 	}, [chatId, loadAllEvents, startStream]);
 
+	// Polling misses in a row after the stream is gone: the answer has really
+	// stopped arriving, so tell the host instead of leaving a silent spinner.
+	const connectionLost =
+		streamFailureCount >= 2 &&
+		pollFailureCount >= POLL_FAILURES_BEFORE_BANNER &&
+		!isTerminalStatus(runStatus);
+
 	useEffect(() => {
 		if (!runId || !runStatus || isTerminalStatus(runStatus)) return;
 		if (isStreaming || streamFailureCount < 2) return;
@@ -1482,9 +1493,16 @@ export const AgenticChatPanel = ({
 		const interval = window.setInterval(async () => {
 			if (!active) return;
 			try {
-				await refreshEvents(runId, afterSeq);
+				const payload = await refreshEvents(runId, afterSeq);
+				if (!active) return;
+				setPollFailureCount(0);
+				// Only the stream call starts a queued turn, so polling alone would wait forever.
+				if (payload.status === "queued") {
+					void startStream(runId, payload.next_seq);
+				}
 			} catch {
-				// Keep fallback polling retries lightweight.
+				// Keep retrying lightly; only a run of misses is worth telling the host.
+				if (active) setPollFailureCount((count) => count + 1);
 			}
 		}, 1500);
 
@@ -1499,6 +1517,7 @@ export const AgenticChatPanel = ({
 		isStreaming,
 		streamFailureCount,
 		refreshEvents,
+		startStream,
 	]);
 
 	useEffect(() => {
@@ -1853,13 +1872,13 @@ export const AgenticChatPanel = ({
 
 			<Box className="min-h-0 flex-1 overflow-y-auto" ref={threadScrollRef}>
 				<Stack className="relative min-h-full w-full pt-3 pb-6">
-					{error && (
+					{(error || connectionLost) && (
 						<Alert
 							color="red"
 							icon={<WarningCircleIcon size={20} />}
 							title={<Trans>Error</Trans>}
 						>
-							{error}
+							{error ?? t`Connection lost. Reload for the answer.`}
 						</Alert>
 					)}
 

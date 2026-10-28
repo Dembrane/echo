@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { generateTitle } from "../src/llm";
-import { generateSuggestions } from "../src/suggestions";
+import { generateSuggestions, SUGGESTIONS_TIMEOUT_MS } from "../src/suggestions";
 import { cleanGeneratedTitle, ensureConversationSummaries } from "../src/summaries";
 import { countMessageTokens } from "../src/tokens";
 import { fakeDeps, fakeModel } from "./fakes";
@@ -80,6 +80,48 @@ describe("suggestions", () => {
     await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe("suggestions limits", () => {
+  const store = {
+    lastAssistantMessage: async () => "Buses stop at eleven.",
+    recentUserQueries: async () => ["What about buses?"],
+    lockedConversationsWithSummaries: async () => [
+      { id: "c1", name: "Resident 1", summary: "Wants later buses." },
+    ],
+  };
+  const answer = JSON.stringify({ suggestions: [{ icon: "sparkles", label: "a", prompt: "p" }] });
+
+  test("a stalled model answers an empty list within the time limit", async () => {
+    const stalled = {
+      ...fakeModel({}),
+      doGenerate: (o: LanguageModelV4CallOptions) =>
+        new Promise<never>((_, reject) => {
+          o.abortSignal?.addEventListener("abort", () => reject(o.abortSignal?.reason));
+        }),
+    };
+    const d = { ...fakeDeps({ store, model: stalled as never }), suggestionTimeoutMs: 50 };
+    const started = Date.now();
+    expect(await generateSuggestions(d, "p1", "chat", "deep_dive", "en")).toEqual([]);
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(SUGGESTIONS_TIMEOUT_MS).toBe(15_000);
+  });
+
+  test("reopening a chat with history reuses its suggestions; a new reply asks again", async () => {
+    const calls: LanguageModelV4CallOptions[] = [];
+    let reply = "Buses stop at eleven.";
+    const d = fakeDeps({
+      store: { ...store, lastAssistantMessage: async () => reply },
+      model: fakeModel({ text: answer, calls }),
+    });
+    const first = await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
+    const again = await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
+    expect(again).toEqual(first);
+    expect(calls).toHaveLength(1);
+    reply = "Trams run until midnight.";
+    await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
+    expect(calls).toHaveLength(2);
   });
 });
 

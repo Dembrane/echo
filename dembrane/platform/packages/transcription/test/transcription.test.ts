@@ -19,6 +19,8 @@ import {
   rescaleToPiece,
   spansOf,
   splitLong,
+  TRANSCRIBE_CALL_TIMEOUT_MS,
+  TRANSCRIBE_FINAL_CALL_TIMEOUT_MS,
   TranscriptParseError,
   TranscriptRefusedError,
   tidy,
@@ -255,6 +257,161 @@ test("a refused chunk goes to the next deployment, with safety filters off", asy
     { threshold: "OFF" },
     { threshold: "OFF" },
   ]);
+});
+
+/** A deployment that answers after `stallMs`, or never when that is null; it honours the abort signal. */
+function slow(
+  id: string,
+  stallMs: number | null,
+  calls: string[],
+  text = "hallo",
+): LanguageModelV4 {
+  return {
+    specificationVersion: "v4",
+    provider: "fake",
+    modelId: id,
+    supportedUrls: {},
+    async doStream() {
+      throw new Error("not used");
+    },
+    doGenerate(o) {
+      calls.push(id);
+      return new Promise((resolve, reject) => {
+        const answer = () =>
+          resolve({
+            content: [{ type: "text", text: `{"corrected_transcript": "${text}", "note": ""}` }],
+            finishReason: { unified: "stop", raw: "STOP" },
+            usage: {
+              inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
+              outputTokens: { total: 1, text: 1, reasoning: 0 },
+            },
+            response: { modelId: id },
+            warnings: [],
+          } as never);
+        const timer = stallMs === null ? null : setTimeout(answer, stallMs);
+        o.abortSignal?.addEventListener("abort", () => {
+          if (timer) clearTimeout(timer);
+          reject(o.abortSignal?.reason);
+        });
+      });
+    },
+  };
+}
+
+test("a stalled call is cut at the bound and the next attempt answers, noted as one failed call", async () => {
+  const calls: string[] = [];
+  const metered: { model: string; status: string; error: string | null; attempt: number }[] = [];
+  const group = new FallbackModel(
+    "multi_modal_pro",
+    [
+      { label: "a", model: slow("gemini-a", null, calls) },
+      { label: "b", model: slow("gemini-b", 0, calls) },
+    ],
+    {
+      ...noWait,
+      attemptsPerDeployment: 1,
+      observe: (c) =>
+        metered.push({ model: c.model, status: c.status, error: c.error, attempt: c.attempt }),
+    },
+  );
+  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+    callTimeoutMs: 30,
+  });
+  const began = Date.now();
+  const out = await t.transcribe({ audio: new Uint8Array([1]) });
+  expect(Date.now() - began).toBeLessThan(2000);
+  expect(out.transcript).toBe("hallo");
+  expect(out.models).toEqual(["gemini-b"]);
+  expect(calls).toEqual(["gemini-a", "gemini-b"]);
+  expect(metered).toEqual([
+    { model: "gemini-a", status: "error", error: "timeouterror", attempt: 1 },
+    { model: "gemini-b", status: "ok", error: null, attempt: 2 },
+  ]);
+});
+
+test("a stalled call is retried on the same deployment with a fresh clock", async () => {
+  let n = 0;
+  const calls: string[] = [];
+  const flaky = slow("gemini-a", 0, calls);
+  const stalls = slow("gemini-a", null, calls);
+  const a: LanguageModelV4 = {
+    ...flaky,
+    doGenerate: (o) => (n++ === 0 ? stalls : flaky).doGenerate(o),
+  };
+  const group = new FallbackModel("multi_modal_pro", [{ label: "a", model: a }], noWait);
+  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+    callTimeoutMs: 30,
+  });
+  const out = await t.transcribe({ audio: new Uint8Array([1]) });
+  expect(out.transcript).toBe("hallo");
+  expect(calls).toEqual(["gemini-a", "gemini-a"]);
+});
+
+test("a call that answers inside the bound is not cut", async () => {
+  const calls: string[] = [];
+  const group = new FallbackModel(
+    "multi_modal_pro",
+    [
+      { label: "a", model: slow("gemini-a", 10, calls) },
+      { label: "b", model: slow("gemini-b", 0, calls) },
+    ],
+    noWait,
+  );
+  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+    callTimeoutMs: 2000,
+  });
+  const out = await t.transcribe({ audio: new Uint8Array([1]) });
+  expect(out.models).toEqual(["gemini-a"]);
+  expect(calls).toEqual(["gemini-a"]);
+});
+
+test("the pro group keeps the short bound, the fast group's last attempt the long one", async () => {
+  const seen: LanguageModelV4CallOptions[] = [];
+  const pro = model(['{"corrected_transcript": "x", "note": ""}'], seen);
+  const t = new GeminiTranscriber({ model: () => pro, embedding: () => ({}) as never }, logger);
+  await t.transcribe({ audio: new Uint8Array([1]) });
+  const fallback = seen[0]?.providerOptions?.fallback;
+  expect(fallback?.attemptTimeoutMs).toBe(TRANSCRIBE_CALL_TIMEOUT_MS);
+  expect(fallback?.finalAttemptTimeoutMs).toBe(TRANSCRIBE_CALL_TIMEOUT_MS);
+  expect(TRANSCRIBE_FINAL_CALL_TIMEOUT_MS).toBeGreaterThan(348_174);
+});
+
+test("pro stalls and is cut at the short bound, then the fast group waits the long one", async () => {
+  const calls: string[] = [];
+  const bounds: Record<string, unknown> = {};
+  const watching = (id: string, inner: LanguageModelV4): LanguageModelV4 => ({
+    ...inner,
+    doGenerate: (o) => {
+      bounds[id] = o.providerOptions?.fallback;
+      return inner.doGenerate(o);
+    },
+  });
+  const pro = new FallbackModel(
+    "multi_modal_pro",
+    [{ label: "a", model: watching("pro", slow("gemini-a", null, calls)) }],
+    { ...noWait, attemptsPerDeployment: 1 },
+  );
+  const fast = new FallbackModel(
+    "multi_modal_fast",
+    [{ label: "b", model: watching("fast", slow("gemini-b", 120, calls)) }],
+    { ...noWait, attemptsPerDeployment: 1 },
+  );
+  const t = new GeminiTranscriber(
+    {
+      model: (g: string) => (g === "multi_modal_pro" ? pro : fast),
+      embedding: () => ({}) as never,
+    } as never,
+    logger,
+    { callTimeoutMs: 30, finalCallTimeoutMs: 2000 },
+  );
+  const began = Date.now();
+  const out = await t.transcribe({ audio: new Uint8Array([1]) });
+  // The stalled pro call is cut at 30 ms, not held for the long bound; the fast call outlives 30 ms and answers.
+  expect(out.models).toEqual(["gemini-b"]);
+  expect(calls).toEqual(["gemini-a", "gemini-b"]);
+  expect(Date.now() - began).toBeLessThan(1500);
+  expect(bounds.pro).toMatchObject({ attemptTimeoutMs: 30, finalAttemptTimeoutMs: 30 });
+  expect(bounds.fast).toMatchObject({ attemptTimeoutMs: 30, finalAttemptTimeoutMs: 2000 });
 });
 
 test("a chunk every deployment refuses ends with a refusal, not a parse error", async () => {
