@@ -2,7 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
@@ -10,6 +10,8 @@ import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
 const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
+	onRecordingInterrupted: undefined as (() => void) | undefined,
+	stopRecording: vi.fn(),
 	taking: false as boolean | undefined,
 }));
 
@@ -37,19 +39,22 @@ vi.mock("./hooks", () => ({
 	useUploadConversationChunk: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock("./hooks/useChunkedAudioRecorder", () => ({
-	default: () => ({
-		errored: false,
-		getAudioLevel: () => 0,
-		getChunkHistory: () => [],
-		hadInterruption: false,
-		isPaused: false,
-		isRecording: state.isRecording,
-		isStarting: false,
-		permissionError: null,
-		recordingTime: 0,
-		startRecording: vi.fn(),
-		stopRecording: vi.fn(),
-	}),
+	default: (options: { onRecordingInterrupted?: () => void }) => {
+		state.onRecordingInterrupted = options.onRecordingInterrupted;
+		return {
+			errored: false,
+			getAudioLevel: () => 0,
+			getChunkHistory: () => [],
+			hadInterruption: false,
+			isPaused: false,
+			isRecording: state.isRecording,
+			isStarting: false,
+			permissionError: null,
+			recordingTime: 0,
+			startRecording: vi.fn(),
+			stopRecording: state.stopRecording,
+		};
+	},
 }));
 vi.mock("./hooks/usePingConnectionHealth", () => ({
 	usePingConnectionHealth: () => ({
@@ -116,6 +121,7 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	state.isRecording = false;
+	state.stopRecording.mockReset();
 });
 
 const page = () => (
@@ -170,4 +176,20 @@ it("keeps the page after a recording here stopped with no chunk on a now-closed 
 	state.taking = false;
 	rerender(page());
 	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
+});
+
+// A mic that drops between chunks ends in the recorder's interruption callback.
+// The screen must stop recording and tell the participant, not keep saying it
+// is recording.
+it("stops recording and shows the interruption notice when the recorder reports one", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+	expect(screen.queryByText("Recording interrupted")).toBeNull();
+
+	act(() => state.onRecordingInterrupted?.());
+
+	expect(state.stopRecording).toHaveBeenCalledTimes(1);
+	expect(await screen.findByText("Recording interrupted")).toBeTruthy();
 });

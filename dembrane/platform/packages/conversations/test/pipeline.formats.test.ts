@@ -85,6 +85,11 @@ const FORMATS: readonly Spec[] = [
   { name: "ogg Vorbis", ext: "ogg", out: ["-c:a", "libvorbis", "-q:a", "3"] },
   { name: "opus file", ext: "opus", out: ["-c:a", "libopus", "-b:a", "16k"] },
   { name: "flac", ext: "flac", out: ["-c:a", "flac"] },
+  {
+    name: "m4a AAC in a QuickTime container (Apple Voice Memo, renamed from .qta)",
+    ext: "m4a",
+    out: ["-c:a", "aac", "-b:a", "64k", "-f", "mov"],
+  },
 ];
 
 async function ffmpeg(args: string[]) {

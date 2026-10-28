@@ -24,6 +24,7 @@ import { charged, fitsVatTreatment, requireAmounts, type VatTreatment } from "./
 import {
   type Amendment,
   type BillingUnit,
+  type DembraneSigner,
   type Language,
   type OfferAnnex,
   type OfferContent,
@@ -47,6 +48,7 @@ import {
 import { type ChooseMode, checkOptions } from "./options";
 import { voidAcceptance } from "./outside";
 import { type PlacedField, pageCountOf, textPdf } from "./pdf";
+import { dembraneSignature, recordDembraneSignature } from "./presign";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
 import { openDpa } from "./signing";
@@ -224,7 +226,14 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
     timeline: events.map((e) => eventView(e, staffNames)),
+    dembrane_signer: await defaultSigner(d),
   };
+}
+
+/** Who signs a new offer for dembrane unless staff choose another: the configured signatory. */
+async function defaultSigner(d: AccountsDeps): Promise<DembraneSigner | null> {
+  const s = await dembraneSignature(d, d.db, d.now());
+  return s && { name: s.name, role: s.role, email: s.email };
 }
 
 /**
@@ -357,6 +366,8 @@ export interface PushOfferInput {
   readonly choose?: ChooseMode | undefined;
   /** A second signature; on a change absent keeps the draft's, null drops it. */
   readonly second_signer?: SecondSigner | null | undefined;
+  /** Who signs for dembrane when it is sent; on a change absent keeps the draft's. */
+  readonly dembrane_signer?: DembraneSigner | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -387,8 +398,12 @@ async function replaceable(
 ) {
   const prev = isUuid(id) ? await store.documentForUpdate(tx, orgId, id) : null;
   if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
-  // Signed, or signed by some of those it asks to sign: it stands as it is.
-  if (prev.status === "signed" || (await store.signaturesOf(tx, prev.id)).length)
+  // Signed, or signed by some of those it asks to sign: it stands as it is. dembrane's own
+  // signature does not hold it: dembrane may withdraw or replace what it signed.
+  if (
+    prev.status === "signed" ||
+    (await store.signaturesOf(tx, prev.id)).some((x) => x.slot !== "dembrane")
+  )
     throw new ConflictError("document.signed_cannot_supersede");
   return prev;
 }
@@ -446,6 +461,7 @@ function offerContent(
     | "no_charge"
     | "choose"
     | "second_signer"
+    | "dembrane_signer"
   > & { date: string; reference: string; annexes?: readonly OfferAnnex[] | undefined },
   words: OfferTemplateText,
   before?: OfferContent,
@@ -469,6 +485,7 @@ function offerContent(
     throw new ValidationError("offer.amendments_custom_only");
   const billTo = o.bill_to ? checkBillTo(o.bill_to, vatTreatment) : null;
   const second = o.second_signer ? checkSecondSigner(o.second_signer) : null;
+  const signer = o.dembrane_signer ? checkDembraneSigner(o.dembrane_signer) : null;
   const plan = o.invoice_plan ? checkInvoicePlan(o.invoice_plan, o.items) : null;
   const same = before?.template === o.template && before?.language === o.language;
   const unit =
@@ -490,6 +507,7 @@ function offerContent(
     ...(noCharge && { no_charge: true as const }),
     ...(choose && { choose }),
     ...(second && { second_signer: second }),
+    ...(signer && { dembrane_signer: signer }),
     ...(o.annexes?.length && { annexes: o.annexes }),
     dpa_separate: true,
     template: o.template,
@@ -531,6 +549,15 @@ function checkSecondSigner(s: SecondSigner): SecondSigner {
     return { kind: "customer", name: s.name || null, email: s.email?.toLowerCase() || null };
   if (!isStaffEmail(s.email)) throw new ValidationError("offer.second_signer_staff");
   return { kind: "dembrane", name: s.name, email: s.email.toLowerCase(), role: s.role || null };
+}
+
+/**
+ * Who signs for dembrane as the offer keeps it: a staff member, since the signature is
+ * applied in dembrane's name without a step of theirs; the address kept lower case.
+ */
+function checkDembraneSigner(s: DembraneSigner): DembraneSigner {
+  if (!isStaffEmail(s.email)) throw new ValidationError("offer.second_signer_staff");
+  return { name: s.name, role: s.role || null, email: s.email.toLowerCase() };
 }
 
 /** The columns of an offer that follow from its content. */
@@ -595,7 +622,11 @@ export async function pushOffer(
       ? await store.document(d.db, org.id, input.supersedes_id)
       : null;
   const annexes = (replaced?.content as OfferContent | null)?.annexes;
-  const content = offerContent(d, pinned, { ...input, date, reference, annexes }, words);
+  const drafted = offerContent(d, pinned, { ...input, date, reference, annexes }, words);
+  // Sent now: it carries dembrane's signature. A draft carries none until it is sent.
+  const signature =
+    input.send === false ? null : await dembraneSignature(d, d.db, now, drafted.dembrane_signer);
+  const content = signature ? { ...drafted, dembrane_signature: signature } : drafted;
   // The PDF rendered now is what the customer sees and what a signature binds.
   const rendered = await renderOffer(d, content);
   const file = await storeRendered(d, org.id, id, rendered);
@@ -703,6 +734,8 @@ export async function updateOffer(
       no_charge: input.no_charge === undefined ? before.no_charge === true : input.no_charge,
       choose: input.choose === undefined ? before.choose : input.choose,
       second_signer: input.second_signer === undefined ? before.second_signer : input.second_signer,
+      dembrane_signer:
+        input.dembrane_signer === undefined ? before.dembrane_signer : input.dembrane_signer,
       annexes: before.annexes,
     },
     words,
@@ -774,6 +807,9 @@ async function sendOfferIn(
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
   const content = doc.content as OfferContent | null;
+  // The PDF as sent prints dembrane's signature; its record goes in with the send.
+  if (content?.dembrane_signature)
+    await recordDembraneSignature(d, tx, doc, content.dembrane_signature);
   // The task is worded from the kind of offer and its number ("Review and sign event
   // offer 515"); the title stays for older readers and the server's own wording.
   const params = {
@@ -912,7 +948,8 @@ async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string
  * A draft offer carries the day it is sent and the texts in force that day: when the
  * draft is from an earlier day, a text changed since, or it predates the DPA being its own
  * document, its PDF, text and fields are rendered again before it freezes. A date set in
- * the future stays.
+ * the future stays. With a signer chosen or a signatory configured, it is rendered again
+ * with dembrane's signature, applied now.
  */
 async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
@@ -924,7 +961,10 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
   const before = doc.content as OfferContent;
   const today = d.now().toISOString().slice(0, 10);
   const date = before.date < today ? today : before.date;
+  const signature = await dembraneSignature(d, d.db, d.now(), before.dembrane_signer);
   if (
+    !signature &&
+    !before.dembrane_signature &&
     before.dpa_separate &&
     date === before.date &&
     doc.termsTextId === pinned.terms.id &&
@@ -932,8 +972,11 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
     doc.dpaTextId === pinned.dpa.id
   )
     return;
+  // A signature from a send that did not go through is applied again, or dropped.
+  const { dembrane_signature: _stale, ...unsigned } = before;
   const content: OfferContent = {
-    ...before,
+    ...unsigned,
+    ...(signature && { dembrane_signature: signature }),
     date,
     legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
     // A draft from before the DPA was its own document is sent as one that names it so.
