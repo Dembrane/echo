@@ -176,7 +176,7 @@ export const ChatTemplatesMenuConnected = ({
 	]);
 
 	// Refetch suggestions when the caller signals the assistant just finished
-	// responding (classic refetches on the isLoading -> false transition).
+	// responding (classic refetches once the reply is saved).
 	const prevRefetchKeyRef = useRef<unknown>(refetchSuggestionsKey);
 	const isFirstRefetchKeyRenderRef = useRef(true);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: suggestionsQuery identity changes per render; only refetchSuggestionsKey should retrigger this
