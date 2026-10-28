@@ -1774,7 +1774,7 @@ msgstr "Ouvrir le document"
 msgid "Open the draft ({0})"
 msgstr "Ouvrir le brouillon ({0})"
 
-#: src/features/accounts/pdf/PdfPages.tsx:105
+#: src/features/accounts/pdf/PdfPages.tsx:155
 msgid "Open the PDF"
 msgstr "Ouvrir le PDF"
 
@@ -3075,7 +3075,7 @@ msgstr "À : {0}"
 #~ msgstr ""
 
 #: src/features/accounts/signing/SignRoute.tsx:1397
-#: src/features/accounts/pdf/PdfPages.tsx:94
+#: src/features/accounts/pdf/PdfPages.tsx:144
 msgid "Try again"
 msgstr "Réessayer"
 
@@ -3476,7 +3476,7 @@ msgstr "Votre adresse est vide."
 msgid "Your answer"
 msgstr "Votre réponse"
 
-#: src/features/accounts/pdf/PdfPages.tsx:83
+#: src/features/accounts/pdf/PdfPages.tsx:133
 msgid "Your browser could not display this document. Try again, or open the PDF on its own."
 msgstr "Votre navigateur n'a pas pu afficher ce document. Réessayez ou ouvrez le PDF séparément."
 
