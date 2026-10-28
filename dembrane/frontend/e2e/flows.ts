@@ -151,6 +151,7 @@ export const flows: Record<string, Flow> = {
 	},
 	"/projects": REDIRECT,
 	"/projects/:projectId/*": REDIRECT,
+	"/projects/new": REDIRECT,
 	"/register": { auth: false },
 	"/release-notes": {},
 	"/request-password-reset": { auth: false },

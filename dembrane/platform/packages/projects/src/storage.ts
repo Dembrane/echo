@@ -229,6 +229,19 @@ export function projectsStorage(db: Db) {
       return row ?? null;
     },
 
+    /** A project's tags in their shown order, locked until the transaction ends. Call inside one. */
+    async lockTags(projectId: string) {
+      const rows = await db
+        .select({ id: project_tag.id, sort: project_tag.sort })
+        .from(project_tag)
+        .where(eq(project_tag.project_id, projectId))
+        .orderBy(asc(project_tag.id))
+        .for("update");
+      return rows.sort(
+        (a, b) => (a.sort ?? Infinity) - (b.sort ?? Infinity) || a.id.localeCompare(b.id),
+      );
+    },
+
     async insertTags(rows: (typeof project_tag.$inferInsert)[]) {
       if (rows.length) await db.insert(project_tag).values(rows);
     },

@@ -99,10 +99,12 @@ export function useSearchHits(
 	const [debouncedQ] = useDebouncedValue(query.trim(), 250);
 	const deepSearch = useQuery({
 		enabled: enabled && debouncedQ.length >= 2,
-		queryFn: async (): Promise<HomeSearchResponse> => {
+		// The signal aborts the request when the text changes, so a slow search for
+		// an earlier prefix no longer holds a connection open.
+		queryFn: async ({ signal }): Promise<HomeSearchResponse> => {
 			const res = await fetch(
 				`${API_BASE_URL}/home/search?query=${encodeURIComponent(debouncedQ)}&limit=5`,
-				{ credentials: "include" },
+				{ credentials: "include", signal },
 			);
 			if (!res.ok) return EMPTY_SEARCH;
 			return res.json();

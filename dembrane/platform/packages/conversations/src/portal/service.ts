@@ -8,6 +8,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import { audioOpen, requireAudioStart } from "../free-audio";
+import { clip } from "../live/telemetry";
 import { finishConversation } from "../pipeline/defs";
 import {
   type ChunkRow,
@@ -79,9 +80,10 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
       .values({
         id,
         project_id: project.id,
-        participant_name: input.name,
+        // Both come from the browser unchecked; an upload's name is its file's name.
+        participant_name: clip(input.name, 255),
         participant_email: input.email,
-        participant_user_agent: input.userAgent,
+        participant_user_agent: input.userAgent && clip(input.userAgent, 255),
         source: input.source,
         is_anonymized: Boolean(project.anonymize_transcripts),
         created_at: now,
