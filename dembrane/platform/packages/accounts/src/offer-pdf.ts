@@ -453,6 +453,19 @@ class Sheet {
   }
 
   /**
+   * A blank already filled in: its label, the value on the line, and the line. No field: the
+   * value is part of the document as sent. Returns the line's position, as `blank` does.
+   */
+  filled(label: string, value: string, x: number, width: number, top: number, room: number) {
+    this.at(label, x, top, { s: T.caption, c: MUTED });
+    const lineY = top + room;
+    // Where and how large a signature stamps a value, so both signatures read alike.
+    this.at(value, x + 2, lineY - 2.5 - ASCENT * 11, { s: 11, c: TEXT });
+    this.rule(x, x + width, lineY, CONTROL);
+    return lineY;
+  }
+
+  /**
    * A box to tick with its label beside it, the field on the box. Returns the bottom of the
    * line.
    */
@@ -765,6 +778,19 @@ function acceptance(s: Sheet, l: OfferLayout) {
       sBottom = s.blank(sSignature, x, RIGHT - x, sTop, 48);
     }
     s.y = sBottom;
+  }
+  // dembrane's signature, applied when the offer was sent: the same lines, filled in.
+  const signed = l.signed;
+  if (signed) {
+    s.gap(26);
+    s.room(80 + 37 * signed.printed.length + 56);
+    s.para({ runs: runs(signed.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+    for (const [label, value] of signed.printed)
+      s.y = s.filled(label, value, MARGIN, CONTENT_W, s.y, 26) + 11;
+    const top = s.y;
+    s.filled(signed.date[0], signed.date[1], MARGIN, dateW, top, 48);
+    const x = MARGIN + dateW + 24;
+    s.y = s.filled(signed.signature[0], signed.signature[1], x, RIGHT - x, top, 48);
   }
   s.done(32);
 }
