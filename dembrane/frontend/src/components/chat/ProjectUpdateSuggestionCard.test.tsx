@@ -10,6 +10,7 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { loadErrorMessages } from "@/lib/errors/present";
 import { ApiRequestError } from "@/lib/errors/read";
 import {
 	type ProjectUpdateSuggestion,
@@ -18,14 +19,20 @@ import {
 
 // The card only needs the project read to decide "already applied"; leaving it
 // undefined keeps it in the pending state, which is what we are testing.
-const { mutateAsync } = vi.hoisted(() => ({ mutateAsync: vi.fn() }));
+const { mutateAsync, useUpdateProjectByIdMutation } = vi.hoisted(() => {
+	const mutateAsync = vi.fn();
+	return {
+		mutateAsync,
+		useUpdateProjectByIdMutation: vi.fn(() => ({
+			isPending: false,
+			mutateAsync,
+		})),
+	};
+});
 
 vi.mock("@/components/project/hooks", () => ({
 	useProjectById: () => ({ data: undefined, refetch: vi.fn() }),
-	useUpdateProjectByIdMutation: () => ({
-		isPending: false,
-		mutateAsync,
-	}),
+	useUpdateProjectByIdMutation,
 }));
 
 vi.mock("@/components/common/Toaster", () => ({
@@ -320,6 +327,9 @@ describe("ProjectUpdateSuggestionCard", () => {
 	});
 
 	describe("when the server answers the apply", () => {
+		// Lazy on the first error, ~12s under a full run: far past findBy's 1s.
+		beforeAll(() => loadErrorMessages(i18n), 30_000);
+
 		const legalBasisSuggestion: ProjectUpdateSuggestion = {
 			changes: [
 				{
@@ -357,10 +367,17 @@ describe("ProjectUpdateSuggestionCard", () => {
 			const refusal = await screen.findByTestId("suggestion-refusal");
 			expect(refusal.textContent).toContain("Nothing was saved");
 			expect(refusal.textContent).toContain(
-				"legal basis: Pick one of the options.",
+				"Legal basis: Pick one of the options.",
 			);
 			// The server's own sentence never reaches the host.
 			expect(refusal.textContent).not.toContain("Input should be");
+		});
+
+		it("keeps the global error toast quiet, since the card shows the reason", () => {
+			renderCard(legalBasisSuggestion);
+			expect(useUpdateProjectByIdMutation).toHaveBeenCalledWith({
+				errorToast: false,
+			});
 		});
 
 		it("uses the shared message when the refusal is not about a field", async () => {

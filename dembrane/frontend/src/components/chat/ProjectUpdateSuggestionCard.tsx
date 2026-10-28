@@ -71,6 +71,7 @@ const FIELD_LABELS: Record<string, () => string> = {
 	is_verify_enabled: () => t`Participant verification`,
 	is_verify_on_finish_enabled: () => t`Verification on the finish screen`,
 	language: () => t`Portal language`,
+	legal_basis: () => t`Legal basis`,
 	name: () => t`Project name`,
 	selected_verification_key_list: () => t`Verification topics`,
 	tutorial_slug: () => t`Tutorial`,
@@ -423,7 +424,10 @@ export const ProjectUpdateSuggestionCard = ({
 	onSendNote?: (message: string) => void | Promise<void>;
 }) => {
 	const panelId = useId();
-	const updateProjectMutation = useUpdateProjectByIdMutation();
+	// The card shows a refusal itself, so the global error toast stays quiet.
+	const updateProjectMutation = useUpdateProjectByIdMutation({
+		errorToast: false,
+	});
 	const changedFields = useMemo(
 		() => suggestion.changes.map((c) => c.field),
 		[suggestion.changes],
