@@ -42,15 +42,21 @@ const recording = vi.hoisted(() => ({
 	} as Record<string, unknown> | undefined,
 }));
 
+const dropped = vi.hoisted(() => ({
+	files: [] as { name: string; type: string }[],
+}));
+
 vi.mock("./hooks", () => ({ useConversationUploader: () => uploader }));
 vi.mock("./Dropzone", () => ({
 	CommonDropzone: ({ onDrop }: { onDrop: (files: File[]) => void }) => (
 		<button
 			type="button"
 			onClick={() =>
-				onDrop([
-					new File([new Uint8Array(6000)], "a.mp3", { type: "audio/mpeg" }),
-				])
+				onDrop(
+					dropped.files.map(
+						(f) => new File([new Uint8Array(6000)], f.name, { type: f.type }),
+					),
+				)
 			}
 		>
 			drop
@@ -110,6 +116,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+	dropped.files = [{ name: "a.mp3", type: "audio/mpeg" }];
 	Object.assign(uploader, {
 		error: null,
 		isError: false,
@@ -205,4 +212,42 @@ it("keeps Try again when a failure is not a free limit refusal", async () => {
 	expect(
 		await screen.findByTestId("conversation-upload-retry-button"),
 	).toBeTruthy();
+});
+
+const uploadedChunks = () =>
+	(uploader.uploadFiles as ReturnType<typeof vi.fn>).mock.calls[0]?.[0]
+		.chunks as File[];
+
+it("takes an Apple Voice Memo and uploads it as m4a", async () => {
+	recording.data = { free: false };
+	dropped.files = [{ name: "New Recording.qta", type: "video/quicktime" }];
+	renderDropzone();
+	const button = await openAndPick();
+	await screen.findByText("New Recording.m4a");
+	fireEvent.click(button);
+	await waitFor(() => expect(uploader.uploadFiles).toHaveBeenCalled());
+	const [file] = uploadedChunks();
+	expect(file.name).toBe("New Recording.m4a");
+	expect(file.type).toBe("audio/m4a");
+	expect(file.size).toBe(6000);
+});
+
+it("takes a .qta whatever its case or reported type", async () => {
+	recording.data = { free: false };
+	dropped.files = [{ name: "Memo.QTA", type: "" }];
+	renderDropzone();
+	const button = await openAndPick();
+	fireEvent.click(button);
+	await waitFor(() => expect(uploader.uploadFiles).toHaveBeenCalled());
+	expect(uploadedChunks()[0].name).toBe("Memo.m4a");
+});
+
+it("still refuses a video that is not a voice memo", async () => {
+	dropped.files = [{ name: "clip.mov", type: "video/quicktime" }];
+	renderDropzone();
+	fireEvent.click(screen.getByTestId("conversation-upload-button"));
+	fireEvent.click(await screen.findByText("drop"));
+	await waitFor(() =>
+		expect(screen.queryByTestId("conversation-upload-files-button")).toBeNull(),
+	);
 });

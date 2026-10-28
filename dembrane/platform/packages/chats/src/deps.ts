@@ -22,7 +22,9 @@ export interface ChatDeps {
   readonly newId: () => string;
   /** How long a reply may stay silent before the dashboard is told the system is busy. */
   readonly highLoadDelayMs: number;
-  /** Per-process cache of suggestions for fresh chats (Redis in the Python API). */
+  /** Overrides the suggestions time limit; tests use it to keep a stalled model quick. */
+  readonly suggestionTimeoutMs?: number;
+  /** Per-process cache of suggestions per chat state (Redis in the Python API). */
   readonly suggestionCache: Map<string, { at: number; value: Suggestion[] }>;
 }
 

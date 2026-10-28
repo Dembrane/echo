@@ -1,5 +1,5 @@
 import { type BillTo, billToLines } from "./bill-to";
-import { type InvoicePlan, invoiceParts } from "./invoice-plan";
+import { amsterdamDay, type InvoicePlan, invoiceParts } from "./invoice-plan";
 import { dutchDate } from "./legal/parse";
 import {
   charged,
@@ -109,6 +109,23 @@ export type SecondSigner =
       readonly role: string | null;
     };
 
+/** Who signs an offer for dembrane when it is sent: a staff member, chosen per offer. */
+export interface DembraneSigner {
+  readonly name: string;
+  readonly role: string | null;
+  readonly email: string;
+}
+
+/**
+ * dembrane's signature as the offer carries it: applied when the offer is sent, by the
+ * signer staff chose or else the signatory configured, so the customer's signature
+ * completes the offer.
+ */
+export interface DembraneSignature extends DembraneSigner {
+  /** When it was applied: the moment the offer was sent. */
+  readonly signed_at: string;
+}
+
 /** A PDF attached to an offer: in its clause, after its pages, part of its hash. */
 export interface OfferAnnex {
   /** From 1. */
@@ -195,6 +212,13 @@ export interface OfferContent {
   readonly second_signer?: SecondSigner;
   /** PDFs attached after the offer's pages, listed in its clause. */
   readonly annexes?: readonly OfferAnnex[];
+  /** Who signs for dembrane when it is sent; absent takes the configured signatory then. */
+  readonly dembrane_signer?: DembraneSigner;
+  /**
+   * dembrane's signature, printed under the customer's blanks. Set when the offer is sent;
+   * absent on a draft and on an offer sent before dembrane signed what it sends.
+   */
+  readonly dembrane_signature?: DembraneSignature;
 }
 
 /** A term staff agree with one customer, in the offer's language. */
@@ -264,6 +288,8 @@ interface Copy {
     readonly role: string;
     readonly date: string;
     readonly signature: string;
+    /** Where dembrane's signature image would be, on the signature it applied when sending. */
+    readonly signed: string;
   };
   readonly amendmentsTitle: string;
   readonly words: ClauseWords;
@@ -573,6 +599,7 @@ const EN_FRAME = {
     role: "Role",
     date: "Date",
     signature: "Signature",
+    signed: "Signed electronically",
   },
   acceptanceTitle: "Accept this offer",
   // The e-signing clause sits where the reader signs.
@@ -626,6 +653,7 @@ const NL_FRAME = {
     role: "Functie",
     date: "Datum",
     signature: "Handtekening",
+    signed: "Elektronisch ondertekend",
   },
   acceptanceTitle: "Offerte accepteren",
   acceptanceIntro:
@@ -939,6 +967,17 @@ export interface OfferLayout {
     readonly fields: readonly AcceptanceField[];
     readonly signing: readonly AcceptanceField[];
   } | null;
+  /**
+   * dembrane's signature, applied when the offer was sent: its heading, then name, role,
+   * date and the words that stand where a signature image would, label and value. Nothing
+   * in it is a field: it is filled in before the customer opens the offer.
+   */
+  readonly signed: {
+    readonly title: string;
+    readonly printed: readonly (readonly [string, string])[];
+    readonly date: readonly [string, string];
+    readonly signature: readonly [string, string];
+  } | null;
   /** The clause as plain lines, numbered, for the text. */
   readonly clause: readonly string[];
   /** The same clause in parts, for the PDF: linked names, underlined words. */
@@ -1147,7 +1186,12 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
     acceptance: copy.acceptance,
-    second: secondBlock(copy, content.second_signer),
+    // dembrane's signature applied at sending stands for the counter-signature it would ask.
+    second:
+      content.dembrane_signature && content.second_signer?.kind === "dembrane"
+        ? null
+        : secondBlock(copy, content.second_signer),
+    signed: signedBlock(copy, content.dembrane_signature),
     clause: [
       clause.opening,
       ...clause.items.map((line, i) => `${i + 1}. ${clauseText(line)}`),
@@ -1186,6 +1230,21 @@ function secondBlock(copy: Copy, second: SecondSigner | undefined): OfferLayout[
       { ...f(w.date, "date"), role: "dembrane" },
       { ...f(w.signature, "signature"), role: "dembrane" },
     ],
+  };
+}
+
+/** A date as the documents print it: day-month-year, in Amsterdam. */
+export const printedDay = (at: Date): string => amsterdamDay(at).split("-").reverse().join("-");
+
+/** dembrane's signature applied when sending, as the offer prints it. */
+function signedBlock(copy: Copy, s: DembraneSignature | undefined): OfferLayout["signed"] {
+  if (!s) return null;
+  const w = copy.second;
+  return {
+    title: w.dembrane,
+    printed: [[w.name, s.name], ...(s.role ? [[w.role, s.role] as const] : [])],
+    date: [w.date, printedDay(new Date(s.signed_at))],
+    signature: [w.signature, w.signed],
   };
 }
 
@@ -1284,6 +1343,13 @@ export function offerText(content: OfferContent): string {
           `### ${l.second.title}`,
           ...l.second.printed.map(([k, v]) => `${k}: ${v}`),
           ...[...l.second.fields, ...l.second.signing].map((a) => `${a.label}: ${blank}`),
+        ]
+      : []),
+    ...(l.signed
+      ? [
+          "",
+          `### ${l.signed.title}`,
+          ...[...l.signed.printed, l.signed.date, l.signed.signature].map(([k, v]) => `${k}: ${v}`),
         ]
       : []),
     "",

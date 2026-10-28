@@ -309,6 +309,48 @@ class Writer {
     });
     this.y -= height + 6;
   }
+
+  /** A blank already filled in: the words, the value on the line, and no field. */
+  filled(label: string, value: string) {
+    const height = 18;
+    this.ensure(height + 8);
+    const words = this.clean(label);
+    const bottom = this.y - height;
+    this.page.drawText(words, {
+      x: MARGIN,
+      y: bottom + 4,
+      size: 10,
+      font: this.regular,
+      color: INK,
+    });
+    const x = Math.max(MARGIN + this.width(words, 10, this.regular) + 8, MARGIN + 170);
+    // Where and how large a signature stamps a value, so both signatures read alike.
+    this.page.drawText(this.clean(value), {
+      x: x + 2,
+      y: bottom + 4.5,
+      size: 11,
+      font: this.regular,
+      color: INK,
+    });
+    this.page.drawLine({
+      start: { x, y: bottom + 2 },
+      end: { x: A4[0] - MARGIN, y: bottom + 2 },
+      thickness: 0.6,
+      color: FIELD_LINE,
+    });
+    this.y -= height + 6;
+  }
+
+  /** dembrane's signature applied when sending, under the customer's blanks, filled in. */
+  signed(by: SignedBy, words: (typeof SIGNED_BLOCK)[Language]) {
+    this.space(18);
+    this.ensure(150);
+    this.text(`${words.for} ${by.company}`, { bold: true, size: brand.type.print.lead, gap: 6 });
+    this.filled(words.name, by.name);
+    if (by.role) this.filled(words.role, by.role);
+    this.filled(words.date, by.day);
+    this.filled(words.signature, words.signed);
+  }
 }
 
 async function start() {
@@ -460,14 +502,47 @@ export function legalBlocks(body: string): LegalBlock[] {
   return out;
 }
 
+/** The words around dembrane's signature applied when sending, as a text document prints it. */
+const SIGNED_BLOCK: Record<
+  Language,
+  { for: string; name: string; role: string; date: string; signature: string; signed: string }
+> = {
+  en: {
+    for: "For",
+    name: "Name:",
+    role: "Role:",
+    date: "Date:",
+    signature: "Signature:",
+    signed: "Signed electronically",
+  },
+  nl: {
+    for: "Namens",
+    name: "Naam:",
+    role: "Functie:",
+    date: "Datum:",
+    signature: "Handtekening:",
+    signed: "Elektronisch ondertekend",
+  },
+};
+
+/** dembrane's signature on a text document: who, for which company, and the day. */
+export interface SignedBy {
+  readonly company: string;
+  readonly name: string;
+  readonly role: string | null;
+  /** Day-month-year, as the documents print dates. */
+  readonly day: string;
+}
+
 /**
  * A text document (a DPA, a plan) as a PDF. With `signing`, a signing block follows the
- * text and its blanks are the document's fields.
+ * text and its blanks are the document's fields. With `signed`, dembrane's signature,
+ * applied when the document is sent, follows the customer's blanks, filled in.
  */
 export async function textPdf(
   title: string,
   body: string,
-  opts: { signing: boolean; language: Language },
+  opts: { signing: boolean; language: Language; signed?: SignedBy | null },
 ): Promise<RenderedPdf> {
   const w = await start();
   w.text(title, { bold: true, size: brand.type.print.display, gap: 14 });
@@ -516,6 +591,7 @@ export async function textPdf(
     w.ensure(230);
     w.text(block.title, { bold: true, size: brand.type.print.title, gap: 10 });
     for (const a of block.fields) w.blank(a);
+    if (opts.signed) w.signed(opts.signed, SIGNED_BLOCK[opts.language]);
   }
   return finish(w, title);
 }
@@ -590,68 +666,118 @@ function drawAudit(w: Writer, a: AuditRecord) {
     color: MUTED,
     gap: 12,
   });
-  const rows: [string, string][] = [
-    ["Document", a.documentTitle],
-    ["Document id", a.documentId],
-    ...(a.reference ? ([["Reference", a.reference]] as [string, string][]) : []),
-    ["Version", String(a.version)],
-    ["SHA-256 of the unsigned PDF", a.sha256],
-    ["Signer", a.signerName],
-    ...(a.signerRole ? ([["Role", a.signerRole]] as [string, string][]) : []),
-    ["Email (verified at sign-in)", a.email],
-    ["Organisation", a.organisation],
-    ...(a.address ? ([["Address", a.address]] as [string, string][]) : []),
-    ...(a.vatNumber ? ([["VAT number", a.vatNumber]] as [string, string][]) : []),
-    ...(a.dpaAuthorised === null
-      ? []
-      : ([
-          [
-            "May agree to data processing",
-            a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
-          ],
-        ] as [string, string][])),
-    // The choice is part of what was signed: each option, chosen or not.
-    ...(a.choices ?? []).map((c): [string, string] => [
-      `Option: ${c.label}`,
-      c.chosen ? "chosen" : "not chosen",
-    ]),
-    ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
-    ["Signature made", a.method],
-    ["SHA-256 of the signature image", a.imageSha256],
-    ["Signed at (UTC)", a.signedAt],
-    ["IP address", a.ip ?? "not recorded"],
-    ["User agent", a.userAgent ?? "not recorded"],
-    ["Signature id", a.signatureId],
-  ];
-  for (const t of a.legal)
-    rows.push([
-      `Pinned ${t.kind}`,
-      `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
-    ]);
-  drawRows(w, rows);
+  const row = (label: string, value: string | null | undefined): [string, string][] =>
+    value ? [[label, value]] : [];
+  const pinned = a.legal.map(
+    (t): Row => [
+      LEGAL_LABEL[t.kind] ?? t.kind,
+      `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}`,
+    ],
+  );
+  const pinnedHashes = a.legal.map(
+    (t): Row => [`${LEGAL_LABEL[t.kind] ?? t.kind} (SHA-256)`, t.sha256, HASH_SIZE],
+  );
+  // Plain headings first; the ids and hashes that only matter when checking the record
+  // come last. Every recorded value stays.
+  drawGroups(w, [
+    [
+      "The document",
+      [
+        ["Title", a.documentTitle],
+        ...row("Reference", a.reference),
+        ["Version", String(a.version)],
+        // The choice is part of what was signed: each option, chosen or not.
+        ...(a.choices ?? []).map((c): [string, string] => [
+          `Option: ${c.label}`,
+          c.chosen ? "chosen" : "not chosen",
+        ]),
+        ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
+        ...pinned,
+      ],
+    ],
+    [
+      "Who signed",
+      [
+        ["Name", a.signerName],
+        ...row("Role", a.signerRole),
+        ["Email (verified at sign-in)", a.email],
+        ["Organisation", a.organisation],
+        ...row("Address", a.address),
+        ...row("VAT number", a.vatNumber),
+        ...(a.dpaAuthorised === null
+          ? []
+          : ([
+              [
+                "May agree to data processing",
+                a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
+              ],
+            ] as [string, string][])),
+      ],
+    ],
+    [
+      "When and where",
+      [
+        ["Signed at (UTC)", a.signedAt],
+        ["How the signature was made", a.method],
+        ["IP address", a.ip ?? "not recorded"],
+        ["Browser and device", a.userAgent ?? "not recorded"],
+      ],
+    ],
+    [
+      "Verification",
+      [
+        ["Document id", a.documentId],
+        ["Unsigned PDF (SHA-256)", a.sha256, HASH_SIZE],
+        ["Signature image (SHA-256)", a.imageSha256, HASH_SIZE],
+        ...pinnedHashes,
+        ["Signature id", a.signatureId],
+      ],
+    ],
+  ]);
   drawTrail(w, a.trail);
-  w.space(10);
-  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Confirmation shown and accepted");
   w.text(a.confirmationText, { size: 9.5 });
 }
 
+/** What the pinned legal texts are called on the record; an unknown kind prints as it is. */
+const LEGAL_LABEL: Record<string, string> = { terms: "Terms", sla: "SLA", dpa: "DPA" };
+
+/** A heading that never sits alone at the foot of a page. */
+function heading(w: Writer, text: string) {
+  w.space(6);
+  w.ensure(48);
+  w.text(text, { size: 11, gap: 3 });
+}
+
+/** A row: label, value, and the size to print the value at when it is not the usual 9. */
+type Row = readonly [label: string, value: string, size?: number];
+
+/** A 64 character hash fits one line at this size, so a hash row is not two lines tall. */
+const HASH_SIZE = 7.5;
+
+function drawGroups(w: Writer, groups: readonly (readonly [string, readonly Row[]])[]) {
+  for (const [title, rows] of groups) {
+    heading(w, title);
+    drawRows(w, rows);
+  }
+}
+
 /** Label and value side by side, the label muted, each row as tall as its longer side. */
-function drawRows(w: Writer, rows: readonly (readonly [string, string])[]) {
-  for (const [k, value] of rows) {
+function drawRows(w: Writer, rows: readonly Row[]) {
+  for (const [k, value, size] of rows) {
     const before = w.y;
     const page = w.page;
     w.text(k, { size: 9, width: 150, color: MUTED });
     const after = w.y;
     if (w.page === page) w.y = before;
-    w.text(value, { size: 9, x: MARGIN + 160 });
+    w.text(value, { size: size ?? 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
   }
 }
 
 function drawTrail(w: Writer, trail: readonly { at: string; what: string }[]) {
   if (!trail.length) return;
-  w.space(10);
-  w.text("Audit trail (UTC)", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Audit trail (UTC)");
   drawRows(
     w,
     trail.map((t) => [t.at, t.what] as const),
@@ -746,8 +872,7 @@ export async function acceptedPdf(sent: Uint8Array, a: AcceptanceRecord): Promis
     ]);
   drawRows(w, rows);
   drawTrail(w, a.trail);
-  w.space(10);
-  w.text("Recorded statement", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Recorded statement");
   w.text(a.statement, { size: 9.5 });
   await doc.attach(a.evidence.bytes, a.evidence.name, {
     mimeType: a.evidence.type,

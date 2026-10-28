@@ -30,16 +30,18 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { XIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { notifyError } from "@/components/error/notifyError";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
 import {
 	useCreateProjectTagMutation,
 	useDeleteTagByIdMutation,
-	useUpdateProjectTagByIdMutation,
+	useReorderProjectTagsMutation,
 } from "./hooks";
 
 export const ProjectTagPill = ({
@@ -145,14 +147,38 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		},
 	});
 	const createTagMutation = useCreateProjectTagMutation();
-	const updateTagMutation = useUpdateProjectTagByIdMutation();
+	const reorderTagsMutation = useReorderProjectTagsMutation();
+
+	const queryClient = useQueryClient();
 
 	const [tagInput, setTagInput] = useState("");
+	const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+	// Only the latest drop hands the screen back to the server's order.
+	const dropGeneration = useRef(0);
+	const saveQueue = useRef<Promise<void>>(Promise.resolve());
+	const lastSaveError = useRef<unknown>(null);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor),
 	);
+
+	// Sort tags by sort field before rendering
+	const sortedTags = [
+		...((projectQuery.data?.tags as unknown as ProjectTag[]) ?? []),
+	].sort(
+		(a, b) =>
+			((a as ProjectTag).sort ?? Number.POSITIVE_INFINITY) -
+			((b as ProjectTag).sort ?? Number.POSITIVE_INFINITY),
+	);
+	const displayedTags = localOrder
+		? [
+				...localOrder.flatMap((id) =>
+					sortedTags.filter((tag) => tag.id === id),
+				),
+				...sortedTags.filter((tag) => !localOrder.includes(tag.id)),
+			]
+		: sortedTags;
 
 	const handleSubmit = async () => {
 		if (!tagInput.trim()) return;
@@ -190,37 +216,46 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 
 		if (!active || !over || active.id === over.id) return;
 
-		const oldIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => (tag as ProjectTag).id === active.id,
-		);
-		const newIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => (tag as ProjectTag).id === over.id,
-		);
+		const oldIndex = displayedTags.findIndex((tag) => tag.id === active.id);
+		const newIndex = displayedTags.findIndex((tag) => tag.id === over.id);
 
-		if (
-			oldIndex === undefined ||
-			newIndex === undefined ||
-			!projectQuery.data?.tags
-		)
-			return;
+		if (oldIndex === -1 || newIndex === -1) return;
 
-		// Create new array with updated positions
-		const newTags = arrayMove(
-			projectQuery.data.tags as unknown as ProjectTag[],
-			oldIndex,
-			newIndex,
+		const order = arrayMove(displayedTags, oldIndex, newIndex).map(
+			(tag) => tag.id,
 		);
 
-		// Update sort values for all affected tags
-		newTags.forEach((tag: ProjectTag, index: number) => {
-			updateTagMutation.mutate({
-				id: tag.id,
-				payload: {
-					sort: index + 1, // Sort starts from 1
+		// Keep the dropped order on screen until its save is done.
+		setLocalOrder(order);
+		dropGeneration.current += 1;
+		const generation = dropGeneration.current;
+
+		// One drop saves at a time, so the last drop is the last write.
+		saveQueue.current = saveQueue.current
+			.then(() =>
+				reorderTagsMutation.mutateAsync({
+					project_id: props.project.id,
+					tag_ids: order,
+				}),
+			)
+			.then(
+				() => {
+					lastSaveError.current = null;
 				},
-				project_id: props.project.id,
+				(error) => {
+					lastSaveError.current = error;
+				},
+			)
+			.then(async () => {
+				if (generation !== dropGeneration.current) return;
+				await queryClient.invalidateQueries({
+					queryKey: ["projects", props.project.id],
+				});
+				if (generation !== dropGeneration.current) return;
+				// A failed save changed nothing, so the server's order is the old one.
+				setLocalOrder(null);
+				if (lastSaveError.current) void notifyError(lastSaveError.current);
 			});
-		});
 	};
 
 	if (projectQuery.isLoading) {
@@ -230,15 +265,6 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			</Stack>
 		);
 	}
-
-	// Sort tags by sort field before rendering
-	const sortedTags = [
-		...((projectQuery.data?.tags as unknown as ProjectTag[]) ?? []),
-	].sort(
-		(a, b) =>
-			((a as ProjectTag).sort ?? Number.POSITIVE_INFINITY) -
-			((b as ProjectTag).sort ?? Number.POSITIVE_INFINITY),
-	);
 
 	return (
 		<Stack className="relative">
@@ -290,13 +316,13 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 								onDragEnd={handleDragEnd}
 							>
 								<SortableContext
-									items={sortedTags.map((tag) => (tag as ProjectTag).id)}
+									items={displayedTags.map((tag) => tag.id)}
 									strategy={horizontalListSortingStrategy}
 								>
-									{sortedTags.map((tag) => (
+									{displayedTags.map((tag) => (
 										<ProjectTagPill
-											key={(tag as ProjectTag).id}
-											tag={tag as ProjectTag}
+											key={tag.id}
+											tag={tag}
 											projectId={props.project.id}
 										/>
 									))}

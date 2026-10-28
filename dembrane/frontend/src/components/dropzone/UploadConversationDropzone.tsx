@@ -112,6 +112,8 @@ const isAudioFile = (file: File): boolean => {
 		"aac",
 		"flac",
 		"opus",
+		// Apple Voice Memos; renamed to m4a on selection (see asUploadable).
+		"qta",
 	];
 
 	// Check MIME type first
@@ -125,14 +127,29 @@ const isAudioFile = (file: File): boolean => {
 };
 
 // Create a new file with updated name but same content
-const renameFile = (file: File, newName: string): File => {
-	const extension = getFileExtension(file.name);
+const renameFile = (
+	file: File,
+	newName: string,
+	as?: { extension: string; type: string },
+): File => {
+	const extension = as?.extension ?? getFileExtension(file.name);
 	const finalName = newName.endsWith(`.${extension}`)
 		? newName
 		: `${newName}.${extension}`;
 
-	return new File([file], finalName, { type: file.type });
+	return new File([file], finalName, { type: as?.type ?? file.type });
 };
+
+// Apple Voice Memos saves .qta: an MPEG-4 style container holding AAC audio, which the
+// server reads as m4a. The server only accepts known extensions, so the name is changed
+// here and the bytes are untouched.
+export const asUploadable = (file: File): File =>
+	getFileExtension(file.name) === "qta"
+		? renameFile(file, file.name.slice(0, -".qta".length), {
+				extension: "m4a",
+				type: "audio/m4a",
+			})
+		: file;
 
 // Custom hook for file name editing
 const useFileNameEditor = (
@@ -435,15 +452,17 @@ export const UploadConversationDropzone = (
 	const handleFileSelection = useCallback(
 		(files: File[]) => {
 			// First filter only audio files
-			const audioFiles = Array.from(files).filter((file) => {
-				if (!isAudioFile(file)) {
-					toast.error(
-						t`File "${file.name}" is not a supported audio format. Only audio files are allowed.`,
-					);
-					return false;
-				}
-				return true;
-			});
+			const audioFiles = Array.from(files)
+				.filter((file) => {
+					if (!isAudioFile(file)) {
+						toast.error(
+							t`File "${file.name}" is not a supported audio format. Only audio files are allowed.`,
+						);
+						return false;
+					}
+					return true;
+				})
+				.map(asUploadable);
 
 			if (audioFiles.length === 0) {
 				toast.error(
@@ -666,7 +685,7 @@ export const UploadConversationDropzone = (
 									<UploadSimpleIcon size={20} />
 									<Text size="sm">{t`Drag audio files here or click to select files`}</Text>
 									<Text size="xs" c="dimmed">
-										{t`Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS`}
+										{t`Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS, QTA`}
 									</Text>
 									<Text size="xs" c="dimmed">
 										{t`File size: Min ${formatFileSize(MIN_FILE_SIZE)}, Max ${formatFileSize(MAX_FILE_SIZE)}, up to ${MAX_FILES} files`}
