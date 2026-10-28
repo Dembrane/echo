@@ -668,10 +668,15 @@ function drawAudit(w: Writer, a: AuditRecord) {
   });
   const row = (label: string, value: string | null | undefined): [string, string][] =>
     value ? [[label, value]] : [];
-  const pinned = a.legal.map((t): [string, string] => [
-    LEGAL_LABEL[t.kind] ?? t.kind,
-    `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}, SHA-256 ${t.sha256}`,
-  ]);
+  const pinned = a.legal.map(
+    (t): Row => [
+      LEGAL_LABEL[t.kind] ?? t.kind,
+      `version ${t.version}${t.effectiveOn ? `, ${t.effectiveOn}` : ""}`,
+    ],
+  );
+  const pinnedHashes = a.legal.map(
+    (t): Row => [`${LEGAL_LABEL[t.kind] ?? t.kind} (SHA-256)`, t.sha256, HASH_SIZE],
+  );
   // Plain headings first; the ids and hashes that only matter when checking the record
   // come last. Every recorded value stays.
   drawGroups(w, [
@@ -724,13 +729,13 @@ function drawAudit(w: Writer, a: AuditRecord) {
         ["Document id", a.documentId],
         ["Unsigned PDF (SHA-256)", a.sha256, HASH_SIZE],
         ["Signature image (SHA-256)", a.imageSha256, HASH_SIZE],
+        ...pinnedHashes,
         ["Signature id", a.signatureId],
       ],
     ],
   ]);
   drawTrail(w, a.trail);
-  w.space(10);
-  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Confirmation shown and accepted");
   w.text(a.confirmationText, { size: 9.5 });
 }
 
@@ -752,7 +757,6 @@ const HASH_SIZE = 7.5;
 
 function drawGroups(w: Writer, groups: readonly (readonly [string, readonly Row[]])[]) {
   for (const [title, rows] of groups) {
-    if (!rows.length) continue;
     heading(w, title);
     drawRows(w, rows);
   }
@@ -868,8 +872,7 @@ export async function acceptedPdf(sent: Uint8Array, a: AcceptanceRecord): Promis
     ]);
   drawRows(w, rows);
   drawTrail(w, a.trail);
-  w.space(10);
-  w.text("Recorded statement", { size: brand.type.print.lead, gap: 4 });
+  heading(w, "Recorded statement");
   w.text(a.statement, { size: 9.5 });
   await doc.attach(a.evidence.bytes, a.evidence.name, {
     mimeType: a.evidence.type,

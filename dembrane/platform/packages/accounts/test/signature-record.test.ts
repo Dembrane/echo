@@ -5,6 +5,7 @@ import {
   PDFDict,
   PDFDocument,
   PDFName,
+  type PDFPage,
   type PDFRawStream,
 } from "pdf-lib";
 import { type AuditRecord, signedPdf, textPdf } from "../src/pdf";
@@ -32,10 +33,8 @@ function toUnicode(doc: PDFDocument, font: PDFDict): Map<string, string> {
   return map;
 }
 
-/** The text of the last page, one string per drawn line, in drawing order. */
-function lastPageLines(doc: PDFDocument): string[] {
-  const page = doc.getPages().at(-1);
-  if (!page) return [];
+/** The text of one page, one string per drawn line, in drawing order. */
+function pageLines(doc: PDFDocument, page: PDFPage): string[] {
   const fonts = page.node.Resources()?.lookup(PDFName.of("Font"), PDFDict) as PDFDict;
   const maps = new Map<string, Map<string, string>>();
   for (const [name] of fonts.entries()) {
@@ -79,21 +78,36 @@ const record = (over: Partial<AuditRecord> = {}): AuditRecord => ({
   signedAt: "2026-09-28T10:00:00.000Z",
   ip: "203.0.113.7",
   userAgent: "ua-string",
-  confirmationText: "I, Anna, confirm.",
+  // As long as a real one: it repeats the title and the unsigned PDF's SHA-256.
+  confirmationText: `I, Anna, Wethouder, confirm that I may sign on behalf of Gemeente, and I sign "Plan" (DMB-7) as shown to me, SHA-256 ${"a".repeat(64)}. I am also authorised to agree to data processing on behalf of this organisation.`,
   signatureId: "sig-id-1",
   method: "drawn",
   imageSha256: "b".repeat(64),
   language: "nl",
-  legal: [{ kind: "terms", version: "3.0.1", effectiveOn: "2026-10-01", sha256: "c".repeat(64) }],
-  trail: [{ at: "2026-09-28T09:58:00.000Z", what: "First opened by a@b.example" }],
+  legal: [
+    { kind: "terms", version: "3.0.1", effectiveOn: "2026-10-01", sha256: "c".repeat(64) },
+    { kind: "sla", version: "2.1.0", effectiveOn: "2026-09-01", sha256: "d".repeat(64) },
+    { kind: "dpa", version: "1.4.0", effectiveOn: null, sha256: "e".repeat(64) },
+  ],
+  trail: [
+    { at: "2026-09-25T09:00:00.000Z", what: "Sent to a@b.example" },
+    { at: "2026-09-26T09:58:00.000Z", what: "First opened by a@b.example" },
+    { at: "2026-09-27T12:00:00.000Z", what: "Version 2 sent" },
+    { at: "2026-09-28T09:58:00.000Z", what: "Opened by a@b.example" },
+  ],
   choices: [{ label: "Extra seats", chosen: true }],
   ...over,
 });
 
+/** The lines of every page the record takes, after the document's own pages. */
 async function auditLines(audit: AuditRecord) {
   const r = await textPdf("Plan", "# Plan\n\nText", { signing: true, language: "en" });
   const out = await signedPdf(r.bytes, [], {}, { signature: png(), initials: null }, audit);
-  return lastPageLines(await PDFDocument.load(out));
+  const doc = await PDFDocument.load(out);
+  return doc
+    .getPages()
+    .slice(r.pageCount)
+    .flatMap((p) => pageLines(doc, p));
 }
 
 describe("signature record", () => {
@@ -139,16 +153,26 @@ describe("signature record", () => {
       a.ip,
       a.userAgent,
       a.signatureId,
-      `version 3.0.1, 2026-10-01, SHA-256 ${"c".repeat(64)}`,
+      "version 3.0.1, 2026-10-01",
+      "version 2.1.0, 2026-09-01",
+      "version 1.4.0",
+      "c".repeat(64),
+      "d".repeat(64),
+      "e".repeat(64),
       a.confirmationText,
-      "First opened by a@b.example",
+      ...a.trail.map((t) => t.what),
     ];
     // Long values wrap between characters, so compare without line breaks or spaces.
     const flat = page.replace(/\s/g, "");
     for (const v of values) expect(flat).toContain((v as string).replace(/\s/g, ""));
   });
 
-  test("the optional rows and their empty groups stay out when there is nothing to say", async () => {
+  test("each SHA-256 prints whole on one line", async () => {
+    const lines = await auditLines(record());
+    for (const c of "abcde") expect(lines).toContain(c.repeat(64));
+  });
+
+  test("the optional rows stay out when there is nothing to say", async () => {
     const lines = await auditLines(
       record({
         reference: null,
