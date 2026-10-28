@@ -239,9 +239,15 @@ export const account_signature = pgTable(
     sha256: text("sha256").notNull(),
     /** Every field's value as submitted, by field id. */
     fieldValues: json("field_values").notNull(),
-    /** `drawn`, `typed` or `uploaded`; `outside` for an acceptance recorded by staff. */
+    /**
+     * `drawn`, `typed` or `uploaded`; `outside` for an acceptance recorded by staff;
+     * `presigned` for dembrane's own signature, applied by echo when the document is sent.
+     */
     method: text("method").notNull(),
-    /** The signature image; null when accepted outside, where the evidence file stands in. */
+    /**
+     * The signature image; null when accepted outside, where the evidence file stands in, and
+     * on dembrane's signature applied at sending, which the PDF prints as signed electronically.
+     */
     imageKey: text("image_key"),
     imageSha256: text("image_sha256"),
     initialsImageKey: text("initials_image_key"),
@@ -287,7 +293,7 @@ export const account_signature = pgTable(
     check("account_signature_slot_check", sql`${t.slot} in ('customer', 'second', 'dembrane')`),
     check(
       "account_signature_method_check",
-      sql`${t.method} in ('drawn', 'typed', 'uploaded', 'outside')`,
+      sql`${t.method} in ('drawn', 'typed', 'uploaded', 'outside', 'presigned')`,
     ),
     check(
       "account_signature_outside_check",
@@ -295,7 +301,7 @@ export const account_signature = pgTable(
     ),
     check(
       "account_signature_image_check",
-      sql`${t.method} = 'outside' or (${t.signerUserId} is not null and ${t.imageKey} is not null and ${t.imageSha256} is not null)`,
+      sql`${t.method} = 'outside' or (${t.method} = 'presigned' and ${t.slot} = 'dembrane') or (${t.signerUserId} is not null and ${t.imageKey} is not null and ${t.imageSha256} is not null)`,
     ),
   ],
 );
