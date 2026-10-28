@@ -10,7 +10,7 @@ import {
   type MediaSource,
   measureSeconds,
 } from "../src";
-import { decodeSeconds } from "../src/ffmpeg";
+import { convertFile, decodeSeconds, durationOf, probePlain } from "../src/ffmpeg";
 
 setDefaultTimeout(120_000);
 
@@ -64,6 +64,8 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
     ],
     ["memo.m4a", "m4a", [...sine(20), "-ac", "1", "-ar", "48000", "-c:a", "aac", "-b:a", "64k"]],
     ["alac.m4a", "m4a", [...sine(20), "-c:a", "alac"]],
+    // Apple Voice Memos (.qta): AAC in a QuickTime container. The dashboard renames it to .m4a.
+    ["voice-memo.m4a", "m4a", [...sine(20), "-ac", "1", "-c:a", "aac", "-b:a", "64k", "-f", "mov"]],
   ];
 
   beforeAll(async () => {
@@ -138,6 +140,18 @@ const video = (s: number) => ["-f", "lavfi", "-i", `testsrc=duration=${s}:size=1
       const m = await measure(name, format);
       expect({ name, how: "how" in m ? m.how : m }).toEqual({ name, how: "decoded" });
       expect("seconds" in m && Math.abs(m.seconds - 20) < 0.5).toBe(true);
+    }
+  });
+
+  test("a voice memo in a QuickTime container reads as m4a and converts", async () => {
+    const head = readFileSync(at("voice-memo.m4a")).subarray(4, 12).toString("latin1");
+    expect(head).toBe("ftypqt  ");
+    const probe = await media.probe(src("voice-memo.m4a", "m4a"));
+    expect(probe.streams?.map((s) => s.codec_type)).toEqual(["audio"]);
+    for (const out of ["mp3", "ogg"] as const) {
+      const dest = at(`voice-memo.${out}`);
+      await convertFile(at("voice-memo.m4a"), "m4a", dest, out);
+      expect(Math.abs((durationOf(await probePlain(dest)) ?? 0) - 20)).toBeLessThan(0.5);
     }
   });
 
