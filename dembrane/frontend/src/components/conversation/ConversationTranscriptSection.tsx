@@ -36,6 +36,7 @@ import {
 } from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
+import { scrollToTranscriptEnd } from "./scrollToTranscriptEnd";
 import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
 
 type ConversationTranscriptSectionProps = {
@@ -134,7 +135,22 @@ export const ConversationTranscriptSection = ({
 		hasNextPage,
 		isFetchingNextPage,
 		status,
-	} = useInfiniteConversationChunks(conversationId);
+	} = useInfiniteConversationChunks(conversationId, { isFinished });
+
+	const [isScrollingToEnd, setIsScrollingToEnd] = useState(false);
+	const handleScrollToBottom = useCallback(async () => {
+		if (isScrollingToEnd) return;
+		setIsScrollingToEnd(true);
+		// No try/finally: it makes the React Compiler skip this component, and this never throws.
+		await scrollToTranscriptEnd({
+			// Join a page that is already loading instead of restarting it.
+			fetchNextPage: () => fetchNextPage({ cancelRefetch: false }),
+			hasNextPage,
+			scrollToEnd: () =>
+				bottomTargetRef.current?.scrollIntoView({ behavior: "smooth" }),
+		});
+		setIsScrollingToEnd(false);
+	}, [fetchNextPage, hasNextPage, isScrollingToEnd]);
 
 	useEffect(() => {
 		if (inView && hasNextPage && !isFetchingNextPage) {
@@ -358,11 +374,8 @@ export const ConversationTranscriptSection = ({
 						>
 							<ScrollToBottomButton
 								visible={!isBottomVisible}
-								onClick={() =>
-									bottomTargetRef.current?.scrollIntoView({
-										behavior: "smooth",
-									})
-								}
+								loading={isScrollingToEnd}
+								onClick={handleScrollToBottom}
 							/>
 						</Group>
 					) : null}

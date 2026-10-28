@@ -727,6 +727,7 @@ export const accountCard: Out<typeof AccountCard> = {
       created_at: "2026-09-28T08:55:00.000Z",
     },
   ],
+  dembrane_signer: { name: "Jamie Voorbeeld", role: "Director", email: "jamie@dembrane.com" },
 };
 
 export const pushOfferResponse: Out<typeof PushOfferResponse> = {
