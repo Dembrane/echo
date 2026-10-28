@@ -1342,6 +1342,7 @@ export const AgenticChatPanel = ({
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						setPollFailureCount(0);
 						if (event.event_type === "assistant.message") {
 							// Same React batch as the merge: draft and durable swap in one paint.
 							const payload = asObject(event.payload);
@@ -1492,8 +1493,13 @@ export const AgenticChatPanel = ({
 		const interval = window.setInterval(async () => {
 			if (!active) return;
 			try {
-				await refreshEvents(runId, afterSeq);
-				if (active) setPollFailureCount(0);
+				const payload = await refreshEvents(runId, afterSeq);
+				if (!active) return;
+				setPollFailureCount(0);
+				// Only the stream call starts a queued turn, so polling alone would wait forever.
+				if (payload.status === "queued") {
+					void startStream(runId, payload.next_seq);
+				}
 			} catch {
 				// Keep retrying lightly; only a run of misses is worth telling the host.
 				if (active) setPollFailureCount((count) => count + 1);
@@ -1511,6 +1517,7 @@ export const AgenticChatPanel = ({
 		isStreaming,
 		streamFailureCount,
 		refreshEvents,
+		startStream,
 	]);
 
 	useEffect(() => {

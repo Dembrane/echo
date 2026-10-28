@@ -54,8 +54,6 @@ const {
 		pollFails: boolean;
 		status: AgenticRunStatus;
 	},
-	// "hang" keeps the stream open; "drop" fails it the way a cut connection does.
-	streamState: { mode: "hang" } as { mode: "drop" | "hang" },
 	stopAgenticRunMock: vi.fn(async () => ({
 		run_id: "run-1",
 		status: "stopping" as const,
@@ -69,6 +67,8 @@ const {
 			onDraft?: (draft: { message_id: string; text: string }) => void;
 		},
 	},
+	// "hang" keeps the stream open; "drop" fails it the way a cut connection does.
+	streamState: { mode: "hang" } as { mode: "drop" | "hang" },
 	transcribeMock: vi.fn(async () => ({
 		note: "",
 		transcript: "what I said out loud",
@@ -577,6 +577,24 @@ describe("AgenticChatPanel, fallback to polling", () => {
 		);
 		expect(screen.getByText("Error")).toBeTruthy();
 	}, 20000);
+
+	it("reopens the stream while polling finds the run still queued", async () => {
+		// Only the stream call starts a queued turn, so polling alone never would.
+		const { streamAgenticRun } = await import("@/lib/api");
+		const streamCalls = () => vi.mocked(streamAgenticRun).mock.calls.length;
+		const callsBefore = streamCalls();
+		runState.status = "queued";
+		runState.events = [messageEvent(1, "user", "hello")];
+		renderPanel();
+		await screen.findByText("hello");
+		await waitFor(() => expect(streamCalls()).toBe(callsBefore + 2));
+
+		streamState.mode = "hang";
+		await waitFor(() => expect(streamCalls()).toBe(callsBefore + 3), {
+			timeout: 5000,
+		});
+		expect(screen.queryByText(/Connection lost/)).toBeNull();
+	}, 15000);
 
 	it("clears the error once polling recovers", async () => {
 		runState.events = [messageEvent(1, "user", "hello")];
