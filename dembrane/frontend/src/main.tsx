@@ -15,11 +15,15 @@ import {
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
+import { errorFilter } from "./lib/errorFilter";
 
 // With analytics switched off PostHog is never initialised: no request, script or cookie.
 if (ANALYTICS_ENABLED)
 	posthog.init(POSTHOG_TOKEN, {
 		api_host: POSTHOG_HOST,
+		// Drops known browser noise and caps repeated exceptions; the portal and
+		// the dashboard share this one init.
+		before_send: errorFilter,
 		// Error tracking: autocapture unhandled errors and promise rejections.
 		// React render errors are reported separately via ErrorBoundary.
 		capture_exceptions: {
