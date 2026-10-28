@@ -85,17 +85,21 @@ test("Retry-After of an hour waits a minute", async () => {
 });
 
 test("an HTTP-date Retry-After is read and capped", async () => {
-  const date = new Date(Date.now() + 3_600_000).toUTCString();
-  const { e } = embedder(1, () => busy(date));
-  const c = clock();
-  await embedWithRetry(e, "text", 5, { ...c, now: () => Date.now() + 0, random: () => 0 });
-  expect(c.waits).toEqual([60000]);
-  const near = new Date(Date.now() + 10_000).toUTCString();
-  const again = embedder(1, () => busy(near));
-  const d = clock();
-  await embedWithRetry(again.e, "text", 5, { ...d, now: () => Date.now(), random: () => 0 });
-  expect(d.waits[0]).toBeGreaterThan(8000);
-  expect(d.waits[0]).toBeLessThanOrEqual(10000);
+  // A fixed clock: the real one jumps on some dev VMs.
+  const at = Date.parse("Wed, 28 Oct 2026 12:00:00 GMT");
+  const still = (waits: number[]) => ({
+    now: () => at,
+    sleep: async (ms: number) => void waits.push(ms),
+    random: () => 0,
+  });
+  const far = embedder(1, () => busy(new Date(at + 3_600_000).toUTCString()));
+  const farWaits: number[] = [];
+  await embedWithRetry(far.e, "text", 5, still(farWaits));
+  expect(farWaits).toEqual([60000]);
+  const near = embedder(1, () => busy(new Date(at + 10_000).toUTCString()));
+  const nearWaits: number[] = [];
+  await embedWithRetry(near.e, "text", 5, still(nearWaits));
+  expect(nearWaits).toEqual([10000]);
 });
 
 test("a rate limit that outlasts the deadline raises before the last try", async () => {
