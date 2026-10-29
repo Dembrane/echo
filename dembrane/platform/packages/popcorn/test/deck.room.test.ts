@@ -10,6 +10,7 @@ import {
 } from "../src/deck";
 import type { Json } from "../src/py";
 import { RoomRulesBroken, reportRoomViolations, roomViolations } from "../src/room";
+import { bookPublish, hasProvisional, type PopcornDeps } from "../src/service";
 
 /**
  * What the room may be shown, as rules every built deck keeps. Each rule closes a way the
@@ -298,5 +299,27 @@ describe("every deck the server builds is checked", () => {
       if (was === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = was;
     }
+  });
+});
+
+describe("a host looking at provisional slides books a publishing read", () => {
+  const d = { logger: { warn: () => {} }, now: () => new Date(0) } as unknown as PopcornDeps;
+  const booked: string[] = [];
+  const book = async (loopId: string) => {
+    booked.push(loopId);
+  };
+
+  test("only a deck still showing a provisional file asks", () => {
+    expect(hasProvisional({ "tensions.json": { tensions: [], provisional: true } })).toBe(true);
+    expect(hasProvisional({ "tensions.json": { tensions: [] } })).toBe(false);
+  });
+
+  test("once per loop every ten minutes, and never for a loop the live chain reads", () => {
+    booked.length = 0;
+    expect(bookPublish(d, { id: "loop-live", status: "active" }, 0, book)).toBe(false);
+    expect(bookPublish(d, { id: "loop-ended", status: "paused" }, 1_000_000, book)).toBe(true);
+    expect(bookPublish(d, { id: "loop-ended", status: "paused" }, 1_300_000, book)).toBe(false);
+    expect(bookPublish(d, { id: "loop-ended", status: "paused" }, 1_700_000, book)).toBe(true);
+    expect(booked).toEqual(["loop-ended", "loop-ended"]);
   });
 });

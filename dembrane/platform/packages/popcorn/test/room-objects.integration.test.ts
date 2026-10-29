@@ -6,6 +6,7 @@ import {
   type ProducerServices,
   readSnapshot,
 } from "@dembrane/analysis";
+import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
@@ -16,8 +17,9 @@ import { appClient, executorDeps, quiet } from "../../analysis/test/harness";
 import { analysisDeck, applyPublishedObjects, curatePresentation, deckQuoteId } from "../src/deck";
 import type { Json } from "../src/py";
 import { Publisher } from "../src/tick/publish";
-import { unpublishedConversations, unpublishedTensions } from "../src/tick/run";
+import { runPopcornTick, unpublishedConversations, unpublishedTensions } from "../src/tick/run";
 import { QuoteBook } from "../src/tick/shapes";
+import { tickDeps } from "../src/worker";
 import { fixture, freshDatabase, ids, seed } from "./fixtures/tick/seed";
 
 // The live session's tensions published through the analysis executor, against Postgres:
@@ -362,5 +364,61 @@ run("the room and the host's results read the same objects", () => {
     await publisher([]).conversation(state, transcript);
     expect(((state.conversations as Json)[cid] as Json).published_revision).toBe(3);
     expect(unpublishedConversations(state, [transcript]).length).toBe(0);
+  });
+
+  test("a session whose live reads ended publishes its held tensions when a host asks, without the model", async () => {
+    // A finished session as deploy found it: a tensions slide in its state, never published.
+    const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const held = slide(book, [["", "Bins before benches", 120]]);
+    for (const t of held.tensions) delete (t as Json).identity;
+    const state = {
+      version: 1,
+      run: 3,
+      order: [],
+      conversations: {},
+      quotes: book.quotes,
+      analysis: { tensions: held, fingerprints: { tensions: "fp-held" }, updated: {} },
+    };
+    await raw`update agent_loop set status = 'paused', popcorn_state = ${raw.json(state as never)}
+      where id = ${ids.loop}`;
+    const completer = new FakeCompleter();
+    const publishingRead = (workflow: string) =>
+      runPopcornTick(
+        {
+          ...tickDeps(
+            {
+              db: database.db,
+              logger: quiet,
+              completer,
+              flags: { present: true, canvas: true },
+              participantBaseUrl: "http://localhost:5174",
+              adminBaseUrl: "http://localhost:5173",
+              databaseUrl: "unused",
+              analysis: () => ({ deck: deck(), executor: deps }),
+            },
+            workflow,
+            { deck: deck(), executor: deps },
+          ),
+          heartbeatMs: 50,
+        },
+        ids.loop,
+        "publish",
+        newId(),
+      );
+    const tick = await publishingRead("publish-test");
+    expect(tick.status).toBe("ok");
+    // No model is asked, translation included.
+    expect(completer.calls.length).toBe(0);
+    const [loop] = await raw`select popcorn_state, status from agent_loop where id = ${ids.loop}`;
+    const after = (loop?.popcorn_state ?? {}) as Json;
+    expect(unpublishedTensions(after)).toBe(false);
+    // Nothing new is read: the session lists no conversation it was not already reading.
+    expect(Object.keys((after.conversations as Json) ?? {})).toEqual([]);
+    expect(loop?.status).toBe("paused");
+    const objects = await deck().deckObjects(P);
+    expect(objects.tensions.map((r) => r.payload.poleA)).toContain("Bins before benches");
+    // A second publishing read finds nothing owed.
+    expect((await publishingRead("publish-test-2")).status).toBe("no_op");
+    expect(completer.calls.length).toBe(0);
   });
 });

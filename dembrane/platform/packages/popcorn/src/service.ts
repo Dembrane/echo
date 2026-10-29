@@ -42,7 +42,15 @@ import {
   translationTargets,
 } from "./settings";
 import { freshState, isSyntheticSession, normalizeState, stateCounts } from "./state";
-import { client, type PopcornStore, popcornStore, type Row, type Sql, START_TICK } from "./storage";
+import {
+  client,
+  type PopcornStore,
+  PUBLISH_TICK,
+  popcornStore,
+  type Row,
+  type Sql,
+  START_TICK,
+} from "./storage";
 import { pySplit } from "./text";
 import { translatedBundle } from "./translate";
 
@@ -766,6 +774,38 @@ export async function withWaiting(
   }
 }
 
+/** The deck still shows something not published: a whole file marked provisional. */
+export function hasProvisional(files: Json): boolean {
+  return Object.values(files).some((file) => isRecord(file) && file.provisional === true);
+}
+
+const PUBLISH_EVERY_MS = 10 * 60_000;
+const publishBooked = new Map<string, number>();
+
+/**
+ * Books a publishing read for a loop the live chain is not reading, at most once every ten
+ * minutes per loop and process; a read that finds nothing owed is a no-op. Never awaited
+ * by the deck and never fails it.
+ */
+export function bookPublish(
+  d: PopcornDeps,
+  loop: Row,
+  now = d.now().getTime(),
+  book: (loopId: string) => Promise<unknown> = (loopId) =>
+    client(d.db).begin((tx) => dispatchTick(d, tx, loopId, PUBLISH_TICK)),
+): boolean {
+  const loopId = asId(loop.id);
+  // A live loop reads on its own cadence, and its next read publishes what is owed.
+  if (!loopId || loop.status === "active") return false;
+  if (now - (publishBooked.get(loopId) ?? 0) < PUBLISH_EVERY_MS) return false;
+  publishBooked.set(loopId, now);
+  if (publishBooked.size > 1024) publishBooked.clear();
+  book(loopId).catch((err: unknown) =>
+    d.logger.warn({ err, loop_id: loopId }, "popcorn deck: publishing read not booked"),
+  );
+  return true;
+}
+
 export async function bundleForReport(
   d: PopcornDeps,
   report: Row,
@@ -815,6 +855,8 @@ export async function bundleForReport(
   });
   // Checked before translation, which rewords the quotes their ids were derived from.
   reportRoomViolations(d.logger, key, dict(bundle.files));
+  // A host looking at slides the results cannot list yet, with no live read to publish them.
+  if (host && loop && hasProvisional(dict(bundle.files))) bookPublish(d, loop);
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));
   bundle = curatePresentation(bundle, settings);

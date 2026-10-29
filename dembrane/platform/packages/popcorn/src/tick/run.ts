@@ -41,7 +41,14 @@ import {
   voiceHostNote,
 } from "../settings";
 import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import { FINISH_TICK, type PopcornStore, popcornStore, type Row, START_TICK } from "../storage";
+import {
+  FINISH_TICK,
+  type PopcornStore,
+  PUBLISH_TICK,
+  popcornStore,
+  type Row,
+  START_TICK,
+} from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -103,6 +110,7 @@ export const ANALYSIS_VIEWS = ["tensions", "stakeholders"] as const;
  */
 export const ON_REQUEST = new Set([
   "manual",
+  PUBLISH_TICK,
   FINISH_TICK,
   "rerun",
   "translation",
@@ -1545,8 +1553,9 @@ export async function runPopcornTick(
     for (const t of transcripts) {
       const cid = String(t.id);
       let entry = conversations[cid] as Json | undefined;
-      // A conversation this read does not read is not listed as being read.
-      if (entry === undefined && !inScope(t)) continue;
+      // A conversation this read does not read is not listed as being read; a publishing
+      // read reads none.
+      if (entry === undefined && (!inScope(t) || tickKind === PUBLISH_TICK)) continue;
       if (entry === undefined) {
         entry = { id: cid, revision: 0, done: false, items: [] };
         conversations[cid] = entry;
@@ -1593,10 +1602,12 @@ export async function runPopcornTick(
     );
     const analysisStale =
       transcripts.length > 0 && staleViews(state, analysisFingerprint, analysisViews).length > 0;
-    const preparesPopcorn = prepareKind === null || prepareKind === "popcorn";
+    // A publishing read reads nothing new and asks no model: it only publishes what is held.
+    const publishOnly = tickKind === PUBLISH_TICK;
+    const preparesPopcorn = !publishOnly && (prepareKind === null || prepareKind === "popcorn");
     const extractionWork = preparesPopcorn ? changed.filter(readable) : [];
     const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(readable) : [];
-    const analysisOwed = analysisStale && !cut;
+    const analysisOwed = analysisStale && !cut && !publishOnly;
     // Conversations whose phrases did not reach the shared store: the deck shows them as
     // provisional until a read publishes them.
     const unpublished = d.analysis ? unpublishedConversations(state, transcripts) : [];
@@ -1613,6 +1624,7 @@ export async function runPopcornTick(
     const mapOwed =
       Boolean(d.requestMap) &&
       !cut &&
+      !publishOnly &&
       transcripts.length > 0 &&
       list(audienceManifest(settings).blocks).includes("map") &&
       (extractionWork.length > 0 ||
@@ -1632,17 +1644,19 @@ export async function runPopcornTick(
       tickKind !== "rerun"
     ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
-      let translated: string | null;
-      try {
-        translated = await translateSession(d, state, settings, {
-          reportId,
-          projectId,
-          writer: translationWriter,
-        });
-      } catch (exc) {
-        d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
-        translated = null;
-      }
+      let translated: string | null = null;
+      // A publishing read asks no model, translation included.
+      if (!publishOnly)
+        try {
+          translated = await translateSession(d, state, settings, {
+            reportId,
+            projectId,
+            writer: translationWriter,
+          });
+        } catch (exc) {
+          d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
+          translated = null;
+        }
       await kept.save();
       if (translated) {
         const run = await createRun(d, {
@@ -1778,6 +1792,7 @@ export async function runPopcornTick(
     const analysisPass = async () => {
       if (
         cut ||
+        publishOnly ||
         !transcripts.length ||
         !(analysisStale || extractionWork.length || tickKind === "rerun")
       )
@@ -1852,12 +1867,14 @@ export async function runPopcornTick(
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();
     }
-    let translated: string | null;
-    try {
-      translated = await translateSession(d, state, settings, { reportId, projectId, writer });
-    } catch (exc) {
-      translated = `translation failed: ${failureText(exc)}`;
-    }
+    let translated: string | null = null;
+    // A publishing read asks no model, translation included: the next full read translates.
+    if (!publishOnly)
+      try {
+        translated = await translateSession(d, state, settings, { reportId, projectId, writer });
+      } catch (exc) {
+        translated = `translation failed: ${failureText(exc)}`;
+      }
     if (translated) outcomes.push(translated);
 
     const detail = [
