@@ -5,8 +5,8 @@ import { dict, isRecord, type Json, list, pyStr } from "./py";
  * What the room may be shown, as rules every deck the server builds keeps. Each closes a
  * way the room and the host's results came apart (ECHO-1035, #1293):
  *
- * 1. Once a session publishes, every tension and stakeholder is a published object, named
- *    by its object id; every phrase is an object, or its whole file is marked provisional.
+ * 1. Once a session publishes, every tension, stakeholder and phrase is a published object,
+ *    named by its object id, or its whole file is marked provisional (owed a publication).
  *    A slide with nothing behind it is one the host's results cannot list or hide.
  * 2. Every quote id resolves, and a phrase's quote is its own conversation's.
  * 3. Every quote id is the one its conversation and words derive (deckQuoteId), so a
@@ -56,7 +56,7 @@ export function roomViolations(files: Json): string[] {
     for (const key of ["tensions", "stakeholders"] as const) {
       if (name !== `${key}.json`) continue;
       for (const item of list(raw[key]).filter(isRecord)) {
-        if (published && (!item.objectId || item.id !== item.objectId))
+        if (published && raw.provisional !== true && (!item.objectId || item.id !== item.objectId))
           out.push(`${name}: ${pyStr(item.id)} is not named by its object`);
         for (const id of list(item.quoteIds)) cite(name, id);
       }

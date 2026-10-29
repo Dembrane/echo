@@ -12,6 +12,7 @@ export {
   claimKey,
   MAX_TITLE_CHARS,
   MIN_TITLE_NODES,
+  pyFind,
   SelectionTooLarge,
   SelectionTooSmall,
   type Transcript,

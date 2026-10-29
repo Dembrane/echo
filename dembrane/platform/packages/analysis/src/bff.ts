@@ -517,6 +517,8 @@ export interface ObjectsQuery {
   readonly type: string | null;
   readonly scope: string | null;
   readonly snapshot_id: string | null;
+  /** With `snapshot_id`: its objects at their current revision, the ones withdrawn since left out of `active`. */
+  readonly latest?: boolean;
   readonly membership: "active" | "withdrawn" | "all";
   readonly sort: "default" | "attention";
   readonly offset: number;
@@ -558,6 +560,17 @@ export async function listAnalysisObjects(
           MAP_TYPES.includes(String(o.type)),
         )
       : [];
+    // A pinned snapshot as the host last left it: the rows the room is pinned to, each at the
+    // revision the host's next edit names, so an edit shows and the next one does not conflict.
+    if (query.latest && query.snapshot_id && entries.length) {
+      const heads = await store.currentRevisions(projectId);
+      entries = entries.flatMap((e) => {
+        const head = heads.get(String(e.objectId));
+        if (!head) return [e];
+        if (query.membership === "active" && extraOf(head.provenance).membershipExcluded) return [];
+        return [{ ...e, revisionId: head.id }];
+      });
+    }
     if (query.membership !== "active") {
       const current = await store.currentRevisions(projectId);
       const withdrawn = [...current.values()]

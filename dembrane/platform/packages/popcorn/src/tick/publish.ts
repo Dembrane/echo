@@ -2,6 +2,7 @@ import {
   type ConversationPhrases,
   type ExecutorDeps,
   executeInline,
+  normKey,
   POPCORN_RECIPE_ID,
   POPCORN_SOURCES_KEY,
   POPCORN_TENSIONS_RECIPE_ID,
@@ -12,11 +13,17 @@ import {
   type ProducerServices,
   phraseRecords,
   popcornScopeKey,
+  pyFind,
   type SessionTension,
   type Transcript,
 } from "@dembrane/analysis";
 import type { Logger } from "@dembrane/observability";
-import { type DeckAnalysis, stakeholdersSlide, tensionsSlideFrom } from "../deck";
+import {
+  type DeckAnalysis,
+  type DeckRevision,
+  stakeholdersSlide,
+  tensionsSlideFrom,
+} from "../deck";
 import { dict, isRecord, type Json, list, orStr, truthy } from "../py";
 import { POPCORN_PROMPT, VALIDATE_PROMPT } from "./model";
 import type { QuoteBook } from "./shapes";
@@ -54,17 +61,12 @@ export class Publisher {
     private readonly hostNote = "",
   ) {}
 
+  /** Throws when the store cannot answer: that is not the legacy writer's scope, and nothing is settled on it. */
   private async mayWrite(recipeId: string, scopeKey: string): Promise<boolean> {
     const key = `${recipeId}@${scopeKey}`;
     let owns = this.owned.get(key);
     if (owns === undefined) {
-      try {
-        owns = await this.d.deck.owns(this.projectId, recipeId, scopeKey);
-      } catch {
-        // A store that cannot answer is not an answer: this read keeps to the session's state.
-        this.d.logger.warn(`popcorn: the analysis store did not answer for ${key}`);
-        owns = false;
-      }
+      owns = await this.d.deck.owns(this.projectId, recipeId, scopeKey);
       this.owned.set(key, owns);
     }
     return owns;
@@ -141,7 +143,15 @@ export class Publisher {
    * so nothing is asked twice; its quotes go into the session's own registry.
    */
   async stakeholders(transcripts: readonly Json[], book: QuoteBook): Promise<Json | null> {
-    if (!(await this.mayWrite(STAKEHOLDERS_RECIPE_ID, PROJECT_SCOPE))) return null;
+    try {
+      if (!(await this.mayWrite(STAKEHOLDERS_RECIPE_ID, PROJECT_SCOPE))) return null;
+    } catch {
+      // A store that cannot answer is not an answer: this read keeps to the session's state.
+      this.d.logger.warn(
+        `popcorn: the analysis store did not answer for ${STAKEHOLDERS_RECIPE_ID}`,
+      );
+      return null;
+    }
     const pinned: Transcript[] = transcripts.map((t) => ({
       id: String(t.id),
       label: orStr(t.label),
@@ -219,7 +229,11 @@ export class Publisher {
       });
     }
     const source = {
-      tensions,
+      tensions: carriedIdentities(
+        tensions,
+        await this.d.deck.heldTensions(this.projectId),
+        transcripts,
+      ),
       transcripts: transcripts.map((t) => ({ id: String(t.id), text: String(t.text) })),
     };
     const one: PopcornTensionSources = { tensions: async () => source };
@@ -238,4 +252,85 @@ export class Publisher {
       (quote) => book.add({ transcript: quote.conversationId, text: quote.text }),
     );
   }
+}
+
+/** A stretch of a conversation, in the recipe's location basis (normKey, code points). */
+interface Passage {
+  readonly conversationId: string;
+  readonly from: number;
+  readonly to: number;
+}
+
+function passage(conversationId: string, text: string, at: number): Passage | null {
+  const key = normKey(text);
+  return key && at >= 0 ? { conversationId, from: at, to: at + [...key].length } : null;
+}
+
+/** How much of one pole's passages the other's cover, in characters; 0 when none touch. */
+const overlap = (a: readonly Passage[], b: readonly Passage[]) => {
+  let shared = 0;
+  for (const x of a)
+    for (const y of b)
+      if (x.conversationId === y.conversationId)
+        shared += Math.max(0, Math.min(x.to, y.to) - Math.max(x.from, y.from));
+  return shared;
+};
+
+/**
+ * Each tension with the identity it keeps: its own when that is already published, else that
+ * of the published tension whose two poles rest most on the same passages (either way round),
+ * first come in rank order. Positions are worded anew on every read, so an identity from words
+ * alone would make a new object each time, and the host's hide or edit would leave with it.
+ */
+export function carriedIdentities(
+  tensions: readonly SessionTension[],
+  published: readonly DeckRevision[],
+  transcripts: readonly Json[],
+): SessionTension[] {
+  const keys = new Map(transcripts.map((t) => [String(t.id), normKey(String(t.text))]));
+  const poles = (quotes: readonly Json[], at: (q: Json) => number) => {
+    const out: Record<"A" | "B", Passage[]> = { A: [], B: [] };
+    for (const q of quotes) {
+      const pole = q.pole === "A" || q.pole === "B" ? q.pole : null;
+      const p = pole && passage(orStr(q.conversationId), orStr(q.text), at(q));
+      if (pole && p) out[pole].push(p);
+    }
+    return out;
+  };
+  const held = published
+    .map((r) => ({
+      identity: orStr(r.extra.identity),
+      poles: poles(list(r.payload.quotes).map(dict), (q) => {
+        const offset = dict(q.location).offset;
+        return typeof offset === "number" ? offset : -1;
+      }),
+    }))
+    .filter((r) => r.identity);
+  const taken = new Set(
+    tensions.map((t) => t.identity).filter((id) => held.some((r) => r.identity === id)),
+  );
+  return tensions.map((t) => {
+    if (taken.has(t.identity)) return t;
+    const mine = poles(t.quotes as unknown as Json[], (q) =>
+      pyFind(keys.get(orStr(q.conversationId)) ?? "", normKey(orStr(q.text))),
+    );
+    // Both poles on shared passages, either way round; the one sharing the most words wins.
+    const both = (a: number, b: number) => (a && b ? a + b : 0);
+    let match: (typeof held)[number] | undefined;
+    let best = 0;
+    for (const r of held) {
+      if (taken.has(r.identity)) continue;
+      const shared = Math.max(
+        both(overlap(mine.A, r.poles.A), overlap(mine.B, r.poles.B)),
+        both(overlap(mine.A, r.poles.B), overlap(mine.B, r.poles.A)),
+      );
+      if (shared > best || (shared === best && shared && match && r.identity < match.identity)) {
+        match = r;
+        best = shared;
+      }
+    }
+    if (!match) return t;
+    taken.add(match.identity);
+    return { ...t, identity: match.identity };
+  });
 }

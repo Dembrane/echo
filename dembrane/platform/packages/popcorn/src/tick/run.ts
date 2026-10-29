@@ -777,6 +777,26 @@ export function unpublishedTensions(state: Json): boolean {
   );
 }
 
+/**
+ * The slide the published tensions make, or null when this read's tensions did not reach
+ * the store: the read keeps its own slide, owed to the next read (unpublishedTensions),
+ * which publishes it without asking the model again.
+ */
+export async function publishTensions(
+  publisher: Publisher,
+  slide: Json,
+  transcripts: readonly Json[],
+  book: QuoteBook,
+  outcomes: string[],
+): Promise<Json | null> {
+  try {
+    return await publisher.tensions(slide, transcripts, book);
+  } catch (exc) {
+    outcomes.push(`tensions: publishing FAILED ${failureText(exc)}`);
+    return null;
+  }
+}
+
 /** Read conversations whose current phrases never reached the shared store. */
 export function unpublishedConversations(state: Json, transcripts: readonly Json[]): Json[] {
   const conversations = dict(state.conversations);
@@ -944,7 +964,7 @@ async function runAnalysisPass(
     });
     // The room reads tensions as published objects: the slide is the one they make.
     const published = publisher
-      ? await publisher.tensions(result.tensions, transcripts, book)
+      ? await publishTensions(publisher, result.tensions, transcripts, book, outcomes)
       : null;
     shaped.tensions = published ?? result.tensions;
     outcomes.push(...(result.notes ?? []));

@@ -118,11 +118,23 @@ describe("once a session publishes, the room shows only published objects", () =
   const deck = () =>
     objects({ popcorn: new Map([["c3", [phrase("c3", "something else entirely")]]]) });
 
-  test("a tension or stakeholder slide with no objects behind it leaves the room", () => {
+  test("a slide not published yet stays, provisional, its quotes derived", () => {
+    // A finished session's slide is never read again, so it would not come back.
     const files = applyPublishedObjects(sessionBundle(), deck(), args).files as Json;
-    expect(files["tensions.json"]).toBeUndefined();
-    expect(files["stakeholders.json"]).toBeUndefined();
+    const tensions = files["tensions.json"] as Json;
+    expect(tensions.provisional).toBe(true);
+    expect(((tensions.tensions as Json[])[0] as Json).quoteIds).toEqual([
+      deckQuoteId("c1", "we need buses at night"),
+      deckQuoteId("c2", "no money for staff"),
+    ]);
+    expect((files["stakeholders.json"] as Json).provisional).toBe(true);
     expect(broken(files)).toEqual([]);
+  });
+
+  test("a slide not published and not provisional breaks the room's rules", () => {
+    const files = applyPublishedObjects(sessionBundle(), deck(), args).files as Json;
+    delete (files["tensions.json"] as Json).provisional;
+    expect(broken(files)).toEqual(["tensions.json: x1 is not named by its object"]);
   });
 
   test("a conversation not published yet is provisional, its quotes still its own", () => {

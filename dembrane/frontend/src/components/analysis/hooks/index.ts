@@ -342,7 +342,11 @@ export function useResultsList(
 						offset: page * RESULTS_PAGE,
 						sort: "attention",
 						type: kind,
-						...(snapshots?.[kind] && { snapshot_id: snapshots[kind] }),
+						// Each row at its current revision, so an edit shows and the next one names it.
+						...(snapshots?.[kind] && {
+							latest: true,
+							snapshot_id: snapshots[kind],
+						}),
 					},
 				),
 			queryKey: analysisKeys.objects(

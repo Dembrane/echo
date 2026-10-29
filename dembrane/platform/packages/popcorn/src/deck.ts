@@ -29,6 +29,9 @@ import { norm } from "./text";
 export const DECK_RECIPES = ["popcorn", "tensions", "popcorn.tensions", "stakeholders"] as const;
 /** The recipes whose objects make the tensions slide: the host's Analyse and the live session's. */
 const TENSION_RECIPES = new Set(["tensions", "popcorn.tensions"]);
+const LIVE_TENSIONS_RECIPE = "popcorn.tensions";
+/** A live tension's output key (popcorn-tensions.ts), at the end of its object's lineage key. */
+const TENSION_KEY = "tension:";
 const DECK_VIEW_ID = "deck";
 const DECK_SCOPE_KEY = "project";
 const DECK_TYPES = new Set(["popcorn", "tension", "stakeholder"]);
@@ -83,6 +86,11 @@ export interface DeckAnalysis {
   excludedObjectIds(projectId: string): Promise<Set<string>>;
   /** The deck view's current snapshot; null when there is none yet. */
   currentDeck(projectId: string): Promise<DeckSnapshot | null>;
+  /**
+   * Every live tension ever published, withdrawn and host-edited ones too, at its current
+   * revision, its identity (`extra.identity`) read from its object's lineage key.
+   */
+  heldTensions(projectId: string): Promise<DeckRevision[]>;
   /** A new deck snapshot over the producer scopes the executor owns; null when it owns none. */
   assembleDeck(projectId: string, sourceEventId?: string | null): Promise<DeckSnapshot | null>;
   /**
@@ -143,6 +151,31 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
     async currentDeck(projectId) {
       const snapshot = await current(projectId);
       return snapshot ? deckSnapshot(snapshot) : null;
+    },
+    async heldTensions(projectId) {
+      const rows = await store.sql<{ lineage_key: string; revision_id: string }[]>`
+        select o.lineage_key, o.current_revision_id::text as revision_id
+          from analysis_object o join analysis_scope s on s.id = o.scope_id
+         where o.project_id = ${projectId} and s.kind = 'producer'
+           and s.recipe_id = ${LIVE_TENSIONS_RECIPE} and o.current_revision_id is not null`;
+      const revisions = await store.getRevisions(
+        projectId,
+        rows.map((r) => r.revision_id),
+      );
+      return rows.flatMap((row) => {
+        const r = revisions.get(row.revision_id);
+        if (!r) return [];
+        // The identity the object was made for, whatever a host's edit kept of its extra.
+        const at = row.lineage_key.lastIndexOf(TENSION_KEY);
+        if (at < 0) return [];
+        const rev = revision(r);
+        return [
+          {
+            ...rev,
+            extra: { ...rev.extra, identity: row.lineage_key.slice(at + TENSION_KEY.length) },
+          },
+        ];
+      });
     },
     async assembleDeck(projectId, sourceEventId) {
       const snapshot = await assemble(projectId, sourceEventId ?? null);
@@ -414,10 +447,10 @@ export function stakeholdersSlide(
 
 /**
  * The deck's files with every scope the executor owns served from its published
- * revisions. Once anything is published, a tensions or stakeholders slide with no objects
- * behind it leaves the room, and a conversation not yet published is marked provisional.
- * Every quote id in the result is derived from its conversation and words (deckQuoteId),
- * so a screen holding files from two reads still resolves each id to the same quote.
+ * revisions. Once anything is published, a conversation or a tensions or stakeholders slide
+ * not published yet is marked provisional. Every quote id in the result is derived from its
+ * conversation and words (deckQuoteId), so a screen holding files from two reads still
+ * resolves each id to the same quote.
  */
 export function applyPublishedObjects(
   bundle: Json,
@@ -428,14 +461,17 @@ export function applyPublishedObjects(
   const quotes = new DeckQuotes();
   const built = new Set<string>();
   const tabs = dict(args.settings.tabs);
-  // Once a session publishes, the room shows what is published and nothing else: a slide
-  // the session holds with no objects behind it would show the room what the host's
-  // results cannot. A synthetic demo has no objects and keeps its own slides.
+  // Once a session publishes, the room shows what is published. A slide the session holds
+  // with no objects behind it yet stays, marked provisional, until the tick publishes it: a
+  // finished session is not read again, and its slide would otherwise be gone. A synthetic
+  // demo has no objects and keeps its own slides.
   const published = !isEmpty(objects) && !isSynthetic(files);
-  if (published) {
-    if (!objects.ownsTensions) delete files["tensions.json"];
-    if (!objects.ownsStakeholders) delete files["stakeholders.json"];
-  }
+  if (published)
+    for (const [name, owned] of [
+      ["tensions.json", objects.ownsTensions],
+      ["stakeholders.json", objects.ownsStakeholders],
+    ] as const)
+      if (!owned && isRecord(files[name])) files[name] = { ...files[name], provisional: true };
   for (const [conversationId, revisions] of objects.popcorn) {
     const name = `popcorn/${conversationId}.json`;
     const current: Json = {

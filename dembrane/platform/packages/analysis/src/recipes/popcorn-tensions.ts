@@ -379,7 +379,7 @@ export const RECIPE: Recipe = {
   ],
   identityPolicy: {
     description:
-      "A tension keeps its identity while the same two positions, by conversation, wording and quote, hold its poles; reworded positions make a new object.",
+      "A tension keeps its identity while its two poles rest on the same passages of the same conversations, however the positions are worded; the tick carries a published identity to the tension a new read finds on those passages.",
   },
   embeddingProjections: ["tension"],
   scopeKeyPattern: /^project$/,

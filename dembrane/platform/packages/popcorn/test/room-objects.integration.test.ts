@@ -1,15 +1,19 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import {
+  type AnalysisRuntime,
   type ExecutorDeps,
   PRODUCERS_KEY,
   type ProducerServices,
   readSnapshot,
 } from "@dembrane/analysis";
 import { createDb, migrate } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
+import { type BffDeps, listAnalysisObjects } from "../../analysis/src/bff";
+import { RevisionService } from "../../analysis/src/revisions";
 import { appClient, executorDeps, quiet } from "../../analysis/test/harness";
-import { analysisDeck, applyPublishedObjects, deckQuoteId } from "../src/deck";
+import { analysisDeck, applyPublishedObjects, curatePresentation, deckQuoteId } from "../src/deck";
 import type { Json } from "../src/py";
 import { Publisher } from "../src/tick/publish";
 import { unpublishedConversations, unpublishedTensions } from "../src/tick/run";
@@ -194,6 +198,154 @@ run("the room and the host's results read the same objects", () => {
     expect(((again?.tensions as Json[]) ?? [])[0]?.objectId).toBe(published?.objectId as string);
     state.analysis = { ...(state.analysis as Json), published: { tensions: "fp-1" } };
     expect(unpublishedTensions(state)).toBe(false);
+  });
+
+  /**
+   * Publish a tension, then read it again as the next read words it: the positions come back
+   * reworded (so the tick derives another identity) on the same passages, one said at more length.
+   */
+  const readAgain = async (identity: string, from: number, between = async (_t: Json) => {}) => {
+    const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const first = await publisher([]).tensions(
+      slide(book, [[identity, "Lanes first", from]]),
+      transcripts,
+      book,
+    );
+    const [shown] = (first?.tensions as Json[]) ?? [];
+    await between(shown as Json);
+    // The outbox advances the deck view after a host's change, as it does live.
+    await deck().assembleDeck(P);
+    const again = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const a = again.add(said(0, from)) as string;
+    const b = again.add(said(1, from, 70)) as string;
+    const reread = await publisher([]).tensions(
+      {
+        tensions: [
+          {
+            id: "x1",
+            identity: `${identity}-reworded`,
+            poleA: "Lanes come first",
+            poleB: "not Lanes first",
+            knot: "Said again.",
+            toResolve: "Which comes first?",
+            quoteIds: [a, b],
+            quotePoles: { [a]: "A", [b]: "B" },
+          },
+        ],
+      },
+      transcripts,
+      again,
+    );
+    return { shown: shown as Json, reread: ((reread?.tensions as Json[]) ?? []) as Json[] };
+  };
+
+  test("a tension read again in other words keeps its object, so the host's hide holds", async () => {
+    const { shown, reread } = await readAgain("read-one", 30);
+    expect(reread.map((t) => t.objectId)).toEqual([shown.objectId]);
+    expect(reread[0]?.poleA).toBe("Lanes come first");
+    // Present hides by object id (the draft's hidden_items): the room drops it again.
+    const room = applyPublishedObjects(
+      { files: { "session.json": { transcripts: [] } } },
+      await deck().deckObjects(P),
+      { settings: { tabs: { tensions: true } }, project: {}, host: false },
+    );
+    const curated = curatePresentation(room, {
+      presentation: { hidden_items: [String(shown.objectId)] },
+    });
+    expect(((curated.files as Json)["tensions.json"] as Json).tensions).toEqual([]);
+  });
+
+  test("a tension the host edited keeps its object when it is read again in other words", async () => {
+    const { shown, reread } = await readAgain("read-edited", 90, async (t) => {
+      const [held] = (await deck().deckObjects(P)).tensions.filter(
+        (r) => r.objectId === t.objectId,
+      );
+      await new RevisionService(deps.store).authorEdit({
+        projectId: P,
+        objectId: String(t.objectId),
+        expected: String(t.revisionId),
+        payload: { ...(held?.payload as Json), knot: "The host's words." },
+        actorId: ids.user,
+      });
+    });
+    expect(reread.map((t) => t.objectId)).toEqual([shown.objectId]);
+  });
+
+  test("a tension the host withdrew stays withdrawn when it is read again in other words", async () => {
+    const { shown } = await readAgain("read-withdrawn", 60, async (t) => {
+      await new RevisionService(deps.store).setExcluded({
+        projectId: P,
+        objectId: String(t.objectId),
+        expected: String(t.revisionId),
+        excluded: true,
+        actorId: ids.user,
+      });
+    });
+    // Neither the withdrawn object nor a new one in the read's words is in the room.
+    const shownNow = (await deck().deckObjects(P)).tensions.filter(
+      (r) => r.objectId === shown.objectId || r.payload.poleA === "Lanes come first",
+    );
+    expect(shownNow).toEqual([]);
+    expect((await deck().excludedObjectIds(P)).has(String(shown.objectId))).toBe(true);
+  });
+
+  test("the results table lists the pinned slide's tensions as the host last left them", async () => {
+    const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const published = await publisher([]).tensions(
+      slide(book, [
+        ["pinned-one", "Parking first", 0],
+        ["pinned-two", "Trees first", 50],
+      ]),
+      transcripts,
+      book,
+    );
+    const [edited, withdrawn] = (published?.tensions as Json[]) ?? [];
+    // The room is pinned to this snapshot ("Show them"); the host then works the table.
+    const pinned = (await deckSnapshot()).id;
+    const revisions = new RevisionService(deps.store);
+    const edit = await revisions.authorEdit({
+      projectId: P,
+      objectId: String(edited?.objectId),
+      expected: String(edited?.revisionId),
+      payload: {
+        ...((await deck().deckObjects(P)).tensions.find((r) => r.objectId === edited?.objectId)
+          ?.payload as Json),
+        knot: "Edited by the host.",
+      },
+      actorId: ids.user,
+    });
+    await revisions.setExcluded({
+      projectId: P,
+      objectId: String(withdrawn?.objectId),
+      expected: String(withdrawn?.revisionId),
+      excluded: true,
+      actorId: ids.user,
+    });
+    const bff: BffDeps = {
+      db: database.db,
+      rt: { store: deps.store } as AnalysisRuntime,
+      access: { project: async () => ({ project: { id: P }, tier: "changemaker" }) } as never,
+      limiter: { check: async () => {} } as never,
+      enablePresent: true,
+      now: () => new Date(),
+    };
+    const listed = await listAnalysisObjects(
+      bff,
+      { appUserId: ids.appUser, directusUserId: ids.user } as Signed,
+      P,
+      {
+        type: "tension",
+        scope: null,
+        snapshot_id: pinned,
+        latest: true,
+        membership: "active",
+        sort: "attention",
+        offset: 0,
+        limit: 50,
+      },
+    );
+    // The row is the revision the next edit must name, and a withdrawn tension leaves.
+    expect(listed.items.map((i) => [i.objectId, i.revisionId])).toEqual([[edit.objectId, edit.id]]);
   });
 
   test("a conversation is owed a publication until its revision reaches the store", async () => {

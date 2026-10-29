@@ -141,6 +141,17 @@ describe("the results list", () => {
 			stakeholder: undefined,
 			tension: "deck-1",
 		});
+		// Each row at its current revision: an edit shows, and the next one names it.
+		const latest = Object.fromEntries(
+			params().map((query) => [query.type, query.latest]),
+		);
+		expect(latest).toEqual({
+			argument: undefined,
+			deduplicated_argument: undefined,
+			popcorn: true,
+			stakeholder: undefined,
+			tension: true,
+		});
 	});
 
 	it("keeps to one kind where the host filtered for one", async () => {
