@@ -4,6 +4,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Button,
+	Checkbox,
 	Divider,
 	Group,
 	Modal,
@@ -199,6 +200,11 @@ function OfferForm({
 	const setSigner = (patch: Partial<Signer>) =>
 		setSignerEdit({ ...signer, ...patch });
 	const signs = Boolean(signer.name.trim() && signer.email.trim());
+	// dembrane always signs the DPA; the offer only when ticked, so a new offer starts
+	// without it.
+	const [signsOffer, setSignsOffer] = useState(
+		from?.dembrane_signs_offer === true,
+	);
 	const [amendments, setAmendments] = useState<Amendment[]>(
 		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
 	);
@@ -242,6 +248,7 @@ function OfferForm({
 					role: signer.role.trim() || null,
 				}
 			: null,
+		dembrane_signs_offer: signsOffer,
 		invoice_plan: planBody(plan),
 		items: toItems(priced),
 		language,
@@ -512,6 +519,18 @@ function OfferForm({
 						data-testid="dembrane-signer-role"
 					/>
 				</SimpleGrid>
+				<Checkbox
+					label={t`Sign the offer when sent`}
+					description={t`The DPA is always signed`}
+					checked={signsOffer}
+					onChange={(e) => {
+						setSignsOffer(e.currentTarget.checked);
+						// Signing the offer makes a second signature of ours redundant.
+						if (e.currentTarget.checked && second === "dembrane")
+							setSecond("none");
+					}}
+					data-testid="dembrane-signs-offer"
+				/>
 			</Stack>
 			<Stack gap="xs" data-testid="offer-second-signer">
 				<Stack gap={4}>
@@ -525,8 +544,8 @@ function OfferForm({
 						data={[
 							{ label: t`None`, value: "none" },
 							{ label: t`Another signer of theirs`, value: "customer" },
-							// dembrane's signature above makes a later one of ours redundant.
-							...(signs && second !== "dembrane"
+							// dembrane signing the offer above makes a later one of ours redundant.
+							...(signsOffer && second !== "dembrane"
 								? []
 								: [{ label: t`dembrane signs too`, value: "dembrane" }]),
 						]}

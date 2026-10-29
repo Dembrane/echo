@@ -469,9 +469,11 @@ export const useAttachChatConversationsMutation = () => {
 	});
 };
 
-export const useUpdateProjectByIdMutation = () => {
+// errorToast: false for screens that show the error inline instead.
+export const useUpdateProjectByIdMutation = ({ errorToast = true } = {}) => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		meta: { errorToast },
 		mutationFn: async ({
 			id,
 			payload,

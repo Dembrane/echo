@@ -1,15 +1,21 @@
 import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
-import { type DembraneSignature, type DembraneSigner, printedDay } from "./offer";
+import {
+  type DembraneSignature,
+  type DembraneSigner,
+  type OfferContent,
+  printedDay,
+} from "./offer";
 import type { SignedBy } from "./pdf";
 import { type DocumentRow, type SignatureRow, store } from "./storage";
 
 /**
- * dembrane signs what it sends. With a signer chosen on the offer, or a signatory configured,
- * every offer and every DPA echo sends carries dembrane's signature from the moment it is sent: the PDF prints it under the
- * customer's blanks (name, role, date, signed electronically) and it is its own insert-only
- * signature row in the `dembrane` slot. The customer's signature then completes the document
- * and nobody at dembrane has a step after it. Without either, documents go out as before.
+ * dembrane signs what it sends. Every DPA echo sends carries dembrane's signature from the
+ * moment it is sent, and so does an offer staff chose to sign (`dembrane_signs_offer`): the
+ * PDF prints it under the customer's blanks (name, role, date, signed electronically) and it
+ * is its own insert-only signature row in the `dembrane` slot. The customer's signature then
+ * completes the document and nobody at dembrane has a step after it. Without a signer chosen
+ * or a signatory configured, documents go out unsigned by dembrane.
  */
 
 /**
@@ -41,6 +47,14 @@ export async function dembraneSignature(
   }
   return { name, role: s.role?.trim() || null, email, signed_at: now.toISOString() };
 }
+
+/** dembrane's signature on the offer itself: only when staff chose that it signs the offer. */
+export const offerSignature = (
+  d: AccountsDeps,
+  c: Conn,
+  now: Date,
+  content: Pick<OfferContent, "dembrane_signs_offer" | "dembrane_signer">,
+) => (content.dembrane_signs_offer ? dembraneSignature(d, c, now, content.dembrane_signer) : null);
 
 /** dembrane's signature as a text document (the DPA) prints it. */
 export const signedBy = (d: AccountsDeps, s: DembraneSignature): SignedBy => ({

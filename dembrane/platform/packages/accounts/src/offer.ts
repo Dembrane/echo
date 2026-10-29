@@ -212,11 +212,17 @@ export interface OfferContent {
   readonly second_signer?: SecondSigner;
   /** PDFs attached after the offer's pages, listed in its clause. */
   readonly annexes?: readonly OfferAnnex[];
-  /** Who signs for dembrane when it is sent; absent takes the configured signatory then. */
-  readonly dembrane_signer?: DembraneSigner;
   /**
-   * dembrane's signature, printed under the customer's blanks. Set when the offer is sent;
-   * absent on a draft and on an offer sent before dembrane signed what it sends.
+   * Who signs for dembrane when it is sent; absent takes the configured signatory then. They
+   * sign the DPA the offer sends, and the offer too when `dembrane_signs_offer`.
+   */
+  readonly dembrane_signer?: DembraneSigner;
+  /** Staff chose that dembrane signs the offer itself when it is sent; absent: it does not. */
+  readonly dembrane_signs_offer?: true;
+  /**
+   * dembrane's signature, printed under the customer's blanks. Set when the offer is sent
+   * with `dembrane_signs_offer`; absent on a draft, on an offer dembrane does not sign and on
+   * an offer sent before dembrane signed what it sends.
    */
   readonly dembrane_signature?: DembraneSignature;
 }

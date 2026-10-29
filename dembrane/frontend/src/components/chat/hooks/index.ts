@@ -298,7 +298,7 @@ export const useChatSuggestions = (
 		queryFn: () => getChatSuggestions(chatId, language),
 		queryKey: ["chats", chatId, "suggestions", language],
 		refetchOnWindowFocus: false,
-		retry: 1, // Retry once on failure, then give up gracefully
+		retry: 0, // A slow failure retried would double the wait for a nicety
 		staleTime: 30_000, // 30 seconds - avoid rapid re-fetches
 	});
 };

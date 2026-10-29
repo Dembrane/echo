@@ -26,6 +26,7 @@ export {
 } from "./complete";
 export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
 export {
+  attemptTimeout,
   type Deployment,
   FALL_BACK_ON_REFUSAL,
   FallbackModel,

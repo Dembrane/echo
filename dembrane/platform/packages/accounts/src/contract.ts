@@ -402,9 +402,11 @@ export const OfferContent = z.object({
   annexes: z.array(OfferAnnex).optional(),
   /**
    * Who signs for dembrane when it is sent, as staff chose; absent takes the configured
-   * signatory then.
+   * signatory then. They sign the DPA always, and the offer when `dembrane_signs_offer`.
    */
   dembrane_signer: DembraneSigner.optional(),
+  /** Staff chose that dembrane signs the offer itself when it is sent; absent: it does not. */
+  dembrane_signs_offer: z.literal(true).optional(),
   /**
    * dembrane's signature, applied when the offer was sent and printed under the customer's
    * blanks; absent on a draft and on offers sent before dembrane signed what it sends.
@@ -1124,14 +1126,20 @@ export const PushOfferRequest = z.object({
     .nullable()
     .optional(),
   /**
-   * Who signs the offer, and the DPA it sends, for dembrane when it is sent: a staff member,
-   * printed with name and role. Absent or null takes the configured signatory at sending. On
-   * a change, absent keeps the draft's and null drops it.
+   * Who signs the DPA the offer sends for dembrane, and the offer too when
+   * `dembrane_signs_offer`: a staff member, printed with name and role. Absent or null takes
+   * the configured signatory at sending. On a change, absent keeps the draft's and null drops it.
    */
   dembrane_signer: z
     .object({ name: text(200), email: z.email().max(255), role: optText(200) })
     .nullable()
     .optional(),
+  /**
+   * True: dembrane signs the offer itself when it is sent, so the customer's signature
+   * completes it. Absent or false: only the customer signs the offer (the DPA is always
+   * signed by dembrane). On a change, absent keeps the draft's.
+   */
+  dembrane_signs_offer: z.boolean().optional(),
   /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.
