@@ -371,7 +371,7 @@ msgstr "Při podpisu zaškrtnou"
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:761
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 msgid "Back"
 msgstr "Zpět"
 
@@ -483,7 +483,7 @@ msgstr "Hovor domluven"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 msgid "Cancel"
@@ -1062,13 +1062,13 @@ msgstr "Vyplňte datum"
 
 #: src/features/accounts/customer/WhoSigns.tsx:113
 #: src/features/accounts/customer/WhoSigns.tsx:122
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:238
 msgid "Fill in their email"
 msgstr "Vyplňte e-mail"
 
 #: src/features/accounts/customer/WhoSigns.tsx:114
 #: src/features/accounts/customer/WhoSigns.tsx:123
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:248
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:244
 msgid "Fill in their name"
 msgstr "Vyplňte jméno"
 
@@ -1513,8 +1513,8 @@ msgstr "Nový úkol"
 #: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:886
 #: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:236
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
 msgid "Next"
 msgstr "Další"
 
@@ -1855,7 +1855,7 @@ msgstr "Volitelné, nahrazuje naši smlouvu o zpracování"
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Nepovinné. Minulá událost nebo zákazník, podle kterého se demo vytvoří."
 
-#: src/features/accounts/customer/WhoSigns.tsx:453
+#: src/features/accounts/customer/WhoSigns.tsx:449
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:205
 msgid "Optional. It goes on the signature."
 msgstr "Nepovinné. Uvede se u podpisu."
@@ -2300,7 +2300,7 @@ msgstr "Vyberte pole a nastavte jeho typ, popisek a zda je povinné. Přetažen�
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:243
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:251
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:247
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:671
 msgid "Send"
@@ -2830,7 +2830,7 @@ msgstr "Koncept ještě není připraven."
 msgid "The draft is ready. Check it, then publish."
 msgstr "Koncept je připraven. Zkontrolujte jej a poté publikujte."
 
-#: src/features/accounts/customer/WhoSigns.tsx:436
+#: src/features/accounts/customer/WhoSigns.tsx:432
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:181
 msgid "The email address is empty."
 msgstr "E-mailová adresa je prázdná."
@@ -2846,7 +2846,7 @@ msgstr "Pozvánka byla odeslána na"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:447
+#: src/features/accounts/customer/WhoSigns.tsx:443
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:197
 msgid "The name is empty."
 msgstr "Jméno je prázdné."
@@ -2888,17 +2888,17 @@ msgstr "Jejich adresa @dembrane.com"
 msgid "Their data processing terms"
 msgstr "Jejich podmínky zpracování údajů"
 
-#: src/features/accounts/customer/WhoSigns.tsx:426
+#: src/features/accounts/customer/WhoSigns.tsx:422
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:169
 msgid "Their email address"
 msgstr "Jejich e-mailová adresa"
 
-#: src/features/accounts/customer/WhoSigns.tsx:452
+#: src/features/accounts/customer/WhoSigns.tsx:448
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:204
 msgid "Their job title"
 msgstr "Jejich pracovní pozice"
 
-#: src/features/accounts/customer/WhoSigns.tsx:442
+#: src/features/accounts/customer/WhoSigns.tsx:438
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:190
 msgid "Their name"
 msgstr "Jejich jméno"
@@ -2997,7 +2997,7 @@ msgstr "Pozvánku se nepodařilo načíst"
 msgid "This invitation is for {invitee}"
 msgstr "Tato pozvánka je pro {invitee}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:435
+#: src/features/accounts/customer/WhoSigns.tsx:431
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:180
 msgid "This is not an email address."
 msgstr "Toto není e-mailová adresa."
