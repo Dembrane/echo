@@ -230,15 +230,8 @@ export const CreateOrganisationModal = ({
 									onChange={(e) => setOrgName(e.currentTarget.value)}
 									data-testid="create-organisation-name-input"
 								/>
-								<Group justify="flex-start">
-									<Button
-										variant="filled"
-										type="submit"
-										loading={busy}
-										disabled={!orgName.trim()}
-									>
-										<Trans>Continue</Trans>
-									</Button>
+								{/* A row of steps: the quiet button on the left, the pill on the right. */}
+								<Group data-steps justify="space-between">
 									<Button
 										variant="subtle"
 										color="gray"
@@ -246,6 +239,14 @@ export const CreateOrganisationModal = ({
 										disabled={busy}
 									>
 										<Trans>Cancel</Trans>
+									</Button>
+									<Button
+										variant="filled"
+										type="submit"
+										loading={busy}
+										disabled={!orgName.trim()}
+									>
+										<Trans>Continue</Trans>
 									</Button>
 								</Group>
 							</Stack>
@@ -263,15 +264,8 @@ export const CreateOrganisationModal = ({
 								onChange={setEmails}
 								autoFocusFirst
 							/>
-							<Group justify="flex-start">
-								<Button
-									variant="filled"
-									loading={busy}
-									disabled={!canInvite}
-									onClick={handleSendInvites}
-								>
-									<Trans>Send invites</Trans>
-								</Button>
+							{/* A row of steps: the quiet button on the left, the pill on the right. */}
+							<Group data-steps justify="space-between">
 								<Button
 									variant="subtle"
 									color="gray"
@@ -279,6 +273,14 @@ export const CreateOrganisationModal = ({
 									disabled={busy}
 								>
 									<Trans>Skip</Trans>
+								</Button>
+								<Button
+									variant="filled"
+									loading={busy}
+									disabled={!canInvite}
+									onClick={handleSendInvites}
+								>
+									<Trans>Send invites</Trans>
 								</Button>
 							</Group>
 						</Stack>

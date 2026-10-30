@@ -422,7 +422,15 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 			const column = cs.flexDirection.startsWith("column");
 			const pos = (k: Element) =>
 				column ? k.getBoundingClientRect().top : k.getBoundingClientRect().left;
-			if (kids.some((k) => k !== mine && pos(k) < pos(mine) - 1))
+			// A row of steps runs the way time does: Back left, the pill right (rules.css).
+			if (box.hasAttribute("data-steps")) {
+				if (kids.some((k) => k !== mine && pos(k) > pos(mine) + 1))
+					fail(
+						"flow.steps-primary-last",
+						btn,
+						"in a row of steps the filled button is not rightmost",
+					);
+			} else if (kids.some((k) => k !== mine && pos(k) < pos(mine) - 1))
 				fail(
 					"flow.primary-first",
 					btn,

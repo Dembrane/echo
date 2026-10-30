@@ -371,7 +371,7 @@ msgstr "Alla firma, spuntano"
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:761
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 msgid "Back"
 msgstr "Indietro"
 
@@ -483,7 +483,7 @@ msgstr "Chiamata prenotata"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 msgid "Cancel"
@@ -1062,13 +1062,13 @@ msgstr "Inserisci la data"
 
 #: src/features/accounts/customer/WhoSigns.tsx:113
 #: src/features/accounts/customer/WhoSigns.tsx:122
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:238
 msgid "Fill in their email"
 msgstr "Inserisci la sua email"
 
 #: src/features/accounts/customer/WhoSigns.tsx:114
 #: src/features/accounts/customer/WhoSigns.tsx:123
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:248
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:244
 msgid "Fill in their name"
 msgstr "Inserisci il suo nome"
 
@@ -1513,8 +1513,8 @@ msgstr "Nuova attività"
 #: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:886
 #: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:236
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
 msgid "Next"
 msgstr "Avanti"
 
@@ -1855,7 +1855,7 @@ msgstr "Facoltativo, sostituisce il nostro DPA"
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Facoltativo. Un evento passato o un cliente su cui basare la demo."
 
-#: src/features/accounts/customer/WhoSigns.tsx:453
+#: src/features/accounts/customer/WhoSigns.tsx:449
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:205
 msgid "Optional. It goes on the signature."
 msgstr "Facoltativo. Compare con la firma."
@@ -2300,7 +2300,7 @@ msgstr "Seleziona un campo per impostarne tipo, etichetta e obbligatorietà. Tra
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:243
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:251
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:247
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:671
 msgid "Send"
@@ -2830,7 +2830,7 @@ msgstr "La bozza non è ancora pronta."
 msgid "The draft is ready. Check it, then publish."
 msgstr "La bozza è pronta. Controllala, poi pubblicala."
 
-#: src/features/accounts/customer/WhoSigns.tsx:436
+#: src/features/accounts/customer/WhoSigns.tsx:432
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:181
 msgid "The email address is empty."
 msgstr "L'indirizzo email è vuoto."
@@ -2846,7 +2846,7 @@ msgstr "L'invito è stato inviato a"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:447
+#: src/features/accounts/customer/WhoSigns.tsx:443
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:197
 msgid "The name is empty."
 msgstr "Il nome è vuoto."
@@ -2888,17 +2888,17 @@ msgstr "Il suo indirizzo @dembrane.com"
 msgid "Their data processing terms"
 msgstr "Le loro condizioni sul trattamento dei dati"
 
-#: src/features/accounts/customer/WhoSigns.tsx:426
+#: src/features/accounts/customer/WhoSigns.tsx:422
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:169
 msgid "Their email address"
 msgstr "Il suo indirizzo email"
 
-#: src/features/accounts/customer/WhoSigns.tsx:452
+#: src/features/accounts/customer/WhoSigns.tsx:448
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:204
 msgid "Their job title"
 msgstr "Il suo ruolo"
 
-#: src/features/accounts/customer/WhoSigns.tsx:442
+#: src/features/accounts/customer/WhoSigns.tsx:438
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:190
 msgid "Their name"
 msgstr "Il suo nome"
@@ -2997,7 +2997,7 @@ msgstr "Impossibile caricare questo invito"
 msgid "This invitation is for {invitee}"
 msgstr "Questo invito è per {invitee}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:435
+#: src/features/accounts/customer/WhoSigns.tsx:431
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:180
 msgid "This is not an email address."
 msgstr "Questo non è un indirizzo email."

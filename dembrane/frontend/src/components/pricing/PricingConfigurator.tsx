@@ -829,21 +829,9 @@ export const PricingConfigurator = ({
 							{/* Not now stands for both the opening and the first question:
 							    there is nothing behind the first question worth a Back.
 							    Back, Skip and Continue start together, one step later.
-							    Continue leads; the quiet ways out follow it. */}
-							<Group justify="flex-start" gap="sm">
-								<Button
-									variant="filled"
-									loading={isSending}
-									size="md"
-									type="submit"
-									{...testId("pricing-configurator-next")}
-								>
-									{phase.step === STEP_COUNT ? (
-										<Trans>Pick a time</Trans>
-									) : (
-										<Trans>Continue</Trans>
-									)}
-								</Button>
+							    A row of steps: the way back on the left, Skip and Continue on
+							    the right (rules.css). */}
+							<Group data-steps justify="space-between" gap="sm">
 								{phase.step <= OPENING_STEP + 1 ? (
 									<Button
 										onClick={handleClose}
@@ -867,18 +855,33 @@ export const PricingConfigurator = ({
 										<Trans>Back</Trans>
 									</Button>
 								)}
-								{phase.step > OPENING_STEP + 1 && phase.step < STEP_COUNT && (
+								<Group data-steps gap="sm">
+									{phase.step > OPENING_STEP + 1 && phase.step < STEP_COUNT && (
+										<Button
+											onClick={advance}
+											size="md"
+											type="button"
+											variant="subtle"
+											color="gray"
+											{...testId("pricing-configurator-skip")}
+										>
+											<Trans>Skip</Trans>
+										</Button>
+									)}
 									<Button
-										onClick={advance}
+										variant="filled"
+										loading={isSending}
 										size="md"
-										type="button"
-										variant="subtle"
-										color="gray"
-										{...testId("pricing-configurator-skip")}
+										type="submit"
+										{...testId("pricing-configurator-next")}
 									>
-										<Trans>Skip</Trans>
+										{phase.step === STEP_COUNT ? (
+											<Trans>Pick a time</Trans>
+										) : (
+											<Trans>Continue</Trans>
+										)}
 									</Button>
-								)}
+								</Group>
 							</Group>
 						</Stack>
 					</form>
