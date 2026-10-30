@@ -119,7 +119,7 @@ it("builds the summary from the question labels, never from option keys", () => 
 
 	expect(summary.split("\n")).toEqual([
 		"Reference DEM-4F2A",
-		"What do you want to use dembrane for? An assembly, Something else: a museum tour",
+		"What do you want to use dembrane for? An assembly over several sessions, Something else: a museum tour",
 		"When do you need dembrane? Six weekends across seven months",
 		"How many recordings do you expect in your first year? 50 to 250",
 		"At your busiest moment, how many conversations will be running at once? More than 40 (120)",

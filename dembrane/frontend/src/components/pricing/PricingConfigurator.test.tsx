@@ -12,6 +12,7 @@ import {
 import { MemoryRouter, useLocation, useNavigate } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { BookingLinks } from "@/lib/links";
+import { messages as nlMessages } from "@/locales/nl-NL";
 import {
 	type Answers,
 	CONFIG_STORAGE_KEY,
@@ -167,7 +168,7 @@ const modalText = () =>
 // 1. The question list is one typed list with a version, in a fixed order.
 
 it("keeps the five questions in order behind the opening, with a version", () => {
-	expect(QUESTION_SET_VERSION).toBe("21-aug-26");
+	expect(QUESTION_SET_VERSION).toBe("30-oct-26");
 	// Six steps, and the first one is the opening.
 	expect(STEP_COUNT).toBe(6);
 	expect([...QUESTION_KEYS]).toEqual([
@@ -234,11 +235,12 @@ it("opens a free text box on Something else, and a number box above 40", () => {
 		throw new Error("use case and concurrency are option questions");
 	}
 	expect(useCase.options.map((option) => option.key)).toEqual([
-		"event_workshop",
+		"tables_synthesis",
+		"rounds_panel",
 		"assembly",
-		"conference_sessions",
-		"in_person",
-		"audio_survey",
+		"walk_in",
+		"meetings_record",
+		"year_of_work",
 		"something_else",
 	]);
 	expect(useCase.options.at(-1)?.reveals).toBe("text");
@@ -252,6 +254,43 @@ it("opens a free text box on Something else, and a number box above 40", () => {
 	if (timing.kind !== "text") return;
 	expect(timing.examples).toHaveLength(6);
 	expect(timing.examples?.[1].label).toBe("Six weekends across seven months");
+});
+
+it("opens on the event shapes, in English and in Dutch", async () => {
+	// The keys match the site's needs form, so both mounts count as one funnel.
+	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
+	await screen.findByTestId("pricing-option-use_case-tables_synthesis");
+	for (const label of [
+		"Conversations at tables, with a synthesis at the end.",
+		"Short rounds that feed a panel on stage.",
+		"An assembly over several sessions.",
+		"A stand people walk up to.",
+		"A record of your meetings.",
+		"A year of work.",
+	]) {
+		expect(modalText()).toContain(label);
+	}
+	first.view.unmount();
+	cleanup();
+
+	i18n.load("nl-NL", nlMessages);
+	i18n.activate("nl-NL");
+	try {
+		renderConfigurator({ entries: ["/workspace?pc_step=2"] });
+		await screen.findByTestId("pricing-option-use_case-year_of_work");
+		for (const label of [
+			"Gesprekken aan tafels, met een synthese aan het eind.",
+			"Korte rondes die een panel op het podium voeden.",
+			"Een beraad in meerdere sessies.",
+			"Een stand waar mensen binnenlopen.",
+			"Je eigen overleggen, vastgelegd.",
+			"Een jaar aan werk.",
+		]) {
+			expect(modalText()).toContain(label);
+		}
+	} finally {
+		i18n.activate("en");
+	}
 });
 
 // 2. The opening is step 1, and it names what the person was trying to do.
@@ -430,10 +469,12 @@ it("restores the answers and the same session id after a reload", async () => {
 	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
 
-	fireEvent.click(screen.getByTestId("pricing-option-use_case-event_workshop"));
+	fireEvent.click(
+		screen.getByTestId("pricing-option-use_case-tables_synthesis"),
+	);
 	await waitFor(() =>
 		expect(readStoredConfiguration()?.answers.use_case).toEqual([
-			"event_workshop",
+			"tables_synthesis",
 		]),
 	);
 	const sessionId = readStoredConfiguration()?.config_session_id;
@@ -447,7 +488,7 @@ it("restores the answers and the same session id after a reload", async () => {
 	renderConfigurator({ entries: ["/workspace?pc_step=2"], submit });
 
 	const restored = (await screen.findByTestId(
-		"pricing-option-use_case-event_workshop",
+		"pricing-option-use_case-tables_synthesis",
 	)) as HTMLInputElement;
 	expect(restored.checked).toBe(true);
 	expect(readStoredConfiguration()?.config_session_id).toBe(sessionId);

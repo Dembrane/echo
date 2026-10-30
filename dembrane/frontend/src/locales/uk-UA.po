@@ -1195,7 +1195,7 @@ msgstr "1 година"
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. You provide a URL where you want to receive notifications"
 
-#: src/components/pricing/questions.ts:189
+#: src/components/pricing/questions.ts:208
 msgid "16 to 40."
 msgstr "Від 16 до 40."
 
@@ -1203,7 +1203,7 @@ msgstr "Від 16 до 40."
 msgid "2 months ago"
 msgstr "2 місяці тому"
 
-#: src/components/pricing/questions.ts:187
+#: src/components/pricing/questions.ts:206
 msgid "2 to 5."
 msgstr "Від 2 до 5."
 
@@ -1216,7 +1216,7 @@ msgstr "2. When a conversation or report event happens, we automatically send th
 msgid "24 hours"
 msgstr "24 години"
 
-#: src/components/pricing/questions.ts:175
+#: src/components/pricing/questions.ts:194
 msgid "250 to 1000."
 msgstr "Від 250 до 1000."
 
@@ -1232,11 +1232,11 @@ msgstr "3 місяці тому"
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
-#: src/components/pricing/questions.ts:174
+#: src/components/pricing/questions.ts:193
 msgid "50 to 250."
 msgstr "Від 50 до 250."
 
-#: src/components/pricing/questions.ts:188
+#: src/components/pricing/questions.ts:207
 msgid "6 to 15."
 msgstr "Від 6 до 15."
 
@@ -1330,6 +1330,10 @@ msgstr "Проєкт містить усе, що стосується одніє
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Публічна сторінка потребує вищого тарифу. Вимкни «Публічна сторінка» в розділі «Поділитися», щоб показати інші зміни."
 
+#: src/components/pricing/questions.ts:163
+msgid "A record of your meetings."
+msgstr ""
+
 #: src/components/report/UpdateReportModalButton.tsx:252
 #: src/components/report/CreateReportForm.tsx:157
 msgid "A report is already being generated for this project. Please wait for it to complete."
@@ -1380,9 +1384,17 @@ msgstr "Короткий опис, що відображається в огля
 msgid "A smoother conversation workspace"
 msgstr "Зручніший простір для розмов"
 
+#: src/components/pricing/questions.ts:158
+msgid "A stand people walk up to."
+msgstr ""
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:303
 msgid "A switch without words shows nothing on the screen."
 msgstr "Перемикач без тексту нічого не показує на екрані."
+
+#: src/components/pricing/questions.ts:141
+msgid "A talk, then conversations at tables of six to ten, read back to the room at the end."
+msgstr ""
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
@@ -1397,6 +1409,10 @@ msgstr "Помилка друку"
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "робочий простір"
+
+#: src/components/pricing/questions.ts:168
+msgid "A year of work."
+msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:521
 msgid "About the suggested project update: {hostNote}"
@@ -2135,7 +2151,7 @@ msgstr "Вже використано в цьому чаті"
 msgid "Also allow it to change project settings"
 msgstr "Також дозволити йому змінювати налаштування проєкту"
 
-#: src/components/pricing/questions.ts:160
+#: src/components/pricing/questions.ts:179
 msgid "Always on, it lives on our website"
 msgstr "Працює постійно, розміщено на нашому сайті"
 
@@ -2160,9 +2176,13 @@ msgstr "Суми за замовчуванням розраховуються я
 msgid "An AI assistant you connect, and the company that runs it, will receive the conversations and projects you allow. dembrane is not responsible for what they do with that data. You can revoke a connection at any time."
 msgstr "Підключений ШІ-асистент і компанія, яка ним керує, отримають доступ до дозволених вами розмов і проєктів. dembrane не несе відповідальності за їхні дії з цими даними. Ви можете відкликати підключення в будь-який момент."
 
+#: src/components/pricing/questions.ts:153
+msgid "An assembly over several sessions."
+msgstr ""
+
 #: src/components/pricing/questions.ts:141
-msgid "An assembly."
-msgstr "Асамблея."
+#~ msgid "An assembly."
+#~ msgstr "Асамблея."
 
 #: src/components/results/ResultItem.tsx:289
 msgid "An earlier wording restored"
@@ -2193,8 +2213,8 @@ msgid "An error occurred."
 msgstr "An error occurred."
 
 #: src/components/pricing/questions.ts:140
-msgid "An event or a workshop."
-msgstr "Подія або воркшоп."
+#~ msgid "An event or a workshop."
+#~ msgstr "Подія або воркшоп."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
@@ -2359,11 +2379,11 @@ msgstr "Будь-хто з посиланням може його прочита
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Переглядати може будь-хто з посиланням. Без входу та без транскриптів."
 
-#: src/components/pricing/questions.ts:212
+#: src/components/pricing/questions.ts:231
 msgid "Anything else you might need?"
 msgstr "Чи потрібно вам щось іще?"
 
-#: src/components/pricing/questions.ts:207
+#: src/components/pricing/questions.ts:226
 msgid "Anything else you'd like to share"
 msgstr "Що ще ви хотіли б розповісти"
 
@@ -2671,7 +2691,7 @@ msgstr "At least one topic must be selected to enable Verify"
 msgid "At the end of this period"
 msgstr "Наприкінці цього періоду"
 
-#: src/components/pricing/questions.ts:184
+#: src/components/pricing/questions.ts:203
 msgid "At your busiest moment, how many conversations will be running at once?"
 msgstr "Скільки розмов триватиме одночасно в момент найбільшої активності?"
 
@@ -3875,8 +3895,8 @@ msgid "Colleagues you invite can explore conversations, share insights, and buil
 msgstr "Запрошені колеги зможуть досліджувати розмови, ділитися висновками та створювати звіти разом із вами."
 
 #: src/components/pricing/questions.ts:149
-msgid "Collecting people's stories without you being there, like an audio-based survey."
-msgstr "Збір історій людей без вашої присутності, як в аудіоопитуванні."
+#~ msgid "Collecting people's stories without you being there, like an audio-based survey."
+#~ msgstr "Збір історій людей без вашої присутності, як в аудіоопитуванні."
 
 #: src/components/settings/AuditLogsCard.tsx:195
 msgid "Collection"
@@ -4294,6 +4314,10 @@ msgstr "conversations"
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
+
+#: src/components/pricing/questions.ts:143
+msgid "Conversations at tables, with a synthesis at the end."
+msgstr ""
 
 #: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
@@ -6114,7 +6138,7 @@ msgstr "Орієнтовна сума: €{estimated}"
 msgid "EU hosted LLMs included"
 msgstr "LLM із хостингом у ЄС включено"
 
-#: src/components/pricing/questions.ts:217
+#: src/components/pricing/questions.ts:236
 msgid "Event help from the dembrane team"
 msgstr "Супровід подій від команди dembrane"
 
@@ -6155,7 +6179,7 @@ msgstr "Усі підключені агенти в {0} негайно прип�
 msgid "Every member's connection that names this organisation."
 msgstr "Усі підключення учасників, які вказують на цю організацію."
 
-#: src/components/pricing/questions.ts:158
+#: src/components/pricing/questions.ts:177
 msgid "Every week for a year"
 msgstr "Щотижня протягом року"
 
@@ -7472,7 +7496,7 @@ msgstr "Як dembrane покращує вашу транскрипцію"
 msgid "How it works:"
 msgstr "How it works:"
 
-#: src/components/pricing/questions.ts:171
+#: src/components/pricing/questions.ts:190
 msgid "How many recordings do you expect in your first year?"
 msgstr "Скільки записів ви очікуєте в перший рік?"
 
@@ -7490,7 +7514,7 @@ msgstr "Як мають звучати фрази?"
 #~ "* What is the north star goal or key metric\n"
 #~ "* What does success look like"
 
-#: src/components/pricing/questions.ts:163
+#: src/components/pricing/questions.ts:182
 msgid "However you would say it. A date, a season, or that you do not know yet."
 msgstr "Як завгодно: дата, пора року чи те, що ви ще не знаєте."
 
@@ -7506,7 +7530,7 @@ msgstr "Я застосував канвас."
 msgid "I applied the goal."
 msgstr "Я застосував ціль."
 
-#: src/components/pricing/questions.ts:198
+#: src/components/pricing/questions.ts:217
 msgid "I have lots of big events coming up"
 msgstr "У мене попереду багато великих подій"
 
@@ -7514,11 +7538,11 @@ msgstr "У мене попереду багато великих подій"
 msgid "I have read and accept the <0>terms</0>"
 msgstr "Я ознайомився(-лася) та приймаю <0>умови</0>"
 
-#: src/components/pricing/questions.ts:201
+#: src/components/pricing/questions.ts:220
 msgid "I need a specific language to be supported"
 msgstr "Мені потрібна підтримка конкретної мови"
 
-#: src/components/pricing/questions.ts:203
+#: src/components/pricing/questions.ts:222
 msgid "I need strict privacy guarantees"
 msgstr "Мені потрібні суворі гарантії конфіденційності"
 
@@ -7536,7 +7560,7 @@ msgstr "Зрозуміло"
 msgid "I understand that {0} and its provider will receive this data"
 msgstr "Я розумію, що {0} та його провайдер отримають ці дані"
 
-#: src/components/pricing/questions.ts:161
+#: src/components/pricing/questions.ts:180
 msgid "I will know in a week or two"
 msgstr "Я знатиму через тиждень-два"
 
@@ -8114,7 +8138,7 @@ msgstr "Just a moment"
 msgid "just now"
 msgstr "щойно"
 
-#: src/components/pricing/questions.ts:186
+#: src/components/pricing/questions.ts:205
 msgid "Just one."
 msgstr "Лише один."
 
@@ -9226,11 +9250,11 @@ msgstr "Надійніша анонімізація та запис"
 msgid "More reliable conversation summaries"
 msgstr "Надійніші підсумки розмов"
 
-#: src/components/pricing/questions.ts:176
+#: src/components/pricing/questions.ts:195
 msgid "More than 1000."
 msgstr "Понад 1000."
 
-#: src/components/pricing/questions.ts:190
+#: src/components/pricing/questions.ts:209
 msgid "More than 40."
 msgstr "Понад 40."
 
@@ -10235,8 +10259,8 @@ msgstr "Не встановлено"
 msgid "Not started"
 msgstr "Не розпочато"
 
-#: src/components/pricing/questions.ts:177
-#: src/components/pricing/questions.ts:191
+#: src/components/pricing/questions.ts:196
+#: src/components/pricing/questions.ts:210
 msgid "Not sure yet."
 msgstr "Поки не знаю."
 
@@ -10420,7 +10444,7 @@ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud wha
 msgid "One at a time"
 msgstr "По одній"
 
-#: src/components/pricing/questions.ts:159
+#: src/components/pricing/questions.ts:178
 msgid "One big event at the end of the year"
 msgstr "Одна велика подія наприкінці року"
 
@@ -10429,7 +10453,7 @@ msgstr "Одна велика подія наприкінці року"
 msgid "one conversation only"
 msgstr "лише з однієї розмови"
 
-#: src/components/pricing/questions.ts:156
+#: src/components/pricing/questions.ts:175
 msgid "One day in October"
 msgstr "Один день у жовтні"
 
@@ -10467,6 +10491,10 @@ msgstr "Одна велика літера"
 #: src/routes/admin/AdminSettingsRoute.tsx:2626
 msgid "One-off"
 msgstr "Одноразово"
+
+#: src/components/pricing/questions.ts:156
+msgid "One-to-one conversations with passers-by, at a stand or an exhibition."
+msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:345
 msgid "Ongoing"
@@ -11826,7 +11854,7 @@ msgstr "Processing <0>{totalCount, plural, one {# conversation} other {# convers
 msgid "Processing your retranscription request..."
 msgstr "Processing your retranscription request..."
 
-#: src/components/pricing/questions.ts:222
+#: src/components/pricing/questions.ts:241
 msgid "Procurement help"
 msgstr "Допомога із закупівлями"
 
@@ -12082,6 +12110,10 @@ msgstr "Запитання про роботу dembrane, а не лише про
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:99
 msgid "Queued"
 msgstr "У черзі"
+
+#: src/components/pricing/questions.ts:146
+msgid "Quick conversations between talks, put on screen while the panel speaks."
+msgstr ""
 
 #: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
@@ -12375,12 +12407,12 @@ msgid "Recording checks the audio upload connection."
 msgstr "Під час запису перевіряється з'єднання для завантаження аудіо."
 
 #: src/components/pricing/questions.ts:142
-msgid "Recording conference sessions."
-msgstr "Запис сесій конференцій."
+#~ msgid "Recording conference sessions."
+#~ msgstr "Запис сесій конференцій."
 
 #: src/components/pricing/questions.ts:145
-msgid "Recording conversations you have in person, like street interviews."
-msgstr "Запис особистих розмов, як-от вуличних опитувань."
+#~ msgid "Recording conversations you have in person, like street interviews."
+#~ msgstr "Запис особистих розмов, як-от вуличних опитувань."
 
 #: src/components/release/releaseHistory.ts:490
 msgid "Recording devices stay awake more reliably."
@@ -14195,6 +14227,10 @@ msgstr "Налаштування оновлено"
 msgid "Setup"
 msgstr "Налаштування"
 
+#: src/components/pricing/questions.ts:166
+msgid "Several of these, spread across the year."
+msgstr ""
+
 #: src/components/release/releaseHistory.ts:411
 msgid "Shape how participants verify outcomes"
 msgstr "Налаштовуйте перевірку результатів"
@@ -14296,6 +14332,10 @@ msgstr "Користуєтеся цим входом разом із колег�
 #: src/routes/project/present/PresentRoute.tsx:220
 msgid "Short phrases from the conversations"
 msgstr "Короткі фрази з розмов"
+
+#: src/components/pricing/questions.ts:148
+msgid "Short rounds that feed a panel on stage."
+msgstr ""
 
 #: src/components/conversation/useConversationList.ts:28
 msgid "Shortest first"
@@ -14567,7 +14607,7 @@ msgstr "Завершити сеанс на вибраному пристрої �
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Посилання для входу перевіряють ваш доступ перед відкриттям організації чи проєкту."
 
-#: src/components/pricing/questions.ts:157
+#: src/components/pricing/questions.ts:176
 msgid "Six weekends across seven months"
 msgstr "Шість вихідних протягом семи місяців"
 
@@ -14643,7 +14683,7 @@ msgstr "Хтось переписав це після тебе. Його сло�
 msgid "Something else"
 msgstr "Щось інше"
 
-#: src/components/pricing/questions.ts:151
+#: src/components/pricing/questions.ts:170
 msgid "Something else."
 msgstr "Щось інше."
 
@@ -15896,6 +15936,10 @@ msgstr "Екран зали відкритий, тож зміни чекають
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "Власні слова зали, ідеї, що рухали розмову."
 
+#: src/components/pricing/questions.ts:151
+msgid "The same group meets over weeks and ends with a shared outcome."
+msgstr ""
+
 #: src/components/results/ResultRow.tsx:259
 msgid "The second line of this finding"
 msgstr "Другий рядок цього висновку"
@@ -16053,7 +16097,7 @@ msgstr "Ці робочі простори мають власний тариф,
 msgid "They'll be added as members. You can add more later."
 msgstr "Їх буде додано як учасників. Більше користувачів можна додати пізніше."
 
-#: src/components/pricing/questions.ts:220
+#: src/components/pricing/questions.ts:239
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
 msgstr "Наприклад: дзвінок із вашим DPO або CISO, аудит безпеки чи індивідуальна оцінка DPIA."
 
@@ -16258,7 +16302,7 @@ msgstr "Встановлено обробку на основі згоди бе�
 #~ msgid "This is the live transcript. You get a more accurate one when the conversation ends."
 #~ msgstr "Це транскрипція наживо. Точнішу ви отримаєте, коли розмова закінчиться."
 
-#: src/components/pricing/questions.ts:197
+#: src/components/pricing/questions.ts:216
 msgid "This is urgent"
 msgstr "Це терміново"
 
@@ -16575,7 +16619,7 @@ msgstr "Не подобається"
 msgid "Thumbs up"
 msgstr "Подобається"
 
-#: src/components/pricing/questions.ts:209
+#: src/components/pricing/questions.ts:228
 msgid "Tick anything that applies."
 msgstr "Позначте все, що підходить."
 
@@ -17152,7 +17196,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/components/pricing/questions.ts:173
+#: src/components/pricing/questions.ts:192
 msgid "Under 50."
 msgstr "Менше ніж 50."
 
@@ -18035,7 +18079,7 @@ msgstr "Ми надіслали посилання для підтверджен
 msgid "We sent you a verification link. Click it to finish setting up your account."
 msgstr "Ми надіслали вам посилання для підтвердження. Перейдіть за ним, щоб завершити налаштування облікового запису."
 
-#: src/components/pricing/questions.ts:215
+#: src/components/pricing/questions.ts:234
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Ми налаштовуємо проєкт, підтримуємо вас у день події та допомагаємо підготувати звіт після неї."
 
@@ -18293,7 +18337,7 @@ msgstr "When all audio has been converted to text and the full transcript is ava
 msgid "When are webhooks triggered?"
 msgstr "When are webhooks triggered?"
 
-#: src/components/pricing/questions.ts:166
+#: src/components/pricing/questions.ts:185
 msgid "When do you need dembrane?"
 msgstr "Коли вам потрібен dembrane?"
 
@@ -18318,7 +18362,7 @@ msgstr "Якщо ввімкнено, служба підтримки dembrane м
 msgid "When should the report be generated?"
 msgstr "When should the report be generated?"
 
-#: src/components/pricing/questions.ts:181
+#: src/components/pricing/questions.ts:200
 msgid "When someone scans the QR code, that is one conversation. If 50 people scan it at the same time, that is 50 conversations at once."
 msgstr "Коли хтось сканує QR-код, це одна розмова. Якщо 50 людей сканують його одночасно, це 50 одночасних розмов."
 
@@ -19174,6 +19218,10 @@ msgstr "Ваші організації"
 #: src/components/workspace/gateWalls.ts:93
 msgid "Your own logo comes with a paid plan."
 msgstr "Власний логотип доступний у платному тарифі."
+
+#: src/components/pricing/questions.ts:161
+msgid "Your own meetings, kept so nothing that was said gets lost."
+msgstr ""
 
 #: src/components/release/releaseHistory.ts:229
 msgid "Your own member card stays at the top of the list."
