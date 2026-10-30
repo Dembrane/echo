@@ -837,10 +837,12 @@ function scanSource(rel) {
 			if (customIcons.size && /^Icons\./.test(tag))
 				report("icon.library", rel, line, `<${tag}>: use the Phosphor icon`);
 
-			// Actions pushed to the right
+			// Actions pushed to the right. A row of steps (data-steps) is the exception: Back
+			// left, the pill right (rules.css).
 			if (
 				ts.isJsxOpeningElement(node) &&
 				/^(Group|Flex)$/.test(tag) &&
+				!attrs.has("data-steps") &&
 				["flex-end", "space-between"].includes(val("justify"))
 			) {
 				const el = node.parent;
@@ -885,7 +887,7 @@ function scanSource(rel) {
 						"action.right-aligned",
 						rel,
 						line,
-						`<${tag} justify="${val("justify")}"> of buttons: actions sit at the left, primary first`,
+						`<${tag} justify="${val("justify")}"> of buttons: actions sit at the left, primary first (a row of steps takes data-steps)`,
 					);
 			}
 
