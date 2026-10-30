@@ -111,6 +111,7 @@ export function analysisRoutes(deps: AnalysisRoutesDeps) {
         type: optional(nullable(str()), null),
         scope: optional(nullable(str()), null),
         snapshot_id: optional(nullable(str()), null),
+        latest: optional(bool(), false),
         membership: optional(literal("active", "withdrawn", "all"), "active"),
         sort: optional(literal("default", "attention"), "default"),
         offset: optional(int({ ge: 0 }), 0),

@@ -14,7 +14,7 @@ import {
   type TensionsCache,
 } from "./scale";
 import type { QuoteBook } from "./shapes";
-import { all, failureText, Semaphore, TickTimeout, withTimeout } from "./util";
+import { all, failureText, Semaphore, sha1Hex, TickTimeout, withTimeout } from "./util";
 
 /**
  * Tensions as a pipeline of single judgements (popcorn tensions.py): handed, positions,
@@ -140,6 +140,17 @@ export function locate(
 function tablesOf(position: Json): string[] {
   const tables = list(position.tables);
   return tables.length ? tables.map((t) => pyStr(t)) : [pyStr(position.transcript)];
+}
+
+/**
+ * A tension's identity: the two positions holding its poles, each by the tables that hold
+ * it, its wording and its quote. The same pair found again keeps its object across reads,
+ * whatever the writer made of its poles; positions read differently make a new one.
+ */
+export function tensionIdentity(a: Json, b: Json): string {
+  const side = (p: Json) =>
+    sha1Hex([[...tablesOf(p)].sort().join(","), pyStr(p.position), pyStr(p.quote)].join("\x1f"));
+  return sha1Hex(pairKey(side(a), side(b))).slice(0, 24);
 }
 
 export class JudgeFailed extends Error {}
@@ -819,7 +830,17 @@ export async function runPipeline(
   written.forEach(([tension, flags], i) => {
     const item = kept[i] as Json;
     // Every quote arrives with the table that said it; the book only confirms.
-    tension.quoteIds = book.addAll([...list(item.quotesA), ...list(item.quotesB)]);
+    const idsA = book.addAll(list(item.quotesA));
+    const idsB = book.addAll(list(item.quotesB));
+    tension.quoteIds = [...new Set([...idsA, ...idsB])];
+    // Which pole each quote holds, so the published object says so.
+    tension.quotePoles = Object.fromEntries([
+      ...idsB.map((q) => [q, "B"] as const),
+      ...idsA.map((q) => [q, "A"] as const),
+    ]);
+    const a = byId.get(String(item.a));
+    const b = byId.get(String(item.b));
+    if (a && b) tension.identity = tensionIdentity(a, b);
     tensions.push(tension);
     gateFlags.push(...flags);
   });

@@ -7,6 +7,7 @@ export const NO_ANALYSIS: TickAnalysis = {
     deckObjects: async () => NO_OBJECTS,
     excludedObjectIds: async () => new Set(),
     currentDeck: async () => null,
+    heldTensions: async () => [],
     assembleDeck: async () => null,
     owns: async () => false,
   },

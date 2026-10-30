@@ -4,7 +4,7 @@ import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { buildBundle } from "../bundle";
-import { applyPublishedObjects, type DeckAnalysis } from "../deck";
+import { applyPublishedObjects, type DeckAnalysis, NO_OBJECTS } from "../deck";
 import { publishNudge } from "../events";
 import type { PopcornAllowance } from "../free";
 import { popcornTick } from "../jobs";
@@ -22,6 +22,7 @@ import {
   truthy,
   utcNowIso,
 } from "../py";
+import { reportRoomViolations } from "../room";
 import {
   forgetBundle,
   isPopcornLoop,
@@ -39,8 +40,21 @@ import {
   targetLanguages,
   voiceHostNote,
 } from "../settings";
-import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import { FINISH_TICK, type PopcornStore, popcornStore, type Row, START_TICK } from "../storage";
+import {
+  freshState,
+  normalizeState,
+  owedConversations,
+  referencedQuoteIds,
+  unpublishedTensions,
+} from "../state";
+import {
+  FINISH_TICK,
+  type PopcornStore,
+  PUBLISH_TICK,
+  popcornStore,
+  type Row,
+  START_TICK,
+} from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -73,6 +87,8 @@ import {
 } from "./tensions";
 import { errText, f, failureText, Mutex, Semaphore, settle, sha1Hex, withTimeout } from "./util";
 
+export { unpublishedTensions };
+
 /**
  * The popcorn tick (popcorn ticks.py): gather every conversation, pop the changed ones,
  * then analyse. One fast extractor per changed conversation, all at once, each phrase
@@ -102,6 +118,7 @@ export const ANALYSIS_VIEWS = ["tensions", "stakeholders"] as const;
  */
 export const ON_REQUEST = new Set([
   "manual",
+  PUBLISH_TICK,
   FINISH_TICK,
   "rerun",
   "translation",
@@ -767,6 +784,45 @@ async function enrichOne(
   if (publisher) await publisher.conversation(writer.state, transcript);
 }
 
+/** The published slide, or null on failure: the read keeps its own slide, owed to the next read. */
+export async function publishTensions(
+  publisher: Publisher,
+  slide: Json,
+  transcripts: readonly Json[],
+  book: QuoteBook,
+  outcomes: string[],
+): Promise<Json | null> {
+  try {
+    return await publisher.tensions(slide, transcripts, book);
+  } catch (exc) {
+    outcomes.push(`tensions: publishing FAILED ${failureText(exc)}`);
+    return null;
+  }
+}
+
+/** Read conversations whose current phrases never reached the shared store. */
+export function unpublishedConversations(state: Json, transcripts: readonly Json[]): Json[] {
+  const conversations = dict(state.conversations);
+  return transcripts.filter((t) => {
+    const conv = conversations[String(t.id)];
+    return (
+      isRecord(conv) &&
+      truthy(conv.done) &&
+      conv.fingerprint === t.fingerprint &&
+      conv.published_revision !== (conv.revision ?? null)
+    );
+  });
+}
+
+/** Owed conversations a publishing read cannot attempt: read before their transcript changed. */
+export function unattemptable(state: Json, transcripts: readonly Json[]): string[] {
+  const attempted = new Set(unpublishedConversations(state, transcripts).map((t) => String(t.id)));
+  return owedConversations(state)
+    .filter(({ cid }) => !attempted.has(cid))
+    .map(({ item }) => item)
+    .sort();
+}
+
 /** The conversations still owed a second pass on the transcript as it stands. */
 export function pendingEnrichment(state: Json, transcripts: readonly Json[]): Json[] {
   const conversations = dict(state.conversations);
@@ -918,14 +974,19 @@ async function runAnalysisPass(
       ...(d.callTimeoutMs !== undefined && { callTimeoutMs: d.callTimeoutMs }),
       ...(large && { large }),
     });
-    shaped.tensions = result.tensions;
+    // The room reads tensions as published objects: the slide is the one they make.
+    const published = publisher
+      ? await publishTensions(publisher, result.tensions, transcripts, book, outcomes)
+      : null;
+    shaped.tensions = published ?? result.tensions;
     outcomes.push(...(result.notes ?? []));
     const c = result.counts;
     const ms = Math.trunc(performance.now() - started);
     outcomes.push(
       `tensions: ${list(result.tensions.tensions).length} items in ${ms} ms ` +
         `(${c.positions ?? 0} positions, ${c.candidates ?? 0} pairs, ${c.cross_table ?? 0} across tables, ${c.verified ?? 0} verified)` +
-        (result.gate_flags.length ? `, ${result.gate_flags.length} screen flag(s) left` : ""),
+        (result.gate_flags.length ? `, ${result.gate_flags.length} screen flag(s) left` : "") +
+        (published ? ", published" : ""),
     );
   };
 
@@ -1060,6 +1121,8 @@ export function commitViews(
   const fingerprints: Json = { ...dict(previous.fingerprints) };
   const updated: Json = { ...dict(previous.updated) };
   const analysis: Json = { fingerprints, updated };
+  // Which slide reached the shared store, by fingerprint (unpublishedTensions).
+  if (isRecord(previous.published)) analysis.published = previous.published;
   for (const kind of ANALYSIS_VIEWS) {
     const slide = fresh[kind];
     if (slide !== null && slide !== undefined) {
@@ -1116,7 +1179,7 @@ async function roomBundle(
     row ? projectJson(row) : { id: projectId },
     settings,
   );
-  let bundle = buildBundle({
+  const bundle = buildBundle({
     state,
     settings,
     report: report ?? { id: reportId },
@@ -1127,13 +1190,15 @@ async function roomBundle(
     host: false,
     now: d.now(),
   });
+  let objects = NO_OBJECTS;
   try {
-    const objects = await d.deck.deckObjects(projectId);
-    bundle = applyPublishedObjects(bundle, objects, { settings, project, host: false });
+    objects = await d.deck.deckObjects(projectId);
   } catch {
     d.logger.warn({ project_id: projectId }, "popcorn deck: published objects unavailable");
   }
-  return bundle;
+  const room = applyPublishedObjects(bundle, objects, { settings, project, host: false });
+  reportRoomViolations(d.logger, `${reportId}:saved`, dict(room.files));
+  return room;
 }
 
 /** The files as Python held them: a transcript's duration is float(duration). */
@@ -1492,8 +1557,9 @@ export async function runPopcornTick(
     for (const t of transcripts) {
       const cid = String(t.id);
       let entry = conversations[cid] as Json | undefined;
-      // A conversation this read does not read is not listed as being read.
-      if (entry === undefined && !inScope(t)) continue;
+      // A conversation this read does not read is not listed as being read; a publishing
+      // read reads none.
+      if (entry === undefined && (!inScope(t) || tickKind === PUBLISH_TICK)) continue;
       if (entry === undefined) {
         entry = { id: cid, revision: 0, done: false, items: [] };
         conversations[cid] = entry;
@@ -1540,10 +1606,18 @@ export async function runPopcornTick(
     );
     const analysisStale =
       transcripts.length > 0 && staleViews(state, analysisFingerprint, analysisViews).length > 0;
-    const preparesPopcorn = prepareKind === null || prepareKind === "popcorn";
+    // A publishing read reads nothing new and asks no language model: it publishes what is held.
+    const publishOnly = tickKind === PUBLISH_TICK;
+    const preparesPopcorn = !publishOnly && (prepareKind === null || prepareKind === "popcorn");
     const extractionWork = preparesPopcorn ? changed.filter(readable) : [];
     const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(readable) : [];
-    const analysisOwed = analysisStale && !cut;
+    const analysisOwed = analysisStale && !cut && !publishOnly;
+    // Conversations whose phrases did not reach the shared store: the deck shows them as
+    // provisional until a read publishes them.
+    const unpublished = d.analysis ? unpublishedConversations(state, transcripts) : [];
+    // A session's tensions found before they were published as objects (or whose
+    // publication failed): published now, without asking the model again.
+    const tensionsOwed = Boolean(d.analysis) && unpublishedTensions(state);
     // A session saved before the map fingerprint: its map is as current as its last full read.
     if (d.requestMap && state.map_fingerprint === undefined) {
       const held = Object.values(dict(dict(state.analysis).fingerprints)).find(
@@ -1554,6 +1628,7 @@ export async function runPopcornTick(
     const mapOwed =
       Boolean(d.requestMap) &&
       !cut &&
+      !publishOnly &&
       transcripts.length > 0 &&
       list(audienceManifest(settings).blocks).includes("map") &&
       (extractionWork.length > 0 ||
@@ -1568,19 +1643,31 @@ export async function runPopcornTick(
       !analysisOwed &&
       !mapOwed &&
       !owed.length &&
+      !unpublished.length &&
+      !tensionsOwed &&
       tickKind !== "rerun"
     ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
-      let translated: string | null;
-      try {
-        translated = await translateSession(d, state, settings, {
-          reportId,
-          projectId,
-          writer: translationWriter,
-        });
-      } catch (exc) {
-        d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
-        translated = null;
+      let translated: string | null = null;
+      // A publishing read asks no language model, translation included.
+      if (!publishOnly)
+        try {
+          translated = await translateSession(d, state, settings, {
+            reportId,
+            projectId,
+            writer: translationWriter,
+          });
+        } catch (exc) {
+          d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
+          translated = null;
+        }
+      // What this publishing read cannot attempt is not booked again; what vanished is saved gone.
+      if (publishOnly && d.analysis) {
+        const idle = unattemptable(state, transcripts);
+        if (vanished.length || idle.join() !== list(state.publish_idle).join()) {
+          state.publish_idle = idle;
+          await translationWriter.flush();
+        }
       }
       await kept.save();
       if (translated) {
@@ -1717,6 +1804,7 @@ export async function runPopcornTick(
     const analysisPass = async () => {
       if (
         cut ||
+        publishOnly ||
         !transcripts.length ||
         !(analysisStale || extractionWork.length || tickKind === "rerun")
       )
@@ -1767,16 +1855,40 @@ export async function runPopcornTick(
       }
     };
     await Promise.all([secondPass(), analysisPass(), preparePass()]);
+    // What this read's passes did not publish, and what an earlier read failed to.
+    if (publisher) {
+      for (const t of unpublishedConversations(state, transcripts))
+        await publisher.conversation(writer.state, t);
+      const analysis = dict(state.analysis);
+      if (!publisher.tensionsSettled && unpublishedTensions(state))
+        try {
+          const slide = await publisher.tensions(dict(analysis.tensions), transcripts, book);
+          if (slide) analysis.tensions = slide;
+          outcomes.push("tensions: published the session's slide as objects");
+        } catch (exc) {
+          outcomes.push(`tensions: publishing FAILED ${failureText(exc)}`);
+        }
+      // The slide as it stands is in the store: nothing owed until it changes.
+      if (publisher.tensionsSettled && isRecord(state.analysis))
+        state.analysis.published = {
+          ...dict(analysis.published),
+          tensions: dict(analysis.fingerprints).tensions ?? null,
+        };
+    }
+    // Only what it could not attempt: a publication that failed stays owed and is tried again.
+    if (publishOnly && publisher) state.publish_idle = unattemptable(state, transcripts);
     if (transcripts.length) {
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();
     }
-    let translated: string | null;
-    try {
-      translated = await translateSession(d, state, settings, { reportId, projectId, writer });
-    } catch (exc) {
-      translated = `translation failed: ${failureText(exc)}`;
-    }
+    let translated: string | null = null;
+    // A publishing read asks no language model, translation included: the next full read translates.
+    if (!publishOnly)
+      try {
+        translated = await translateSession(d, state, settings, { reportId, projectId, writer });
+      } catch (exc) {
+        translated = `translation failed: ${failureText(exc)}`;
+      }
     if (translated) outcomes.push(translated);
 
     const detail = [

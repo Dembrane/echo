@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   type AnalysisStore,
   assembleSnapshot,
@@ -8,7 +9,7 @@ import {
   resolveSnapshot,
   type SnapshotHook,
 } from "@dembrane/analysis";
-import { conversationUrl, markSyntheticFiles, roomFiles } from "./bundle";
+import { conversationUrl, markSyntheticFiles } from "./bundle";
 import { dict, isRecord, type Json, list, pyRound, pyStr, truthy } from "./py";
 import { TOGGLEABLE_TABS } from "./settings";
 import { referencedQuoteIds } from "./state";
@@ -25,7 +26,14 @@ import { norm } from "./text";
  * gets its first snapshot assembled on first read.
  */
 
-export const DECK_RECIPES = ["popcorn", "tensions", "stakeholders"] as const;
+export const DECK_RECIPES = ["popcorn", "tensions", "popcorn.tensions", "stakeholders"] as const;
+/** The recipes whose objects make the tensions slide: the host's Analyse and the live session's. */
+const TENSION_RECIPES = new Set(["tensions", "popcorn.tensions"]);
+/** The kinds a presentation pins and a host curates. */
+const CURATED_TYPES = new Set(["tension", "stakeholder"]);
+const LIVE_TENSIONS_RECIPE = "popcorn.tensions";
+/** A live tension's output key (popcorn-tensions.ts), at the end of its object's lineage key. */
+const TENSION_KEY = "tension:";
 const DECK_VIEW_ID = "deck";
 const DECK_SCOPE_KEY = "project";
 const DECK_TYPES = new Set(["popcorn", "tension", "stakeholder"]);
@@ -34,6 +42,7 @@ export interface DeckRevision {
   readonly id: string;
   readonly objectId: string;
   readonly type: string;
+  readonly recipeId: string | null;
   readonly payload: Json;
   readonly sourceConversationIds: readonly string[];
   readonly extra: Json;
@@ -73,12 +82,18 @@ export interface DeckSnapshot {
 }
 
 export interface DeckAnalysis {
-  /** The deck's current (or a pinned) snapshot's objects; empty when the legacy writer owns the session. */
-  deckObjects(projectId: string, snapshotId?: string | null): Promise<DeckObjects>;
+  /** The deck's current (or a pinned) snapshot's objects; `latest`: curated kinds at their current revision. */
+  deckObjects(
+    projectId: string,
+    snapshotId?: string | null,
+    latest?: boolean,
+  ): Promise<DeckObjects>;
   /** Objects currently withdrawn from every audience view. */
   excludedObjectIds(projectId: string): Promise<Set<string>>;
   /** The deck view's current snapshot; null when there is none yet. */
   currentDeck(projectId: string): Promise<DeckSnapshot | null>;
+  /** Every live tension ever published, at its current revision, identity from its lineage key. */
+  heldTensions(projectId: string): Promise<DeckRevision[]>;
   /** A new deck snapshot over the producer scopes the executor owns; null when it owns none. */
   assembleDeck(projectId: string, sourceEventId?: string | null): Promise<DeckSnapshot | null>;
   /**
@@ -93,6 +108,7 @@ function revision(r: ObjectRevision): DeckRevision {
     id: r.id,
     objectId: r.objectId,
     type: r.type,
+    recipeId: r.provenance.recipeId ?? null,
     payload: dict(r.payload),
     sourceConversationIds: (r.provenance.sourceRefs ?? []).map((ref) => ref.conversationId),
     extra: dict(r.provenance.extra),
@@ -116,6 +132,25 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
         join analysis_run r on r.id = s.current_run_id
        where s.project_id = ${projectId} and s.kind = 'producer' and s.writer = 'analysis'
          and s.recipe_id in ${store.sql([...DECK_RECIPES])}`;
+  /** Each revision's object at its current published revision, keyed by the revision it replaces. */
+  const currentOf = async (projectId: string, revisions: readonly ObjectRevision[]) => {
+    if (!revisions.length) return new Map<string, ObjectRevision>();
+    const rows = await store.sql<{ id: string; head: string }[]>`
+      select id::text as id, current_revision_id::text as head from analysis_object
+       where project_id = ${projectId} and current_revision_id is not null
+         and id in ${store.sql(revisions.map((r) => r.objectId))}`;
+    const heads = await store.getRevisions(
+      projectId,
+      rows.map((r) => r.head),
+    );
+    const byObject = new Map(rows.map((r) => [r.id, heads.get(r.head)]));
+    const out = new Map<string, ObjectRevision>();
+    for (const r of revisions) {
+      const head = byObject.get(r.objectId);
+      if (head && head.id !== r.id && head.status === "published") out.set(r.id, head);
+    }
+    return out;
+  };
   const assemble = async (projectId: string, sourceEventId: string | null = null) => {
     const owned = await heads(projectId);
     if (!owned.length) return null;
@@ -139,6 +174,31 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
       const snapshot = await current(projectId);
       return snapshot ? deckSnapshot(snapshot) : null;
     },
+    async heldTensions(projectId) {
+      const rows = await store.sql<{ lineage_key: string; revision_id: string }[]>`
+        select o.lineage_key, o.current_revision_id::text as revision_id
+          from analysis_object o join analysis_scope s on s.id = o.scope_id
+         where o.project_id = ${projectId} and s.kind = 'producer'
+           and s.recipe_id = ${LIVE_TENSIONS_RECIPE} and o.current_revision_id is not null`;
+      const revisions = await store.getRevisions(
+        projectId,
+        rows.map((r) => r.revision_id),
+      );
+      return rows.flatMap((row) => {
+        const r = revisions.get(row.revision_id);
+        if (!r) return [];
+        // The identity the object was made for, whatever a host's edit kept of its extra.
+        const at = row.lineage_key.lastIndexOf(TENSION_KEY);
+        if (at < 0) return [];
+        const rev = revision(r);
+        return [
+          {
+            ...rev,
+            extra: { ...rev.extra, identity: row.lineage_key.slice(at + TENSION_KEY.length) },
+          },
+        ];
+      });
+    },
     async assembleDeck(projectId, sourceEventId) {
       const snapshot = await assemble(projectId, sourceEventId ?? null);
       return snapshot ? deckSnapshot(snapshot) : null;
@@ -152,7 +212,7 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
       });
       return scope === null || scope.writer === "analysis";
     },
-    async deckObjects(projectId, snapshotId) {
+    async deckObjects(projectId, snapshotId, latest = false) {
       let snapshot = snapshotId
         ? await resolveSnapshot(store, { projectId, snapshotId })
         : await current(projectId);
@@ -161,11 +221,18 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
       if (snapshot === null && !snapshotId) snapshot = await assemble(projectId);
       if (snapshot === null) return NO_OBJECTS;
       const contents = await readSnapshot(snapshot, store);
+      // The pinned objects as the host last left them: an edit shows, as a withdrawal does.
+      const moved = latest
+        ? await currentOf(
+            projectId,
+            [...contents.revisions.values()].filter((r) => CURATED_TYPES.has(r.type)),
+          )
+        : new Map<string, ObjectRevision>();
       const popcorn = new Map<string, DeckRevision[]>();
       const tensions: DeckRevision[] = [];
       const stakeholders: DeckRevision[] = [];
-      for (const r of contents.revisions.values()) {
-        const rev = revision(r);
+      for (const pinned of contents.revisions.values()) {
+        const rev = revision(moved.get(pinned.id) ?? pinned);
         if (rev.type === "popcorn") {
           const cid = rev.sourceConversationIds.find(Boolean) ?? pyStrOr(rev.extra.conversationId);
           if (cid) popcorn.set(cid, [...(popcorn.get(cid) ?? []), rev]);
@@ -178,11 +245,11 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
         tensions,
         stakeholders,
         relations: [...contents.relations.values()].map((r) => ({
-          fromRevisionId: r.fromRevisionId,
-          toRevisionId: r.toRevisionId,
+          fromRevisionId: moved.get(r.fromRevisionId)?.id ?? r.fromRevisionId,
+          toRevisionId: moved.get(r.toRevisionId)?.id ?? r.toRevisionId,
           attributes: dict(r.attributes),
         })),
-        ownsTensions: producers.some((p) => p.recipeId === "tensions"),
+        ownsTensions: producers.some((p) => TENSION_RECIPES.has(pyStr(p.recipeId))),
         ownsStakeholders: producers.some((p) => p.recipeId === "stakeholders"),
       };
     },
@@ -213,21 +280,35 @@ const pyStrOr = (v: unknown) => (truthy(v) ? pyStr(v) : "");
 /** How a projection mints the quote id the deck resolves. */
 export type Register = (quote: Json) => string | null;
 
-/** The registry minted over exactly the quotes the objects cite: one id per conversation and wording. */
+/**
+ * A quote's id in the deck: its conversation and its normalised words, hashed. The same
+ * quote has the same id in every bundle, whatever else was published or in what order, so
+ * a file a screen kept from an earlier read can never cite another conversation's words.
+ */
+export function deckQuoteId(conversationId: string, text: string): string {
+  const key = `${conversationId}\u0000${norm(text)}`;
+  return `q-${createHash("sha256").update(key).digest("hex").slice(0, 20)}`;
+}
+
+/** The registry minted over exactly the quotes the deck cites: one id per conversation and wording. */
 export class DeckQuotes {
   readonly entries: Json[] = [];
-  private readonly ids = new Map<string, string>();
+  private readonly ids = new Set<string>();
   readonly add: Register = (quote) => {
     if (!isRecord(quote)) return null;
     const text = pyStrOr(quote.text).trim();
     const conversationId = pyStrOr(quote.conversationId);
     if (!text || !conversationId) return null;
-    const key = `${conversationId}\u0000${norm(text)}`;
-    const found = this.ids.get(key);
-    if (found) return found;
-    const id = `q${this.entries.length + 1}`;
-    this.ids.set(key, id);
-    this.entries.push({ id, transcript: conversationId, text });
+    const id = deckQuoteId(conversationId, text);
+    const context = truthy(quote.context) ? pyStr(quote.context) : null;
+    if (this.ids.has(id)) {
+      // The session's line on where the moment sits rides along, whoever cited it first.
+      const entry = context ? this.entries.find((e) => e.id === id) : undefined;
+      if (entry && !truthy(entry.context)) entry.context = context;
+      return id;
+    }
+    this.ids.add(id);
+    this.entries.push({ id, transcript: conversationId, text, ...(context && { context }) });
     return id;
   };
 }
@@ -241,16 +322,13 @@ function registerAll(register: Register, quotes: unknown): string[] {
 
 function popcornItem(
   r: DeckRevision,
-  conversationId: string,
   register: Register,
   sources: Map<string, unknown>,
   host: boolean,
 ): Json {
   const phrase = pyStr(r.payload.phrase);
   const entry: Json = {
-    id: truthy(r.extra.phraseId)
-      ? pyStr(r.extra.phraseId)
-      : `p-${conversationId}-${r.objectId.slice(0, 8)}`,
+    id: truthy(r.extra.phraseId) ? pyStr(r.extra.phraseId) : `p-${r.objectId}`,
     phrase,
     objectId: r.objectId,
     revisionId: r.id,
@@ -275,25 +353,47 @@ function popcornItem(
   return entry;
 }
 
-export function tensionSlide(r: DeckRevision, index: number, register: Register): Json {
+/** A tension's slide entry. Its id is its object's, never its place in the list. */
+export function tensionSlide(r: DeckRevision, register: Register): Json {
   const p = r.payload;
-  return {
-    id: `x${index}`,
+  const quotes = list(p.quotes).filter(isRecord);
+  const quoteIds: string[] = [];
+  const quotePoles: Json = {};
+  for (const quote of quotes) {
+    const id = register(quote);
+    if (!id) continue;
+    if (!quoteIds.includes(id)) quoteIds.push(id);
+    if (quote.pole === "A" || quote.pole === "B") quotePoles[id] = quote.pole;
+  }
+  const entry: Json = {
+    id: r.objectId,
     objectId: r.objectId,
     revisionId: r.id,
     poleA: p.poleA,
     poleB: p.poleB,
     knot: p.knot,
     toResolve: p.toResolve,
-    quoteIds: registerAll(register, p.quotes),
+    quoteIds,
   };
+  if (Object.keys(quotePoles).length) entry.quotePoles = quotePoles;
+  if (truthy(r.extra.identity)) entry.identity = pyStr(r.extra.identity);
+  return entry;
 }
 
-function stakeholder(r: DeckRevision, index: number, register: Register): Json {
+/** The tensions slide the objects make, in one order whatever order the store read them in. */
+export function tensionsSlideFrom(revisions: readonly DeckRevision[], register: Register): Json {
+  const ordered = [...revisions].sort(
+    (a, b) =>
+      cmpStr(pyStr(a.payload.poleA), pyStr(b.payload.poleA)) || cmpStr(a.objectId, b.objectId),
+  );
+  return { tensions: ordered.map((r) => tensionSlide(r, register)) };
+}
+
+function stakeholder(r: DeckRevision, register: Register): Json {
   const p = r.payload;
   const weight = dict(p.weight);
   return {
-    id: `s${index}`,
+    id: r.objectId,
     objectId: r.objectId,
     revisionId: r.id,
     name: p.name,
@@ -334,8 +434,8 @@ export function stakeholdersSlide(
   register: Register,
 ): Json {
   const ordered = [...people].sort(byStake);
-  const byRevision = new Map(ordered.map((r, i) => [r.id, i + 1]));
-  const slide = ordered.map((r) => stakeholder(r, byRevision.get(r.id) as number, register));
+  const byRevision = new Map(ordered.map((r) => [r.id, r.objectId]));
+  const slide = ordered.map((r) => stakeholder(r, register));
   const byName = new Map(slide.map((e) => [norm(pyStr(e.name)), e.id]));
   ordered.forEach((r, i) => {
     const invoked = r.payload.invokedBy;
@@ -344,6 +444,7 @@ export function stakeholdersSlide(
       (entry.evidence as Json).invokedBy = byName.get(norm(pyStr(invoked)));
   });
   const out: Json[] = [];
+  const pairs = new Map<string, number>();
   for (const relation of relations) {
     const a = byRevision.get(relation.fromRevisionId);
     const b = byRevision.get(relation.toRevisionId);
@@ -355,9 +456,13 @@ export function stakeholdersSlide(
       if (!quoteIds.length) continue; // no quote, no aspect: the deck's own rule
       aspects.push({ kind: aspect.kind ?? null, note: aspect.note ?? null, quoteIds });
     }
+    // A relation is named by its ends: the n-th between the same two groups, never its place.
+    const ends = `${a}~${b}`;
+    const nth = pairs.get(ends) ?? 0;
+    pairs.set(ends, nth + 1);
     out.push({
-      id: `r${out.length + 1}`,
-      between: [`s${a}`, `s${b}`],
+      id: nth ? `${ends}~${nth}` : ends,
+      between: [a, b],
       label: "label" in attrs ? attrs.label : "",
       intensity: pyRound(Number(attrs.intensity || 0), 2),
       sentiment: pyRound(Number(attrs.sentiment || 0), 2),
@@ -371,18 +476,29 @@ export function stakeholdersSlide(
 
 /**
  * The deck's files with every scope the executor owns served from its published
- * revisions. A scope it does not own is left exactly as the session state wrote it.
+ * revisions. Once anything is published, a conversation or a tensions or stakeholders slide
+ * not published yet is marked provisional. Every quote id in the result is derived from its
+ * conversation and words (deckQuoteId), so a screen holding files from two reads still
+ * resolves each id to the same quote.
  */
 export function applyPublishedObjects(
   bundle: Json,
   objects: DeckObjects,
   args: { settings: Json; project: Json; host: boolean; adminBaseUrl?: string },
 ): Json {
-  if (isEmpty(objects)) return bundle;
   const files: Json = { ...dict(bundle.files) };
   const quotes = new DeckQuotes();
   const built = new Set<string>();
   const tabs = dict(args.settings.tabs);
+  // An unpublished slide stays, marked provisional, until a read publishes it.
+  // A synthetic demo has no objects and keeps its own slides.
+  const published = !isEmpty(objects) && !isSynthetic(files);
+  if (published)
+    for (const [name, owned] of [
+      ["tensions.json", objects.ownsTensions],
+      ["stakeholders.json", objects.ownsStakeholders],
+    ] as const)
+      if (!owned && isRecord(files[name])) files[name] = { ...files[name], provisional: true };
   for (const [conversationId, revisions] of objects.popcorn) {
     const name = `popcorn/${conversationId}.json`;
     const current: Json = {
@@ -394,20 +510,24 @@ export function applyPublishedObjects(
     const sources = new Map<string, unknown>();
     for (const item of list(current.items))
       if (isRecord(item) && truthy(item.source)) sources.set(pyStr(item.phrase), item.source);
-    current.items = revisions.map((r) =>
-      popcornItem(r, conversationId, quotes.add, sources, args.host),
-    );
+    current.items = revisions.map((r) => popcornItem(r, quotes.add, sources, args.host));
+    delete current.provisional;
     files[name] = current;
     built.add(name);
   }
+  // A conversation whose phrases are not published yet shows them for the seconds the
+  // publication takes, marked so: the tick publishes them again until they land.
+  if (published)
+    for (const [name, file] of Object.entries(files))
+      if (
+        name.startsWith("popcorn/") &&
+        !built.has(name) &&
+        isRecord(file) &&
+        list(file.items).length
+      )
+        files[name] = { ...file, provisional: true };
   if (objects.ownsTensions && truthy(tabs.tensions ?? true)) {
-    const ordered = [...objects.tensions].sort(
-      (a, b) =>
-        cmpStr(pyStr(a.payload.poleA), pyStr(b.payload.poleA)) || cmpStr(a.objectId, b.objectId),
-    );
-    files["tensions.json"] = {
-      tensions: ordered.map((r, i) => tensionSlide(r, i + 1, quotes.add)),
-    };
+    files["tensions.json"] = tensionsSlideFrom(objects.tensions, quotes.add);
     built.add("tensions.json");
   }
   if (objects.ownsStakeholders && truthy(tabs.stakeholders ?? true)) {
@@ -426,7 +546,9 @@ export function applyPublishedObjects(
   );
   const carry = (id: string) => {
     const q = theirs.get(id);
-    return q ? quotes.add({ text: q.text, conversationId: q.transcript }) : null;
+    return q
+      ? quotes.add({ text: q.text, conversationId: q.transcript, context: q.context })
+      : null;
   };
   for (const [name, file] of Object.entries(files))
     if (name !== "quotes.json" && !built.has(name)) files[name] = withQuoteIds(file, carry);
@@ -444,10 +566,16 @@ export function applyPublishedObjects(
   return { ...bundle, files: markSyntheticFiles(files) };
 }
 
+/** A synthetic demo's deck: made up, with no conversations behind it and no objects. */
+function isSynthetic(files: Json): boolean {
+  return dict(dict(files["session.json"]).demo).synthetic === true;
+}
+
 /** `value` with every quote id it cites passed through `to`; an id `to` cannot place is dropped. */
 function withQuoteIds(value: unknown, to: (id: string) => string | null): unknown {
   if (Array.isArray(value)) return value.map((v) => withQuoteIds(v, to));
-  if (!isRecord(value)) return value;
+  // A plain object only: a value class (a float the saved run prints as Python did) passes as is.
+  if (!isRecord(value) || Object.getPrototypeOf(value) !== Object.prototype) return value;
   const out: Json = {};
   for (const [key, v] of Object.entries(value)) {
     if (key === "quoteIds" && Array.isArray(v))
@@ -507,8 +635,10 @@ export function curatePresentation(bundle: Json, settings: Json): Json {
 }
 
 /**
- * Keep non-live slides on the host-adopted saved version. Pinned quote ids are namespaced,
- * because live popcorn's registry keeps growing.
+ * Keep non-live slides on the host-adopted analysis snapshot. Quote ids are derived from
+ * their words, so a pinned slide's quotes merge into the live registry by id. A binding to
+ * a saved session version (written before pins were snapshots) is not honoured: that copy
+ * has no objects behind it, so the slide follows the current objects instead.
  */
 export async function applyResultBindings(
   bundle: Json,
@@ -516,67 +646,49 @@ export async function applyResultBindings(
     settings: Json;
     projectId: string | null;
     deck: DeckAnalysis;
-    versionFiles: (versionId: string) => Promise<Json | null>;
   },
 ): Promise<Json> {
   const { settings } = args;
   const bindings = dict(dict(settings.presentation).result_bindings);
-  if (!truthy(bindings)) return bundle;
+  if (!truthy(bindings) || !args.projectId) return bundle;
   const files: Json = { ...dict(bundle.files) };
-  const quotes = [...list(dict(files["quotes.json"]).quotes)];
-  const loaded = new Map<string, Json | null>();
+  const quotes = new Map(
+    list(dict(files["quotes.json"]).quotes)
+      .filter(isRecord)
+      .map((q) => [pyStr(q.id), q] as const),
+  );
+  const loaded = new Map<string, Json>();
   for (const block of ["stakeholders", "tensions"]) {
-    const version = bindings[block];
-    if (!truthy(version) || !truthy(dict(settings.tabs)[block])) continue;
-    const v = pyStr(version);
-    if (!loaded.has(v)) {
-      if (v.startsWith("analysis:") && args.projectId) {
-        const objects = await args.deck.deckObjects(
-          args.projectId,
-          v.split(":").slice(1).join(":"),
-        );
-        loaded.set(
-          v,
-          dict(
-            applyPublishedObjects({ files: {} }, objects, {
-              settings,
-              project: { id: args.projectId },
-              host: false,
-            }).files,
-          ),
-        );
-      } else {
-        const stored = await args.versionFiles(v);
-        loaded.set(v, stored ? roomFiles(stored, settings.public_labels !== "names") : null);
-      }
+    const version = pyStr(bindings[block] ?? "");
+    if (!version.startsWith("analysis:") || !truthy(dict(settings.tabs)[block])) continue;
+    if (!loaded.has(version)) {
+      const objects = await args.deck.deckObjects(
+        args.projectId,
+        version.split(":").slice(1).join(":"),
+        true,
+      );
+      loaded.set(
+        version,
+        dict(
+          applyPublishedObjects({ files: {} }, objects, {
+            settings,
+            project: { id: args.projectId },
+            host: false,
+          }).files,
+        ),
+      );
     }
-    const pinned = loaded.get(v);
-    if (!truthy(pinned) || !pinned) continue;
+    const pinned = loaded.get(version) as Json;
     const name = `${block}.json`;
     if (!(name in pinned)) {
       delete files[name];
       continue;
     }
-    const prefix = `${block}:${v}:`;
-    const remap = (value: unknown): unknown => {
-      if (Array.isArray(value)) return value.map(remap);
-      if (!isRecord(value)) return value;
-      return Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          key === "quoteIds" && Array.isArray(val)
-            ? val.map((q) => prefix + pyStr(q))
-            : key === "quoteId"
-              ? prefix + pyStr(val)
-              : remap(val),
-        ]),
-      );
-    };
-    files[name] = remap(pinned[name]);
+    files[name] = pinned[name];
     for (const quote of list(dict(pinned["quotes.json"]).quotes))
-      if (truthy(dict(quote).id))
-        quotes.push({ ...dict(quote), id: prefix + pyStr(dict(quote).id) });
+      if (isRecord(quote) && truthy(quote.id) && !quotes.has(pyStr(quote.id)))
+        quotes.set(pyStr(quote.id), quote);
   }
-  files["quotes.json"] = { quotes };
+  files["quotes.json"] = { quotes: [...quotes.values()] };
   return { ...bundle, files };
 }

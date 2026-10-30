@@ -9,7 +9,6 @@ import {
   freshState,
   isRecord,
   type Json,
-  listVersions,
   loadSettingsFor,
   mergeSettings,
   missingTexts,
@@ -236,7 +235,42 @@ export async function draftPayload(
     capture.state ?? freshState(),
     capture.run ?? null,
   );
+  // The same settings the preview resolves, so a pin reads here as the bundle reads it.
+  detail.result_snapshots = await resultSnapshots(d, String(report.project_id), resolved);
   return withFreePopcorn(d.db, detail, String(report.project_id), d.now());
+}
+
+/**
+ * The analysis snapshot each block of the preview is drawn from, so the host's results
+ * list exactly what the room is shown: a slide pinned to a snapshot reads that one, every
+ * other block the deck view's current snapshot. Empty while nothing is published: the
+ * room then shows the session's first phrases and the results fall back to the map view.
+ */
+export async function resultSnapshots(
+  d: PopcornDeps,
+  projectId: string,
+  settings: Json,
+): Promise<Record<string, string>> {
+  let current: string | null = null;
+  try {
+    current = (await d.deck.currentDeck(projectId))?.id ?? null;
+  } catch (err) {
+    if (!(err instanceof AnalysisStoreError)) throw err;
+    d.logger.warn({ err }, "present: the deck's snapshot is unavailable");
+  }
+  if (!current) return {};
+  const bindings = dict(dict(settings.presentation).result_bindings);
+  const pinned = (block: string) => {
+    const bound = pyStr(bindings[block] ?? "");
+    return bound.startsWith("analysis:") && truthy(dict(settings.tabs)[block])
+      ? bound.slice("analysis:".length)
+      : current;
+  };
+  return {
+    popcorn: current,
+    tensions: pinned("tensions") as string,
+    stakeholders: pinned("stakeholders") as string,
+  };
 }
 
 export interface DraftState {
@@ -360,18 +394,17 @@ export async function publishOpening(
 
 // ── results a presentation adopts ───────────────────────────────────
 
-/** The newest results each block could show: a saved run, the deck view, the map view. */
+/**
+ * The newest results each block could show: the deck view's snapshot, the map view's. A
+ * slide is only ever pinned to a snapshot of published objects, never to a saved session
+ * copy, so what the room is pinned to is what the host's results list.
+ */
 export async function availableBindings(
   d: PopcornDeps,
   map: MapStore,
-  report: Row,
   projectId: string,
 ): Promise<Record<string, string>> {
-  const versions = await listVersions(d.store, String(report.id), 1);
-  const first = versions[0];
-  const bindings: Record<string, string> = first
-    ? { stakeholders: first.id, tensions: first.id }
-    : {};
+  const bindings: Record<string, string> = {};
   try {
     const deck = (await d.deck.currentDeck(projectId)) ?? (await d.deck.assembleDeck(projectId));
     if (deck) {
@@ -381,7 +414,8 @@ export async function availableBindings(
           .filter((p) => truthy(p.available))
           .map((p) => pyStr(p.recipeId ?? null)),
       );
-      if (available.has("tensions")) bindings.tensions = `analysis:${deck.id}`;
+      if (available.has("tensions") || available.has("popcorn.tensions"))
+        bindings.tensions = `analysis:${deck.id}`;
       if (available.has("stakeholders")) bindings.stakeholders = `analysis:${deck.id}`;
     }
     const snapshot = await map.currentSnapshot(projectId);
@@ -403,7 +437,7 @@ export async function adoptResults(
 ): Promise<void> {
   // Looking for results reads outside the lock; what is bound now is read inside it, so a
   // binding the host adopted meanwhile is never replaced by an older one.
-  const available = await availableBindings(d, map, report, projectId);
+  const available = await availableBindings(d, map, projectId);
   if (!Object.keys(available).length) return;
   await settingsLock(d, String(report.id), async (store, tx) => {
     const manifest = dict((await loadSettingsFor(store, report)).presentation);

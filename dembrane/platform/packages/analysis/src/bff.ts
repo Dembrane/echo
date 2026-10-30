@@ -45,6 +45,7 @@ import {
 } from "./mapview";
 import { ASSESSMENT_RECIPE_ID } from "./recipes";
 import { RECIPE_ID as INTEGRATION_RECIPE_ID } from "./recipes/integration";
+import { RECIPE_ID as POPCORN_TENSIONS_RECIPE_ID } from "./recipes/popcorn-tensions";
 import { listRecipes, pyRepr, recipeMetadata, sortedStrings } from "./registry";
 import { RevisionService } from "./revisions";
 import type { AnalysisRuntime } from "./runtime";
@@ -67,9 +68,9 @@ export interface BffDeps {
   readonly now: () => Date;
 }
 
-/** Recipes that run only from their own feature: an assessment records what a fact-check found. */
-export const INTERNAL_RECIPES = new Set([ASSESSMENT_RECIPE_ID]);
-/** The integration fixture stays runnable for the parity scenarios but is not offered to users. */
+/** Recipes that run only from their own feature: an assessment, and a popcorn tick's live tensions. */
+export const INTERNAL_RECIPES = new Set([ASSESSMENT_RECIPE_ID, POPCORN_TENSIONS_RECIPE_ID]);
+/** Not offered to users: the integration fixture stays runnable for the parity scenarios. */
 const UNLISTED_RECIPES = new Set([INTEGRATION_RECIPE_ID]);
 /** Client idempotency keys live apart from the keys the platform makes itself. */
 export const CLIENT_KEY_PREFIX = "client:";
@@ -513,6 +514,8 @@ export interface ObjectsQuery {
   readonly type: string | null;
   readonly scope: string | null;
   readonly snapshot_id: string | null;
+  /** With `snapshot_id`: its objects at their current revision, the ones withdrawn since left out of `active`. */
+  readonly latest?: boolean;
   readonly membership: "active" | "withdrawn" | "all";
   readonly sort: "default" | "attention";
   readonly offset: number;
@@ -554,6 +557,16 @@ export async function listAnalysisObjects(
           MAP_TYPES.includes(String(o.type)),
         )
       : [];
+    // A pinned snapshot's rows at their current revision: an edit shows, the next one names it.
+    if (query.latest && query.snapshot_id && entries.length) {
+      const heads = await store.currentRevisions(projectId);
+      entries = entries.flatMap((e) => {
+        const head = heads.get(String(e.objectId));
+        if (!head) return [e];
+        if (query.membership === "active" && extraOf(head.provenance).membershipExcluded) return [];
+        return [{ ...e, revisionId: head.id }];
+      });
+    }
     if (query.membership !== "active") {
       const current = await store.currentRevisions(projectId);
       const withdrawn = [...current.values()]

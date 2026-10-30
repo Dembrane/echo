@@ -3372,7 +3372,7 @@ msgstr "змінювати налаштування проєкту"
 msgid "Change role"
 msgstr "Змінити роль"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:139
+#: src/routes/project/present/PresentResultsPanel.tsx:150
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Зміни слова, прочитай докази або залиш висновок поза цією презентацією. Спільні результати лишаються в Аналізі."
 
@@ -4522,7 +4522,7 @@ msgstr "Не вдалося завантажити мету цього проє�
 msgid "Could not open the conversation list. Try again."
 msgstr "Could not open the conversation list. Try again."
 
-#: src/components/present/hooks/index.ts:69
+#: src/components/present/hooks/index.ts:76
 msgid "Could not open the presentation. Try again."
 msgstr "Не вдалося відкрити презентацію. Спробуйте ще раз."
 
@@ -4566,7 +4566,7 @@ msgstr "Відгук не збережено"
 msgid "Could not save tags"
 msgstr "Не вдалося зберегти теги"
 
-#: src/components/analysis/hooks/index.ts:471
+#: src/components/analysis/hooks/index.ts:493
 msgid "Could not save the change. Try again."
 msgstr "Не вдалося зберегти зміну. Спробуйте ще раз."
 
@@ -4594,7 +4594,7 @@ msgstr "Не вдалося надіслати лист із запрошенн�
 msgid "Could not send your feedback. Try again"
 msgstr "Не вдалося надіслати відгук. Спробуйте ще раз"
 
-#: src/components/analysis/hooks/index.ts:556
+#: src/components/analysis/hooks/index.ts:578
 msgid "Could not start this run. Try again."
 msgstr "Не вдалося розпочати цей запуск. Спробуйте ще раз."
 
@@ -4602,7 +4602,7 @@ msgstr "Не вдалося розпочати цей запуск. Спробу
 msgid "Could not stop live"
 msgstr "Не вдалося зупинити прямий ефір"
 
-#: src/components/analysis/hooks/index.ts:578
+#: src/components/analysis/hooks/index.ts:600
 msgid "Could not stop this run. Try again."
 msgstr "Не вдалося зупинити цей запуск. Спробуйте ще раз."
 
@@ -13110,7 +13110,7 @@ msgstr "Відновлюємо це формулювання."
 msgid "Results"
 msgstr "Результати"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:155
+#: src/routes/project/present/PresentResultsPanel.tsx:166
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 msgid "Results could not be loaded."
 msgstr "Не вдалося завантажити результати."
@@ -13236,8 +13236,8 @@ msgstr "Перегляньте налаштування мого проєкту 
 #~ msgid "Review processing status for every conversation collected in this project."
 #~ msgstr "Review processing status for every conversation collected in this project."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:130
-#: src/routes/project/present/PresentResultsPanel.tsx:136
+#: src/routes/project/present/PresentResultsPanel.tsx:141
+#: src/routes/project/present/PresentResultsPanel.tsx:147
 msgid "Review results"
 msgstr "Переглянути результати"
 
@@ -16976,7 +16976,7 @@ msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:1005
-#: src/routes/project/present/PresentResultsPanel.tsx:158
+#: src/routes/project/present/PresentResultsPanel.tsx:169
 #: src/routes/project/chat/ProjectChatRoute.tsx:851
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:169
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:470

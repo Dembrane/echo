@@ -34,6 +34,13 @@ export const TASK_POPCORN_TICK = "popcorn_tick";
 export const START_TICK = "start";
 /** The tick kind of a read booked because a conversation's transcript is complete. */
 export const FINISH_TICK = "finish";
+/**
+ * A read that only publishes what the session already holds (phrases, tensions) and asks no
+ * language model, only embedding new text. Booked when a host opens a deck still showing
+ * provisional slides, so a session whose live reads have ended does not keep slides the
+ * host's results cannot list.
+ */
+export const PUBLISH_TICK = "publish";
 
 export function popcornStore(sql: Sql) {
   const tasks = scheduledTasks(sql);

@@ -9,6 +9,8 @@ import {
   applyResultBindings,
   curatePresentation,
   type DeckAnalysis,
+  type DeckObjects,
+  NO_OBJECTS,
   withoutObjects,
 } from "./deck";
 import { publishNudge } from "./events";
@@ -25,6 +27,7 @@ import {
   strip,
   truthy,
 } from "./py";
+import { reportRoomViolations } from "./room";
 import {
   DEFAULT_CADENCE_MINUTES,
   defaultSettings,
@@ -38,8 +41,22 @@ import {
   syntheticFrameLocked,
   translationTargets,
 } from "./settings";
-import { freshState, isSyntheticSession, normalizeState, stateCounts } from "./state";
-import { client, type PopcornStore, popcornStore, type Row, type Sql, START_TICK } from "./storage";
+import {
+  freshState,
+  isSyntheticSession,
+  normalizeState,
+  owesPublication,
+  stateCounts,
+} from "./state";
+import {
+  client,
+  type PopcornStore,
+  PUBLISH_TICK,
+  popcornStore,
+  type Row,
+  type Sql,
+  START_TICK,
+} from "./storage";
 import { pySplit } from "./text";
 import { translatedBundle } from "./translate";
 
@@ -710,19 +727,21 @@ export async function publishedBundle(
   bundle: Json,
   args: { projectId: string | null; settings: Json; project: Json; host: boolean },
 ): Promise<Json> {
-  if (!args.projectId) return bundle;
-  try {
-    const objects = await d.deck.deckObjects(args.projectId);
-    return applyPublishedObjects(bundle, objects, {
+  const apply = (objects: DeckObjects) =>
+    applyPublishedObjects(bundle, objects, {
       settings: args.settings,
       project: args.project,
       host: args.host,
       adminBaseUrl: d.adminBaseUrl,
     });
+  if (!args.projectId) return apply(NO_OBJECTS);
+  try {
+    return apply(await d.deck.deckObjects(args.projectId));
   } catch (err) {
     // The deck is polled several times a second: say it plainly and once per read.
     d.logger.warn({ reason: (err as Error).name }, "popcorn deck: published objects unavailable");
-    return bundle;
+    // The session's own files, with their quote ids derived like every other read's.
+    return apply(NO_OBJECTS);
   }
 }
 
@@ -759,6 +778,38 @@ export async function withWaiting(
     d.logger.warn({ reason: (err as Error).name }, "popcorn deck: waiting count unavailable");
     return bundle;
   }
+}
+
+/** The deck still shows something not published: a whole file marked provisional. */
+export function hasProvisional(files: Json): boolean {
+  return Object.values(files).some((file) => isRecord(file) && file.provisional === true);
+}
+
+const PUBLISH_EVERY_MS = 10 * 60_000;
+const publishBooked = new Map<string, number>();
+
+/**
+ * Books a publishing read for a loop the live chain is not reading, at most once every ten
+ * minutes per loop and process; a read that finds nothing owed is a no-op. Never awaited
+ * by the deck and never fails it.
+ */
+export function bookPublish(
+  d: PopcornDeps,
+  loop: Row,
+  now = d.now().getTime(),
+  book: (loopId: string) => Promise<unknown> = (loopId) =>
+    client(d.db).begin((tx) => dispatchTick(d, tx, loopId, PUBLISH_TICK)),
+): boolean {
+  const loopId = asId(loop.id);
+  // A live loop reads on its own cadence, and its next read publishes what is owed.
+  if (!loopId || loop.status === "active") return false;
+  if (now - (publishBooked.get(loopId) ?? 0) < PUBLISH_EVERY_MS) return false;
+  publishBooked.set(loopId, now);
+  if (publishBooked.size > 1024) publishBooked.clear();
+  book(loopId).catch((err: unknown) =>
+    d.logger.warn({ err, loop_id: loopId }, "popcorn deck: publishing read not booked"),
+  );
+  return true;
 }
 
 export async function bundleForReport(
@@ -807,8 +858,12 @@ export async function bundleForReport(
     settings,
     projectId,
     deck: d.deck,
-    versionFiles: (v) => versionFiles(store, reportId, v),
   });
+  // Checked before translation, which rewords the quotes their ids were derived from.
+  reportRoomViolations(d.logger, key, dict(bundle.files));
+  // A host looking at unpublished slides books a read, only when it has something to publish.
+  if (host && loop && hasProvisional(dict(bundle.files)) && owesPublication(state))
+    bookPublish(d, loop);
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));
   bundle = curatePresentation(bundle, settings);

@@ -70,6 +70,9 @@ export function normalizeState(raw: unknown): Json {
   }
   // The transcripts the last map request covered.
   if (typeof raw.map_fingerprint === "string") state.map_fingerprint = raw.map_fingerprint;
+  // Conversations the last publishing read could not attempt (owesPublication).
+  if (Array.isArray(raw.publish_idle))
+    state.publish_idle = raw.publish_idle.filter((x) => typeof x === "string");
   return state;
 }
 
@@ -112,4 +115,29 @@ export function stateCounts(state: Json): Json {
     analysis_updated_at: analysis.updated_at ?? null,
     run: state.run ?? null,
   };
+}
+
+/** Finished conversations whose phrases are not published, each as `cid:revision`. */
+export function owedConversations(state: Json): { cid: string; item: string }[] {
+  return Object.entries(dict(state.conversations))
+    .filter(
+      ([, c]) => isRecord(c) && truthy(c.done) && c.published_revision !== (c.revision ?? null),
+    )
+    .map(([cid, c]) => ({ cid, item: `${cid}:${pyStr(dict(c).revision ?? null)}` }));
+}
+
+/** A publishing read has something to publish it did not already find it cannot attempt. */
+export function owesPublication(state: Json): boolean {
+  if (unpublishedTensions(state)) return true;
+  const idle = new Set(list(state.publish_idle).map((x) => pyStr(x)));
+  return owedConversations(state).some(({ item }) => !idle.has(item));
+}
+
+/** The session holds a tensions slide that has not reached the shared store as it stands. */
+export function unpublishedTensions(state: Json): boolean {
+  const analysis = dict(state.analysis);
+  return (
+    truthy(analysis.tensions) &&
+    dict(analysis.published).tensions !== (dict(analysis.fingerprints).tensions ?? null)
+  );
 }

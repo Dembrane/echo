@@ -2,21 +2,32 @@ import {
   type ConversationPhrases,
   type ExecutorDeps,
   executeInline,
+  normKey,
   POPCORN_RECIPE_ID,
   POPCORN_SOURCES_KEY,
+  POPCORN_TENSIONS_RECIPE_ID,
+  POPCORN_TENSIONS_SOURCES_KEY,
   type PopcornSources,
+  type PopcornTensionSources,
   PRODUCERS_KEY,
   type ProducerServices,
   phraseRecords,
   popcornScopeKey,
+  pyFind,
+  type SessionTension,
   type Transcript,
 } from "@dembrane/analysis";
 import type { Logger } from "@dembrane/observability";
-import { type DeckAnalysis, stakeholdersSlide } from "../deck";
+import {
+  type DeckAnalysis,
+  type DeckRevision,
+  stakeholdersSlide,
+  tensionsSlideFrom,
+} from "../deck";
 import { dict, isRecord, type Json, list, orStr, truthy } from "../py";
 import { POPCORN_PROMPT, VALIDATE_PROMPT } from "./model";
 import type { QuoteBook } from "./shapes";
-import { failureText } from "./util";
+import { failureText, sha1Hex } from "./util";
 
 const STAKEHOLDERS_RECIPE_ID = "stakeholders";
 const PROJECT_SCOPE = "project";
@@ -40,6 +51,8 @@ export interface PublisherDeps {
  */
 export class Publisher {
   private readonly owned = new Map<string, boolean>();
+  /** This read published the session's tensions, or found them not its to publish. */
+  tensionsSettled = false;
 
   constructor(
     private readonly d: PublisherDeps,
@@ -48,28 +61,32 @@ export class Publisher {
     private readonly hostNote = "",
   ) {}
 
+  /** Throws when the store cannot answer: an unanswered scope settles nothing. */
   private async mayWrite(recipeId: string, scopeKey: string): Promise<boolean> {
     const key = `${recipeId}@${scopeKey}`;
     let owns = this.owned.get(key);
     if (owns === undefined) {
-      try {
-        owns = await this.d.deck.owns(this.projectId, recipeId, scopeKey);
-      } catch {
-        // A store that cannot answer is not an answer: this read keeps to the session's state.
-        this.d.logger.warn(`popcorn: the analysis store did not answer for ${key}`);
-        owns = false;
-      }
+      owns = await this.d.deck.owns(this.projectId, recipeId, scopeKey);
       this.owned.set(key, owns);
     }
     return owns;
   }
 
-  /** Publish one conversation's phrases as they now stand. */
+  /**
+   * Publish one conversation's phrases as they now stand. The entry records the revision
+   * that reached the store (`published_revision`), so a conversation whose publication
+   * failed is published again by a later read rather than staying provisional on the deck.
+   */
   async conversation(state: Json, transcript: Json): Promise<void> {
     const cid = String(transcript.id);
     const scopeKey = popcornScopeKey(cid);
+    const held = dict(state.conversations)[cid];
+    const settled = (entry: unknown) => {
+      if (isRecord(entry)) entry.published_revision = entry.revision ?? null;
+    };
     try {
-      if (!(await this.mayWrite(POPCORN_RECIPE_ID, scopeKey))) return;
+      // A scope the legacy writer owns is not this tick's to publish: nothing is owed.
+      if (!(await this.mayWrite(POPCORN_RECIPE_ID, scopeKey))) return settled(held);
       const entry = dict(dict(state.conversations)[cid]);
       const quotes = new Map(
         list(state.quotes)
@@ -96,7 +113,9 @@ export class Publisher {
         { ...executor, services: { ...executor.services, [POPCORN_SOURCES_KEY]: one } },
       );
       const { status, error } = outcome.run;
-      if (status !== "ready" && status !== "superseded")
+      if (status === "ready") settled(held);
+      // A superseded run lost to a newer request, which records its own revision.
+      else if (status !== "superseded")
         this.outcomes.push(`publish ${cid.slice(0, 8)}: ${status}${error ? ` (${error})` : ""}`);
     } catch (exc) {
       // The deck is the tick's to keep.
@@ -109,12 +128,30 @@ export class Publisher {
   }
 
   /**
+   * The deck's objects with this read's publication in them. The outbox advances the deck
+   * view after a publication, a moment later; the slide this read writes is made now, so it
+   * advances the view itself (the same assembly, safe to race the outbox's).
+   */
+  private async freshDeck() {
+    const snapshot = await this.d.deck.assembleDeck(this.projectId);
+    return this.d.deck.deckObjects(this.projectId, snapshot?.id ?? null);
+  }
+
+  /**
    * Run the stakeholders recipe over this session and return its slide, or null when the
    * scope is not the executor's. The recipe makes the one call the tick would have made,
    * so nothing is asked twice; its quotes go into the session's own registry.
    */
   async stakeholders(transcripts: readonly Json[], book: QuoteBook): Promise<Json | null> {
-    if (!(await this.mayWrite(STAKEHOLDERS_RECIPE_ID, PROJECT_SCOPE))) return null;
+    try {
+      if (!(await this.mayWrite(STAKEHOLDERS_RECIPE_ID, PROJECT_SCOPE))) return null;
+    } catch {
+      // A store that cannot answer is not an answer: this read keeps to the session's state.
+      this.d.logger.warn(
+        `popcorn: the analysis store did not answer for ${STAKEHOLDERS_RECIPE_ID}`,
+      );
+      return null;
+    }
     const pinned: Transcript[] = transcripts.map((t) => ({
       id: String(t.id),
       label: orStr(t.label),
@@ -131,9 +168,164 @@ export class Publisher {
     );
     if (outcome.run.status !== "ready")
       throw new Error(outcome.run.error || `the stakeholders run is ${outcome.run.status}`);
-    const objects = await this.d.deck.deckObjects(this.projectId);
+    const objects = await this.freshDeck();
     return stakeholdersSlide(objects.stakeholders, objects.relations, (quote) =>
       book.add({ transcript: quote.conversationId, text: quote.text }),
     );
   }
+
+  /**
+   * Publish the session's tensions as `popcorn.tensions` objects and return the slide those
+   * objects make, or null when the scope is not the executor's. The tick found the tensions;
+   * the recipe only grounds, embeds and publishes them, so the room, the results table and
+   * the Map read the same objects. A failed run throws: the slide is not committed and the
+   * next read tries again.
+   */
+  async tensions(slide: Json, transcripts: readonly Json[], book: QuoteBook): Promise<Json | null> {
+    if (!(await this.mayWrite(POPCORN_TENSIONS_RECIPE_ID, PROJECT_SCOPE))) {
+      this.tensionsSettled = true;
+      return null;
+    }
+    const registry = new Map(book.quotes.map((q) => [String(q.id), q]));
+    const seen = new Set<string>();
+    const tensions: SessionTension[] = [];
+    for (const raw of list(slide.tensions)) {
+      const t = dict(raw);
+      // A slide written before tensions kept an identity gets one from its words and
+      // quotes: stable across reads of that same slide, new when the slide changes.
+      const identity =
+        orStr(t.identity) ||
+        `slide-${sha1Hex(
+          [
+            orStr(t.poleA),
+            orStr(t.poleB),
+            ...list(t.quoteIds)
+              .map((id) => orStr(registry.get(String(id))?.text))
+              .sort(),
+          ].join("\x1f"),
+        ).slice(0, 24)}`;
+      // Two tensions on one pair are one object: the first, in the slide's rank order.
+      if (!identity || seen.has(identity)) continue;
+      seen.add(identity);
+      const poles = dict(t.quotePoles);
+      tensions.push({
+        identity,
+        poleA: orStr(t.poleA),
+        poleB: orStr(t.poleB),
+        knot: orStr(t.knot),
+        toResolve: orStr(t.toResolve),
+        quotes: list(t.quoteIds).flatMap((id) => {
+          const q = registry.get(String(id));
+          if (!q || !truthy(q.text) || !truthy(q.transcript)) return [];
+          const pole = poles[String(id)];
+          return [
+            {
+              text: String(q.text),
+              conversationId: String(q.transcript),
+              pole: pole === "A" || pole === "B" ? pole : null,
+            },
+          ];
+        }),
+      });
+    }
+    const source = {
+      tensions: carriedIdentities(
+        tensions,
+        await this.d.deck.heldTensions(this.projectId),
+        transcripts,
+      ),
+      transcripts: transcripts.map((t) => ({ id: String(t.id), text: String(t.text) })),
+    };
+    const one: PopcornTensionSources = { tensions: async () => source };
+    const executor = this.d.executor;
+    const outcome = await executeInline(
+      { projectId: this.projectId, recipeId: POPCORN_TENSIONS_RECIPE_ID, scopeKey: PROJECT_SCOPE },
+      { ...executor, services: { ...executor.services, [POPCORN_TENSIONS_SOURCES_KEY]: one } },
+    );
+    const { status, error } = outcome.run;
+    if (status !== "ready" && status !== "superseded")
+      throw new Error(error || `the live tensions run is ${status}`);
+    const objects = await this.freshDeck();
+    this.tensionsSettled = true;
+    return tensionsSlideFrom(
+      objects.tensions.filter((r) => r.recipeId === POPCORN_TENSIONS_RECIPE_ID),
+      (quote) => book.add({ transcript: quote.conversationId, text: quote.text }),
+    );
+  }
+}
+
+/** A stretch of a conversation, in the recipe's location basis (normKey, code points). */
+interface Passage {
+  readonly conversationId: string;
+  readonly from: number;
+  readonly to: number;
+}
+
+function passage(conversationId: string, text: string, at: number): Passage | null {
+  const key = normKey(text);
+  return key && at >= 0 ? { conversationId, from: at, to: at + [...key].length } : null;
+}
+
+/** How much of one pole's passages the other's cover, in characters; 0 when none touch. */
+const overlap = (a: readonly Passage[], b: readonly Passage[]) => {
+  let shared = 0;
+  for (const x of a)
+    for (const y of b)
+      if (x.conversationId === y.conversationId)
+        shared += Math.max(0, Math.min(x.to, y.to) - Math.max(x.from, y.from));
+  return shared;
+};
+
+/** Each tension keeps the published identity whose poles rest most on the same passages. */
+export function carriedIdentities(
+  tensions: readonly SessionTension[],
+  published: readonly DeckRevision[],
+  transcripts: readonly Json[],
+): SessionTension[] {
+  const keys = new Map(transcripts.map((t) => [String(t.id), normKey(String(t.text))]));
+  const poles = (quotes: readonly Json[], at: (q: Json) => number) => {
+    const out: Record<"A" | "B", Passage[]> = { A: [], B: [] };
+    for (const q of quotes) {
+      const pole = q.pole === "A" || q.pole === "B" ? q.pole : null;
+      const p = pole && passage(orStr(q.conversationId), orStr(q.text), at(q));
+      if (pole && p) out[pole].push(p);
+    }
+    return out;
+  };
+  const held = published
+    .map((r) => ({
+      identity: orStr(r.extra.identity),
+      poles: poles(list(r.payload.quotes).map(dict), (q) => {
+        const offset = dict(q.location).offset;
+        return typeof offset === "number" ? offset : -1;
+      }),
+    }))
+    .filter((r) => r.identity);
+  const taken = new Set(
+    tensions.map((t) => t.identity).filter((id) => held.some((r) => r.identity === id)),
+  );
+  return tensions.map((t) => {
+    if (taken.has(t.identity)) return t;
+    const mine = poles(t.quotes as unknown as Json[], (q) =>
+      pyFind(keys.get(orStr(q.conversationId)) ?? "", normKey(orStr(q.text))),
+    );
+    // Both poles on shared passages, either way round; the one sharing the most words wins.
+    const both = (a: number, b: number) => (a && b ? a + b : 0);
+    let match: (typeof held)[number] | undefined;
+    let best = 0;
+    for (const r of held) {
+      if (taken.has(r.identity)) continue;
+      const shared = Math.max(
+        both(overlap(mine.A, r.poles.A), overlap(mine.B, r.poles.B)),
+        both(overlap(mine.A, r.poles.B), overlap(mine.B, r.poles.A)),
+      );
+      if (shared > best || (shared === best && shared && match && r.identity < match.identity)) {
+        match = r;
+        best = shared;
+      }
+    }
+    if (!match) return t;
+    taken.add(match.identity);
+    return { ...t, identity: match.identity };
+  });
 }
