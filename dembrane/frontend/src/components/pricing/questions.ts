@@ -132,42 +132,21 @@ export type Question = OptionsQuestion | TextQuestion;
  */
 export const getQuestionSet = (): Question[] => [
 	{
-		hint: t`Tick anything that fits.`,
+		hint: t`Tick both if both fit.`,
 		key: "use_case",
 		kind: "multi",
 		label: t`What do you want to use dembrane for?`,
 		options: [
 			{
-				description: t`A talk, then conversations at tables of six to ten, read back to the room at the end.`,
-				key: "tables_synthesis",
-				label: t`Conversations at tables, with a synthesis at the end.`,
+				description: t`One event or a series, each with its own date.`,
+				key: "event",
+				label: t`For an event.`,
 			},
 			{
-				description: t`Quick conversations between talks, put on screen while the panel speaks.`,
-				key: "rounds_panel",
-				label: t`Short rounds that feed a panel on stage.`,
+				description: t`dembrane all year, for as many events and meetings as you need.`,
+				key: "year",
+				label: t`All year.`,
 			},
-			{
-				description: t`The same group meets over weeks and ends with a shared outcome.`,
-				key: "assembly",
-				label: t`An assembly over several sessions.`,
-			},
-			{
-				description: t`One-to-one conversations with passers-by, at a stand or an exhibition.`,
-				key: "walk_in",
-				label: t`A stand people walk up to.`,
-			},
-			{
-				description: t`Your own meetings, kept so nothing that was said gets lost.`,
-				key: "meetings_record",
-				label: t`A record of your meetings.`,
-			},
-			{
-				description: t`Several of these, spread across the year.`,
-				key: "year_of_work",
-				label: t`A year of work.`,
-			},
-			{ key: "something_else", label: t`Something else.`, reveals: "text" },
 		],
 	},
 	{

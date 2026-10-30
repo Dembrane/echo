@@ -184,7 +184,7 @@ it("keeps the five questions in order behind the opening, with a version", () =>
 	const questions = getQuestionSet();
 	expect(questions.map((question) => question.key)).toEqual([...QUESTION_KEYS]);
 	expect(questions[0].label).toBe("What do you want to use dembrane for?");
-	expect(questions[0].hint).toBe("Tick anything that fits.");
+	expect(questions[0].hint).toBe("Tick both if both fit.");
 	expect(questions[2].label).toBe(
 		"How many recordings do you expect in your first year?",
 	);
@@ -229,21 +229,15 @@ it("carries the volume buckets and the two extras, with the free text merged in"
 	expect(extras.follow?.examples).toHaveLength(4);
 });
 
-it("opens a free text box on Something else, and a number box above 40", () => {
+it("opens on two doors, and a number box above 40", () => {
 	const [useCase, timing, , concurrency] = getQuestionSet();
 	if (useCase.kind === "text" || concurrency.kind === "text") {
 		throw new Error("use case and concurrency are option questions");
 	}
 	expect(useCase.options.map((option) => option.key)).toEqual([
-		"tables_synthesis",
-		"rounds_panel",
-		"assembly",
-		"walk_in",
-		"meetings_record",
-		"year_of_work",
-		"something_else",
+		"event",
+		"year",
 	]);
-	expect(useCase.options.at(-1)?.reveals).toBe("text");
 	expect(
 		concurrency.options.find((option) => option.key === "more_than_40")
 			?.reveals,
@@ -256,20 +250,12 @@ it("opens a free text box on Something else, and a number box above 40", () => {
 	expect(timing.examples?.[1].label).toBe("Six weekends across seven months");
 });
 
-it("opens on the event shapes, in English and in Dutch", async () => {
-	// The keys match the site's needs form, so both mounts count as one funnel.
+it("opens on two doors, in English and in Dutch", async () => {
+	// The keys match the site's opener, so both mounts count as one funnel.
 	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
-	await screen.findByTestId("pricing-option-use_case-tables_synthesis");
-	for (const label of [
-		"Conversations at tables, with a synthesis at the end.",
-		"Short rounds that feed a panel on stage.",
-		"An assembly over several sessions.",
-		"A stand people walk up to.",
-		"A record of your meetings.",
-		"A year of work.",
-	]) {
-		expect(modalText()).toContain(label);
-	}
+	await screen.findByTestId("pricing-option-use_case-event");
+	expect(modalText()).toContain("For an event.");
+	expect(modalText()).toContain("All year.");
 	first.view.unmount();
 	cleanup();
 
@@ -277,17 +263,9 @@ it("opens on the event shapes, in English and in Dutch", async () => {
 	i18n.activate("nl-NL");
 	try {
 		renderConfigurator({ entries: ["/workspace?pc_step=2"] });
-		await screen.findByTestId("pricing-option-use_case-year_of_work");
-		for (const label of [
-			"Gesprekken aan tafels, met een synthese aan het eind.",
-			"Korte rondes die een panel op het podium voeden.",
-			"Een beraad in meerdere sessies.",
-			"Een stand waar mensen binnenlopen.",
-			"Je eigen overleggen, vastgelegd.",
-			"Een jaar aan werk.",
-		]) {
-			expect(modalText()).toContain(label);
-		}
+		await screen.findByTestId("pricing-option-use_case-year");
+		expect(modalText()).toContain("Voor een evenement.");
+		expect(modalText()).toContain("Het hele jaar.");
 	} finally {
 		i18n.activate("en");
 	}
@@ -469,13 +447,9 @@ it("restores the answers and the same session id after a reload", async () => {
 	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
 
-	fireEvent.click(
-		screen.getByTestId("pricing-option-use_case-tables_synthesis"),
-	);
+	fireEvent.click(screen.getByTestId("pricing-option-use_case-event"));
 	await waitFor(() =>
-		expect(readStoredConfiguration()?.answers.use_case).toEqual([
-			"tables_synthesis",
-		]),
+		expect(readStoredConfiguration()?.answers.use_case).toEqual(["event"]),
 	);
 	const sessionId = readStoredConfiguration()?.config_session_id;
 	expect(sessionId).toBeTruthy();
@@ -488,7 +462,7 @@ it("restores the answers and the same session id after a reload", async () => {
 	renderConfigurator({ entries: ["/workspace?pc_step=2"], submit });
 
 	const restored = (await screen.findByTestId(
-		"pricing-option-use_case-tables_synthesis",
+		"pricing-option-use_case-event",
 	)) as HTMLInputElement;
 	expect(restored.checked).toBe(true);
 	expect(readStoredConfiguration()?.config_session_id).toBe(sessionId);
@@ -618,18 +592,15 @@ it("keeps a newline on shift and Enter rather than advancing", async () => {
 	expect(search()).toBe("?pc_step=6");
 });
 
-// The three free text boxes, and the two controls an option reveals.
+// The free text boxes, and the control an option reveals.
 
-it("gives all three free text answers the composer with voice", async () => {
+it("gives both free text answers the composer with voice", async () => {
 	renderConfigurator({ entries: ["/workspace?pc_step=2"], projectId: "p-1" });
 
-	// The first question, behind Something else.
+	// The opener's two doors open nothing of their own.
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
+	fireEvent.click(screen.getByTestId("pricing-option-use_case-event"));
 	expect(screen.queryByTestId("pricing-use-case-other-input")).toBeNull();
-	fireEvent.click(screen.getByTestId("pricing-option-use_case-something_else"));
-	expect(
-		await screen.findByTestId("pricing-use-case-other-voice-record"),
-	).toBeTruthy();
 
 	// The timing box.
 	next();
