@@ -5519,7 +5519,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Funciones experimentales que puedes probar en este proyecto antes de que estén disponibles para todos."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:706
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:722
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6252,7 +6252,7 @@ msgstr "Error al eliminar la respuesta"
 #~ msgstr ""
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:373
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:386
 msgid "Failed to finish conversation. Please try again."
 msgstr "Error al finalizar la conversación. Por favor, inténtalo de nuevo."
 
@@ -6337,7 +6337,7 @@ msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo.
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Error al revisar el resultado. Por favor, inténtalo de nuevo."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:222
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:235
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, inténtalo de nuevo."
 
@@ -6517,7 +6517,7 @@ msgid "participant.button.stop.finish"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:667
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:683
 msgid "participant.button.finish"
 msgstr "Finalizar"
 
@@ -12001,7 +12001,7 @@ msgid "Reconnecting"
 msgstr "Reconectando"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:643
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:659
 msgid "participant.button.record"
 msgstr "Grabar"
 
@@ -14596,7 +14596,7 @@ msgid "Stop"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:727
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:743
 msgid "participant.button.stop"
 msgstr "Detener"
 
@@ -14828,7 +14828,7 @@ msgstr "Cambiar a autoservicio"
 msgid "Switch to self-serve billing"
 msgstr "Cambiar a facturación de autoservicio"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:650
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:666
 msgid "Switch to text"
 msgstr "Cambiar a texto"
 

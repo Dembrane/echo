@@ -5516,7 +5516,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Nieuwe functies die je in dit project kunt proberen voordat ze klaar zijn voor iedereen."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:706
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:722
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6249,7 +6249,7 @@ msgstr "Fout bij het verwijderen van de reactie"
 #~ msgstr "Verwijderen van tag mislukt"
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:373
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:386
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -6334,7 +6334,7 @@ msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:222
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:235
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
@@ -6514,7 +6514,7 @@ msgid "participant.button.stop.finish"
 msgstr "Afronden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:667
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:683
 msgid "participant.button.finish"
 msgstr "Voltooien"
 
@@ -11998,7 +11998,7 @@ msgid "Reconnecting"
 msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:643
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:659
 msgid "participant.button.record"
 msgstr "Opname starten"
 
@@ -14593,7 +14593,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:727
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:743
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -14825,7 +14825,7 @@ msgstr "Overzetten naar self-serve"
 msgid "Switch to self-serve billing"
 msgstr "Overzetten naar self-serve facturering"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:650
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:666
 msgid "Switch to text"
 msgstr "Overschakelen naar tekst"
 

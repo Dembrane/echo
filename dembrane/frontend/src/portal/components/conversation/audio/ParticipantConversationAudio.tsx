@@ -199,12 +199,25 @@ export const ParticipantConversationAudio = () => {
 		permissionError,
 	} = audioRecorder;
 
+	// A failed refetch keeps the last good conversation. Once recording has
+	// started, that must not swap the recorder for an error page: audio waits in
+	// the outbox, so the recorder stays and the server banner says to keep going.
+	// Deletion codes still end the session through the effect below.
+	const refetchFailedWhileRecording =
+		conversationQuery.isError &&
+		!!conversationQuery.data &&
+		!CONVERSATION_DELETION_STATUS_CODES.includes(
+			conversationQuery.error?.response?.status ?? 0,
+		) &&
+		(isRecording || isStarting || isHeld(session));
+	const serverReachable = connectionHealthy && !refetchFailedWhileRecording;
+
 	// What colour the meter runs in. A run that was interrupted is the recording
 	// itself failing, so it outranks a connection that has merely gone quiet.
 	// The meter escalates to `problem` on its own when no sound arrives at all.
 	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
 		? "problem"
-		: !isOnline || !connectionHealthy
+		: !isOnline || !serverReachable
 			? "unhealthy"
 			: "healthy";
 
@@ -473,7 +486,10 @@ export const ParticipantConversationAudio = () => {
 	}
 
 	// Check if conversation is not present or failed to load
-	if (loadState === "failed" || conversationDeletedDuringRecording) {
+	if (
+		(loadState === "failed" && !refetchFailedWhileRecording) ||
+		conversationDeletedDuringRecording
+	) {
 		return (
 			<ConversationErrorView
 				conversationDeletedDuringRecording={conversationDeletedDuringRecording}
@@ -543,7 +559,7 @@ export const ParticipantConversationAudio = () => {
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
-						connectionHealthy,
+						connectionHealthy: serverReachable,
 						recordingTime,
 					}}
 				/>
