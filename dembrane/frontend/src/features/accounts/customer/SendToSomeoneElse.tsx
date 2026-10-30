@@ -213,13 +213,9 @@ export function SendToSomeoneElse({
 						{mutation.error && !fieldError ? (
 							<ErrorNotice error={mutation.error} />
 						) : null}
-						{/* Back on the left and the step's action on the right, as on the signing
-						    panel; dialogs otherwise put their buttons at the left. */}
-						<Group
-							justify="space-between"
-							wrap="nowrap"
-							style={{ justifyContent: "space-between" }}
-						>
+						{/* A row of steps: Back on the left and the step's action on the right,
+						    as on the signing panel (rules.css). */}
+						<Group data-steps justify="space-between" wrap="nowrap">
 							<Button
 								onClick={back}
 								data-testid="send-to-back"

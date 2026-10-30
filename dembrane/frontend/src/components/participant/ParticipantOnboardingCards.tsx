@@ -405,7 +405,23 @@ const ParticipantOnboardingCards = ({
 							)}
 						</div>
 
-						<div className="mt-8 flex w-full items-center justify-start gap-4">
+						{/* A row of steps: Back on the left, Continue on the right (rules.css). */}
+						<div
+							data-steps
+							className="mt-8 flex w-full items-center justify-start gap-4"
+						>
+							{currentSlideIndex > 0 && !(refused && isLastSlide) && (
+								<Button
+									onClick={prevSlide}
+									variant="subtle"
+									color="gray"
+									size="lg"
+									className={!isLastSlide ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-back-button")}
+								>
+									<Trans id="participant.button.back">Back</Trans>
+								</Button>
+							)}
 							{!isLastSlide && (
 								<Button
 									onClick={nextSlide}
@@ -423,18 +439,6 @@ const ParticipantOnboardingCards = ({
 									) : (
 										<Trans id="participant.button.next">Continue</Trans>
 									)}
-								</Button>
-							)}
-							{currentSlideIndex > 0 && !(refused && isLastSlide) && (
-								<Button
-									onClick={prevSlide}
-									variant="subtle"
-									color="gray"
-									size="lg"
-									className={!isLastSlide ? "basis-1/2" : "w-full"}
-									{...testId("portal-onboarding-back-button")}
-								>
-									<Trans id="participant.button.back">Back</Trans>
 								</Button>
 							)}
 						</div>

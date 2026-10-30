@@ -22,9 +22,7 @@
  * Order: the pill comes first in its row and the row sits at the left. A row
  * of steps (a wizard, an onboarding, any sequence with Back) runs the way time
  * does instead: Back on the left, the pill on the right (Jor, 30 Oct 2026).
- * Such a row carries data-steps, which is what both checks look for.
- * TODO: the stepped flows still put the pill first; give each of their rows
- * data-steps and move Back to the left of Continue. */
+ * Such a row carries data-steps, which is what both checks look for. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
  * below is one of these; a theme (dark) redefines them and nothing else.
@@ -751,10 +749,11 @@
   margin-inline-end: 12px;
 }
 
-/* Dialog actions align with the text they answer, at the left. */
+/* Dialog actions align with the text they answer, at the left. A row of
+ * steps (data-steps) keeps its own justify: Back left, the pill right. */
 :root
   .mantine-Modal-body
-  .mantine-Group-root:not(:has(> :not(.mantine-Button-root))) {
+  .mantine-Group-root:not([data-steps]):not(:has(> :not(.mantine-Button-root))) {
   justify-content: flex-start;
 }
 

@@ -748,7 +748,17 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 				</Stepper>
 
-				<Group mt="sm">
+				{/* A row of steps: Cancel or Back on the left, the pill on the right
+				    (rules.css). */}
+				<Group data-steps justify="space-between" mt="sm">
+					<Button
+						variant="subtle"
+						color="gray"
+						size="md"
+						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
+					>
+						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
+					</Button>
 					{step < 3 ? (
 						<Button
 							variant="filled"
@@ -776,14 +786,6 @@ export const CreateWorkspaceRoute = () => {
 							<Trans>Create workspace</Trans>
 						</Button>
 					)}
-					<Button
-						variant="subtle"
-						color="gray"
-						size="md"
-						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
-					>
-						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
-					</Button>
 				</Group>
 			</Stack>
 			<UpgradeModal
