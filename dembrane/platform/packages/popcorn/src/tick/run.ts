@@ -43,7 +43,7 @@ import {
 import {
   freshState,
   normalizeState,
-  owedKey,
+  owedConversations,
   referencedQuoteIds,
   unpublishedTensions,
 } from "../state";
@@ -812,6 +812,15 @@ export function unpublishedConversations(state: Json, transcripts: readonly Json
       conv.published_revision !== (conv.revision ?? null)
     );
   });
+}
+
+/** Owed conversations a publishing read cannot attempt: read before their transcript changed. */
+export function unattemptable(state: Json, transcripts: readonly Json[]): string[] {
+  const attempted = new Set(unpublishedConversations(state, transcripts).map((t) => String(t.id)));
+  return owedConversations(state)
+    .filter(({ cid }) => !attempted.has(cid))
+    .map(({ item }) => item)
+    .sort();
 }
 
 /** The conversations still owed a second pass on the transcript as it stands. */
@@ -1652,10 +1661,13 @@ export async function runPopcornTick(
           d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
           translated = null;
         }
-      // What this publishing read could not publish is not booked again until it changes.
-      if (publishOnly && state.publish_idle !== owedKey(state)) {
-        state.publish_idle = owedKey(state);
-        await translationWriter.flush();
+      // What this publishing read cannot attempt is not booked again; what vanished is saved gone.
+      if (publishOnly && d.analysis) {
+        const idle = unattemptable(state, transcripts);
+        if (vanished.length || idle.join() !== list(state.publish_idle).join()) {
+          state.publish_idle = idle;
+          await translationWriter.flush();
+        }
       }
       await kept.save();
       if (translated) {
@@ -1863,7 +1875,8 @@ export async function runPopcornTick(
           tensions: dict(analysis.fingerprints).tensions ?? null,
         };
     }
-    if (publishOnly) state.publish_idle = owedKey(state);
+    // Only what it could not attempt: a publication that failed stays owed and is tried again.
+    if (publishOnly && publisher) state.publish_idle = unattemptable(state, transcripts);
     if (transcripts.length) {
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();

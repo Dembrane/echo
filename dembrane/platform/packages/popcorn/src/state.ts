@@ -70,8 +70,9 @@ export function normalizeState(raw: unknown): Json {
   }
   // The transcripts the last map request covered.
   if (typeof raw.map_fingerprint === "string") state.map_fingerprint = raw.map_fingerprint;
-  // What the last publishing read found owed and could not publish (owesPublication).
-  if (typeof raw.publish_idle === "string") state.publish_idle = raw.publish_idle;
+  // Conversations the last publishing read could not attempt (owesPublication).
+  if (Array.isArray(raw.publish_idle))
+    state.publish_idle = raw.publish_idle.filter((x) => typeof x === "string");
   return state;
 }
 
@@ -116,23 +117,20 @@ export function stateCounts(state: Json): Json {
   };
 }
 
-/** What a publishing read is owed, as one key: finished conversations' phrases and the tensions. */
-export function owedKey(state: Json): string {
-  const owed = Object.entries(dict(state.conversations))
+/** Finished conversations whose phrases are not published, each as `cid:revision`. */
+export function owedConversations(state: Json): { cid: string; item: string }[] {
+  return Object.entries(dict(state.conversations))
     .filter(
       ([, c]) => isRecord(c) && truthy(c.done) && c.published_revision !== (c.revision ?? null),
     )
-    .map(([cid, c]) => `${cid}:${pyStr(dict(c).revision ?? null)}`)
-    .sort();
-  if (unpublishedTensions(state))
-    owed.push(`tensions:${pyStr(dict(dict(state.analysis).fingerprints).tensions ?? null)}`);
-  return owed.join(" ");
+    .map(([cid, c]) => ({ cid, item: `${cid}:${pyStr(dict(c).revision ?? null)}` }));
 }
 
-/** A publishing read has something to publish it has not already found it cannot. */
+/** A publishing read has something to publish it did not already find it cannot attempt. */
 export function owesPublication(state: Json): boolean {
-  const key = owedKey(state);
-  return key !== "" && key !== state.publish_idle;
+  if (unpublishedTensions(state)) return true;
+  const idle = new Set(list(state.publish_idle).map((x) => pyStr(x)));
+  return owedConversations(state).some(({ item }) => !idle.has(item));
 }
 
 /** The session holds a tensions slide that has not reached the shared store as it stands. */

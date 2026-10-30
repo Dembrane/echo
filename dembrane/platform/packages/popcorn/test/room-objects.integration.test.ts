@@ -19,15 +19,16 @@ import {
   applyPublishedObjects,
   applyResultBindings,
   curatePresentation,
+  type DeckAnalysis,
   deckQuoteId,
   withoutObjects,
 } from "../src/deck";
-import type { Json } from "../src/py";
+import { dict, type Json } from "../src/py";
 import { normalizeState, owesPublication } from "../src/state";
 import { Publisher } from "../src/tick/publish";
 import { runPopcornTick, unpublishedConversations, unpublishedTensions } from "../src/tick/run";
 import { QuoteBook } from "../src/tick/shapes";
-import { tickDeps } from "../src/worker";
+import { type TickAnalysis, tickDeps } from "../src/worker";
 import { fixture, freshDatabase, ids, seed } from "./fixtures/tick/seed";
 
 // The live session's tensions published through the analysis executor, against Postgres:
@@ -491,6 +492,56 @@ run("the room and the host's results read the same objects", () => {
     expect(unpublishedConversations(state, [transcript]).length).toBe(0);
   });
 
+  /** A host-booked publishing read of the fixture loop, against the given analysis store. */
+  const publishingRead = (
+    workflow: string,
+    analysis: TickAnalysis,
+    completer = new FakeCompleter(),
+  ) =>
+    runPopcornTick(
+      {
+        ...tickDeps(
+          {
+            db: database.db,
+            logger: quiet,
+            completer,
+            flags: { present: true, canvas: true },
+            participantBaseUrl: "http://localhost:5174",
+            adminBaseUrl: "http://localhost:5173",
+            databaseUrl: "unused",
+            analysis: () => analysis,
+          },
+          workflow,
+          analysis,
+        ),
+        heartbeatMs: 50,
+      },
+      ids.loop,
+      "publish",
+      newId(),
+    );
+  const finishedWith = (state: Json) =>
+    raw`update agent_loop set status = 'paused', popcorn_state = ${raw.json(state as never)}
+      where id = ${ids.loop}`;
+  /** The session as the deck reads it: normalised. */
+  const saved = async () => {
+    const [loop] = await raw`select popcorn_state from agent_loop where id = ${ids.loop}`;
+    return normalizeState(loop?.popcorn_state);
+  };
+  /** A finished session holding a tensions slide it never published. */
+  const owingTensions = (identity: string) => {
+    const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const held = slide(book, [[identity, "Lights before benches", 10]]);
+    return {
+      version: 1,
+      run: 5,
+      order: [],
+      conversations: {},
+      quotes: book.quotes,
+      analysis: { tensions: held, fingerprints: { tensions: `fp-${identity}` }, updated: {} },
+    };
+  };
+
   test("a publishing read that can publish nothing owed stops the deck asking again", async () => {
     const [t] = transcripts;
     // Owed but unpublishable: a deleted conversation, and one whose transcript changed after
@@ -506,37 +557,87 @@ run("the room and the host's results read the same objects", () => {
       quotes: [],
       analysis: {},
     };
-    await raw`update agent_loop set status = 'paused', popcorn_state = ${raw.json(state as never)}
-      where id = ${ids.loop}`;
+    await finishedWith(state);
     expect(owesPublication(state)).toBe(true);
     const completer = new FakeCompleter();
-    const read = await runPopcornTick(
-      {
-        ...tickDeps(
-          {
-            db: database.db,
-            logger: quiet,
-            completer,
-            flags: { present: true, canvas: true },
-            participantBaseUrl: "http://localhost:5174",
-            adminBaseUrl: "http://localhost:5173",
-            databaseUrl: "unused",
-            analysis: () => ({ deck: deck(), executor: deps }),
-          },
-          "publish-nothing-owed",
-          { deck: deck(), executor: deps },
-        ),
-        heartbeatMs: 50,
-      },
-      ids.loop,
-      "publish",
-      newId(),
+    const read = await publishingRead(
+      "publish-nothing-owed",
+      { deck: deck(), executor: deps },
+      completer,
     );
     expect(read.status).toBe("no_op");
     expect(completer.calls.length).toBe(0);
-    const [loop] = await raw`select popcorn_state from agent_loop where id = ${ids.loop}`;
-    // As the deck reads it: normalised.
-    expect(owesPublication(normalizeState(loop?.popcorn_state))).toBe(false);
+    expect(owesPublication(await saved())).toBe(false);
+  });
+
+  test("a publishing read drops a deleted conversation for good, so the deck stops asking", async () => {
+    const state = {
+      version: 1,
+      run: 4,
+      order: [],
+      conversations: {
+        "c9000000-0000-4000-8000-00000000000a": { done: true, revision: 1, items: [] },
+      },
+      quotes: [],
+      analysis: {},
+    };
+    await finishedWith(state);
+    await publishingRead("publish-deleted-only", { deck: deck(), executor: deps });
+    expect(owesPublication(await saved())).toBe(false);
+  });
+
+  test("a publishing read whose publication fails keeps what it owes, so the deck asks again", async () => {
+    await finishedWith(owingTensions("held-fail"));
+    const busy: DeckAnalysis = {
+      ...deck(),
+      owns: async () => {
+        throw new Error("store busy");
+      },
+    };
+    await publishingRead("publish-store-busy", { deck: busy, executor: deps });
+    expect(owesPublication(await saved())).toBe(true);
+  });
+
+  test("a conversation whose publication fails stays owed; the next read publishes it", async () => {
+    // The fingerprint a real tick gave this transcript (the recorded run), so the read attempts it.
+    const cid = String(transcripts[0]?.id);
+    const read = dict(dict(dict(fixture.ticks[0]?.state).conversations)[cid]);
+    await finishedWith({
+      version: 1,
+      run: 6,
+      order: [cid],
+      conversations: {
+        [cid]: {
+          done: true,
+          revision: 7,
+          fingerprint: read.fingerprint,
+          items: [],
+        },
+      },
+      quotes: [],
+      analysis: {},
+    });
+    const busy: DeckAnalysis = {
+      ...deck(),
+      owns: async () => {
+        throw new Error("store busy");
+      },
+    };
+    await publishingRead("publish-conversation-busy", { deck: busy, executor: deps });
+    const after = await saved();
+    expect(((after.conversations as Json)[cid] as Json).published_revision).toBeUndefined();
+    expect(owesPublication(after)).toBe(true);
+    // The store answers again: the conversation was attemptable, and is published now.
+    await publishingRead("publish-conversation-again", { deck: deck(), executor: deps });
+    const settled = await saved();
+    expect(((settled.conversations as Json)[cid] as Json).published_revision).toBe(7);
+    expect(owesPublication(settled)).toBe(false);
+  });
+
+  test("a publishing read with no analysis store gives up on nothing", async () => {
+    await finishedWith(owingTensions("held-no-store"));
+    await publishingRead("publish-no-store", { deck: deck(), executor: null });
+    expect(owesPublication(await saved())).toBe(true);
   });
 
   test("a session whose live reads ended publishes its held tensions when a host asks, without the model", async () => {

@@ -11,7 +11,7 @@ import {
 import type { Json } from "../src/py";
 import { RoomRulesBroken, reportRoomViolations, roomViolations } from "../src/room";
 import { bookPublish, hasProvisional, type PopcornDeps } from "../src/service";
-import { normalizeState, owedKey, owesPublication } from "../src/state";
+import { normalizeState, owesPublication } from "../src/state";
 
 /**
  * What the room may be shown, as rules every built deck keeps. Each rule closes a way the
@@ -330,10 +330,16 @@ describe("a host looking at provisional slides books a publishing read", () => {
     // Published, still being read, or settled for the legacy writer: nothing to publish.
     expect(owesPublication(done({ published_revision: 2 }))).toBe(false);
     expect(owesPublication({ conversations: { c1: { done: false, revision: 2 } } })).toBe(false);
-    // What a publishing read found it could not publish is not asked for again; anything new is.
-    const tried = done({});
-    const idle = { ...tried, publish_idle: owedKey(tried) };
+    // A conversation a publishing read could not attempt is not asked for again; anything new is.
+    const idle = { ...done({}), publish_idle: ["c1:2"] };
     expect(owesPublication(idle)).toBe(false);
+    // Tensions are never given up on: a read can always attempt them.
+    expect(
+      owesPublication({
+        ...idle,
+        analysis: { tensions: { tensions: [] }, fingerprints: { tensions: "f" } },
+      }),
+    ).toBe(true);
     // The deck reads the state normalised: the mark survives that.
     expect(owesPublication(normalizeState({ ...idle, order: [], quotes: [] }))).toBe(false);
     expect(owesPublication({ ...idle, conversations: { c1: { done: true, revision: 3 } } })).toBe(
