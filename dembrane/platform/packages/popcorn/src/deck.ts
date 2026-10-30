@@ -29,6 +29,8 @@ import { norm } from "./text";
 export const DECK_RECIPES = ["popcorn", "tensions", "popcorn.tensions", "stakeholders"] as const;
 /** The recipes whose objects make the tensions slide: the host's Analyse and the live session's. */
 const TENSION_RECIPES = new Set(["tensions", "popcorn.tensions"]);
+/** The kinds a presentation pins and a host curates. */
+const CURATED_TYPES = new Set(["tension", "stakeholder"]);
 const LIVE_TENSIONS_RECIPE = "popcorn.tensions";
 /** A live tension's output key (popcorn-tensions.ts), at the end of its object's lineage key. */
 const TENSION_KEY = "tension:";
@@ -80,16 +82,17 @@ export interface DeckSnapshot {
 }
 
 export interface DeckAnalysis {
-  /** The deck's current (or a pinned) snapshot's objects; empty when the legacy writer owns the session. */
-  deckObjects(projectId: string, snapshotId?: string | null): Promise<DeckObjects>;
+  /** The deck's current (or a pinned) snapshot's objects; `latest`: curated kinds at their current revision. */
+  deckObjects(
+    projectId: string,
+    snapshotId?: string | null,
+    latest?: boolean,
+  ): Promise<DeckObjects>;
   /** Objects currently withdrawn from every audience view. */
   excludedObjectIds(projectId: string): Promise<Set<string>>;
   /** The deck view's current snapshot; null when there is none yet. */
   currentDeck(projectId: string): Promise<DeckSnapshot | null>;
-  /**
-   * Every live tension ever published, withdrawn and host-edited ones too, at its current
-   * revision, its identity (`extra.identity`) read from its object's lineage key.
-   */
+  /** Every live tension ever published, at its current revision, identity from its lineage key. */
   heldTensions(projectId: string): Promise<DeckRevision[]>;
   /** A new deck snapshot over the producer scopes the executor owns; null when it owns none. */
   assembleDeck(projectId: string, sourceEventId?: string | null): Promise<DeckSnapshot | null>;
@@ -129,6 +132,25 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
         join analysis_run r on r.id = s.current_run_id
        where s.project_id = ${projectId} and s.kind = 'producer' and s.writer = 'analysis'
          and s.recipe_id in ${store.sql([...DECK_RECIPES])}`;
+  /** Each revision's object at its current published revision, keyed by the revision it replaces. */
+  const currentOf = async (projectId: string, revisions: readonly ObjectRevision[]) => {
+    if (!revisions.length) return new Map<string, ObjectRevision>();
+    const rows = await store.sql<{ id: string; head: string }[]>`
+      select id::text as id, current_revision_id::text as head from analysis_object
+       where project_id = ${projectId} and current_revision_id is not null
+         and id in ${store.sql(revisions.map((r) => r.objectId))}`;
+    const heads = await store.getRevisions(
+      projectId,
+      rows.map((r) => r.head),
+    );
+    const byObject = new Map(rows.map((r) => [r.id, heads.get(r.head)]));
+    const out = new Map<string, ObjectRevision>();
+    for (const r of revisions) {
+      const head = byObject.get(r.objectId);
+      if (head && head.id !== r.id && head.status === "published") out.set(r.id, head);
+    }
+    return out;
+  };
   const assemble = async (projectId: string, sourceEventId: string | null = null) => {
     const owned = await heads(projectId);
     if (!owned.length) return null;
@@ -190,7 +212,7 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
       });
       return scope === null || scope.writer === "analysis";
     },
-    async deckObjects(projectId, snapshotId) {
+    async deckObjects(projectId, snapshotId, latest = false) {
       let snapshot = snapshotId
         ? await resolveSnapshot(store, { projectId, snapshotId })
         : await current(projectId);
@@ -199,11 +221,18 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
       if (snapshot === null && !snapshotId) snapshot = await assemble(projectId);
       if (snapshot === null) return NO_OBJECTS;
       const contents = await readSnapshot(snapshot, store);
+      // The pinned objects as the host last left them: an edit shows, as a withdrawal does.
+      const moved = latest
+        ? await currentOf(
+            projectId,
+            [...contents.revisions.values()].filter((r) => CURATED_TYPES.has(r.type)),
+          )
+        : new Map<string, ObjectRevision>();
       const popcorn = new Map<string, DeckRevision[]>();
       const tensions: DeckRevision[] = [];
       const stakeholders: DeckRevision[] = [];
-      for (const r of contents.revisions.values()) {
-        const rev = revision(r);
+      for (const pinned of contents.revisions.values()) {
+        const rev = revision(moved.get(pinned.id) ?? pinned);
         if (rev.type === "popcorn") {
           const cid = rev.sourceConversationIds.find(Boolean) ?? pyStrOr(rev.extra.conversationId);
           if (cid) popcorn.set(cid, [...(popcorn.get(cid) ?? []), rev]);
@@ -216,8 +245,8 @@ export function analysisDeck(store: AnalysisStore): DeckAnalysis {
         tensions,
         stakeholders,
         relations: [...contents.relations.values()].map((r) => ({
-          fromRevisionId: r.fromRevisionId,
-          toRevisionId: r.toRevisionId,
+          fromRevisionId: moved.get(r.fromRevisionId)?.id ?? r.fromRevisionId,
+          toRevisionId: moved.get(r.toRevisionId)?.id ?? r.toRevisionId,
           attributes: dict(r.attributes),
         })),
         ownsTensions: producers.some((p) => TENSION_RECIPES.has(pyStr(p.recipeId))),
@@ -461,10 +490,8 @@ export function applyPublishedObjects(
   const quotes = new DeckQuotes();
   const built = new Set<string>();
   const tabs = dict(args.settings.tabs);
-  // Once a session publishes, the room shows what is published. A slide the session holds
-  // with no objects behind it yet stays, marked provisional, until the tick publishes it: a
-  // finished session is not read again, and its slide would otherwise be gone. A synthetic
-  // demo has no objects and keeps its own slides.
+  // An unpublished slide stays, marked provisional, until a read publishes it.
+  // A synthetic demo has no objects and keeps its own slides.
   const published = !isEmpty(objects) && !isSynthetic(files);
   if (published)
     for (const [name, owned] of [
@@ -638,6 +665,7 @@ export async function applyResultBindings(
       const objects = await args.deck.deckObjects(
         args.projectId,
         version.split(":").slice(1).join(":"),
+        true,
       );
       loaded.set(
         version,

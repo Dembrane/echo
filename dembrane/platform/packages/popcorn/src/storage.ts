@@ -36,7 +36,8 @@ export const START_TICK = "start";
 export const FINISH_TICK = "finish";
 /**
  * A read that only publishes what the session already holds (phrases, tensions) and asks
- * no model: booked when a host opens a deck still showing provisional slides, so a session
+ * no language model (only new text is embedded): booked when a host opens a deck still
+ * showing provisional slides, so a session
  * whose live reads have ended does not keep slides the host's results cannot list.
  */
 export const PUBLISH_TICK = "publish";

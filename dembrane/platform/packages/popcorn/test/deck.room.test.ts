@@ -11,6 +11,7 @@ import {
 import type { Json } from "../src/py";
 import { RoomRulesBroken, reportRoomViolations, roomViolations } from "../src/room";
 import { bookPublish, hasProvisional, type PopcornDeps } from "../src/service";
+import { owesPublication } from "../src/tick/run";
 
 /**
  * What the room may be shown, as rules every built deck keeps. Each rule closes a way the
@@ -312,6 +313,25 @@ describe("a host looking at provisional slides books a publishing read", () => {
   test("only a deck still showing a provisional file asks", () => {
     expect(hasProvisional({ "tensions.json": { tensions: [], provisional: true } })).toBe(true);
     expect(hasProvisional({ "tensions.json": { tensions: [] } })).toBe(false);
+  });
+
+  test("only for what a publishing read can publish, so a deck never asks forever", () => {
+    const done = (entry: Json) => ({
+      conversations: { c1: { done: true, revision: 2, ...entry } },
+    });
+    // Read before publications were recorded, or published at an older revision: owed.
+    expect(owesPublication(done({}))).toBe(true);
+    expect(owesPublication(done({ published_revision: 1 }))).toBe(true);
+    expect(
+      owesPublication({
+        analysis: { tensions: { tensions: [] }, fingerprints: { tensions: "f" } },
+      }),
+    ).toBe(true);
+    // Published, still being read, or settled for the legacy writer: nothing to publish.
+    expect(owesPublication(done({ published_revision: 2 }))).toBe(false);
+    expect(owesPublication({ conversations: { c1: { done: false, revision: 2 } } })).toBe(false);
+    // A stakeholders slide is not the publishing read's to publish.
+    expect(owesPublication({ analysis: { stakeholders: { stakeholders: [] } } })).toBe(false);
   });
 
   test("once per loop every ten minutes, and never for a loop the live chain reads", () => {

@@ -11,10 +11,17 @@ import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
-import { type BffDeps, listAnalysisObjects } from "../../analysis/src/bff";
+import { type BffDeps, listAnalysisObjects, requestAnalysisRun } from "../../analysis/src/bff";
 import { RevisionService } from "../../analysis/src/revisions";
 import { appClient, executorDeps, quiet } from "../../analysis/test/harness";
-import { analysisDeck, applyPublishedObjects, curatePresentation, deckQuoteId } from "../src/deck";
+import {
+  analysisDeck,
+  applyPublishedObjects,
+  applyResultBindings,
+  curatePresentation,
+  deckQuoteId,
+  withoutObjects,
+} from "../src/deck";
 import type { Json } from "../src/py";
 import { Publisher } from "../src/tick/publish";
 import { runPopcornTick, unpublishedConversations, unpublishedTensions } from "../src/tick/run";
@@ -202,10 +209,7 @@ run("the room and the host's results read the same objects", () => {
     expect(unpublishedTensions(state)).toBe(false);
   });
 
-  /**
-   * Publish a tension, then read it again as the next read words it: the positions come back
-   * reworded (so the tick derives another identity) on the same passages, one said at more length.
-   */
+  /** Publish a tension, then read it again reworded on the same passages, one quote longer. */
   const readAgain = async (identity: string, from: number, between = async (_t: Json) => {}) => {
     const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
     const first = await publisher([]).tensions(
@@ -291,7 +295,7 @@ run("the room and the host's results read the same objects", () => {
     expect((await deck().excludedObjectIds(P)).has(String(shown.objectId))).toBe(true);
   });
 
-  test("the results table lists the pinned slide's tensions as the host last left them", async () => {
+  test("the results table and the room show a pinned slide as the host last left it", async () => {
     const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
     const published = await publisher([]).tensions(
       slide(book, [
@@ -348,6 +352,126 @@ run("the room and the host's results read the same objects", () => {
     );
     // The row is the revision the next edit must name, and a withdrawn tension leaves.
     expect(listed.items.map((i) => [i.objectId, i.revisionId])).toEqual([[edit.objectId, edit.id]]);
+    // The room, built as the server builds it: the pin, then what the host withdrew.
+    const room = withoutObjects(
+      await applyResultBindings(
+        { files: {} },
+        {
+          settings: {
+            tabs: { tensions: true },
+            presentation: { result_bindings: { tensions: `analysis:${pinned}` } },
+          },
+          projectId: P,
+          deck: deck(),
+        },
+      ),
+      await deck().excludedObjectIds(P),
+    );
+    const shown = ((room.files as Json)["tensions.json"] as Json).tensions as Json[];
+    expect(shown.map((t) => [t.objectId, t.revisionId, t.knot])).toEqual([
+      [edit.objectId, edit.id, "Edited by the host."],
+    ]);
+  });
+
+  test("a pinned stakeholder the host edited keeps its relations in the room", async () => {
+    const said = (i: number, text: string) => ({ transcript: String(transcripts[i]?.id), text });
+    const answer = {
+      stakeholders: [
+        {
+          name: "Residents",
+          role: "People in the flats",
+          stake: "Charging near home",
+          rung: "voiced",
+          stakeWeight: 0.9,
+          mentionsWeight: 1,
+          quotes: [said(0, "the waiting list is months long")],
+        },
+        {
+          name: "Council",
+          role: "Answers letters",
+          stake: "The grid",
+          rung: "named",
+          stakeWeight: 0.5,
+          mentionsWeight: 0.5,
+          quotes: [said(1, "The council never answers our letters about the grid")],
+        },
+      ],
+      relations: [
+        {
+          between: ["Residents", "Council"],
+          label: "wait for answers",
+          intensity: 0.6,
+          sentiment: -0.4,
+          unowned: false,
+          detail: "Residents write; the council does not answer.",
+          aspects: [],
+        },
+      ],
+    };
+    const fake = new FakeCompleter();
+    fake.on(
+      () => true,
+      () => JSON.stringify(answer),
+    );
+    const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
+    const pinnedSlide = await new Publisher(
+      { executor: executorDeps(sql, { completer: fake }), deck: deck(), logger: quiet },
+      P,
+      [],
+    ).stakeholders(
+      transcripts.map((t) => ({ ...t, label: "", created_at: null })),
+      book,
+    );
+    expect(((pinnedSlide?.relations as Json[]) ?? []).length).toBe(1);
+    const pinned = (await deckSnapshot()).id;
+    const residents = (await deck().deckObjects(P)).stakeholders.find(
+      (r) => r.payload.name === "Residents",
+    );
+    await new RevisionService(deps.store).authorEdit({
+      projectId: P,
+      objectId: String(residents?.objectId),
+      expected: String(residents?.id),
+      payload: { ...(residents?.payload as Json), role: "Edited by the host." },
+      actorId: ids.user,
+    });
+    const room = await applyResultBindings(
+      { files: {} },
+      {
+        settings: {
+          tabs: { stakeholders: true },
+          presentation: { result_bindings: { stakeholders: `analysis:${pinned}` } },
+        },
+        projectId: P,
+        deck: deck(),
+      },
+    );
+    const shown = (room.files as Json)["stakeholders.json"] as Json;
+    expect((shown.stakeholders as Json[]).map((x) => x.role)).toContain("Edited by the host.");
+    expect((shown.relations as Json[]).map((r) => r.label)).toEqual(["wait for answers"]);
+  });
+
+  test("a live tensions run is the tick's alone: the analysis route refuses to start one", async () => {
+    // Outside a tick the recipe would read the session without the identities the tick carries.
+    const bff: BffDeps = {
+      db: database.db,
+      rt: { store: deps.store } as AnalysisRuntime,
+      access: { project: async () => ({ project: { id: P }, tier: "changemaker" }) } as never,
+      limiter: { check: async () => {} } as never,
+      enablePresent: true,
+      now: () => new Date(),
+    };
+    await expect(
+      requestAnalysisRun(bff, { appUserId: ids.appUser, directusUserId: ids.user } as Signed, P, {
+        recipe_id: "popcorn.tensions",
+        scope_key: "project",
+        parameters: {},
+        selected_revision_ids: [],
+        mode: "full",
+        idempotency_key: null,
+        refresh_dependencies: false,
+        retry_run_id: null,
+      }),
+    ).rejects.toMatchObject({ code: "analysis.recipe_internal" });
   });
 
   test("a conversation is owed a publication until its revision reaches the store", async () => {

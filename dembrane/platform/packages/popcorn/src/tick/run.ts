@@ -40,7 +40,13 @@ import {
   targetLanguages,
   voiceHostNote,
 } from "../settings";
-import { freshState, normalizeState, referencedQuoteIds } from "../state";
+import {
+  freshState,
+  normalizeState,
+  owesPublication,
+  referencedQuoteIds,
+  unpublishedTensions,
+} from "../state";
 import {
   FINISH_TICK,
   type PopcornStore,
@@ -80,6 +86,8 @@ import {
   PROMPT_NAMES as TENSION_PROMPTS,
 } from "./tensions";
 import { errText, f, failureText, Mutex, Semaphore, settle, sha1Hex, withTimeout } from "./util";
+
+export { owesPublication, unpublishedTensions };
 
 /**
  * The popcorn tick (popcorn ticks.py): gather every conversation, pop the changed ones,
@@ -776,20 +784,7 @@ async function enrichOne(
   if (publisher) await publisher.conversation(writer.state, transcript);
 }
 
-/** The session holds a tensions slide that has not reached the shared store as it stands. */
-export function unpublishedTensions(state: Json): boolean {
-  const analysis = dict(state.analysis);
-  return (
-    truthy(analysis.tensions) &&
-    dict(analysis.published).tensions !== (dict(analysis.fingerprints).tensions ?? null)
-  );
-}
-
-/**
- * The slide the published tensions make, or null when this read's tensions did not reach
- * the store: the read keeps its own slide, owed to the next read (unpublishedTensions),
- * which publishes it without asking the model again.
- */
+/** The published slide, or null on failure: the read keeps its own slide, owed to the next read. */
 export async function publishTensions(
   publisher: Publisher,
   slide: Json,
@@ -1602,7 +1597,7 @@ export async function runPopcornTick(
     );
     const analysisStale =
       transcripts.length > 0 && staleViews(state, analysisFingerprint, analysisViews).length > 0;
-    // A publishing read reads nothing new and asks no model: it only publishes what is held.
+    // A publishing read reads nothing new and asks no language model: it publishes what is held.
     const publishOnly = tickKind === PUBLISH_TICK;
     const preparesPopcorn = !publishOnly && (prepareKind === null || prepareKind === "popcorn");
     const extractionWork = preparesPopcorn ? changed.filter(readable) : [];
@@ -1645,7 +1640,7 @@ export async function runPopcornTick(
     ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
       let translated: string | null = null;
-      // A publishing read asks no model, translation included.
+      // A publishing read asks no language model, translation included.
       if (!publishOnly)
         try {
           translated = await translateSession(d, state, settings, {
@@ -1868,7 +1863,7 @@ export async function runPopcornTick(
       await writer.flush();
     }
     let translated: string | null = null;
-    // A publishing read asks no model, translation included: the next full read translates.
+    // A publishing read asks no language model, translation included: the next full read translates.
     if (!publishOnly)
       try {
         translated = await translateSession(d, state, settings, { reportId, projectId, writer });

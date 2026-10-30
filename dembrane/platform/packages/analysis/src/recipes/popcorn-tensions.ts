@@ -12,8 +12,9 @@ import { loadTranscripts, modelDeployment, producerServices } from "./services";
 
 /**
  * A live session's tensions as shared analysis objects. The tick finds them (positions,
- * pairs, verification, writing) and this recipe makes no model call: it publishes what the
- * room is shown, so the room, the results table and the Map read the same objects. Scope
+ * pairs, verification, writing) and this recipe asks no language model (it only embeds text
+ * it has not embedded before): it publishes what the room is shown, so the room, the results
+ * table and the Map read the same objects. Scope
  * `project`, one output per project, beside the host's own `tensions` recipe.
  */
 
@@ -374,7 +375,7 @@ export const RECIPE: Recipe = {
   execute,
   resolveInputs,
   validationRules: [
-    "the run publishes exactly the tensions the session pinned; no model is called",
+    "the run publishes exactly the tensions the session pinned; no language model is called",
     "every quote is verbatim in the conversation it is credited to, or it is dropped",
   ],
   identityPolicy: {

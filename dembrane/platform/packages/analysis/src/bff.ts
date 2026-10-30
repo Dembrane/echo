@@ -68,13 +68,10 @@ export interface BffDeps {
   readonly now: () => Date;
 }
 
-/** Recipes that run only from their own feature: an assessment records what a fact-check found. */
-export const INTERNAL_RECIPES = new Set([ASSESSMENT_RECIPE_ID]);
-/**
- * Not offered to users: the integration fixture stays runnable for the parity scenarios, and
- * the live session publishes its own tensions (a popcorn session's tick runs that recipe).
- */
-const UNLISTED_RECIPES = new Set([INTEGRATION_RECIPE_ID, POPCORN_TENSIONS_RECIPE_ID]);
+/** Recipes that run only from their own feature: an assessment, and a popcorn tick's live tensions. */
+export const INTERNAL_RECIPES = new Set([ASSESSMENT_RECIPE_ID, POPCORN_TENSIONS_RECIPE_ID]);
+/** Not offered to users: the integration fixture stays runnable for the parity scenarios. */
+const UNLISTED_RECIPES = new Set([INTEGRATION_RECIPE_ID]);
 /** Client idempotency keys live apart from the keys the platform makes itself. */
 export const CLIENT_KEY_PREFIX = "client:";
 export const MAX_PAGE = 200;
@@ -560,8 +557,7 @@ export async function listAnalysisObjects(
           MAP_TYPES.includes(String(o.type)),
         )
       : [];
-    // A pinned snapshot as the host last left it: the rows the room is pinned to, each at the
-    // revision the host's next edit names, so an edit shows and the next one does not conflict.
+    // A pinned snapshot's rows at their current revision: an edit shows, the next one names it.
     if (query.latest && query.snapshot_id && entries.length) {
       const heads = await store.currentRevisions(projectId);
       entries = entries.flatMap((e) => {

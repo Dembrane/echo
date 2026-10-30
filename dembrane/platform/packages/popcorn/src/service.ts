@@ -41,7 +41,13 @@ import {
   syntheticFrameLocked,
   translationTargets,
 } from "./settings";
-import { freshState, isSyntheticSession, normalizeState, stateCounts } from "./state";
+import {
+  freshState,
+  isSyntheticSession,
+  normalizeState,
+  owesPublication,
+  stateCounts,
+} from "./state";
 import {
   client,
   type PopcornStore,
@@ -855,8 +861,9 @@ export async function bundleForReport(
   });
   // Checked before translation, which rewords the quotes their ids were derived from.
   reportRoomViolations(d.logger, key, dict(bundle.files));
-  // A host looking at slides the results cannot list yet, with no live read to publish them.
-  if (host && loop && hasProvisional(dict(bundle.files))) bookPublish(d, loop);
+  // A host looking at unpublished slides books a read, only when it has something to publish.
+  if (host && loop && hasProvisional(dict(bundle.files)) && owesPublication(state))
+    bookPublish(d, loop);
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));
   bundle = curatePresentation(bundle, settings);

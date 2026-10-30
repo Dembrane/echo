@@ -61,7 +61,7 @@ export class Publisher {
     private readonly hostNote = "",
   ) {}
 
-  /** Throws when the store cannot answer: that is not the legacy writer's scope, and nothing is settled on it. */
+  /** Throws when the store cannot answer: an unanswered scope settles nothing. */
   private async mayWrite(recipeId: string, scopeKey: string): Promise<boolean> {
     const key = `${recipeId}@${scopeKey}`;
     let owns = this.owned.get(key);
@@ -276,12 +276,7 @@ const overlap = (a: readonly Passage[], b: readonly Passage[]) => {
   return shared;
 };
 
-/**
- * Each tension with the identity it keeps: its own when that is already published, else that
- * of the published tension whose two poles rest most on the same passages (either way round),
- * first come in rank order. Positions are worded anew on every read, so an identity from words
- * alone would make a new object each time, and the host's hide or edit would leave with it.
- */
+/** Each tension keeps the published identity whose poles rest most on the same passages. */
 export function carriedIdentities(
   tensions: readonly SessionTension[],
   published: readonly DeckRevision[],

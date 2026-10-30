@@ -113,3 +113,22 @@ export function stateCounts(state: Json): Json {
     run: state.run ?? null,
   };
 }
+
+/** A publishing read has something to publish: a finished conversation's phrases or the tensions. */
+export function owesPublication(state: Json): boolean {
+  return (
+    unpublishedTensions(state) ||
+    Object.values(dict(state.conversations)).some(
+      (c) => isRecord(c) && truthy(c.done) && c.published_revision !== (c.revision ?? null),
+    )
+  );
+}
+
+/** The session holds a tensions slide that has not reached the shared store as it stands. */
+export function unpublishedTensions(state: Json): boolean {
+  const analysis = dict(state.analysis);
+  return (
+    truthy(analysis.tensions) &&
+    dict(analysis.published).tensions !== (dict(analysis.fingerprints).tensions ?? null)
+  );
+}

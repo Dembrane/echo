@@ -402,7 +402,6 @@ export async function publishOpening(
 export async function availableBindings(
   d: PopcornDeps,
   map: MapStore,
-  _report: Row,
   projectId: string,
 ): Promise<Record<string, string>> {
   const bindings: Record<string, string> = {};
@@ -438,7 +437,7 @@ export async function adoptResults(
 ): Promise<void> {
   // Looking for results reads outside the lock; what is bound now is read inside it, so a
   // binding the host adopted meanwhile is never replaced by an older one.
-  const available = await availableBindings(d, map, report, projectId);
+  const available = await availableBindings(d, map, projectId);
   if (!Object.keys(available).length) return;
   await settingsLock(d, String(report.id), async (store, tx) => {
     const manifest = dict((await loadSettingsFor(store, report)).presentation);
