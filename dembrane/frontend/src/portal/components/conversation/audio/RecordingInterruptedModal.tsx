@@ -1,19 +1,17 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Loader, Modal, Stack, Text } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { WarningIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 
 type RecordingInterruptedModalProps = {
 	opened: boolean;
-	isUploading: boolean;
 	isReconnecting: boolean;
 	onReconnect: () => void;
 };
 
-/** The recorder lost audio; the only way on is to reconnect. */
+/** The recorder lost audio; the only way on is to reconnect. Queued audio sends after the reload. */
 export const RecordingInterruptedModal = ({
 	opened,
-	isUploading,
 	isReconnecting,
 	onReconnect,
 }: RecordingInterruptedModalProps) => (
@@ -47,22 +45,10 @@ export const RecordingInterruptedModal = ({
 				</Trans>
 			</Text>
 
-			{/* Uploading indicator - same pattern as StopRecordingConfirmationModal */}
-			{isUploading && (
-				<Group gap="xs" justify="flex-start" py="xs">
-					<Loader size="sm" />
-					<Text size="sm" c="dimmed">
-						<Trans id="participant.modal.interruption.uploading">
-							Uploading audio...
-						</Trans>
-					</Text>
-				</Group>
-			)}
-
 			<Button
 				onClick={onReconnect}
 				loading={isReconnecting}
-				disabled={isReconnecting || isUploading}
+				disabled={isReconnecting}
 				fullWidth
 				variant="filled"
 				size="lg"

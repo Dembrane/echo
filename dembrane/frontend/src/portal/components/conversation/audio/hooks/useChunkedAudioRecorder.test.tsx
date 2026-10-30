@@ -5,10 +5,12 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 /** jsdom has no MediaRecorder and no Audio playback. The hook module reads
  * MediaRecorder at import time, so both fakes have to exist before the import
  * below runs. */
-const { getUserMedia, recorderFailure } = vi.hoisted(() => {
+const { getUserMedia, recorderFailure, recorders } = vi.hoisted(() => {
 	// lets a test simulate an unsupported-mimeType constructor throw (Safari)
 	// or a start() that throws after the ref was already assigned
 	const recorderFailure = { failNextConstruct: false, failNextStart: false };
+
+	const recorders: FakeMediaRecorder[] = [];
 
 	class FakeMediaRecorder {
 		static isTypeSupported = () => true;
@@ -23,6 +25,7 @@ const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 				recorderFailure.failNextConstruct = false;
 				throw new Error("mimeType not supported");
 			}
+			recorders.push(this);
 		}
 		start() {
 			if (recorderFailure.failNextStart) {
@@ -62,7 +65,7 @@ const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 		value: { getUserMedia },
 	});
 
-	return { getUserMedia, recorderFailure };
+	return { getUserMedia, recorderFailure, recorders };
 });
 
 import useChunkedAudioRecorder from "./useChunkedAudioRecorder";
@@ -82,6 +85,7 @@ beforeEach(() => {
 	getUserMedia.mockReset();
 	recorderFailure.failNextConstruct = false;
 	recorderFailure.failNextStart = false;
+	recorders.length = 0;
 });
 
 afterEach(() => {
@@ -273,4 +277,31 @@ it("recovers when recorder.start() fails after the ref was assigned", async () =
 		result.current.stopRecording();
 	});
 	consoleError.mockRestore();
+});
+
+it("resolves stopRecording once the last chunk is handed over", async () => {
+	getUserMedia.mockResolvedValue(fakeStream);
+	const order: string[] = [];
+	const { result } = renderHook(() =>
+		useChunkedAudioRecorder({ onChunk: () => order.push("chunk") }),
+	);
+	await act(async () => {
+		await result.current.startRecording();
+	});
+	act(() =>
+		recorders
+			.at(-1)
+			?.ondataavailable?.({ data: new Blob([new Uint8Array(2048)]) }),
+	);
+
+	await act(async () => {
+		const stopped = result.current.stopRecording();
+		// A second stop, before onstop has run, waits on the same chunk.
+		await Promise.all([
+			stopped.then(() => order.push("stopped")),
+			result.current.stopRecording(),
+		]);
+	});
+
+	expect(order).toEqual(["chunk", "stopped"]);
 });

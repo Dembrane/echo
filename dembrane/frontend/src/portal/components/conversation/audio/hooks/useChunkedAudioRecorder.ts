@@ -21,7 +21,8 @@ type UseAudioRecorderOptions = {
 type UseAudioRecorderResult = {
 	/** Resolves true only when recording actually started. */
 	startRecording: (initialTime?: number) => Promise<boolean>;
-	stopRecording: () => void;
+	/** Resolves once the recorder has handed over its last chunk. */
+	stopRecording: () => Promise<void>;
 	pauseRecording: () => void;
 	resumeRecording: () => void;
 	isRecording: boolean;
@@ -198,6 +199,8 @@ const useChunkedAudioRecorder = ({
 	}, []);
 
 	const chunkBufferRef = useRef<Blob[]>([]);
+	// The recorder hands over its last chunk in onstop, a moment after stop().
+	const handedOverRef = useRef<Promise<void>>(Promise.resolve());
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	const startRecordingChunk = useCallback(() => {
@@ -464,11 +467,19 @@ const useChunkedAudioRecorder = ({
 	const stopRecording = () => {
 		startTokenRef.current += 1;
 		isRecordingRef.current = false;
-		if (
-			mediaRecorderRef.current &&
-			mediaRecorderRef.current.state === "recording"
-		) {
-			mediaRecorderRef.current.stop();
+		const recorder = mediaRecorderRef.current;
+		if (recorder && recorder.state === "recording") {
+			handedOverRef.current = new Promise((resolve) => {
+				const onstop = recorder.onstop;
+				recorder.onstop = (event) => {
+					try {
+						onstop?.call(recorder, event);
+					} finally {
+						resolve();
+					}
+				};
+			});
+			recorder.stop();
 		}
 		setIsRecording(false);
 		setIsPaused(false);
@@ -498,6 +509,8 @@ const useChunkedAudioRecorder = ({
 			track.stop();
 		});
 		streamRef.current = null;
+		// A second stop while the first is still handing over waits on the same chunk.
+		return handedOverRef.current;
 	};
 
 	const pauseRecording = () => {

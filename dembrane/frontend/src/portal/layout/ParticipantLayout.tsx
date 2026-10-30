@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { logoUrl } from "@/lib/avatar";
+import { OutboxProvider } from "@/portal/components/conversation/audio/outbox/OutboxProvider";
 import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { Toaster } from "../../components/common/Toaster";
 import { I18nProvider } from "../../components/layout/I18nProvider";
@@ -25,28 +26,34 @@ export const ParticipantLayout = () => {
 		setLogoUrl(logoUrl(projectQuery.data?.whitelabel_logo_url) ?? null);
 	}, [projectQuery.data, setLogoUrl]);
 
+	// The outbox wraps every portal page, so audio left unsent by an earlier
+	// visit goes out from whichever page the participant opens next.
 	if (isReportPage) {
 		return (
-			<I18nProvider>
-				<Toaster />
-				<main className="relative min-h-dvh">
-					<Outlet />
-				</main>
-			</I18nProvider>
+			<OutboxProvider>
+				<I18nProvider>
+					<Toaster />
+					<main className="relative min-h-dvh">
+						<Outlet />
+					</main>
+				</I18nProvider>
+			</OutboxProvider>
 		);
 	}
 
 	return (
-		<I18nProvider>
-			<Toaster />
-			<main className="relative !h-dvh overflow-y-auto">
-				<div className="flex h-full flex-col">
-					<ParticipantHeader />
-					<main className="relative grow">
-						<Outlet />
-					</main>
-				</div>
-			</main>
-		</I18nProvider>
+		<OutboxProvider>
+			<I18nProvider>
+				<Toaster />
+				<main className="relative !h-dvh overflow-y-auto">
+					<div className="flex h-full flex-col">
+						<ParticipantHeader />
+						<main className="relative grow">
+							<Outlet />
+						</main>
+					</div>
+				</main>
+			</I18nProvider>
+		</OutboxProvider>
 	);
 };

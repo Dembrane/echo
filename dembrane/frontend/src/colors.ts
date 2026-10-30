@@ -307,6 +307,8 @@ export const lightRoles = {
 	text: "#2d2d2c",
 	warning: "#7a5200",
 	warningFill: "#7a5200",
+	/** Warning as a mark, not text (the recording meter): the bright amber that dark uses for text. */
+	warningMark: "#e9bd5c",
 	warningTint: "#f9e7bc",
 } as const;
 
@@ -339,6 +341,7 @@ export const darkRoles: Record<keyof typeof lightRoles, string> = {
 	text: "#f6f4f1",
 	warning: "#e9bd5c",
 	warningFill: "#7a5200",
+	warningMark: "#e9bd5c",
 	warningTint: "#332a16",
 };
 
