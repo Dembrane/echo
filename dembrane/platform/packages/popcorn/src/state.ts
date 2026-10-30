@@ -70,6 +70,8 @@ export function normalizeState(raw: unknown): Json {
   }
   // The transcripts the last map request covered.
   if (typeof raw.map_fingerprint === "string") state.map_fingerprint = raw.map_fingerprint;
+  // What the last publishing read found owed and could not publish (owesPublication).
+  if (typeof raw.publish_idle === "string") state.publish_idle = raw.publish_idle;
   return state;
 }
 
@@ -114,14 +116,23 @@ export function stateCounts(state: Json): Json {
   };
 }
 
-/** A publishing read has something to publish: a finished conversation's phrases or the tensions. */
-export function owesPublication(state: Json): boolean {
-  return (
-    unpublishedTensions(state) ||
-    Object.values(dict(state.conversations)).some(
-      (c) => isRecord(c) && truthy(c.done) && c.published_revision !== (c.revision ?? null),
+/** What a publishing read is owed, as one key: finished conversations' phrases and the tensions. */
+export function owedKey(state: Json): string {
+  const owed = Object.entries(dict(state.conversations))
+    .filter(
+      ([, c]) => isRecord(c) && truthy(c.done) && c.published_revision !== (c.revision ?? null),
     )
-  );
+    .map(([cid, c]) => `${cid}:${pyStr(dict(c).revision ?? null)}`)
+    .sort();
+  if (unpublishedTensions(state))
+    owed.push(`tensions:${pyStr(dict(dict(state.analysis).fingerprints).tensions ?? null)}`);
+  return owed.join(" ");
+}
+
+/** A publishing read has something to publish it has not already found it cannot. */
+export function owesPublication(state: Json): boolean {
+  const key = owedKey(state);
+  return key !== "" && key !== state.publish_idle;
 }
 
 /** The session holds a tensions slide that has not reached the shared store as it stands. */

@@ -12,10 +12,10 @@ import { loadTranscripts, modelDeployment, producerServices } from "./services";
 
 /**
  * A live session's tensions as shared analysis objects. The tick finds them (positions,
- * pairs, verification, writing) and this recipe asks no language model (it only embeds text
- * it has not embedded before): it publishes what the room is shown, so the room, the results
- * table and the Map read the same objects. Scope
- * `project`, one output per project, beside the host's own `tensions` recipe.
+ * pairs, verification, writing); this recipe asks no language model, only embedding text it
+ * has not embedded before. It publishes what the room is shown, so the room, the results
+ * table and the Map read the same objects. Scope `project`, one output per project, beside
+ * the host's own `tensions` recipe.
  */
 
 export const RECIPE_ID = "popcorn.tensions";

@@ -43,7 +43,7 @@ import {
 import {
   freshState,
   normalizeState,
-  owesPublication,
+  owedKey,
   referencedQuoteIds,
   unpublishedTensions,
 } from "../state";
@@ -87,7 +87,7 @@ import {
 } from "./tensions";
 import { errText, f, failureText, Mutex, Semaphore, settle, sha1Hex, withTimeout } from "./util";
 
-export { owesPublication, unpublishedTensions };
+export { unpublishedTensions };
 
 /**
  * The popcorn tick (popcorn ticks.py): gather every conversation, pop the changed ones,
@@ -1652,6 +1652,11 @@ export async function runPopcornTick(
           d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
           translated = null;
         }
+      // What this publishing read could not publish is not booked again until it changes.
+      if (publishOnly && state.publish_idle !== owedKey(state)) {
+        state.publish_idle = owedKey(state);
+        await translationWriter.flush();
+      }
       await kept.save();
       if (translated) {
         const run = await createRun(d, {
@@ -1858,6 +1863,7 @@ export async function runPopcornTick(
           tensions: dict(analysis.fingerprints).tensions ?? null,
         };
     }
+    if (publishOnly) state.publish_idle = owedKey(state);
     if (transcripts.length) {
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();

@@ -115,6 +115,7 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
       }),
       // A popcorn run requested outside a tick reads its session from the popcorn report.
       [POPCORN_SOURCES_KEY]: sessionSources(store),
+      // A queued live-tensions run the sweep redispatches publishes its pinned tensions; this reads its transcripts.
       [POPCORN_TENSIONS_SOURCES_KEY]: sessionTensionSources(store),
     },
     logger: d.logger,

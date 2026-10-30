@@ -23,6 +23,7 @@ import {
   withoutObjects,
 } from "../src/deck";
 import type { Json } from "../src/py";
+import { normalizeState, owesPublication } from "../src/state";
 import { Publisher } from "../src/tick/publish";
 import { runPopcornTick, unpublishedConversations, unpublishedTensions } from "../src/tick/run";
 import { QuoteBook } from "../src/tick/shapes";
@@ -488,6 +489,54 @@ run("the room and the host's results read the same objects", () => {
     await publisher([]).conversation(state, transcript);
     expect(((state.conversations as Json)[cid] as Json).published_revision).toBe(3);
     expect(unpublishedConversations(state, [transcript]).length).toBe(0);
+  });
+
+  test("a publishing read that can publish nothing owed stops the deck asking again", async () => {
+    const [t] = transcripts;
+    // Owed but unpublishable: a deleted conversation, and one whose transcript changed after
+    // it was read (late audio). Neither is published by a read that reads nothing new.
+    const state = {
+      version: 1,
+      run: 4,
+      order: [String(t?.id)],
+      conversations: {
+        "c9000000-0000-4000-8000-000000000009": { done: true, revision: 1, items: [] },
+        [String(t?.id)]: { done: true, revision: 2, fingerprint: "before-late-audio", items: [] },
+      },
+      quotes: [],
+      analysis: {},
+    };
+    await raw`update agent_loop set status = 'paused', popcorn_state = ${raw.json(state as never)}
+      where id = ${ids.loop}`;
+    expect(owesPublication(state)).toBe(true);
+    const completer = new FakeCompleter();
+    const read = await runPopcornTick(
+      {
+        ...tickDeps(
+          {
+            db: database.db,
+            logger: quiet,
+            completer,
+            flags: { present: true, canvas: true },
+            participantBaseUrl: "http://localhost:5174",
+            adminBaseUrl: "http://localhost:5173",
+            databaseUrl: "unused",
+            analysis: () => ({ deck: deck(), executor: deps }),
+          },
+          "publish-nothing-owed",
+          { deck: deck(), executor: deps },
+        ),
+        heartbeatMs: 50,
+      },
+      ids.loop,
+      "publish",
+      newId(),
+    );
+    expect(read.status).toBe("no_op");
+    expect(completer.calls.length).toBe(0);
+    const [loop] = await raw`select popcorn_state from agent_loop where id = ${ids.loop}`;
+    // As the deck reads it: normalised.
+    expect(owesPublication(normalizeState(loop?.popcorn_state))).toBe(false);
   });
 
   test("a session whose live reads ended publishes its held tensions when a host asks, without the model", async () => {

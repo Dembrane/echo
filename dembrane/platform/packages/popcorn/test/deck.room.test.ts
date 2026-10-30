@@ -11,7 +11,7 @@ import {
 import type { Json } from "../src/py";
 import { RoomRulesBroken, reportRoomViolations, roomViolations } from "../src/room";
 import { bookPublish, hasProvisional, type PopcornDeps } from "../src/service";
-import { owesPublication } from "../src/tick/run";
+import { normalizeState, owedKey, owesPublication } from "../src/state";
 
 /**
  * What the room may be shown, as rules every built deck keeps. Each rule closes a way the
@@ -330,6 +330,15 @@ describe("a host looking at provisional slides books a publishing read", () => {
     // Published, still being read, or settled for the legacy writer: nothing to publish.
     expect(owesPublication(done({ published_revision: 2 }))).toBe(false);
     expect(owesPublication({ conversations: { c1: { done: false, revision: 2 } } })).toBe(false);
+    // What a publishing read found it could not publish is not asked for again; anything new is.
+    const tried = done({});
+    const idle = { ...tried, publish_idle: owedKey(tried) };
+    expect(owesPublication(idle)).toBe(false);
+    // The deck reads the state normalised: the mark survives that.
+    expect(owesPublication(normalizeState({ ...idle, order: [], quotes: [] }))).toBe(false);
+    expect(owesPublication({ ...idle, conversations: { c1: { done: true, revision: 3 } } })).toBe(
+      true,
+    );
     // A stakeholders slide is not the publishing read's to publish.
     expect(owesPublication({ analysis: { stakeholders: { stakeholders: [] } } })).toBe(false);
   });
