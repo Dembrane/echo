@@ -1196,7 +1196,7 @@ msgstr "1 Stunde"
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. Sie geben eine URL an, an die Sie Benachrichtigungen erhalten möchten"
 
-#: src/components/pricing/questions.ts:189
+#: src/components/pricing/questions.ts:187
 msgid "16 to 40."
 msgstr "16 bis 40."
 
@@ -1204,7 +1204,7 @@ msgstr "16 bis 40."
 msgid "2 months ago"
 msgstr "vor 2 Monaten"
 
-#: src/components/pricing/questions.ts:187
+#: src/components/pricing/questions.ts:185
 msgid "2 to 5."
 msgstr "2 bis 5."
 
@@ -1217,7 +1217,7 @@ msgstr "2. Wenn ein Gesprächs- oder Berichtereignis eintritt, senden wir die Da
 msgid "24 hours"
 msgstr "24 Stunden"
 
-#: src/components/pricing/questions.ts:175
+#: src/components/pricing/questions.ts:173
 msgid "250 to 1000."
 msgstr "250 bis 1000."
 
@@ -1233,11 +1233,11 @@ msgstr "vor 3 Monaten"
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Ihr System empfängt die Daten und kann darauf reagieren (z.B. in eine Datenbank speichern, eine E-Mail senden, ein Spreadsheet aktualisieren)"
 
-#: src/components/pricing/questions.ts:174
+#: src/components/pricing/questions.ts:172
 msgid "50 to 250."
 msgstr "50 bis 250."
 
-#: src/components/pricing/questions.ts:188
+#: src/components/pricing/questions.ts:186
 msgid "6 to 15."
 msgstr "6 bis 15."
 
@@ -1331,6 +1331,10 @@ msgstr "Ein Projekt bündelt alles zu einem Thema. Teilen Sie den Link mit Teiln
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Eine öffentliche Seite braucht einen höheren Plan. Schalte Öffentliche Seite unter Teilen aus, um die anderen Änderungen zu zeigen."
 
+#: src/components/pricing/questions.ts:163
+#~ msgid "A record of your meetings."
+#~ msgstr "Ein Protokoll eurer Besprechungen."
+
 #: src/components/report/UpdateReportModalButton.tsx:252
 #: src/components/report/CreateReportForm.tsx:157
 msgid "A report is already being generated for this project. Please wait for it to complete."
@@ -1381,9 +1385,17 @@ msgstr "Eine kurze Beschreibung in der Organisationsübersicht."
 msgid "A smoother conversation workspace"
 msgstr "Ein flüssigerer Gesprächsbereich"
 
+#: src/components/pricing/questions.ts:158
+#~ msgid "A stand people walk up to."
+#~ msgstr "Ein Stand, an den Leute herantreten."
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:303
 msgid "A switch without words shows nothing on the screen."
 msgstr "Ein Schalter ohne Text blendet auf dem Bildschirm nichts ein."
+
+#: src/components/pricing/questions.ts:141
+#~ msgid "A talk, then conversations at tables of six to ten, read back to the room at the end."
+#~ msgstr "Erst ein Vortrag, dann Gespräche an Tischen mit sechs bis zehn Personen, am Ende dem ganzen Saal vorgelesen."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
@@ -1398,6 +1410,10 @@ msgstr "Ein Tippfehler"
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "ein Arbeitsbereich"
+
+#: src/components/pricing/questions.ts:168
+#~ msgid "A year of work."
+#~ msgstr "Ein Jahr voller Arbeit."
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:521
 msgid "About the suggested project update: {hostNote}"
@@ -2070,6 +2086,10 @@ msgstr "Alle sichtbaren Gespräche ausgewählt"
 msgid "All workspaces"
 msgstr "Alle Arbeitsbereiche"
 
+#: src/components/pricing/questions.ts:148
+msgid "All year."
+msgstr "Das ganze Jahr."
+
 #: src/components/release/releases.ts:48
 msgid "All-new Present features: show live results on a big screen during your session."
 msgstr "Ganz neue Funktionen in Präsentieren: Zeigen Sie während Ihrer Sitzung Live-Ergebnisse auf einem großen Bildschirm."
@@ -2136,7 +2156,7 @@ msgstr "In diesem Chat bereits verwendet"
 msgid "Also allow it to change project settings"
 msgstr "Auch Änderungen der Projekteinstellungen erlauben"
 
-#: src/components/pricing/questions.ts:160
+#: src/components/pricing/questions.ts:158
 msgid "Always on, it lives on our website"
 msgstr "Dauerhaft aktiv, direkt auf unserer Website"
 
@@ -2161,9 +2181,13 @@ msgstr "Beträge entsprechen standardmäßig den Plätzen des Kontos multiplizie
 msgid "An AI assistant you connect, and the company that runs it, will receive the conversations and projects you allow. dembrane is not responsible for what they do with that data. You can revoke a connection at any time."
 msgstr "Ein von Ihnen verbundener KI-Assistent und dessen Anbieter erhalten Zugriff auf die von Ihnen freigegebenen Gespräche und Projekte. dembrane übernimmt keine Verantwortung für den Umgang mit diesen Daten. Sie können eine Verbindung jederzeit widerrufen."
 
+#: src/components/pricing/questions.ts:153
+#~ msgid "An assembly over several sessions."
+#~ msgstr "Eine Versammlung über mehrere Sitzungen."
+
 #: src/components/pricing/questions.ts:141
-msgid "An assembly."
-msgstr "Eine Versammlung."
+#~ msgid "An assembly."
+#~ msgstr "Eine Versammlung."
 
 #: src/components/results/ResultItem.tsx:289
 msgid "An earlier wording restored"
@@ -2194,8 +2218,8 @@ msgid "An error occurred."
 msgstr "Ein Fehler ist aufgetreten."
 
 #: src/components/pricing/questions.ts:140
-msgid "An event or a workshop."
-msgstr "Eine Veranstaltung oder ein Workshop."
+#~ msgid "An event or a workshop."
+#~ msgstr "Eine Veranstaltung oder ein Workshop."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
@@ -2360,11 +2384,11 @@ msgstr "Alle mit dem Link können ihn lesen. Ohne Anmeldung und ohne Transkripte
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Jeder mit dem Link kann zuschauen. Keine Anmeldung erforderlich, keine Transkripte."
 
-#: src/components/pricing/questions.ts:212
+#: src/components/pricing/questions.ts:210
 msgid "Anything else you might need?"
 msgstr "Benötigen Sie noch etwas?"
 
-#: src/components/pricing/questions.ts:207
+#: src/components/pricing/questions.ts:205
 msgid "Anything else you'd like to share"
 msgstr "Möchten Sie uns noch etwas mitteilen?"
 
@@ -2672,7 +2696,7 @@ msgstr "Mindestens ein Thema muss ausgewählt werden, um Verify zu aktivieren"
 msgid "At the end of this period"
 msgstr "Am Ende dieses Zeitraums"
 
-#: src/components/pricing/questions.ts:184
+#: src/components/pricing/questions.ts:182
 msgid "At your busiest moment, how many conversations will be running at once?"
 msgstr "Wie viele Gespräche laufen zu Spitzenzeiten gleichzeitig?"
 
@@ -3876,8 +3900,8 @@ msgid "Colleagues you invite can explore conversations, share insights, and buil
 msgstr "Eingeladene Kollegen können Gespräche erkunden, Erkenntnisse teilen und gemeinsam mit Ihnen Berichte erstellen."
 
 #: src/components/pricing/questions.ts:149
-msgid "Collecting people's stories without you being there, like an audio-based survey."
-msgstr "Erzählungen von Menschen sammeln, ohne dass Sie vor Ort sind – wie eine Audio-Umfrage."
+#~ msgid "Collecting people's stories without you being there, like an audio-based survey."
+#~ msgstr "Erzählungen von Menschen sammeln, ohne dass Sie vor Ort sind – wie eine Audio-Umfrage."
 
 #: src/components/settings/AuditLogsCard.tsx:195
 msgid "Collection"
@@ -4295,6 +4319,10 @@ msgstr "Gespräche"
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gespräche"
+
+#: src/components/pricing/questions.ts:143
+#~ msgid "Conversations at tables, with a synthesis at the end."
+#~ msgstr "Gespräche an Tischen, mit einer Synthese am Ende."
 
 #: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
@@ -5218,6 +5246,10 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane – der Standard"
 
+#: src/components/pricing/questions.ts:146
+msgid "dembrane all year, for as many events and meetings as you need."
+msgstr "dembrane das ganze Jahr, für so viele Veranstaltungen und Besprechungen, wie Sie brauchen."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane bei Ihrem Event?"
@@ -6115,7 +6147,7 @@ msgstr "Geschätzte Gesamtsumme: €{estimated}"
 msgid "EU hosted LLMs included"
 msgstr "In der EU gehostete LLMs inbegriffen"
 
-#: src/components/pricing/questions.ts:217
+#: src/components/pricing/questions.ts:215
 msgid "Event help from the dembrane team"
 msgstr "Event-Unterstützung durch das dembrane-Team"
 
@@ -6156,7 +6188,7 @@ msgstr "Jeder verbundene Agent in {0} stoppt sofort. Mitglieder behalten ihre Ve
 msgid "Every member's connection that names this organisation."
 msgstr "Jede Verbindung eines Mitglieds, die diese Organisation nennt."
 
-#: src/components/pricing/questions.ts:158
+#: src/components/pricing/questions.ts:156
 msgid "Every week for a year"
 msgstr "Ein Jahr lang jede Woche"
 
@@ -6812,6 +6844,10 @@ msgstr "Für <0>{0}</0>"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:420
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Für erfahrene Benutzer: Ein Geheimnis-Schlüssel, um die Authentizität des Webhooks zu verifizieren. Nur erforderlich, wenn Ihr Empfangs-Dienst Signatur-Verifizierung benötigt."
+
+#: src/components/pricing/questions.ts:143
+msgid "For an event."
+msgstr "Für eine Veranstaltung."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:534
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:137
@@ -7473,7 +7509,7 @@ msgstr "Wie dembrane Ihr Transkript verbessert"
 msgid "How it works:"
 msgstr "Wie es funktioniert:"
 
-#: src/components/pricing/questions.ts:171
+#: src/components/pricing/questions.ts:169
 msgid "How many recordings do you expect in your first year?"
 msgstr "Wie viele Aufnahmen erwarten Sie in Ihrem ersten Jahr?"
 
@@ -7491,7 +7527,7 @@ msgstr "Wie sollen die Sätze klingen?"
 #~ "* Was ist das übergeordnete Ziel oder die wichtigste Kennzahl\n"
 #~ "* Wie sieht Erfolg aus"
 
-#: src/components/pricing/questions.ts:163
+#: src/components/pricing/questions.ts:161
 msgid "However you would say it. A date, a season, or that you do not know yet."
 msgstr "Ganz wie Sie möchten. Ein Datum, eine Jahreszeit oder dass Sie es noch nicht wissen."
 
@@ -7507,7 +7543,7 @@ msgstr "Ich habe das Canvas angewendet."
 msgid "I applied the goal."
 msgstr "Ich habe das Ziel übernommen."
 
-#: src/components/pricing/questions.ts:198
+#: src/components/pricing/questions.ts:196
 msgid "I have lots of big events coming up"
 msgstr "Ich habe viele große Veranstaltungen vor mir"
 
@@ -7515,11 +7551,11 @@ msgstr "Ich habe viele große Veranstaltungen vor mir"
 msgid "I have read and accept the <0>terms</0>"
 msgstr "Ich habe die <0>Nutzungsbedingungen</0> gelesen und akzeptiere sie"
 
-#: src/components/pricing/questions.ts:201
+#: src/components/pricing/questions.ts:199
 msgid "I need a specific language to be supported"
 msgstr "Ich benötige Unterstützung für eine bestimmte Sprache"
 
-#: src/components/pricing/questions.ts:203
+#: src/components/pricing/questions.ts:201
 msgid "I need strict privacy guarantees"
 msgstr "Ich benötige strenge Datenschutzgarantien"
 
@@ -7537,7 +7573,7 @@ msgstr "Ich verstehe"
 msgid "I understand that {0} and its provider will receive this data"
 msgstr "Ich verstehe, dass {0} und dessen Anbieter diese Daten erhalten"
 
-#: src/components/pricing/questions.ts:161
+#: src/components/pricing/questions.ts:159
 msgid "I will know in a week or two"
 msgstr "Ich weiß es in ein oder zwei Wochen"
 
@@ -8115,7 +8151,7 @@ msgstr "Einen Moment bitte"
 msgid "just now"
 msgstr "Gerade eben"
 
-#: src/components/pricing/questions.ts:186
+#: src/components/pricing/questions.ts:184
 msgid "Just one."
 msgstr "Nur eine."
 
@@ -9227,11 +9263,11 @@ msgstr "Zuverlässiger anonymisieren und aufnehmen"
 msgid "More reliable conversation summaries"
 msgstr "Zuverlässigere Gesprächszusammenfassungen"
 
-#: src/components/pricing/questions.ts:176
+#: src/components/pricing/questions.ts:174
 msgid "More than 1000."
 msgstr "Mehr als 1000."
 
-#: src/components/pricing/questions.ts:190
+#: src/components/pricing/questions.ts:188
 msgid "More than 40."
 msgstr "Mehr als 40."
 
@@ -10236,8 +10272,8 @@ msgstr "Nicht festgelegt"
 msgid "Not started"
 msgstr "Nicht gestartet"
 
-#: src/components/pricing/questions.ts:177
-#: src/components/pricing/questions.ts:191
+#: src/components/pricing/questions.ts:175
+#: src/components/pricing/questions.ts:189
 msgid "Not sure yet."
 msgstr "Noch nicht sicher."
 
@@ -10421,7 +10457,7 @@ msgstr "Sobald Sie {objectLabel} erhalten haben, lesen Sie es laut vor und teile
 msgid "One at a time"
 msgstr "Eine nach der anderen"
 
-#: src/components/pricing/questions.ts:159
+#: src/components/pricing/questions.ts:157
 msgid "One big event at the end of the year"
 msgstr "Ein großes Event am Ende des Jahres"
 
@@ -10430,9 +10466,13 @@ msgstr "Ein großes Event am Ende des Jahres"
 msgid "one conversation only"
 msgstr "nur aus einem Gespräch"
 
-#: src/components/pricing/questions.ts:156
+#: src/components/pricing/questions.ts:154
 msgid "One day in October"
 msgstr "Ein Tag im Oktober"
+
+#: src/components/pricing/questions.ts:141
+msgid "One event or a series, each with its own date."
+msgstr "Eine Veranstaltung oder eine Reihe, jede mit eigenem Datum."
 
 #: src/components/auth/PasswordRequirements.tsx:63
 msgid "One lowercase letter"
@@ -10468,6 +10508,10 @@ msgstr "Ein Großbuchstabe"
 #: src/routes/admin/AdminSettingsRoute.tsx:2626
 msgid "One-off"
 msgstr "Einmalig"
+
+#: src/components/pricing/questions.ts:156
+#~ msgid "One-to-one conversations with passers-by, at a stand or an exhibition."
+#~ msgstr "Gespräche unter vier Augen mit Passanten, an einem Stand oder in einer Ausstellung."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:345
 msgid "Ongoing"
@@ -11827,7 +11871,7 @@ msgstr "<0>{totalCount, plural, one {# Unterhaltung} other {# Unterhaltungen}}</
 msgid "Processing your retranscription request..."
 msgstr "Ihre Hertranskription anfragen werden verarbeitet..."
 
-#: src/components/pricing/questions.ts:222
+#: src/components/pricing/questions.ts:220
 msgid "Procurement help"
 msgstr "Beschaffungshilfe"
 
@@ -12083,6 +12127,10 @@ msgstr "Fragen zur Funktionsweise von dembrane, nicht nur zu Ihren Daten."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:99
 msgid "Queued"
 msgstr "In der Warteschlange"
+
+#: src/components/pricing/questions.ts:146
+#~ msgid "Quick conversations between talks, put on screen while the panel speaks."
+#~ msgstr "Kurze Gespräche zwischen den Vorträgen, auf dem Bildschirm, während das Podium spricht."
 
 #: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
@@ -12376,12 +12424,12 @@ msgid "Recording checks the audio upload connection."
 msgstr "Die Aufnahme prüft die Audio-Upload-Verbindung."
 
 #: src/components/pricing/questions.ts:142
-msgid "Recording conference sessions."
-msgstr "Aufzeichnung von Konferenz-Sessions."
+#~ msgid "Recording conference sessions."
+#~ msgstr "Aufzeichnung von Konferenz-Sessions."
 
 #: src/components/pricing/questions.ts:145
-msgid "Recording conversations you have in person, like street interviews."
-msgstr "Persönliche Gespräche aufzeichnen, z. B. Straßeninterviews."
+#~ msgid "Recording conversations you have in person, like street interviews."
+#~ msgstr "Persönliche Gespräche aufzeichnen, z. B. Straßeninterviews."
 
 #: src/components/release/releaseHistory.ts:490
 msgid "Recording devices stay awake more reliably."
@@ -14196,6 +14244,10 @@ msgstr "Einstellungen aktualisiert"
 msgid "Setup"
 msgstr "Einrichtung"
 
+#: src/components/pricing/questions.ts:166
+#~ msgid "Several of these, spread across the year."
+#~ msgstr "Mehrere davon, über das Jahr verteilt."
+
 #: src/components/release/releaseHistory.ts:411
 msgid "Shape how participants verify outcomes"
 msgstr "Gestalte die Überprüfung von Ergebnissen"
@@ -14297,6 +14349,10 @@ msgstr "Teilen Sie diesen Login mit einer Kollegin oder einem Kollegen? Eine Adm
 #: src/routes/project/present/PresentRoute.tsx:220
 msgid "Short phrases from the conversations"
 msgstr "Kurze Phrasen aus den Gesprächen"
+
+#: src/components/pricing/questions.ts:148
+#~ msgid "Short rounds that feed a panel on stage."
+#~ msgstr "Kurze Runden, die ein Podium auf der Bühne speisen."
 
 #: src/components/conversation/useConversationList.ts:28
 msgid "Shortest first"
@@ -14568,7 +14624,7 @@ msgstr "Ausgewähltes Gerät abmelden und fortfahren"
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Anmelde-Links prüfen Ihre Zugriffsberechtigung vor dem Öffnen einer Organisation oder eines Projekts."
 
-#: src/components/pricing/questions.ts:157
+#: src/components/pricing/questions.ts:155
 msgid "Six weekends across seven months"
 msgstr "Sechs Wochenenden über sieben Monate hinweg"
 
@@ -14644,9 +14700,9 @@ msgstr "Jemand hat das nach dir umformuliert. Diese Worte bleiben stehen. Öffne
 msgid "Something else"
 msgstr "Etwas anderes"
 
-#: src/components/pricing/questions.ts:151
-msgid "Something else."
-msgstr "Etwas anderes."
+#: src/components/pricing/questions.ts:170
+#~ msgid "Something else."
+#~ msgstr "Etwas anderes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:43
@@ -15897,6 +15953,10 @@ msgstr "Der Raumbildschirm ist offen, daher warten Änderungen, bis du sie zeigs
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "Die eigenen Worte des Raumes – die Ideen, die das Gespräch bewegt haben."
 
+#: src/components/pricing/questions.ts:151
+#~ msgid "The same group meets over weeks and ends with a shared outcome."
+#~ msgstr "Dieselbe Gruppe trifft sich über Wochen und endet mit einem gemeinsamen Ergebnis."
+
 #: src/components/results/ResultRow.tsx:259
 msgid "The second line of this finding"
 msgstr "Die zweite Zeile dieser Erkenntnis"
@@ -16054,7 +16114,7 @@ msgstr "Diese Arbeitsbereiche haben ihren eigenen Tarif, der im jeweiligen Arbei
 msgid "They'll be added as members. You can add more later."
 msgstr "Sie werden als Mitglieder hinzugefügt. Sie können später weitere hinzufügen."
 
-#: src/components/pricing/questions.ts:220
+#: src/components/pricing/questions.ts:218
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
 msgstr "Dinge wie: Ein Gespräch mit Ihrem DSB oder CISO, eine Sicherheitsprüfung oder eine individuelle DSFA."
 
@@ -16259,7 +16319,7 @@ msgstr "Hier ist Verarbeitung auf Basis von Einwilligung festgelegt, aber ohne L
 #~ msgid "This is the live transcript. You get a more accurate one when the conversation ends."
 #~ msgstr "Das ist das Live-Transkript. Ein genaueres bekommst du, wenn das Gespräch endet."
 
-#: src/components/pricing/questions.ts:197
+#: src/components/pricing/questions.ts:195
 msgid "This is urgent"
 msgstr "Dies ist dringend"
 
@@ -16576,17 +16636,21 @@ msgstr "Daumen runter"
 msgid "Thumbs up"
 msgstr "Daumen hoch"
 
-#: src/components/pricing/questions.ts:209
+#: src/components/pricing/questions.ts:207
 msgid "Tick anything that applies."
 msgstr "Kreuzen Sie alles Zutreffende an."
 
 #: src/components/pricing/questions.ts:135
-msgid "Tick anything that fits."
-msgstr "Kreuzen Sie alles Passende an."
+#~ msgid "Tick anything that fits."
+#~ msgstr "Kreuzen Sie alles Passende an."
 
 #: src/components/results/curate/RowTools.tsx:111
 msgid "Tick as many as relevant"
 msgstr "Wählen Sie alle relevanten Optionen aus"
+
+#: src/components/pricing/questions.ts:135
+msgid "Tick both if both fit."
+msgstr "Kreuzen Sie beides an, wenn beides passt."
 
 #: src/routes/project/CreateProjectRoute.tsx:427
 #: src/routes/admin/AdminSettingsRoute.tsx:1560
@@ -17151,7 +17215,7 @@ msgstr "Das generierte Ergebnis konnte nicht geladen werden. Bitte versuchen Sie
 msgid "Unable to process this chunk"
 msgstr "Dieser Teil kann nicht verarbeitet werden"
 
-#: src/components/pricing/questions.ts:173
+#: src/components/pricing/questions.ts:171
 msgid "Under 50."
 msgstr "Unter 50."
 
@@ -18034,7 +18098,7 @@ msgstr "Wir haben einen Bestätigungslink an <0>{email}</0> gesendet. Klicken Si
 msgid "We sent you a verification link. Click it to finish setting up your account."
 msgstr "Wir haben Ihnen einen Bestätigungslink gesendet. Klicken Sie darauf, um die Einrichtung Ihres Kontos abzuschließen."
 
-#: src/components/pricing/questions.ts:215
+#: src/components/pricing/questions.ts:213
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Wir richten das Projekt ein, stehen Ihnen am Tag der Veranstaltung zur Seite und helfen anschließend beim Verfassen des Berichts."
 
@@ -18292,7 +18356,7 @@ msgstr "Wenn alle Audio in Text umgewandelt wurde und der vollständige Transkri
 msgid "When are webhooks triggered?"
 msgstr "Wenn werden Webhooks ausgelöst?"
 
-#: src/components/pricing/questions.ts:166
+#: src/components/pricing/questions.ts:164
 msgid "When do you need dembrane?"
 msgstr "Wann brauchen Sie dembrane?"
 
@@ -18317,7 +18381,7 @@ msgstr "Wenn aktiviert, kann der dembrane-Support diesem Arbeitsbereich beitrete
 msgid "When should the report be generated?"
 msgstr "Wann soll der Bericht erstellt werden?"
 
-#: src/components/pricing/questions.ts:181
+#: src/components/pricing/questions.ts:179
 msgid "When someone scans the QR code, that is one conversation. If 50 people scan it at the same time, that is 50 conversations at once."
 msgstr "Wenn jemand den QR-Code scannt, zählt das als ein Gespräch. Scannen 50 Personen gleichzeitig, sind das 50 gleichzeitige Gespräche."
 
@@ -19173,6 +19237,10 @@ msgstr "Ihre Organisationen"
 #: src/components/workspace/gateWalls.ts:93
 msgid "Your own logo comes with a paid plan."
 msgstr "Ein eigenes Logo ist in kostenpflichtigen Tarifen enthalten."
+
+#: src/components/pricing/questions.ts:161
+#~ msgid "Your own meetings, kept so nothing that was said gets lost."
+#~ msgstr "Eure eigenen Besprechungen, festgehalten, damit nichts Gesagtes verloren geht."
 
 #: src/components/release/releaseHistory.ts:229
 msgid "Your own member card stays at the top of the list."

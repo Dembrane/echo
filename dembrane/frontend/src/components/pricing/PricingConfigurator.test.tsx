@@ -12,6 +12,7 @@ import {
 import { MemoryRouter, useLocation, useNavigate } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { BookingLinks } from "@/lib/links";
+import { messages as nlMessages } from "@/locales/nl-NL";
 import {
 	type Answers,
 	CONFIG_STORAGE_KEY,
@@ -167,7 +168,7 @@ const modalText = () =>
 // 1. The question list is one typed list with a version, in a fixed order.
 
 it("keeps the five questions in order behind the opening, with a version", () => {
-	expect(QUESTION_SET_VERSION).toBe("21-aug-26");
+	expect(QUESTION_SET_VERSION).toBe("30-oct-26");
 	// Six steps, and the first one is the opening.
 	expect(STEP_COUNT).toBe(6);
 	expect([...QUESTION_KEYS]).toEqual([
@@ -183,7 +184,7 @@ it("keeps the five questions in order behind the opening, with a version", () =>
 	const questions = getQuestionSet();
 	expect(questions.map((question) => question.key)).toEqual([...QUESTION_KEYS]);
 	expect(questions[0].label).toBe("What do you want to use dembrane for?");
-	expect(questions[0].hint).toBe("Tick anything that fits.");
+	expect(questions[0].hint).toBe("Tick both if both fit.");
 	expect(questions[2].label).toBe(
 		"How many recordings do you expect in your first year?",
 	);
@@ -228,20 +229,15 @@ it("carries the volume buckets and the two extras, with the free text merged in"
 	expect(extras.follow?.examples).toHaveLength(4);
 });
 
-it("opens a free text box on Something else, and a number box above 40", () => {
+it("opens on two doors, and a number box above 40", () => {
 	const [useCase, timing, , concurrency] = getQuestionSet();
 	if (useCase.kind === "text" || concurrency.kind === "text") {
 		throw new Error("use case and concurrency are option questions");
 	}
 	expect(useCase.options.map((option) => option.key)).toEqual([
-		"event_workshop",
-		"assembly",
-		"conference_sessions",
-		"in_person",
-		"audio_survey",
-		"something_else",
+		"event",
+		"year",
 	]);
-	expect(useCase.options.at(-1)?.reveals).toBe("text");
 	expect(
 		concurrency.options.find((option) => option.key === "more_than_40")
 			?.reveals,
@@ -252,6 +248,27 @@ it("opens a free text box on Something else, and a number box above 40", () => {
 	if (timing.kind !== "text") return;
 	expect(timing.examples).toHaveLength(6);
 	expect(timing.examples?.[1].label).toBe("Six weekends across seven months");
+});
+
+it("opens on two doors, in English and in Dutch", async () => {
+	// The keys match the site's opener, so both mounts count as one funnel.
+	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
+	await screen.findByTestId("pricing-option-use_case-event");
+	expect(modalText()).toContain("For an event.");
+	expect(modalText()).toContain("All year.");
+	first.view.unmount();
+	cleanup();
+
+	i18n.load("nl-NL", nlMessages);
+	i18n.activate("nl-NL");
+	try {
+		renderConfigurator({ entries: ["/workspace?pc_step=2"] });
+		await screen.findByTestId("pricing-option-use_case-year");
+		expect(modalText()).toContain("Voor een evenement.");
+		expect(modalText()).toContain("Het hele jaar.");
+	} finally {
+		i18n.activate("en");
+	}
 });
 
 // 2. The opening is step 1, and it names what the person was trying to do.
@@ -430,11 +447,9 @@ it("restores the answers and the same session id after a reload", async () => {
 	const first = renderConfigurator({ entries: ["/workspace?pc_step=2"] });
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
 
-	fireEvent.click(screen.getByTestId("pricing-option-use_case-event_workshop"));
+	fireEvent.click(screen.getByTestId("pricing-option-use_case-event"));
 	await waitFor(() =>
-		expect(readStoredConfiguration()?.answers.use_case).toEqual([
-			"event_workshop",
-		]),
+		expect(readStoredConfiguration()?.answers.use_case).toEqual(["event"]),
 	);
 	const sessionId = readStoredConfiguration()?.config_session_id;
 	expect(sessionId).toBeTruthy();
@@ -447,7 +462,7 @@ it("restores the answers and the same session id after a reload", async () => {
 	renderConfigurator({ entries: ["/workspace?pc_step=2"], submit });
 
 	const restored = (await screen.findByTestId(
-		"pricing-option-use_case-event_workshop",
+		"pricing-option-use_case-event",
 	)) as HTMLInputElement;
 	expect(restored.checked).toBe(true);
 	expect(readStoredConfiguration()?.config_session_id).toBe(sessionId);
@@ -577,18 +592,15 @@ it("keeps a newline on shift and Enter rather than advancing", async () => {
 	expect(search()).toBe("?pc_step=6");
 });
 
-// The three free text boxes, and the two controls an option reveals.
+// The free text boxes, and the control an option reveals.
 
-it("gives all three free text answers the composer with voice", async () => {
+it("gives both free text answers the composer with voice", async () => {
 	renderConfigurator({ entries: ["/workspace?pc_step=2"], projectId: "p-1" });
 
-	// The first question, behind Something else.
+	// The opener's two doors open nothing of their own.
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
+	fireEvent.click(screen.getByTestId("pricing-option-use_case-event"));
 	expect(screen.queryByTestId("pricing-use-case-other-input")).toBeNull();
-	fireEvent.click(screen.getByTestId("pricing-option-use_case-something_else"));
-	expect(
-		await screen.findByTestId("pricing-use-case-other-voice-record"),
-	).toBeTruthy();
 
 	// The timing box.
 	next();

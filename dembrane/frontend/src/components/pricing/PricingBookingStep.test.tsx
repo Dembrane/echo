@@ -72,8 +72,7 @@ const ANSWERS: Answers = {
 	context: "A citizens assembly on housing, about sixty people in one room.",
 	extras: ["event_help"],
 	timing: "Six weekends across seven months",
-	use_case: ["assembly", "something_else"],
-	use_case_other: "a museum tour",
+	use_case: ["event", "year"],
 	volume: "50_to_250",
 };
 
@@ -119,7 +118,7 @@ it("builds the summary from the question labels, never from option keys", () => 
 
 	expect(summary.split("\n")).toEqual([
 		"Reference DEM-4F2A",
-		"What do you want to use dembrane for? An assembly, Something else: a museum tour",
+		"What do you want to use dembrane for? For an event, All year",
 		"When do you need dembrane? Six weekends across seven months",
 		"How many recordings do you expect in your first year? 50 to 250",
 		"At your busiest moment, how many conversations will be running at once? More than 40 (120)",
@@ -131,12 +130,7 @@ it("builds the summary from the question labels, never from option keys", () => 
 
 	// Only the snake_case keys are checked. A label can of course hold the word
 	// "assembly": what must never appear is the key an event travels on.
-	for (const key of [
-		"something_else",
-		"50_to_250",
-		"more_than_40",
-		"event_help",
-	]) {
+	for (const key of ["50_to_250", "more_than_40", "event_help"]) {
 		expect(summary).not.toContain(key);
 	}
 });

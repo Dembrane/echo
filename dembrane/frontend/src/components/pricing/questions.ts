@@ -19,7 +19,7 @@ import { t } from "@lingui/core/macro";
  * It is written onto every event and every row, so an old row still says
  * which form it answered.
  */
-export const QUESTION_SET_VERSION = "21-aug-26";
+export const QUESTION_SET_VERSION = "30-oct-26";
 
 /** Bump only when the keys of the `config` object change. It moves on its own
  * clock, far more slowly than the question set.
@@ -132,23 +132,21 @@ export type Question = OptionsQuestion | TextQuestion;
  */
 export const getQuestionSet = (): Question[] => [
 	{
-		hint: t`Tick anything that fits.`,
+		hint: t`Tick both if both fit.`,
 		key: "use_case",
 		kind: "multi",
 		label: t`What do you want to use dembrane for?`,
 		options: [
-			{ key: "event_workshop", label: t`An event or a workshop.` },
-			{ key: "assembly", label: t`An assembly.` },
-			{ key: "conference_sessions", label: t`Recording conference sessions.` },
 			{
-				key: "in_person",
-				label: t`Recording conversations you have in person, like street interviews.`,
+				description: t`One event or a series, each with its own date.`,
+				key: "event",
+				label: t`For an event.`,
 			},
 			{
-				key: "audio_survey",
-				label: t`Collecting people's stories without you being there, like an audio-based survey.`,
+				description: t`dembrane all year, for as many events and meetings as you need.`,
+				key: "year",
+				label: t`All year.`,
 			},
-			{ key: "something_else", label: t`Something else.`, reveals: "text" },
 		],
 	},
 	{

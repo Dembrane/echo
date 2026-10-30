@@ -1195,7 +1195,7 @@ msgstr "1 hodina"
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. You provide a URL where you want to receive notifications"
 
-#: src/components/pricing/questions.ts:189
+#: src/components/pricing/questions.ts:187
 msgid "16 to 40."
 msgstr "16 až 40."
 
@@ -1203,7 +1203,7 @@ msgstr "16 až 40."
 msgid "2 months ago"
 msgstr "2 months ago"
 
-#: src/components/pricing/questions.ts:187
+#: src/components/pricing/questions.ts:185
 msgid "2 to 5."
 msgstr "2 až 5."
 
@@ -1216,7 +1216,7 @@ msgstr "2. When a conversation or report event happens, we automatically send th
 msgid "24 hours"
 msgstr "24 hodin"
 
-#: src/components/pricing/questions.ts:175
+#: src/components/pricing/questions.ts:173
 msgid "250 to 1000."
 msgstr "250 až 1000."
 
@@ -1232,11 +1232,11 @@ msgstr "3 months ago"
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
-#: src/components/pricing/questions.ts:174
+#: src/components/pricing/questions.ts:172
 msgid "50 to 250."
 msgstr "50 až 250."
 
-#: src/components/pricing/questions.ts:188
+#: src/components/pricing/questions.ts:186
 msgid "6 to 15."
 msgstr "6 to 15."
 
@@ -1330,6 +1330,10 @@ msgstr "A project holds everything for one topic. Share its link with participan
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Veřejná stránka vyžaduje vyšší tarif. Vypni Veřejná stránka v části Sdílet, aby se zobrazily ostatní změny."
 
+#: src/components/pricing/questions.ts:163
+#~ msgid "A record of your meetings."
+#~ msgstr "Záznam vašich porad."
+
 #: src/components/report/UpdateReportModalButton.tsx:252
 #: src/components/report/CreateReportForm.tsx:157
 msgid "A report is already being generated for this project. Please wait for it to complete."
@@ -1380,9 +1384,17 @@ msgstr "A short blurb shown on the organisation overview."
 msgid "A smoother conversation workspace"
 msgstr "Plynulejší prostor pro rozhovory"
 
+#: src/components/pricing/questions.ts:158
+#~ msgid "A stand people walk up to."
+#~ msgstr "Stánek, ke kterému lidé přicházejí."
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:303
 msgid "A switch without words shows nothing on the screen."
 msgstr "Přepínač bez textu nezobrazí na obrazovce nic."
+
+#: src/components/pricing/questions.ts:141
+#~ msgid "A talk, then conversations at tables of six to ten, read back to the room at the end."
+#~ msgstr "Nejdřív přednáška, pak rozhovory u stolů po šesti až deseti lidech, na konci přečtené celému sálu."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
@@ -1397,6 +1409,10 @@ msgstr "Překlep"
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "a workspace"
+
+#: src/components/pricing/questions.ts:168
+#~ msgid "A year of work."
+#~ msgstr "Rok práce."
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:521
 msgid "About the suggested project update: {hostNote}"
@@ -2069,6 +2085,10 @@ msgstr "All visible conversations selected"
 msgid "All workspaces"
 msgstr "All workspaces"
 
+#: src/components/pricing/questions.ts:148
+msgid "All year."
+msgstr "Celý rok."
+
 #: src/components/release/releases.ts:48
 msgid "All-new Present features: show live results on a big screen during your session."
 msgstr "Zcela nové funkce prezentace: zobrazte během setkání živé výsledky na velké obrazovce."
@@ -2135,7 +2155,7 @@ msgstr "Already used in this chat"
 msgid "Also allow it to change project settings"
 msgstr "Povolit také úpravy nastavení projektu"
 
-#: src/components/pricing/questions.ts:160
+#: src/components/pricing/questions.ts:158
 msgid "Always on, it lives on our website"
 msgstr "Stále aktivní, běží na našem webu"
 
@@ -2160,9 +2180,13 @@ msgstr "Částky se standardně počítají jako počet křesel účtu krát cen
 msgid "An AI assistant you connect, and the company that runs it, will receive the conversations and projects you allow. dembrane is not responsible for what they do with that data. You can revoke a connection at any time."
 msgstr "AI asistent, kterého připojíte, a společnost, která jej provozuje, obdrží vámi povolené rozhovory a projekty. dembrane nenese odpovědnost za to, jak s těmito daty naloží. Připojení můžete kdykoli odvolat."
 
+#: src/components/pricing/questions.ts:153
+#~ msgid "An assembly over several sessions."
+#~ msgstr "Shromáždění v několika setkáních."
+
 #: src/components/pricing/questions.ts:141
-msgid "An assembly."
-msgstr "Shromáždění."
+#~ msgid "An assembly."
+#~ msgstr "Shromáždění."
 
 #: src/components/results/ResultItem.tsx:289
 msgid "An earlier wording restored"
@@ -2193,8 +2217,8 @@ msgid "An error occurred."
 msgstr "An error occurred."
 
 #: src/components/pricing/questions.ts:140
-msgid "An event or a workshop."
-msgstr "Akce nebo workshop."
+#~ msgid "An event or a workshop."
+#~ msgstr "Akce nebo workshop."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:317
 msgid "An improved transcript is on its way."
@@ -2359,11 +2383,11 @@ msgstr "Kdokoli s odkazem si ji může přečíst. Bez přihlášení a bez pře
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Sledovat může kdokoli s odkazem. Bez přihlášení a bez přepisů."
 
-#: src/components/pricing/questions.ts:212
+#: src/components/pricing/questions.ts:210
 msgid "Anything else you might need?"
 msgstr "Potřebujete ještě něco dalšího?"
 
-#: src/components/pricing/questions.ts:207
+#: src/components/pricing/questions.ts:205
 msgid "Anything else you'd like to share"
 msgstr "Cokoli dalšího, o co byste se chtěli podělit"
 
@@ -2671,7 +2695,7 @@ msgstr "At least one topic must be selected to enable Verify"
 msgid "At the end of this period"
 msgstr "Na konci tohoto období"
 
-#: src/components/pricing/questions.ts:184
+#: src/components/pricing/questions.ts:182
 msgid "At your busiest moment, how many conversations will be running at once?"
 msgstr "Kolik rozhovorů poběží současně v nejvytíženější chvíli?"
 
@@ -3875,8 +3899,8 @@ msgid "Colleagues you invite can explore conversations, share insights, and buil
 msgstr "Colleagues you invite can explore conversations, share insights, and build reports with you."
 
 #: src/components/pricing/questions.ts:149
-msgid "Collecting people's stories without you being there, like an audio-based survey."
-msgstr "Sběr příběhů od lidí bez vaší přítomnosti, podobně jako audio dotazník."
+#~ msgid "Collecting people's stories without you being there, like an audio-based survey."
+#~ msgstr "Sběr příběhů od lidí bez vaší přítomnosti, podobně jako audio dotazník."
 
 #: src/components/settings/AuditLogsCard.tsx:195
 msgid "Collection"
@@ -4294,6 +4318,10 @@ msgstr "conversations"
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
+
+#: src/components/pricing/questions.ts:143
+#~ msgid "Conversations at tables, with a synthesis at the end."
+#~ msgstr "Rozhovory u stolů se shrnutím na konci."
 
 #: src/components/conversation/hooks/index.ts:560
 msgid "Conversations cleared"
@@ -5217,6 +5245,10 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane – výchozí"
 
+#: src/components/pricing/questions.ts:146
+msgid "dembrane all year, for as many events and meetings as you need."
+msgstr "dembrane celý rok, pro tolik akcí a porad, kolik potřebujete."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
@@ -6114,7 +6146,7 @@ msgstr "Odhadem celkem: {estimated} €"
 msgid "EU hosted LLMs included"
 msgstr "Včetně LLM hostovaných v EU"
 
-#: src/components/pricing/questions.ts:217
+#: src/components/pricing/questions.ts:215
 msgid "Event help from the dembrane team"
 msgstr "Podpora při akcích od týmu dembrane"
 
@@ -6155,7 +6187,7 @@ msgstr "Všichni připojení agenti v organizaci {0} okamžitě přestanou fungo
 msgid "Every member's connection that names this organisation."
 msgstr "Připojení každého člena, které uvádí tuto organizaci."
 
-#: src/components/pricing/questions.ts:158
+#: src/components/pricing/questions.ts:156
 msgid "Every week for a year"
 msgstr "Každý týden po dobu jednoho roku"
 
@@ -6811,6 +6843,10 @@ msgstr "For <0>{0}</0>"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:420
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
+
+#: src/components/pricing/questions.ts:143
+msgid "For an event."
+msgstr "Pro akci."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:534
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:137
@@ -7472,7 +7508,7 @@ msgstr "Jak dembrane vylepšuje váš přepis"
 msgid "How it works:"
 msgstr "How it works:"
 
-#: src/components/pricing/questions.ts:171
+#: src/components/pricing/questions.ts:169
 msgid "How many recordings do you expect in your first year?"
 msgstr "Kolik nahrávek očekáváte během prvního roku?"
 
@@ -7490,7 +7526,7 @@ msgstr "Jak by měly fráze vyznít?"
 #~ "* What is the north star goal or key metric\n"
 #~ "* What does success look like"
 
-#: src/components/pricing/questions.ts:163
+#: src/components/pricing/questions.ts:161
 msgid "However you would say it. A date, a season, or that you do not know yet."
 msgstr "Napište to vlastními slovy. Datum, roční období nebo že zatím nevíte."
 
@@ -7506,7 +7542,7 @@ msgstr "Plátno bylo použito."
 msgid "I applied the goal."
 msgstr "Cíl byl použit."
 
-#: src/components/pricing/questions.ts:198
+#: src/components/pricing/questions.ts:196
 msgid "I have lots of big events coming up"
 msgstr "Čeká mě spousta velkých akcí"
 
@@ -7514,11 +7550,11 @@ msgstr "Čeká mě spousta velkých akcí"
 msgid "I have read and accept the <0>terms</0>"
 msgstr "Přečetl(a) jsem si <0>podmínky</0> a souhlasím s nimi"
 
-#: src/components/pricing/questions.ts:201
+#: src/components/pricing/questions.ts:199
 msgid "I need a specific language to be supported"
 msgstr "Potřebuji podporu konkrétního jazyka"
 
-#: src/components/pricing/questions.ts:203
+#: src/components/pricing/questions.ts:201
 msgid "I need strict privacy guarantees"
 msgstr "Požaduji přísné záruky ochrany soukromí"
 
@@ -7536,7 +7572,7 @@ msgstr "Rozumím"
 msgid "I understand that {0} and its provider will receive this data"
 msgstr "Rozumím tomu, že {0} a jeho poskytovatel obdrží tato data"
 
-#: src/components/pricing/questions.ts:161
+#: src/components/pricing/questions.ts:159
 msgid "I will know in a week or two"
 msgstr "Budu to vědět za týden nebo dva"
 
@@ -8114,7 +8150,7 @@ msgstr "Just a moment"
 msgid "just now"
 msgstr "právě teď"
 
-#: src/components/pricing/questions.ts:186
+#: src/components/pricing/questions.ts:184
 msgid "Just one."
 msgstr "Jen jeden."
 
@@ -9226,11 +9262,11 @@ msgstr "Spolehlivější anonymizace a nahrávání"
 msgid "More reliable conversation summaries"
 msgstr "Spolehlivější shrnutí rozhovorů"
 
-#: src/components/pricing/questions.ts:176
+#: src/components/pricing/questions.ts:174
 msgid "More than 1000."
 msgstr "Více než 1000."
 
-#: src/components/pricing/questions.ts:190
+#: src/components/pricing/questions.ts:188
 msgid "More than 40."
 msgstr "Více než 40."
 
@@ -10235,8 +10271,8 @@ msgstr "Not set"
 msgid "Not started"
 msgstr "Zatím nezahájeno"
 
-#: src/components/pricing/questions.ts:177
-#: src/components/pricing/questions.ts:191
+#: src/components/pricing/questions.ts:175
+#: src/components/pricing/questions.ts:189
 msgid "Not sure yet."
 msgstr "Zatím nevím."
 
@@ -10420,7 +10456,7 @@ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud wha
 msgid "One at a time"
 msgstr "Jedna po druhé"
 
-#: src/components/pricing/questions.ts:159
+#: src/components/pricing/questions.ts:157
 msgid "One big event at the end of the year"
 msgstr "Jedna velká událost na konci roku"
 
@@ -10429,9 +10465,13 @@ msgstr "Jedna velká událost na konci roku"
 msgid "one conversation only"
 msgstr "jen z jednoho rozhovoru"
 
-#: src/components/pricing/questions.ts:156
+#: src/components/pricing/questions.ts:154
 msgid "One day in October"
 msgstr "Jeden den v říjnu"
+
+#: src/components/pricing/questions.ts:141
+msgid "One event or a series, each with its own date."
+msgstr "Jedna akce nebo série, každá s vlastním datem."
 
 #: src/components/auth/PasswordRequirements.tsx:63
 msgid "One lowercase letter"
@@ -10467,6 +10507,10 @@ msgstr "Jedno velké písmeno"
 #: src/routes/admin/AdminSettingsRoute.tsx:2626
 msgid "One-off"
 msgstr "Jednorázově"
+
+#: src/components/pricing/questions.ts:156
+#~ msgid "One-to-one conversations with passers-by, at a stand or an exhibition."
+#~ msgstr "Rozhovory mezi čtyřma očima s kolemjdoucími, u stánku nebo na výstavě."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:345
 msgid "Ongoing"
@@ -11826,7 +11870,7 @@ msgstr "Processing <0>{totalCount, plural, one {# conversation} other {# convers
 msgid "Processing your retranscription request..."
 msgstr "Processing your retranscription request..."
 
-#: src/components/pricing/questions.ts:222
+#: src/components/pricing/questions.ts:220
 msgid "Procurement help"
 msgstr "Nákup a fakturace"
 
@@ -12082,6 +12126,10 @@ msgstr "Otázky k fungování dembrane, nejen k vašim datům."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:99
 msgid "Queued"
 msgstr "Ve frontě"
+
+#: src/components/pricing/questions.ts:146
+#~ msgid "Quick conversations between talks, put on screen while the panel speaks."
+#~ msgstr "Rychlé rozhovory mezi přednáškami, na obrazovce, zatímco panel mluví."
 
 #: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
@@ -12375,12 +12423,12 @@ msgid "Recording checks the audio upload connection."
 msgstr "Nahrávání kontroluje připojení pro nahrávání zvuku."
 
 #: src/components/pricing/questions.ts:142
-msgid "Recording conference sessions."
-msgstr "Nahrávání konferenčních bloků."
+#~ msgid "Recording conference sessions."
+#~ msgstr "Nahrávání konferenčních bloků."
 
 #: src/components/pricing/questions.ts:145
-msgid "Recording conversations you have in person, like street interviews."
-msgstr "Nahrávání osobních rozhovorů, například anket na ulici."
+#~ msgid "Recording conversations you have in person, like street interviews."
+#~ msgstr "Nahrávání osobních rozhovorů, například anket na ulici."
 
 #: src/components/release/releaseHistory.ts:490
 msgid "Recording devices stay awake more reliably."
@@ -14195,6 +14243,10 @@ msgstr "Nastavení byla aktualizována"
 msgid "Setup"
 msgstr "Setup"
 
+#: src/components/pricing/questions.ts:166
+#~ msgid "Several of these, spread across the year."
+#~ msgstr "Několik z toho, rozložených během roku."
+
 #: src/components/release/releaseHistory.ts:411
 msgid "Shape how participants verify outcomes"
 msgstr "Urči, jak účastníci ověřují výsledky"
@@ -14296,6 +14348,10 @@ msgstr "Sdílíte toto přihlášení s kolegou? Správce vaší organizace ho m
 #: src/routes/project/present/PresentRoute.tsx:220
 msgid "Short phrases from the conversations"
 msgstr "Krátké úryvky z rozhovorů"
+
+#: src/components/pricing/questions.ts:148
+#~ msgid "Short rounds that feed a panel on stage."
+#~ msgstr "Krátká kola, která živí panel na pódiu."
 
 #: src/components/conversation/useConversationList.ts:28
 msgid "Shortest first"
@@ -14567,7 +14623,7 @@ msgstr "Odhlásit vybrané zařízení a pokračovat"
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Přihlašovací odkazy před otevřením organizace nebo projektu zkontrolují vaše oprávnění."
 
-#: src/components/pricing/questions.ts:157
+#: src/components/pricing/questions.ts:155
 msgid "Six weekends across seven months"
 msgstr "Šest víkendů v průběhu sedmi měsíců"
 
@@ -14643,9 +14699,9 @@ msgstr "Někdo to přeformuloval po tobě. Jeho slova zůstávají. Otevři to a
 msgid "Something else"
 msgstr "Něco jiného"
 
-#: src/components/pricing/questions.ts:151
-msgid "Something else."
-msgstr "Něco jiného."
+#: src/components/pricing/questions.ts:170
+#~ msgid "Something else."
+#~ msgstr "Něco jiného."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:43
@@ -15895,6 +15951,10 @@ msgstr "Plátno v sále je otevřené, takže změny čekají, dokud je nezobraz
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "Vlastní slova místnosti, myšlenky, které posunuly rozhovor."
 
+#: src/components/pricing/questions.ts:151
+#~ msgid "The same group meets over weeks and ends with a shared outcome."
+#~ msgstr "Stejná skupina se schází týdny a končí společným výsledkem."
+
 #: src/components/results/ResultRow.tsx:259
 msgid "The second line of this finding"
 msgstr "Druhý řádek tohoto zjištění"
@@ -16052,7 +16112,7 @@ msgstr "Tyto pracovní prostory mají vlastní tarif spravovaný přímo z nich.
 msgid "They'll be added as members. You can add more later."
 msgstr "Budou přidáni jako členové. Další můžete přidat později."
 
-#: src/components/pricing/questions.ts:220
+#: src/components/pricing/questions.ts:218
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
 msgstr "Například: Hovor s vaším DPO nebo CISO, bezpečnostní prověrka či DPIA na míru."
 
@@ -16257,7 +16317,7 @@ msgstr "Je nastaveno zpracování na základě souhlasu bez odkazu na zásady oc
 #~ msgid "This is the live transcript. You get a more accurate one when the conversation ends."
 #~ msgstr "Toto je živý přepis. Přesnější dostanete po skončení rozhovoru."
 
-#: src/components/pricing/questions.ts:197
+#: src/components/pricing/questions.ts:195
 msgid "This is urgent"
 msgstr "Je to naléhavé"
 
@@ -16574,17 +16634,21 @@ msgstr "Palec dolů"
 msgid "Thumbs up"
 msgstr "Palec nahoru"
 
-#: src/components/pricing/questions.ts:209
+#: src/components/pricing/questions.ts:207
 msgid "Tick anything that applies."
 msgstr "Zaškrtněte vše, co platí."
 
 #: src/components/pricing/questions.ts:135
-msgid "Tick anything that fits."
-msgstr "Zaškrtněte vše, co odpovídá."
+#~ msgid "Tick anything that fits."
+#~ msgstr "Zaškrtněte vše, co odpovídá."
 
 #: src/components/results/curate/RowTools.tsx:111
 msgid "Tick as many as relevant"
 msgstr "Zaškrtněte vše relevantní"
+
+#: src/components/pricing/questions.ts:135
+msgid "Tick both if both fit."
+msgstr "Zaškrtněte obojí, pokud sedí obojí."
 
 #: src/routes/project/CreateProjectRoute.tsx:427
 #: src/routes/admin/AdminSettingsRoute.tsx:1560
@@ -17151,7 +17215,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/components/pricing/questions.ts:173
+#: src/components/pricing/questions.ts:171
 msgid "Under 50."
 msgstr "Méně než 50."
 
@@ -18033,7 +18097,7 @@ msgstr "We sent a verification link to <0>{email}</0>. Click it to finish settin
 msgid "We sent you a verification link. Click it to finish setting up your account."
 msgstr "We sent you a verification link. Click it to finish setting up your account."
 
-#: src/components/pricing/questions.ts:215
+#: src/components/pricing/questions.ts:213
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Nastavíme projekt, budeme vám v den akce po boku a pomůžeme s následnou tvorbou zprávy."
 
@@ -18291,7 +18355,7 @@ msgstr "When all audio has been converted to text and the full transcript is ava
 msgid "When are webhooks triggered?"
 msgstr "When are webhooks triggered?"
 
-#: src/components/pricing/questions.ts:166
+#: src/components/pricing/questions.ts:164
 msgid "When do you need dembrane?"
 msgstr "Kdy budete dembrane potřebovat?"
 
@@ -18316,7 +18380,7 @@ msgstr "Pokud je tato možnost zapnutá, podpora dembrane se může připojit k 
 msgid "When should the report be generated?"
 msgstr "When should the report be generated?"
 
-#: src/components/pricing/questions.ts:181
+#: src/components/pricing/questions.ts:179
 msgid "When someone scans the QR code, that is one conversation. If 50 people scan it at the same time, that is 50 conversations at once."
 msgstr "Když někdo naskenuje QR kód, počítá se to jako jeden rozhovor. Pokud jej naskenuje 50 lidí najednou, je to 50 souběžných rozhovorů."
 
@@ -19172,6 +19236,10 @@ msgstr "Vaše organizace"
 #: src/components/workspace/gateWalls.ts:93
 msgid "Your own logo comes with a paid plan."
 msgstr "Vlastní logo získáte s placeným tarifem."
+
+#: src/components/pricing/questions.ts:161
+#~ msgid "Your own meetings, kept so nothing that was said gets lost."
+#~ msgstr "Vaše vlastní porady, uchované, aby se nic z řečeného neztratilo."
 
 #: src/components/release/releaseHistory.ts:229
 msgid "Your own member card stays at the top of the list."
