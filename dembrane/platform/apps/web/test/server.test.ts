@@ -145,6 +145,14 @@ test("path traversal cannot leave the dist directory", async () => {
   expect(await res.text()).toBe("<html>app</html>");
 });
 
+test("a path with a malformed percent escape is a 400, not an unhandled error", async () => {
+  for (const path of ["/api/v1/%E0%A4%A.env", "/%", "/assets/%zz"]) {
+    const res = await get(path);
+    expect(res.status).toBe(400);
+    expect(res.headers.get("x-frame-options")).toBe("SAMEORIGIN");
+  }
+});
+
 test("runtime config is served uncached as a script", async () => {
   const res = await handler()(new Request("https://dash.example/runtime-config.js"));
   expect(res.headers.get("cache-control")).toBe("no-store");

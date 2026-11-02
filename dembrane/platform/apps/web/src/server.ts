@@ -72,7 +72,13 @@ export function createHandler(opts: WebOptions) {
 
   return async function handle(req: Request, peer?: string | null): Promise<Response> {
     const url = new URL(req.url);
-    const path = decodeURIComponent(url.pathname);
+    let path: string;
+    try {
+      path = decodeURIComponent(url.pathname);
+    } catch {
+      // A broken escape such as a lone % names no page of ours; scanners send these.
+      return withHeaders(new Response("Bad request", { status: 400 }));
+    }
 
     if (path === "/health") return Response.json({ status: "ok", release: opts.release });
     if (path === "/runtime-config.js") {
