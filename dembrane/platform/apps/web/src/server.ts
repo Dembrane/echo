@@ -86,6 +86,25 @@ export function createHandler(opts: WebOptions) {
     if (opts.apiOrigin && (path === "/api" || path.startsWith("/api/")))
       return proxy(req, url, opts.apiOrigin, peer ?? null, opts);
 
+    if (opts.runtime.role === "portal") {
+      const isDashboardRoute =
+        path === "/" ||
+        /^\/(o|login|register|settings|admin|invites|w|account)($|\/)/.test(path) ||
+        /^\/(en-US|nl-NL|de-DE|fr-FR|es-ES|it-IT|uk-UA|cs-CZ)\/?$/.test(path);
+      if (isDashboardRoute) {
+        const dashboardUrl =
+          typeof opts.runtime.dashboardUrl === "string" ? opts.runtime.dashboardUrl : "/";
+        const target = new URL(path === "/" ? "/" : path, dashboardUrl);
+        target.search = url.search;
+        return withHeaders(
+          new Response(null, {
+            status: 302,
+            headers: { Location: target.toString() },
+          }),
+        );
+      }
+    }
+
     const safe = normalize(path).replace(/^(\.\.[/\\])+/, "");
     if (safe !== "/" && !safe.includes("\0")) {
       const filePath = join(opts.distDir, safe);

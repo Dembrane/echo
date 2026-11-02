@@ -13,7 +13,7 @@ import {
 import { isRouteErrorResponse, useLocation, useRouteError } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
-import { DEBUG_MODE, USE_PARTICIPANT_ROUTER } from "@/config";
+import { ADMIN_BASE_URL, DEBUG_MODE, USE_PARTICIPANT_ROUTER } from "@/config";
 import { BaseLayout } from "../layout/BaseLayout";
 
 export const ErrorPage = () => {
@@ -68,36 +68,42 @@ export const ErrorPage = () => {
 			</Trans>
 		));
 
-	return (
-		<BaseLayout>
-			<Box className="flex h-[calc(100vh-60px)] flex-col justify-center p-4">
-				<Stack gap="md" w="100%" maw={440} mx="auto">
-					<Title order={2}>{title}</Title>
-					<Text c="dimmed">{message}</Text>
-					{DEBUG_MODE && (
-						<Paper p="md">
-							<pre className="overflow-auto">
-								{JSON.stringify(error, null, 2)}
-							</pre>
-						</Paper>
-					)}
-					<Group gap="sm">
-						{!isNotFound && (
-							<Button variant="filled" onClick={() => window.location.reload()}>
-								<Trans>Reload page</Trans>
-							</Button>
-						)}
-						<Button
-							variant={isNotFound ? "filled" : undefined}
-							onClick={() => {
-								window.location.href = "/";
-							}}
-						>
-							<Trans>Return home</Trans>
+	const content = (
+		<Box className="flex h-[calc(100vh-60px)] flex-col justify-center p-4">
+			<Stack gap="md" w="100%" maw={440} mx="auto">
+				<Title order={2}>{title}</Title>
+				<Text c="dimmed">{message}</Text>
+				{DEBUG_MODE && (
+					<Paper p="md">
+						<pre className="overflow-auto">
+							{JSON.stringify(error, null, 2)}
+						</pre>
+					</Paper>
+				)}
+				<Group gap="sm">
+					{!isNotFound && (
+						<Button variant="filled" onClick={() => window.location.reload()}>
+							<Trans>Reload page</Trans>
 						</Button>
-					</Group>
-				</Stack>
-			</Box>
-		</BaseLayout>
+					)}
+					<Button
+						variant={isNotFound ? "filled" : undefined}
+						onClick={() => {
+							window.location.href = USE_PARTICIPANT_ROUTER
+								? ADMIN_BASE_URL
+								: "/";
+						}}
+					>
+						<Trans>Return home</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Box>
 	);
+
+	if (USE_PARTICIPANT_ROUTER) {
+		return content;
+	}
+
+	return <BaseLayout>{content}</BaseLayout>;
 };

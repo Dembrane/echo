@@ -6,6 +6,7 @@ import { Outlet, useSearchParams } from "react-router";
 import { roles } from "@/colors";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
+import { USE_PARTICIPANT_ROUTER } from "@/config";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { InboxView } from "@/features/sidebar/views/InboxView";
@@ -45,14 +46,14 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 	return (
 		<TransitionCurtainProvider>
 			<div className="flex h-dvh w-screen overflow-hidden">
-				{isAuthenticated ? (
+				{!USE_PARTICIPANT_ROUTER && isAuthenticated ? (
 					<ErrorBoundary fallback={<SidebarFailure />}>
 						<AppSidebar />
 					</ErrorBoundary>
 				) : null}
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
-						{isAuthenticated ? <AppBreadcrumbs /> : null}
+						{!USE_PARTICIPANT_ROUTER && isAuthenticated ? <AppBreadcrumbs /> : null}
 						<div className="flex-1 overflow-auto" data-app-scroll-root>
 							{holdLoading ? (
 								<BeautifulLoading />
