@@ -15,6 +15,7 @@ import { publishDraft, publishEvent, watchers } from "./live";
 import {
   AGENT_CANCELLED_ERROR_CODE,
   AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL,
+  aiBudgetStopMessage,
   automaticNudgeContent,
   draftPublishIntervalMs,
   HISTORY_PAGE_SIZE,
@@ -83,6 +84,8 @@ export interface TurnDeps {
   readonly capture: Capture;
   readonly notify: (e: Emit) => Promise<unknown>;
   readonly now: () => Date;
+  /** False once the project's free AI budget is used up; checked before every step after the first. */
+  readonly budgetLeft: (projectId: string) => Promise<boolean>;
   /** How often a running step re-reads the run to notice Stop. */
   readonly cancelPollMs?: number;
 }
@@ -255,6 +258,11 @@ async function agentStep(
     return { state: s, responseMessages: [], done: true, end: { kind: "cancelled" } };
   if (d.now().getTime() >= begin.deadline)
     return { state: s, responseMessages: [], done: true, end: timeoutEnd() };
+  if (stepIndex > 0 && !(await budgetLeft(d, a))) {
+    const say = new StepEmitter(d, a, begin, s, stepIndex, () => false);
+    s.latestOutput = await say.assistantMessage(aiBudgetStopMessage(), null, false, "ai-budget");
+    return { state: s, responseMessages: [], done: true, end: { kind: "limit" } };
+  }
 
   const who = begin.who as Signed;
   const ctx: TurnContext = {
@@ -348,6 +356,16 @@ async function agentStep(
       clearInterval(poll);
       clearTimeout(timer);
     }
+  }
+}
+
+// A failed read lets the turn go on; started work finishes.
+async function budgetLeft(d: TurnDeps, a: TurnArgs): Promise<boolean> {
+  try {
+    return await d.budgetLeft(a.projectId);
+  } catch (err) {
+    d.logger.warn({ err, runId: a.runId }, "reading the AI budget failed; the turn goes on");
+    return true;
   }
 }
 
@@ -536,7 +554,7 @@ class StepEmitter {
    * write), then the chat's copy under the same id. Placeholders and empty text never
    * become messages; they only fragment the chat.
    */
-  private async assistantMessage(
+  async assistantMessage(
     content: string,
     messageId: string | null,
     keepStatusNarration: boolean,

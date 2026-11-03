@@ -1,7 +1,7 @@
 import { BadRequestError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
-import { chatFor, chatProjectId } from "./access";
+import { chatFor } from "./access";
 import type { ChatDeps } from "./deps";
 
 /**
@@ -50,8 +50,7 @@ export async function listChats(
 }
 
 export async function getChat(d: ChatDeps, who: Signed, chatId: string) {
-  const { chat } = await bffChat(d, who, chatId);
-  const projectId = chatProjectId(chat);
+  await bffChat(d, who, chatId);
   const item = await d.store.chatItem(chatId);
   if (!item) throw new NotFoundError("chat.not_found");
   return {
@@ -61,7 +60,8 @@ export async function getChat(d: ChatDeps, who: Signed, chatId: string) {
     chat_mode: item.chat_mode ?? null,
     date_created: item.date_created ?? null,
     date_updated: item.date_updated ?? null,
-    free_turns: projectId ? await d.freeChats.turnStatus(chatId, projectId, d.now()) : null,
+    // Kept for one release so an older dashboard still reads it.
+    free_turns: null,
   };
 }
 

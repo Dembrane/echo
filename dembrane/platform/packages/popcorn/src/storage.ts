@@ -200,7 +200,7 @@ export function popcornStore(sql: Sql) {
     },
 
     async latestRun(loopId: string): Promise<Row | null> {
-      // A counted analysis still in progress is not a run yet.
+      // A pre-budget free run left in progress is not a run.
       const [r] = await sql`select * from agent_loop_run
         where loop_id = ${loopId} and status is distinct from 'running' order by started_at desc limit 1`;
       return r ?? null;

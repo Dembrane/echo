@@ -57,6 +57,8 @@ export interface TickDeps {
   readonly now: () => Date;
   /** Tells open canvas pages a new generation exists. */
   readonly nudge: (reportId: string) => Promise<void>;
+  /** False when the project's free AI budget is used up. */
+  readonly budgetLeft: (projectId: string) => Promise<boolean>;
   /** One scheduled tick per loop per cadence window; false when another took it. */
   readonly claimWindow: (loopId: string, window: number, ttlSeconds: number) => Promise<boolean>;
   /** Ids the tick writes, derived from its run so a replayed phase writes the same rows. */
@@ -488,7 +490,14 @@ export async function renderWall(
 
 // ── the tick, in phases ─────────────────────────────────────────────
 
-export type TickOutcome = "ok" | "no_op" | "disabled" | "expired" | "duplicate" | "error";
+export type TickOutcome =
+  | "ok"
+  | "no_op"
+  | "disabled"
+  | "expired"
+  | "duplicate"
+  | "budget"
+  | "error";
 
 /** What the phases hand each other; serialisable so the workflow checkpoints it. */
 export interface TickPlan {
@@ -570,6 +579,9 @@ export async function prepareTick(
     if (!(await d.claimWindow(loopId, window, Math.max(30, cadence * 60 - 5))))
       return noOp("Duplicate tick for cadence window", "duplicate");
   }
+  const projectId = asId(loop.project_id);
+  if (projectId && !(await d.budgetLeft(projectId)))
+    return noOp("Skipped: the AI budget is used up", "budget");
   return {
     outcome: "continue",
     plan: {
@@ -578,7 +590,7 @@ export async function prepareTick(
       startedAt,
       loop,
       reportId: asId(loop.report_id),
-      projectId: asId(loop.project_id),
+      projectId,
       actingUser: orStr(loop.acting_directus_user_id),
     },
   };
@@ -822,6 +834,7 @@ export async function runTick(
   tickKind = "scheduled",
 ): Promise<TickOutcome> {
   const prepared = await prepareTick(d, loopId, tickKind);
+  if (prepared.outcome === "budget") await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
   if (prepared.outcome !== "continue") return prepared.outcome;
   const plan = prepared.plan;
   let configId: string | null = null;

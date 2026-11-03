@@ -51,30 +51,27 @@ function queries(sql: Sql) {
       ) as Promise<Row[]>;
     },
 
-    /** Free (stamped) drafts untouched since `before` move to error; returns their ids. */
+    /** Free (or legacy stamped) drafts untouched since `before` move to error; returns their ids. */
     async failStuckDrafts(before: string, now: string, code: string, message: string) {
+      // Free is the workspace's own account tier, as allowance decides it.
       const rows = await sql`update project_report r
         set status = 'error', error_code = ${code}, error_message = ${message}, date_updated = ${now}
         from project p
         where p.id = r.project_id and p.is_sample is not true
           and r.kind = 'report' and r.status = 'draft' and r.deleted_at is null
-          and r.free_period_start is not null
+          and (r.free_period_start is not null or exists (
+            select 1 from workspace w join billing_account own on own.id = w.billing_account_id
+            where w.id = p.workspace_id and own.tier = 'free'))
           and coalesce(r.date_updated, r.date_created) < ${before}
         returning r.id::int`;
       return rows.map((r) => r.id as number).sort((a, b) => a - b);
     },
 
-    /**
-     * Starts a run: a scheduled report becomes a draft; a free draft is timed from now.
-     * False when the report moved on since it was read.
-     */
-    async startRun(id: number, now: string, free: boolean) {
+    /** Starts a run, timed from now; false when the report moved on since it was read. */
+    async startRun(id: number, now: string) {
       const rows = await sql`update project_report set status = 'draft', date_updated = ${now}
-        where id = ${id} and (status = 'scheduled' or (status = 'draft' and ${free}))
-        returning id`;
-      if (rows.length) return true;
-      const [row] = await sql`select status from project_report where id = ${id}`;
-      return !free && row?.status === "draft";
+        where id = ${id} and status in ('scheduled', 'draft') returning id`;
+      return rows.length > 0;
     },
 
     /** The scheduler's flip to draft; false when the report is no longer scheduled. */

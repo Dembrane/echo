@@ -10,7 +10,8 @@ export type FreeLimitName =
   | "report"
   | "map"
   | "popcorn"
-  | "recording_project";
+  | "recording_project"
+  | "ai_budget";
 
 // Params go first so they can never overwrite the reason.
 export function freeLimitError(

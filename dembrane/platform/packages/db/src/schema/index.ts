@@ -167,7 +167,7 @@ export const agent_loop_run = pgTable(
     index("agent_loop_run_running_started")
       .using("btree", table.started_at.asc().nullsLast())
       .where(sql`((status)::text = 'running'::text)`),
-    // nextRunStart: a loop's runs by start.
+    // latestRun: a loop's runs by start.
     index("agent_loop_run_loop_started").using(
       "btree",
       table.loop_id.asc().nullsLast(),
@@ -1149,6 +1149,8 @@ export const conversation = pgTable(
     move_history: json(),
     token_count: integer(),
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
+    // When a live recording first got the AI budget stop; its grace runs from here.
+    ai_stopped_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

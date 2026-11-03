@@ -124,6 +124,13 @@ export function turnToolLimitMessage(hostMessage: string | null | undefined): st
   );
 }
 
+export function aiBudgetStopMessage(): string {
+  return (
+    "This month's AI budget is used up, so I stopped here. You can upgrade to continue, " +
+    "or pick this up after it resets."
+  );
+}
+
 export function automaticNudgeContent(toolCallsWithoutAssistantMessage: number): string {
   const milestone =
     Math.floor(toolCallsWithoutAssistantMessage / AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL) *

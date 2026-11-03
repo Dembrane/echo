@@ -1,4 +1,5 @@
 import { type Access, DrizzleAccessStore } from "@dembrane/access";
+import { requireAiBudget } from "@dembrane/allowance";
 import { NotFoundError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
@@ -53,6 +54,7 @@ export function canvasRoutes(deps: CanvasRoutesDeps) {
     completer: deps.completer,
     limiter: deps.limiter ?? new RateLimiter(new PostgresRateCounter(deps.db)),
     now: deps.now ?? (() => new Date()),
+    requireAiBudget: (projectId, now) => requireAiBudget(deps.db, projectId, now),
     startTick: async (loopId, tickKind) => {
       await deps.queue.enqueue(canvasTick, { loopId, tickKind });
     },

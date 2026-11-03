@@ -7,8 +7,8 @@ import { type StatelessInput, transcribeStateless } from "./service";
 
 const { str, bool, nullable } = p;
 
-// The one purposes a caller may name to transcribe without a project to bill.
-const UNMETERED = ["pricing_intake", "issue_report"] as const;
+// The purposes a caller may name to transcribe without a project.
+const PURPOSES = ["pricing_intake", "issue_report"] as const;
 // Tighter than any form's own ceiling: this spends transcription, not a row.
 const PURPOSE_LIMITS = {
   pricing_intake: { name: "pricing_intake_transcription", capacity: 30, windowSeconds: 3600 },
@@ -21,6 +21,7 @@ const ALLOWED_TYPES = ["audio/", "video/", "application/octet-stream"];
 
 const formShape = {
   project_id: nullable(str()),
+  workspace_id: nullable(str()),
   purpose: nullable(str()),
   audio_file_uri: nullable(str()),
   language: nullable(str()),
@@ -81,6 +82,7 @@ async function readForm(req: Request) {
   return {
     file,
     project_id: (values.project_id as string | null | undefined) ?? null,
+    workspace_id: (values.workspace_id as string | null | undefined) ?? null,
     purpose: (values.purpose as string | null | undefined) ?? null,
     audio_file_uri: (values.audio_file_uri as string | null | undefined) ?? null,
     language: values.language === undefined ? "en" : (values.language as string | null),
@@ -102,11 +104,13 @@ export function statelessRoutes(d: ConversationsDeps) {
   app.post("/api/stateless/transcribe", async (c) => {
     const who = requireUser(c);
     const f = await readForm(c.req.raw);
-    if (f.purpose !== null && !(UNMETERED as readonly string[]).includes(f.purpose))
+    if (f.purpose !== null && !(PURPOSES as readonly string[]).includes(f.purpose))
       throw new StatusError(422, "upload.unsupported_purpose", { params: { purpose: f.purpose } });
-    const purpose = f.purpose as (typeof UNMETERED)[number] | null;
+    const purpose = f.purpose as (typeof PURPOSES)[number] | null;
     const input: StatelessInput = {
       projectId: f.project_id,
+      workspaceId: f.workspace_id,
+      budgetExempt: purpose === "issue_report",
       file: f.file,
       audioFileUri: f.audio_file_uri,
       language: f.language,
@@ -119,9 +123,13 @@ export function statelessRoutes(d: ConversationsDeps) {
     return c.json(
       await transcribeStateless(d, who, input, {
         async gate() {
-          // A project to bill wins over a purpose; a purpose alone is rate limited per
-          // person; staff alone may name neither.
-          if (input.projectId) return;
+          // Issue reports skip the budget, so they are rate limited even with a project.
+          if (input.projectId) {
+            if (purpose === "issue_report")
+              await d.limiter.check(PURPOSE_LIMITS.issue_report, who.directusUserId);
+            return;
+          }
+          // A purpose alone is rate limited per person; staff alone may name neither.
           if (purpose) await d.limiter.check(PURPOSE_LIMITS[purpose], who.directusUserId);
           else if (!who.isStaff) throw new ForbiddenError("upload.project_required");
         },

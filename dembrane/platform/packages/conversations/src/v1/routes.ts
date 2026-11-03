@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
 import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
+import { requirePortalAi } from "../portal-ai";
 import { conversationStore } from "../storage";
 import { replyProtocol, withStatus } from "./reply";
 import { v1Store } from "./storage";
@@ -99,6 +100,7 @@ export function conversationV1Routes(d: ConversationsDeps) {
     const project = await store.project(conv.project_id);
     if (!project) throw new NotFoundError("conversation.not_found");
     if (!project.is_conversation_allowed) throw new ForbiddenError("conversation.not_open");
+    await requirePortalAi(d.db, conv.project_id, d.now());
     if (!(await d.limiter.allow(REPLY_LIMIT, id))) {
       throw new RateLimitedError("rate_limit.exceeded", { message: TOO_MANY });
     }

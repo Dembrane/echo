@@ -31,35 +31,24 @@ function world() {
   return { store, inserted };
 }
 
-describe("chat BFF and the free chats", () => {
-  test("createChat refuses when the chats are spent", async () => {
+describe("chat BFF and the AI budget", () => {
+  test("createChat refuses when the AI budget is used up", async () => {
     const w = world();
-    const d = fakeDeps({ store: w.store, freeChats: fakeFreeChats(w.store, { refuse: "chats" }) });
+    const d = fakeDeps({
+      store: w.store,
+      freeChats: fakeFreeChats(w.store, { refuse: "ai_budget" }),
+    });
     const err = await createChat(d, host, { project_id: P1, name: null }).then(
       () => null,
       (e) => e,
     );
-    expect(err).toMatchObject({ status: 402, details: { limit: "chats" } });
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
     expect(w.inserted).toHaveLength(0);
   });
 
-  test("getChat carries free_turns", async () => {
-    const w = world();
-    const turns = { limit: 20, used: 4, frozen: false };
-    const d = fakeDeps({ store: w.store, freeChats: fakeFreeChats(w.store, { turns }) });
-    expect(await getChat(d, host, CHAT)).toMatchObject({ id: CHAT, free_turns: turns });
-  });
-
-  test("getChat reports a frozen chat", async () => {
-    const w = world();
-    const turns = { limit: 20, used: 20, frozen: true };
-    const d = fakeDeps({ store: w.store, freeChats: fakeFreeChats(w.store, { turns }) });
-    expect((await getChat(d, host, CHAT)).free_turns).toEqual(turns);
-  });
-
-  test("getChat has no free_turns off the free tier", async () => {
+  test("getChat keeps free_turns, always null", async () => {
     const w = world();
     const d = fakeDeps({ store: w.store });
-    expect((await getChat(d, host, CHAT)).free_turns).toBeNull();
+    expect(await getChat(d, host, CHAT)).toMatchObject({ id: CHAT, free_turns: null });
   });
 });

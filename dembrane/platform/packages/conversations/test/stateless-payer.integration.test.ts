@@ -75,6 +75,8 @@ run("stateless transcription payer", () => {
       { appUserId: "a", directusUserId: "u", isStaff: true },
       {
         projectId,
+        workspaceId: null,
+        budgetExempt: false,
         file: new File([new Uint8Array([1, 2, 3])], "note.webm", { type: "audio/webm" }),
         audioFileUri: null,
         language: "en",

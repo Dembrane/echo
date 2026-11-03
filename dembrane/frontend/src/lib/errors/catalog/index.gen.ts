@@ -25,6 +25,7 @@ import { offer } from "./offer.gen";
 import { organisation } from "./organisation.gen";
 import { participant } from "./participant.gen";
 import { popcorn } from "./popcorn.gen";
+import { portal } from "./portal.gen";
 import { present } from "./present.gen";
 import { pricing } from "./pricing.gen";
 import { privacy } from "./privacy.gen";
@@ -69,6 +70,7 @@ export const ERROR_CATALOG = {
   ...conversation,
   ...upload,
   ...participant,
+  ...portal,
   ...chat,
   ...memory,
   ...agent,

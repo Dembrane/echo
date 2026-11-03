@@ -25,6 +25,8 @@ export interface CanvasDeps extends AccessDeps {
   readonly completer: Completer;
   readonly limiter: RateLimiter;
   readonly now: () => Date;
+  /** Throws the 402 `ai_budget` when the project's free AI budget is used up. */
+  readonly requireAiBudget: (projectId: string, now: Date) => Promise<void>;
   /** Starts a tick now (the manual refresh), on the worker. */
   readonly startTick: (loopId: string, tickKind: string) => Promise<void>;
   /** Tells open canvas pages a new generation exists. */
@@ -342,6 +344,7 @@ async function loopOf(d: CanvasDeps, reportId: string): Promise<Row> {
 export async function refreshCanvas(d: CanvasDeps, who: Signed, canvasId: string) {
   const { report } = await canvasReport(d, who, canvasId, "project:update");
   const loop = await loopOf(d, String(report.id));
+  await d.requireAiBudget(String(report.project_id), d.now());
   if (!(await d.limiter.allow(REFRESH_LIMIT, canvasId)))
     throw new RateLimitedError("canvas.just_refreshed");
   await d.startTick(String(loop.id), "manual");
@@ -412,6 +415,7 @@ export async function previewCanvas(
   body: { project_id: string; brief: string; gather_spec: Json | null; tabs: Json[] | null },
 ) {
   await canvasProject(d, who, body.project_id, "project:update");
+  await d.requireAiBudget(body.project_id, d.now());
   if (!(await d.limiter.allow(PREVIEW_LIMIT, body.project_id)))
     throw new RateLimitedError("canvas.just_previewed");
   const bundle = await executeGatherSpec(d, {

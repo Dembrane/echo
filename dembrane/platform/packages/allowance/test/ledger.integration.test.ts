@@ -10,7 +10,14 @@ const run = admin ? describe : describe.skip;
 const dbName = `allowance_ledger_${process.pid}`;
 const OCT = new Date("2026-10-01T00:00:00Z");
 const NOV = new Date("2026-11-01T00:00:00Z");
-const ZERO = { audio_seconds: 0, chats: 0, reports: 0, maps: 0, popcorn_analyses: 0 };
+const ZERO = {
+  audio_seconds: 0,
+  chats: 0,
+  reports: 0,
+  maps: 0,
+  popcorn_analyses: 0,
+  ai_spend_micro_eur: 0,
+};
 
 run("allowance ledger", () => {
   setDefaultTimeout(60_000);

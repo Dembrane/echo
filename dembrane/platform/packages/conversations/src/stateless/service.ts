@@ -1,6 +1,6 @@
-import { allowanceForProject, freeLimitError } from "@dembrane/allowance";
+import { requireAiBudget, requireAiBudgetForWorkspace } from "@dembrane/allowance";
 import { durationOf } from "@dembrane/audio";
-import { newId, StatusError } from "@dembrane/core";
+import { ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
@@ -19,6 +19,10 @@ const PARTICIPANT = "Voice note";
 
 export interface StatelessInput {
   readonly projectId: string | null;
+  /** Pays for a note without a project; the caller must be in it. */
+  readonly workspaceId: string | null;
+  /** Issue reports transcribe even at zero budget. */
+  readonly budgetExempt: boolean;
   readonly file: File | null;
   readonly audioFileUri: string | null;
   readonly language: string | null;
@@ -30,7 +34,7 @@ export interface StatelessInput {
 }
 
 export interface StatelessHooks {
-  /** Who may call without a project: a purpose (rate limited) or staff. */
+  /** Who may call: purpose rate limits, and staff-only calls without a project. */
   gate(): Promise<void>;
   /** Content type and size of an uploaded file. */
   checkFile(file: File): void;
@@ -82,6 +86,16 @@ async function ownedKey(d: ConversationsDeps, input: StatelessInput): Promise<st
   return key;
 }
 
+// Any role in the workspace counts, billing included; no role answers 403.
+async function requireMember(d: ConversationsDeps, who: Signed, workspaceId: string) {
+  if (!who.appUserId || !isUuid(workspaceId)) throw new ForbiddenError("workspace.no_access");
+  await d.access.workspace(who, workspaceId, "project:read", d.now()).catch((err) => {
+    if (err instanceof NotFoundError) throw new ForbiddenError("workspace.no_access");
+    // A role without project:read is still a member.
+    if (!(err instanceof ForbiddenError)) throw err;
+  });
+}
+
 /**
  * The Dembrane-26-07 pipeline on one input, then a conversation row born deleted that
  * meters its duration against the project (billing counts deleted rows; listings do not).
@@ -96,10 +110,16 @@ export async function transcribeStateless(
   // act through their own workspace role, as everywhere on the platform).
   if (input.projectId) {
     await projectFor(d.access, who, input.projectId, "project:update");
-    // Voice notes are not part of the free plan (sample projects included).
-    if (await allowanceForProject(d.db, input.projectId, d.now()))
-      throw freeLimitError("audio_month");
-  } else await hooks.gate();
+    await hooks.gate();
+    // Voice spends the AI budget, never the audio hours.
+    if (!input.budgetExempt) await requireAiBudget(d.db, input.projectId, d.now());
+  } else {
+    await hooks.gate();
+    if (input.workspaceId) {
+      await requireMember(d, who, input.workspaceId);
+      if (!input.budgetExempt) await requireAiBudgetForWorkspace(d.db, input.workspaceId, d.now());
+    }
+  }
   if ((input.file === null) === (input.audioFileUri === null))
     throw new StatusError(400, "upload.source_ambiguous");
   if (input.file) hooks.checkFile(input.file);
@@ -122,10 +142,11 @@ export async function transcribeStateless(
   let transcript: string;
   let note: string;
   let duration: number | null = null;
-  // The form names the project; a note without one is ours until plan 2 bills the workspace.
   const payer: Payer = input.projectId
     ? { ref: "project", id: input.projectId }
-    : { internal: "voice_without_project" };
+    : input.workspaceId
+      ? { ref: "workspace", id: input.workspaceId }
+      : { internal: "voice_without_project" };
   try {
     try {
       const r = await withPayer(payer, () =>

@@ -320,6 +320,7 @@ export async function suggestions(
   const { chat } = await chatFor(gate(d), who, chatId);
   const projectId = chatProjectId(chat);
   if (!projectId) return { suggestions: [] };
+  await d.requireAiBudget(projectId, d.now());
   await d.limiter.check(SUGGESTIONS_LIMIT, projectId);
   return {
     suggestions: await generateSuggestions(d, projectId, chatId, chat.chat_mode, language),
@@ -356,6 +357,8 @@ export async function initializeMode(
       message: "Agentic mode enabled. Use the agentic run APIs for messaging.",
     };
   }
+  // Overview summarises conversations; the other modes make no model call.
+  await d.requireAiBudget(body.project_id, d.now());
   const withContent = (await d.reads.overviewConversations(body.project_id)).filter(
     (c) => Number(c.chunks_count ?? 0) > 0,
   );

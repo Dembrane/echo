@@ -1,4 +1,4 @@
-import { periodStart } from "@dembrane/allowance";
+import { AI_SPEND_KEY, periodStart } from "@dembrane/allowance";
 import { type Db, schema } from "@dembrane/db";
 import type { ModelCall, ModelCallObserver } from "@dembrane/llm";
 import { correlation, type Logger, type Payer, payer, payerKey } from "@dembrane/observability";
@@ -284,7 +284,6 @@ export function toRow(
   };
 }
 
-const AI_SPEND_KEY = "ai_spend_micro_eur";
 const RESOLVE_TTL_MS = 60_000;
 // Well under Postgres's 65,535 bind parameters per statement at ~30 columns a row.
 const INSERT_CHUNK = 1000;

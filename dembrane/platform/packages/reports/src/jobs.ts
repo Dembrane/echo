@@ -49,8 +49,8 @@ export interface GenerateDeps {
   readonly notifier: Notify;
   /** Sends report.generated to the project's webhooks. */
   readonly reportGenerated: (projectId: string, reportId: number) => Promise<unknown>;
-  /** Gives back a free report that produced nothing. */
-  readonly refundFreeReport: (reportId: number) => Promise<unknown>;
+  /** False when the project's free AI budget is used up. */
+  readonly budgetLeft: (projectId: string) => Promise<boolean>;
   /** Tests stretch a step to crash a worker inside it. */
   readonly pause?: (step: string) => Promise<void>;
 }
@@ -113,14 +113,9 @@ export async function markError(
     // Never over a report another run saved.
     if (!(await d.store.failRun(p.reportId, code, message, d.now().toISOString()))) return false;
   } catch (err) {
-    // Still a draft: no notice now; the stuck-draft sweep errors and refunds it.
+    // Still a draft: no notice now; the stuck-draft sweep errors it.
     d.logger.error({ err, reportId: p.reportId }, "failed to update report status to error");
     return false;
-  }
-  try {
-    await d.refundFreeReport(p.reportId);
-  } catch (err) {
-    d.logger.error({ err, reportId: p.reportId }, "free report refund failed");
   }
   await progress(d, p.reportId, "failed", message);
   return true;
@@ -184,15 +179,14 @@ export function generateReportWorkflow(d: GenerateDeps) {
       "guard",
       async () => {
         const report = await d.store.report(String(p.reportId));
+        const open = report && (report.status === "draft" || report.status === "scheduled");
+        if (open && !(await d.budgetLeft(p.projectId))) {
+          await markError(d, p, "AI_BUDGET_USED_UP", "This month's AI budget is used up.");
+          await phaseEnded(d, p, "task_create_report", "completed", `for report ${p.reportId}`, t0);
+          return { go: false };
+        }
         // Conditional, so a report another run saved meanwhile is not re-entered.
-        const started =
-          report &&
-          (report.status === "draft" || report.status === "scheduled") &&
-          (await d.store.startRun(
-            p.reportId,
-            d.now().toISOString(),
-            Boolean(report.free_period_start),
-          ));
+        const started = open && (await d.store.startRun(p.reportId, d.now().toISOString()));
         if (!started) {
           await phaseEnded(d, p, "task_create_report", "completed", `for report ${p.reportId}`, t0);
           return { go: false };
@@ -420,11 +414,11 @@ export const STUCK_REPORT_MS =
   generateReport.expireInSeconds * 1000 * (generateReport.retryLimit + 1) + 30 * 60_000;
 
 /**
- * A free draft whose run ended without markError (DBOS cancelled or timed it out) ends in
- * error, gives its report back once, and no longer blocks a new report. Paid drafts are left.
+ * A draft whose run ended without markError (DBOS cancelled or timed it out) ends in error
+ * and no longer blocks a new report.
  */
 export async function failStuckReports(
-  d: Pick<GenerateDeps, "store" | "refundFreeReport" | "logger" | "now">,
+  d: Pick<GenerateDeps, "store" | "logger" | "now">,
 ): Promise<number> {
   const now = d.now();
   const ids = await d.store.failStuckDrafts(
@@ -433,14 +427,7 @@ export async function failStuckReports(
     "GENERATION_DID_NOT_FINISH",
     "Report generation did not finish",
   );
-  for (const id of ids) {
-    try {
-      await d.refundFreeReport(id);
-    } catch (err) {
-      d.logger.error({ err, reportId: id }, "free report refund failed");
-    }
-    await progress(d, id, "failed", "Report generation did not finish");
-  }
+  for (const id of ids) await progress(d, id, "failed", "Report generation did not finish");
   return ids.length;
 }
 

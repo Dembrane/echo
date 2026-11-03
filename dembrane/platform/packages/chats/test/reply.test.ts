@@ -177,7 +177,7 @@ describe("chat reply stream", () => {
     expect(w.deleted).toEqual([w.created[0]?.id as string]);
     expect(free.undone).toHaveLength(1);
     expect(free.undone[0]?.[0]).toMatchObject({ projectId: P1, chatId: CHAT, text: "Hi" });
-    expect(free.undone[0]?.[1]).toEqual({ account: null, claimed: false });
+    expect(free.undone[0]?.[1]).toEqual({ inserted: true });
     expect((captured[0] as unknown[])[1]).toBe("server_chat_error");
     const textRes = await reply(
       d,
@@ -318,13 +318,13 @@ describe("chat reply stream", () => {
     expect(agentic.created.length).toBe(0);
   });
 
-  test("spent free turns are refused before anything is stored", async () => {
+  test("a used-up AI budget is refused before anything is stored", async () => {
     const w = world();
     const calls: LanguageModelV4CallOptions[] = [];
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
-      freeChats: fakeFreeChats(w.store, { refuse: "chat_turns" }),
+      freeChats: fakeFreeChats(w.store, { refuse: "ai_budget" }),
       model: fakeLanguageModel({ calls }),
     });
     const err = await reply(
@@ -338,7 +338,7 @@ describe("chat reply stream", () => {
       () => null,
       (e) => e,
     );
-    expect(err).toMatchObject({ status: 402, details: { limit: "chat_turns" } });
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
     expect(w.created).toHaveLength(0);
     expect(calls).toHaveLength(0);
   });

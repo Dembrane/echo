@@ -4,12 +4,16 @@ import type { AllowanceAccount } from "./account";
 
 const { free_usage } = schema;
 
+// Micro-euros of AI spend; the metering recorder adds to it, the budget check reads it.
+export const AI_SPEND_KEY = "ai_spend_micro_eur";
+
 export const USAGE_KEYS = [
   "audio_seconds",
   "chats",
   "reports",
   "maps",
   "popcorn_analyses",
+  AI_SPEND_KEY,
 ] as const;
 export type UsageKey = (typeof USAGE_KEYS)[number];
 
@@ -130,7 +134,7 @@ export async function usedThisPeriod(
   return used;
 }
 
-export type Marker = "notice:audio_out";
+export type Marker = "notice:audio_out" | "notice:ai_out";
 
 // True only for the first call per account and period.
 export async function claimOnce(db: Db, a: AllowanceAccount, marker: Marker): Promise<boolean> {

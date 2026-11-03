@@ -1,6 +1,7 @@
 import {
   type AllowanceAccount,
   add,
+  aiBudgetForProject,
   allowanceForProject,
   type FreeLimits,
   freeLimitError,
@@ -24,7 +25,7 @@ export const LIVE_SOURCE = "PORTAL_AUDIO";
 export const LIVE_GRACE_SECONDS = 120;
 // Set on a chunk the free limit kept out of the transcript.
 export const FREE_LIMIT_SKIPPED = "Over the free plan's recording limit";
-export type AudioRefusal = "audio_month" | "audio_conversation" | "recording_project";
+export type AudioRefusal = "audio_month" | "audio_conversation" | "recording_project" | "ai_budget";
 
 type AudioDeps = Pick<ConversationsDeps, "db" | "now"> & Partial<Pick<ConversationsDeps, "logger">>;
 
@@ -46,6 +47,24 @@ async function verdict(d: AudioDeps, projectId: string): Promise<Verdict | null>
   return { a, limits, refusal: null };
 }
 
+// Read only; a failed read lets the audio through.
+async function aiBudgetGone(d: AudioDeps, projectId: string): Promise<boolean> {
+  try {
+    return (await aiBudgetForProject(d.db, projectId, d.now()))?.exhausted === true;
+  } catch (err) {
+    d.logger?.error(
+      { err, projectId, signal: "free_audio.ai_budget_check_failed" },
+      "AI budget check failed",
+    );
+    return false;
+  }
+}
+
+// Past the grace from a recording's first AI budget stop, its chunks are refused.
+function aiGraceOver(stoppedAt: string | null, now: Date): boolean {
+  return stoppedAt !== null && now.getTime() > Date.parse(stoppedAt) + LIVE_GRACE_SECONDS * 1000;
+}
+
 // Null for unlimited; throws the limit error when this project may not start audio.
 export async function requireAudioStart(
   d: AudioDeps,
@@ -55,6 +74,8 @@ export async function requireAudioStart(
   if (!v) return null;
   if (v.refusal === "recording_project") throw freeLimitError("recording_project");
   if (v.refusal === "audio_month") throw freeLimitError("audio_month", { remaining_seconds: 0 });
+  // No budget figures: participants never see them.
+  if (await aiBudgetGone(d, projectId)) throw freeLimitError("ai_budget");
   return v.a;
 }
 
@@ -62,12 +83,14 @@ export async function requireAudioStart(
 export async function audioOpen(
   d: AudioDeps,
   projectId: string,
-): Promise<{ open: boolean; conversationLimitSeconds: number | null }> {
+): Promise<{ open: boolean; aiAvailable: boolean; conversationLimitSeconds: number | null }> {
   try {
     const v = await verdict(d, projectId);
-    if (!v) return { open: true, conversationLimitSeconds: null };
+    if (!v) return { open: true, aiAvailable: true, conversationLimitSeconds: null };
+    const ai = !(await aiBudgetGone(d, projectId));
     return {
-      open: v.refusal === null,
+      open: v.refusal === null && ai,
+      aiAvailable: ai,
       conversationLimitSeconds: v.limits.audio_seconds_conversation,
     };
   } catch (err) {
@@ -75,7 +98,7 @@ export async function audioOpen(
       { err, projectId, signal: "free_audio.open_check_failed" },
       "audio open check failed",
     );
-    return { open: true, conversationLimitSeconds: null };
+    return { open: true, aiAvailable: true, conversationLimitSeconds: null };
   }
 }
 
@@ -204,6 +227,7 @@ export async function reserveUpload(
   };
   // Also for a conversation that already has audio: only the recording project takes files.
   if (pre.home !== conv.project_id) return refuse(freeLimitError("recording_project"));
+  if (await aiBudgetGone(d, conv.project_id)) return refuse(freeLimitError("ai_budget"));
   const measured = await measureFailed(d, conv.id, () => measureUpload(d, key, bytes));
   if ("unreadable" in measured) {
     d.logger.warn(
@@ -285,23 +309,54 @@ async function liveVerdict(
   return v(null, null);
 }
 
+type AiLive = Pick<LiveVerdict, "refuse" | "stop">;
+
+// The AI budget's verdict for a live chunk, from the recording's first stop.
+function aiLive(gone: boolean, stoppedAt: string | null, now: Date): AiLive {
+  if (!gone) return { refuse: null, stop: null };
+  return aiGraceOver(stoppedAt, now)
+    ? { refuse: "ai_budget", stop: null }
+    : { refuse: null, stop: "ai_budget" };
+}
+
+// Stamps the first stop, and clears it once there is room again, so a later stop gets its grace.
+async function stampAiStop(db: Db, conversationId: string, gone: boolean, now: Date) {
+  const { conversation } = schema;
+  const [row] = await db
+    .select({ at: conversation.ai_stopped_at })
+    .from(conversation)
+    .where(eq(conversation.id, conversationId));
+  const at = row?.at ?? null;
+  const next = gone ? (at ?? now.toISOString()) : null;
+  if (next !== at)
+    await db
+      .update(conversation)
+      .set({ ai_stopped_at: next })
+      .where(eq(conversation.id, conversationId));
+  return aiLive(gone, next, now);
+}
+
 /**
  * A live chunk's verdict: throws past the grace, returns the stop signal at the limit.
  * Fails open: any error reading the limits accepts the chunk.
  */
 export async function liveChunkCheck(
   d: Pick<ConversationsDeps, "db" | "now" | "logger">,
-  conv: { id: string; project_id: string },
+  conv: { id: string; project_id: string; ai_stopped_at: string | null },
   opts: { home?: boolean } = {},
 ): Promise<AudioRefusal | null> {
-  let v: LiveVerdict;
+  let v: AiLive;
   try {
     const a = await allowanceForProject(d.db, conv.project_id, d.now());
     if (!a) return null;
     // A started recording with no audio yet still belongs to the recording project.
     if (opts.home && (await recordingProject(d.db, a)) !== conv.project_id)
-      v = { refuse: "recording_project", stop: null, conv: 0 };
+      v = { refuse: "recording_project", stop: null };
     else v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
+    if (!v.refuse) {
+      const ai = aiLive(await aiBudgetGone(d, conv.project_id), conv.ai_stopped_at, d.now());
+      v = { refuse: ai.refuse, stop: v.stop ?? ai.stop };
+    }
   } catch (err) {
     d.logger.error(
       { err, conversationId: conv.id, signal: "free_audio.live_check_failed" },
@@ -338,6 +393,7 @@ export async function confirmLiveChunk(
     const limits = await freeLimits(d.db, d.now, d.logger).catch(
       failed("free_audio.live_check_failed"),
     );
+    const aiGone = await aiBudgetGone(d, conv.project_id);
     return await withAllowanceLock(d.db, a, async (tx) => {
       const prior = await written(tx, conv.id, write.id);
       const v = limits
@@ -345,8 +401,14 @@ export async function confirmLiveChunk(
             .transaction((sp) => liveVerdict(sp as unknown as Db, a, limits, conv.id))
             .catch(failed("free_audio.live_check_failed"))
         : null;
-      if (prior) return { chunk: prior, recordingStop: v ? (v.refuse ?? v.stop) : null };
+      const aiStop = aiGone ? "ai_budget" : null;
+      if (prior) return { chunk: prior, recordingStop: (v && (v.refuse ?? v.stop)) ?? aiStop };
       if (v?.refuse) throw freeLimitError(v.refuse);
+      // A failed stamp keeps the chunk and still says stop.
+      const ai = (await tx
+        .transaction((sp) => stampAiStop(sp as unknown as Db, conv.id, aiGone, d.now()))
+        .catch(failed("free_audio.ai_stop_failed"))) ?? { refuse: null, stop: aiStop };
+      if (ai.refuse) throw freeLimitError(ai.refuse);
       let row: CountedChunk = { audioSeconds: null, error: null };
       if (v && limits && s !== null) {
         const seconds = Math.round(s);
@@ -371,7 +433,7 @@ export async function confirmLiveChunk(
             row = fits ? { ...row, audioSeconds: s } : { ...row, error: FREE_LIMIT_SKIPPED };
         }
       }
-      return { chunk: await write.insert(tx, row), recordingStop: v?.stop ?? null };
+      return { chunk: await write.insert(tx, row), recordingStop: v?.stop ?? ai.stop };
     });
   } catch (err) {
     if (isFreeLimit(err)) await drop(d, conv.id, key, write.id);
@@ -388,7 +450,7 @@ export async function liveStopNow(
     const a = await allowanceForProject(d.db, conv.project_id, d.now());
     if (!a) return null;
     const v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
-    return v.refuse ?? v.stop;
+    return v.refuse ?? v.stop ?? ((await aiBudgetGone(d, conv.project_id)) ? "ai_budget" : null);
   } catch (err) {
     d.logger.error(
       { err, conversationId: conv.id, signal: "free_audio.live_check_failed" },

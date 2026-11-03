@@ -11,6 +11,8 @@ const dbName = `reports_stuck_drafts_${process.pid}`;
 const url = admin ? `${admin.slice(0, admin.lastIndexOf("/"))}/${dbName}` : "";
 const PROJECT = "f0000000-0000-4000-8000-00000000cc01";
 const SAMPLE = "f0000000-0000-4000-8000-00000000cc02";
+const FREE = "f0000000-0000-4000-8000-00000000cc03";
+const PAID = "f0000000-0000-4000-8000-00000000cc04";
 const OCT = "2026-10-01T00:00:00Z";
 const NOW = new Date("2026-10-21T12:00:00Z");
 
@@ -30,6 +32,19 @@ run("stuck report drafts", () => {
       values (${PROJECT}, 'Stuck', 'en', true, now(), now())`;
     await sql`insert into project (id, name, language, is_conversation_allowed, is_sample, created_at, updated_at)
       values (${SAMPLE}, 'Sample', 'en', true, true, now(), now())`;
+    for (const [n, tier, project] of [
+      [5, "free", FREE],
+      [6, "guardian", PAID],
+    ] as const) {
+      const [org, billing, ws] = [1, 2, 3].map(
+        (i) => `f0000000-0000-4000-8000-0000000${n}cc0${i}`,
+      ) as [string, string, string];
+      await sql`insert into org (id, name) values (${org}, 'Org')`;
+      await sql`insert into billing_account (id, org_id, tier) values (${billing}, ${org}, ${tier})`;
+      await sql`insert into workspace (id, name, org_id, billing_account_id) values (${ws}, 'W', ${org}, ${billing})`;
+      await sql`insert into project (id, name, language, workspace_id, is_conversation_allowed, created_at, updated_at)
+        values (${project}, 'P', 'en', ${ws}, true, now(), now())`;
+    }
   });
   afterAll(async () => {
     await sql?.end();
@@ -43,7 +58,7 @@ run("stuck report drafts", () => {
   const old = ago(STUCK_REPORT_MS + 60_000);
   const fresh = ago(STUCK_REPORT_MS - 60_000);
 
-  test("old free drafts end in error and ask for a refund; others are left alone", async () => {
+  test("old stamped drafts end in error; others are left alone", async () => {
     const rows = await sql`insert into project_report
         (project_id, status, kind, content, date_created, date_updated, deleted_at, free_period_start)
       values
@@ -57,15 +72,14 @@ run("stuck report drafts", () => {
         (${SAMPLE}, 'draft', 'report', '', ${old}, ${old}, null, ${OCT})
       returning id::int`;
     const ids = rows.map((r) => r.id as number);
-    const refunded: number[] = [];
     const d = {
       store: reportsStorage(database.db),
-      refundFreeReport: async (id: number) => refunded.push(id),
       logger: { error: () => {}, warn: () => {}, info: () => {} } as never,
       now: () => NOW,
     };
+    const ledger = async () => Number((await sql`select count(*) as n from free_usage`)[0]?.n);
+    const usage = await ledger();
     expect(await failStuckReports(d)).toBe(2);
-    expect(refunded).toEqual([ids[0], ids[1]] as number[]);
     const after = await sql`select id::int, status, error_code from project_report order by id`;
     const err = { status: "error", error_code: "GENERATION_DID_NOT_FINISH" };
     const left = (status: string) => ({ status, error_code: null });
@@ -82,7 +96,27 @@ run("stuck report drafts", () => {
       ].map((r, i) => ({ id: ids[i], ...r })),
     );
     expect(await failStuckReports(d)).toBe(0);
-    expect(refunded).toHaveLength(2);
+    expect(await ledger()).toBe(usage);
+  });
+
+  test("a stuck free draft ends in error; a stuck paid draft is left alone", async () => {
+    const rows = await sql`insert into project_report
+        (project_id, status, kind, content, date_created, date_updated)
+      values (${FREE}, 'draft', 'report', '', ${old}, ${old}), (${PAID}, 'draft', 'report', '', ${old}, ${old})
+      returning id::int`;
+    const [free, paid] = rows.map((r) => r.id as number) as [number, number];
+    const d = {
+      store: reportsStorage(database.db),
+      logger: { error: () => {}, warn: () => {}, info: () => {} } as never,
+      now: () => NOW,
+    };
+    expect(await failStuckReports(d)).toBe(1);
+    const after =
+      await sql`select id::int, status from project_report where id in (${free}, ${paid}) order by id`;
+    expect([...after]).toEqual([
+      { id: free, status: "error" },
+      { id: paid, status: "draft" },
+    ]);
   });
 
   test("a save that lands after the sweep does not archive the report", async () => {
@@ -96,35 +130,16 @@ run("stuck report drafts", () => {
     expect(row).toEqual({ status: "error", content: "" });
   });
 
-  test("a refund that throws does not stop the sweep", async () => {
-    await sql`insert into project_report (project_id, status, kind, content, date_created, free_period_start)
-      values (${PROJECT}, 'draft', 'report', '', ${old}, ${OCT}), (${PROJECT}, 'draft', 'report', '', ${old}, ${OCT})`;
-    const errors: unknown[] = [];
-    const d = {
-      store: reportsStorage(database.db),
-      refundFreeReport: async () => {
-        throw new Error("db down");
-      },
-      logger: { error: (o: unknown) => errors.push(o), warn: () => {}, info: () => {} } as never,
-      now: () => NOW,
-    };
-    expect(await failStuckReports(d)).toBe(2);
-    expect(errors).toHaveLength(2);
-  });
-
   test("a second run neither re-enters nor errors a report another run saved", async () => {
     const store = reportsStorage(database.db);
     const [r] =
       await sql`insert into project_report (project_id, status, kind, content, date_created, free_period_start)
       values (${PROJECT}, 'archived', 'report', '# Saved', ${old}, ${OCT}) returning id::int`;
     const id = r?.id as number;
-    expect(await store.startRun(id, NOW.toISOString(), true)).toBe(false);
-    expect(await store.startRun(id, NOW.toISOString(), false)).toBe(false);
-    const refunded: number[] = [];
+    expect(await store.startRun(id, NOW.toISOString())).toBe(false);
     await markError(
       {
         store,
-        refundFreeReport: async (n: number) => refunded.push(n),
         logger: { error: () => {}, warn: () => {}, info: () => {} },
         now: () => NOW,
       } as never,
@@ -135,7 +150,6 @@ run("stuck report drafts", () => {
     const [row] =
       await sql`select status, content, error_code from project_report where id = ${id}`;
     expect(row).toEqual({ status: "archived", content: "# Saved", error_code: null });
-    expect(refunded).toEqual([]);
   });
 
   test("a run starts a scheduled report and a draft", async () => {
@@ -145,9 +159,8 @@ run("stuck report drafts", () => {
       values (${PROJECT}, 'scheduled', 'report', '', ${old}), (${PROJECT}, 'draft', 'report', '', ${old})
       returning id::int`;
     const [scheduled, draft] = rows.map((r) => r.id as number) as [number, number];
-    expect(await store.startRun(scheduled, NOW.toISOString(), false)).toBe(true);
-    expect(await store.startRun(draft, NOW.toISOString(), false)).toBe(true);
-    expect(await store.startRun(draft, NOW.toISOString(), true)).toBe(true);
+    expect(await store.startRun(scheduled, NOW.toISOString())).toBe(true);
+    expect(await store.startRun(draft, NOW.toISOString())).toBe(true);
     const after =
       await sql`select status, date_updated from project_report where id in (${scheduled}, ${draft}) order by id`;
     expect(after.map((r) => r.status)).toEqual(["draft", "draft"]);

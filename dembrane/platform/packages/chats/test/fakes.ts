@@ -5,7 +5,7 @@ import { freeLimitError } from "@dembrane/allowance";
 import { fakeLanguageModel } from "@dembrane/llm";
 import { createLogger, type Logger } from "@dembrane/observability";
 import type { ChatDeps } from "../src/deps";
-import type { Admitted, FreeChats, FreeTurns, UserTurn } from "../src/free";
+import type { Admitted, FreeChats, UserTurn } from "../src/free";
 
 export const quietLogger: Logger = createLogger(
   { service: "test", release: "r", env: "test", level: "error" },
@@ -15,7 +15,7 @@ export const quietLogger: Logger = createLogger(
 /** A FreeChats over a fake store: admits by storing, undoes by deleting, records undo calls. */
 export function fakeFreeChats(
   store: Record<string, unknown> | undefined,
-  opts: { refuse?: "chats" | "chat_turns"; turns?: FreeTurns | null } = {},
+  opts: { refuse?: "ai_budget" | "chat_turns" } = {},
 ): FreeChats & { undone: [UserTurn, Admitted][] } {
   const s = store as {
     createMessage?: (v: Record<string, unknown>) => Promise<unknown>;
@@ -25,7 +25,7 @@ export function fakeFreeChats(
   return {
     undone,
     async canStartChat() {
-      if (opts.refuse === "chats") throw freeLimitError("chats");
+      if (opts.refuse === "ai_budget") throw freeLimitError("ai_budget");
     },
     async admitTurn(turn) {
       if (opts.refuse) throw freeLimitError(opts.refuse);
@@ -37,14 +37,11 @@ export function fakeFreeChats(
         templateKey: turn.templateKey ?? null,
         now: turn.now,
       });
-      return { account: null, claimed: false };
+      return { inserted: true };
     },
     async undoTurn(turn, admitted) {
       undone.push([turn, admitted]);
       await s.deleteMessage?.(turn.messageId);
-    },
-    async turnStatus() {
-      return opts.turns ?? null;
     },
   };
 }
@@ -57,12 +54,14 @@ export function fakeDeps(parts: {
   models?: Record<string, LanguageModelV4>;
   captured?: unknown[][];
   freeChats?: FreeChats;
+  requireAiBudget?: ChatDeps["requireAiBudget"];
 }): ChatDeps {
   let n = 0;
   return {
     store: parts.store as never,
     reads: parts.reads as never,
     freeChats: parts.freeChats ?? fakeFreeChats(parts.store),
+    requireAiBudget: parts.requireAiBudget ?? (async () => {}),
     access: hostAccess(),
     models: {
       model: (g: string) => (parts.models?.[g] ?? parts.model ?? fakeLanguageModel()) as never,

@@ -1,4 +1,5 @@
 import { DrizzleAccessStore } from "@dembrane/access";
+import { aiBudgetForProject } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
@@ -71,12 +72,15 @@ export interface CanvasWorkerDeps {
 export function tickDeps(deps: CanvasWorkerDeps, runId: string): TickDeps {
   const sql = client(deps.db);
   const limiter = new RateLimiter(new PostgresRateCounter(deps.db));
+  const now = deps.now ?? (() => new Date());
   return {
     store: canvasStore(sql),
     accessStore: new DrizzleAccessStore(deps.db),
     completer: deps.completer,
     canvasEnabled: deps.canvasEnabled,
-    now: deps.now ?? (() => new Date()),
+    now,
+    budgetLeft: async (projectId) =>
+      (await aiBudgetForProject(deps.db, projectId, now()))?.exhausted !== true,
     nudge: (reportId) => publishGenerationNudge(sql, reportId, deps.logger),
     claimWindow: (loopId, window, ttl) =>
       limiter.allow({ name: WINDOW_LIMIT, capacity: 1, windowSeconds: ttl }, `${loopId}:${window}`),
@@ -87,10 +91,12 @@ export function tickDeps(deps: CanvasWorkerDeps, runId: string): TickDeps {
 /** The workflow body: the tick's phases as checkpointed steps. */
 export async function tickWorkflow(d: TickDeps, loopId: string, tickKind: string): Promise<string> {
   const prepared = await step("prepare", () => prepareTick(d, loopId, tickKind), STEP);
-  if (prepared.outcome !== "continue") return prepared.outcome;
-  const plan = prepared.plan;
   const next = () =>
     step("schedule-next", () => enqueueNextIfDue(d, loopId, null, d.idFor("next")), STEP);
+  // A skip for budget keeps the schedule, so ticks resume on their own after the reset.
+  if (prepared.outcome === "budget") await next();
+  if (prepared.outcome !== "continue") return prepared.outcome;
+  const plan = prepared.plan;
   let configId: string | null = null;
   try {
     const g = await step("gather", () => gatherTick(d, plan), STEP);

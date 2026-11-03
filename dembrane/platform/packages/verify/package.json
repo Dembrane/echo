@@ -31,6 +31,7 @@
     "hono": "^4.9.0"
   },
   "devDependencies": {
+    "@dembrane/allowance": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/storage": "workspace:*",
     "postgres": "^3.4.9",

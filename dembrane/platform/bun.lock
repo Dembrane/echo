@@ -342,6 +342,7 @@
       "dependencies": {
         "@dbos-inc/dbos-sdk": "^5.1.10",
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -692,6 +693,7 @@
       "dependencies": {
         "@dembrane/access": "workspace:*",
         "@dembrane/account": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -825,6 +827,7 @@
         "hono": "^4.9.0",
       },
       "devDependencies": {
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "hono": "^4.9.0",

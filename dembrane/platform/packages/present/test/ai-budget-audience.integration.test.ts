@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Writable } from "node:stream";
 import type { Access } from "@dembrane/access";
-import { invalidateFreeLimits } from "@dembrane/allowance";
+import { AI_SPEND_KEY, invalidateFreeLimits } from "@dembrane/allowance";
 import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import { createLogger } from "@dembrane/observability";
-import { type PopcornDeps, popcornAllowance, popcornDeps } from "@dembrane/popcorn";
+import { type PopcornDeps, popcornDeps } from "@dembrane/popcorn";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { updateSettings } from "../../popcorn/src/service";
@@ -14,14 +14,14 @@ import type { MapStore } from "../src/map";
 import { presentRoutes } from "../src/routes";
 import { ensureDefault } from "../src/service";
 
-// The host sees the free analyses run out; the presented screen never does.
+// The host sees the AI budget run out; the presented screen never does.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 
 const USER = "d2000000-0000-4000-8000-0000000000f1";
 const APP_USER = "a2000000-0000-4000-8000-0000000000f1";
 
-run("free popcorn on the presented screen", () => {
+run("the AI budget on the presented screen", () => {
   setDefaultTimeout(60_000);
   let database: ReturnType<typeof createDb>;
   let d: PopcornDeps;
@@ -29,7 +29,7 @@ run("free popcorn on the presented screen", () => {
 
   beforeAll(async () => {
     invalidateFreeLimits();
-    const url = await freshDatabase(admin as string, "present_free_audience_test");
+    const url = await freshDatabase(admin as string, "present_ai_budget_audience_test");
     await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 4 });
     const logger = createLogger(
@@ -102,7 +102,7 @@ run("free popcorn on the presented screen", () => {
     return { status: res.status, text: await res.text() };
   };
 
-  test("the audience sees nothing of the free limit", async () => {
+  test("the audience sees nothing of the AI budget", async () => {
     const sql = database.client;
     const [org, billing, ws, projectId] = [newId(), newId(), newId(), newId()];
     await sql`insert into directus_users (id, email) values (${USER}, 'free@example.com')`;
@@ -117,20 +117,28 @@ run("free popcorn on the presented screen", () => {
     await updateSettings(d, report, {
       presentation: { blocks: ["popcorn", "tensions", "stakeholders"] },
     });
-    const pop = popcornAllowance(database.db);
-    for (let i = 0; i < 12; i++) await pop.admit(projectId, new Date());
+    const now = new Date();
+    const period = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount)
+      values (${billing}, ${period}, ${AI_SPEND_KEY}, 5000000)`;
 
     const host = await get(`projects/${projectId}`);
     expect(host.status).toBe(200);
     const presentation = (JSON.parse(host.text) as { presentation: Record<string, unknown> })
       .presentation;
-    expect((presentation.free_popcorn as { exhausted: boolean }).exhausted).toBe(true);
+    expect(presentation.ai_budget).toEqual({ exhausted: true });
+    expect(presentation.free_popcorn).toBeUndefined();
+    const draft = await get(`${String(report.id)}/draft`);
+    expect(draft.status).toBe(200);
+    const drafted = (JSON.parse(draft.text) as { presentation: Record<string, unknown> })
+      .presentation;
+    expect(drafted.ai_budget).toEqual({ exhausted: true });
 
     const id = String(report.id);
     for (const path of [`${id}/audience`, `${id}/deck/data/bundle.json`, `${id}/deck/`]) {
       const res = await get(path);
       expect(res.status).toBe(200);
-      for (const word of ["free_popcorn", "FREE_TIER", "upgrade", "exhausted"])
+      for (const word of ["ai_budget", "free_popcorn", "FREE_TIER", "upgrade", "exhausted"])
         expect({ path, found: res.text.includes(word) }).toEqual({ path, found: false });
     }
 

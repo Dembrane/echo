@@ -1,5 +1,5 @@
 import type { Access } from "@dembrane/access";
-import { allowanceForCountedProject, freeLimitError } from "@dembrane/allowance";
+import { requireAiBudget } from "@dembrane/allowance";
 import type { Admitted, ChatsStorage, FreeChats, UserTurn } from "@dembrane/chats";
 import {
   BadRequestError,
@@ -115,7 +115,7 @@ interface Gated {
   readonly admitted: Admitted;
 }
 
-// Stores the host's message through the free chat gate; a free run needs a chat to count against.
+// Refuses at a used-up AI budget, then stores the host's message in the run's chat, if any.
 async function admitHostTurn(
   d: RunsDeps,
   projectId: string | null,
@@ -124,10 +124,8 @@ async function admitHostTurn(
 ): Promise<Gated | null> {
   if (!projectId) return null;
   const now = d.now();
-  if (!chatId) {
-    if (await allowanceForCountedProject(d.db, projectId, now)) throw freeLimitError("chats");
-    return null;
-  }
+  await requireAiBudget(d.db, projectId, now);
+  if (!chatId) return null;
   const turn = { projectId, chatId, messageId: newId(), text, now };
   return { turn, admitted: await d.freeChats.admitTurn(turn) };
 }

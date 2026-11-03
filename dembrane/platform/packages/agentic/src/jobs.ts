@@ -1,5 +1,6 @@
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { aiBudgetForProject } from "@dembrane/allowance";
 import { type Capture, posthogCapture } from "@dembrane/analytics";
 import type { Config } from "@dembrane/config";
 import type { Db } from "@dembrane/db";
@@ -74,6 +75,7 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
 } {
   const access = new Access(new DrizzleAccessStore(deps.db));
   const notifier = new Notifier(deps.db, deps.logger);
+  const now = deps.now ?? (() => new Date());
   const turnDeps: TurnDeps = {
     store: runsStorage(deps.db),
     logger: deps.logger,
@@ -95,7 +97,9 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
         )),
     capture: deps.capture ?? posthogCapture(deps.config.http.dashboardUrl, deps.logger),
     notify: (e) => notifier.emit(e),
-    now: deps.now ?? (() => new Date()),
+    now,
+    budgetLeft: async (projectId) =>
+      (await aiBudgetForProject(deps.db, projectId, now()))?.exhausted !== true,
   };
   let client: Promise<DBOSClient> | null = null;
   const dbos = () => {

@@ -1,3 +1,4 @@
+import { AI_SPEND_KEY, type Marker } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, ne, sql } from "drizzle-orm";
@@ -270,6 +271,24 @@ export function billingStorage(db: Db): BillingStore {
         periodStart: new Date(r.periodStart),
         amount: Number(r.amount),
       }));
+    },
+
+    async freeAiCandidates(since) {
+      const u = schema.free_usage;
+      const marker: Marker = "notice:ai_out";
+      const rows = await db
+        .select({ accountId: u.billing_account_id, periodStart: u.period_start })
+        .from(u)
+        .where(
+          and(
+            eq(u.key, AI_SPEND_KEY),
+            gte(u.updated_at, since.toISOString()),
+            sql`not exists (select 1 from free_usage n where n.billing_account_id = ${u.billing_account_id}
+              and n.period_start = ${u.period_start} and n.key = ${marker})`,
+          ),
+        )
+        .orderBy(asc(u.billing_account_id), asc(u.period_start));
+      return rows.map((r) => ({ ...r, periodStart: new Date(r.periodStart) }));
     },
 
     async prewarnAccounts(from, until) {

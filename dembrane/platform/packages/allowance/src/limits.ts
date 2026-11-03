@@ -12,6 +12,8 @@ export const LIMIT_KEYS = [
   "maps_month",
   "popcorn_analyses_month",
   "popcorn_cadence_minutes",
+  "ai_budget_micro_eur",
+  "ai_budget_enforce",
 ] as const;
 
 export type LimitKey = (typeof LIMIT_KEYS)[number];
@@ -27,6 +29,9 @@ export const FREE_LIMIT_DEFAULTS: FreeLimits = Object.freeze({
   maps_month: 1,
   popcorn_analyses_month: 12,
   popcorn_cadence_minutes: 5,
+  ai_budget_micro_eur: 5_000_000,
+  // 0 is the staff off switch: spend is still recorded, nothing refuses.
+  ai_budget_enforce: 1,
 });
 
 const FREE = "free";

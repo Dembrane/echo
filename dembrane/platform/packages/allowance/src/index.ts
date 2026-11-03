@@ -5,12 +5,14 @@ export {
   allowanceForWorkspace,
 } from "./account";
 export {
-  chargeFreeUnit,
-  type FreeCharge,
-  type FreeUnit,
-  requireFreeUnitRoom,
-  takeFreeUnit,
-} from "./charge";
+  AI_SPEND_KEY,
+  type AiBudget,
+  aiBudgetFor,
+  aiBudgetForProject,
+  aiBudgetForWorkspace,
+  requireAiBudget,
+  requireAiBudgetForWorkspace,
+} from "./budget";
 export { type FreeLimitName, freeLimitError, isFreeLimit } from "./errors";
 export { isFreeTier } from "./free";
 export {

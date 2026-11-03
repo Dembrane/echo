@@ -67,6 +67,8 @@ run("free limits", () => {
       maps_month: 1,
       popcorn_analyses_month: 12,
       popcorn_cadence_minutes: 5,
+      ai_budget_micro_eur: 5_000_000,
+      ai_budget_enforce: 1,
     });
   });
 

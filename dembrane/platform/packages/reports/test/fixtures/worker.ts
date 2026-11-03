@@ -2,6 +2,7 @@
 // model, and with HANG=1 stops inside the generate step so the test can kill it there.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
+import { aiBudgetForProject } from "@dembrane/allowance";
 import { createDb } from "@dembrane/db";
 import { FakeCompleter, lastPayer } from "@dembrane/llm";
 import { createLogger, initTracing, payerKey } from "@dembrane/observability";
@@ -60,7 +61,8 @@ await queue.workflow(
     maxContextTokens: 100_000,
     notifier: { emit: async (e) => log(`notify ${e.eventCode}`) },
     reportGenerated: async () => log("webhook"),
-    refundFreeReport: async () => false,
+    budgetLeft: (projectId) =>
+      aiBudgetForProject(database.db, projectId, new Date()).then((b) => b?.exhausted !== true),
     pause: async (name) => {
       log(`step ${name}`);
       if (name === "generate" && process.env.HANG === "1") await Bun.sleep(600_000);

@@ -78,6 +78,8 @@ export interface BillingStore {
   freeAudioCandidates(
     since: Date,
   ): Promise<{ accountId: string; periodStart: Date; amount: number }[]>;
+  /** Free AI spend rows touched since the given time whose period has no used-up notice yet. */
+  freeAiCandidates(since: Date): Promise<{ accountId: string; periodStart: Date }[]>;
   /** Accounts expiring within the window that have not been warned yet. */
   prewarnAccounts(
     from: Date,

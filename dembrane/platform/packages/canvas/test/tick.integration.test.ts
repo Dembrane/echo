@@ -50,6 +50,7 @@ run("canvas tick against Postgres", () => {
       canvasEnabled: true,
       now: () => new Date(),
       nudge: async () => {},
+      budgetLeft: async () => true,
       claimWindow: async () => true,
       idFor: (label) => derivedId(`${seedLabel}:${label}`),
     };
@@ -154,6 +155,7 @@ run("canvas tick against Postgres", () => {
         completer: fake(),
         limiter: new RateLimiter(new MemoryRateCounter()),
         now: () => new Date(),
+        requireAiBudget: async () => {},
         startTick: async () => {},
         nudge: async () => {},
       },

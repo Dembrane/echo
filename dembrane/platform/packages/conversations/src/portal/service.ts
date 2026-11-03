@@ -185,6 +185,8 @@ export async function publicProject(d: PortalDeps, projectId: string) {
     privacy_policy_url: legal.privacy_policy_url,
     organiser_name: organiser,
     is_taking_recordings: audio.open,
+    // Verify and Explore; false once a free account's AI budget is used up.
+    is_ai_available: audio.aiAvailable,
     conversation_limit_seconds: audio.conversationLimitSeconds,
   };
 }

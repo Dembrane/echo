@@ -1,3 +1,4 @@
+import { isFreeLimit, requireAiBudget } from "@dembrane/allowance";
 import { AudioError } from "@dembrane/audio";
 import { BadRequestError, NotFoundError, newId, PlatformError, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
@@ -148,6 +149,7 @@ async function retranscribe(
     const store = conversationStore(d.db);
     const original = await store.conversationIncludingDeleted(conversationId);
     if (!original) throw new NotFoundError("conversation.not_found");
+    await requireAiBudget(d.db, original.project_id, d.now());
     let pii = body.use_pii_redaction;
     if (pii === null)
       pii = Boolean((await store.project(original.project_id))?.anonymize_transcripts);
@@ -226,6 +228,8 @@ async function retranscribe(
       new_conversation_id: newConversationId,
     };
   } catch (err) {
+    // The dashboard opens its AI budget wall on a real 402.
+    if (isFreeLimit(err, "ai_budget")) throw err;
     if (err instanceof PlatformError && err.status < 500) {
       const detail = typeof err.details === "object" && err.details ? err.details : err.message;
       return { status: "error", message: "Operation failed", error_detail: detail };

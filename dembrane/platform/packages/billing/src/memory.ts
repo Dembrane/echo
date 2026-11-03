@@ -201,6 +201,9 @@ export class MemoryBillingStore implements BillingStore {
   async freeAudioCandidates(_since: Date) {
     return [];
   }
+  async freeAiCandidates(_since: Date) {
+    return [];
+  }
   async prewarnAccounts(from: Date, until: Date) {
     return [...this.accounts.values()]
       .filter((a) => {

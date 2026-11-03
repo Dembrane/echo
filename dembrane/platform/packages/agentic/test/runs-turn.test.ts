@@ -34,7 +34,7 @@ run("turn workflow on a fake model", () => {
   let url = "";
   const captured: { event: string; props: Record<string, unknown> }[] = [];
   const notified: Emit[] = [];
-  const deps = (agent: Agent): TurnDeps => ({
+  const deps = (agent: Agent, over: Partial<TurnDeps> = {}): TurnDeps => ({
     store: runsStorage(database.db),
     logger,
     models: fakeModels(),
@@ -52,7 +52,9 @@ run("turn workflow on a fake model", () => {
       notified.push(e);
     },
     now: () => new Date(),
+    budgetLeft: async () => true,
     cancelPollMs: 50,
+    ...over,
   });
   const direct = <T>(_name: string, fn: () => Promise<T>) => fn();
   const args = {
@@ -251,6 +253,22 @@ run("turn workflow on a fake model", () => {
       'I need to pause this pass on your request: "What did people say about parking?"',
     );
     expect((await runRow()).status).toBe("completed");
+  });
+
+  test("a used-up AI budget stops the turn before its next step", async () => {
+    const seen: unknown[] = [];
+    let checks = 0;
+    const budgetLeft = async () => ++checks < 2;
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen).toHaveLength(2);
+    const said = (await events()).filter((e) => e.event_type === "assistant.message");
+    const stops = said.filter((e) => String(e.payload.content).includes("AI budget is used up"));
+    expect(stops).toHaveLength(1);
+    expect(said.at(-1)).toBe(stops[0]);
+    const r = await runRow();
+    expect(r.status).toBe("completed");
+    expect(r.latest_output).toContain("AI budget is used up");
+    expect(notified[0]).toMatchObject({ eventCode: "AGENTIC_RUN_FINISHED" });
   });
 
   test("a turn that is no longer the latest does not start", async () => {
