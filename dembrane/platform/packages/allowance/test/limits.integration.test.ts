@@ -61,11 +61,6 @@ run("free limits", () => {
       audio_seconds_month: 18000,
       audio_seconds_conversation: 3600,
       projects: 1,
-      chats_month: 2,
-      chat_turns_per_chat: 20,
-      reports_month: 1,
-      maps_month: 1,
-      popcorn_analyses_month: 12,
       popcorn_cadence_minutes: 5,
       ai_budget_micro_eur: 5_000_000,
       ai_budget_enforce: 1,
@@ -77,37 +72,47 @@ run("free limits", () => {
   });
 
   test("a row overrides its key only", async () => {
-    await sql`insert into tier_limit (tier, key, value) values ('free', 'reports_month', 3)`;
+    await sql`insert into tier_limit (tier, key, value) values ('free', 'projects', 3)`;
     invalidateFreeLimits();
     const limits = await freeLimits(db);
-    expect(limits.reports_month).toBe(3);
-    expect(limits.chats_month).toBe(2);
+    expect(limits.projects).toBe(3);
+    expect(limits.audio_seconds_month).toBe(18000);
   });
 
   test("unknown keys and other tiers are ignored", async () => {
-    await sql`insert into tier_limit (tier, key, value) values ('free', 'bogus', 9), ('innovator', 'reports_month', 9)`;
+    await sql`insert into tier_limit (tier, key, value) values ('free', 'bogus', 9), ('innovator', 'projects', 9)`;
     const limits = await freeLimits(db);
     expect(limits).toEqual(FREE_LIMIT_DEFAULTS);
     expect("bogus" in limits).toBe(false);
   });
 
   test("retired keys are ignored", async () => {
-    await sql`insert into tier_limit (tier, key, value) values ('free', 'chat_turns_first', 7)`;
+    const retired = [
+      "chat_turns_first",
+      "chats_month",
+      "chat_turns_per_chat",
+      "reports_month",
+      "maps_month",
+      "popcorn_analyses_month",
+    ];
+    for (const key of retired)
+      await sql`insert into tier_limit (tier, key, value) values ('free', ${key}, 7)`;
     const limits = await freeLimits(db);
     expect(limits).toEqual(FREE_LIMIT_DEFAULTS);
-    expect("chat_turns_first" in limits).toBe(false);
+    for (const key of retired) expect(key in limits).toBe(false);
+    expect((await freeLimitRows(db)).map((r) => r.key)).not.toContain("chats_month" as never);
   });
 
   test("cached for 60 s", async () => {
     const t0 = Date.parse("2026-10-20T12:00:00Z");
     let t = t0;
     const now = () => new Date(t);
-    expect((await freeLimits(db, now)).maps_month).toBe(1);
-    await sql`insert into tier_limit (tier, key, value) values ('free', 'maps_month', 4)`;
+    expect((await freeLimits(db, now)).popcorn_cadence_minutes).toBe(5);
+    await sql`insert into tier_limit (tier, key, value) values ('free', 'popcorn_cadence_minutes', 4)`;
     t = t0 + 59_000;
-    expect((await freeLimits(db, now)).maps_month).toBe(1);
+    expect((await freeLimits(db, now)).popcorn_cadence_minutes).toBe(5);
     t = t0 + 61_000;
-    expect((await freeLimits(db, now)).maps_month).toBe(4);
+    expect((await freeLimits(db, now)).popcorn_cadence_minutes).toBe(4);
   });
 
   test("setFreeLimit invalidates at once and records updated_by", async () => {
@@ -129,23 +134,23 @@ run("free limits", () => {
   });
 
   test("a staff value of 0 is stored and served", async () => {
-    await setFreeLimit(db, "reports_month", 0, STAFF);
-    expect((await freeLimits(db)).reports_month).toBe(0);
-    expect((await freeLimitRows(db)).find((r) => r.key === "reports_month")?.value).toBe(0);
-    await sql`delete from tier_limit where key = 'reports_month'`;
+    await setFreeLimit(db, "ai_budget_enforce", 0, STAFF);
+    expect((await freeLimits(db)).ai_budget_enforce).toBe(0);
+    expect((await freeLimitRows(db)).find((r) => r.key === "ai_budget_enforce")?.value).toBe(0);
+    await sql`delete from tier_limit where key = 'ai_budget_enforce'`;
     invalidateFreeLimits();
   });
 
   test("freeLimitRows lists every key with row or default", async () => {
-    await setFreeLimit(db, "chats_month", 4, STAFF);
+    await setFreeLimit(db, "ai_budget_micro_eur", 4_000_000, STAFF);
     const rows = await freeLimitRows(db);
     expect(rows.map((r) => r.key)).toEqual(Object.keys(FREE_LIMIT_DEFAULTS) as never);
-    const chats = rows.find((r) => r.key === "chats_month");
-    expect(chats).toMatchObject({ value: 4, default: 2, updated_by: STAFF });
-    expect(chats?.updated_at).toBeTruthy();
-    const reports = rows.find((r) => r.key === "reports_month");
-    expect(reports).toEqual({
-      key: "reports_month",
+    const budget = rows.find((r) => r.key === "ai_budget_micro_eur");
+    expect(budget).toMatchObject({ value: 4_000_000, default: 5_000_000, updated_by: STAFF });
+    expect(budget?.updated_at).toBeTruthy();
+    const projects = rows.find((r) => r.key === "projects");
+    expect(projects).toEqual({
+      key: "projects",
       value: 1,
       default: 1,
       updated_at: null,
@@ -161,7 +166,7 @@ run("free limits", () => {
     const logger = { warn: (...args: unknown[]) => warnings.push(args) } as unknown as Logger;
     expect(await freeLimits(broken, undefined, logger)).toEqual(FREE_LIMIT_DEFAULTS);
     expect(warnings).toHaveLength(1);
-    await sql`insert into tier_limit (tier, key, value) values ('free', 'reports_month', 7)`;
-    expect((await freeLimits(db)).reports_month).toBe(7);
+    await sql`insert into tier_limit (tier, key, value) values ('free', 'projects', 7)`;
+    expect((await freeLimits(db)).projects).toBe(7);
   });
 });

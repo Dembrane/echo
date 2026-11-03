@@ -146,11 +146,12 @@ run("reports and the AI budget", () => {
   test("at zero, creating a report now or scheduled is refused and writes nothing", async () => {
     const { owner, billing, own } = await seed();
     await spend(billing, LIMIT);
-    for (const scheduled of [null, LATER])
-      expect(await rejection(request(owner, own, scheduled))).toMatchObject({
-        status: 402,
-        details: { limit: "ai_budget", used: LIMIT, cap: LIMIT },
-      });
+    for (const scheduled of [null, LATER]) {
+      const err = await rejection(request(owner, own, scheduled));
+      expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget", percent: 100 } });
+      expect(err.details).not.toHaveProperty("used");
+      expect(err.details).not.toHaveProperty("cap");
+    }
     expect(await reportRows(own)).toBe(0);
     expect(enqueued).toEqual([]);
     const tasks = await sql`select id from scheduled_task where payload->>'project_id' = ${own}`;

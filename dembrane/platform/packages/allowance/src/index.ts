@@ -45,4 +45,4 @@ export {
 export { monthStart, nextReset, periodStart } from "./period";
 export { accountWorkspaceIds, liveProjectCount, requireProjectRoom } from "./projects";
 export { recordingProject, setRecordingProject } from "./recording";
-export { type AllowanceSnapshot, allowanceSnapshot, type Meter } from "./snapshot";
+export { type AiMeter, type AllowanceSnapshot, allowanceSnapshot, type Meter } from "./snapshot";

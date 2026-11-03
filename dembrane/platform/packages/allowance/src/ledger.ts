@@ -7,14 +7,7 @@ const { free_usage } = schema;
 // Micro-euros of AI spend; the metering recorder adds to it, the budget check reads it.
 export const AI_SPEND_KEY = "ai_spend_micro_eur";
 
-export const USAGE_KEYS = [
-  "audio_seconds",
-  "chats",
-  "reports",
-  "maps",
-  "popcorn_analyses",
-  AI_SPEND_KEY,
-] as const;
+export const USAGE_KEYS = ["audio_seconds", AI_SPEND_KEY] as const;
 export type UsageKey = (typeof USAGE_KEYS)[number];
 
 export type Take = { ok: true; used: number } | { ok: false; used: number; limit: number };

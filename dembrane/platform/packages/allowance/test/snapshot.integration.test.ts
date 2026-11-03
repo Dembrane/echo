@@ -34,10 +34,10 @@ test("freeLimitError is a 402 naming the limit", () => {
 });
 
 test("freeLimitError params never overwrite the reason", () => {
-  const e = freeLimitError("chats", { limit: "x", error: "y", used: 2 });
+  const e = freeLimitError("chat_turns", { limit: "x", error: "y", used: 2 });
   expect(e.details).toEqual({
     error: "FREE_TIER_LIMIT",
-    limit: "chats",
+    limit: "chat_turns",
     upgrade_cta_tier: "changemaker",
     used: 2,
   });
@@ -114,15 +114,12 @@ run("allowance snapshot", () => {
       period_start: null,
       resets_at: null,
       audio_seconds: null,
-      chats: null,
-      reports: null,
-      maps: null,
-      popcorn_analyses: null,
       projects: null,
+      ai: null,
     });
   });
 
-  test("free workspace shows ledger usage, limits and live projects", async () => {
+  test("free workspace shows ledger usage, limits, live projects and the AI meter", async () => {
     const o = await org();
     const acc = await account("free", o);
     const ws = await workspace(o, acc);
@@ -130,18 +127,43 @@ run("allowance snapshot", () => {
     await project(ws, { sample: true });
     await project(ws, { deleted: true });
     await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
-      (${acc}, ${OCT}, 'audio_seconds', 3600), (${acc}, ${OCT}, 'chats', 1)`;
+      (${acc}, ${OCT}, 'audio_seconds', 3600), (${acc}, ${OCT}, 'ai_spend_micro_eur', 4100000),
+      (${acc}, ${OCT}, 'chats', 1)`;
     expect(await allowanceSnapshot(db, ws, NOW)).toEqual({
       free: true,
       scope: "organisation",
       period_start: OCT,
       resets_at: NOV,
       audio_seconds: { used: 3600, limit: 18000 },
-      chats: { used: 1, limit: 2 },
-      reports: { used: 0, limit: 1 },
-      maps: { used: 0, limit: 1 },
-      popcorn_analyses: { used: 0, limit: 12 },
       projects: { used: 1, limit: 1 },
+      ai: { percent_used: 82, exhausted: false, unlimited: false },
+    });
+  });
+
+  test("spend past the budget reads 100 and exhausted, with no euro amounts", async () => {
+    const o = await org();
+    const acc = await account("free", o);
+    const ws = await workspace(o, acc);
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
+      (${acc}, ${OCT}, 'ai_spend_micro_eur', 6000000)`;
+    const snap = await allowanceSnapshot(db, ws, NOW);
+    expect(snap.ai).toEqual({ percent_used: 100, exhausted: true, unlimited: false });
+    const body = JSON.stringify(snap);
+    for (const word of ["micro", "eur", "6000000", "5000000", "spent", "limit_"])
+      expect(body.toLowerCase()).not.toContain(word);
+  });
+
+  test("an unlimited override reads unlimited and never exhausted", async () => {
+    const o = await org();
+    const acc = await account("free", o);
+    const ws = await workspace(o, acc);
+    await sql`update billing_account set ai_budget_unlimited = true where id = ${acc}`;
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
+      (${acc}, ${OCT}, 'ai_spend_micro_eur', 9000000)`;
+    expect((await allowanceSnapshot(db, ws, NOW)).ai).toEqual({
+      percent_used: 0,
+      exhausted: false,
+      unlimited: true,
     });
   });
 
@@ -151,10 +173,11 @@ run("allowance snapshot", () => {
     const ws = await workspace(o, acc);
     await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
       (${acc}, '2026-09-01T00:00:00.000Z', 'audio_seconds', 9000),
-      (${acc}, '2026-09-01T00:00:00.000Z', 'chats', 2), (${acc}, ${OCT}, 'audio_seconds', 60)`;
+      (${acc}, '2026-09-01T00:00:00.000Z', 'ai_spend_micro_eur', 5000000),
+      (${acc}, ${OCT}, 'audio_seconds', 60)`;
     const snap = await allowanceSnapshot(db, ws, NOW);
     expect(snap.audio_seconds).toEqual({ used: 60, limit: 18000 });
-    expect(snap.chats).toEqual({ used: 0, limit: 2 });
+    expect(snap.ai).toEqual({ percent_used: 0, exhausted: false, unlimited: false });
   });
 
   test("projects count across the pooled org and its free client workspaces", async () => {

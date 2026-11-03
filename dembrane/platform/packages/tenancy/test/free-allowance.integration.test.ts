@@ -64,7 +64,7 @@ run("free allowance route", () => {
     await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values
       (${n("b1", 1)}, 'P', ${FREE_WS}, true)`;
     await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
-      (${FREE_BA}, '2026-10-01T00:00:00Z', 'chats', 1)`;
+      (${FREE_BA}, '2026-10-01T00:00:00Z', 'ai_spend_micro_eur', 4100000)`;
     for (const p of Object.values(P)) {
       await sql`insert into directus_users (id, email) values (${p.directus}, ${p.email})`;
       await sql`insert into auth_user (id, email, email_verified, name) values (${p.directus}, ${p.email}, true, ${p.email})`;
@@ -127,18 +127,40 @@ run("free allowance route", () => {
       period_start: "2026-10-01T00:00:00.000Z",
       resets_at: "2026-11-01T00:00:00.000Z",
       audio_seconds: { used: 0, limit: 18000 },
-      chats: { used: 1, limit: 2 },
-      reports: { used: 0, limit: 1 },
-      maps: { used: 0, limit: 1 },
-      popcorn_analyses: { used: 0, limit: 12 },
       projects: { used: 1, limit: 1 },
+      ai: { percent_used: 82, exhausted: false, unlimited: false },
     });
+  });
+
+  test("the usage route's free block carries the AI meter as a percentage only", async () => {
+    const res = await get(P.alice, FREE_WS, "usage");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { free_tier: unknown };
+    expect(body.free_tier).toEqual({ active: true, ai_percent_used: 82, ai_exhausted: false });
+  });
+
+  test("a used-up budget reads 100 and exhausted on both routes", async () => {
+    await sql`update free_usage set amount = 6000000
+      where billing_account_id = ${FREE_BA} and key = 'ai_spend_micro_eur'`;
+    try {
+      const snap = (await (await get(P.alice, FREE_WS, "free-allowance")).json()) as {
+        ai: unknown;
+      };
+      expect(snap.ai).toEqual({ percent_used: 100, exhausted: true, unlimited: false });
+      const usage = (await (await get(P.alice, FREE_WS, "usage")).json()) as { free_tier: unknown };
+      expect(usage.free_tier).toEqual({ active: true, ai_percent_used: 100, ai_exhausted: true });
+    } finally {
+      await sql`update free_usage set amount = 4100000
+        where billing_account_id = ${FREE_BA} and key = 'ai_spend_micro_eur'`;
+    }
   });
 
   test("a member of a paid workspace is told it is not free", async () => {
     const res = await get(P.alice, PAID_WS, "free-allowance");
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { free: boolean }).free).toBe(false);
+    expect(await res.json()).toMatchObject({ free: false, ai: null });
+    const usage = (await (await get(P.alice, PAID_WS, "usage")).json()) as { free_tier: unknown };
+    expect(usage.free_tier).toEqual({ active: false, ai_percent_used: 0, ai_exhausted: false });
   });
 
   test("a non-member is refused as the usage route refuses them", async () => {

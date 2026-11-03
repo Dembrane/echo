@@ -5,11 +5,8 @@ export type FreeLimitName =
   | "audio_conversation"
   | "projects"
   | "organisations"
-  | "chats"
   | "chat_turns"
   | "report"
-  | "map"
-  | "popcorn"
   | "recording_project"
   | "ai_budget";
 

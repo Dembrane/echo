@@ -222,16 +222,7 @@ run("recording project", () => {
     const next: AllowanceAccount = { ...s.a, periodStart: new Date("2026-11-01T00:00:00Z") };
     expect(await claimOnce(db, next, "notice:audio_out")).toBe(true);
     const used = await usedThisPeriod(db, s.a);
-    expect(Object.keys(used).sort()).toEqual(
-      [
-        "ai_spend_micro_eur",
-        "audio_seconds",
-        "chats",
-        "maps",
-        "popcorn_analyses",
-        "reports",
-      ].sort(),
-    );
+    expect(Object.keys(used).sort()).toEqual(["ai_spend_micro_eur", "audio_seconds"]);
     expect(Object.values(used).every((v) => v === 0)).toBe(true);
   });
 });

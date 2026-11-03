@@ -1,13 +1,17 @@
 import type { Db } from "@dembrane/db";
 import { allowanceForWorkspace } from "./account";
+import { aiBudgetFor } from "./budget";
 import { usedThisPeriod } from "./ledger";
-import { freeLimits, type LimitKey } from "./limits";
+import { freeLimits } from "./limits";
 import { nextReset } from "./period";
 import { liveProjectCount } from "./projects";
 
 export { accountWorkspaceIds } from "./projects";
 
 export type Meter = { used: number; limit: number };
+
+// Percent only: customers never see euro amounts.
+export type AiMeter = { percent_used: number; exhausted: boolean; unlimited: boolean };
 
 export interface AllowanceSnapshot {
   free: boolean;
@@ -16,20 +20,9 @@ export interface AllowanceSnapshot {
   period_start: string | null;
   resets_at: string | null;
   audio_seconds: Meter | null;
-  chats: Meter | null;
-  reports: Meter | null;
-  maps: Meter | null;
-  popcorn_analyses: Meter | null;
   projects: Meter | null;
+  ai: AiMeter | null;
 }
-
-const METERS = {
-  audio_seconds: "audio_seconds_month",
-  chats: "chats_month",
-  reports: "reports_month",
-  maps: "maps_month",
-  popcorn_analyses: "popcorn_analyses_month",
-} as const satisfies Record<string, LimitKey>;
 
 const NOT_FREE: AllowanceSnapshot = Object.freeze({
   free: false,
@@ -37,11 +30,8 @@ const NOT_FREE: AllowanceSnapshot = Object.freeze({
   period_start: null,
   resets_at: null,
   audio_seconds: null,
-  chats: null,
-  reports: null,
-  maps: null,
-  popcorn_analyses: null,
   projects: null,
+  ai: null,
 });
 
 export async function allowanceSnapshot(
@@ -51,22 +41,23 @@ export async function allowanceSnapshot(
 ): Promise<AllowanceSnapshot> {
   const a = await allowanceForWorkspace(db, workspaceId, now);
   if (!a) return NOT_FREE;
-  const [limits, used, projects] = await Promise.all([
+  const [limits, used, projects, budget] = await Promise.all([
     freeLimits(db),
     usedThisPeriod(db, a),
     liveProjectCount(db, a),
+    aiBudgetFor(db, a, now),
   ]);
-  const meter = (k: keyof typeof METERS): Meter => ({ used: used[k], limit: limits[METERS[k]] });
   return {
     free: true,
     scope: a.orgId ? "organisation" : "workspace",
     period_start: a.periodStart.toISOString(),
     resets_at: nextReset(now).toISOString(),
-    audio_seconds: meter("audio_seconds"),
-    chats: meter("chats"),
-    reports: meter("reports"),
-    maps: meter("maps"),
-    popcorn_analyses: meter("popcorn_analyses"),
+    audio_seconds: { used: used.audio_seconds, limit: limits.audio_seconds_month },
     projects: { used: projects, limit: limits.projects },
+    ai: {
+      percent_used: budget.percentUsed,
+      exhausted: budget.exhausted,
+      unlimited: budget.limitMicroEur === null,
+    },
   };
 }

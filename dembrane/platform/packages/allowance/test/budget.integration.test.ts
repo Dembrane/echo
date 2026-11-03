@@ -124,9 +124,8 @@ run("ai budget", () => {
     await spend(s.accountId, 5_000_000);
     const err = await refusal(requireAiBudget(db, s.project, NOW));
     expect(err).toBeInstanceOf(PaymentRequiredError);
+    // Percent only: euro amounts never reach the browser.
     expect((err as PaymentRequiredError).details).toEqual({
-      used: 5_000_000,
-      cap: 5_000_000,
       percent: 100,
       resets_at: NOV_ISO,
       error: "FREE_TIER_LIMIT",
@@ -216,7 +215,8 @@ run("ai budget", () => {
     await sql`update billing_account set ai_budget_until = '2026-10-24T12:00:00Z' where id = ${s.accountId}`;
     expect((await aiBudgetForProject(db, s.project, NOW))?.limitMicroEur).toBe(5_000_000);
     const err = await refusal(requireAiBudget(db, s.project, NOW));
-    expect((err as PaymentRequiredError).details).toMatchObject({ cap: 5_000_000 });
+    expect((err as PaymentRequiredError).details).toMatchObject({ percent: 100 });
+    expect((err as PaymentRequiredError).details).not.toHaveProperty("cap");
   });
 
   test("an override that ended this morning is back on the default at once", async () => {

@@ -74,12 +74,8 @@ run("workspace usage and a sample project", () => {
   test("the free block reads the allowance", async () => {
     expect(await freeTierBlock(database.db, WS, new Date())).toEqual({
       active: true,
-      chats_used: 0,
-      chats_limit: 2,
-      primary_chat_id: null,
-      reports_used: 0,
-      reports_limit: 1,
-      primary_report_id: null,
+      ai_percent_used: 0,
+      ai_exhausted: false,
     });
   });
 

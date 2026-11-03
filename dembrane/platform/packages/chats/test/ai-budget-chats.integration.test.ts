@@ -176,12 +176,14 @@ run("chats and the AI budget", () => {
 
   async function refusedForBudget(res: Response) {
     expect(res.status).toBe(402);
-    expect(((await res.json()) as { details: unknown }).details).toMatchObject({
+    const details = ((await res.json()) as { details: Record<string, unknown> }).details;
+    expect(details).toMatchObject({
       limit: "ai_budget",
-      used: LIMIT,
-      cap: LIMIT,
+      percent: 100,
       resets_at: "2026-11-01T00:00:00.000Z",
     });
+    expect(details).not.toHaveProperty("used");
+    expect(details).not.toHaveProperty("cap");
   }
 
   describe("a free project with its budget used up", () => {

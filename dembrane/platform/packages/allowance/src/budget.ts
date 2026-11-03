@@ -89,9 +89,8 @@ export async function aiBudgetForWorkspace(
 
 function refuseWhenExhausted(b: AiBudget | null): void {
   if (!b?.exhausted || b.limitMicroEur === null) return;
+  // Percent only: the 402 reaches the browser, and customers never see euros.
   throw freeLimitError("ai_budget", {
-    used: b.spentMicroEur,
-    cap: b.limitMicroEur,
     percent: b.percentUsed,
     resets_at: b.resetsAt.toISOString(),
   });
