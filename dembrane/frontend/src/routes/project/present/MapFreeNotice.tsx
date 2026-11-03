@@ -1,13 +1,13 @@
-import { plural, t } from "@lingui/core/macro";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { usePricingConfigurator } from "@/components/pricing";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { AiBudgetWall } from "@/components/workspace/AiBudgetWall";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
-import { allowanceSpent, formatResetDate } from "@/lib/freeTier";
+import { formatResetDay } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER } from "@/lib/tiers";
 
 type BlockSettings = { presentation?: { blocks?: readonly string[] } };
 
@@ -18,7 +18,7 @@ export const presentsMap = (
 ): boolean =>
 	[published, draft].some((s) => s?.presentation?.blocks?.includes("map"));
 
-// Host only: the free map is used, so the presented map stops updating.
+// Host only: this month's AI is used up, so the presented map stops updating.
 export function MapFreeNotice({
 	mapOn,
 	workspaceId,
@@ -31,30 +31,26 @@ export function MapFreeNotice({
 	const { i18n } = useLingui();
 	const applies = useAllowanceApplies(projectId).applies && mapOn;
 	const allowance = useFreeAllowance(applies ? workspaceId : null);
-	const configurator = usePricingConfigurator("map_cap");
+	const configurator = usePricingConfigurator("map_ai_budget");
 
-	if (!applies || !allowanceSpent(allowance.data, "maps")) return null;
+	const data = allowance.data;
+	if (!applies || !data?.free || !data.ai?.exhausted) return null;
 
-	const date = formatResetDate(allowance.data?.resets_at, i18n.locale);
-	const limit = allowance.data?.maps?.limit ?? 1;
+	const date = formatResetDay(data.resets_at, i18n.locale);
 	return (
 		<Alert variant="light" color="gray" {...testId("map-free-notice")}>
 			<Stack gap="sm">
 				<Text size="sm">
-					{limit <= 0
-						? date
-							? t`You have used this month's free maps. The map in this presentation keeps its current version until ${date}.`
-							: t`You have used this month's free maps. The map in this presentation keeps its current version.`
-						: date
-							? plural(limit, {
-									one: `You have used this month's free map. The map in this presentation keeps its current version until ${date}.`,
-									other: `You have used this month's # free maps. The map in this presentation keeps its current version until ${date}.`,
-								})
-							: plural(limit, {
-									one: "You have used this month's free map. The map in this presentation keeps its current version.",
-									other:
-										"You have used this month's # free maps. The map in this presentation keeps its current version.",
-								})}
+					{date ? (
+						<Trans>
+							This month's AI is used up, so the map can't update until {date}.
+						</Trans>
+					) : (
+						<Trans>
+							This month's AI is used up, so the map can't update until next
+							month.
+						</Trans>
+					)}
 				</Text>
 				<Group>
 					<Button
@@ -67,16 +63,13 @@ export function MapFreeNotice({
 					</Button>
 				</Group>
 			</Stack>
-			<UpgradeModal
+			<AiBudgetWall
 				opened={configurator.opened}
 				onClose={configurator.close}
-				currentTier="free"
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade
+				action="map"
+				resetsAt={data.resets_at}
 				workspaceId={workspaceId}
 				projectId={projectId}
-				wallKey="map_cap"
-				entry="modal_direct"
 			/>
 		</Alert>
 	);

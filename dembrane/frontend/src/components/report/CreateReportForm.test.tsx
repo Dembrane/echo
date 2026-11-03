@@ -21,11 +21,17 @@ const project = { isSample: false, loaded: true };
 
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
+		aiUsedUp,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
+		aiUsedUp?: boolean;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -34,6 +40,9 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-used-up={String(aiUsedUp)}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
@@ -74,27 +83,35 @@ const answer = (body: unknown) =>
 		status: 200,
 	});
 
-const snapshot = (reports: { used: number; limit: number }) => ({
-	// The AI banner follows the budget; spent reports stand for a spent budget here.
-	ai: {
-		exhausted: reports.used >= reports.limit,
-		percent_used: reports.used >= reports.limit ? 100 : 0,
-		unlimited: false,
-	},
+const snapshot = (exhausted: boolean) => ({
+	ai: { exhausted, percent_used: exhausted ? 100 : 0, unlimited: false },
 	audio_seconds: { limit: 18000, used: 0 },
-	chats: { limit: 2, used: 0 },
 	free: true,
-	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_analyses: { limit: 12, used: 0 },
 	projects: { limit: 1, used: 1 },
-	reports,
 	resets_at: "2026-11-01T00:00:00Z",
 });
 
+// The sample project's own one-report cap.
 const reportLimit = {
 	response: {
 		data: { detail: { error: "FREE_TIER_LIMIT", limit: "report" } },
+		status: 402,
+	},
+};
+
+const aiRefusal = {
+	response: {
+		data: {
+			code: "billing.tier_limit",
+			detail: {
+				error: "FREE_TIER_LIMIT",
+				limit: "ai_budget",
+				percent: 100,
+				resets_at: "2026-12-01T00:00:00Z",
+			},
+			params: { limit: "ai_budget" },
+		},
 		status: 402,
 	},
 };
@@ -158,8 +175,8 @@ const settled = (client: QueryClient) =>
 		).toBe("success"),
 	);
 
-it("generates while this month's report is unspent", async () => {
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 0 })));
+it("generates while this month's AI has room", async () => {
+	fetchMock.mockResolvedValue(answer(snapshot(false)));
 	const client = renderForm();
 	await settled(client);
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
@@ -170,23 +187,25 @@ it("generates while this month's report is unspent", async () => {
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });
 
-it("shows the banner and opens the wall instead of submitting once spent", async () => {
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 1 })));
+it("shows the banner and opens the AI wall instead of submitting once the AI is used up", async () => {
+	fetchMock.mockResolvedValue(answer(snapshot(true)));
 	renderForm();
 	await screen.findByTestId("free-allowance-banner");
 	fireEvent.click(screen.getAllByTestId("report-create-button")[0]);
 	expect(mutate).not.toHaveBeenCalled();
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("report_cap");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("report");
+	expect(modal.dataset.resets).toBe("2026-11-01T00:00:00Z");
 	expect(modal.dataset.tier).toBe("free");
 });
 
-it("opens the wall when the server refuses the report", async () => {
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 0 })));
+it("opens the AI wall, not an error, when the server refuses the report", async () => {
+	fetchMock.mockResolvedValue(answer(snapshot(false)));
 	mutate.mockImplementation(
 		(_vars: unknown, opts?: { onError?: (e: unknown) => void }) => {
-			mutation.error = reportLimit;
-			opts?.onError?.(reportLimit);
+			mutation.error = aiRefusal;
+			opts?.onError?.(aiRefusal);
 		},
 	);
 	const client = renderForm();
@@ -194,13 +213,17 @@ it("opens the wall when the server refuses the report", async () => {
 	fireEvent.click(screen.getAllByTestId("report-create-button")[0]);
 	expect(mutate).toHaveBeenCalledTimes(1);
 	const modal = await screen.findByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("report_cap");
-	expect(modal.dataset.tier).toBe("free");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("report");
+	expect(modal.dataset.usedUp).toBe("true");
+	expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+	expect(document.body.textContent).not.toContain("Error creating report");
+	expect(document.body.textContent).not.toContain("Report limit reached");
 });
 
-it("leaves a sample project's report open when the month's report is spent", async () => {
+it("leaves a sample project's report open when this month's AI is used up", async () => {
 	project.isSample = true;
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 1 })));
+	fetchMock.mockResolvedValue(answer(snapshot(true)));
 	const client = renderForm();
 	await settled(client);
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
@@ -211,7 +234,7 @@ it("leaves a sample project's report open when the month's report is spent", asy
 
 it("walls nothing while is_sample is still loading", async () => {
 	project.loaded = false;
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 1 })));
+	fetchMock.mockResolvedValue(answer(snapshot(true)));
 	const client = renderForm();
 	await settled(client);
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
@@ -220,24 +243,20 @@ it("walls nothing while is_sample is still loading", async () => {
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });
 
-it("names the sample's own report, not a month, when the server refuses it", async () => {
+it("names the sample's own report when the server refuses it", async () => {
 	project.isSample = true;
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 1, used: 0 })));
+	fetchMock.mockResolvedValue(answer(snapshot(false)));
 	mutation.error = reportLimit;
 	const client = renderForm();
 	await settled(client);
 	expect(document.body.textContent).toContain(
 		"This sample project includes one report.",
 	);
-	expect(document.body.textContent).not.toContain("one report a month");
-});
-
-it("states the live monthly report limit when the server refuses it", async () => {
-	fetchMock.mockResolvedValue(answer(snapshot({ limit: 3, used: 0 })));
-	mutation.error = reportLimit;
-	const client = renderForm();
-	await settled(client);
-	expect(document.body.textContent).toContain(
-		"The free plan includes 3 reports a month.",
-	);
+	expect(document.body.textContent).not.toContain("a month");
+	expect(document.body.textContent).not.toContain("Error creating report");
+	fireEvent.click(screen.getByRole("button", { name: "See upgrade options" }));
+	const modal = screen.getByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	// Nothing about the AI budget was used up.
+	expect(modal.dataset.usedUp).toBe("false");
 });

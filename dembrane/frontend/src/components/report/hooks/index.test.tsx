@@ -4,14 +4,17 @@ import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { freeAllowanceQueryKey } from "@/hooks/useFreeAllowance";
+import { createProjectReport } from "@/lib/api";
 import {
 	useCancelScheduledReportMutation,
+	useCreateProjectReportMutation,
 	useDeleteProjectReportMutation,
 	useUpdateProjectReportMutation,
 } from "./index";
 
 vi.mock("@/lib/api", () => ({
 	cancelScheduledReport: vi.fn(async () => ({ cancelled: true })),
+	createProjectReport: vi.fn(async () => ({ id: 1 })),
 	deleteProjectReport: vi.fn(async () => ({ deleted: true })),
 	updateProjectReport: vi.fn(async () => ({})),
 }));
@@ -30,36 +33,59 @@ const setup = () => {
 	return { allowanceStale, wrapper };
 };
 
-it("cancel schedule refetches the free allowance", async () => {
+const create = { language: "en", projectId: "p" };
+
+it("a new report refetches the free allowance (it spends AI)", async () => {
 	const { allowanceStale, wrapper } = setup();
-	const { result } = renderHook(() => useCancelScheduledReportMutation(), {
+	const { result } = renderHook(() => useCreateProjectReportMutation(), {
 		wrapper,
 	});
-	expect(allowanceStale()).toBe(false);
-	await act(() => result.current.mutateAsync({ projectId: "p", reportId: 1 }));
+	await act(() => result.current.mutateAsync(create));
 	expect(allowanceStale()).toBe(true);
 });
 
-it("a report update (cancel or reschedule) refetches the free allowance", async () => {
+it("a report refused for the AI budget refetches the free allowance", async () => {
+	vi.mocked(createProjectReport).mockRejectedValueOnce({
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: { error: "FREE_TIER_LIMIT", limit: "ai_budget" },
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	});
 	const { allowanceStale, wrapper } = setup();
-	const { result } = renderHook(() => useUpdateProjectReportMutation(), {
+	const { result } = renderHook(() => useCreateProjectReportMutation(), {
+		wrapper,
+	});
+	await act(() => result.current.mutateAsync(create).catch(() => {}));
+	expect(allowanceStale()).toBe(true);
+});
+
+it("cancelling, rescheduling or deleting a report gives no AI back, so the allowance stays", async () => {
+	const { allowanceStale, wrapper } = setup();
+	const cancel = renderHook(() => useCancelScheduledReportMutation(), {
+		wrapper,
+	});
+	const update = renderHook(() => useUpdateProjectReportMutation(), {
+		wrapper,
+	});
+	const remove = renderHook(() => useDeleteProjectReportMutation(), {
 		wrapper,
 	});
 	await act(() =>
-		result.current.mutateAsync({
+		cancel.result.current.mutateAsync({ projectId: "p", reportId: 1 }),
+	);
+	await act(() =>
+		update.result.current.mutateAsync({
 			payload: { status: "cancelled" },
 			projectId: "p",
 			reportId: 1,
 		}),
 	);
-	expect(allowanceStale()).toBe(true);
-});
-
-it("deleting a report refetches the free allowance", async () => {
-	const { allowanceStale, wrapper } = setup();
-	const { result } = renderHook(() => useDeleteProjectReportMutation(), {
-		wrapper,
-	});
-	await act(() => result.current.mutateAsync({ projectId: "p", reportId: 1 }));
-	expect(allowanceStale()).toBe(true);
+	await act(() =>
+		remove.result.current.mutateAsync({ projectId: "p", reportId: 1 }),
+	);
+	expect(allowanceStale()).toBe(false);
 });

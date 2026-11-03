@@ -855,6 +855,7 @@ export const PricingConfigurator = ({
 									question={questions[phase.step - 1 - OPENING_STEP]}
 									showExactError={showExactError}
 									updateAnswers={updateAnswers}
+									workspaceId={workspaceId}
 								/>
 							)}
 
@@ -1016,6 +1017,7 @@ const QuestionBody = ({
 	question,
 	showExactError,
 	updateAnswers,
+	workspaceId,
 }: {
 	answers: Answers;
 	headingId: string;
@@ -1035,6 +1037,7 @@ const QuestionBody = ({
 	question: Question;
 	showExactError: boolean;
 	updateAnswers: (patch: Partial<Answers>) => void;
+	workspaceId?: string;
 }) => {
 	// The rhythm is the onboarding questionnaire's, which is the app's other
 	// question-per-step form: 4px between the question and its helper line, 12px
@@ -1101,6 +1104,7 @@ const QuestionBody = ({
 											questionKey="use_case_other"
 											testIdPrefix="pricing-use-case-other"
 											value={answers.use_case_other ?? ""}
+											workspaceId={workspaceId}
 										/>
 									</Box>
 								)}
@@ -1123,6 +1127,7 @@ const QuestionBody = ({
 							projectId={projectId}
 							question={question.follow}
 							updateAnswers={updateAnswers}
+							workspaceId={workspaceId}
 						/>
 					</Stack>
 				)}
@@ -1223,6 +1228,7 @@ const QuestionBody = ({
 				projectId={projectId}
 				question={question}
 				updateAnswers={updateAnswers}
+				workspaceId={workspaceId}
 			/>
 		</Stack>
 	);
@@ -1247,6 +1253,7 @@ const FreeTextAnswer = ({
 	projectId,
 	question,
 	updateAnswers,
+	workspaceId,
 }: {
 	answers: Answers;
 	ariaLabelledBy: string;
@@ -1263,6 +1270,7 @@ const FreeTextAnswer = ({
 	projectId?: string;
 	question: TextQuestion;
 	updateAnswers: (patch: Partial<Answers>) => void;
+	workspaceId?: string;
 }) => {
 	const isTiming = question.key === "timing";
 	return (
@@ -1282,6 +1290,7 @@ const FreeTextAnswer = ({
 				questionKey={question.key}
 				testIdPrefix={`pricing-${question.key}`}
 				value={(isTiming ? answers.timing : answers.context) ?? ""}
+				workspaceId={workspaceId}
 			/>
 			{question.examples && (
 				<Group gap="sm">

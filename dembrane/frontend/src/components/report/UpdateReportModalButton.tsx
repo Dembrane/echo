@@ -18,31 +18,24 @@ import { useDisclosure } from "@mantine/hooks";
 import {
 	ArrowLeftIcon,
 	ClockIcon,
-	InfoIcon,
 	PencilSimpleIcon,
 } from "@phosphor-icons/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
-import {
-	invalidateFreeAllowance,
-	useFreeAllowance,
-} from "@/hooks/useFreeAllowance";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import {
-	allowanceSpent,
-	freeReportsLine,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
+import { aiBudgetDetails, isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
@@ -87,16 +80,15 @@ export const UpdateReportModalButton = ({
 	needsUpdate?: boolean;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const aiWall = useAiBudgetWall();
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
-	// Free tier: this month's reports. Gate the "New Report" action on click.
+	// Free tier: once this month's AI is used up, "Create report" opens the AI wall.
 	const { workspace } = useWorkspace();
-	const queryClient = useQueryClient();
 	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspace?.id);
-	const effectivelyAtLimit =
-		allowanceApplies && allowanceSpent(freeAllowance.data, "reports");
+	const aiUsedUp =
+		allowanceApplies && Boolean(freeAllowance.data?.ai?.exhausted);
 	const { data: currentReport } = useProjectReport(
 		projectId ?? "",
 		currentReportId,
@@ -119,12 +111,15 @@ export const UpdateReportModalButton = ({
 
 	const is409Error =
 		error instanceof AxiosError && error.response?.status === 409;
-	const is402ReportError = isFreeTierLimitError(error) === "report";
+	// A sample project keeps one report of its own.
+	const isSampleRefusal = isFreeTierLimitError(error) === "report";
+	// The AI wall answered this one; the form shows no error for it.
+	const shownError = aiBudgetDetails(error) ? null : error;
 
 	const handleOpen = () => {
-		// At the free-tier limit, route straight to the upgrade path.
-		if (effectivelyAtLimit) {
-			upgradeHandlers.open();
+		// With this month's AI used up, route straight to the upgrade path.
+		if (aiUsedUp) {
+			aiWall.open(freeAllowance.data?.resets_at ?? null);
 			return;
 		}
 		setLanguage(currentReport.language ?? iso639_1 ?? "en");
@@ -136,25 +131,24 @@ export const UpdateReportModalButton = ({
 
 	const handleSubmit = async (schedule?: boolean) => {
 		posthog.capture("report_updated");
-		await mutateAsync(
-			{
-				language,
-				otherPayload: {
-					show_portal_link: currentReport.show_portal_link,
+		try {
+			await mutateAsync(
+				{
+					language,
+					otherPayload: {
+						show_portal_link: currentReport.show_portal_link,
+					},
+					projectId: projectId ?? "",
+					scheduledAt:
+						schedule && scheduledDate ? scheduledDate.toISOString() : undefined,
+					userInstructions: userInstructions || undefined,
 				},
-				projectId: projectId ?? "",
-				scheduledAt:
-					schedule && scheduledDate ? scheduledDate.toISOString() : undefined,
-				userInstructions: userInstructions || undefined,
-			},
-			{
-				onError: (err) => {
-					if (isFreeTierLimitError(err) === "report")
-						void invalidateFreeAllowance(queryClient);
-				},
-				onSuccess: () => close(),
-			},
-		);
+				{ onSuccess: () => close() },
+			);
+		} catch (err) {
+			// The modal shows any other failure from the mutation's error.
+			if (aiWall.openFor(err)) close();
+		}
 	};
 
 	return (
@@ -164,9 +158,7 @@ export const UpdateReportModalButton = ({
 					label={
 						needsUpdate
 							? t`New conversations added since this report`
-							: effectivelyAtLimit
-								? freeReportsLine(freeAllowance.data)
-								: t`Generate a new report`
+							: t`Generate a new report`
 					}
 				>
 					<Indicator
@@ -180,24 +172,13 @@ export const UpdateReportModalButton = ({
 							color="primary"
 							onClick={handleOpen}
 							leftSection={<PencilSimpleIcon size={20} />}
-							opacity={effectivelyAtLimit ? 0.7 : 1}
+							opacity={aiUsedUp ? 0.7 : 1}
 							{...testId("report-update-button")}
 						>
 							<Trans>Create report</Trans>
 						</Button>
 					</Indicator>
 				</Tooltip>
-				{effectivelyAtLimit && (
-					<Tooltip label={freeReportsLine(freeAllowance.data)}>
-						<InfoIcon
-							size={16}
-							style={{
-								color: "var(--mantine-color-dimmed)",
-								cursor: "help",
-							}}
-						/>
-					</Tooltip>
-				)}
 			</Group>
 
 			<Modal
@@ -220,26 +201,28 @@ export const UpdateReportModalButton = ({
 					</Group>
 				}
 			>
-				{is402ReportError ? (
+				{isSampleRefusal ? (
 					<Alert
 						title={t`Report limit reached`}
 						color="primary"
 						variant="light"
 					>
 						<Stack gap="sm" align="flex-start">
-							<Text size="sm">{freeReportsLine(freeAllowance.data)}</Text>
+							<Text size="sm">
+								<Trans>This sample project includes one report.</Trans>
+							</Text>
 							<Button
 								size="xs"
 								onClick={() => {
 									close();
-									upgradeHandlers.open();
+									aiWall.open(null, false);
 								}}
 							>
 								{t`See upgrade options`}
 							</Button>
 						</Stack>
 					</Alert>
-				) : error ? (
+				) : shownError ? (
 					<Alert
 						title={
 							is409Error
@@ -398,15 +381,11 @@ export const UpdateReportModalButton = ({
 				onClose={() => setFeedbackOpen(false)}
 				locale={appLocale}
 			/>
-			<UpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				currentTier="free"
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade
+			<AiBudgetWall
+				{...aiWall.props}
+				action="report"
 				workspaceId={workspace?.id ?? ""}
-				wallKey="report_cap"
-				entry="modal_direct"
+				projectId={projectId}
 			/>
 		</>
 	);

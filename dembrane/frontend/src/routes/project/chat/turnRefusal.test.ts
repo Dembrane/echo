@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { turnRefusalOf } from "./turnRefusal";
+import { aiBudgetRefusalOf, turnRefusalOf } from "./turnRefusal";
 
 const refusal = (detail: Record<string, unknown>) =>
 	new Error(
@@ -7,25 +7,45 @@ const refusal = (detail: Record<string, unknown>) =>
 	);
 
 describe("turnRefusalOf", () => {
-	it("reads a refused turn and a frozen chat", () => {
-		expect(turnRefusalOf(refusal({ limit: "chat_turns" }))).toEqual({
-			frozen: false,
-			monthly: false,
-		});
+	it("reads the sample project's refused turn", () => {
+		expect(turnRefusalOf(refusal({ cap: 10, limit: "chat_turns" }))).toBe(true);
+	});
+
+	it("leaves other failures alone", () => {
+		expect(turnRefusalOf(refusal({ limit: "chats" }))).toBe(false);
+		expect(turnRefusalOf(refusal({ limit: "ai_budget" }))).toBe(false);
+		expect(turnRefusalOf(new Error("boom"))).toBe(false);
+		expect(turnRefusalOf(undefined)).toBe(false);
+	});
+});
+
+describe("aiBudgetRefusalOf", () => {
+	it("reads a used-up AI budget with its reset time", () => {
 		expect(
-			turnRefusalOf(refusal({ limit: "chat_turns", reason: "frozen" })),
-		).toEqual({ frozen: true, monthly: false });
+			aiBudgetRefusalOf(
+				refusal({
+					limit: "ai_budget",
+					percent: 100,
+					resets_at: "2026-12-01T00:00:00Z",
+				}),
+			),
+		).toEqual({ percent: 100, resetsAt: "2026-12-01T00:00:00Z" });
 	});
 
-	it("reads the month's chats used up as a limit, not an error", () => {
-		expect(turnRefusalOf(refusal({ cap: 2, limit: "chats", used: 2 }))).toEqual(
-			{ frozen: false, monthly: true },
+	it("reads the coded body too", () => {
+		const coded = new Error(
+			JSON.stringify({
+				action: "upgrade",
+				code: "billing.tier_limit",
+				params: { limit: "ai_budget" },
+			}),
 		);
+		expect(aiBudgetRefusalOf(coded)).toEqual({ percent: null, resetsAt: null });
 	});
 
-	it("leaves other failures to the error alert", () => {
-		expect(turnRefusalOf(refusal({ limit: "reports" }))).toBeNull();
-		expect(turnRefusalOf(new Error("boom"))).toBeNull();
-		expect(turnRefusalOf(undefined)).toBeNull();
+	it("is null for anything else", () => {
+		expect(aiBudgetRefusalOf(refusal({ limit: "chat_turns" }))).toBeNull();
+		expect(aiBudgetRefusalOf(new Error("boom"))).toBeNull();
+		expect(aiBudgetRefusalOf(undefined)).toBeNull();
 	});
 });

@@ -18,10 +18,11 @@ import {
 
 export type VoiceTranscriptionStatus = "idle" | "recording" | "transcribing";
 
-/** Who pays: a project, or a named unmetered purpose where no project exists. */
-type VoiceBilling =
-	| { projectId: string; purpose?: never }
-	| { projectId?: never; purpose: TranscribePurpose };
+/** Who pays: a project, else the workspace; a purpose names a project-less surface. */
+type VoiceBilling = { workspaceId?: string } & (
+	| { projectId: string; purpose?: TranscribePurpose }
+	| { projectId?: never; purpose: TranscribePurpose }
+);
 
 type UseVoiceTranscriptionOptions = VoiceBilling & {
 	/** ISO 639-1, from the host's interface language. */
@@ -42,6 +43,8 @@ type UseVoiceTranscriptionResult = {
 	/** True while the browser prompt is open or the device is warming up. */
 	isStarting: boolean;
 	errorKind: VoiceErrorKind | null;
+	/** The failed request behind errorKind, for its details (an ai_budget reset date). */
+	errorCause: unknown;
 	dismissError: () => void;
 	start: () => void;
 	/** Stop recording and transcribe what was captured. */
@@ -62,14 +65,24 @@ export const useVoiceTranscription = (
 	options: UseVoiceTranscriptionOptions,
 ): UseVoiceTranscriptionResult => {
 	const { hotwords, language, onDurationLimit, onTranscript } = options;
-	const { projectId, purpose } = options;
+	const { projectId, purpose, workspaceId } = options;
 	const billing = useMemo<VoiceBilling>(
 		() =>
-			projectId ? { projectId } : { purpose: purpose as TranscribePurpose },
-		[projectId, purpose],
+			projectId
+				? { projectId, purpose, workspaceId }
+				: { purpose: purpose as TranscribePurpose, workspaceId },
+		[projectId, purpose, workspaceId],
 	);
 	const [isTranscribing, setIsTranscribing] = useState(false);
-	const [errorKind, setErrorKind] = useState<VoiceErrorKind | null>(null);
+	const [error, setError] = useState<{
+		kind: VoiceErrorKind;
+		cause: unknown;
+	} | null>(null);
+	const setErrorKind = useCallback(
+		(kind: VoiceErrorKind | null, cause: unknown = null) =>
+			setError(kind ? { cause, kind } : null),
+		[],
+	);
 	const abortRef = useRef<AbortController | null>(null);
 	const unmountedRef = useRef(false);
 
@@ -124,18 +137,19 @@ export const useVoiceTranscription = (
 				onTranscriptRef.current(response.transcript);
 			} catch (error) {
 				if (unmountedRef.current || controller.signal.aborted) return;
-				setErrorKind(transcribeErrorKind(error));
+				setErrorKind(transcribeErrorKind(error), error);
 			} finally {
 				if (abortRef.current === controller) abortRef.current = null;
 				if (!unmountedRef.current) setIsTranscribing(false);
 			}
 		},
-		[hotwords, language, billing],
+		[hotwords, language, billing, setErrorKind],
 	);
 
-	const handleError = useCallback((kind: VoiceErrorKind) => {
-		setErrorKind(kind);
-	}, []);
+	const handleError = useCallback(
+		(kind: VoiceErrorKind) => setErrorKind(kind),
+		[setErrorKind],
+	);
 
 	const recorder = useVoiceRecorder({
 		onComplete: handleComplete,
@@ -145,7 +159,7 @@ export const useVoiceTranscription = (
 	const start = useCallback(() => {
 		setErrorKind(null);
 		void recorder.start();
-	}, [recorder]);
+	}, [recorder, setErrorKind]);
 
 	const cancel = useCallback(() => {
 		abortRef.current?.abort();
@@ -164,7 +178,8 @@ export const useVoiceTranscription = (
 		cancel,
 		dismissError: () => setErrorKind(null),
 		elapsedMs: recorder.elapsedMs,
-		errorKind,
+		errorCause: error?.cause ?? null,
+		errorKind: error?.kind ?? null,
 		isStarting: recorder.isStarting,
 		levels: recorder.levels,
 		start,

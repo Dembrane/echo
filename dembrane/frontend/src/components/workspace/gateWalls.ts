@@ -26,25 +26,15 @@ export type WallKey =
 	| "billing_page"
 	/** The monthly AI budget is used up; one wall for every AI action. */
 	| "ai_budget"
-	// removed in plan 3 task 4
-	| "chat_cap"
-	// removed in plan 3 task 4
-	| "chat_turn_cap"
 	| "chat_voice_cap"
 	| "custom_logo"
 	| "event_cta"
 	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
 	| "free_allowance"
-	// removed in plan 3 task 4
-	| "map_cap"
 	| "org_cap"
-	// removed in plan 3 task 4
-	| "popcorn_cap"
 	| "private_workspace"
 	| "project_cap"
 	| "recording_project"
-	// removed in plan 3 task 4
-	| "report_cap"
 	| "transcription_cap"
 	| "transcripts_view"
 	| "upload_cap"
@@ -126,20 +116,14 @@ export function wallPopoverLine(wall: WallKey): string {
 		// Opens the popup directly.
 		ai_budget: "",
 		billing_page: "",
-		// Both chat walls read the same line: it covers chats and turns.
-		chat_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
-		chat_turn_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
 		chat_voice_cap: "",
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
 		free_allowance: "",
-		map_cap: t`The free plan includes a monthly allowance of maps.`,
 		org_cap: t`The free plan includes one organisation.`,
-		popcorn_cap: t`The free plan includes a monthly allowance of popcorn analyses.`,
 		private_workspace: t`Private workspaces come with a paid plan.`,
 		project_cap: t`The free plan includes a limited number of projects.`,
 		recording_project: t`On the free plan one project takes recordings.`,
-		report_cap: t`The free plan includes a monthly allowance of reports.`,
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
 		upload_cap: t`Uploading recordings comes with a paid plan.`,
@@ -174,19 +158,14 @@ export function wallActionLine(wall: WallKey | string | undefined): string {
 		// Fallback only: AiBudgetWall names the refused action through aiActionLine.
 		ai_budget: t`use AI features`,
 		billing_page: "",
-		chat_cap: t`ask more in chat`,
-		chat_turn_cap: t`ask more in chat`,
 		chat_voice_cap: t`use your voice in chat`,
 		custom_logo: t`add your logo`,
 		event_cta: t`hide the dembrane event invitation`,
 		free_allowance: t`go beyond this month's free allowance`,
-		map_cap: t`generate another map`,
 		org_cap: t`create more organisations`,
-		popcorn_cap: t`keep analysing with popcorn`,
 		private_workspace: t`make a workspace private`,
 		project_cap: t`add more projects`,
 		recording_project: t`record in every project`,
-		report_cap: t`create another report`,
 		// The one locked data wall. Nothing was blocked in the room: the
 		// recording ran and the participants never met a wall. What stopped is
 		// the transcription of what they said.

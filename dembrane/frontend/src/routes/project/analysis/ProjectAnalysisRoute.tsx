@@ -19,7 +19,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { useDocumentTitle } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
@@ -53,12 +53,14 @@ import {
 	ResultsList,
 	useResultActions,
 } from "@/components/results";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import { aiBudgetDetails } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER } from "@/lib/tiers";
 import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
@@ -433,18 +435,12 @@ function RecipeCard({
 	}>();
 	const { workspaceId: contextWorkspaceId } = useWorkspace();
 	const wallWorkspaceId = routeWorkspaceId ?? contextWorkspaceId;
-	// A used-up free month opens its wall; the modal stays mounted, as at every other wall.
-	const [wallKey, setWallKey] = useState<"map_cap" | "popcorn_cap">("map_cap");
-	const [wallOpened, wallHandlers] = useDisclosure(false);
+	// A used-up AI budget opens the AI wall; the modal stays mounted, as at every other wall.
+	const aiWall = useAiBudgetWall();
 	const onRefused = (error: unknown) => {
-		const limit = isFreeTierLimitError(error);
-		if (limit !== "map" && limit !== "popcorn") return;
-		setWallKey(limit === "map" ? "map_cap" : "popcorn_cap");
-		wallHandlers.open();
+		aiWall.openFor(error);
 	};
-	const walled = ["map", "popcorn"].includes(
-		isFreeTierLimitError(request.error) ?? "",
-	);
+	const walled = aiBudgetDetails(request.error) !== null;
 	const isConversationScoped = recipe.scopeKeyPattern.includes("conversation:");
 	const [conversationId, setConversationId] = useState<string | null>(null);
 	const defaults = useMemo(() => recipeDefaults(recipe, runs), [recipe, runs]);
@@ -645,16 +641,11 @@ function RecipeCard({
 				)}
 			</Stack>
 			{wallWorkspaceId && (
-				<UpgradeModal
-					opened={wallOpened}
-					onClose={wallHandlers.close}
-					currentTier="free"
-					requiredTier={SELLABLE_TIER}
-					canRequestUpgrade
+				<AiBudgetWall
+					{...aiWall.props}
+					action="analysis"
 					workspaceId={wallWorkspaceId}
 					projectId={projectId}
-					wallKey={wallKey}
-					entry="modal_direct"
 				/>
 			)}
 		</Card>

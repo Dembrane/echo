@@ -29,11 +29,15 @@ vi.mock("@/components/project/hooks", () => ({
 }));
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -42,13 +46,15 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
 
 const spent = {
+	ai: { exhausted: true, percent_used: 100, unlimited: false },
 	free: true,
-	maps: { limit: 1, used: 1 },
 	resets_at: "2026-11-01T00:00:00Z",
 };
 
@@ -89,35 +95,38 @@ const renderNotice = (mapOn = true) =>
 		</I18nProvider>,
 	);
 
-it("tells the host the map keeps its version and opens the map wall", () => {
+it("tells the host the map can't update and opens the AI wall", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
 	state.allowance = spent;
 	renderNotice();
 	const text = screen.getByTestId("map-free-notice").textContent ?? "";
 	expect(text).toContain(
-		"You have used this month's free map. The map in this presentation keeps its current version until ",
+		"This month's AI is used up, so the map can't update until 1 November 2026.",
 	);
-	expect(text).toContain("2026");
 	fireEvent.click(screen.getByRole("button", { name: "See upgrade options" }));
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("map_cap");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("map");
+	expect(modal.dataset.resets).toBe("2026-11-01T00:00:00Z");
 	expect(modal.dataset.tier).toBe("free");
 });
 
-it("ends without a date when the reset is unknown", () => {
+it("says next month when the reset is unknown", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
 	state.allowance = { ...spent, resets_at: null };
 	renderNotice();
 	const text = screen.getByTestId("map-free-notice").textContent ?? "";
 	expect(text).toContain(
-		"You have used this month's free map. The map in this presentation keeps its current version.",
+		"This month's AI is used up, so the map can't update until next month.",
 	);
-	expect(text).not.toContain("until");
 });
 
-it("stays quiet while the map is left, the map is off, or the project is a sample", () => {
+it("stays quiet while the AI has room, the map is off, or the project is a sample", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
-	state.allowance = { ...spent, maps: { limit: 1, used: 0 } };
+	state.allowance = {
+		...spent,
+		ai: { exhausted: false, percent_used: 95, unlimited: false },
+	};
 	renderNotice();
 	expect(screen.queryByTestId("map-free-notice")).toBeNull();
 	cleanup();
@@ -138,21 +147,19 @@ it("stays quiet while the map is left, the map is off, or the project is a sampl
 	expect(screen.queryByTestId("map-free-notice")).toBeNull();
 });
 
-it("stays quiet on a paid account", () => {
+it("stays quiet on a paid or unlimited account", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
-	state.allowance = { ...spent, free: false };
+	state.allowance = { ...spent, ai: null, free: false };
 	renderNotice();
 	expect(screen.queryByTestId("map-free-notice")).toBeNull();
-});
+	cleanup();
 
-it("states the live limit when staff allow more than one map", () => {
-	state.sample = { data: { is_sample: false }, isSuccess: true };
-	state.allowance = { ...spent, maps: { limit: 2, used: 2 } };
+	state.allowance = {
+		...spent,
+		ai: { exhausted: false, percent_used: 0, unlimited: true },
+	};
 	renderNotice();
-	const text = screen.getByTestId("map-free-notice").textContent ?? "";
-	expect(text).toContain(
-		"You have used this month's 2 free maps. The map in this presentation keeps its current version until ",
-	);
+	expect(screen.queryByTestId("map-free-notice")).toBeNull();
 });
 
 it("counts the map as on only when the published or draft blocks hold it", () => {
@@ -163,15 +170,4 @@ it("counts the map as on only when the published or draft blocks hold it", () =>
 	expect(presentsMap(undefined, undefined)).toBe(false);
 	expect(presentsMap(settings(["popcorn", "map"]), undefined)).toBe(true);
 	expect(presentsMap(settings(["popcorn"]), settings(["map"]))).toBe(true);
-});
-
-it("states no number when staff set the map limit to 0", () => {
-	state.sample = { data: { is_sample: false }, isSuccess: true };
-	state.allowance = { ...spent, maps: { limit: 0, used: 0 } };
-	renderNotice();
-	const text = screen.getByTestId("map-free-notice").textContent ?? "";
-	expect(text).toContain(
-		"You have used this month's free maps. The map in this presentation keeps its current version until ",
-	);
-	expect(text).not.toContain(" 0 ");
 });

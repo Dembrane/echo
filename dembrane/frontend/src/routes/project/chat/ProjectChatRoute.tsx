@@ -23,7 +23,7 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
-import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -43,10 +43,7 @@ import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
 import { formatMessage } from "@/components/chat/chatUtils";
-import {
-	ChatTurnLimitCard,
-	ChatUpgradeModal,
-} from "@/components/chat/FreeTierChatGate";
+import { ChatTurnLimitCard } from "@/components/chat/FreeTierChatGate";
 import {
 	useAddChatMessageMutation,
 	useChatHistory,
@@ -74,6 +71,10 @@ import {
 } from "@/components/feedback/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
 	ENABLE_AGENTIC_CHAT,
@@ -82,13 +83,12 @@ import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { chatTurnGate } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
 import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
-import { turnRefusalOf } from "./turnRefusal";
+import { aiBudgetRefusalOf, turnRefusalOf } from "./turnRefusal";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -499,21 +499,22 @@ export const ProjectChatRoute = () => {
 		setInput,
 	]);
 
-	// Free tier: the server's turn meter, or a refused reply (sample chats only have the latter).
-	const [chatUpgradeOpened, chatUpgradeHandlers] = useDisclosure(false);
-	const turnGate = chatTurnGate(chatQuery.data?.free_turns);
-	const turnRefusal = turnRefusalOf(error);
-	const atTurnLimit = turnGate.atLimit || turnRefusal !== null;
-	const turnsFrozen = turnGate.frozen || Boolean(turnRefusal?.frozen);
-	const monthlyRefusal = Boolean(turnRefusal?.monthly);
-	// The month's chats used up on a first message: show the wall at once.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: opens once per refusal
+	// Free tier: a sample project's refused turn, or a used-up AI budget.
+	const aiWall = useAiBudgetWall();
+	const atTurnLimit = turnRefusalOf(error);
+	const aiRefusal = aiBudgetRefusalOf(error);
+	const queryClient = useQueryClient();
+	// A reply refused for the AI budget: show the wall at once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: opens once per refused reply
 	useEffect(() => {
-		if (monthlyRefusal) chatUpgradeHandlers.open();
-	}, [monthlyRefusal]);
+		if (!aiRefusal) return;
+		aiWall.open(aiRefusal.resetsAt);
+		void invalidateFreeAllowance(queryClient);
+	}, [error]);
 	const guardedSubmit = () => {
 		if (atTurnLimit) {
-			chatUpgradeHandlers.open();
+			// The sample cap: nothing about the AI budget is used up.
+			aiWall.open(null, false);
 			return;
 		}
 		handleSubmit();
@@ -826,7 +827,7 @@ export const ProjectChatRoute = () => {
 							</div>
 						)}
 
-					{error && !turnRefusal && (
+					{error && !atTurnLimit && !aiRefusal && (
 						<Alert
 							icon={<WarningCircleIcon size={20} />}
 							title={t`Error`}
@@ -923,11 +924,7 @@ export const ProjectChatRoute = () => {
 					)}
 					{atTurnLimit && (
 						<Box className="mb-2">
-							<ChatTurnLimitCard
-								onUpgrade={chatUpgradeHandlers.open}
-								frozen={turnsFrozen}
-								monthly={monthlyRefusal}
-							/>
+							<ChatTurnLimitCard onUpgrade={() => aiWall.open(null, false)} />
 						</Box>
 					)}
 					<form
@@ -1068,11 +1065,14 @@ export const ProjectChatRoute = () => {
 					/>
 				)}
 			</Modal>
-			<ChatUpgradeModal
-				opened={chatUpgradeOpened}
-				onClose={chatUpgradeHandlers.close}
-				reason={monthlyRefusal ? "chats" : "chat_turns"}
-			/>
+			{(routeWorkspaceId ?? projectWorkspaceId) && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="chat"
+					workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
+					projectId={projectId}
+				/>
+			)}
 		</Stack>
 	);
 };

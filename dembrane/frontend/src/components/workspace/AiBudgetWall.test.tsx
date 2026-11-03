@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	render,
+	renderHook,
+	screen,
+} from "@testing-library/react";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
-import { AiBudgetWall } from "./AiBudgetWall";
+import { AiBudgetWall, useAiBudgetWall } from "./AiBudgetWall";
 
 const modalProps = vi.hoisted(() => ({
 	current: {} as Record<string, unknown>,
@@ -76,4 +82,57 @@ it("opens without the used-up claim when the budget is not used up yet", () => {
 it("renders nothing while closed", () => {
 	renderWall(false);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+});
+
+const aiRefusal = {
+	response: {
+		data: {
+			code: "billing.tier_limit",
+			detail: {
+				error: "FREE_TIER_LIMIT",
+				limit: "ai_budget",
+				percent: 100,
+				resets_at: "2026-12-01T00:00:00Z",
+			},
+			params: { limit: "ai_budget" },
+		},
+		status: 402,
+	},
+};
+
+it("opens from an ai_budget refusal with its reset time, and ignores anything else", () => {
+	const { result } = renderHook(() => useAiBudgetWall());
+	let opened = true;
+	act(() => {
+		opened = result.current.openFor(new Error("boom"));
+	});
+	expect(opened).toBe(false);
+	expect(result.current.props.opened).toBe(false);
+
+	act(() => {
+		opened = result.current.openFor(aiRefusal);
+	});
+	expect(opened).toBe(true);
+	expect(result.current.props).toMatchObject({
+		opened: true,
+		resetsAt: "2026-12-01T00:00:00Z",
+		usedUp: true,
+	});
+
+	// Closing keeps the date, so the closing popup does not flicker.
+	act(() => result.current.close());
+	expect(result.current.props).toMatchObject({
+		opened: false,
+		resetsAt: "2026-12-01T00:00:00Z",
+	});
+});
+
+it("opens neutrally when asked to, with no refusal behind it", () => {
+	const { result } = renderHook(() => useAiBudgetWall());
+	act(() => result.current.open(null, false));
+	expect(result.current.props).toMatchObject({
+		opened: true,
+		resetsAt: null,
+		usedUp: false,
+	});
 });

@@ -321,9 +321,6 @@ interface ProjectChat {
 	chat_mode: "overview" | "deep_dive" | "agentic" | null;
 	date_created: string | null;
 	date_updated: string | null;
-	// removed in plan 3 task 4
-	/** Free accounts only: this chat's turn meter. */
-	free_turns?: { limit: number; used: number; frozen: boolean } | null;
 	id: string;
 	name: string | null;
 	project_id: string | Project | null;

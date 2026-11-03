@@ -315,7 +315,7 @@ it("says you are on the free plan where there is no wall", async () => {
 });
 
 it("numbers the first question as step 2, so step_viewed starts there", async () => {
-	const { onEvent } = renderConfigurator({ wallKey: "report_cap" });
+	const { onEvent } = renderConfigurator({ wallKey: "project_cap" });
 	await waitFor(() => expect(search()).toBe("?pc_step=1"));
 	next();
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));

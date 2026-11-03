@@ -338,8 +338,8 @@ export const useGenerateMap = (projectId: string) => {
 				`/map/projects/${enc(projectId)}/generate`,
 			),
 		onError: (error: HttpError) => {
-			// The page opens the wall for a used-up month.
-			if (isFreeTierLimitError(error) === "map") {
+			// The page opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") {
 				void invalidateFreeAllowance(queryClient);
 				return;
 			}

@@ -11,7 +11,6 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import {
 	type ReactNode,
@@ -22,13 +21,14 @@ import {
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
-import { SELLABLE_TIER } from "@/lib/tiers";
 import {
 	budgetState,
 	budgetsToAdmit,
@@ -249,7 +249,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const mapQuery = useProjectMapSummary(offline ? "" : projectId);
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const aiWall = useAiBudgetWall();
 	const { applies: allowanceApplies } = useAllowanceApplies(
 		offline ? "" : projectId,
 	);
@@ -461,6 +461,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const factCheck = useMapFactCheck({
 		initialStates: fixtureData?.factChecks,
 		offline,
+		onRefused: aiWall.openFor,
 		readOnly,
 		resultId,
 	});
@@ -701,8 +702,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							onGenerate={() =>
 								generate.mutate(undefined, {
 									onError: (error) => {
-										if (isFreeTierLimitError(error) === "map")
-											upgradeHandlers.open();
+										aiWall.openFor(error);
 									},
 								})
 							}
@@ -751,16 +751,11 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				</div>
 			)}
 			{!offline && linkWorkspaceId && (
-				<UpgradeModal
-					opened={upgradeOpened}
-					onClose={upgradeHandlers.close}
-					currentTier="free"
-					requiredTier={SELLABLE_TIER}
-					canRequestUpgrade
+				<AiBudgetWall
+					{...aiWall.props}
+					action="map"
 					workspaceId={linkWorkspaceId}
 					projectId={projectId}
-					wallKey="map_cap"
-					entry="modal_direct"
 				/>
 			)}
 

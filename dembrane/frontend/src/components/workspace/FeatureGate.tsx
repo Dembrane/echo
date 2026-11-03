@@ -234,7 +234,7 @@ export function UpgradeModal({
 }: UpgradeModalProps) {
 	const { workspace } = useWorkspace();
 	const { i18n } = useLingui();
-	const emit = usePricingGateEmitter(workspaceId);
+	const emit = usePricingGateEmitter(workspaceId, aiAction);
 	const gateViewed = useGateViewed(workspaceId);
 	// One opening is one event. The old `upgrade_prompt_viewed` sat in a
 	// `useEffect` whose deps held `currentTier`, which arrives from a query, so
@@ -254,6 +254,7 @@ export function UpgradeModal({
 		if (entry !== "modal_direct") return;
 		viewedRef.current = true;
 		gateViewed({
+			aiAction,
 			canRequestUpgrade,
 			// The event property is a string, and "none" says out loud that this
 			// entry point had no tier requirement. An empty value would read as a
@@ -263,6 +264,7 @@ export function UpgradeModal({
 			wallKey,
 		});
 	}, [
+		aiAction,
 		alreadyHas,
 		canRequestUpgrade,
 		entry,

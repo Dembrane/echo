@@ -44,7 +44,6 @@ import {
 } from "@/components/chat/ChatComposer";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
-import { ChatUpgradeModal } from "@/components/chat/FreeTierChatGate";
 import {
 	useDeleteChatMutation,
 	useInfiniteProjectChats,
@@ -64,6 +63,10 @@ import {
 	useAttachChatConversationsMutation,
 	useCreateChatMutation,
 } from "@/components/project/hooks";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
@@ -72,7 +75,6 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { ChatMode } from "@/lib/api";
-import { allowanceSpent, isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -274,9 +276,10 @@ export const NewChatRoute = () => {
 	const [draft, setDraft] = useState("");
 	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspaceId);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	const atChatLimit =
-		allowanceApplies && allowanceSpent(freeAllowance.data, "chats");
+	const aiWall = useAiBudgetWall();
+	const aiUsedUp =
+		allowanceApplies && Boolean(freeAllowance.data?.ai?.exhausted);
+	const openAiWall = () => aiWall.open(freeAllowance.data?.resets_at ?? null);
 	// Which mode the primary Start button (and the count line's wording)
 	// targets. Agentic stays available via the "Try Agentic instead" link
 	// regardless of this default.
@@ -336,9 +339,9 @@ export const NewChatRoute = () => {
 	) => {
 		if (!projectId) return;
 
-		// Free tier: this month's chats are used. Route to upgrade instead of creating.
-		if (atChatLimit) {
-			upgradeHandlers.open();
+		// Free tier: this month's AI is used up. Route to upgrade instead of creating.
+		if (aiUsedUp) {
+			openAiWall();
 			return;
 		}
 
@@ -399,10 +402,8 @@ export const NewChatRoute = () => {
 				state: initialMessage ? { initialMessage } : undefined,
 			});
 		} catch (error) {
-			// Backend safety net: free-tier chat cap returns 402.
-			if (isFreeTierLimitError(error) === "chats") {
-				upgradeHandlers.open();
-			} else {
+			// Backend safety net: a used-up AI budget returns 402.
+			if (!aiWall.openFor(error)) {
 				console.error("Failed to create chat with mode:", error);
 			}
 			setIsInitializing(false);
@@ -418,10 +419,10 @@ export const NewChatRoute = () => {
 		// isPending only flips on the next render; two clicks in one tick would
 		// both pass it and create two drafts.
 		if (creatingDraftRef.current) return;
-		// Free tier: this month's chats. Route to upgrade before creating the
+		// Free tier: this month's AI. Route to upgrade before creating the
 		// draft, same as starting a chat would.
-		if (atChatLimit) {
-			upgradeHandlers.open();
+		if (aiUsedUp) {
+			openAiWall();
 			return;
 		}
 		creatingDraftRef.current = true;
@@ -449,9 +450,8 @@ export const NewChatRoute = () => {
 			}
 			pickerHandlers.open();
 		} catch (error) {
-			if (isFreeTierLimitError(error) === "chats") {
-				upgradeHandlers.open();
-			} else if (draftChatIdRef.current) {
+			if (aiWall.openFor(error)) return;
+			if (draftChatIdRef.current) {
 				// Only the carry-over failed, so let the host pick by hand.
 				console.error("Failed to carry over the current selection:", error);
 				toast.error(t`Could not carry over your selection. Pick again below.`);
@@ -720,7 +720,7 @@ export const NewChatRoute = () => {
 						isCreating={isPending}
 						projectId={projectId}
 						onModeSelected={(mode) => void handleModeSelected(mode)}
-						atChatLimit={atChatLimit}
+						atChatLimit={aiUsedUp}
 					/>
 				)}
 
@@ -731,11 +731,14 @@ export const NewChatRoute = () => {
 					/>
 				</Suspense>
 			</Stack>
-			<ChatUpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				reason="chats"
-			/>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="chat"
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
+			)}
 			<Modal
 				opened={pickerOpened}
 				onClose={pickerHandlers.close}

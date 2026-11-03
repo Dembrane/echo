@@ -22,6 +22,7 @@ import {
 	selectAllContext,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import type { ListQuery } from "@/lib/listQuery";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
 import type { FinalTranscriptData } from "../sentences";
@@ -667,6 +668,8 @@ export const useRetranscribeConversationMutation = () => {
 				attachVerifiedArtifacts,
 			),
 		onError: (error) => {
+			// The modal opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") return;
 			toast.error(t`Failed to retranscribe conversation. Please try again.`);
 			console.error("Retranscribe error:", error);
 		},

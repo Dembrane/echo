@@ -51,11 +51,15 @@ vi.mock("@/components/project/hooks", async (importOriginal) => ({
 
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -64,6 +68,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
@@ -179,7 +185,7 @@ describe("MapPage in fixture mode", () => {
 });
 
 describe("MapPage free tier", () => {
-	it("a spent map opens the upgrade modal", async () => {
+	it("a used-up AI budget opens the AI wall for the map", async () => {
 		bffMock.get.mockImplementation((path: string) => {
 			if (path === "/map/projects/p1/graph") return Promise.resolve(null);
 			if (path === "/map/projects/p1") {
@@ -195,7 +201,12 @@ describe("MapPage free tier", () => {
 			new ApiRequestError(402, {
 				action: "upgrade",
 				code: "billing.tier_limit",
-				params: { cap: 1, limit: "map", used: 1 },
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
 			}),
 		);
 		render(
@@ -217,7 +228,9 @@ describe("MapPage free tier", () => {
 			await screen.findByRole("button", { name: "Generate map" }),
 		);
 		const modal = await screen.findByTestId("upgrade-modal");
-		expect(modal.dataset.wall).toBe("map_cap");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("map");
+		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
 		expect(modal.dataset.tier).toBe("free");
 		await waitFor(() => expect(bffMock.post).toHaveBeenCalledTimes(1));
 		expect(toastMock.error).not.toHaveBeenCalled();
@@ -245,6 +258,42 @@ describe("MapPage free tier", () => {
 			</MantineProvider>,
 		);
 	};
+
+	it("a fact-check refused for the AI budget opens the AI wall, not the claim error", async () => {
+		// Auto fact-check on, coloured by fact-check: the page starts the claims itself.
+		window.localStorage.setItem(
+			"dembrane-map-settings",
+			JSON.stringify({
+				autoFactCheckClaims: true,
+				colorBy: "factCheck",
+				version: 7,
+			}),
+		);
+		resetMapSettingsForTests();
+		bffMock.post.mockRejectedValue(
+			new ApiRequestError(402, {
+				action: "upgrade",
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
+			}),
+		);
+		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
+			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
+		);
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("map");
+		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+		expect(bffMock.post.mock.calls[0][0]).toMatch(/fact-checks/);
+		expect(document.body.textContent).not.toContain(
+			"The fact-check could not be started.",
+		);
+	});
 
 	it("carries the AI banner before the first map exists", async () => {
 		renderLive(

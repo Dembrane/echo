@@ -1,6 +1,38 @@
+import { useCallback, useMemo, useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { aiBudgetDetails } from "@/lib/freeTier";
 import { SELLABLE_TIER } from "@/lib/tiers";
 import type { AiAction } from "./gateWalls";
+
+/** Open state for AiBudgetWall: `openFor` takes a refusal, `open` a known used-up budget. */
+export function useAiBudgetWall() {
+	const [state, setState] = useState({
+		opened: false,
+		resetsAt: null as string | null,
+		usedUp: true,
+	});
+	const open = useCallback(
+		(resetsAt: string | null = null, usedUp = true) =>
+			setState({ opened: true, resetsAt, usedUp }),
+		[],
+	);
+	// Keeps the date while closing, so the closing popup does not change.
+	const close = useCallback(
+		() => setState((s) => ({ ...s, opened: false })),
+		[],
+	);
+	const openFor = useCallback(
+		(err: unknown) => {
+			const refused = aiBudgetDetails(err);
+			if (!refused) return false;
+			open(refused.resetsAt);
+			return true;
+		},
+		[open],
+	);
+	const props = useMemo(() => ({ ...state, onClose: close }), [state, close]);
+	return { close, open, openFor, props };
+}
 
 // The one upgrade popup for a free account whose monthly AI budget is used up.
 export function AiBudgetWall({

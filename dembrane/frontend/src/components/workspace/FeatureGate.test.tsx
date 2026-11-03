@@ -136,10 +136,10 @@ it("renders the same modal from two different walls, but for the opening line", 
 	expect(custom).toContain("You were trying to add your logo.");
 	first.unmount();
 
-	renderModal({ wallKey: "report_cap" });
-	expect(modalText()).toContain("You were trying to create another report.");
+	renderModal({ wallKey: "project_cap" });
+	expect(modalText()).toContain("You were trying to add more projects.");
 	// Swap that one line back and the two are the same text.
-	expect(modalText().replace("create another report", "add your logo")).toBe(
+	expect(modalText().replace("add more projects", "add your logo")).toBe(
 		custom,
 	);
 });
@@ -199,19 +199,14 @@ it("keeps every other wall byte for byte the same as every other", () => {
 it("carries an attempt for every wall, and none for the page that is not one", () => {
 	const walls: WallKey[] = [
 		"ai_budget",
-		"chat_cap",
-		"chat_turn_cap",
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
-		"map_cap",
 		"org_cap",
-		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",
-		"report_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",
@@ -235,20 +230,6 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 
 it("states the free content limits without a number or an em dash", () => {
 	const lines: [WallKey, string][] = [
-		[
-			"chat_cap",
-			"The free plan includes a few chats a month, each with a set number of questions.",
-		],
-		[
-			"chat_turn_cap",
-			"The free plan includes a few chats a month, each with a set number of questions.",
-		],
-		["report_cap", "The free plan includes a monthly allowance of reports."],
-		["map_cap", "The free plan includes a monthly allowance of maps."],
-		[
-			"popcorn_cap",
-			"The free plan includes a monthly allowance of popcorn analyses.",
-		],
 		["project_cap", "The free plan includes a limited number of projects."],
 	];
 	for (const [wall, line] of lines) {
@@ -258,8 +239,6 @@ it("states the free content limits without a number or an em dash", () => {
 		expect(wallPopoverLine(wall)).not.toContain("\u2014");
 		expect(wallActionLine(wall)).not.toContain("\u2014");
 	}
-	expect(wallActionLine("map_cap")).toBe("generate another map");
-	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
 });
 
 // The AI budget wall: one popup for every AI action, naming the action and the reset date.
@@ -351,19 +330,14 @@ it("names every AI action as a lowercase phrase", () => {
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
 		"ai_budget",
-		"chat_cap",
-		"chat_turn_cap",
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
-		"map_cap",
 		"org_cap",
-		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",
-		"report_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",
@@ -444,6 +418,27 @@ it("fires gate_viewed on the modal when no popover came first, once", () => {
 		</I18nProvider>,
 	);
 	expect(gateViewedCalls()).toHaveLength(1);
+});
+
+it("names the refused AI action on the ai_budget wall's gate events", () => {
+	renderModal({ aiAction: "report", wallKey: "ai_budget" });
+	expect(gateViewedCalls()[0][1]).toMatchObject({
+		ai_action: "report",
+		wall_key: "ai_budget",
+	});
+	const configEvents = capture.mock.calls.filter(
+		(call) =>
+			String(call[0]).startsWith("pricing_config_") &&
+			call[0] !== "pricing_config_gate_viewed",
+	);
+	expect(configEvents.length).toBeGreaterThan(0);
+	for (const call of configEvents)
+		expect(call[1]).toMatchObject({ ai_action: "report" });
+});
+
+it("carries no AI action on any other wall's gate event", () => {
+	renderModal({ wallKey: "custom_logo" });
+	expect(gateViewedCalls()[0][1]).not.toHaveProperty("ai_action");
 });
 
 it("does not fire gate_viewed on the modal when the popover already did", () => {

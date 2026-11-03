@@ -111,8 +111,8 @@ const refusal = (limit: string) =>
 	});
 
 // StrictMode runs mount effects twice, as the dev build does.
-it.each(["map", "popcorn"])(
-	"keeps the upgrade wall open after a used-up free %s",
+it.each(["ai_budget"])(
+	"keeps the AI wall open after a refused run (%s)",
 	async (limit) => {
 		vi.mocked(bff.post).mockRejectedValue(refusal(limit));
 		// The results tab reads quietly in the background.
@@ -154,6 +154,10 @@ it.each(["map", "popcorn"])(
 			await new Promise((r) => setTimeout(r, 50));
 		});
 		expect(screen.queryByTestId("pricing-configurator-modal")).toBeTruthy();
+		const text =
+			screen.getByTestId("pricing-configurator-modal").textContent ?? "";
+		expect(text).toContain("This month's AI budget is used up.");
+		expect(text).toContain("You were trying to run an analysis.");
 		// The wall answers it; no inline notice links elsewhere.
 		expect(screen.queryByText("See plans")).toBeNull();
 	},

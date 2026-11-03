@@ -67,7 +67,10 @@ export const ReportIssueModal = ({
 					MAX_MESSAGE_CHARS,
 				),
 			),
-		...(projectId ? { projectId } : { purpose: "issue_report" as const }),
+		// Issue reports are never budget-checked, with or without a project.
+		projectId,
+		purpose: "issue_report",
+		workspaceId,
 	});
 	const isVoiceActive = voice.status !== "idle";
 	const atMessageLimit = message.length >= MAX_MESSAGE_CHARS;

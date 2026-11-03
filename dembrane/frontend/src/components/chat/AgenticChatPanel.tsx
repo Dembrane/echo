@@ -65,11 +65,13 @@ import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
 import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
-import { trackProcess } from "@/features/processes/store";
 import {
-	invalidateFreeAllowance,
-	useFreeAllowance,
-} from "@/hooks/useFreeAllowance";
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
+import { trackProcess } from "@/features/processes/store";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -92,11 +94,7 @@ import {
 	stopAgenticRun,
 	streamAgenticRun,
 } from "@/lib/api";
-import {
-	chatTurnGate,
-	freeLimitDetails,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
@@ -123,11 +121,7 @@ import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
-import {
-	ChatTurnLimitCard,
-	ChatUpgradeModal,
-	VoiceCapUpgradeModal,
-} from "./FreeTierChatGate";
+import { ChatTurnLimitCard, VoiceCapUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
@@ -873,13 +867,10 @@ export const AgenticChatPanel = ({
 			fields: ["id", "default_conversation_transcript_prompt"],
 		},
 	});
-	// A refused turn (402 chat_turns or chats); sample chats only learn their limit this way.
-	const [turnRefusal, setTurnRefusal] = useState<{
-		frozen: boolean;
-		monthly: boolean;
-	} | null>(null);
+	// A sample project's refused turn (402 chat_turns); it learns its cap this way.
+	const [atTurnLimit, setAtTurnLimit] = useState(false);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on chat switch
-	useEffect(() => setTurnRefusal(null), [chatId]);
+	useEffect(() => setAtTurnLimit(false), [chatId]);
 	const voiceHotwords =
 		(
 			projectTranscriptHintsQuery.data as
@@ -1171,25 +1162,22 @@ export const AgenticChatPanel = ({
 	}, [timeline, pendingUserMessage]);
 
 	const { usageGates } = useWorkspaceUsage(workspace?.id);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
+	const aiWall = useAiBudgetWall();
+	// What the host was doing when the AI budget refused them.
+	const [aiAction, setAiAction] = useState<AiAction>("assistant");
+	// The sample cap's upgrade: nothing about the AI budget is used up.
+	const openSampleWall = () => aiWall.open(null, false);
+	// The gate that locks uploads locks the mic.
 	const voiceCapReached = Boolean(usageGates?.uploads_locked);
 	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
-	// Free projects have no voice input (the server refuses it with a 402).
-	const voiceFree = Boolean(useFreeAllowance(workspace?.id).data?.free);
-	const [voiceFreeRefused, setVoiceFreeRefused] = useState(false);
-	const voiceLocked = voiceFree || voiceFreeRefused || voiceCapReached;
 	// biome-ignore lint/correctness/useExhaustiveDependencies: react to a refusal only
 	useEffect(() => {
 		if (voice.errorKind !== "free_limit") return;
+		setAiAction("voice");
+		if (!aiWall.openFor(voice.errorCause)) aiWall.open();
 		voice.dismissError();
-		setVoiceFreeRefused(true);
-		voiceCapHandlers.open();
+		void invalidateFreeAllowance(queryClient);
 	}, [voice.errorKind]);
-	// Free tier: the server's turn meter for this chat.
-	const turnGate = chatTurnGate(chatQuery.data?.free_turns);
-	const atTurnLimit = turnGate.atLimit || turnRefusal !== null;
-	const turnsFrozen = turnGate.frozen || Boolean(turnRefusal?.frozen);
 
 	const historyMessages = useMemo(
 		() =>
@@ -1647,7 +1635,7 @@ export const AgenticChatPanel = ({
 		}
 
 		if (atTurnLimit) {
-			upgradeHandlers.open();
+			openSampleWall();
 			return;
 		}
 
@@ -1701,14 +1689,13 @@ export const AgenticChatPanel = ({
 			// Don't strand the host's message when the send fails: restore it to
 			// the composer so it isn't lost (unless they've already typed a new one).
 			setInput((current) => (current.length === 0 ? message : current));
-			// Backend safety net: free-tier turn cap returns 402.
-			const refused = isFreeTierLimitError(submitError);
-			if (refused === "chat_turns" || refused === "chats") {
-				setTurnRefusal({
-					frozen: freeLimitDetails(submitError)?.reason === "frozen",
-					monthly: refused === "chats",
-				});
-				upgradeHandlers.open();
+			// Backend safety net: the sample cap or a used-up AI budget returns 402.
+			if (isFreeTierLimitError(submitError) === "chat_turns") {
+				setAtTurnLimit(true);
+				openSampleWall();
+			} else if (aiWall.openFor(submitError)) {
+				setAiAction("assistant");
+				void invalidateFreeAllowance(queryClient);
 			} else {
 				const nextError =
 					submitError instanceof Error
@@ -2200,13 +2187,7 @@ export const AgenticChatPanel = ({
 						onTemplateSelect={handleTemplateSelect}
 					/>
 
-					{atTurnLimit && (
-						<ChatTurnLimitCard
-							onUpgrade={upgradeHandlers.open}
-							frozen={turnsFrozen}
-							monthly={Boolean(turnRefusal?.monthly)}
-						/>
-					)}
+					{atTurnLimit && <ChatTurnLimitCard onUpgrade={openSampleWall} />}
 					{voice.errorKind && (
 						<VoiceInputError
 							kind={voice.errorKind}
@@ -2294,9 +2275,9 @@ export const AgenticChatPanel = ({
 										<VoiceInputButton
 											ariaLabel={t`Record a voice message`}
 											disabled={atTurnLimit || voice.isStarting}
-											locked={voiceLocked && !atTurnLimit}
+											locked={voiceCapReached && !atTurnLimit}
 											onClick={
-												voiceLocked && !atTurnLimit
+												voiceCapReached && !atTurnLimit
 													? () => {
 															emitFrozenFeatureAttempt();
 															voiceCapHandlers.open();
@@ -2307,11 +2288,9 @@ export const AgenticChatPanel = ({
 											tooltip={
 												atTurnLimit
 													? undefined
-													: voiceFree || voiceFreeRefused
-														? t`Voice input comes with a paid plan.`
-														: voiceCapReached
-															? t`This workspace has used its recording hours. Upgrade to keep using voice.`
-															: undefined
+													: voiceCapReached
+														? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+														: undefined
 											}
 										/>
 										<Button
@@ -2424,16 +2403,16 @@ export const AgenticChatPanel = ({
 					/>
 				</Modal>
 			</Box>
-			<ChatUpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				reason={turnRefusal?.monthly ? "chats" : "chat_turns"}
+			<AiBudgetWall
+				{...aiWall.props}
+				action={aiAction}
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
 			/>
 			<VoiceCapUpgradeModal
 				opened={voiceCapOpened}
 				onClose={voiceCapHandlers.close}
 				upgradeTier={usageGates?.upgrade_cta_tier ?? null}
-				free={voiceFree || voiceFreeRefused}
 			/>
 		</Stack>
 	);
