@@ -263,6 +263,7 @@ const metering = modelCallRecorder({
   logger,
   service,
   prices,
+  slackUrl: config.metering.slackWebhookUrl ?? null,
 });
 // The transcription profile the worker runs: the API transcribes typed text and short audio
 // with the same live model, and refuses to start when the deployment lacks what it needs.

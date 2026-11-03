@@ -21,6 +21,8 @@ const logger = createLogger(
 );
 const { tracer } = initTracing({ service: "fixture", release: "r", env: "test", sampleRatio: 0 });
 const database = createDb({ url, poolMax: 4 });
+// The test's fixed instant for budget reads, when it gives one.
+const budgetNow = () => (process.env.BUDGET_NOW ? new Date(process.env.BUDGET_NOW) : new Date());
 // The payer the fake recorded for the call it is answering.
 const paidBy = () => {
   const p = lastPayer();
@@ -62,7 +64,7 @@ await queue.workflow(
     notifier: { emit: async (e) => log(`notify ${e.eventCode}`) },
     reportGenerated: async () => log("webhook"),
     budgetLeft: (projectId) =>
-      aiBudgetForProject(database.db, projectId, new Date()).then((b) => b?.exhausted !== true),
+      aiBudgetForProject(database.db, projectId, budgetNow()).then((b) => b?.exhausted !== true),
     pause: async (name) => {
       log(`step ${name}`);
       if (name === "generate" && process.env.HANG === "1") await Bun.sleep(600_000);

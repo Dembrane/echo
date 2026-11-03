@@ -241,8 +241,8 @@ export interface PriceStartup {
 }
 
 /**
- * At boot: load the book (a database read). With no prices stored, sync once in the
- * background; after that, name any configured model still without a price. Never throws.
+ * At boot: load the book (a database read). When any configured model has no stored price,
+ * sync once in the background; after that, name any configured model still without one. Never throws.
  */
 export async function priceStartup(
   d: SyncDeps,
@@ -250,11 +250,13 @@ export async function priceStartup(
   models: readonly string[],
 ): Promise<PriceStartup> {
   await book.reload();
-  const empty = book.current().prices.size === 0;
+  const unpriced = book.missing(models).length > 0;
   const settled = (async () => {
-    if (empty) {
+    let synced = false;
+    if (unpriced) {
       try {
         await syncPrices(d);
+        synced = true;
       } catch (err) {
         d.logger.error(
           { err, signal: "metering.price_sync_failed" },
@@ -276,7 +278,9 @@ export async function priceStartup(
       );
       await postSlack(
         d.slackUrl,
-        `No AI price for ${missing.join(", ")}. Their calls are charged at the highest price held until one is added to prices/overrides.json or models.dev.`,
+        synced
+          ? `No AI price for ${missing.join(", ")} after a price sync. Their calls are charged at the highest price held until models.dev lists them or they get a hand price in prices/overrides.json.`
+          : `No AI price for ${missing.join(", ")} yet. Their calls are charged at the highest price held until a price sync succeeds.`,
         d.logger,
       );
     }

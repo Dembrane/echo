@@ -147,6 +147,35 @@ run("portal AI and retranscribe at the AI budget", () => {
     expect(fakeCalls().length).toBe(1);
   });
 
+  const host_ = (conversation: string, action: "summarize" | "generate-title") =>
+    app.request(`/api/conversations/${conversation}/${action}`, { method: "POST" });
+
+  test("a host's summary and title regenerate at zero budget are refused and call no model", async () => {
+    const { conversation } = await seed(LIMIT);
+    takeUnscopedFakeCalls();
+    for (const action of ["summarize", "generate-title"] as const) {
+      const res = await host_(conversation, action);
+      expect(res.status).toBe(402);
+      expect(await res.json()).toMatchObject({
+        code: "billing.tier_limit",
+        detail: { limit: "ai_budget" },
+      });
+    }
+    expect(fakeCalls().length).toBe(0);
+    const [row] = await sql`select summary from conversation where id = ${conversation}`;
+    expect(row?.summary).toBeNull();
+  });
+
+  test("a host's summary regenerate below the limit still runs", async () => {
+    const { conversation } = await seed(LIMIT - 1);
+    takeUnscopedFakeCalls();
+    const res = await withPayer({ ref: "conversation", id: conversation }, () =>
+      host_(conversation, "summarize"),
+    );
+    expect(res.status).toBe(200);
+    expect(fakeCalls().length).toBeGreaterThan(0);
+  });
+
   test("retranscribe at zero budget is refused with ai_budget and clones nothing", async () => {
     const { project, conversation } = await seed(LIMIT);
     enqueued.length = 0;

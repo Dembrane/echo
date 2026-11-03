@@ -177,6 +177,19 @@ run("the AI budget used-up notice", () => {
     for (const s of [below, paid, old]) expect(await notices(s.acc)).toHaveLength(0);
   });
 
+  test("only live free accounts are candidates; paid and deleted spend rows are not read", async () => {
+    const free = await seed();
+    const paid = await seed("innovator");
+    const gone = await seed();
+    await sql`update billing_account set deleted_at = now() where id = ${gone.acc}`;
+    for (const s of [free, paid, gone]) await spent(s.acc, "2026-10-01T00:00:00Z", 100, OCT);
+    const found = await billingStorage(db).freeAiCandidates(new Date(OCT.getTime() - 60_000));
+    const ids = found.map((c) => c.accountId);
+    expect(ids).toContain(free.acc);
+    expect(ids).not.toContain(paid.acc);
+    expect(ids).not.toContain(gone.acc);
+  });
+
   test("a no-limit override hears nothing; a lower override is used up at its own amount", async () => {
     const unlimited = await seed();
     await sql`update billing_account set ai_budget_unlimited = true where id = ${unlimited.acc}`;

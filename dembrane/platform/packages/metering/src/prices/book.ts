@@ -42,19 +42,75 @@ export interface OverrideFile {
 }
 
 const currency = (v: unknown): v is "USD" | "EUR" => v === "USD" || v === "EUR";
+const num = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= 0;
+const numOrNull = (v: unknown) => v === null || num(v);
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
 
-/** The hand-kept prices/overrides.json; throws on an entry that is neither mapped nor priced. */
-export function loadOverrides(): OverrideFile {
-  const f = file as unknown as OverrideFile;
-  for (const [key, entry] of Object.entries(f.models)) {
-    const ok =
-      typeof entry.provider === "string" &&
-      ("modelsDev" in entry
-        ? typeof entry.modelsDev === "string"
-        : "prices" in entry && currency(entry.prices.currency));
-    if (!ok) throw new Error(`prices/overrides.json: ${key} needs modelsDev or prices`);
+const ENTRY_KEYS = new Set(["provider", "modelsDev", "prices", "_source"]);
+const UNIT_KEYS = [
+  "inputPerM",
+  "cachedInputPerM",
+  "audioInputPerM",
+  "outputPerM",
+  "perAudioSecond",
+  "perSearchQuery",
+] as const;
+const PRICE_KEYS = new Set<string>(["currency", "longContext", ...UNIT_KEYS]);
+const LONG_KEYS = new Set(["threshold", "inputPerM", "cachedInputPerM", "outputPerM"]);
+
+// Every key known, every unit a number or null, and something above 0 to charge.
+function priceProblem(p: unknown): string | null {
+  if (!isObject(p)) return "prices must be an object";
+  const unknown = Object.keys(p).filter((k) => !PRICE_KEYS.has(k));
+  if (unknown.length) return `unknown price keys ${unknown.join(", ")}`;
+  if (!currency(p.currency)) return "currency must be USD or EUR";
+  for (const k of UNIT_KEYS) if (!numOrNull(p[k])) return `${k} must be a number or null`;
+  const lc = p.longContext;
+  if (lc !== null) {
+    if (!isObject(lc)) return "longContext must be an object or null";
+    const bad = Object.keys(lc).filter((k) => !LONG_KEYS.has(k));
+    if (
+      bad.length ||
+      !num(lc.threshold) ||
+      !num(lc.inputPerM) ||
+      !num(lc.outputPerM) ||
+      !numOrNull(lc.cachedInputPerM)
+    )
+      return "longContext needs threshold, inputPerM, cachedInputPerM and outputPerM";
   }
-  if (!currency(f.searchQuery.currency) || typeof f.searchQuery.perQuery !== "number")
+  if (!UNIT_KEYS.some((k) => (p[k] as number | null) !== null && (p[k] as number) > 0))
+    return "no unit price above 0";
+  return null;
+}
+
+/** Checks a parsed overrides file; throws naming the entry and the problem. */
+export function checkOverrides(raw: unknown): OverrideFile {
+  const f = raw as OverrideFile;
+  if (!isObject(raw) || !isObject(f.models) || !isObject(f.searchQuery))
+    throw new Error("prices/overrides.json needs models and searchQuery");
+  for (const [key, entry] of Object.entries(f.models as Record<string, unknown>)) {
+    if (!isObject(entry) || typeof entry.provider !== "string")
+      throw new Error(`prices/overrides.json: ${key} needs a provider`);
+    const unknown = Object.keys(entry).filter((k) => !ENTRY_KEYS.has(k));
+    if (unknown.length)
+      throw new Error(`prices/overrides.json: ${key} has unknown keys ${unknown.join(", ")}`);
+    if ("modelsDev" in entry) {
+      if (typeof entry.modelsDev !== "string" || "prices" in entry)
+        throw new Error(`prices/overrides.json: ${key} needs modelsDev or prices`);
+      continue;
+    }
+    if (!("prices" in entry))
+      throw new Error(`prices/overrides.json: ${key} needs modelsDev or prices`);
+    const problem = priceProblem(entry.prices);
+    if (problem) throw new Error(`prices/overrides.json: ${key}: ${problem}`);
+  }
+  if (!currency(f.searchQuery.currency) || !num(f.searchQuery.perQuery))
     throw new Error("prices/overrides.json: searchQuery needs a currency and perQuery");
   return f;
+}
+
+/** The hand-kept prices/overrides.json; throws on an entry that is neither mapped nor priced right. */
+export function loadOverrides(): OverrideFile {
+  return checkOverrides(file);
 }

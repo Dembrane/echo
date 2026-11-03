@@ -501,6 +501,8 @@ export const ParticipantConversationAudio = () => {
 	const shouldVerifyOnFinish =
 		!!projectQuery.data?.is_verify_on_finish_enabled &&
 		!!projectQuery.data?.is_verify_enabled &&
+		// Verify needs AI; at a used-up budget it would open on "Not available right now".
+		projectQuery.data?.is_ai_available !== false &&
 		!hasApprovedArtefacts &&
 		effectiveRecordingTime >= REFINE_BUTTON_THRESHOLD_SECONDS;
 

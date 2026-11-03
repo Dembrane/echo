@@ -276,13 +276,17 @@ export function billingStorage(db: Db): BillingStore {
     async freeAiCandidates(since) {
       const u = schema.free_usage;
       const marker: Marker = "notice:ai_out";
+      // The recorder writes spend for every tier; only live free accounts can run out.
       const rows = await db
         .select({ accountId: u.billing_account_id, periodStart: u.period_start })
         .from(u)
+        .innerJoin(billing_account, eq(billing_account.id, u.billing_account_id))
         .where(
           and(
             eq(u.key, AI_SPEND_KEY),
             gte(u.updated_at, since.toISOString()),
+            eq(billing_account.tier, "free"),
+            isNull(billing_account.deleted_at),
             sql`not exists (select 1 from free_usage n where n.billing_account_id = ${u.billing_account_id}
               and n.period_start = ${u.period_start} and n.key = ${marker})`,
           ),

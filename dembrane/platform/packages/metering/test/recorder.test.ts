@@ -163,6 +163,124 @@ describe("model call recorder", () => {
     expect(sink.writes).toHaveLength(1);
   });
 
+  test("a write slower than flushMs never stalls the writes that follow", async () => {
+    const writes: number[][] = [];
+    let first = true;
+    const sink: ModelCallSink = {
+      async write(batch) {
+        if (first) {
+          first = false;
+          await Bun.sleep(150);
+        }
+        writes.push(batch.map((p) => p.row.ms ?? -1));
+      },
+    };
+    const r = modelCallRecorder({
+      sink,
+      logger: fakeLogger().logger,
+      service: "x",
+      prices: stubBook(),
+      flushMs: 20,
+    });
+    r.observe(call({ ms: 1 }));
+    await Bun.sleep(50);
+    // Observed while the first write is still running.
+    r.observe(call({ ms: 2 }));
+    await Bun.sleep(60);
+    r.observe(call({ ms: 3 }));
+    await Bun.sleep(250);
+    expect(writes.flat()).toEqual([1, 2, 3]);
+  });
+
+  test("flush also writes what was observed during a write in flight", async () => {
+    const writes: number[][] = [];
+    let release = () => {};
+    const gate = new Promise<void>((res) => {
+      release = res;
+    });
+    let first = true;
+    const sink: ModelCallSink = {
+      async write(batch) {
+        if (first) {
+          first = false;
+          await gate;
+        }
+        writes.push(batch.map((p) => p.row.ms ?? -1));
+      },
+    };
+    const r = modelCallRecorder({
+      sink,
+      logger: fakeLogger().logger,
+      service: "x",
+      prices: stubBook(),
+      flushMs: 60_000,
+    });
+    withPayer(project, () => r.observe(call({ ms: 1 })));
+    const running = r.flush();
+    withPayer(project, () => r.observe(call({ ms: 2 })));
+    const exit = r.flush();
+    release();
+    await Promise.all([running, exit]);
+    expect(writes.flat()).toEqual([1, 2]);
+  });
+
+  test("a call priced without a price row is posted to Slack once per model", async () => {
+    const posts: string[] = [];
+    const slack = Bun.serve({
+      port: 0,
+      fetch: async (req) => {
+        posts.push(((await req.json()) as { text: string }).text);
+        return new Response("ok");
+      },
+    });
+    try {
+      const { logger, lines } = fakeLogger();
+      const r = modelCallRecorder({
+        sink: fakeSink(),
+        logger,
+        service: "echo-api",
+        prices: stubBook(),
+        flushMs: 60_000,
+        slackUrl: `http://localhost:${slack.port}/hook`,
+      });
+      withPayer(project, () => {
+        r.observe(call({ model: "gemini-unknown" }));
+        r.observe(call({ model: "gemini-unknown" }));
+        r.observe(call({ model: "gemini-other" }));
+        r.observe(call());
+      });
+      await r.flush();
+      await Bun.sleep(100);
+      expect(posts).toHaveLength(2);
+      expect(posts.some((p) => p.includes("vertex/gemini-unknown"))).toBe(true);
+      expect(posts.some((p) => p.includes("vertex/gemini-other"))).toBe(true);
+      expect(posts.join(" ")).not.toContain("\u2014");
+      expect(
+        lines.filter((l) => l.fields.signal === "metering.price_missing").map((l) => l.level),
+      ).toEqual(["error", "error"]);
+    } finally {
+      slack.stop(true);
+    }
+  });
+
+  test("an unreachable Slack never fails a call priced without a row", async () => {
+    const sink = fakeSink();
+    const r = modelCallRecorder({
+      sink,
+      logger: fakeLogger().logger,
+      service: "x",
+      prices: stubBook(),
+      flushMs: 60_000,
+      slackUrl: "http://127.0.0.1:1/hook",
+    });
+    expect(() =>
+      withPayer(project, () => r.observe(call({ model: "gemini-unknown" }))),
+    ).not.toThrow();
+    await r.flush();
+    await Bun.sleep(50);
+    expect(sink.writes[0]?.batch[0]?.row.price_missing).toBe(true);
+  });
+
   test("a call under a payer is priced and its cost lands in that payer's hour", async () => {
     const sink = fakeSink();
     const r = modelCallRecorder({

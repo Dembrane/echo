@@ -2,7 +2,7 @@ import { afterAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { AI_SPEND_KEY } from "@dembrane/allowance";
+import { AI_SPEND_KEY, periodStart } from "@dembrane/allowance";
 import { createDb, migrate } from "@dembrane/db";
 import { installQueueSchema } from "@dembrane/queue";
 import postgres from "postgres";
@@ -22,6 +22,8 @@ const WS = "f0000000-0000-4000-8000-00000000dd02";
 const PROJECT = "f0000000-0000-4000-8000-00000000dd03";
 const CONVERSATION = "c1000000-0000-4000-8000-00000000dd01";
 const LIMIT = 5_000_000;
+// The worker reads the budget at this instant too, so a run across midnight on the 1st can't flake.
+const NOW = new Date();
 
 const lines = () => readFileSync(trace, "utf8").trim().split("\n");
 async function until(check: () => Promise<boolean> | boolean, ms = 45_000) {
@@ -56,6 +58,7 @@ run("a scheduled report and the AI budget", () => {
         PROJECT_ID: PROJECT,
         REPORT_ID: String(reportId),
         START: "1",
+        BUDGET_NOW: NOW.toISOString(),
       },
       stdout: "ignore",
       stderr: "ignore",
@@ -65,7 +68,7 @@ run("a scheduled report and the AI budget", () => {
   };
 
   async function spend(amount: number) {
-    const period = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+    const period = periodStart(NOW, "free", null);
     await sql`insert into free_usage (billing_account_id, period_start, key, amount)
       values (${BILLING}, ${period.toISOString()}, ${AI_SPEND_KEY}, ${amount})
       on conflict (billing_account_id, period_start, key) do update set amount = excluded.amount`;
@@ -129,6 +132,10 @@ run("a scheduled report and the AI budget", () => {
       // Give the run a moment to show it stopped at the guard.
       await Bun.sleep(1_000);
       expect(lines().filter((l) => !l.endsWith(" ready"))).toEqual([]);
+      // A refused run is a failed phase for the project's processing status.
+      const events = await sql`select event, message from processing_status
+        where project_id = ${PROJECT} and message like ${`%report ${id}%`} order by id`;
+      expect(events.map((e) => e.event)).toEqual(["task_create_report.failed"]);
     } finally {
       worker.kill(9);
     }

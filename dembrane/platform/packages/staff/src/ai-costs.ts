@@ -74,7 +74,7 @@ function spendRows(db: Db, from: Date, to: Date, useRollup: boolean) {
 function accountInfo(db: Db, ids: string[]) {
   if (!ids.length) return Promise.resolve([] as AccountInfo[]);
   return db.execute<AccountInfo>(sql`
-    select b.id, coalesce(nullif(b.label, ''), o.name, w.name, '') as name, b.tier,
+    select b.id, coalesce(o.name, w.name, nullif(b.label, ''), '') as name, b.tier,
       to_char(b.downgraded_at at time zone 'UTC', ${sql.raw(MS)}) as downgraded_at,
       b.ai_budget_micro_eur::text as amount, b.ai_budget_unlimited as unlimited,
       to_char(b.ai_budget_until at time zone 'UTC', ${sql.raw(MS)}) as until

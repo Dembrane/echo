@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 import { priceCall } from "./prices/pricer";
 import type { PriceBook } from "./prices/store";
 import { type Resolution, resolvePayers } from "./resolve";
+import { postSlack } from "./slack";
 
 export { configuredModels, type MeteringJobDeps, meteringRegistration, priceSync } from "./jobs";
 export {
@@ -60,6 +61,8 @@ export interface RecorderOptions {
   readonly flushMs?: number;
   /** Rows kept while the database is unreachable; older ones are dropped beyond this. */
   readonly maxPending?: number;
+  /** Where a model priced without a row is posted, once per model per process; unset is off. */
+  readonly slackUrl?: string | null;
 }
 
 export interface ModelCallRecorder {
@@ -70,6 +73,8 @@ export interface ModelCallRecorder {
 
 const DEFAULT_FLUSH_MS = 1000;
 const DEFAULT_MAX_PENDING = 2000;
+// An exit flush retries this often for calls that arrived during the write before it.
+const MAX_FLUSH_ROUNDS = 5;
 const HOUR_MS = 3_600_000;
 
 /** A row waiting to be written; `unpriced` holds the call until a price book has prices. */
@@ -90,11 +95,27 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
   let queue: Entry[] = [];
   let spend = new Map<string, SpendBucket>();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let inFlight: Promise<void> | undefined;
+  let inFlight: Promise<boolean> | undefined;
   let failing = false;
   let waitingWarned = false;
   let dropped = 0;
   const unscoped = new Set<string | null>();
+  const unpricedModels = new Set<string>();
+
+  const warnUnpriced = (call: ModelCall) => {
+    const model = `${call.provider}/${call.model}`;
+    if (unpricedModels.has(model)) return;
+    unpricedModels.add(model);
+    opts.logger.error(
+      { model, signal: "metering.price_missing" },
+      "model call priced without an AI price",
+    );
+    void postSlack(
+      opts.slackUrl ?? null,
+      `No AI price for ${model} (${opts.service}). Its calls are charged at the highest price held until it has one in prices/overrides.json or models.dev.`,
+      opts.logger,
+    );
+  };
 
   const addSpend = (key: string, b: SpendBucket) => {
     const had = spend.get(key);
@@ -108,6 +129,7 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
     const snap = opts.prices.current();
     const cost = priceCall(call, snap);
     if (cost.priceMissing && snap.prices.size === 0) return false;
+    if (cost.priceMissing) warnUnpriced(call);
     e.row = {
       ...e.row,
       cost_micro_eur: cost.costMicroEur,
@@ -143,12 +165,16 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
 
   const schedule = () => {
     if (timer) return;
-    timer = setTimeout(() => void flush(), flushMs);
+    timer = setTimeout(() => {
+      timer = undefined;
+      void flush();
+    }, flushMs);
     // A pending batch never keeps a finished process alive; the app flushes on exit.
     (timer as { unref?: () => void }).unref?.();
   };
 
-  const writeOnce = async () => {
+  // True when something was written.
+  const writeOnce = async (): Promise<boolean> => {
     const taken = queue;
     queue = [];
     const ready: Entry[] = [];
@@ -159,7 +185,7 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
     waitingWarned = waiting.length > 0;
     if (!ready.length && !spend.size) {
       queue = [...waiting, ...queue];
-      return;
+      return false;
     }
     const sending = spend;
     spend = new Map();
@@ -171,6 +197,7 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
       queue = [...waiting, ...queue];
       if (failing) opts.logger.info({ rows: ready.length }, "model call rows write again");
       failing = false;
+      return true;
     } catch (err) {
       queue = [...taken, ...queue];
       for (const [k, b] of sending) addSpend(k, b);
@@ -180,18 +207,21 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
           "model call rows could not be written; kept for the next flush",
         );
       failing = true;
+      return false;
     }
   };
 
-  const flush = async (): Promise<void> => {
+  const pending = () => queue.length > 0 || spend.size > 0;
+
+  // One write, or the one already running.
+  const round = (): Promise<boolean> => {
     if (inFlight) return inFlight;
-    if (timer) {
-      clearTimeout(timer);
-      timer = undefined;
-    }
-    if (!queue.length && !spend.size) return;
+    if (!pending()) return Promise.resolve(false);
     inFlight = writeOnce()
-      .catch((err) => opts.logger.warn({ err }, "model call rows could not be prepared"))
+      .catch((err) => {
+        opts.logger.warn({ err }, "model call rows could not be prepared");
+        return false;
+      })
       .finally(() => {
         cap();
         if (dropped) {
@@ -200,9 +230,21 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
         }
         inFlight = undefined;
         // Rows waiting for prices or for the database get another try without a new call.
-        if (queue.length || spend.size) schedule();
+        if (pending()) schedule();
       });
     return inFlight;
+  };
+
+  // Writes until nothing is pending, a write fails, or only calls waiting for prices are left.
+  const flush = async (): Promise<void> => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = undefined;
+    }
+    for (let i = 0; i < MAX_FLUSH_ROUNDS && pending(); i++) {
+      const joined = inFlight !== undefined;
+      if (!(await round()) && !joined) return;
+    }
   };
 
   const observe: ModelCallObserver = (call: ModelCall) => {

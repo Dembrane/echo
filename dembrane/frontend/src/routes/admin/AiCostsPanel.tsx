@@ -214,7 +214,11 @@ export function AiCostsPanel({
 					</SimpleGrid>
 					{accounts.length === 0 ? (
 						<Text size="sm" c="dimmed">
-							<Trans>No AI costs recorded this month.</Trans>
+							{offset === 0 ? (
+								<Trans>No AI costs recorded this month.</Trans>
+							) : (
+								<Trans>No AI costs recorded for {month}.</Trans>
+							)}
 						</Text>
 					) : (
 						<Paper withBorder>

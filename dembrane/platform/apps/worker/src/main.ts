@@ -129,6 +129,7 @@ const metering = modelCallRecorder({
   logger,
   service,
   prices,
+  slackUrl: config.metering.slackWebhookUrl ?? null,
 });
 // One structured line per request to a speech model: what is sent, how long it took, how it ended.
 const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");

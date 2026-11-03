@@ -56,6 +56,8 @@ const STAFF_EMAIL_DOMAIN = "@dembrane.com";
 const MAX_LIMIT = 10_000_000;
 // EUR 1,000: the most a budget, default or per account, may be.
 const MAX_AI_BUDGET = 1_000_000_000;
+// ISO 8601: a UTC day (what the staff screen sends) or a date and time with a zone.
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2}))?$/;
 const KEY_MAX: Partial<Record<LimitKey, number>> = {
   ai_budget_micro_eur: MAX_AI_BUDGET,
   ai_budget_enforce: 1,
@@ -562,23 +564,26 @@ export function staffRoutes(deps: StaffRouteDeps) {
       Number.isInteger(amount) &&
       amount >= 0 &&
       amount <= MAX_AI_BUDGET;
-    const untilAt = typeof until === "string" ? new Date(until) : null;
+    const untilAt = typeof until === "string" && ISO_INSTANT.test(until) ? new Date(until) : null;
     const now = clock();
     const untilOk = until === null || (untilAt !== null && untilAt > now);
     if (typeof unlimited !== "boolean" || (!unlimited && !amountOk) || !untilOk)
       throw new BadRequestError("request.invalid");
     const id = c.req.param("account_id");
-    await staff(c, "staff:set_tier", "billing_account.ai_budget.set", ["billing_account", id], {
-      amount_micro_eur: amount,
-      unlimited,
-      until,
-    });
-    await liveAccount(id);
     const patch = {
       ai_budget_micro_eur: unlimited ? null : (amount as number),
       ai_budget_unlimited: unlimited,
       ai_budget_until: untilAt?.toISOString() ?? null,
     };
+    // The audit records what is stored, not the raw body.
+    await staff(
+      c,
+      "staff:set_tier",
+      "billing_account.ai_budget.set",
+      ["billing_account", id],
+      patch,
+    );
+    await liveAccount(id);
     await billingStore.updateAccount(id, patch, now);
     return c.json({ status: "ok", billing_account_id: id, ...patch });
   });

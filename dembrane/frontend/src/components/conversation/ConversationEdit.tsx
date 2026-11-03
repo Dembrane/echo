@@ -19,6 +19,13 @@ import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useParams } from "react-router";
+import { notifyError } from "@/components/error/notifyError";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
 	generateConversationSummary,
@@ -103,6 +110,14 @@ export const ConversationEdit = ({
 	showSummary?: boolean;
 }) => {
 	const queryClient = useQueryClient();
+	const { projectId, workspaceId } = useParams();
+	const aiWall = useAiBudgetWall();
+	const [aiAction, setAiAction] = useState<AiAction>("summary");
+	// True when a used-up AI budget opened its wall for this refusal.
+	const openAiWall = (error: unknown, action: AiAction) => {
+		setAiAction(action);
+		return aiWall.openFor(error);
+	};
 	const emailsQuery = useConversationEmails(conversation.id);
 	const emails = emailsQuery.data?.emails_csv
 		? emailsQuery.data.emails_csv.split(",").filter(Boolean)
@@ -191,6 +206,10 @@ export const ConversationEdit = ({
 			return result;
 		},
 		mutationKey: ["generateTitle", conversation.id],
+		onError: (error) => {
+			if (openAiWall(error, "title")) return;
+			void notifyError(error);
+		},
 		onSuccess: (data) => {
 			if (data?.title) {
 				setValue("title", data.title, { shouldDirty: false });
@@ -210,7 +229,8 @@ export const ConversationEdit = ({
 			return result;
 		},
 		mutationKey: ["generateSummary", conversation.id],
-		onError: () => {
+		onError: (error) => {
+			if (openAiWall(error, "summary")) return;
 			toast.error(t`Could not generate a summary. Please try again.`);
 		},
 		onSuccess: (data) => {
@@ -397,6 +417,7 @@ export const ConversationEdit = ({
 											loading={isGeneratingTitle}
 											disabled={!canGenerateTitle}
 											onClick={() => generateTitleMutation.mutate()}
+											{...testId("conversation-edit-title-generate-button")}
 										>
 											{hasTitle ? t`Regenerate` : t`Generate`}
 										</Button>
@@ -465,6 +486,7 @@ export const ConversationEdit = ({
 											loading={generateSummaryMutation.isPending}
 											disabled={isLocked}
 											onClick={() => generateSummaryMutation.mutate()}
+											{...testId("conversation-edit-summary-generate-button")}
 										>
 											{watch("summary")?.trim() ? t`Regenerate` : t`Generate`}
 										</Button>
@@ -480,6 +502,14 @@ export const ConversationEdit = ({
 					)}
 				</Stack>
 			</form>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action={aiAction}
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
+			)}
 		</Stack>
 	);
 };

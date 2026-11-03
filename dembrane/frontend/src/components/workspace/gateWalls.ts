@@ -76,7 +76,9 @@ export type AiAction =
 	| "analysis"
 	| "popcorn"
 	| "canvas"
-	| "retranscribe";
+	| "retranscribe"
+	| "summary"
+	| "title";
 
 /** The opening's phrase for the refused AI action, read as "You were trying to {action}." */
 export function aiActionLine(action: AiAction): string {
@@ -89,6 +91,8 @@ export function aiActionLine(action: AiAction): string {
 		popcorn: t`keep analysing with popcorn`,
 		report: t`create a report`,
 		retranscribe: t`retranscribe a conversation`,
+		summary: t`regenerate a summary`,
+		title: t`generate a title`,
 		voice: t`use your voice in chat`,
 	};
 	return actions[action] ?? "";

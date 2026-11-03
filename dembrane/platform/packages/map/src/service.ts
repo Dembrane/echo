@@ -1,5 +1,6 @@
 import { isFreeLimit, requireAiBudget } from "@dembrane/allowance";
 import {
+  ACTIVE_RUN_STATUSES,
   type AnalysisRuntime,
   AnalysisStoreError,
   ARGUMENT_TYPES,
@@ -366,7 +367,8 @@ const running = (since: unknown, staleSeconds: number) =>
 async function pendingRun(d: MapDeps, projectId: string): Promise<Run | null> {
   try {
     const run = await argumentsRun(d, projectId);
-    return run && run.status !== "failed" ? run : null;
+    // Only a run still working; a finished map is regenerated, which the budget refuses.
+    return run && ACTIVE_RUN_STATUSES.includes(run.status) ? run : null;
   } catch (err) {
     if (!(err instanceof AnalysisStoreError)) throw err;
     return null;

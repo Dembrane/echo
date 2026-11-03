@@ -67,8 +67,8 @@ export const ReportIssueModal = ({
 					MAX_MESSAGE_CHARS,
 				),
 			),
-		// Issue reports are never budget-checked, with or without a project.
-		projectId,
+		// The workspace pays, never the project: a viewer lacks project:update, and issue
+		// reports are never budget-checked.
 		purpose: "issue_report",
 		workspaceId,
 	});

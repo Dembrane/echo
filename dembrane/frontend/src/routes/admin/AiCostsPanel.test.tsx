@@ -240,3 +240,25 @@ it("switches to last month", async () => {
 		).toBe(true),
 	);
 });
+
+it("says no AI costs for this month, and names the month for last month", async () => {
+	const empty = (period: string) => ({
+		...VIEW,
+		accounts: [],
+		by_provider: [],
+		period_start: period,
+		unattributed_micro_eur: 0,
+	});
+	fetchMock.mockImplementation(async (url: string) =>
+		answer(
+			String(url).endsWith("month_offset=1")
+				? empty("2026-10-01T00:00:00.000Z")
+				: empty("2026-11-01T00:00:00.000Z"),
+		),
+	);
+	show();
+	await screen.findByText("No AI costs recorded this month.");
+	fireEvent.click(screen.getByText("Last month"));
+	await screen.findByText("No AI costs recorded for October 2026.");
+	expect(screen.queryByText("No AI costs recorded this month.")).toBeNull();
+});

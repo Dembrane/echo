@@ -262,7 +262,7 @@ export function embedCall(
  * Passes a stream through and reports once it ends: at the finish part's usage, at the
  * first error part, when the reader fails, or when the consumer cancels (an abort). The
  * clock keeps running until the last part, so a stream's time is what the caller waited.
- * Ending early keeps the finish part's usage, else estimates from `prompt` and the text so far.
+ * Without a finish part's usage (an early end, or none sent) it estimates from `prompt` and the text so far.
  */
 export function observedStream(
   stream: ReadableStream<LanguageModelV4StreamPart>,
@@ -285,9 +285,7 @@ export function observedStream(
     const error = err ?? failure;
     report(() => ({
       ...base(meta, "stream", startedAt, t0),
-      ...(usage || error === undefined
-        ? tokens(usage, metadata)
-        : estimated(meta, prompt, streamed)),
+      ...(usage ? tokens(usage, metadata) : estimated(meta, prompt, streamed)),
       finishReason: reason(finish),
       status: error === undefined ? "ok" : "error",
       error: error === undefined ? null : errorLabel(error),

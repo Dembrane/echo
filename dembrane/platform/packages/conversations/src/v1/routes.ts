@@ -1,3 +1,4 @@
+import { requireAiBudget } from "@dembrane/allowance";
 import { ForbiddenError, NotFoundError, RateLimitedError } from "@dembrane/core";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -75,14 +76,16 @@ export function conversationV1Routes(d: ConversationsDeps) {
   app.post("/api/conversations/:conversation_id/summarize", async (c) => {
     const who = requireUser(c);
     const id = c.req.param("conversation_id");
-    await conversationForV1(d, who, id, "project:update");
+    const { conversation } = await conversationForV1(d, who, id, "project:update");
+    await requireAiBudget(d.db, conversation.project_id, d.now());
     return c.json(await summarizeAndStore(d, id));
   });
 
   app.post("/api/conversations/:conversation_id/generate-title", async (c) => {
     const who = requireUser(c);
     const id = c.req.param("conversation_id");
-    await conversationForV1(d, who, id, "project:update");
+    const { conversation } = await conversationForV1(d, who, id, "project:update");
+    await requireAiBudget(d.db, conversation.project_id, d.now());
     return c.json(await generateTitleAndStore(d, id));
   });
 

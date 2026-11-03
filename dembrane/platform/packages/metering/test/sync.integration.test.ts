@@ -311,7 +311,24 @@ run("price sync", () => {
     expect(row?.q).toBeCloseTo(0.014 * 0.8, 12);
   });
 
-  test("startup with prices stored loads them without syncing and names a model with no price", async () => {
+  test("startup with every configured model priced loads them without syncing", async () => {
+    const book = priceBook(db.db, logger);
+    logs.length = 0;
+    posts.length = 0;
+    let fetched = 0;
+    const counting = async (url: string) => {
+      fetched++;
+      return serve(fixture)(url);
+    };
+    const started = await priceStartup(deps(counting), book, ["vertex/gemini-3.8-flash"]);
+    expect(book.current().prices.has("vertex/gemini-3.8-flash")).toBe(true);
+    await started.settled;
+    expect(fetched).toBe(0);
+    expect(logs.filter((l) => l.level === "error")).toHaveLength(0);
+    expect(posts).toHaveLength(0);
+  });
+
+  test("startup syncs when a configured model has no stored price, then names what is still missing", async () => {
     const book = priceBook(db.db, logger);
     logs.length = 0;
     posts.length = 0;
@@ -324,14 +341,34 @@ run("price sync", () => {
       "vertex/gemini-3.8-flash",
       "vertex/x",
     ]);
-    // Loaded before startup returns; the missing-price check follows in settled.
+    // Loaded before startup returns; the sync and the missing-price check follow in settled.
     expect(book.current().prices.has("vertex/gemini-3.8-flash")).toBe(true);
     await started.settled;
-    expect(fetched).toBe(0);
-    expect(book.current().prices.has("vertex/gemini-3.8-flash")).toBe(true);
+    expect(fetched).toBeGreaterThan(0);
     expect(logs.filter((l) => l.level === "error")).toHaveLength(1);
-    expect(posts).toHaveLength(1);
-    expect(posts[0]).toContain("vertex/x");
-    expect(posts[0]).not.toContain("gemini-3.8-flash");
+    // The sync may also post price changes; one post names what is still missing.
+    const missing = posts.filter((p) => p.startsWith("No AI price"));
+    expect(missing).toHaveLength(1);
+    expect(missing[0]).toContain("vertex/x");
+    expect(missing[0]).toContain("after a price sync");
+    expect(missing[0]).not.toContain("gemini-3.8-flash");
+    expect(missing[0]).not.toContain("\u2014");
+  });
+
+  test("a model added in a deploy is priced by the startup sync, with no post", async () => {
+    // The stored table lacks one configured model, as after a deploy that adds it.
+    await sql`delete from ai_price where provider = 'vertex' and model = 'gemini-3.8-flash'`;
+    const book = priceBook(db.db, logger);
+    logs.length = 0;
+    posts.length = 0;
+    const started = await priceStartup(deps(serve(fixture)), book, [
+      "vertex/gemini-3.8-flash",
+      "openai-compatible/glm-5.3",
+    ]);
+    expect(book.current().prices.has("vertex/gemini-3.8-flash")).toBe(false);
+    await started.settled;
+    expect(book.current().prices.has("vertex/gemini-3.8-flash")).toBe(true);
+    expect(logs.filter((l) => l.level === "error")).toHaveLength(0);
+    expect(posts.filter((p) => p.startsWith("No AI price"))).toEqual([]);
   });
 });

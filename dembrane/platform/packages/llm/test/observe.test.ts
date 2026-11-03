@@ -442,6 +442,19 @@ describe("a failed or cancelled call keeps or estimates its usage", () => {
     });
   });
 
+  test("a stream that ends cleanly without a finish part estimates its usage", async () => {
+    const calls: ModelCall[] = [];
+    const stream = observed([{ type: "text-delta", id: "t", delta: "Hello there" }], calls);
+    for await (const _ of stream);
+    expect(calls[0]).toMatchObject({
+      status: "ok",
+      error: null,
+      usageEstimated: true,
+      inputTokens: promptTokens,
+      outputTokens: estimateText("Hello there"),
+    });
+  });
+
   test("a stream that errors after its finish part keeps the provider's usage", async () => {
     const calls: ModelCall[] = [];
     const stream = observed(

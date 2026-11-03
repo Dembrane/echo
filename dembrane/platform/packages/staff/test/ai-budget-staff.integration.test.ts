@@ -264,13 +264,14 @@ run("staff AI budget and costs", () => {
         [
           "staff:set_tier",
           "billing_account",
-          { amount_micro_eur: 20_000_000, unlimited: false, until },
+          { ai_budget_micro_eur: 20_000_000, ai_budget_unlimited: false, ai_budget_until: until },
           "req-1",
         ],
+        // What took effect: unlimited stores no amount.
         [
           "staff:set_tier",
           "billing_account",
-          { amount_micro_eur: 7, unlimited: true, until: null },
+          { ai_budget_micro_eur: null, ai_budget_unlimited: true, ai_budget_until: null },
           "req-1",
         ],
       ]);
@@ -286,6 +287,10 @@ run("staff AI budget and costs", () => {
       const put = (body: unknown) => call("staff", "PUT", path, body);
       const ok = { amount_micro_eur: 1_000_000_000, unlimited: false, until: null };
       expect((await put(ok)).status).toBe(200);
+      // The staff screen sends a UTC day.
+      expect((await put({ ...ok, until: "2026-12-01" })).status).toBe(200);
+      expect((await put({ ...ok, until: "2026-12-01T00:00:00+01:00" })).status).toBe(200);
+      expect((await put({ ...ok, until: "2026-12-01T00:00:00.000Z" })).status).toBe(200);
       expect((await put({ ...ok, amount_micro_eur: 0 })).status).toBe(200);
       for (const bad of [
         { ...ok, amount_micro_eur: 1_000_000_001 },
@@ -297,6 +302,10 @@ run("staff AI budget and costs", () => {
         { ...ok, until: "not a date" },
         { ...ok, until: "2026-10-25T11:00:00Z" },
         { ...ok, until: 5 },
+        // Date-parsable, but not ISO 8601.
+        { ...ok, until: "December 1, 2026" },
+        { ...ok, until: "2026/12/01" },
+        { ...ok, until: "2026-12-01T00:00" },
       ])
         expect((await put(bad)).status).toBe(400);
       const missing = `/api/v2/admin/billing-accounts/${randomUUID()}/ai-budget`;
@@ -334,7 +343,8 @@ run("staff AI budget and costs", () => {
       await sql`delete from model_call`;
       await sql`delete from ai_spend_daily`;
       free = (await seed({ org: "Free Org" })).accountId;
-      paid = (await seed({ tier: "changemaker", org: "Paid Org", label: "Paid Co" })).accountId;
+      // Onboarding labels every org account "Org billing": the org name wins.
+      paid = (await seed({ tier: "changemaker", org: "Paid Org", label: "Org billing" })).accountId;
       down = (await seed({ org: "Down Org", downgradedAt: "2026-10-10T00:00:00Z" })).accountId;
       open = (await seed({ org: "Open Org" })).accountId;
       await sql`update billing_account set ai_budget_micro_eur = 1000000,
@@ -496,7 +506,7 @@ run("staff AI budget and costs", () => {
       expect(view.accounts).toEqual([
         {
           billing_account_id: paid,
-          name: "Paid Co",
+          name: "Paid Org",
           tier: "changemaker",
           cost_micro_eur: 2_000_000,
           budget_micro_eur: null,

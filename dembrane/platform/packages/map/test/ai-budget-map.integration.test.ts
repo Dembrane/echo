@@ -225,6 +225,19 @@ run("map routes and the AI budget", () => {
     expect(await argumentsRuns(pid)).toBe(1);
   });
 
+  test("at zero, regenerating a map whose run finished refuses", async () => {
+    for (const done of ["ready", "cancelled", "needs_review", "superseded"]) {
+      const { pid, accountId } = await project("free");
+      const first = await generate(pid);
+      expect(first.status).toBe(202);
+      await sql`update analysis_run set status = ${done}, completed_at = now(),
+        output_manifest = ${sql.json({ nodes: [] })} where project_id = ${pid}`;
+      await spend(accountId, LIMIT);
+      expect(await generate(pid)).toMatchObject({ status: 402, limit: "ai_budget" });
+      expect(await argumentsRuns(pid)).toBe(1);
+    }
+  });
+
   test("at zero, a cached title and a done or running fact-check answer without a check", async () => {
     const { pid, accountId } = await project("free");
     const resultId = await savedMap(pid);

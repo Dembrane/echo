@@ -182,7 +182,14 @@ export function generateReportWorkflow(d: GenerateDeps) {
         const open = report && (report.status === "draft" || report.status === "scheduled");
         if (open && !(await d.budgetLeft(p.projectId))) {
           await markError(d, p, "AI_BUDGET_USED_UP", "This month's AI budget is used up.");
-          await phaseEnded(d, p, "task_create_report", "completed", `for report ${p.reportId}`, t0);
+          await phaseEnded(
+            d,
+            p,
+            "task_create_report",
+            "failed",
+            `AI budget used up for report ${p.reportId}`,
+            t0,
+          );
           return { go: false };
         }
         // Conditional, so a report another run saved meanwhile is not re-entered.

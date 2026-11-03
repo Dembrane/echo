@@ -12,6 +12,8 @@ const state = vi.hoisted(() => ({
 	isRecording: false,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
 	onRecordingStop: undefined as ((r: string) => void) | undefined,
+	project: {} as Record<string, unknown>,
+	recordingTime: 0,
 	stopRecording: vi.fn(),
 	taking: false as boolean | undefined,
 }));
@@ -34,7 +36,7 @@ vi.mock("./hooks", () => ({
 		isLoading: false,
 	}),
 	useParticipantProjectById: () => ({
-		data: { id: "p-1", is_taking_recordings: state.taking },
+		data: { id: "p-1", is_taking_recordings: state.taking, ...state.project },
 		isLoading: false,
 	}),
 	useUploadConversationChunk: (options: {
@@ -56,7 +58,7 @@ vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 			isRecording: state.isRecording,
 			isStarting: false,
 			permissionError: null,
-			recordingTime: 0,
+			recordingTime: state.recordingTime,
 			startRecording: vi.fn(),
 			stopRecording: state.stopRecording,
 		};
@@ -91,6 +93,15 @@ vi.mock("@/hooks/useVideoWakeLockFallback", () => ({
 }));
 vi.mock("./ParticipantRecordingWaveform", () => ({
 	ParticipantRecordingWaveform: () => null,
+}));
+vi.mock("./StopRecordingConfirmationModal", () => ({
+	StopRecordingConfirmationModal: ({
+		showVerifyOnFinish,
+	}: {
+		showVerifyOnFinish: boolean;
+	}) => (
+		<div data-testid="stop-modal" data-verify={String(showVerifyOnFinish)} />
+	),
 }));
 
 beforeAll(() => {
@@ -127,6 +138,8 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	state.isRecording = false;
+	state.project = {};
+	state.recordingTime = 0;
 	state.stopRecording.mockReset();
 });
 
@@ -216,3 +229,21 @@ it("opens the account wrap-up when a chunk comes back with recording_stop ai_bud
 		),
 	).toBeTruthy();
 });
+
+it.each([
+	[true, "true"],
+	[false, "false"],
+])(
+	"offers verify on finish only while AI is available (is_ai_available %s)",
+	(available, offered) => {
+		state.taking = true;
+		state.recordingTime = 120;
+		state.project = {
+			is_ai_available: available,
+			is_verify_enabled: true,
+			is_verify_on_finish_enabled: true,
+		};
+		renderPage();
+		expect(screen.getByTestId("stop-modal").dataset.verify).toBe(offered);
+	},
+);

@@ -3,7 +3,13 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -14,6 +20,43 @@ const summary = vi.hoisted(() => ({ current: null as string | null }));
 // Set to make the conversation request fail.
 const failure = vi.hoisted(() => ({ current: null as unknown }));
 const navigateMock = vi.hoisted(() => vi.fn());
+const { summarize, toastMock } = vi.hoisted(() => ({
+	summarize: vi.fn(),
+	toastMock: {
+		dismiss: vi.fn(),
+		error: vi.fn(),
+		loading: vi.fn(() => "t1"),
+		promise: vi.fn(),
+		success: vi.fn(),
+	},
+}));
+
+vi.mock("@/lib/api", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@/lib/api")>()),
+	generateConversationSummary: summarize,
+}));
+vi.mock("@/components/common/Toaster", () => ({ toast: toastMock }));
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({
+		aiAction,
+		opened,
+		resetsAt,
+		wallKey,
+	}: {
+		aiAction?: string;
+		opened: boolean;
+		resetsAt?: string | null;
+		wallKey: string;
+	}) =>
+		opened ? (
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
+			/>
+		) : null,
+}));
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
 vi.mock("@/hooks/useWorkspace", () => ({
@@ -78,6 +121,8 @@ afterEach(() => {
 	summary.current = null;
 	failure.current = null;
 	navigateMock.mockReset();
+	summarize.mockReset();
+	for (const f of Object.values(toastMock)) f.mockClear();
 });
 
 beforeAll(() => {
@@ -159,5 +204,56 @@ describe("ProjectConversationRoute when the conversation is gone", () => {
 		expect(navigateMock).toHaveBeenCalledWith(
 			"/w/w1/projects/p1/conversations",
 		);
+	});
+});
+
+describe("ProjectConversationRoute summary at a used-up AI budget", () => {
+	const usedUp = {
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	};
+
+	it("regenerate opens the AI wall instead of the failure toast", async () => {
+		summary.current = "A summary";
+		summarize.mockRejectedValueOnce(usedUp);
+		renderConversation();
+		fireEvent.click(
+			screen.getByTestId("conversation-overview-regenerate-summary-button"),
+		);
+		await act(async () => {
+			fireEvent.click(await screen.findByText("Regenerate"));
+		});
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("summary");
+		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+		expect(toastMock.error).not.toHaveBeenCalled();
+	});
+
+	it("any other failure still toasts and opens no wall", async () => {
+		summarize.mockRejectedValueOnce(new Error("boom"));
+		renderConversation();
+		await act(async () => {
+			fireEvent.click(
+				screen.getByTestId("conversation-overview-generate-summary-button"),
+			);
+		});
+		await vi.waitFor(() =>
+			expect(toastMock.error).toHaveBeenCalledWith(
+				"Failed to generate the summary. Please try again later.",
+				expect.anything(),
+			),
+		);
+		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 });
