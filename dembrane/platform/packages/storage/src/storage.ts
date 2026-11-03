@@ -29,6 +29,38 @@ export interface ObjectStorage {
   ): PresignedPost;
 }
 
+/** One stored object as a listing shows it; `key` is the bare key, without any deployment prefix. */
+export interface ListedObject {
+  readonly key: string;
+  readonly size: number;
+  readonly lastModified: Date | null;
+}
+
+/** One version of an object, or the delete marker that hides it. */
+export interface ObjectVersion extends ListedObject {
+  readonly versionId: string;
+  readonly isLatest: boolean;
+  readonly isDeleteMarker: boolean;
+}
+
+/** Whether a bucket keeps old versions: "off" means a delete is final. */
+export type Versioning = "enabled" | "suspended" | "off";
+
+/**
+ * What a retention job needs beyond ObjectStorage: to see what is stored, old versions
+ * included, and to remove one version for good. A plain delete on a versioned bucket only
+ * adds a delete marker and keeps the bytes, so removing audio means removing every version.
+ */
+export interface ObjectInventory {
+  /** Current objects whose key starts with `prefix`. */
+  list(prefix: string): AsyncIterable<ListedObject>;
+  versioning(): Promise<Versioning>;
+  /** Every version and delete marker of keys that start with `prefix`; none while versioning is off. */
+  versions(prefix: string): AsyncIterable<ObjectVersion>;
+  /** Removes one version permanently (a delete marker included). */
+  deleteVersion(key: string, versionId: string): Promise<void>;
+}
+
 export interface PresignedPost {
   readonly url: string;
   readonly fields: Readonly<Record<string, string>>;
