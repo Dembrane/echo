@@ -235,8 +235,21 @@ describe("ProjectConversationRoute summary at a used-up AI budget", () => {
 		});
 		const modal = await screen.findByTestId("upgrade-modal");
 		expect(modal.dataset.wall).toBe("ai_budget");
-		expect(modal.dataset.action).toBe("summary");
+		expect(modal.dataset.action).toBe("summary_again");
 		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+		expect(toastMock.error).not.toHaveBeenCalled();
+	});
+
+	it("a first generate names generating, not regenerating", async () => {
+		summarize.mockRejectedValueOnce(usedUp);
+		renderConversation();
+		await act(async () => {
+			fireEvent.click(
+				screen.getByTestId("conversation-overview-generate-summary-button"),
+			);
+		});
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.action).toBe("summary");
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 

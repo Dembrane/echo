@@ -127,6 +127,10 @@ run("price sync", () => {
     expect(logs.filter((l) => l.level === "error")).toHaveLength(1);
     expect(posts).toHaveLength(1);
     expect(posts[0]).toContain("vertex/gemini-3.8-flash");
+    // The next sync prices it: no hand price is asked for, and hand prices are held now.
+    expect(posts[0]).toContain("models.dev could not be read, so the next sync prices them");
+    expect(posts[0]).not.toContain("hand price");
+    expect(posts[0]).toContain("charged at the highest price held");
     expect(posts[0]).not.toContain("glm-5.3");
     expect(posts[0]).not.toContain("\u2014");
   });
@@ -161,7 +165,7 @@ run("price sync", () => {
 
     posts.length = 0;
     const second = await syncPrices(deps(serve(fixture)));
-    expect(second).toEqual({ changed: [], rejected: [], fxChanged: false });
+    expect(second).toEqual({ changed: [], rejected: [], fxChanged: false, sourceRead: true });
     expect(await rows()).toHaveLength(stored.length);
     expect(await fx()).toHaveLength(1);
     expect(posts).toEqual([]);
@@ -260,7 +264,7 @@ run("price sync", () => {
   test("unreachable or unreadable sources change nothing", async () => {
     const before = { prices: await rows(), fx: await fx() };
     const res = await syncPrices(deps(offline));
-    expect(res).toEqual({ changed: [], rejected: [], fxChanged: false });
+    expect(res).toEqual({ changed: [], rejected: [], fxChanged: false, sourceRead: false });
     expect({ prices: await rows(), fx: await fx() }).toEqual(before);
 
     logs.length = 0;
@@ -269,6 +273,7 @@ run("price sync", () => {
       changed: [],
       rejected: [],
       fxChanged: false,
+      sourceRead: false,
     });
     expect({ prices: await rows(), fx: await fx() }).toEqual(before);
     expect(logs.filter((l) => l.level === "warn").length).toBeGreaterThanOrEqual(2);
@@ -350,7 +355,8 @@ run("price sync", () => {
     const missing = posts.filter((p) => p.startsWith("No AI price"));
     expect(missing).toHaveLength(1);
     expect(missing[0]).toContain("vertex/x");
-    expect(missing[0]).toContain("after a price sync");
+    // vertex/x has no overrides entry: the post asks for one.
+    expect(missing[0]).toContain("not in prices/overrides.json, so add an entry there");
     expect(missing[0]).not.toContain("gemini-3.8-flash");
     expect(missing[0]).not.toContain("\u2014");
   });

@@ -375,8 +375,9 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "shutting down");
   await server.stop();
+  // Held rows and spend land before the pool closes.
+  await metering.flush().catch((err) => logger.warn({ err }, "metering flush at shutdown failed"));
   await Promise.allSettled([
-    metering.flush(),
     queue.stop(),
     hub.stop(),
     listener.end(),

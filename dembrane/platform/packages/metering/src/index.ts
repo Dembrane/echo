@@ -21,6 +21,7 @@ export { type CallCost, priceCall } from "./prices/pricer";
 export { FALLBACK_USD_TO_EUR, type PriceBook, priceBook } from "./prices/store";
 export {
   ecbUsdRate,
+  missingPriceText,
   type PriceStartup,
   priceStartup,
   type SyncDeps,
@@ -235,16 +236,18 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
     return inFlight;
   };
 
-  // Writes until nothing is pending, a write fails, or only calls waiting for prices are left.
+  // Writes until nothing is pending, a write fails, or only calls waiting for prices are left;
+  // never returns while a write (its own or another flush's) is still running.
   const flush = async (): Promise<void> => {
     if (timer) {
       clearTimeout(timer);
       timer = undefined;
     }
-    for (let i = 0; i < MAX_FLUSH_ROUNDS && pending(); i++) {
+    for (let i = 0; i < MAX_FLUSH_ROUNDS && (pending() || inFlight); i++) {
       const joined = inFlight !== undefined;
-      if (!(await round()) && !joined) return;
+      if (!(await round()) && !joined) break;
     }
+    while (inFlight) await inFlight;
   };
 
   const observe: ModelCallObserver = (call: ModelCall) => {

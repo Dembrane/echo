@@ -224,6 +224,77 @@ describe("model call recorder", () => {
     expect(writes.flat()).toEqual([1, 2]);
   });
 
+  test("flush waits for a write already in flight before it returns", async () => {
+    let committed = 0;
+    let release = () => {};
+    const gate = new Promise<void>((res) => {
+      release = res;
+    });
+    const sink: ModelCallSink = {
+      async write(batch, spend) {
+        await gate;
+        committed += batch.length + spend.size;
+      },
+    };
+    const r = modelCallRecorder({
+      sink,
+      logger: fakeLogger().logger,
+      service: "x",
+      prices: stubBook(),
+      flushMs: 10,
+    });
+    withPayer(project, () => r.observe(call()));
+    // The timer's write is in flight, holding the row and its spend.
+    await Bun.sleep(30);
+    let done = false;
+    const exit = r.flush().then(() => {
+      done = true;
+    });
+    await Bun.sleep(20);
+    expect(done).toBe(false);
+    release();
+    await exit;
+    expect(committed).toBe(2);
+  });
+
+  test("a timer flush and the exit flush both resolve only once every row and spend is written", async () => {
+    const rows: number[] = [];
+    let spent = 0;
+    let n = 0;
+    let release = () => {};
+    const gate = new Promise<void>((res) => {
+      release = res;
+    });
+    const sink: ModelCallSink = {
+      async write(batch, spend) {
+        n++;
+        if (n === 1) await gate;
+        else await Bun.sleep(50);
+        rows.push(...batch.map((p) => p.row.ms ?? -1));
+        spent += total([...spend.values()]);
+      },
+    };
+    const r = modelCallRecorder({
+      sink,
+      logger: fakeLogger().logger,
+      service: "x",
+      prices: stubBook(),
+      flushMs: 10,
+    });
+    withPayer(project, () => r.observe(call({ ms: 1 })));
+    await Bun.sleep(30);
+    // Observed during the timer's write; the timer flush and the exit flush race for it.
+    withPayer(project, () => r.observe(call({ ms: 2 })));
+    const timerFlush = r.flush();
+    const exit = r.flush();
+    release();
+    await exit;
+    expect(rows.sort()).toEqual([1, 2]);
+    expect(spent).toBe(11_200);
+    await timerFlush;
+    expect(n).toBe(2);
+  });
+
   test("a call priced without a price row is posted to Slack once per model", async () => {
     const posts: string[] = [];
     const slack = Bun.serve({

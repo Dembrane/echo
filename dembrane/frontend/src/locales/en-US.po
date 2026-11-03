@@ -1622,7 +1622,7 @@ msgstr "Add a note"
 msgid "Add a project goal before saving."
 msgstr "Add a project goal before saving."
 
-#: src/components/workspace/gateWalls.ts:180
+#: src/components/workspace/gateWalls.ts:184
 msgid "add a workspace"
 msgstr "add a workspace"
 
@@ -1671,7 +1671,7 @@ msgstr "Add images"
 #~ msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 #~ msgstr "Add key terms or proper nouns to improve transcript quality and accuracy."
 
-#: src/components/workspace/gateWalls.ts:171
+#: src/components/workspace/gateWalls.ts:175
 msgid "add more projects"
 msgstr "add more projects"
 
@@ -1777,7 +1777,7 @@ msgstr "Add webhook"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Add Your First Webhook"
 
-#: src/components/workspace/gateWalls.ts:166
+#: src/components/workspace/gateWalls.ts:170
 msgid "add your logo"
 msgstr "add your logo"
 
@@ -2350,8 +2350,8 @@ msgstr "Anonymize transcripts"
 msgid "anonymized conversation"
 msgstr "anonymized conversation"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:256
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:261
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:260
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:265
 #: src/components/conversation/ProjectConversationsPanel.tsx:314
 #: src/components/conversation/ProjectConversationsPanel.tsx:319
 #: src/components/conversation/ConversationAccordion.tsx:589
@@ -2533,7 +2533,7 @@ msgstr "Are you sure you want to finish the conversation?"
 #~ msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 #~ msgstr "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:463
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:467
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
@@ -2654,7 +2654,7 @@ msgstr "Ask for name?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Ask for participant email addresses after a conversation ends."
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:91
 msgid "ask in chat"
 msgstr "ask in chat"
 
@@ -2675,7 +2675,7 @@ msgstr "Ask participants for their email"
 msgid "Ask participants for their name"
 msgstr "Ask participants for their name"
 
-#: src/components/workspace/gateWalls.ts:87
+#: src/components/workspace/gateWalls.ts:89
 msgid "ask the assistant"
 msgstr "ask the assistant"
 
@@ -2835,7 +2835,7 @@ msgstr "Auto-generate titles"
 #~ msgid "Auto-generate Titles"
 #~ msgstr "Auto-generate Titles"
 
-#: src/components/conversation/ConversationEdit.tsx:428
+#: src/components/conversation/ConversationEdit.tsx:435
 msgid "Auto-generated or enter manually"
 msgstr "Auto-generated or enter manually"
 
@@ -2935,7 +2935,7 @@ msgstr "Back 15 seconds"
 msgid "Back to Connect your agent"
 msgstr "Back to Connect your agent"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:228
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:232
 msgid "Back to conversations"
 msgstr "Back to conversations"
 
@@ -4462,7 +4462,7 @@ msgstr "Copy report content"
 msgid "Copy secret"
 msgstr "Copy secret"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:331
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:335
 msgid "Copy summary"
 msgstr "Copy summary"
 
@@ -4545,7 +4545,7 @@ msgstr "Could not copy to clipboard. Please try again."
 #~ msgid "Could not delete template"
 #~ msgstr "Could not delete template"
 
-#: src/components/conversation/ConversationEdit.tsx:234
+#: src/components/conversation/ConversationEdit.tsx:241
 msgid "Could not generate a summary. Please try again."
 msgstr "Could not generate a summary. Please try again."
 
@@ -4799,7 +4799,7 @@ msgstr "Create"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Create a new webhook from scratch"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:94
 msgid "create a report"
 msgstr "create a report"
 
@@ -4837,7 +4837,7 @@ msgstr "Create custom chat templates (beta), or duplicate and edit a built-in te
 msgid "Create methodology"
 msgstr "Create methodology"
 
-#: src/components/workspace/gateWalls.ts:169
+#: src/components/workspace/gateWalls.ts:173
 msgid "create more organisations"
 msgstr "create more organisations"
 
@@ -4915,7 +4915,7 @@ msgstr "Created"
 msgid "Created by"
 msgstr "Created by"
 
-#: src/components/conversation/ConversationEdit.tsx:324
+#: src/components/conversation/ConversationEdit.tsx:331
 msgid "Created on"
 msgstr "Created on"
 
@@ -5676,7 +5676,7 @@ msgstr "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgid "Duplicate"
 msgstr "Duplicate"
 
-#: src/components/conversation/ConversationEdit.tsx:345
+#: src/components/conversation/ConversationEdit.tsx:352
 msgid "Duration"
 msgstr "Duration"
 
@@ -5783,7 +5783,7 @@ msgstr "ECHO"
 msgid "Edit"
 msgstr "Edit"
 
-#: src/components/conversation/ConversationEdit.tsx:301
+#: src/components/conversation/ConversationEdit.tsx:308
 msgid "Edit conversation"
 msgstr "Edit conversation"
 
@@ -6527,7 +6527,7 @@ msgstr "Failed to finish conversation. Please try again."
 msgid "Failed to generate {label}. Please try again."
 msgstr "Failed to generate {label}. Please try again."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:149
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:152
 msgid "Failed to generate the summary. Please try again later."
 msgstr "Failed to generate the summary. Please try again later."
 
@@ -6568,7 +6568,7 @@ msgstr "Failed to mark announcement as unread"
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Failed to reconnect. Please try reloading the page."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:148
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:151
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
 
@@ -7070,12 +7070,12 @@ msgstr "General repulsion: {0}"
 #~ msgid "General Repulsion: {0}"
 #~ msgstr "General Repulsion: {0}"
 
-#: src/components/conversation/ConversationEdit.tsx:422
-#: src/components/conversation/ConversationEdit.tsx:491
+#: src/components/conversation/ConversationEdit.tsx:429
+#: src/components/conversation/ConversationEdit.tsx:498
 msgid "Generate"
 msgstr "Generate"
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:92
 msgid "generate a map"
 msgstr "generate a map"
 
@@ -7091,11 +7091,15 @@ msgstr "Generate a new report"
 #~ msgid "Generate a Report"
 #~ msgstr "Generate a Report"
 
-#: src/components/conversation/ConversationEdit.tsx:410
+#: src/components/workspace/gateWalls.ts:96
+msgid "generate a summary"
+msgstr "generate a summary"
+
+#: src/components/conversation/ConversationEdit.tsx:417
 msgid "Generate a summary first"
 msgstr "Generate a summary first"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:98
 msgid "generate a title"
 msgstr "generate a title"
 
@@ -7139,7 +7143,7 @@ msgstr "Generate secret"
 msgid "Generate stakeholders"
 msgstr "Generate stakeholders"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:395
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:399
 msgid "Generate summary"
 msgstr "Generate summary"
 
@@ -7159,7 +7163,7 @@ msgstr "Generated"
 msgid "Generated conversation titles contain one title instead of a list of suggestions."
 msgstr "Generated conversation titles contain one title instead of a list of suggestions."
 
-#: src/components/conversation/ConversationEdit.tsx:496
+#: src/components/conversation/ConversationEdit.tsx:503
 msgid "Generated from the transcript. You can edit it."
 msgstr "Generated from the transcript. You can edit it."
 
@@ -7171,7 +7175,7 @@ msgstr "Generating"
 msgid "Generating report..."
 msgstr "Generating report..."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:137
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:140
 msgid "Generating the summary. Please wait..."
 msgstr "Generating the summary. Please wait..."
 
@@ -7234,7 +7238,7 @@ msgstr "Give the session a title"
 msgid "Go back"
 msgstr "Go back"
 
-#: src/components/workspace/gateWalls.ts:168
+#: src/components/workspace/gateWalls.ts:172
 msgid "go beyond this month's free allowance"
 msgstr "go beyond this month's free allowance"
 
@@ -7359,7 +7363,7 @@ msgstr "Guided"
 #~ msgid "h"
 #~ msgstr "h"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:244
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:248
 #: src/components/conversation/ProjectConversationsPanel.tsx:302
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
@@ -7369,7 +7373,7 @@ msgstr "Has verified artifacts"
 msgid "Have you completed a training?"
 msgstr "Have you completed a training?"
 
-#: src/components/workspace/gateWalls.ts:176
+#: src/components/workspace/gateWalls.ts:180
 msgid "have your recordings transcribed"
 msgstr "have your recordings transcribed"
 
@@ -7422,7 +7426,7 @@ msgstr "Hidden gem"
 #: src/components/results/ResultItem.tsx:721
 #: src/components/results/curate/RowTools.tsx:302
 #: src/components/results/curate/CurateTable.tsx:98
-#: src/components/conversation/ConversationEdit.tsx:366
+#: src/components/conversation/ConversationEdit.tsx:373
 msgid "Hide"
 msgstr "Hide"
 
@@ -7462,11 +7466,11 @@ msgstr "Hide steps"
 msgid "Hide the changes"
 msgstr "Hide the changes"
 
-#: src/components/workspace/gateWalls.ts:167
+#: src/components/workspace/gateWalls.ts:171
 msgid "hide the dembrane event invitation"
 msgstr "hide the dembrane event invitation"
 
-#: src/components/workspace/gateWalls.ts:125
+#: src/components/workspace/gateWalls.ts:129
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Hiding the dembrane event invitation comes with a paid plan."
 
@@ -8061,7 +8065,7 @@ msgstr "It looks like you don't have a report for this project yet. Generate one
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "It may have already been used or expired. If your email is verified, log in to continue."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:214
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:218
 msgid "It may have been deleted."
 msgstr "It may have been deleted."
 
@@ -8265,7 +8269,7 @@ msgstr "Keep {tier} until a date"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:93
 msgid "keep analysing with popcorn"
 msgstr "keep analysing with popcorn"
 
@@ -8841,7 +8845,7 @@ msgstr "LocalMAP paper parameters"
 #~ msgid "LocalMap Settings"
 #~ msgstr "LocalMap Settings"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:276
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:280
 #: src/components/conversation/ConversationAccordion.tsx:612
 msgid "Locked"
 msgstr "Locked"
@@ -8948,7 +8952,7 @@ msgstr "loop"
 msgid "Low battery"
 msgstr "Low battery"
 
-#: src/components/workspace/gateWalls.ts:170
+#: src/components/workspace/gateWalls.ts:174
 msgid "make a workspace private"
 msgstr "make a workspace private"
 
@@ -9454,7 +9458,7 @@ msgstr "My templates"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
-#: src/components/conversation/ConversationEdit.tsx:383
+#: src/components/conversation/ConversationEdit.tsx:390
 #: src/components/common/RedactedText.tsx:42
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:131
 #: src/components/chat/CanvasSuggestionCard.tsx:92
@@ -10524,7 +10528,7 @@ msgstr "On dembrane-managed billing. Switching to self-serve keeps the tier and 
 msgid "On recording page"
 msgstr "On recording page"
 
-#: src/components/workspace/gateWalls.ts:130
+#: src/components/workspace/gateWalls.ts:134
 msgid "On the free plan one project takes recordings."
 msgstr "On the free plan one project takes recordings."
 
@@ -11132,7 +11136,7 @@ msgstr "partially completed"
 msgid "Participant"
 msgstr "Participant"
 
-#: src/components/conversation/ConversationEdit.tsx:356
+#: src/components/conversation/ConversationEdit.tsx:363
 msgid "Participant email"
 msgstr "Participant email"
 
@@ -11140,7 +11144,7 @@ msgstr "Participant email"
 #~ msgid "Participant Email"
 #~ msgstr "Participant Email"
 
-#: src/components/conversation/ConversationEdit.tsx:358
+#: src/components/conversation/ConversationEdit.tsx:365
 msgid "Participant emails"
 msgstr "Participant emails"
 
@@ -11926,7 +11930,7 @@ msgstr "Private project"
 msgid "Private workspace"
 msgstr "Private workspace"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:132
 msgid "Private workspaces come with a paid plan."
 msgstr "Private workspaces come with a paid plan."
 
@@ -12305,7 +12309,7 @@ msgstr "Read replies as they arrive."
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Read shared findings, inspect their evidence and see how they were produced."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:473
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:477
 #: src/components/conversation/RetranscribeConversation.tsx:212
 msgid "Read the troubleshooting guide for transcripts and summaries"
 msgstr "Read the troubleshooting guide for transcripts and summaries"
@@ -12478,7 +12482,7 @@ msgstr "Record a voice message"
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
-#: src/components/workspace/gateWalls.ts:172
+#: src/components/workspace/gateWalls.ts:176
 msgid "record in every project"
 msgstr "record in every project"
 
@@ -12543,7 +12547,7 @@ msgstr "Recording page"
 msgid "participant.modal.pause.title"
 msgstr "Recording paused"
 
-#: src/components/conversation/ConversationEdit.tsx:334
+#: src/components/conversation/ConversationEdit.tsx:341
 msgid "Recording started"
 msgstr "Recording started"
 
@@ -12604,7 +12608,7 @@ msgstr "Refresh audit logs"
 msgid "Refresh started"
 msgstr "Refresh started"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:90
 msgid "refresh the canvas"
 msgstr "refresh the canvas"
 
@@ -12616,28 +12620,32 @@ msgstr "Refresh will work when the canvas service is ready."
 msgid "Refreshing…"
 msgstr "Refreshing…"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:479
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:483
 #: src/routes/project/chat/ProjectChatRoute.tsx:761
 #: src/routes/project/canvas/CanvasRoute.tsx:697
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
 #: src/components/popcorn/PopcornActions.tsx:96
 #: src/components/map/MapPage.tsx:153
-#: src/components/conversation/ConversationEdit.tsx:422
-#: src/components/conversation/ConversationEdit.tsx:491
+#: src/components/conversation/ConversationEdit.tsx:429
+#: src/components/conversation/ConversationEdit.tsx:498
 msgid "Regenerate"
 msgstr "Regenerate"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:97
 msgid "regenerate a summary"
 msgstr "regenerate a summary"
+
+#: src/components/workspace/gateWalls.ts:99
+msgid "regenerate a title"
+msgstr "regenerate a title"
 
 #: src/components/popcorn/PopcornActions.tsx:88
 msgid "Regenerate popcorn?"
 msgstr "Regenerate popcorn?"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:336
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:458
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:340
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:462
 msgid "Regenerate summary"
 msgstr "Regenerate summary"
 
@@ -12650,7 +12658,7 @@ msgstr "Regenerate summary"
 msgid "participant.regenerating.outcome"
 msgstr "Regenerating the outcome"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:136
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:139
 msgid "Regenerating the summary. Please wait..."
 msgstr "Regenerating the summary. Please wait..."
 
@@ -13290,7 +13298,7 @@ msgstr "Retracting a note for the dembrane team"
 msgid "Retranscribe"
 msgstr "Retranscribe"
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:95
 msgid "retranscribe a conversation"
 msgstr "retranscribe a conversation"
 
@@ -13481,7 +13489,7 @@ msgstr "Run"
 msgid "Run again from scratch"
 msgstr "Run again from scratch"
 
-#: src/components/workspace/gateWalls.ts:86
+#: src/components/workspace/gateWalls.ts:88
 msgid "run an analysis"
 msgstr "run an analysis"
 
@@ -13912,7 +13920,7 @@ msgstr "See plans"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "See the arguments from your conversations and the quotes behind them on the Map."
 
-#: src/components/workspace/gateWalls.ts:177
+#: src/components/workspace/gateWalls.ts:181
 msgid "see transcripts"
 msgstr "see transcripts"
 
@@ -14062,7 +14070,7 @@ msgstr "Select project"
 msgid "Select Project"
 msgstr "Select Project"
 
-#: src/components/conversation/ConversationEdit.tsx:442
+#: src/components/conversation/ConversationEdit.tsx:449
 #: src/components/conversation/ConversationDrilldownModal.tsx:201
 msgid "Select tags"
 msgstr "Select tags"
@@ -14450,7 +14458,7 @@ msgstr "Shortest first"
 msgid "Shortest First"
 msgstr "Shortest First"
 
-#: src/components/conversation/ConversationEdit.tsx:366
+#: src/components/conversation/ConversationEdit.tsx:373
 msgid "Show"
 msgstr "Show"
 
@@ -14809,13 +14817,13 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:754
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:209
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:213
 #: src/routes/auth/Login.tsx:268
 #: src/routes/auth/Login.tsx:342
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
-#: src/components/conversation/ConversationEdit.tsx:317
+#: src/components/conversation/ConversationEdit.tsx:324
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
@@ -15298,8 +15306,8 @@ msgstr "Summarize"
 msgid "Summarize this interview into a shareable article"
 msgstr "Summarize this interview into a shareable article"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:320
-#: src/components/conversation/ConversationEdit.tsx:476
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:324
+#: src/components/conversation/ConversationEdit.tsx:483
 msgid "Summary"
 msgstr "Summary"
 
@@ -15307,15 +15315,15 @@ msgstr "Summary"
 msgid "Summary (when available)"
 msgstr "Summary (when available)"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:163
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:166
 msgid "Summary generated."
 msgstr "Summary generated."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:162
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:165
 msgid "Summary regenerated."
 msgstr "Summary regenerated."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:379
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:383
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Summary will be available once the conversation is transcribed"
 
@@ -15446,7 +15454,7 @@ msgstr "Tag deleted"
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
 #: src/components/conversation/ConversationsMiniList.tsx:189
-#: src/components/conversation/ConversationEdit.tsx:445
+#: src/components/conversation/ConversationEdit.tsx:452
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
 #: src/components/conversation/ConversationAccordion.tsx:1278
@@ -15768,7 +15776,7 @@ msgstr "The feedback portal explains how to report security issues."
 msgid "The following conversations were automatically added to the context"
 msgstr "The following conversations were automatically added to the context"
 
-#: src/components/workspace/gateWalls.ts:135
+#: src/components/workspace/gateWalls.ts:139
 msgid "The free plan covers one workspace."
 msgstr "The free plan covers one workspace."
 
@@ -15785,7 +15793,7 @@ msgstr "The free plan covers one workspace."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "The free plan includes a few chats a month, each with a set number of questions."
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:133
 msgid "The free plan includes a limited number of projects."
 msgstr "The free plan includes a limited number of projects."
 
@@ -15811,7 +15819,7 @@ msgstr "The free plan includes a limited number of projects."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "The free plan includes one map a month."
 
-#: src/components/workspace/gateWalls.ts:127
+#: src/components/workspace/gateWalls.ts:131
 msgid "The free plan includes one organisation."
 msgstr "The free plan includes one organisation."
 
@@ -16064,11 +16072,11 @@ msgstr "The sidebar fits mobile screens more reliably, with corrected French nav
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr "The sidebar scrolls on short screens while keeping its header and footer available."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:166
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:169
 msgid "The summary is being generated. Please wait for it to be available."
 msgstr "The summary is being generated. Please wait for it to be available."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:165
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:168
 msgid "The summary is being regenerated. Please wait for it to be available."
 msgstr "The summary is being regenerated. Please wait for it to be available."
 
@@ -16285,7 +16293,7 @@ msgstr "This conversation has the following copies:"
 msgid "conversation.linking_conversations.description"
 msgstr "This conversation is a copy of"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:207
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:211
 msgid "This conversation is no longer available"
 msgstr "This conversation is no longer available"
 
@@ -16821,7 +16829,7 @@ msgid "Tip: You can also create a template from any chat message you send, or du
 msgstr "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:156
-#: src/components/conversation/ConversationEdit.tsx:403
+#: src/components/conversation/ConversationEdit.tsx:410
 msgid "Title"
 msgstr "Title"
 
@@ -16846,7 +16854,7 @@ msgstr "Title or participant"
 msgid "to"
 msgstr "to"
 
-#: src/components/conversation/ConversationEdit.tsx:462
+#: src/components/conversation/ConversationEdit.tsx:469
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "To assign a new tag, please create it first in the portal settings."
 
@@ -16943,7 +16951,7 @@ msgstr "Topic label"
 msgid "Topic updated successfully"
 msgstr "Topic updated successfully"
 
-#: src/components/conversation/ConversationEdit.tsx:427
+#: src/components/conversation/ConversationEdit.tsx:434
 msgid "Topic-based title describing what was discussed"
 msgstr "Topic-based title describing what was discussed"
 
@@ -17070,7 +17078,7 @@ msgstr "Transcription error"
 msgid "Transcription failed"
 msgstr "Transcription failed"
 
-#: src/components/workspace/gateWalls.ts:132
+#: src/components/workspace/gateWalls.ts:136
 msgid "Transcripts come with a paid plan."
 msgstr "Transcripts come with a paid plan."
 
@@ -17475,7 +17483,7 @@ msgstr "Untitled"
 msgid "Untitled canvas"
 msgstr "Untitled canvas"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:113
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:115
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:232
@@ -17613,11 +17621,11 @@ msgstr "Upgrade to add this to the chat"
 msgid "Upgrade to continue"
 msgstr "Upgrade to continue"
 
-#: src/components/conversation/ConversationEdit.tsx:409
+#: src/components/conversation/ConversationEdit.tsx:416
 msgid "Upgrade to generate a title for this conversation"
 msgstr "Upgrade to generate a title for this conversation"
 
-#: src/components/conversation/ConversationEdit.tsx:480
+#: src/components/conversation/ConversationEdit.tsx:487
 msgid "Upgrade to generate summaries for this conversation"
 msgstr "Upgrade to generate summaries for this conversation"
 
@@ -17629,7 +17637,7 @@ msgstr "Upgrade your workspace to download audio for conversations recorded afte
 msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Upgrade your workspace to view summaries for new conversations."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:269
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:273
 #: src/components/conversation/ConversationAccordion.tsx:604
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Upgrade your workspace to view this conversation"
@@ -17700,7 +17708,7 @@ msgstr "Upload limit reached. Upgrade your workspace."
 msgid "Upload logo"
 msgstr "Upload logo"
 
-#: src/components/workspace/gateWalls.ts:178
+#: src/components/workspace/gateWalls.ts:182
 msgid "upload recordings"
 msgstr "upload recordings"
 
@@ -17722,7 +17730,7 @@ msgstr "Uploading audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:137
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Uploading recordings comes with a paid plan."
 
@@ -17774,7 +17782,7 @@ msgstr "Usage is tracked for your organisation. View it in organisation settings
 msgid "Usage this cycle"
 msgstr "Usage this cycle"
 
-#: src/components/workspace/gateWalls.ts:163
+#: src/components/workspace/gateWalls.ts:167
 msgid "use AI features"
 msgstr "use AI features"
 
@@ -17828,12 +17836,12 @@ msgstr "Use this wording"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Use Ukrainian for chat and participant replies."
 
-#: src/components/workspace/gateWalls.ts:179
+#: src/components/workspace/gateWalls.ts:183
 msgid "use webhooks"
 msgstr "use webhooks"
 
-#: src/components/workspace/gateWalls.ts:96
-#: src/components/workspace/gateWalls.ts:165
+#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:169
 msgid "use your voice in chat"
 msgstr "use your voice in chat"
 
@@ -17949,7 +17957,7 @@ msgstr "Verified"
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:249
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:253
 #: src/components/conversation/ProjectConversationsPanel.tsx:307
 msgid "Verified artifacts"
 msgstr "Verified artifacts"
@@ -18323,7 +18331,7 @@ msgstr "Webhooks are automated messages sent from one app to another when someth
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:138
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks come with a paid plan."
 
@@ -19399,7 +19407,7 @@ msgstr "Your organisation or company"
 msgid "Your organisations"
 msgstr "Your organisations"
 
-#: src/components/workspace/gateWalls.ts:124
+#: src/components/workspace/gateWalls.ts:128
 msgid "Your own logo comes with a paid plan."
 msgstr "Your own logo comes with a paid plan."
 

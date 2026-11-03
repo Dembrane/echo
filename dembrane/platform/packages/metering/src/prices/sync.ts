@@ -11,6 +11,8 @@ export interface SyncResult {
   /** Keys whose new price was missing or zero; their last good price is kept. */
   readonly rejected: readonly string[];
   readonly fxChanged: boolean;
+  /** False when models.dev could not be fetched or read. */
+  readonly sourceRead: boolean;
 }
 
 export interface SyncDeps {
@@ -231,7 +233,7 @@ export async function syncPrices(d: SyncDeps): Promise<SyncResult> {
   if (changed.length) d.logger.info({ changed, rejected }, "AI prices changed");
   else if (rejected.length) d.logger.warn({ rejected }, "AI prices rejected; last good kept");
   for (const text of texts) await postSlack(d.slackUrl, text, d.logger);
-  return { changed, rejected, fxChanged };
+  return { changed, rejected, fxChanged, sourceRead: api !== null };
 }
 
 /** What boot awaits: the book is loaded; the first sync and the missing-price check finish in `settled`. */
@@ -252,12 +254,12 @@ export async function priceStartup(
   await book.reload();
   const unpriced = book.missing(models).length > 0;
   const settled = (async () => {
-    let synced = false;
+    let sync: "none" | "failed" | SyncResult = "none";
     if (unpriced) {
       try {
-        await syncPrices(d);
-        synced = true;
+        sync = await syncPrices(d);
       } catch (err) {
+        sync = "failed";
         d.logger.error(
           { err, signal: "metering.price_sync_failed" },
           "AI price sync failed at startup",
@@ -278,12 +280,51 @@ export async function priceStartup(
       );
       await postSlack(
         d.slackUrl,
-        synced
-          ? `No AI price for ${missing.join(", ")} after a price sync. Their calls are charged at the highest price held until models.dev lists them or they get a hand price in prices/overrides.json.`
-          : `No AI price for ${missing.join(", ")} yet. Their calls are charged at the highest price held until a price sync succeeds.`,
+        missingPriceText(missing, {
+          listed: new Set(Object.keys((d.overrides ?? loadOverrides()).models)),
+          sync:
+            sync === "failed" ? "failed" : sync === "none" || sync.sourceRead ? "read" : "unread",
+          held: book.current().prices.size === 0,
+        }),
         d.logger,
       );
     }
   })().catch((err) => d.logger.error({ err }, "AI price startup check failed"));
   return { settled };
+}
+
+/**
+ * The startup post for configured models without a price: why each has none and what fixes
+ * it, and whether their calls are held (no prices at all) or charged at the highest price.
+ */
+export function missingPriceText(
+  missing: readonly string[],
+  o: {
+    readonly listed: ReadonlySet<string>;
+    readonly sync: "read" | "unread" | "failed";
+    readonly held: boolean;
+  },
+): string {
+  const unlisted = missing.filter((m) => !o.listed.has(m));
+  const mapped = missing.filter((m) => o.listed.has(m));
+  const lines: string[] = [];
+  if (unlisted.length)
+    lines.push(
+      `No AI price for ${unlisted.join(", ")}: not in prices/overrides.json, so add an entry there.`,
+    );
+  if (mapped.length) {
+    const why =
+      o.sync === "failed"
+        ? "the startup price sync failed, so the next sync prices them"
+        : o.sync === "unread"
+          ? "models.dev could not be read, so the next sync prices them"
+          : "models.dev does not list them, so give them a hand price in prices/overrides.json";
+    lines.push(`No AI price for ${mapped.join(", ")}: ${why}.`);
+  }
+  lines.push(
+    o.held
+      ? "No AI prices are stored at all, so calls with usage are held, not charged, until prices load."
+      : "Until then their calls are charged at the highest price held.",
+  );
+  return lines.join(" ");
 }

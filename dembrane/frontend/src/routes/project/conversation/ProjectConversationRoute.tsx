@@ -28,6 +28,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import posthog from "posthog-js";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
@@ -50,6 +51,7 @@ import {
 	AiBudgetWall,
 	useAiBudgetWall,
 } from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
 import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -125,6 +127,7 @@ export const ProjectConversationRoute = () => {
 		: null;
 
 	const aiWall = useAiBudgetWall();
+	const [aiAction, setAiAction] = useState<AiAction>("summary");
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
 			if (isRegeneration) {
@@ -169,7 +172,8 @@ export const ProjectConversationRoute = () => {
 			return response;
 		},
 		mutationKey: ["generateSummary", conversationId],
-		onError: (error) => {
+		onError: (error, isRegeneration) => {
+			setAiAction(isRegeneration ? "summary_again" : "summary");
 			aiWall.openFor(error);
 		},
 		onSuccess: () => {
@@ -485,7 +489,7 @@ export const ProjectConversationRoute = () => {
 			{workspaceId && (
 				<AiBudgetWall
 					{...aiWall.props}
-					action="summary"
+					action={aiAction}
 					workspaceId={workspaceId}
 					projectId={projectId}
 				/>

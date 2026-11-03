@@ -207,7 +207,8 @@ export const ConversationEdit = ({
 		},
 		mutationKey: ["generateTitle", conversation.id],
 		onError: (error) => {
-			if (openAiWall(error, "title")) return;
+			if (openAiWall(error, getValues("title") ? "title_again" : "title"))
+				return;
 			void notifyError(error);
 		},
 		onSuccess: (data) => {
@@ -230,7 +231,13 @@ export const ConversationEdit = ({
 		},
 		mutationKey: ["generateSummary", conversation.id],
 		onError: (error) => {
-			if (openAiWall(error, "summary")) return;
+			if (
+				openAiWall(
+					error,
+					getValues("summary")?.trim() ? "summary_again" : "summary",
+				)
+			)
+				return;
 			toast.error(t`Could not generate a summary. Please try again.`);
 		},
 		onSuccess: (data) => {

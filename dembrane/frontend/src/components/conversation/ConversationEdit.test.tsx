@@ -81,6 +81,8 @@ afterEach(() => {
 	vi.clearAllMocks();
 });
 
+const filled = { summary: "A summary", title: "A title" };
+
 const usedUp = {
 	response: {
 		data: {
@@ -96,7 +98,7 @@ const usedUp = {
 	},
 };
 
-const renderEdit = () =>
+const renderEdit = (fields: { summary: string; title: string } = filled) =>
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<I18nProvider i18n={i18n}>
@@ -111,9 +113,8 @@ const renderEdit = () =>
 											{
 												id: "c1",
 												project_id: "p1",
-												summary: "A summary",
 												tags: [],
-												title: "A title",
+												...fields,
 											} as unknown as Conversation
 										}
 										projectTags={[]}
@@ -129,13 +130,30 @@ const renderEdit = () =>
 	);
 
 it.each([
-	["summary", "conversation-edit-summary-generate-button", summarize],
-	["title", "conversation-edit-title-generate-button", title],
+	[
+		"summary_again",
+		"conversation-edit-summary-generate-button",
+		summarize,
+		filled,
+	],
+	["title_again", "conversation-edit-title-generate-button", title, filled],
+	[
+		"summary",
+		"conversation-edit-summary-generate-button",
+		summarize,
+		{ summary: "", title: "" },
+	],
+	[
+		"title",
+		"conversation-edit-title-generate-button",
+		title,
+		{ summary: "A summary", title: "" },
+	],
 ] as const)(
 	"%s at a used-up AI budget opens the AI wall, with no failure toast",
-	async (action, button, call) => {
+	async (action, button, call, fields) => {
 		call.mockRejectedValueOnce(usedUp);
-		renderEdit();
+		renderEdit(fields);
 		await act(async () => {
 			fireEvent.click(screen.getByTestId(button));
 		});
