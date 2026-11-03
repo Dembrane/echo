@@ -2062,6 +2062,8 @@ export const org = pgTable(
     // Customer accounts: null for organisations dembrane does not manage as an account.
     account_stage: varchar({ length: 32 }),
     origin_pricing_configuration_id: uuid(),
+    /** Days after a conversation finishes that its audio is kept; null means the default of 30. */
+    audio_retention_days: integer(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2077,6 +2079,10 @@ export const org = pgTable(
     check(
       "org_account_stage_check",
       sql`${table.account_stage} is null or ${table.account_stage} in ('prospect', 'customer', 'churned')`,
+    ),
+    check(
+      "org_audio_retention_days_check",
+      sql`${table.audio_retention_days} is null or ${table.audio_retention_days} >= 1`,
     ),
   ],
 );
