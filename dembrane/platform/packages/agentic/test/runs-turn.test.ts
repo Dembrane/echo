@@ -10,6 +10,7 @@ import {
 import { Writable } from "node:stream";
 import { APICallError } from "@ai-sdk/provider";
 import { createDb } from "@dembrane/db";
+import { fakeModels } from "@dembrane/llm";
 import type { Emit } from "@dembrane/notifications";
 import { createLogger } from "@dembrane/observability";
 import type { AgentData } from "../src/agent/data";
@@ -36,7 +37,7 @@ run("turn workflow on a fake model", () => {
   const deps = (agent: Agent): TurnDeps => ({
     store: runsStorage(database.db),
     logger,
-    models: { model: () => ({}) as never, embedding: () => ({}) as never },
+    models: fakeModels(),
     config: {
       agentic: { modelGroup: "multi_modal_pro", runTimeoutSeconds: 600 },
       canvas: { enabled: false },

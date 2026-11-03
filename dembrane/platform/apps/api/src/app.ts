@@ -67,6 +67,7 @@ import type { Deps, Env } from "./deps";
 import { clientAddress } from "./middleware/client-ip";
 import { correlation } from "./middleware/correlation";
 import { notFound, onError } from "./middleware/errors";
+import { payerMiddleware } from "./middleware/payer";
 import { session } from "./middleware/session";
 import { systemRoutes } from "./routes/system";
 
@@ -76,6 +77,7 @@ const EMAIL_CODE_LIMIT = { name: "email_code", capacity: 1, windowSeconds: 60 };
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
+  app.use(payerMiddleware());
   app.use(clientAddress(deps));
   // The local file routes stand in for the buckets, whose URLs the dashboard and portal load
   // from their own origin (an <audio src>), so those may be read by the rest of the site.

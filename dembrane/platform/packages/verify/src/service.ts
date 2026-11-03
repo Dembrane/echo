@@ -4,6 +4,7 @@ import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } fr
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
 import { speechHint } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
@@ -415,12 +416,15 @@ export async function generateArtifact(
     language: project.language || "en",
     pii_redaction: anonymized,
   });
-  const text = await complete(
-    ctx,
-    system,
-    [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
-    "Failed to generate verification artifact",
-    project.language || "en",
+  // The body names the conversation, so the payer middleware cannot.
+  const text = await withPayer({ ref: "conversation", id: conv.id }, async () =>
+    complete(
+      ctx,
+      system,
+      [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
+      "Failed to generate verification artifact",
+      project.language || "en",
+    ),
   );
   const created = await ctx.store.createArtifact({
     id: newId(),

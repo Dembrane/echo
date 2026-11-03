@@ -67,6 +67,9 @@ export function accountRow(p: Partial<AccountRow> & { id: string }): AccountRow 
     billing_country_code: null,
     no_vat_number: null,
     invoice_portal: null,
+    ai_budget_micro_eur: null,
+    ai_budget_unlimited: false,
+    ai_budget_until: null,
     ...p,
   };
 }

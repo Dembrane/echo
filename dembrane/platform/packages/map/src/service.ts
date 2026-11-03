@@ -29,7 +29,7 @@ import {
   VIEW_SCOPE_KEY,
 } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
-import type { Logger } from "@dembrane/observability";
+import { type Logger, withPayer } from "@dembrane/observability";
 import { startFreeMap } from "./free";
 import { ACTIVE_STATUSES, type MapStore, type Row } from "./store";
 
@@ -515,7 +515,9 @@ export async function selectionTitle(
     .join(",");
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${verdictState}`;
   const key = `map:title:${titleSelectionKey(String(row.id), ordered, config)}`;
-  return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
+  // The title route names a result, not a project: the map's project pays.
+  const payer = { ref: "project", id: String(row.project_id) } as const;
+  return d.cache.once(key, () => withPayer(payer, () => d.generate(lines, project[0], project[1])));
 }
 
 /**
@@ -572,7 +574,8 @@ export async function snapshotSelectionTitle(
   const { ordered, lines, config: pinned } = await snapshotTitleLines(d, snapshot, revisionIds);
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${pinned}`;
   const key = `map:title:v2:${titleSelectionKey(snapshot.id, ordered, config)}`;
-  return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
+  const payer = { ref: "project", id: snapshot.projectId } as const;
+  return d.cache.once(key, () => withPayer(payer, () => d.generate(lines, project[0], project[1])));
 }
 
 // ── groups ──────────────────────────────────────────────────────────────

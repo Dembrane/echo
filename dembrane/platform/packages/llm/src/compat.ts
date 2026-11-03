@@ -5,6 +5,7 @@ import type {
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
 import { mp3Seconds } from "./audio-length";
+import { markNotSent } from "./estimate";
 import { retryAfterMs, type SpeechGate, type SpeechPriority } from "./speech-gate";
 
 /** Connection to an OpenAI-compatible API (Scaleway Generative APIs, for example). */
@@ -23,6 +24,8 @@ export interface CompatEndpoint {
   readonly speechGate?: SpeechGate | undefined;
   /** Told about every speech-to-text request, once it has an answer (a 429 included). */
   readonly onSpeechRequest?: ((e: SpeechRequestLog) => void) | undefined;
+  /** Told once per answered request, with the seconds Whisper heard when its answer says so. */
+  readonly onSpeechAnswered?: ((e: SpeechRequestLog) => void) | undefined;
 }
 
 /** What one request to the speech-to-text endpoint was: numbers and names, never audio or text. */
@@ -149,10 +152,11 @@ async function requestTranscription(
   const seconds = known ?? Math.min(3600, Math.max(1, audio.byteLength / 8000));
   const gate = ep.speechGate;
   let res: Response;
+  let sent: SpeechRequestLog;
   for (let attempt = 0; ; attempt++) {
     const began = Date.now();
     res = gate ? await gate.run(seconds, call.priority ?? "live", request) : await request();
-    ep.onSpeechRequest?.({
+    sent = {
       provider: "openai-compatible",
       model: ep.transcriptionModel,
       audioSeconds: Math.round(seconds * 10) / 10,
@@ -162,7 +166,8 @@ async function requestTranscription(
       status: res.status,
       attempt: attempt + 1,
       path: call.priority ?? "live",
-    });
+    };
+    ep.onSpeechRequest?.(sent);
     if (res.status !== 429 || attempt >= RATE_LIMIT_ATTEMPTS - 1) break;
     // The org limit answered: everybody in this process waits as long as it asks (or, without
     // a hint, a growing while), then goes again in priority order.
@@ -180,7 +185,12 @@ async function requestTranscription(
       res.status === 408 || res.status === 429 || res.status >= 500;
     throw err;
   }
-  return (await res.json()) as Record<string, unknown>;
+  const body = (await res.json()) as Record<string, unknown>;
+  const heard = Number(body.duration);
+  ep.onSpeechAnswered?.(
+    Number.isFinite(heard) && heard > 0 ? { ...sent, audioSeconds: heard, estimated: false } : sent,
+  );
+  return body;
 }
 
 /** Audio to text on the endpoint's `/audio/transcriptions`. */
@@ -364,11 +374,16 @@ export class CompatLanguageModel implements LanguageModelV4 {
     const language = languageHint(
       (options.providerOptions as { echo?: { language?: unknown } } | undefined)?.echo?.language,
     );
-    const mapped = compatCallOptions(options, this.ep.reasoningEffort, this.ep.maxOutputTokens);
-    return {
-      ...mapped,
-      prompt: await audioToText(this.ep, options.prompt, language, options.abortSignal),
-    };
+    try {
+      const mapped = compatCallOptions(options, this.ep.reasoningEffort, this.ep.maxOutputTokens);
+      return {
+        ...mapped,
+        prompt: await audioToText(this.ep, options.prompt, language, options.abortSignal),
+      };
+    } catch (err) {
+      // The chat request was never sent: its call costs nothing (the speech call is metered on its own).
+      throw markNotSent(err);
+    }
   }
 
   async doGenerate(options: LanguageModelV4CallOptions) {

@@ -31,6 +31,7 @@ import { AnalysisStore } from "./store";
 /** One recipe run: claim, execute, publish or settle (see jobs.ts). */
 export const analysisRun = defineJob("analysis.run", z.object({ runId: z.string() }), {
   retryLimit: 0,
+  payer: (p) => ({ ref: "analysis_run", id: p.runId }),
   // The whole workflow, deferrals included; each execute step has its own 60-minute limit.
   expireInSeconds: 3 * 60 * 60,
 });

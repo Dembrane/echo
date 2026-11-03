@@ -38,7 +38,7 @@ run("tier_limit and free_usage tables", () => {
   test("tier_limit keys on (tier, key)", async () => {
     await sql`insert into tier_limit (tier, key, value) values ('free', 'audio_seconds_month', 18000)`;
     const [row] =
-      await sql`select value, updated_at, updated_by from tier_limit where tier = 'free'`;
+      await sql`select value, updated_at, updated_by from tier_limit where tier = 'free' and key = 'audio_seconds_month'`;
     expect(Number(row?.value)).toBe(18000);
     expect(row?.updated_at).toBeTruthy();
     expect(row?.updated_by).toBeNull();

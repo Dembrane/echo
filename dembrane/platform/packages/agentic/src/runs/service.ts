@@ -13,7 +13,7 @@ import {
 } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import type { Logger } from "@dembrane/observability";
+import { type Logger, withPayer } from "@dembrane/observability";
 import type { Queue } from "@dembrane/queue";
 import { agentProject } from "../access";
 import { startTurn } from "../jobs";
@@ -224,7 +224,10 @@ export async function createRun(
     await d.store.appendEvent(String(run.id), "user.message", payload, d.now());
     return run;
   });
-  scheduleTitle(d, body.project_chat_id, body.message, body.language);
+  // The body names the project; the run's own model calls are billed in the worker.
+  withPayer({ ref: "project", id: body.project_id }, () =>
+    scheduleTitle(d, body.project_chat_id, body.message, body.language),
+  );
   return runOr404(d, String(run.id));
 }
 

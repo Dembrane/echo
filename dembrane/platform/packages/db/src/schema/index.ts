@@ -1071,6 +1071,11 @@ export const billing_account = pgTable(
     no_vat_number: boolean(),
     // What the customer wrote about how they receive invoices, when invoice_delivery is "other".
     invoice_portal: text(),
+    // Staff override of the free AI budget; null uses tier_limit ai_budget_micro_eur.
+    ai_budget_micro_eur: bigint({ mode: "number" }),
+    ai_budget_unlimited: boolean().default(false).notNull(),
+    // After this the account returns to the default; null means no end date.
+    ai_budget_until: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

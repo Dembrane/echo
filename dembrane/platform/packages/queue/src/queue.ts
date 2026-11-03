@@ -7,6 +7,7 @@ import {
   propagation,
   type Tracer,
   withCorrelation,
+  withPayer,
 } from "@dembrane/observability";
 import type postgres from "postgres";
 import { DEFAULT_LOST_WORKER_LIMIT, type JobDefinition, type Parsed, type Payload } from "./define";
@@ -340,7 +341,7 @@ export class Queue {
     return h;
   }
 
-  /** Correlation, span, payload check and logging, done once for every job. */
+  /** Correlation, payer, span, payload check and logging, done once for every job. */
   private wrap(def: JobDefinition, handler: Handler) {
     this.handlers.set(def.name, handler);
     return async (envelope: Envelope, attempt: number) => {
@@ -366,11 +367,11 @@ export class Queue {
               async () => {
                 const started = performance.now();
                 try {
-                  await handler(def.schema.parse(envelope.payload), {
-                    id: jobId,
-                    attempt,
-                    signal: new AbortController().signal,
-                  });
+                  const payload = def.schema.parse(envelope.payload);
+                  const call = () =>
+                    handler(payload, { id: jobId, attempt, signal: new AbortController().signal });
+                  const paidBy = def.payer?.(payload) ?? null;
+                  await (paidBy ? withPayer(paidBy, call) : call());
                   this.logger.info(
                     { job: def.name, attempt, ms: Math.round(performance.now() - started) },
                     "job done",

@@ -10,6 +10,7 @@ import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import postgres from "postgres";
 import { type BffDeps, listAnalysisObjects, requestAnalysisRun } from "../../analysis/src/bff";
 import { RevisionService } from "../../analysis/src/revisions";
@@ -26,9 +27,10 @@ import {
 import { dict, type Json } from "../src/py";
 import { normalizeState, owesPublication } from "../src/state";
 import { Publisher } from "../src/tick/publish";
-import { runPopcornTick, unpublishedConversations, unpublishedTensions } from "../src/tick/run";
+import { unpublishedConversations, unpublishedTensions } from "../src/tick/run";
 import { QuoteBook } from "../src/tick/shapes";
 import { type TickAnalysis, tickDeps } from "../src/worker";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import { fixture, freshDatabase, ids, seed } from "./fixtures/tick/seed";
 
 // The live session's tensions published through the analysis executor, against Postgres:
@@ -38,6 +40,20 @@ import { fixture, freshDatabase, ids, seed } from "./fixtures/tick/seed";
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const P = ids.project;
+const LOOP = { ref: "popcorn_loop", id: ids.loop } as const;
+
+/** Publishes as the tick does: billed to the loop. */
+class TickPublisher extends Publisher {
+  override conversation(...a: Parameters<Publisher["conversation"]>) {
+    return withPayer(LOOP, () => super.conversation(...a));
+  }
+  override stakeholders(...a: Parameters<Publisher["stakeholders"]>) {
+    return withPayer(LOOP, () => super.stakeholders(...a));
+  }
+  override tensions(...a: Parameters<Publisher["tensions"]>) {
+    return withPayer(LOOP, () => super.tensions(...a));
+  }
+}
 
 run("the room and the host's results read the same objects", () => {
   setDefaultTimeout(60_000);
@@ -67,7 +83,7 @@ run("the room and the host's results read the same objects", () => {
 
   const deck = () => analysisDeck(deps.store);
   const publisher = (outcomes: string[]) =>
-    new Publisher({ executor: deps, deck: deck(), logger: quiet }, P, outcomes);
+    new TickPublisher({ executor: deps, deck: deck(), logger: quiet }, P, outcomes);
   /** A verbatim stretch of a conversation, as the tick's quotes are. */
   const said = (i: number, from: number, length = 40) => {
     const t = transcripts[i] as Json;
@@ -416,7 +432,7 @@ run("the room and the host's results read the same objects", () => {
       () => JSON.stringify(answer),
     );
     const book = new QuoteBook(new Map(transcripts.map((t) => [String(t.id), String(t.text)])));
-    const pinnedSlide = await new Publisher(
+    const pinnedSlide = await new TickPublisher(
       { executor: executorDeps(sql, { completer: fake }), deck: deck(), logger: quiet },
       P,
       [],

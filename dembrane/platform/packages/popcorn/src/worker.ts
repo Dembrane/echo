@@ -15,7 +15,7 @@ import {
 } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
-import { correlation, type Logger, withCorrelation } from "@dembrane/observability";
+import { correlation, type Logger, withCorrelation, withPayer } from "@dembrane/observability";
 import {
   defineJob,
   type JobDefinition,
@@ -287,7 +287,8 @@ export function popcornWorker(deps: PopcornWorkerDeps): {
       // A resumed workflow reruns its one step: the tick is written to be re-read from the
       // state it left, and the lease token it holds is its own.
       workflow(TICK_WORKFLOW, async (args: TickArgs) => {
-        // Model calls are metered under the kind of read, e.g. popcorn.tick.finish.
+        // Model calls are metered under the kind of read, e.g. popcorn.tick.finish, and
+        // billed to the loop; both are set again when a recovered run restarts here.
         const c = correlation();
         const outcome = await withCorrelation(
           {
@@ -296,16 +297,18 @@ export function popcornWorker(deps: PopcornWorkerDeps): {
             operation: `popcorn.tick.${args.tickKind}`,
           },
           () =>
-            step("tick", async () => {
-              const result = await runPopcornTick(
-                tickDeps(deps, args.workflowId, analysis),
-                args.loopId,
-                args.tickKind,
-                args.requestId,
-                args.conversationIds ?? null,
-              );
-              return result.status;
-            }),
+            withPayer({ ref: "popcorn_loop", id: args.loopId }, () =>
+              step("tick", async () => {
+                const result = await runPopcornTick(
+                  tickDeps(deps, args.workflowId, analysis),
+                  args.loopId,
+                  args.tickKind,
+                  args.requestId,
+                  args.conversationIds ?? null,
+                );
+                return result.status;
+              }),
+            ),
         );
         deps.logger.info({ loop_id: args.loopId, outcome }, "popcorn tick finished");
       });

@@ -19,7 +19,14 @@ import {
   vertexEmbedder,
 } from "@dembrane/llm";
 import { type Mailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
-import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
+import {
+  configuredModels,
+  httpText,
+  modelCallRecorder,
+  modelCallTable,
+  priceBook,
+  priceStartup,
+} from "@dembrane/metering";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
@@ -62,6 +69,7 @@ const loaded = loadSections([
   "samInbox",
   "samples",
   "files",
+  "metering",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -113,8 +121,15 @@ const billing = createBilling({
 // The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
 // media service in the cloud or in-process locally, and Gemini transcription) and the
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
-// Every model call is metered: one log line at once and one model_call row per batch.
-const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+// AI prices held in memory; the daily sync job reloads them, a timer every few minutes too.
+const prices = priceBook(database.db, logger);
+// Every model call is metered: one log line at once, one model_call row and its spend per batch.
+const metering = modelCallRecorder({
+  sink: modelCallTable(database.db),
+  logger,
+  service,
+  prices,
+});
 // One structured line per request to a speech model: what is sent, how long it took, how it ended.
 const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
 // The transcription pipeline is one named profile (packages/llm/src/profiles.ts). A deployment
@@ -284,6 +299,7 @@ const regs = registrations({
   models,
   databaseUrl,
   popcorn: { databaseUrl, portalUrl: config.http.portalUrl },
+  prices,
 });
 // A worker that cannot start says why in one line before it exits: Cloud Run restarts it
 // either way, and the line (signal worker.boot_failed) is what the person on call reads.
@@ -291,6 +307,20 @@ try {
   // The database first, through the same connect() every pool uses, so an unreachable
   // server is named before DBOS's own retries fill the log.
   await database.ping();
+  // Jobs start on loaded prices; a first sync and the missing-price check run in the background.
+  await priceStartup(
+    {
+      db: database.db,
+      fetchText: httpText,
+      logger,
+      slackUrl: config.metering.slackWebhookUrl ?? null,
+      modelsDevUrl: config.metering.modelsDevUrl,
+      ecbUrl: config.metering.ecbRatesUrl,
+      now: () => new Date(),
+    },
+    prices,
+    configuredModels(config.llm, profile),
+  );
   await queue.start(regs.flatMap((r) => r.jobs));
   for (const r of regs) await r.register(queue);
   await queue.run();

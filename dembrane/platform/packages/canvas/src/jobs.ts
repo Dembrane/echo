@@ -31,7 +31,11 @@ import {
 export const canvasTick = defineJob(
   "canvas.tick",
   z.object({ loopId: z.string(), tickKind: z.string() }),
-  { retryLimit: 0, expireInSeconds: 4 * 60 * 60 },
+  {
+    retryLimit: 0,
+    expireInSeconds: 4 * 60 * 60,
+    payer: (p) => ({ ref: "canvas", id: p.loopId }),
+  },
 );
 
 /** Every minute: turn due canvas_tick rows of scheduled_task into tick workflows. */

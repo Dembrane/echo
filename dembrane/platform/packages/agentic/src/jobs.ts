@@ -111,16 +111,20 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
   return {
     jobs: agenticApiJobs,
     async register(queue) {
-      workflow(TURN_WORKFLOW, async (args: TurnArgs) => {
-        try {
-          await runTurn(turnDeps, args, (name, fn) =>
-            step(name, fn, { retriesAllowed: true, maxAttempts: 3, intervalSeconds: 2 }),
-          );
-        } catch (err) {
-          deps.logger.error({ err, runId: args.runId }, "turn workflow failed");
-          await step("abandon", () => abandonTurn(turnDeps, args));
-        }
-      });
+      workflow(
+        TURN_WORKFLOW,
+        async (args: TurnArgs) => {
+          try {
+            await runTurn(turnDeps, args, (name, fn) =>
+              step(name, fn, { retriesAllowed: true, maxAttempts: 3, intervalSeconds: 2 }),
+            );
+          } catch (err) {
+            deps.logger.error({ err, runId: args.runId }, "turn workflow failed");
+            await step("abandon", () => abandonTurn(turnDeps, args));
+          }
+        },
+        { payer: (args) => ({ ref: "agent_run", id: args.runId }) },
+      );
       await queue.work(
         startTurn,
         { concurrency: deps.config.agentic.turnConcurrency },

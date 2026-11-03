@@ -16,6 +16,8 @@ import {
 
 export interface Deployment {
   readonly label: string;
+  /** Who bills the calls ("vertex", "openai-compatible"); the model's own provider id when unset. */
+  readonly provider?: string;
   readonly model: LanguageModelV4;
 }
 
@@ -127,7 +129,7 @@ export class FallbackModel implements LanguageModelV4 {
               },
         );
       } catch (err) {
-        this.report(() => failedCall(meta, "generate", startedAt, t0, err));
+        this.report(() => failedCall(meta, "generate", startedAt, t0, err, options.prompt));
         throw err;
       }
       this.report(() => generateCall(meta, startedAt, t0, result));
@@ -147,11 +149,14 @@ export class FallbackModel implements LanguageModelV4 {
       try {
         result = await d.model.doStream(options);
       } catch (err) {
-        this.report(() => failedCall(meta, "stream", startedAt, t0, err));
+        this.report(() => failedCall(meta, "stream", startedAt, t0, err, options.prompt));
         throw err;
       }
       if (!this.opts.observe) return result;
-      return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, this.report) };
+      return {
+        ...result,
+        stream: observedStream(result.stream, meta, startedAt, t0, this.report, options.prompt),
+      };
     }, options.abortSignal);
   }
 
@@ -171,6 +176,7 @@ export class FallbackModel implements LanguageModelV4 {
             d,
             {
               group: this.group,
+              provider: d.provider ?? d.model.provider,
               model: d.model.modelId,
               attempt: attempts,
               fallback: i > 0,

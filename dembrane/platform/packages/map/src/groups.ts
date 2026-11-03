@@ -1,5 +1,6 @@
 import type { AnalysisRuntime } from "@dembrane/analysis";
 import type { Completer } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
 import { TITLE_PROMPT, titleSelection } from "./model";
@@ -71,21 +72,24 @@ export async function runGroup(
   if ("gone" in prepared) return fail(prepared.projectId, String(prepared.gone));
   const { projectId } = prepared;
 
-  const titled = await run(
-    "title",
-    async (): Promise<{ title: string } | { failed: true }> => {
-      try {
-        const title = await titleSelection(d.completer, {
-          lines: prepared.lines,
-          projectName: prepared.name,
-          projectContext: prepared.context,
-        });
-        return title ? { title } : { failed: true };
-      } catch {
-        return { failed: true };
-      }
-    },
-    2 * 60_000,
+  // The job names only its group: the title is billed to the project the load step found.
+  const titled = await withPayer({ ref: "project", id: projectId }, () =>
+    run(
+      "title",
+      async (): Promise<{ title: string } | { failed: true }> => {
+        try {
+          const title = await titleSelection(d.completer, {
+            lines: prepared.lines,
+            projectName: prepared.name,
+            projectContext: prepared.context,
+          });
+          return title ? { title } : { failed: true };
+        } catch {
+          return { failed: true };
+        }
+      },
+      2 * 60_000,
+    ),
   );
   if ("failed" in titled) return fail(projectId, "The title could not be generated. Try again.");
 

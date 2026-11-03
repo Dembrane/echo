@@ -12,7 +12,7 @@ import {
   transcribeSegments,
 } from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
-import { observedEmbedding, observeSafely } from "./observe";
+import { observedEmbedding, observeSafely, speechCall } from "./observe";
 import { type SpeechGate, type SpeechPriority, speechGateFor } from "./speech-gate";
 
 /** The model groups callers ask for by purpose, never by vendor model name. */
@@ -118,6 +118,9 @@ export function createModels(
       ...(configured.speechConcurrency && { concurrency: configured.speechConcurrency }),
     }),
     onSpeechRequest: opts.onSpeechRequest,
+    // Only an answered request is billed; a 429 or a fault costs nothing.
+    onSpeechAnswered: (e: SpeechRequestLog) =>
+      observeSafely(opts.observe, opts.onObserverFault, () => speechCall(e)),
   };
   const vertex = compat
     ? null
@@ -136,9 +139,11 @@ export function createModels(
     chat && compat
       ? new CompatLanguageModel(chat.languageModel(id) as LanguageModelV4, compat)
       : ((vertex as NonNullable<typeof vertex>)(id) as LanguageModelV4);
+  const provider = compat ? "openai-compatible" : "vertex";
   const deployments = (group: ModelGroup): Deployment[] =>
     cfg.groups[group].map((id, i) => ({
       label: `${group}[${i}]:${id}`,
+      provider,
       model: build(id),
     }));
   const built: Record<ModelGroup, FallbackModel> = {
@@ -161,8 +166,11 @@ export function createModels(
           location: cfg.embeddingLocation,
         }).textEmbeddingModel(cfg.embeddingModel) as EmbeddingModelV4);
   const embedding = opts.observe
-    ? observedEmbedding(raw, "embedding", (make) =>
-        observeSafely(opts.observe, opts.onObserverFault, make),
+    ? observedEmbedding(
+        raw,
+        "embedding",
+        (make) => observeSafely(opts.observe, opts.onObserverFault, make),
+        provider,
       )
     : raw;
   return {

@@ -17,9 +17,10 @@ import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import type postgres from "postgres";
 import { popcornAllowance } from "../src/free";
-import { runPopcornTick, type TickDeps } from "../src/tick/run";
+import type { TickDeps } from "../src/tick/run";
 import { tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import { freshDatabase } from "./fixtures/tick/seed";
 
 // Adversarial review (group D): paths that let a free account run more popcorn analyses than its 12.

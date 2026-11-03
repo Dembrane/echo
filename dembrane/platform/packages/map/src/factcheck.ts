@@ -10,6 +10,7 @@ import {
   snapshotRevision,
 } from "@dembrane/analysis";
 import type { Completer } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
 import { FACTCHECK_PROMPT_VERSION, type FactCheckOutcome, factcheckClaim } from "./model";
@@ -116,22 +117,26 @@ export async function runFactCheck(
   if ("finished" in prepared) return prepared.finished;
   const { projectId, claim } = prepared;
   const event = { type: "fact_check", claim_key: prepared.claimKeyRow };
+  // The job names only its check: its calls are billed to the project the load step found.
+  const payer = { ref: "project", id: projectId } as const;
 
-  const outcome = await run(
-    "investigate",
-    async (): Promise<FactCheckOutcome | { failed: true }> => {
-      try {
-        return await factcheckClaim(d.completer, {
-          statement: claim.statement,
-          evidence: claim.quotes,
-          projectName: prepared.name,
-          projectContext: prepared.context,
-        });
-      } catch {
-        return { failed: true };
-      }
-    },
-    7 * 60_000,
+  const outcome = await withPayer(payer, () =>
+    run(
+      "investigate",
+      async (): Promise<FactCheckOutcome | { failed: true }> => {
+        try {
+          return await factcheckClaim(d.completer, {
+            statement: claim.statement,
+            evidence: claim.quotes,
+            projectName: prepared.name,
+            projectContext: prepared.context,
+          });
+        } catch {
+          return { failed: true };
+        }
+      },
+      7 * 60_000,
+    ),
   );
   if ("failed" in outcome) {
     const written = await run(
@@ -163,34 +168,37 @@ export async function runFactCheck(
   if (!written) return "stale";
   if (claim.revisionId) {
     // The verdict is saved already; recording it as a revision and advancing the view is
-    // retried by nothing, so a failure is logged and the check still counts as done.
-    await run(
-      "record",
-      async () => {
-        try {
-          const completed = await d.store.getFactCheck(job.factCheckId);
-          if (completed?.status !== "done") return null;
-          const recorded = await recordAssessment(
-            d.rt.executor,
-            projectId,
-            claim.revisionId as string,
-            completed as Json,
-          );
-          if (recorded.eventId)
-            await advanceMapView(projectId, d.rt.store, new MapViewReads(d.rt.store), {
-              sourceEventId: recorded.eventId,
-              publish: d.rt.publishMap,
-            });
-          return recorded.runId;
-        } catch (err) {
-          d.rt.executor.logger?.warn(
-            { revision_id: claim.revisionId, error: (err as Error)?.constructor?.name },
-            "map fact-check not recorded as an assessment",
-          );
-          return null;
-        }
-      },
-      5 * 60_000,
+    // retried by nothing, so a failure is logged and the check still counts as done. The
+    // inline assessment run is billed like the check.
+    await withPayer(payer, () =>
+      run(
+        "record",
+        async () => {
+          try {
+            const completed = await d.store.getFactCheck(job.factCheckId);
+            if (completed?.status !== "done") return null;
+            const recorded = await recordAssessment(
+              d.rt.executor,
+              projectId,
+              claim.revisionId as string,
+              completed as Json,
+            );
+            if (recorded.eventId)
+              await advanceMapView(projectId, d.rt.store, new MapViewReads(d.rt.store), {
+                sourceEventId: recorded.eventId,
+                publish: d.rt.publishMap,
+              });
+            return recorded.runId;
+          } catch (err) {
+            d.rt.executor.logger?.warn(
+              { revision_id: claim.revisionId, error: (err as Error)?.constructor?.name },
+              "map fact-check not recorded as an assessment",
+            );
+            return null;
+          }
+        },
+        5 * 60_000,
+      ),
     );
   }
   await d.rt.publishMap(projectId, event);

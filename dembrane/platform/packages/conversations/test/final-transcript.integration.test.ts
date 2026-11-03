@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
 import { newId } from "@dembrane/core";
+import { fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
+import { type Payer, payer } from "@dembrane/observability";
 import { FakeTranscriber } from "@dembrane/transcription";
 import { createChunk } from "../src/chunks";
 import { finishConversation } from "../src/pipeline/defs";
@@ -232,12 +234,32 @@ run("final transcript", () => {
 
   test("the summary is made again from the final text", async () => {
     const cid = newId();
-    await finished(cid, 2);
-    await until(async () => (await record(cid)).length === 1);
+    takeUnscopedFakeCalls();
+    // The final pass's speech calls and its summary are billed to the conversation.
+    const heardUnder: (Payer | undefined)[] = [];
+    const real = whisper.transcribe;
+    whisper.transcribe = async (input) => {
+      heardUnder.push(payer());
+      return real(input);
+    };
+    try {
+      await finished(cid, 2);
+      await until(async () => (await record(cid)).length === 1);
+    } finally {
+      whisper.transcribe = real;
+    }
     await until(async () => {
       const [c] = await h.sql`select summary from conversation where id = ${cid}`;
       return c?.summary ? c : null;
     });
+    expect(heardUnder.length).toBeGreaterThan(0);
+    expect(new Set(heardUnder.map((p) => JSON.stringify(p)))).toEqual(
+      new Set([JSON.stringify({ ref: "conversation", id: cid })]),
+    );
+    expect(
+      fakeCalls().filter((c) => c.payer && "ref" in c.payer && c.payer.id === cid).length,
+    ).toBeGreaterThan(0);
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     const statuses =
       await h.sql`select event from processing_status where conversation_id = ${cid}`;
     expect(

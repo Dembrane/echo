@@ -473,6 +473,9 @@
         "@dembrane/llm": "workspace:*",
         "drizzle-orm": "^0.45.3",
       },
+      "devDependencies": {
+        "@dembrane/observability": "workspace:*",
+      },
     },
     "packages/legacy-shape": {
       "name": "@dembrane/legacy-shape",
@@ -489,6 +492,7 @@
         "@ai-sdk/provider": "*",
         "@dembrane/observability": "workspace:*",
         "ai": "^7.0.118",
+        "js-tiktoken": "^1.0.21",
       },
     },
     "packages/mail": {
@@ -517,11 +521,17 @@
     "packages/metering": {
       "name": "@dembrane/metering",
       "dependencies": {
+        "@dembrane/allowance": "workspace:*",
+        "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/llm": "workspace:*",
         "@dembrane/observability": "workspace:*",
+        "@dembrane/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "zod": "^4.1.0",
       },
       "devDependencies": {
+        "@dembrane/config": "workspace:*",
         "postgres": "^3.4.9",
       },
     },

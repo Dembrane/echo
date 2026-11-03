@@ -4,6 +4,7 @@ import { newId, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
+import { type Payer, withPayer } from "@dembrane/observability";
 import { TranscriptionError } from "@dembrane/transcription";
 import { and, eq } from "drizzle-orm";
 import type { ConversationsDeps } from "../deps";
@@ -121,17 +122,23 @@ export async function transcribeStateless(
   let transcript: string;
   let note: string;
   let duration: number | null = null;
+  // The form names the project; a note without one is ours until plan 2 bills the workspace.
+  const payer: Payer = input.projectId
+    ? { ref: "project", id: input.projectId }
+    : { internal: "voice_without_project" };
   try {
     try {
-      const r = await d.transcriber.transcribe({
-        audio,
-        language: input.language,
-        hotwords: parseHotwords(input.hotwords),
-        usePiiRedaction: input.usePiiRedaction,
-        anonymizeTranscripts: input.anonymizeTranscripts,
-        customGuidancePrompt: input.customGuidancePrompt,
-        promptOverride: input.promptOverride,
-      });
+      const r = await withPayer(payer, () =>
+        d.transcriber.transcribe({
+          audio,
+          language: input.language,
+          hotwords: parseHotwords(input.hotwords),
+          usePiiRedaction: input.usePiiRedaction,
+          anonymizeTranscripts: input.anonymizeTranscripts,
+          customGuidancePrompt: input.customGuidancePrompt,
+          promptOverride: input.promptOverride,
+        }),
+      );
       transcript = r.transcript;
       note = r.note;
     } catch (err) {

@@ -21,15 +21,10 @@ import type { Json } from "../src/py";
 import { popcornRoutes } from "../src/routes";
 import { finishReadState, goLive, type PopcornDeps, popcornDeps } from "../src/service";
 import { client, popcornStore } from "../src/storage";
-import {
-  enqueueNextIfDue,
-  runPopcornTick,
-  STUCK_RUN_MS,
-  settleStuckRuns,
-  type TickDeps,
-} from "../src/tick/run";
+import { enqueueNextIfDue, STUCK_RUN_MS, settleStuckRuns, type TickDeps } from "../src/tick/run";
 import { tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import { freshDatabase } from "./fixtures/tick/seed";
 
 // The tick, the live cadence and the host routes on a free account's 12 analyses.

@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { FallbackModel } from "@dembrane/llm";
-import { createLogger } from "@dembrane/observability";
+import { FallbackModel, fakeLanguageModel } from "@dembrane/llm";
+import { createLogger, withPayer } from "@dembrane/observability";
 import {
   DEFAULT_RETRY,
   doubtful,
-  editSentences,
+  editSentences as edit,
   GeminiTranscriber,
   guardEdit,
   isoOf,
@@ -28,6 +28,20 @@ import {
   transcribeChecked,
   transcriptionFailureReason,
 } from "../src";
+
+// The transcriber runs in the conversation's chunk and finalize workflows, which bill the conversation.
+const CONVERSATION = { ref: "conversation", id: "c1" } as const;
+
+class Transcriber extends GeminiTranscriber {
+  override transcribe(...a: Parameters<GeminiTranscriber["transcribe"]>) {
+    return withPayer(CONVERSATION, () => super.transcribe(...a));
+  }
+  override redactText(...a: Parameters<GeminiTranscriber["redactText"]>) {
+    return withPayer(CONVERSATION, () => super.redactText(...a));
+  }
+}
+
+const editSentences: typeof edit = (...a) => withPayer(CONVERSATION, () => edit(...a));
 
 const logger = createLogger(
   { service: "t", release: "r", env: "test", level: "error" },
@@ -60,28 +74,11 @@ test("regex redaction runs the patterns in the Python order", () => {
 });
 
 function model(answers: string[], seen: LanguageModelV4CallOptions[]): LanguageModelV4 {
-  return {
-    specificationVersion: "v4",
-    provider: "fake",
+  return fakeLanguageModel({
     modelId: "gemini-fake",
-    supportedUrls: {},
-    async doGenerate(o) {
-      seen.push(o);
-      return {
-        content: [{ type: "text", text: answers.shift() ?? "" }],
-        finishReason: { unified: "stop", raw: "STOP" },
-        usage: {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 1, text: 1, reasoning: 0 },
-        },
-        response: { modelId: "gemini-fake" },
-        warnings: [],
-      } as never;
-    },
-    async doStream() {
-      throw new Error("not used");
-    },
-  };
+    text: () => answers.shift() ?? "",
+    calls: seen,
+  });
 }
 
 test("redaction runs a second pass on the audio plus the first transcript", async () => {
@@ -93,7 +90,7 @@ test("redaction runs a second pass on the audio plus the first transcript", asyn
     ],
     seen,
   );
-  const t = new GeminiTranscriber({ model: () => m, embedding: () => ({}) as never }, logger);
+  const t = new Transcriber({ model: () => m, embedding: () => ({}) as never }, logger);
   const out = await t.transcribe({
     audio: new Uint8Array([1, 2, 3]),
     language: "nl",
@@ -114,7 +111,7 @@ test("redaction runs a second pass on the audio plus the first transcript", asyn
 test("with a speech-to-text model its words are the transcript and no chat model runs", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
   const heard: { language?: string | null; prompt?: string; priority?: string }[] = [];
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: () => model([], seen),
       embedding: () => ({}) as never,
@@ -160,7 +157,7 @@ test("with a speech-to-text model its words are the transcript and no chat model
 
 test("with a speech-to-text model, redaction is one text-only pass with reasoning off", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: () => model(['{"corrected_transcript": "Ik ben <redacted_name>", "note": "n"}'], seen),
       embedding: () => ({}) as never,
@@ -188,7 +185,7 @@ test("with a speech-to-text model, redaction is one text-only pass with reasonin
 });
 
 test("an empty transcript becomes the placeholder the dashboard shows", async () => {
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: () => model(['{"corrected_transcript": "", "note": ""}'], []),
       embedding: () => ({}) as never,
@@ -200,38 +197,16 @@ test("an empty transcript becomes the placeholder the dashboard shows", async ()
   );
 });
 
+/** What prod saw: finish_reason SAFETY with no text at all, for each "refused" answer. */
 function refusing(id: string, answers: (string | "refused")[], seen: LanguageModelV4CallOptions[]) {
-  const m = model([], seen);
-  return {
-    ...m,
+  return fakeLanguageModel({
     modelId: id,
-    async doGenerate(o: LanguageModelV4CallOptions) {
-      seen.push(o);
+    calls: seen,
+    text: () => {
       const next = answers.shift() ?? "refused";
-      // What prod saw: finish_reason SAFETY with no text at all.
-      if (next === "refused")
-        return {
-          content: [],
-          finishReason: { unified: "content-filter", raw: "SAFETY" },
-          usage: {
-            inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-            outputTokens: { total: 0, text: 0, reasoning: 0 },
-          },
-          response: { modelId: id },
-          warnings: [],
-        } as never;
-      return {
-        content: [{ type: "text", text: next }],
-        finishReason: { unified: "stop", raw: "STOP" },
-        usage: {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 1, text: 1, reasoning: 0 },
-        },
-        response: { modelId: id },
-        warnings: [],
-      } as never;
+      return next === "refused" ? null : next;
     },
-  } satisfies LanguageModelV4;
+  });
 }
 
 const noWait = { backoffMs: 0, sleep: async () => {} };
@@ -249,7 +224,7 @@ test("a refused chunk goes to the next deployment, with safety filters off", asy
     ],
     noWait,
   );
-  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger);
+  const t = new Transcriber({ model: () => group, embedding: () => ({}) as never }, logger);
   const out = await t.transcribe({ audio: new Uint8Array([1]) });
   expect(out.transcript).toBe("hallo");
   expect(out.models).toEqual(["gemini-b"]);
@@ -266,36 +241,14 @@ function slow(
   calls: string[],
   text = "hallo",
 ): LanguageModelV4 {
-  return {
-    specificationVersion: "v4",
-    provider: "fake",
+  return fakeLanguageModel({
     modelId: id,
-    supportedUrls: {},
-    async doStream() {
-      throw new Error("not used");
-    },
-    doGenerate(o) {
+    delayMs: stallMs ?? Number.POSITIVE_INFINITY,
+    text: () => {
       calls.push(id);
-      return new Promise((resolve, reject) => {
-        const answer = () =>
-          resolve({
-            content: [{ type: "text", text: `{"corrected_transcript": "${text}", "note": ""}` }],
-            finishReason: { unified: "stop", raw: "STOP" },
-            usage: {
-              inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-              outputTokens: { total: 1, text: 1, reasoning: 0 },
-            },
-            response: { modelId: id },
-            warnings: [],
-          } as never);
-        const timer = stallMs === null ? null : setTimeout(answer, stallMs);
-        o.abortSignal?.addEventListener("abort", () => {
-          if (timer) clearTimeout(timer);
-          reject(o.abortSignal?.reason);
-        });
-      });
+      return `{"corrected_transcript": "${text}", "note": ""}`;
     },
-  };
+  });
 }
 
 test("a stalled call is cut at the bound and the next attempt answers, noted as one failed call", async () => {
@@ -314,7 +267,7 @@ test("a stalled call is cut at the bound and the next attempt answers, noted as 
         metered.push({ model: c.model, status: c.status, error: c.error, attempt: c.attempt }),
     },
   );
-  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+  const t = new Transcriber({ model: () => group, embedding: () => ({}) as never }, logger, {
     callTimeoutMs: 30,
   });
   const began = Date.now();
@@ -339,7 +292,7 @@ test("a stalled call is retried on the same deployment with a fresh clock", asyn
     doGenerate: (o) => (n++ === 0 ? stalls : flaky).doGenerate(o),
   };
   const group = new FallbackModel("multi_modal_pro", [{ label: "a", model: a }], noWait);
-  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+  const t = new Transcriber({ model: () => group, embedding: () => ({}) as never }, logger, {
     callTimeoutMs: 30,
   });
   const out = await t.transcribe({ audio: new Uint8Array([1]) });
@@ -357,7 +310,7 @@ test("a call that answers inside the bound is not cut", async () => {
     ],
     noWait,
   );
-  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger, {
+  const t = new Transcriber({ model: () => group, embedding: () => ({}) as never }, logger, {
     callTimeoutMs: 2000,
   });
   const out = await t.transcribe({ audio: new Uint8Array([1]) });
@@ -368,7 +321,7 @@ test("a call that answers inside the bound is not cut", async () => {
 test("the pro group keeps the short bound, the fast group's last attempt the long one", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
   const pro = model(['{"corrected_transcript": "x", "note": ""}'], seen);
-  const t = new GeminiTranscriber({ model: () => pro, embedding: () => ({}) as never }, logger);
+  const t = new Transcriber({ model: () => pro, embedding: () => ({}) as never }, logger);
   await t.transcribe({ audio: new Uint8Array([1]) });
   const fallback = seen[0]?.providerOptions?.fallback;
   expect(fallback?.attemptTimeoutMs).toBe(TRANSCRIBE_CALL_TIMEOUT_MS);
@@ -396,7 +349,7 @@ test("pro stalls and is cut at the short bound, then the fast group waits the lo
     [{ label: "b", model: watching("fast", slow("gemini-b", 120, calls)) }],
     { ...noWait, attemptsPerDeployment: 1 },
   );
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: (g: string) => (g === "multi_modal_pro" ? pro : fast),
       embedding: () => ({}) as never,
@@ -424,7 +377,7 @@ test("a chunk every deployment refuses ends with a refusal, not a parse error", 
     ],
     noWait,
   );
-  const t = new GeminiTranscriber({ model: () => group, embedding: () => ({}) as never }, logger);
+  const t = new Transcriber({ model: () => group, embedding: () => ({}) as never }, logger);
   const err = await t.transcribe({ audio: new Uint8Array([1]) }).catch((e) => e);
   expect(err).toBeInstanceOf(TranscriptRefusedError);
   expect(err).not.toBeInstanceOf(TranscriptParseError);
@@ -436,12 +389,9 @@ test("a chunk every deployment refuses ends with a refusal, not a parse error", 
 
 test("a refusal on the multi_modal_fast detour is a refusal too", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const overloaded = {
-    ...model([], seen),
-    async doGenerate() {
-      throw Object.assign(new Error("503"), { statusCode: 503, isRetryable: true });
-    },
-  } satisfies LanguageModelV4;
+  const overloaded = fakeLanguageModel({
+    fail: Object.assign(new Error("503"), { statusCode: 503, isRetryable: true }),
+  });
   const pro = new FallbackModel("multi_modal_pro", [{ label: "p", model: overloaded }], {
     ...noWait,
     attemptsPerDeployment: 1,
@@ -451,7 +401,7 @@ test("a refusal on the multi_modal_fast detour is a refusal too", async () => {
     [{ label: "f", model: refusing("gemini-f", ["refused"], seen) }],
     noWait,
   );
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     { model: (g) => (g === "multi_modal_pro" ? pro : fast), embedding: () => ({}) as never },
     logger,
   );
@@ -461,7 +411,7 @@ test("a refusal on the multi_modal_fast detour is a refusal too", async () => {
 
 test("typed text is redacted like a transcript: regex first, then one text-only model pass", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: () =>
         model(
@@ -484,7 +434,7 @@ test("typed text is redacted like a transcript: regex first, then one text-only 
 
 test("typed text with both redaction flags off is returned as typed and calls no model", async () => {
   const seen: LanguageModelV4CallOptions[] = [];
-  const t = new GeminiTranscriber(
+  const t = new Transcriber(
     {
       model: () => model(['{"corrected_transcript": "x", "note": ""}'], seen),
       embedding: () => ({}) as never,
@@ -537,28 +487,15 @@ test("timed sentences are parsed from seconds or a clock and tidied into the pie
 });
 
 function editModel(answer: (prompt: string) => unknown, seen: string[] = []): LanguageModelV4 {
-  return {
-    specificationVersion: "v4",
-    provider: "fake",
+  return fakeLanguageModel({
     modelId: "edit-fake",
-    supportedUrls: {},
-    async doGenerate(opts: LanguageModelV4CallOptions) {
-      const user = (opts.prompt[1] as { content: { text: string }[] }).content[0]?.text ?? "";
+    usage: { input: 10, output: 5 },
+    text: (prompt) => {
+      const user = (prompt[1] as { content: { text: string }[] }).content[0]?.text ?? "";
       seen.push(user);
-      return {
-        content: [{ type: "text", text: JSON.stringify(answer(user)) }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage: {
-          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 5, text: 5, reasoning: 0 },
-        },
-        warnings: [],
-      } as never;
+      return JSON.stringify(answer(user));
     },
-    async doStream() {
-      throw new Error("not used");
-    },
-  };
+  });
 }
 
 const sentenceList = [

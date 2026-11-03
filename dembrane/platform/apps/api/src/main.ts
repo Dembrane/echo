@@ -28,7 +28,14 @@ import {
 } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
-import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
+import {
+  configuredModels,
+  httpText,
+  modelCallRecorder,
+  modelCallTable,
+  priceBook,
+  priceStartup,
+} from "@dembrane/metering";
 import { Notifier } from "@dembrane/notifications";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { popcornApiJobs } from "@dembrane/popcorn";
@@ -248,8 +255,15 @@ void (async () => {
   }
 })();
 
-// Every model call is metered: one log line at once and one model_call row per batch.
-const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+// AI prices held in memory and reloaded every few minutes; every model call is priced from them.
+const prices = priceBook(database.db, logger);
+// Every model call is metered: one log line at once, one model_call row and its spend per batch.
+const metering = modelCallRecorder({
+  sink: modelCallTable(database.db),
+  logger,
+  service,
+  prices,
+});
 // The transcription profile the worker runs: the API transcribes typed text and short audio
 // with the same live model, and refuses to start when the deployment lacks what it needs.
 const profile = (() => {
@@ -267,12 +281,30 @@ const profile = (() => {
 void checkProfileModels(profile, config.llm, (line) =>
   logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
 );
+// One structured line per request to a speech model, as the worker logs them.
+const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
 const modelHooks = {
+  onSpeechRequest: logSpeech,
   observe: metering.observe,
   onObserverFault: (err: unknown) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
 };
 const models = createModels(modelsConfigOf(config.llm, profile), modelHooks);
+// Serving waits for the prices to load (one read); a first sync and the missing-price check
+// run in the background.
+await priceStartup(
+  {
+    db: database.db,
+    fetchText: httpText,
+    logger,
+    slackUrl: config.metering.slackWebhookUrl ?? null,
+    modelsDevUrl: config.metering.modelsDevUrl,
+    ecbUrl: config.metering.ecbRatesUrl,
+    now: () => new Date(),
+  },
+  prices,
+  configuredModels(config.llm, profile),
+);
 const liveSettings: LlmSettings = {
   ...config.llm,
   provider: profile.live.provider === "whisper" ? "openai-compatible" : "vertex",

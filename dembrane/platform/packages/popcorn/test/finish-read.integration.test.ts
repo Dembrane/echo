@@ -4,9 +4,10 @@ import { createDb, migrate } from "@dembrane/db";
 import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
 import type { Json } from "../src/py";
-import { runPopcornTick, type TickDeps } from "../src/tick/run";
+import type { TickDeps } from "../src/tick/run";
 import { tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import { fixture, freshDatabase, ids, insertChunk, seed } from "./fixtures/tick/seed";
 
 // A finish read outside a live session reads the conversations that finished and nothing
