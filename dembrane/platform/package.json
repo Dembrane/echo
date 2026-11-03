@@ -26,7 +26,8 @@
     "accounts:staff-key": "bun --env-file=.env.local packages/accounts/src/staff-key-cli.ts",
     "translations:fill": "bun packages/i18n/src/cli.ts --write",
     "translations:check": "bun packages/i18n/src/cli.ts",
-    "staff:access": "bun --env-file=.env.local packages/staff/src/grant-cli.ts"
+    "staff:access": "bun --env-file=.env.local packages/staff/src/grant-cli.ts",
+    "audio:retention": "bun --env-file=.env.local apps/worker/src/retention.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",
