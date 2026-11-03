@@ -1340,8 +1340,8 @@ msgstr "Una página pública necesita un plan superior. Desactiva Página públi
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Ya se está generando un informe para este proyecto. Espera a que se complete."
 
-#: src/components/pricing/PricingConfigurator.tsx:1186
-#: src/components/pricing/PricingConfigurator.tsx:1190
+#: src/components/pricing/PricingConfigurator.tsx:1183
+#: src/components/pricing/PricingConfigurator.tsx:1187
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Una cifra aproximada o «no lo sé». Cualquiera de las dos sirve."
 
@@ -2001,11 +2001,11 @@ msgstr "Presupuesto de IA guardado"
 msgid "AI costs"
 msgstr "Costes de IA"
 
-#: src/components/pricing/PricingConfigurator.tsx:766
+#: src/components/pricing/PricingConfigurator.tsx:763
 msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 msgstr "Las funciones de IA y las nuevas grabaciones están en pausa hasta el {resetDate}. Mejora tu plan para continuar ahora."
 
-#: src/components/pricing/PricingConfigurator.tsx:771
+#: src/components/pricing/PricingConfigurator.tsx:768
 msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
 msgstr "Las funciones de IA y las nuevas grabaciones están en pausa hasta el próximo mes. Mejora tu plan para continuar ahora."
 
@@ -2916,7 +2916,7 @@ msgstr "Ausente"
 #: src/routes/auth/Register.tsx:289
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:918
+#: src/components/pricing/PricingConfigurator.tsx:915
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2945,7 +2945,7 @@ msgstr "Volver a Conecta tu agente"
 msgid "Back to conversations"
 msgstr "Volver a las conversaciones"
 
-#: src/components/pricing/PricingConfigurator.tsx:989
+#: src/components/pricing/PricingConfigurator.tsx:986
 msgid "Back to dembrane"
 msgstr "Volver a dembrane"
 
@@ -3211,7 +3211,7 @@ msgstr "Por etiqueta"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:720
+#: src/components/pricing/PricingConfigurator.tsx:719
 msgid "Can you tell us more?"
 msgstr "¿Puedes contarnos más?"
 
@@ -4216,7 +4216,7 @@ msgstr "Sugerencias contextuales"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:895
+#: src/components/pricing/PricingConfigurator.tsx:892
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
@@ -10306,7 +10306,7 @@ msgid "Not monthly"
 msgstr "No mensual"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:907
+#: src/components/pricing/PricingConfigurator.tsx:904
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -11406,12 +11406,12 @@ msgstr "Elija una fecha"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Elige un punto para leer sus palabras abajo."
 
-#: src/components/pricing/PricingConfigurator.tsx:893
+#: src/components/pricing/PricingConfigurator.tsx:890
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Elige una hora"
 
-#: src/components/pricing/PricingConfigurator.tsx:707
+#: src/components/pricing/PricingConfigurator.tsx:706
 msgid "Pick a time with {host}."
 msgstr "Elige una hora con {host}."
 
@@ -12563,8 +12563,8 @@ msgstr "Las grabaciones están pausadas para este proyecto en el plan Free. Las 
 #~ msgstr "Temas recurrentes"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:166
-#: src/components/pricing/PricingConfigurator.tsx:979
+#: src/components/pricing/PricingConfigurator.tsx:165
+#: src/components/pricing/PricingConfigurator.tsx:976
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -13459,7 +13459,7 @@ msgstr "Rol actualizado"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Estimación aproximada para terminar de transcribir lo pendiente"
 
-#: src/components/pricing/PricingConfigurator.tsx:1194
+#: src/components/pricing/PricingConfigurator.tsx:1191
 msgid "Roughly how many?"
 msgstr "¿Aproximadamente cuántos?"
 
@@ -14716,7 +14716,7 @@ msgstr "Seis fines de semana a lo largo de siete meses"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:930
+#: src/components/pricing/PricingConfigurator.tsx:927
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -15126,7 +15126,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr "Se mantiene al día hasta mañana a las {0}"
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:783
+#: src/components/pricing/PricingConfigurator.tsx:780
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Paso {0} de {STEP_COUNT}"
 
@@ -15598,7 +15598,7 @@ msgstr "¡Gracias!"
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr "¡Gracias! Nos pondremos en contacto lo antes posible. También puedes escribirnos a info@dembrane.com."
 
-#: src/components/pricing/PricingConfigurator.tsx:971
+#: src/components/pricing/PricingConfigurator.tsx:968
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Gracias por completar esto. Revisa tu correo para ver la confirmación de la llamada. Si tienes alguna pregunta, siempre puedes escribirnos a info@dembrane.com"
 
@@ -15622,7 +15622,7 @@ msgstr "Ese código no es correcto o ha caducado. Solicita uno nuevo."
 msgid "That did not save. Your words are still here."
 msgstr "No se guardó. Tus palabras siguen aquí."
 
-#: src/components/pricing/PricingConfigurator.tsx:870
+#: src/components/pricing/PricingConfigurator.tsx:867
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr "No se pudo enviar. Tus respuestas siguen aquí, así que inténtalo de nuevo."
 
@@ -15634,7 +15634,7 @@ msgstr "No ha funcionado. Hemos guardado tu grabación."
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Esa grabación es demasiado larga para enviarse. Graba una nota más corta."
 
-#: src/components/pricing/PricingConfigurator.tsx:828
+#: src/components/pricing/PricingConfigurator.tsx:825
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Eso requiere un plan de pago. Te haremos 5 preguntas rápidas más y luego podrás elegir una hora con el equipo de dembrane. Leeremos tus respuestas antes de la llamada para ofrecerte una propuesta a tu medida."
 
@@ -15850,7 +15850,7 @@ msgstr "La pantalla de la guía del anfitrión muestra el código para participa
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "El anfitrión aún no ha preparado una presentación."
 
-#: src/components/pricing/PricingConfigurator.tsx:957
+#: src/components/pricing/PricingConfigurator.tsx:954
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr "Tienes la invitación en tu bandeja de entrada. Leeremos tus respuestas antes de la cita y prepararemos una propuesta inicial. ¿Tienes alguna pregunta mientras tanto? Escríbenos a"
 
@@ -15978,7 +15978,7 @@ msgstr "La página a la que hace referencia esta respuesta."
 msgid "The participant flow has clearer microphone checks."
 msgstr "El flujo de participantes cuenta con comprobaciones de micrófono más claras."
 
-#: src/components/pricing/PricingConfigurator.tsx:747
+#: src/components/pricing/PricingConfigurator.tsx:744
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "¡Los portales seguirán funcionando! Tus participantes nunca se quedarán fuera y nada de lo que digan se perderá. En cuanto pases a un plan de pago, la transcripción se pondrá al día con todo lo grabado."
 
@@ -16447,7 +16447,7 @@ msgstr "Esto marca la formación como cancelada. Puedes reabrirla más tarde des
 msgid "This month"
 msgstr "Este mes"
 
-#: src/components/pricing/PricingConfigurator.tsx:762
+#: src/components/pricing/PricingConfigurator.tsx:759
 msgid "This month's AI budget is used up."
 msgstr "Se ha agotado el presupuesto de IA de este mes."
 
@@ -17587,7 +17587,7 @@ msgstr "Actualizando las etiquetas del proyecto"
 #~ msgid "Upgrade"
 #~ msgstr "Mejorar plan"
 
-#: src/components/pricing/PricingConfigurator.tsx:821
+#: src/components/pricing/PricingConfigurator.tsx:818
 msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Pásate a un plan superior para tener más IA cada mes. Te haremos 5 preguntas rápidas más y luego podrás elegir una hora con el equipo de dembrane. Leeremos tus respuestas antes de la llamada para ofrecerte algo que se adapte a tus necesidades."
 
@@ -18398,7 +18398,7 @@ msgstr "Qué se envía"
 msgid "What is at stake here"
 msgstr "Qué está en juego aquí"
 
-#: src/components/pricing/PricingConfigurator.tsx:1102
+#: src/components/pricing/PricingConfigurator.tsx:1099
 msgid "What is it?"
 msgstr "¿Qué es?"
 
@@ -18855,7 +18855,7 @@ msgstr "No eres miembro de ninguna organización, así que todavía no hay nada 
 msgid "You are not in an organisation yet."
 msgstr "Aún no estás en ninguna organización."
 
-#: src/components/pricing/PricingConfigurator.tsx:815
+#: src/components/pricing/PricingConfigurator.tsx:812
 msgid "You are on the free plan."
 msgstr "Estás en el plan Free."
 
@@ -19095,7 +19095,7 @@ msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 msgid "You stopped this run."
 msgstr "Has detenido esta ejecución."
 
-#: src/components/pricing/PricingConfigurator.tsx:813
+#: src/components/pricing/PricingConfigurator.tsx:810
 msgid "You were trying to {action}."
 msgstr "Intentabas {action}."
 
@@ -19179,7 +19179,7 @@ msgstr "Aún no estás en ninguna organización. Crea un espacio de trabajo para
 msgid "You're not part of any organisation right now."
 msgstr "Ahora mismo no formas parte de ninguna organización."
 
-#: src/components/pricing/PricingConfigurator.tsx:808
+#: src/components/pricing/PricingConfigurator.tsx:805
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Estás en el plan Free, que incluye una cuota mensual de IA."
 
@@ -19266,11 +19266,11 @@ msgstr "¡Su aprobación nos ayuda a comprender lo que realmente piensa!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Tu navegador está bloqueando el micrófono. Permite el acceso y vuelve a intentarlo."
 
-#: src/components/pricing/PricingConfigurator.tsx:712
+#: src/components/pricing/PricingConfigurator.tsx:711
 msgid "Your call is booked: {bookedTime}."
 msgstr "Tu llamada está reservada: {bookedTime}."
 
-#: src/components/pricing/PricingConfigurator.tsx:714
+#: src/components/pricing/PricingConfigurator.tsx:713
 msgid "Your call is booked."
 msgstr "Tu llamada está reservada."
 
@@ -19325,7 +19325,7 @@ msgstr "Tu comentario y esta respuesta llegan al equipo de dembrane."
 #~ msgid "Your free plan includes one report. Upgrade to create more."
 #~ msgstr "Tu plan Free incluye un informe. Mejora tu plan para crear más."
 
-#: src/components/pricing/PricingConfigurator.tsx:744
+#: src/components/pricing/PricingConfigurator.tsx:741
 msgid "Your free transcription allowance is used up."
 msgstr "Se ha agotado tu cuota de transcripción gratuita."
 
@@ -19444,7 +19444,7 @@ msgstr "Tu plan no se renovará. Mantendrás el acceso hasta el final del period
 msgid "Your recording, {0}"
 msgstr "Tu grabación, {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:717
+#: src/components/pricing/PricingConfigurator.tsx:716
 msgid "Your request is in."
 msgstr "Hemos recibido tu solicitud."
 

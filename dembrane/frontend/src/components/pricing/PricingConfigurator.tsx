@@ -102,8 +102,7 @@ export type PricingConfiguratorProps = {
 	onClose: () => void;
 	/** Which wall started this session. It rides on every event. */
 	wallKey?: string;
-	/** `transcription_cap` and `ai_budget` put their cap block above the opening;
-	 * every other mount point is byte for byte the same. */
+	/** `transcription_cap` and `ai_budget` add a block above the opening; `ai_allowance` rewords the opening. */
 	variant?: "default" | "transcription_cap" | "ai_budget" | "ai_allowance";
 	/** The refused AI action; overrides the wall's own action line. */
 	aiAction?: AiAction;
@@ -734,9 +733,7 @@ export const PricingConfigurator = ({
 		>
 			{phase.kind === "question" && (
 				<Stack gap="lg">
-					{/* The locked data exception, and the only block that ever sits
-					    above the opening. Nothing was blocked while recording, so
-					    the block says so before anything asks for money. */}
+					{/* Locked transcripts: nothing was blocked while recording, so say so before asking for money. */}
 					{phase.step === OPENING_STEP && variant === "transcription_cap" && (
 						<>
 							<Stack gap="xs">

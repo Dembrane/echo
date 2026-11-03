@@ -1339,8 +1339,8 @@ msgstr "Veřejná stránka vyžaduje vyšší tarif. Vypni Veřejná stránka v 
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "A report is already being generated for this project. Please wait for it to complete."
 
-#: src/components/pricing/PricingConfigurator.tsx:1186
-#: src/components/pricing/PricingConfigurator.tsx:1190
+#: src/components/pricing/PricingConfigurator.tsx:1183
+#: src/components/pricing/PricingConfigurator.tsx:1187
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Přibližné číslo nebo „nevím jistě“. Obojí pomůže."
 
@@ -2000,11 +2000,11 @@ msgstr "Rozpočet na AI uložen"
 msgid "AI costs"
 msgstr "Náklady na AI"
 
-#: src/components/pricing/PricingConfigurator.tsx:766
+#: src/components/pricing/PricingConfigurator.tsx:763
 msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 msgstr "Funkce AI a nové nahrávky jsou pozastaveny do {resetDate}. Přejděte na vyšší tarif a pokračujte hned."
 
-#: src/components/pricing/PricingConfigurator.tsx:771
+#: src/components/pricing/PricingConfigurator.tsx:768
 msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
 msgstr "Funkce AI a nové nahrávky jsou pozastaveny do příštího měsíce. Přejděte na vyšší tarif a pokračujte hned."
 
@@ -2915,7 +2915,7 @@ msgstr "Pryč"
 #: src/routes/auth/Register.tsx:289
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:918
+#: src/components/pricing/PricingConfigurator.tsx:915
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2944,7 +2944,7 @@ msgstr "Zpět na připojení agenta"
 msgid "Back to conversations"
 msgstr "Zpět na rozhovory"
 
-#: src/components/pricing/PricingConfigurator.tsx:989
+#: src/components/pricing/PricingConfigurator.tsx:986
 msgid "Back to dembrane"
 msgstr "Zpět do dembrane"
 
@@ -3210,7 +3210,7 @@ msgstr "Podle štítku"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:720
+#: src/components/pricing/PricingConfigurator.tsx:719
 msgid "Can you tell us more?"
 msgstr "Můžete nám říct víc?"
 
@@ -4215,7 +4215,7 @@ msgstr "Contextual suggestions"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:895
+#: src/components/pricing/PricingConfigurator.tsx:892
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
@@ -10305,7 +10305,7 @@ msgid "Not monthly"
 msgstr "Ne měsíčně"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:907
+#: src/components/pricing/PricingConfigurator.tsx:904
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -11405,12 +11405,12 @@ msgstr "Pick a date"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Vyberte tečku a přečtěte si její slova níže."
 
-#: src/components/pricing/PricingConfigurator.tsx:893
+#: src/components/pricing/PricingConfigurator.tsx:890
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Vyberte čas"
 
-#: src/components/pricing/PricingConfigurator.tsx:707
+#: src/components/pricing/PricingConfigurator.tsx:706
 msgid "Pick a time with {host}."
 msgstr "Vyberte si čas ({host})."
 
@@ -12562,8 +12562,8 @@ msgstr "V tarifu Free je nahrávání pro tento projekt pozastaveno. Nové nahr�
 #~ msgstr "Recurring Themes"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:166
-#: src/components/pricing/PricingConfigurator.tsx:979
+#: src/components/pricing/PricingConfigurator.tsx:165
+#: src/components/pricing/PricingConfigurator.tsx:976
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -13458,7 +13458,7 @@ msgstr "Role updated"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Přibližný odhad dokončení přepisu zbývajících nahrávek"
 
-#: src/components/pricing/PricingConfigurator.tsx:1194
+#: src/components/pricing/PricingConfigurator.tsx:1191
 msgid "Roughly how many?"
 msgstr "Přibližně kolik?"
 
@@ -14715,7 +14715,7 @@ msgstr "Šest víkendů v průběhu sedmi měsíců"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:930
+#: src/components/pricing/PricingConfigurator.tsx:927
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -15125,7 +15125,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr "Zůstává aktuální do zítřejších {0}"
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:783
+#: src/components/pricing/PricingConfigurator.tsx:780
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Krok {0} z {STEP_COUNT}"
 
@@ -15597,7 +15597,7 @@ msgstr "Thank you!"
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr "Děkujeme! Ozveme se vám co nejdříve. Můžete nám také napsat na info@dembrane.com."
 
-#: src/components/pricing/PricingConfigurator.tsx:971
+#: src/components/pricing/PricingConfigurator.tsx:968
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Děkujeme za vyplnění. V e-mailu najdete potvrzení hovoru. V případě jakýchkoli dotazů nás můžete kdykoli kontaktovat na info@dembrane.com"
 
@@ -15621,7 +15621,7 @@ msgstr "Tento kód není správný nebo vypršel. Požádejte o nový."
 msgid "That did not save. Your words are still here."
 msgstr "Neuložilo se. Tvá slova tu zůstávají."
 
-#: src/components/pricing/PricingConfigurator.tsx:870
+#: src/components/pricing/PricingConfigurator.tsx:867
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr "To se nepodařilo odeslat. Vaše odpovědi zůstaly zachovány, zkuste to prosím znovu."
 
@@ -15633,7 +15633,7 @@ msgstr "To se nepovedlo. Vaši nahrávku jsme uložili."
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Tato nahrávka je na odeslání příliš dlouhá. Nahrajte kratší poznámku."
 
-#: src/components/pricing/PricingConfigurator.tsx:828
+#: src/components/pricing/PricingConfigurator.tsx:825
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "K tomu je potřeba placený tarif. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas s týmem dembrane. Před hovorem si vaše odpovědi projdeme, abychom přišli s nabídkou na míru."
 
@@ -15849,7 +15849,7 @@ msgstr "Obrazovka průvodce pro hostitele ukazuje kód pro zapojení. Pro její 
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
-#: src/components/pricing/PricingConfigurator.tsx:957
+#: src/components/pricing/PricingConfigurator.tsx:954
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr "Pozvánku máte ve své schránce. Před schůzkou si přečteme vaše odpovědi a připravíme návrh nabídky. Máte mezitím nějaké dotazy? Obraťte se na"
 
@@ -15976,7 +15976,7 @@ msgstr "Stránka, na kterou tato odpověď odkazuje."
 msgid "The participant flow has clearer microphone checks."
 msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 
-#: src/components/pricing/PricingConfigurator.tsx:747
+#: src/components/pricing/PricingConfigurator.tsx:744
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
@@ -16445,7 +16445,7 @@ msgstr "Tímto se školení označí jako zrušené. Později ho můžete ze ste
 msgid "This month"
 msgstr "This month"
 
-#: src/components/pricing/PricingConfigurator.tsx:762
+#: src/components/pricing/PricingConfigurator.tsx:759
 msgid "This month's AI budget is used up."
 msgstr "Rozpočet na AI pro tento měsíc je vyčerpán."
 
@@ -17585,7 +17585,7 @@ msgstr "Aktualizují se štítky projektu"
 #~ msgid "Upgrade"
 #~ msgstr "Upgradovat"
 
-#: src/components/pricing/PricingConfigurator.tsx:821
+#: src/components/pricing/PricingConfigurator.tsx:818
 msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Přejděte na vyšší tarif a získejte každý měsíc víc AI. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas na hovor s týmem dembrane. Vaše odpovědi si předem projdeme, abychom pro vás připravili nabídku na míru."
 
@@ -18395,7 +18395,7 @@ msgstr "Co se odešle"
 msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
-#: src/components/pricing/PricingConfigurator.tsx:1102
+#: src/components/pricing/PricingConfigurator.tsx:1099
 msgid "What is it?"
 msgstr "O co jde?"
 
@@ -18852,7 +18852,7 @@ msgstr "Nejste členem žádné organizace, takže zatím není co připojit."
 msgid "You are not in an organisation yet."
 msgstr "Zatím nejste v žádné organizaci."
 
-#: src/components/pricing/PricingConfigurator.tsx:815
+#: src/components/pricing/PricingConfigurator.tsx:812
 msgid "You are on the free plan."
 msgstr "Využíváte tarif Free."
 
@@ -19092,7 +19092,7 @@ msgstr "You seem to be offline, please check your internet connection"
 msgid "You stopped this run."
 msgstr "Tento běh jste zastavili."
 
-#: src/components/pricing/PricingConfigurator.tsx:813
+#: src/components/pricing/PricingConfigurator.tsx:810
 msgid "You were trying to {action}."
 msgstr "Pokusili jste se o: {action}."
 
@@ -19176,7 +19176,7 @@ msgstr "Zatím nejste v žádné organizaci. Vytvořte pracovní prostor a zalo�
 msgid "You're not part of any organisation right now."
 msgstr "You're not part of any organisation right now."
 
-#: src/components/pricing/PricingConfigurator.tsx:808
+#: src/components/pricing/PricingConfigurator.tsx:805
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Používáte bezplatný tarif Free, který zahrnuje měsíční příděl AI."
 
@@ -19263,11 +19263,11 @@ msgstr "Your approval helps us understand what you really think!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Váš prohlížeč blokuje mikrofon. Povolte k němu přístup a zkuste to znovu."
 
-#: src/components/pricing/PricingConfigurator.tsx:712
+#: src/components/pricing/PricingConfigurator.tsx:711
 msgid "Your call is booked: {bookedTime}."
 msgstr "Váš hovor je zarezervován: {bookedTime}."
 
-#: src/components/pricing/PricingConfigurator.tsx:714
+#: src/components/pricing/PricingConfigurator.tsx:713
 msgid "Your call is booked."
 msgstr "Váš hovor je zarezervován."
 
@@ -19322,7 +19322,7 @@ msgstr "Vaše zpětná vazba i tato odpověď dorazí týmu dembrane."
 #~ msgid "Your free plan includes one report. Upgrade to create more."
 #~ msgstr "Váš bezplatný tarif zahrnuje jednu zprávu. Přejděte na vyšší tarif a vytvářejte další."
 
-#: src/components/pricing/PricingConfigurator.tsx:744
+#: src/components/pricing/PricingConfigurator.tsx:741
 msgid "Your free transcription allowance is used up."
 msgstr "Váš bezplatný limit pro přepis je vyčerpaný."
 
@@ -19441,7 +19441,7 @@ msgstr "Váš tarif se neobnoví. Přístup vám zůstane až do konce období."
 msgid "Your recording, {0}"
 msgstr "Vaše nahrávka, {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:717
+#: src/components/pricing/PricingConfigurator.tsx:716
 msgid "Your request is in."
 msgstr "Vaše žádost byla přijata."
 
