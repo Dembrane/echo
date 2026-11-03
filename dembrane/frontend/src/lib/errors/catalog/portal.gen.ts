@@ -7,7 +7,6 @@ export const portal = {
   "portal.ai_unavailable": {
     action: "none",
     detail: "Not available right now.",
-    description:
-      "Verify or Explore was refused because the project's free AI budget is used up; participants are not told why.",
+    description: "Verify or Explore is not available for this project right now.",
   },
 } as const satisfies Codes<"portal">;

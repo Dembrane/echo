@@ -23,16 +23,22 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		opened,
 		wallKey,
 		requiredTier,
+		aiAction,
+		aiUsedUp,
 	}: {
 		opened: boolean;
 		wallKey: string;
 		requiredTier: string | null;
+		aiAction?: string;
+		aiUsedUp?: boolean;
 	}) =>
 		opened ? (
 			<div
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={String(requiredTier)}
+				data-action={aiAction ?? ""}
+				data-used-up={String(aiUsedUp)}
 			/>
 		) : null,
 }));
@@ -44,31 +50,31 @@ const answer = (status: number, body: unknown) =>
 	});
 
 const NOT_FREE = {
+	ai: null,
 	audio_seconds: null,
-	chats: null,
 	free: false,
-	maps: null,
 	period_start: null,
-	popcorn_analyses: null,
 	projects: null,
-	reports: null,
 	resets_at: null,
 	scope: null,
 };
 
 const snapshot = (overrides: Record<string, unknown> = {}) => ({
+	ai: { exhausted: false, percent_used: 40, unlimited: false },
 	audio_seconds: { limit: 18000, used: 7800 },
-	chats: { limit: 2, used: 1 },
 	free: true,
-	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_analyses: { limit: 12, used: 3 },
 	projects: { limit: 1, used: 1 },
-	reports: { limit: 1, used: 0 },
 	resets_at: "2026-11-01T00:00:00Z",
 	scope: "organisation",
 	...overrides,
 });
+
+const isRed = (key: string) =>
+	within(meter(key))
+		.getByRole("progressbar")
+		.closest(".mantine-Progress-root")
+		?.innerHTML.includes("red");
 
 beforeAll(() => {
 	i18n.load("en", {});
@@ -179,30 +185,161 @@ it("rounds 160 s of audio as the usage card does", async () => {
 	).toBe("2 min of 2 min");
 });
 
-it("shows counted meters as n of m with a progress bar each", async () => {
+it("shows audio, AI this month and projects, each with a progress bar", async () => {
 	fetchMock.mockResolvedValue(answer(200, snapshot()));
 	renderCard();
 	await screen.findByTestId("free-allowance-card");
 	const value = (key: string) =>
 		within(meter(key)).getByTestId("free-allowance-value").textContent;
-	expect(value("chats")).toBe("1 of 2");
-	expect(value("reports")).toBe("0 of 1");
-	expect(value("maps")).toBe("0 of 1");
-	expect(value("popcorn_analyses")).toBe("3 of 12");
-	expect(
-		within(meter("popcorn_analyses")).getByText("Popcorn analyses"),
-	).toBeTruthy();
 	expect(value("projects")).toBe("1 of 1");
-	for (const key of [
-		"audio_seconds",
-		"chats",
-		"reports",
-		"maps",
-		"popcorn_analyses",
-		"projects",
-	]) {
+	expect(value("ai")).toBe("40% used");
+	expect(within(meter("ai")).getByText("AI this month")).toBeTruthy();
+	for (const key of ["audio_seconds", "ai", "projects"]) {
 		expect(within(meter(key)).getByRole("progressbar")).toBeTruthy();
 	}
+});
+
+it("no longer shows chats, reports, maps or popcorn, even if sent", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				chats: { limit: 2, used: 2 },
+				maps: { limit: 1, used: 1 },
+				popcorn_analyses: { limit: 12, used: 12 },
+				reports: { limit: 1, used: 1 },
+			}),
+		),
+	);
+	renderCard();
+	const card = await screen.findByTestId("free-allowance-card");
+	for (const key of ["chats", "reports", "maps", "popcorn_analyses"]) {
+		expect(screen.queryByTestId(`free-allowance-${key}`)).toBeNull();
+	}
+	for (const label of ["Chats", "Reports", "Maps", "Popcorn analyses"]) {
+		expect(within(card).queryByText(label)).toBeNull();
+	}
+	expect(screen.queryByTestId("free-allowance-upgrade")).toBeNull();
+});
+
+it("shows 82% used of this month's AI with the bar at 82", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: false, percent_used: 82, unlimited: false },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("ai")).getByTestId("free-allowance-value").textContent,
+	).toBe("82% used");
+	expect(
+		within(meter("ai")).getByRole("progressbar").getAttribute("aria-valuenow"),
+	).toBe("82");
+	expect(isRed("ai")).toBe(false);
+});
+
+it("shows used-up AI as 100% in the full style", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: true, percent_used: 100, unlimited: false },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("ai")).getByTestId("free-allowance-value").textContent,
+	).toBe("100% used");
+	expect(
+		within(meter("ai")).getByRole("progressbar").getAttribute("aria-valuenow"),
+	).toBe("100");
+	expect(isRed("ai")).toBe(true);
+});
+
+it("never shows more than 100% of the AI", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: true, percent_used: 137, unlimited: false },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(
+		within(meter("ai")).getByTestId("free-allowance-value").textContent,
+	).toBe("100% used");
+	expect(
+		within(meter("ai")).getByRole("progressbar").getAttribute("aria-valuenow"),
+	).toBe("100");
+});
+
+it("hides the AI row and the AI banner for an unlimited account", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: false, percent_used: 0, unlimited: true },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(screen.queryByTestId("free-allowance-ai")).toBeNull();
+	expect(screen.queryByText("AI this month")).toBeNull();
+	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
+});
+
+it("hides the AI row when the snapshot has no AI meter", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot({ ai: null })));
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(screen.queryByTestId("free-allowance-ai")).toBeNull();
+});
+
+it("shows no AI banner below 80%", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: false, percent_used: 79, unlimited: false },
+			}),
+		),
+	);
+	renderCard();
+	await screen.findByTestId("free-allowance-card");
+	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
+});
+
+it("carries the AI banner from 80%, opening the AI wall with no named action", async () => {
+	fetchMock.mockResolvedValue(
+		answer(
+			200,
+			snapshot({
+				ai: { exhausted: false, percent_used: 82, unlimited: false },
+			}),
+		),
+	);
+	renderCard();
+	const banner = await screen.findByTestId("free-allowance-banner");
+	expect(
+		within(screen.getByTestId("free-allowance-card")).getByTestId(
+			"free-allowance-banner",
+		),
+	).toBe(banner);
+	expect(banner.textContent).toContain("You've used 82% of this month's AI.");
+	fireEvent.click(screen.getByTestId("free-allowance-banner-upgrade"));
+	const modal = screen.getByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("");
+	expect(modal.dataset.usedUp).toBe("false");
 });
 
 it("says the allowance is shared across the organisation", async () => {
@@ -224,22 +361,18 @@ it("says a workspace on its own free account uses it alone", async () => {
 	).toBeNull();
 });
 
-it("shows the reset moment in the viewer's local date and time", async () => {
+it("shows the reset as the UTC day, the same date the AI banner names", async () => {
 	fetchMock.mockResolvedValue(answer(200, snapshot()));
 	renderCard();
 	await screen.findByTestId("free-allowance-card");
-	const local = new Date("2026-11-01T00:00:00Z").toLocaleString("en", {
-		dateStyle: "medium",
-		timeStyle: "short",
-	});
 	expect(screen.getByTestId("free-allowance-resets").textContent).toBe(
-		`Resets on ${local}`,
+		"Resets on 1 November 2026",
 	);
 });
 
 it("offers the upgrade action when a meter is at its limit", async () => {
 	fetchMock.mockResolvedValue(
-		answer(200, snapshot({ chats: { limit: 2, used: 2 } })),
+		answer(200, snapshot({ audio_seconds: { limit: 18000, used: 18000 } })),
 	);
 	renderCard();
 	await screen.findByTestId("free-allowance-card");
@@ -343,12 +476,8 @@ it("formats the reset moment in the app language, not the browser's", async () =
 		fetchMock.mockResolvedValue(answer(200, snapshot()));
 		renderCard();
 		await screen.findByTestId("free-allowance-card");
-		const nl = new Date("2026-11-01T00:00:00Z").toLocaleString("nl-NL", {
-			dateStyle: "medium",
-			timeStyle: "short",
-		});
 		expect(screen.getByTestId("free-allowance-resets").textContent).toContain(
-			nl,
+			"1 november 2026",
 		);
 	} finally {
 		i18n.activate("en");

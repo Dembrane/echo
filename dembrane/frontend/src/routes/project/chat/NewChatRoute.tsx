@@ -574,7 +574,11 @@ export const NewChatRoute = () => {
 							<Trans>Where would you like to start?</Trans>
 						</Title>
 						{allowanceApplies && (
-							<FreeAllowanceBanner workspaceId={workspaceId} feature="chats" />
+							<FreeAllowanceBanner
+								workspaceId={workspaceId}
+								feature="ai"
+								action="chat"
+							/>
 						)}
 						<ChatTemplatesMenuConnected
 							chatMode={modeToStart}

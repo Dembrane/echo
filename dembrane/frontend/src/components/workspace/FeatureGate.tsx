@@ -12,7 +12,12 @@ import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { variantFor, type WallKey, wallPopoverLine } from "./gateWalls";
+import {
+	type AiAction,
+	variantFor,
+	type WallKey,
+	wallPopoverLine,
+} from "./gateWalls";
 import { useGateViewed, usePricingGateEmitter } from "./pricingGateEvents";
 
 /**
@@ -196,6 +201,12 @@ interface UpgradeModalProps {
 	projectId?: string;
 	/** The org the upgrade is for, when it is not the active workspace's. */
 	orgId?: string;
+	/** The refused AI action, named in the opening on the ai_budget wall. */
+	aiAction?: AiAction;
+	/** When the AI budget resets; null when the refusal carried no date. */
+	resetsAt?: string | null;
+	/** False opens the ai_budget wall on a neutral opening (budget not spent yet). */
+	aiUsedUp?: boolean;
 }
 
 /**
@@ -207,6 +218,8 @@ interface UpgradeModalProps {
  * met renders nothing and emits nothing.
  */
 export function UpgradeModal({
+	aiAction,
+	aiUsedUp = true,
 	canRequestUpgrade,
 	currentTier,
 	entry = "modal_direct",
@@ -215,6 +228,7 @@ export function UpgradeModal({
 	orgId,
 	projectId,
 	requiredTier,
+	resetsAt,
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
@@ -262,6 +276,7 @@ export function UpgradeModal({
 
 	return (
 		<PricingConfigurator
+			aiAction={aiAction}
 			entry={entry}
 			locale={i18n.locale}
 			mount="app"
@@ -270,7 +285,12 @@ export function UpgradeModal({
 			opened={opened}
 			orgId={orgId ?? workspace?.org_id}
 			projectId={projectId}
-			variant={variantFor(wallKey)}
+			resetsAt={resetsAt}
+			variant={
+				wallKey === "ai_budget" && !aiUsedUp
+					? "ai_allowance"
+					: variantFor(wallKey)
+			}
 			wallKey={wallKey}
 			workspaceId={workspaceId || workspace?.id}
 		/>

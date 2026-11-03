@@ -1,6 +1,7 @@
 import {
 	Buildings,
 	ChartBar,
+	Coins,
 	CreditCard,
 	Gauge,
 	GraduationCap,
@@ -27,6 +28,7 @@ export const AdminHomeView = () => {
 				label="Free tier limits"
 				icon={Gauge}
 			/>
+			<NavItem to="/admin/ai-costs" label="AI costs" icon={Coins} />
 			<NavItem
 				to="/admin/response-feedback"
 				label="Response feedback"

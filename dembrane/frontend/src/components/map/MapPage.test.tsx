@@ -69,8 +69,14 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 }));
 
 vi.mock("@/components/workspace/FreeAllowanceBanner", () => ({
-	FreeAllowanceBanner: ({ feature }: { feature: string }) => (
-		<div data-testid={`allowance-banner-${feature}`} />
+	FreeAllowanceBanner: ({
+		feature,
+		action,
+	}: {
+		feature: string;
+		action?: string;
+	}) => (
+		<div data-testid={`allowance-banner-${feature}`} data-action={action} />
 	),
 }));
 
@@ -240,7 +246,7 @@ describe("MapPage free tier", () => {
 		);
 	};
 
-	it("shows no map banner while the first map is generating", async () => {
+	it("carries the AI banner before the first map exists", async () => {
 		renderLive(
 			{
 				attempt: { id: "a1", progress: {}, status: "extracting" },
@@ -250,13 +256,15 @@ describe("MapPage free tier", () => {
 			() => Promise.resolve(null),
 		);
 		expect(await screen.findByText("Reading conversations")).toBeTruthy();
-		expect(screen.queryByTestId("allowance-banner-maps")).toBeNull();
+		expect(screen.getByTestId("allowance-banner-ai").dataset.action).toBe(
+			"map",
+		);
 	});
 
-	it("shows the map banner once a map exists", async () => {
+	it("carries the AI banner once a map exists", async () => {
 		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
 			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
 		);
-		expect(await screen.findByTestId("allowance-banner-maps")).toBeTruthy();
+		expect(await screen.findByTestId("allowance-banner-ai")).toBeTruthy();
 	});
 });

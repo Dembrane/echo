@@ -283,6 +283,8 @@ interface ParticipantProject extends Project {
 	organiser_name: string | null;
 	// Free tier: false when the portal may not start a recording.
 	is_taking_recordings?: boolean;
+	// Free tier: false when the account's AI budget is used up (Verify, Explore).
+	is_ai_available?: boolean;
 	// Recorded seconds after which the portal stops itself; null is no limit.
 	conversation_limit_seconds?: number | null;
 }
@@ -319,6 +321,7 @@ interface ProjectChat {
 	chat_mode: "overview" | "deep_dive" | "agentic" | null;
 	date_created: string | null;
 	date_updated: string | null;
+	// removed in plan 3 task 4
 	/** Free accounts only: this chat's turn meter. */
 	free_turns?: { limit: number; used: number; frozen: boolean } | null;
 	id: string;

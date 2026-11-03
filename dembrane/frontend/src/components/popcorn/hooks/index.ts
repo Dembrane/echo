@@ -131,6 +131,7 @@ export type PopcornCounts = {
 	run?: number | null;
 };
 
+// removed in plan 3 task 4
 // A free account's popcorn analyses this month; null when unlimited.
 export type FreePopcorn = { used: number; limit: number; exhausted: boolean };
 
@@ -147,6 +148,9 @@ export type PopcornDetail = {
 	public_token?: string | null;
 	loop?: PopcornLoop | null;
 	counts: PopcornCounts;
+	// A free account's AI budget for the host; null when it does not apply.
+	ai_budget?: { exhausted: boolean } | null;
+	// removed in plan 3 task 4
 	free_popcorn?: FreePopcorn | null;
 };
 

@@ -7,15 +7,17 @@ import { readApiError } from "./errors/read";
 // UpgradeModal key on this.
 
 export type FreeTierLimit =
-	| "chats"
 	| "chat_turns"
-	| "report"
 	| "workspaces"
 	| "projects"
 	| "organisations"
 	| "audio_month"
 	| "audio_conversation"
 	| "recording_project"
+	| "ai_budget"
+	// removed in plan 3 task 4
+	| "chats"
+	| "report"
 	| "map"
 	| "popcorn";
 
@@ -23,18 +25,21 @@ export type FreeTierLimit =
 export type RecordingRefusal =
 	| "audio_month"
 	| "audio_conversation"
-	| "recording_project";
+	| "recording_project"
+	| "ai_budget";
 
 const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
-	"chats",
 	"chat_turns",
-	"report",
 	"workspaces",
 	"projects",
 	"organisations",
 	"audio_month",
 	"audio_conversation",
 	"recording_project",
+	"ai_budget",
+	// removed in plan 3 task 4
+	"chats",
+	"report",
 	"map",
 	"popcorn",
 ]);
@@ -43,8 +48,10 @@ const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
 	"audio_month",
 	"audio_conversation",
 	"recording_project",
+	"ai_budget",
 ]);
 
+// removed in plan 3 task 4
 /** A chat's turn meter: a frozen chat (opened before the free limits) takes no more turns. */
 export function chatTurnGate(
 	t: { limit: number; used: number; frozen: boolean } | null | undefined,
@@ -53,6 +60,7 @@ export function chatTurnGate(
 	return { atLimit: t.frozen || t.used >= t.limit, frozen: t.frozen };
 }
 
+// removed in plan 3 task 4
 /** True when a free account has used this month's meter up. */
 export function allowanceSpent(
 	s: FreeAllowance | undefined,
@@ -62,6 +70,7 @@ export function allowanceSpent(
 	return !!meter && meter.used >= meter.limit;
 }
 
+// removed in plan 3 task 4
 /** The monthly free report line, with the live limit when the snapshot has it. */
 export function freeReportsLine(s: FreeAllowance | undefined): string {
 	const limit = s?.free ? s.reports?.limit : undefined;
@@ -90,6 +99,24 @@ export function formatResetDate(
 	const d = new Date(iso);
 	if (Number.isNaN(d.getTime())) return null;
 	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
+
+/** The reset day (UTC, the budget resets at 00:00 UTC) in the reader's locale; null when missing or unreadable. */
+export function formatResetDay(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	// English reads day-first, as on the audience screen.
+	const tag = locale === "en" || locale.startsWith("en-") ? "en-GB" : locale;
+	return new Intl.DateTimeFormat(tag, {
+		day: "numeric",
+		month: "long",
+		timeZone: "UTC",
+		year: "numeric",
+	}).format(d);
 }
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
@@ -125,6 +152,18 @@ export function freeLimitDetails(
 	return detail && typeof detail === "object" && !Array.isArray(detail)
 		? (detail as Record<string, unknown>)
 		: null;
+}
+
+/** The budget figures of an ai_budget 402 (null when absent), or null for anything else. */
+export function aiBudgetDetails(
+	err: unknown,
+): { percent: number | null; resetsAt: string | null } | null {
+	if (isFreeTierLimitError(err) !== "ai_budget") return null;
+	const d = freeLimitDetails(err);
+	return {
+		percent: typeof d?.percent === "number" ? d.percent : null,
+		resetsAt: typeof d?.resets_at === "string" ? d.resets_at : null,
+	};
 }
 
 /** The recording reason of a free-limit 402, or null for anything else. */

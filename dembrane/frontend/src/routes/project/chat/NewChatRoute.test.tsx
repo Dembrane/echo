@@ -96,6 +96,7 @@ const answer = (body: unknown) =>
 	});
 
 const SPENT = {
+	ai: { exhausted: true, percent_used: 100, unlimited: false },
 	audio_seconds: { limit: 18000, used: 0 },
 	chats: { limit: 2, used: 2 },
 	free: true,

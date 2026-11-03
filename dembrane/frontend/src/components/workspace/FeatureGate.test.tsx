@@ -8,7 +8,14 @@ import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
 import { FeatureGate, UpgradeModal } from "./FeatureGate";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { type WallKey, wallActionLine, wallPopoverLine } from "./gateWalls";
+import {
+	type AiAction,
+	aiActionLine,
+	variantFor,
+	type WallKey,
+	wallActionLine,
+	wallPopoverLine,
+} from "./gateWalls";
 
 const capture = vi.fn();
 
@@ -83,19 +90,28 @@ const wrap = (node: React.ReactNode) =>
 	);
 
 const renderModal = ({
+	aiAction,
+	aiUsedUp,
 	currentTier = "free" as Tier,
 	entry = "modal_direct" as "modal_direct" | "popover_link",
 	requiredTier = "changemaker" as Tier,
+	resetsAt,
 	wallKey,
 }: {
+	aiAction?: AiAction;
+	aiUsedUp?: boolean;
 	currentTier?: Tier;
 	entry?: "modal_direct" | "popover_link";
 	requiredTier?: Tier;
+	resetsAt?: string | null;
 	wallKey: WallKey;
 }) =>
 	wrap(
 		<UpgradeModal
+			aiAction={aiAction}
+			aiUsedUp={aiUsedUp}
 			canRequestUpgrade
+			resetsAt={resetsAt}
 			currentTier={currentTier}
 			entry={entry}
 			onClose={() => {}}
@@ -182,6 +198,7 @@ it("keeps every other wall byte for byte the same as every other", () => {
 
 it("carries an attempt for every wall, and none for the page that is not one", () => {
 	const walls: WallKey[] = [
+		"ai_budget",
 		"chat_cap",
 		"chat_turn_cap",
 		"chat_voice_cap",
@@ -245,10 +262,95 @@ it("states the free content limits without a number or an em dash", () => {
 	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
 });
 
+// The AI budget wall: one popup for every AI action, naming the action and the reset date.
+
+it("names the refused action and the reset date on the ai_budget wall", () => {
+	const resetsAt = "2026-12-01T00:00:00Z";
+	renderModal({ aiAction: "report", resetsAt, wallKey: "ai_budget" });
+	const text = modalText();
+
+	expect(text).toContain("This month's AI budget is used up.");
+	expect(text).toContain(
+		"AI features and new recordings are paused until 1 December 2026. Upgrade to keep going now.",
+	);
+	expect(text).toContain("You were trying to create a report.");
+	// The budget block sits above the opening, like the transcription cap.
+	expect(text.indexOf("This month's AI budget is used up.")).toBeLessThan(
+		text.indexOf("You were trying to"),
+	);
+	expect(text).not.toContain("Your free transcription allowance is used up.");
+	expect(text).not.toContain("\u2014");
+});
+
+it("says next month when the ai_budget refusal carries no reset date", () => {
+	renderModal({ aiAction: "chat", resetsAt: null, wallKey: "ai_budget" });
+	const text = modalText();
+	expect(text).toContain(
+		"AI features and new recordings are paused until next month. Upgrade to keep going now.",
+	);
+	expect(text).toContain("You were trying to ask in chat.");
+});
+
+it("opens neutrally while the budget still has room: nothing refused, nothing used up", () => {
+	renderModal({
+		aiUsedUp: false,
+		resetsAt: "2026-12-01T00:00:00Z",
+		wallKey: "ai_budget",
+	});
+	const text = modalText();
+	expect(screen.getByTestId("pricing-configurator-opening").textContent).toBe(
+		"You're on the free plan, which includes a monthly AI allowance.",
+	);
+	expect(text).toContain("Upgrade for more AI every month.");
+	expect(text).not.toContain("You were trying to");
+	expect(text).not.toContain("requires a paid plan");
+	expect(text).not.toContain("used up");
+	expect(text).not.toContain("paused until");
+	expect(text).not.toContain("\u2014");
+	expect(screen.queryByTestId("pricing-configurator-ai-budget")).toBeNull();
+});
+
+it("ignores a passed action on the not-used-up opening", () => {
+	renderModal({ aiAction: "chat", aiUsedUp: false, wallKey: "ai_budget" });
+	const text = modalText();
+	expect(text).not.toContain("You were trying to");
+	expect(text).not.toContain("requires a paid plan");
+});
+
+it("keeps the ai_budget block off every other wall", () => {
+	renderModal({ wallKey: "custom_logo" });
+	expect(modalText()).not.toContain("This month's AI budget is used up.");
+});
+
+it("maps each wall to its variant and gives ai_budget no popover", () => {
+	expect(variantFor("ai_budget")).toBe("ai_budget");
+	expect(variantFor("transcription_cap")).toBe("transcription_cap");
+	expect(variantFor("custom_logo")).toBe("default");
+	expect(wallPopoverLine("ai_budget")).toBe("");
+});
+
+it("names every AI action as a lowercase phrase", () => {
+	const lines: [AiAction, string][] = [
+		["chat", "ask in chat"],
+		["assistant", "ask the assistant"],
+		["voice", "use your voice in chat"],
+		["report", "create a report"],
+		["map", "generate a map"],
+		["analysis", "run an analysis"],
+		["popcorn", "keep analysing with popcorn"],
+		["canvas", "refresh the canvas"],
+		["retranscribe", "retranscribe a conversation"],
+	];
+	for (const [action, line] of lines) {
+		expect(aiActionLine(action)).toBe(line);
+	}
+});
+
 // 3. No tier name anywhere on the gate path, and no price table.
 
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
+		"ai_budget",
 		"chat_cap",
 		"chat_turn_cap",
 		"chat_voice_cap",

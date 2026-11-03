@@ -216,6 +216,17 @@ run("staff AI budget and costs", () => {
       expect((await aiBudgetForProject(database.db, s.project, NOW))?.limitMicroEur).toBe(
         20_000_000,
       );
+      // The account modal reads the override from the billing rollup.
+      const rollup = (await (
+        await call("staff", "GET", "/api/v2/admin/billing-rollup")
+      ).json()) as {
+        accounts: { billing_account_id: string; ai_budget: unknown }[];
+      };
+      expect(rollup.accounts.find((a) => a.billing_account_id === s.accountId)?.ai_budget).toEqual({
+        amount_micro_eur: 20_000_000,
+        unlimited: false,
+        until,
+      });
 
       // Unlimited ignores the amount.
       const open = await call("staff", "PUT", path, {

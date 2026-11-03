@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
+	onRecordingStop: undefined as ((r: string) => void) | undefined,
 	stopRecording: vi.fn(),
 	taking: false as boolean | undefined,
 }));
@@ -36,7 +37,12 @@ vi.mock("./hooks", () => ({
 		data: { id: "p-1", is_taking_recordings: state.taking },
 		isLoading: false,
 	}),
-	useUploadConversationChunk: () => ({ mutateAsync: vi.fn() }),
+	useUploadConversationChunk: (options: {
+		onRecordingStop?: (r: string) => void;
+	}) => {
+		state.onRecordingStop = options.onRecordingStop;
+		return { mutateAsync: vi.fn() };
+	},
 }));
 vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 	default: (options: { onRecordingInterrupted?: () => void }) => {
@@ -192,4 +198,21 @@ it("stops recording and shows the interruption notice when the recorder reports 
 
 	expect(state.stopRecording).toHaveBeenCalledTimes(1);
 	expect(await screen.findByText("Recording interrupted")).toBeTruthy();
+});
+
+// The AI budget ran out mid-recording: the same wrap-up as the monthly audio limit.
+it("opens the account wrap-up when a chunk comes back with recording_stop ai_budget", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+
+	act(() => state.onRecordingStop?.("ai_budget"));
+
+	expect(state.stopRecording).toHaveBeenCalledTimes(1);
+	expect(
+		await screen.findByText(
+			"Recording has stopped for now. Everything you recorded is saved.",
+		),
+	).toBeTruthy();
 });

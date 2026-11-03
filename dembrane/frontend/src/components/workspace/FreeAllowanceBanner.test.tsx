@@ -21,16 +21,25 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		opened,
 		wallKey,
 		currentTier,
+		aiAction,
+		aiUsedUp,
+		resetsAt,
 	}: {
 		opened: boolean;
 		wallKey: string;
 		currentTier: string;
+		aiAction?: string;
+		aiUsedUp?: boolean;
+		resetsAt?: string | null;
 	}) =>
 		opened ? (
 			<div
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction ?? ""}
+				data-resets={resetsAt ?? ""}
+				data-used-up={String(aiUsedUp)}
 			/>
 		) : null,
 }));
@@ -42,26 +51,24 @@ const answer = (status: number, body: unknown) =>
 	});
 
 const NOT_FREE = {
+	ai: null,
 	audio_seconds: null,
-	chats: null,
 	free: false,
-	maps: null,
 	period_start: null,
-	popcorn_analyses: null,
 	projects: null,
-	reports: null,
 	resets_at: null,
 };
 
+const ai = (percent_used: number, exhausted = false, unlimited = false) => ({
+	ai: { exhausted, percent_used, unlimited },
+});
+
 const snapshot = (overrides: Record<string, unknown> = {}) => ({
+	...ai(0),
 	audio_seconds: { limit: 18000, used: 0 },
-	chats: { limit: 2, used: 0 },
 	free: true,
-	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_analyses: { limit: 12, used: 0 },
 	projects: { limit: 1, used: 1 },
-	reports: { limit: 1, used: 0 },
 	resets_at: "2026-11-01T00:00:00Z",
 	...overrides,
 });
@@ -93,7 +100,10 @@ afterEach(() => {
 	cleanup();
 });
 
-const renderBanner = (feature: "chats" | "reports" | "maps" | "audio") => {
+const renderBanner = (
+	feature: "ai" | "audio",
+	action?: "chat" | "report" | "map",
+) => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -103,7 +113,11 @@ const renderBanner = (feature: "chats" | "reports" | "maps" | "audio") => {
 				<QueryClientProvider client={client}>
 					<MemoryRouter>
 						<div data-testid="host">
-							<FreeAllowanceBanner workspaceId="ws-1" feature={feature} />
+							<FreeAllowanceBanner
+								workspaceId="ws-1"
+								feature={feature}
+								action={action}
+							/>
 						</div>
 					</MemoryRouter>
 				</QueryClientProvider>
@@ -125,109 +139,92 @@ const resetDate = new Date("2026-11-01T00:00:00Z").toLocaleString("en", {
 	timeStyle: "short",
 });
 
+// The AI budget resets at 00:00 UTC on the 1st, so the banner names the day only.
+const aiResetDay = "1 November 2026";
+
 it("renders nothing for a paid account", async () => {
 	fetchMock.mockResolvedValue(answer(200, NOT_FREE));
-	const client = renderBanner("reports");
+	const client = renderBanner("ai", "report");
 	await settled(client);
 	expect(screen.getByTestId("host").innerHTML).toBe("");
 });
 
-it("renders nothing while the report is unspent", async () => {
-	fetchMock.mockResolvedValue(answer(200, snapshot()));
-	const client = renderBanner("reports");
+it("renders nothing for a paid snapshot that still carries an exhausted AI meter", async () => {
+	fetchMock.mockResolvedValue(answer(200, { ...NOT_FREE, ...ai(100, true) }));
+	const client = renderBanner("ai", "chat");
 	await settled(client);
 	expect(screen.getByTestId("host").innerHTML).toBe("");
 });
 
-it("says the report is used and when it resets, and opens the wall", async () => {
-	fetchMock.mockResolvedValue(
-		answer(200, snapshot({ reports: { limit: 1, used: 1 } })),
-	);
-	renderBanner("reports");
+it("renders nothing at 79% of the AI", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(79))));
+	const client = renderBanner("ai", "chat");
+	await settled(client);
+	expect(screen.getByTestId("host").innerHTML).toBe("");
+});
+
+it("renders nothing for an unlimited account, even at 100%", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(100, true, true))));
+	const client = renderBanner("ai", "chat");
+	await settled(client);
+	expect(screen.getByTestId("host").innerHTML).toBe("");
+});
+
+it("renders nothing when the snapshot has no AI meter", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot({ ai: null })));
+	const client = renderBanner("ai", "chat");
+	await settled(client);
+	expect(screen.getByTestId("host").innerHTML).toBe("");
+});
+
+it("warns at exactly 80% that AI and new recordings stop, and opens the AI wall", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(80))));
+	renderBanner("ai", "chat");
 	const banner = await screen.findByTestId("free-allowance-banner");
 	expect(banner.textContent).toContain(
-		`You have used this month's free report. It resets on ${resetDate}.`,
+		`You've used 80% of this month's AI. When it runs out, AI features and new recordings stop until ${aiResetDay}.`,
 	);
+	expect(banner.textContent).toContain("recordings");
 	const button = screen.getByTestId("free-allowance-banner-upgrade");
 	expect(button.textContent).toBe("See upgrade options");
 	fireEvent.click(button);
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("report_cap");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	// Nothing was refused yet, so the wall names no action.
+	expect(modal.dataset.action).toBe("");
 	expect(modal.dataset.tier).toBe("free");
+	expect(modal.dataset.resets).toBe("2026-11-01T00:00:00Z");
+	// Not used up yet, so the popup must not say it is.
+	expect(modal.dataset.usedUp).toBe("false");
 });
 
-it("names the chat and map walls", async () => {
-	fetchMock.mockImplementation(async () =>
-		answer(
-			200,
-			snapshot({ chats: { limit: 2, used: 2 }, maps: { limit: 1, used: 1 } }),
-		),
+it("shows the live percentage between 80 and 99", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(99))));
+	renderBanner("ai", "map");
+	const banner = await screen.findByTestId("free-allowance-banner");
+	expect(banner.textContent).toContain("You've used 99% of this month's AI.");
+});
+
+it("says the month's AI is used up and paused until the reset day", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(100, true))));
+	renderBanner("ai", "report");
+	const banner = await screen.findByTestId("free-allowance-banner");
+	expect(banner.textContent).toContain(
+		`This month's AI is used up. AI features and new recordings are paused until ${aiResetDay}.`,
 	);
-	renderBanner("chats");
-	const chats = await screen.findByTestId("free-allowance-banner");
-	expect(chats.textContent).toContain(
-		`You have used this month's free chats. They reset on ${resetDate}.`,
-	);
+	expect(banner.textContent).not.toContain("You've used");
 	fireEvent.click(screen.getByTestId("free-allowance-banner-upgrade"));
-	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("chat_cap");
-	cleanup();
-
-	renderBanner("maps");
-	const maps = await screen.findByTestId("free-allowance-banner");
-	expect(maps.textContent).toContain(
-		`You have used this month's free map. Your current map stays here. It resets on ${resetDate}.`,
-	);
-	fireEvent.click(screen.getByTestId("free-allowance-banner-upgrade"));
-	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("map_cap");
+	const modal = screen.getByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("report");
+	expect(modal.dataset.usedUp).toBe("true");
 });
 
-it("states the live limit when staff allow more than one", async () => {
-	fetchMock.mockImplementation(async () =>
-		answer(
-			200,
-			snapshot({
-				maps: { limit: 3, used: 3 },
-				reports: { limit: 2, used: 2 },
-			}),
-		),
-	);
-	renderBanner("reports");
-	const reports = await screen.findByTestId("free-allowance-banner");
-	expect(reports.textContent).toContain(
-		`You have used this month's 2 free reports. They reset on ${resetDate}.`,
-	);
-	cleanup();
-
-	renderBanner("maps");
-	const maps = await screen.findByTestId("free-allowance-banner");
-	expect(maps.textContent).toContain(
-		`You have used this month's 3 free maps. Your current maps stay here. They reset on ${resetDate}.`,
-	);
-});
-
-it("states no number when staff set the limit to 0", async () => {
-	fetchMock.mockImplementation(async () =>
-		answer(
-			200,
-			snapshot({
-				maps: { limit: 0, used: 0 },
-				reports: { limit: 0, used: 0 },
-			}),
-		),
-	);
-	renderBanner("reports");
-	const reports = await screen.findByTestId("free-allowance-banner");
-	expect(reports.textContent).toContain(
-		`You have used this month's free reports. They reset on ${resetDate}.`,
-	);
-	expect(reports.textContent).not.toMatch(/\b0\b/);
-	cleanup();
-
-	renderBanner("maps");
-	const maps = await screen.findByTestId("free-allowance-banner");
-	expect(maps.textContent).toContain(
-		`You have used this month's free maps. Your current maps stay here. They reset on ${resetDate}.`,
-	);
+it("reads exhausted as used up whatever the percentage says", async () => {
+	fetchMock.mockResolvedValue(answer(200, snapshot(ai(42, true))));
+	renderBanner("ai", "map");
+	const banner = await screen.findByTestId("free-allowance-banner");
+	expect(banner.textContent).toContain("This month's AI is used up.");
 });
 
 it("says the month's recording time is used and when it resets", async () => {

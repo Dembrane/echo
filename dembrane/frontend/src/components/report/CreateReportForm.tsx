@@ -171,7 +171,11 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	return (
 		<Stack maw="540px" className="pt-4">
 			{workspace?.id && allowanceApplies && (
-				<FreeAllowanceBanner workspaceId={workspace.id} feature="reports" />
+				<FreeAllowanceBanner
+					workspaceId={workspace.id}
+					feature="ai"
+					action="report"
+				/>
 			)}
 			{is402ReportError && !isAtReportLimit && (
 				<Alert title={t`Report limit reached`} color="primary" variant="light">

@@ -6,12 +6,9 @@ export type FreeLimitKey =
 	| "audio_seconds_month"
 	| "audio_seconds_conversation"
 	| "projects"
-	| "chats_month"
-	| "chat_turns_per_chat"
-	| "reports_month"
-	| "maps_month"
-	| "popcorn_analyses_month"
-	| "popcorn_cadence_minutes";
+	| "popcorn_cadence_minutes"
+	| "ai_budget_micro_eur"
+	| "ai_budget_enforce";
 
 export interface FreeLimit {
 	key: FreeLimitKey;

@@ -24,19 +24,26 @@ export type WallKey =
 	 * `surface="modal"`.
 	 */
 	| "billing_page"
+	/** The monthly AI budget is used up; one wall for every AI action. */
+	| "ai_budget"
+	// removed in plan 3 task 4
 	| "chat_cap"
+	// removed in plan 3 task 4
 	| "chat_turn_cap"
 	| "chat_voice_cap"
 	| "custom_logo"
 	| "event_cta"
 	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
 	| "free_allowance"
+	// removed in plan 3 task 4
 	| "map_cap"
 	| "org_cap"
+	// removed in plan 3 task 4
 	| "popcorn_cap"
 	| "private_workspace"
 	| "project_cap"
 	| "recording_project"
+	// removed in plan 3 task 4
 	| "report_cap"
 	| "transcription_cap"
 	| "transcripts_view"
@@ -62,8 +69,39 @@ export function isLockedDataWall(wall: WallKey): boolean {
 }
 
 /** The variant the configurator renders for this wall. */
-export function variantFor(wall: WallKey): "default" | "transcription_cap" {
+export function variantFor(
+	wall: WallKey,
+): "default" | "transcription_cap" | "ai_budget" {
+	if (wall === "ai_budget") return "ai_budget";
 	return isLockedDataWall(wall) ? "transcription_cap" : "default";
+}
+
+/** The AI action a free account was refused when the budget ran out. */
+export type AiAction =
+	| "chat"
+	| "assistant"
+	| "voice"
+	| "report"
+	| "map"
+	| "analysis"
+	| "popcorn"
+	| "canvas"
+	| "retranscribe";
+
+/** The opening's phrase for the refused AI action, read as "You were trying to {action}." */
+export function aiActionLine(action: AiAction): string {
+	const actions: Record<AiAction, string> = {
+		analysis: t`run an analysis`,
+		assistant: t`ask the assistant`,
+		canvas: t`refresh the canvas`,
+		chat: t`ask in chat`,
+		map: t`generate a map`,
+		popcorn: t`keep analysing with popcorn`,
+		report: t`create a report`,
+		retranscribe: t`retranscribe a conversation`,
+		voice: t`use your voice in chat`,
+	};
+	return actions[action] ?? "";
 }
 
 /**
@@ -85,6 +123,8 @@ export function variantFor(wall: WallKey): "default" | "transcription_cap" {
  */
 export function wallPopoverLine(wall: WallKey): string {
 	const lines: Record<WallKey, string> = {
+		// Opens the popup directly.
+		ai_budget: "",
 		billing_page: "",
 		// Both chat walls read the same line: it covers chats and turns.
 		chat_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
@@ -131,6 +171,8 @@ export function wallPopoverLine(wall: WallKey): string {
 export function wallActionLine(wall: WallKey | string | undefined): string {
 	if (!wall) return "";
 	const actions: Record<WallKey, string> = {
+		// Fallback only: AiBudgetWall names the refused action through aiActionLine.
+		ai_budget: t`use AI features`,
 		billing_page: "",
 		chat_cap: t`ask more in chat`,
 		chat_turn_cap: t`ask more in chat`,

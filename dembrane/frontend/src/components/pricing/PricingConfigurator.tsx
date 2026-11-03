@@ -18,7 +18,12 @@ import {
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { wallActionLine } from "@/components/workspace/gateWalls";
+import {
+	type AiAction,
+	aiActionLine,
+	wallActionLine,
+} from "@/components/workspace/gateWalls";
+import { formatResetDay } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { buildBookingPrefill } from "./bookingPrefill";
 import {
@@ -97,9 +102,13 @@ export type PricingConfiguratorProps = {
 	onClose: () => void;
 	/** Which wall started this session. It rides on every event. */
 	wallKey?: string;
-	/** `transcription_cap` puts the cap line above the free plan block. It is
-	 * the only variant, and every other mount point is byte for byte the same. */
-	variant?: "default" | "transcription_cap";
+	/** `transcription_cap` and `ai_budget` put their cap block above the opening;
+	 * every other mount point is byte for byte the same. */
+	variant?: "default" | "transcription_cap" | "ai_budget" | "ai_allowance";
+	/** The refused AI action; overrides the wall's own action line. */
+	aiAction?: AiAction;
+	/** When the AI budget resets, for the `ai_budget` block. */
+	resetsAt?: string | null;
 	/** What the app already knows about the person, and nothing more.
 	 *
 	 * Nothing sets these today, on purpose. The configurator asks no name and no
@@ -157,6 +166,7 @@ const supportMailto = (reference: string): string =>
 	`mailto:info@dembrane.com?subject=${encodeURIComponent(t`Reference ${reference}`)}`;
 
 export const PricingConfigurator = ({
+	aiAction,
 	attendeeEmail,
 	attendeeName,
 	entry = "modal_direct",
@@ -167,6 +177,7 @@ export const PricingConfigurator = ({
 	opened,
 	orgId,
 	projectId,
+	resetsAt,
 	submit = defaultSubmit,
 	variant = "default",
 	wallKey,
@@ -683,7 +694,8 @@ export const PricingConfigurator = ({
 		: null;
 	// What the person was trying to do when they met the wall. Empty on the
 	// billing page, which is not a wall, and on a mount that names none.
-	const action = wallActionLine(wallKey);
+	const action = aiAction ? aiActionLine(aiAction) : wallActionLine(wallKey);
+	const resetDate = formatResetDay(resetsAt, locale);
 
 	// The fallback screen carries its own thank you line rather than a heading,
 	// so the step title is dropped while it is up: naming a host above a
@@ -743,6 +755,29 @@ export const PricingConfigurator = ({
 							<Divider />
 						</>
 					)}
+					{phase.step === OPENING_STEP && variant === "ai_budget" && (
+						<>
+							<Stack gap="xs" {...testId("pricing-configurator-ai-budget")}>
+								<Text>
+									<Trans>This month's AI budget is used up.</Trans>
+								</Text>
+								<Text size="sm">
+									{resetDate ? (
+										<Trans>
+											AI features and new recordings are paused until{" "}
+											{resetDate}. Upgrade to keep going now.
+										</Trans>
+									) : (
+										<Trans>
+											AI features and new recordings are paused until next
+											month. Upgrade to keep going now.
+										</Trans>
+									)}
+								</Text>
+							</Stack>
+							<Divider />
+						</>
+					)}
 
 					<Text role="status" size="sm">
 						<Trans>
@@ -769,19 +804,34 @@ export const PricingConfigurator = ({
 										tabIndex={-1}
 										{...testId("pricing-configurator-opening")}
 									>
-										{action ? (
+										{variant === "ai_allowance" ? (
+											<Trans>
+												You're on the free plan, which includes a monthly AI
+												allowance.
+											</Trans>
+										) : action ? (
 											<Trans>You were trying to {action}.</Trans>
 										) : (
 											<Trans>You are on the free plan.</Trans>
 										)}
 									</Title>
 									<Text size="sm">
-										<Trans>
-											That requires a paid plan. We're going to ask you 5 more
-											quick questions, then you pick a time with the dembrane
-											team. We'll read your answers before the call to bring an
-											offer that fits your needs.
-										</Trans>
+										{variant === "ai_allowance" ? (
+											// Nothing was refused yet, so no "requires a paid plan".
+											<Trans>
+												Upgrade for more AI every month. We're going to ask you
+												5 more quick questions, then you pick a time with the
+												dembrane team. We'll read your answers before the call
+												to bring an offer that fits your needs.
+											</Trans>
+										) : (
+											<Trans>
+												That requires a paid plan. We're going to ask you 5 more
+												quick questions, then you pick a time with the dembrane
+												team. We'll read your answers before the call to bring
+												an offer that fits your needs.
+											</Trans>
+										)}
 									</Text>
 									{/* One optional line from the feature flag's payload, and
 									    only for the share of people the flag holds. The words

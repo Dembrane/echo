@@ -17,15 +17,12 @@ import { FreeLimitsPanel } from "./FreeLimitsPanel";
 const fetchMock = vi.fn();
 
 const DEFAULTS: Record<string, number> = {
+	ai_budget_enforce: 1,
+	ai_budget_micro_eur: 5_000_000,
 	audio_seconds_conversation: 3600,
 	audio_seconds_month: 18000,
-	chat_turns_per_chat: 20,
-	chats_month: 2,
-	maps_month: 1,
-	popcorn_analyses_month: 12,
 	popcorn_cadence_minutes: 5,
 	projects: 1,
-	reports_month: 1,
 };
 
 const limitsBody = (overrides: Record<string, number> = {}) => ({
@@ -100,31 +97,32 @@ it("renders one row per limit", async () => {
 	fetchMock.mockResolvedValue(answer(200, limitsBody()));
 	renderPanel();
 	await screen.findByTestId("free-limit-row-audio_seconds_month");
-	expect(screen.getAllByTestId(/^free-limit-row-/)).toHaveLength(9);
+	expect(screen.getAllByTestId(/^free-limit-row-/)).toHaveLength(6);
+	expect(screen.queryByText("Chats per month")).toBeNull();
 });
 
-it("labels the chat turn and popcorn rows", async () => {
+it("labels the popcorn and AI budget rows", async () => {
 	fetchMock.mockResolvedValue(answer(200, limitsBody()));
 	renderPanel();
-	await screen.findByTestId("free-limit-row-chat_turns_per_chat");
+	await screen.findByTestId("free-limit-row-ai_budget_micro_eur");
 	const current = (key: string) =>
 		within(row(key)).getByTestId("free-limit-current").textContent;
-	expect(
-		within(row("chat_turns_per_chat")).getByText("Turns per chat"),
-	).toBeTruthy();
-	expect(current("chat_turns_per_chat")).toBe("20");
-	expect(
-		within(row("popcorn_analyses_month")).getByText(
-			"Popcorn analyses per month",
-		),
-	).toBeTruthy();
-	expect(current("popcorn_analyses_month")).toBe("12");
 	expect(
 		within(row("popcorn_cadence_minutes")).getByText(
 			"Minimum popcorn interval",
 		),
 	).toBeTruthy();
-	expect(screen.queryByText("Popcorn window")).toBeNull();
+	expect(
+		within(row("ai_budget_micro_eur")).getByText("AI budget per month"),
+	).toBeTruthy();
+	expect(current("ai_budget_micro_eur")).toBe("€5.00");
+	expect(
+		within(row("ai_budget_micro_eur")).getByRole("textbox"),
+	).toHaveProperty("value", "€5.00");
+	expect(
+		within(row("ai_budget_enforce")).getByText("AI budget enforced"),
+	).toBeTruthy();
+	expect(current("ai_budget_enforce")).toBe("On");
 });
 
 it("shows audio as hours and minutes and edits it in minutes", async () => {
@@ -265,4 +263,85 @@ it("formats the changed-at time in the app language, not the browser's", async (
 	} finally {
 		i18n.activate("en");
 	}
+});
+
+const saveBudget = async (typed: string) => {
+	fetchMock.mockResolvedValue(answer(200, limitsBody()));
+	renderPanel();
+	await screen.findByTestId("free-limit-row-ai_budget_micro_eur");
+	const r = row("ai_budget_micro_eur");
+	fireEvent.change(within(r).getByRole("textbox"), {
+		target: { value: typed },
+	});
+	fireEvent.click(within(r).getByRole("button", { name: "Save" }));
+	return putBody();
+};
+
+it("stores the AI budget in micro-euros: 5.55 is 5,550,000", async () => {
+	const put = await saveBudget("5.55");
+	expect(put.url).toMatch(/\/v2\/admin\/free-limits\/ai_budget_micro_eur$/);
+	expect(put.body).toEqual({ value: 5_550_000 });
+});
+
+it("keeps at most two decimals of a typed budget: 5.555 stores 5,550,000", async () => {
+	expect((await saveBudget("5.555")).body).toEqual({ value: 5_550_000 });
+});
+
+it("allows a budget of EUR 0, which blocks all AI", async () => {
+	expect((await saveBudget("0")).body).toEqual({ value: 0 });
+});
+
+it("allows a budget up to EUR 1,000 and rejects 1,000.01", async () => {
+	fetchMock.mockResolvedValue(answer(200, limitsBody()));
+	renderPanel();
+	await screen.findByTestId("free-limit-row-ai_budget_micro_eur");
+	const r = row("ai_budget_micro_eur");
+	const input = within(r).getByRole("textbox");
+	const save = within(r).getByRole("button", { name: "Save" });
+	fireEvent.change(input, { target: { value: "1000" } });
+	expect(save).toHaveProperty("disabled", false);
+	fireEvent.change(input, { target: { value: "1000.01" } });
+	expect(save).toHaveProperty("disabled", true);
+});
+
+it("the enforce switch PUTs 0 when turned off and 1 when turned back on", async () => {
+	let enforce = 1;
+	fetchMock.mockImplementation(async (_url: string, init?: RequestInit) => {
+		if (init?.method === "PUT") enforce = JSON.parse(String(init.body)).value;
+		return answer(
+			200,
+			limitsBody(enforce === 1 ? {} : { ai_budget_enforce: enforce }),
+		);
+	});
+	renderPanel();
+	await screen.findByTestId("free-limit-row-ai_budget_enforce");
+	const toggle = () =>
+		fireEvent.click(
+			within(row("ai_budget_enforce")).getByRole("switch", {
+				name: "AI budget enforced",
+			}),
+		);
+	const puts = () =>
+		fetchMock.mock.calls
+			.filter((c) => c[1]?.method === "PUT")
+			.map((c) => [String(c[0]), JSON.parse(String(c[1]?.body))]);
+
+	toggle();
+	await waitFor(() =>
+		expect(
+			within(row("ai_budget_enforce")).getByTestId("free-limit-current")
+				.textContent,
+		).toBe("Off: costs are recorded, nobody is blocked"),
+	);
+	toggle();
+	await waitFor(() =>
+		expect(
+			within(row("ai_budget_enforce")).getByTestId("free-limit-current")
+				.textContent,
+		).toBe("On"),
+	);
+	expect(puts()).toEqual([
+		[expect.stringMatching(/\/free-limits\/ai_budget_enforce$/), { value: 0 }],
+		[expect.stringMatching(/\/free-limits\/ai_budget_enforce$/), { value: 1 }],
+	]);
 });

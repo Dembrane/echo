@@ -75,6 +75,12 @@ const answer = (body: unknown) =>
 	});
 
 const snapshot = (reports: { used: number; limit: number }) => ({
+	// The AI banner follows the budget; spent reports stand for a spent budget here.
+	ai: {
+		exhausted: reports.used >= reports.limit,
+		percent_used: reports.used >= reports.limit ? 100 : 0,
+		unlimited: false,
+	},
 	audio_seconds: { limit: 18000, used: 0 },
 	chats: { limit: 2, used: 0 },
 	free: true,
