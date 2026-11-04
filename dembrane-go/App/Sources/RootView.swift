@@ -75,6 +75,10 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $model.showRecordingScreen) { NowRecordingView() }
         .sheet(isPresented: $model.showOnboarding) { OnboardingView() }
+        .sheet(isPresented: $model.showAIConsent, onDismiss: { model.aiConsentSheetClosed() }) {
+            AIConsentView(onNotNow: { model.showAIConsent = false })
+                .interactiveDismissDisabled()
+        }
     }
 }
 
