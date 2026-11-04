@@ -10,6 +10,7 @@ public enum AppGroup {
     public static let environmentKey = "dembrane.go.shared.environment"
     public static let pendingRecordAtKey = "dembrane.go.shared.pendingRecordAt"
     public static let pendingRecordProjectKey = "dembrane.go.shared.pendingRecordProjectId"
+    public static let aiConsentAtKey = "dembrane.go.shared.aiConsentAt"
 
     public static var defaults: UserDefaults? { UserDefaults(suiteName: identifier) }
 
@@ -54,6 +55,23 @@ public enum AppGroup {
         defaults.set(environment.rawValue, forKey: environmentKey)
     }
 
+    /// When the person allowed their recordings to go to AI for transcription and
+    /// analysis; nil before that, after they withdraw, and after sign-out. Shared so
+    /// the Share Extension uploads only with the same permission.
+    public static var aiConsentAt: Date? {
+        get { defaults?.object(forKey: aiConsentAtKey) as? Date }
+        set { defaults?.set(newValue, forKey: aiConsentAtKey) }
+    }
+
+    /// Drops what belongs to the signed-out account, so the widgets and the Share
+    /// Extension stop offering its projects.
+    public static func forgetAccount() {
+        for key in [selectedProjectIdKey, selectedProjectNameKey, projectsKey, favoritesKey,
+                    defaultProjectIdKey, pendingRecordAtKey, pendingRecordProjectKey] {
+            defaults?.removeObject(forKey: key)
+        }
+    }
+
     public static func readProjectId() -> String? { defaults?.string(forKey: selectedProjectIdKey) }
     public static func readProjectName() -> String? { defaults?.string(forKey: selectedProjectNameKey) }
 
@@ -69,8 +87,14 @@ public enum AppGroup {
               let list = try? JSONDecoder().decode([WorkspaceProject].self, from: data) else { return [] }
         return list
     }
+    /// The app's backend, for the Share Extension. A store build is production only,
+    /// the same as the app.
     public static func readEnvironment() -> AppEnvironment {
+        #if DEBUG
         AppEnvironment(rawValue: defaults?.string(forKey: environmentKey) ?? "") ?? .default
+        #else
+        .default
+        #endif
     }
 
     // Favorite projects: an ordered list of project ids (excludes the default

@@ -51,6 +51,53 @@ final class ParticipantUploadTests: XCTestCase {
         }
     }
 
+    func testTokenFromInitiateGoesOnEveryLaterCallUntilFinish() async throws {
+        let lock = NSLock()
+        var sent: [String: String?] = [:]
+        MockURLProtocol.handler = { req in
+            let path = req.url!.path
+            lock.withLock { sent[path] = req.value(forHTTPHeaderField: "x-participant-token") }
+            if path.hasSuffix("/initiate") {
+                let resp = HTTPURLResponse(url: req.url!, statusCode: 200, httpVersion: nil,
+                                           headerFields: ["x-participant-token": "p1.body.sig"])!
+                return (resp, Data(#"{"id":"conv-1"}"#.utf8))
+            }
+            if path.hasSuffix("/get-upload-url") {
+                let json = #"{"chunk_id":"ch1","upload_url":"https://s3.example.com/b","file_url":"https://s3.example.com/b/k","fields":{}}"#
+                return (Self.ok(req), Data(json.utf8))
+            }
+            return (Self.ok(req), Data(#""OK""#.utf8))
+        }
+        let tokens = InMemoryParticipantTokenStore()
+        let client = ParticipantUploadClient(env: .staging, session: MockURLProtocol.makeSession(), tokens: tokens)
+
+        let id = try await client.startConversation(projectId: "p1", displayName: "you")
+        XCTAssertEqual(tokens.token(conversationId: id), "p1.body.sig")
+        _ = try await client.uploadTicket(conversationId: id, filename: "r.m4a", contentType: "audio/m4a")
+        try await client.confirm(conversationId: id, chunkId: "ch1", fileURL: "https://s3.example.com/b/k",
+                                 source: "GO_IOS", timestamp: Date())
+        try await client.finishConversation(conversationId: id)
+
+        let seen = lock.withLock { sent }
+        XCTAssertEqual(seen["/api/participant/projects/p1/conversations/initiate"], .some(nil))
+        XCTAssertEqual(seen["/api/participant/conversations/conv-1/get-upload-url"], "p1.body.sig")
+        XCTAssertEqual(seen["/api/participant/conversations/conv-1/confirm-upload"], "p1.body.sig")
+        XCTAssertEqual(seen["/api/participant/conversations/conv-1/finish"], "p1.body.sig")
+        XCTAssertNil(tokens.token(conversationId: id), "a finished conversation needs no token")
+    }
+
+    func testAConversationWithoutATokenSendsNone() async throws {
+        var header: String? = "unset"
+        MockURLProtocol.handler = { req in
+            header = req.value(forHTTPHeaderField: "x-participant-token")
+            return (Self.ok(req), Data(#""OK""#.utf8))
+        }
+        let client = ParticipantUploadClient(env: .staging, session: MockURLProtocol.makeSession(),
+                                             tokens: InMemoryParticipantTokenStore())
+        try await client.finishConversation(conversationId: "older")
+        XCTAssertNil(header)
+    }
+
     // MARK: - helpers
     private static func ok(_ req: URLRequest) -> HTTPURLResponse {
         HTTPURLResponse(url: req.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!

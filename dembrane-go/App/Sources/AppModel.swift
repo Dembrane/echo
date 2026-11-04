@@ -42,15 +42,29 @@ final class AppModel {
     var loginError: String?
     var isSigningIn = false
     var needsOTP = false        // 2FA: show the one-time-code field
+    /// Set when a sign-in is waiting because the account is signed in on two
+    /// other devices; the login screen then asks which one to sign out.
+    var signedInElsewhere: SignedInElsewhere?
+    struct SignedInElsewhere: Equatable { let devices: [OtherDevice] }
     var statusMessage: String?
     var isRegistering = false
     var registerError: String?
+    var onboardingError: String?
     var registrationSentTo: String?
     var isDeletingAccount = false
     var deleteAccountError: String?
     var pendingAskConversationId: String?
     var pendingAskQuery: String?
     var showOnboarding = false
+    /// Whether the person allowed recordings to go to AI. Recording, uploads, Ask and
+    /// the AI actions on a conversation wait for it (App Review Guideline 5.1.2(i)).
+    private(set) var hasAIConsent = AppGroup.aiConsentAt != nil
+    /// The permission sheet shown once after sign-in. "Not now" closes it; Record and
+    /// Ask then ask again in place.
+    var showAIConsent = false
+    private var askedForAIConsent = false
+    /// First-run onboarding waits until the permission sheet has closed.
+    private var onboardingAfterConsent = false
 
     // Loaded data
     var me: Me?
@@ -145,7 +159,14 @@ final class AppModel {
     /// Real app stack: Keychain-backed session + live API client (with a
     /// refresh-on-401 retry).
     convenience init() {
+        #if DEBUG
         let env = AppEnvironment(rawValue: UserDefaults.standard.string(forKey: Self.environmentKey) ?? "") ?? .default
+        #else
+        // A store build talks to production only. A backend chosen in a development
+        // build stays in that build, so an install that once pointed elsewhere
+        // cannot carry it into the App Store version.
+        let env = AppEnvironment.default
+        #endif
         let sm = SessionManager(store: makeSessionStore())
         let auth = AuthService(env: env, sessionManager: sm)
         let api = LiveAPIClient(
@@ -162,8 +183,9 @@ final class AppModel {
         return AppModel(environment: .echoNext, sessionManager: sm, auth: auth, api: api)
     }
 
-    /// The API client's 401 handler: try to refresh; if that fails the session is
-    /// dead, so broadcast session-expired (the app signs out) and report failure.
+    /// The API client's 401 handler: ask the server whether the session still
+    /// stands; if not it is dead (expired, or replaced by a sign-in on another
+    /// device), so broadcast session-expired (the app signs out) and report failure.
     /// Centralizes auth handling so EVERY authed call recovers the same way.
     nonisolated private static func refreshOrExpire(_ auth: AuthService) async -> Bool {
         if (try? await auth.refresh()) == true { return true }
@@ -327,29 +349,92 @@ final class AppModel {
     }
 
     func signIn(email: String, password: String, otp: String? = nil) async {
+        await runSignIn(codeEntered: otp?.isEmpty == false) {
+            _ = try await self.auth.login(email: email, password: password, otp: otp)
+        }
+    }
+
+    /// Emails a six-digit sign-in code. Returns whether the request went out;
+    /// the server answers the same for an address without an account.
+    func sendSignInCode(email: String) async -> Bool {
+        loginError = nil
+        do {
+            try await auth.sendSignInCode(email: email)
+            return true
+        } catch {
+            loginError = Self.signInMessage(for: error)
+            return false
+        }
+    }
+
+    func signIn(email: String, code: String) async {
+        await runSignIn(codeEntered: true) {
+            _ = try await self.auth.login(email: email, code: code)
+        }
+    }
+
+    /// Completes the waiting sign-in by signing out the device the person chose.
+    /// When the devices changed meanwhile, the screen shows the fresh list.
+    func signOutDeviceAndContinue(_ id: OtherDevice.ID) async {
+        await runSignIn(codeEntered: false) {
+            _ = try await self.auth.replaceOtherDevice(id)
+        }
+        if signedInElsewhere != nil, loginError == nil {
+            loginError = "The active devices changed. Choose again."
+        }
+    }
+
+    func cancelHeldSignIn() async {
+        signedInElsewhere = nil
+        await auth.cancelHeldSignIn()
+    }
+
+    /// One path for every way of signing in, so each ends in the same states.
+    private func runSignIn(codeEntered: Bool, _ attempt: () async throws -> Void) async {
         loginError = nil
         isSigningIn = true
         defer { isSigningIn = false }
         do {
-            _ = try await auth.login(email: email, password: password, otp: otp)
+            try await attempt()
             needsOTP = false
+            signedInElsewhere = nil
             phase = .signedIn
             await loadData()
+        } catch AuthError.signedInElsewhere(let devices) {
+            signedInElsewhere = SignedInElsewhere(devices: devices)
+            if phase == .loading { phase = .signedOut }
         } catch AuthError.otpRequired {
             // 2FA: reveal the code field. If a code was already entered, it was wrong.
-            if needsOTP, otp?.isEmpty == false {
-                loginError = "That code didn't work. Try again."
+            if needsOTP, codeEntered {
+                loginError = "That code didn't work. Try again with a fresh code from your authenticator app."
             }
             needsOTP = true
             if phase == .loading { phase = .signedOut }
-        } catch AuthError.invalidCredentials {
-            loginError = "That email or password didn't work."
-            needsOTP = false
-            if phase == .loading { phase = .signedOut }
         } catch {
+            if case AuthError.invalidCredentials = error { needsOTP = false }
             NSLog("dembrane-go sign-in failed: \(error)")
-            loginError = "Couldn't sign in. Check your connection and try again."
+            loginError = Self.signInMessage(for: error)
             if phase == .loading { phase = .signedOut }
+        }
+    }
+
+    private static func signInMessage(for error: Error) -> String {
+        switch error as? AuthError {
+        case .invalidCredentials:
+            return "That email or password didn't work."
+        case .invalidCode:
+            return "That code is not right or has expired. Request a new one."
+        case .emailNotVerified:
+            return "Your email is not verified yet. Check your inbox for the verification link."
+        case .rateLimited(let retryAfter):
+            if let retryAfter, retryAfter > 0 {
+                return "Too many tries. Wait \(retryAfter) seconds and try again."
+            }
+            return "Too many tries. Wait a moment and try again."
+        case .accountInactive:
+            return "This account is not active."
+        default:
+            return "Couldn't sign in. Check your connection and try again."
         }
     }
 
@@ -385,8 +470,59 @@ final class AppModel {
         }
     }
 
+    /// Forgets what belonged to the account that signed out, so the next person on this
+    /// phone starts clean: cached lists, the chosen, default and favourite projects,
+    /// first-run state, the open chat, and what the widgets and Share Extension offer.
+    /// Otherwise the next account sees the last one's recordings and records into its
+    /// project.
+    private func forgetAccount() async {
+        for key in [Self.selectedProjectKey, Self.didOnboardKey, Self.favoritesKey, Self.defaultProjectIdKey] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        await DiskCache.shared.clear()
+        AppGroup.forgetAccount()
+        WidgetCenter.shared.reloadAllTimelines()
+        favoriteProjectIds = []
+        defaultProjectId = nil
+        crossProjectRecents = []
+        didLoadRecentsOnce = false
+        didLoadConversationsOnce = false
+        workspaceUsage = nil
+        avatarImage = nil
+        askConversationIds = []
+        resetAskThread()
+    }
+
+    /// Records the person's answer. Withdrawing stops new recordings and uploads from
+    /// being sent; what was sent before stays in its project.
+    func setAIConsent(_ allowed: Bool) {
+        AppGroup.aiConsentAt = allowed ? Date() : nil
+        hasAIConsent = allowed
+        if allowed { showAIConsent = false }
+    }
+
+    /// The permission sheet closed, by either answer. Onboarding waits for it, since
+    /// one sheet cannot open while another is still closing.
+    func aiConsentSheetClosed() {
+        if onboardingAfterConsent {
+            onboardingAfterConsent = false
+            showOnboarding = true
+        }
+    }
+
+    /// Asks for the permission where the action was started, and says whether the
+    /// action may go ahead.
+    private func requireAIConsent() -> Bool {
+        if !hasAIConsent { showAIConsent = true }
+        return hasAIConsent
+    }
+
     func signOut() async {
         await auth.logout()
+        // The next person to sign in on this phone answers for themselves.
+        setAIConsent(false)
+        askedForAIConsent = false
+        await forgetAccount()
         me = nil
         workspaces = []
         allProjects = []
@@ -438,6 +574,9 @@ final class AppModel {
         // Already recording? Don't start a second capture (which would orphan the
         // first). Just reopen the in-progress screen.
         guard !isRecording else { showRecordingScreen = true; return }
+        // Recording sends audio for transcription while it runs. Without permission the
+        // Record screen opens and asks for it in place.
+        guard hasAIConsent else { showRecordingScreen = true; return }
         guard await AVAudioApplication.requestRecordPermission() else {
             statusMessage = "Microphone access is off. Enable it in Settings."
             return
@@ -638,6 +777,7 @@ final class AppModel {
     /// Push a pending recording to dembrane: create the conversation if needed,
     /// upload every on-disk segment not yet sent, finish, then drop the local copy.
     func uploadPending(_ recording: LocalRecording) async {
+        guard requireAIConsent() else { return }
         guard !uploadingRecordingIds.contains(recording.id) else { return }
         uploadingRecordingIds.insert(recording.id)
         defer { uploadingRecordingIds.remove(recording.id) }
@@ -860,14 +1000,14 @@ final class AppModel {
         return nil
     }
 
-    /// The signed-in user's avatar (Directus asset), fetched with the token in
+    /// The signed-in user's avatar (a file the API serves by id), fetched with the token in
     /// an Authorization header — never as a URL query param, which would land
     /// the session token in server access logs. Resolved after `me` loads.
     var avatarImage: UIImage?
 
     private func refreshAvatar() async {
         guard let avatar = me?.avatar, !avatar.isEmpty else { avatarImage = nil; return }
-        var req = URLRequest(url: environment.directusBaseURL.appending(path: "assets/\(avatar)"))
+        var req = URLRequest(url: DembraneEndpoints(env: environment).asset(id: avatar))
         if let token = await sessionManager.accessToken() {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
@@ -880,6 +1020,7 @@ final class AppModel {
 
     /// Upload an audio file transferred from the Apple Watch.
     func uploadWatchFile(_ url: URL) async {
+        guard requireAIConsent() else { return }
         guard let projectId = selectedProject?.id else { return }
         statusMessage = "Importing watch recording…"
         _ = try? await uploader.upload(
@@ -895,6 +1036,7 @@ final class AppModel {
     /// Import an audio file the user picked from Files, and upload it to the
     /// given project (defaults to the active project), source GO_IOS.
     func importAudioFile(_ url: URL, into destinationProjectId: String? = nil) async {
+        guard requireAIConsent() else { return }
         guard let projectId = destinationProjectId ?? selectedProject?.id else {
             statusMessage = "No project to save to yet."; return
         }
@@ -1090,13 +1232,44 @@ final class AppModel {
 
         // First run: let the user pick which workspace their "Go Recordings"
         // project lives in (we still auto-picked a default so capture isn't blocked).
-        if !UserDefaults.standard.bool(forKey: Self.didOnboardKey), !workspaces.isEmpty {
-            showOnboarding = true
+        if !hasAIConsent, !askedForAIConsent {
+            askedForAIConsent = true
+            showAIConsent = true
+        }
+        if !UserDefaults.standard.bool(forKey: Self.didOnboardKey), !workspaces.isEmpty || needsWorkspace {
+            if showAIConsent { onboardingAfterConsent = true } else { showOnboarding = true }
         }
 
         await loadConversations()
         await loadRecents()
         await refreshWorkspaceUsage()
+    }
+
+    /// A new account has no workspace until its organisation is set up; the dashboard
+    /// does that in its onboarding, and so does the app.
+    var needsWorkspace: Bool { workspaces.isEmpty && me?.onboardingCompleted == false }
+
+    /// Sets up a new account's organisation and first workspace, then finishes
+    /// onboarding there so the person can record straight away.
+    func createFirstWorkspace(organisationName: String) async {
+        onboardingError = nil
+        do {
+            try await api.completeOnboarding(orgName: organisationName)
+        } catch {
+            NSLog("dembrane-go workspace setup failed: \(error)")
+            onboardingError = "Couldn't set up your workspace. Check your connection and try again."
+            return
+        }
+        me = (try? await api.me()) ?? me
+        workspaces = (try? await api.workspaces()) ?? []
+        await loadAllProjects()
+        guard let workspace = workspaces.first(where: { $0.isDefault }) ?? workspaces.first else {
+            onboardingError = "Your workspace is being set up. Try again in a moment."
+            return
+        }
+        await completeOnboarding(workspace: workspace)
+        await loadConversations()
+        await loadRecents()
     }
 
     /// Finish onboarding: find-or-create "Go Recordings" in the chosen workspace
@@ -1402,17 +1575,22 @@ final class AppModel {
     }
 
     // Conversation actions (mirror the web's summary/title/retranscribe controls).
+    // Each sends the conversation to AI, so each needs the person's permission; the
+    // screens hide them until then.
     func summarizeConversation(_ id: String) async throws {
+        guard hasAIConsent else { throw AIConsentRequired() }
         try await api.summarizeConversation(id: id)
         await loadConversations()
     }
     func generateConversationTitle(_ id: String) async throws {
+        guard hasAIConsent else { throw AIConsentRequired() }
         try await api.generateConversationTitle(id: id)
         await loadConversations()
     }
     /// Clone a conversation and re-run transcription on its audio into the copy
     /// named `newName`. The original is left untouched.
     func retranscribeConversation(_ id: String, newName: String) async throws {
+        guard hasAIConsent else { throw AIConsentRequired() }
         try await api.retranscribeConversation(id: id, newName: newName)
         await loadConversations()
     }
@@ -1636,6 +1814,7 @@ final class AppModel {
     /// Send a message: lazily create the chat (+ add the selected conversations
     /// as context), then stream the assistant reply.
     func sendAsk(_ text: String) async {
+        guard hasAIConsent else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !askStreaming, let projectId = selectedProject?.id else { return }
         askError = nil
@@ -1694,4 +1873,9 @@ struct AskMessage: Identifiable, Equatable {
     let role: Role
     var text: String
     var references: [ConversationReference] = []
+}
+
+/// An action that sends a conversation to AI was started before the person allowed it.
+struct AIConsentRequired: LocalizedError {
+    var errorDescription: String? { "Allow AI processing in Settings first." }
 }
