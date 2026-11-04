@@ -14,7 +14,6 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { usePostHog } from "@posthog/react";
 import {
 	ArrowRightIcon,
 	CheckCircleIcon,
@@ -26,6 +25,7 @@ import {
 	WarningCircleIcon,
 	XIcon,
 } from "@phosphor-icons/react";
+import { usePostHog } from "@posthog/react";
 import {
 	type PropsWithChildren,
 	useCallback,
@@ -958,8 +958,30 @@ export const UploadConversationDropzone = (
 								</Alert>
 							)}
 
-							{/* Action buttons */}
-							<Group justify="flex-start" mt="md">
+							{/* Action buttons: a row of steps, so the ways back and out on
+							    the left and Try again on the right (rules.css). */}
+							<Group data-steps justify="space-between" mt="md">
+								<Group gap="sm">
+									{!uploader.isSuccess && !uploader.isPending && (
+										<Button
+											onClick={() => {
+												setUploadStarted(false);
+											}}
+											{...testId("conversation-upload-back-button")}
+										>
+											{t`Back`}
+										</Button>
+									)}
+									<Button
+										variant="subtle"
+										color="gray"
+										onClick={close}
+										disabled={uploader.isPending}
+										{...testId("conversation-upload-close-button")}
+									>
+										{uploader.isSuccess ? t`Close` : t`Cancel`}
+									</Button>
+								</Group>
 								{!uploader.isSuccess && uploader.isError && canRetry && (
 									<Button
 										variant="filled"
@@ -970,25 +992,6 @@ export const UploadConversationDropzone = (
 										{t`Try again`}
 									</Button>
 								)}
-								{!uploader.isSuccess && !uploader.isPending && (
-									<Button
-										onClick={() => {
-											setUploadStarted(false);
-										}}
-										{...testId("conversation-upload-back-button")}
-									>
-										{t`Back`}
-									</Button>
-								)}
-								<Button
-									variant="subtle"
-									color="gray"
-									onClick={close}
-									disabled={uploader.isPending}
-									{...testId("conversation-upload-close-button")}
-								>
-									{uploader.isSuccess ? t`Close` : t`Cancel`}
-								</Button>
 							</Group>
 						</>
 					)}

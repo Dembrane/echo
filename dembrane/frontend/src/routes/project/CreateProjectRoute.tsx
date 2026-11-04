@@ -436,7 +436,17 @@ export const CreateProjectRoute = () => {
 					</Stepper.Step>
 				</Stepper>
 
-				<Group gap="sm" mt="sm">
+				{/* A row of steps: Cancel or Back on the left, the pill on the right
+				    (rules.css). */}
+				<Group data-steps justify="space-between" gap="sm" mt="sm">
+					<Button
+						variant="subtle"
+						color="gray"
+						size="sm"
+						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
+					>
+						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
+					</Button>
 					{step < 3 ? (
 						<Button
 							variant="filled"
@@ -457,14 +467,6 @@ export const CreateProjectRoute = () => {
 							<Trans>Create project</Trans>
 						</Button>
 					)}
-					<Button
-						variant="subtle"
-						color="gray"
-						size="sm"
-						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
-					>
-						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
-					</Button>
 				</Group>
 			</Stack>
 			<UpgradeModal

@@ -227,7 +227,7 @@ export function SignatureCapture({
 		);
 	// Back on the left and the step's one blue button on the right, on one row.
 	const row = (primary: ReactNode) => (
-		<Group justify="space-between" wrap="nowrap" gap="sm" mt={4}>
+		<Group data-steps justify="space-between" wrap="nowrap" gap="sm" mt={4}>
 			{onBack ? (
 				<Button onClick={onBack} data-testid="sign-back">
 					<Trans>Back</Trans>

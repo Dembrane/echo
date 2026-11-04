@@ -354,7 +354,16 @@ export const OnboardingRoute = () => {
 							autoFocusFirst
 						/>
 
-						<Group gap="sm">
+						{/* A row of steps: Skip on the left, the pill on the right (rules.css). */}
+						<Group data-steps gap="sm">
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								onClick={() => goToQuestionsOrHome()}
+							>
+								<Trans>Skip</Trans>
+							</Button>
 							<Button
 								variant="filled"
 								flex={1}
@@ -366,14 +375,6 @@ export const OnboardingRoute = () => {
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
-							</Button>
-							<Button
-								size="md"
-								variant="subtle"
-								color="gray"
-								onClick={() => goToQuestionsOrHome()}
-							>
-								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -521,7 +522,17 @@ export const OnboardingRoute = () => {
 							</Stack>
 						)}
 
-						<Group gap="sm">
+						{/* A row of steps: Skip on the left, the pill on the right (rules.css). */}
+						<Group data-steps gap="sm">
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								disabled={submittingAnswers}
+								onClick={() => submitAnswers(true)}
+							>
+								<Trans>Skip</Trans>
+							</Button>
 							<Button
 								variant="filled"
 								flex={1}
@@ -531,15 +542,6 @@ export const OnboardingRoute = () => {
 								onClick={goNext}
 							>
 								{isLastQ ? <Trans>Done</Trans> : <Trans>Continue</Trans>}
-							</Button>
-							<Button
-								size="md"
-								variant="subtle"
-								color="gray"
-								disabled={submittingAnswers}
-								onClick={() => submitAnswers(true)}
-							>
-								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>

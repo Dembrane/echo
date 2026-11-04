@@ -371,7 +371,7 @@ msgstr "Під час підписання вони позначають"
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:761
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 msgid "Back"
 msgstr "Назад"
 
@@ -483,7 +483,7 @@ msgstr "Дзвінок заплановано"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:369
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:228
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:224
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 msgid "Cancel"
@@ -1062,13 +1062,13 @@ msgstr "Вкажіть дату"
 
 #: src/features/accounts/customer/WhoSigns.tsx:113
 #: src/features/accounts/customer/WhoSigns.tsx:122
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:238
 msgid "Fill in their email"
 msgstr "Вкажіть електронну пошту"
 
 #: src/features/accounts/customer/WhoSigns.tsx:114
 #: src/features/accounts/customer/WhoSigns.tsx:123
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:248
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:244
 msgid "Fill in their name"
 msgstr "Вкажіть ім'я"
 
@@ -1513,8 +1513,8 @@ msgstr "Нове завдання"
 #: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:886
 #: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:236
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:242
 msgid "Next"
 msgstr "Далі"
 
@@ -1855,7 +1855,7 @@ msgstr "Необов'язково, замінює нашу угоду про о�
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Необов'язково. Минула подія або клієнт як основа для демо."
 
-#: src/features/accounts/customer/WhoSigns.tsx:453
+#: src/features/accounts/customer/WhoSigns.tsx:449
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:205
 msgid "Optional. It goes on the signature."
 msgstr "Необов'язково. Зазначається біля підпису."
@@ -2300,7 +2300,7 @@ msgstr "Виберіть поле, щоб налаштувати його тип
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:243
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:251
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:247
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:671
 msgid "Send"
@@ -2830,7 +2830,7 @@ msgstr "Чернетка ще не готова."
 msgid "The draft is ready. Check it, then publish."
 msgstr "Чернетка готова. Перевірте її та опублікуйте."
 
-#: src/features/accounts/customer/WhoSigns.tsx:436
+#: src/features/accounts/customer/WhoSigns.tsx:432
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:181
 msgid "The email address is empty."
 msgstr "Адресу електронної пошти не вказано."
@@ -2846,7 +2846,7 @@ msgstr "Запрошення надіслано на"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:447
+#: src/features/accounts/customer/WhoSigns.tsx:443
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:197
 msgid "The name is empty."
 msgstr "Ім'я не вказано."
@@ -2888,17 +2888,17 @@ msgstr "Їхня адреса @dembrane.com"
 msgid "Their data processing terms"
 msgstr "Їхні умови обробки даних"
 
-#: src/features/accounts/customer/WhoSigns.tsx:426
+#: src/features/accounts/customer/WhoSigns.tsx:422
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:169
 msgid "Their email address"
 msgstr "Їхня електронна пошта"
 
-#: src/features/accounts/customer/WhoSigns.tsx:452
+#: src/features/accounts/customer/WhoSigns.tsx:448
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:204
 msgid "Their job title"
 msgstr "Їхня посада"
 
-#: src/features/accounts/customer/WhoSigns.tsx:442
+#: src/features/accounts/customer/WhoSigns.tsx:438
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:190
 msgid "Their name"
 msgstr "Їхнє ім'я"
@@ -2997,7 +2997,7 @@ msgstr "Не вдалося завантажити це запрошення"
 msgid "This invitation is for {invitee}"
 msgstr "Це запрошення для {invitee}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:435
+#: src/features/accounts/customer/WhoSigns.tsx:431
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:180
 msgid "This is not an email address."
 msgstr "Це не адреса електронної пошти."
