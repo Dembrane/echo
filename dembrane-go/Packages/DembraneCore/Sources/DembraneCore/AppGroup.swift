@@ -69,8 +69,14 @@ public enum AppGroup {
               let list = try? JSONDecoder().decode([WorkspaceProject].self, from: data) else { return [] }
         return list
     }
+    /// The app's backend, for the Share Extension. A store build is production only,
+    /// the same as the app.
     public static func readEnvironment() -> AppEnvironment {
+        #if DEBUG
         AppEnvironment(rawValue: defaults?.string(forKey: environmentKey) ?? "") ?? .default
+        #else
+        .default
+        #endif
     }
 
     // Favorite projects: an ordered list of project ids (excludes the default

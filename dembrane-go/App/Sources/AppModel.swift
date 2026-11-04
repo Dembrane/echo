@@ -149,7 +149,14 @@ final class AppModel {
     /// Real app stack: Keychain-backed session + live API client (with a
     /// refresh-on-401 retry).
     convenience init() {
+        #if DEBUG
         let env = AppEnvironment(rawValue: UserDefaults.standard.string(forKey: Self.environmentKey) ?? "") ?? .default
+        #else
+        // A store build talks to production only. A backend chosen in a development
+        // build stays in that build, so an install that once pointed elsewhere
+        // cannot carry it into the App Store version.
+        let env = AppEnvironment.default
+        #endif
         let sm = SessionManager(store: makeSessionStore())
         let auth = AuthService(env: env, sessionManager: sm)
         let api = LiveAPIClient(
