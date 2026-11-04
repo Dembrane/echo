@@ -171,6 +171,8 @@ export async function upsertConfiguration(
     ...flatMirrors(payload.config),
     config: configWithBooking(payload.config, existing, booking),
   };
+  // The moment it became submitted starts the enquiry outbox's wait for a booking.
+  if (status === "submitted" && !existing?.submitted_at) row.submitted_at = now.toISOString();
   if (existing && identity.email === null) {
     // A site row learns its email from the booking once; other writes must not erase it.
     delete row.email;

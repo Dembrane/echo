@@ -1,6 +1,6 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, asc, eq, gt, isNotNull, isNull, ne, not } from "drizzle-orm";
+import { and, asc, eq, gt, isNotNull, isNull, lte, ne, not } from "drizzle-orm";
 
 const { pricing_configuration: pc, directus_users } = schema;
 
@@ -43,6 +43,30 @@ export function pricingStorage(db: Db) {
         .from(pc)
         .where(and(isNotNull(pc.booking_uid), isNull(pc.booking_notified_at)))
         .orderBy(asc(pc.created_at), asc(pc.id))
+        .limit(limit);
+    },
+
+    /**
+     * The enquiry outbox: submitted rows with an email and no booking, submitted before
+     * `before` and not yet forwarded, oldest first. A row without an email is an anonymous
+     * website visit and is never sent.
+     */
+    async unforwardedEnquiries(before: Date, limit: number): Promise<PricingRow[]> {
+      return db
+        .select()
+        .from(pc)
+        .where(
+          and(
+            eq(pc.status, "submitted"),
+            isNull(pc.booking_uid),
+            isNotNull(pc.email),
+            ne(pc.email, ""),
+            isNotNull(pc.submitted_at),
+            lte(pc.submitted_at, before.toISOString()),
+            isNull(pc.enquiry_notified_at),
+          ),
+        )
+        .orderBy(asc(pc.submitted_at), asc(pc.id))
         .limit(limit);
     },
 

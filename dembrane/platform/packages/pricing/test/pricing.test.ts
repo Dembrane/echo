@@ -57,6 +57,7 @@ function memStore() {
     },
     unforwardedBookings: async () =>
       [...rows.values()].filter((r) => r.booking_uid && !r.booking_notified_at),
+    unforwardedEnquiries: async () => [],
     recentEnquiries: async (since) =>
       [...rows.values()].filter(
         (r) => !r.is_internal && r.email && r.updated_at && new Date(r.updated_at) > since,
@@ -93,6 +94,24 @@ test("one row per session, a stable reference, submitted never goes back", async
   expect(second.reference).toBe(first.reference);
   expect(rows.size).toBe(1);
   expect([...rows.values()][0]?.status).toBe("submitted");
+});
+
+test("submitted_at is set once, when the row first becomes submitted", async () => {
+  const { store, rows } = memStore();
+  let now = new Date("2026-11-04T09:00:00.000Z");
+  const d = {
+    store,
+    storage: new FilesystemStorage(root, "http://t"),
+    logger,
+    clock: () => now,
+  };
+  await upsertConfiguration(d, base, [], id);
+  expect([...rows.values()][0]?.submitted_at ?? null).toBeNull();
+  now = new Date("2026-11-04T09:05:00.000Z");
+  await upsertConfiguration(d, { ...base, status: "submitted" }, [], id);
+  now = new Date("2026-11-04T09:09:00.000Z");
+  await upsertConfiguration(d, { ...base, status: "submitted" }, [], id);
+  expect([...rows.values()][0]?.submitted_at).toBe("2026-11-04T09:05:00.000Z");
 });
 
 test("another user's session is refused", async () => {
