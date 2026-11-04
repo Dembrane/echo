@@ -188,9 +188,13 @@ run("canvas and the AI budget", () => {
   };
 
   test("an idle scheduled tick with nothing new reads no budget", async () => {
+    // Its own good generation first, so the idle tick does not lean on an earlier test.
+    await spend(0);
+    const first = await tickAt(new Date(Date.now() + 20 * 60_000), fake(), "idle-0", "manual");
+    expect(first.outcome).toBe("ok");
     await spend(LIMIT);
     const completer = fake();
-    const got = await tickAt(new Date(Date.now() + 20 * 60_000), completer, "idle-1");
+    const got = await tickAt(new Date(Date.now() + 25 * 60_000), completer, "idle-1");
     expect(got).toEqual({ outcome: "no_op", reads: 0 });
     expect(completer.calls.length).toBe(0);
   });

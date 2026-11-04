@@ -5,7 +5,6 @@ import cl100k from "js-tiktoken/ranks/cl100k_base";
 import {
   AUDIO_TOKENS_PER_SECOND,
   audioSecondsOf,
-  ESTIMATE_SAMPLE_CHARS,
   estimateInput,
   estimateText,
   markNotSent,
@@ -30,6 +29,20 @@ function transcript(chars: number, seed: number): string {
     len += w.length + 1;
   }
   return out.join(" ");
+}
+// Japanese clauses shuffled at their punctuation, seeded.
+const JA =
+  "住民は、病院や港で遅い時間まで働く人が多いので、夜はバスをもっと遅くまで運行してほしいと言いました。ほかの人は、自転車道を増やし、学校の近くに安全な横断歩道を作り、公園の照明を良くしてほしいと求めました。".split(
+    /(?<=[、。])/,
+  );
+function japanese(chars: number, seed: number): string {
+  let x = seed;
+  let out = "";
+  while (out.length < chars) {
+    x = (x * 1103515245 + 12345) % 2147483648;
+    out += JA[x % JA.length] as string;
+  }
+  return out.slice(0, chars);
 }
 const exact = (texts: string[]) => texts.reduce((n, t) => n + cl.encode(t, [], []).length, 0);
 
@@ -135,10 +148,16 @@ describe("estimate", () => {
     );
   });
 
-  test("a prompt at the sample size is still counted exactly", () => {
-    const text = transcript(ESTIMATE_SAMPLE_CHARS - 10, 1);
-    const prompt: LanguageModelV4Prompt = [{ role: "system", content: text }];
-    expect(estimateInput(prompt).inputTokens).toBe(exact([text]));
+  test("a prompt within the cost budget is counted exactly, part by part", () => {
+    const parts = [transcript(1_500, 1), transcript(2_000, 2), "Summarise.", transcript(1_200, 3)];
+    const prompt: LanguageModelV4Prompt = [
+      { role: "system", content: parts[0] as string },
+      ...parts.slice(1).map((t) => ({
+        role: "user" as const,
+        content: [{ type: "text" as const, text: t }],
+      })),
+    ];
+    expect(estimateInput(prompt).inputTokens).toBe(exact(parts));
   });
 
   test("a huge prompt is sampled: a few ms, within 3% of the exact count", () => {
@@ -157,8 +176,40 @@ describe("estimate", () => {
     const ms = performance.now() - t0;
     const want = exact([system, ...turns]);
     expect(Math.abs(got - want) / want).toBeLessThan(0.03);
-    // Encoding all 2 MB takes ~250 ms here.
+    // Encoding all 2 MB takes ~250 ms here; sampling takes ~5 ms (bound left loose for CI).
     expect(ms).toBeLessThan(30);
+  });
+
+  test("English and Japanese blocks together stay within 8% either way, in a few ms", () => {
+    estimateInput([{ role: "system", content: japanese(5_000, 1) }]);
+    for (const seed of [11, 12, 13]) {
+      const blocks = Array.from({ length: 6 }, (_, i) =>
+        i % 2 ? japanese(10_000, seed * 10 + i) : transcript(20_000, seed * 10 + i),
+      );
+      const prompt: LanguageModelV4Prompt = [
+        { role: "system", content: transcript(4_000, seed) },
+        { role: "user", content: [{ type: "text", text: blocks.join("\n") }] },
+      ];
+      const want = exact([transcript(4_000, seed), blocks.join("\n")]);
+      const t0 = performance.now();
+      const got = estimateInput(prompt).inputTokens;
+      const ms = performance.now() - t0;
+      expect(got / want).toBeGreaterThan(0.92);
+      expect(got / want).toBeLessThan(1.08);
+      expect(ms).toBeLessThan(30);
+    }
+  });
+
+  test("a long run with no word breaks stays cheap", () => {
+    const run = japanese(300_000, 5).replace(/[、。]/g, "");
+    const t0 = performance.now();
+    const got = estimateInput([
+      { role: "user", content: [{ type: "text", text: run }] },
+    ]).inputTokens;
+    // Encoding it whole would take minutes: BPE cost grows with the square of a word.
+    expect(performance.now() - t0).toBeLessThan(30);
+    expect(got / run.length).toBeGreaterThan(0.8);
+    expect(got / run.length).toBeLessThan(1.6);
   });
 
   test("many short turns past the sample size stay within 3%", () => {
@@ -169,6 +220,33 @@ describe("estimate", () => {
     }));
     const want = exact(turns);
     expect(Math.abs(estimateInput(prompt).inputTokens - want) / want).toBeLessThan(0.03);
+  });
+
+  test("symbol, box-drawing and blank-line runs and many tiny parts stay cheap", () => {
+    estimateInput([{ role: "system", content: transcript(40_000, 9) }]);
+    const row = (s: string) => s.repeat(Math.ceil(1_000_000 / s.length)).slice(0, 1_000_000);
+    const cases: LanguageModelV4Prompt[] = [
+      ...[
+        `|${"-".repeat(78)}|\n| a | 1 |\n`,
+        `┌${"─".repeat(78)}┐\n`,
+        "。",
+        "\n",
+        "\t",
+        "\ud800",
+      ].map(
+        (s): LanguageModelV4Prompt => [{ role: "user", content: [{ type: "text", text: row(s) }] }],
+      ),
+      Array.from({ length: 200_000 }, () => ({
+        role: "user" as const,
+        content: [{ type: "text" as const, text: "a" }],
+      })),
+    ];
+    for (const prompt of cases) {
+      const t0 = performance.now();
+      expect(estimateInput(prompt).inputTokens).toBeGreaterThan(0);
+      // About 5-10 ms each here; encoding them whole takes 35-70 ms per MB.
+      expect(performance.now() - t0).toBeLessThan(30);
+    }
   });
 
   test("a call the provider never accepted: a 4xx or a connection error", () => {
