@@ -133,6 +133,7 @@
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
         "@dembrane/samples": "workspace:*",
+        "@dembrane/staff": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "@dembrane/tenancy": "workspace:*",
         "@dembrane/transcription": "workspace:*",
@@ -719,6 +720,7 @@
       "dependencies": {
         "@dembrane/access": "workspace:*",
         "@dembrane/allowance": "workspace:*",
+        "@dembrane/auth": "workspace:*",
         "@dembrane/billing": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",

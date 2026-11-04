@@ -10,6 +10,13 @@ export { EXPORT_LINK_SECONDS, erasePerson, erasurePlan, exportPerson } from "./p
 export { type PrivacyRouteDeps, privacyRoutes } from "./privacy-routes";
 export { AUTHOR_COLUMNS, type PrivacyStorage, privacyStorage } from "./privacy-storage";
 export {
+  type AccountPurgeDeps,
+  accountPurgeRegistration,
+  type PurgeResult,
+  purgeDeletedAccounts,
+  runAccountPurge,
+} from "./purge";
+export {
   accountMonthlyForecast,
   atRisk,
   billingRollup,

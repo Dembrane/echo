@@ -8,7 +8,7 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 **Apps**
 
 - **api** (in 0, out 42): The HTTP server: mounts every namespace's routes and answers the dashboard, the portal and outside agents. Uses 24 namespaces and 18 capabilities.
-- **worker** (in 0, out 31): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 17 namespaces and 14 capabilities.
+- **worker** (in 0, out 32): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 18 namespaces and 14 capabilities.
 - **migrate** (in 0, out 8): The job that runs before every rollout: schema migrations, the queue schema, database grants, the default verification topics, and on PR previews the sample data. Uses samples, accounts, verify and 5 capabilities.
 - **media** (in 0, out 3): The ffmpeg service: probes, converts, splits and merges audio, one job per instance. Uses observability, config, audio.
 - **web** (in 0, out 3): Serves the built dashboard and participant portal and proxies /api to the API. Uses observability, http, config.
@@ -34,9 +34,9 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 - **present** (in 2, out 12): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime, allowance.
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 12): Report generation and the report timeline. Used by api, worker. Uses account, projects, notifications, webhooks, llm.
+- **staff** (in 2, out 13): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api, worker. Uses billing, auth, i18n, mail, storage and 1 more.
 - **verify** (in 2, out 8): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.
-- **staff** (in 1, out 12): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, i18n, mail, storage, allowance.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
 - **training** (in 1, out 8): Training as its own product: catalog, rosters, licences, staff provisioning. Used by api. Uses billing, mail.
 
@@ -59,9 +59,9 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 - **i18n** (in 7, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by billing, account, tenancy, accounts and 3 more. Uses config, llm, core, db.
 - **analytics** (in 5, out 1): Product analytics capture (PostHog). Used by popcorn, chats, agentic, agent-access and 1 more. Uses observability.
 - **audio** (in 4, out 0): ffmpeg and ffprobe wrappers, audio formats, and the client for the media app. Used by conversations, api, media, worker. Uses nothing.
+- **auth** (in 4, out 2): Sign-in and sessions (Better Auth) and the identity sync from Directus. Used by account, staff, api, migrate. Uses core, db.
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **transcription** (in 3, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api, worker. Uses prompts, llm, observability.
-- **auth** (in 3, out 2): Sign-in and sessions (Better Auth) and the identity sync from Directus. Used by account, api, migrate. Uses core, db.
 - **metering** (in 2, out 3): What each model call cost: one log line and one model_call row per call, which the obs views aggregate. Used by api, worker. Uses llm, observability, db.
 
 **Allowed imports between namespaces**
