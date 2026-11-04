@@ -76,6 +76,12 @@ describe("quoted history", () => {
     expect(htmlToText(html).trim()).toBe("Yes, Tuesday & Wednesday.\nAnn");
   });
 
+  test("HTML: scripts, styles and every tag go; escaped markup stays as text", () => {
+    const html =
+      "<style>p{color:red}</style><p>Hi<script>alert(1)</script> there</p><SCRIPT>x</SCRIPT>&lt;b&gt; ok<br/><ul><li>one</li></ul><p unclosed";
+    expect(htmlToText(html)).toBe("\nHi there\n<b> ok\n\n- one\n");
+  });
+
   test("prefers text/plain, falls back to HTML, never returns nothing for a pure quote", () => {
     const both = msg({
       id: "1",

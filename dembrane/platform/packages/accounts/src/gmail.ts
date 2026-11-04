@@ -44,8 +44,7 @@ export interface ServiceAccountKey {
   readonly private_key: string;
 }
 
-const b64url = (v: string | Buffer) =>
-  Buffer.from(v).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
 
 /** The signed JWT the token endpoint swaps for an access token acting as `mailbox`. */
 export function delegationAssertion(key: ServiceAccountKey, mailbox: string, now: Date): string {

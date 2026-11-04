@@ -14,7 +14,7 @@ export const header = (p: GmailPart | undefined, name: string): string | null =>
 };
 
 const decode = (data: string | undefined) =>
-  data ? Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8") : "";
+  data ? Buffer.from(data, "base64url").toString("utf8") : "";
 
 /** The first part of this MIME type, depth first; attachments (with a filename) skipped. */
 function find(p: GmailPart | undefined, type: string): string | null {
@@ -38,26 +38,56 @@ const ENTITIES: Record<string, string> = {
   nbsp: " ",
 };
 
-/** HTML mail to text, the quoted history (Gmail, Apple Mail, Outlook) removed first. */
+const SKIP = new Set(["script", "style", "head"]);
+const BREAK = /^\/?(br|p|div|li|tr|h[1-6])$/;
+
+/**
+ * HTML mail to text, the quoted history (Gmail, Apple Mail, Outlook) removed first. A
+ * scanner, not a chain of regexes: every tag goes, script and style with their content,
+ * so no markup survives into the text. The text is rendered as text, never as HTML.
+ */
 export function htmlToText(html: string): string {
-  let h = html.replace(/<(script|style|head)[\s\S]*?<\/\1>/gi, "");
   // Everything from the first quote container on is history.
-  const cut = h.search(
-    /<div[^>]+class="[^"]*gmail_quote|<blockquote|<div[^>]+id="(appendonsend|divRplyFwdMsg|mail-editor-reference-message-container)"/i,
-  );
-  if (cut >= 0) h = h.slice(0, cut);
-  return h
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n")
-    .replace(/<li[^>]*>/gi, "- ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
-      if (e[0] === "#") {
-        const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
-        return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-      }
-      return ENTITIES[e.toLowerCase()] ?? m;
-    });
+  const lower = html.toLowerCase();
+  const cut = [
+    lower.indexOf("gmail_quote"),
+    lower.indexOf("<blockquote"),
+    lower.indexOf('id="appendonsend"'),
+    lower.indexOf('id="divrplyfwdmsg"'),
+    lower.indexOf('id="mail-editor-reference-message-container"'),
+  ]
+    .filter((i) => i >= 0)
+    .map((i) => lower.lastIndexOf("<", i))
+    .reduce((a, b) => Math.min(a, b), html.length);
+  let out = "";
+  let i = 0;
+  while (i < cut) {
+    const open = html.indexOf("<", i);
+    if (open < 0 || open >= cut) {
+      out += html.slice(i, cut);
+      break;
+    }
+    out += html.slice(i, open);
+    const close = html.indexOf(">", open);
+    if (close < 0) break;
+    const name = (lower.slice(open + 1, close).match(/^\/?[a-z0-9]+/)?.[0] ?? "").toString();
+    if (SKIP.has(name)) {
+      const end = lower.indexOf(`</${name}`, close);
+      const after = end < 0 ? -1 : html.indexOf(">", end);
+      i = after < 0 ? cut : after + 1;
+      continue;
+    }
+    if (name === "li") out += "\n- ";
+    else if (BREAK.test(name)) out += "\n";
+    i = close + 1;
+  }
+  return out.replace(/&(#x?[0-9a-f]{1,6}|[a-z]{2,8});/gi, (m, e: string) => {
+    if (e[0] === "#") {
+      const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+    }
+    return ENTITIES[e.toLowerCase()] ?? m;
+  });
 }
 
 // "On Tue, 3 Nov 2026 at 10:00, Ann <ann@x.nl> wrote:" in the languages our clients write.
