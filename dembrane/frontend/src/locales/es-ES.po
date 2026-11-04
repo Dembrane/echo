@@ -1315,6 +1315,10 @@ msgstr "Un nuevo asistente y un monitor en directo"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Se generará y publicará automáticamente un nuevo informe en el horario programado."
 
+#: src/components/workspace/gateWalls.ts:148
+msgid "A paid plan lets you keep going."
+msgstr "Con un plan de pago puedes seguir adelante."
+
 #: src/components/release/PilotHistory.tsx:23
 msgid "A participant portal for recording conversations."
 msgstr "Un portal para participantes donde grabar conversaciones."
@@ -2828,7 +2832,7 @@ msgstr "Enviar automáticamente los datos de la conversación a tus otras herram
 msgid "Automation"
 msgstr "Automatización"
 
-#: src/components/workspace/FeatureGate.tsx:156
+#: src/components/workspace/FeatureGate.tsx:157
 msgid "Available on a paid plan"
 msgstr "Disponible en un plan de pago"
 
@@ -4174,7 +4178,7 @@ msgstr "Continuar"
 msgid "participant.verify.instructions.button.next"
 msgstr "Continuar"
 
-#: src/components/workspace/FeatureGate.tsx:358
+#: src/components/workspace/FeatureGate.tsx:362
 msgid "Continue on dembrane.com"
 msgstr "Continuar en dembrane.com"
 
@@ -6186,7 +6190,7 @@ msgstr "Todo el personal de la lista está capacitado."
 msgid "participant.alert.microphone.access.success"
 msgstr "Acceso al micrófono verificado con éxito"
 
-#: src/components/workspace/FeatureGate.tsx:344
+#: src/components/workspace/FeatureGate.tsx:348
 msgid "Everything you've made here stays as it is."
 msgstr "Todo lo que has creado aquí se queda como está."
 
@@ -9041,7 +9045,7 @@ msgstr "Marca {orgName} como socio. Sus espacios de trabajo identifican por sí 
 msgid "max {maximum}"
 msgstr "máx. {maximum}"
 
-#: src/components/workspace/FeatureGate.tsx:365
+#: src/components/workspace/FeatureGate.tsx:369
 msgid "Maybe later"
 msgstr "Quizás más tarde"
 
@@ -18088,7 +18092,7 @@ msgstr "Solo te enviaremos un mensaje si tu host genera un informe, nunca compar
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Nos encantaría saber de usted. Ya sea que tenga una idea para algo nuevo, haya visto una traducción que no encaja, o simplemente quiera contarnos cómo va todo. ¿Ha encontrado un error? Use <0>Informar de un problema</0> para enviarlo con capturas de pantalla."
 
-#: src/components/workspace/FeatureGate.tsx:330
+#: src/components/workspace/FeatureGate.tsx:334
 msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
 msgstr "Nos encantaría saber un poco más sobre cómo usas dembrane, para poder ayudarte mejor. Son unos dos minutos en nuestra web y, al final, puedes reservar una llamada corta con nosotros si quieres."
 
@@ -19308,7 +19312,7 @@ msgstr "Tu plan te permite quitar la marca."
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Tu plan no se renovará. Mantendrás el acceso hasta el final del periodo."
 
-#: src/components/workspace/FeatureGate.tsx:338
+#: src/components/workspace/FeatureGate.tsx:342
 msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
 msgstr "Tus portales siguen funcionando y no se pierde nada de lo que dicen tus participantes. En cuanto tengas un plan de pago, se transcribe todo lo que ya está grabado."
 

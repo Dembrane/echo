@@ -9,7 +9,12 @@ import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
 import { FeatureGate, UpgradeModal } from "./FeatureGate";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { type WallKey, wallHandoverTitle, wallPopoverLine } from "./gateWalls";
+import {
+	type WallKey,
+	wallHandoverLead,
+	wallHandoverTitle,
+	wallPopoverLine,
+} from "./gateWalls";
 
 const capture = vi.fn();
 const saveHandover = vi.fn();
@@ -190,9 +195,9 @@ it("says what they hit and offers the website, without sending them anywhere", (
 
 	const modal = screen.getByTestId("upgrade-modal");
 	expect(modal.textContent).toContain("You've used this month's free reports");
-	expect(screen.getByTestId("upgrade-modal-body").textContent).toContain(
-		"about two minutes on our website",
-	);
+	const body = screen.getByTestId("upgrade-modal-body").textContent;
+	expect(body).toMatch(/^A paid plan lets you keep going\. We'd love/);
+	expect(body).toContain("about two minutes on our website");
 	expect(screen.getByTestId("upgrade-modal-reassurance").textContent).toBe(
 		"Everything you've made here stays as it is.",
 	);
@@ -288,6 +293,46 @@ it("lets the person stay with Maybe later, and saves nothing", () => {
 			(c) => c[0] === "pricing_config_handover_dismissed",
 		),
 	).toBe(true);
+});
+
+it("says a paid plan is needed once, in the title or in the body", () => {
+	const usageWalls: WallKey[] = [
+		"chat_cap",
+		"chat_turn_cap",
+		"chat_voice_cap",
+		"free_allowance",
+		"map_cap",
+		"org_cap",
+		"popcorn_cap",
+		"project_cap",
+		"recording_project",
+		"report_cap",
+		"transcription_cap",
+		"workspace_cap",
+	];
+	const featureWalls: WallKey[] = [
+		"custom_logo",
+		"event_cta",
+		"private_workspace",
+		"transcripts_view",
+		"upload_cap",
+		"webhooks",
+	];
+
+	for (const wall of usageWalls) {
+		expect(wallHandoverLead(wall)).toBe("A paid plan lets you keep going.");
+		expect(wallHandoverTitle(wall)).not.toContain("paid plan");
+	}
+	for (const wall of featureWalls) {
+		expect(wallHandoverLead(wall)).toBe("");
+		expect(wallHandoverTitle(wall)).toContain("paid plan");
+	}
+	expect(wallHandoverLead("billing_page")).toBe("");
+
+	renderModal({ wallKey: "webhooks" });
+	expect(screen.getByTestId("upgrade-modal-body").textContent).toMatch(
+		/^We'd love/,
+	);
 });
 
 it("tells the person at the transcription cap that nothing recorded is lost", () => {

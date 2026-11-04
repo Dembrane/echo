@@ -137,3 +137,35 @@ export function wallHandoverTitle(wall: WallKey): string {
 	};
 	return titles[wall] ?? titles.billing_page;
 }
+
+/**
+ * The sentence that opens the upgrade prompt's body: going further needs a
+ * paid plan. Only the walls whose title names what was used up carry it. A
+ * paid feature's title already says it comes with a paid plan, so saying it
+ * again would repeat, and the billing page blocks nothing.
+ */
+export function wallHandoverLead(wall: WallKey): string {
+	const keepGoing = t`A paid plan lets you keep going.`;
+	const leads: Record<WallKey, string> = {
+		billing_page: "",
+		chat_cap: keepGoing,
+		chat_turn_cap: keepGoing,
+		chat_voice_cap: keepGoing,
+		custom_logo: "",
+		event_cta: "",
+		free_allowance: keepGoing,
+		map_cap: keepGoing,
+		org_cap: keepGoing,
+		popcorn_cap: keepGoing,
+		private_workspace: "",
+		project_cap: keepGoing,
+		recording_project: keepGoing,
+		report_cap: keepGoing,
+		transcription_cap: keepGoing,
+		transcripts_view: "",
+		upload_cap: "",
+		webhooks: "",
+		workspace_cap: keepGoing,
+	};
+	return leads[wall] ?? "";
+}

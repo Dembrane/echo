@@ -15,6 +15,7 @@ import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
 	isLockedDataWall,
 	type WallKey,
+	wallHandoverLead,
 	wallHandoverTitle,
 	wallPopoverLine,
 } from "./gateWalls";
@@ -316,6 +317,8 @@ export function UpgradeModal({
 		onClose();
 	};
 
+	const lead = wallHandoverLead(wallKey);
+
 	return (
 		<Modal
 			opened={opened}
@@ -327,6 +330,7 @@ export function UpgradeModal({
 		>
 			<Stack gap="md">
 				<Text {...testId("upgrade-modal-body")}>
+					{lead && `${lead} `}
 					<Trans>
 						We'd love to learn a bit about how you use dembrane, so we can help
 						you better. It takes about two minutes on our website, and you can
