@@ -85,6 +85,12 @@ export async function requireAudioStart(
   return v.a;
 }
 
+// Typed text records nothing, so only a used-up AI budget refuses it, the same way as a recording.
+export async function requireTextStart(d: AudioDeps, projectId: string): Promise<void> {
+  const a = await allowanceForProject(d.db, projectId, d.now());
+  if (a && (await aiBudgetGone(d, a, projectId))) throw freeLimitError("ai_budget");
+}
+
 // What the portal shows before starting; never throws.
 export async function audioOpen(
   d: AudioDeps,

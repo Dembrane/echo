@@ -422,7 +422,7 @@ msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Vraag hierover} other {Vraag over deze (#)}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2210
+#: src/components/chat/AgenticChatPanel.tsx:2214
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Focus op # gesprek:} other {Focus op # gesprekken:}}"
 
@@ -464,14 +464,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:948
+#: src/routes/project/chat/ProjectChatRoute.tsx:950
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {# gesprek in gebruik:} other {# gesprekken in gebruik:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:784
+#: src/routes/project/chat/ProjectChatRoute.tsx:786
 #: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -781,15 +781,15 @@ msgstr "Toegevoegd: {addedCount}. Bekijk de lijst hieronder."
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} mensen waren al uitgenodigd. Het project wordt gedeeld zodra ze meedoen."
 
-#: src/routes/admin/AiCostsPanel.tsx:63
+#: src/routes/admin/AiCostsPanel.tsx:64
 msgid "{amount} custom"
 msgstr "{amount} aangepast"
 
-#: src/routes/admin/AiCostsPanel.tsx:62
+#: src/routes/admin/AiCostsPanel.tsx:63
 msgid "{amount} default"
 msgstr "{amount} standaard"
 
-#: src/routes/admin/AiCostsPanel.tsx:63
+#: src/routes/admin/AiCostsPanel.tsx:64
 msgid "{amount} until {until}"
 msgstr "{amount} tot {until}"
 
@@ -805,7 +805,7 @@ msgstr "{argumentCount, plural, one {# argument} other {# argumenten}} uit {conv
 msgid "{browser} on {platform}"
 msgstr "{browser} op {platform}"
 
-#: src/routes/admin/AiCostsPanel.tsx:122
+#: src/routes/admin/AiCostsPanel.tsx:123
 msgid "{calls, plural, one {# call} other {# calls}}"
 msgstr "{calls, plural, one {# call} other {# calls}}"
 
@@ -984,11 +984,11 @@ msgstr "{name} heeft de gratis opname-uren van deze maand verbruikt. Opnemen is 
 msgid "{name}: {rowDone} of {rowTotal}"
 msgstr "{name}: {rowDone} van {rowTotal}"
 
-#: src/components/chat/AgenticChatPanel.tsx:279
+#: src/components/chat/AgenticChatPanel.tsx:280
 msgid "{name}'s conversation"
 msgstr "Gesprek van {name}"
 
-#: src/components/chat/AgenticChatPanel.tsx:278
+#: src/components/chat/AgenticChatPanel.tsx:279
 msgid "{name}'s transcript excerpt"
 msgstr "Transcriptfragment van {name}"
 
@@ -1093,7 +1093,7 @@ msgstr "{sent} uitnodigingen verstuurd. Het project wordt gedeeld zodra ze meedo
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} uitnodigingen verstuurd."
 
-#: src/routes/admin/AiCostsPanel.tsx:621
+#: src/routes/admin/AiCostsPanel.tsx:622
 msgid "{share} of the total"
 msgstr "{share} van het totaal"
 
@@ -1105,11 +1105,11 @@ msgstr "{stored} min"
 msgid "{tag} (preselected)"
 msgstr "{tag} (vooraf gekozen)"
 
-#: src/routes/admin/AiCostsPanel.tsx:52
+#: src/routes/admin/AiCostsPanel.tsx:53
 msgid "{tier}, organisation account"
 msgstr "{tier}, organisatie-account"
 
-#: src/routes/admin/AiCostsPanel.tsx:53
+#: src/routes/admin/AiCostsPanel.tsx:54
 msgid "{tier}, workspace account"
 msgstr "{tier}, werkruimte-account"
 
@@ -1363,13 +1363,13 @@ msgstr "Een project bevat alles voor één onderwerp. Deel de link met deelnemer
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Een openbare pagina vraagt om een hoger abonnement. Zet Openbare pagina uit onder Delen om de andere wijzigingen te tonen."
 
-#: src/components/report/UpdateReportModalButton.tsx:235
-#: src/components/report/CreateReportForm.tsx:149
+#: src/components/report/UpdateReportModalButton.tsx:237
+#: src/components/report/CreateReportForm.tsx:152
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaar is."
 
-#: src/components/pricing/PricingConfigurator.tsx:1183
-#: src/components/pricing/PricingConfigurator.tsx:1187
+#: src/components/pricing/PricingConfigurator.tsx:1214
+#: src/components/pricing/PricingConfigurator.tsx:1218
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
 
@@ -1509,7 +1509,7 @@ msgstr "Toegangsverzoek ingetrokken"
 msgid "Access requests"
 msgstr "Toegangsverzoeken"
 
-#: src/routes/admin/AiCostsPanel.tsx:655
+#: src/routes/admin/AiCostsPanel.tsx:656
 #: src/routes/admin/AdminSettingsRoute.tsx:482
 #: src/routes/admin/AdminSettingsRoute.tsx:1361
 #: src/routes/admin/AdminSettingsRoute.tsx:1573
@@ -1557,7 +1557,7 @@ msgstr "Account overgezet naar facturatie via dembrane."
 msgid "Account set to managed."
 msgstr "Account op beheerd gezet."
 
-#: src/routes/admin/AiCostsPanel.tsx:598
+#: src/routes/admin/AiCostsPanel.tsx:599
 msgid "Accounts and providers"
 msgstr "Accounts en providers"
 
@@ -1565,7 +1565,7 @@ msgstr "Accounts en providers"
 msgid "Accounts billed"
 msgstr "Gefactureerde accounts"
 
-#: src/routes/admin/AiCostsPanel.tsx:600
+#: src/routes/admin/AiCostsPanel.tsx:601
 msgid "Accounts with AI calls"
 msgstr "Accounts met AI-aanroepen"
 
@@ -1668,7 +1668,7 @@ msgstr "Notitie toevoegen"
 msgid "Add a project goal before saving."
 msgstr "Voeg een projectdoel toe voordat je opslaat."
 
-#: src/components/workspace/gateWalls.ts:184
+#: src/components/workspace/gateWalls.ts:197
 msgid "add a workspace"
 msgstr "een werkruimte toe te voegen"
 
@@ -1693,7 +1693,7 @@ msgstr "Voeg gesprekstags toe vanuit het dashboard."
 msgid "select.all.modal.title.add"
 msgstr "Gesprekken toevoegen aan context"
 
-#: src/components/report/CreateReportForm.tsx:336
+#: src/components/report/CreateReportForm.tsx:339
 msgid "Add conversations to your project first"
 msgstr "Voeg eerst gesprekken toe aan je project"
 
@@ -1717,7 +1717,7 @@ msgstr "Afbeeldingen toevoegen"
 #~ msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 #~ msgstr "Voeg belangrijke woorden of namen toe om de kwaliteit en nauwkeurigheid van het transcript te verbeteren."
 
-#: src/components/workspace/gateWalls.ts:175
+#: src/components/workspace/gateWalls.ts:186
 msgid "add more projects"
 msgstr "meer projecten toevoegen"
 
@@ -1823,7 +1823,7 @@ msgstr "Webhook toevoegen"
 #~ msgid "Add Your First Webhook"
 #~ msgstr "Voeg uw eerste webhook toe"
 
-#: src/components/workspace/gateWalls.ts:170
+#: src/components/workspace/gateWalls.ts:181
 msgid "add your logo"
 msgstr "je logo toe te voegen"
 
@@ -2000,7 +2000,7 @@ msgstr "Tegen"
 msgid "Agent"
 msgstr "Agent"
 
-#: src/components/chat/AgenticChatPanel.tsx:415
+#: src/components/chat/AgenticChatPanel.tsx:416
 msgid "Agent run failed"
 msgstr "Agent-run mislukt"
 
@@ -2017,7 +2017,7 @@ msgstr "Agentisch - Tool-gestuurd uitvoering"
 msgid "Agentic chat"
 msgstr "Agentische chat"
 
-#: src/routes/admin/AiBudgetEditor.tsx:119
+#: src/routes/admin/AiBudgetEditor.tsx:124
 msgid "AI budget"
 msgstr "AI-budget"
 
@@ -2037,15 +2037,19 @@ msgstr "AI-budget per maand"
 msgid "AI budget saved"
 msgstr "AI-budget opgeslagen"
 
-#: src/routes/admin/AiCostsPanel.tsx:523
+#: src/components/chat/ChatModeSelector.tsx:114
+msgid "AI budget used up"
+msgstr "AI-budget is op"
+
+#: src/routes/admin/AiCostsPanel.tsx:524
 msgid "AI costs"
 msgstr "AI-kosten"
 
-#: src/components/pricing/PricingConfigurator.tsx:763
+#: src/components/pricing/PricingConfigurator.tsx:777
 msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot {resetDate}. Upgrade om nu verder te gaan."
 
-#: src/components/pricing/PricingConfigurator.tsx:768
+#: src/components/pricing/PricingConfigurator.tsx:782
 msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
 msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot volgende maand. Upgrade om nu verder te gaan."
 
@@ -2230,7 +2234,7 @@ msgstr "Altijd aan. Het scherm opent hier, zodat de zaal iets te lezen heeft ter
 msgid "Amount"
 msgstr "Bedrag"
 
-#: src/routes/admin/AiBudgetEditor.tsx:130
+#: src/routes/admin/AiBudgetEditor.tsx:135
 msgid "Amount per month"
 msgstr "Bedrag per maand"
 
@@ -2274,7 +2278,7 @@ msgstr "Er is een fout opgetreden bij het laden van het portaal. Neem contact op
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:843
+#: src/routes/project/chat/ProjectChatRoute.tsx:845
 msgid "An error occurred."
 msgstr "Er is een fout opgetreden."
 
@@ -2484,7 +2488,7 @@ msgstr "Toegepast. Het canvas toont nu dit ontwerp en houdt het actueel."
 msgid "Applies this wording and refresh behavior to the existing canvas."
 msgstr "Past deze formulering en het verversgedrag toe op het bestaande canvas."
 
-#: src/routes/admin/AiBudgetEditor.tsx:123
+#: src/routes/admin/AiBudgetEditor.tsx:128
 msgid "Applies while the account is on the free plan."
 msgstr "Geldt zolang het account het Free-abonnement heeft."
 
@@ -2509,7 +2513,7 @@ msgid "Approaching a limit this month"
 msgstr "Bijna een limiet bereikt deze maand"
 
 #. placeholder {0}: input.length.toLocaleString()
-#: src/components/chat/AgenticChatPanel.tsx:2365
+#: src/components/chat/AgenticChatPanel.tsx:2369
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Bijna aan de limiet: {0} / 32.000 tekens"
 
@@ -2646,7 +2650,7 @@ msgstr "Stel vraag"
 msgid "Ask | dembrane"
 msgstr "Vragen | dembrane"
 
-#: src/components/chat/AgenticChatPanel.tsx:1915
+#: src/components/chat/AgenticChatPanel.tsx:1919
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Stel een vraag over de gesprekken in dit project, of vraag hulp bij het opzetten ervan. Elke wijziging wordt eerst ter beoordeling voorgesteld en er wordt niets opgeslagen totdat je het goedkeurt."
 
@@ -2671,7 +2675,7 @@ msgid "Ask about these"
 msgstr "Hierover vragen"
 
 #: src/routes/project/chat/NewChatRoute.tsx:682
-#: src/components/chat/AgenticChatPanel.tsx:2341
+#: src/components/chat/AgenticChatPanel.tsx:2345
 msgid "Ask about your conversations..."
 msgstr "Vraag iets over je gesprekken..."
 
@@ -2703,7 +2707,7 @@ msgstr "Vraag om naam?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Vraag na afloop van een gesprek om e-mailadressen van deelnemers."
 
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:100
 msgid "ask in chat"
 msgstr "vragen in de chat"
 
@@ -2716,6 +2720,10 @@ msgstr "vragen in de chat"
 #~ msgid "ask more in chat"
 #~ msgstr "meer vragen te stellen in de chat"
 
+#: src/components/workspace/gateWalls.ts:98
+#~ msgid "ask more in this sample project"
+#~ msgstr "meer vragen in dit voorbeeldproject"
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Ask participants for their email"
 msgstr "Vraag deelnemers om hun e-mailadres"
@@ -2724,7 +2732,7 @@ msgstr "Vraag deelnemers om hun e-mailadres"
 msgid "Ask participants for their name"
 msgstr "Vraag deelnemers om hun naam"
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:98
 msgid "ask the assistant"
 msgstr "vraag het de assistent"
 
@@ -2934,7 +2942,7 @@ msgstr "Conversatiegegevens automatisch verzenden naar je andere tools en servic
 msgid "Automation"
 msgstr "Automatisering"
 
-#: src/components/workspace/FeatureGate.tsx:155
+#: src/components/workspace/FeatureGate.tsx:156
 msgid "Available on a paid plan"
 msgstr "Beschikbaar met een betaald abonnement"
 
@@ -2965,7 +2973,7 @@ msgstr "Afwezig"
 #: src/routes/auth/Register.tsx:289
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:915
+#: src/components/pricing/PricingConfigurator.tsx:946
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2994,7 +3002,7 @@ msgstr "Terug naar ‘Koppel je agent’"
 msgid "Back to conversations"
 msgstr "Terug naar gesprekken"
 
-#: src/components/pricing/PricingConfigurator.tsx:986
+#: src/components/pricing/PricingConfigurator.tsx:1017
 msgid "Back to dembrane"
 msgstr "Terug naar dembrane"
 
@@ -3085,8 +3093,8 @@ msgstr "Voordat je een agent koppelt"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:143
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:155
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:168
-#: src/components/report/UpdateReportModalButton.tsx:198
-#: src/components/report/CreateReportForm.tsx:238
+#: src/components/report/UpdateReportModalButton.tsx:200
+#: src/components/report/CreateReportForm.tsx:241
 #: src/components/project/ProjectPortalEditor.tsx:1380
 #: src/components/project/ProjectPortalEditor.tsx:1460
 #: src/components/project/ProjectExperimentalSection.tsx:50
@@ -3158,7 +3166,7 @@ msgstr "Gefactureerd onder het abonnement van je organisatie, samen met je ander
 msgid "Billing"
 msgstr "Facturering"
 
-#: src/routes/admin/AiCostsPanel.tsx:602
+#: src/routes/admin/AiCostsPanel.tsx:603
 msgid "Billing accounts that made AI calls"
 msgstr "Facturatie-accounts met AI-calls"
 
@@ -3223,7 +3231,7 @@ msgstr "Briefing"
 msgid "Bring your own LLM"
 msgstr "Gebruik je eigen LLM"
 
-#: src/routes/admin/AiCostsPanel.tsx:661
+#: src/routes/admin/AiCostsPanel.tsx:662
 msgid "Budget"
 msgstr "Budget"
 
@@ -3239,7 +3247,7 @@ msgstr "Aangepaste dashboards bouwen met realtime conversatiegegevens"
 msgid "by {by}"
 msgstr "door {by}"
 
-#: src/routes/admin/AiCostsPanel.tsx:630
+#: src/routes/admin/AiCostsPanel.tsx:631
 msgid "By account"
 msgstr "Per account"
 
@@ -3251,11 +3259,11 @@ msgstr "Door dit project te verwijderen, verwijder je alle bijbehorende gegevens
 #~ msgid "By feature"
 #~ msgstr "Per functie"
 
-#: src/routes/admin/AiCostsPanel.tsx:185
+#: src/routes/admin/AiCostsPanel.tsx:186
 msgid "By feature group"
 msgstr "Per functiegroep"
 
-#: src/routes/admin/AiCostsPanel.tsx:193
+#: src/routes/admin/AiCostsPanel.tsx:194
 msgid "By model"
 msgstr "Per model"
 
@@ -3272,7 +3280,7 @@ msgstr "Op trefwoord"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:588
+#: src/routes/admin/AiCostsPanel.tsx:589
 msgid "Calls no account could be matched to"
 msgstr "Aanroepen die aan geen enkel account konden worden gekoppeld"
 
@@ -3280,7 +3288,7 @@ msgstr "Aanroepen die aan geen enkel account konden worden gekoppeld"
 #~ msgid "Calls with no account or internal payer"
 #~ msgstr "Calls zonder account of interne betaler"
 
-#: src/components/pricing/PricingConfigurator.tsx:719
+#: src/components/pricing/PricingConfigurator.tsx:733
 msgid "Can you tell us more?"
 msgstr "Kun je ons meer vertellen?"
 
@@ -3334,8 +3342,8 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/common/ImageCropModal.tsx:146
 #: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:764
-#: src/components/chat/AgenticChatPanel.tsx:754
-#: src/components/chat/AgenticChatPanel.tsx:2248
+#: src/components/chat/AgenticChatPanel.tsx:755
+#: src/components/chat/AgenticChatPanel.tsx:2252
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -3373,7 +3381,7 @@ msgstr "Annuleren"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Annuleer wanneer je wilt. Je houdt toegang tot het einde van de periode."
 
-#: src/components/chat/AgenticChatPanel.tsx:742
+#: src/components/chat/AgenticChatPanel.tsx:743
 msgid "Cancel current run"
 msgstr "Huidige run stoppen"
 
@@ -3602,23 +3610,23 @@ msgstr "Laadafstand (viewport-fractie): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Laadafstand (viewport-fractie): {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:574
+#: src/routes/admin/AiCostsPanel.tsx:575
 msgid "Charged to accounts"
 msgstr "In rekening gebracht bij accounts"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:689
-#: src/routes/project/chat/ProjectChatRoute.tsx:695
+#: src/routes/project/chat/ProjectChatRoute.tsx:691
+#: src/routes/project/chat/ProjectChatRoute.tsx:697
 #: src/routes/admin/aiCostBreakdown.ts:49
 #: src/routes/admin/aiCostBreakdown.ts:68
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:258
 #: src/features/sidebar/hooks/useSearchHits.ts:259
 #: src/features/sidebar/hooks/useSearchHits.ts:264
-#: src/components/chat/AgenticChatPanel.tsx:1764
+#: src/components/chat/AgenticChatPanel.tsx:1768
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:352
+#: src/routes/project/chat/ProjectChatRoute.tsx:353
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3638,14 +3646,14 @@ msgstr "Chat verwijderd"
 msgid "Chat is more reliable."
 msgstr "Chat werkt betrouwbaarder."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:626
+#: src/routes/project/chat/ProjectChatRoute.tsx:628
 #: src/routes/project/chat/NewChatRoute.tsx:542
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat is niet beschikbaar op jouw toegangsniveau. Neem contact op met je werkruimtebeheerder om een upgrade aan te vragen."
 
 #: src/components/chat/ChatModeSelector.tsx:114
-msgid "Chat limit reached"
-msgstr "Chatlimiet bereikt"
+#~ msgid "Chat limit reached"
+#~ msgstr "Chatlimiet bereikt"
 
 #: src/components/chat/ChatAccordion.tsx:140
 msgid "Chat name"
@@ -3835,7 +3843,7 @@ msgstr "Plaats"
 #~ msgid "Claim · unverified"
 #~ msgstr ""
 
-#: src/routes/admin/AiBudgetEditor.tsx:180
+#: src/routes/admin/AiBudgetEditor.tsx:185
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:815
 #: src/components/conversation/ConversationsMiniList.tsx:251
@@ -4223,7 +4231,7 @@ msgstr "Gekoppelde agents"
 msgid "participant.modal.s3check.title"
 msgstr "Verbindingsprobleem"
 
-#: src/components/chat/AgenticChatPanel.tsx:1868
+#: src/components/chat/AgenticChatPanel.tsx:1872
 msgid "Connection lost. Reload for the answer."
 msgstr "Verbinding verbroken. Laad opnieuw voor het antwoord."
 
@@ -4297,7 +4305,7 @@ msgstr "Contextuele suggesties"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:892
+#: src/components/pricing/PricingConfigurator.tsx:923
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
@@ -4400,7 +4408,7 @@ msgstr "Gesprek gestart"
 #~ msgid "Conversation Status"
 #~ msgstr "Gespreksstatus"
 
-#: src/components/report/CreateReportForm.tsx:215
+#: src/components/report/CreateReportForm.tsx:218
 msgid "Conversation status details"
 msgstr "Details gespreksstatus"
 
@@ -4437,7 +4445,7 @@ msgid "Conversation transcribed"
 msgstr "Gesprek getranscribeerd"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1648
-#: src/components/report/CreateReportForm.tsx:207
+#: src/components/report/CreateReportForm.tsx:210
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
 msgstr "gesprekken"
@@ -4583,7 +4591,7 @@ msgstr "Kopieer URL"
 msgid "Copying…"
 msgstr "Kopiëren…"
 
-#: src/routes/admin/AiCostsPanel.tsx:658
+#: src/routes/admin/AiCostsPanel.tsx:659
 msgid "Cost"
 msgstr "Kosten"
 
@@ -4653,7 +4661,7 @@ msgstr "Kon de methodologieën niet laden."
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Betalingen konden niet worden geladen. Controleer de authenticatie en de backend-logs."
 
-#: src/routes/admin/AiCostsPanel.tsx:548
+#: src/routes/admin/AiCostsPanel.tsx:549
 msgid "Could not load the AI costs."
 msgstr "Kon de AI-kosten niet laden."
 
@@ -4890,7 +4898,7 @@ msgstr "Maak"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Een nieuwe webhook vanaf nul maken"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:103
 msgid "create a report"
 msgstr "een rapport maken"
 
@@ -4919,6 +4927,10 @@ msgstr "Maak en beheer meerdere rapporten binnen één project."
 #~ msgid "create another report"
 #~ msgstr "nog een rapport te maken"
 
+#: src/components/workspace/gateWalls.ts:97
+#~ msgid "create another report in this sample project"
+#~ msgstr "nog een rapport maken in dit voorbeeldproject"
+
 #: src/components/release/releaseHistory.ts:322
 msgid "Create custom chat templates (beta), or duplicate and edit a built-in template."
 msgstr "Maak eigen chattemplates (bèta), of kopieer en bewerk een ingebouwde template."
@@ -4928,7 +4940,7 @@ msgstr "Maak eigen chattemplates (bèta), of kopieer en bewerk een ingebouwde te
 msgid "Create methodology"
 msgstr "Methodologie aanmaken"
 
-#: src/components/workspace/gateWalls.ts:173
+#: src/components/workspace/gateWalls.ts:184
 msgid "create more organisations"
 msgstr "meer organisaties aanmaken"
 
@@ -4958,8 +4970,8 @@ msgstr "Project aanmaken"
 msgid "Create project | dembrane"
 msgstr "Project aanmaken | dembrane"
 
-#: src/components/report/UpdateReportModalButton.tsx:178
-#: src/components/report/UpdateReportModalButton.tsx:193
+#: src/components/report/UpdateReportModalButton.tsx:180
+#: src/components/report/UpdateReportModalButton.tsx:195
 msgid "Create report"
 msgstr "Rapport aanmaken"
 
@@ -4996,6 +5008,14 @@ msgstr "Werkruimte aanmaken"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:141
 msgid "Create workspace | dembrane"
 msgstr "Werkruimte aanmaken | dembrane"
+
+#: src/components/pricing/PricingConfigurator.tsx:841
+msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
+msgstr "Maak je eigen project aan om door te gaan, of beantwoord 5 korte vragen en kies een moment met het dembrane-team voor een betaald abonnement."
+
+#: src/components/pricing/PricingConfigurator.tsx:838
+#~ msgid "Create your own project to keep going."
+#~ msgstr "Maak je eigen project om door te gaan."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2406
 #: src/components/workspace/OrganisationProjectsTable.tsx:230
@@ -5227,7 +5247,7 @@ msgid "Deep Dive"
 msgstr "Deep Dive"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:274
-#: src/routes/admin/AiBudgetEditor.tsx:139
+#: src/routes/admin/AiBudgetEditor.tsx:144
 #: src/routes/admin/AdminSettingsRoute.tsx:3077
 #: src/routes/admin/AdminSettingsRoute.tsx:3093
 #: src/components/project/ProjectPortalEditor.tsx:826
@@ -5398,9 +5418,9 @@ msgstr "Ook dembrane inzetten?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1034
-#: src/routes/project/chat/ProjectChatRoute.tsx:1044
-#: src/components/chat/AgenticChatPanel.tsx:2384
+#: src/routes/project/chat/ProjectChatRoute.tsx:1036
+#: src/routes/project/chat/ProjectChatRoute.tsx:1046
+#: src/components/chat/AgenticChatPanel.tsx:2388
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
 
@@ -5455,7 +5475,7 @@ msgstr "dembrane v3"
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot was ons eerdere project. Dank aan de hosts, deelnemers en bijdragers die het hebben helpen vormgeven."
 
-#: src/routes/admin/AiCostsPanel.tsx:594
+#: src/routes/admin/AiCostsPanel.tsx:595
 msgid "Demos, voice outside projects, dev tools"
 msgstr "Demo's, spraak buiten projecten, dev tools"
 
@@ -5657,7 +5677,7 @@ msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:663
 #: src/components/chat/AgenticPlanCard.tsx:34
-#: src/components/chat/AgenticChatPanel.tsx:434
+#: src/components/chat/AgenticChatPanel.tsx:435
 msgid "Done"
 msgstr "Klaar"
 
@@ -5914,8 +5934,8 @@ msgstr "Methodologie bewerken"
 msgid "Edit mode"
 msgstr "Bewerkingsmodus"
 
-#: src/components/report/UpdateReportModalButton.tsx:282
-#: src/components/report/CreateReportForm.tsx:276
+#: src/components/report/UpdateReportModalButton.tsx:284
+#: src/components/report/CreateReportForm.tsx:279
 msgid "Edit options"
 msgstr "Opties bewerken"
 
@@ -6244,13 +6264,13 @@ msgstr "Ingevoerd door de deelnemer op het portaal"
 msgid "Entered details"
 msgstr "Gegevens ingevuld"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:833
+#: src/routes/project/chat/ProjectChatRoute.tsx:835
 #: src/routes/project/canvas/CanvasRoute.tsx:341
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
 #: src/components/dropzone/UploadConversationDropzone.tsx:941
 #: src/components/conversation/LiveMonitorSection.tsx:274
-#: src/components/chat/AgenticChatPanel.tsx:439
-#: src/components/chat/AgenticChatPanel.tsx:1866
+#: src/components/chat/AgenticChatPanel.tsx:440
+#: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Error"
 msgstr "Fout"
 
@@ -6258,8 +6278,8 @@ msgstr "Fout"
 msgid "Error cloning project"
 msgstr "Fout bij het klonen van het project"
 
-#: src/components/report/UpdateReportModalButton.tsx:230
-#: src/components/report/CreateReportForm.tsx:143
+#: src/components/report/UpdateReportModalButton.tsx:232
+#: src/components/report/CreateReportForm.tsx:146
 msgid "Error creating report"
 msgstr "Fout bij het maken van het rapport"
 
@@ -6322,7 +6342,7 @@ msgstr "Elke 60 minuten"
 #~ msgid "Every AI call on every tier, priced in euros. Free accounts show their budget."
 #~ msgstr "Elke AI-aanroep op elk niveau, in euro's. Free-accounts tonen hun budget."
 
-#: src/routes/admin/AiCostsPanel.tsx:526
+#: src/routes/admin/AiCostsPanel.tsx:527
 msgid "Every AI call on every tier, priced in euros. Free accounts show their budget. Click a row for its breakdown."
 msgstr "Elke AI-call op elk niveau, geprijsd in euro's. Free-accounts tonen hun budget. Klik op een rij voor de uitsplitsing."
 
@@ -6339,7 +6359,7 @@ msgstr "Elke verbonden agent in {0} stopt direct met werken. Leden behouden hun 
 msgid "Every member's connection that names this organisation."
 msgstr "Elke verbinding van leden die naar deze organisatie verwijst."
 
-#: src/routes/admin/AiCostsPanel.tsx:570
+#: src/routes/admin/AiCostsPanel.tsx:571
 msgid "Every priced AI call, all tiers"
 msgstr "Elke geprijsde AI-call, alle niveaus"
 
@@ -6715,11 +6735,11 @@ msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
-#: src/components/chat/AgenticChatPanel.tsx:1757
+#: src/components/chat/AgenticChatPanel.tsx:1761
 msgid "Failed to stop run"
 msgstr "De run stoppen is mislukt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1703
+#: src/components/chat/AgenticChatPanel.tsx:1707
 msgid "Failed to submit agentic message"
 msgstr "Bericht versturen is mislukt"
 
@@ -6951,18 +6971,18 @@ msgstr "Eerste pagina"
 msgid "Fixture"
 msgstr "Fixture"
 
-#: src/components/report/UpdateReportModalButton.tsx:256
-#: src/components/report/CreateReportForm.tsx:250
+#: src/components/report/UpdateReportModalButton.tsx:258
+#: src/components/report/CreateReportForm.tsx:253
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2252
-#: src/components/chat/AgenticChatPanel.tsx:2253
-#: src/components/chat/AgenticChatPanel.tsx:2394
+#: src/components/chat/AgenticChatPanel.tsx:2256
+#: src/components/chat/AgenticChatPanel.tsx:2257
+#: src/components/chat/AgenticChatPanel.tsx:2398
 msgid "Focus on conversations"
 msgstr "Focus op gesprekken"
 
-#: src/components/chat/AgenticChatPanel.tsx:252
+#: src/components/chat/AgenticChatPanel.tsx:253
 msgid "Focusing on:"
 msgstr "Gericht op:"
 
@@ -7103,11 +7123,11 @@ msgstr "Kader"
 #~ msgid "Free"
 #~ msgstr "Gratis"
 
-#: src/routes/admin/AiCostsPanel.tsx:608
+#: src/routes/admin/AiCostsPanel.tsx:609
 msgid "Free accounts at 100% or more"
 msgstr "Free-accounts op 100% of meer"
 
-#: src/routes/admin/AiCostsPanel.tsx:606
+#: src/routes/admin/AiCostsPanel.tsx:607
 msgid "Free accounts at or over budget"
 msgstr "Free-accounts op of over budget"
 
@@ -7203,11 +7223,11 @@ msgstr "Algemene afstoting: {0}"
 msgid "Generate"
 msgstr "Genereren"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:101
 msgid "generate a map"
 msgstr "een kaart genereren"
 
-#: src/components/report/UpdateReportModalButton.tsx:161
+#: src/components/report/UpdateReportModalButton.tsx:163
 msgid "Generate a new report"
 msgstr "Nieuw rapport genereren"
 
@@ -7219,7 +7239,7 @@ msgstr "Nieuw rapport genereren"
 #~ msgid "Generate a Report"
 #~ msgstr "Rapport genereren"
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:105
 msgid "generate a summary"
 msgstr "een samenvatting genereren"
 
@@ -7227,7 +7247,7 @@ msgstr "een samenvatting genereren"
 msgid "Generate a summary first"
 msgstr "Genereer eerst een samenvatting"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:107
 msgid "generate a title"
 msgstr "een titel genereren"
 
@@ -7249,13 +7269,13 @@ msgid "Generate map"
 msgstr "Kaart genereren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:506
-#: src/components/report/UpdateReportModalButton.tsx:347
-#: src/components/report/CreateReportForm.tsx:347
+#: src/components/report/UpdateReportModalButton.tsx:349
+#: src/components/report/CreateReportForm.tsx:350
 msgid "Generate now"
 msgstr "Nu genereren"
 
-#: src/components/report/UpdateReportModalButton.tsx:315
-#: src/components/report/CreateReportForm.tsx:312
+#: src/components/report/UpdateReportModalButton.tsx:317
+#: src/components/report/CreateReportForm.tsx:315
 msgid "Generate now instead"
 msgstr "Nu genereren"
 
@@ -7366,7 +7386,7 @@ msgstr "Geef de sessie een titel"
 msgid "Go back"
 msgstr "Ga terug"
 
-#: src/components/workspace/gateWalls.ts:172
+#: src/components/workspace/gateWalls.ts:183
 msgid "go beyond this month's free allowance"
 msgstr "meer te gebruiken dan het gratis tegoed van deze maand"
 
@@ -7505,7 +7525,7 @@ msgstr "Bevat geverifieerde artefacten"
 msgid "Have you completed a training?"
 msgstr "Heb je een training afgerond?"
 
-#: src/components/workspace/gateWalls.ts:180
+#: src/components/workspace/gateWalls.ts:193
 msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
@@ -7590,7 +7610,7 @@ msgstr "Projecten verbergen"
 msgid "Hide revision data"
 msgstr "Revisiegegevens verbergen"
 
-#: src/components/chat/AgenticChatPanel.tsx:645
+#: src/components/chat/AgenticChatPanel.tsx:646
 msgid "Hide steps"
 msgstr "Stappen verbergen"
 
@@ -7598,11 +7618,11 @@ msgstr "Stappen verbergen"
 msgid "Hide the changes"
 msgstr "Wijzigingen verbergen"
 
-#: src/components/workspace/gateWalls.ts:171
+#: src/components/workspace/gateWalls.ts:182
 msgid "hide the dembrane event invitation"
 msgstr "de dembrane event-uitnodiging verbergen"
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:138
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "De dembrane event-uitnodiging verbergen kan met een betaald plan."
 
@@ -7728,11 +7748,11 @@ msgstr "Zeg het zoals jij het zou zeggen. Een datum, een seizoen, of dat je het 
 msgid "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 msgstr "https://youtu.be/y6jIf-kAYtQ"
 
-#: src/components/chat/AgenticChatPanel.tsx:2038
+#: src/components/chat/AgenticChatPanel.tsx:2042
 msgid "I applied the canvas."
 msgstr "Ik heb het canvas toegepast."
 
-#: src/components/chat/AgenticChatPanel.tsx:2054
+#: src/components/chat/AgenticChatPanel.tsx:2058
 msgid "I applied the goal."
 msgstr "Ik heb het doel toegepast."
 
@@ -7848,7 +7868,7 @@ msgstr "Overgenomen uit een eerdere analyse"
 msgid "Imported from an earlier analysis, {day}"
 msgstr "Overgenomen uit een eerdere analyse, {day}"
 
-#: src/components/chat/AgenticChatPanel.tsx:1935
+#: src/components/chat/AgenticChatPanel.tsx:1939
 msgid "Improve my setup"
 msgstr "Verbeter mijn instellingen"
 
@@ -7892,7 +7912,7 @@ msgstr "Inactief"
 msgid "Inbox"
 msgstr "Inbox"
 
-#: src/routes/admin/AiCostsPanel.tsx:578
+#: src/routes/admin/AiCostsPanel.tsx:579
 msgid "incl. {deleted} from deleted accounts"
 msgstr "incl. {deleted} van verwijderde accounts"
 
@@ -7981,7 +8001,7 @@ msgstr "Instructies voor het genereren van het verificatieresultaat"
 #~ msgid "Integrations & Export"
 #~ msgstr "Integraties en export"
 
-#: src/routes/admin/AiCostsPanel.tsx:592
+#: src/routes/admin/AiCostsPanel.tsx:593
 msgid "Internal"
 msgstr "Intern"
 
@@ -8197,7 +8217,7 @@ msgstr "Het gesprek is verwijderd terwijl je opnam. We hebben de opname gestopt 
 msgid "participant.outcome.error.description"
 msgstr "We konden deze uitkomst niet laden. Dit kan een tijdelijk probleem zijn. U kunt proberen te herladen of teruggaan om een ander onderwerp te selecteren."
 
-#: src/components/report/CreateReportForm.tsx:186
+#: src/components/report/CreateReportForm.tsx:189
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Het lijkt erop dat u nog geen rapport voor dit project heeft. Genereer er een om een overzicht van uw gesprekken te krijgen."
 
@@ -8409,7 +8429,7 @@ msgstr "{tier} houden tot een datum"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Houd de toegang veilig met een eenmalige code uit je authenticator-app. Gebruik deze schakelaar om tweestapsverificatie voor dit account te beheren."
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:102
 msgid "keep analysing with popcorn"
 msgstr "blijf analyseren met Popcorn"
 
@@ -8417,6 +8437,10 @@ msgstr "blijf analyseren met Popcorn"
 #: src/routes/project/CreateProjectRoute.tsx:193
 msgid "Keep editing"
 msgstr "Verder bewerken"
+
+#: src/components/workspace/gateWalls.ts:188
+#~ msgid "keep going in this sample project"
+#~ msgstr "doorgaan in dit voorbeeldproject"
 
 #: src/components/training/TrainingRowActions.tsx:331
 #: src/components/members/PendingInvitesSection.tsx:229
@@ -8495,10 +8519,10 @@ msgstr "Kennisgraaf"
 #: src/routes/project/present/PresentRoute.tsx:139
 #: src/features/sidebar/shell/UserMenu.tsx:159
 #: src/components/settings/LanguageSettingsCard.tsx:10
-#: src/components/report/UpdateReportModalButton.tsx:251
-#: src/components/report/UpdateReportModalButton.tsx:325
-#: src/components/report/CreateReportForm.tsx:245
-#: src/components/report/CreateReportForm.tsx:321
+#: src/components/report/UpdateReportModalButton.tsx:253
+#: src/components/report/UpdateReportModalButton.tsx:327
+#: src/components/report/CreateReportForm.tsx:248
+#: src/components/report/CreateReportForm.tsx:324
 #: src/components/project/ProjectPortalEditor.tsx:603
 #: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
@@ -8514,11 +8538,11 @@ msgstr "Laatst actief: {lastActiveAt}"
 msgid "Last audio"
 msgstr "Laatste audio"
 
-#: src/routes/admin/AiBudgetEditor.tsx:146
+#: src/routes/admin/AiBudgetEditor.tsx:151
 msgid "Last day on this budget"
 msgstr "Laatste dag met dit budget"
 
-#: src/routes/admin/AiCostsPanel.tsx:538
+#: src/routes/admin/AiCostsPanel.tsx:539
 #: src/routes/admin/AdminSettingsRoute.tsx:258
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
@@ -8718,11 +8742,11 @@ msgstr "Link gekopieerd"
 msgid "Link to the privacy policy shown to participants"
 msgstr "Link naar het privacybeleid dat deelnemers te zien krijgen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1925
+#: src/components/chat/AgenticChatPanel.tsx:1929
 msgid "List my conversations"
 msgstr "Toon mijn gesprekken"
 
-#: src/components/chat/AgenticChatPanel.tsx:1926
+#: src/components/chat/AgenticChatPanel.tsx:1930
 msgid "List the conversations in this project."
 msgstr "Toon de gesprekken in dit project."
 
@@ -8922,7 +8946,7 @@ msgstr "De kaart wordt geladen."
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Nieuw bereik laden. De huidige kaart blijft tot die tijd staan."
 
-#: src/components/chat/AgenticChatPanel.tsx:1877
+#: src/components/chat/AgenticChatPanel.tsx:1881
 msgid "Loading this chat..."
 msgstr "Deze chat laden..."
 
@@ -9092,7 +9116,7 @@ msgstr "loop"
 msgid "Low battery"
 msgstr "Batterij bijna leeg"
 
-#: src/components/workspace/gateWalls.ts:174
+#: src/components/workspace/gateWalls.ts:185
 msgid "make a workspace private"
 msgstr "een werkruimte privé te maken"
 
@@ -9367,7 +9391,7 @@ msgstr "Geheugen"
 msgid "Memory removed"
 msgstr "Herinnering verwijderd"
 
-#: src/components/chat/AgenticChatPanel.tsx:2360
+#: src/components/chat/AgenticChatPanel.tsx:2364
 msgid "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
 msgstr "Bericht is te lang (maximaal 32.000 tekens). Voeg gesprekken toe of maak je bericht korter."
 
@@ -9749,7 +9773,7 @@ msgstr "Nieuwe gespreksnaam"
 #~ msgid "New Conversation Name"
 #~ msgstr "Nieuwe Gesprek Naam"
 
-#: src/components/report/UpdateReportModalButton.tsx:160
+#: src/components/report/UpdateReportModalButton.tsx:162
 msgid "New conversations added since this report"
 msgstr "Nieuwe gesprekken toegevoegd sinds dit rapport"
 
@@ -9862,15 +9886,15 @@ msgstr "Nee"
 msgid "No access"
 msgstr "Geen toegang"
 
-#: src/routes/admin/AiCostsPanel.tsx:580
+#: src/routes/admin/AiCostsPanel.tsx:581
 msgid "No account was charged"
 msgstr "Er zijn geen kosten in rekening gebracht"
 
-#: src/routes/admin/AiCostsPanel.tsx:637
+#: src/routes/admin/AiCostsPanel.tsx:638
 msgid "No account was charged in {month}."
 msgstr "Er zijn in {month} geen kosten in rekening gebracht bij accounts."
 
-#: src/routes/admin/AiCostsPanel.tsx:635
+#: src/routes/admin/AiCostsPanel.tsx:636
 msgid "No account was charged this month."
 msgstr "Er zijn deze maand geen kosten in rekening gebracht bij accounts."
 
@@ -9894,11 +9918,11 @@ msgstr "Nog geen aanroepen door agents."
 msgid "No agents connected yet."
 msgstr "Nog geen agents gekoppeld."
 
-#: src/routes/admin/AiCostsPanel.tsx:560
+#: src/routes/admin/AiCostsPanel.tsx:561
 msgid "No AI costs recorded for {month}."
 msgstr "Geen AI-kosten geregistreerd voor {month}."
 
-#: src/routes/admin/AiCostsPanel.tsx:558
+#: src/routes/admin/AiCostsPanel.tsx:559
 msgid "No AI costs recorded this month."
 msgstr "Geen AI-kosten geregistreerd deze maand."
 
@@ -10000,7 +10024,7 @@ msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken a
 msgid "No conversations yet."
 msgstr "Nog geen gesprekken."
 
-#: src/components/report/CreateReportForm.tsx:191
+#: src/components/report/CreateReportForm.tsx:194
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Nog geen gesprekken. Je kunt nu een rapport plannen en gesprekken worden opgenomen zodra ze zijn toegevoegd."
 
@@ -10012,7 +10036,7 @@ msgstr "Nog geen ontdubbelde argumenten opgeslagen."
 msgid "No default set (client-managed applies)"
 msgstr "Geen standaard ingesteld (door client beheerd geldt)"
 
-#: src/routes/admin/AiBudgetEditor.tsx:147
+#: src/routes/admin/AiBudgetEditor.tsx:152
 msgid "No end date"
 msgstr "Geen einddatum"
 
@@ -10060,12 +10084,12 @@ msgstr "Nog geen doel. Stel er hier een in, of laat de assistent je erover inter
 msgid "No invites went out. Check the list below."
 msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 
-#: src/routes/admin/AiCostsPanel.tsx:59
-#: src/routes/admin/AiBudgetEditor.tsx:158
+#: src/routes/admin/AiCostsPanel.tsx:60
+#: src/routes/admin/AiBudgetEditor.tsx:163
 msgid "No limit"
 msgstr "Geen limiet"
 
-#: src/routes/admin/AiCostsPanel.tsx:59
+#: src/routes/admin/AiCostsPanel.tsx:60
 msgid "No limit until {until}"
 msgstr "Geen limiet tot {until}"
 
@@ -10327,7 +10351,7 @@ msgstr "Nog geen spanningen opgeslagen."
 msgid "No tensions yet. They appear after the first analysis."
 msgstr "Nog geen spanningen. Die verschijnen na de eerste analyse."
 
-#: src/routes/admin/AiCostsPanel.tsx:47
+#: src/routes/admin/AiCostsPanel.tsx:48
 msgid "No tier"
 msgstr "Geen niveau"
 
@@ -10478,7 +10502,7 @@ msgid "Not monthly"
 msgstr "Niet maandelijks"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:904
+#: src/components/pricing/PricingConfigurator.tsx:935
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10694,7 +10718,7 @@ msgstr "Facturatie wordt beheerd door dembrane. Overschakelen naar self-serve be
 msgid "On recording page"
 msgstr "Op opnamepagina"
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:143
 msgid "On the free plan one project takes recordings."
 msgstr "In het Free-abonnement kan één project opnames maken."
 
@@ -10840,7 +10864,7 @@ msgstr "Openen"
 msgid "Open {label}"
 msgstr "Open {label}"
 
-#: src/routes/admin/AiCostsPanel.tsx:312
+#: src/routes/admin/AiCostsPanel.tsx:313
 #: src/routes/admin/AdminSettingsRoute.tsx:1664
 msgid "Open account actions"
 msgstr "Accountacties openen"
@@ -11288,7 +11312,7 @@ msgstr "Paginatitel"
 msgid "Paid"
 msgstr "Betaald"
 
-#: src/routes/admin/AiCostsPanel.tsx:60
+#: src/routes/admin/AiCostsPanel.tsx:61
 msgid "Paid plan"
 msgstr "Betaald abonnement"
 
@@ -11584,12 +11608,12 @@ msgstr "Kies een datum"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Kies een stip om de woorden hieronder te lezen."
 
-#: src/components/pricing/PricingConfigurator.tsx:890
+#: src/components/pricing/PricingConfigurator.tsx:921
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Kies een tijd"
 
-#: src/components/pricing/PricingConfigurator.tsx:706
+#: src/components/pricing/PricingConfigurator.tsx:720
 msgid "Pick a time with {host}."
 msgstr "Kies een tijd met {host}."
 
@@ -12115,7 +12139,7 @@ msgstr "Privéproject"
 msgid "Private workspace"
 msgstr "Privéwerkruimte"
 
-#: src/components/workspace/gateWalls.ts:132
+#: src/components/workspace/gateWalls.ts:141
 msgid "Private workspaces come with a paid plan."
 msgstr "Privéwerkruimtes zijn beschikbaar met een betaald abonnement."
 
@@ -12336,7 +12360,7 @@ msgstr "Met trots gehost in de EU"
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Geef een overzicht van de belangrijkste onderwerpen en herhalende thema's"
 
-#: src/routes/admin/AiCostsPanel.tsx:619
+#: src/routes/admin/AiCostsPanel.tsx:620
 msgid "Provider: {provider}"
 msgstr "Provider: {provider}"
 
@@ -12421,7 +12445,7 @@ msgstr "Citaten ({quoteCount})"
 #~ msgstr "Citaten ({quotes})"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:619
+#: src/components/chat/AgenticChatPanel.tsx:620
 msgid "Ran {0} steps at once"
 msgstr "{0} stappen tegelijk uitgevoerd"
 
@@ -12663,7 +12687,7 @@ msgstr "Opname starten"
 
 #: src/components/pricing/PricingTextInput.tsx:267
 #: src/components/feedback/ReportIssueModal.tsx:251
-#: src/components/chat/AgenticChatPanel.tsx:2276
+#: src/components/chat/AgenticChatPanel.tsx:2280
 msgid "Record a voice message"
 msgstr "Spraakbericht opnemen"
 
@@ -12671,7 +12695,7 @@ msgstr "Spraakbericht opnemen"
 msgid "Record another conversation"
 msgstr "Neem nog een gesprek op"
 
-#: src/components/workspace/gateWalls.ts:176
+#: src/components/workspace/gateWalls.ts:187
 msgid "record in every project"
 msgstr "in elk project opnemen"
 
@@ -12742,7 +12766,7 @@ msgstr "Opname gepauzeerd"
 msgid "Recording started"
 msgstr "Opname gestart"
 
-#: src/components/chat/AgenticChatPanel.tsx:886
+#: src/components/chat/AgenticChatPanel.tsx:887
 msgid "Recording stopped at the five minute limit. Turning what you recorded into text."
 msgstr "De opname is gestopt bij de limiet van vijf minuten. Je opname wordt omgezet naar tekst."
 
@@ -12760,8 +12784,8 @@ msgstr "Opnames zijn gepauzeerd voor dit project met het Free-abonnement. Nieuwe
 #~ msgstr "Terugkerende thema's"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:165
-#: src/components/pricing/PricingConfigurator.tsx:976
+#: src/components/pricing/PricingConfigurator.tsx:176
+#: src/components/pricing/PricingConfigurator.tsx:1007
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -12799,7 +12823,7 @@ msgstr "Auditlogboeken vernieuwen"
 msgid "Refresh started"
 msgstr "Verversen gestart"
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:99
 msgid "refresh the canvas"
 msgstr "het canvas vernieuwen"
 
@@ -12812,7 +12836,7 @@ msgid "Refreshing…"
 msgstr "Vernieuwen…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:483
-#: src/routes/project/chat/ProjectChatRoute.tsx:761
+#: src/routes/project/chat/ProjectChatRoute.tsx:763
 #: src/routes/project/canvas/CanvasRoute.tsx:697
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
@@ -12823,11 +12847,11 @@ msgstr "Vernieuwen…"
 msgid "Regenerate"
 msgstr "Opnieuw genereren"
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:106
 msgid "regenerate a summary"
 msgstr "een samenvatting opnieuw genereren"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:108
 msgid "regenerate a title"
 msgstr "een titel opnieuw genereren"
 
@@ -13021,7 +13045,7 @@ msgid "project.sidebar.chat.rename"
 msgstr "Naam wijzigen"
 
 #: src/components/chat/ChatAccordion.tsx:139
-#: src/components/chat/AgenticChatPanel.tsx:1827
+#: src/components/chat/AgenticChatPanel.tsx:1831
 msgid "Rename chat"
 msgstr "Chat hernoemen"
 
@@ -13088,8 +13112,8 @@ msgstr "rapport"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/report/UpdateReportModalButton.tsx:229
-#: src/components/report/CreateReportForm.tsx:143
+#: src/components/report/UpdateReportModalButton.tsx:231
+#: src/components/report/CreateReportForm.tsx:146
 msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
@@ -13151,8 +13175,8 @@ msgstr "Rapportgeneratie, opnieuw transcriberen, projecten kopiëren en chatgesc
 msgid "Report issues from the dashboard with images and voice recordings."
 msgstr "Meld problemen vanuit het dashboard met afbeeldingen en spraakopnamen."
 
-#: src/components/report/UpdateReportModalButton.tsx:206
-#: src/components/report/CreateReportForm.tsx:173
+#: src/components/report/UpdateReportModalButton.tsx:208
+#: src/components/report/CreateReportForm.tsx:176
 msgid "Report limit reached"
 msgstr "Rapportlimiet bereikt"
 
@@ -13180,8 +13204,8 @@ msgstr "Rapport gepland"
 msgid "Report subscriptions, Library generation and live indicators receive fixes."
 msgstr "Rapportabonnementen, Library-generatie en live-indicatoren zijn hersteld."
 
-#: src/components/report/UpdateReportModalButton.tsx:363
-#: src/components/report/CreateReportForm.tsx:368
+#: src/components/report/UpdateReportModalButton.tsx:365
+#: src/components/report/CreateReportForm.tsx:371
 msgid "Report templates are on our roadmap."
 msgstr "Report templates staan op onze roadmap."
 
@@ -13500,7 +13524,7 @@ msgstr "Een notitie voor het dembrane-team intrekken"
 msgid "Retranscribe"
 msgstr "Hertranscriptie"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:104
 msgid "retranscribe a conversation"
 msgstr "een gesprek opnieuw transcriberen"
 
@@ -13575,7 +13599,7 @@ msgstr "Controleer voordat je aanmaakt."
 msgid "Review files before uploading"
 msgstr "Bestanden bekijken voordat u uploadt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1936
+#: src/components/chat/AgenticChatPanel.tsx:1940
 msgid "Review my project settings and suggest improvements."
 msgstr "Bekijk mijn projectinstellingen en stel verbeteringen voor."
 
@@ -13675,7 +13699,7 @@ msgstr "Rol bijgewerkt"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Ruwe schatting om de achterstand aan transcripties weg te werken"
 
-#: src/components/pricing/PricingConfigurator.tsx:1191
+#: src/components/pricing/PricingConfigurator.tsx:1222
 msgid "Roughly how many?"
 msgstr "Ongeveer hoeveel?"
 
@@ -13691,7 +13715,7 @@ msgstr "Starten"
 msgid "Run again from scratch"
 msgstr "Helemaal opnieuw uitvoeren"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:97
 msgid "run an analysis"
 msgstr "een analyse uitvoeren"
 
@@ -13717,7 +13741,7 @@ msgid "Run transcription again for an existing conversation."
 msgstr "Voer de transcriptie opnieuw uit voor een bestaand gesprek."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:103
-#: src/components/chat/AgenticChatPanel.tsx:444
+#: src/components/chat/AgenticChatPanel.tsx:445
 msgid "Running"
 msgstr "Bezig"
 
@@ -13732,6 +13756,14 @@ msgstr "Verkoopfactuur uitgegeven."
 #: src/components/popcorn/PopcornIntroModal.tsx:34
 msgid "Sample popcorn session"
 msgstr "Voorbeeld-Popcorn-sessie"
+
+#: src/components/pricing/PricingConfigurator.tsx:822
+msgid "Sample projects allow {sampleQuestions} questions."
+msgstr "Voorbeeldprojecten staan {sampleQuestions} vragen toe."
+
+#: src/components/pricing/PricingConfigurator.tsx:820
+msgid "Sample projects allow one report."
+msgstr "Voorbeeldprojecten staan één rapport toe."
 
 #: src/routes/admin/AiCostsPanel.tsx:543
 #~ msgid "Samples, demo building and dev tools; no account pays"
@@ -13767,7 +13799,7 @@ msgstr "Opslaan"
 msgid "Save access"
 msgstr "Toegang opslaan"
 
-#: src/routes/admin/AiBudgetEditor.tsx:171
+#: src/routes/admin/AiBudgetEditor.tsx:176
 msgid "Save AI budget"
 msgstr "AI-budget opslaan"
 
@@ -13873,15 +13905,15 @@ msgid "Scanned the QR"
 msgstr "QR gescand"
 
 #: src/components/training/TrainingRowActions.tsx:152
-#: src/components/report/UpdateReportModalButton.tsx:354
-#: src/components/report/CreateReportForm.tsx:360
+#: src/components/report/UpdateReportModalButton.tsx:356
+#: src/components/report/CreateReportForm.tsx:363
 msgid "Schedule"
 msgstr "Plannen"
 
-#: src/components/report/UpdateReportModalButton.tsx:191
-#: src/components/report/UpdateReportModalButton.tsx:307
-#: src/components/report/CreateReportForm.tsx:235
-#: src/components/report/CreateReportForm.tsx:304
+#: src/components/report/UpdateReportModalButton.tsx:193
+#: src/components/report/UpdateReportModalButton.tsx:309
+#: src/components/report/CreateReportForm.tsx:238
+#: src/components/report/CreateReportForm.tsx:307
 msgid "Schedule report"
 msgstr "Rapport inplannen"
 
@@ -14130,14 +14162,14 @@ msgstr "Abonnementen bekijken"
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Bekijk de argumenten uit je gesprekken en de citaten erachter op de Map."
 
-#: src/components/workspace/gateWalls.ts:181
+#: src/components/workspace/gateWalls.ts:194
 msgid "see transcripts"
 msgstr "transcripten te bekijken"
 
 #: src/routes/project/present/MapFreeNotice.tsx:62
-#: src/components/workspace/FreeAllowanceBanner.tsx:89
-#: src/components/report/UpdateReportModalButton.tsx:221
-#: src/components/report/CreateReportForm.tsx:179
+#: src/components/workspace/FreeAllowanceBanner.tsx:90
+#: src/components/report/UpdateReportModalButton.tsx:223
+#: src/components/report/CreateReportForm.tsx:182
 #: src/components/popcorn/AiBudgetNotice.tsx:50
 #: src/components/chat/FreeTierChatGate.tsx:53
 msgid "See upgrade options"
@@ -14169,7 +14201,7 @@ msgstr "{0} selecteren"
 msgid "Select {title}"
 msgstr "{title} selecteren"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:901
+#: src/routes/project/chat/ProjectChatRoute.tsx:903
 msgid "Select a conversation to continue"
 msgstr "Selecteer een gesprek om verder te gaan"
 
@@ -14245,10 +14277,10 @@ msgstr "Audiobestanden selecteren"
 msgid "Select conversation"
 msgstr "Gesprek selecteren"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:910
-#: src/routes/project/chat/ProjectChatRoute.tsx:969
-#: src/routes/project/chat/ProjectChatRoute.tsx:970
-#: src/routes/project/chat/ProjectChatRoute.tsx:1055
+#: src/routes/project/chat/ProjectChatRoute.tsx:912
+#: src/routes/project/chat/ProjectChatRoute.tsx:971
+#: src/routes/project/chat/ProjectChatRoute.tsx:972
+#: src/routes/project/chat/ProjectChatRoute.tsx:1057
 #: src/routes/project/chat/NewChatRoute.tsx:633
 #: src/routes/project/chat/NewChatRoute.tsx:635
 #: src/routes/project/chat/NewChatRoute.tsx:745
@@ -14354,10 +14386,10 @@ msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
 msgid "Self-serve"
 msgstr "Self-serve"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:994
+#: src/routes/project/chat/ProjectChatRoute.tsx:996
 #: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
-#: src/components/chat/AgenticChatPanel.tsx:2315
+#: src/components/chat/AgenticChatPanel.tsx:2319
 msgid "Send"
 msgstr "Verzenden"
 
@@ -14619,8 +14651,8 @@ msgstr "Deel met werkruimte"
 msgid "Share your details here"
 msgstr "Deel je gegevens hier"
 
-#: src/components/report/UpdateReportModalButton.tsx:371
-#: src/components/report/CreateReportForm.tsx:375
+#: src/components/report/UpdateReportModalButton.tsx:373
+#: src/components/report/CreateReportForm.tsx:378
 msgid "Share your ideas with our team"
 msgstr "Deel uw ideeën met ons team"
 
@@ -14723,7 +14755,7 @@ msgstr "Alle gesprekken tonen"
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
-#: src/routes/admin/AiCostsPanel.tsx:284
+#: src/routes/admin/AiCostsPanel.tsx:285
 msgid "Show breakdown"
 msgstr "Uitsplitsing weergeven"
 
@@ -14818,7 +14850,7 @@ msgstr "Toon referenties"
 msgid "Show revision data"
 msgstr "Revisiegegevens tonen"
 
-#: src/components/chat/AgenticChatPanel.tsx:645
+#: src/components/chat/AgenticChatPanel.tsx:646
 msgid "Show steps"
 msgstr "Stappen tonen"
 
@@ -14940,7 +14972,7 @@ msgstr "Zes weekenden verspreid over zeven maanden"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:927
+#: src/components/pricing/PricingConfigurator.tsx:958
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -15051,7 +15083,7 @@ msgstr "Er is iets misgegaan bij het genereren van uw laatste rapport."
 msgid "Something went wrong generating your report."
 msgstr "Er is iets misgegaan bij het genereren van uw rapport."
 
-#: src/components/chat/AgenticChatPanel.tsx:218
+#: src/components/chat/AgenticChatPanel.tsx:219
 msgid "Something went wrong on my side. Send your message again and I'll retry."
 msgstr "Er ging iets mis aan mijn kant. Stuur je bericht opnieuw, dan probeer ik het nog een keer."
 
@@ -15181,7 +15213,7 @@ msgstr "Specifieke details - Geselecteerde gesprekken"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Chat met Specifieke details respecteert handmatige gespreksselectie."
 
-#: src/routes/admin/AiCostsPanel.tsx:566
+#: src/routes/admin/AiCostsPanel.tsx:567
 msgid "Spend"
 msgstr "Uitgaven"
 
@@ -15358,7 +15390,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr "Blijft actueel tot morgen {0}"
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:780
+#: src/components/pricing/PricingConfigurator.tsx:794
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Stap {0} van {STEP_COUNT}"
 
@@ -15370,10 +15402,10 @@ msgstr "Stappen en logs"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kom je er nog niet uit? Mail <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:796
+#: src/routes/project/chat/ProjectChatRoute.tsx:798
 #: src/components/pricing/PricingTextInput.tsx:263
 #: src/components/feedback/ReportIssueModal.tsx:247
-#: src/components/chat/AgenticChatPanel.tsx:2271
+#: src/components/chat/AgenticChatPanel.tsx:2275
 msgid "Stop"
 msgstr "Stop"
 
@@ -15405,7 +15437,7 @@ msgstr "Live stoppen"
 
 #: src/components/pricing/PricingTextInput.tsx:254
 #: src/components/feedback/ReportIssueModal.tsx:239
-#: src/components/chat/AgenticChatPanel.tsx:2262
+#: src/components/chat/AgenticChatPanel.tsx:2266
 msgid "Stop recording and turn it into text"
 msgstr "Opname stoppen en omzetten naar tekst"
 
@@ -15739,9 +15771,9 @@ msgstr "Vertel de beheerders van de werkruimte waarvoor je toegang nodig hebt. D
 msgid "Tell us what you need"
 msgstr "Vertel ons wat je nodig hebt"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:592
+#: src/routes/project/chat/ProjectChatRoute.tsx:594
 #: src/routes/project/chat/NewChatRoute.tsx:314
-#: src/components/chat/AgenticChatPanel.tsx:1734
+#: src/components/chat/AgenticChatPanel.tsx:1738
 msgid "Template applied"
 msgstr "Template toegepast"
 
@@ -15838,7 +15870,7 @@ msgstr "Bedankt!"
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr "Bedankt! We nemen zo snel mogelijk contact met je op. Je kunt ons ook mailen via info@dembrane.com."
 
-#: src/components/pricing/PricingConfigurator.tsx:968
+#: src/components/pricing/PricingConfigurator.tsx:999
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Bedankt voor het invullen. Kijk in je mail voor de bevestiging van de afspraak. Heb je vragen voor ons, dan kun je ons altijd bereiken op info@dembrane.com"
 
@@ -15862,7 +15894,7 @@ msgstr "Die code klopt niet of is verlopen. Vraag een nieuwe aan."
 msgid "That did not save. Your words are still here."
 msgstr "Dat is niet opgeslagen. Je woorden staan er nog."
 
-#: src/components/pricing/PricingConfigurator.tsx:867
+#: src/components/pricing/PricingConfigurator.tsx:898
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr "Dat is niet verstuurd. Je antwoorden staan er nog, dus probeer het opnieuw."
 
@@ -15874,7 +15906,7 @@ msgstr "Dat is niet gelukt. We hebben je opname opgeslagen."
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Die opname is te lang om te versturen. Neem een kortere notitie op."
 
-#: src/components/pricing/PricingConfigurator.tsx:825
+#: src/components/pricing/PricingConfigurator.tsx:856
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Daarvoor heb je een betaald abonnement nodig. We stellen je nog 5 korte vragen. Daarna kies je een tijd met het dembrane-team. Voor het gesprek lezen we je antwoorden, zodat we een voorstel meenemen dat bij je past."
 
@@ -15891,7 +15923,7 @@ msgstr "Dat was het"
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "De [helpdocumentatie](https://docs.dembrane.com/) is herschreven en up-to-date."
 
-#: src/routes/admin/AiCostsPanel.tsx:581
+#: src/routes/admin/AiCostsPanel.tsx:582
 msgid "The account rows below"
 msgstr "De accountrijen hieronder"
 
@@ -15907,7 +15939,7 @@ msgstr "De agent handelt namens jou: hij kan alleen zien wat jij al kunt zien."
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "De agent en het bedrijf erachter ontvangen de gespreksinhoud die jij toestaat."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:839
+#: src/routes/project/chat/ProjectChatRoute.tsx:841
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "De AI kon deze vraag niet beantwoorden. Probeer hem anders te formuleren."
 
@@ -16006,7 +16038,7 @@ msgstr "Het feedbackportaal legt uit hoe je beveiligingsproblemen meldt."
 msgid "The following conversations were automatically added to the context"
 msgstr "De volgende gesprekken werden automatisch toegevoegd aan de context"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:150
 msgid "The free plan covers one workspace."
 msgstr "Het gratis plan dekt één werkruimte."
 
@@ -16023,7 +16055,7 @@ msgstr "Het gratis plan dekt één werkruimte."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "Het Free-abonnement bevat een paar chats per maand, elk met een vast aantal vragen."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:142
 msgid "The free plan includes a limited number of projects."
 msgstr "Het Free-abonnement bevat een beperkt aantal projecten."
 
@@ -16049,7 +16081,7 @@ msgstr "Het Free-abonnement bevat een beperkt aantal projecten."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Het Free-abonnement bevat één kaart per maand."
 
-#: src/components/workspace/gateWalls.ts:131
+#: src/components/workspace/gateWalls.ts:140
 msgid "The free plan includes one organisation."
 msgstr "Het Free-abonnement bevat één organisatie."
 
@@ -16094,7 +16126,7 @@ msgstr "Het hostgidsscherm toont de code om mee te doen. Zet deelname aan in de 
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "De host heeft nog geen presentatie voorbereid."
 
-#: src/components/pricing/PricingConfigurator.tsx:954
+#: src/components/pricing/PricingConfigurator.tsx:985
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr "De uitnodiging staat in je inbox. We lezen je antwoorden vooraf en nemen een conceptvoorstel mee. Heb je intussen vragen? Neem dan contact op met"
 
@@ -16221,7 +16253,7 @@ msgstr "De pagina waar dit antwoord naar verwijst."
 msgid "The participant flow has clearer microphone checks."
 msgstr "De deelnemersflow heeft duidelijkere microfooncontroles."
 
-#: src/components/pricing/PricingConfigurator.tsx:744
+#: src/components/pricing/PricingConfigurator.tsx:758
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
@@ -16269,8 +16301,8 @@ msgstr "De random walk toont hier knooppunten zodra deze beschikbaar zijn."
 msgid "The report ends with an invitation to add your voice."
 msgstr "Het rapport eindigt met een uitnodiging om je stem toe te voegen."
 
-#: src/components/report/UpdateReportModalButton.tsx:294
-#: src/components/report/CreateReportForm.tsx:288
+#: src/components/report/UpdateReportModalButton.tsx:296
+#: src/components/report/CreateReportForm.tsx:291
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Het rapport kan tot 5 minuten na de gekozen tijd starten."
 
@@ -16393,8 +16425,8 @@ msgstr "Er zijn geen andere werkruimtes waarnaar je dit project kunt verplaatsen
 #~ msgid "There was an error cloning your project. Please try again or contact support."
 #~ msgstr "Er is een fout opgetreden bij het klonen van uw project. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
 
-#: src/components/report/UpdateReportModalButton.tsx:240
-#: src/components/report/CreateReportForm.tsx:154
+#: src/components/report/UpdateReportModalButton.tsx:242
+#: src/components/report/CreateReportForm.tsx:157
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Er is een fout opgetreden bij het maken van uw rapport. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
 
@@ -16684,13 +16716,13 @@ msgstr "Deze kaart bevat {count} argumenten. Het weergeven kan veel van je appar
 msgid "This marks the training cancelled. You can reopen it later from the same menu."
 msgstr "Hiermee zet je de training op geannuleerd. Je kunt hem later via hetzelfde menu weer openen."
 
-#: src/routes/admin/AiCostsPanel.tsx:537
+#: src/routes/admin/AiCostsPanel.tsx:538
 #: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "Deze maand"
 
-#: src/components/pricing/PricingConfigurator.tsx:759
+#: src/components/pricing/PricingConfigurator.tsx:773
 msgid "This month's AI budget is used up."
 msgstr "Het AI-tegoed voor deze maand is op."
 
@@ -16714,7 +16746,7 @@ msgstr "De AI voor deze maand is op, dus de kaart kan niet worden bijgewerkt tot
 msgid "This month's AI is used up."
 msgstr "De AI voor deze maand is op."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:70
+#: src/components/workspace/FreeAllowanceBanner.tsx:71
 msgid "This month's AI is used up. AI features and new recordings are paused until {date}."
 msgstr "De AI voor deze maand is op. AI-functies en nieuwe opnames zijn gepauzeerd tot {date}."
 
@@ -16869,7 +16901,7 @@ msgstr "Dit rapport werd geopend door {0} mensen"
 msgid "This request has expired"
 msgstr "Dit verzoek is verlopen"
 
-#: src/components/chat/AgenticChatPanel.tsx:216
+#: src/components/chat/AgenticChatPanel.tsx:217
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
 msgstr "Dit verzoek duurde te lang, dus ik heb het gestopt. Stuur het opnieuw, dan probeer ik het nog een keer."
 
@@ -16889,8 +16921,8 @@ msgstr "Hiermee komt de werkruimte terug bij de gedeelde facturering van je orga
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
 
-#: src/components/report/UpdateReportModalButton.tsx:212
-#: src/components/report/CreateReportForm.tsx:176
+#: src/components/report/UpdateReportModalButton.tsx:214
+#: src/components/report/CreateReportForm.tsx:179
 msgid "This sample project includes one report."
 msgstr "Dit voorbeeldproject bevat één rapport."
 
@@ -16958,7 +16990,7 @@ msgstr "deze werkruimte"
 msgid "This workspace has reached its recording cap. Upgrade to upload more audio."
 msgstr "Deze werkruimte heeft de opnamelimiet bereikt. Upgrade om meer audio te uploaden."
 
-#: src/components/chat/AgenticChatPanel.tsx:2292
+#: src/components/chat/AgenticChatPanel.tsx:2296
 msgid "This workspace has used its recording hours. Upgrade to keep using voice."
 msgstr "Deze werkruimte heeft zijn opname-uren gebruikt. Upgrade om spraak te blijven gebruiken."
 
@@ -17137,7 +17169,7 @@ msgstr "Te lang of onduidelijk"
 #~ msgid "Too many reports. Wait a few minutes and try again"
 #~ msgstr "Te veel meldingen. Wacht een paar minuten en probeer het opnieuw"
 
-#: src/components/chat/AgenticChatPanel.tsx:2226
+#: src/components/chat/AgenticChatPanel.tsx:2230
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Te veel om hier te tonen. De assistent leest ze in delen door."
 
@@ -17164,8 +17196,8 @@ msgstr "Tool"
 msgid "Tools"
 msgstr "Gereedschap"
 
-#: src/routes/admin/AiCostsPanel.tsx:449
-#: src/routes/admin/AiCostsPanel.tsx:667
+#: src/routes/admin/AiCostsPanel.tsx:450
+#: src/routes/admin/AiCostsPanel.tsx:668
 msgid "Top feature group"
 msgstr "Grootste functiegroep"
 
@@ -17205,7 +17237,7 @@ msgstr "totaal"
 msgid "Total"
 msgstr "Totaal"
 
-#: src/routes/admin/AiCostsPanel.tsx:568
+#: src/routes/admin/AiCostsPanel.tsx:569
 msgid "Total cost"
 msgstr "Totale kosten"
 
@@ -17278,7 +17310,7 @@ msgstr "Wordt getranscribeerd"
 msgid "Transcribing..."
 msgstr "Transcriptie wordt uitgevoerd..."
 
-#: src/components/chat/AgenticChatPanel.tsx:282
+#: src/components/chat/AgenticChatPanel.tsx:283
 msgid "transcript"
 msgstr "transcript"
 
@@ -17298,7 +17330,7 @@ msgstr "Transcriptie-anonimisering en opnieuw transcriberen gebruiken dezelfde p
 msgid "Transcript copied to clipboard"
 msgstr "Transcript gekopieerd naar klembord"
 
-#: src/components/chat/AgenticChatPanel.tsx:281
+#: src/components/chat/AgenticChatPanel.tsx:282
 msgid "transcript excerpt"
 msgstr "transcriptfragment"
 
@@ -17323,7 +17355,7 @@ msgstr "Transcriptiefout"
 msgid "Transcription failed"
 msgstr "Transcriptie mislukt"
 
-#: src/components/workspace/gateWalls.ts:136
+#: src/components/workspace/gateWalls.ts:147
 msgid "Transcripts come with a paid plan."
 msgstr "Transcripten zijn beschikbaar met een betaald abonnement."
 
@@ -17420,7 +17452,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:1003
 #: src/routes/project/present/PresentResultsPanel.tsx:169
-#: src/routes/project/chat/ProjectChatRoute.tsx:852
+#: src/routes/project/chat/ProjectChatRoute.tsx:854
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:171
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:466
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -17558,7 +17590,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Typ <0>{0}</0> om te bevestigen."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1003
+#: src/routes/project/chat/ProjectChatRoute.tsx:1005
 msgid "Type a message or press / for templates..."
 msgstr "Typ een bericht of druk / voor templates..."
 
@@ -17595,7 +17627,7 @@ msgstr "Kan het gegenereerde resultaat niet laden. Probeer het opnieuw."
 msgid "Unable to process this chunk"
 msgstr "Kan dit fragment niet verwerken"
 
-#: src/routes/admin/AiCostsPanel.tsx:586
+#: src/routes/admin/AiCostsPanel.tsx:587
 msgid "Unattributed"
 msgstr "Niet toegewezen"
 
@@ -17607,11 +17639,11 @@ msgstr "Minder dan 50."
 msgid "Under your organisation"
 msgstr "Onder je organisatie"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:594
+#: src/routes/project/chat/ProjectChatRoute.tsx:596
 #: src/routes/project/chat/NewChatRoute.tsx:316
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
-#: src/components/chat/AgenticChatPanel.tsx:1736
+#: src/components/chat/AgenticChatPanel.tsx:1740
 msgid "Undo"
 msgstr "Ongedaan maken"
 
@@ -17706,7 +17738,7 @@ msgstr "Zonder tag"
 msgid "Untick a field to leave it exactly as it is."
 msgstr "Vink een veld uit om het precies te laten zoals het is."
 
-#: src/routes/admin/AiBudgetEditor.tsx:145
+#: src/routes/admin/AiBudgetEditor.tsx:150
 msgid "Until"
 msgstr "Tot"
 
@@ -17852,7 +17884,7 @@ msgstr "Projecttags bijwerken"
 #~ msgid "Upgrade"
 #~ msgstr "Upgraden"
 
-#: src/components/pricing/PricingConfigurator.tsx:818
+#: src/components/pricing/PricingConfigurator.tsx:849
 msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Upgrade voor meer AI per maand. We stellen je nog 5 korte vragen, daarna kies je een moment met het dembrane-team. We bekijken je antwoorden vóór het gesprek om met een passend aanbod te komen."
 
@@ -17952,7 +17984,7 @@ msgstr "Uploadlimiet bereikt. Upgrade je werkruimte."
 msgid "Upload logo"
 msgstr "Logo uploaden"
 
-#: src/components/workspace/gateWalls.ts:182
+#: src/components/workspace/gateWalls.ts:195
 msgid "upload recordings"
 msgstr "opnames te uploaden"
 
@@ -17974,7 +18006,7 @@ msgstr "Audio uploaden..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Audio uploaden..."
 
-#: src/components/workspace/gateWalls.ts:137
+#: src/components/workspace/gateWalls.ts:148
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Opnames uploaden is beschikbaar met een betaald abonnement."
 
@@ -18026,7 +18058,7 @@ msgstr "Gebruik wordt bijgehouden voor je organisatie. Bekijk het in de organisa
 msgid "Usage this cycle"
 msgstr "Gebruik deze cyclus"
 
-#: src/components/workspace/gateWalls.ts:167
+#: src/components/workspace/gateWalls.ts:178
 msgid "use AI features"
 msgstr "AI-functies gebruiken"
 
@@ -18058,9 +18090,9 @@ msgstr "Liever met mijn wachtwoord"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Gebruik vastgepinde en opgeslagen vraagtemplates, inclusief de /-sneltoets, vanuit Ask."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1031
-#: src/routes/project/chat/ProjectChatRoute.tsx:1041
-#: src/components/chat/AgenticChatPanel.tsx:2380
+#: src/routes/project/chat/ProjectChatRoute.tsx:1033
+#: src/routes/project/chat/ProjectChatRoute.tsx:1043
+#: src/components/chat/AgenticChatPanel.tsx:2384
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -18080,16 +18112,16 @@ msgstr "Deze tekst gebruiken"
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Gebruik Oekraïens voor chat en antwoorden aan deelnemers."
 
-#: src/components/workspace/gateWalls.ts:183
+#: src/components/workspace/gateWalls.ts:196
 msgid "use webhooks"
 msgstr "webhooks te gebruiken"
 
-#: src/components/workspace/gateWalls.ts:100
-#: src/components/workspace/gateWalls.ts:169
+#: src/components/workspace/gateWalls.ts:109
+#: src/components/workspace/gateWalls.ts:180
 msgid "use your voice in chat"
 msgstr "je stem in de chat te gebruiken"
 
-#: src/routes/admin/AiCostsPanel.tsx:664
+#: src/routes/admin/AiCostsPanel.tsx:665
 msgid "Used"
 msgstr "Gebruikt"
 
@@ -18117,7 +18149,7 @@ msgstr "Gebruikersnaam"
 msgid "Uses eligible conversations across this project."
 msgstr "Gebruikt geschikte gesprekken uit dit hele project."
 
-#: src/routes/admin/AiBudgetEditor.tsx:125
+#: src/routes/admin/AiBudgetEditor.tsx:130
 msgid "Uses the free plan default."
 msgstr "Gebruikt de standaardwaarde van het Free-abonnement."
 
@@ -18374,7 +18406,7 @@ msgstr "Spraakinvoer houdt rekening met de opnamelimiet van het gratis abonnemen
 msgid "Voiced in a conversation"
 msgstr "Genoemd in een gesprek"
 
-#: src/components/report/CreateReportForm.tsx:227
+#: src/components/report/CreateReportForm.tsx:230
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Wachten tot gesprekken zijn afgerond voordat een rapport wordt gegenereerd."
 
@@ -18581,7 +18613,7 @@ msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:149
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks zijn beschikbaar met een betaald abonnement."
 
@@ -18605,7 +18637,7 @@ msgstr "Welkom terug, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Welkom bij dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:718
+#: src/routes/project/chat/ProjectChatRoute.tsx:720
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Welkom bij dembrane chat. Selecteer de gesprekken die je wilt analyseren en vraag dan naar details, citaten en samenvattingen."
 
@@ -18613,7 +18645,7 @@ msgstr "Welkom bij dembrane chat. Selecteer de gesprekken die je wilt analyseren
 msgid "Welcome to dembrane!"
 msgstr "Welkom bij dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:717
+#: src/routes/project/chat/ProjectChatRoute.tsx:719
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Context mode."
 
@@ -18668,7 +18700,7 @@ msgstr "Wat er verstuurd wordt"
 msgid "What is at stake here"
 msgstr "Wat hier op het spel staat"
 
-#: src/components/pricing/PricingConfigurator.tsx:1099
+#: src/components/pricing/PricingConfigurator.tsx:1130
 msgid "What is it?"
 msgstr "Wat is het?"
 
@@ -18684,11 +18716,11 @@ msgstr "Wat moet ECHO analyseren of genereren uit de gesprekken?"
 msgid "What should we know? Paste a screenshot here to attach it"
 msgstr "Wat moeten we weten? Plak hier een screenshot om die toe te voegen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1931
+#: src/components/chat/AgenticChatPanel.tsx:1935
 msgid "What themes came up across the conversations in this project?"
 msgstr "Welke thema's kwamen naar voren in de gesprekken in dit project?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1930
+#: src/components/chat/AgenticChatPanel.tsx:1934
 msgid "What themes came up?"
 msgstr "Welke thema's kwamen naar voren?"
 
@@ -18791,8 +18823,8 @@ msgstr "Staat dit aan, dan kan het supportteam van dembrane deze werkruimte in o
 #~ msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 #~ msgstr "Zodra deelnemers de QR-code scannen, verschijnen ze hier en bewegen ze live door de fases."
 
-#: src/components/report/UpdateReportModalButton.tsx:288
-#: src/components/report/CreateReportForm.tsx:282
+#: src/components/report/UpdateReportModalButton.tsx:290
+#: src/components/report/CreateReportForm.tsx:285
 msgid "When should the report be generated?"
 msgstr "Wanneer moet het rapport gegenereerd worden?"
 
@@ -18821,7 +18853,7 @@ msgid "Where would you like to go?"
 msgstr "Waar wil je naartoe?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:574
-#: src/components/chat/AgenticChatPanel.tsx:1912
+#: src/components/chat/AgenticChatPanel.tsx:1916
 msgid "Where would you like to start?"
 msgstr "Waar wil je beginnen?"
 
@@ -18865,7 +18897,7 @@ msgstr "Waarom niet in deze presentatie?"
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Waarom? Eén zin, voor je collega's en voor wie dit later naloopt."
 
-#: src/components/report/CreateReportForm.tsx:209
+#: src/components/report/CreateReportForm.tsx:212
 msgid "will be included in your report"
 msgstr "wordt in je rapport opgenomen"
 
@@ -18940,7 +18972,7 @@ msgid "Work with the new conversational assistant."
 msgstr "Werk met de nieuwe gespreksassistent."
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:620
+#: src/components/chat/AgenticChatPanel.tsx:621
 msgid "Worked through {0} steps"
 msgstr "{0} stappen doorlopen"
 
@@ -18948,7 +18980,7 @@ msgstr "{0} stappen doorlopen"
 msgid "working"
 msgstr "bezig"
 
-#: src/components/chat/AgenticChatPanel.tsx:1789
+#: src/components/chat/AgenticChatPanel.tsx:1793
 msgid "Working on your answer..."
 msgstr "Bezig met je antwoord..."
 
@@ -19125,7 +19157,7 @@ msgstr "Je bent nog geen lid van een organisatie, dus er valt nog niets te koppe
 msgid "You are not in an organisation yet."
 msgstr "Je zit nog niet in een organisatie."
 
-#: src/components/pricing/PricingConfigurator.tsx:812
+#: src/components/pricing/PricingConfigurator.tsx:834
 msgid "You are on the free plan."
 msgstr "Je zit op het gratis plan."
 
@@ -19320,7 +19352,7 @@ msgstr "Je hebt supporttoegang tot deze werkruimte. Deze stopt automatisch op {e
 #~ msgid "You have used this month's free popcorn analyses. The results stay here. Analysis starts again on {date}."
 #~ msgstr "Je hebt de gratis Popcorn-analyses van deze maand gebruikt. De resultaten blijven hier staan. Vanaf {date} kun je weer analyseren."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:64
+#: src/components/workspace/FreeAllowanceBanner.tsx:65
 msgid "You have used this month's free recording time. New recordings and uploads are paused until it resets on {date}."
 msgstr "Je hebt de gratis opnametijd van deze maand gebruikt. Nieuwe opnames en uploads zijn gepauzeerd tot de reset op {date}."
 
@@ -19361,11 +19393,11 @@ msgstr "Je hebt een uitnodiging van een collega nodig"
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
-#: src/components/chat/AgenticChatPanel.tsx:214
+#: src/components/chat/AgenticChatPanel.tsx:215
 msgid "You stopped this run."
 msgstr "Je hebt deze run gestopt."
 
-#: src/components/pricing/PricingConfigurator.tsx:810
+#: src/components/pricing/PricingConfigurator.tsx:832
 msgid "You were trying to {action}."
 msgstr "Je probeerde {action}."
 
@@ -19449,7 +19481,7 @@ msgstr "Je zit nog in geen enkele organisatie. Maak een werkruimte om een organi
 msgid "You're not part of any organisation right now."
 msgstr "Je maakt op dit moment deel uit van geen enkele organisatie."
 
-#: src/components/pricing/PricingConfigurator.tsx:805
+#: src/components/pricing/PricingConfigurator.tsx:827
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Je hebt het Free-abonnement, inclusief een maandelijks AI-tegoed."
 
@@ -19493,7 +19525,7 @@ msgstr "Je hebt je samenvattingslimiet bereikt"
 msgid "You've reached your transcript limit"
 msgstr "Je hebt je transcriptielimiet bereikt"
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:76
+#: src/components/workspace/FreeAllowanceBanner.tsx:77
 msgid "You've used {percent}% of this month's AI. When it runs out, AI features and new recordings stop until {date}."
 msgstr "Je hebt {percent}% van de AI van deze maand gebruikt. Als het op is, stoppen AI-functies en nieuwe opnames tot {date}."
 
@@ -19536,11 +19568,11 @@ msgstr "Jouw goedkeuring helpt ons begrijpen wat je echt denkt!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Je browser blokkeert de microfoon. Geef toegang en probeer het opnieuw."
 
-#: src/components/pricing/PricingConfigurator.tsx:711
+#: src/components/pricing/PricingConfigurator.tsx:725
 msgid "Your call is booked: {bookedTime}."
 msgstr "Je afspraak is geboekt: {bookedTime}."
 
-#: src/components/pricing/PricingConfigurator.tsx:713
+#: src/components/pricing/PricingConfigurator.tsx:727
 msgid "Your call is booked."
 msgstr "Je afspraak is geboekt."
 
@@ -19595,7 +19627,7 @@ msgstr "Je feedback en dit antwoord gaan naar het dembrane-team."
 #~ msgid "Your free plan includes one report. Upgrade to create more."
 #~ msgstr "Je gratis plan bevat één rapport. Upgrade om er meer te maken."
 
-#: src/components/pricing/PricingConfigurator.tsx:741
+#: src/components/pricing/PricingConfigurator.tsx:755
 msgid "Your free transcription allowance is used up."
 msgstr "Je gratis transcriptietegoed is op."
 
@@ -19657,7 +19689,7 @@ msgstr "Je organisatie of bedrijf"
 msgid "Your organisations"
 msgstr "Je organisaties"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:137
 msgid "Your own logo comes with a paid plan."
 msgstr "Je eigen logo is beschikbaar met een betaald abonnement."
 
@@ -19714,7 +19746,7 @@ msgstr "Je abonnement wordt niet verlengd. Je houdt toegang tot het einde van de
 msgid "Your recording, {0}"
 msgstr "Je opname, {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:716
+#: src/components/pricing/PricingConfigurator.tsx:730
 msgid "Your request is in."
 msgstr "Je aanvraag is binnen."
 

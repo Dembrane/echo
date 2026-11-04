@@ -720,7 +720,7 @@ export const NewChatRoute = () => {
 						isCreating={isPending}
 						projectId={projectId}
 						onModeSelected={(mode) => void handleModeSelected(mode)}
-						atChatLimit={aiUsedUp}
+						aiUsedUp={aiUsedUp}
 					/>
 				)}
 

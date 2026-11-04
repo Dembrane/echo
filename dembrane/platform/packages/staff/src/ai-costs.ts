@@ -55,14 +55,14 @@ type Totals = { cost: number; features: Map<string, Sum>; models: Map<string, Su
 
 const MS = `'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
 
-// Rolled up days come from ai_spend_daily, whose provider is the model's only priced provider.
-function spendRows(db: Db, from: Date, to: Date, useRollup: boolean) {
+// Rolled up days come from ai_spend_daily (provider: the model's only priced one), the rest from model_call.
+function spendRows(db: Db, from: Date, to: Date) {
   const fromDay = from.toISOString().slice(0, 10);
   const toDay = to.toISOString().slice(0, 10);
   return db.execute<SpendRow>(sql`
     with rolled as (
       select distinct day from ai_spend_daily
-      where ${useRollup} and day >= ${fromDay}::date and day < ${toDay}::date
+      where day >= ${fromDay}::date and day < ${toDay}::date
     ), spend as (
       select s.billing_account_id, s.payer, s.operation, s.model,
         coalesce((select min(p.provider) from ai_price p where p.model = s.model
@@ -149,7 +149,7 @@ export async function aiCosts(
   // The moment the month is judged at: now, or the last instant of a past month.
   const at = to > now ? now : new Date(to.getTime() - 1);
 
-  const rows = await spendRows(db, from, to, monthOffset > 0);
+  const rows = await spendRows(db, from, to);
   let unattributed = 0;
   let internal = 0;
   const providers = new Map<string, number>();

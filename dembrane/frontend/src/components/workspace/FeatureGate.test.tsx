@@ -11,6 +11,7 @@ import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
 	type AiAction,
 	aiActionLine,
+	type SampleCap,
 	variantFor,
 	type WallKey,
 	wallActionLine,
@@ -96,6 +97,8 @@ const renderModal = ({
 	entry = "modal_direct" as "modal_direct" | "popover_link",
 	requiredTier = "changemaker" as Tier,
 	resetsAt,
+	sampleCap,
+	sampleQuestions,
 	wallKey,
 }: {
 	aiAction?: AiAction;
@@ -104,6 +107,8 @@ const renderModal = ({
 	entry?: "modal_direct" | "popover_link";
 	requiredTier?: Tier;
 	resetsAt?: string | null;
+	sampleCap?: SampleCap;
+	sampleQuestions?: number | null;
 	wallKey: WallKey;
 }) =>
 	wrap(
@@ -117,6 +122,8 @@ const renderModal = ({
 			onClose={() => {}}
 			opened
 			requiredTier={requiredTier}
+			sampleCap={sampleCap}
+			sampleQuestions={sampleQuestions}
 			wallKey={wallKey}
 			workspaceId="workspace-1"
 		/>,
@@ -224,6 +231,8 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 	}
 
 	// The billing page is not a wall, and neither is a mount that names none.
+	// The sample cap's opening names the cap, never an attempt.
+	expect(wallActionLine("sample_cap")).toBe("");
 	expect(wallActionLine("billing_page")).toBe("");
 	expect(wallActionLine(undefined)).toBe("");
 });
@@ -296,6 +305,42 @@ it("ignores a passed action on the not-used-up opening", () => {
 	expect(text).not.toContain("requires a paid plan");
 });
 
+it.each([
+	["chat", "Sample projects allow 10 questions."],
+	["report", "Sample projects allow one report."],
+] as const)(
+	"a sample project's %s cap has its own wall: only the cap and the way on",
+	(cap, line) => {
+		renderModal({ sampleCap: cap, wallKey: "sample_cap" });
+		const text = modalText();
+		expect(screen.getByTestId("pricing-configurator-opening").textContent).toBe(
+			line,
+		);
+		expect(
+			screen.getByTestId("pricing-configurator-sample-cap").textContent,
+		).toBe(
+			"Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan.",
+		);
+		expect(text).not.toContain("requires a paid plan");
+		expect(text).not.toContain("You were trying to");
+		expect(text).not.toContain("AI allowance");
+		expect(text).not.toContain("AI budget");
+		expect(screen.queryByTestId("pricing-configurator-ai-budget")).toBeNull();
+		expect(gateViewedCalls()[0]?.[1]).toMatchObject({ wall_key: "sample_cap" });
+	},
+);
+
+it("names the question cap the refusal carried", () => {
+	renderModal({
+		sampleCap: "chat",
+		sampleQuestions: 12,
+		wallKey: "sample_cap",
+	});
+	expect(screen.getByTestId("pricing-configurator-opening").textContent).toBe(
+		"Sample projects allow 12 questions.",
+	);
+});
+
 it("keeps the ai_budget block off every other wall", () => {
 	renderModal({ wallKey: "custom_logo" });
 	expect(modalText()).not.toContain("This month's AI budget is used up.");
@@ -338,6 +383,7 @@ it("names no tier in any gate copy", () => {
 		"private_workspace",
 		"project_cap",
 		"recording_project",
+		"sample_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",

@@ -16975,27 +16975,6 @@
           "with": {},
           "method": "btree",
           "concurrently": false
-        },
-        "model_call_account_started_idx": {
-          "name": "model_call_account_started_idx",
-          "columns": [
-            {
-              "expression": "billing_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "started_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
         }
       },
       "foreignKeys": {},

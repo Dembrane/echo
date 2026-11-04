@@ -16,7 +16,13 @@ export interface FreeAllowance {
 	audio_seconds: FreeMeter | null;
 	projects: FreeMeter | null;
 	// The monthly AI budget; null when not free.
-	ai: { percent_used: number; exhausted: boolean; unlimited: boolean } | null;
+	// enforced is false while staff turned the AI budget check off.
+	ai: {
+		percent_used: number;
+		exhausted: boolean;
+		unlimited: boolean;
+		enforced: boolean;
+	} | null;
 }
 
 export const freeAllowanceQueryKey = (workspaceId: string) =>

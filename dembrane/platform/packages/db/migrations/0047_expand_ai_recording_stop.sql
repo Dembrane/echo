@@ -1,3 +1,3 @@
--- When a free live recording first got the AI budget stop; later chunks get a short grace from it.
--- A nullable column rewrites no rows. Safe to run twice.
-ALTER TABLE "conversation" ADD COLUMN IF NOT EXISTS "ai_stopped_at" timestamp with time zone;
+-- No-op: its conversation column moved to 0048, so the one-transaction run takes no hot
+-- lock before billing_account's. Kept so the journal stays in order. Safe to run twice.
+SELECT 1;

@@ -14,6 +14,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
 	ArrowLeftIcon,
 	ArrowSquareOutIcon,
@@ -29,6 +30,7 @@ import {
 	useAiBudgetWall,
 } from "@/components/workspace/AiBudgetWall";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
@@ -93,6 +95,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspace?.id);
 	const aiWall = useAiBudgetWall();
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
 	const aiUsedUp =
 		allowanceApplies && Boolean(freeAllowance.data?.ai?.exhausted);
 	// A sample project keeps one report of its own.
@@ -129,7 +132,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			{
 				onError: (err) => {
 					if (aiWall.openFor(err)) return;
-					if (isFreeTierLimitError(err) === "report") aiWall.open(null, false);
+					if (isFreeTierLimitError(err) === "report") sampleWall.open();
 				},
 				onSuccess: () => onSuccess(),
 			},
@@ -175,7 +178,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Text size="sm">
 							<Trans>This sample project includes one report.</Trans>
 						</Text>
-						<Button size="xs" onClick={() => aiWall.open(null, false)}>
+						<Button size="xs" onClick={sampleWall.open}>
 							{t`See upgrade options`}
 						</Button>
 					</Stack>
@@ -386,6 +389,13 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			<AiBudgetWall
 				{...aiWall.props}
 				action="report"
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
+			/>
+			<SampleCapWall
+				cap="report"
+				opened={sampleWallOpened}
+				onClose={sampleWall.close}
 				workspaceId={workspace?.id ?? ""}
 				projectId={projectId}
 			/>

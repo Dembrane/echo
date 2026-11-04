@@ -289,6 +289,40 @@ run("price sync", () => {
     expect(Number(rate[0]?.usd_to_eur)).toBeCloseTo(0.8, 10);
   });
 
+  test("an ECB rate outside 0.5 to 2 EUR per USD is rejected: the last good rate stays, logged and posted", async () => {
+    const f = clone();
+    cost(f, "gemini-3.8-flash").input = 3;
+    for (const usd of ["0.3000", "5.0000"]) {
+      const before = await fx();
+      posts.length = 0;
+      logs.length = 0;
+      const res = await syncPrices(deps(serve(f, usd)));
+      expect(res.fxChanged).toBe(false);
+      expect(await fx()).toEqual(before);
+      expect(logs.some((l) => l.level === "error" && l.msg.includes("out of range"))).toBe(true);
+      const rejected = posts.filter((p) => p.startsWith("ECB rate rejected"));
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0]).toContain("the last good rate is kept");
+      expect(rejected[0]).not.toContain("\u2014");
+    }
+  });
+
+  test("a rate move above 2% is posted; a smaller one is not", async () => {
+    const f = clone();
+    cost(f, "gemini-3.8-flash").input = 3;
+    const moves = () => posts.filter((p) => p.startsWith("USD to EUR rate moved"));
+    posts.length = 0;
+    // 1.25 to 1.26 USD per EUR is under 1%.
+    await syncPrices(deps(serve(f, "1.2600")));
+    expect(moves()).toEqual([]);
+    posts.length = 0;
+    // 1.26 to 1.30 is about 3.1%.
+    await syncPrices(deps(serve(f, "1.3000")));
+    expect(moves()).toEqual(["USD to EUR rate moved -3.1%: 1 USD was 0.7937 EUR, now 0.7692 EUR."]);
+    // Back to the rate the next tests expect.
+    await syncPrices(deps(serve(f, "1.2500")));
+  });
+
   test("a search price in another currency is converted at the stored rate", async () => {
     const base = loadOverrides();
     const overrides: OverrideFile = {

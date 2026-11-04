@@ -29,6 +29,7 @@ import {
 	AiBudgetWall,
 	useAiBudgetWall,
 } from "@/components/workspace/AiBudgetWall";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -81,6 +82,7 @@ export const UpdateReportModalButton = ({
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
 	const aiWall = useAiBudgetWall();
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
 	// Free tier: once this month's AI is used up, "Create report" opens the AI wall.
@@ -215,7 +217,7 @@ export const UpdateReportModalButton = ({
 								size="xs"
 								onClick={() => {
 									close();
-									aiWall.open(null, false);
+									sampleWall.open();
 								}}
 							>
 								{t`See upgrade options`}
@@ -384,6 +386,13 @@ export const UpdateReportModalButton = ({
 			<AiBudgetWall
 				{...aiWall.props}
 				action="report"
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
+			/>
+			<SampleCapWall
+				cap="report"
+				opened={sampleWallOpened}
+				onClose={sampleWall.close}
 				workspaceId={workspace?.id ?? ""}
 				projectId={projectId}
 			/>

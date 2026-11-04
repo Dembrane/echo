@@ -236,7 +236,11 @@ describe("MapPage free tier", () => {
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 
+	let liveClient = new QueryClient();
 	const renderLive = (summary: unknown, graph: () => Promise<unknown>) => {
+		liveClient = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
 		bffMock.get.mockImplementation((path: string) => {
 			if (path === "/map/projects/p1/graph") return graph();
 			if (path === "/map/projects/p1") return Promise.resolve(summary);
@@ -245,11 +249,7 @@ describe("MapPage free tier", () => {
 		return render(
 			<MantineProvider>
 				<I18nProvider i18n={i18n}>
-					<QueryClientProvider
-						client={
-							new QueryClient({ defaultOptions: { queries: { retry: false } } })
-						}
-					>
+					<QueryClientProvider client={liveClient}>
 						<MemoryRouter>
 							<MapPage projectId="p1" workspaceId="w1" />
 						</MemoryRouter>
@@ -285,11 +285,23 @@ describe("MapPage free tier", () => {
 		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
 			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
 		);
+		const invalidate = vi.spyOn(liveClient, "invalidateQueries");
 		const modal = await screen.findByTestId("upgrade-modal");
 		expect(modal.dataset.wall).toBe("ai_budget");
 		expect(modal.dataset.action).toBe("map");
 		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
 		expect(bffMock.post.mock.calls[0][0]).toMatch(/fact-checks/);
+		// The meter and banners catch up with the refusal.
+		const predicates = invalidate.mock.calls.map(
+			([filters]) =>
+				(filters as { predicate?: (q: unknown) => boolean } | undefined)
+					?.predicate,
+		);
+		expect(
+			predicates.some((p) =>
+				p?.({ queryKey: ["workspace", "w1", "free-allowance"] }),
+			),
+		).toBe(true);
 		expect(document.body.textContent).not.toContain(
 			"The fact-check could not be started.",
 		);

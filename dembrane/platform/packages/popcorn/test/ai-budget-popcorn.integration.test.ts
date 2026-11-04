@@ -296,6 +296,7 @@ run("popcorn on the AI budget", () => {
       ...deps(c),
       requestMap: async (projectId) => {
         maps.push(projectId);
+        return true;
       },
     });
     expect(
@@ -316,6 +317,41 @@ run("popcorn on the AI budget", () => {
     expect(got.status).toBe("ok");
     expect(maps.length).toBe(3);
     expect(completer.calls.length).toBe(0);
+  });
+
+  test("a map refused for the AI budget stays owed and is asked for after the reset", async () => {
+    const s = await seed("free", { status: "active", blocks: ["popcorn", "map"] });
+    await say(s.conv, "Table 1 says the bridge needs a cycle lane.");
+    broken.on = false;
+    const maps: string[] = [];
+    let refused = false;
+    const withMap = (c: FakeCompleter): TickDeps => ({
+      ...deps(c),
+      requestMap: async (projectId) => {
+        maps.push(projectId);
+        return !refused;
+      },
+    });
+    const fingerprint = async () =>
+      (
+        await sql`select popcorn_state->>'map_fingerprint' as f from agent_loop where id = ${s.loopId}`
+      )[0]?.f;
+    await runPopcornTick(withMap(failingWithSlide()), s.loopId, "manual", newId());
+    const current = await fingerprint();
+    expect(current).toBeTruthy();
+    await sql`update agent_loop set popcorn_state = jsonb_set(popcorn_state::jsonb,
+      '{map_fingerprint}', '"older"')::json where id = ${s.loopId}`;
+    await useAll(s);
+    refused = true;
+    await runPopcornTick(withMap(fake()), s.loopId, "scheduled");
+    expect(maps.length).toBe(2);
+    expect(await fingerprint()).toBe("older");
+    // The month resets: the next read asks again without any new transcript.
+    await spend(s.billing, s.projectId, 0);
+    refused = false;
+    await runPopcornTick(withMap(fake()), s.loopId, "scheduled");
+    expect(maps.length).toBe(3);
+    expect(await fingerprint()).toBe(current);
   });
 
   test("below the limit a 13th analysis runs and nothing is counted", async () => {

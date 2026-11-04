@@ -59,8 +59,13 @@ const NOT_FREE = {
 	resets_at: null,
 };
 
-const ai = (percent_used: number, exhausted = false, unlimited = false) => ({
-	ai: { exhausted, percent_used, unlimited },
+const ai = (
+	percent_used: number,
+	exhausted = false,
+	unlimited = false,
+	enforced = true,
+) => ({
+	ai: { enforced, exhausted, percent_used, unlimited },
 });
 
 const snapshot = (overrides: Record<string, unknown> = {}) => ({
@@ -169,6 +174,18 @@ it("renders nothing for an unlimited account, even at 100%", async () => {
 	await settled(client);
 	expect(screen.getByTestId("host").innerHTML).toBe("");
 });
+
+it.each([85, 100])(
+	"renders nothing at %i percent while staff turned the AI budget off",
+	async (percent) => {
+		fetchMock.mockResolvedValue(
+			answer(200, snapshot(ai(percent, false, false, false))),
+		);
+		const client = renderBanner("ai", "chat");
+		await settled(client);
+		expect(screen.getByTestId("host").innerHTML).toBe("");
+	},
+);
 
 it("renders nothing when the snapshot has no AI meter", async () => {
 	fetchMock.mockResolvedValue(answer(200, snapshot({ ai: null })));

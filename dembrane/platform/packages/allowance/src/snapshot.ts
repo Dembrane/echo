@@ -10,8 +10,13 @@ export { accountWorkspaceIds } from "./projects";
 
 export type Meter = { used: number; limit: number };
 
-// Percent only: customers never see euro amounts.
-export type AiMeter = { percent_used: number; exhausted: boolean; unlimited: boolean };
+// Percent only: customers never see euro amounts. Enforced is false while staff turned the check off.
+export type AiMeter = {
+  percent_used: number;
+  exhausted: boolean;
+  unlimited: boolean;
+  enforced: boolean;
+};
 
 export interface AllowanceSnapshot {
   free: boolean;
@@ -59,6 +64,7 @@ export async function allowanceSnapshot(
       percent_used: budget.percentUsed,
       exhausted: budget.exhausted,
       unlimited: budget.limitMicroEur === null,
+      enforced: budget.enforced,
     },
   };
 }

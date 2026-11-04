@@ -35,8 +35,9 @@ const COLUMNS = 7;
 
 const nowrap = { whiteSpace: "nowrap" } as const;
 
+// The stored end is the start of the day after; show the last covered day like the editor.
 const formatUntil = (iso: string, locale: string) =>
-	new Date(iso).toLocaleDateString(locale, {
+	new Date(Date.parse(iso) - 86_400_000).toLocaleDateString(locale, {
 		day: "numeric",
 		month: "short",
 		timeZone: "UTC",

@@ -69,9 +69,33 @@ run("ai spend schema", () => {
       cost_micro_eur: { type: "bigint", nullable: true },
       price_id: { type: "bigint", nullable: true },
     });
+    // The dropped account index stays dropped: no query needs it.
     const idx =
-      await sql`select indexdef from pg_indexes where indexname = 'model_call_account_started_idx'`;
-    expect(idx[0]?.indexdef).toContain("(billing_account_id, started_at)");
+      await sql`select 1 from pg_indexes where indexname = 'model_call_account_started_idx'`;
+    expect(idx).toHaveLength(0);
+  });
+
+  test("billing_account is altered at the very end of the run, so its lock waits on nothing", async () => {
+    const statements = async (name: string) =>
+      (await Bun.file(new URL(`../../db/migrations/${name}.sql`, import.meta.url)).text())
+        .split("--> statement-breakpoint")
+        .map((s) => s.replace(/^\s*--.*$/gm, "").trim())
+        .filter(Boolean);
+    expect(
+      (await statements("0045_expand_ai_spend")).some((s) => s.includes('"billing_account"')),
+    ).toBe(false);
+    // 0047 is a no-op; its conversation column moved into 0048.
+    expect(await statements("0047_expand_ai_recording_stop")).toEqual(["SELECT 1;"]);
+    const last = await statements("0048_expand_retire_free_counts");
+    // The deletes, then the hot tables: conversation, and billing_account at the very end.
+    expect(last.map((s) => s.split(" ").slice(0, 3).join(" "))).toEqual([
+      'DELETE FROM "free_usage"',
+      'DELETE FROM "tier_limit"',
+      'ALTER TABLE "conversation"',
+      'ALTER TABLE "billing_account"',
+      'ALTER TABLE "billing_account"',
+      'ALTER TABLE "billing_account"',
+    ]);
   });
 
   test("billing_account carries the budget override", async () => {

@@ -40,10 +40,10 @@ export interface PendingCall {
   readonly payer: Payer | null;
 }
 
-/** Unsaved spend of one payer in one UTC hour. */
+/** Unsaved spend of one payer in one UTC second (a downgrade splits periods at any instant). */
 export interface SpendBucket {
   readonly payer: Payer;
-  readonly hour: Date;
+  readonly second: Date;
   readonly costMicroEur: number;
 }
 
@@ -76,7 +76,7 @@ const DEFAULT_FLUSH_MS = 1000;
 const DEFAULT_MAX_PENDING = 2000;
 // An exit flush retries this often for calls that arrived during the write before it.
 const MAX_FLUSH_ROUNDS = 5;
-const HOUR_MS = 3_600_000;
+const SECOND_MS = 1000;
 
 /** A row waiting to be written; `unpriced` holds the call until a price book has prices. */
 interface Entry {
@@ -139,10 +139,10 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
     };
     e.unpriced = null;
     if (e.payer && cost.costMicroEur > 0) {
-      const hour = new Date(Math.floor(call.startedAt.getTime() / HOUR_MS) * HOUR_MS);
-      addSpend(`${payerKey(e.payer)}|${hour.toISOString()}`, {
+      const second = new Date(Math.floor(call.startedAt.getTime() / SECOND_MS) * SECOND_MS);
+      addSpend(`${payerKey(e.payer)}|${second.toISOString()}`, {
         payer: e.payer,
-        hour,
+        second,
         costMicroEur: cost.costMicroEur,
       });
     }
@@ -382,7 +382,7 @@ export function modelCallTable(db: Db): ModelCallSink {
         for (const b of spend.values()) {
           const r = who(b.payer);
           if (!r || r === "internal" || !r.counted || b.costMicroEur <= 0) continue;
-          const period = periodStart(b.hour, r.tier, r.downgradedAt).toISOString();
+          const period = periodStart(b.second, r.tier, r.downgradedAt).toISOString();
           const key = `${r.accountId}|${period}`;
           const had = sums.get(key);
           sums.set(key, {

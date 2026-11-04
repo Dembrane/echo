@@ -167,6 +167,39 @@ it("today can be the last day", async () => {
 	expect((await sent("PUT")).body).toMatchObject({ until: "2026-11-04" });
 });
 
+// The stored end is UTC midnight, so the earliest last day is today's UTC date in any time zone.
+it.each([
+	[
+		"2026-11-03T21:00:00.000Z",
+		"2 November 2026",
+		"3 November 2026",
+		"2026-11-04",
+	],
+	[
+		"2026-11-04T04:00:00.000Z",
+		"3 November 2026",
+		"4 November 2026",
+		"2026-11-05",
+	],
+])(
+	"at %s the earliest last day is today's UTC date",
+	async (now, before, first, until) => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(new Date(now));
+		show();
+		fireEvent.change(amountInput(), { target: { value: "20" } });
+		fireEvent.click(screen.getByRole("button", { name: "Until" }));
+		expect(
+			(await screen.findByRole("button", { name: before })).hasAttribute(
+				"data-disabled",
+			),
+		).toBe(true);
+		fireEvent.click(screen.getByRole("button", { name: first }));
+		fireEvent.click(screen.getByRole("button", { name: "Save AI budget" }));
+		expect((await sent("PUT")).body).toMatchObject({ until });
+	},
+);
+
 it("keeps at most two decimals and allows EUR 0", async () => {
 	show();
 	fireEvent.change(amountInput(), { target: { value: "5.555" } });

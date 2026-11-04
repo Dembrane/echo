@@ -103,6 +103,7 @@ run("a finish read outside a live session", () => {
       ),
       requestMap: async (projectId) => {
         maps.push(projectId);
+        return true;
       },
       heartbeatMs: 50,
     };

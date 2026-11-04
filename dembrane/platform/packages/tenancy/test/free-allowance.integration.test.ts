@@ -128,7 +128,7 @@ run("free allowance route", () => {
       resets_at: "2026-11-01T00:00:00.000Z",
       audio_seconds: { used: 0, limit: 18000 },
       projects: { used: 1, limit: 1 },
-      ai: { percent_used: 82, exhausted: false, unlimited: false },
+      ai: { percent_used: 82, exhausted: false, unlimited: false, enforced: true },
     });
   });
 
@@ -146,7 +146,12 @@ run("free allowance route", () => {
       const snap = (await (await get(P.alice, FREE_WS, "free-allowance")).json()) as {
         ai: unknown;
       };
-      expect(snap.ai).toEqual({ percent_used: 100, exhausted: true, unlimited: false });
+      expect(snap.ai).toEqual({
+        percent_used: 100,
+        exhausted: true,
+        unlimited: false,
+        enforced: true,
+      });
       const usage = (await (await get(P.alice, FREE_WS, "usage")).json()) as { free_tier: unknown };
       expect(usage.free_tier).toEqual({ active: true, ai_percent_used: 100, ai_exhausted: true });
     } finally {

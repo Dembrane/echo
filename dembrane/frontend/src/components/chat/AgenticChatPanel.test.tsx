@@ -980,7 +980,7 @@ describe("AgenticChatPanel, free turn limit", () => {
 		appendAgenticRunMessageMock.mockRejectedValueOnce({
 			response: {
 				data: {
-					detail: { cap: 10, error: "FREE_TIER_LIMIT", limit: "chat_turns" },
+					detail: { cap: 7, error: "FREE_TIER_LIMIT", limit: "chat_turns" },
 				},
 				status: 402,
 			},
@@ -995,9 +995,13 @@ describe("AgenticChatPanel, free turn limit", () => {
 		});
 		await waitFor(() => expect(document.body.textContent).toContain(TURN_CARD));
 		const modal = await openedConfigurator();
+		// The cap comes from the refusal.
+		expect(modal).toContain("Sample projects allow 7 questions.");
 		expect(modal).toContain(
-			"You're on the free plan, which includes a monthly AI allowance.",
+			"Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan.",
 		);
+		expect(modal).not.toContain("requires a paid plan");
+		expect(modal).not.toContain("monthly AI allowance");
 		expect(modal).not.toContain("This month's AI budget is used up.");
 	});
 

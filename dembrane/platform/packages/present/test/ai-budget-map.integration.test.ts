@@ -79,7 +79,7 @@ run("the present room's map at budget zero", () => {
       },
       db,
     );
-    expect(await store.requestGeneration(pid, null)).toBeUndefined();
+    expect(await store.requestGeneration(pid, null)).toBe(false);
     expect(await sql`select id from analysis_run where project_id = ${pid}`).toHaveLength(0);
     expect(enqueued).toBe(0);
   });

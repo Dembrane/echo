@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	act,
 	cleanup,
@@ -125,6 +126,30 @@ it("opens from an ai_budget refusal with its reset time, and ignores anything el
 		opened: false,
 		resetsAt: "2026-12-01T00:00:00Z",
 	});
+});
+
+it("refreshes the free allowance when a refusal opens it, and only then", () => {
+	const client = new QueryClient();
+	const invalidate = vi.spyOn(client, "invalidateQueries");
+	const { result } = renderHook(() => useAiBudgetWall(), {
+		wrapper: ({ children }) => (
+			<QueryClientProvider client={client}>{children}</QueryClientProvider>
+		),
+	});
+	act(() => {
+		result.current.openFor(new Error("boom"));
+	});
+	expect(invalidate).not.toHaveBeenCalled();
+	act(() => {
+		result.current.openFor(aiRefusal);
+	});
+	expect(invalidate).toHaveBeenCalledTimes(1);
+	const { predicate } = invalidate.mock.calls[0][0] as unknown as {
+		predicate: (q: { queryKey: unknown[] }) => boolean;
+	};
+	expect(predicate({ queryKey: ["workspace", "w1", "free-allowance"] })).toBe(
+		true,
+	);
 });
 
 it("opens neutrally when asked to, with no refusal behind it", () => {

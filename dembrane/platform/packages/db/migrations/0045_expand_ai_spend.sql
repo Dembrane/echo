@@ -1,5 +1,5 @@
 -- Model calls carry their payer, token kinds and cost; prices, daily FX and daily spend get
--- their own tables; billing accounts get a budget override. Safe to run twice.
+-- their own tables. The billing_account override columns are in 0048, the last step of the run. Safe to run twice.
 CREATE TABLE IF NOT EXISTS "ai_fx_rate" (
 	"day" date PRIMARY KEY NOT NULL,
 	"usd_to_eur" numeric NOT NULL,
@@ -37,9 +37,6 @@ CREATE TABLE IF NOT EXISTS "ai_spend_daily" (
 	"cost_micro_eur" bigint NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "billing_account" ADD COLUMN IF NOT EXISTS "ai_budget_micro_eur" bigint;--> statement-breakpoint
-ALTER TABLE "billing_account" ADD COLUMN IF NOT EXISTS "ai_budget_unlimited" boolean DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE "billing_account" ADD COLUMN IF NOT EXISTS "ai_budget_until" timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "model_call" ADD COLUMN IF NOT EXISTS "provider" text;--> statement-breakpoint
 ALTER TABLE "model_call" ADD COLUMN IF NOT EXISTS "billing_account_id" uuid;--> statement-breakpoint
 ALTER TABLE "model_call" ADD COLUMN IF NOT EXISTS "project_id" uuid;--> statement-breakpoint
@@ -56,6 +53,5 @@ ALTER TABLE "model_call" ADD COLUMN IF NOT EXISTS "cost_micro_eur" bigint;--> st
 ALTER TABLE "model_call" ADD COLUMN IF NOT EXISTS "price_id" bigint;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "ai_price_provider_model_effective_from" ON "ai_price" USING btree ("provider","model","effective_from");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "ai_spend_daily_key" ON "ai_spend_daily" USING btree ("day",coalesce("billing_account_id", '00000000-0000-0000-0000-000000000000'::uuid),"payer","operation","model");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "model_call_account_started_idx" ON "model_call" USING btree ("billing_account_id","started_at");--> statement-breakpoint
 -- The free tier's monthly AI budget (EUR 5) and whether reaching it blocks AI work.
 insert into tier_limit (tier, key, value) values ('free','ai_budget_micro_eur',5000000), ('free','ai_budget_enforce',1) on conflict do nothing;

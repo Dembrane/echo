@@ -35,6 +35,8 @@ export type WallKey =
 	| "private_workspace"
 	| "project_cap"
 	| "recording_project"
+	/** A free sample project's own caps (its questions, its one report); not the AI budget. */
+	| "sample_cap"
 	| "transcription_cap"
 	| "transcripts_view"
 	| "upload_cap"
@@ -61,8 +63,9 @@ export function isLockedDataWall(wall: WallKey): boolean {
 /** The variant the configurator renders for this wall. */
 export function variantFor(
 	wall: WallKey,
-): "default" | "transcription_cap" | "ai_budget" {
+): "default" | "transcription_cap" | "ai_budget" | "sample_cap" {
 	if (wall === "ai_budget") return "ai_budget";
+	if (wall === "sample_cap") return "sample_cap";
 	return isLockedDataWall(wall) ? "transcription_cap" : "default";
 }
 
@@ -81,6 +84,12 @@ export type AiAction =
 	| "summary_again"
 	| "title"
 	| "title_again";
+
+/** Which of a sample project's own caps was reached. */
+export type SampleCap = "chat" | "report";
+
+/** Fallback when the chat_turns refusal carries no cap; mirrors FREE_TIER_MAX_SAMPLE_USER_TURNS. */
+export const SAMPLE_CHAT_QUESTIONS = 10;
 
 /** The opening's phrase for the refused AI action, read as "You were trying to {action}." */
 export function aiActionLine(action: AiAction): string {
@@ -132,6 +141,8 @@ export function wallPopoverLine(wall: WallKey): string {
 		private_workspace: t`Private workspaces come with a paid plan.`,
 		project_cap: t`The free plan includes a limited number of projects.`,
 		recording_project: t`On the free plan one project takes recordings.`,
+		// Opens the popup directly.
+		sample_cap: "",
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
 		upload_cap: t`Uploading recordings comes with a paid plan.`,
@@ -174,6 +185,8 @@ export function wallActionLine(wall: WallKey | string | undefined): string {
 		private_workspace: t`make a workspace private`,
 		project_cap: t`add more projects`,
 		recording_project: t`record in every project`,
+		// Never rendered: the sample_cap opening names the cap, not an attempt.
+		sample_cap: "",
 		// The one locked data wall. Nothing was blocked in the room: the
 		// recording ran and the participants never met a wall. What stopped is
 		// the transcription of what they said.

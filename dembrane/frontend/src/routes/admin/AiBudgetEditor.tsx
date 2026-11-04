@@ -109,8 +109,13 @@ export function AiBudgetEditor({
 		},
 	});
 
-	// Today at the earliest: the stored end is then tomorrow.
-	const minDate = dayjs().startOf("day").toDate();
+	// Today's UTC date at the earliest: the stored end is the UTC midnight after it.
+	const now = new Date();
+	const minDate = new Date(
+		now.getUTCFullYear(),
+		now.getUTCMonth(),
+		now.getUTCDate(),
+	);
 
 	return (
 		<Paper withBorder p="sm">

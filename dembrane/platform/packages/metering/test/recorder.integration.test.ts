@@ -199,6 +199,20 @@ run("model call recorder against the database", () => {
     ).toEqual([["2026-10-01T00:00:00.000Z", COST]]);
   });
 
+  test("a call in the same minute as a downgrade, after it, counts in the free period", async () => {
+    const free = await account("free", "2026-10-14T10:30:30Z");
+    const fp = await project(free.workspaceId);
+    observe({ ref: "project", id: fp }, call({ startedAt: new Date("2026-10-14T10:30:15Z") }));
+    observe({ ref: "project", id: fp }, call({ startedAt: new Date("2026-10-14T10:30:40Z") }));
+    await recorder.flush();
+    expect(
+      (await spendOf(free.accountId)).map((s) => [s.period_start.toISOString(), Number(s.amount)]),
+    ).toEqual([
+      ["2026-10-01T00:00:00.000Z", COST],
+      ["2026-10-14T10:30:30.000Z", COST],
+    ]);
+  });
+
   test("a payer that does not resolve keeps its row as unattributed", async () => {
     const before = await sql`select count(*)::int as n from free_usage`;
     const orphan = await project(null);
@@ -223,7 +237,9 @@ run("model call recorder against the database", () => {
     const sink = modelCallTable(db);
     const row = { row: toRow(call(), "echo-worker", null, null), payer };
     const bucket = (costMicroEur: number) =>
-      new Map([[payerKey(payer), { payer, hour: new Date("2026-10-14T11:00:00Z"), costMicroEur }]]);
+      new Map([
+        [payerKey(payer), { payer, second: new Date("2026-10-14T11:00:00Z"), costMicroEur }],
+      ]);
     // Past bigint: free_usage refuses it after model_call took the row.
     await expect(sink.write([row], bucket(1e20))).rejects.toThrow(/insert into "free_usage"/);
     expect(await rowsOf(accountId)).toHaveLength(0);

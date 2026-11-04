@@ -126,6 +126,13 @@ export function aiBudgetDetails(
 	};
 }
 
+/** The question cap a sample chat_turns 402 carries, or null. */
+export function sampleTurnCap(err: unknown): number | null {
+	if (isFreeTierLimitError(err) !== "chat_turns") return null;
+	const cap = freeLimitDetails(err)?.cap;
+	return typeof cap === "number" && cap > 0 ? cap : null;
+}
+
 /** The recording reason of a free-limit 402, or null for anything else. */
 export function portalRecordingRefusal(err: unknown): RecordingRefusal | null {
 	const limit = isFreeTierLimitError(err);

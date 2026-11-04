@@ -25,6 +25,7 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		aiUsedUp,
 		opened,
 		resetsAt,
+		sampleCap,
 		wallKey,
 		currentTier,
 	}: {
@@ -32,6 +33,7 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		aiUsedUp?: boolean;
 		opened: boolean;
 		resetsAt?: string | null;
+		sampleCap?: string;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -43,6 +45,7 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-action={aiAction}
 				data-used-up={String(aiUsedUp)}
 				data-resets={resetsAt ?? ""}
+				data-sample-cap={sampleCap ?? ""}
 			/>
 		) : null,
 }));
@@ -256,7 +259,7 @@ it("names the sample's own report when the server refuses it", async () => {
 	expect(document.body.textContent).not.toContain("Error creating report");
 	fireEvent.click(screen.getByRole("button", { name: "See upgrade options" }));
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("ai_budget");
-	// Nothing about the AI budget was used up.
-	expect(modal.dataset.usedUp).toBe("false");
+	// The sample cap's own wall, never the AI budget's.
+	expect(modal.dataset.wall).toBe("sample_cap");
+	expect(modal.dataset.sampleCap).toBe("report");
 });

@@ -156,8 +156,8 @@ export interface TickDeps {
   readonly collisionCalls?: number;
   /** Vectors for texts, kept per project; null leaves large sessions on the full listing. */
   readonly similar?: SimilarFor | null;
-  /** Asks for a new argument map. Its run is its own workflow, beside the read. */
-  readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<void>) | null;
+  /** Asks for a new argument map (its own workflow, beside the read); false when the AI budget refused it. */
+  readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<boolean>) | null;
   /** Tells the project's people that the read of a booked start is ready to review. */
   readonly notifyReady?: ((o: { projectId: string; reportId: string }) => Promise<void>) | null;
   /** The free tier's AI budget and cadence floor; null leaves every read in. */
@@ -1667,14 +1667,15 @@ export async function runPopcornTick(
     // The argument map is part of the same run: asked for here, it works as its own
     // workflow while this read extracts. One already running is left to finish.
     if (d.requestMap && mapOwed) {
+      let requested = true;
       try {
-        await d.requestMap(projectId, actingUser || null);
+        requested = await d.requestMap(projectId, actingUser || null);
       } catch (exc) {
         // The read goes on without a new map; the next change asks again.
         d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
-      } finally {
-        state.map_fingerprint = analysisFingerprint;
       }
+      // Refused for the AI budget: the map stays owed, so a read after the reset asks again.
+      if (requested) state.map_fingerprint = analysisFingerprint;
     }
     if (extractionWork.length) {
       const slots = new Semaphore(MAX_PARALLEL_EXTRACTORS);

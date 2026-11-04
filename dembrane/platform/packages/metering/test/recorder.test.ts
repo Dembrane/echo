@@ -352,7 +352,7 @@ describe("model call recorder", () => {
     expect(sink.writes[0]?.batch[0]?.row.price_missing).toBe(true);
   });
 
-  test("a call under a payer is priced and its cost lands in that payer's hour", async () => {
+  test("a call under a payer is priced and its cost lands in that payer's second", async () => {
     const sink = fakeSink();
     const r = modelCallRecorder({
       sink,
@@ -363,8 +363,8 @@ describe("model call recorder", () => {
     });
     withPayer(project, () => {
       r.observe(call({ startedAt: new Date("2026-10-11T12:10:00Z") }));
-      r.observe(call({ startedAt: new Date("2026-10-11T12:59:59Z"), outputTokens: 0 }));
-      r.observe(call({ startedAt: new Date("2026-10-11T13:00:00Z") }));
+      r.observe(call({ startedAt: new Date("2026-10-11T12:10:00.999Z"), outputTokens: 0 }));
+      r.observe(call({ startedAt: new Date("2026-10-11T12:10:01Z") }));
     });
     await r.flush();
     const [w] = sink.writes;
@@ -376,8 +376,8 @@ describe("model call recorder", () => {
     });
     expect(w?.batch[1]?.row.cost_micro_eur).toBe(5000);
     expect(w?.spend).toEqual([
-      { payer: project, hour: new Date("2026-10-11T12:00:00Z"), costMicroEur: 10_600 },
-      { payer: project, hour: new Date("2026-10-11T13:00:00Z"), costMicroEur: 5600 },
+      { payer: project, second: new Date("2026-10-11T12:10:00Z"), costMicroEur: 10_600 },
+      { payer: project, second: new Date("2026-10-11T12:10:01Z"), costMicroEur: 5600 },
     ]);
   });
 
@@ -476,7 +476,7 @@ describe("model call recorder", () => {
     await r.flush();
     expect(sink.writes[0]?.batch).toHaveLength(2);
     expect(sink.writes[0]?.spend).toEqual([
-      { payer: project, hour: new Date("2026-10-11T12:00:00Z"), costMicroEur: 11_200 },
+      { payer: project, second: new Date("2026-10-11T12:00:00Z"), costMicroEur: 11_200 },
     ]);
   });
 

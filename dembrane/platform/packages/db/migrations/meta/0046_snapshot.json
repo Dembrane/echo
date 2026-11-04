@@ -4238,25 +4238,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "ai_budget_micro_eur": {
-          "name": "ai_budget_micro_eur",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ai_budget_unlimited": {
-          "name": "ai_budget_unlimited",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "ai_budget_until": {
-          "name": "ai_budget_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -16958,27 +16939,6 @@
         "model_call_started_at_idx": {
           "name": "model_call_started_at_idx",
           "columns": [
-            {
-              "expression": "started_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "model_call_account_started_idx": {
-          "name": "model_call_account_started_idx",
-          "columns": [
-            {
-              "expression": "billing_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
             {
               "expression": "started_at",
               "isExpression": false,

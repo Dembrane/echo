@@ -143,10 +143,12 @@ describe("the store's map generation", () => {
     );
 
   test("a used-up AI budget is skipped quietly", async () => {
-    await storeThrowing(freeLimitError("ai_budget", { percent: 100 })).requestGeneration(
-      "p1",
-      null,
-    );
+    expect(
+      await storeThrowing(freeLimitError("ai_budget", { percent: 100 })).requestGeneration(
+        "p1",
+        null,
+      ),
+    ).toBe(false);
     const other = new Error("boom");
     const err = await storeThrowing(other)
       .requestGeneration("p1", null)

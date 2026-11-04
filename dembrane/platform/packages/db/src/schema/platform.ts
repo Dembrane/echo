@@ -119,10 +119,7 @@ export const model_call = pgTable(
     /** The ai_price row the cost came from. */
     price_id: bigint("price_id", { mode: "number" }),
   },
-  (t) => [
-    index("model_call_started_at_idx").on(t.started_at),
-    index("model_call_account_started_idx").on(t.billing_account_id, t.started_at),
-  ],
+  (t) => [index("model_call_started_at_idx").on(t.started_at)],
 );
 
 /** Unit prices per model; a new row starts when any price changes, old rows stay for history. */

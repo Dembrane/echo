@@ -18,9 +18,12 @@ vi.mock("@/components/participant/InAppBrowserNotice", () => ({
 vi.mock("@/components/participant/ParticipantOnboardingCards", () => ({
 	default: () => <div data-testid="onboarding" />,
 }));
+const project = vi.hoisted(() => ({
+	current: { id: "p-1", is_ai_available: true, is_taking_recordings: false },
+}));
 vi.mock("@/components/participant/hooks", () => ({
 	useParticipantProjectById: () => ({
-		data: { id: "p-1", is_taking_recordings: false },
+		data: project.current,
 		error: null,
 		isLoading: false,
 	}),
@@ -45,6 +48,44 @@ beforeAll(() => {
 
 afterEach(() => {
 	cleanup();
+	project.current = {
+		id: "p-1",
+		is_ai_available: true,
+		is_taking_recordings: false,
+	};
+});
+
+const renderStart = (path = "/p-1/start") =>
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider>
+				<MemoryRouter initialEntries={[path]}>
+					<Routes>
+						<Route
+							path="/:projectId/start"
+							element={<ParticipantStartRoute />}
+						/>
+					</Routes>
+				</MemoryRouter>
+			</MantineProvider>
+		</I18nProvider>,
+	);
+
+it("lets typed text start while only recording is closed", () => {
+	renderStart("/p-1/start?mode=text");
+	expect(screen.getByTestId("onboarding")).toBeTruthy();
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
+});
+
+it("shows typed text the same not-taking-recordings page once AI is unavailable", () => {
+	project.current = {
+		id: "p-1",
+		is_ai_available: false,
+		is_taking_recordings: false,
+	};
+	renderStart("/p-1/start?mode=text");
+	expect(screen.getByTestId("portal-not-taking-recordings")).toBeTruthy();
+	expect(screen.queryByTestId("onboarding")).toBeNull();
 });
 
 it("shows the not-taking-recordings page under the portal logo", () => {

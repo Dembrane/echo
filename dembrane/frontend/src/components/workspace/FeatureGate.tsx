@@ -14,6 +14,7 @@ import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
 	type AiAction,
+	type SampleCap,
 	variantFor,
 	type WallKey,
 	wallPopoverLine,
@@ -207,6 +208,10 @@ interface UpgradeModalProps {
 	resetsAt?: string | null;
 	/** False opens the ai_budget wall on a neutral opening (budget not spent yet). */
 	aiUsedUp?: boolean;
+	/** The sample project cap reached, on the sample_cap wall. */
+	sampleCap?: SampleCap;
+	/** The question cap the chat_turns refusal carried, if any. */
+	sampleQuestions?: number | null;
 }
 
 /**
@@ -229,6 +234,8 @@ export function UpgradeModal({
 	projectId,
 	requiredTier,
 	resetsAt,
+	sampleCap,
+	sampleQuestions,
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
@@ -288,6 +295,8 @@ export function UpgradeModal({
 			orgId={orgId ?? workspace?.org_id}
 			projectId={projectId}
 			resetsAt={resetsAt}
+			sampleCap={sampleCap}
+			sampleQuestions={sampleQuestions}
 			variant={
 				wallKey === "ai_budget" && !aiUsedUp
 					? "ai_allowance"

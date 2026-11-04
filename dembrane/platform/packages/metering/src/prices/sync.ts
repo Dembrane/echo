@@ -100,7 +100,14 @@ export function ecbUsdRate(xml: string): number | null {
   return Number.isFinite(rate) && rate > 0 ? rate : null;
 }
 
-/** Stores today's USD to EUR rate; a failed or unreadable fetch keeps the last row. */
+/** A USD to EUR rate outside this range is a bad feed, not a market move. */
+const SANE_USD_TO_EUR = { min: 0.5, max: 2 } as const;
+/** A rate move above this share is posted. */
+const FX_POST_SHARE = 0.02;
+
+const eur = (n: number) => n.toFixed(4);
+
+/** Stores today's USD to EUR rate; a failed, unreadable or out-of-range fetch keeps the last row. */
 async function syncRate(d: SyncDeps): Promise<boolean> {
   let rate: number | null = null;
   try {
@@ -112,6 +119,18 @@ async function syncRate(d: SyncDeps): Promise<boolean> {
   }
   if (rate === null) return false;
   const usdToEur = 1 / rate;
+  if (usdToEur < SANE_USD_TO_EUR.min || usdToEur > SANE_USD_TO_EUR.max) {
+    d.logger.error(
+      { usd_to_eur: usdToEur, url: d.ecbUrl, signal: "metering.fx_rejected" },
+      "ECB USD to EUR rate out of range; keeping the last",
+    );
+    await postSlack(
+      d.slackUrl,
+      `ECB rate rejected: 1 USD = ${eur(usdToEur)} EUR is outside ${SANE_USD_TO_EUR.min} to ${SANE_USD_TO_EUR.max} EUR, so the last good rate is kept.`,
+      d.logger,
+    );
+    return false;
+  }
   const before = await latestRate(d.db);
   const day = d.now().toISOString().slice(0, 10);
   await d.db
@@ -121,6 +140,13 @@ async function syncRate(d: SyncDeps): Promise<boolean> {
       target: schema.ai_fx_rate.day,
       set: { usd_to_eur: String(usdToEur), fetched_at: d.now() },
     });
+  const move = before ? (usdToEur - before) / before : 0;
+  if (Math.abs(move) > FX_POST_SHARE)
+    await postSlack(
+      d.slackUrl,
+      `USD to EUR rate moved ${(move * 100).toFixed(1)}%: 1 USD was ${eur(before as number)} EUR, now ${eur(usdToEur)} EUR.`,
+      d.logger,
+    );
   return before !== usdToEur;
 }
 

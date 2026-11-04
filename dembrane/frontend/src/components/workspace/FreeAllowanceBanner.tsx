@@ -21,7 +21,8 @@ function aiBannerState(
 	s: FreeAllowance | undefined,
 ): { exhausted: boolean; percent: number } | null {
 	const ai = s?.free ? s.ai : null;
-	if (!ai || ai.unlimited) return null;
+	// Nothing stops while staff turned the check off, so no banner says it will.
+	if (!ai || ai.unlimited || ai.enforced === false) return null;
 	if (!ai.exhausted && ai.percent_used < AI_WARN_PERCENT) return null;
 	return { exhausted: ai.exhausted, percent: Math.min(100, ai.percent_used) };
 }

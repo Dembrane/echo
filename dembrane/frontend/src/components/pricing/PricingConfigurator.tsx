@@ -21,6 +21,8 @@ import { useSearchParams } from "react-router";
 import {
 	type AiAction,
 	aiActionLine,
+	SAMPLE_CHAT_QUESTIONS,
+	type SampleCap,
 	wallActionLine,
 } from "@/components/workspace/gateWalls";
 import { formatResetDay } from "@/lib/freeTier";
@@ -102,8 +104,17 @@ export type PricingConfiguratorProps = {
 	onClose: () => void;
 	/** Which wall started this session. It rides on every event. */
 	wallKey?: string;
-	/** `transcription_cap` and `ai_budget` add a block above the opening; `ai_allowance` rewords the opening. */
-	variant?: "default" | "transcription_cap" | "ai_budget" | "ai_allowance";
+	/** `transcription_cap` and `ai_budget` add a block above the opening; `ai_allowance` and `sample_cap` reword it. */
+	variant?:
+		| "default"
+		| "transcription_cap"
+		| "ai_budget"
+		| "ai_allowance"
+		| "sample_cap";
+	/** The sample project cap reached, for the `sample_cap` opening. */
+	sampleCap?: SampleCap;
+	/** The question cap from the chat_turns refusal; null falls back to SAMPLE_CHAT_QUESTIONS. */
+	sampleQuestions?: number | null;
 	/** The refused AI action; overrides the wall's own action line. */
 	aiAction?: AiAction;
 	/** When the AI budget resets, for the `ai_budget` block. */
@@ -177,6 +188,8 @@ export const PricingConfigurator = ({
 	orgId,
 	projectId,
 	resetsAt,
+	sampleCap,
+	sampleQuestions: refusedQuestions,
 	submit = defaultSubmit,
 	variant = "default",
 	wallKey,
@@ -694,6 +707,7 @@ export const PricingConfigurator = ({
 	// What the person was trying to do when they met the wall. Empty on the
 	// billing page, which is not a wall, and on a mount that names none.
 	const action = aiAction ? aiActionLine(aiAction) : wallActionLine(wallKey);
+	const sampleQuestions = refusedQuestions ?? SAMPLE_CHAT_QUESTIONS;
 	const resetDate = formatResetDay(resetsAt, locale);
 
 	// The fallback screen carries its own thank you line rather than a heading,
@@ -801,7 +815,15 @@ export const PricingConfigurator = ({
 										tabIndex={-1}
 										{...testId("pricing-configurator-opening")}
 									>
-										{variant === "ai_allowance" ? (
+										{variant === "sample_cap" ? (
+											sampleCap === "report" ? (
+												<Trans>Sample projects allow one report.</Trans>
+											) : (
+												<Trans>
+													Sample projects allow {sampleQuestions} questions.
+												</Trans>
+											)
+										) : variant === "ai_allowance" ? (
 											<Trans>
 												You're on the free plan, which includes a monthly AI
 												allowance.
@@ -813,7 +835,16 @@ export const PricingConfigurator = ({
 										)}
 									</Title>
 									<Text size="sm">
-										{variant === "ai_allowance" ? (
+										{variant === "sample_cap" ? (
+											// The way on, and what Continue starts: no "requires a paid plan".
+											<span {...testId("pricing-configurator-sample-cap")}>
+												<Trans>
+													Create your own project to keep going, or answer 5
+													quick questions and pick a time with the dembrane team
+													for a paid plan.
+												</Trans>
+											</span>
+										) : variant === "ai_allowance" ? (
 											// Nothing was refused yet, so no "requires a paid plan".
 											<Trans>
 												Upgrade for more AI every month. We're going to ask you

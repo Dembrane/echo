@@ -70,6 +70,7 @@ import {
 	useAiBudgetWall,
 } from "@/components/workspace/AiBudgetWall";
 import type { AiAction } from "@/components/workspace/gateWalls";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import { trackProcess } from "@/features/processes/store";
 import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -94,7 +95,7 @@ import {
 	stopAgenticRun,
 	streamAgenticRun,
 } from "@/lib/api";
-import { isFreeTierLimitError } from "@/lib/freeTier";
+import { isFreeTierLimitError, sampleTurnCap } from "@/lib/freeTier";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
@@ -1165,8 +1166,10 @@ export const AgenticChatPanel = ({
 	const aiWall = useAiBudgetWall();
 	// What the host was doing when the AI budget refused them.
 	const [aiAction, setAiAction] = useState<AiAction>("assistant");
-	// The sample cap's upgrade: nothing about the AI budget is used up.
-	const openSampleWall = () => aiWall.open(null, false);
+	// The sample cap has its own wall: nothing about the AI budget is used up.
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
+	const openSampleWall = sampleWall.open;
+	const [sampleQuestions, setSampleQuestions] = useState<number | null>(null);
 	// The gate that locks uploads locks the mic.
 	const voiceCapReached = Boolean(usageGates?.uploads_locked);
 	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
@@ -1691,6 +1694,7 @@ export const AgenticChatPanel = ({
 			setInput((current) => (current.length === 0 ? message : current));
 			// Backend safety net: the sample cap or a used-up AI budget returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
+				setSampleQuestions(sampleTurnCap(submitError));
 				setAtTurnLimit(true);
 				openSampleWall();
 			} else if (aiWall.openFor(submitError)) {
@@ -2406,6 +2410,14 @@ export const AgenticChatPanel = ({
 			<AiBudgetWall
 				{...aiWall.props}
 				action={aiAction}
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
+			/>
+			<SampleCapWall
+				cap="chat"
+				questions={sampleQuestions}
+				opened={sampleWallOpened}
+				onClose={sampleWall.close}
 				workspaceId={workspace?.id ?? ""}
 				projectId={projectId}
 			/>

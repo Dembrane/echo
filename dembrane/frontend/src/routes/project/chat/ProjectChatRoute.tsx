@@ -2,14 +2,6 @@ import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	ChatCircleText as ChatCircleTextIcon,
-	ArrowClockwiseIcon,
-	LockIcon,
-	PaperPlaneRightIcon,
-	SquareIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
-import {
 	Alert,
 	Badge,
 	Box,
@@ -23,7 +15,15 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import {
+	ArrowClockwiseIcon,
+	ChatCircleText as ChatCircleTextIcon,
+	LockIcon,
+	PaperPlaneRightIcon,
+	SquareIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -74,6 +74,7 @@ import {
 	AiBudgetWall,
 	useAiBudgetWall,
 } from "@/components/workspace/AiBudgetWall";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -88,7 +89,7 @@ import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
 import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
-import { aiBudgetRefusalOf, turnRefusalOf } from "./turnRefusal";
+import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -501,6 +502,7 @@ export const ProjectChatRoute = () => {
 
 	// Free tier: a sample project's refused turn, or a used-up AI budget.
 	const aiWall = useAiBudgetWall();
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
 	const atTurnLimit = turnRefusalOf(error);
 	const aiRefusal = aiBudgetRefusalOf(error);
 	const queryClient = useQueryClient();
@@ -513,8 +515,8 @@ export const ProjectChatRoute = () => {
 	}, [error]);
 	const guardedSubmit = () => {
 		if (atTurnLimit) {
-			// The sample cap: nothing about the AI budget is used up.
-			aiWall.open(null, false);
+			// The sample cap has its own wall: nothing about the AI budget is used up.
+			sampleWall.open();
 			return;
 		}
 		handleSubmit();
@@ -892,8 +894,8 @@ export const ProjectChatRoute = () => {
 							icon={<WarningCircleIcon size={20} />}
 							p="xs"
 							styles={{
-								wrapper: { alignItems: "center" },
 								title: { marginBottom: 0 },
+								wrapper: { alignItems: "center" },
 							}}
 							title={
 								<Group gap="xl" wrap="nowrap" align="center">
@@ -924,7 +926,7 @@ export const ProjectChatRoute = () => {
 					)}
 					{atTurnLimit && (
 						<Box className="mb-2">
-							<ChatTurnLimitCard onUpgrade={() => aiWall.open(null, false)} />
+							<ChatTurnLimitCard onUpgrade={sampleWall.open} />
 						</Box>
 					)}
 					<form
@@ -1066,12 +1068,22 @@ export const ProjectChatRoute = () => {
 				)}
 			</Modal>
 			{(routeWorkspaceId ?? projectWorkspaceId) && (
-				<AiBudgetWall
-					{...aiWall.props}
-					action="chat"
-					workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
-					projectId={projectId}
-				/>
+				<>
+					<AiBudgetWall
+						{...aiWall.props}
+						action="chat"
+						workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
+						projectId={projectId}
+					/>
+					<SampleCapWall
+						cap="chat"
+						questions={turnCapOf(error)}
+						opened={sampleWallOpened}
+						onClose={sampleWall.close}
+						workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
+						projectId={projectId}
+					/>
+				</>
 			)}
 		</Stack>
 	);

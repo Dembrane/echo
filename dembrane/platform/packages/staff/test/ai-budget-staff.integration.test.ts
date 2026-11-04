@@ -453,7 +453,7 @@ run("staff AI budget and costs", () => {
       await spend(down, "2026-10-01T00:00:00Z", 300_000);
       await spend(down, "2026-10-10T00:00:00Z", 200_000);
       await spend(open, "2026-10-01T00:00:00Z", 100_000);
-      // Rolled up October days are not read for this month.
+      // A rolled up October day: read from the rollup, its calls not counted twice.
       await daily({
         day: "2026-10-03",
         account: free,
@@ -621,6 +621,31 @@ run("staff AI budget and costs", () => {
         STAFF.directusUserId,
         { month_offset: 0 },
       ]);
+    });
+
+    test("this month reads rolled up days from the rollup, not from model_call", async () => {
+      // With the rolled up day's model_call row gone, nothing changes.
+      const gone = await sql`delete from model_call where started_at = '2026-10-03T09:00:00Z'
+        returning id`;
+      expect(gone).toHaveLength(1);
+      try {
+        const row = (await costs(0)).accounts.find((a) => a.billing_account_id === free);
+        expect(row?.cost_micro_eur).toBe(1_500_000);
+        expect(row?.by_feature).toContainEqual({
+          operation: "chat.reply",
+          cost_micro_eur: 1_000_000,
+          calls: 1,
+        });
+      } finally {
+        await modelCall({
+          at: "2026-10-03T09:00:00Z",
+          account: free,
+          operation: "chat.reply",
+          model: "gemini-flash",
+          provider: "vertex",
+          cost: 1_000_000,
+        });
+      }
     });
 
     test("last month: rolled up days plus the days not yet rolled up", async () => {

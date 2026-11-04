@@ -96,7 +96,8 @@ const VIEW: AiCostView = {
 			cost_micro_eur: 1_000_000,
 			custom_budget: true,
 			name: "Custom Org",
-			override_until: "2026-12-31T00:00:00.000Z",
+			// Stored as the start of the day after the last covered day.
+			override_until: "2027-01-01T00:00:00.000Z",
 			percent_used: 5,
 		}),
 		account("over-acc", {

@@ -167,13 +167,24 @@ run("AI budget: recording and uploads", () => {
     expect(dt.limit).toBe("ai_budget");
     expect(dt).not.toHaveProperty("used");
     expect(dt).not.toHaveProperty("cap");
-    // Typed text records nothing, so it still starts.
-    const text = await post(`/api/participant/projects/${p}/conversations/initiate`, {
-      name: "N",
-      pin: "",
-      source: "PORTAL_TEXT",
-    });
-    expect(text.status).toBe(200);
+  });
+
+  test("a typed text conversation at zero is refused the same way; below zero it starts", async () => {
+    const { p } = await account("free");
+    const start = () =>
+      post(`/api/participant/projects/${p}/conversations/initiate`, {
+        name: "N",
+        pin: "",
+        source: "PORTAL_TEXT",
+      });
+    expect((await start()).status).toBe(200);
+    await spend(p);
+    const text = await start();
+    expect(text.status).toBe(402);
+    const dt = await detail(text);
+    expect(dt.limit).toBe("ai_budget");
+    expect(dt).not.toHaveProperty("percent");
+    expect(dt).not.toHaveProperty("resets_at");
   });
 
   test("the portal project read says whether recording and AI are available", async () => {

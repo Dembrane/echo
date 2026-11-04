@@ -13,7 +13,7 @@ import { countingDb } from "@dembrane/db/testing";
 import type postgres from "postgres";
 import { allowanceForWorkspace } from "../src/account";
 import { freeLimitError } from "../src/errors";
-import { freeLimits, invalidateFreeLimits } from "../src/limits";
+import { freeLimits, invalidateFreeLimits, setFreeLimit } from "../src/limits";
 import { monthStart } from "../src/period";
 import { accountWorkspaceIds, allowanceSnapshot } from "../src/snapshot";
 
@@ -139,7 +139,7 @@ run("allowance snapshot", () => {
       resets_at: NOV,
       audio_seconds: { used: 3600, limit: 18000 },
       projects: { used: 1, limit: 1 },
-      ai: { percent_used: 82, exhausted: false, unlimited: false },
+      ai: { percent_used: 82, exhausted: false, unlimited: false, enforced: true },
     });
   });
 
@@ -150,10 +150,35 @@ run("allowance snapshot", () => {
     await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
       (${acc}, ${OCT}, 'ai_spend_micro_eur', 6000000)`;
     const snap = await allowanceSnapshot(db, ws, NOW);
-    expect(snap.ai).toEqual({ percent_used: 100, exhausted: true, unlimited: false });
+    expect(snap.ai).toEqual({
+      percent_used: 100,
+      exhausted: true,
+      unlimited: false,
+      enforced: true,
+    });
     const body = JSON.stringify(snap);
     for (const word of ["micro", "eur", "6000000", "5000000", "spent", "limit_"])
       expect(body.toLowerCase()).not.toContain(word);
+  });
+
+  test("with the staff off switch the meter says so and is never exhausted", async () => {
+    const o = await org();
+    const acc = await account("free", o);
+    const ws = await workspace(o, acc);
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
+      (${acc}, ${OCT}, 'ai_spend_micro_eur', 6000000)`;
+    await setFreeLimit(db, "ai_budget_enforce", 0, null);
+    try {
+      expect((await allowanceSnapshot(db, ws, NOW)).ai).toEqual({
+        percent_used: 100,
+        exhausted: false,
+        unlimited: false,
+        enforced: false,
+      });
+    } finally {
+      await sql`delete from tier_limit where key = 'ai_budget_enforce'`;
+      invalidateFreeLimits();
+    }
   });
 
   test("an unlimited override reads unlimited and never exhausted", async () => {
@@ -167,6 +192,7 @@ run("allowance snapshot", () => {
       percent_used: 0,
       exhausted: false,
       unlimited: true,
+      enforced: true,
     });
   });
 
@@ -180,7 +206,12 @@ run("allowance snapshot", () => {
       (${acc}, ${OCT}, 'audio_seconds', 60)`;
     const snap = await allowanceSnapshot(db, ws, NOW);
     expect(snap.audio_seconds).toEqual({ used: 60, limit: 18000 });
-    expect(snap.ai).toEqual({ percent_used: 0, exhausted: false, unlimited: false });
+    expect(snap.ai).toEqual({
+      percent_used: 0,
+      exhausted: false,
+      unlimited: false,
+      enforced: true,
+    });
   });
 
   test("projects count across the pooled org and its free client workspaces", async () => {

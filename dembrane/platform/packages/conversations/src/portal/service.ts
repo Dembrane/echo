@@ -7,7 +7,7 @@ import { enqueueConversationEvent, webhooksStorage } from "@dembrane/webhooks";
 import { and, eq, inArray } from "drizzle-orm";
 import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
-import { audioOpen, requireAudioStart } from "../free-audio";
+import { audioOpen, requireAudioStart, requireTextStart } from "../free-audio";
 import { clip } from "../live/telemetry";
 import { finishConversation } from "../pipeline/defs";
 import {
@@ -70,8 +70,9 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
   // project_service raised ProjectNotFoundException here, which the route did not catch.
   if (!project) throw new Error(`project ${projectId} not found`);
   if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
-  // Anything but typed text may record, so it is a start.
+  // Anything but typed text may record, so it is a start; typed text only needs AI.
   if (input.source !== "PORTAL_TEXT") await requireAudioStart(d, project.id);
+  else await requireTextStart(d, project.id);
   const id = newId();
   const now = d.now().toISOString();
   const row = await transaction(d.db, async (tx) => {

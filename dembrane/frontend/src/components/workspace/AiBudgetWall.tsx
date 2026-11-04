@@ -1,11 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { aiBudgetDetails } from "@/lib/freeTier";
 import { SELLABLE_TIER } from "@/lib/tiers";
 import type { AiAction } from "./gateWalls";
 
 /** Open state for AiBudgetWall: `openFor` takes a refusal, `open` a known used-up budget. */
 export function useAiBudgetWall() {
+	// Optional: a refusal also refreshes the meter and banners where a client is mounted.
+	const queryClient = useContext(QueryClientContext);
 	const [state, setState] = useState({
 		opened: false,
 		resetsAt: null as string | null,
@@ -26,9 +30,10 @@ export function useAiBudgetWall() {
 			const refused = aiBudgetDetails(err);
 			if (!refused) return false;
 			open(refused.resetsAt);
+			if (queryClient) void invalidateFreeAllowance(queryClient);
 			return true;
 		},
-		[open],
+		[open, queryClient],
 	);
 	const props = useMemo(() => ({ ...state, onClose: close }), [state, close]);
 	return { close, open, openFor, props };
