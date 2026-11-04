@@ -57,6 +57,7 @@ import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { reportsWorker } from "@dembrane/reports";
 import { MILLBROOK_IDS, samplesWorker } from "@dembrane/samples";
+import { accountPurgeRegistration } from "@dembrane/staff";
 import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
 import {
@@ -251,6 +252,14 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    // Accounts deleted in the app are purged once their grace period has passed.
+    accountPurgeRegistration({
+      db,
+      audio: deps.conversations.audio,
+      audioKeyOf: (path) => deps.conversations.audioUrls.keyOf(path),
+      files: deps.files,
+      logger,
+    }),
     // Every workspace's best-practices sample where samples are on, but none in the synthetic
     // demo or preview orgs.
     samplesWorker({

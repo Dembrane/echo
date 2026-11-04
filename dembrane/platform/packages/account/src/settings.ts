@@ -1,3 +1,4 @@
+import { deletionRequestNote } from "@dembrane/auth";
 import {
   BadRequestError,
   NotFoundError,
@@ -167,12 +168,9 @@ export function settingsRoutes(deps: AccountDeps) {
     .delete(`${base}/avatar`, (c) => remove(c, "avatar"))
     .delete(`${base}/account`, async (c) => {
       const who = requireUser(c);
-      // App Store guideline 5.1.1(v): sign-in stops now, data is purged within 30 days.
-      const day = new Date().toISOString().slice(0, 10);
-      await deps.identity.suspend(
-        who.directusUserId,
-        `deletion requested in-app on ${day}, purge within 30 days`,
-      );
+      // App Store guideline 5.1.1(v): sign-in stops now; the staff purge job deletes the
+      // account and its data once the grace period has passed.
+      await deps.identity.suspend(who.directusUserId, deletionRequestNote(new Date()));
       deps.logger?.info({ userId: who.directusUserId }, "account suspended pending deletion");
       return c.json({ status: "ok" });
     });

@@ -184,3 +184,24 @@ export function identityAccount(auth: Pick<Auth, "$context">, db: Db) {
 }
 
 export type IdentityAccount = ReturnType<typeof identityAccount>;
+
+/** Days between an in-app deletion request and the purge that deletes the account. */
+export const DELETION_GRACE_DAYS = 30;
+
+const DELETION_NOTE = /^deletion requested in-app on (\d{4}-\d{2}-\d{2}), purge within \d+ days$/;
+
+/**
+ * The note a suspension for an in-app deletion request carries on directus_users.description.
+ * It is the only marker of the request, so the writer and the purge share this one format.
+ */
+export function deletionRequestNote(day: Date): string {
+  return `deletion requested in-app on ${day.toISOString().slice(0, 10)}, purge within ${DELETION_GRACE_DAYS} days`;
+}
+
+/** The UTC day a deletion was requested, or null when the note is anything else. */
+export function deletionRequestedOn(description: string | null | undefined): Date | null {
+  const day = description ? DELETION_NOTE.exec(description)?.[1] : undefined;
+  if (!day) return null;
+  const at = new Date(`${day}T00:00:00.000Z`);
+  return Number.isNaN(at.getTime()) || at.toISOString().slice(0, 10) !== day ? null : at;
+}
