@@ -51,7 +51,7 @@ export function AiBudgetWall({
 }: {
 	opened: boolean;
 	onClose: () => void;
-	// None reads as "use AI features" (the allowance card names no action).
+	// None (the allowance card) opens on the free-plan allowance line, with no attempt named.
 	action?: AiAction;
 	resetsAt: string | null;
 	workspaceId: string;

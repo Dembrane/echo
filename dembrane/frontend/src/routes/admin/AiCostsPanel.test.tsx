@@ -249,7 +249,7 @@ it("sums the month in captioned tiles", async () => {
 	);
 	expect(summary.getByTestId("ai-cost-internal").textContent).toBe("€0.069");
 	expect(summary.getByTestId("ai-cost-charged").textContent).toBe("€4.53");
-	expect(summary.getByText("incl. €0.02 from deleted accounts")).toBeTruthy();
+	expect(summary.getByText("incl. €0.02 from removed accounts")).toBeTruthy();
 	expect(summary.getByText("Spend")).toBeTruthy();
 	expect(summary.getByText("Accounts and providers")).toBeTruthy();
 	expect(summary.getByText("88% of the total")).toBeTruthy();

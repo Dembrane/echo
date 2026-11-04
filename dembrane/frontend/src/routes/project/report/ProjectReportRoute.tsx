@@ -56,7 +56,10 @@ import {
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
-import { reportErrorText } from "@/components/report/reportError";
+import {
+	failedReportAlert,
+	reportErrorText,
+} from "@/components/report/reportError";
 import {
 	isDateFarEnough,
 	ScheduleDateTimePicker,
@@ -748,12 +751,8 @@ export const ProjectReportRoute = () => {
 				<Divider />
 				{latestReport && isFallbackFromFailure && (
 					<CloseableAlert
-						color={latestReport.status === "cancelled" ? "yellow" : "red"}
-						title={
-							latestReport.status === "cancelled"
-								? t`Report generation cancelled`
-								: t`Something went wrong`
-						}
+						color={failedReportAlert(latestReport).color}
+						title={failedReportAlert(latestReport).title}
 					>
 						{latestReport.status === "cancelled" ? (
 							<Trans>
@@ -842,12 +841,8 @@ export const ProjectReportRoute = () => {
 
 				{isFallbackFromFailure && (
 					<CloseableAlert
-						color={latestReport.status === "cancelled" ? "yellow" : "red"}
-						title={
-							latestReport.status === "cancelled"
-								? t`Report generation cancelled`
-								: t`Something went wrong`
-						}
+						color={failedReportAlert(latestReport).color}
+						title={failedReportAlert(latestReport).title}
 					>
 						{latestReport.status === "cancelled" ? (
 							<Trans>
@@ -1198,12 +1193,8 @@ export const ProjectReportRoute = () => {
 					) : isFallbackFromFailure ? (
 						<Stack>
 							<Alert
-								color={latestReport.status === "cancelled" ? "yellow" : "red"}
-								title={
-									latestReport.status === "cancelled"
-										? t`Report generation cancelled`
-										: t`Something went wrong`
-								}
+								color={failedReportAlert(latestReport).color}
+								title={failedReportAlert(latestReport).title}
 							>
 								{latestReport.status === "cancelled" ? (
 									<Trans>

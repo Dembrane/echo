@@ -589,7 +589,7 @@ export function AiCostsPanel({
 										value={formatAiCost(charged)}
 										caption={
 											data.deleted_accounts_micro_eur > 0
-												? t`incl. ${deleted} from deleted accounts`
+												? t`incl. ${deleted} from removed accounts`
 												: accounts.length === 0
 													? t`No account was charged`
 													: t`The account rows below`
