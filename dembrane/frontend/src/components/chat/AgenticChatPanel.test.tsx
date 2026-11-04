@@ -723,8 +723,6 @@ describe("AgenticChatPanel, voice input", () => {
 	});
 
 	it("refuses to record past the recording cap and offers the upgrade instead", async () => {
-		const openTab = vi.fn().mockReturnValue({ opener: window });
-		vi.stubGlobal("open", openTab);
 		usageState.uploadsLocked = true;
 		runState.status = "completed";
 		renderPanel();
@@ -742,14 +740,13 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(screen.queryByTestId("chat-voice-recording-bar")).toBeNull();
 		expect(transcribeMock).not.toHaveBeenCalled();
 		// The dead-looking button still has somewhere to send the host: the
-		// pricing calculator on the website.
-		await waitFor(() => expect(openTab).toHaveBeenCalledTimes(1));
-		expect(openTab.mock.calls[0][0]).toContain("/pricing-calculator");
+		// upgrade prompt, titled for the voice cap wall.
+		expect(
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
+		).toBeTruthy();
 	});
 
 	it("locks the microphone on a free project and offers the upgrade", async () => {
-		const openTab = vi.fn().mockReturnValue({ opener: window });
-		vi.stubGlobal("open", openTab);
 		usageState.free = true;
 		runState.status = "completed";
 		renderPanel();
@@ -764,13 +761,12 @@ describe("AgenticChatPanel, voice input", () => {
 			globalThis.navigator.mediaDevices.getUserMedia,
 		).not.toHaveBeenCalled();
 		expect(transcribeMock).not.toHaveBeenCalled();
-		await waitFor(() => expect(openTab).toHaveBeenCalledTimes(1));
-		expect(openTab.mock.calls[0][0]).toContain("/pricing-calculator");
+		expect(
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
+		).toBeTruthy();
 	});
 
 	it("opens the upgrade wall when the server refuses a free voice note", async () => {
-		const openTab = vi.fn().mockReturnValue({ opener: window });
-		vi.stubGlobal("open", openTab);
 		transcribeMock.mockRejectedValueOnce(
 			Object.assign(new Error("402"), {
 				isAxiosError: true,
@@ -793,14 +789,13 @@ describe("AgenticChatPanel, voice input", () => {
 			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
 		});
 
-		await waitFor(() => expect(openTab).toHaveBeenCalledTimes(1));
-		expect(openTab.mock.calls[0][0]).toContain("/pricing-calculator");
+		expect(
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
+		).toBeTruthy();
 		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
 	});
 
 	it("shows any other 402 as a voice error, not the free wall", async () => {
-		const openTab = vi.fn().mockReturnValue({ opener: window });
-		vi.stubGlobal("open", openTab);
 		transcribeMock.mockRejectedValueOnce(
 			Object.assign(new Error("402"), {
 				isAxiosError: true,
@@ -823,7 +818,9 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(alert.textContent).toContain(
 			"Something went wrong while transcribing",
 		);
-		expect(openTab).not.toHaveBeenCalled();
+		expect(
+			screen.queryByText(/You.ve reached the limit for speaking in chat/),
+		).toBeNull();
 	});
 
 	it("says the microphone is blocked rather than failing quietly", async () => {

@@ -1192,7 +1192,7 @@ msgstr "1 heure"
 #~ msgid "1 view"
 #~ msgstr "1 vue"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:699
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. Vous fournissez une URL où vous souhaitez recevoir les notifications"
 
@@ -1208,7 +1208,7 @@ msgstr "Il y a 2 mois"
 msgid "2 to 5."
 msgstr "2 à 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:704
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:705
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Lorsqu'un événement de conversation ou de rapport se produit, nous envoyons automatiquement les données à votre URL"
 
@@ -1229,7 +1229,7 @@ msgstr "3 jours"
 msgid "3 months ago"
 msgstr "Il y a 3 mois"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:710
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:711
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Votre système reçoit les données et peut agir sur elles (par exemple, enregistrer dans une base de données, envoyer un e-mail, mettre à jour un tableau de bord)"
 
@@ -1279,7 +1279,7 @@ msgstr "Quelques mots de plus, pour que la personne qui lira plus tard comprenne
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Une première version apparaîtra ici dès qu'elle sera prête."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 msgid "A friendly name to identify this webhook"
 msgstr "Un nom convivial pour identifier ce webhook"
 
@@ -1550,7 +1550,7 @@ msgstr "Action sur"
 #~ msgstr "Action sur"
 
 #: src/components/project/ProjectDangerZone.tsx:87
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:929
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:930
 msgid "Actions"
 msgstr "Actions"
 
@@ -1624,8 +1624,8 @@ msgid "Add a project goal before saving."
 msgstr "Ajoutez un objectif de projet avant d'enregistrer."
 
 #: src/components/workspace/gateWalls.ts:155
-msgid "add a workspace"
-msgstr "ajouter un espace de travail"
+#~ msgid "add a workspace"
+#~ msgstr "ajouter un espace de travail"
 
 #: src/components/view/CreateViewForm.tsx:132
 #~ msgid "Add additional context (Optional)"
@@ -1673,8 +1673,8 @@ msgstr "Ajouter des images"
 #~ msgstr "Ajoutez des termes clés ou des noms propres pour améliorer la qualité et la précision de la transcription."
 
 #: src/components/workspace/gateWalls.ts:145
-msgid "add more projects"
-msgstr "ajouter d'autres projets"
+#~ msgid "add more projects"
+#~ msgstr "ajouter d'autres projets"
 
 #: src/components/project/ProjectUploadSection.tsx:56
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
@@ -1762,10 +1762,10 @@ msgstr "Ajouter des traductions"
 msgid "Add verification prompt"
 msgstr "Ajouter une consigne de vérification"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:897
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:964
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:469
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:898
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:965
 msgid "Add webhook"
 msgstr "Ajouter un webhook"
 
@@ -1779,8 +1779,8 @@ msgstr "Ajouter un webhook"
 #~ msgstr "Ajouter votre premier webhook"
 
 #: src/components/workspace/gateWalls.ts:138
-msgid "add your logo"
-msgstr "ajouter votre logo"
+#~ msgid "add your logo"
+#~ msgstr "ajouter votre logo"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
@@ -1909,7 +1909,7 @@ msgstr "Administrateurs"
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Les administrateurs ont accès à tous les espaces de travail de cette organisation. Les membres et personnes externes ne voient que ceux auxquels ils ont accès."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:881
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
 msgid "Advanced"
 msgstr "Avancé"
 
@@ -2449,7 +2449,7 @@ msgid "Archived"
 msgstr "Archivé"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:612
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:613
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer le webhook \"{0}\" ? Cette action ne peut pas être annulée."
 
@@ -2617,8 +2617,8 @@ msgstr "Demander l'adresse e-mail des participants à la fin d'une conversation.
 
 #: src/components/workspace/gateWalls.ts:135
 #: src/components/workspace/gateWalls.ts:136
-msgid "ask more in chat"
-msgstr "en savoir plus dans le chat"
+#~ msgid "ask more in chat"
+#~ msgstr "en savoir plus dans le chat"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Ask participants for their email"
@@ -2812,7 +2812,7 @@ msgstr "Titres automatiques et tags en brouillon"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque conversation après la synthèse. Le titre décrit ce qui a été discuté, pas qui a participé. Le nom original du participant est conservé séparément, s'il a fourni un nom."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:789
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Enregistrer automatiquement les transcriptions dans votre CRM ou base de données"
 
@@ -2820,7 +2820,7 @@ msgstr "Enregistrer automatiquement les transcriptions dans votre CRM ou base de
 msgid "Automatically select relevant conversations for your question."
 msgstr "Sélectionnez automatiquement les conversations pertinentes pour votre question."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:886
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:887
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Envoyer automatiquement les données de conversation à vos autres outils et services lorsque des événements se produisent."
 
@@ -2828,7 +2828,7 @@ msgstr "Envoyer automatiquement les données de conversation à vos autres outil
 msgid "Automation"
 msgstr "Automatisation"
 
-#: src/components/workspace/FeatureGate.tsx:148
+#: src/components/workspace/FeatureGate.tsx:156
 msgid "Available on a paid plan"
 msgstr "Disponible avec un forfait payant"
 
@@ -2857,8 +2857,8 @@ msgstr "Absent"
 #: src/routes/organisation/OrganisationRoute.tsx:708
 #: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:289
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:322
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:360
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:361
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -3067,7 +3067,7 @@ msgstr "Mode de facturation"
 msgid "Book"
 msgstr "Planifier"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:995
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:992
 msgid "Book a call"
 msgstr "Prendre rendez-vous"
 
@@ -3112,7 +3112,7 @@ msgstr "Utilisez votre propre LLM"
 msgid "Bug fixes"
 msgstr "Corrections de bugs"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:808
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:809
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Construire des tableaux de bord personnalisés avec des données de conversation en temps réel"
 
@@ -3175,8 +3175,8 @@ msgstr "C_Med : {0}"
 #: src/components/project/ProjectDangerZone.tsx:168
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:134
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:477
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:631
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:478
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:632
 #: src/components/organisation/CreateOrganisationModal.tsx:248
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -3621,7 +3621,7 @@ msgstr "Choisissez d'abord une organisation"
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr "Choisissez des espaces de travail découvrables, sur invitation ou privés."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
 msgid "Choose from your other projects"
 msgstr "Choisir parmi vos autres projets"
 
@@ -3641,7 +3641,7 @@ msgstr "Choisissez les résultats que votre public peut explorer."
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Choisissez ce que voit la salle : Popcorn, Tensions, Carte et Parties prenantes."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
 msgid "Choose when you want to receive notifications"
 msgstr "Choisir quand vous souhaitez recevoir les notifications"
 
@@ -3780,11 +3780,11 @@ msgstr "Gestion client"
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr "Les boutons de presse-papiers fonctionnent sous Safari, et la langue choisie pour l'interface est mémorisée."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:279
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:280
 msgid "Clone from another project"
 msgstr "Cloner depuis un autre projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
 msgid "Clone from project"
 msgstr "Cloner depuis un projet"
 
@@ -3951,7 +3951,7 @@ msgstr "Regroupé à partir de {0} arguments"
 msgid "Coming soon"
 msgstr "Bientôt disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:784
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
 msgid "Common use cases:"
 msgstr "Cas d'utilisation courants :"
 
@@ -4174,6 +4174,10 @@ msgstr "Continuer"
 msgid "participant.verify.instructions.button.next"
 msgstr "Continuer"
 
+#: src/components/workspace/FeatureGate.tsx:350
+msgid "Continue on dembrane.com"
+msgstr "Continuer sur dembrane.com"
+
 #: src/components/map/panels/ExplorePanel.tsx:52
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Nœuds contributeurs ({0})"
@@ -4235,7 +4239,7 @@ msgstr "Les pages de conversation et le chargement des données sont fluidifiés
 msgid "Conversation removed from chat"
 msgstr "Conversation retirée de la discussion"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:59
 msgid "Conversation started"
 msgstr "Conversation démarrée"
 
@@ -4260,11 +4264,11 @@ msgstr "Le statut de la conversation inclut la progression de l'importation."
 msgid "Conversation summaries no longer hang in the affected processing cases."
 msgstr "Les résumés de conversation ne se bloquent plus dans les cas de traitement concernés."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:69
 msgid "Conversation summarized"
 msgstr "Conversation résumée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:756
 msgid "Conversation tags"
 msgstr "Tags de conversation"
 
@@ -4272,7 +4276,7 @@ msgstr "Tags de conversation"
 msgid "Conversation tags are easier to read."
 msgstr "Les étiquettes de conversation sont plus lisibles."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:64
 msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
@@ -4323,7 +4327,7 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -4401,7 +4405,7 @@ msgstr "Copier le résumé"
 #~ msgid "Copy Summary"
 #~ msgstr "Copier le résumé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1025
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Copier dans le presse-papiers"
@@ -4744,8 +4748,8 @@ msgid "Create and manage multiple reports in one project."
 msgstr "Créez et gérez plusieurs rapports au sein d'un même projet."
 
 #: src/components/workspace/gateWalls.ts:147
-msgid "create another report"
-msgstr "créer un autre rapport"
+#~ msgid "create another report"
+#~ msgstr "créer un autre rapport"
 
 #: src/components/release/releaseHistory.ts:322
 msgid "Create custom chat templates (beta), or duplicate and edit a built-in template."
@@ -4757,8 +4761,8 @@ msgid "Create methodology"
 msgstr "Créer une méthodologie"
 
 #: src/components/workspace/gateWalls.ts:142
-msgid "create more organisations"
-msgstr "créer d'autres organisations"
+#~ msgid "create more organisations"
+#~ msgstr "créer d'autres organisations"
 
 #: src/features/sidebar/shell/UserMenu.tsx:164
 #~ msgid "Create new organisation"
@@ -4970,7 +4974,7 @@ msgstr "Mode sombre"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:772
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "URL du tableau de bord (lien direct vers l'aperçu de la conversation)"
 
@@ -5091,8 +5095,8 @@ msgstr "Déléguer une analyse multi-étapes avec l'exécution en direct des out
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:590
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:625
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
@@ -5173,7 +5177,7 @@ msgstr "Supprimer cet espace de travail. Les membres perdront immédiatement l'a
 msgid "Delete topic"
 msgstr "Supprimer le sujet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:607
 msgid "Delete webhook"
 msgstr "Supprimer le webhook"
 
@@ -5440,7 +5444,7 @@ msgstr "Liens dissemblables : {0}"
 msgid "Distilling core idea…"
 msgstr "Distillation de l’idée centrale…"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:816
 msgid "Do I need this?"
 msgstr "Dois-je avoir cela ?"
 
@@ -5649,7 +5653,7 @@ msgstr "ex. Nous sommes une agence de recherche. Les rapports sont destinés à 
 msgid "e.g. Weekly stakeholder digest"
 msgstr "ex. Résumé hebdomadaire des parties prenantes"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "par exemple : notifications Slack, workflow Make"
 
@@ -5692,7 +5696,7 @@ msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:585
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
@@ -5795,7 +5799,7 @@ msgstr "Modifier le contenu du rapport en utilisant l'éditeur de texte enrichi 
 msgid "Edit topic"
 msgstr "Modifier le sujet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
 msgid "Edit webhook"
 msgstr "Modifier le webhook"
 
@@ -5968,7 +5972,7 @@ msgid "Enable Verify"
 msgstr "Activer la vérification"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:927
 msgid "Enabled"
 msgstr "Activé"
 
@@ -6009,7 +6013,7 @@ msgstr "Saisis un mot de passe"
 msgid "Enter a presentation title"
 msgstr "Saisissez un titre de présentation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
 msgid "Enter a secret key"
 msgstr "Entrez une clé secrète"
 
@@ -6117,11 +6121,11 @@ msgstr "LLM hébergés dans l'UE inclus"
 msgid "Event help from the dembrane team"
 msgstr "Assistance pour vos événements par l'équipe dembrane"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:924
 msgid "Events"
 msgstr "Événements"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Events to listen for"
 msgstr "Événements à écouter"
 
@@ -6182,6 +6186,10 @@ msgstr "Toutes les personnes de la liste sont formées."
 msgid "participant.alert.microphone.access.success"
 msgstr "Tout semble bon – vous pouvez continuer."
 
+#: src/components/workspace/FeatureGate.tsx:337
+msgid "Everything you've made here stays as it is."
+msgstr "Tout ce que vous avez créé ici reste tel quel."
+
 #: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Éléments probants"
@@ -6198,7 +6206,7 @@ msgstr "Éléments probants"
 msgid "Evidenced connections"
 msgstr "Connexions étayées"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1006
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1003
 msgid "Example webhook payload"
 msgstr "Exemple de payload de webhook"
 
@@ -6448,7 +6456,7 @@ msgstr "Impossible de générer le résumé. Réessaie plus tard."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Impossible de charger l'audio ou l'audio n'est pas disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:912
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:913
 msgid "Failed to load webhooks"
 msgstr "Échec du chargement des webhooks"
 
@@ -6807,7 +6815,7 @@ msgstr "Pour"
 msgid "For <0>{0}</0>"
 msgstr "Pour <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:420
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:421
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Pour les utilisateurs avancés : Une clé secrète pour vérifier l'authenticité du webhook. Nécessaire si votre service de réception requiert une vérification de signature."
 
@@ -6950,7 +6958,7 @@ msgstr "Extrait de la transcription"
 msgid "Full screen"
 msgstr "Plein écran"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:759
 msgid "Full transcript (when available)"
 msgstr "Transcription complète (lorsqu'elle est disponible)"
 
@@ -7005,8 +7013,8 @@ msgid "Generate a summary first"
 msgstr "Générer un résumé d'abord"
 
 #: src/components/workspace/gateWalls.ts:141
-msgid "generate another map"
-msgstr "générer une autre carte"
+#~ msgid "generate another map"
+#~ msgstr "générer une autre carte"
 
 #: src/components/release/releaseHistory.ts:433
 msgid "Generate conversation titles automatically, with an option to turn this off."
@@ -7140,8 +7148,8 @@ msgid "Go back"
 msgstr "Retour"
 
 #: src/components/workspace/gateWalls.ts:140
-msgid "go beyond this month's free allowance"
-msgstr "dépasser le quota gratuit de ce mois-ci"
+#~ msgid "go beyond this month's free allowance"
+#~ msgstr "dépasser le quota gratuit de ce mois-ci"
 
 #: src/routes/project/HostGuidePage.tsx:1569
 msgid "Go fullscreen"
@@ -7275,8 +7283,8 @@ msgid "Have you completed a training?"
 msgstr "Avez-vous suivi une formation ?"
 
 #: src/components/workspace/gateWalls.ts:151
-msgid "have your recordings transcribed"
-msgstr "faire transcrire vos enregistrements"
+#~ msgid "have your recordings transcribed"
+#~ msgstr "faire transcrire vos enregistrements"
 
 #: src/features/sidebar/views/HelpView.tsx:18
 #: src/features/sidebar/blocks/HelpBlock.tsx:167
@@ -7368,10 +7376,14 @@ msgid "Hide the changes"
 msgstr "Masquer les modifications"
 
 #: src/components/workspace/gateWalls.ts:139
-msgid "hide the dembrane event invitation"
-msgstr "masquer l'invitation événement dembrane"
+#~ msgid "hide the dembrane event invitation"
+#~ msgstr "masquer l'invitation événement dembrane"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:123
+msgid "Hiding the dembrane event invitation comes with a paid plan"
+msgstr "Masquer l'invitation événement dembrane est inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:89
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Masquer l'invitation événement dembrane fait partie d'un forfait payant."
 
@@ -7467,7 +7479,7 @@ msgstr "Comment fonctionne Ask et ce qu'il peut faire."
 msgid "How dembrane improves your transcript"
 msgstr "Comment dembrane améliore votre transcription"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
 msgid "How it works:"
 msgstr "Comment ça marche :"
 
@@ -7581,11 +7593,11 @@ msgstr "Si vous avez d'autres besoins, nous vous préparerons une offre sur mesu
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Si vous attendiez un accès, veuillez demander à la personne qui vous a invité de vous le renvoyer."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:818
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:819
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "Si vous n'êtes pas sûr, vous n'avez probablement pas besoin de cela encore. Les webhooks sont une fonctionnalité avancée généralement utilisée par les développeurs ou les équipes avec des intégrations personnalisées. Vous pouvez toujours les configurer plus tard."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:982
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:983
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "Si vous configurez des intégrations webhook, nous aimerions en savoir plus sur votre cas d'utilisation. Nous construisons également des fonctionnalités d'observabilité incluant les journaux d'audit et le suivi de la livraison."
 
@@ -8171,8 +8183,8 @@ msgid "Keep access secure with a one-time code from your authenticator app. Togg
 msgstr "Sécurisez l'accès avec un code à usage unique de votre application d'authentification. Activez ou désactivez l'authentification à deux facteurs pour ce compte."
 
 #: src/components/workspace/gateWalls.ts:143
-msgid "keep analysing with popcorn"
-msgstr "continuer d'analyser avec Popcorn"
+#~ msgid "keep analysing with popcorn"
+#~ msgstr "continuer d'analyser avec Popcorn"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
 #: src/routes/project/CreateProjectRoute.tsx:193
@@ -8330,11 +8342,11 @@ msgstr "Dernier rapport"
 msgid "Learn more"
 msgstr "En savoir plus"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:831
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:832
 msgid "Learn more about webhooks"
 msgstr "En savoir plus sur les webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
 msgid "Leave empty to keep existing"
 msgstr "Laisser vide pour conserver l'existant"
 
@@ -8383,6 +8395,10 @@ msgstr "Raison sociale"
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Légende"
+
+#: src/components/workspace/gateWalls.ts:118
+msgid "Let's find what fits you"
+msgstr "Trouvons ce qui vous convient"
 
 #: src/components/pricing/PricingConfigurator.tsx:869
 #~ msgid "Let's go!"
@@ -8849,8 +8865,8 @@ msgid "Low battery"
 msgstr "Batterie faible"
 
 #: src/components/workspace/gateWalls.ts:144
-msgid "make a workspace private"
-msgstr "rendre un espace de travail privé"
+#~ msgid "make a workspace private"
+#~ msgstr "rendre un espace de travail privé"
 
 #: src/components/project/ProjectSharingModal.tsx:304
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -9024,6 +9040,10 @@ msgstr "Définit {orgName} comme partenaire. Ses espaces de travail distinguent 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:279
 msgid "max {maximum}"
 msgstr "max {maximum}"
+
+#: src/components/workspace/FeatureGate.tsx:357
+msgid "Maybe later"
+msgstr "Plus tard"
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:56
 #: src/components/agent-access/YourOrganisations.tsx:58
@@ -9351,7 +9371,7 @@ msgstr "Mes modèles"
 #: src/routes/project/CreateProjectRoute.tsx:365
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:109
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:363
@@ -9366,7 +9386,7 @@ msgstr "Nom"
 msgid "Name A-Z"
 msgstr "Nom A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:368
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:369
 msgid "Name is required"
 msgstr "Le nom est requis"
 
@@ -10093,11 +10113,11 @@ msgstr "Aucune version pour l'instant"
 #~ msgid "No webhooks configured"
 #~ msgstr "Aucun webhook configuré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:335
 msgid "No webhooks found"
 msgstr "Aucun webhook trouvé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:955
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:956
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Aucun webhook pour l'instant. Ajoutez un webhook pour recevoir automatiquement les données de conversation lorsque des événements se produisent."
 
@@ -10396,9 +10416,13 @@ msgstr "Facturation gérée par dembrane. Passer en libre-service conserve le ni
 msgid "On recording page"
 msgstr "Sur la page d'enregistrement"
 
-#: src/components/workspace/gateWalls.ts:101
+#: src/components/workspace/gateWalls.ts:96
 msgid "On the free plan one project takes recordings."
 msgstr "Avec le forfait Free, un seul projet permet d'enregistrer."
+
+#: src/components/workspace/gateWalls.ts:130
+msgid "On the free plan, one project takes recordings"
+msgstr "Avec le forfait Free, un seul projet permet d'enregistrer"
 
 #: src/components/project/RecordingPausedNotice.tsx:89
 msgid "On the free plan, uploads go to {name}."
@@ -10729,7 +10753,7 @@ msgstr "Activez les fonctionnalités expérimentales et contribuez à façonner 
 
 #: src/routes/auth/Register.tsx:187
 #: src/components/project/CustomTopicModal.tsx:234
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:416
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:417
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
 #: src/components/billing/BillingManager.tsx:443
 #: src/components/billing/BillingManager.tsx:469
@@ -11034,7 +11058,7 @@ msgstr "Fonctionnalités participant"
 msgid "Participant name"
 msgstr "Nom du participant"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:753
 msgid "Participant name and email"
 msgstr "Nom et email du participant"
 
@@ -11797,7 +11821,11 @@ msgstr "Projet privé"
 msgid "Private workspace"
 msgstr "Espace de travail privé"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:128
+msgid "Private workspaces come with a paid plan"
+msgstr "Les espaces de travail privés sont inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:94
 msgid "Private workspaces come with a paid plan."
 msgstr "Les espaces de travail privés sont inclus dans les forfaits payants."
 
@@ -11920,7 +11948,7 @@ msgstr "Projet déplacé"
 msgid "Project name"
 msgstr "Nom du projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
 msgid "Project name and ID"
 msgstr "Nom et ID du projet"
 
@@ -12120,7 +12148,7 @@ msgstr "Revérifier"
 msgid "Re-enter new password"
 msgstr "Ressaisir le nouveau mot de passe"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:282
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:283
 msgid "Re-use settings from an existing webhook"
 msgstr "Réutiliser les paramètres d'un webhook existant"
 
@@ -12350,8 +12378,8 @@ msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
 #: src/components/workspace/gateWalls.ts:146
-msgid "record in every project"
-msgstr "enregistrer dans chaque projet"
+#~ msgid "record in every project"
+#~ msgstr "enregistrer dans chaque projet"
 
 #: src/components/project/RecordingPausedNotice.tsx:66
 msgid "Record in every project"
@@ -12774,7 +12802,7 @@ msgstr "Rapport créé · {0}"
 msgid "Report failed"
 msgstr "Échec du rapport"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:74
 msgid "Report generated"
 msgstr "Rapport généré"
 
@@ -13411,7 +13439,7 @@ msgstr "Enregistrer comme modèle"
 msgid "Save billing details"
 msgstr "Enregistrer les coordonnées de facturation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:466
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
 msgid "Save changes"
 msgstr "Enregistrer les modifications"
 
@@ -13679,7 +13707,7 @@ msgstr "Rechercher des templates..."
 msgid "select.all.modal.search.text"
 msgstr "Texte de recherche :"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 msgid "Search webhooks..."
 msgstr "Rechercher des webhooks..."
 
@@ -13741,7 +13769,7 @@ msgstr "Places complètes"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:408
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:409
 msgid "Secret"
 msgstr "Secret"
 
@@ -13763,8 +13791,8 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Retrouvez sur la Carte les arguments de vos conversations et les citations qui les appuient."
 
 #: src/components/workspace/gateWalls.ts:152
-msgid "see transcripts"
-msgstr "voir les transcriptions"
+#~ msgid "see transcripts"
+#~ msgstr "voir les transcriptions"
 
 #: src/routes/project/present/MapFreeNotice.tsx:66
 #: src/components/workspace/FreeAllowanceBanner.tsx:84
@@ -13817,7 +13845,7 @@ msgstr "Sélectionner un microphone"
 #~ msgid "Select a tab to show results on the screen."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:327
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
 msgid "Select a webhook to clone"
 msgstr "Sélectionner un webhook à cloner"
 
@@ -13857,7 +13885,7 @@ msgstr "Sélectionner tous les résultats"
 msgid "Select all visible ({remainingCount})"
 msgstr "Sélectionner tous les éléments visibles ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:437
 msgid "Select at least one event"
 msgstr "Sélectionner au moins un événement"
 
@@ -14041,7 +14069,7 @@ msgstr "Envoyer la demande"
 msgid "Send reset link"
 msgstr "Envoyer le lien de réinitialisation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:795
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:796
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Envoyer des notifications Slack/Teams lorsque de nouvelles conversations sont terminées"
 
@@ -14116,7 +14144,7 @@ msgstr "Passer en géré"
 msgid "Set to managed billing"
 msgstr "Passer en facturation gérée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:300
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:301
 msgid "Set up a new webhook from scratch"
 msgstr "Configurer un nouveau webhook à partir de zéro"
 
@@ -14880,7 +14908,7 @@ msgstr "Démarrer une nouvelle discussion"
 msgid "Start again from your agent. It will open a fresh request here."
 msgstr "Recommencez depuis votre agent. Cela ouvrira une nouvelle requête ici."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:297
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:298
 msgid "Start fresh"
 msgstr "Commencer de zéro"
 
@@ -15147,7 +15175,7 @@ msgstr "Résume cet entretien en un article partageable"
 msgid "Summary"
 msgstr "Résumé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:762
 msgid "Summary (when available)"
 msgstr "Résumé (lorsqu'il est disponible)"
 
@@ -15349,7 +15377,6 @@ msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre d
 
 #: src/components/workspace/FreeAllowanceCard.tsx:180
 #: src/components/workspace/FeatureGatePopover.tsx:115
-#: src/components/workspace/FeatureGate.tsx:301
 #: src/components/billing/BillingManager.tsx:689
 msgid "Tell us what you need"
 msgstr "Dites-nous ce dont vous avez besoin"
@@ -15413,7 +15440,7 @@ msgstr "Testez et sélectionnez votre microphone avant d'enregistrer."
 msgid "test mode"
 msgstr "mode test"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
 msgid "Test webhook"
 msgstr "Tester le webhook"
 
@@ -15582,7 +15609,7 @@ msgstr "Le budget de liaisons doit être un nombre entier supérieur à zéro ; 
 msgid "The email or password is not right. Check them and try again."
 msgstr "L'e-mail ou le mot de passe est incorrect. Vérifiez-les et réessayez."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "L'endpoint où nous enverrons les données. Obtenez cela de votre service de réception (par exemple, Zapier, Make, ou votre propre serveur)."
 
@@ -15613,7 +15640,11 @@ msgstr "Le portail de retours explique comment signaler les failles de sécurit�
 msgid "The following conversations were automatically added to the context"
 msgstr "Les conversations suivantes ont été automatiquement ajoutées au contexte"
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:136
+msgid "The free plan covers one workspace"
+msgstr "Le forfait Free couvre un seul espace de travail"
+
+#: src/components/workspace/gateWalls.ts:102
 msgid "The free plan covers one workspace."
 msgstr "Le forfait Free couvre un seul espace de travail."
 
@@ -15625,25 +15656,25 @@ msgstr "Le forfait Free couvre un seul espace de travail."
 #~ msgid "The free plan includes 5 hours of recording a month."
 #~ msgstr "Le forfait Free comprend 5 heures d'enregistrement par mois."
 
-#: src/components/workspace/gateWalls.ts:90
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:85
+#: src/components/workspace/gateWalls.ts:86
 msgid "The free plan includes a few chats a month, each with a set number of questions."
 msgstr "Le forfait Free comprend quelques discussions par mois, chacune avec un nombre défini de questions."
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:95
 msgid "The free plan includes a limited number of projects."
 msgstr "Le forfait Free comprend un nombre limité de projets."
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:91
 msgid "The free plan includes a monthly allowance of maps."
 msgstr "Le forfait Free comprend un quota mensuel de cartes."
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:93
 msgid "The free plan includes a monthly allowance of popcorn analyses."
 msgstr "Le forfait Free comprend un quota mensuel d'analyses Popcorn."
 
 #: src/lib/freeTier.ts:69
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:97
 msgid "The free plan includes a monthly allowance of reports."
 msgstr "Le forfait Free comprend un quota mensuel de rapports."
 
@@ -15656,7 +15687,11 @@ msgstr "Le forfait Free comprend un quota mensuel de rapports."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Le forfait Free comprend une carte par mois."
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:126
+msgid "The free plan includes one organisation"
+msgstr "Le forfait Free comprend une seule organisation"
+
+#: src/components/workspace/gateWalls.ts:92
 msgid "The free plan includes one organisation."
 msgstr "Le forfait Free comprend une seule organisation."
 
@@ -15946,7 +15981,7 @@ msgstr "Impossible de lancer la traduction"
 msgid "The valence of this object has not been assessed."
 msgstr "La valence de cet objet n'a pas été évaluée."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:338
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:339
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "L'URL du webhook et les événements seront clonés. Vous devrez entrer à nouveau le secret si un était configuré."
 
@@ -16227,7 +16262,7 @@ msgstr "Ceci est un projet d'exemple. Les organisations, les personnes et les co
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Ceci est une démo synthétique. Ses mentions et son cadre sont définis avec la démo et s'affichent toujours."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1011
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1008
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "C'est un exemple des données JSON envoyées à votre URL de webhook lorsqu'une conversation est résumée."
 
@@ -16611,7 +16646,7 @@ msgstr "Chronologie"
 msgid "Timestamp"
 msgstr "Horodatage"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:765
 msgid "Timestamps and duration"
 msgstr "Horodatages et durée"
 
@@ -16619,7 +16654,7 @@ msgstr "Horodatages et durée"
 msgid "Tip"
 msgstr "Conseil"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:946
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:947
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Conseil : Utilisez le bouton de lecture (▶) pour envoyer un payload de test à votre webhook et vérifier qu'il fonctionne correctement."
 
@@ -16872,7 +16907,11 @@ msgstr "Erreur de transcription"
 msgid "Transcription failed"
 msgstr "Échec de la transcription"
 
-#: src/components/workspace/gateWalls.ts:104
+#: src/components/workspace/gateWalls.ts:133
+msgid "Transcripts come with a paid plan"
+msgstr "Les transcriptions sont incluses dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:99
 msgid "Transcripts come with a paid plan."
 msgstr "Les transcriptions nécessitent un forfait payant."
 
@@ -16958,7 +16997,7 @@ msgstr "Essai"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Comptes d'essai et offerts, exclus du total payant."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:802
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:803
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Déclencher des workflows automatisés dans des outils comme Zapier, Make, ou n8n"
 
@@ -17195,8 +17234,8 @@ msgstr "Raison inconnue"
 msgid "Unknown time"
 msgstr "Heure inconnue"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:555
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:138
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:556
 msgid "Unnamed webhook"
 msgstr "Webhook sans nom"
 
@@ -17484,8 +17523,8 @@ msgid "Upload logo"
 msgstr "Importer le logo"
 
 #: src/components/workspace/gateWalls.ts:153
-msgid "upload recordings"
-msgstr "importer des enregistrements"
+#~ msgid "upload recordings"
+#~ msgstr "importer des enregistrements"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
@@ -17505,7 +17544,11 @@ msgstr "Envoi de l'audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Envoi de l'audio..."
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:134
+msgid "Uploading recordings comes with a paid plan"
+msgstr "L'importation d'enregistrements est incluse dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:100
 msgid "Uploading recordings comes with a paid plan."
 msgstr "L'importation d'enregistrements nécessite un forfait payant."
 
@@ -17517,11 +17560,11 @@ msgstr "Les téléversements indiquent clairement lorsqu'ils échouent."
 msgid "URL copied"
 msgstr "URL copiée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:388
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 msgid "URL is required"
 msgstr "L'URL est requise"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:385
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:386
 msgid "URL must start with http:// or https://"
 msgstr "L'URL doit commencer par http:// ou https://"
 
@@ -17608,12 +17651,12 @@ msgid "Use Ukrainian for chat and participant replies."
 msgstr "Utilisez l'ukrainien pour le chat et les réponses des participants."
 
 #: src/components/workspace/gateWalls.ts:154
-msgid "use webhooks"
-msgstr "utiliser les webhooks"
+#~ msgid "use webhooks"
+#~ msgstr "utiliser les webhooks"
 
 #: src/components/workspace/gateWalls.ts:137
-msgid "use your voice in chat"
-msgstr "utiliser votre voix dans le chat"
+#~ msgid "use your voice in chat"
+#~ msgstr "utiliser votre voix dans le chat"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:139
 msgid "Used by this workspace only"
@@ -17647,7 +17690,7 @@ msgstr "Utilisation du logo dembrane par défaut"
 msgid "Using fixture data."
 msgstr "Utilisation de données fictives."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:980
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Utilisez des webhooks ? Nous aimerions en savoir plus sur votre cas d'utilisation"
 
@@ -17793,7 +17836,7 @@ msgstr "Vue"
 #~ msgid "View Details"
 #~ msgstr "Voir les détails"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:779
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
 msgid "View example payload"
 msgstr "Voir un exemple de payload"
 
@@ -18042,6 +18085,10 @@ msgstr "Nous vous envoyerons un message uniquement si votre hôte génère un ra
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Nous serions ravis de vous lire. Que vous ayez une idée pour quelque chose de nouveau, repéré une traduction qui sonne faux, ou envie de nous dire comment ça se passe. Vous avez trouvé un bug ? Utilisez <0>Signaler un problème</0> pour l'envoyer avec des captures d'écran."
 
+#: src/components/workspace/FeatureGate.tsx:323
+msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
+msgstr "Nous aimerions en savoir un peu plus sur la façon dont vous utilisez dembrane, pour mieux vous aider. Cela prend environ deux minutes sur notre site, et à la fin, vous pouvez réserver un court appel avec nous si vous le souhaitez."
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:300
 msgid "participant.test.microphone.description"
@@ -18073,20 +18120,20 @@ msgstr "Réseau faible"
 msgid "Weak password"
 msgstr "Mot de passe faible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:921
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
 msgid "Webhook URL"
 msgstr "URL du webhook"
 
 #: src/routes/project/ProjectRoutes.tsx:219
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:879
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:880
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:687
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:688
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Les webhooks sont des messages automatisés envoyés d'une application à une autre lorsqu'un événement se produit. Pensez à eux comme à un \"système de notification\" pour vos autres outils."
 
@@ -18094,7 +18141,11 @@ msgstr "Les webhooks sont des messages automatisés envoyés d'une application �
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:135
+msgid "Webhooks come with a paid plan"
+msgstr "Les webhooks sont inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:101
 msgid "Webhooks come with a paid plan."
 msgstr "Les webhooks sont inclus avec un forfait payant."
 
@@ -18139,7 +18190,7 @@ msgstr "Bienvenue, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Bienvenue !"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:680
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:681
 msgid "What are webhooks? (2 min read)"
 msgstr "Qu'est-ce que les webhooks ? (2 min de lecture)"
 
@@ -18147,7 +18198,7 @@ msgstr "Qu'est-ce que les webhooks ? (2 min de lecture)"
 msgid "What are you trying to learn?"
 msgstr "Que cherchez-vous à savoir ?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "What data is sent?"
 msgstr "Quelles données sont envoyées ?"
 
@@ -18256,31 +18307,31 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Date"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:723
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:724
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "Lorsqu'un participant ouvre le portail, entre ses détails et commence une conversation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:57
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
 msgid "When a participant starts a new conversation"
 msgstr "Lorsqu'un participant commence une nouvelle conversation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:72
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
 msgid "When a report has been generated"
 msgstr "Lorsqu'un rapport a été généré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:743
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
 msgid "When a report has been generated for the project"
 msgstr "Lorsqu'un rapport a été généré pour le projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:62
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
 msgid "When all audio has been converted to text"
 msgstr "Lorsque tout l'audio a été converti en texte"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:730
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:731
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "Lorsque tout l'audio a été converti en texte et que le transcript complet est disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:718
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
 msgid "When are webhooks triggered?"
 msgstr "Quand sont déclenchés les webhooks ?"
 
@@ -18321,11 +18372,11 @@ msgstr "À la fin de la conversation, dembrane réécoute tout l'enregistrement.
 #~ msgid "When the conversation ends, we listen to the whole recording again."
 #~ msgstr "À la fin de la conversation, nous réécoutons tout l'enregistrement."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:67
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
 msgid "When the summary is generated"
 msgstr "Lorsque le résumé est généré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:737
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:738
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le résumé)"
 
@@ -18994,6 +19045,14 @@ msgstr "Vous avez été invité à rejoindre <0>{0}</0>. Nous vous y redirigeons
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Vous avez atteint la limite du forfait Free pour cette discussion. Passez à un forfait supérieur pour poursuivre la conversation."
 
+#: src/components/workspace/gateWalls.ts:129
+msgid "You've reached the free plan's project limit"
+msgstr "Vous avez atteint la limite de projets du forfait Free"
+
+#: src/components/workspace/gateWalls.ts:121
+msgid "You've reached the limit for speaking in chat"
+msgstr "Vous avez atteint la limite de saisie vocale dans le chat"
+
 #: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "Vous avez atteint votre limite de résumés"
@@ -19005,6 +19064,34 @@ msgstr "Vous avez atteint votre limite de transcriptions"
 #: src/components/workspace/PilotBlockModal.tsx:39
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Vous avez utilisé l'intégralité des 10 heures du pilote. Les outils d'hôte (chat, rapports, analyses, exports) sont suspendus."
+
+#: src/components/workspace/gateWalls.ts:124
+msgid "You've used part of this month's free allowance"
+msgstr "Vous avez utilisé une partie de votre quota gratuit de ce mois"
+
+#: src/components/workspace/gateWalls.ts:120
+msgid "You've used the free questions in this chat"
+msgstr "Vous avez utilisé les questions gratuites de ce chat"
+
+#: src/components/workspace/gateWalls.ts:119
+msgid "You've used this month's free chats"
+msgstr "Vous avez utilisé les chats gratuits de ce mois"
+
+#: src/components/workspace/gateWalls.ts:125
+msgid "You've used this month's free maps"
+msgstr "Vous avez utilisé les cartes gratuites de ce mois"
+
+#: src/components/workspace/gateWalls.ts:127
+msgid "You've used this month's free popcorn analyses"
+msgstr "Vous avez utilisé les analyses Popcorn gratuites de ce mois"
+
+#: src/components/workspace/gateWalls.ts:131
+msgid "You've used this month's free reports"
+msgstr "Vous avez utilisé les rapports gratuits de ce mois"
+
+#: src/components/workspace/gateWalls.ts:132
+msgid "You've used this month's free transcription"
+msgstr "Vous avez utilisé la transcription gratuite de ce mois"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "Your access"
@@ -19162,7 +19249,11 @@ msgstr "Votre organisation ou entreprise"
 msgid "Your organisations"
 msgstr "Vos organisations"
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:122
+msgid "Your own logo comes with a paid plan"
+msgstr "Votre propre logo est inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:88
 msgid "Your own logo comes with a paid plan."
 msgstr "L'ajout de votre propre logo nécessite un forfait payant."
 
@@ -19213,6 +19304,10 @@ msgstr "Votre forfait vous permet de retirer le filigrane."
 #: src/components/billing/BillingManager.tsx:556
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Votre forfait ne sera pas renouvelé. Vous conservez votre accès jusqu'à la fin de la période."
+
+#: src/components/workspace/FeatureGate.tsx:331
+msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
+msgstr "Vos portails continuent de fonctionner et rien de ce que disent vos participants n'est perdu. Dès que vous passez à un forfait payant, tout ce qui a déjà été enregistré est transcrit."
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
 #: src/components/pricing/PricingTextInput.tsx:311

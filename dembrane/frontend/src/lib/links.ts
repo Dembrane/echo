@@ -76,14 +76,36 @@ export const eventEnquiryUrl = ({
 };
 
 /**
- * The website's pricing calculator, the one place a person plans a paid
- * account and books the call. Dutch speakers get the Dutch page; every other
- * language gets English, which is what the site has. The site picks the
- * language from the path, not from a parameter.
+ * The website's pricing calculator, opened from the app's upgrade prompt.
+ *
+ * Dutch speakers get the Dutch page; every other language gets English, which
+ * is what the site has. The site picks the language from the path. The rest
+ * tells the site who is arriving without saying who they are:
+ *   - `from=app` and `trigger`, the wall they met, so the page greets them for
+ *     what they just ran into;
+ *   - `handover`, the random id of the row the app saved for their account.
+ *     The site sends it back with its own writes and echo links the two, so
+ *     the email never travels in the address;
+ *   - `back`, where "Back to dembrane" returns to.
  */
-export const pricingCalculatorUrl = (language: string): string => {
+export const pricingHandoverUrl = ({
+	language,
+	trigger,
+	handover,
+	back,
+}: {
+	language: string;
+	trigger: string;
+	handover: string;
+	back: string;
+}): string => {
 	const path = language.toLowerCase().startsWith("nl")
 		? "/nl/pricing-calculator"
 		: "/pricing-calculator";
-	return new URL(path, "https://www.dembrane.com").toString();
+	const url = new URL(path, "https://www.dembrane.com");
+	url.searchParams.set("from", "app");
+	url.searchParams.set("trigger", trigger);
+	url.searchParams.set("handover", handover);
+	url.searchParams.set("back", back);
+	return url.toString();
 };

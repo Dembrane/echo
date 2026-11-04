@@ -1,30 +1,38 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Button, Modal, Stack, Text } from "@mantine/core";
+import { Badge, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { LockIcon } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { ArrowSquareOutIcon, LockIcon } from "@phosphor-icons/react";
+import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { newConfigSessionId } from "@/components/pricing/configuratorState";
+import { saveHandover } from "@/components/pricing/submitConfiguration";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
-import { pricingCalculatorUrl } from "@/lib/links";
+import { pricingHandoverUrl } from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { type WallKey, wallPopoverLine } from "./gateWalls";
-import { useGateViewed } from "./pricingGateEvents";
+import {
+	isLockedDataWall,
+	type WallKey,
+	wallHandoverTitle,
+	wallPopoverLine,
+} from "./gateWalls";
+import { useGateViewed, usePricingGateEmitter } from "./pricingGateEvents";
 
 /**
  * The tier gate.
  *
- * One prompt, from all fifteen mount points, and it names no feature. The
- * feature is named one click earlier, in the popover on the blocked control.
- * No price appears here: planning a paid account and booking the call happen
- * in the pricing calculator on the dembrane website, which the prompt opens in
- * a new tab.
+ * One prompt, from every mount point: a single screen that says what the
+ * person just ran into and offers to continue on the dembrane website, where
+ * the pricing calculator learns how they use dembrane and a call can be
+ * booked. No price and no questions here. Nobody is sent away without
+ * choosing it.
  *
- * The locked data family is the one exception. The transcription cap and the
- * locked conversation are about data the person already has, not a feature
- * they do not, so they open the prompt directly, without a popover first. See
- * `gateWalls.ts`.
+ * The locked data family is the one exception to the popover. The
+ * transcription cap is about data the person already has, not a feature they
+ * do not, so it opens the prompt directly and the prompt says nothing was
+ * lost. See `gateWalls.ts`.
  *
  * Exports:
  *   - <FeatureGate />  — the placeholder for a whole feature surface.
@@ -189,20 +197,23 @@ interface UpgradeModalProps {
 	 * `pricing_config_gate_viewed` already fired there. `modal_direct` when
 	 * this is the first surface the person meets. */
 	entry?: "popover_link" | "modal_direct";
-	/** Not read since the calculator moved to the website. Kept so the mounts
-	 * that pass them need no change. */
+	/** Recorded on the handover row, so whoever follows up sees where it came
+	 * from. Passed where the mount has one. */
 	projectId?: string;
+	/** The org the upgrade is for, when it is not the active workspace's. */
 	orgId?: string;
 }
 
 /**
- * The one prompt. Same from every mount point.
+ * The one prompt. Same from every mount point; only the title follows the
+ * wall.
  *
- * Opening it sends the person to the pricing calculator on the website, in a
- * new tab, and closes it again. That happens in the same click as the one that
- * opened it, so the browser allows the tab. When a wall opens after a request
- * has answered (a cap reached mid action) a browser may refuse the tab, and the
- * modal then stays up with a link that cannot be refused.
+ * "Continue on dembrane.com" is a plain link opened by the person's own click,
+ * so no browser blocks the tab. The same click saves a row for the signed-in
+ * account (the server takes the email from the session) and puts only that
+ * row's random id in the address, so the website can link what the person
+ * plans there back to their account without being told who they are. Each
+ * opening is a new id: one handover, one row.
  *
  * A gate must never offer a tier the account already holds. That happened
  * before: gates told accounts to upgrade to the tier they were already on,
@@ -215,22 +226,30 @@ export function UpgradeModal({
 	entry = "modal_direct",
 	onClose,
 	opened,
+	orgId,
+	projectId,
 	requiredTier,
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
 	const { i18n } = useLingui();
+	const { workspace } = useWorkspace();
 	const gateViewed = useGateViewed(workspaceId);
+	const emit = usePricingGateEmitter(workspaceId);
 	// One opening is one event. The old `upgrade_prompt_viewed` sat in a
 	// `useEffect` whose deps held `currentTier`, which arrives from a query, so
 	// it refired when the real tier landed. This ref is what stops that, and it
 	// matters here too: the emitter's identity moves when the workspace query
 	// settles.
 	const viewedRef = useRef(false);
-	// One opening is one tab, also under StrictMode's second effect run.
-	const redirectedRef = useRef(false);
-	const [refused, setRefused] = useState(false);
-	const url = pricingCalculatorUrl(i18n.locale);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a fresh id per opening is the point
+	const handover = useMemo(() => newConfigSessionId(), [opened]);
+	const url = pricingHandoverUrl({
+		back: window.location.origin,
+		handover,
+		language: i18n.locale,
+		trigger: wallKey,
+	});
 	// No required tier means no wall, so there is nothing the person can
 	// already hold. See the prop.
 	const alreadyHas =
@@ -261,45 +280,84 @@ export function UpgradeModal({
 		wallKey,
 	]);
 
-	useEffect(() => {
-		if (!opened) {
-			redirectedRef.current = false;
-			setRefused(false);
-			return;
-		}
-		if (alreadyHas || redirectedRef.current) return;
-		redirectedRef.current = true;
-		const tab = window.open(url, "_blank");
-		if (tab) {
-			tab.opener = null;
-			onClose();
-		} else {
-			setRefused(true);
-		}
-	}, [alreadyHas, onClose, opened, url]);
-
 	if (alreadyHas) return null;
+
+	const continueOnSite = () => {
+		emit("pricing_config_handover_continued", {
+			config_session_id: handover,
+			mount: "app",
+			wall_key: wallKey,
+		});
+		// The tab is already open by now; a failed save costs only the link to
+		// the account, never the person's way forward.
+		saveHandover({
+			config_session_id: handover,
+			locale: i18n.locale,
+			org_id: orgId ?? workspace?.org_id,
+			project_id: projectId,
+			wall_key: wallKey,
+			workspace_id: workspaceId || workspace?.id,
+		}).catch(() => {});
+		onClose();
+	};
+
+	const later = () => {
+		emit("pricing_config_handover_dismissed", {
+			mount: "app",
+			wall_key: wallKey,
+		});
+		onClose();
+	};
 
 	return (
 		<Modal
-			opened={opened && refused}
-			onClose={onClose}
+			opened={opened}
+			onClose={later}
 			centered
-			size="sm"
-			withCloseButton
+			size="md"
+			title={wallHandoverTitle(wallKey)}
 			{...testId("upgrade-modal")}
 		>
-			<Button
-				component="a"
-				href={url}
-				target="_blank"
-				rel="noopener noreferrer"
-				fullWidth
-				onClick={onClose}
-				{...testId("upgrade-modal-link")}
-			>
-				<Trans>Tell us what you need</Trans>
-			</Button>
+			<Stack gap="md">
+				<Text {...testId("upgrade-modal-body")}>
+					<Trans>
+						We'd love to learn a bit about how you use dembrane, so we can help
+						you better. It takes about two minutes on our website, and you can
+						book a short call with us at the end if you like.
+					</Trans>
+				</Text>
+				<Text size="sm" c="dimmed" {...testId("upgrade-modal-reassurance")}>
+					{isLockedDataWall(wallKey) ? (
+						<Trans>
+							Your portals keep working and nothing your participants say is
+							lost. Once you're on a paid plan, transcription catches up on
+							everything already recorded.
+						</Trans>
+					) : (
+						<Trans>Everything you've made here stays as it is.</Trans>
+					)}
+				</Text>
+				<Group gap="sm" mt="xs">
+					<Button
+						component="a"
+						href={url}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={continueOnSite}
+						rightSection={<ArrowSquareOutIcon size={16} />}
+						{...testId("upgrade-modal-continue")}
+					>
+						<Trans>Continue on dembrane.com</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						onClick={later}
+						{...testId("upgrade-modal-later")}
+					>
+						<Trans>Maybe later</Trans>
+					</Button>
+				</Group>
+			</Stack>
 		</Modal>
 	);
 }

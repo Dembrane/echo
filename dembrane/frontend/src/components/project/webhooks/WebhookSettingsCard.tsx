@@ -37,6 +37,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import type { Webhook, WebhookCreatePayload, WebhookEvent } from "@/lib/api";
+import { BookingLinks } from "@/lib/links";
 import {
 	useCopyableWebhooks,
 	useCreateWebhookMutation,
@@ -986,11 +987,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 							</Trans>
 						</Text>
 						<Group gap="md">
-							<Anchor
-								href="https://cal.com/sameer-dembrane"
-								target="_blank"
-								size="sm"
-							>
+							<Anchor href={BookingLinks.BOOK_A_CALL} target="_blank" size="sm">
 								<Group gap="xs">
 									<Trans>Book a call</Trans>
 									<ArrowSquareOutIcon size={16} />

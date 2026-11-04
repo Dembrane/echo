@@ -10,7 +10,9 @@ import { Hono } from "hono";
 import {
   APP_PREFIX,
   type Attachment,
+  clean,
   cleanEmail,
+  handoverFrom,
   INTERNAL_EMAIL_DOMAIN,
   type PricingPayload,
   SITE_PREFIX,
@@ -205,9 +207,17 @@ export function pricingRoutes(deps: PricingRouteDeps) {
           (c.req.header("x-site-visitor-ip") ?? "").trim() || "unknown",
         );
         const [body] = await readBody(c, deps.logger);
-        const payload = validatePayload(body, { email: v.optional(s255()) });
+        const payload = validatePayload(body, {
+          email: v.optional(s255()),
+          handover: v.optional(s255()),
+        });
+        // Someone the app sent here: their account's email stands in until they type one.
+        const handoverId = clean(payload.handover as string | null);
+        const handover = handoverId
+          ? handoverFrom(await store.bySession(handoverId), new Date())
+          : null;
+        const email = cleanEmail(payload.email as string | null) ?? handover?.email ?? null;
         // Whatever the body said, this row came from the site.
-        const email = cleanEmail(payload.email as string | null);
         return c.json(
           await upsertConfiguration(
             upsertDeps,
@@ -219,6 +229,7 @@ export function pricingRoutes(deps: PricingRouteDeps) {
               isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
               prefix: SITE_PREFIX,
             },
+            handover,
           ),
         );
       })
