@@ -1,7 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -31,7 +31,7 @@ export function MapFreeNotice({
 	const { i18n } = useLingui();
 	const applies = useAllowanceApplies(projectId).applies && mapOn;
 	const allowance = useFreeAllowance(applies ? workspaceId : null);
-	const configurator = usePricingConfigurator("map_cap");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (!applies || !allowanceSpent(allowance.data, "maps")) return null;
 
@@ -60,7 +60,7 @@ export function MapFreeNotice({
 					<Button
 						size="xs"
 						variant="light"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("map-free-upgrade")}
 					>
 						{t`See upgrade options`}
@@ -68,8 +68,8 @@ export function MapFreeNotice({
 				</Group>
 			</Stack>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier="free"
 				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade

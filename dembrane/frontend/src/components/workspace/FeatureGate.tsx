@@ -1,37 +1,44 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Stack, Text } from "@mantine/core";
-import { LockIcon } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef } from "react";
-import {
-	PricingConfigurator,
-	usePricingConfigurator,
-} from "@/components/pricing";
+import { Badge, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { ArrowSquareOutIcon, LockIcon } from "@phosphor-icons/react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { newConfigSessionId } from "@/components/pricing/configuratorState";
+import { saveHandover } from "@/components/pricing/submitConfiguration";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
+import { pricingHandoverUrl } from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { variantFor, type WallKey, wallPopoverLine } from "./gateWalls";
+import {
+	isLockedDataWall,
+	type WallKey,
+	wallHandoverLead,
+	wallHandoverTitle,
+	wallPopoverLine,
+} from "./gateWalls";
 import { useGateViewed, usePricingGateEmitter } from "./pricingGateEvents";
 
 /**
  * The tier gate.
  *
- * One modal, from all fifteen mount points, and it names no feature. The
- * feature is named one click earlier, in the popover on the blocked control.
- * The price table is gone: this path no longer sells a plan, it asks the
- * person what they need and ends in a booked call.
+ * One prompt, from every mount point: a single screen that says what the
+ * person just ran into and offers to continue on the dembrane website, where
+ * the pricing calculator learns how they use dembrane and a call can be
+ * booked. No price and no questions here. Nobody is sent away without
+ * choosing it.
  *
- * The locked data family is the one exception. The transcription cap and the
- * locked conversation are about data the person already has, not a feature
- * they do not, so they open the modal directly with the cap line above the
- * free plan block. See `gateWalls.ts`.
+ * The locked data family is the one exception to the popover. The
+ * transcription cap is about data the person already has, not a feature they
+ * do not, so it opens the prompt directly and the prompt says nothing was
+ * lost. See `gateWalls.ts`.
  *
  * Exports:
  *   - <FeatureGate />  — the placeholder for a whole feature surface.
  *     The card is the blocked control, so the card carries the popover.
- *   - <UpgradeModal /> — the one modal, usable standalone. Every wall that is
+ *   - <UpgradeModal /> — the one prompt, usable standalone. Every wall that is
  *     met by doing something (a cap reached mid action) opens this directly.
  *
  * What this path no longer renders:
@@ -88,7 +95,7 @@ export function FeatureGate({
 	wallKey,
 	workspaceId,
 }: FeatureGateProps) {
-	const configurator = usePricingConfigurator(wallKey);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (meetsTier(currentTier, requiredTier)) {
 		return <>{children}</>;
@@ -115,7 +122,7 @@ export function FeatureGate({
 		<>
 			<FeatureGatePopover
 				canRequestUpgrade={canRequestUpgrade}
-				onStart={configurator.open}
+				onStart={upgradeHandlers.open}
 				requiredTier={requiredTier}
 				wallKey={wallKey}
 				workspaceId={workspaceId}
@@ -155,8 +162,8 @@ export function FeatureGate({
 				)}
 			</FeatureGatePopover>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier={currentTier}
 				requiredTier={requiredTier}
 				wallKey={wallKey}
@@ -176,7 +183,7 @@ interface UpgradeModalProps {
 	 * The tier this wall needs, where there is one.
 	 *
 	 * `null` on an entry point that is not a wall. The billing page of an
-	 * account with nothing to pay carries the configurator (`billing_page`),
+	 * account with nothing to pay carries the upgrade prompt (`billing_page`),
 	 * and nothing there is blocked, so there is no tier to already hold and
 	 * R5's suppression below must not fire. Every real wall passes a tier.
 	 */
@@ -191,15 +198,23 @@ interface UpgradeModalProps {
 	 * `pricing_config_gate_viewed` already fired there. `modal_direct` when
 	 * this is the first surface the person meets. */
 	entry?: "popover_link" | "modal_direct";
-	/** Transcription is billed to a project. Passed where the mount has one,
-	 * so the voice answer works on the walls that sit inside a project. */
+	/** Recorded on the handover row, so whoever follows up sees where it came
+	 * from. Passed where the mount has one. */
 	projectId?: string;
 	/** The org the upgrade is for, when it is not the active workspace's. */
 	orgId?: string;
 }
 
 /**
- * The one modal. Same content from every mount point.
+ * The one prompt. Same from every mount point; only the title follows the
+ * wall.
+ *
+ * "Continue on dembrane.com" is a plain link opened by the person's own click,
+ * so no browser blocks the tab. The same click saves a row for the signed-in
+ * account (the server takes the email from the session) and puts only that
+ * row's random id in the address, so the website can link what the person
+ * plans there back to their account without being told who they are. Each
+ * opening is a new id: one handover, one row.
  *
  * A gate must never offer a tier the account already holds. That happened
  * before: gates told accounts to upgrade to the tier they were already on,
@@ -218,16 +233,31 @@ export function UpgradeModal({
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
-	const { workspace } = useWorkspace();
 	const { i18n } = useLingui();
-	const emit = usePricingGateEmitter(workspaceId);
+	const { workspace } = useWorkspace();
 	const gateViewed = useGateViewed(workspaceId);
+	const emit = usePricingGateEmitter(workspaceId);
 	// One opening is one event. The old `upgrade_prompt_viewed` sat in a
 	// `useEffect` whose deps held `currentTier`, which arrives from a query, so
 	// it refired when the real tier landed. This ref is what stops that, and it
 	// matters here too: the emitter's identity moves when the workspace query
 	// settles.
 	const viewedRef = useRef(false);
+	// A fresh id per opening, and only on opening. Closing re-renders this in the
+	// same click, before the browser follows the link, so an id that changed on
+	// close would open the tab with a different id than the one saved.
+	const [handover, setHandover] = useState(newConfigSessionId);
+	const [wasOpened, setWasOpened] = useState(opened);
+	if (opened !== wasOpened) {
+		setWasOpened(opened);
+		if (opened) setHandover(newConfigSessionId());
+	}
+	const url = pricingHandoverUrl({
+		back: window.location.origin,
+		handover,
+		language: i18n.locale,
+		trigger: wallKey,
+	});
 	// No required tier means no wall, so there is nothing the person can
 	// already hold. See the prop.
 	const alreadyHas =
@@ -260,19 +290,86 @@ export function UpgradeModal({
 
 	if (alreadyHas) return null;
 
+	const continueOnSite = () => {
+		emit("pricing_config_handover_continued", {
+			config_session_id: handover,
+			mount: "app",
+			wall_key: wallKey,
+		});
+		// The tab is already open by now; a failed save costs only the link to
+		// the account, never the person's way forward.
+		saveHandover({
+			config_session_id: handover,
+			locale: i18n.locale,
+			org_id: orgId ?? workspace?.org_id,
+			project_id: projectId,
+			wall_key: wallKey,
+			workspace_id: workspaceId || workspace?.id,
+		}).catch(() => {});
+		onClose();
+	};
+
+	const later = () => {
+		emit("pricing_config_handover_dismissed", {
+			mount: "app",
+			wall_key: wallKey,
+		});
+		onClose();
+	};
+
+	const lead = wallHandoverLead(wallKey);
+
 	return (
-		<PricingConfigurator
-			entry={entry}
-			locale={i18n.locale}
-			mount="app"
-			onClose={onClose}
-			onEvent={emit}
+		<Modal
 			opened={opened}
-			orgId={orgId ?? workspace?.org_id}
-			projectId={projectId}
-			variant={variantFor(wallKey)}
-			wallKey={wallKey}
-			workspaceId={workspaceId || workspace?.id}
-		/>
+			onClose={later}
+			centered
+			size="md"
+			title={wallHandoverTitle(wallKey)}
+			{...testId("upgrade-modal")}
+		>
+			<Stack gap="md">
+				<Text {...testId("upgrade-modal-body")}>
+					{lead && `${lead} `}
+					<Trans>
+						We'd love to learn a bit about how you use dembrane, so we can help
+						you better. It takes about two minutes on our website, and you can
+						book a short call with us at the end if you like.
+					</Trans>
+				</Text>
+				<Text size="sm" c="dimmed" {...testId("upgrade-modal-reassurance")}>
+					{isLockedDataWall(wallKey) ? (
+						<Trans>
+							Your portals keep working and nothing your participants say is
+							lost. Once you're on a paid plan, transcription catches up on
+							everything already recorded.
+						</Trans>
+					) : (
+						<Trans>Everything you've made here stays as it is.</Trans>
+					)}
+				</Text>
+				<Group gap="sm" mt="xs">
+					<Button
+						component="a"
+						variant="filled"
+						href={url}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={continueOnSite}
+						rightSection={<ArrowSquareOutIcon size={16} />}
+						{...testId("upgrade-modal-continue")}
+					>
+						<Trans>Continue on dembrane.com</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						onClick={later}
+						{...testId("upgrade-modal-later")}
+					>
+						<Trans>Maybe later</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Modal>
 	);
 }

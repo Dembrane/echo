@@ -350,7 +350,7 @@ msgstr "{0, plural, one {# project} other {# projects}}"
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
 #: src/components/invite/WorkspaceSelectList.tsx:128
-#: src/components/billing/BillingManager.tsx:1262
+#: src/components/billing/BillingManager.tsx:1261
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# místo} few {# místa} other {# míst}}"
 
@@ -362,7 +362,7 @@ msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at
 msgstr "{0, plural, one {# místo} few {# místa} other {# míst}} · {1} nyní · +{2}/{cadence} při obnovení"
 
 #. placeholder {0}: overview.available_seats
-#: src/components/billing/BillingManager.tsx:1266
+#: src/components/billing/BillingManager.tsx:1265
 msgid "{0, plural, one {# seat} other {# seats}} paid for this period and unused. Invite someone to fill them at no charge until renewal."
 msgstr "{0, plural, one {# předplacené místo je} few {# předplacená místa jsou} other {# předplacených míst je}} na toto období nevyužito. Pozvěte někoho bez dalších poplatků až do obnovení."
 
@@ -490,19 +490,19 @@ msgstr "{0} (partner)"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1350
+#: src/components/billing/BillingManager.tsx:1349
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr "{0} / místo / měsíc × {1}, účtováno ročně. Bez VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1355
+#: src/components/billing/BillingManager.tsx:1354
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr "{0} / místo × {1}. Bez VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1345
+#: src/components/billing/BillingManager.tsx:1344
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr "{0} / místo × {1}. Po tomto období již nebude účtováno."
 
@@ -699,7 +699,7 @@ msgstr "{0} vybráno"
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
 #. placeholder {2}: pendingInvites === 1 ? "invite is" : "invites are"
-#: src/components/billing/BillingManager.tsx:1364
+#: src/components/billing/BillingManager.tsx:1363
 msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "Celková částka ({0}) se zvýší na {1}, jakmile bude přijato {pendingInvites} čekajících {2}"
 
@@ -854,7 +854,7 @@ msgstr "{currentCadence} min"
 msgid "{days} days"
 msgstr "{days} dní"
 
-#: src/components/billing/BillingManager.tsx:1373
+#: src/components/billing/BillingManager.tsx:1372
 msgid "{discountPct}% discount applied"
 msgstr "Uplatněna sleva {discountPct} %"
 
@@ -996,7 +996,7 @@ msgstr "{overflow} more people"
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# rozhovor se do tohoto chatu nevešel. Zbytek můžete probrat v dalším chatu.} few {# rozhovory se do tohoto chatu nevešly. Zbytek můžete probrat v dalším chatu.} other {# rozhovorů se do tohoto chatu nevešlo. Zbytek můžete probrat v dalším chatu.}}"
 
-#: src/components/billing/BillingManager.tsx:1279
+#: src/components/billing/BillingManager.tsx:1278
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} nevyřízených pozvánek. Započítají se až po přijetí."
 
@@ -1047,7 +1047,7 @@ msgstr "{s} s"
 msgid "{s}s"
 msgstr "{s} s"
 
-#: src/components/billing/BillingManager.tsx:344
+#: src/components/billing/BillingManager.tsx:343
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# místo} few {# místa} other {# míst}}"
 
@@ -1191,7 +1191,7 @@ msgstr "1 hodina"
 #~ msgid "1 view"
 #~ msgstr "1 view"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:699
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. You provide a URL where you want to receive notifications"
 
@@ -1207,7 +1207,7 @@ msgstr "2 months ago"
 msgid "2 to 5."
 msgstr "2 až 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:704
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:705
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
@@ -1228,7 +1228,7 @@ msgstr "3 dny"
 msgid "3 months ago"
 msgstr "3 months ago"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:710
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:711
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
@@ -1278,7 +1278,7 @@ msgstr "Ještě pár slov, aby to pochopil i někdo, kdo to bude číst později
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Jakmile bude první verze připravena, objeví se zde."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 msgid "A friendly name to identify this webhook"
 msgstr "A friendly name to identify this webhook"
 
@@ -1314,6 +1314,10 @@ msgstr "Nový asistent a živý monitor"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
 
+#: src/components/workspace/gateWalls.ts:148
+msgid "A paid plan lets you keep going."
+msgstr "S placeným tarifem můžete pokračovat."
+
 #: src/components/release/PilotHistory.tsx:23
 msgid "A participant portal for recording conversations."
 msgstr "Portál účastníků pro nahrávání konverzací."
@@ -1337,8 +1341,8 @@ msgstr "A report is already being generated for this project. Please wait for it
 
 #: src/components/pricing/PricingConfigurator.tsx:1131
 #: src/components/pricing/PricingConfigurator.tsx:1135
-msgid "A rough number or \"not sure\". Either is useful."
-msgstr "Přibližné číslo nebo „nevím jistě“. Obojí pomůže."
+#~ msgid "A rough number or \"not sure\". Either is useful."
+#~ msgstr "Přibližné číslo nebo „nevím jistě“. Obojí pomůže."
 
 #: src/components/popcorn/PopcornIntroModal.tsx:41
 msgid "A sample session, not your data. Yours will look like this."
@@ -1356,11 +1360,11 @@ msgstr "Obrazovka před odpočtem, která sděluje, na co se místnost dívá."
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr "Obrazovka, která krok za krokem vysvětluje, co se děje se záznamy. Text vychází z anonymizace a právního základu tohoto projektu."
 
-#: src/components/billing/BillingManager.tsx:1291
+#: src/components/billing/BillingManager.tsx:1290
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr "Místo představuje jednoho člena. Členy můžete přidávat či odebírat na záložce Lidé v každém pracovním prostoru; příští platba se automaticky upraví."
 
-#: src/components/billing/BillingManager.tsx:1286
+#: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Místo představuje jednoho člena. Místa zůstávají k dispozici až do konce tarifu; za změny nebudou účtovány žádné poplatky."
 
@@ -1499,7 +1503,7 @@ msgid "Account default"
 msgstr "Výchozí hodnota účtu"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3026
-#: src/components/billing/BillingManager.tsx:351
+#: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Správce účtu"
 
@@ -1549,7 +1553,7 @@ msgstr "Objekt akce"
 #~ msgstr "Action On"
 
 #: src/components/project/ProjectDangerZone.tsx:87
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:929
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:930
 msgid "Actions"
 msgstr "Actions"
 
@@ -1558,7 +1562,7 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
-#: src/components/billing/BillingManager.tsx:1243
+#: src/components/billing/BillingManager.tsx:1242
 #: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Active"
@@ -1583,7 +1587,7 @@ msgstr "Aktivita"
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
-#: src/components/billing/BillingManager.tsx:1393
+#: src/components/billing/BillingManager.tsx:1392
 msgid "Add"
 msgstr "Add"
 
@@ -1623,8 +1627,8 @@ msgid "Add a project goal before saving."
 msgstr "Před uložením přidejte cíl projektu."
 
 #: src/components/workspace/gateWalls.ts:155
-msgid "add a workspace"
-msgstr "přidat pracovní prostor"
+#~ msgid "add a workspace"
+#~ msgstr "přidat pracovní prostor"
 
 #: src/components/view/CreateViewForm.tsx:132
 #~ msgid "Add additional context (Optional)"
@@ -1672,8 +1676,8 @@ msgstr "Přidat obrázky"
 #~ msgstr "Add key terms or proper nouns to improve transcript quality and accuracy."
 
 #: src/components/workspace/gateWalls.ts:145
-msgid "add more projects"
-msgstr "přidat další projekty"
+#~ msgid "add more projects"
+#~ msgstr "přidat další projekty"
 
 #: src/components/project/ProjectUploadSection.tsx:56
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
@@ -1761,10 +1765,10 @@ msgstr "Add translations"
 msgid "Add verification prompt"
 msgstr "Přidat ověřovací prompt"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:897
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:964
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:469
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:898
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:965
 msgid "Add webhook"
 msgstr "Přidat webhook"
 
@@ -1778,8 +1782,8 @@ msgstr "Přidat webhook"
 #~ msgstr "Add Your First Webhook"
 
 #: src/components/workspace/gateWalls.ts:138
-msgid "add your logo"
-msgstr "přidat své logo"
+#~ msgid "add your logo"
+#~ msgstr "přidat své logo"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
@@ -1865,11 +1869,11 @@ msgstr "Další síly"
 msgid "Address"
 msgstr "Address"
 
-#: src/components/billing/BillingManager.tsx:461
+#: src/components/billing/BillingManager.tsx:460
 msgid "Address line 1"
 msgstr "Ulice a číslo popisné"
 
-#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:468
 msgid "Address line 2"
 msgstr "Upřesnění adresy (volitelné)"
 
@@ -1908,7 +1912,7 @@ msgstr "Admins"
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:881
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
 msgid "Advanced"
 msgstr "Pokročilé"
 
@@ -2144,7 +2148,7 @@ msgid "Always on. The screen opens here, so the room has something to read while
 msgstr "Stále aktivní. Obrazovka se otevře zde, aby si účastníci v místnosti měli co číst, než se zbytek připraví."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2597
-#: src/components/billing/BillingManager.tsx:779
+#: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Částka"
 
@@ -2371,7 +2375,7 @@ msgstr "Cokoli dalšího, o co byste se chtěli podělit"
 msgid "Anything else?"
 msgstr "Ještě něco?"
 
-#: src/components/billing/BillingManager.tsx:596
+#: src/components/billing/BillingManager.tsx:595
 msgid "Anything we could have done better?"
 msgstr "Mohli jsme něco udělat lépe?"
 
@@ -2448,7 +2452,7 @@ msgid "Archived"
 msgstr "Archivováno"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:612
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:613
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 
@@ -2541,7 +2545,7 @@ msgstr "Argumenty ({0})"
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Argumenty vyjadřují postoje či preference a neověřují se z hlediska faktů."
 
-#: src/components/billing/BillingManager.tsx:661
+#: src/components/billing/BillingManager.tsx:660
 msgid "Arranged with dembrane"
 msgstr "Sjednáno s dembrane"
 
@@ -2616,8 +2620,8 @@ msgstr "Požádejte účastníky o e-mail po skončení rozhovoru."
 
 #: src/components/workspace/gateWalls.ts:135
 #: src/components/workspace/gateWalls.ts:136
-msgid "ask more in chat"
-msgstr "zeptat se na více v chatu"
+#~ msgid "ask more in chat"
+#~ msgstr "zeptat se na více v chatu"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Ask participants for their email"
@@ -2667,7 +2671,7 @@ msgstr "At least 8 characters"
 msgid "At least one topic must be selected to enable Verify"
 msgstr "At least one topic must be selected to enable Verify"
 
-#: src/components/billing/BillingManager.tsx:1308
+#: src/components/billing/BillingManager.tsx:1307
 msgid "At the end of this period"
 msgstr "Na konci tohoto období"
 
@@ -2811,7 +2815,7 @@ msgstr "Automatické názvy a koncepty štítků"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:789
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Automatically save transcripts to your CRM or database"
 
@@ -2819,7 +2823,7 @@ msgstr "Automatically save transcripts to your CRM or database"
 msgid "Automatically select relevant conversations for your question."
 msgstr "Automaticky vybírejte relevantní rozhovory pro vaši otázku."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:886
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:887
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Automatically send conversation data to your other tools and services when events occur."
 
@@ -2827,7 +2831,7 @@ msgstr "Automatically send conversation data to your other tools and services wh
 msgid "Automation"
 msgstr "Automatizace"
 
-#: src/components/workspace/FeatureGate.tsx:150
+#: src/components/workspace/FeatureGate.tsx:157
 msgid "Available on a paid plan"
 msgstr "K dispozici v placeném tarifu"
 
@@ -2856,9 +2860,8 @@ msgstr "Pryč"
 #: src/routes/organisation/OrganisationRoute.tsx:708
 #: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:289
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:322
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:867
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:361
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2888,8 +2891,8 @@ msgid "Back to conversations"
 msgstr "Zpět na rozhovory"
 
 #: src/components/pricing/PricingConfigurator.tsx:938
-msgid "Back to dembrane"
-msgstr "Zpět do dembrane"
+#~ msgid "Back to dembrane"
+#~ msgstr "Zpět do dembrane"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:311
 msgid "Back to live"
@@ -3013,11 +3016,11 @@ msgstr "Lepší nahrávky, více způsobů odpovědi"
 msgid "Better uploads, transcripts and discovery"
 msgstr "Lepší nahrávání, přepisy a hledání"
 
-#: src/components/billing/BillingManager.tsx:1253
+#: src/components/billing/BillingManager.tsx:1252
 msgid "Billed annually"
 msgstr "Účtováno ročně"
 
-#: src/components/billing/BillingManager.tsx:1251
+#: src/components/billing/BillingManager.tsx:1250
 msgid "Billed monthly"
 msgstr "Účtováno měsíčně"
 
@@ -3047,15 +3050,15 @@ msgstr "Účtováno v rámci tarifu vaší organizace, společně s ostatními p
 msgid "Billing"
 msgstr "Billing"
 
-#: src/components/billing/BillingManager.tsx:427
+#: src/components/billing/BillingManager.tsx:426
 msgid "Billing details"
 msgstr "Fakturační údaje"
 
-#: src/components/billing/BillingManager.tsx:415
+#: src/components/billing/BillingManager.tsx:414
 msgid "Billing details saved."
 msgstr "Fakturační údaje uloženy."
 
-#: src/components/billing/BillingManager.tsx:286
+#: src/components/billing/BillingManager.tsx:285
 msgid "Billing is managed by your organisation"
 msgstr "Fakturaci spravuje vaše organizace"
 
@@ -3067,11 +3070,11 @@ msgstr "Režim fakturace"
 msgid "Book"
 msgstr "Naplánovat"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:995
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:992
 msgid "Book a call"
 msgstr "Book a call"
 
-#: src/components/common/FeedbackPortalModal.tsx:137
+#: src/components/common/FeedbackPortalModal.tsx:134
 msgid "Book a call with us"
 msgstr "Book a call with us"
 
@@ -3112,7 +3115,7 @@ msgstr "Vlastní LLM"
 msgid "Bug fixes"
 msgstr "Opravy chyb"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:808
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:809
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Build custom dashboards with real-time conversation data"
 
@@ -3138,8 +3141,8 @@ msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:708
-msgid "Can you tell us more?"
-msgstr "Můžete nám říct víc?"
+#~ msgid "Can you tell us more?"
+#~ msgstr "Můžete nám říct víc?"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
@@ -3175,8 +3178,8 @@ msgstr "Můžete nám říct víc?"
 #: src/components/project/ProjectDangerZone.tsx:168
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:134
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:477
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:631
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:478
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:632
 #: src/components/organisation/CreateOrganisationModal.tsx:248
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -3226,7 +3229,7 @@ msgstr "Cancel"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Cancel"
 
-#: src/components/billing/BillingManager.tsx:1431
+#: src/components/billing/BillingManager.tsx:1430
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Zrušte kdykoli. Přístup vám zůstane až do konce období."
 
@@ -3238,8 +3241,8 @@ msgstr "Zrušit aktuální běh"
 msgid "Cancel override"
 msgstr "Zrušit přepsání"
 
-#: src/components/billing/BillingManager.tsx:611
-#: src/components/billing/BillingManager.tsx:1446
+#: src/components/billing/BillingManager.tsx:610
+#: src/components/billing/BillingManager.tsx:1445
 msgid "Cancel plan"
 msgstr "Zrušit tarif"
 
@@ -3261,16 +3264,16 @@ msgstr "Zrušit výběr"
 msgid "Cancel training"
 msgstr "Zrušit školení"
 
-#: src/components/billing/BillingManager.tsx:572
+#: src/components/billing/BillingManager.tsx:571
 msgid "Cancel your plan"
 msgstr "Zrušit váš tarif"
 
-#: src/components/billing/BillingManager.tsx:232
+#: src/components/billing/BillingManager.tsx:231
 msgid "Cancelled"
 msgstr "Zrušeno"
 
 #. placeholder {0}: tierLabel(currentTier)
-#: src/components/billing/BillingManager.tsx:578
+#: src/components/billing/BillingManager.tsx:577
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "Zrušením se zastaví automatické obnovení vašeho tarifu. Tarif {0} vám zůstane do konce aktuálního zúčtovacího období, poté přejdete na Free."
 
@@ -3322,7 +3325,7 @@ msgstr "Dohnání {0}"
 msgid "Certified training for teams using dembrane in high-risk settings. A separate product, billed per session."
 msgstr "Certifikované školení pro týmy používající dembrane ve vysoce rizikových prostředích. Samostatný produkt, účtovaný za sezení."
 
-#: src/components/billing/BillingManager.tsx:1391
+#: src/components/billing/BillingManager.tsx:1390
 msgid "Change"
 msgstr "Změnit"
 
@@ -3358,8 +3361,8 @@ msgstr "Change organisation role?"
 msgid "Change password"
 msgstr "Change password"
 
-#: src/components/billing/BillingManager.tsx:1224
-#: src/components/billing/BillingManager.tsx:1467
+#: src/components/billing/BillingManager.tsx:1223
+#: src/components/billing/BillingManager.tsx:1466
 msgid "Change payment method"
 msgstr "Změnit platební metodu"
 
@@ -3621,7 +3624,7 @@ msgstr "Choose an organisation first"
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr "Zvolte vyhledatelné, pouze pro zvané nebo soukromé pracovní prostory."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
 msgid "Choose from your other projects"
 msgstr "Choose from your other projects"
 
@@ -3641,7 +3644,7 @@ msgstr "Vyberte výsledky, které může vaše publikum prozkoumat."
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Vyberte, co uvidí sál: Popcorn, Napětí, Mapa a Zainteresovaní."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
 msgid "Choose when you want to receive notifications"
 msgstr "Choose when you want to receive notifications"
 
@@ -3653,7 +3656,7 @@ msgstr "Choose your preferred language for the interface"
 #~ msgid "Choose your preferred theme for the interface"
 #~ msgstr "Choose your preferred theme for the interface"
 
-#: src/components/billing/BillingManager.tsx:487
+#: src/components/billing/BillingManager.tsx:486
 msgid "City"
 msgstr "Město"
 
@@ -3780,11 +3783,11 @@ msgstr "Client-managed"
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr "Tlačítka schránky fungují i v Safari a zvolený jazyk rozhraní se ukládá."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:279
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:280
 msgid "Clone from another project"
 msgstr "Clone from another project"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
 msgid "Clone from project"
 msgstr "Klonovat z projektu"
 
@@ -3812,7 +3815,7 @@ msgstr "Clone project"
 #: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
-#: src/components/common/FeedbackPortalModal.tsx:158
+#: src/components/common/FeedbackPortalModal.tsx:155
 #: src/components/agent-access/AgentAccessSection.tsx:98
 msgid "Close"
 msgstr "Zavřít"
@@ -3951,7 +3954,7 @@ msgstr "Sloučeno z {0} argumentů"
 msgid "Coming soon"
 msgstr "Již brzy"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:784
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
 msgid "Common use cases:"
 msgstr "Common use cases:"
 
@@ -4142,11 +4145,10 @@ msgstr "Contextual suggestions"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
-#: src/components/billing/BillingManager.tsx:1469
+#: src/components/billing/BillingManager.tsx:1468
 msgid "Continue"
 msgstr "Continue"
 
@@ -4174,6 +4176,10 @@ msgstr "Pokračovat"
 #: src/components/participant/verify/VerifyInstructions.tsx:109
 msgid "participant.verify.instructions.button.next"
 msgstr "Pokračovat"
+
+#: src/components/workspace/FeatureGate.tsx:362
+msgid "Continue on dembrane.com"
+msgstr "Pokračovat na dembrane.com"
 
 #: src/components/map/panels/ExplorePanel.tsx:52
 #~ msgid "Contributing nodes ({0})"
@@ -4236,7 +4242,7 @@ msgstr "Stránky rozhovorů a načítání dat jsou přehlednější a rychlejš
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:59
 msgid "Conversation started"
 msgstr "Rozhovor zahájen"
 
@@ -4261,11 +4267,11 @@ msgstr "Stav rozhovoru nyní zobrazuje průběh nahrávání."
 msgid "Conversation summaries no longer hang in the affected processing cases."
 msgstr "Shrnutí rozhovorů se už v dotčených případech zpracování nezasekávají."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:69
 msgid "Conversation summarized"
 msgstr "Rozhovor shrnut"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:756
 msgid "Conversation tags"
 msgstr "Conversation tags"
 
@@ -4273,7 +4279,7 @@ msgstr "Conversation tags"
 msgid "Conversation tags are easier to read."
 msgstr "Štítky rozhovorů jsou lépe čitelné."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:64
 msgid "Conversation transcribed"
 msgstr "Rozhovor přepsán"
 
@@ -4324,7 +4330,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -4402,7 +4408,7 @@ msgstr "Kopírovat shrnutí"
 #~ msgid "Copy Summary"
 #~ msgstr "Copy Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1025
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
@@ -4444,7 +4450,7 @@ msgstr "Could not carry over your selection. Pick again below."
 #~ msgid "Could not complete that action."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:987
+#: src/components/billing/BillingManager.tsx:986
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Platbu se nepodařilo potvrdit. Zkuste to znovu obnovením stránky."
 
@@ -4711,7 +4717,7 @@ msgstr "Nepodařilo se uložit"
 #~ msgid "Couldn't send invite"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:493
+#: src/components/billing/BillingManager.tsx:492
 msgid "Country"
 msgstr "Země"
 
@@ -4745,8 +4751,8 @@ msgid "Create and manage multiple reports in one project."
 msgstr "Vytvářejte a spravujte více zpráv v jednom projektu."
 
 #: src/components/workspace/gateWalls.ts:147
-msgid "create another report"
-msgstr "vytvořit další zprávu"
+#~ msgid "create another report"
+#~ msgstr "vytvořit další zprávu"
 
 #: src/components/release/releaseHistory.ts:322
 msgid "Create custom chat templates (beta), or duplicate and edit a built-in template."
@@ -4758,8 +4764,8 @@ msgid "Create methodology"
 msgstr "Vytvořit metodiku"
 
 #: src/components/workspace/gateWalls.ts:142
-msgid "create more organisations"
-msgstr "vytvořit další organizace"
+#~ msgid "create more organisations"
+#~ msgstr "vytvořit další organizace"
 
 #: src/features/sidebar/shell/UserMenu.tsx:164
 #~ msgid "Create new organisation"
@@ -4887,13 +4893,13 @@ msgstr "Current logo"
 msgid "Current password"
 msgstr "Current password"
 
-#: src/components/billing/BillingManager.tsx:325
-#: src/components/billing/BillingManager.tsx:656
-#: src/components/billing/BillingManager.tsx:1230
+#: src/components/billing/BillingManager.tsx:324
+#: src/components/billing/BillingManager.tsx:655
+#: src/components/billing/BillingManager.tsx:1229
 msgid "Current plan"
 msgstr "Aktuální tarif"
 
-#: src/components/billing/BillingManager.tsx:1335
+#: src/components/billing/BillingManager.tsx:1334
 msgid "Current rate"
 msgstr "Aktuální sazba"
 
@@ -4971,7 +4977,7 @@ msgstr "Tmavý režim"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:772
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "Dashboard URL (direct link to conversation overview)"
 
@@ -4995,7 +5001,7 @@ msgstr "Zásady nakládání s daty a prohlášení"
 #: src/routes/admin/AdminSettingsRoute.tsx:2547
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
-#: src/components/billing/BillingManager.tsx:773
+#: src/components/billing/BillingManager.tsx:772
 msgid "Date"
 msgstr "Date"
 
@@ -5092,8 +5098,8 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:590
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:625
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
@@ -5174,7 +5180,7 @@ msgstr "Delete this workspace. Members lose access immediately and all conversat
 msgid "Delete topic"
 msgstr "Smazat téma"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:607
 msgid "Delete webhook"
 msgstr "Smazat webhook"
 
@@ -5300,7 +5306,7 @@ msgstr "Describe what the language model should extract or summarize from the co
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
-#: src/components/billing/BillingManager.tsx:776
+#: src/components/billing/BillingManager.tsx:775
 msgid "Description"
 msgstr "Description"
 
@@ -5441,7 +5447,7 @@ msgstr "Rozdílná propojení: {0}"
 msgid "Distilling core idea…"
 msgstr "Destiluje se hlavní myšlenka…"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:816
 msgid "Do I need this?"
 msgstr "Do I need this?"
 
@@ -5540,7 +5546,7 @@ msgstr "Stáhněte si zvuk z rozhovorů."
 msgid "Download event printouts"
 msgstr "Stáhnout tiskoviny k akci"
 
-#: src/components/billing/BillingManager.tsx:835
+#: src/components/billing/BillingManager.tsx:834
 msgid "Download PDF"
 msgstr "Stáhnout PDF"
 
@@ -5650,7 +5656,7 @@ msgstr "např. Jsme výzkumná agentura. Zprávy putují městským klientům, s
 msgid "e.g. Weekly stakeholder digest"
 msgstr "e.g. Weekly stakeholder digest"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "např. upozornění ve Slacku, workflow v Make"
 
@@ -5693,7 +5699,7 @@ msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:585
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
@@ -5796,7 +5802,7 @@ msgstr "Edit the report content using the rich text editor below. You can format
 msgid "Edit topic"
 msgstr "Upravit téma"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
 msgid "Edit webhook"
 msgstr "Upravit webhook"
 
@@ -5969,7 +5975,7 @@ msgid "Enable Verify"
 msgstr "Enable Verify"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:927
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -5978,7 +5984,7 @@ msgstr "Enabled"
 msgid "Ended"
 msgstr "Ukončeno"
 
-#: src/components/billing/BillingManager.tsx:1249
+#: src/components/billing/BillingManager.tsx:1248
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Končí {endDate}, poté přejde na Free"
 
@@ -6010,7 +6016,7 @@ msgstr "Zadejte heslo"
 msgid "Enter a presentation title"
 msgstr "Zadejte název prezentace"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
 msgid "Enter a secret key"
 msgstr "Enter a secret key"
 
@@ -6118,11 +6124,11 @@ msgstr "Včetně LLM hostovaných v EU"
 msgid "Event help from the dembrane team"
 msgstr "Podpora při akcích od týmu dembrane"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:924
 msgid "Events"
 msgstr "Events"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Events to listen for"
 msgstr "Události ke sledování"
 
@@ -6183,6 +6189,10 @@ msgstr "Všichni na seznamu jsou proškoleni."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
+#: src/components/workspace/FeatureGate.tsx:348
+msgid "Everything you've made here stays as it is."
+msgstr "Vše, co jste tu vytvořili, zůstane tak, jak je."
+
 #: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Podklady"
@@ -6199,7 +6209,7 @@ msgstr "Podklady"
 msgid "Evidenced connections"
 msgstr "Doložená spojení"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1006
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1003
 msgid "Example webhook payload"
 msgstr "Ukázkový payload webhooku"
 
@@ -6225,7 +6235,7 @@ msgstr "Rozbalit pracovní prostory"
 msgid "Experimental"
 msgstr "Experimental"
 
-#: src/components/billing/BillingManager.tsx:234
+#: src/components/billing/BillingManager.tsx:233
 #: src/components/agent-access/format.ts:32
 msgid "Expired"
 msgstr "Platnost vypršela"
@@ -6369,7 +6379,7 @@ msgstr "Na tento objekt se faktický stav nevztahuje."
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:911
-#: src/components/billing/BillingManager.tsx:230
+#: src/components/billing/BillingManager.tsx:229
 msgid "Failed"
 msgstr "Failed"
 
@@ -6449,7 +6459,7 @@ msgstr "Failed to generate the summary. Please try again later."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Zvuk se nepodařilo načíst nebo není k dispozici"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:912
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:913
 msgid "Failed to load webhooks"
 msgstr "Failed to load webhooks"
 
@@ -6583,7 +6593,7 @@ msgstr "Feature available soon"
 #~ msgid "Feedback"
 #~ msgstr "Feedback"
 
-#: src/components/common/FeedbackPortalModal.tsx:62
+#: src/components/common/FeedbackPortalModal.tsx:63
 msgid "Feedback portal"
 msgstr "Feedback portal"
 
@@ -6808,7 +6818,7 @@ msgstr "Pro"
 msgid "For <0>{0}</0>"
 msgstr "For <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:420
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:421
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 
@@ -6951,7 +6961,7 @@ msgstr "Z přepisu"
 msgid "Full screen"
 msgstr "Celá obrazovka"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:759
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
@@ -7006,8 +7016,8 @@ msgid "Generate a summary first"
 msgstr "Generate a summary first"
 
 #: src/components/workspace/gateWalls.ts:141
-msgid "generate another map"
-msgstr "vygenerovat další mapu"
+#~ msgid "generate another map"
+#~ msgstr "vygenerovat další mapu"
 
 #: src/components/release/releaseHistory.ts:433
 msgid "Generate conversation titles automatically, with an option to turn this off."
@@ -7141,8 +7151,8 @@ msgid "Go back"
 msgstr "Go back"
 
 #: src/components/workspace/gateWalls.ts:140
-msgid "go beyond this month's free allowance"
-msgstr "překročit bezplatný limit na tento měsíc"
+#~ msgid "go beyond this month's free allowance"
+#~ msgstr "překročit bezplatný limit na tento měsíc"
 
 #: src/routes/project/HostGuidePage.tsx:1569
 msgid "Go fullscreen"
@@ -7276,8 +7286,8 @@ msgid "Have you completed a training?"
 msgstr "Absolvovali jste školení?"
 
 #: src/components/workspace/gateWalls.ts:151
-msgid "have your recordings transcribed"
-msgstr "nechat přepsat své nahrávky"
+#~ msgid "have your recordings transcribed"
+#~ msgstr "nechat přepsat své nahrávky"
 
 #: src/features/sidebar/views/HelpView.tsx:18
 #: src/features/sidebar/blocks/HelpBlock.tsx:167
@@ -7369,10 +7379,14 @@ msgid "Hide the changes"
 msgstr "Skrýt změny"
 
 #: src/components/workspace/gateWalls.ts:139
-msgid "hide the dembrane event invitation"
-msgstr "skrýt pozvánku na akci dembrane"
+#~ msgid "hide the dembrane event invitation"
+#~ msgstr "skrýt pozvánku na akci dembrane"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:123
+msgid "Hiding the dembrane event invitation comes with a paid plan"
+msgstr "Skrytí pozvánky na akci dembrane je součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:89
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Skrytí pozvánky na akci dembrane je součástí placeného plánu."
 
@@ -7468,7 +7482,7 @@ msgstr "Jak funguje Ask a co všechno dokáže."
 msgid "How dembrane improves your transcript"
 msgstr "Jak dembrane vylepšuje váš přepis"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
 msgid "How it works:"
 msgstr "How it works:"
 
@@ -7565,7 +7579,7 @@ msgstr "Neaktivní"
 msgid "If an account exists for <0>{0}</0>, we sent it a link to reset your password. Check your inbox and spam folder."
 msgstr "Pokud účet pro <0>{0}</0> existuje, poslali jsme na něj odkaz pro obnovení hesla. Zkontrolujte doručenou poštu i složku se spamem."
 
-#: src/components/common/FeedbackPortalModal.tsx:90
+#: src/components/common/FeedbackPortalModal.tsx:91
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Pokud jste narazili na data viditelná pro nepovolané osoby, na někoho s přístupem, který by mít neměl, nebo na možnou bezpečnostní zranitelnost, použijte prosím náš <0>formulář pro hlášení bezpečnostních problémů</0>. Dostane se k jinému týmu rychlejší cestou. V naléhavých případech napište na <1>privacy@dembrane.com</1>"
 
@@ -7574,7 +7588,7 @@ msgstr "Pokud jste narazili na data viditelná pro nepovolané osoby, na někoho
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
 
-#: src/components/billing/BillingManager.tsx:679
+#: src/components/billing/BillingManager.tsx:678
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Pokud potřebujete něco jiného, rádi vám připravíme nabídku na míru."
 
@@ -7582,11 +7596,11 @@ msgstr "Pokud potřebujete něco jiného, rádi vám připravíme nabídku na m�
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "If you were expecting access, please ask the person who invited you to send it again."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:818
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:819
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:982
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:983
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 
@@ -7888,7 +7902,7 @@ msgstr "Faktura byla označena jako zaplacená."
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Fakturováno offline, bez mandátu Mollie."
 
-#: src/components/billing/BillingManager.tsx:754
+#: src/components/billing/BillingManager.tsx:753
 msgid "Invoices"
 msgstr "Faktury"
 
@@ -8057,7 +8071,7 @@ msgstr "Připojit se pro podporu"
 msgid "Join for support (24h)"
 msgstr "Připojit se pro podporu (24 h)"
 
-#: src/components/common/FeedbackPortalModal.tsx:153
+#: src/components/common/FeedbackPortalModal.tsx:150
 msgid "Join our Slack community"
 msgstr "Připojte se k naší komunitě na Slacku"
 
@@ -8118,7 +8132,7 @@ msgstr "právě teď"
 msgid "Just one."
 msgstr "Jen jeden."
 
-#: src/components/billing/BillingManager.tsx:515
+#: src/components/billing/BillingManager.tsx:514
 msgid "Just pausing for now"
 msgstr "Jen si dávám pauzu"
 
@@ -8139,7 +8153,7 @@ msgstr "Právě aktualizováno. Chvilku strpení."
 msgid "Just started"
 msgstr "Právě zahájeno"
 
-#: src/components/common/FeedbackPortalModal.tsx:83
+#: src/components/common/FeedbackPortalModal.tsx:84
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 
@@ -8172,8 +8186,8 @@ msgid "Keep access secure with a one-time code from your authenticator app. Togg
 msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 
 #: src/components/workspace/gateWalls.ts:143
-msgid "keep analysing with popcorn"
-msgstr "pokračovat v analýze pomocí popcornu"
+#~ msgid "keep analysing with popcorn"
+#~ msgstr "pokračovat v analýze pomocí popcornu"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
 #: src/routes/project/CreateProjectRoute.tsx:193
@@ -8189,7 +8203,7 @@ msgstr "Keep it"
 msgid "Keep license"
 msgstr "Ponechat licenci"
 
-#: src/components/billing/BillingManager.tsx:619
+#: src/components/billing/BillingManager.tsx:618
 msgid "Keep my plan"
 msgstr "Ponechat si tarif"
 
@@ -8331,11 +8345,11 @@ msgstr "Latest report"
 msgid "Learn more"
 msgstr "Learn more"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:831
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:832
 msgid "Learn more about webhooks"
 msgstr "Learn more about webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
 
@@ -8376,7 +8390,7 @@ msgstr "Právní základ"
 msgid "Legal basis saved"
 msgstr "Právní základ uložen"
 
-#: src/components/billing/BillingManager.tsx:434
+#: src/components/billing/BillingManager.tsx:433
 msgid "Legal entity name"
 msgstr "Název právnické osoby"
 
@@ -8384,6 +8398,10 @@ msgstr "Název právnické osoby"
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Legenda"
+
+#: src/components/workspace/gateWalls.ts:118
+msgid "Let's find what fits you"
+msgstr "Pojďme najít, co vám sedí"
 
 #: src/components/pricing/PricingConfigurator.tsx:869
 #~ msgid "Let's go!"
@@ -8607,7 +8625,7 @@ msgstr "Živé plátno a popcorn"
 #~ msgid "Load latest revision"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:854
+#: src/components/billing/BillingManager.tsx:853
 msgid "Load more"
 msgstr "Načíst další"
 
@@ -8850,8 +8868,8 @@ msgid "Low battery"
 msgstr "Slabá baterie"
 
 #: src/components/workspace/gateWalls.ts:144
-msgid "make a workspace private"
-msgstr "nastavit pracovní prostor jako soukromý"
+#~ msgid "make a workspace private"
+#~ msgstr "nastavit pracovní prostor jako soukromý"
 
 #: src/components/project/ProjectSharingModal.tsx:304
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -8868,7 +8886,7 @@ msgstr "Make private"
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
 #: src/components/conversation/ProjectConversationsPanel.tsx:386
-#: src/components/billing/BillingManager.tsx:1555
+#: src/components/billing/BillingManager.tsx:1554
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
 msgstr "Manage"
@@ -8886,7 +8904,7 @@ msgstr "Spravujte fakturační účty, platby a žádosti o navýšení tarifu p
 msgid "Manage members"
 msgstr "Manage members"
 
-#: src/components/billing/BillingManager.tsx:300
+#: src/components/billing/BillingManager.tsx:299
 msgid "Manage organisation billing"
 msgstr "Spravovat fakturaci organizace"
 
@@ -8915,7 +8933,7 @@ msgstr "Spravované účty platí na fakturu, nikoli kartou. Nastavení účtu j
 msgid "Managed billing"
 msgstr "Spravovaná fakturace"
 
-#: src/components/billing/BillingManager.tsx:329
+#: src/components/billing/BillingManager.tsx:328
 msgid "Managed by dembrane"
 msgstr "Spravováno dembrane"
 
@@ -9025,6 +9043,10 @@ msgstr "Označí {orgName} jako partnera. Jeho pracovní prostory při vytvořen
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:279
 msgid "max {maximum}"
 msgstr "max. {maximum}"
+
+#: src/components/workspace/FeatureGate.tsx:369
+msgid "Maybe later"
+msgstr "Možná později"
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:56
 #: src/components/agent-access/YourOrganisations.tsx:58
@@ -9178,7 +9200,7 @@ msgstr "Minimální interval pro Popcorn"
 msgid "Missed the question"
 msgstr "Mimo položenou otázku"
 
-#: src/components/billing/BillingManager.tsx:512
+#: src/components/billing/BillingManager.tsx:511
 msgid "Missing features I need"
 msgstr "Chybí mi potřebné funkce"
 
@@ -9352,7 +9374,7 @@ msgstr "My templates"
 #: src/routes/project/CreateProjectRoute.tsx:365
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:109
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:363
@@ -9367,7 +9389,7 @@ msgstr "Name"
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:368
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:369
 msgid "Name is required"
 msgstr "Name is required"
 
@@ -9588,7 +9610,7 @@ msgstr "Next"
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Další změna za <0>{remainingSeconds} s</0>"
 
-#: src/components/billing/BillingManager.tsx:1316
+#: src/components/billing/BillingManager.tsx:1315
 msgid "Next invoice"
 msgstr "Další faktura"
 
@@ -9650,7 +9672,7 @@ msgstr "Zatím žádné argumenty. Zobrazí se po první analýze."
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
 
-#: src/components/billing/BillingManager.tsx:1095
+#: src/components/billing/BillingManager.tsx:1094
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Zatím nemáte fakturační účet. Napište na <0>support@dembrane.com</0> a my vám ho zřídíme."
 
@@ -9771,7 +9793,7 @@ msgstr "Žádná zjištění tomu neodpovídají."
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Zatím žádná zjištění. Objeví se po první analýze."
 
-#: src/components/billing/BillingManager.tsx:1312
+#: src/components/billing/BillingManager.tsx:1311
 msgid "No further charges"
 msgstr "Žádné další poplatky"
 
@@ -9900,11 +9922,11 @@ msgstr "No organisation role. Access via workspace invites."
 msgid "No payments match the filter."
 msgstr "Filtru neodpovídají žádné platby."
 
-#: src/components/billing/BillingManager.tsx:765
+#: src/components/billing/BillingManager.tsx:764
 msgid "No payments yet."
 msgstr "Zatím žádné platby."
 
-#: src/components/billing/BillingManager.tsx:727
+#: src/components/billing/BillingManager.tsx:726
 msgid "No PDF available for this invoice."
 msgstr "K této faktuře není k dispozici žádné PDF."
 
@@ -10094,11 +10116,11 @@ msgstr "Zatím žádná verze"
 #~ msgid "No webhooks configured"
 #~ msgstr "No webhooks configured"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:335
 msgid "No webhooks found"
 msgstr "No webhooks found"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:955
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:956
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Zatím žádné webhooky. Přidejte webhook a data rozhovorů budete dostávat automaticky, když nastanou události."
 
@@ -10134,7 +10156,7 @@ msgstr "Žádné"
 msgid "None in this view."
 msgstr "Žádní v tomto zobrazení."
 
-#: src/components/billing/BillingManager.tsx:1326
+#: src/components/billing/BillingManager.tsx:1325
 msgid "None scheduled"
 msgstr "Žádné nebyly naplánovány"
 
@@ -10187,7 +10209,6 @@ msgid "Not monthly"
 msgstr "Ne měsíčně"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10217,7 +10238,7 @@ msgstr "Nezaznamenáno"
 msgid "Not relevant"
 msgstr "Není relevantní"
 
-#: src/components/billing/BillingManager.tsx:1239
+#: src/components/billing/BillingManager.tsx:1238
 msgid "Not renewing"
 msgstr "Bez obnovení"
 
@@ -10226,7 +10247,7 @@ msgid "Not scheduled"
 msgstr "Nenaplánováno"
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:1398
+#: src/components/billing/BillingManager.tsx:1397
 msgid "Not set"
 msgstr "Not set"
 
@@ -10248,7 +10269,7 @@ msgstr "Zatím nevím."
 msgid "Not trained"
 msgstr "Neproškoleno"
 
-#: src/components/billing/BillingManager.tsx:513
+#: src/components/billing/BillingManager.tsx:512
 msgid "Not using it enough"
 msgstr "Nepoužívám ho dost často"
 
@@ -10398,9 +10419,13 @@ msgstr "Fakturaci spravuje dembrane. Přechod na samoobsluhu zachová úroveň a
 msgid "On recording page"
 msgstr "Na stránce nahrávání"
 
-#: src/components/workspace/gateWalls.ts:101
+#: src/components/workspace/gateWalls.ts:96
 msgid "On the free plan one project takes recordings."
 msgstr "V tarifu Free může nahrávat jen jeden projekt."
+
+#: src/components/workspace/gateWalls.ts:130
+msgid "On the free plan, one project takes recordings"
+msgstr "V tarifu Free může nahrávat jen jeden projekt"
 
 #: src/components/project/RecordingPausedNotice.tsx:89
 msgid "On the free plan, uploads go to {name}."
@@ -10731,11 +10756,11 @@ msgstr "Zapojte se do testování experimentálních funkcí a pomozte utvářet
 
 #: src/routes/auth/Register.tsx:187
 #: src/components/project/CustomTopicModal.tsx:234
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:416
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:417
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
-#: src/components/billing/BillingManager.tsx:444
-#: src/components/billing/BillingManager.tsx:470
-#: src/components/billing/BillingManager.tsx:597
+#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:596
 msgid "Optional"
 msgstr "Optional"
 
@@ -10769,7 +10794,7 @@ msgstr "or"
 msgid "Or choose a time"
 msgstr "Nebo vyberte čas"
 
-#: src/components/common/FeedbackPortalModal.tsx:130
+#: src/components/common/FeedbackPortalModal.tsx:131
 msgid "Or prefer to chat directly?"
 msgstr "Or prefer to chat directly?"
 
@@ -10878,7 +10903,7 @@ msgid "Original language"
 msgstr "Původní jazyk"
 
 #: src/components/feedback/reasons.ts:27
-#: src/components/billing/BillingManager.tsx:516
+#: src/components/billing/BillingManager.tsx:515
 msgid "Other"
 msgstr "Jiné"
 
@@ -10986,7 +11011,7 @@ msgstr "Název stránky"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
 #: src/routes/admin/AdminSettingsRoute.tsx:2749
-#: src/components/billing/BillingManager.tsx:224
+#: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Zaplaceno"
 
@@ -11036,7 +11061,7 @@ msgstr "Funkce pro účastníky"
 msgid "Participant name"
 msgstr "Participant name"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:753
 msgid "Participant name and email"
 msgstr "Participant name and email"
 
@@ -11150,7 +11175,7 @@ msgstr "Pozastaveno."
 msgid "Paused. Updated {updatedAgo}."
 msgstr "Pozastaveno. Aktualizováno {updatedAgo}."
 
-#: src/components/billing/BillingManager.tsx:814
+#: src/components/billing/BillingManager.tsx:813
 msgid "Pay now"
 msgstr "Zaplatit nyní"
 
@@ -11162,7 +11187,7 @@ msgstr "Příjmy od platících"
 msgid "Paying revenue this month"
 msgstr "Příjmy od platících za tento měsíc"
 
-#: src/components/billing/BillingManager.tsx:1241
+#: src/components/billing/BillingManager.tsx:1240
 msgid "Payment failed"
 msgstr "Platba se nezdařila"
 
@@ -11174,7 +11199,7 @@ msgstr "Částka platebního odkazu, EUR"
 msgid "Payment link issued."
 msgstr "Platební odkaz byl vystaven."
 
-#: src/components/billing/BillingManager.tsx:1382
+#: src/components/billing/BillingManager.tsx:1381
 msgid "Payment method"
 msgstr "Způsob platby"
 
@@ -11182,7 +11207,7 @@ msgstr "Způsob platby"
 msgid "Payment reference"
 msgstr "Variabilní symbol"
 
-#: src/components/billing/BillingManager.tsx:1078
+#: src/components/billing/BillingManager.tsx:1077
 msgid "Payment went through. Your plan is up to date."
 msgstr "Platba proběhla úspěšně. Váš tarif je aktuální."
 
@@ -11197,7 +11222,7 @@ msgstr "pending"
 #: src/components/project/ProjectUsageAndSharing.tsx:354
 #: src/components/project/ProjectSharingModal.tsx:404
 #: src/components/members/PendingInvitesSection.tsx:168
-#: src/components/billing/BillingManager.tsx:228
+#: src/components/billing/BillingManager.tsx:227
 msgid "Pending"
 msgstr "Pending"
 
@@ -11282,14 +11307,13 @@ msgstr "Pick a date"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Vyberte tečku a přečtěte si její slova níže."
 
-#: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Vyberte čas"
 
 #: src/components/pricing/PricingConfigurator.tsx:695
-msgid "Pick a time with {host}."
-msgstr "Vyberte si čas ({host})."
+#~ msgid "Pick a time with {host}."
+#~ msgstr "Vyberte si čas ({host})."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
@@ -11307,7 +11331,7 @@ msgstr "Pick at least one workspace to send the invite."
 msgid "Pick from your organisation, or type an email to invite."
 msgstr "Vyberte z organizace nebo zadejte e-mail k pozvání."
 
-#: src/components/billing/BillingManager.tsx:586
+#: src/components/billing/BillingManager.tsx:585
 msgid "Pick one"
 msgstr "Vyberte jednu možnost"
 
@@ -11359,7 +11383,7 @@ msgstr "Pinned templates"
 msgid "Plan"
 msgstr "Plán"
 
-#: src/components/billing/BillingManager.tsx:1303
+#: src/components/billing/BillingManager.tsx:1302
 msgid "Plan ends"
 msgstr "Konec tarifu"
 
@@ -11630,7 +11654,7 @@ msgstr "Průvodce portálem"
 msgid "Positive"
 msgstr "Pozitivní"
 
-#: src/components/billing/BillingManager.tsx:479
+#: src/components/billing/BillingManager.tsx:478
 msgid "Postal code"
 msgstr "PSČ"
 
@@ -11800,7 +11824,11 @@ msgstr "Private project"
 msgid "Private workspace"
 msgstr "Private workspace"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:128
+msgid "Private workspaces come with a paid plan"
+msgstr "Soukromé pracovní prostory jsou součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:94
 msgid "Private workspaces come with a paid plan."
 msgstr "Soukromé pracovní prostory jsou součástí placeného tarifu."
 
@@ -11923,7 +11951,7 @@ msgstr "Projekt byl přesunut"
 msgid "Project name"
 msgstr "Project name"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
 msgid "Project name and ID"
 msgstr "Project name and ID"
 
@@ -11955,11 +11983,11 @@ msgstr "nastavení projektu"
 #~ msgid "Project Settings"
 #~ msgstr "Project Settings"
 
-#: src/components/billing/BillingManager.tsx:1338
+#: src/components/billing/BillingManager.tsx:1337
 msgid "Projected monthly total"
 msgstr "Předpokládaný měsíční součet"
 
-#: src/components/billing/BillingManager.tsx:1337
+#: src/components/billing/BillingManager.tsx:1336
 msgid "Projected yearly total"
 msgstr "Předpokládaný roční součet"
 
@@ -12123,7 +12151,7 @@ msgstr "Znovu zkontrolovat"
 msgid "Re-enter new password"
 msgstr "Re-enter new password"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:282
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:283
 msgid "Re-use settings from an existing webhook"
 msgstr "Re-use settings from an existing webhook"
 
@@ -12353,8 +12381,8 @@ msgid "Record another conversation"
 msgstr "Record another conversation"
 
 #: src/components/workspace/gateWalls.ts:146
-msgid "record in every project"
-msgstr "nahrávat v každém projektu"
+#~ msgid "record in every project"
+#~ msgstr "nahrávat v každém projektu"
 
 #: src/components/project/RecordingPausedNotice.tsx:66
 msgid "Record in every project"
@@ -12439,8 +12467,6 @@ msgstr "V tarifu Free je nahrávání pro tento projekt pozastaveno. Nové nahr�
 #~ msgstr "Recurring Themes"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:157
-#: src/components/pricing/PricingConfigurator.tsx:928
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -12779,7 +12805,7 @@ msgstr "Zpráva vytvořena · {0}"
 msgid "Report failed"
 msgstr "Zpráva se nezdařila"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:74
 msgid "Report generated"
 msgstr "Zpráva vygenerována"
 
@@ -13129,7 +13155,7 @@ msgstr "Resume"
 msgid "Resume physics"
 msgstr "Obnovit fyziku"
 
-#: src/components/billing/BillingManager.tsx:1442
+#: src/components/billing/BillingManager.tsx:1441
 msgid "Resume plan"
 msgstr "Obnovit tarif"
 
@@ -13329,8 +13355,8 @@ msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Přibližný odhad dokončení přepisu zbývajících nahrávek"
 
 #: src/components/pricing/PricingConfigurator.tsx:1139
-msgid "Roughly how many?"
-msgstr "Přibližně kolik?"
+#~ msgid "Roughly how many?"
+#~ msgstr "Přibližně kolik?"
 
 #: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
@@ -13412,11 +13438,11 @@ msgstr "Uložit přístup"
 msgid "Save as template"
 msgstr "Save as template"
 
-#: src/components/billing/BillingManager.tsx:502
+#: src/components/billing/BillingManager.tsx:501
 msgid "Save billing details"
 msgstr "Uložit fakturační údaje"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:466
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
 msgid "Save changes"
 msgstr "Uložit změny"
 
@@ -13479,7 +13505,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Řekněte to vlastními slovy. Napište to, nebo stiskněte nahrávání a mluvte."
 
-#: src/components/common/FeedbackPortalModal.tsx:124
+#: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Naskenujte nebo klikněte na QR kód pro otevření portálu pro zpětnou vazbu"
 
@@ -13684,7 +13710,7 @@ msgstr "Search templates..."
 msgid "select.all.modal.search.text"
 msgstr "Search text:"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
@@ -13732,8 +13758,8 @@ msgstr "seats"
 #: src/routes/admin/AdminSettingsRoute.tsx:1681
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
-#: src/components/billing/BillingManager.tsx:342
-#: src/components/billing/BillingManager.tsx:1260
+#: src/components/billing/BillingManager.tsx:341
+#: src/components/billing/BillingManager.tsx:1259
 msgid "Seats"
 msgstr "Seats"
 
@@ -13746,7 +13772,7 @@ msgstr "Seats full"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:408
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:409
 msgid "Secret"
 msgstr "Secret"
 
@@ -13768,8 +13794,8 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Prohlédněte si na Mapě argumenty z vašich rozhovorů a citace, o které se opírají."
 
 #: src/components/workspace/gateWalls.ts:152
-msgid "see transcripts"
-msgstr "zobrazit přepisy"
+#~ msgid "see transcripts"
+#~ msgstr "zobrazit přepisy"
 
 #: src/routes/project/present/MapFreeNotice.tsx:66
 #: src/components/workspace/FreeAllowanceBanner.tsx:84
@@ -13793,7 +13819,7 @@ msgid "Sees usage and invoices. No project or content access."
 msgstr "Sees usage and invoices. No project or content access."
 
 #: src/routes/project/ProjectsHome.tsx:455
-#: src/components/billing/BillingManager.tsx:451
+#: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Vybrat"
 
@@ -13822,7 +13848,7 @@ msgstr "Select a microphone"
 #~ msgid "Select a tab to show results on the screen."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:327
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
 msgid "Select a webhook to clone"
 msgstr "Select a webhook to clone"
 
@@ -13862,7 +13888,7 @@ msgstr "Vybrat všechny výsledky"
 msgid "Select all visible ({remainingCount})"
 msgstr "Select all visible ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:437
 msgid "Select at least one event"
 msgstr "Select at least one event"
 
@@ -14046,7 +14072,7 @@ msgstr "Odeslat žádost"
 msgid "Send reset link"
 msgstr "Odeslat odkaz pro obnovení"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:795
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:796
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Send Slack/Teams notifications when new conversations are completed"
 
@@ -14121,7 +14147,7 @@ msgstr "Nastavit na spravované"
 msgid "Set to managed billing"
 msgstr "Nastavit na spravovanou fakturaci"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:300
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:301
 msgid "Set up a new webhook from scratch"
 msgstr "Nastavit nový webhook od začátku"
 
@@ -14573,7 +14599,6 @@ msgstr "Šest víkendů v průběhu sedmi měsíců"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:879
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -14886,7 +14911,7 @@ msgstr "Zahájit nový chat"
 msgid "Start again from your agent. It will open a fresh request here."
 msgstr "Začněte znovu od svého agenta. Otevře se zde nový požadavek."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:297
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:298
 msgid "Start fresh"
 msgstr "Start fresh"
 
@@ -14947,7 +14972,7 @@ msgstr "Tvrzení"
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:33
-#: src/components/billing/BillingManager.tsx:782
+#: src/components/billing/BillingManager.tsx:781
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:85
 #: src/components/agent-access/AgentGrantsCard.tsx:105
 msgid "Status"
@@ -14982,10 +15007,9 @@ msgstr "Zůstává aktuální do {0}"
 msgid "Stays up to date until tomorrow {0}"
 msgstr "Zůstává aktuální do zítřejších {0}"
 
-#. placeholder {0}: phase.step
 #: src/components/pricing/PricingConfigurator.tsx:748
-msgid "Step {0} of {STEP_COUNT}"
-msgstr "Krok {0} z {STEP_COUNT}"
+#~ msgid "Step {0} of {STEP_COUNT}"
+#~ msgstr "Krok {0} z {STEP_COUNT}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:791
 msgid "Steps and logs"
@@ -15154,7 +15178,7 @@ msgstr "Summarize this interview into a shareable article"
 msgid "Summary"
 msgstr "Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:762
 msgid "Summary (when available)"
 msgstr "Summary (when available)"
 
@@ -15252,7 +15276,7 @@ msgstr "Switch to text input"
 msgid "Switching it off comes with a paid plan."
 msgstr "Vypnutí je součástí placeného plánu."
 
-#: src/components/billing/BillingManager.tsx:514
+#: src/components/billing/BillingManager.tsx:513
 msgid "Switching to another tool"
 msgstr "Přecházím na jiný nástroj"
 
@@ -15356,7 +15380,7 @@ msgstr "Sdělte správcům pracovního prostoru, k čemu přístup potřebujete.
 
 #: src/components/workspace/FreeAllowanceCard.tsx:180
 #: src/components/workspace/FeatureGatePopover.tsx:115
-#: src/components/billing/BillingManager.tsx:690
+#: src/components/billing/BillingManager.tsx:689
 msgid "Tell us what you need"
 msgstr "Dejte nám vědět, co potřebujete"
 
@@ -15419,7 +15443,7 @@ msgstr "Před nahráváním mikrofon otestujte a vyberte."
 msgid "test mode"
 msgstr "testovací režim"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
 msgid "Test webhook"
 msgstr "Otestovat webhook"
 
@@ -15456,8 +15480,8 @@ msgid "Thank you! We will get in touch as soon as possible. You can also write t
 msgstr "Děkujeme! Ozveme se vám co nejdříve. Můžete nám také napsat na info@dembrane.com."
 
 #: src/components/pricing/PricingConfigurator.tsx:920
-msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
-msgstr "Děkujeme za vyplnění. V e-mailu najdete potvrzení hovoru. V případě jakýchkoli dotazů nás můžete kdykoli kontaktovat na info@dembrane.com"
+#~ msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
+#~ msgstr "Děkujeme za vyplnění. V e-mailu najdete potvrzení hovoru. V případě jakýchkoli dotazů nás můžete kdykoli kontaktovat na info@dembrane.com"
 
 #: src/components/results/curate/RowTools.tsx:276
 msgid "Thanks! That helps a lot."
@@ -15480,8 +15504,8 @@ msgid "That did not save. Your words are still here."
 msgstr "Neuložilo se. Tvá slova tu zůstávají."
 
 #: src/components/pricing/PricingConfigurator.tsx:819
-msgid "That didn't send. Your answers are still here, so try again."
-msgstr "To se nepodařilo odeslat. Vaše odpovědi zůstaly zachovány, zkuste to prosím znovu."
+#~ msgid "That didn't send. Your answers are still here, so try again."
+#~ msgstr "To se nepodařilo odeslat. Vaše odpovědi zůstaly zachovány, zkuste to prosím znovu."
 
 #: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
@@ -15492,8 +15516,8 @@ msgid "That recording is too long to send. Record a shorter note."
 msgstr "Tato nahrávka je na odeslání příliš dlouhá. Nahrajte kratší poznámku."
 
 #: src/components/pricing/PricingConfigurator.tsx:779
-msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr "K tomu je potřeba placený tarif. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas s týmem dembrane. Před hovorem si vaše odpovědi projdeme, abychom přišli s nabídkou na míru."
+#~ msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
+#~ msgstr "K tomu je potřeba placený tarif. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas s týmem dembrane. Před hovorem si vaše odpovědi projdeme, abychom přišli s nabídkou na míru."
 
 #: src/components/voice/VoiceInputError.tsx:33
 msgid "That was too short to transcribe. Hold the recording a little longer."
@@ -15588,7 +15612,7 @@ msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí
 msgid "The email or password is not right. Check them and try again."
 msgstr "E-mail nebo heslo není správné. Zkontrolujte je a zkuste to znovu."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
@@ -15619,7 +15643,11 @@ msgstr "Portál pro zpětnou vazbu vysvětluje, jak nahlásit bezpečnostní pro
 msgid "The following conversations were automatically added to the context"
 msgstr "The following conversations were automatically added to the context"
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:136
+msgid "The free plan covers one workspace"
+msgstr "Tarif Free pokrývá jeden pracovní prostor"
+
+#: src/components/workspace/gateWalls.ts:102
 msgid "The free plan covers one workspace."
 msgstr "Tarif Free pokrývá jeden pracovní prostor."
 
@@ -15631,25 +15659,25 @@ msgstr "Tarif Free pokrývá jeden pracovní prostor."
 #~ msgid "The free plan includes 5 hours of recording a month."
 #~ msgstr "Tarif Free zahrnuje 5 hodin nahrávání měsíčně."
 
-#: src/components/workspace/gateWalls.ts:90
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:85
+#: src/components/workspace/gateWalls.ts:86
 msgid "The free plan includes a few chats a month, each with a set number of questions."
 msgstr "Tarif Free zahrnuje několik chatů měsíčně, každý se stanoveným počtem otázek."
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:95
 msgid "The free plan includes a limited number of projects."
 msgstr "Tarif Free zahrnuje omezený počet projektů."
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:91
 msgid "The free plan includes a monthly allowance of maps."
 msgstr "Tarif Free zahrnuje měsíční limit map."
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:93
 msgid "The free plan includes a monthly allowance of popcorn analyses."
 msgstr "Tarif Free zahrnuje měsíční limit Popcorn analýz."
 
 #: src/lib/freeTier.ts:69
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:97
 msgid "The free plan includes a monthly allowance of reports."
 msgstr "Tarif Free zahrnuje měsíční limit zpráv."
 
@@ -15662,7 +15690,11 @@ msgstr "Tarif Free zahrnuje měsíční limit zpráv."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Tarif Free zahrnuje jednu mapu měsíčně."
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:126
+msgid "The free plan includes one organisation"
+msgstr "Tarif Free zahrnuje jednu organizaci"
+
+#: src/components/workspace/gateWalls.ts:92
 msgid "The free plan includes one organisation."
 msgstr "Tarif Free zahrnuje jednu organizaci."
 
@@ -15708,8 +15740,8 @@ msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
 #: src/components/pricing/PricingConfigurator.tsx:906
-msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
-msgstr "Pozvánku máte ve své schránce. Před schůzkou si přečteme vaše odpovědi a připravíme návrh nabídky. Máte mezitím nějaké dotazy? Obraťte se na"
+#~ msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
+#~ msgstr "Pozvánku máte ve své schránce. Před schůzkou si přečteme vaše odpovědi a připravíme návrh nabídky. Máte mezitím nějaké dotazy? Obraťte se na"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:341
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
@@ -15835,8 +15867,8 @@ msgid "The participant flow has clearer microphone checks."
 msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 
 #: src/components/pricing/PricingConfigurator.tsx:735
-msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
-msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
+#~ msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
+#~ msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
 #: src/routes/project/present/PresentRoute.tsx:981
 msgid "The presentation could not be loaded"
@@ -15951,7 +15983,7 @@ msgstr "Překlad se nepodařilo spustit"
 msgid "The valence of this object has not been assessed."
 msgstr "Valence tohoto objektu nebyla vyhodnocena."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:338
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:339
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 
@@ -16044,7 +16076,7 @@ msgstr "Tyto změny štítků jsou u vašeho projektu uplatněny."
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Tyto pracovní prostory jsou účtovány samostatně. Každá přidaná osoba obsadí místo v {billingContextCount} fakturačních kontextech, z nichž každý se fakturuje zvlášť."
 
-#: src/components/billing/BillingManager.tsx:1527
+#: src/components/billing/BillingManager.tsx:1526
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Tyto pracovní prostory mají vlastní tarif spravovaný přímo z nich. Nejsou součástí tarifu této organizace."
 
@@ -16232,7 +16264,7 @@ msgstr "Toto je ukázkový projekt. Organizace, lidé a rozhovory v něm jsou sm
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Toto je syntetická ukázka. Její oznámení a rámec jsou součástí dema a zobrazují se vždy."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1011
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1008
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 
@@ -16541,7 +16573,7 @@ msgstr "Tento pracovní prostor vyčerpal své nahrávací hodiny. Chcete-li pok
 msgid "This workspace is billed separately"
 msgstr "Tento pracovní prostor se fakturuje samostatně"
 
-#: src/components/billing/BillingManager.tsx:289
+#: src/components/billing/BillingManager.tsx:288
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Tento pracovní prostor se fakturuje přes {orgName}. Tarify a platby se spravují jednou pro celou organizaci a všechny pracovní prostory je sdílejí."
 
@@ -16616,7 +16648,7 @@ msgstr "Časová osa"
 msgid "Timestamp"
 msgstr "Timestamp"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:765
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
@@ -16624,7 +16656,7 @@ msgstr "Timestamps and duration"
 msgid "Tip"
 msgstr "Tip"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:946
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:947
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 
@@ -16675,7 +16707,7 @@ msgstr "K vyřešení"
 msgid "To resolve:"
 msgstr "K vyřešení:"
 
-#: src/components/billing/BillingManager.tsx:694
+#: src/components/billing/BillingManager.tsx:693
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Napište nám na <0>support@dembrane.com</0> a probereme, co potřebujete."
 
@@ -16687,7 +16719,7 @@ msgstr "Přepnout zvýraznění „{contextMenuWord}“"
 msgid "Tone deaf"
 msgstr "Nevhodný tón"
 
-#: src/components/billing/BillingManager.tsx:511
+#: src/components/billing/BillingManager.tsx:510
 msgid "Too expensive"
 msgstr "Příliš drahé"
 
@@ -16877,7 +16909,11 @@ msgstr "Chyba přepisu"
 msgid "Transcription failed"
 msgstr "Přepis se nezdařil"
 
-#: src/components/workspace/gateWalls.ts:104
+#: src/components/workspace/gateWalls.ts:133
+msgid "Transcripts come with a paid plan"
+msgstr "Přepisy jsou součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:99
 msgid "Transcripts come with a paid plan."
 msgstr "Přepisy jsou součástí placeného tarifu."
 
@@ -16966,7 +17002,7 @@ msgstr "Zkušební verze"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Zkušební a bezplatné účty, nezapočítané do celkového počtu platících."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:802
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:803
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
@@ -16989,7 +17025,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
-#: src/components/billing/BillingManager.tsx:1217
+#: src/components/billing/BillingManager.tsx:1216
 msgid "Try again"
 msgstr "Try again"
 
@@ -17203,8 +17239,8 @@ msgstr "Unknown reason"
 msgid "Unknown time"
 msgstr "Neznámý čas"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:555
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:138
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:556
 msgid "Unnamed webhook"
 msgstr "Webhook bez názvu"
 
@@ -17492,8 +17528,8 @@ msgid "Upload logo"
 msgstr "Upload logo"
 
 #: src/components/workspace/gateWalls.ts:153
-msgid "upload recordings"
-msgstr "nahrát nahrávky"
+#~ msgid "upload recordings"
+#~ msgstr "nahrát nahrávky"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
@@ -17513,7 +17549,11 @@ msgstr "Uploading audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:134
+msgid "Uploading recordings comes with a paid plan"
+msgstr "Nahrávání záznamů je součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:100
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Nahrávání záznamů je k dispozici v placeném tarifu."
 
@@ -17525,11 +17565,11 @@ msgstr "Nahrávání jasně ukáže, když selže."
 msgid "URL copied"
 msgstr "URL zkopírována"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:388
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 msgid "URL is required"
 msgstr "URL is required"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:385
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:386
 msgid "URL must start with http:// or https://"
 msgstr "URL must start with http:// or https://"
 
@@ -17616,18 +17656,18 @@ msgid "Use Ukrainian for chat and participant replies."
 msgstr "Používejte ukrajinštinu pro chat a odpovědi účastníků."
 
 #: src/components/workspace/gateWalls.ts:154
-msgid "use webhooks"
-msgstr "používat webhooky"
+#~ msgid "use webhooks"
+#~ msgstr "používat webhooky"
 
 #: src/components/workspace/gateWalls.ts:137
-msgid "use your voice in chat"
-msgstr "používat v chatu hlas"
+#~ msgid "use your voice in chat"
+#~ msgstr "používat v chatu hlas"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:139
 msgid "Used by this workspace only"
 msgstr "Využito pouze tímto pracovním prostorem"
 
-#: src/components/billing/BillingManager.tsx:430
+#: src/components/billing/BillingManager.tsx:429
 msgid "Used on your invoices. Prices exclude VAT."
 msgstr "Uvádí se na fakturách. Ceny jsou bez VAT."
 
@@ -17655,7 +17695,7 @@ msgstr "Using default dembrane logo"
 msgid "Using fixture data."
 msgstr "Používají se testovací data."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:980
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
@@ -17668,11 +17708,11 @@ msgstr "Valence"
 msgid "Validation progress"
 msgstr "Průběh ověření"
 
-#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:442
 msgid "VAT ID"
 msgstr "DIČ / VAT ID"
 
-#: src/components/billing/BillingManager.tsx:450
+#: src/components/billing/BillingManager.tsx:449
 msgid "VAT region"
 msgstr "Region VAT"
 
@@ -17801,7 +17841,7 @@ msgstr "View"
 #~ msgid "View Details"
 #~ msgstr "View Details"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:779
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
 msgid "View example payload"
 msgstr "View example payload"
 
@@ -17948,7 +17988,7 @@ msgstr "K dembrane se nepodařilo připojit. Zkontrolujte připojení k internet
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "K dembrane se nepodařilo připojit. Zkontrolujte připojení k internetu a zkuste to znovu."
 
-#: src/components/billing/BillingManager.tsx:1201
+#: src/components/billing/BillingManager.tsx:1200
 msgid "We couldn't charge your payment method"
 msgstr "Nepodařilo se strhnout platbu z vaší platební metody"
 
@@ -18000,7 +18040,7 @@ msgstr "We couldn't load your organisations. Check your connection and try again
 msgid "We couldn't load your pending invites. Try again in a moment."
 msgstr "We couldn't load your pending invites. Try again in a moment."
 
-#: src/components/billing/BillingManager.tsx:980
+#: src/components/billing/BillingManager.tsx:979
 msgid "We couldn't update your payment method. Your old one is still active. Please try again."
 msgstr "Vaši platební metodu se nepodařilo aktualizovat. Původní zůstává aktivní. Zkuste to prosím znovu."
 
@@ -18037,7 +18077,7 @@ msgstr "We sent you a verification link. Click it to finish setting up your acco
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Nastavíme projekt, budeme vám v den akce po boku a pomůžeme s následnou tvorbou zprávy."
 
-#: src/components/billing/BillingManager.tsx:1081
+#: src/components/billing/BillingManager.tsx:1080
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "Platbu se stále nepodařilo strhnout. Aktualizujte platební metodu a zkuste to znovu."
 
@@ -18045,9 +18085,13 @@ msgstr "Platbu se stále nepodařilo strhnout. Aktualizujte platební metodu a z
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 
-#: src/components/common/FeedbackPortalModal.tsx:68
+#: src/components/common/FeedbackPortalModal.tsx:69
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Rádi si od vás poslechneme. Ať už máte nápad na něco nového, všimli jste si nepovedeného překladu, nebo se chcete jen podělit o to, jak se vám daří. Našli jste chybu? Použijte <0>Nahlásit problém</0> a pošlete ji se snímky obrazovky."
+
+#: src/components/workspace/FeatureGate.tsx:334
+msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
+msgstr "Rádi bychom se dozvěděli, jak dembrane používáte, abychom vám mohli lépe pomoct. Na našem webu to zabere asi dvě minuty a na konci si s námi můžete, pokud chcete, domluvit krátký hovor."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:300
@@ -18080,20 +18124,20 @@ msgstr "Slabé připojení"
 msgid "Weak password"
 msgstr "Slabé heslo"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:921
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
 #: src/routes/project/ProjectRoutes.tsx:219
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:879
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:880
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:687
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:688
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
@@ -18101,7 +18145,11 @@ msgstr "Webhooks are automated messages sent from one app to another when someth
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:135
+msgid "Webhooks come with a paid plan"
+msgstr "Webhooky jsou součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:101
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooky jsou součástí placeného tarifu."
 
@@ -18146,7 +18194,7 @@ msgstr "Welcome, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Welcome!"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:680
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:681
 msgid "What are webhooks? (2 min read)"
 msgstr "What are webhooks? (2 min read)"
 
@@ -18154,7 +18202,7 @@ msgstr "What are webhooks? (2 min read)"
 msgid "What are you trying to learn?"
 msgstr "What are you trying to learn?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
@@ -18189,8 +18237,8 @@ msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
 #: src/components/pricing/PricingConfigurator.tsx:1049
-msgid "What is it?"
-msgstr "O co jde?"
+#~ msgid "What is it?"
+#~ msgstr "O co jde?"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:737
 msgid "What should be different about this?"
@@ -18251,7 +18299,7 @@ msgstr "Co dáte do středu pozornosti, se ukládá sem: klikněte na argument n
 msgid "What's new"
 msgstr "Co je nového"
 
-#: src/components/billing/BillingManager.tsx:585
+#: src/components/billing/BillingManager.tsx:584
 msgid "What's the main reason?"
 msgstr "Jaký je hlavní důvod?"
 
@@ -18263,31 +18311,31 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Kdy"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:723
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:724
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "When a participant opens the portal, enters their details, and begins a conversation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:57
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
 msgid "When a participant starts a new conversation"
 msgstr "Když účastník zahájí nový rozhovor"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:72
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
 msgid "When a report has been generated"
 msgstr "Když byla vygenerována zpráva"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:743
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
 msgid "When a report has been generated for the project"
 msgstr "When a report has been generated for the project"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:62
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
 msgid "When all audio has been converted to text"
 msgstr "Když je veškerý zvuk převeden na text"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:730
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:731
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "When all audio has been converted to text and the full transcript is available"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:718
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
 msgid "When are webhooks triggered?"
 msgstr "When are webhooks triggered?"
 
@@ -18328,11 +18376,11 @@ msgstr "Po skončení rozhovoru si dembrane celou nahrávku poslechne znovu."
 #~ msgid "When the conversation ends, we listen to the whole recording again."
 #~ msgstr "Po skončení rozhovoru si celou nahrávku poslechneme znovu."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:67
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
 msgid "When the summary is generated"
 msgstr "Když je vygenerováno shrnutí"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:737
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:738
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
@@ -18563,7 +18611,7 @@ msgstr "Workspace-only guest. Not added to the organisation."
 msgid "Workspaces"
 msgstr "Workspaces"
 
-#: src/components/billing/BillingManager.tsx:1524
+#: src/components/billing/BillingManager.tsx:1523
 msgid "Workspaces billed separately"
 msgstr "Pracovní prostory účtované zvlášť"
 
@@ -18646,10 +18694,10 @@ msgid "You are not in an organisation yet."
 msgstr "Zatím nejste v žádné organizaci."
 
 #: src/components/pricing/PricingConfigurator.tsx:775
-msgid "You are on the free plan."
-msgstr "Využíváte tarif Free."
+#~ msgid "You are on the free plan."
+#~ msgstr "Využíváte tarif Free."
 
-#: src/components/billing/BillingManager.tsx:673
+#: src/components/billing/BillingManager.tsx:672
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr "Využíváte tarif Free. Zatím není třeba spravovat žádné platby."
 
@@ -18886,8 +18934,8 @@ msgid "You stopped this run."
 msgstr "Tento běh jste zastavili."
 
 #: src/components/pricing/PricingConfigurator.tsx:773
-msgid "You were trying to {action}."
-msgstr "Pokusili jste se o: {action}."
+#~ msgid "You were trying to {action}."
+#~ msgstr "Pokusili jste se o: {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:412
@@ -18919,7 +18967,7 @@ msgstr "You'll lose access to this workspace. Projects you created stay; your ro
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "You'll soon get {objectLabel} to verify."
 
-#: src/components/billing/BillingManager.tsx:1468
+#: src/components/billing/BillingManager.tsx:1467
 msgid "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 msgstr "Novou platební metodu ověříte na další obrazovce. Nic vám nenaúčtujeme, jen se tím potvrdí nová karta."
 
@@ -19001,6 +19049,14 @@ msgstr "You've been invited to join <0>{0}</0>. We'll take you there in a moment
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Dosáhli jste limitu bezplatného tarifu pro tento chat. Přejděte na vyšší tarif a pokračujte v rozhovoru."
 
+#: src/components/workspace/gateWalls.ts:129
+msgid "You've reached the free plan's project limit"
+msgstr "Dosáhli jste limitu projektů v tarifu Free"
+
+#: src/components/workspace/gateWalls.ts:121
+msgid "You've reached the limit for speaking in chat"
+msgstr "Dosáhli jste limitu hlasového zadávání v chatu"
+
 #: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "You've reached your summary limit"
@@ -19012,6 +19068,34 @@ msgstr "You've reached your transcript limit"
 #: src/components/workspace/PilotBlockModal.tsx:39
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
+
+#: src/components/workspace/gateWalls.ts:124
+msgid "You've used part of this month's free allowance"
+msgstr "Vyčerpali jste část bezplatného limitu na tento měsíc"
+
+#: src/components/workspace/gateWalls.ts:120
+msgid "You've used the free questions in this chat"
+msgstr "Vyčerpali jste bezplatné otázky v tomto chatu"
+
+#: src/components/workspace/gateWalls.ts:119
+msgid "You've used this month's free chats"
+msgstr "Vyčerpali jste bezplatné chaty na tento měsíc"
+
+#: src/components/workspace/gateWalls.ts:125
+msgid "You've used this month's free maps"
+msgstr "Vyčerpali jste bezplatné mapy na tento měsíc"
+
+#: src/components/workspace/gateWalls.ts:127
+msgid "You've used this month's free popcorn analyses"
+msgstr "Vyčerpali jste bezplatné Popcorn analýzy na tento měsíc"
+
+#: src/components/workspace/gateWalls.ts:131
+msgid "You've used this month's free reports"
+msgstr "Vyčerpali jste bezplatné zprávy na tento měsíc"
+
+#: src/components/workspace/gateWalls.ts:132
+msgid "You've used this month's free transcription"
+msgstr "Vyčerpali jste bezplatný přepis na tento měsíc"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "Your access"
@@ -19049,12 +19133,12 @@ msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Váš prohlížeč blokuje mikrofon. Povolte k němu přístup a zkuste to znovu."
 
 #: src/components/pricing/PricingConfigurator.tsx:700
-msgid "Your call is booked: {bookedTime}."
-msgstr "Váš hovor je zarezervován: {bookedTime}."
+#~ msgid "Your call is booked: {bookedTime}."
+#~ msgstr "Váš hovor je zarezervován: {bookedTime}."
 
 #: src/components/pricing/PricingConfigurator.tsx:702
-msgid "Your call is booked."
-msgstr "Váš hovor je zarezervován."
+#~ msgid "Your call is booked."
+#~ msgstr "Váš hovor je zarezervován."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:69
@@ -19108,8 +19192,8 @@ msgstr "Vaše zpětná vazba i tato odpověď dorazí týmu dembrane."
 #~ msgstr "Váš bezplatný tarif zahrnuje jednu zprávu. Přejděte na vyšší tarif a vytvářejte další."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
-msgid "Your free transcription allowance is used up."
-msgstr "Váš bezplatný limit pro přepis je vyčerpaný."
+#~ msgid "Your free transcription allowance is used up."
+#~ msgstr "Váš bezplatný limit pro přepis je vyčerpaný."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
 #~ msgid "Your free transcription hour is used up."
@@ -19128,7 +19212,7 @@ msgstr "Your invite is still pending. Try again once the admin frees a seat or u
 msgid "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 msgstr "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 
-#: src/components/billing/BillingManager.tsx:1210
+#: src/components/billing/BillingManager.tsx:1209
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Poslední platba neproběhla. Váš tarif zůstává aktivní. Pro vyrovnání platby upravte platební metodu nebo platbu zopakujte."
 
@@ -19169,7 +19253,11 @@ msgstr "Your organisation or company"
 msgid "Your organisations"
 msgstr "Vaše organizace"
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:122
+msgid "Your own logo comes with a paid plan"
+msgstr "Vlastní logo je součástí placeného tarifu"
+
+#: src/components/workspace/gateWalls.ts:88
 msgid "Your own logo comes with a paid plan."
 msgstr "Vlastní logo získáte s placeným tarifem."
 
@@ -19177,31 +19265,31 @@ msgstr "Vlastní logo získáte s placeným tarifem."
 msgid "Your own member card stays at the top of the list."
 msgstr "Vaše vlastní členská karta zůstává nahoře v seznamu."
 
-#: src/components/billing/BillingManager.tsx:1016
+#: src/components/billing/BillingManager.tsx:1015
 msgid "Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you."
 msgstr "Předplacené období vypršelo, takže odsud nelze tento tarif znovu aktivovat. Napište na support@dembrane.com a společně to vyřešíme."
 
-#: src/components/billing/BillingManager.tsx:977
+#: src/components/billing/BillingManager.tsx:976
 msgid "Your payment method has been updated."
 msgstr "Vaše platební metoda byla aktualizována."
 
-#: src/components/billing/BillingManager.tsx:983
+#: src/components/billing/BillingManager.tsx:982
 msgid "Your payment method update is still processing."
 msgstr "Aktualizace platební metody se stále zpracovává."
 
-#: src/components/billing/BillingManager.tsx:1428
+#: src/components/billing/BillingManager.tsx:1427
 msgid "Your plan ends at the period end."
 msgstr "Váš tarif skončí na konci období."
 
-#: src/components/billing/BillingManager.tsx:1426
+#: src/components/billing/BillingManager.tsx:1425
 msgid "Your plan ends on {endDate}."
 msgstr "Váš tarif končí dne {endDate}."
 
-#: src/components/billing/BillingManager.tsx:668
+#: src/components/billing/BillingManager.tsx:667
 msgid "Your plan is arranged with dembrane, so there is nothing to pay here. Everything your plan includes stays available."
 msgstr "Váš tarif je sjednaný s dembrane, takže zde nemusíte nic platit. Vše, co váš tarif zahrnuje, máte stále k dispozici."
 
-#: src/components/billing/BillingManager.tsx:1012
+#: src/components/billing/BillingManager.tsx:1011
 msgid "Your plan is back on. You keep your current period."
 msgstr "Váš tarif je znovu aktivní. Současné období vám zůstává."
 
@@ -19209,7 +19297,7 @@ msgstr "Váš tarif je znovu aktivní. Současné období vám zůstává."
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Váš tarif není aktivní. Chcete-li přidat členy, znovu jej aktivujte."
 
-#: src/components/billing/BillingManager.tsx:333
+#: src/components/billing/BillingManager.tsx:332
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Váš tarif spravuje dembrane. Pokud chcete provést změny, obraťte se na svého account managera."
 
@@ -19217,9 +19305,13 @@ msgstr "Váš tarif spravuje dembrane. Pokud chcete provést změny, obraťte se
 msgid "Your plan lets you take the mark off."
 msgstr "Váš tarif vám umožňuje vodoznak odstranit."
 
-#: src/components/billing/BillingManager.tsx:557
+#: src/components/billing/BillingManager.tsx:556
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Váš tarif se neobnoví. Přístup vám zůstane až do konce období."
+
+#: src/components/workspace/FeatureGate.tsx:342
+msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
+msgstr "Vaše portály dál fungují a nic z toho, co účastníci řeknou, se neztratí. Jakmile přejdete na placený tarif, vše, co už je nahrané, se dodatečně přepíše."
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
 #: src/components/pricing/PricingTextInput.tsx:311
@@ -19227,8 +19319,8 @@ msgid "Your recording, {0}"
 msgstr "Vaše nahrávka, {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:705
-msgid "Your request is in."
-msgstr "Vaše žádost byla přijata."
+#~ msgid "Your request is in."
+#~ msgstr "Vaše žádost byla přijata."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."

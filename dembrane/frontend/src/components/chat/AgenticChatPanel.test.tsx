@@ -739,10 +739,10 @@ describe("AgenticChatPanel, voice input", () => {
 		).not.toHaveBeenCalled();
 		expect(screen.queryByTestId("chat-voice-recording-bar")).toBeNull();
 		expect(transcribeMock).not.toHaveBeenCalled();
-		// The dead-looking button still has somewhere to send the host: the needs
-		// form, opened on the attempt the voice cap wall names.
+		// The dead-looking button still has somewhere to send the host: the
+		// upgrade prompt, titled for the voice cap wall.
 		expect(
-			await screen.findByText(/You were trying to use your voice in chat/),
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
 		).toBeTruthy();
 	});
 
@@ -762,7 +762,7 @@ describe("AgenticChatPanel, voice input", () => {
 		).not.toHaveBeenCalled();
 		expect(transcribeMock).not.toHaveBeenCalled();
 		expect(
-			await screen.findByText(/You were trying to use your voice in chat/),
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
 		).toBeTruthy();
 	});
 
@@ -790,7 +790,7 @@ describe("AgenticChatPanel, voice input", () => {
 		});
 
 		expect(
-			await screen.findByText(/You were trying to use your voice in chat/),
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
 		).toBeTruthy();
 		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
 	});
@@ -819,7 +819,7 @@ describe("AgenticChatPanel, voice input", () => {
 			"Something went wrong while transcribing",
 		);
 		expect(
-			screen.queryByText(/You were trying to use your voice in chat/),
+			screen.queryByText(/You.ve reached the limit for speaking in chat/),
 		).toBeNull();
 	});
 

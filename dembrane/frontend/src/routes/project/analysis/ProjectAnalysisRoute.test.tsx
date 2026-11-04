@@ -147,13 +147,11 @@ it.each(["map", "popcorn"])(
 		await act(async () => {
 			fireEvent.click(await screen.findByRole("button", { name: "Prepare" }));
 		});
-		expect(
-			await screen.findByTestId("pricing-configurator-modal"),
-		).toBeTruthy();
+		expect(await screen.findByTestId("upgrade-modal")).toBeTruthy();
 		await act(async () => {
 			await new Promise((r) => setTimeout(r, 50));
 		});
-		expect(screen.queryByTestId("pricing-configurator-modal")).toBeTruthy();
+		expect(screen.queryByTestId("upgrade-modal")).toBeTruthy();
 		// The wall answers it; no inline notice links elsewhere.
 		expect(screen.queryByText("See plans")).toBeNull();
 	},

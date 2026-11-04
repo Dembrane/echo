@@ -351,7 +351,7 @@ msgstr "{0, plural, one {# project} other {# projecten}}"
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
 #: src/components/invite/WorkspaceSelectList.tsx:128
-#: src/components/billing/BillingManager.tsx:1262
+#: src/components/billing/BillingManager.tsx:1261
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# plek} other {# plekken}}"
 
@@ -363,7 +363,7 @@ msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at
 msgstr "{0, plural, one {# plek} other {# plekken}} · nu {1} · +{2}/{cadence} bij verlenging"
 
 #. placeholder {0}: overview.available_seats
-#: src/components/billing/BillingManager.tsx:1266
+#: src/components/billing/BillingManager.tsx:1265
 msgid "{0, plural, one {# seat} other {# seats}} paid for this period and unused. Invite someone to fill them at no charge until renewal."
 msgstr "{0, plural, one {# plek betaald} other {# plekken betaald}} voor deze periode en niet in gebruik. Nodig iemand uit om ze kosteloos te gebruiken tot de verlenging."
 
@@ -491,19 +491,19 @@ msgstr "{0} (partner)"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1350
+#: src/components/billing/BillingManager.tsx:1349
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr "{0} / plek / maand × {1}, jaarlijks gefactureerd. Exclusief btw."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1355
+#: src/components/billing/BillingManager.tsx:1354
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr "{0} / plek × {1}. Exclusief btw."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1345
+#: src/components/billing/BillingManager.tsx:1344
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr "{0} / plek × {1}. Wordt na deze periode niet meer in rekening gebracht."
 
@@ -700,7 +700,7 @@ msgstr "{0} geselecteerd"
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
 #. placeholder {2}: pendingInvites === 1 ? "invite is" : "invites are"
-#: src/components/billing/BillingManager.tsx:1364
+#: src/components/billing/BillingManager.tsx:1363
 msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "{0} totaal stijgt naar {1} zodra {pendingInvites} openstaande {2} geaccepteerd"
 
@@ -855,7 +855,7 @@ msgstr "{currentCadence} min"
 msgid "{days} days"
 msgstr "{days} dagen"
 
-#: src/components/billing/BillingManager.tsx:1373
+#: src/components/billing/BillingManager.tsx:1372
 msgid "{discountPct}% discount applied"
 msgstr "{discountPct}% korting toegepast"
 
@@ -997,7 +997,7 @@ msgstr "{overflow} personen meer"
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# gesprek paste niet in deze chat. Start een nieuwe chat voor de rest.} other {# gesprekken pasten niet in deze chat. Start een nieuwe chat voor de rest.}}"
 
-#: src/components/billing/BillingManager.tsx:1279
+#: src/components/billing/BillingManager.tsx:1278
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} uitnodiging(en) in afwachting. Telt mee zodra geaccepteerd."
 
@@ -1048,7 +1048,7 @@ msgstr "{s} s"
 msgid "{s}s"
 msgstr "{s}s"
 
-#: src/components/billing/BillingManager.tsx:344
+#: src/components/billing/BillingManager.tsx:343
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# plek} other {# plekken}}"
 
@@ -1192,7 +1192,7 @@ msgstr "1 uur"
 #~ msgid "1 view"
 #~ msgstr "1 weergave"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:699
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. Je geeft een URL op waar je meldingen wilt ontvangen"
 
@@ -1208,7 +1208,7 @@ msgstr "2 maanden geleden"
 msgid "2 to 5."
 msgstr "2 tot 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:704
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:705
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automatisch naar je URL"
 
@@ -1229,7 +1229,7 @@ msgstr "3 dagen"
 msgid "3 months ago"
 msgstr "3 maanden geleden"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:710
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:711
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld opslaan in een database, e-mail verzenden, spreadsheet bijwerken)"
 
@@ -1279,7 +1279,7 @@ msgstr "Nog een paar woorden, zodat iemand die dit later leest het begrijpt."
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Zodra de eerste versie klaar is, verschijnt die hier."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 msgid "A friendly name to identify this webhook"
 msgstr "Een vriendelijke naam om dit webhook te identificeren"
 
@@ -1315,6 +1315,10 @@ msgstr "Een nieuwe assistent en een live monitor"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Er wordt automatisch een nieuw rapport gegenereerd en gepubliceerd op het geplande tijdstip."
 
+#: src/components/workspace/gateWalls.ts:148
+msgid "A paid plan lets you keep going."
+msgstr "Met een betaald abonnement kun je verder."
+
 #: src/components/release/PilotHistory.tsx:23
 msgid "A participant portal for recording conversations."
 msgstr "Een deelnemersportaal om gesprekken op te nemen."
@@ -1338,8 +1342,8 @@ msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaa
 
 #: src/components/pricing/PricingConfigurator.tsx:1131
 #: src/components/pricing/PricingConfigurator.tsx:1135
-msgid "A rough number or \"not sure\". Either is useful."
-msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
+#~ msgid "A rough number or \"not sure\". Either is useful."
+#~ msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
 
 #: src/components/popcorn/PopcornIntroModal.tsx:41
 msgid "A sample session, not your data. Yours will look like this."
@@ -1357,11 +1361,11 @@ msgstr "Een scherm voor het aftellen dat zegt waar de zaal naar kijkt."
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr "Een scherm dat stap voor stap uitlegt wat er met de opnames gebeurt. De tekst volgt de anonimisering en rechtsgrond van dit project."
 
-#: src/components/billing/BillingManager.tsx:1291
+#: src/components/billing/BillingManager.tsx:1290
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr "Een zetel is één lid. Voeg leden toe of verwijder ze in het tabblad Mensen van elke werkruimte; je volgende afschrijving past zich automatisch aan."
 
-#: src/components/billing/BillingManager.tsx:1286
+#: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Een zetel is één lid. Zetels blijven beschikbaar tot het abonnement eindigt; wijzigingen worden niet in rekening gebracht."
 
@@ -1500,7 +1504,7 @@ msgid "Account default"
 msgstr "Accountstandaard"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3026
-#: src/components/billing/BillingManager.tsx:351
+#: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Accountmanager"
 
@@ -1550,7 +1554,7 @@ msgstr "Actie op"
 #~ msgstr "Actie op"
 
 #: src/components/project/ProjectDangerZone.tsx:87
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:929
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:930
 msgid "Actions"
 msgstr "Acties"
 
@@ -1559,7 +1563,7 @@ msgstr "Acties"
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
-#: src/components/billing/BillingManager.tsx:1243
+#: src/components/billing/BillingManager.tsx:1242
 #: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Actief"
@@ -1584,7 +1588,7 @@ msgstr "Activiteit"
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
-#: src/components/billing/BillingManager.tsx:1393
+#: src/components/billing/BillingManager.tsx:1392
 msgid "Add"
 msgstr "Toevoegen"
 
@@ -1624,8 +1628,8 @@ msgid "Add a project goal before saving."
 msgstr "Voeg een projectdoel toe voordat je opslaat."
 
 #: src/components/workspace/gateWalls.ts:155
-msgid "add a workspace"
-msgstr "een werkruimte toe te voegen"
+#~ msgid "add a workspace"
+#~ msgstr "een werkruimte toe te voegen"
 
 #: src/components/view/CreateViewForm.tsx:132
 #~ msgid "Add additional context (Optional)"
@@ -1673,8 +1677,8 @@ msgstr "Afbeeldingen toevoegen"
 #~ msgstr "Voeg belangrijke woorden of namen toe om de kwaliteit en nauwkeurigheid van het transcript te verbeteren."
 
 #: src/components/workspace/gateWalls.ts:145
-msgid "add more projects"
-msgstr "meer projecten toevoegen"
+#~ msgid "add more projects"
+#~ msgstr "meer projecten toevoegen"
 
 #: src/components/project/ProjectUploadSection.tsx:56
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
@@ -1762,10 +1766,10 @@ msgstr "Vertalingen toevoegen"
 msgid "Add verification prompt"
 msgstr "Verificatieprompt toevoegen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:897
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:964
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:469
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:898
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:965
 msgid "Add webhook"
 msgstr "Webhook toevoegen"
 
@@ -1779,8 +1783,8 @@ msgstr "Webhook toevoegen"
 #~ msgstr "Voeg uw eerste webhook toe"
 
 #: src/components/workspace/gateWalls.ts:138
-msgid "add your logo"
-msgstr "je logo toe te voegen"
+#~ msgid "add your logo"
+#~ msgstr "je logo toe te voegen"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
@@ -1866,11 +1870,11 @@ msgstr "Extra krachten"
 msgid "Address"
 msgstr "Adres"
 
-#: src/components/billing/BillingManager.tsx:461
+#: src/components/billing/BillingManager.tsx:460
 msgid "Address line 1"
 msgstr "Adresregel 1"
 
-#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:468
 msgid "Address line 2"
 msgstr "Adresregel 2"
 
@@ -1909,7 +1913,7 @@ msgstr "Beheerders"
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Beheerders hebben toegang tot elke werkruimte in deze organisatie. Leden en externen zien alleen de werkruimtes waartoe ze toegang hebben gekregen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:881
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
 msgid "Advanced"
 msgstr "Geavanceerd"
 
@@ -2145,7 +2149,7 @@ msgid "Always on. The screen opens here, so the room has something to read while
 msgstr "Altijd aan. Het scherm opent hier, zodat de zaal iets te lezen heeft terwijl de rest klaarstaat."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2597
-#: src/components/billing/BillingManager.tsx:779
+#: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Bedrag"
 
@@ -2369,7 +2373,7 @@ msgstr "Wil je nog iets anders delen"
 msgid "Anything else?"
 msgstr "Nog iets?"
 
-#: src/components/billing/BillingManager.tsx:596
+#: src/components/billing/BillingManager.tsx:595
 msgid "Anything we could have done better?"
 msgstr "Is er iets dat we beter hadden kunnen doen?"
 
@@ -2446,7 +2450,7 @@ msgid "Archived"
 msgstr "Gearchiveerd"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:612
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:613
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Weet je zeker dat je de webhook \"{0}\" wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
 
@@ -2539,7 +2543,7 @@ msgstr "Argumenten ({0})"
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Argumenten drukken standpunten of voorkeuren uit en worden niet gefactcheckt."
 
-#: src/components/billing/BillingManager.tsx:661
+#: src/components/billing/BillingManager.tsx:660
 msgid "Arranged with dembrane"
 msgstr "Geregeld met dembrane"
 
@@ -2614,8 +2618,8 @@ msgstr "Vraag na afloop van een gesprek om e-mailadressen van deelnemers."
 
 #: src/components/workspace/gateWalls.ts:135
 #: src/components/workspace/gateWalls.ts:136
-msgid "ask more in chat"
-msgstr "meer vragen te stellen in de chat"
+#~ msgid "ask more in chat"
+#~ msgstr "meer vragen te stellen in de chat"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Ask participants for their email"
@@ -2665,7 +2669,7 @@ msgstr "Minstens 8 tekens"
 msgid "At least one topic must be selected to enable Verify"
 msgstr "Er moet minstens één onderwerp zijn geselecteerd om Verifiëren aan te zetten"
 
-#: src/components/billing/BillingManager.tsx:1308
+#: src/components/billing/BillingManager.tsx:1307
 msgid "At the end of this period"
 msgstr "Aan het einde van deze periode"
 
@@ -2809,7 +2813,7 @@ msgstr "Automatische titels en concepttags"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatisch een korte onderwerp-gebaseerde titel genereren voor elk gesprek na samenvatting. De titel beschrijft wat er werd besproken, niet wie deelnemde. De oorspronkelijke naam van de deelnemer wordt apart bewaard, als ze er een had."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:789
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Transcripten automatisch opslaan in je CRM of database"
 
@@ -2817,7 +2821,7 @@ msgstr "Transcripten automatisch opslaan in je CRM of database"
 msgid "Automatically select relevant conversations for your question."
 msgstr "Selecteer automatisch relevante gesprekken voor je vraag."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:886
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:887
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Conversatiegegevens automatisch verzenden naar je andere tools en services wanneer gebeurtenissen plaatsvinden."
 
@@ -2825,7 +2829,7 @@ msgstr "Conversatiegegevens automatisch verzenden naar je andere tools en servic
 msgid "Automation"
 msgstr "Automatisering"
 
-#: src/components/workspace/FeatureGate.tsx:150
+#: src/components/workspace/FeatureGate.tsx:157
 msgid "Available on a paid plan"
 msgstr "Beschikbaar met een betaald abonnement"
 
@@ -2854,9 +2858,8 @@ msgstr "Afwezig"
 #: src/routes/organisation/OrganisationRoute.tsx:708
 #: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:289
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:322
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:867
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:361
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2886,8 +2889,8 @@ msgid "Back to conversations"
 msgstr "Terug naar gesprekken"
 
 #: src/components/pricing/PricingConfigurator.tsx:938
-msgid "Back to dembrane"
-msgstr "Terug naar dembrane"
+#~ msgid "Back to dembrane"
+#~ msgstr "Terug naar dembrane"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:311
 msgid "Back to live"
@@ -3011,11 +3014,11 @@ msgstr "Betere opnames, meer manieren om te antwoorden"
 msgid "Better uploads, transcripts and discovery"
 msgstr "Betere uploads, transcripten en zoeken"
 
-#: src/components/billing/BillingManager.tsx:1253
+#: src/components/billing/BillingManager.tsx:1252
 msgid "Billed annually"
 msgstr "Jaarlijks gefactureerd"
 
-#: src/components/billing/BillingManager.tsx:1251
+#: src/components/billing/BillingManager.tsx:1250
 msgid "Billed monthly"
 msgstr "Maandelijks gefactureerd"
 
@@ -3045,15 +3048,15 @@ msgstr "Gefactureerd onder het abonnement van je organisatie, samen met je ander
 msgid "Billing"
 msgstr "Facturering"
 
-#: src/components/billing/BillingManager.tsx:427
+#: src/components/billing/BillingManager.tsx:426
 msgid "Billing details"
 msgstr "Factuurgegevens"
 
-#: src/components/billing/BillingManager.tsx:415
+#: src/components/billing/BillingManager.tsx:414
 msgid "Billing details saved."
 msgstr "Factuurgegevens opgeslagen."
 
-#: src/components/billing/BillingManager.tsx:286
+#: src/components/billing/BillingManager.tsx:285
 msgid "Billing is managed by your organisation"
 msgstr "Facturering wordt beheerd door je organisatie"
 
@@ -3065,11 +3068,11 @@ msgstr "Facturatiemodus"
 msgid "Book"
 msgstr "Inplannen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:995
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:992
 msgid "Book a call"
 msgstr "Een gesprek boeken"
 
-#: src/components/common/FeedbackPortalModal.tsx:137
+#: src/components/common/FeedbackPortalModal.tsx:134
 msgid "Book a call with us"
 msgstr "Plan een gesprek met ons"
 
@@ -3110,7 +3113,7 @@ msgstr "Gebruik je eigen LLM"
 msgid "Bug fixes"
 msgstr "Bugfixes"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:808
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:809
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Aangepaste dashboards bouwen met realtime conversatiegegevens"
 
@@ -3136,8 +3139,8 @@ msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:708
-msgid "Can you tell us more?"
-msgstr "Kun je ons meer vertellen?"
+#~ msgid "Can you tell us more?"
+#~ msgstr "Kun je ons meer vertellen?"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
@@ -3173,8 +3176,8 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/project/ProjectDangerZone.tsx:168
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:134
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:477
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:631
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:478
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:632
 #: src/components/organisation/CreateOrganisationModal.tsx:248
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -3224,7 +3227,7 @@ msgstr "Annuleren"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Annuleren"
 
-#: src/components/billing/BillingManager.tsx:1431
+#: src/components/billing/BillingManager.tsx:1430
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Annuleer wanneer je wilt. Je houdt toegang tot het einde van de periode."
 
@@ -3236,8 +3239,8 @@ msgstr "Huidige run stoppen"
 msgid "Cancel override"
 msgstr "Overschrijving annuleren"
 
-#: src/components/billing/BillingManager.tsx:611
-#: src/components/billing/BillingManager.tsx:1446
+#: src/components/billing/BillingManager.tsx:610
+#: src/components/billing/BillingManager.tsx:1445
 msgid "Cancel plan"
 msgstr "Abonnement opzeggen"
 
@@ -3259,16 +3262,16 @@ msgstr "Selectie annuleren"
 msgid "Cancel training"
 msgstr "Training annuleren"
 
-#: src/components/billing/BillingManager.tsx:572
+#: src/components/billing/BillingManager.tsx:571
 msgid "Cancel your plan"
 msgstr "Je abonnement opzeggen"
 
-#: src/components/billing/BillingManager.tsx:232
+#: src/components/billing/BillingManager.tsx:231
 msgid "Cancelled"
 msgstr "Opgezegd"
 
 #. placeholder {0}: tierLabel(currentTier)
-#: src/components/billing/BillingManager.tsx:578
+#: src/components/billing/BillingManager.tsx:577
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "Bij opzeggen wordt je abonnement niet verlengd. Je houdt {0} tot het einde van je huidige factureringsperiode en gaat daarna over naar Free."
 
@@ -3320,7 +3323,7 @@ msgstr "Ingehaald in {0}"
 msgid "Certified training for teams using dembrane in high-risk settings. A separate product, billed per session."
 msgstr "Gecertificeerde training voor teams die dembrane in risicovolle situaties gebruiken. Een apart product, per sessie gefactureerd."
 
-#: src/components/billing/BillingManager.tsx:1391
+#: src/components/billing/BillingManager.tsx:1390
 msgid "Change"
 msgstr "Wijzigen"
 
@@ -3356,8 +3359,8 @@ msgstr "Organisatierol wijzigen?"
 msgid "Change password"
 msgstr "Wachtwoord wijzigen"
 
-#: src/components/billing/BillingManager.tsx:1224
-#: src/components/billing/BillingManager.tsx:1467
+#: src/components/billing/BillingManager.tsx:1223
+#: src/components/billing/BillingManager.tsx:1466
 msgid "Change payment method"
 msgstr "Betaalmethode wijzigen"
 
@@ -3619,7 +3622,7 @@ msgstr "Kies eerst een organisatie"
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr "Kies vindbare, alleen op uitnodiging toegankelijke of privéwerkruimtes."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
 msgid "Choose from your other projects"
 msgstr "Kiezen uit je andere projecten"
 
@@ -3639,7 +3642,7 @@ msgstr "Kies de resultaten die je publiek kan ontdekken."
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Kies wat de zaal ziet: Popcorn, Spanningen, Map en Belanghebbenden."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
 msgid "Choose when you want to receive notifications"
 msgstr "Kiezen wanneer je meldingen wilt ontvangen"
 
@@ -3651,7 +3654,7 @@ msgstr "Kies je voorkeurstaal voor de interface"
 #~ msgid "Choose your preferred theme for the interface"
 #~ msgstr "Kies je favoriete thema voor de interface"
 
-#: src/components/billing/BillingManager.tsx:487
+#: src/components/billing/BillingManager.tsx:486
 msgid "City"
 msgstr "Plaats"
 
@@ -3778,11 +3781,11 @@ msgstr "Door client beheerd"
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr "Kopieerknoppen werken in Safari en je gekozen interfacetaal wordt onthouden."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:279
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:280
 msgid "Clone from another project"
 msgstr "Klonen vanuit een ander project"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
 msgid "Clone from project"
 msgstr "Klonen vanuit project"
 
@@ -3810,7 +3813,7 @@ msgstr "Project klonen"
 #: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
-#: src/components/common/FeedbackPortalModal.tsx:158
+#: src/components/common/FeedbackPortalModal.tsx:155
 #: src/components/agent-access/AgentAccessSection.tsx:98
 msgid "Close"
 msgstr "Sluiten"
@@ -3949,7 +3952,7 @@ msgstr "Samengevoegd uit {0} argumenten"
 msgid "Coming soon"
 msgstr "Binnenkort beschikbaar"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:784
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
 msgid "Common use cases:"
 msgstr "Algemene toepassingen:"
 
@@ -4140,11 +4143,10 @@ msgstr "Contextuele suggesties"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
-#: src/components/billing/BillingManager.tsx:1469
+#: src/components/billing/BillingManager.tsx:1468
 msgid "Continue"
 msgstr "Doorgaan"
 
@@ -4172,6 +4174,10 @@ msgstr "Doorgaan"
 #: src/components/participant/verify/VerifyInstructions.tsx:109
 msgid "participant.verify.instructions.button.next"
 msgstr "Doorgaan"
+
+#: src/components/workspace/FeatureGate.tsx:362
+msgid "Continue on dembrane.com"
+msgstr "Verder op dembrane.com"
 
 #: src/components/map/panels/ExplorePanel.tsx:52
 #~ msgid "Contributing nodes ({0})"
@@ -4234,7 +4240,7 @@ msgstr "Gesprekspagina's en het laden van gegevens zijn vereenvoudigd."
 msgid "Conversation removed from chat"
 msgstr "Gesprek verwijderd uit chat"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:59
 msgid "Conversation started"
 msgstr "Gesprek gestart"
 
@@ -4259,11 +4265,11 @@ msgstr "De gespreksstatus bevat de uploadvoortgang."
 msgid "Conversation summaries no longer hang in the affected processing cases."
 msgstr "Gesprekssamenvattingen blijven niet meer hangen in de getroffen verwerkingsgevallen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:69
 msgid "Conversation summarized"
 msgstr "Gesprek samengevat"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:756
 msgid "Conversation tags"
 msgstr "Gesprekslabels"
 
@@ -4271,7 +4277,7 @@ msgstr "Gesprekslabels"
 msgid "Conversation tags are easier to read."
 msgstr "Gesprekstags zijn beter leesbaar."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:64
 msgid "Conversation transcribed"
 msgstr "Gesprek getranscribeerd"
 
@@ -4322,7 +4328,7 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -4400,7 +4406,7 @@ msgstr "Samenvatting kopiëren"
 #~ msgid "Copy Summary"
 #~ msgstr "Kopieer samenvatting"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1025
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Kopieer naar clipboard"
@@ -4442,7 +4448,7 @@ msgstr "Je selectie kon niet worden meegenomen. Kies hieronder opnieuw."
 #~ msgid "Could not complete that action."
 #~ msgstr "Kon die actie niet voltooien."
 
-#: src/components/billing/BillingManager.tsx:987
+#: src/components/billing/BillingManager.tsx:986
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Kon de betaling niet bevestigen. Vernieuw om opnieuw te proberen."
 
@@ -4709,7 +4715,7 @@ msgstr "Kon niet opslaan"
 #~ msgid "Couldn't send invite"
 #~ msgstr "Uitnodiging kon niet worden verstuurd"
 
-#: src/components/billing/BillingManager.tsx:493
+#: src/components/billing/BillingManager.tsx:492
 msgid "Country"
 msgstr "Land"
 
@@ -4743,8 +4749,8 @@ msgid "Create and manage multiple reports in one project."
 msgstr "Maak en beheer meerdere rapporten binnen één project."
 
 #: src/components/workspace/gateWalls.ts:147
-msgid "create another report"
-msgstr "nog een rapport te maken"
+#~ msgid "create another report"
+#~ msgstr "nog een rapport te maken"
 
 #: src/components/release/releaseHistory.ts:322
 msgid "Create custom chat templates (beta), or duplicate and edit a built-in template."
@@ -4756,8 +4762,8 @@ msgid "Create methodology"
 msgstr "Methodologie aanmaken"
 
 #: src/components/workspace/gateWalls.ts:142
-msgid "create more organisations"
-msgstr "meer organisaties aanmaken"
+#~ msgid "create more organisations"
+#~ msgstr "meer organisaties aanmaken"
 
 #: src/features/sidebar/shell/UserMenu.tsx:164
 #~ msgid "Create new organisation"
@@ -4885,13 +4891,13 @@ msgstr "Huidige logo"
 msgid "Current password"
 msgstr "Huidig wachtwoord"
 
-#: src/components/billing/BillingManager.tsx:325
-#: src/components/billing/BillingManager.tsx:656
-#: src/components/billing/BillingManager.tsx:1230
+#: src/components/billing/BillingManager.tsx:324
+#: src/components/billing/BillingManager.tsx:655
+#: src/components/billing/BillingManager.tsx:1229
 msgid "Current plan"
 msgstr "Huidig abonnement"
 
-#: src/components/billing/BillingManager.tsx:1335
+#: src/components/billing/BillingManager.tsx:1334
 msgid "Current rate"
 msgstr "Huidig tarief"
 
@@ -4969,7 +4975,7 @@ msgstr "Donkere modus"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:772
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "Dashboard URL (directe link naar gespreksoverzicht)"
 
@@ -4993,7 +4999,7 @@ msgstr "Gegevensbeleid en toelichting"
 #: src/routes/admin/AdminSettingsRoute.tsx:2547
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
-#: src/components/billing/BillingManager.tsx:773
+#: src/components/billing/BillingManager.tsx:772
 msgid "Date"
 msgstr "Datum"
 
@@ -5090,8 +5096,8 @@ msgstr "Multistap analyse delegeren met live tool uitvoering"
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:590
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:625
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
@@ -5172,7 +5178,7 @@ msgstr "Deze werkruimte verwijderen. Leden verliezen direct toegang en alle gesp
 msgid "Delete topic"
 msgstr "Onderwerp verwijderen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:607
 msgid "Delete webhook"
 msgstr "Webhook verwijderen"
 
@@ -5298,7 +5304,7 @@ msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gespre
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
-#: src/components/billing/BillingManager.tsx:776
+#: src/components/billing/BillingManager.tsx:775
 msgid "Description"
 msgstr "Beschrijving"
 
@@ -5439,7 +5445,7 @@ msgstr "Ongelijke verbindingen: {0}"
 msgid "Distilling core idea…"
 msgstr "Kernidee wordt gedestilleerd…"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:816
 msgid "Do I need this?"
 msgstr "Ben ik dit nodig?"
 
@@ -5538,7 +5544,7 @@ msgstr "Download audio van gesprekken."
 msgid "Download event printouts"
 msgstr "Printversies voor het evenement downloaden"
 
-#: src/components/billing/BillingManager.tsx:835
+#: src/components/billing/BillingManager.tsx:834
 msgid "Download PDF"
 msgstr "PDF downloaden"
 
@@ -5648,7 +5654,7 @@ msgstr "bijv. We zijn een onderzoeksbureau. Rapporten gaan naar gemeentelijke op
 msgid "e.g. Weekly stakeholder digest"
 msgstr "bijv. Wekelijkse samenvatting stakeholders"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "bijv. Slack-meldingen, Make-workflow"
 
@@ -5691,7 +5697,7 @@ msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:585
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
@@ -5794,7 +5800,7 @@ msgstr "Bewerk de rapport inhoud met de rich text editor hieronder. Je kunt teks
 msgid "Edit topic"
 msgstr "Onderwerp bewerken"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
 msgid "Edit webhook"
 msgstr "Webhook bewerken"
 
@@ -5967,7 +5973,7 @@ msgid "Enable Verify"
 msgstr "Verifiëren inschakelen"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:927
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -5976,7 +5982,7 @@ msgstr "Ingeschakeld"
 msgid "Ended"
 msgstr "Afgelopen"
 
-#: src/components/billing/BillingManager.tsx:1249
+#: src/components/billing/BillingManager.tsx:1248
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Eindigt op {endDate}, gaat daarna over naar Free"
 
@@ -6008,7 +6014,7 @@ msgstr "Voer een wachtwoord in"
 msgid "Enter a presentation title"
 msgstr "Voer een presentatietitel in"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
 msgid "Enter a secret key"
 msgstr "Voer een geheime sleutel in"
 
@@ -6116,11 +6122,11 @@ msgstr "In de EU gehoste taalmodellen inbegrepen"
 msgid "Event help from the dembrane team"
 msgstr "Hulp van het dembrane-team bij je evenement"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:924
 msgid "Events"
 msgstr "Gebeurtenissen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Events to listen for"
 msgstr "Te volgen gebeurtenissen"
 
@@ -6181,6 +6187,10 @@ msgstr "Iedereen op de lijst is getraind."
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
 
+#: src/components/workspace/FeatureGate.tsx:348
+msgid "Everything you've made here stays as it is."
+msgstr "Alles wat je hier hebt gemaakt, blijft gewoon staan."
+
 #: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Bewijs"
@@ -6197,7 +6207,7 @@ msgstr "Bewijs"
 msgid "Evidenced connections"
 msgstr "Onderbouwde verbindingen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1006
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1003
 msgid "Example webhook payload"
 msgstr "Voorbeeld van webhook-payload"
 
@@ -6223,7 +6233,7 @@ msgstr "Werkruimtes uitvouwen"
 msgid "Experimental"
 msgstr "Experimenteel"
 
-#: src/components/billing/BillingManager.tsx:234
+#: src/components/billing/BillingManager.tsx:233
 #: src/components/agent-access/format.ts:32
 msgid "Expired"
 msgstr "Verlopen"
@@ -6367,7 +6377,7 @@ msgstr "Feitelijke status is niet van toepassing op dit object."
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:911
-#: src/components/billing/BillingManager.tsx:230
+#: src/components/billing/BillingManager.tsx:229
 msgid "Failed"
 msgstr "Mislukt"
 
@@ -6447,7 +6457,7 @@ msgstr "Samenvatting maken lukt niet. Probeer het later nog een keer."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Audio kon niet worden geladen of is niet beschikbaar"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:912
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:913
 msgid "Failed to load webhooks"
 msgstr "Fout bij het laden van webhooks"
 
@@ -6581,7 +6591,7 @@ msgstr "Functie binnenkort beschikbaar"
 #~ msgid "Feedback"
 #~ msgstr "Feedback"
 
-#: src/components/common/FeedbackPortalModal.tsx:62
+#: src/components/common/FeedbackPortalModal.tsx:63
 msgid "Feedback portal"
 msgstr "Feedbackportaal"
 
@@ -6806,7 +6816,7 @@ msgstr "Voor"
 msgid "For <0>{0}</0>"
 msgstr "Voor <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:420
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:421
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Voor geavanceerde gebruikers: Een geheime sleutel om de authenticiteit van de webhook te controleren. Alleen nodig als je ontvangende service een handtekeningvereist."
 
@@ -6949,7 +6959,7 @@ msgstr "Uit het transcript"
 msgid "Full screen"
 msgstr "Volledig scherm"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:759
 msgid "Full transcript (when available)"
 msgstr "Volledig transcript (wanneer beschikbaar)"
 
@@ -7004,8 +7014,8 @@ msgid "Generate a summary first"
 msgstr "Genereer eerst een samenvatting"
 
 #: src/components/workspace/gateWalls.ts:141
-msgid "generate another map"
-msgstr "genereer nog een kaart"
+#~ msgid "generate another map"
+#~ msgstr "genereer nog een kaart"
 
 #: src/components/release/releaseHistory.ts:433
 msgid "Generate conversation titles automatically, with an option to turn this off."
@@ -7139,8 +7149,8 @@ msgid "Go back"
 msgstr "Ga terug"
 
 #: src/components/workspace/gateWalls.ts:140
-msgid "go beyond this month's free allowance"
-msgstr "meer te gebruiken dan het gratis tegoed van deze maand"
+#~ msgid "go beyond this month's free allowance"
+#~ msgstr "meer te gebruiken dan het gratis tegoed van deze maand"
 
 #: src/routes/project/HostGuidePage.tsx:1569
 msgid "Go fullscreen"
@@ -7274,8 +7284,8 @@ msgid "Have you completed a training?"
 msgstr "Heb je een training afgerond?"
 
 #: src/components/workspace/gateWalls.ts:151
-msgid "have your recordings transcribed"
-msgstr "je opnames te laten transcriberen"
+#~ msgid "have your recordings transcribed"
+#~ msgstr "je opnames te laten transcriberen"
 
 #: src/features/sidebar/views/HelpView.tsx:18
 #: src/features/sidebar/blocks/HelpBlock.tsx:167
@@ -7367,10 +7377,14 @@ msgid "Hide the changes"
 msgstr "Wijzigingen verbergen"
 
 #: src/components/workspace/gateWalls.ts:139
-msgid "hide the dembrane event invitation"
-msgstr "de dembrane event-uitnodiging verbergen"
+#~ msgid "hide the dembrane event invitation"
+#~ msgstr "de dembrane event-uitnodiging verbergen"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:123
+msgid "Hiding the dembrane event invitation comes with a paid plan"
+msgstr "De dembrane event-uitnodiging verbergen kan met een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:89
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "De dembrane event-uitnodiging verbergen kan met een betaald plan."
 
@@ -7466,7 +7480,7 @@ msgstr "Hoe Vragen werkt en wat je ermee kunt."
 msgid "How dembrane improves your transcript"
 msgstr "Hoe dembrane je transcript verbetert"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
 msgid "How it works:"
 msgstr "Hoe het werkt:"
 
@@ -7563,7 +7577,7 @@ msgstr "Inactief"
 msgid "If an account exists for <0>{0}</0>, we sent it a link to reset your password. Check your inbox and spam folder."
 msgstr "Als er een account bestaat voor <0>{0}</0>, hebben we een link gestuurd om je wachtwoord te resetten. Controleer je inbox en spammap."
 
-#: src/components/common/FeedbackPortalModal.tsx:90
+#: src/components/common/FeedbackPortalModal.tsx:91
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Als je hebt gezien dat gegevens zichtbaar zijn voor de verkeerde mensen, dat iemand toegang heeft die dat niet hoort te hebben, of dat er mogelijk een beveiligingslek is, gebruik dan ons <0>formulier voor beveiligingsmeldingen</0>. Je melding komt dan bij een ander team terecht en wordt sneller opgepakt. Mail bij spoed naar <1>privacy@dembrane.com</1>"
 
@@ -7572,7 +7586,7 @@ msgstr "Als je hebt gezien dat gegevens zichtbaar zijn voor de verkeerde mensen,
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Als je tevreden bent met {objectLabel}, klik dan op \"Goedkeuren\" om te laten zien dat je je gehoord voelt."
 
-#: src/components/billing/BillingManager.tsx:679
+#: src/components/billing/BillingManager.tsx:678
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Als je iets anders nodig hebt, maken we een voorstel voor jouw situatie."
 
@@ -7580,11 +7594,11 @@ msgstr "Als je iets anders nodig hebt, maken we een voorstel voor jouw situatie.
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Verwachtte je toegang? Vraag de persoon die je heeft uitgenodigd om de uitnodiging opnieuw te sturen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:818
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:819
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "Als je niet zeker bent, is het waarschijnlijk nog niet nodig. Webhooks zijn een geavanceerde functie die meestal wordt gebruikt door ontwikkelaars of teams met aangepaste integraties. Je kunt ze altijd later instellen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:982
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:983
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "Als je webhook-integraties instelt, zouden we graag weten wat je voor gebruik hebt. We zijn ook bezig met observability-functies, waaronder auditlogboeken en leveringstracking."
 
@@ -7886,7 +7900,7 @@ msgstr "Factuur geregistreerd als betaald."
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Offline gefactureerd, geen Mollie-machtiging."
 
-#: src/components/billing/BillingManager.tsx:754
+#: src/components/billing/BillingManager.tsx:753
 msgid "Invoices"
 msgstr "Facturen"
 
@@ -8055,7 +8069,7 @@ msgstr "Aansluiten voor support"
 msgid "Join for support (24h)"
 msgstr "Aansluiten voor support (24 uur)"
 
-#: src/components/common/FeedbackPortalModal.tsx:153
+#: src/components/common/FeedbackPortalModal.tsx:150
 msgid "Join our Slack community"
 msgstr "Word lid van onze Slack-community"
 
@@ -8116,7 +8130,7 @@ msgstr "zojuist"
 msgid "Just one."
 msgstr "Eén."
 
-#: src/components/billing/BillingManager.tsx:515
+#: src/components/billing/BillingManager.tsx:514
 msgid "Just pausing for now"
 msgstr "Ik pauzeer even"
 
@@ -8137,7 +8151,7 @@ msgstr "Net bijgewerkt. Even geduld."
 msgid "Just started"
 msgstr "Net begonnen"
 
-#: src/components/common/FeedbackPortalModal.tsx:83
+#: src/components/common/FeedbackPortalModal.tsx:84
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Praat of typ gewoon op een natuurlijke manier. Uw bijdrage gaat rechtstreeks naar ons productteam en helpt ons echt om dembrane te verbeteren. We lezen alles."
 
@@ -8170,8 +8184,8 @@ msgid "Keep access secure with a one-time code from your authenticator app. Togg
 msgstr "Houd de toegang veilig met een eenmalige code uit je authenticator-app. Gebruik deze schakelaar om tweestapsverificatie voor dit account te beheren."
 
 #: src/components/workspace/gateWalls.ts:143
-msgid "keep analysing with popcorn"
-msgstr "blijf analyseren met Popcorn"
+#~ msgid "keep analysing with popcorn"
+#~ msgstr "blijf analyseren met Popcorn"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
 #: src/routes/project/CreateProjectRoute.tsx:193
@@ -8187,7 +8201,7 @@ msgstr "Behouden"
 msgid "Keep license"
 msgstr "Licentie houden"
 
-#: src/components/billing/BillingManager.tsx:619
+#: src/components/billing/BillingManager.tsx:618
 msgid "Keep my plan"
 msgstr "Mijn abonnement behouden"
 
@@ -8329,11 +8343,11 @@ msgstr "Laatste rapport"
 msgid "Learn more"
 msgstr "Meer informatie"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:831
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:832
 msgid "Learn more about webhooks"
 msgstr "Meer informatie over webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
 msgid "Leave empty to keep existing"
 msgstr "Laat leeg om bestaande te behouden"
 
@@ -8374,7 +8388,7 @@ msgstr "Rechtsgrondslag"
 msgid "Legal basis saved"
 msgstr "Rechtsgrondslag opgeslagen"
 
-#: src/components/billing/BillingManager.tsx:434
+#: src/components/billing/BillingManager.tsx:433
 msgid "Legal entity name"
 msgstr "Naam rechtspersoon"
 
@@ -8382,6 +8396,10 @@ msgstr "Naam rechtspersoon"
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Legenda"
+
+#: src/components/workspace/gateWalls.ts:118
+msgid "Let's find what fits you"
+msgstr "Laten we kijken wat bij je past"
 
 #: src/components/pricing/PricingConfigurator.tsx:869
 #~ msgid "Let's go!"
@@ -8605,7 +8623,7 @@ msgstr "Living canvas en popcorn"
 #~ msgid "Load latest revision"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:854
+#: src/components/billing/BillingManager.tsx:853
 msgid "Load more"
 msgstr "Meer laden"
 
@@ -8848,8 +8866,8 @@ msgid "Low battery"
 msgstr "Batterij bijna leeg"
 
 #: src/components/workspace/gateWalls.ts:144
-msgid "make a workspace private"
-msgstr "een werkruimte privé te maken"
+#~ msgid "make a workspace private"
+#~ msgstr "een werkruimte privé te maken"
 
 #: src/components/project/ProjectSharingModal.tsx:304
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -8866,7 +8884,7 @@ msgstr "Privé maken"
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
 #: src/components/conversation/ProjectConversationsPanel.tsx:386
-#: src/components/billing/BillingManager.tsx:1555
+#: src/components/billing/BillingManager.tsx:1554
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
 msgstr "Beheren"
@@ -8884,7 +8902,7 @@ msgstr "Beheer facturatieaccounts, betalingen en upgradeverzoeken voor werkruimt
 msgid "Manage members"
 msgstr "Leden beheren"
 
-#: src/components/billing/BillingManager.tsx:300
+#: src/components/billing/BillingManager.tsx:299
 msgid "Manage organisation billing"
 msgstr "Facturatie van organisatie beheren"
 
@@ -8913,7 +8931,7 @@ msgstr "Beheerde accounts betalen op factuur, niet met een kaart. Een account be
 msgid "Managed billing"
 msgstr "Beheerde facturatie"
 
-#: src/components/billing/BillingManager.tsx:329
+#: src/components/billing/BillingManager.tsx:328
 msgid "Managed by dembrane"
 msgstr "Beheerd door dembrane"
 
@@ -9023,6 +9041,10 @@ msgstr "Markeert {orgName} als partner. De werkruimtes geven bij het aanmaken ze
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:279
 msgid "max {maximum}"
 msgstr "max. {maximum}"
+
+#: src/components/workspace/FeatureGate.tsx:369
+msgid "Maybe later"
+msgstr "Misschien later"
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:56
 #: src/components/agent-access/YourOrganisations.tsx:58
@@ -9176,7 +9198,7 @@ msgstr "Minimale popcorn-interval"
 msgid "Missed the question"
 msgstr "Antwoordt niet op de vraag"
 
-#: src/components/billing/BillingManager.tsx:512
+#: src/components/billing/BillingManager.tsx:511
 msgid "Missing features I need"
 msgstr "Ik mis functies die ik nodig heb"
 
@@ -9350,7 +9372,7 @@ msgstr "Mijn sjablonen"
 #: src/routes/project/CreateProjectRoute.tsx:365
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:109
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:363
@@ -9365,7 +9387,7 @@ msgstr "Naam"
 msgid "Name A-Z"
 msgstr "Naam A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:368
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:369
 msgid "Name is required"
 msgstr "Naam is verplicht"
 
@@ -9586,7 +9608,7 @@ msgstr "Volgende"
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Volgende verandering over <0>{remainingSeconds}s</0>"
 
-#: src/components/billing/BillingManager.tsx:1316
+#: src/components/billing/BillingManager.tsx:1315
 msgid "Next invoice"
 msgstr "Volgende factuur"
 
@@ -9648,7 +9670,7 @@ msgstr "Nog geen argumenten. Ze verschijnen na de eerste analyse."
 msgid "No audit logs match the current filters."
 msgstr "Geen auditlogboeken komen overeen met de huidige filters."
 
-#: src/components/billing/BillingManager.tsx:1095
+#: src/components/billing/BillingManager.tsx:1094
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Nog geen factureringsaccount. Mail naar <0>support@dembrane.com</0> en we stellen er een in."
 
@@ -9769,7 +9791,7 @@ msgstr "Geen bevindingen die hierbij passen."
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Nog geen bevindingen. Ze verschijnen na de eerste analyse."
 
-#: src/components/billing/BillingManager.tsx:1312
+#: src/components/billing/BillingManager.tsx:1311
 msgid "No further charges"
 msgstr "Geen verdere kosten"
 
@@ -9898,11 +9920,11 @@ msgstr "Geen organisatierol. Toegang via werkruimte-uitnodigingen."
 msgid "No payments match the filter."
 msgstr "Geen betalingen voldoen aan het filter."
 
-#: src/components/billing/BillingManager.tsx:765
+#: src/components/billing/BillingManager.tsx:764
 msgid "No payments yet."
 msgstr "Nog geen betalingen."
 
-#: src/components/billing/BillingManager.tsx:727
+#: src/components/billing/BillingManager.tsx:726
 msgid "No PDF available for this invoice."
 msgstr "Geen pdf beschikbaar voor deze factuur."
 
@@ -10092,11 +10114,11 @@ msgstr "Nog geen versie"
 #~ msgid "No webhooks configured"
 #~ msgstr "Geen webhooks geconfigureerd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:335
 msgid "No webhooks found"
 msgstr "Geen webhooks gevonden"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:955
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:956
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Nog geen webhooks. Voeg een webhook toe om automatisch gespreksdata te ontvangen wanneer er iets gebeurt."
 
@@ -10132,7 +10154,7 @@ msgstr "Geen"
 msgid "None in this view."
 msgstr "Geen in deze weergave."
 
-#: src/components/billing/BillingManager.tsx:1326
+#: src/components/billing/BillingManager.tsx:1325
 msgid "None scheduled"
 msgstr "Niets gepland"
 
@@ -10185,7 +10207,6 @@ msgid "Not monthly"
 msgstr "Niet maandelijks"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10215,7 +10236,7 @@ msgstr "Niet opgenomen"
 msgid "Not relevant"
 msgstr "Niet relevant"
 
-#: src/components/billing/BillingManager.tsx:1239
+#: src/components/billing/BillingManager.tsx:1238
 msgid "Not renewing"
 msgstr "Wordt niet verlengd"
 
@@ -10224,7 +10245,7 @@ msgid "Not scheduled"
 msgstr "Niet ingepland"
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:1398
+#: src/components/billing/BillingManager.tsx:1397
 msgid "Not set"
 msgstr "Niet ingesteld"
 
@@ -10246,7 +10267,7 @@ msgstr "Weet ik nog niet."
 msgid "Not trained"
 msgstr "Niet getraind"
 
-#: src/components/billing/BillingManager.tsx:513
+#: src/components/billing/BillingManager.tsx:512
 msgid "Not using it enough"
 msgstr "Ik gebruik het te weinig"
 
@@ -10396,9 +10417,13 @@ msgstr "Facturatie wordt beheerd door dembrane. Overschakelen naar self-serve be
 msgid "On recording page"
 msgstr "Op opnamepagina"
 
-#: src/components/workspace/gateWalls.ts:101
+#: src/components/workspace/gateWalls.ts:96
 msgid "On the free plan one project takes recordings."
 msgstr "In het Free-abonnement kan één project opnames maken."
+
+#: src/components/workspace/gateWalls.ts:130
+msgid "On the free plan, one project takes recordings"
+msgstr "In het gratis abonnement kan één project opnemen"
 
 #: src/components/project/RecordingPausedNotice.tsx:89
 msgid "On the free plan, uploads go to {name}."
@@ -10729,11 +10754,11 @@ msgstr "Zet experimentele functies aan en help dembrane vormgeven. Deze functies
 
 #: src/routes/auth/Register.tsx:187
 #: src/components/project/CustomTopicModal.tsx:234
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:416
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:417
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
-#: src/components/billing/BillingManager.tsx:444
-#: src/components/billing/BillingManager.tsx:470
-#: src/components/billing/BillingManager.tsx:597
+#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:596
 msgid "Optional"
 msgstr "Optioneel"
 
@@ -10767,7 +10792,7 @@ msgstr "of"
 msgid "Or choose a time"
 msgstr "Of kies een tijd"
 
-#: src/components/common/FeedbackPortalModal.tsx:130
+#: src/components/common/FeedbackPortalModal.tsx:131
 msgid "Or prefer to chat directly?"
 msgstr "Of liever direct chatten?"
 
@@ -10876,7 +10901,7 @@ msgid "Original language"
 msgstr "Oorspronkelijke taal"
 
 #: src/components/feedback/reasons.ts:27
-#: src/components/billing/BillingManager.tsx:516
+#: src/components/billing/BillingManager.tsx:515
 msgid "Other"
 msgstr "Anders"
 
@@ -10984,7 +11009,7 @@ msgstr "Paginatitel"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
 #: src/routes/admin/AdminSettingsRoute.tsx:2749
-#: src/components/billing/BillingManager.tsx:224
+#: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Betaald"
 
@@ -11034,7 +11059,7 @@ msgstr "Functies voor deelnemers"
 msgid "Participant name"
 msgstr "Naam deelnemer"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:753
 msgid "Participant name and email"
 msgstr "Deelnemer naam en e-mail"
 
@@ -11148,7 +11173,7 @@ msgstr "Gepauzeerd."
 msgid "Paused. Updated {updatedAgo}."
 msgstr "Gepauzeerd. Bijgewerkt {updatedAgo}."
 
-#: src/components/billing/BillingManager.tsx:814
+#: src/components/billing/BillingManager.tsx:813
 msgid "Pay now"
 msgstr "Nu betalen"
 
@@ -11160,7 +11185,7 @@ msgstr "Betalende omzet"
 msgid "Paying revenue this month"
 msgstr "Betalende omzet deze maand"
 
-#: src/components/billing/BillingManager.tsx:1241
+#: src/components/billing/BillingManager.tsx:1240
 msgid "Payment failed"
 msgstr "Betaling mislukt"
 
@@ -11172,7 +11197,7 @@ msgstr "Bedrag betaallink, EUR"
 msgid "Payment link issued."
 msgstr "Betaallink uitgegeven."
 
-#: src/components/billing/BillingManager.tsx:1382
+#: src/components/billing/BillingManager.tsx:1381
 msgid "Payment method"
 msgstr "Betaalmethode"
 
@@ -11180,7 +11205,7 @@ msgstr "Betaalmethode"
 msgid "Payment reference"
 msgstr "Betalingskenmerk"
 
-#: src/components/billing/BillingManager.tsx:1078
+#: src/components/billing/BillingManager.tsx:1077
 msgid "Payment went through. Your plan is up to date."
 msgstr "De betaling is gelukt. Je plan is up-to-date."
 
@@ -11195,7 +11220,7 @@ msgstr "in behandeling"
 #: src/components/project/ProjectUsageAndSharing.tsx:354
 #: src/components/project/ProjectSharingModal.tsx:404
 #: src/components/members/PendingInvitesSection.tsx:168
-#: src/components/billing/BillingManager.tsx:228
+#: src/components/billing/BillingManager.tsx:227
 msgid "Pending"
 msgstr "In afwachting"
 
@@ -11280,14 +11305,13 @@ msgstr "Kies een datum"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Kies een stip om de woorden hieronder te lezen."
 
-#: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Kies een tijd"
 
 #: src/components/pricing/PricingConfigurator.tsx:695
-msgid "Pick a time with {host}."
-msgstr "Kies een tijd met {host}."
+#~ msgid "Pick a time with {host}."
+#~ msgstr "Kies een tijd met {host}."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
@@ -11305,7 +11329,7 @@ msgstr "Kies minstens één werkruimte om de uitnodiging te versturen."
 msgid "Pick from your organisation, or type an email to invite."
 msgstr "Kies iemand uit je organisatie of typ een e-mailadres om uit te nodigen."
 
-#: src/components/billing/BillingManager.tsx:586
+#: src/components/billing/BillingManager.tsx:585
 msgid "Pick one"
 msgstr "Kies er een"
 
@@ -11357,7 +11381,7 @@ msgstr "Vastgepinde sjablonen"
 msgid "Plan"
 msgstr "Plan"
 
-#: src/components/billing/BillingManager.tsx:1303
+#: src/components/billing/BillingManager.tsx:1302
 msgid "Plan ends"
 msgstr "Plan eindigt"
 
@@ -11628,7 +11652,7 @@ msgstr "Portaltutorial"
 msgid "Positive"
 msgstr "Positief"
 
-#: src/components/billing/BillingManager.tsx:479
+#: src/components/billing/BillingManager.tsx:478
 msgid "Postal code"
 msgstr "Postcode"
 
@@ -11798,7 +11822,11 @@ msgstr "Privéproject"
 msgid "Private workspace"
 msgstr "Privéwerkruimte"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:128
+msgid "Private workspaces come with a paid plan"
+msgstr "Privéwerkruimtes horen bij een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:94
 msgid "Private workspaces come with a paid plan."
 msgstr "Privéwerkruimtes zijn beschikbaar met een betaald abonnement."
 
@@ -11921,7 +11949,7 @@ msgstr "Project verplaatst"
 msgid "Project name"
 msgstr "Projectnaam"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
 msgid "Project name and ID"
 msgstr "Projectnaam en ID"
 
@@ -11953,11 +11981,11 @@ msgstr "projectinstellingen"
 #~ msgid "Project Settings"
 #~ msgstr "Project Instellingen"
 
-#: src/components/billing/BillingManager.tsx:1338
+#: src/components/billing/BillingManager.tsx:1337
 msgid "Projected monthly total"
 msgstr "Verwacht maandtotaal"
 
-#: src/components/billing/BillingManager.tsx:1337
+#: src/components/billing/BillingManager.tsx:1336
 msgid "Projected yearly total"
 msgstr "Verwacht jaartotaal"
 
@@ -12121,7 +12149,7 @@ msgstr "Opnieuw controleren"
 msgid "Re-enter new password"
 msgstr "Voer het nieuwe wachtwoord opnieuw in"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:282
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:283
 msgid "Re-use settings from an existing webhook"
 msgstr "Gebruik instellingen van een bestaande webhook"
 
@@ -12351,8 +12379,8 @@ msgid "Record another conversation"
 msgstr "Neem nog een gesprek op"
 
 #: src/components/workspace/gateWalls.ts:146
-msgid "record in every project"
-msgstr "in elk project opnemen"
+#~ msgid "record in every project"
+#~ msgstr "in elk project opnemen"
 
 #: src/components/project/RecordingPausedNotice.tsx:66
 msgid "Record in every project"
@@ -12437,8 +12465,6 @@ msgstr "Opnames zijn gepauzeerd voor dit project met het Free-abonnement. Nieuwe
 #~ msgstr "Terugkerende thema's"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:157
-#: src/components/pricing/PricingConfigurator.tsx:928
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -12777,7 +12803,7 @@ msgstr "Rapport aangemaakt · {0}"
 msgid "Report failed"
 msgstr "Rapport mislukt"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:74
 msgid "Report generated"
 msgstr "Rapport gegenereerd"
 
@@ -13127,7 +13153,7 @@ msgstr "Hervatten"
 msgid "Resume physics"
 msgstr "Simulatie hervatten"
 
-#: src/components/billing/BillingManager.tsx:1442
+#: src/components/billing/BillingManager.tsx:1441
 msgid "Resume plan"
 msgstr "Abonnement hervatten"
 
@@ -13327,8 +13353,8 @@ msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Ruwe schatting om de achterstand aan transcripties weg te werken"
 
 #: src/components/pricing/PricingConfigurator.tsx:1139
-msgid "Roughly how many?"
-msgstr "Ongeveer hoeveel?"
+#~ msgid "Roughly how many?"
+#~ msgstr "Ongeveer hoeveel?"
 
 #: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
@@ -13410,11 +13436,11 @@ msgstr "Toegang opslaan"
 msgid "Save as template"
 msgstr "Opslaan als template"
 
-#: src/components/billing/BillingManager.tsx:502
+#: src/components/billing/BillingManager.tsx:501
 msgid "Save billing details"
 msgstr "Factuurgegevens opslaan"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:466
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
 msgid "Save changes"
 msgstr "Wijzigingen opslaan"
 
@@ -13477,7 +13503,7 @@ msgstr "Opslaan..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Zeg het in je eigen woorden. Typ, of druk op opnemen en praat."
 
-#: src/components/common/FeedbackPortalModal.tsx:124
+#: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scan of klik op de QR-code om het feedbackportaal te openen"
 
@@ -13682,7 +13708,7 @@ msgstr "Zoek templates..."
 msgid "select.all.modal.search.text"
 msgstr "Zoektekst:"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 msgid "Search webhooks..."
 msgstr "Zoek webhooks..."
 
@@ -13730,8 +13756,8 @@ msgstr "plekken"
 #: src/routes/admin/AdminSettingsRoute.tsx:1681
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
-#: src/components/billing/BillingManager.tsx:342
-#: src/components/billing/BillingManager.tsx:1260
+#: src/components/billing/BillingManager.tsx:341
+#: src/components/billing/BillingManager.tsx:1259
 msgid "Seats"
 msgstr "Plekken"
 
@@ -13744,7 +13770,7 @@ msgstr "Plekken vol"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:408
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:409
 msgid "Secret"
 msgstr "Geheim"
 
@@ -13766,8 +13792,8 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Bekijk de argumenten uit je gesprekken en de citaten erachter op de Map."
 
 #: src/components/workspace/gateWalls.ts:152
-msgid "see transcripts"
-msgstr "transcripten te bekijken"
+#~ msgid "see transcripts"
+#~ msgstr "transcripten te bekijken"
 
 #: src/routes/project/present/MapFreeNotice.tsx:66
 #: src/components/workspace/FreeAllowanceBanner.tsx:84
@@ -13791,7 +13817,7 @@ msgid "Sees usage and invoices. No project or content access."
 msgstr "Ziet gebruik en facturen. Geen toegang tot projecten of content."
 
 #: src/routes/project/ProjectsHome.tsx:455
-#: src/components/billing/BillingManager.tsx:451
+#: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Selecteren"
 
@@ -13820,7 +13846,7 @@ msgstr "Selecteer een microfoon"
 #~ msgid "Select a tab to show results on the screen."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:327
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
 msgid "Select a webhook to clone"
 msgstr "Selecteer een webhook om te klonen"
 
@@ -13860,7 +13886,7 @@ msgstr "Alle resultaten selecteren"
 msgid "Select all visible ({remainingCount})"
 msgstr "Selecteer alle zichtbare ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:437
 msgid "Select at least one event"
 msgstr "Selecteer ten minste één gebeurtenis"
 
@@ -14044,7 +14070,7 @@ msgstr "Verzoek versturen"
 msgid "Send reset link"
 msgstr "Resetlink versturen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:795
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:796
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Stuur Slack/Teams notificaties wanneer nieuwe gesprekken zijn voltooid"
 
@@ -14119,7 +14145,7 @@ msgstr "Zet op beheerd"
 msgid "Set to managed billing"
 msgstr "Zet op beheerde facturatie"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:300
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:301
 msgid "Set up a new webhook from scratch"
 msgstr "Een nieuwe webhook vanaf nul instellen"
 
@@ -14571,7 +14597,6 @@ msgstr "Zes weekenden verspreid over zeven maanden"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:879
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -14884,7 +14909,7 @@ msgstr "Start een nieuwe chat"
 msgid "Start again from your agent. It will open a fresh request here."
 msgstr "Begin opnieuw vanuit je agent. Het zal hier een nieuw verzoek openen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:297
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:298
 msgid "Start fresh"
 msgstr "Beginnen vanaf nul"
 
@@ -14945,7 +14970,7 @@ msgstr "Uitspraak"
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:33
-#: src/components/billing/BillingManager.tsx:782
+#: src/components/billing/BillingManager.tsx:781
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:85
 #: src/components/agent-access/AgentGrantsCard.tsx:105
 msgid "Status"
@@ -14980,10 +15005,9 @@ msgstr "Blijft actueel tot {0}"
 msgid "Stays up to date until tomorrow {0}"
 msgstr "Blijft actueel tot morgen {0}"
 
-#. placeholder {0}: phase.step
 #: src/components/pricing/PricingConfigurator.tsx:748
-msgid "Step {0} of {STEP_COUNT}"
-msgstr "Stap {0} van {STEP_COUNT}"
+#~ msgid "Step {0} of {STEP_COUNT}"
+#~ msgstr "Stap {0} van {STEP_COUNT}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:791
 msgid "Steps and logs"
@@ -15152,7 +15176,7 @@ msgstr "Vat dit interview samen in een artikel dat je kunt delen"
 msgid "Summary"
 msgstr "Samenvatting"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:762
 msgid "Summary (when available)"
 msgstr "Samenvatting (wanneer beschikbaar)"
 
@@ -15250,7 +15274,7 @@ msgstr "Overschakelen naar tekstinvoer"
 msgid "Switching it off comes with a paid plan."
 msgstr "Uitzetten kan met een betaald plan."
 
-#: src/components/billing/BillingManager.tsx:514
+#: src/components/billing/BillingManager.tsx:513
 msgid "Switching to another tool"
 msgstr "Ik stap over op een andere tool"
 
@@ -15354,7 +15378,7 @@ msgstr "Vertel de beheerders van de werkruimte waarvoor je toegang nodig hebt. D
 
 #: src/components/workspace/FreeAllowanceCard.tsx:180
 #: src/components/workspace/FeatureGatePopover.tsx:115
-#: src/components/billing/BillingManager.tsx:690
+#: src/components/billing/BillingManager.tsx:689
 msgid "Tell us what you need"
 msgstr "Vertel ons wat je nodig hebt"
 
@@ -15417,7 +15441,7 @@ msgstr "Test en selecteer je microfoon voordat je opneemt."
 msgid "test mode"
 msgstr "testmodus"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
 msgid "Test webhook"
 msgstr "Webhook testen"
 
@@ -15454,8 +15478,8 @@ msgid "Thank you! We will get in touch as soon as possible. You can also write t
 msgstr "Bedankt! We nemen zo snel mogelijk contact met je op. Je kunt ons ook mailen via info@dembrane.com."
 
 #: src/components/pricing/PricingConfigurator.tsx:920
-msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
-msgstr "Bedankt voor het invullen. Kijk in je mail voor de bevestiging van de afspraak. Heb je vragen voor ons, dan kun je ons altijd bereiken op info@dembrane.com"
+#~ msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
+#~ msgstr "Bedankt voor het invullen. Kijk in je mail voor de bevestiging van de afspraak. Heb je vragen voor ons, dan kun je ons altijd bereiken op info@dembrane.com"
 
 #: src/components/results/curate/RowTools.tsx:276
 msgid "Thanks! That helps a lot."
@@ -15478,8 +15502,8 @@ msgid "That did not save. Your words are still here."
 msgstr "Dat is niet opgeslagen. Je woorden staan er nog."
 
 #: src/components/pricing/PricingConfigurator.tsx:819
-msgid "That didn't send. Your answers are still here, so try again."
-msgstr "Dat is niet verstuurd. Je antwoorden staan er nog, dus probeer het opnieuw."
+#~ msgid "That didn't send. Your answers are still here, so try again."
+#~ msgstr "Dat is niet verstuurd. Je antwoorden staan er nog, dus probeer het opnieuw."
 
 #: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
@@ -15490,8 +15514,8 @@ msgid "That recording is too long to send. Record a shorter note."
 msgstr "Die opname is te lang om te versturen. Neem een kortere notitie op."
 
 #: src/components/pricing/PricingConfigurator.tsx:779
-msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr "Daarvoor heb je een betaald abonnement nodig. We stellen je nog 5 korte vragen. Daarna kies je een tijd met het dembrane-team. Voor het gesprek lezen we je antwoorden, zodat we een voorstel meenemen dat bij je past."
+#~ msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
+#~ msgstr "Daarvoor heb je een betaald abonnement nodig. We stellen je nog 5 korte vragen. Daarna kies je een tijd met het dembrane-team. Voor het gesprek lezen we je antwoorden, zodat we een voorstel meenemen dat bij je past."
 
 #: src/components/voice/VoiceInputError.tsx:33
 msgid "That was too short to transcribe. Hold the recording a little longer."
@@ -15586,7 +15610,7 @@ msgstr "Het randbudget moet een heel getal boven nul zijn, dus geldt {applied}."
 msgid "The email or password is not right. Check them and try again."
 msgstr "Het e-mailadres of wachtwoord klopt niet. Controleer ze en probeer het opnieuw."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "Het eindpunt waar we de gegevens zullen verzenden. Haal dit op van uw ontvangende service (bijvoorbeeld Zapier, Make, of uw eigen server)."
 
@@ -15617,7 +15641,11 @@ msgstr "Het feedbackportaal legt uit hoe je beveiligingsproblemen meldt."
 msgid "The following conversations were automatically added to the context"
 msgstr "De volgende gesprekken werden automatisch toegevoegd aan de context"
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:136
+msgid "The free plan covers one workspace"
+msgstr "Het gratis abonnement heeft één werkruimte"
+
+#: src/components/workspace/gateWalls.ts:102
 msgid "The free plan covers one workspace."
 msgstr "Het gratis plan dekt één werkruimte."
 
@@ -15629,25 +15657,25 @@ msgstr "Het gratis plan dekt één werkruimte."
 #~ msgid "The free plan includes 5 hours of recording a month."
 #~ msgstr "Het Free-abonnement bevat 5 uur aan opnames per maand."
 
-#: src/components/workspace/gateWalls.ts:90
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:85
+#: src/components/workspace/gateWalls.ts:86
 msgid "The free plan includes a few chats a month, each with a set number of questions."
 msgstr "Het Free-abonnement bevat een paar chats per maand, elk met een vast aantal vragen."
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:95
 msgid "The free plan includes a limited number of projects."
 msgstr "Het Free-abonnement bevat een beperkt aantal projecten."
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:91
 msgid "The free plan includes a monthly allowance of maps."
 msgstr "Het Free-abonnement bevat een maandelijks tegoed aan kaarten."
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:93
 msgid "The free plan includes a monthly allowance of popcorn analyses."
 msgstr "Het Free-abonnement bevat een maandelijks tegoed aan Popcorn-analyses."
 
 #: src/lib/freeTier.ts:69
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:97
 msgid "The free plan includes a monthly allowance of reports."
 msgstr "Het Free-abonnement bevat een maandelijks tegoed aan rapporten."
 
@@ -15660,7 +15688,11 @@ msgstr "Het Free-abonnement bevat een maandelijks tegoed aan rapporten."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Het Free-abonnement bevat één kaart per maand."
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:126
+msgid "The free plan includes one organisation"
+msgstr "Het gratis abonnement heeft één organisatie"
+
+#: src/components/workspace/gateWalls.ts:92
 msgid "The free plan includes one organisation."
 msgstr "Het Free-abonnement bevat één organisatie."
 
@@ -15706,8 +15738,8 @@ msgid "The host hasn’t prepared a presentation yet."
 msgstr "De host heeft nog geen presentatie voorbereid."
 
 #: src/components/pricing/PricingConfigurator.tsx:906
-msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
-msgstr "De uitnodiging staat in je inbox. We lezen je antwoorden vooraf en nemen een conceptvoorstel mee. Heb je intussen vragen? Neem dan contact op met"
+#~ msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
+#~ msgstr "De uitnodiging staat in je inbox. We lezen je antwoorden vooraf en nemen een conceptvoorstel mee. Heb je intussen vragen? Neem dan contact op met"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:341
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
@@ -15833,8 +15865,8 @@ msgid "The participant flow has clearer microphone checks."
 msgstr "De deelnemersflow heeft duidelijkere microfooncontroles."
 
 #: src/components/pricing/PricingConfigurator.tsx:735
-msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
-msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
+#~ msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
+#~ msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
 #: src/routes/project/present/PresentRoute.tsx:981
 msgid "The presentation could not be loaded"
@@ -15949,7 +15981,7 @@ msgstr "De vertaling kon niet worden gestart"
 msgid "The valence of this object has not been assessed."
 msgstr "De valentie van dit object is nog niet beoordeeld."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:338
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:339
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "De webhook URL en gebeurtenissen worden gekloond. Je moet de geheime sleutel opnieuw invoeren als er een was geconfigureerd."
 
@@ -16042,7 +16074,7 @@ msgstr "Deze tagwijzigingen zijn toegepast op je project."
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Deze werkruimtes worden apart gefactureerd. Elke persoon die je toevoegt neemt een plek in {billingContextCount} factureringscontexten in, die elk afzonderlijk worden gefactureerd."
 
-#: src/components/billing/BillingManager.tsx:1527
+#: src/components/billing/BillingManager.tsx:1526
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Deze werkruimtes hebben hun eigen abonnement, beheerd vanuit elke werkruimte. Ze maken geen deel uit van het abonnement van deze organisatie."
 
@@ -16230,7 +16262,7 @@ msgstr "Dit is een voorbeeldproject. De organisaties, mensen en gesprekken erin 
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Dit is een synthetische demo. De disclaimer en het kader horen bij de demo en staan altijd aan."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1011
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1008
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "Dit is een voorbeeld van de JSON-gegevens die naar je webhook-URL worden verzonden wanneer een gesprek wordt samengevat."
 
@@ -16539,7 +16571,7 @@ msgstr "Deze werkruimte heeft zijn opname-uren gebruikt. Upgrade om spraak te bl
 msgid "This workspace is billed separately"
 msgstr "Deze werkruimte wordt apart gefactureerd"
 
-#: src/components/billing/BillingManager.tsx:289
+#: src/components/billing/BillingManager.tsx:288
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Deze werkruimte wordt gefactureerd via {orgName}. Abonnementen en betaling worden in één keer voor de hele organisatie beheerd, en elke werkruimte deelt dit."
 
@@ -16614,7 +16646,7 @@ msgstr "Tijdlijn"
 msgid "Timestamp"
 msgstr "Tijdstempel"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:765
 msgid "Timestamps and duration"
 msgstr "Tijdstempels en duur"
 
@@ -16622,7 +16654,7 @@ msgstr "Tijdstempels en duur"
 msgid "Tip"
 msgstr "Tip"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:946
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:947
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Gebruik de afspeelknop (▶) om een testpayload naar je webhook te verzenden en te controleren of het correct werkt."
 
@@ -16673,7 +16705,7 @@ msgstr "Uit te zoeken"
 msgid "To resolve:"
 msgstr "Op te lossen:"
 
-#: src/components/billing/BillingManager.tsx:694
+#: src/components/billing/BillingManager.tsx:693
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Wil je bespreken wat je nodig hebt, mail dan <0>support@dembrane.com</0>."
 
@@ -16685,7 +16717,7 @@ msgstr "Markering \"{contextMenuWord}\" aan/uit"
 msgid "Tone deaf"
 msgstr "Doof voor de toon"
 
-#: src/components/billing/BillingManager.tsx:511
+#: src/components/billing/BillingManager.tsx:510
 msgid "Too expensive"
 msgstr "Te duur"
 
@@ -16875,7 +16907,11 @@ msgstr "Transcriptiefout"
 msgid "Transcription failed"
 msgstr "Transcriptie mislukt"
 
-#: src/components/workspace/gateWalls.ts:104
+#: src/components/workspace/gateWalls.ts:133
+msgid "Transcripts come with a paid plan"
+msgstr "Transcripten horen bij een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:99
 msgid "Transcripts come with a paid plan."
 msgstr "Transcripten zijn beschikbaar met een betaald abonnement."
 
@@ -16962,7 +16998,7 @@ msgstr "Proef"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Proef- en gratis accounts, niet meegerekend in het betalende totaal."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:802
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:803
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automatische workflows in tools like Zapier, Make, or n8n"
 
@@ -16985,7 +17021,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
-#: src/components/billing/BillingManager.tsx:1217
+#: src/components/billing/BillingManager.tsx:1216
 msgid "Try again"
 msgstr "Opnieuw proberen"
 
@@ -17199,8 +17235,8 @@ msgstr "Onbekende reden"
 msgid "Unknown time"
 msgstr "Onbekende tijd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:555
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:138
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:556
 msgid "Unnamed webhook"
 msgstr "Naamloze webhook"
 
@@ -17488,8 +17524,8 @@ msgid "Upload logo"
 msgstr "Logo uploaden"
 
 #: src/components/workspace/gateWalls.ts:153
-msgid "upload recordings"
-msgstr "opnames te uploaden"
+#~ msgid "upload recordings"
+#~ msgstr "opnames te uploaden"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
@@ -17509,7 +17545,11 @@ msgstr "Audio uploaden..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Audio uploaden..."
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:134
+msgid "Uploading recordings comes with a paid plan"
+msgstr "Opnames uploaden hoort bij een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:100
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Opnames uploaden is beschikbaar met een betaald abonnement."
 
@@ -17521,11 +17561,11 @@ msgstr "Uploads laten duidelijk zien wanneer ze mislukken."
 msgid "URL copied"
 msgstr "URL gekopieerd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:388
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 msgid "URL is required"
 msgstr "URL is vereist"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:385
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:386
 msgid "URL must start with http:// or https://"
 msgstr "URL moet beginnen met http:// of https://"
 
@@ -17612,18 +17652,18 @@ msgid "Use Ukrainian for chat and participant replies."
 msgstr "Gebruik Oekraïens voor chat en antwoorden aan deelnemers."
 
 #: src/components/workspace/gateWalls.ts:154
-msgid "use webhooks"
-msgstr "webhooks te gebruiken"
+#~ msgid "use webhooks"
+#~ msgstr "webhooks te gebruiken"
 
 #: src/components/workspace/gateWalls.ts:137
-msgid "use your voice in chat"
-msgstr "je stem in de chat te gebruiken"
+#~ msgid "use your voice in chat"
+#~ msgstr "je stem in de chat te gebruiken"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:139
 msgid "Used by this workspace only"
 msgstr "Alleen gebruikt door deze werkruimte"
 
-#: src/components/billing/BillingManager.tsx:430
+#: src/components/billing/BillingManager.tsx:429
 msgid "Used on your invoices. Prices exclude VAT."
 msgstr "Gebruikt op je facturen. Prijzen zijn exclusief btw."
 
@@ -17651,7 +17691,7 @@ msgstr "Gebruik standaard dembrane-logo"
 msgid "Using fixture data."
 msgstr "Gebruikt fixture-data."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:980
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Gebruik webhooks? We zouden graag van je horen"
 
@@ -17664,11 +17704,11 @@ msgstr "Valentie"
 msgid "Validation progress"
 msgstr "Voortgang van validatie"
 
-#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:442
 msgid "VAT ID"
 msgstr "Btw-nummer"
 
-#: src/components/billing/BillingManager.tsx:450
+#: src/components/billing/BillingManager.tsx:449
 msgid "VAT region"
 msgstr "Btw-regio"
 
@@ -17797,7 +17837,7 @@ msgstr "Weergave"
 #~ msgid "View Details"
 #~ msgstr "Bekijk details"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:779
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
 msgid "View example payload"
 msgstr "Voorbeeld payload bekijken"
 
@@ -17944,7 +17984,7 @@ msgstr "We konden dembrane niet bereiken. Controleer je internetverbinding en pr
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "We konden dembrane niet bereiken. Controleer je internetverbinding en probeer het opnieuw."
 
-#: src/components/billing/BillingManager.tsx:1201
+#: src/components/billing/BillingManager.tsx:1200
 msgid "We couldn't charge your payment method"
 msgstr "We konden je betaalmethode niet belasten"
 
@@ -17996,7 +18036,7 @@ msgstr "We konden je organisaties niet laden. Controleer je verbinding en probee
 msgid "We couldn't load your pending invites. Try again in a moment."
 msgstr "We konden je openstaande uitnodigingen niet laden. Probeer het zo meteen opnieuw."
 
-#: src/components/billing/BillingManager.tsx:980
+#: src/components/billing/BillingManager.tsx:979
 msgid "We couldn't update your payment method. Your old one is still active. Please try again."
 msgstr "We konden je betaalmethode niet bijwerken. Je oude methode is nog actief. Probeer het opnieuw."
 
@@ -18033,7 +18073,7 @@ msgstr "We hebben je een verificatielink gestuurd. Klik erop om het instellen va
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "We zetten samen het project op, draaien op de dag zelf met je mee en helpen je daarna het rapport te schrijven."
 
-#: src/components/billing/BillingManager.tsx:1081
+#: src/components/billing/BillingManager.tsx:1080
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "We konden je methode nog steeds niet belasten. Werk deze bij en probeer het opnieuw."
 
@@ -18041,9 +18081,13 @@ msgstr "We konden je methode nog steeds niet belasten. Werk deze bij en probeer 
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
-#: src/components/common/FeedbackPortalModal.tsx:68
+#: src/components/common/FeedbackPortalModal.tsx:69
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik <0>Probleem melden</0> om die met schermafbeeldingen te sturen."
+
+#: src/components/workspace/FeatureGate.tsx:334
+msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
+msgstr "We horen graag hoe je dembrane gebruikt, zodat we je beter kunnen helpen. Dat kost je zo'n twee minuten op onze website. Aan het eind kun je, als je wilt, een kort gesprek met ons inplannen."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:300
@@ -18076,20 +18120,20 @@ msgstr "Zwak netwerk"
 msgid "Weak password"
 msgstr "Zwak wachtwoord"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:921
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
 #: src/routes/project/ProjectRoutes.tsx:219
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:879
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:880
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:687
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:688
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere worden verzonden wanneer iets gebeurt. Denk aan ze als een \"notificatiesysteem\" voor uw andere tools."
 
@@ -18097,7 +18141,11 @@ msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:135
+msgid "Webhooks come with a paid plan"
+msgstr "Webhooks horen bij een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:101
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks zijn beschikbaar met een betaald abonnement."
 
@@ -18142,7 +18190,7 @@ msgstr "Welkom, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Welkom!"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:680
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:681
 msgid "What are webhooks? (2 min read)"
 msgstr "Wat zijn webhooks? (2 min lezen)"
 
@@ -18150,7 +18198,7 @@ msgstr "Wat zijn webhooks? (2 min lezen)"
 msgid "What are you trying to learn?"
 msgstr "Wat wil je te weten komen?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "What data is sent?"
 msgstr "Wat gegevens worden verzonden?"
 
@@ -18185,8 +18233,8 @@ msgid "What is at stake here"
 msgstr "Wat hier op het spel staat"
 
 #: src/components/pricing/PricingConfigurator.tsx:1049
-msgid "What is it?"
-msgstr "Wat is het?"
+#~ msgid "What is it?"
+#~ msgstr "Wat is het?"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:737
 msgid "What should be different about this?"
@@ -18247,7 +18295,7 @@ msgstr "Wat je in de spotlight zet, wordt hier bewaard: klik op een argument, of
 msgid "What's new"
 msgstr "Wat is er nieuw"
 
-#: src/components/billing/BillingManager.tsx:585
+#: src/components/billing/BillingManager.tsx:584
 msgid "What's the main reason?"
 msgstr "Wat is de belangrijkste reden?"
 
@@ -18259,31 +18307,31 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Wanneer"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:723
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:724
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "Wanneer een deelnemer het portaal opent, hun details invoert en een gesprek begint"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:57
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
 msgid "When a participant starts a new conversation"
 msgstr "Wanneer een deelnemer een nieuw gesprek start"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:72
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
 msgid "When a report has been generated"
 msgstr "Wanneer een rapport is gegenereerd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:743
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
 msgid "When a report has been generated for the project"
 msgstr "Wanneer er een rapport is gegenereerd voor het project"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:62
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
 msgid "When all audio has been converted to text"
 msgstr "Wanneer alle audio is omgezet naar tekst"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:730
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:731
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "Wanneer alle audio is geconverteerd naar tekst en het volledige transcript beschikbaar is"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:718
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
 msgid "When are webhooks triggered?"
 msgstr "Wanneer worden webhooks geactiveerd?"
 
@@ -18324,11 +18372,11 @@ msgstr "Als het gesprek is afgelopen, luistert dembrane de hele opname opnieuw."
 #~ msgid "When the conversation ends, we listen to the whole recording again."
 #~ msgstr "Als het gesprek is afgelopen, luisteren we de hele opname opnieuw."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:67
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
 msgid "When the summary is generated"
 msgstr "Wanneer de samenvatting is gegenereerd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:737
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:738
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvatting)"
 
@@ -18559,7 +18607,7 @@ msgstr "Gast met alleen toegang tot de werkruimte. Niet toegevoegd aan de organi
 msgid "Workspaces"
 msgstr "Werkruimtes"
 
-#: src/components/billing/BillingManager.tsx:1524
+#: src/components/billing/BillingManager.tsx:1523
 msgid "Workspaces billed separately"
 msgstr "Werkruimtes apart gefactureerd"
 
@@ -18642,10 +18690,10 @@ msgid "You are not in an organisation yet."
 msgstr "Je zit nog niet in een organisatie."
 
 #: src/components/pricing/PricingConfigurator.tsx:775
-msgid "You are on the free plan."
-msgstr "Je zit op het gratis plan."
+#~ msgid "You are on the free plan."
+#~ msgstr "Je zit op het gratis plan."
 
-#: src/components/billing/BillingManager.tsx:673
+#: src/components/billing/BillingManager.tsx:672
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr "Je zit op het gratis plan. Er is nog niets te betalen."
 
@@ -18882,8 +18930,8 @@ msgid "You stopped this run."
 msgstr "Je hebt deze run gestopt."
 
 #: src/components/pricing/PricingConfigurator.tsx:773
-msgid "You were trying to {action}."
-msgstr "Je probeerde {action}."
+#~ msgid "You were trying to {action}."
+#~ msgstr "Je probeerde {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:412
@@ -18915,7 +18963,7 @@ msgstr "Je verliest toegang tot deze werkruimte. Projecten die je hebt gemaakt b
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "Je ontvangt zo meteen {objectLabel} om te verifiëren."
 
-#: src/components/billing/BillingManager.tsx:1468
+#: src/components/billing/BillingManager.tsx:1467
 msgid "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 msgstr "Je bevestigt je nieuwe betaalmethode op het volgende scherm. Er wordt niets in rekening gebracht, het bevestigt alleen de nieuwe kaart."
 
@@ -18997,6 +19045,14 @@ msgstr "Je bent uitgenodigd voor <0>{0}</0>. We brengen je er zo naartoe."
 msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 msgstr "Je hebt de limiet van het gratis plan voor deze chat bereikt. Upgrade om verder te chatten."
 
+#: src/components/workspace/gateWalls.ts:129
+msgid "You've reached the free plan's project limit"
+msgstr "Je zit aan het maximum aantal projecten van het gratis abonnement"
+
+#: src/components/workspace/gateWalls.ts:121
+msgid "You've reached the limit for speaking in chat"
+msgstr "Je zit aan de limiet voor inspreken in de chat"
+
 #: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "Je hebt je samenvattingslimiet bereikt"
@@ -19008,6 +19064,34 @@ msgstr "Je hebt je transcriptielimiet bereikt"
 #: src/components/workspace/PilotBlockModal.tsx:39
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Je hebt alle 10 uur van de pilot gebruikt. Tools voor hosts (Chat, rapporten, analyse, exports) staan op pauze."
+
+#: src/components/workspace/gateWalls.ts:124
+msgid "You've used part of this month's free allowance"
+msgstr "Je hebt een deel van je gratis tegoed van deze maand opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:120
+msgid "You've used the free questions in this chat"
+msgstr "Je hebt de gratis vragen in deze chat opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:119
+msgid "You've used this month's free chats"
+msgstr "Je hebt de gratis chats van deze maand opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:125
+msgid "You've used this month's free maps"
+msgstr "Je hebt de gratis kaarten van deze maand opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:127
+msgid "You've used this month's free popcorn analyses"
+msgstr "Je hebt de gratis popcorn-analyses van deze maand opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:131
+msgid "You've used this month's free reports"
+msgstr "Je hebt de gratis rapporten van deze maand opgebruikt"
+
+#: src/components/workspace/gateWalls.ts:132
+msgid "You've used this month's free transcription"
+msgstr "Je hebt de gratis transcriptie van deze maand opgebruikt"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "Your access"
@@ -19045,12 +19129,12 @@ msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Je browser blokkeert de microfoon. Geef toegang en probeer het opnieuw."
 
 #: src/components/pricing/PricingConfigurator.tsx:700
-msgid "Your call is booked: {bookedTime}."
-msgstr "Je afspraak is geboekt: {bookedTime}."
+#~ msgid "Your call is booked: {bookedTime}."
+#~ msgstr "Je afspraak is geboekt: {bookedTime}."
 
 #: src/components/pricing/PricingConfigurator.tsx:702
-msgid "Your call is booked."
-msgstr "Je afspraak is geboekt."
+#~ msgid "Your call is booked."
+#~ msgstr "Je afspraak is geboekt."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:69
@@ -19104,8 +19188,8 @@ msgstr "Je feedback en dit antwoord gaan naar het dembrane-team."
 #~ msgstr "Je gratis plan bevat één rapport. Upgrade om er meer te maken."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
-msgid "Your free transcription allowance is used up."
-msgstr "Je gratis transcriptietegoed is op."
+#~ msgid "Your free transcription allowance is used up."
+#~ msgstr "Je gratis transcriptietegoed is op."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
 #~ msgid "Your free transcription hour is used up."
@@ -19124,7 +19208,7 @@ msgstr "Je uitnodiging staat nog open. Probeer het opnieuw zodra de beheerder ee
 msgid "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 msgstr "Je uitnodiging is al geaccepteerd, maar je bent geen lid meer van {resolvedWorkspaceName}. Vraag de beheerder om je opnieuw uit te nodigen."
 
-#: src/components/billing/BillingManager.tsx:1210
+#: src/components/billing/BillingManager.tsx:1209
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Je laatste betaling is niet gelukt. Je abonnement blijft actief. Werk je betaalmethode bij of probeer de betaling opnieuw om het recht te zetten."
 
@@ -19165,7 +19249,11 @@ msgstr "Je organisatie of bedrijf"
 msgid "Your organisations"
 msgstr "Je organisaties"
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:122
+msgid "Your own logo comes with a paid plan"
+msgstr "Je eigen logo hoort bij een betaald abonnement"
+
+#: src/components/workspace/gateWalls.ts:88
 msgid "Your own logo comes with a paid plan."
 msgstr "Je eigen logo is beschikbaar met een betaald abonnement."
 
@@ -19173,31 +19261,31 @@ msgstr "Je eigen logo is beschikbaar met een betaald abonnement."
 msgid "Your own member card stays at the top of the list."
 msgstr "Je eigen ledenkaart blijft bovenaan de lijst staan."
 
-#: src/components/billing/BillingManager.tsx:1016
+#: src/components/billing/BillingManager.tsx:1015
 msgid "Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you."
 msgstr "Je betaalde periode is afgelopen, dus we kunnen dit abonnement hier niet meer aanzetten. Mail support@dembrane.com, dan lossen we het samen met je op."
 
-#: src/components/billing/BillingManager.tsx:977
+#: src/components/billing/BillingManager.tsx:976
 msgid "Your payment method has been updated."
 msgstr "Je betaalmethode is bijgewerkt."
 
-#: src/components/billing/BillingManager.tsx:983
+#: src/components/billing/BillingManager.tsx:982
 msgid "Your payment method update is still processing."
 msgstr "Het bijwerken van je betaalmethode wordt nog verwerkt."
 
-#: src/components/billing/BillingManager.tsx:1428
+#: src/components/billing/BillingManager.tsx:1427
 msgid "Your plan ends at the period end."
 msgstr "Je abonnement eindigt aan het einde van de periode."
 
-#: src/components/billing/BillingManager.tsx:1426
+#: src/components/billing/BillingManager.tsx:1425
 msgid "Your plan ends on {endDate}."
 msgstr "Je abonnement eindigt op {endDate}."
 
-#: src/components/billing/BillingManager.tsx:668
+#: src/components/billing/BillingManager.tsx:667
 msgid "Your plan is arranged with dembrane, so there is nothing to pay here. Everything your plan includes stays available."
 msgstr "Je abonnement is geregeld met dembrane, dus hier valt niets te betalen. Alles wat in je abonnement zit blijft beschikbaar."
 
-#: src/components/billing/BillingManager.tsx:1012
+#: src/components/billing/BillingManager.tsx:1011
 msgid "Your plan is back on. You keep your current period."
 msgstr "Je abonnement is weer actief. Je behoudt je huidige periode."
 
@@ -19205,7 +19293,7 @@ msgstr "Je abonnement is weer actief. Je behoudt je huidige periode."
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Je abonnement is inactief. Activeer het opnieuw om leden toe te voegen."
 
-#: src/components/billing/BillingManager.tsx:333
+#: src/components/billing/BillingManager.tsx:332
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Je abonnement wordt beheerd door dembrane. Neem contact op met je accountmanager om wijzigingen te maken."
 
@@ -19213,9 +19301,13 @@ msgstr "Je abonnement wordt beheerd door dembrane. Neem contact op met je accoun
 msgid "Your plan lets you take the mark off."
 msgstr "Met jouw abonnement kun je het watermerk verwijderen."
 
-#: src/components/billing/BillingManager.tsx:557
+#: src/components/billing/BillingManager.tsx:556
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Je abonnement wordt niet verlengd. Je houdt toegang tot het einde van de periode."
+
+#: src/components/workspace/FeatureGate.tsx:342
+msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
+msgstr "Je portalen blijven werken en niets van wat je deelnemers zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
 #: src/components/pricing/PricingTextInput.tsx:311
@@ -19223,8 +19315,8 @@ msgid "Your recording, {0}"
 msgstr "Je opname, {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:705
-msgid "Your request is in."
-msgstr "Je aanvraag is binnen."
+#~ msgid "Your request is in."
+#~ msgstr "Je aanvraag is binnen."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."

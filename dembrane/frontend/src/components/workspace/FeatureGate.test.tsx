@@ -3,23 +3,30 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
 import { FeatureGate, UpgradeModal } from "./FeatureGate";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { type WallKey, wallActionLine, wallPopoverLine } from "./gateWalls";
+import {
+	type WallKey,
+	wallHandoverLead,
+	wallHandoverTitle,
+	wallPopoverLine,
+} from "./gateWalls";
 
 const capture = vi.fn();
+const saveHandover = vi.fn();
 
 vi.mock("posthog-js", () => ({
 	default: {
 		capture: (...args: unknown[]) => capture(...args),
-		// The price anchor line reads a feature flag. Unresolved here, which is
-		// the quiet variant: no number is drawn.
-		getFeatureFlag: () => undefined,
-		onFeatureFlags: () => () => {},
 	},
+}));
+
+vi.mock("@/components/pricing/submitConfiguration", () => ({
+	saveHandover: (...args: unknown[]) => saveHandover(...args),
 }));
 
 vi.mock("@/hooks/useWorkspace", () => ({
@@ -67,10 +74,13 @@ beforeAll(() => {
 beforeEach(() => {
 	sessionStorage.clear();
 	capture.mockClear();
+	saveHandover.mockReset();
+	saveHandover.mockResolvedValue({ reference: "DEM-TEST" });
 });
 
 afterEach(() => {
 	cleanup();
+	i18n.activate("en");
 });
 
 const wrap = (node: React.ReactNode) =>
@@ -85,11 +95,13 @@ const wrap = (node: React.ReactNode) =>
 const renderModal = ({
 	currentTier = "free" as Tier,
 	entry = "modal_direct" as "modal_direct" | "popover_link",
+	onClose = () => {},
 	requiredTier = "changemaker" as Tier,
 	wallKey,
 }: {
 	currentTier?: Tier;
 	entry?: "modal_direct" | "popover_link";
+	onClose?: () => void;
 	requiredTier?: Tier;
 	wallKey: WallKey;
 }) =>
@@ -98,7 +110,7 @@ const renderModal = ({
 			canRequestUpgrade
 			currentTier={currentTier}
 			entry={entry}
-			onClose={() => {}}
+			onClose={onClose}
 			opened
 			requiredTier={requiredTier}
 			wallKey={wallKey}
@@ -106,81 +118,10 @@ const renderModal = ({
 		/>,
 	);
 
-const modalText = () =>
-	screen.getByTestId("pricing-configurator-modal").textContent ?? "";
-
 const gateViewedCalls = () =>
 	capture.mock.calls.filter((call) => call[0] === "pricing_config_gate_viewed");
 
-// 1. One modal, from every mount point. One line varies: the opening.
-
-it("renders the same modal from two different walls, but for the opening line", () => {
-	const first = renderModal({ wallKey: "custom_logo" });
-	const custom = modalText();
-	expect(custom).toContain("You were trying to add your logo.");
-	first.unmount();
-
-	renderModal({ wallKey: "report_cap" });
-	expect(modalText()).toContain("You were trying to create another report.");
-	// Swap that one line back and the two are the same text.
-	expect(modalText().replace("create another report", "add your logo")).toBe(
-		custom,
-	);
-});
-
-it("names the attempt, never the feature or the plan, because the popover named those", () => {
-	renderModal({ wallKey: "custom_logo" });
-	const text = modalText();
-
-	// The wall is keyed, so the app already knows what they were doing.
-	expect(text).toContain("You were trying to add your logo.");
-	expect(text).toContain("That requires a paid plan.");
-	// The control's own name, the feature list and the other walls stay out.
-	expect(text).not.toMatch(/custom logo/i);
-	expect(text).not.toMatch(/webhook/i);
-	expect(text).not.toMatch(/report/i);
-});
-
-it("names the free allowance as the referent when opened from the allowance card", () => {
-	renderModal({ wallKey: "free_allowance" });
-	const text = modalText();
-	expect(text).toContain(
-		"You were trying to go beyond this month's free allowance.",
-	);
-	expect(text).toContain("That requires a paid plan.");
-	expect(text).not.toContain("You are on the free plan.");
-	expect(wallPopoverLine("free_allowance")).toBe("");
-});
-
-// 2. The locked data family is the only exception.
-
-it("puts the cap block above the opening for the transcription cap", () => {
-	renderModal({ wallKey: "transcription_cap" });
-	const text = modalText();
-
-	expect(text).toContain("Your free transcription allowance is used up.");
-	expect(text).toContain(
-		"The portals will keep working! Your participants are never cut off and nothing they say is lost.",
-	);
-	// The cap block sits above the opening, not below it.
-	expect(
-		text.indexOf("Your free transcription allowance is used up."),
-	).toBeLessThan(text.indexOf("You were trying to"));
-});
-
-it("keeps every other wall byte for byte the same as every other", () => {
-	const cap = renderModal({ wallKey: "transcription_cap" });
-	const capText = modalText();
-	cap.unmount();
-
-	renderModal({ wallKey: "upload_cap" });
-	expect(modalText()).not.toBe(capText);
-	expect(modalText()).not.toContain(
-		"Your free transcription allowance is used up.",
-	);
-});
-
-it("carries an attempt for every wall, and none for the page that is not one", () => {
+it("names what the person ran into, for every wall, in a title of its own", () => {
 	const walls: WallKey[] = [
 		"chat_cap",
 		"chat_turn_cap",
@@ -202,18 +143,19 @@ it("carries an attempt for every wall, and none for the page that is not one", (
 		"workspace_cap",
 	];
 
-	for (const wall of walls) {
-		const action = wallActionLine(wall);
-		expect(action.length).toBeGreaterThan(0);
-		// A phrase, read inside the opening line, so it starts lowercase and
-		// stops on nothing of its own.
-		expect(action[0]).toBe(action[0].toLowerCase());
-		expect(action.endsWith(".")).toBe(false);
+	for (const wall of [...walls, "billing_page" as const]) {
+		const title = wallHandoverTitle(wall);
+		expect(title.length).toBeGreaterThan(0);
+		// A title, not a sentence: no full stop, no em dash, no number.
+		expect(title.endsWith(".")).toBe(false);
+		expect(title).not.toContain("\u2014");
+		expect(title).not.toMatch(/\d/);
 	}
-
-	// The billing page is not a wall, and neither is a mount that names none.
-	expect(wallActionLine("billing_page")).toBe("");
-	expect(wallActionLine(undefined)).toBe("");
+	expect(wallHandoverTitle("report_cap")).toBe(
+		"You've used this month's free reports",
+	);
+	expect(wallHandoverTitle("webhooks")).toBe("Webhooks come with a paid plan");
+	expect(wallHandoverTitle("billing_page")).toBe("Let's find what fits you");
 });
 
 it("states the free content limits without a number or an em dash", () => {
@@ -239,13 +181,176 @@ it("states the free content limits without a number or an em dash", () => {
 		// Staff edit these limits, so the lines state no number.
 		expect(wallPopoverLine(wall)).not.toMatch(/\d|\b(one|two)\b/);
 		expect(wallPopoverLine(wall)).not.toContain("\u2014");
-		expect(wallActionLine(wall)).not.toContain("\u2014");
 	}
-	expect(wallActionLine("map_cap")).toBe("generate another map");
-	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
 });
 
-// 3. No tier name anywhere on the gate path, and no price table.
+// 2. The prompt is one screen, and the person chooses whether to go.
+
+const continueLink = () =>
+	screen.getByTestId("upgrade-modal-continue") as HTMLAnchorElement;
+
+it("says what they hit and offers the website, without sending them anywhere", () => {
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "report_cap" });
+
+	const modal = screen.getByTestId("upgrade-modal");
+	expect(modal.textContent).toContain("You've used this month's free reports");
+	const body = screen.getByTestId("upgrade-modal-body").textContent;
+	expect(body).toMatch(/^A paid plan lets you keep going\. We'd love/);
+	expect(body).toContain("about two minutes on our website");
+	expect(screen.getByTestId("upgrade-modal-reassurance").textContent).toBe(
+		"Everything you've made here stays as it is.",
+	);
+	expect(onClose).not.toHaveBeenCalled();
+	expect(saveHandover).not.toHaveBeenCalled();
+});
+
+it("continues in a new tab with the trigger and a handover id, and saves that id for the account", () => {
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "custom_logo" });
+
+	const link = continueLink();
+	expect(link.getAttribute("target")).toBe("_blank");
+	const url = new URL(link.href);
+	expect(url.origin + url.pathname).toBe(
+		"https://www.dembrane.com/pricing-calculator",
+	);
+	expect(url.searchParams.get("from")).toBe("app");
+	expect(url.searchParams.get("trigger")).toBe("custom_logo");
+	expect(url.searchParams.get("back")).toBe(window.location.origin);
+	const handover = url.searchParams.get("handover") ?? "";
+	expect(handover).toMatch(/^[0-9a-f-]{36}$/);
+	// Nothing about the person travels in the address.
+	expect(link.href).not.toContain("example.com");
+	expect(link.href).not.toContain("workspace-1");
+
+	fireEvent.click(link);
+	expect(saveHandover).toHaveBeenCalledWith({
+		config_session_id: handover,
+		locale: "en",
+		org_id: "org-1",
+		project_id: undefined,
+		wall_key: "custom_logo",
+		workspace_id: "workspace-1",
+	});
+	expect(onClose).toHaveBeenCalledTimes(1);
+	expect(
+		capture.mock.calls.find(
+			(c) => c[0] === "pricing_config_handover_continued",
+		)?.[1],
+	).toMatchObject({ config_session_id: handover, wall_key: "custom_logo" });
+});
+
+it("opens the tab with the same id it saves, though closing re-renders in the same click", () => {
+	function Harness() {
+		const [opened, setOpened] = useState(true);
+		return (
+			<UpgradeModal
+				canRequestUpgrade
+				currentTier="free"
+				onClose={() => setOpened(false)}
+				opened={opened}
+				requiredTier="changemaker"
+				wallKey="report_cap"
+				workspaceId="workspace-1"
+			/>
+		);
+	}
+	wrap(<Harness />);
+	const link = continueLink();
+	let followed = "";
+	// The browser follows the link after the click handlers ran: read it then.
+	link.addEventListener("click", (event) => {
+		event.preventDefault();
+		followed = (event.currentTarget as HTMLAnchorElement).href;
+	});
+	fireEvent.click(link);
+	const saved = saveHandover.mock.calls[0]?.[0]?.config_session_id;
+	expect(saved).toBeTruthy();
+	expect(new URL(followed || link.href).searchParams.get("handover")).toBe(
+		saved,
+	);
+	expect(new URL(link.href).searchParams.get("handover")).toBe(saved);
+});
+
+it("sends Dutch speakers to the Dutch calculator", () => {
+	i18n.load("nl-NL", {});
+	i18n.activate("nl-NL");
+	renderModal({ wallKey: "custom_logo" });
+
+	expect(new URL(continueLink().href).pathname).toBe("/nl/pricing-calculator");
+});
+
+it("lets the person stay with Maybe later, and saves nothing", () => {
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "map_cap" });
+
+	fireEvent.click(screen.getByTestId("upgrade-modal-later"));
+	expect(onClose).toHaveBeenCalledTimes(1);
+	expect(saveHandover).not.toHaveBeenCalled();
+	expect(
+		capture.mock.calls.some(
+			(c) => c[0] === "pricing_config_handover_dismissed",
+		),
+	).toBe(true);
+});
+
+it("says a paid plan is needed once, in the title or in the body", () => {
+	const usageWalls: WallKey[] = [
+		"chat_cap",
+		"chat_turn_cap",
+		"chat_voice_cap",
+		"free_allowance",
+		"map_cap",
+		"org_cap",
+		"popcorn_cap",
+		"project_cap",
+		"recording_project",
+		"report_cap",
+		"transcription_cap",
+		"workspace_cap",
+	];
+	const featureWalls: WallKey[] = [
+		"custom_logo",
+		"event_cta",
+		"private_workspace",
+		"transcripts_view",
+		"upload_cap",
+		"webhooks",
+	];
+
+	for (const wall of usageWalls) {
+		expect(wallHandoverLead(wall)).toBe("A paid plan lets you keep going.");
+		expect(wallHandoverTitle(wall)).not.toContain("paid plan");
+	}
+	for (const wall of featureWalls) {
+		expect(wallHandoverLead(wall)).toBe("");
+		expect(wallHandoverTitle(wall)).toContain("paid plan");
+	}
+	expect(wallHandoverLead("billing_page")).toBe("");
+
+	renderModal({ wallKey: "webhooks" });
+	expect(screen.getByTestId("upgrade-modal-body").textContent).toMatch(
+		/^We'd love/,
+	);
+});
+
+it("tells the person at the transcription cap that nothing recorded is lost", () => {
+	renderModal({ wallKey: "transcription_cap" });
+	expect(screen.getByTestId("upgrade-modal-reassurance").textContent).toContain(
+		"nothing your participants say is lost",
+	);
+});
+
+it("keeps the save from blocking the way forward", async () => {
+	saveHandover.mockRejectedValue(new Error("offline"));
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "upload_cap" });
+	fireEvent.click(continueLink());
+	expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+// 3. No tier name anywhere on the gate path.
 
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
@@ -274,10 +379,6 @@ it("names no tier in any gate copy", () => {
 		expect(wallPopoverLine(wall)).not.toMatch(tierNames);
 	}
 
-	const view = renderModal({ wallKey: "custom_logo" });
-	expect(modalText()).not.toMatch(tierNames);
-	view.unmount();
-
 	wrap(
 		<FeatureGate
 			canRequestUpgrade
@@ -296,14 +397,6 @@ it("names no tier in any gate copy", () => {
 	expect(screen.getByTestId("feature-gate-card").textContent).toContain(
 		"Available on a paid plan",
 	);
-});
-
-it("shows no price and no price table", () => {
-	renderModal({ wallKey: "custom_logo" });
-	const text = modalText();
-
-	expect(text).not.toContain("€");
-	expect(text).not.toMatch(/per seat|\/seat|billed annually|billed monthly/i);
 });
 
 // 4. The gate viewed event, the denominator.
@@ -383,7 +476,7 @@ it("fires gate_viewed from the popover, with surface popover, once", () => {
 
 // 5. The popover names the feature and carries the way in.
 
-it("names the feature in the popover and starts the configurator from it", () => {
+it("names the feature in the popover and starts the upgrade prompt from it", () => {
 	const onStart = vi.fn();
 	wrap(
 		<FeatureGatePopover
@@ -414,7 +507,7 @@ it("names the feature in the popover and starts the configurator from it", () =>
 	expect(onStart).toHaveBeenCalledTimes(1);
 });
 
-it("opens the modal directly for a wall with no agreed popover line", () => {
+it("opens the prompt directly for a wall with no agreed popover line", () => {
 	const onStart = vi.fn();
 	wrap(
 		<FeatureGatePopover
@@ -444,7 +537,7 @@ it("opens the modal directly for a wall with no agreed popover line", () => {
 it("shows no gate to a workspace that already holds the tier", () => {
 	renderModal({ currentTier: "changemaker", wallKey: "custom_logo" });
 
-	expect(screen.queryByTestId("pricing-configurator-modal")).toBeNull();
+	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	expect(gateViewedCalls()).toHaveLength(0);
 });
 
@@ -456,7 +549,7 @@ it("still gates when the required tier is one nobody knows", () => {
 		wallKey: "upload_cap",
 	});
 
-	expect(screen.getByTestId("pricing-configurator-modal")).toBeTruthy();
+	expect(screen.getByTestId("upgrade-modal")).toBeTruthy();
 });
 
 // 7. The keyboard reaches the card, and the card says what it is.

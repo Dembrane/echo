@@ -2,7 +2,7 @@ import { plural, t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import type { WallKey } from "@/components/workspace/gateWalls";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -30,7 +30,7 @@ export function FreeAllowanceBanner({
 	const { i18n } = useLingui();
 	const { data } = useFreeAllowance(workspaceId);
 	const wallKey = WALLS[feature];
-	const configurator = usePricingConfigurator(wallKey);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	const spent =
 		feature === "audio"
@@ -78,7 +78,7 @@ export function FreeAllowanceBanner({
 					<Button
 						size="xs"
 						variant="light"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("free-allowance-banner-upgrade")}
 					>
 						{t`See upgrade options`}
@@ -86,8 +86,8 @@ export function FreeAllowanceBanner({
 				</Group>
 			</Stack>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier="free"
 				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade
