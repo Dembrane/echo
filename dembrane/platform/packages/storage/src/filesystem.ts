@@ -1,6 +1,14 @@
-import { mkdir, rm } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { checkKey, type ObjectStorage, type PresignedPost } from "./storage";
+import { mkdir, readdir, rm } from "node:fs/promises";
+import { dirname, join, relative } from "node:path";
+import {
+  checkKey,
+  type ListedObject,
+  type ObjectInventory,
+  type ObjectStorage,
+  type ObjectVersion,
+  type PresignedPost,
+  type Versioning,
+} from "./storage";
 
 /** Where local presigned URLs point; served by `localStorageHandler`. */
 export const LOCAL_STORAGE_PATH = "/_local-storage";
@@ -9,7 +17,7 @@ export const LOCAL_STORAGE_PATH = "/_local-storage";
  * Local development and tests. Presigned URLs point at the API's local file route, which
  * only exists when APP_ENV is local or test.
  */
-export class FilesystemStorage implements ObjectStorage {
+export class FilesystemStorage implements ObjectStorage, ObjectInventory {
   /** Lets requireBucket tell a local store from a bucket without importing this class. */
   readonly kind = "filesystem";
   constructor(
@@ -40,6 +48,27 @@ export class FilesystemStorage implements ObjectStorage {
   async size(key: string) {
     const f = Bun.file(this.path(key));
     return (await f.exists()) ? f.size : null;
+  }
+  /** A directory has no versions: a delete here is final. */
+  async versioning(): Promise<Versioning> {
+    return "off";
+  }
+  // biome-ignore lint/correctness/useYield: nothing is versioned on disk
+  async *versions(_prefix: string): AsyncGenerator<ObjectVersion> {
+    return;
+  }
+  async deleteVersion(key: string, _versionId: string) {
+    await this.delete(key);
+  }
+  async *list(prefix: string): AsyncGenerator<ListedObject> {
+    const files = await readdir(this.root, { recursive: true, withFileTypes: true }).catch(
+      () => [],
+    );
+    for (const f of files.filter((e) => e.isFile()).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      const key = relative(this.root, join(f.parentPath, f.name)).split("\\").join("/");
+      if (key.startsWith(prefix))
+        yield { key, size: Bun.file(join(this.root, key)).size, lastModified: null };
+    }
   }
   presignUpload(key: string, opts: { contentType: string; expiresInSeconds: number }) {
     return `${this.publicBase}${this.routePath}/${encodeURI(checkKey(key))}?expires=${Date.now() + opts.expiresInSeconds * 1000}`;

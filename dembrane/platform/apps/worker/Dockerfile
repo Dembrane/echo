@@ -8,6 +8,8 @@ WORKDIR /src
 COPY . .
 RUN bun install --frozen-lockfile --production --ignore-scripts
 RUN bun build apps/worker/src/main.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile /out/worker
+# The retention command ships beside the worker; a Kubernetes job starts it with /app/retention.
+RUN bun build apps/worker/src/retention.ts --compile --minify --target=bun-linux-x64 --outfile /out/retention
 # A compiled binary has no source tree beside it, so the files it reads are laid out under
 # /app/assets as <package>/... (packages/core/src/assets.ts), and the binary
 # checks them at boot against apps/worker/src/assets.ts. Popcorn's prompts drive the ticks;
@@ -19,6 +21,7 @@ RUN mkdir -p /assets/popcorn /assets/agentic /assets/i18n \
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=build /out/worker /app/worker
+COPY --from=build /out/retention /app/retention
 COPY --from=build /assets /app/assets
 ARG RELEASE=dev
 ENV APP_RELEASE=${RELEASE} NODE_ENV=production

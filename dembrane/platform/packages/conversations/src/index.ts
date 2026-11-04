@@ -31,6 +31,7 @@ export type { FinalSettings } from "./pipeline/final";
 export { type PipelineDeps, pieceId } from "./pipeline/steps";
 export { conversationWorker } from "./pipeline/worker";
 export { pipelineWorkflows, RETRIES, type RetryPolicy } from "./pipeline/workflows";
+export * from "./retention";
 export { conversationRoutes } from "./routes";
 export {
   type ChunkRow,

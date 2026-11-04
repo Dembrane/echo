@@ -97,6 +97,12 @@ The media app is an HTTP shell around ffmpeg: `POST /probe`, `/probe-url`, `/con
 | `conversations.finish-idle` | 2 minutes | Finishes conversations nobody added to for 5 minutes. A conversation with no chunks at all waits 30 minutes, and stays open while the portal still pings. |
 | `conversations.summary-catch-up` | 5 minutes | Summarises transcribed conversations that have no summary, whatever their old `is_over_cap` stamp says. |
 
+## Removing audio
+
+Audio is removed by a command, not by a schedule, one step at a time. `bun run audio:retention deleted` covers conversations their owners deleted. `bun run audio:retention aged` covers finished conversations whose last audio is older than the organisation's keep period: `org.audio_retention_days`, 30 when empty. Without `--execute` a command only reports, per organisation, the objects, bytes and oldest object it would remove. `--org`, `--limit` and `--db-only` narrow or lighten a run.
+
+A real run removes every object under the conversation's folders (`conversation/<id>/`, `chunks/<id>/`, the merged file) and every file its rows name. On a bucket that keeps versions it removes every version and delete marker too, because a plain delete only hides the file. It then clears the paths in the rows. Transcripts, summaries and chats stay. A file that another live conversation also points at stays, and a conversation that fails is retried by the next run.
+
 ## Reports and chat
 
 - A report is one durable workflow, `reports.generate`, in `packages/reports/src/jobs.ts`. A worker runs 4 at once. The prompt budget is `REPORT_MAX_CONTEXT_TOKENS`.
