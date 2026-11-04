@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ArrowSquareOutIcon, LockIcon } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { newConfigSessionId } from "@/components/pricing/configuratorState";
 import { saveHandover } from "@/components/pricing/submitConfiguration";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -242,8 +242,15 @@ export function UpgradeModal({
 	// matters here too: the emitter's identity moves when the workspace query
 	// settles.
 	const viewedRef = useRef(false);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a fresh id per opening is the point
-	const handover = useMemo(() => newConfigSessionId(), [opened]);
+	// A fresh id per opening, and only on opening. Closing re-renders this in the
+	// same click, before the browser follows the link, so an id that changed on
+	// close would open the tab with a different id than the one saved.
+	const [handover, setHandover] = useState(newConfigSessionId);
+	const [wasOpened, setWasOpened] = useState(opened);
+	if (opened !== wasOpened) {
+		setWasOpened(opened);
+		if (opened) setHandover(newConfigSessionId());
+	}
 	const url = pricingHandoverUrl({
 		back: window.location.origin,
 		handover,

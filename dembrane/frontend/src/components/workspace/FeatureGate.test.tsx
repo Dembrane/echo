@@ -3,6 +3,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
@@ -233,6 +234,38 @@ it("continues in a new tab with the trigger and a handover id, and saves that id
 			(c) => c[0] === "pricing_config_handover_continued",
 		)?.[1],
 	).toMatchObject({ config_session_id: handover, wall_key: "custom_logo" });
+});
+
+it("opens the tab with the same id it saves, though closing re-renders in the same click", () => {
+	function Harness() {
+		const [opened, setOpened] = useState(true);
+		return (
+			<UpgradeModal
+				canRequestUpgrade
+				currentTier="free"
+				onClose={() => setOpened(false)}
+				opened={opened}
+				requiredTier="changemaker"
+				wallKey="report_cap"
+				workspaceId="workspace-1"
+			/>
+		);
+	}
+	wrap(<Harness />);
+	const link = continueLink();
+	let followed = "";
+	// The browser follows the link after the click handlers ran: read it then.
+	link.addEventListener("click", (event) => {
+		event.preventDefault();
+		followed = (event.currentTarget as HTMLAnchorElement).href;
+	});
+	fireEvent.click(link);
+	const saved = saveHandover.mock.calls[0]?.[0]?.config_session_id;
+	expect(saved).toBeTruthy();
+	expect(new URL(followed || link.href).searchParams.get("handover")).toBe(
+		saved,
+	);
+	expect(new URL(link.href).searchParams.get("handover")).toBe(saved);
 });
 
 it("sends Dutch speakers to the Dutch calculator", () => {
