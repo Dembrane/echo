@@ -2476,6 +2476,8 @@ export const pricing_configuration = pgTable(
     created_at: timestamp({ withTimezone: true, mode: "string" }),
     updated_at: timestamp({ withTimezone: true, mode: "string" }),
     booking_notified_at: timestamp({ withTimezone: true, mode: "string" }),
+    submitted_at: timestamp({ withTimezone: true, mode: "string" }),
+    enquiry_notified_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     unique("pricing_configuration_reference_unique").on(table.reference),
