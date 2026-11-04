@@ -10,6 +10,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { PaymentRequiredError } from "@dembrane/core";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
+import { countingDb } from "@dembrane/db/testing";
 import type postgres from "postgres";
 import { allowanceForProject } from "../src/account";
 import {
@@ -20,7 +21,7 @@ import {
   requireAiBudgetForWorkspace,
 } from "../src/budget";
 import { add } from "../src/ledger";
-import { invalidateFreeLimits, setFreeLimit } from "../src/limits";
+import { freeLimits, invalidateFreeLimits, setFreeLimit } from "../src/limits";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -34,13 +35,14 @@ run("ai budget", () => {
   let sql: postgres.Sql;
   let db: Db;
   let close: () => Promise<void>;
+  let url: string;
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     await a.unsafe(`create database ${dbName}`);
     await a.end();
-    const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
+    url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 2, onnotice: () => {} });
     const made = createDb({ url, poolMax: 10 });
@@ -102,6 +104,38 @@ run("ai budget", () => {
     }
     throw new Error("expected a refusal");
   }
+
+  test("a free check is two round trips; a paid tier Access already read sends nothing", async () => {
+    const s = await seed();
+    const paid = await seed("changemaker");
+    const orgId = randomUUID();
+    await sql`insert into org (id, name) values (${orgId}, 'o')`;
+    const sample = await project(await workspace(orgId, await account("free", orgId)), true);
+    await spend(s.accountId, 5_000_000);
+    const c = countingDb(url, 4);
+    try {
+      // Steady state: the limits cache is warm.
+      await freeLimits(c.db, () => NOW);
+      const sent = async (f: () => Promise<unknown>) => {
+        c.log.length = 0;
+        await f().catch(() => {});
+        return c.log.map((l) => l.q);
+      };
+      // One resolve that also reads is_sample, then the override and usage at once.
+      const free = await sent(() => requireAiBudget(c.db, s.project, NOW));
+      expect(free).toHaveLength(3);
+      expect(free[0]).toContain("as own_id");
+      expect(free[0]).toContain("is_sample");
+      expect(await refusal(requireAiBudget(c.db, s.project, NOW, "free"))).toBeInstanceOf(
+        PaymentRequiredError,
+      );
+      expect(await sent(() => requireAiBudget(c.db, sample, NOW))).toHaveLength(1);
+      expect(await sent(() => requireAiBudget(c.db, paid.project, NOW))).toHaveLength(1);
+      expect(await sent(() => requireAiBudget(c.db, paid.project, NOW, "changemaker"))).toEqual([]);
+    } finally {
+      await c.close();
+    }
+  });
 
   test("the spend key is the one the recorder writes", () => {
     expect(AI_SPEND_KEY).toBe("ai_spend_micro_eur");

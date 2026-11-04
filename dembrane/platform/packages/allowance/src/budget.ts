@@ -6,6 +6,7 @@ import {
   allowanceForWorkspace,
 } from "./account";
 import { freeLimitError } from "./errors";
+import { isFreeTier } from "./free";
 import { AI_SPEND_KEY, type UsageKey, usedThisPeriod } from "./ledger";
 import { freeLimits } from "./limits";
 import { nextReset } from "./period";
@@ -103,9 +104,20 @@ function refuseWhenExhausted(b: AiBudget | null): void {
   });
 }
 
-/** Throws the 402 `ai_budget` when exhausted. */
-export async function requireAiBudget(db: Db, projectId: string, now: Date): Promise<void> {
+/** Throws the 402 `ai_budget` when exhausted; a non-free `tier` Access already read skips the reads. */
+export async function requireAiBudget(
+  db: Db,
+  projectId: string,
+  now: Date,
+  tier?: string | null,
+): Promise<void> {
+  if (tier && !isFreeTier(tier)) return;
   refuseWhenExhausted(await aiBudgetForProject(db, projectId, now));
+}
+
+/** Throws the 402 `ai_budget` when the account resolved by the caller is exhausted. */
+export async function requireAccountBudget(db: Db, a: AllowanceAccount, now: Date): Promise<void> {
+  refuseWhenExhausted(await aiBudgetFor(db, a, now));
 }
 
 /** Throws the 402 `ai_budget` when exhausted. */

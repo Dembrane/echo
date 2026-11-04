@@ -1594,7 +1594,12 @@ export async function runPopcornTick(
       const translationWriter = new TickWriter(d, loopId, reportId, state);
       let translated: string | null = null;
       // A publishing read asks no language model, translation included; nor does one at budget zero.
-      if (!publishOnly && (await admitted(d, projectId, startedAt)))
+      // No target language: nothing to translate, so no budget read.
+      if (
+        !publishOnly &&
+        targetLanguages(settings).length > 0 &&
+        (await admitted(d, projectId, startedAt))
+      )
         try {
           translated = await translateSession(d, state, settings, {
             reportId,
@@ -1796,7 +1801,11 @@ export async function runPopcornTick(
     let translated: string | null = null;
     // A publishing read asks no language model, translation included: the next full read translates.
     // A read past the gate with no analysis (map, publication) translates only with budget left.
-    if (!publishOnly && (analyses || (await admitted(d, projectId, startedAt))))
+    if (
+      !publishOnly &&
+      targetLanguages(settings).length > 0 &&
+      (analyses || (await admitted(d, projectId, startedAt)))
+    )
       try {
         translated = await translateSession(d, state, settings, { reportId, projectId, writer });
       } catch (exc) {

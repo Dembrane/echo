@@ -16,8 +16,8 @@ export async function createChat(
   who: Signed,
   body: { project_id: string; name: string | null },
 ) {
-  await projectFor(d.access, who, body.project_id, "chat:use");
-  await d.freeChats.canStartChat(body.project_id, d.now());
+  const pa = await projectFor(d.access, who, body.project_id, "chat:use");
+  await d.freeChats.canStartChat(body.project_id, d.now(), pa.tier);
   const id = d.newId();
   // The Python API wrote through the admin token, so Directus stamped the service account
   // as the creator. The creator is who created it: private chats and "is_own" read this.

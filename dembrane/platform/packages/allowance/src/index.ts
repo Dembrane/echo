@@ -4,6 +4,8 @@ export {
   allowanceForProject,
   allowanceForWorkspace,
   isSampleProject,
+  type ProjectAllowance,
+  projectAllowance,
 } from "./account";
 export {
   AI_SPEND_KEY,
@@ -11,6 +13,7 @@ export {
   aiBudgetFor,
   aiBudgetForProject,
   aiBudgetForWorkspace,
+  requireAccountBudget,
   requireAiBudget,
   requireAiBudgetForWorkspace,
 } from "./budget";

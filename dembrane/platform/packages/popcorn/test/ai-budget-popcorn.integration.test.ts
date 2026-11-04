@@ -283,6 +283,33 @@ run("popcorn on the AI budget", () => {
     expect(completer.calls.length).toBe(0);
   });
 
+  test("an idle live tick with no translation target reads no budget", async () => {
+    const s = await seed("free", { status: "active" });
+    expect((await runPopcornTick(deps(fake()), s.loopId, "manual", newId())).status).toBe("ok");
+    let reads = 0;
+    const counting = (c: FakeCompleter): TickDeps => {
+      const base = deps(c);
+      const free = base.free as NonNullable<TickDeps["free"]>;
+      return {
+        ...base,
+        free: {
+          ...free,
+          admit: (projectId, at) => {
+            reads++;
+            return free.admit(projectId, at);
+          },
+        },
+      };
+    };
+    const completer = fake();
+    const got = await runPopcornTick(counting(completer), s.loopId, "scheduled");
+    expect({ status: got.status, reads, calls: completer.calls.length }).toEqual({
+      status: "no_op",
+      reads: 0,
+      calls: 0,
+    });
+  });
+
   test("at zero a map-only read translates nothing", async () => {
     const s = await seed("free", {
       status: "active",

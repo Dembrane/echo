@@ -72,7 +72,7 @@ export async function createReport(
   const scheduled = body.scheduled_at ? parseSchedule(body.scheduled_at, now) : null;
   if (!scheduled && (await d.store.hasDraftReport(projectId)))
     throw new ConflictError("report.already_generating");
-  await requireAiBudget(d.db, projectId, now);
+  await requireAiBudget(d.db, projectId, now, pa.tier);
 
   return d.store.transaction(async ({ store, sql }) => {
     const created = await store.insertReport({

@@ -317,10 +317,11 @@ export async function suggestions(
   chatId: string,
   language: string,
 ): Promise<{ suggestions: Suggestion[] }> {
-  const { chat } = await chatFor(gate(d), who, chatId);
+  const { chat, access } = await chatFor(gate(d), who, chatId);
   const projectId = chatProjectId(chat);
   if (!projectId) return { suggestions: [] };
-  await d.requireAiBudget(projectId, d.now());
+  // Before the limiter, so a refused request uses no slot.
+  await d.requireAiBudget(projectId, d.now(), access.tier);
   await d.limiter.check(SUGGESTIONS_LIMIT, projectId);
   return {
     suggestions: await generateSuggestions(d, projectId, chatId, chat.chat_mode, language),
@@ -333,7 +334,7 @@ export async function initializeMode(
   chatId: string,
   body: { mode: "overview" | "deep_dive" | "agentic"; project_id: string },
 ) {
-  const { chat } = await chatFor(gate(d), who, chatId, { withUsed: true });
+  const { chat, access } = await chatFor(gate(d), who, chatId, { withUsed: true });
   assertProjectMatches(chat, body.project_id);
   if (chat.chat_mode !== null)
     throw new BadRequestError("chat.mode_already_set", {
@@ -358,7 +359,7 @@ export async function initializeMode(
     };
   }
   // Overview summarises conversations; the other modes make no model call.
-  await d.requireAiBudget(body.project_id, d.now());
+  await d.requireAiBudget(body.project_id, d.now(), access.tier);
   const withContent = (await d.reads.overviewConversations(body.project_id)).filter(
     (c) => Number(c.chunks_count ?? 0) > 0,
   );

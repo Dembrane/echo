@@ -150,4 +150,20 @@ run("a scheduled report and the AI budget", () => {
     expect(lines().some((l) => l.startsWith("worker-b model report"))).toBe(true);
     expect((await report(id))?.status).toBe("archived");
   }, 90_000);
+
+  test("a budget read that fails lets the run go on", async () => {
+    await spend(LIMIT);
+    await sql`alter table billing_account rename column ai_budget_micro_eur to ai_budget_off`;
+    try {
+      writeFileSync(trace, "");
+      const id = await due();
+      spawn("worker-c", id);
+      // Either worker may take the run.
+      await until(() => lines().some((l) => l.endsWith(" webhook")));
+      expect(lines().some((l) => l.includes(" model report "))).toBe(true);
+      expect((await report(id))?.status).toBe("archived");
+    } finally {
+      await sql`alter table billing_account rename column ai_budget_off to ai_budget_micro_eur`;
+    }
+  }, 90_000);
 });

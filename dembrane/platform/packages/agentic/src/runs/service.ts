@@ -1,4 +1,4 @@
-import type { Access } from "@dembrane/access";
+import type { Access, ProjectAccess } from "@dembrane/access";
 import { requireAiBudget } from "@dembrane/allowance";
 import type { Admitted, ChatsStorage, FreeChats, UserTurn } from "@dembrane/chats";
 import {
@@ -68,6 +68,7 @@ async function assertChatInProject(d: RunsDeps, chatId: string | null, projectId
     throw new UnavailableError("chat.verify_unavailable");
   }
   mismatch(chat.project_id?.id ?? null, projectId);
+  if (chat.deleted_at) throw new NotFoundError("chat.not_found");
 }
 
 function mismatch(chatProjectId: string | null, projectId: string | null) {
@@ -121,13 +122,17 @@ async function admitHostTurn(
   projectId: string | null,
   chatId: string | null,
   text: string,
+  known: { tier: string | null; chatChecked: boolean },
 ): Promise<Gated | null> {
   if (!projectId) return null;
   const now = d.now();
-  await requireAiBudget(d.db, projectId, now);
-  if (!chatId) return null;
+  if (!chatId) {
+    await requireAiBudget(d.db, projectId, now, known.tier);
+    return null;
+  }
+  // admitTurn checks the budget too.
   const turn = { projectId, chatId, messageId: newId(), text, now };
-  return { turn, admitted: await d.freeChats.admitTurn(turn) };
+  return { turn, admitted: await d.freeChats.admitTurn(turn, known) };
 }
 
 // Undoes the admitted turn when what follows fails, then rethrows the original error.
@@ -171,16 +176,15 @@ async function runOr404(d: RunsDeps, runId: string): Promise<Row> {
  * Runs are their creator's. Spec L-2: a creator removed from the project kept reading and
  * appending to their runs; the project gate now applies as well.
  */
-async function authorizeRun(d: RunsDeps, who: Signed, run: Row) {
+async function authorizeRun(d: RunsDeps, who: Signed, run: Row): Promise<ProjectAccess | null> {
   if (run.directus_user_id !== who.directusUserId) throw new ForbiddenError("agent.run_forbidden");
   const projectId = relatedId(run.project_id);
-  if (projectId) {
-    try {
-      await agentProject(d.access, who, projectId);
-    } catch (err) {
-      if (err instanceof PlatformError) throw new ForbiddenError("agent.run_forbidden");
-      throw err;
-    }
+  if (!projectId) return null;
+  try {
+    return await agentProject(d.access, who, projectId);
+  } catch (err) {
+    if (err instanceof PlatformError) throw new ForbiddenError("agent.run_forbidden");
+    throw err;
   }
 }
 
@@ -191,12 +195,15 @@ export async function createRun(
 ): Promise<Row> {
   const project = await liveProject(d.store.sql, body.project_id);
   if (!project) throw new NotFoundError("project.not_found");
-  await agentProject(d.access, who, body.project_id);
+  const pa = await agentProject(d.access, who, body.project_id);
   await assertChatInProject(d, body.project_chat_id, body.project_id);
   const focused = await focusedConversations(d, body.project_chat_id, body.project_id);
   // The Pilot hard block the old route checked here always answers "not blocked" now
   // (is_hard_blocked is deprecated to False), so it is not ported.
-  const gated = await admitHostTurn(d, body.project_id, body.project_chat_id, body.message);
+  const gated = await admitHostTurn(d, body.project_id, body.project_chat_id, body.message, {
+    tier: pa.tier,
+    chatChecked: true,
+  });
 
   const run = await undoOnFailure(d, gated, async () => {
     const run = await d.store.create({
@@ -236,11 +243,14 @@ export async function appendMessage(
   body: { message: string; language: string },
 ): Promise<Row> {
   const run = await runOr404(d, runId);
-  await authorizeRun(d, who, run);
+  const pa = await authorizeRun(d, who, run);
   const chatId = nonEmpty(run.project_chat_id);
   const projectId = relatedId(run.project_id);
   const focused = await focusedConversations(d, chatId, projectId);
-  const gated = await admitHostTurn(d, projectId, chatId, body.message);
+  const gated = await admitHostTurn(d, projectId, chatId, body.message, {
+    tier: pa?.tier ?? null,
+    chatChecked: false,
+  });
   const payload: Record<string, unknown> = { content: body.message };
   if (focused.length) {
     payload.agent_prompt_content = followupPrompt(body.message, focused);

@@ -11,6 +11,7 @@ import { Writable } from "node:stream";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
 import {
   AI_SPEND_KEY,
+  aiBudgetForProject,
   allowanceForProject,
   invalidateFreeLimits,
   requireAiBudget,
@@ -166,5 +167,51 @@ run("canvas and the AI budget", () => {
     now = new Date(t0.getTime() + 5 * 60_000);
     expect(await tick("budget-2")).toBe("ok");
     expect(completer.calls.length).toBe(2);
+  });
+
+  const tickAt = (now: Date, completer: FakeCompleter, label: string, kind = "scheduled") => {
+    let reads = 0;
+    const base = tickDeps(
+      { db: database.db, logger: quiet, completer, canvasEnabled: true, now: () => now },
+      label,
+    );
+    const d = {
+      ...base,
+      budgetLeft: (projectId: string) => {
+        reads++;
+        return base.budgetLeft(projectId);
+      },
+    };
+    return withPayer({ ref: "canvas", id: ids.loop }, () => runTick(d, ids.loop, kind)).then(
+      (outcome) => ({ outcome, reads }),
+    );
+  };
+
+  test("an idle scheduled tick with nothing new reads no budget", async () => {
+    await spend(LIMIT);
+    const completer = fake();
+    const got = await tickAt(new Date(Date.now() + 20 * 60_000), completer, "idle-1");
+    expect(got).toEqual({ outcome: "no_op", reads: 0 });
+    expect(completer.calls.length).toBe(0);
+  });
+
+  test("a failed budget read lets the tick run and keeps the schedule", async () => {
+    await spend(LIMIT);
+    await raw`alter table billing_account rename column ai_budget_micro_eur to ai_budget_off`;
+    try {
+      expect(
+        await rejection(aiBudgetForProject(database.db, ids.project, new Date())),
+      ).toBeTruthy();
+      await raw`delete from scheduled_task where task_type = 'canvas_tick'`;
+      const completer = fake();
+      const got = await tickAt(new Date(Date.now() + 30 * 60_000), completer, "broken-1", "manual");
+      expect(got).toEqual({ outcome: "ok", reads: 1 });
+      expect(completer.calls.length).toBe(2);
+      const next =
+        await raw`select status from scheduled_task where task_type = 'canvas_tick' and status = 'scheduled'`;
+      expect(next).toHaveLength(1);
+    } finally {
+      await raw`alter table billing_account rename column ai_budget_off to ai_budget_micro_eur`;
+    }
   });
 });

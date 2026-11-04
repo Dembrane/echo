@@ -14,7 +14,7 @@ export interface ChatDeps {
   readonly access: Access;
   readonly freeChats: FreeChats;
   /** Throws the 402 `ai_budget` when the project's free account has used its AI budget. */
-  readonly requireAiBudget: (projectId: string, now: Date) => Promise<void>;
+  readonly requireAiBudget: (projectId: string, now: Date, tier?: string | null) => Promise<void>;
   /** Language models by group; tests pass fakes. */
   readonly models: Pick<Models, "model">;
   readonly limiter: Pick<RateLimiter, "check">;

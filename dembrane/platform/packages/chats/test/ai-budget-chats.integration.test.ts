@@ -9,8 +9,9 @@ import {
 } from "bun:test";
 import { Writable } from "node:stream";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
-import { AI_SPEND_KEY, invalidateFreeLimits } from "@dembrane/allowance";
+import { AI_SPEND_KEY, freeLimits, invalidateFreeLimits } from "@dembrane/allowance";
 import { connect, createDb, migrate } from "@dembrane/db";
+import { countingDb } from "@dembrane/db/testing";
 import type { Env, Signed } from "@dembrane/http";
 import { fakeModels } from "@dembrane/llm";
 import { createLogger, withPayer } from "@dembrane/observability";
@@ -43,13 +44,14 @@ run("chats and the AI budget", () => {
   let database: ReturnType<typeof createDb>;
   let sql: postgres.Sql;
   let access: Access;
+  let url: string;
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     await a.unsafe(`create database ${dbName}`);
     await a.end();
-    const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
+    url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 12 });
     sql = connect(url, { max: 2, onnotice: () => {} });
@@ -401,6 +403,66 @@ run("chats and the AI budget", () => {
       expect(await rejection(fc.admitTurn(turn(s.own, gone, 0)))).toMatchObject({ status: 404 });
       expect(await userMessages(foreign)).toBe(0);
       expect(await userMessages(gone)).toBe(0);
+    });
+
+    test("statements per turn: paid back to three, a known paid tier two, free one budget read", async () => {
+      const free = await seed();
+      const paid = await seed("innovator");
+      const c = countingDb(url, 4);
+      try {
+        await freeLimits(c.db, () => now);
+        const fc = freeChats(c.db);
+        const sent = async (t: UserTurn, opts?: Parameters<typeof fc.admitTurn>[1]) => {
+          c.log.length = 0;
+          expect(await fc.admitTurn(t, opts)).toEqual({ inserted: true });
+          return c.log.map((l) => l.q.trim().split(/\s+/)[0]?.toLowerCase());
+        };
+        const pc = await chat(paid.own);
+        // Resolve, stored, insert: no chat re-read, no is_sample read, no transaction.
+        expect(await sent(turn(paid.own, pc, 0), { chatChecked: true })).toEqual([
+          "select",
+          "select",
+          "insert",
+        ]);
+        expect(await sent(turn(paid.own, pc, 1), { chatChecked: true, tier: "innovator" })).toEqual(
+          ["select", "insert"],
+        );
+        // Free: one resolve with is_sample, the override and usage, stored, insert.
+        const fcid = await chat(free.own);
+        expect(await sent(turn(free.own, fcid, 0), { chatChecked: true })).toHaveLength(5);
+        // Unchecked callers still read the chat.
+        expect(await sent(turn(free.own, fcid, 1))).toHaveLength(6);
+        // Link rows keep the message and its links in one transaction.
+        const conv = id();
+        await sql`insert into conversation (id, project_id) values (${conv}, ${paid.own})`;
+        const linked = await sent(
+          { ...turn(paid.own, pc, 2), usedConversationIds: [conv] },
+          { chatChecked: true, tier: "innovator" },
+        );
+        expect(linked).toEqual(["select", "begin", "insert", "insert", "commit"]);
+      } finally {
+        await c.close();
+      }
+    });
+
+    test("a known paid tier skips the sample cap like a paid read does", async () => {
+      const s = await seed("innovator");
+      const sc = await chat(s.sample);
+      await seedTurns(sc, 10);
+      const fc = freeChats(database.db);
+      expect(
+        await fc.admitTurn(turn(s.sample, sc, 10), { chatChecked: true, tier: "innovator" }),
+      ).toEqual({ inserted: true });
+    });
+
+    test("a free sample still caps at ten turns when the tier is known", async () => {
+      const s = await seed();
+      const sc = await chat(s.sample);
+      await seedTurns(sc, 10);
+      const fc = freeChats(database.db);
+      expect(
+        await rejection(fc.admitTurn(turn(s.sample, sc, 10), { chatChecked: true, tier: "free" })),
+      ).toMatchObject({ status: 402, details: { limit: "chat_turns" } });
     });
 
     test("undo deletes the message once; after a no-op retry it keeps the original", async () => {

@@ -23,6 +23,33 @@ export function audioSecondsOf(bytes: Uint8Array): number {
 
 type Estimate = { inputTokens: number; audioInputTokens: number };
 
+// Past this many characters a prompt's text is sampled: encoding 1 MB blocks the loop ~100 ms.
+export const ESTIMATE_SAMPLE_CHARS = 32_000;
+const SAMPLE_WINDOWS = 16;
+
+// Exact up to the cap; above it, evenly spaced windows scaled up to the whole length.
+function estimateTexts(texts: readonly string[]): number {
+  let total = 0;
+  for (const t of texts) total += t.length;
+  if (total <= ESTIMATE_SAMPLE_CHARS) {
+    let n = 0;
+    for (const t of texts) n += estimateText(t);
+    return n;
+  }
+  const all = texts.join("\n");
+  const width = Math.floor(ESTIMATE_SAMPLE_CHARS / SAMPLE_WINDOWS);
+  const step = all.length / SAMPLE_WINDOWS;
+  let sampled = 0;
+  let tokens = 0;
+  for (let i = 0; i < SAMPLE_WINDOWS; i++) {
+    const start = Math.floor(i * step);
+    const window = all.slice(start, start + width);
+    sampled += window.length;
+    tokens += estimateText(window);
+  }
+  return Math.ceil((tokens * all.length) / sampled);
+}
+
 // Every attempt of one call shares its prompt: count it once.
 const counted = new WeakMap<LanguageModelV4Prompt, { text: number; audio: number }>();
 
@@ -40,30 +67,30 @@ export function estimateInput(
 }
 
 function countPrompt(prompt: LanguageModelV4Prompt): { text: number; audio: number } {
-  let text = 0;
+  const texts: string[] = [];
   let audio = 0;
   for (const message of prompt) {
     if (typeof message.content === "string") {
-      text += estimateText(message.content);
+      texts.push(message.content);
       continue;
     }
     for (const part of message.content) {
       switch (part.type) {
         case "text":
         case "reasoning":
-          text += estimateText(part.text);
+          texts.push(part.text);
           break;
         case "file": {
           const bytes = part.mediaType.startsWith("audio/") ? fileBytes(part.data) : null;
           if (bytes) audio += Math.ceil(audioSecondsOf(bytes) * AUDIO_TOKENS_PER_SECOND);
-          else if (part.data.type === "text") text += estimateText(part.data.text);
+          else if (part.data.type === "text") texts.push(part.data.text);
           break;
         }
         case "tool-call":
-          text += estimateText(JSON.stringify(part.input) ?? "");
+          texts.push(JSON.stringify(part.input) ?? "");
           break;
         case "tool-result":
-          text += estimateText(
+          texts.push(
             part.output.type === "text" || part.output.type === "error-text"
               ? part.output.value
               : (JSON.stringify(part.output) ?? ""),
@@ -72,7 +99,7 @@ function countPrompt(prompt: LanguageModelV4Prompt): { text: number; audio: numb
       }
     }
   }
-  const count = { text, audio };
+  const count = { text: estimateTexts(texts), audio };
   counted.set(prompt, count);
   return count;
 }

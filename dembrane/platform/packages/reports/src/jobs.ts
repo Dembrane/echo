@@ -57,6 +57,16 @@ export interface GenerateDeps {
 
 type Payload = Parsed<typeof generateReport>;
 
+// A failed read lets the run go on; the host started it, and started work finishes.
+async function budgetLeft(d: GenerateDeps, p: Payload): Promise<boolean> {
+  try {
+    return await d.budgetLeft(p.projectId);
+  } catch (err) {
+    d.logger.warn({ err, reportId: p.reportId }, "reading the AI budget failed; the report runs");
+    return true;
+  }
+}
+
 /** Progress for the report page's stream, delivered on commit of nothing: a nudge, best effort. */
 async function progress(
   d: Pick<GenerateDeps, "store" | "logger">,
@@ -180,7 +190,7 @@ export function generateReportWorkflow(d: GenerateDeps) {
       async () => {
         const report = await d.store.report(String(p.reportId));
         const open = report && (report.status === "draft" || report.status === "scheduled");
-        if (open && !(await d.budgetLeft(p.projectId))) {
+        if (open && !(await budgetLeft(d, p))) {
           await markError(d, p, "AI_BUDGET_USED_UP", "This month's AI budget is used up.");
           await phaseEnded(
             d,

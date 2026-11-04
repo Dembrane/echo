@@ -5,6 +5,7 @@ import cl100k from "js-tiktoken/ranks/cl100k_base";
 import {
   AUDIO_TOKENS_PER_SECOND,
   audioSecondsOf,
+  ESTIMATE_SAMPLE_CHARS,
   estimateInput,
   estimateText,
   markNotSent,
@@ -12,6 +13,25 @@ import {
 } from "../src/estimate";
 
 const cl = new Tiktoken(cl100k);
+
+// Transcript-like text: mixed English and Dutch words, numbers and punctuation, seeded.
+const WORDS =
+  'the residents said that buses should run later at night because many people work late shifts in the hospital and harbour; others asked for more cycle lanes, safer crossings near schools and better lighting in parks. Bewoners zeiden dat de bussen later moeten rijden omdat velen laat werken. 2026-11-04 12:30 EUR 5,00 #42 (Table 3) "yes"'.split(
+    " ",
+  );
+function transcript(chars: number, seed: number): string {
+  let x = seed;
+  const out: string[] = [];
+  let len = 0;
+  while (len < chars) {
+    x = (x * 1103515245 + 12345) % 2147483648;
+    const w = WORDS[x % WORDS.length] as string;
+    out.push(w);
+    len += w.length + 1;
+  }
+  return out.join(" ");
+}
+const exact = (texts: string[]) => texts.reduce((n, t) => n + cl.encode(t, [], []).length, 0);
 
 describe("estimate", () => {
   test("text is counted with tiktoken cl100k", () => {
@@ -113,6 +133,42 @@ describe("estimate", () => {
     expect(estimateInput(prompt).inputTokens).toBe(
       cl.encode(JSON.stringify({ q: "bikes" })).length + cl.encode("three results").length,
     );
+  });
+
+  test("a prompt at the sample size is still counted exactly", () => {
+    const text = transcript(ESTIMATE_SAMPLE_CHARS - 10, 1);
+    const prompt: LanguageModelV4Prompt = [{ role: "system", content: text }];
+    expect(estimateInput(prompt).inputTokens).toBe(exact([text]));
+  });
+
+  test("a huge prompt is sampled: a few ms, within 3% of the exact count", () => {
+    estimateInput([{ role: "system", content: transcript(40_000, 9) }]);
+    const system = transcript(8_000, 2);
+    const turns = Array.from({ length: 40 }, (_, i) => transcript(50_000, 10 + i));
+    const prompt: LanguageModelV4Prompt = [
+      { role: "system", content: system },
+      ...turns.map((t) => ({
+        role: "user" as const,
+        content: [{ type: "text" as const, text: t }],
+      })),
+    ];
+    const t0 = performance.now();
+    const got = estimateInput(prompt).inputTokens;
+    const ms = performance.now() - t0;
+    const want = exact([system, ...turns]);
+    expect(Math.abs(got - want) / want).toBeLessThan(0.03);
+    // Encoding all 2 MB takes ~250 ms here.
+    expect(ms).toBeLessThan(30);
+  });
+
+  test("many short turns past the sample size stay within 3%", () => {
+    const turns = Array.from({ length: 3_000 }, (_, i) => transcript(200, 100 + i));
+    const prompt: LanguageModelV4Prompt = turns.map((t) => ({
+      role: "user" as const,
+      content: [{ type: "text" as const, text: t }],
+    }));
+    const want = exact(turns);
+    expect(Math.abs(estimateInput(prompt).inputTokens - want) / want).toBeLessThan(0.03);
   });
 
   test("a call the provider never accepted: a 4xx or a connection error", () => {

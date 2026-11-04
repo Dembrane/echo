@@ -10,6 +10,7 @@ import { publishGenerationNudge } from "./events";
 import { dict, orStr, utcNowIso } from "./py";
 import { canvasStore, client } from "./storage";
 import {
+  budgetSkip,
   createRun,
   derivedId,
   enqueueNextIfDue,
@@ -79,8 +80,15 @@ export function tickDeps(deps: CanvasWorkerDeps, runId: string): TickDeps {
     completer: deps.completer,
     canvasEnabled: deps.canvasEnabled,
     now,
-    budgetLeft: async (projectId) =>
-      (await aiBudgetForProject(deps.db, projectId, now()))?.exhausted !== true,
+    // A failed read lets the tick run, so the loop keeps its schedule.
+    budgetLeft: async (projectId) => {
+      try {
+        return (await aiBudgetForProject(deps.db, projectId, now()))?.exhausted !== true;
+      } catch (err) {
+        deps.logger.warn({ err, projectId }, "reading the AI budget failed; the tick goes on");
+        return true;
+      }
+    },
     nudge: (reportId) => publishGenerationNudge(sql, reportId, deps.logger),
     claimWindow: (loopId, window, ttl) =>
       limiter.allow({ name: WINDOW_LIMIT, capacity: 1, windowSeconds: ttl }, `${loopId}:${window}`),
@@ -93,8 +101,6 @@ export async function tickWorkflow(d: TickDeps, loopId: string, tickKind: string
   const prepared = await step("prepare", () => prepareTick(d, loopId, tickKind), STEP);
   const next = () =>
     step("schedule-next", () => enqueueNextIfDue(d, loopId, null, d.idFor("next")), STEP);
-  // A skip for budget keeps the schedule, so ticks resume on their own after the reset.
-  if (prepared.outcome === "budget") await next();
   if (prepared.outcome !== "continue") return prepared.outcome;
   const plan = prepared.plan;
   let configId: string | null = null;
@@ -116,6 +122,12 @@ export async function tickWorkflow(d: TickDeps, loopId: string, tickKind: string
       );
       await next();
       return "no_op";
+    }
+    // A skip for budget keeps the schedule, so ticks resume on their own after the reset.
+    if (g.budgetUsedUp) {
+      await step("budget-skip", () => budgetSkip(d, plan), STEP);
+      await next();
+      return "budget";
     }
     const extracted = await step("extract", () => extractTick(d, plan, g), STEP);
     if ("failed" in extracted) {

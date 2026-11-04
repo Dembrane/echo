@@ -37,7 +37,7 @@ export function chatDeps(deps: ChatRoutesDeps): ChatDeps {
     reads: chatReads(deps.db),
     access: deps.access,
     freeChats: freeChats(deps.db),
-    requireAiBudget: (projectId, now) => requireAiBudget(deps.db, projectId, now),
+    requireAiBudget: (projectId, now, tier) => requireAiBudget(deps.db, projectId, now, tier),
     models: deps.models,
     limiter: deps.limiter,
     capture: deps.capture,

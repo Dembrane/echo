@@ -53,8 +53,8 @@ export function pooled(row: AccountRow): boolean {
   );
 }
 
-function resolve(db: Db, from: SQL, where: SQL) {
-  return db.execute<AccountRow>(sql`${accountQuery(from, where)} limit 1`);
+function resolve<R extends AccountRow = AccountRow>(db: Db, from: SQL, where: SQL, extra?: SQL) {
+  return db.execute<R>(sql`${accountQuery(from, where, extra)} limit 1`);
 }
 
 function pick(row: AccountRow | undefined, now: Date): AllowanceAccount | null {
@@ -96,15 +96,35 @@ export async function allowanceForProject(
   return pick(rows[0], now);
 }
 
+export interface ProjectAllowance {
+  readonly account: AllowanceAccount | null;
+  readonly sample: boolean;
+}
+
+// The project's account and whether it is a sample, in one read.
+export async function projectAllowance(
+  db: Db,
+  projectId: string,
+  now: Date,
+): Promise<ProjectAllowance> {
+  if (!isUuid(projectId)) return { account: null, sample: false };
+  const rows = await resolve<AccountRow & { is_sample: boolean | null }>(
+    db,
+    sql`from project p join workspace w on w.id = p.workspace_id`,
+    sql`p.id = ${projectId}`,
+    sql`, p.is_sample`,
+  );
+  return { account: pick(rows[0], now), sample: rows[0]?.is_sample === true };
+}
+
 // The account a project's usage counts against; null when unlimited or a sample project.
 export async function allowanceForCountedProject(
   db: Db,
   projectId: string,
   now: Date,
 ): Promise<AllowanceAccount | null> {
-  const a = await allowanceForProject(db, projectId, now);
-  if (!a) return null;
-  return (await isSampleProject(db, projectId)) ? null : a;
+  const { account, sample } = await projectAllowance(db, projectId, now);
+  return sample ? null : account;
 }
 
 // A workspace's sample copy: its usage counts against no one.

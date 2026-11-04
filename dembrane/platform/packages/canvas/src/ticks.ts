@@ -517,6 +517,8 @@ export interface Gathered {
   readonly structureChanged: boolean;
   readonly coldStart: boolean;
   readonly bundle: Json;
+  /** Set only when a model call would follow and the AI budget is used up. */
+  readonly budgetUsedUp?: boolean;
 }
 
 export async function createRun(
@@ -580,8 +582,6 @@ export async function prepareTick(
       return noOp("Duplicate tick for cadence window", "duplicate");
   }
   const projectId = asId(loop.project_id);
-  if (projectId && !(await d.budgetLeft(projectId)))
-    return noOp("Skipped: the AI budget is used up", "budget");
   return {
     outcome: "continue",
     plan: {
@@ -615,7 +615,7 @@ export async function gatherTick(d: TickDeps, plan: TickPlan): Promise<Gathered>
     fullHistory: coldStart,
     now: d.now(),
   });
-  return {
+  const g: Gathered = {
     config,
     latestOk: latestOk ? { ...latestOk, created_at: directusTime(latestOk.created_at) } : null,
     state,
@@ -623,6 +623,20 @@ export async function gatherTick(d: TickDeps, plan: TickPlan): Promise<Gathered>
     coldStart,
     bundle,
   };
+  // Read only when a model call would follow.
+  if (nothingNew(plan, g) || (await d.budgetLeft(plan.projectId))) return g;
+  return { ...g, budgetUsedUp: true };
+}
+
+/** The no-op run of a tick skipped at a used-up AI budget; the schedule is kept. */
+export function budgetSkip(d: TickDeps, plan: TickPlan) {
+  return createRun(d, {
+    label: "budget",
+    loopId: plan.loopId,
+    status: "no_op",
+    startedAt: plan.startedAt,
+    detail: "Skipped: the AI budget is used up",
+  });
 }
 
 /** Nothing new since the last good generation and nothing forces a redraw. */
@@ -834,7 +848,6 @@ export async function runTick(
   tickKind = "scheduled",
 ): Promise<TickOutcome> {
   const prepared = await prepareTick(d, loopId, tickKind);
-  if (prepared.outcome === "budget") await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
   if (prepared.outcome !== "continue") return prepared.outcome;
   const plan = prepared.plan;
   let configId: string | null = null;
@@ -851,6 +864,11 @@ export async function runTick(
       });
       await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
       return "no_op";
+    }
+    if (g.budgetUsedUp) {
+      await budgetSkip(d, plan);
+      await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
+      return "budget";
     }
     const extracted = await extractTick(d, plan, g);
     if ("failed" in extracted) {
