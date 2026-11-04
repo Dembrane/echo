@@ -18,7 +18,7 @@ struct LoginView: View {
 
     var body: some View {
         if let elsewhere = model.signedInElsewhere {
-            SignedInElsewhereView(since: elsewhere.since)
+            SignedInElsewhereView(devices: elsewhere.devices)
         } else {
             form
         }
@@ -196,19 +196,37 @@ private extension View {
     }
 }
 
-/// Shown when a sign-in met the account signed in on another device. The
-/// account allows one device at a time, so going ahead signs the other one out.
+/// Shown when a sign-in met the account signed in on two other devices, its
+/// limit. One decision: sign out a chosen device and continue, or go back. The
+/// words are the dashboard's for the same moment.
 private struct SignedInElsewhereView: View {
     @Environment(AppModel.self) private var model
-    let since: Date?
+    let devices: [OtherDevice]
+    @State private var choice: OtherDevice.ID?
+
+    /// The choice only while that device is still in the list the server sent.
+    private var selected: OtherDevice.ID? {
+        devices.contains { $0.id == choice } ? choice : nil
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
-            Text("This account is logged in somewhere else")
+            Text("Choose a device to sign out")
                 .font(.title.weight(.semibold)).foregroundStyle(.primary)
-            Text(explanation)
+            Text("Your account can be signed in on up to two devices. Choose one to sign out so you can continue here.")
                 .font(.callout).foregroundStyle(.secondary)
+            Text("Sharing this login with a colleague? An admin of your organisation can invite them, so each of you has a login of your own.")
+                .font(.caption).foregroundStyle(.secondary)
+
+            VStack(spacing: 10) {
+                ForEach(devices) { device in
+                    DeviceChoiceRow(device: device, isSelected: device.id == selected) {
+                        choice = device.id
+                    }
+                }
+            }
+            .disabled(model.isSigningIn)
 
             if let error = model.loginError {
                 Text(error).font(.callout)
@@ -217,21 +235,23 @@ private struct SignedInElsewhereView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Button {
-                    Task { await model.logInAnyway() }
+                    guard let selected else { return }
+                    Task { await model.signOutDeviceAndContinue(selected) }
                 } label: {
                     if model.isSigningIn {
                         ProgressView().frame(maxWidth: .infinity)
                     } else {
-                        Text("Log in anyway").font(.headline).frame(maxWidth: .infinity)
+                        Text("Sign out selected device and continue").font(.headline)
+                            .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                     }
                 }
                 .buttonStyle(.glassProminent).controlSize(.large).tint(BrandColor.royalBlue)
-                .disabled(model.isSigningIn)
-                Text("Logging in here logs the other device out.")
+                .disabled(model.isSigningIn || selected == nil)
+                Text("The other device will stay signed in.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Button("Back to log in") { Task { await model.cancelLogInAnyway() } }
+            Button("Back to log in") { Task { await model.cancelHeldSignIn() } }
                 .font(.callout).tint(BrandColor.royalBlue)
                 .disabled(model.isSigningIn)
             Spacer()
@@ -239,12 +259,39 @@ private struct SignedInElsewhereView: View {
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
+}
 
-    private var explanation: String {
-        let rule = "For security, an account can be logged in on one device at a time."
-        guard let since else { return "It is logged in on another device. \(rule)" }
-        let when = since.formatted(date: .abbreviated, time: .shortened)
-        return "It has been logged in on another device since \(when). \(rule)"
+/// One signed-in device to choose: its name, when it was last used, and a check
+/// mark once chosen.
+private struct DeviceChoiceRow: View {
+    let device: OtherDevice
+    let isSelected: Bool
+    let select: () -> Void
+
+    var body: some View {
+        Button(action: select) {
+            HStack(spacing: 14) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? BrandColor.royalBlue : Color.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(device.name).font(.body.weight(.medium)).foregroundStyle(.primary)
+                    if let lastActive = device.lastActiveAt {
+                        Text("Last active \(lastActive.formatted(date: .abbreviated, time: .shortened))")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Color(.secondarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(isSelected ? AnyShapeStyle(BrandColor.royalBlue) : AnyShapeStyle(.quaternary)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

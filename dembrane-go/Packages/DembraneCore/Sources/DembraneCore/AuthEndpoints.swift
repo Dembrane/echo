@@ -10,7 +10,7 @@ public extension DembraneEndpoints {
     func sendSignInCode() -> URL { auth.appending(path: "email-otp/send-verification-otp") }
     func signInEmailCode() -> URL { auth.appending(path: "sign-in/email-otp") }
     func otherSessions() -> URL { auth.appending(path: "other-sessions") }
-    func replaceOtherSessions() -> URL { auth.appending(path: "other-sessions/replace") }
+    func replaceOtherDevice() -> URL { auth.appending(path: "other-sessions/replace-device") }
     func getSession() -> URL { auth.appending(path: "get-session") }
     func signOut() -> URL { auth.appending(path: "sign-out") }
 

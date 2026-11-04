@@ -16,7 +16,7 @@ final class AuthEndpointsTests: XCTestCase {
         XCTAssertEqual(e.getSession().absoluteString, "\(base)/auth/get-session")
         XCTAssertEqual(e.signOut().absoluteString, "\(base)/auth/sign-out")
         XCTAssertEqual(e.otherSessions().absoluteString, "\(base)/auth/other-sessions")
-        XCTAssertEqual(e.replaceOtherSessions().absoluteString, "\(base)/auth/other-sessions/replace")
+        XCTAssertEqual(e.replaceOtherDevice().absoluteString, "\(base)/auth/other-sessions/replace-device")
     }
 
     func testAssetIsServedByTheAPI() {

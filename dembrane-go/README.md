@@ -53,7 +53,7 @@ frontend→app parity audit, and [TESTFLIGHT.md](TESTFLIGHT.md) for shipping.
 - Settings → open the project's portal editor on the dashboard.
 
 **Auth & settings**
-- Login (email/password, authenticator code, or an emailed sign-in code), 3-step Register, forgot-password (web). An account is signed in on one device at a time: signing in here asks before signing the other device out.
+- Login (email/password, authenticator code, or an emailed sign-in code), 3-step Register, forgot-password (web). An account is signed in on up to two devices: signing in on a third asks which one to sign out.
 - Session restore (Keychain on device / UserDefaults on simulator), sign out.
 - Settings: account, default project, source link, version.
 

@@ -9,7 +9,8 @@ import XCTest
 ///     DEMBRANE_LIVE_ENV=staging DEMBRANE_LIVE_EMAIL=… DEMBRANE_LIVE_PASSWORD=… \
 ///     DEMBRANE_LIVE_CLIPS=/path/a.m4a:/path/b.m4a swift test --filter LiveWalkTests
 ///
-/// Use a throwaway account: the walk signs it out on every other device.
+/// Use a throwaway account: when it is already on two devices, the walk signs
+/// out the one used least recently.
 final class LiveWalkTests: XCTestCase {
     func testCoreFlow() async throws {
         let vars = ProcessInfo.processInfo.environment
@@ -25,8 +26,8 @@ final class LiveWalkTests: XCTestCase {
                                deviceId: "live-walk-\(UUID().uuidString.lowercased())")
         do {
             _ = try await auth.login(email: email, password: password)
-        } catch AuthError.signedInElsewhere {
-            _ = try await auth.replaceOtherSessions()
+        } catch AuthError.signedInElsewhere(let devices) {
+            _ = try await auth.replaceOtherDevice(try XCTUnwrap(devices.last).id)
         }
         let alive = try await auth.refresh()
         XCTAssertTrue(alive)

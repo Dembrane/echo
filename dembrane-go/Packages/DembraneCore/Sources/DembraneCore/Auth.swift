@@ -17,9 +17,10 @@ public enum AuthError: Error, Sendable, Equatable {
     case otpRequired          // 2FA enabled — a valid authenticator code is needed (or was wrong)
     case invalidCode          // the emailed sign-in code was wrong or has expired
     case emailNotVerified
-    /// The account is signed in on another device. The sign-in is kept waiting
-    /// until `replaceOtherSessions()` or `cancelHeldSignIn()`.
-    case signedInElsewhere(since: Date?)
+    /// The account is signed in on two other devices, its limit. The sign-in is
+    /// kept waiting until `replaceOtherDevice(_:)` signs one of them out, or
+    /// `cancelHeldSignIn()`.
+    case signedInElsewhere(devices: [OtherDevice])
     case rateLimited(retryAfter: Int?)
     case accountInactive
     case server(status: Int)
@@ -71,7 +72,7 @@ public enum DeviceIdentity {
 }
 
 /// Sign-in against the dembrane API: password, authenticator code, emailed
-/// code, and the one-device rule. The token it stores is what every other
+/// code, and the two-device rule. The token it stores is what every other
 /// client sends as `Authorization: Bearer`.
 public actor AuthService {
     private let endpoints: DembraneEndpoints
@@ -79,7 +80,7 @@ public actor AuthService {
     private let sessionManager: SessionManager
     private let deviceId: String
     /// A sign-in the server accepted but keeps waiting because the account is
-    /// signed in on another device. It signs nobody in until replaced.
+    /// signed in on two other devices. It signs nobody in until one is signed out.
     private var held: DembraneSession?
 
     /// The server refuses a sign-in call that carries cookies without a browser
@@ -135,11 +136,17 @@ public actor AuthService {
         return try await finishSignIn(reply)
     }
 
-    /// Signs the account out on its other devices and completes the sign-in
-    /// that `signedInElsewhere` left waiting.
-    public func replaceOtherSessions() async throws -> DembraneSession {
+    /// Signs out the device the person chose from `signedInElsewhere` and
+    /// completes the sign-in it left waiting. When the devices changed in the
+    /// meantime, a freed place completes the sign-in, and otherwise the fresh
+    /// list comes back as `signedInElsewhere`.
+    public func replaceOtherDevice(_ id: OtherDevice.ID) async throws -> DembraneSession {
         guard let held else { throw AuthError.badResponse }
-        _ = try await post(endpoints.replaceOtherSessions(), json: [:], token: held.accessToken)
+        do {
+            _ = try await post(endpoints.replaceOtherDevice(), json: ["sessionId": id], token: held.accessToken)
+        } catch AuthError.server(status: 409) {
+            return try await finishSignIn(token: held.accessToken)
+        }
         try await sessionManager.set(held)
         self.held = nil
         return held
@@ -211,15 +218,19 @@ public actor AuthService {
     }
 
     /// Stores the session a sign-in returned, unless the server is holding it
-    /// because the account is signed in on another device.
+    /// because the account is signed in on two other devices.
     private func finishSignIn(_ reply: Reply) async throws -> DembraneSession {
         guard let token = reply.headerToken ?? reply.body.token, !token.isEmpty else {
             throw AuthError.badResponse
         }
+        return try await finishSignIn(token: token)
+    }
+
+    private func finishSignIn(token: String) async throws -> DembraneSession {
         let new = DembraneSession(accessToken: token)
         if let hold = await hold(token: token) {
             held = new
-            throw AuthError.signedInElsewhere(since: hold.since)
+            throw AuthError.signedInElsewhere(devices: hold.devices)
         }
         held = nil
         try await sessionManager.set(new)
@@ -243,6 +254,7 @@ public actor AuthService {
         req.timeoutInterval = 20
         req.httpShouldHandleCookies = false
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         req.setValue(deviceId, forHTTPHeaderField: "x-device-id")
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         return req
@@ -306,6 +318,11 @@ public actor AuthService {
             .map { "\($0.name)=\($0.value)" }
     }
 
+    /// The server keeps the user agent a session signed in with, and names the
+    /// device by it when someone has to choose one to sign out. This one reads as
+    /// "iPhone" there, where the system's own reads as an unknown device.
+    static let userAgent = "dembrane Go (iPhone)"
+
     static func origin(of url: URL) -> String {
         var out = "\(url.scheme ?? "https")://\(url.host ?? "")"
         if let port = url.port { out += ":\(port)" }
@@ -318,9 +335,37 @@ struct SignInBody: Decodable {
     var twoFactorRedirect: Bool?
 }
 
+/// A device the account is signed in on, as the server lists it while a sign-in
+/// is held: coarse names read from its user agent, and when it was last used.
+public struct OtherDevice: Decodable, Sendable, Equatable, Identifiable {
+    /// One of the device's sessions. Signing it out signs out the whole device.
+    public let id: String
+    public let browser: String?
+    public let platform: String?
+    public let lastActiveAt: Date?
+
+    /// "Chrome on macOS", whichever of the two the server knew, or "Unknown device".
+    public var name: String {
+        switch (browser, platform) {
+        case let (browser?, platform?): return "\(browser) on \(platform)"
+        case let (browser?, nil): return browser
+        case let (nil, platform?): return platform
+        case (nil, nil): return "Unknown device"
+        }
+    }
+}
+
 struct OtherSessions: Decodable {
     let held: Bool
-    let since: Date?
+    let devices: [OtherDevice]
+
+    private enum CodingKeys: String, CodingKey { case held, devices }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        held = try c.decode(Bool.self, forKey: .held)
+        devices = try c.decodeIfPresent([OtherDevice].self, forKey: .devices) ?? []
+    }
 }
 
 struct SessionEnvelope: Decodable {

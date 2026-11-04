@@ -8,7 +8,7 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 - ✅ Login (email/password) — `/api/auth/sign-in/email` → Bearer session token
 - ✅ Two-factor (authenticator code) — `/api/auth/two-factor/verify-totp`
 - ✅ Emailed sign-in code — `/api/auth/email-otp/send-verification-otp` → `/api/auth/sign-in/email-otp`
-- ✅ One device per account — a sign-in that meets another device waits behind "Log in anyway" (`/api/auth/other-sessions`, `/replace`)
+- ✅ Two devices per account — a sign-in that meets two other devices asks which one to sign out (`/api/auth/other-sessions`, `/replace-device`)
 - 🖥️ Google sign-in — web only; those accounts use the emailed code here
 - ✅ Register (3-step) — `/api/v2/auth/register`
 - ✅ Forgot password — opens dashboard reset page (web)

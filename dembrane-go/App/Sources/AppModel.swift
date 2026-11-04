@@ -42,10 +42,10 @@ final class AppModel {
     var loginError: String?
     var isSigningIn = false
     var needsOTP = false        // 2FA: show the one-time-code field
-    /// Set when a sign-in is waiting because the account is signed in on
-    /// another device; the login screen then asks whether to log in anyway.
+    /// Set when a sign-in is waiting because the account is signed in on two
+    /// other devices; the login screen then asks which one to sign out.
     var signedInElsewhere: SignedInElsewhere?
-    struct SignedInElsewhere: Equatable { let since: Date? }
+    struct SignedInElsewhere: Equatable { let devices: [OtherDevice] }
     var statusMessage: String?
     var isRegistering = false
     var registerError: String?
@@ -356,14 +356,18 @@ final class AppModel {
         }
     }
 
-    /// Completes the waiting sign-in by signing the account out everywhere else.
-    func logInAnyway() async {
+    /// Completes the waiting sign-in by signing out the device the person chose.
+    /// When the devices changed meanwhile, the screen shows the fresh list.
+    func signOutDeviceAndContinue(_ id: OtherDevice.ID) async {
         await runSignIn(codeEntered: false) {
-            _ = try await self.auth.replaceOtherSessions()
+            _ = try await self.auth.replaceOtherDevice(id)
+        }
+        if signedInElsewhere != nil, loginError == nil {
+            loginError = "The active devices changed. Choose again."
         }
     }
 
-    func cancelLogInAnyway() async {
+    func cancelHeldSignIn() async {
         signedInElsewhere = nil
         await auth.cancelHeldSignIn()
     }
@@ -379,8 +383,8 @@ final class AppModel {
             signedInElsewhere = nil
             phase = .signedIn
             await loadData()
-        } catch AuthError.signedInElsewhere(let since) {
-            signedInElsewhere = SignedInElsewhere(since: since)
+        } catch AuthError.signedInElsewhere(let devices) {
+            signedInElsewhere = SignedInElsewhere(devices: devices)
             if phase == .loading { phase = .signedOut }
         } catch AuthError.otpRequired {
             // 2FA: reveal the code field. If a code was already entered, it was wrong.

@@ -45,6 +45,7 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertEqual(session.accessToken, "raw.signature")
         XCTAssertEqual(log.all.first?.url?.absoluteString, "\(base)/sign-in/email")
         XCTAssertEqual(log.all.first?.value(forHTTPHeaderField: "x-device-id"), "device-1234")
+        XCTAssertEqual(log.all.first?.value(forHTTPHeaderField: "User-Agent"), "dembrane Go (iPhone)")
         XCTAssertNil(log.all.first?.value(forHTTPHeaderField: "Cookie"))
         XCTAssertEqual(log.all.last?.value(forHTTPHeaderField: "Authorization"), "Bearer raw.signature")
         let stored = await manager.accessToken()
@@ -134,14 +135,50 @@ final class AuthServiceTests: XCTestCase {
         }
     }
 
-    func testSignInOnASecondDeviceWaitsUntilReplaced() async throws {
+    /// A request body the mock saw.
+    private final class Captured: @unchecked Sendable {
+        private let lock = NSLock()
+        private var stored: [String: String]?
+        var value: [String: String]? {
+            get { lock.withLock { stored } }
+            set { lock.withLock { stored = newValue } }
+        }
+    }
+
+    /// What the server answers while a sign-in is held on two other devices.
+    private static let heldOnTwo = #"""
+        {"held":true,"since":"2026-10-09T07:03:48.482Z","devices":[
+          {"id":"s-mac","browser":"Chrome","platform":"macOS","lastActiveAt":"2026-11-04T09:12:00.000Z"},
+          {"id":"s-phone","browser":null,"platform":"iPhone","lastActiveAt":"2026-11-02T18:40:00.000Z"}]}
+        """#
+
+    private static func body(of req: URLRequest) -> [String: String]? {
+        guard let stream = req.httpBodyStream else {
+            return req.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: String] }
+        }
+        stream.open(); defer { stream.close() }
+        var data = Data()
+        var buf = [UInt8](repeating: 0, count: 1024)
+        while stream.hasBytesAvailable {
+            let read = stream.read(&buf, maxLength: buf.count)
+            if read <= 0 { break }
+            data.append(buf, count: read)
+        }
+        return try? JSONSerialization.jsonObject(with: data) as? [String: String]
+    }
+
+    func testSignInOnAThirdDeviceWaitsUntilOneIsSignedOut() async throws {
         let log = Log()
+        let sent = Log()
+        let replaceBody = Captured()
         MockURLProtocol.handler = { req in
             log.add(req)
             switch req.url!.path {
             case let p where p.hasSuffix("/other-sessions"):
-                return Self.reply(req, 200, #"{"held":true,"since":"2026-10-09T07:03:48.482Z"}"#)
-            case let p where p.hasSuffix("/other-sessions/replace"):
+                return Self.reply(req, 200, Self.heldOnTwo)
+            case let p where p.hasSuffix("/other-sessions/replace-device"):
+                sent.add(req)
+                replaceBody.value = Self.body(of: req)
                 return Self.reply(req, 200, #"{"replaced":1}"#)
             default:
                 return Self.reply(req, 200, #"{"token":"raw"}"#, headers: ["set-auth-token": "raw.signature"])
@@ -149,23 +186,83 @@ final class AuthServiceTests: XCTestCase {
         }
         let manager = SessionManager(store: InMemorySessionStore())
         let auth = makeAuth(manager)
+        var devices: [OtherDevice] = []
         do {
             _ = try await auth.login(email: "a@b.com", password: "pw")
             XCTFail("expected signedInElsewhere")
-        } catch AuthError.signedInElsewhere(let since) {
-            XCTAssertNotNil(since)
+        } catch AuthError.signedInElsewhere(let listed) {
+            devices = listed
         } catch {
             XCTFail("unexpected \(error)")
         }
+        XCTAssertEqual(devices.map(\.id), ["s-mac", "s-phone"])
+        XCTAssertEqual(devices.map(\.name), ["Chrome on macOS", "iPhone"])
+        XCTAssertNotNil(devices.first?.lastActiveAt)
         let before = await manager.isAuthenticated()
         XCTAssertFalse(before, "a waiting sign-in signs nobody in")
 
-        let session = try await auth.replaceOtherSessions()
+        let session = try await auth.replaceOtherDevice("s-phone")
         XCTAssertEqual(session.accessToken, "raw.signature")
-        XCTAssertEqual(log.all.last?.url?.absoluteString, "\(base)/other-sessions/replace")
-        XCTAssertEqual(log.all.last?.value(forHTTPHeaderField: "Authorization"), "Bearer raw.signature")
+        XCTAssertEqual(sent.all.count, 1)
+        XCTAssertEqual(sent.all.first?.url?.absoluteString, "\(base)/other-sessions/replace-device")
+        XCTAssertEqual(sent.all.first?.value(forHTTPHeaderField: "Authorization"), "Bearer raw.signature")
+        XCTAssertEqual(replaceBody.value, ["sessionId": "s-phone"])
         let after = await manager.isAuthenticated()
         XCTAssertTrue(after)
+    }
+
+    func testAChosenDeviceThatIsGoneBringsTheFreshList() async throws {
+        let lists = Log()
+        MockURLProtocol.handler = { req in
+            switch req.url!.path {
+            case let p where p.hasSuffix("/other-sessions"):
+                lists.add(req)
+                if lists.all.count == 1 { return Self.reply(req, 200, Self.heldOnTwo) }
+                return Self.reply(req, 200, #"""
+                    {"held":true,"since":null,"devices":[
+                      {"id":"s-mac","browser":"Chrome","platform":"macOS","lastActiveAt":"2026-11-04T09:12:00.000Z"},
+                      {"id":"s-pc","browser":"Edge","platform":"Windows","lastActiveAt":"2026-11-04T09:20:00.000Z"}]}
+                    """#)
+            case let p where p.hasSuffix("/other-sessions/replace-device"):
+                return Self.reply(req, 409, #"{"code":"CONFLICT","message":"This device is no longer available. Choose again."}"#)
+            default:
+                return Self.reply(req, 200, #"{"token":"raw"}"#, headers: ["set-auth-token": "raw.signature"])
+            }
+        }
+        let manager = SessionManager(store: InMemorySessionStore())
+        let auth = makeAuth(manager)
+        _ = try? await auth.login(email: "a@b.com", password: "pw")
+        do {
+            _ = try await auth.replaceOtherDevice("s-phone")
+            XCTFail("expected signedInElsewhere")
+        } catch AuthError.signedInElsewhere(let devices) {
+            XCTAssertEqual(devices.map(\.id), ["s-mac", "s-pc"])
+        }
+        let authed = await manager.isAuthenticated()
+        XCTAssertFalse(authed)
+    }
+
+    func testAChosenDeviceThatIsGoneCompletesTheSignInWhenAPlaceFreedUp() async throws {
+        let lists = Log()
+        MockURLProtocol.handler = { req in
+            switch req.url!.path {
+            case let p where p.hasSuffix("/other-sessions"):
+                lists.add(req)
+                if lists.all.count == 1 { return Self.reply(req, 200, Self.heldOnTwo) }
+                return Self.reply(req, 200, #"{"held":false,"since":null,"devices":[]}"#)
+            case let p where p.hasSuffix("/other-sessions/replace-device"):
+                return Self.reply(req, 409, #"{"code":"CONFLICT"}"#)
+            default:
+                return Self.reply(req, 200, #"{"token":"raw"}"#, headers: ["set-auth-token": "raw.signature"])
+            }
+        }
+        let manager = SessionManager(store: InMemorySessionStore())
+        let auth = makeAuth(manager)
+        _ = try? await auth.login(email: "a@b.com", password: "pw")
+        let session = try await auth.replaceOtherDevice("s-phone")
+        XCTAssertEqual(session.accessToken, "raw.signature")
+        let authed = await manager.isAuthenticated()
+        XCTAssertTrue(authed)
     }
 
     func testCancellingAWaitingSignInEndsIt() async {
