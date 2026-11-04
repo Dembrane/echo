@@ -68,6 +68,8 @@ struct RegisterView: View {
         }
     }
 
+    private var missing: [String] { PasswordRules.unmet(password) }
+
     private var passwordStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             Group {
@@ -76,7 +78,14 @@ struct RegisterView: View {
             }
             .textFieldStyle(.roundedBorder)
 
-            Text("At least 8 characters.").font(.caption).foregroundStyle(.secondary)
+            Text(PasswordRules.summary).font(.caption).foregroundStyle(.secondary)
+            if !password.isEmpty, !missing.isEmpty {
+                Text("Still needs \(missing.formatted(.list(type: .and))).")
+                    .font(.caption).foregroundStyle(BrandColor.cottonCandy)
+            } else if !confirm.isEmpty, confirm != password {
+                Text("The two passwords are not the same.")
+                    .font(.caption).foregroundStyle(BrandColor.cottonCandy)
+            }
 
             if let error = model.registerError {
                 Text(error).font(.callout).foregroundStyle(BrandColor.cottonCandy)
@@ -91,7 +100,7 @@ struct RegisterView: View {
                     if model.isRegistering { ProgressView() } else { Text("Create account") }
                 }
                 .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
-                .disabled(password.count < 8 || password != confirm || model.isRegistering)
+                .disabled(!missing.isEmpty || password != confirm || model.isRegistering)
             }
             Spacer()
         }

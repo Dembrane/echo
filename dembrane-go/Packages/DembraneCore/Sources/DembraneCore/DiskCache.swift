@@ -26,6 +26,13 @@ public actor DiskCache {
         try? data.write(to: url(for: key), options: .atomic)
     }
 
+    /// Drops every cached list, at sign-out: what one account fetched is never shown
+    /// to the next.
+    public func clear() {
+        let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
+        for file in files { try? FileManager.default.removeItem(at: file) }
+    }
+
     private func url(for key: String) -> URL {
         dir.appendingPathComponent(key.replacingOccurrences(of: "/", with: "_") + ".json")
     }

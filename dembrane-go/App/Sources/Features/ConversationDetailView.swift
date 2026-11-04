@@ -70,16 +70,18 @@ struct ConversationDetailView: View {
                         Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
                         Button { showTags = true } label: { Label("Tags", systemImage: "tag") }
                         Button { showMove = true } label: { Label("Move to project", systemImage: "folder") }
-                        Section {
-                            Button { runAction { try await model.summarizeConversation(conversation.id) } } label: {
-                                Label(hasSummary ? "Regenerate summary" : "Generate summary", systemImage: "sparkles")
-                            }
-                            Button { runAction { try await model.generateConversationTitle(conversation.id) } } label: {
-                                Label("Generate title", systemImage: "textformat")
-                            }
-                            .disabled(!hasSummary)
-                            Button { confirmRetranscribe = true } label: {
-                                Label("Duplicate & re-transcribe", systemImage: "doc.on.doc")
+                        if model.hasAIConsent {
+                            Section {
+                                Button { runAction { try await model.summarizeConversation(conversation.id) } } label: {
+                                    Label(hasSummary ? "Regenerate summary" : "Generate summary", systemImage: "sparkles")
+                                }
+                                Button { runAction { try await model.generateConversationTitle(conversation.id) } } label: {
+                                    Label("Generate title", systemImage: "textformat")
+                                }
+                                .disabled(!hasSummary)
+                                Button { confirmRetranscribe = true } label: {
+                                    Label("Duplicate & re-transcribe", systemImage: "doc.on.doc")
+                                }
                             }
                         }
                         Button(role: .destructive) { confirmDelete = true } label: {

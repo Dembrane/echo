@@ -10,9 +10,15 @@ final class AppEnvironmentTests: XCTestCase {
         XCTAssertEqual(
             AppEnvironment.echoNext.apiBaseURL.absoluteString,
             "https://api.echo-next.dembrane.com/api")
+    }
+
+    func testStagingURLs() {
         XCTAssertEqual(
-            AppEnvironment.echoNext.directusBaseURL.host,
-            "directus.echo-next.dembrane.com")
+            AppEnvironment.staging.apiBaseURL.absoluteString,
+            "https://api.staging.dembrane.com/api")
+        XCTAssertEqual(
+            AppEnvironment.staging.dashboardBaseURL.absoluteString,
+            "https://dashboard.staging.dembrane.com")
     }
 
     func testProductionURLs() {
