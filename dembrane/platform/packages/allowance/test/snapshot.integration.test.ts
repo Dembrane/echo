@@ -9,10 +9,12 @@ import {
 } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
+import { countingDb } from "@dembrane/db/testing";
 import type postgres from "postgres";
 import { allowanceForWorkspace } from "../src/account";
 import { freeLimitError } from "../src/errors";
-import { invalidateFreeLimits } from "../src/limits";
+import { freeLimits, invalidateFreeLimits } from "../src/limits";
+import { monthStart } from "../src/period";
 import { accountWorkspaceIds, allowanceSnapshot } from "../src/snapshot";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -48,13 +50,14 @@ run("allowance snapshot", () => {
   let sql: postgres.Sql;
   let db: Db;
   let close: () => Promise<void>;
+  let url: string;
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     await a.unsafe(`create database ${dbName}`);
     await a.end();
-    const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
+    url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 2, onnotice: () => {} });
     const made = createDb({ url, poolMax: 2 });
@@ -205,5 +208,28 @@ run("allowance snapshot", () => {
     const snap = await allowanceSnapshot(db, client, NOW);
     expect(snap.projects).toEqual({ used: 1, limit: 1 });
     expect(snap.scope).toBe("workspace");
+  });
+
+  test("a snapshot reads this period's usage once", async () => {
+    const o = await org();
+    const acc = await account("free", o);
+    const ws = await workspace(o, acc);
+    await project(ws);
+    const now = new Date();
+    await sql`insert into free_usage (billing_account_id, period_start, key, amount) values
+      (${acc}, ${monthStart(now).toISOString()}, 'ai_spend_micro_eur', 1000000)`;
+    const c = countingDb(url);
+    try {
+      // Steady state: the limits cache is warm.
+      await freeLimits(c.db, () => now);
+      c.log.length = 0;
+      expect((await allowanceSnapshot(c.db, ws, now)).ai?.percent_used).toBe(20);
+      const count = (s: string) => c.log.filter((l) => l.q.includes(s)).length;
+      // Two usage reads before.
+      expect(count('from "free_usage"')).toBe(1);
+      expect(count("as own_id")).toBe(1);
+    } finally {
+      await c.close();
+    }
   });
 });

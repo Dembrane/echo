@@ -416,11 +416,16 @@ export async function runFreeAiOut(d: BillingJobDeps): Promise<void> {
   const db = d.overage.db;
   const now = (d.clock ?? (() => new Date()))();
   const since = new Date(now.getTime() - CANDIDATE_WINDOW_MS);
-  for (const c of await store.freeAiCandidates(since)) {
+  const limits = await freeLimits(db, () => now, d.logger);
+  // Switched off: nobody runs out.
+  if (limits.ai_budget_enforce === 0) return;
+  const defaultLimit = limits.ai_budget_micro_eur;
+  for (const c of await store.freeAiCandidates(since, { now, defaultLimit })) {
     try {
       const found = await freeAccountInPeriod(d, c.accountId, c.periodStart, now);
       if (!found) continue;
       const { acc, a } = found;
+      // Still the authority: a staff change since the query must not send a wrong notice.
       const budget = await aiBudgetFor(db, a, now);
       if (!budget.exhausted) continue;
       const t = await noticeTarget(d, acc, a);

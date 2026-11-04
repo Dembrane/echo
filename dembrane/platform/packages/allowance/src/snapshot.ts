@@ -41,11 +41,12 @@ export async function allowanceSnapshot(
 ): Promise<AllowanceSnapshot> {
   const a = await allowanceForWorkspace(db, workspaceId, now);
   if (!a) return NOT_FREE;
+  const usage = usedThisPeriod(db, a);
   const [limits, used, projects, budget] = await Promise.all([
     freeLimits(db),
-    usedThisPeriod(db, a),
+    usage,
     liveProjectCount(db, a),
-    aiBudgetFor(db, a, now),
+    aiBudgetFor(db, a, now, usage),
   ]);
   return {
     free: true,

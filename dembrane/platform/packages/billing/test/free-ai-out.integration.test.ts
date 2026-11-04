@@ -10,6 +10,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { invalidateFreeLimits } from "@dembrane/allowance";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
+import { countingDb } from "@dembrane/db/testing";
 import { MemoryMailer } from "@dembrane/mail";
 import type postgres from "postgres";
 import {
@@ -34,13 +35,14 @@ run("the AI budget used-up notice", () => {
   let sql: postgres.Sql;
   let db: Db;
   let close: () => Promise<void>;
+  let url: string;
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     await a.unsafe(`create database ${dbName}`);
     await a.end();
-    const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
+    url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 2, onnotice: () => {} });
     const made = createDb({ url, poolMax: 3 });
@@ -59,8 +61,8 @@ run("the AI budget used-up notice", () => {
     await a.end();
   });
 
-  function deps(now: Date, customerJobs = true) {
-    const store = billingStorage(db);
+  function deps(now: Date, customerJobs = true, on: Db = db) {
+    const store = billingStorage(on);
     const mailer = new MemoryMailer();
     const billing = {
       service: {} as never,
@@ -76,7 +78,7 @@ run("the AI budget used-up notice", () => {
         logger,
         customerJobs,
         dashboardUrl: "https://dash.test",
-        overage: { db, live: noLiveRecordings, forwarder: null, environment: "test" },
+        overage: { db: on, live: noLiveRecordings, forwarder: null, environment: "test" },
         clock: () => now,
       },
     };
@@ -177,17 +179,49 @@ run("the AI budget used-up notice", () => {
     for (const s of [below, paid, old]) expect(await notices(s.acc)).toHaveLength(0);
   });
 
+  // An earlier month, so the runs in other tests never see these rows.
+  const AUG = new Date("2026-08-20T10:00:00Z");
+  const candidates = async (now = AUG) =>
+    (
+      await billingStorage(db).freeAiCandidates(new Date(now.getTime() - 60_000), {
+        now,
+        defaultLimit: BUDGET,
+      })
+    ).map((c) => c.accountId);
+
   test("only live free accounts are candidates; paid and deleted spend rows are not read", async () => {
     const free = await seed();
     const paid = await seed("innovator");
     const gone = await seed();
     await sql`update billing_account set deleted_at = now() where id = ${gone.acc}`;
-    for (const s of [free, paid, gone]) await spent(s.acc, "2026-10-01T00:00:00Z", 100, OCT);
-    const found = await billingStorage(db).freeAiCandidates(new Date(OCT.getTime() - 60_000));
-    const ids = found.map((c) => c.accountId);
+    for (const s of [free, paid, gone]) await spent(s.acc, "2026-08-01T00:00:00Z", BUDGET, AUG);
+    const ids = await candidates();
     expect(ids).toContain(free.acc);
     expect(ids).not.toContain(paid.acc);
     expect(ids).not.toContain(gone.acc);
+  });
+
+  test("only accounts at their limit are candidates, by the same rule as the budget", async () => {
+    const below = await seed();
+    const at = await seed();
+    const lower = await seed();
+    const lowerExpired = await seed();
+    const unlimited = await seed();
+    const unlimitedExpired = await seed();
+    const past = "2026-08-01T00:00:00Z";
+    await sql`update billing_account set ai_budget_micro_eur = 1000000 where id in (${lower.acc}, ${lowerExpired.acc})`;
+    await sql`update billing_account set ai_budget_unlimited = true where id in (${unlimited.acc}, ${unlimitedExpired.acc})`;
+    await sql`update billing_account set ai_budget_until = ${past} where id in (${lowerExpired.acc}, ${unlimitedExpired.acc})`;
+    await spent(below.acc, past, BUDGET - 1, AUG);
+    await spent(at.acc, past, BUDGET, AUG);
+    for (const s of [lower, lowerExpired]) await spent(s.acc, past, 1_000_000, AUG);
+    for (const s of [unlimited, unlimitedExpired]) await spent(s.acc, past, BUDGET, AUG);
+    const higher = await seed();
+    await sql`update billing_account set ai_budget_micro_eur = 10000000 where id = ${higher.acc}`;
+    await spent(higher.acc, past, BUDGET, AUG);
+    const ids = await candidates();
+    for (const s of [at, lower, unlimitedExpired]) expect(ids).toContain(s.acc);
+    for (const s of [below, lowerExpired, unlimited, higher]) expect(ids).not.toContain(s.acc);
   });
 
   test("a no-limit override hears nothing; a lower override is used up at its own amount", async () => {
@@ -276,6 +310,32 @@ run("the AI budget used-up notice", () => {
     for (const part of [direct.subject, direct.html, direct.text]) {
       expect(part).not.toContain("—");
       expect(part).not.toContain("€");
+    }
+  });
+
+  test("accounts below their limit cost no per-account reads", async () => {
+    // A later month, so earlier tests' rows fall outside the window; deleted after, as `since` has no upper bound.
+    const now = new Date("2027-03-15T10:00:00Z");
+    const below = [];
+    for (let i = 0; i < 5; i++) {
+      const s = await seed();
+      await spent(s.acc, "2027-03-01T00:00:00Z", 1_000_000, now);
+      below.push(s);
+    }
+    const out = await seed();
+    await spent(out.acc, "2027-03-01T00:00:00Z", BUDGET, now);
+    const c = countingDb(url);
+    try {
+      const x = deps(now, true, c.db);
+      await runFreeAiOut(x.d);
+      expect(mailsOf(x.mailer, out.tag)).toHaveLength(2);
+      const ids = new Set<string>(below.map((s) => s.acc));
+      const perAccount = c.log.filter((l) => l.params.some((p) => ids.has(String(p))));
+      // Before, each below-limit account cost three reads (account, override, usage).
+      expect(perAccount).toHaveLength(0);
+    } finally {
+      await c.close();
+      await sql`delete from free_usage where period_start = '2027-03-01T00:00:00Z'`;
     }
   });
 });

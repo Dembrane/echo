@@ -104,8 +104,13 @@ export async function allowanceForCountedProject(
 ): Promise<AllowanceAccount | null> {
   const a = await allowanceForProject(db, projectId, now);
   if (!a) return null;
+  return (await isSampleProject(db, projectId)) ? null : a;
+}
+
+// A workspace's sample copy: its usage counts against no one.
+export async function isSampleProject(db: Db, projectId: string): Promise<boolean> {
   const rows = await db.execute<{ is_sample: boolean | null }>(
     sql`select is_sample from project where id = ${projectId}`,
   );
-  return rows[0]?.is_sample === true ? null : a;
+  return rows[0]?.is_sample === true;
 }

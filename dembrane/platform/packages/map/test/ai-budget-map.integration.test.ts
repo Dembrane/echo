@@ -18,6 +18,7 @@ import {
   type Snapshot,
 } from "@dembrane/analysis";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
+import { countingDb } from "@dembrane/db/testing";
 import type { Env } from "@dembrane/http";
 import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
@@ -42,13 +43,14 @@ run("map routes and the AI budget", () => {
   let enqueued: unknown[] = [];
   let completer: FakeCompleter;
   let api: Hono<Env>;
+  let url: string;
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     await a.unsafe(`create database ${dbName}`);
     await a.end();
-    const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
+    url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${dbName}`;
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 2, onnotice: () => {} });
     const made = createDb({ url, poolMax: 10 });
@@ -367,6 +369,38 @@ run("map routes and the AI budget", () => {
       expect((await factCheck(resultId)).status).toBe(200);
       // Past the budget check: a v1 map has no groups.
       expect((await group(resultId)).status).toBe(409);
+    }
+  });
+
+  test("a cached title reads nothing but its fact-checks", async () => {
+    const { pid, accountId } = await project("free");
+    await spend(accountId, LIMIT - 1);
+    const resultId = await savedMap(pid);
+    const [row] = await sql`select * from map_result where id = ${resultId}`;
+    const c = countingDb(url);
+    try {
+      const d = {
+        store: new MapStore(clientOf(c.db)),
+        db: c.db,
+        cache: new service.TitleCache(),
+        modelIdentity: "m",
+        generate: async () => "Ferry timetables",
+      } as unknown as service.TitleDeps;
+      const ask = () =>
+        service.selectionTitle(
+          d,
+          row as Record<string, unknown>,
+          ["a1", "a2", "a3"],
+          ["Harbour", ""],
+        );
+      expect(await ask()).toMatchObject({ cached: false });
+      c.log.length = 0;
+      expect(await ask()).toMatchObject({ title: "Ferry timetables", cached: true });
+      // No budget read for a title already made (account, sample, override and usage before).
+      const budget = /as own_id|is_sample|ai_budget|free_usage|tier_limit/;
+      expect(c.log.filter((l) => budget.test(l.q))).toEqual([]);
+    } finally {
+      await c.close();
     }
   });
 });

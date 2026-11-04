@@ -1,12 +1,13 @@
 import {
   type AllowanceAccount,
   add,
-  aiBudgetForProject,
+  aiBudgetFor,
   allowanceForProject,
   type FreeLimits,
   freeLimitError,
   freeLimits,
   isFreeLimit,
+  isSampleProject,
   recordingProject,
   take,
   usedThisPeriod,
@@ -47,10 +48,15 @@ async function verdict(d: AudioDeps, projectId: string): Promise<Verdict | null>
   return { a, limits, refusal: null };
 }
 
-// Read only; a failed read lets the audio through.
-async function aiBudgetGone(d: AudioDeps, projectId: string): Promise<boolean> {
+// Read only, on the caller's account: a sample never runs out, a failed read lets audio through.
+async function aiBudgetGone(
+  d: AudioDeps,
+  a: AllowanceAccount,
+  projectId: string,
+): Promise<boolean> {
   try {
-    return (await aiBudgetForProject(d.db, projectId, d.now()))?.exhausted === true;
+    if (await isSampleProject(d.db, projectId)) return false;
+    return (await aiBudgetFor(d.db, a, d.now())).exhausted;
   } catch (err) {
     d.logger?.error(
       { err, projectId, signal: "free_audio.ai_budget_check_failed" },
@@ -75,7 +81,7 @@ export async function requireAudioStart(
   if (v.refusal === "recording_project") throw freeLimitError("recording_project");
   if (v.refusal === "audio_month") throw freeLimitError("audio_month", { remaining_seconds: 0 });
   // No budget figures: participants never see them.
-  if (await aiBudgetGone(d, projectId)) throw freeLimitError("ai_budget");
+  if (await aiBudgetGone(d, v.a, projectId)) throw freeLimitError("ai_budget");
   return v.a;
 }
 
@@ -87,7 +93,7 @@ export async function audioOpen(
   try {
     const v = await verdict(d, projectId);
     if (!v) return { open: true, aiAvailable: true, conversationLimitSeconds: null };
-    const ai = !(await aiBudgetGone(d, projectId));
+    const ai = !(await aiBudgetGone(d, v.a, projectId));
     return {
       open: v.refusal === null && ai,
       aiAvailable: ai,
@@ -227,7 +233,7 @@ export async function reserveUpload(
   };
   // Also for a conversation that already has audio: only the recording project takes files.
   if (pre.home !== conv.project_id) return refuse(freeLimitError("recording_project"));
-  if (await aiBudgetGone(d, conv.project_id)) return refuse(freeLimitError("ai_budget"));
+  if (await aiBudgetGone(d, a, conv.project_id)) return refuse(freeLimitError("ai_budget"));
   const measured = await measureFailed(d, conv.id, () => measureUpload(d, key, bytes));
   if ("unreadable" in measured) {
     d.logger.warn(
@@ -354,7 +360,7 @@ export async function liveChunkCheck(
       v = { refuse: "recording_project", stop: null };
     else v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
     if (!v.refuse) {
-      const ai = aiLive(await aiBudgetGone(d, conv.project_id), conv.ai_stopped_at, d.now());
+      const ai = aiLive(await aiBudgetGone(d, a, conv.project_id), conv.ai_stopped_at, d.now());
       v = { refuse: ai.refuse, stop: v.stop ?? ai.stop };
     }
   } catch (err) {
@@ -393,7 +399,8 @@ export async function confirmLiveChunk(
     const limits = await freeLimits(d.db, d.now, d.logger).catch(
       failed("free_audio.live_check_failed"),
     );
-    const aiGone = await aiBudgetGone(d, conv.project_id);
+    // The AI check and the ledger below share the resolved account's period.
+    const aiGone = await aiBudgetGone(d, a, conv.project_id);
     return await withAllowanceLock(d.db, a, async (tx) => {
       const prior = await written(tx, conv.id, write.id);
       const v = limits
@@ -450,7 +457,7 @@ export async function liveStopNow(
     const a = await allowanceForProject(d.db, conv.project_id, d.now());
     if (!a) return null;
     const v = await liveVerdict(d.db, a, await freeLimits(d.db, d.now, d.logger), conv.id);
-    return v.refuse ?? v.stop ?? ((await aiBudgetGone(d, conv.project_id)) ? "ai_budget" : null);
+    return v.refuse ?? v.stop ?? ((await aiBudgetGone(d, a, conv.project_id)) ? "ai_budget" : null);
   } catch (err) {
     d.logger.error(
       { err, conversationId: conv.id, signal: "free_audio.live_check_failed" },

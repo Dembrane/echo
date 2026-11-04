@@ -273,9 +273,12 @@ export function billingStorage(db: Db): BillingStore {
       }));
     },
 
-    async freeAiCandidates(since) {
+    async freeAiCandidates(since, { now, defaultLimit }) {
       const u = schema.free_usage;
+      const b = billing_account;
       const marker: Marker = "notice:ai_out";
+      // Mirrors aiBudgetFor: an override counts until ai_budget_until, and unlimited never runs out.
+      const active = sql`(${b.ai_budget_until} is null or ${b.ai_budget_until} > ${now.toISOString()}::timestamptz)`;
       // The recorder writes spend for every tier; only live free accounts can run out.
       const rows = await db
         .select({ accountId: u.billing_account_id, periodStart: u.period_start })
@@ -287,6 +290,9 @@ export function billingStorage(db: Db): BillingStore {
             gte(u.updated_at, since.toISOString()),
             eq(billing_account.tier, "free"),
             isNull(billing_account.deleted_at),
+            sql`not (${active} and ${b.ai_budget_unlimited})`,
+            sql`${u.amount} >= case when ${active} and ${b.ai_budget_micro_eur} is not null
+              then ${b.ai_budget_micro_eur} else ${defaultLimit} end`,
             sql`not exists (select 1 from free_usage n where n.billing_account_id = ${u.billing_account_id}
               and n.period_start = ${u.period_start} and n.key = ${marker})`,
           ),

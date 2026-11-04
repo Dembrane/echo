@@ -3,6 +3,7 @@ export {
   allowanceForCountedProject,
   allowanceForProject,
   allowanceForWorkspace,
+  isSampleProject,
 } from "./account";
 export {
   AI_SPEND_KEY,

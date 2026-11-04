@@ -503,6 +503,20 @@ export interface TitleDeps extends MapDeps {
 
 export const TITLE_PROMPT = "map-title-v2";
 
+// A cached or in-flight title answers first; the budget is read only before a model call.
+async function titleOnce(
+  d: TitleDeps,
+  key: string,
+  projectId: string,
+  generate: () => Promise<string>,
+): Promise<Json> {
+  const cached =
+    (await d.cache.peek(key)) ?? (await budgetOr(d, projectId, () => d.cache.peek(key)));
+  if (cached) return cached;
+  // The title route names a result, not a project: the map's project pays.
+  return d.cache.once(key, () => withPayer({ ref: "project", id: projectId }, generate));
+}
+
 export async function selectionTitle(
   d: TitleDeps,
   row: Row,
@@ -529,11 +543,7 @@ export async function selectionTitle(
     .join(",");
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${verdictState}`;
   const key = `map:title:${titleSelectionKey(String(row.id), ordered, config)}`;
-  // The title route names a result, not a project: the map's project pays.
-  const payer = { ref: "project", id: String(row.project_id) } as const;
-  const cached = await budgetOr(d, payer.id, () => d.cache.peek(key));
-  if (cached) return cached;
-  return d.cache.once(key, () => withPayer(payer, () => d.generate(lines, project[0], project[1])));
+  return titleOnce(d, key, String(row.project_id), () => d.generate(lines, project[0], project[1]));
 }
 
 /**
@@ -590,10 +600,7 @@ export async function snapshotSelectionTitle(
   const { ordered, lines, config: pinned } = await snapshotTitleLines(d, snapshot, revisionIds);
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${pinned}`;
   const key = `map:title:v2:${titleSelectionKey(snapshot.id, ordered, config)}`;
-  const payer = { ref: "project", id: snapshot.projectId } as const;
-  const cached = await budgetOr(d, payer.id, () => d.cache.peek(key));
-  if (cached) return cached;
-  return d.cache.once(key, () => withPayer(payer, () => d.generate(lines, project[0], project[1])));
+  return titleOnce(d, key, snapshot.projectId, () => d.generate(lines, project[0], project[1]));
 }
 
 // ── groups ──────────────────────────────────────────────────────────────

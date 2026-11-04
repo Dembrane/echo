@@ -6,7 +6,7 @@ import {
   allowanceForWorkspace,
 } from "./account";
 import { freeLimitError } from "./errors";
-import { AI_SPEND_KEY, usedThisPeriod } from "./ledger";
+import { AI_SPEND_KEY, type UsageKey, usedThisPeriod } from "./ledger";
 import { freeLimits } from "./limits";
 import { nextReset } from "./period";
 
@@ -27,10 +27,17 @@ export interface AiBudget {
 
 const { billing_account } = schema;
 
-// Reads only; no lock, since two calls at once may overshoot the limit.
-export async function aiBudgetFor(db: Db, a: AllowanceAccount, now: Date): Promise<AiBudget> {
+type Usage = Readonly<Record<UsageKey, number>>;
+
+// Reads only; no lock, since two calls at once may overshoot the limit. Pass `used` already read for a.
+export async function aiBudgetFor(
+  db: Db,
+  a: AllowanceAccount,
+  now: Date,
+  used?: Usage | Promise<Usage>,
+): Promise<AiBudget> {
   const until = billing_account.ai_budget_until;
-  const [limits, rows, used] = await Promise.all([
+  const [limits, rows, usage] = await Promise.all([
     freeLimits(db, () => now),
     db
       .select({
@@ -40,7 +47,7 @@ export async function aiBudgetFor(db: Db, a: AllowanceAccount, now: Date): Promi
       })
       .from(billing_account)
       .where(eq(billing_account.id, a.accountId)),
-    usedThisPeriod(db, a),
+    used ?? usedThisPeriod(db, a),
   ]);
   const override = rows[0]?.active ? rows[0] : null;
   const limit = override?.unlimited
@@ -48,7 +55,7 @@ export async function aiBudgetFor(db: Db, a: AllowanceAccount, now: Date): Promi
     : override?.amount != null
       ? Number(override.amount)
       : limits.ai_budget_micro_eur;
-  const spent = used[AI_SPEND_KEY];
+  const spent = usage[AI_SPEND_KEY];
   const enforced = limits.ai_budget_enforce !== 0;
   return {
     accountId: a.accountId,
