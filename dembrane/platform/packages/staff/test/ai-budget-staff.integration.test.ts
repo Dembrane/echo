@@ -49,6 +49,7 @@ type Costs = {
     percent_used: number | null;
     unlimited: boolean;
     override_until: string | null;
+    deleted: boolean;
     by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
     by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
   }[];
@@ -297,6 +298,7 @@ run("staff AI budget and costs", () => {
       expect((await put({ ...ok, until: "2026-12-01" })).status).toBe(200);
       expect((await put({ ...ok, until: "2026-12-01T00:00:00+01:00" })).status).toBe(200);
       expect((await put({ ...ok, until: "2026-12-01T00:00:00.000Z" })).status).toBe(200);
+      expect((await put({ ...ok, until: "2028-02-29" })).status).toBe(200);
       expect((await put({ ...ok, amount_micro_eur: 0 })).status).toBe(200);
       for (const bad of [
         { ...ok, amount_micro_eur: 1_000_000_001 },
@@ -312,6 +314,11 @@ run("staff AI budget and costs", () => {
         { ...ok, until: "December 1, 2026" },
         { ...ok, until: "2026/12/01" },
         { ...ok, until: "2026-12-01T00:00" },
+        // Impossible days that Date would roll over into the next month.
+        { ...ok, until: "2027-02-30" },
+        { ...ok, until: "2027-02-29" },
+        { ...ok, until: "2027-04-31T00:00:00Z" },
+        { ...ok, until: "2027-13-01" },
       ])
         expect((await put(bad)).status).toBe(400);
       const missing = `/api/v2/admin/billing-accounts/${randomUUID()}/ai-budget`;
@@ -555,6 +562,7 @@ run("staff AI budget and costs", () => {
           percent_used: null,
           unlimited: false,
           override_until: null,
+          deleted: false,
           by_feature: [{ operation: "chat.reply", cost_micro_eur: 2_000_000, calls: 1 }],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 2_000_000, calls: 1 },
@@ -571,6 +579,7 @@ run("staff AI budget and costs", () => {
           percent_used: 30,
           unlimited: false,
           override_until: null,
+          deleted: false,
           // An unpriced call still counts as a call.
           by_feature: [
             { operation: "chat.reply", cost_micro_eur: 1_000_000, calls: 1 },
@@ -593,6 +602,7 @@ run("staff AI budget and costs", () => {
           percent_used: 20,
           unlimited: false,
           override_until: "2026-12-01T00:00:00.000Z",
+          deleted: false,
           by_feature: [{ operation: "chat.reply", cost_micro_eur: 500_000, calls: 2 }],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 500_000, calls: 2 },
@@ -609,6 +619,7 @@ run("staff AI budget and costs", () => {
           percent_used: null,
           unlimited: true,
           override_until: null,
+          deleted: false,
           by_feature: [{ operation: "", cost_micro_eur: 100_000, calls: 1 }],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 100_000, calls: 1 },
@@ -648,6 +659,16 @@ run("staff AI budget and costs", () => {
       }
     });
 
+    test("a soft-deleted account is flagged, its cost still shown", async () => {
+      await sql`update billing_account set deleted_at = now() where id = ${paid}`;
+      try {
+        const row = (await costs(0)).accounts.find((a) => a.billing_account_id === paid);
+        expect(row).toMatchObject({ deleted: true, cost_micro_eur: 2_000_000 });
+      } finally {
+        await sql`update billing_account set deleted_at = null where id = ${paid}`;
+      }
+    });
+
     test("last month: rolled up days plus the days not yet rolled up", async () => {
       const view = await costs(1);
       expect(view.period_start).toBe("2026-09-01T00:00:00.000Z");
@@ -672,6 +693,7 @@ run("staff AI budget and costs", () => {
           percent_used: 18,
           unlimited: false,
           override_until: null,
+          deleted: false,
           // Rolled up days carry their call count; the provider is the model's priced one.
           by_feature: [
             { operation: "chat.reply", cost_micro_eur: 800_000, calls: 4 },

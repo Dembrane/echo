@@ -84,7 +84,10 @@ it("shows typed text the same not-taking-recordings page once AI is unavailable"
 		is_taking_recordings: false,
 	};
 	renderStart("/p-1/start?mode=text");
-	expect(screen.getByTestId("portal-not-taking-recordings")).toBeTruthy();
+	// Text mode records nothing, so it says responses; no plan or budget words.
+	expect(screen.getByTestId("portal-not-taking-recordings").textContent).toBe(
+		"This project isn't taking responses right now.",
+	);
 	expect(screen.queryByTestId("onboarding")).toBeNull();
 });
 
@@ -103,7 +106,9 @@ it("shows the not-taking-recordings page under the portal logo", () => {
 			</MantineProvider>
 		</I18nProvider>,
 	);
-	expect(screen.getByTestId("portal-not-taking-recordings")).toBeTruthy();
+	expect(screen.getByTestId("portal-not-taking-recordings").textContent).toBe(
+		"This project isn't taking recordings right now.",
+	);
 	const header = screen.getByTestId("portal-header");
 	expect(header.className).toContain("mx-auto");
 	expect(header.contains(screen.getByTestId("logo"))).toBe(true);

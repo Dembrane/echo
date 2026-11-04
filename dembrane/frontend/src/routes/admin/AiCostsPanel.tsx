@@ -3,6 +3,7 @@ import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Badge,
 	Box,
 	Group,
 	Progress,
@@ -329,9 +330,21 @@ function AccountName({ account: a }: { account: AiCostAccount }) {
 			>
 				{a.name || a.billing_account_id}
 			</Text>
-			<Text size="xs" c="dimmed" style={nowrap}>
-				{accountContext(a)}
-			</Text>
+			<Group gap={6} wrap="nowrap">
+				<Text size="xs" c="dimmed" style={nowrap}>
+					{accountContext(a)}
+				</Text>
+				{a.deleted && (
+					<Badge
+						size="xs"
+						color="gray"
+						variant="light"
+						data-testid="ai-cost-deleted"
+					>
+						<Trans>Deleted</Trans>
+					</Badge>
+				)}
+			</Group>
 		</Stack>
 	);
 }

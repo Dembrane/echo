@@ -707,6 +707,9 @@ export const PricingConfigurator = ({
 	// What the person was trying to do when they met the wall. Empty on the
 	// billing page, which is not a wall, and on a mount that names none.
 	const action = aiAction ? aiActionLine(aiAction) : wallActionLine(wallKey);
+	// Used up but nothing refused (the allowance card): no attempt to name, so the allowance opening.
+	const allowanceOpening =
+		variant === "ai_allowance" || (variant === "ai_budget" && !aiAction);
 	const sampleQuestions = refusedQuestions ?? SAMPLE_CHAT_QUESTIONS;
 	const resetDate = formatResetDay(resetsAt, locale);
 
@@ -823,7 +826,7 @@ export const PricingConfigurator = ({
 													Sample projects allow {sampleQuestions} questions.
 												</Trans>
 											)
-										) : variant === "ai_allowance" ? (
+										) : allowanceOpening ? (
 											<Trans>
 												You're on the free plan, which includes a monthly AI
 												allowance.
@@ -844,8 +847,8 @@ export const PricingConfigurator = ({
 													for a paid plan.
 												</Trans>
 											</span>
-										) : variant === "ai_allowance" ? (
-											// Nothing was refused yet, so no "requires a paid plan".
+										) : allowanceOpening ? (
+											// Nothing was refused, so no "requires a paid plan".
 											<Trans>
 												Upgrade for more AI every month. We're going to ask you
 												5 more quick questions, then you pick a time with the

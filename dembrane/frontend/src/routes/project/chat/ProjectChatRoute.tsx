@@ -926,7 +926,10 @@ export const ProjectChatRoute = () => {
 					)}
 					{atTurnLimit && (
 						<Box className="mb-2">
-							<ChatTurnLimitCard onUpgrade={sampleWall.open} />
+							<ChatTurnLimitCard
+								onUpgrade={sampleWall.open}
+								questions={turnCapOf(error)}
+							/>
 						</Box>
 					)}
 					<form

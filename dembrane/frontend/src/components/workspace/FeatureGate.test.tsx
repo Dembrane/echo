@@ -341,6 +341,22 @@ it("names the question cap the refusal carried", () => {
 	);
 });
 
+it("names no attempt when nothing was refused, and keeps the used-up block", () => {
+	renderModal({
+		aiUsedUp: true,
+		resetsAt: "2026-12-01T00:00:00Z",
+		wallKey: "ai_budget",
+	});
+	const text = modalText();
+	expect(screen.getByTestId("pricing-configurator-ai-budget")).toBeTruthy();
+	expect(text).toContain("This month's AI budget is used up.");
+	expect(text).not.toContain("You were trying to");
+	expect(text).not.toContain("requires a paid plan");
+	expect(screen.getByTestId("pricing-configurator-opening").textContent).toBe(
+		"You're on the free plan, which includes a monthly AI allowance.",
+	);
+});
+
 it("keeps the ai_budget block off every other wall", () => {
 	renderModal({ wallKey: "custom_logo" });
 	expect(modalText()).not.toContain("This month's AI budget is used up.");

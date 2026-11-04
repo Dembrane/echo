@@ -58,6 +58,13 @@ const MAX_LIMIT = 10_000_000;
 const MAX_AI_BUDGET = 1_000_000_000;
 // ISO 8601: a UTC day (what the staff screen sends) or a date and time with a zone.
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2}))?$/;
+
+// The date part must be a real day: Date rolls 2026-02-30 over into March.
+function realDay(iso: string): boolean {
+  const [y = 0, m = 0, d = 0] = iso.slice(0, 10).split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
 const KEY_MAX: Partial<Record<LimitKey, number>> = {
   ai_budget_micro_eur: MAX_AI_BUDGET,
   ai_budget_enforce: 1,
@@ -564,7 +571,10 @@ export function staffRoutes(deps: StaffRouteDeps) {
       Number.isInteger(amount) &&
       amount >= 0 &&
       amount <= MAX_AI_BUDGET;
-    const untilAt = typeof until === "string" && ISO_INSTANT.test(until) ? new Date(until) : null;
+    const untilAt =
+      typeof until === "string" && ISO_INSTANT.test(until) && realDay(until)
+        ? new Date(until)
+        : null;
     const now = clock();
     const untilOk = until === null || (untilAt !== null && untilAt > now);
     if (typeof unlimited !== "boolean" || (!unlimited && !amountOk) || !untilOk)

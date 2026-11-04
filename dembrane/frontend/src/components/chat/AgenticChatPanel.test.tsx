@@ -926,7 +926,7 @@ describe("AgenticChatPanel, voice input", () => {
 });
 
 describe("AgenticChatPanel, free turn limit", () => {
-	const TURN_CARD = "You've reached the free plan limit for this chat.";
+	const TURN_CARD = "You've used this sample project's";
 
 	const tree = (chatId: string) => (
 		<MemoryRouter>
@@ -994,6 +994,9 @@ describe("AgenticChatPanel, free turn limit", () => {
 			fireEvent.click(screen.getByTestId("chat-send-button"));
 		});
 		await waitFor(() => expect(document.body.textContent).toContain(TURN_CARD));
+		expect(document.body.textContent).toContain(
+			"You've used this sample project's 7 questions.",
+		);
 		const modal = await openedConfigurator();
 		// The cap comes from the refusal.
 		expect(modal).toContain("Sample projects allow 7 questions.");

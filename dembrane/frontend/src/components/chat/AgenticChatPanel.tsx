@@ -2191,7 +2191,12 @@ export const AgenticChatPanel = ({
 						onTemplateSelect={handleTemplateSelect}
 					/>
 
-					{atTurnLimit && <ChatTurnLimitCard onUpgrade={openSampleWall} />}
+					{atTurnLimit && (
+						<ChatTurnLimitCard
+							onUpgrade={openSampleWall}
+							questions={sampleQuestions}
+						/>
+					)}
 					{voice.errorKind && (
 						<VoiceInputError
 							kind={voice.errorKind}

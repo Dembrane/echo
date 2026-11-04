@@ -29,12 +29,12 @@ beforeAll(() => {
 
 afterEach(() => cleanup());
 
-const renderCard = () => {
+const renderCard = (questions?: number | null) => {
 	const onUpgrade = vi.fn();
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
-				<ChatTurnLimitCard onUpgrade={onUpgrade} />
+				<ChatTurnLimitCard onUpgrade={onUpgrade} questions={questions} />
 			</MantineProvider>
 		</I18nProvider>,
 	);
@@ -42,9 +42,17 @@ const renderCard = () => {
 };
 
 const TURNS =
-	"You've reached the free plan limit for this chat. Upgrade to keep the conversation going.";
+	"You've used this sample project's 10 questions. Create your own project or upgrade to keep going.";
 
-it("says the sample chat's turns are used and offers the upgrade", () => {
+it("names the refusal's cap, shared by the whole sample project", () => {
+	renderCard(7);
+	expect(document.body.textContent).toContain(
+		"You've used this sample project's 7 questions.",
+	);
+	expect(document.body.textContent).not.toContain("this chat");
+});
+
+it("says the sample project's questions are used and offers the upgrade", () => {
 	const onUpgrade = renderCard();
 	expect(document.body.textContent).toContain(TURNS);
 	expect(document.body.textContent).not.toContain("earlier free period");

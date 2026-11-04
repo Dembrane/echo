@@ -14,6 +14,8 @@ export interface AiCostAccount {
   percent_used: number | null;
   unlimited: boolean;
   override_until: string | null;
+  // The account is soft-deleted (deleted_at set).
+  deleted: boolean;
   by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
   by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
 }
@@ -48,6 +50,7 @@ type AccountInfo = {
   amount: string | null;
   unlimited: boolean;
   until: string | null;
+  deleted: boolean;
 };
 
 type Sum = { cost: number; calls: number };
@@ -90,7 +93,8 @@ function accountInfo(db: Db, ids: string[]) {
         when b.workspace_id is not null then 'workspace' end as scope,
       to_char(b.downgraded_at at time zone 'UTC', ${sql.raw(MS)}) as downgraded_at,
       b.ai_budget_micro_eur::text as amount, b.ai_budget_unlimited as unlimited,
-      to_char(b.ai_budget_until at time zone 'UTC', ${sql.raw(MS)}) as until
+      to_char(b.ai_budget_until at time zone 'UTC', ${sql.raw(MS)}) as until,
+      b.deleted_at is not null as deleted
     from billing_account b
     left join org o on o.id = b.org_id
     left join workspace w on w.id = b.workspace_id
@@ -201,6 +205,7 @@ export async function aiCosts(
       percent_used: percent,
       unlimited,
       override_until: hasOverride ? info.until : null,
+      deleted: info.deleted === true,
       by_feature: desc(a.features, (operation, s) => ({
         operation,
         cost_micro_eur: s.cost,

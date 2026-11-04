@@ -21,6 +21,8 @@ export interface AiCostAccount {
 	percent_used: number | null;
 	unlimited: boolean;
 	override_until: string | null;
+	// Soft-deleted since; the row still shows its cost.
+	deleted: boolean;
 	by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
 	by_model: {
 		model: string;

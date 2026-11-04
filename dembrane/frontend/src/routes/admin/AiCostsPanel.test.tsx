@@ -29,6 +29,7 @@ const account = (
 	by_model: [],
 	cost_micro_eur: 0,
 	custom_budget: false,
+	deleted: false,
 	name: id,
 	override_until: null,
 	percent_used: 0,
@@ -102,6 +103,8 @@ const VIEW: AiCostView = {
 		}),
 		account("over-acc", {
 			cost_micro_eur: 4_100,
+			// Soft-deleted since: still a row, marked.
+			deleted: true,
 			name: "Over Org",
 			percent_used: 104,
 		}),
@@ -224,6 +227,8 @@ it("shows each account's cost, budget, use and top feature group", async () => {
 	);
 
 	const over = within(row("over-acc"));
+	expect(over.getByTestId("ai-cost-deleted").textContent).toBe("Deleted");
+	expect(within(row("free-acc")).queryByTestId("ai-cost-deleted")).toBeNull();
 	expect(over.getByText("104%")).toBeTruthy();
 	expect(over.getByText("€0.0041")).toBeTruthy();
 });

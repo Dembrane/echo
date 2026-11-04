@@ -1429,6 +1429,7 @@ export const getLatestProjectReport = async (projectId: string) => {
 				| "project_id"
 				| "show_portal_link"
 				| "date_created"
+				| "error_code"
 				| "error_message"
 		  > & { title?: string | null })
 		| null

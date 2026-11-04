@@ -384,7 +384,7 @@ msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# přepisuje se} few {# přepisují se} other {# přepisuje se}}"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1078
+#: src/routes/project/report/ProjectReportRoute.tsx:1079
 msgid "{0, plural, one {# view} other {# views}}"
 msgstr "{0, plural, one {# zobrazení} few {# zobrazení} other {# zobrazení}}"
 
@@ -421,7 +421,7 @@ msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Zeptat se na tento rozhovor} few {Zeptat se na tyto rozhovory (#)} many {Zeptat se na tyto rozhovory (#)} other {Zeptat se na tyto rozhovory (#)}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2214
+#: src/components/chat/AgenticChatPanel.tsx:2219
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Zaměřeno na # rozhovor:} few {Zaměřeno na # rozhovory:} other {Zaměřeno na # rozhovorů:}}"
 
@@ -463,7 +463,7 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:950
+#: src/routes/project/chat/ProjectChatRoute.tsx:953
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Využívá se # rozhovor:} few {Využívají se # rozhovory:} other {Využívá se # rozhovorů:}}"
 
@@ -780,15 +780,15 @@ msgstr "Přidáno: {addedCount}. Zkontrolujte seznam níže."
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} lidé již byli pozváni. Projekt bude nasdílen, jakmile se připojí."
 
-#: src/routes/admin/AiCostsPanel.tsx:64
+#: src/routes/admin/AiCostsPanel.tsx:65
 msgid "{amount} custom"
 msgstr "{amount} vlastní"
 
-#: src/routes/admin/AiCostsPanel.tsx:63
+#: src/routes/admin/AiCostsPanel.tsx:64
 msgid "{amount} default"
 msgstr "{amount} výchozí"
 
-#: src/routes/admin/AiCostsPanel.tsx:64
+#: src/routes/admin/AiCostsPanel.tsx:65
 msgid "{amount} until {until}"
 msgstr "{amount} do {until}"
 
@@ -804,7 +804,7 @@ msgstr "{argumentCount, plural, one {# argument} few {# argumenty} other {# argu
 msgid "{browser} on {platform}"
 msgstr "{browser} na {platform}"
 
-#: src/routes/admin/AiCostsPanel.tsx:123
+#: src/routes/admin/AiCostsPanel.tsx:124
 msgid "{calls, plural, one {# call} other {# calls}}"
 msgstr "{calls, plural, one {# volání} few {# volání} many {# volání} other {# volání}}"
 
@@ -1092,7 +1092,7 @@ msgstr "Odesláno {sent} pozvánek. Projekt bude nasdílen, jakmile se připojí
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} invites sent."
 
-#: src/routes/admin/AiCostsPanel.tsx:622
+#: src/routes/admin/AiCostsPanel.tsx:635
 msgid "{share} of the total"
 msgstr "{share} z celku"
 
@@ -1104,11 +1104,11 @@ msgstr "{stored} min"
 msgid "{tag} (preselected)"
 msgstr "{tag} (předvybráno)"
 
-#: src/routes/admin/AiCostsPanel.tsx:53
+#: src/routes/admin/AiCostsPanel.tsx:54
 msgid "{tier}, organisation account"
 msgstr "{tier}, účet organizace"
 
-#: src/routes/admin/AiCostsPanel.tsx:54
+#: src/routes/admin/AiCostsPanel.tsx:55
 msgid "{tier}, workspace account"
 msgstr "{tier}, účet pracovního prostoru"
 
@@ -1342,7 +1342,7 @@ msgstr "Spolehlivější nahrávání audia"
 msgid "A new assistant and a live monitor"
 msgstr "Nový asistent a živý monitor"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:463
+#: src/routes/project/report/ProjectReportRoute.tsx:464
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
 
@@ -1367,8 +1367,8 @@ msgstr "Veřejná stránka vyžaduje vyšší tarif. Vypni Veřejná stránka v 
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "A report is already being generated for this project. Please wait for it to complete."
 
-#: src/components/pricing/PricingConfigurator.tsx:1214
-#: src/components/pricing/PricingConfigurator.tsx:1218
+#: src/components/pricing/PricingConfigurator.tsx:1217
+#: src/components/pricing/PricingConfigurator.tsx:1221
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Přibližné číslo nebo „nevím jistě“. Obojí pomůže."
 
@@ -1508,7 +1508,7 @@ msgstr "Žádost o přístup stažena"
 msgid "Access requests"
 msgstr "Access requests"
 
-#: src/routes/admin/AiCostsPanel.tsx:656
+#: src/routes/admin/AiCostsPanel.tsx:669
 #: src/routes/admin/AdminSettingsRoute.tsx:482
 #: src/routes/admin/AdminSettingsRoute.tsx:1361
 #: src/routes/admin/AdminSettingsRoute.tsx:1573
@@ -1556,7 +1556,7 @@ msgstr "Účet byl nastaven na spravovanou fakturaci."
 msgid "Account set to managed."
 msgstr "Účet byl nastaven jako spravovaný."
 
-#: src/routes/admin/AiCostsPanel.tsx:599
+#: src/routes/admin/AiCostsPanel.tsx:612
 msgid "Accounts and providers"
 msgstr "Účty a poskytovatelé"
 
@@ -1564,7 +1564,7 @@ msgstr "Účty a poskytovatelé"
 msgid "Accounts billed"
 msgstr "Fakturované účty"
 
-#: src/routes/admin/AiCostsPanel.tsx:601
+#: src/routes/admin/AiCostsPanel.tsx:614
 msgid "Accounts with AI calls"
 msgstr "Účty s voláními AI"
 
@@ -2040,15 +2040,15 @@ msgstr "Rozpočet na AI uložen"
 msgid "AI budget used up"
 msgstr "Rozpočet na AI byl vyčerpán"
 
-#: src/routes/admin/AiCostsPanel.tsx:524
+#: src/routes/admin/AiCostsPanel.tsx:537
 msgid "AI costs"
 msgstr "Náklady na AI"
 
-#: src/components/pricing/PricingConfigurator.tsx:777
+#: src/components/pricing/PricingConfigurator.tsx:780
 msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 msgstr "Funkce AI a nové nahrávky jsou pozastaveny do {resetDate}. Přejděte na vyšší tarif a pokračujte hned."
 
-#: src/components/pricing/PricingConfigurator.tsx:782
+#: src/components/pricing/PricingConfigurator.tsx:785
 msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
 msgstr "Funkce AI a nové nahrávky jsou pozastaveny do příštího měsíce. Přejděte na vyšší tarif a pokračujte hned."
 
@@ -2261,11 +2261,11 @@ msgstr "Obnoveno dřívější znění"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1246
+#: src/routes/project/report/ProjectReportRoute.tsx:1247
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "E-mailové upozornění bude odesláno {participantCount, plural, one {# účastníkovi} few {# účastníkům} other {# účastníkům}}. Chcete pokračovat?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1256
+#: src/routes/project/report/ProjectReportRoute.tsx:1257
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Účastníkům bude odesláno e-mailové upozornění. Chcete pokračovat?"
 
@@ -2328,8 +2328,8 @@ msgstr "Analýza | dembrane"
 msgid "Analysis runs"
 msgstr "Běhy analýzy"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:201
-#: src/routes/project/report/ProjectReportRoute.tsx:1093
+#: src/routes/project/report/ProjectReportRoute.tsx:202
+#: src/routes/project/report/ProjectReportRoute.tsx:1094
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -2446,7 +2446,7 @@ msgstr "Any tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Tento pracovní prostor může najít kdokoli z vaší organizace. Správci se mohou připojit rovnou, členové mohou o přístup požádat."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:971
+#: src/routes/project/report/ProjectReportRoute.tsx:972
 msgid "Anyone with the link can read it. No login, and no transcripts."
 msgstr "Kdokoli s odkazem si ji může přečíst. Bez přihlášení a bez přepisů."
 
@@ -2515,7 +2515,7 @@ msgid "Approaching a limit this month"
 msgstr "Approaching a limit this month"
 
 #. placeholder {0}: input.length.toLocaleString()
-#: src/components/chat/AgenticChatPanel.tsx:2369
+#: src/components/chat/AgenticChatPanel.tsx:2374
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Blížíte se k limitu: {0} / 32 000 znaků"
 
@@ -2567,7 +2567,7 @@ msgstr "Are you sure you want to delete this custom topic? This cannot be undone
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1271
+#: src/routes/project/report/ProjectReportRoute.tsx:1272
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Are you sure you want to delete this report? This action cannot be undone."
 
@@ -2677,7 +2677,7 @@ msgid "Ask about these"
 msgstr "Zeptat se na tyto"
 
 #: src/routes/project/chat/NewChatRoute.tsx:682
-#: src/components/chat/AgenticChatPanel.tsx:2345
+#: src/components/chat/AgenticChatPanel.tsx:2350
 msgid "Ask about your conversations..."
 msgstr "Zeptejte se na své rozhovory..."
 
@@ -2968,14 +2968,14 @@ msgstr "Pryč"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/CreateProjectRoute.tsx:466
-#: src/routes/project/report/ProjectReportRoute.tsx:496
+#: src/routes/project/report/ProjectReportRoute.tsx:497
 #: src/routes/organisation/OrganisationRoute.tsx:685
 #: src/routes/organisation/OrganisationRoute.tsx:708
 #: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:289
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:946
+#: src/components/pricing/PricingConfigurator.tsx:949
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -3004,7 +3004,7 @@ msgstr "Zpět na připojení agenta"
 msgid "Back to conversations"
 msgstr "Zpět na rozhovory"
 
-#: src/components/pricing/PricingConfigurator.tsx:1017
+#: src/components/pricing/PricingConfigurator.tsx:1020
 msgid "Back to dembrane"
 msgstr "Zpět do dembrane"
 
@@ -3168,7 +3168,7 @@ msgstr "Účtováno v rámci tarifu vaší organizace, společně s ostatními p
 msgid "Billing"
 msgstr "Billing"
 
-#: src/routes/admin/AiCostsPanel.tsx:603
+#: src/routes/admin/AiCostsPanel.tsx:616
 msgid "Billing accounts that made AI calls"
 msgstr "Fakturační účty s AI voláními"
 
@@ -3233,7 +3233,7 @@ msgstr "Zadání"
 msgid "Bring your own LLM"
 msgstr "Vlastní LLM"
 
-#: src/routes/admin/AiCostsPanel.tsx:662
+#: src/routes/admin/AiCostsPanel.tsx:675
 msgid "Budget"
 msgstr "Rozpočet"
 
@@ -3249,7 +3249,7 @@ msgstr "Build custom dashboards with real-time conversation data"
 msgid "by {by}"
 msgstr "od {by}"
 
-#: src/routes/admin/AiCostsPanel.tsx:631
+#: src/routes/admin/AiCostsPanel.tsx:644
 msgid "By account"
 msgstr "Podle účtu"
 
@@ -3261,11 +3261,11 @@ msgstr "By deleting this project, you will delete all the data associated with i
 #~ msgid "By feature"
 #~ msgstr "Podle funkce"
 
-#: src/routes/admin/AiCostsPanel.tsx:186
+#: src/routes/admin/AiCostsPanel.tsx:187
 msgid "By feature group"
 msgstr "Podle skupiny funkcí"
 
-#: src/routes/admin/AiCostsPanel.tsx:194
+#: src/routes/admin/AiCostsPanel.tsx:195
 msgid "By model"
 msgstr "Podle modelu"
 
@@ -3282,7 +3282,7 @@ msgstr "Podle štítku"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:589
+#: src/routes/admin/AiCostsPanel.tsx:602
 msgid "Calls no account could be matched to"
 msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 
@@ -3290,7 +3290,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #~ msgid "Calls with no account or internal payer"
 #~ msgstr "Volání bez účtu nebo interního plátce"
 
-#: src/components/pricing/PricingConfigurator.tsx:733
+#: src/components/pricing/PricingConfigurator.tsx:736
 msgid "Can you tell us more?"
 msgstr "Můžete nám říct víc?"
 
@@ -3302,7 +3302,7 @@ msgstr "Můžete nám říct víc?"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/ProjectsHome.tsx:443
 #: src/routes/project/CreateProjectRoute.tsx:466
-#: src/routes/project/report/ProjectReportRoute.tsx:277
+#: src/routes/project/report/ProjectReportRoute.tsx:278
 #: src/routes/organisation/OrganisationRoute.tsx:1819
 #: src/routes/organisation/OrganisationRoute.tsx:1842
 #: src/routes/organisation/OrganisationRoute.tsx:1865
@@ -3345,7 +3345,7 @@ msgstr "Můžete nám říct víc?"
 #: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:764
 #: src/components/chat/AgenticChatPanel.tsx:755
-#: src/components/chat/AgenticChatPanel.tsx:2252
+#: src/components/chat/AgenticChatPanel.tsx:2257
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -3400,7 +3400,7 @@ msgstr "Zrušit tarif"
 msgid "Cancel request"
 msgstr "Zrušit žádost"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:531
+#: src/routes/project/report/ProjectReportRoute.tsx:532
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
@@ -3432,7 +3432,7 @@ msgstr "Zrušením se zastaví automatické obnovení vašeho tarifu. Tarif {0} 
 msgid "Cannot add empty conversation"
 msgstr "Cannot add empty conversation"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:510
+#: src/routes/project/report/ProjectReportRoute.tsx:511
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 
@@ -3612,7 +3612,7 @@ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:575
+#: src/routes/admin/AiCostsPanel.tsx:588
 msgid "Charged to accounts"
 msgstr "Účtováno na vrub účtů"
 
@@ -4194,7 +4194,7 @@ msgstr "Confirm password"
 #~ msgid "Confirm Publishing"
 #~ msgstr "Confirm Publishing"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:488
+#: src/routes/project/report/ProjectReportRoute.tsx:489
 msgid "Confirm reschedule"
 msgstr "Confirm reschedule"
 
@@ -4307,7 +4307,7 @@ msgstr "Contextual suggestions"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:923
+#: src/components/pricing/PricingConfigurator.tsx:926
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
@@ -4489,7 +4489,7 @@ msgstr "Rozhovory: {0}"
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1045
+#: src/routes/project/report/ProjectReportRoute.tsx:1046
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
@@ -4554,7 +4554,7 @@ msgstr "Kopírovat odkaz"
 #~ msgid "Copy link to clipboard"
 #~ msgstr "Copy link to clipboard"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1047
+#: src/routes/project/report/ProjectReportRoute.tsx:1048
 msgid "Copy report content"
 msgstr "Copy report content"
 
@@ -4593,7 +4593,7 @@ msgstr "Kopírovat URL"
 msgid "Copying…"
 msgstr "Kopírování…"
 
-#: src/routes/admin/AiCostsPanel.tsx:659
+#: src/routes/admin/AiCostsPanel.tsx:672
 msgid "Cost"
 msgstr "Náklady"
 
@@ -4663,7 +4663,7 @@ msgstr "Metodiky se nepodařilo načíst."
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Platby se nepodařilo načíst. Zkontrolujte přihlášení a záznamy backendu."
 
-#: src/routes/admin/AiCostsPanel.tsx:549
+#: src/routes/admin/AiCostsPanel.tsx:562
 msgid "Could not load the AI costs."
 msgstr "Náklady na AI se nepodařilo načíst."
 
@@ -5011,7 +5011,7 @@ msgstr "Create workspace"
 msgid "Create workspace | dembrane"
 msgstr "Vytvořit pracovní prostor | dembrane"
 
-#: src/components/pricing/PricingConfigurator.tsx:841
+#: src/components/pricing/PricingConfigurator.tsx:844
 msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
 msgstr "Vytvořte si vlastní projekt a pokračujte dál, nebo odpovězte na 5 rychlých otázek a domluvte si schůzku s týmem dembrane ohledně placeného tarifu."
 
@@ -5281,7 +5281,7 @@ msgstr "Výchozí: {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1272
+#: src/routes/project/report/ProjectReportRoute.tsx:1273
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
@@ -5338,8 +5338,8 @@ msgstr "Delete project"
 #~ msgid "Delete Project"
 #~ msgstr "Delete Project"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1057
-#: src/routes/project/report/ProjectReportRoute.tsx:1270
+#: src/routes/project/report/ProjectReportRoute.tsx:1058
+#: src/routes/project/report/ProjectReportRoute.tsx:1271
 msgid "Delete report"
 msgstr "Delete report"
 
@@ -5384,6 +5384,10 @@ msgstr "Delete workspace"
 msgid "Delete…"
 msgstr "Delete…"
 
+#: src/routes/admin/AiCostsPanel.tsx:344
+msgid "Deleted"
+msgstr "Smazáno"
+
 #. placeholder {0}: formatDurationFromHours(convUsage.deleted_hours)
 #: src/components/project/ProjectUsageAndSharing.tsx:537
 #: src/components/project/ProjectUsageAndSharing.tsx:593
@@ -5420,9 +5424,9 @@ msgstr "dembrane na vaší akci?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1036
-#: src/routes/project/chat/ProjectChatRoute.tsx:1046
-#: src/components/chat/AgenticChatPanel.tsx:2388
+#: src/routes/project/chat/ProjectChatRoute.tsx:1039
+#: src/routes/project/chat/ProjectChatRoute.tsx:1049
+#: src/components/chat/AgenticChatPanel.tsx:2393
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane can make mistakes. Please double-check responses."
 
@@ -5477,7 +5481,7 @@ msgstr "dembrane v3"
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot byl náš dřívější projekt. Děkujeme organizátorům, účastníkům a přispěvatelům, kteří jej pomáhali utvářet."
 
-#: src/routes/admin/AiCostsPanel.tsx:595
+#: src/routes/admin/AiCostsPanel.tsx:608
 msgid "Demos, voice outside projects, dev tools"
 msgstr "Ukázky, hlas mimo projekty, vývojářské nástroje"
 
@@ -5711,7 +5715,7 @@ msgstr "Download all transcripts"
 msgid "Download as"
 msgstr "Download as"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1019
+#: src/routes/project/report/ProjectReportRoute.tsx:1020
 msgid "Download as PDF"
 msgstr "Stáhnout jako PDF"
 
@@ -5932,7 +5936,7 @@ msgstr "Upravit cíl"
 msgid "Edit methodology"
 msgstr "Upravit metodologii"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1130
+#: src/routes/project/report/ProjectReportRoute.tsx:1131
 msgid "Edit mode"
 msgstr "Edit mode"
 
@@ -6344,7 +6348,7 @@ msgstr "Každých 60 minut"
 #~ msgid "Every AI call on every tier, priced in euros. Free accounts show their budget."
 #~ msgstr "Každé volání AI na každé úrovni, v eurech. Bezplatné účty zobrazují svůj rozpočet."
 
-#: src/routes/admin/AiCostsPanel.tsx:527
+#: src/routes/admin/AiCostsPanel.tsx:540
 msgid "Every AI call on every tier, priced in euros. Free accounts show their budget. Click a row for its breakdown."
 msgstr "Každé AI volání ve všech tarifech v eurech. Účty Free zobrazují svůj rozpočet. Kliknutím na řádek zobrazíte podrobnosti."
 
@@ -6361,7 +6365,7 @@ msgstr "Všichni připojení agenti v organizaci {0} okamžitě přestanou fungo
 msgid "Every member's connection that names this organisation."
 msgstr "Připojení každého člena, které uvádí tuto organizaci."
 
-#: src/routes/admin/AiCostsPanel.tsx:571
+#: src/routes/admin/AiCostsPanel.tsx:584
 msgid "Every priced AI call, all tiers"
 msgstr "Každé zpoplatněné AI volání, všechny tarify"
 
@@ -6421,7 +6425,7 @@ msgstr "Ukázkový payload webhooku"
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Exceeds seat cap. Overage billing applies."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1137
+#: src/routes/project/report/ProjectReportRoute.tsx:1138
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 #: src/routes/project/canvas/CanvasRoute.tsx:618
 msgid "Exit fullscreen"
@@ -6721,7 +6725,7 @@ msgstr "Failed to remove avatar"
 msgid "Failed to remove logo"
 msgstr "Failed to remove logo"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:479
+#: src/routes/project/report/ProjectReportRoute.tsx:480
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Failed to reschedule. Please choose a time further in the future and try again."
 
@@ -6978,9 +6982,9 @@ msgstr "Předloha"
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2256
-#: src/components/chat/AgenticChatPanel.tsx:2257
-#: src/components/chat/AgenticChatPanel.tsx:2398
+#: src/components/chat/AgenticChatPanel.tsx:2261
+#: src/components/chat/AgenticChatPanel.tsx:2262
+#: src/components/chat/AgenticChatPanel.tsx:2403
 msgid "Focus on conversations"
 msgstr "Zaměřit se na rozhovory"
 
@@ -7125,11 +7129,11 @@ msgstr "Rámování"
 #~ msgid "Free"
 #~ msgstr "Free"
 
-#: src/routes/admin/AiCostsPanel.tsx:609
+#: src/routes/admin/AiCostsPanel.tsx:622
 msgid "Free accounts at 100% or more"
 msgstr "Účty Free na 100 % nebo více"
 
-#: src/routes/admin/AiCostsPanel.tsx:607
+#: src/routes/admin/AiCostsPanel.tsx:620
 msgid "Free accounts at or over budget"
 msgstr "Účty Free na limitu nebo nad rozpočtem"
 
@@ -7191,7 +7195,7 @@ msgstr "Celá obrazovka"
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1137
+#: src/routes/project/report/ProjectReportRoute.tsx:1138
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
@@ -7270,7 +7274,7 @@ msgstr "Generovat názvy rozhovorů automaticky s možností tuto funkci vypnout
 msgid "Generate map"
 msgstr "Vygenerovat mapu"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:506
+#: src/routes/project/report/ProjectReportRoute.tsx:507
 #: src/components/report/UpdateReportModalButton.tsx:349
 #: src/components/report/CreateReportForm.tsx:350
 msgid "Generate now"
@@ -7321,7 +7325,7 @@ msgstr "Vygenerováno z přepisu. Můžete ho upravit."
 msgid "Generating"
 msgstr "Generuje se"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:302
+#: src/routes/project/report/ProjectReportRoute.tsx:303
 msgid "Generating report..."
 msgstr "Generating report..."
 
@@ -7329,7 +7333,7 @@ msgstr "Generating report..."
 msgid "Generating the summary. Please wait..."
 msgstr "Generating the summary. Please wait..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:255
+#: src/routes/project/report/ProjectReportRoute.tsx:256
 msgid "Generating your report..."
 msgstr "Generating your report..."
 
@@ -7508,8 +7512,8 @@ msgstr "Usnadněte si psaní zpráv vlastními pokyny."
 msgid "Guide the report"
 msgstr "Guide the report"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:327
-#: src/routes/project/report/ProjectReportRoute.tsx:1120
+#: src/routes/project/report/ProjectReportRoute.tsx:328
+#: src/routes/project/report/ProjectReportRoute.tsx:1121
 msgid "Guided"
 msgstr "Guided"
 
@@ -7914,11 +7918,11 @@ msgstr "Inactive"
 msgid "Inbox"
 msgstr "Inbox"
 
-#: src/routes/admin/AiCostsPanel.tsx:579
+#: src/routes/admin/AiCostsPanel.tsx:592
 msgid "incl. {deleted} from deleted accounts"
 msgstr "včetně {deleted} ze smazaných účtů"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:974
+#: src/routes/project/report/ProjectReportRoute.tsx:975
 msgid "Include portal link"
 msgstr "Include portal link"
 
@@ -8003,7 +8007,7 @@ msgstr "Instructions for generating the verification outcome"
 #~ msgid "Integrations & Export"
 #~ msgstr "Integrations & Export"
 
-#: src/routes/admin/AiCostsPanel.tsx:593
+#: src/routes/admin/AiCostsPanel.tsx:606
 msgid "Internal"
 msgstr "Interní"
 
@@ -8544,7 +8548,7 @@ msgstr "Poslední zvuk"
 msgid "Last day on this budget"
 msgstr "Poslední den tohoto rozpočtu"
 
-#: src/routes/admin/AiCostsPanel.tsx:539
+#: src/routes/admin/AiCostsPanel.tsx:552
 #: src/routes/admin/AdminSettingsRoute.tsx:258
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
@@ -8584,7 +8588,7 @@ msgstr "Naposledy aktualizováno {0}"
 msgid "Last used"
 msgstr "Naposledy použito"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:325
+#: src/routes/project/report/ProjectReportRoute.tsx:326
 msgid "Latest"
 msgstr "Latest"
 
@@ -9393,7 +9397,7 @@ msgstr "Paměť"
 msgid "Memory removed"
 msgstr "Paměť odstraněna"
 
-#: src/components/chat/AgenticChatPanel.tsx:2364
+#: src/components/chat/AgenticChatPanel.tsx:2369
 msgid "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
 msgstr "Zpráva je příliš dlouhá (maximum je 32 000 znaků). Připojte prosím rozhovory jako přílohu nebo zprávu zkraťte."
 
@@ -9485,7 +9489,7 @@ msgstr "more"
 msgid "More"
 msgstr "Další"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1028
+#: src/routes/project/report/ProjectReportRoute.tsx:1029
 msgid "More actions"
 msgstr "More actions"
 
@@ -9888,15 +9892,15 @@ msgstr "Ne"
 msgid "No access"
 msgstr "No access"
 
-#: src/routes/admin/AiCostsPanel.tsx:581
+#: src/routes/admin/AiCostsPanel.tsx:594
 msgid "No account was charged"
 msgstr "Z žádného účtu nebyly strženy peníze"
 
-#: src/routes/admin/AiCostsPanel.tsx:638
+#: src/routes/admin/AiCostsPanel.tsx:651
 msgid "No account was charged in {month}."
 msgstr "V měsíci {month} nebyl účtován žádný účet."
 
-#: src/routes/admin/AiCostsPanel.tsx:636
+#: src/routes/admin/AiCostsPanel.tsx:649
 msgid "No account was charged this month."
 msgstr "Tento měsíc nebyl účtován žádný účet."
 
@@ -9920,11 +9924,11 @@ msgstr "Zatím žádná volání agentů."
 msgid "No agents connected yet."
 msgstr "Zatím nejsou připojeni žádní agenti."
 
-#: src/routes/admin/AiCostsPanel.tsx:561
+#: src/routes/admin/AiCostsPanel.tsx:574
 msgid "No AI costs recorded for {month}."
 msgstr "Pro měsíc {month} nejsou zaznamenány žádné náklady na AI."
 
-#: src/routes/admin/AiCostsPanel.tsx:559
+#: src/routes/admin/AiCostsPanel.tsx:572
 msgid "No AI costs recorded this month."
 msgstr "Tento měsíc nebyly zaznamenány žádné náklady na AI."
 
@@ -10086,12 +10090,12 @@ msgstr "Zatím žádný cíl. Nastavte si ho zde, nebo se nechte vyzpovídat asi
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
-#: src/routes/admin/AiCostsPanel.tsx:60
+#: src/routes/admin/AiCostsPanel.tsx:61
 #: src/routes/admin/AiBudgetEditor.tsx:163
 msgid "No limit"
 msgstr "Bez limitu"
 
-#: src/routes/admin/AiCostsPanel.tsx:60
+#: src/routes/admin/AiCostsPanel.tsx:61
 msgid "No limit until {until}"
 msgstr "Bez limitu do {until}"
 
@@ -10293,7 +10297,7 @@ msgstr "Nejsou k dispozici žádná data zprávy"
 msgid "No report found"
 msgstr "No report found"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:930
+#: src/routes/project/report/ProjectReportRoute.tsx:931
 msgid "No reports yet"
 msgstr "No reports yet"
 
@@ -10353,7 +10357,7 @@ msgstr "Zatím nejsou uložena žádná napětí."
 msgid "No tensions yet. They appear after the first analysis."
 msgstr "Zatím žádná napětí. Objeví se po první analýze."
 
-#: src/routes/admin/AiCostsPanel.tsx:48
+#: src/routes/admin/AiCostsPanel.tsx:49
 msgid "No tier"
 msgstr "Bez tarifu"
 
@@ -10504,7 +10508,7 @@ msgid "Not monthly"
 msgstr "Ne měsíčně"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:935
+#: src/components/pricing/PricingConfigurator.tsx:938
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10866,7 +10870,7 @@ msgstr "Open"
 msgid "Open {label}"
 msgstr "Otevřít {label}"
 
-#: src/routes/admin/AiCostsPanel.tsx:313
+#: src/routes/admin/AiCostsPanel.tsx:314
 #: src/routes/admin/AdminSettingsRoute.tsx:1664
 msgid "Open account actions"
 msgstr "Otevřít akce účtu"
@@ -11314,7 +11318,7 @@ msgstr "Název stránky"
 msgid "Paid"
 msgstr "Zaplaceno"
 
-#: src/routes/admin/AiCostsPanel.tsx:61
+#: src/routes/admin/AiCostsPanel.tsx:62
 msgid "Paid plan"
 msgstr "Placený tarif"
 
@@ -11610,12 +11614,12 @@ msgstr "Pick a date"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Vyberte tečku a přečtěte si její slova níže."
 
-#: src/components/pricing/PricingConfigurator.tsx:921
+#: src/components/pricing/PricingConfigurator.tsx:924
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Vyberte čas"
 
-#: src/components/pricing/PricingConfigurator.tsx:720
+#: src/components/pricing/PricingConfigurator.tsx:723
 msgid "Pick a time with {host}."
 msgstr "Vyberte si čas ({host})."
 
@@ -12362,7 +12366,7 @@ msgstr "S hrdostí hostováno v EU"
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Provide an overview of the main topics and recurring themes"
 
-#: src/routes/admin/AiCostsPanel.tsx:620
+#: src/routes/admin/AiCostsPanel.tsx:633
 msgid "Provider: {provider}"
 msgstr "Poskytovatel: {provider}"
 
@@ -12371,7 +12375,7 @@ msgstr "Poskytovatel: {provider}"
 msgid "Public page"
 msgstr "Veřejná stránka"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1262
+#: src/routes/project/report/ProjectReportRoute.tsx:1263
 msgid "Publish"
 msgstr "Publish"
 
@@ -12379,7 +12383,7 @@ msgstr "Publish"
 #~ msgid "Publish changes"
 #~ msgstr "Publikovat změny"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1243
+#: src/routes/project/report/ProjectReportRoute.tsx:1244
 msgid "Publish report"
 msgstr "Publikovat zprávu"
 
@@ -12689,7 +12693,7 @@ msgstr "Record"
 
 #: src/components/pricing/PricingTextInput.tsx:267
 #: src/components/feedback/ReportIssueModal.tsx:251
-#: src/components/chat/AgenticChatPanel.tsx:2280
+#: src/components/chat/AgenticChatPanel.tsx:2285
 msgid "Record a voice message"
 msgstr "Nahrát hlasovou zprávu"
 
@@ -12787,7 +12791,7 @@ msgstr "V tarifu Free je nahrávání pro tento projekt pozastaveno. Nové nahr�
 
 #: src/components/pricing/bookingPrefill.ts:168
 #: src/components/pricing/PricingConfigurator.tsx:176
-#: src/components/pricing/PricingConfigurator.tsx:1007
+#: src/components/pricing/PricingConfigurator.tsx:1010
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -13108,7 +13112,7 @@ msgid "report"
 msgstr "zpráva"
 
 #: src/routes/project/ProjectHomeRoute.tsx:113
-#: src/routes/project/report/ProjectReportRoute.tsx:170
+#: src/routes/project/report/ProjectReportRoute.tsx:171
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:159
 #: src/components/report/ReportRenderer.tsx:65
 msgid "Report"
@@ -13150,9 +13154,9 @@ msgstr "Zpráva vygenerována"
 msgid "Report generation"
 msgstr "Generování zpráv"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:753
-#: src/routes/project/report/ProjectReportRoute.tsx:847
-#: src/routes/project/report/ProjectReportRoute.tsx:1203
+#: src/routes/project/report/ProjectReportRoute.tsx:754
+#: src/routes/project/report/ProjectReportRoute.tsx:848
+#: src/routes/project/report/ProjectReportRoute.tsx:1204
 msgid "Report generation cancelled"
 msgstr "Report generation cancelled"
 
@@ -13160,12 +13164,12 @@ msgstr "Report generation cancelled"
 msgid "Report generation continues in the background with a visible status."
 msgstr "Generování zprávy pokračuje na pozadí s viditelným stavem."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:233
+#: src/routes/project/report/ProjectReportRoute.tsx:234
 msgid "Report generation in progress..."
 msgstr "Report generation in progress..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:758
-#: src/routes/project/report/ProjectReportRoute.tsx:1208
+#: src/routes/project/report/ProjectReportRoute.tsx:759
+#: src/routes/project/report/ProjectReportRoute.tsx:1209
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Report generation was cancelled. You can start a new report below."
 
@@ -13194,7 +13198,7 @@ msgstr "Upozornění na zprávy"
 msgid "Report ready"
 msgstr "Zpráva je hotová"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:460
+#: src/routes/project/report/ProjectReportRoute.tsx:461
 msgid "Report scheduled"
 msgstr "Report scheduled"
 
@@ -13224,7 +13228,7 @@ msgstr "Zpráva aktualizována"
 msgid "Report updated · {0}"
 msgstr "Zpráva aktualizována · {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:890
+#: src/routes/project/report/ProjectReportRoute.tsx:891
 #: src/routes/admin/aiCostBreakdown.ts:54
 #: src/routes/admin/aiCostBreakdown.ts:84
 msgid "Reports"
@@ -13352,12 +13356,12 @@ msgstr "Vyžaduje zapnutou možnost „Požádat o e-mail?“"
 #~ msgid "Rerun popcorn?"
 #~ msgstr "Spustit Popcorn znovu?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:521
+#: src/routes/project/report/ProjectReportRoute.tsx:522
 #: src/components/training/TrainingRowActions.tsx:150
 msgid "Reschedule"
 msgstr "Reschedule"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:473
+#: src/routes/project/report/ProjectReportRoute.tsx:474
 msgid "Reschedule to"
 msgstr "Reschedule to"
 
@@ -13701,7 +13705,7 @@ msgstr "Role updated"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Přibližný odhad dokončení přepisu zbývajících nahrávek"
 
-#: src/components/pricing/PricingConfigurator.tsx:1222
+#: src/components/pricing/PricingConfigurator.tsx:1225
 msgid "Roughly how many?"
 msgstr "Přibližně kolik?"
 
@@ -13759,11 +13763,11 @@ msgstr "Faktura vystavena."
 msgid "Sample popcorn session"
 msgstr "Ukázková relace Popcorn"
 
-#: src/components/pricing/PricingConfigurator.tsx:822
+#: src/components/pricing/PricingConfigurator.tsx:825
 msgid "Sample projects allow {sampleQuestions} questions."
 msgstr "Ukázkové projekty umožňují {sampleQuestions} otázek."
 
-#: src/components/pricing/PricingConfigurator.tsx:820
+#: src/components/pricing/PricingConfigurator.tsx:823
 msgid "Sample projects allow one report."
 msgstr "Ukázkové projekty umožňují jednu zprávu."
 
@@ -14173,7 +14177,7 @@ msgstr "zobrazit přepisy"
 #: src/components/report/UpdateReportModalButton.tsx:223
 #: src/components/report/CreateReportForm.tsx:182
 #: src/components/popcorn/AiBudgetNotice.tsx:50
-#: src/components/chat/FreeTierChatGate.tsx:53
+#: src/components/chat/FreeTierChatGate.tsx:62
 msgid "See upgrade options"
 msgstr "Zobrazit možnosti navýšení tarifu"
 
@@ -14280,9 +14284,9 @@ msgid "Select conversation"
 msgstr "Vybrat rozhovor"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:912
-#: src/routes/project/chat/ProjectChatRoute.tsx:971
-#: src/routes/project/chat/ProjectChatRoute.tsx:972
-#: src/routes/project/chat/ProjectChatRoute.tsx:1057
+#: src/routes/project/chat/ProjectChatRoute.tsx:974
+#: src/routes/project/chat/ProjectChatRoute.tsx:975
+#: src/routes/project/chat/ProjectChatRoute.tsx:1060
 #: src/routes/project/chat/NewChatRoute.tsx:633
 #: src/routes/project/chat/NewChatRoute.tsx:635
 #: src/routes/project/chat/NewChatRoute.tsx:745
@@ -14388,10 +14392,10 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr "Samoobslužné"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:996
+#: src/routes/project/chat/ProjectChatRoute.tsx:999
 #: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
-#: src/components/chat/AgenticChatPanel.tsx:2319
+#: src/components/chat/AgenticChatPanel.tsx:2324
 msgid "Send"
 msgstr "Send"
 
@@ -14757,7 +14761,7 @@ msgstr "Zobrazit všechny konverzace"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/routes/admin/AiCostsPanel.tsx:285
+#: src/routes/admin/AiCostsPanel.tsx:286
 msgid "Show breakdown"
 msgstr "Zobrazit rozpis"
 
@@ -14931,7 +14935,7 @@ msgstr "Jsou zobrazeny argumenty jednoho výsledku."
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Zobrazuje se prvních {0} z {shownCount} shod. Zpřesněte vyhledávání pro zobrazení zbytku."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:866
+#: src/routes/project/report/ProjectReportRoute.tsx:867
 msgid "Showing your most recent completed report."
 msgstr "Showing your most recent completed report."
 
@@ -14974,7 +14978,7 @@ msgstr "Šest víkendů v průběhu sedmi měsíců"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:958
+#: src/components/pricing/PricingConfigurator.tsx:961
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -15058,9 +15062,9 @@ msgstr "Něco ve formuláři je potřeba opravit. Zkontrolujte ho a zkuste to zn
 msgid "participant.modal.s3check.message"
 msgstr "Something is blocking your connection. Your audio will not be saved unless this is resolved."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:754
-#: src/routes/project/report/ProjectReportRoute.tsx:848
-#: src/routes/project/report/ProjectReportRoute.tsx:1204
+#: src/routes/project/report/ProjectReportRoute.tsx:755
+#: src/routes/project/report/ProjectReportRoute.tsx:849
+#: src/routes/project/report/ProjectReportRoute.tsx:1205
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:213
 #: src/routes/auth/Login.tsx:268
 #: src/routes/auth/Login.tsx:342
@@ -15076,12 +15080,12 @@ msgstr "Something went wrong"
 msgid "participant.conversation.error"
 msgstr "Something went wrong"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:861
+#: src/routes/project/report/ProjectReportRoute.tsx:862
 msgid "Something went wrong generating your latest report."
 msgstr "Something went wrong generating your latest report."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:765
-#: src/routes/project/report/ProjectReportRoute.tsx:1217
+#: src/routes/project/report/ProjectReportRoute.tsx:766
+#: src/routes/project/report/ProjectReportRoute.tsx:1218
 msgid "Something went wrong generating your report."
 msgstr "Something went wrong generating your report."
 
@@ -15215,7 +15219,7 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Chat ke konkrétním detailům respektuje ruční výběr rozhovorů."
 
-#: src/routes/admin/AiCostsPanel.tsx:567
+#: src/routes/admin/AiCostsPanel.tsx:580
 msgid "Spend"
 msgstr "Výdaje"
 
@@ -15392,7 +15396,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr "Zůstává aktuální do zítřejších {0}"
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:794
+#: src/components/pricing/PricingConfigurator.tsx:797
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Krok {0} z {STEP_COUNT}"
 
@@ -15407,7 +15411,7 @@ msgstr "Still stuck? Email <0>support@dembrane.com</0>."
 #: src/routes/project/chat/ProjectChatRoute.tsx:798
 #: src/components/pricing/PricingTextInput.tsx:263
 #: src/components/feedback/ReportIssueModal.tsx:247
-#: src/components/chat/AgenticChatPanel.tsx:2275
+#: src/components/chat/AgenticChatPanel.tsx:2280
 msgid "Stop"
 msgstr "Stop"
 
@@ -15439,7 +15443,7 @@ msgstr "Zastavit živý přenos"
 
 #: src/components/pricing/PricingTextInput.tsx:254
 #: src/components/feedback/ReportIssueModal.tsx:239
-#: src/components/chat/AgenticChatPanel.tsx:2266
+#: src/components/chat/AgenticChatPanel.tsx:2271
 msgid "Stop recording and turn it into text"
 msgstr "Zastavit nahrávání a převést na text"
 
@@ -15872,7 +15876,7 @@ msgstr "Thank you!"
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr "Děkujeme! Ozveme se vám co nejdříve. Můžete nám také napsat na info@dembrane.com."
 
-#: src/components/pricing/PricingConfigurator.tsx:999
+#: src/components/pricing/PricingConfigurator.tsx:1002
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Děkujeme za vyplnění. V e-mailu najdete potvrzení hovoru. V případě jakýchkoli dotazů nás můžete kdykoli kontaktovat na info@dembrane.com"
 
@@ -15896,7 +15900,7 @@ msgstr "Tento kód není správný nebo vypršel. Požádejte o nový."
 msgid "That did not save. Your words are still here."
 msgstr "Neuložilo se. Tvá slova tu zůstávají."
 
-#: src/components/pricing/PricingConfigurator.tsx:898
+#: src/components/pricing/PricingConfigurator.tsx:901
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr "To se nepodařilo odeslat. Vaše odpovědi zůstaly zachovány, zkuste to prosím znovu."
 
@@ -15908,7 +15912,7 @@ msgstr "To se nepovedlo. Vaši nahrávku jsme uložili."
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Tato nahrávka je na odeslání příliš dlouhá. Nahrajte kratší poznámku."
 
-#: src/components/pricing/PricingConfigurator.tsx:856
+#: src/components/pricing/PricingConfigurator.tsx:859
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "K tomu je potřeba placený tarif. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas s týmem dembrane. Před hovorem si vaše odpovědi projdeme, abychom přišli s nabídkou na míru."
 
@@ -15925,7 +15929,7 @@ msgstr "A je to"
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "[Nápověda](https://docs.dembrane.com/) je přepsaná a aktuální."
 
-#: src/routes/admin/AiCostsPanel.tsx:582
+#: src/routes/admin/AiCostsPanel.tsx:595
 msgid "The account rows below"
 msgstr "Řádky účtů níže"
 
@@ -16128,7 +16132,7 @@ msgstr "Obrazovka průvodce pro hostitele ukazuje kód pro zapojení. Pro její 
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
-#: src/components/pricing/PricingConfigurator.tsx:985
+#: src/components/pricing/PricingConfigurator.tsx:988
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr "Pozvánku máte ve své schránce. Před schůzkou si přečteme vaše odpovědi a připravíme návrh nabídky. Máte mezitím nějaké dotazy? Obraťte se na"
 
@@ -16255,7 +16259,7 @@ msgstr "Stránka, na kterou tato odpověď odkazuje."
 msgid "The participant flow has clearer microphone checks."
 msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 
-#: src/components/pricing/PricingConfigurator.tsx:758
+#: src/components/pricing/PricingConfigurator.tsx:761
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
@@ -16299,7 +16303,7 @@ msgstr "Protichůdné zájmy a potřeby lidí, ověřené na základě rozhovor�
 msgid "The random walk will surface nodes here once available."
 msgstr "Až budou uzly dostupné, náhodný průchod je zobrazí zde."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:975
+#: src/routes/project/report/ProjectReportRoute.tsx:976
 msgid "The report ends with an invitation to add your voice."
 msgstr "Zpráva končí pozvánkou, abyste přidali svůj hlas."
 
@@ -16718,13 +16722,14 @@ msgstr "Tato mapa obsahuje {count} argumentů. Její zobrazení může být pro 
 msgid "This marks the training cancelled. You can reopen it later from the same menu."
 msgstr "Tímto se školení označí jako zrušené. Později ho můžete ze stejné nabídky znovu otevřít."
 
-#: src/routes/admin/AiCostsPanel.tsx:538
+#: src/routes/admin/AiCostsPanel.tsx:551
 #: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "This month"
 
-#: src/components/pricing/PricingConfigurator.tsx:773
+#: src/components/report/reportError.ts:9
+#: src/components/pricing/PricingConfigurator.tsx:776
 msgid "This month's AI budget is used up."
 msgstr "Rozpočet na AI pro tento měsíc je vyčerpán."
 
@@ -16851,9 +16856,14 @@ msgid "This project is visible to everyone in the workspace."
 msgstr "This project is visible to everyone in the workspace."
 
 #. js-lingui-explicit-id
-#: src/components/participant/NotTakingRecordings.tsx:14
+#: src/components/participant/NotTakingRecordings.tsx:19
 msgid "participant.not_taking_recordings"
 msgstr "Tento projekt právě nepřijímá nahrávky."
+
+#. js-lingui-explicit-id
+#: src/components/participant/NotTakingRecordings.tsx:15
+msgid "participant.not_taking_responses"
+msgstr "Tento projekt momentálně nepřijímá odpovědi."
 
 #. placeholder {0}: LEGAL_BASIS_LABELS[data._legal.inherited.legal_basis]()
 #. placeholder {1}: sourceLabel(data._legal.inherited.source)
@@ -16895,7 +16905,7 @@ msgstr "Tato zpráva zatím není k dispozici."
 #~ msgstr "This report is not yet available. "
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:209
+#: src/routes/project/report/ProjectReportRoute.tsx:210
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
 
@@ -16992,7 +17002,7 @@ msgstr "this workspace"
 msgid "This workspace has reached its recording cap. Upgrade to upload more audio."
 msgstr "This workspace has reached its recording cap. Upgrade to upload more audio."
 
-#: src/components/chat/AgenticChatPanel.tsx:2296
+#: src/components/chat/AgenticChatPanel.tsx:2301
 msgid "This workspace has used its recording hours. Upgrade to keep using voice."
 msgstr "Tento pracovní prostor vyčerpal své nahrávací hodiny. Chcete-li pokračovat v používání hlasu, upgradujte tarif."
 
@@ -17171,7 +17181,7 @@ msgstr "Příliš dlouhé nebo nejasné"
 #~ msgid "Too many reports. Wait a few minutes and try again"
 #~ msgstr "Příliš mnoho hlášení. Počkejte několik minut a zkuste to znovu"
 
-#: src/components/chat/AgenticChatPanel.tsx:2230
+#: src/components/chat/AgenticChatPanel.tsx:2235
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Příliš mnoho položek k zobrazení. Asistent je prochází po částech."
 
@@ -17198,8 +17208,8 @@ msgstr "Nástroj"
 msgid "Tools"
 msgstr "Nástroje"
 
-#: src/routes/admin/AiCostsPanel.tsx:450
-#: src/routes/admin/AiCostsPanel.tsx:668
+#: src/routes/admin/AiCostsPanel.tsx:463
+#: src/routes/admin/AiCostsPanel.tsx:681
 msgid "Top feature group"
 msgstr "Hlavní skupina funkcí"
 
@@ -17239,7 +17249,7 @@ msgstr "total"
 msgid "Total"
 msgstr "Total"
 
-#: src/routes/admin/AiCostsPanel.tsx:569
+#: src/routes/admin/AiCostsPanel.tsx:582
 msgid "Total cost"
 msgstr "Celkové náklady"
 
@@ -17594,7 +17604,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Type <0>{0}</0> to confirm."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1005
+#: src/routes/project/chat/ProjectChatRoute.tsx:1008
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
@@ -17631,7 +17641,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/routes/admin/AiCostsPanel.tsx:587
+#: src/routes/admin/AiCostsPanel.tsx:600
 msgid "Unattributed"
 msgstr "Nepřiřazeno"
 
@@ -17780,7 +17790,7 @@ msgstr "Untitled conversation"
 msgid "Untitled methodology"
 msgstr "Metodika bez názvu"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:303
+#: src/routes/project/report/ProjectReportRoute.tsx:304
 msgid "Untitled report"
 msgstr "Untitled report"
 
@@ -17888,7 +17898,7 @@ msgstr "Aktualizují se štítky projektu"
 #~ msgid "Upgrade"
 #~ msgstr "Upgradovat"
 
-#: src/components/pricing/PricingConfigurator.tsx:849
+#: src/components/pricing/PricingConfigurator.tsx:852
 msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Přejděte na vyšší tarif a získejte každý měsíc víc AI. Položíme vám ještě 5 rychlých otázek a pak si vyberete čas na hovor s týmem dembrane. Vaše odpovědi si předem projdeme, abychom pro vás připravili nabídku na míru."
 
@@ -17897,7 +17907,7 @@ msgstr "Přejděte na vyšší tarif a získejte každý měsíc víc AI. Polož
 msgid "Upgrade to add this to the chat"
 msgstr "Přejděte na vyšší tarif a přidejte toto do chatu"
 
-#: src/components/chat/FreeTierChatGate.tsx:43
+#: src/components/chat/FreeTierChatGate.tsx:52
 msgid "Upgrade to continue"
 msgstr "Pro pokračování přejděte na vyšší tarif"
 
@@ -18094,9 +18104,9 @@ msgstr "Místo toho použít heslo"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Používejte připnuté a uložené šablony otázek z Ask, včetně zkratky /."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1033
-#: src/routes/project/chat/ProjectChatRoute.tsx:1043
-#: src/components/chat/AgenticChatPanel.tsx:2384
+#: src/routes/project/chat/ProjectChatRoute.tsx:1036
+#: src/routes/project/chat/ProjectChatRoute.tsx:1046
+#: src/components/chat/AgenticChatPanel.tsx:2389
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -18125,7 +18135,7 @@ msgstr "používat webhooky"
 msgid "use your voice in chat"
 msgstr "používat v chatu hlas"
 
-#: src/routes/admin/AiCostsPanel.tsx:665
+#: src/routes/admin/AiCostsPanel.tsx:678
 msgid "Used"
 msgstr "Využito"
 
@@ -18704,7 +18714,7 @@ msgstr "Co se odešle"
 msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
-#: src/components/pricing/PricingConfigurator.tsx:1130
+#: src/components/pricing/PricingConfigurator.tsx:1133
 msgid "What is it?"
 msgstr "O co jde?"
 
@@ -19161,7 +19171,7 @@ msgstr "Nejste členem žádné organizace, takže zatím není co připojit."
 msgid "You are not in an organisation yet."
 msgstr "Zatím nejste v žádné organizaci."
 
-#: src/components/pricing/PricingConfigurator.tsx:834
+#: src/components/pricing/PricingConfigurator.tsx:837
 msgid "You are on the free plan."
 msgstr "Využíváte tarif Free."
 
@@ -19194,7 +19204,7 @@ msgstr "You can change this later in workspace settings."
 msgid "You can close this page. We'll notify you when it's done."
 msgstr "Tuto stránku můžete zavřít. Až bude hotovo, dáme vám vědět."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:258
+#: src/routes/project/report/ProjectReportRoute.tsx:259
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
 
@@ -19219,7 +19229,7 @@ msgstr "Později to můžete zrušit v sekci <0>Nápověda, Připojte svého age
 msgid "You can skip this and add them later."
 msgstr "Tento krok můžete přeskočit a přidat je později."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1222
+#: src/routes/project/report/ProjectReportRoute.tsx:1223
 msgid "You can try again below."
 msgstr "You can try again below."
 
@@ -19401,7 +19411,7 @@ msgstr "You seem to be offline, please check your internet connection"
 msgid "You stopped this run."
 msgstr "Tento běh jste zastavili."
 
-#: src/components/pricing/PricingConfigurator.tsx:832
+#: src/components/pricing/PricingConfigurator.tsx:835
 msgid "You were trying to {action}."
 msgstr "Pokusili jste se o: {action}."
 
@@ -19485,7 +19495,7 @@ msgstr "Zatím nejste v žádné organizaci. Vytvořte pracovní prostor a zalo�
 msgid "You're not part of any organisation right now."
 msgstr "You're not part of any organisation right now."
 
-#: src/components/pricing/PricingConfigurator.tsx:827
+#: src/components/pricing/PricingConfigurator.tsx:830
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Používáte bezplatný tarif Free, který zahrnuje měsíční příděl AI."
 
@@ -19518,8 +19528,8 @@ msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment.
 msgstr "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 
 #: src/components/chat/FreeTierChatGate.tsx:47
-msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
-msgstr "Dosáhli jste limitu bezplatného tarifu pro tento chat. Přejděte na vyšší tarif a pokračujte v rozhovoru."
+#~ msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
+#~ msgstr "Dosáhli jste limitu bezplatného tarifu pro tento chat. Přejděte na vyšší tarif a pokračujte v rozhovoru."
 
 #: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
@@ -19536,6 +19546,10 @@ msgstr "Využili jste {percent} % AI na tento měsíc. Jakmile ji vyčerpáte, f
 #: src/components/workspace/PilotBlockModal.tsx:39
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
+
+#: src/components/chat/FreeTierChatGate.tsx:56
+msgid "You've used this sample project's {count} questions. Create your own project or upgrade to keep going."
+msgstr "Využili jste {count} otázek z tohoto ukázkového projektu. Vytvořte si vlastní projekt nebo přejděte na vyšší tarif a pokračujte dál."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "Your access"
@@ -19572,11 +19586,11 @@ msgstr "Your approval helps us understand what you really think!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Váš prohlížeč blokuje mikrofon. Povolte k němu přístup a zkuste to znovu."
 
-#: src/components/pricing/PricingConfigurator.tsx:725
+#: src/components/pricing/PricingConfigurator.tsx:728
 msgid "Your call is booked: {bookedTime}."
 msgstr "Váš hovor je zarezervován: {bookedTime}."
 
-#: src/components/pricing/PricingConfigurator.tsx:727
+#: src/components/pricing/PricingConfigurator.tsx:730
 msgid "Your call is booked."
 msgstr "Váš hovor je zarezervován."
 
@@ -19631,7 +19645,7 @@ msgstr "Vaše zpětná vazba i tato odpověď dorazí týmu dembrane."
 #~ msgid "Your free plan includes one report. Upgrade to create more."
 #~ msgstr "Váš bezplatný tarif zahrnuje jednu zprávu. Přejděte na vyšší tarif a vytvářejte další."
 
-#: src/components/pricing/PricingConfigurator.tsx:755
+#: src/components/pricing/PricingConfigurator.tsx:758
 msgid "Your free transcription allowance is used up."
 msgstr "Váš bezplatný limit pro přepis je vyčerpaný."
 
@@ -19656,7 +19670,7 @@ msgstr "Your invite was already accepted, but you're no longer a member of {reso
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Poslední platba neproběhla. Váš tarif zůstává aktivní. Pro vyrovnání platby upravte platební metodu nebo platbu zopakujte."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:852
+#: src/routes/project/report/ProjectReportRoute.tsx:853
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
@@ -19750,7 +19764,7 @@ msgstr "Váš tarif se neobnoví. Přístup vám zůstane až do konce období."
 msgid "Your recording, {0}"
 msgstr "Vaše nahrávka, {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:730
+#: src/components/pricing/PricingConfigurator.tsx:733
 msgid "Your request is in."
 msgstr "Vaše žádost byla přijata."
 

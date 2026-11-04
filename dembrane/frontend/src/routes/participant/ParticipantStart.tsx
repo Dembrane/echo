@@ -114,7 +114,9 @@ export const ParticipantStartRoute = () => {
 						</div>
 					</header>
 					<div className="flex flex-grow flex-col items-center justify-center p-4">
-						<NotTakingRecordings />
+						<NotTakingRecordings
+							text={resolvePortalMode(searchParams) === "text"}
+						/>
 					</div>
 				</div>
 			) : (

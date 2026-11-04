@@ -56,6 +56,7 @@ import {
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
+import { reportErrorText } from "@/components/report/reportError";
 import {
 	isDateFarEnough,
 	ScheduleDateTimePicker,
@@ -759,8 +760,8 @@ export const ProjectReportRoute = () => {
 								Report generation was cancelled. You can start a new report
 								below.
 							</Trans>
-						) : latestReport.error_message ? (
-							<Text size="sm">{latestReport.error_message}</Text>
+						) : reportErrorText(latestReport) ? (
+							<Text size="sm">{reportErrorText(latestReport)}</Text>
 						) : (
 							<Trans>Something went wrong generating your report.</Trans>
 						)}
@@ -855,8 +856,8 @@ export const ProjectReportRoute = () => {
 							</Trans>
 						) : (
 							<>
-								{latestReport.error_message ? (
-									<Text size="sm">{latestReport.error_message}</Text>
+								{reportErrorText(latestReport) ? (
+									<Text size="sm">{reportErrorText(latestReport)}</Text>
 								) : (
 									<Trans>
 										Something went wrong generating your latest report.
@@ -1211,8 +1212,8 @@ export const ProjectReportRoute = () => {
 									</Trans>
 								) : (
 									<>
-										{latestReport.error_message ? (
-											<Text size="sm">{latestReport.error_message}</Text>
+										{reportErrorText(latestReport) ? (
+											<Text size="sm">{reportErrorText(latestReport)}</Text>
 										) : (
 											<Trans>
 												Something went wrong generating your report.
