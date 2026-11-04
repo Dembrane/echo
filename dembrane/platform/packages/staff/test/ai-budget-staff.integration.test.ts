@@ -42,15 +42,19 @@ type Costs = {
     billing_account_id: string;
     name: string;
     tier: string | null;
+    account_scope: "organisation" | "workspace" | null;
     cost_micro_eur: number;
     budget_micro_eur: number | null;
+    custom_budget: boolean;
     percent_used: number | null;
     unlimited: boolean;
     override_until: string | null;
-    by_feature: { operation: string; cost_micro_eur: number }[];
-    by_model: { model: string; cost_micro_eur: number }[];
+    by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+    by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
   }[];
   unattributed_micro_eur: number;
+  internal_micro_eur: number;
+  deleted_accounts_micro_eur: number;
   by_provider: { provider: string; cost_micro_eur: number }[];
 };
 
@@ -175,10 +179,12 @@ run("staff AI budget and costs", () => {
     operation: string;
     model: string;
     cost: number;
+    calls?: number;
   }) {
     await sql`insert into ai_spend_daily (day, billing_account_id, payer, operation, model,
         calls, input_tokens, output_tokens, cost_micro_eur)
-      values (${r.day}, ${r.account}, ${r.payer}, ${r.operation}, ${r.model}, 1, 0, 0, ${r.cost})`;
+      values (${r.day}, ${r.account}, ${r.payer}, ${r.operation}, ${r.model}, ${r.calls ?? 1},
+        0, 0, ${r.cost})`;
   }
 
   async function price(provider: string, model: string) {
@@ -350,6 +356,10 @@ run("staff AI budget and costs", () => {
       await sql`update billing_account set ai_budget_micro_eur = 1000000,
         ai_budget_until = '2026-12-01T00:00:00Z' where id = ${down}`;
       await sql`update billing_account set ai_budget_unlimited = true where id = ${open}`;
+      // A workspace account: named after its workspace.
+      await sql`update workspace set name = 'Open Workspace' where billing_account_id = ${open}`;
+      await sql`update billing_account set org_id = null,
+        workspace_id = (select id from workspace where billing_account_id = ${open}) where id = ${open}`;
       await price("vertex", "gemini-flash");
       await price("anthropic", "claude");
       await price("vertex", "shared");
@@ -430,6 +440,15 @@ run("staff AI budget and costs", () => {
         provider: "vertex",
         cost: 40_000,
       });
+      // An account deleted since: its calls keep a dangling billing_account_id.
+      await modelCall({
+        at: oct("19"),
+        account: randomUUID(),
+        operation: "chat.reply",
+        model: "gemini-flash",
+        provider: "vertex",
+        cost: 25_000,
+      });
       await spend(free, "2026-10-01T00:00:00Z", 1_500_000);
       await spend(down, "2026-10-01T00:00:00Z", 300_000);
       await spend(down, "2026-10-10T00:00:00Z", 200_000);
@@ -452,6 +471,7 @@ run("staff AI budget and costs", () => {
         operation: "chat.reply",
         model: "gemini-flash",
         cost: 800_000,
+        calls: 4,
       });
       await daily({
         day: "2026-09-10",
@@ -460,6 +480,14 @@ run("staff AI budget and costs", () => {
         operation: "",
         model: "shared",
         cost: 30_000,
+      });
+      await daily({
+        day: "2026-09-10",
+        account: null,
+        payer: "internal",
+        operation: "samples.seed-best-practices",
+        model: "gemini-flash",
+        cost: 20_000,
       });
       await daily({
         day: "2026-08-31",
@@ -492,15 +520,27 @@ run("staff AI budget and costs", () => {
     const costs = async (offset: number) => {
       const res = await call("staff", "GET", `/api/v2/admin/ai-costs?month_offset=${offset}`);
       expect(res.status).toBe(200);
-      return (await res.json()) as Costs;
+      const view = (await res.json()) as Costs;
+      // Every euro is charged to an account (live or deleted), unattributed or internal.
+      const sum = (xs: { cost_micro_eur: number }[]) =>
+        xs.reduce((s, x) => s + x.cost_micro_eur, 0);
+      expect(
+        sum(view.accounts) +
+          view.deleted_accounts_micro_eur +
+          view.unattributed_micro_eur +
+          view.internal_micro_eur,
+      ).toBe(sum(view.by_provider));
+      return view;
     };
 
     test("this month: per account, feature, model, provider and unattributed", async () => {
       const view = await costs(0);
       expect(view.period_start).toBe("2026-10-01T00:00:00.000Z");
       expect(view.unattributed_micro_eur).toBe(70_000);
+      expect(view.internal_micro_eur).toBe(40_000);
+      expect(view.deleted_accounts_micro_eur).toBe(25_000);
       expect(view.by_provider).toEqual([
-        { provider: "vertex", cost_micro_eur: 3_710_000 },
+        { provider: "vertex", cost_micro_eur: 3_735_000 },
         { provider: "anthropic", cost_micro_eur: 500_000 },
       ]);
       expect(view.accounts).toEqual([
@@ -508,30 +548,37 @@ run("staff AI budget and costs", () => {
           billing_account_id: paid,
           name: "Paid Org",
           tier: "changemaker",
+          account_scope: "organisation",
           cost_micro_eur: 2_000_000,
           budget_micro_eur: null,
+          custom_budget: false,
           percent_used: null,
           unlimited: false,
           override_until: null,
-          by_feature: [{ operation: "chat.reply", cost_micro_eur: 2_000_000 }],
-          by_model: [{ model: "gemini-flash", cost_micro_eur: 2_000_000 }],
+          by_feature: [{ operation: "chat.reply", cost_micro_eur: 2_000_000, calls: 1 }],
+          by_model: [
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 2_000_000, calls: 1 },
+          ],
         },
         {
           billing_account_id: free,
           name: "Free Org",
           tier: "free",
+          account_scope: "organisation",
           cost_micro_eur: 1_500_000,
           budget_micro_eur: 5_000_000,
+          custom_budget: false,
           percent_used: 30,
           unlimited: false,
           override_until: null,
+          // An unpriced call still counts as a call.
           by_feature: [
-            { operation: "chat.reply", cost_micro_eur: 1_000_000 },
-            { operation: "report.generate", cost_micro_eur: 500_000 },
+            { operation: "chat.reply", cost_micro_eur: 1_000_000, calls: 1 },
+            { operation: "report.generate", cost_micro_eur: 500_000, calls: 2 },
           ],
           by_model: [
-            { model: "gemini-flash", cost_micro_eur: 1_000_000 },
-            { model: "claude", cost_micro_eur: 500_000 },
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 1_000_000, calls: 1 },
+            { model: "claude", provider: "anthropic", cost_micro_eur: 500_000, calls: 2 },
           ],
         },
         {
@@ -539,25 +586,33 @@ run("staff AI budget and costs", () => {
           billing_account_id: down,
           name: "Down Org",
           tier: "free",
+          account_scope: "organisation",
           cost_micro_eur: 500_000,
           budget_micro_eur: 1_000_000,
+          custom_budget: true,
           percent_used: 20,
           unlimited: false,
           override_until: "2026-12-01T00:00:00.000Z",
-          by_feature: [{ operation: "chat.reply", cost_micro_eur: 500_000 }],
-          by_model: [{ model: "gemini-flash", cost_micro_eur: 500_000 }],
+          by_feature: [{ operation: "chat.reply", cost_micro_eur: 500_000, calls: 2 }],
+          by_model: [
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 500_000, calls: 2 },
+          ],
         },
         {
           billing_account_id: open,
-          name: "Open Org",
+          name: "Open Workspace",
           tier: "free",
+          account_scope: "workspace",
           cost_micro_eur: 100_000,
           budget_micro_eur: null,
+          custom_budget: false,
           percent_used: null,
           unlimited: true,
           override_until: null,
-          by_feature: [{ operation: "", cost_micro_eur: 100_000 }],
-          by_model: [{ model: "gemini-flash", cost_micro_eur: 100_000 }],
+          by_feature: [{ operation: "", cost_micro_eur: 100_000, calls: 1 }],
+          by_model: [
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 100_000, calls: 1 },
+          ],
         },
       ]);
       const trail = await audits("ai_costs.read");
@@ -572,9 +627,11 @@ run("staff AI budget and costs", () => {
       const view = await costs(1);
       expect(view.period_start).toBe("2026-09-01T00:00:00.000Z");
       expect(view.unattributed_micro_eur).toBe(30_000);
+      expect(view.internal_micro_eur).toBe(20_000);
+      expect(view.deleted_accounts_micro_eur).toBe(0);
       // A rolled up model priced under two providers is reported as unknown.
       expect(view.by_provider).toEqual([
-        { provider: "vertex", cost_micro_eur: 800_000 },
+        { provider: "vertex", cost_micro_eur: 820_000 },
         { provider: "anthropic", cost_micro_eur: 100_000 },
         { provider: "unknown", cost_micro_eur: 30_000 },
       ]);
@@ -583,18 +640,21 @@ run("staff AI budget and costs", () => {
           billing_account_id: free,
           name: "Free Org",
           tier: "free",
+          account_scope: "organisation",
           cost_micro_eur: 900_000,
           budget_micro_eur: 5_000_000,
+          custom_budget: false,
           percent_used: 18,
           unlimited: false,
           override_until: null,
+          // Rolled up days carry their call count; the provider is the model's priced one.
           by_feature: [
-            { operation: "chat.reply", cost_micro_eur: 800_000 },
-            { operation: "map.generate", cost_micro_eur: 100_000 },
+            { operation: "chat.reply", cost_micro_eur: 800_000, calls: 4 },
+            { operation: "map.generate", cost_micro_eur: 100_000, calls: 1 },
           ],
           by_model: [
-            { model: "gemini-flash", cost_micro_eur: 800_000 },
-            { model: "claude", cost_micro_eur: 100_000 },
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 800_000, calls: 4 },
+            { model: "claude", provider: "anthropic", cost_micro_eur: 100_000, calls: 1 },
           ],
         },
       ]);

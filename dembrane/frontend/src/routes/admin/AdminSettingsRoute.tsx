@@ -3146,7 +3146,7 @@ const AiCostsPanel = lazy(() =>
 	})),
 );
 
-// The cost view, with this month's rollup behind it for the account modals.
+// The cost view; the 3 dots open the account modal from this month's rollup.
 function AiCostsTab() {
 	const { data } = useQuery({
 		queryFn: () =>
@@ -3157,18 +3157,6 @@ function AiCostsTab() {
 	const [accountId, setAccountId] = useState<string | null>(null);
 	const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 	const accounts = data?.accounts;
-	const overrides = useMemo(
-		() =>
-			accounts
-				? new Map(
-						accounts.map((a) => [
-							a.billing_account_id,
-							a.ai_budget ?? NO_AI_BUDGET_OVERRIDE,
-						]),
-					)
-				: undefined,
-		[accounts],
-	);
 	const account =
 		accounts?.find((a) => a.billing_account_id === accountId) ?? null;
 	const workspace =
@@ -3179,7 +3167,7 @@ function AiCostsTab() {
 	return (
 		<>
 			<Suspense fallback={<Skeleton h={240} />}>
-				<AiCostsPanel onOpenAccount={setAccountId} overrides={overrides} />
+				<AiCostsPanel onOpenAccount={setAccountId} />
 			</Suspense>
 			<AccountActionsModal
 				account={account}

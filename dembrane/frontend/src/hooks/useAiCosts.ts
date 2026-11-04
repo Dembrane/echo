@@ -13,19 +13,31 @@ export interface AiCostAccount {
 	billing_account_id: string;
 	name: string;
 	tier: string | null;
+	account_scope: "organisation" | "workspace" | null;
 	cost_micro_eur: number;
 	budget_micro_eur: number | null;
+	// The budget in force is a staff override, not the free default.
+	custom_budget: boolean;
 	percent_used: number | null;
 	unlimited: boolean;
 	override_until: string | null;
-	by_feature: { operation: string; cost_micro_eur: number }[];
-	by_model: { model: string; cost_micro_eur: number }[];
+	by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+	by_model: {
+		model: string;
+		provider: string;
+		cost_micro_eur: number;
+		calls: number;
+	}[];
 }
 
 export interface AiCostView {
 	period_start: string;
 	accounts: AiCostAccount[];
 	unattributed_micro_eur: number;
+	// Samples, staff demos and dev tools; no account pays.
+	internal_micro_eur: number;
+	// Calls billed to accounts deleted since; part of what accounts were charged.
+	deleted_accounts_micro_eur: number;
 	by_provider: { provider: string; cost_micro_eur: number }[];
 }
 
