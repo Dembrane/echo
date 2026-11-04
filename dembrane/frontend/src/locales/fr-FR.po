@@ -351,7 +351,7 @@ msgstr "{0, plural, one {# projet} other {# projets}}"
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
 #: src/components/invite/WorkspaceSelectList.tsx:128
-#: src/components/billing/BillingManager.tsx:1262
+#: src/components/billing/BillingManager.tsx:1261
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# place} other {# places}}"
 
@@ -363,7 +363,7 @@ msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at
 msgstr "{0, plural, one {# place} other {# places}} · {1} maintenant · +{2}/{cadence} au renouvellement"
 
 #. placeholder {0}: overview.available_seats
-#: src/components/billing/BillingManager.tsx:1266
+#: src/components/billing/BillingManager.tsx:1265
 msgid "{0, plural, one {# seat} other {# seats}} paid for this period and unused. Invite someone to fill them at no charge until renewal."
 msgstr "{0, plural, one {# place payée} other {# places payées}} pour cette période et non utilisée{0, plural, one {} other {s}}. Invitez quelqu'un pour les occuper sans frais jusqu'au renouvellement."
 
@@ -491,19 +491,19 @@ msgstr "{0} (partenaire)"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1350
+#: src/components/billing/BillingManager.tsx:1349
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr "{0} / siège / mois × {1}, facturé annuellement. Hors VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1355
+#: src/components/billing/BillingManager.tsx:1354
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr "{0} / siège × {1}. Hors VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1345
+#: src/components/billing/BillingManager.tsx:1344
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr "{0} / siège × {1}. Non facturé après cette période."
 
@@ -700,7 +700,7 @@ msgstr "{0} sélectionné(s)"
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
 #. placeholder {2}: pendingInvites === 1 ? "invite is" : "invites are"
-#: src/components/billing/BillingManager.tsx:1364
+#: src/components/billing/BillingManager.tsx:1363
 msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "Le total {0} passe à {1} quand {pendingInvites} {2} en attente"
 
@@ -855,7 +855,7 @@ msgstr "{currentCadence} min"
 msgid "{days} days"
 msgstr "{days} jours"
 
-#: src/components/billing/BillingManager.tsx:1373
+#: src/components/billing/BillingManager.tsx:1372
 msgid "{discountPct}% discount applied"
 msgstr "Remise de {discountPct} % appliquée"
 
@@ -997,7 +997,7 @@ msgstr "{overflow} autres personnes"
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# conversation n'a pas pu être incluse dans ce chat. Démarrez un autre chat pour le reste.} other {# conversations n'ont pas pu être incluses dans ce chat. Démarrez un autre chat pour le reste.}}"
 
-#: src/components/billing/BillingManager.tsx:1279
+#: src/components/billing/BillingManager.tsx:1278
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} invitation(s) en attente. Prises en compte dès acceptation."
 
@@ -1048,7 +1048,7 @@ msgstr "{s} s"
 msgid "{s}s"
 msgstr "{s} s"
 
-#: src/components/billing/BillingManager.tsx:344
+#: src/components/billing/BillingManager.tsx:343
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# place} other {# places}}"
 
@@ -1338,8 +1338,8 @@ msgstr "Un rapport est déjà en cours de génération pour ce projet. Veuillez 
 
 #: src/components/pricing/PricingConfigurator.tsx:1131
 #: src/components/pricing/PricingConfigurator.tsx:1135
-msgid "A rough number or \"not sure\". Either is useful."
-msgstr "Une estimation approximative ou « pas sûr ». Les deux sont utiles."
+#~ msgid "A rough number or \"not sure\". Either is useful."
+#~ msgstr "Une estimation approximative ou « pas sûr ». Les deux sont utiles."
 
 #: src/components/popcorn/PopcornIntroModal.tsx:41
 msgid "A sample session, not your data. Yours will look like this."
@@ -1357,11 +1357,11 @@ msgstr "Un écran avant le compte à rebours qui indique ce que la salle regarde
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr "Un écran qui explique, étape par étape, ce qu'il advient des enregistrements. Ses termes respectent l'anonymisation et la base juridique de ce projet."
 
-#: src/components/billing/BillingManager.tsx:1291
+#: src/components/billing/BillingManager.tsx:1290
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr "Un siège correspond à un membre. Ajoutez ou supprimez des membres dans l'onglet Membres de chaque espace de travail ; votre prochaine facture s'ajustera automatiquement."
 
-#: src/components/billing/BillingManager.tsx:1286
+#: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Un siège correspond à un membre. Les sièges restent disponibles jusqu'à la fin du forfait ; les modifications ne seront pas facturées."
 
@@ -1500,7 +1500,7 @@ msgid "Account default"
 msgstr "Valeur par défaut du compte"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3026
-#: src/components/billing/BillingManager.tsx:351
+#: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Responsable de compte"
 
@@ -1559,7 +1559,7 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
-#: src/components/billing/BillingManager.tsx:1243
+#: src/components/billing/BillingManager.tsx:1242
 #: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Actif"
@@ -1584,7 +1584,7 @@ msgstr "Activité"
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
-#: src/components/billing/BillingManager.tsx:1393
+#: src/components/billing/BillingManager.tsx:1392
 msgid "Add"
 msgstr "Ajouter"
 
@@ -1866,11 +1866,11 @@ msgstr "Forces supplémentaires"
 msgid "Address"
 msgstr "Adresse"
 
-#: src/components/billing/BillingManager.tsx:461
+#: src/components/billing/BillingManager.tsx:460
 msgid "Address line 1"
 msgstr "Adresse ligne 1"
 
-#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:468
 msgid "Address line 2"
 msgstr "Adresse ligne 2"
 
@@ -2145,7 +2145,7 @@ msgid "Always on. The screen opens here, so the room has something to read while
 msgstr "Toujours actif. L'écran s'ouvre ici pour donner de la lecture à la salle pendant que le reste se prépare."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2597
-#: src/components/billing/BillingManager.tsx:779
+#: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Montant"
 
@@ -2372,7 +2372,7 @@ msgstr "Autre chose que vous souhaitez partager"
 msgid "Anything else?"
 msgstr "Autre chose ?"
 
-#: src/components/billing/BillingManager.tsx:596
+#: src/components/billing/BillingManager.tsx:595
 msgid "Anything we could have done better?"
 msgstr "Y a-t-il quelque chose que nous aurions pu améliorer ?"
 
@@ -2542,7 +2542,7 @@ msgstr "Arguments ({0})"
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Les arguments expriment des points de vue ou des préférences et ne font pas l'objet d'une vérification des faits."
 
-#: src/components/billing/BillingManager.tsx:661
+#: src/components/billing/BillingManager.tsx:660
 msgid "Arranged with dembrane"
 msgstr "Convenu avec dembrane"
 
@@ -2668,7 +2668,7 @@ msgstr "Au moins 8 caractères"
 msgid "At least one topic must be selected to enable Verify"
 msgstr "Sélectionne au moins un sujet pour activer la vérification"
 
-#: src/components/billing/BillingManager.tsx:1308
+#: src/components/billing/BillingManager.tsx:1307
 msgid "At the end of this period"
 msgstr "À la fin de cette période"
 
@@ -2828,7 +2828,7 @@ msgstr "Envoyer automatiquement les données de conversation à vos autres outil
 msgid "Automation"
 msgstr "Automatisation"
 
-#: src/components/workspace/FeatureGate.tsx:150
+#: src/components/workspace/FeatureGate.tsx:148
 msgid "Available on a paid plan"
 msgstr "Disponible avec un forfait payant"
 
@@ -2859,7 +2859,6 @@ msgstr "Absent"
 #: src/routes/auth/Register.tsx:289
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:867
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -2889,8 +2888,8 @@ msgid "Back to conversations"
 msgstr "Retour aux conversations"
 
 #: src/components/pricing/PricingConfigurator.tsx:938
-msgid "Back to dembrane"
-msgstr "Retour à dembrane"
+#~ msgid "Back to dembrane"
+#~ msgstr "Retour à dembrane"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:311
 msgid "Back to live"
@@ -3014,11 +3013,11 @@ msgstr "De meilleurs enregistrements, plus de façons de répondre"
 msgid "Better uploads, transcripts and discovery"
 msgstr "De meilleurs imports, transcriptions et recherches"
 
-#: src/components/billing/BillingManager.tsx:1253
+#: src/components/billing/BillingManager.tsx:1252
 msgid "Billed annually"
 msgstr "Facturé annuellement"
 
-#: src/components/billing/BillingManager.tsx:1251
+#: src/components/billing/BillingManager.tsx:1250
 msgid "Billed monthly"
 msgstr "Facturé mensuellement"
 
@@ -3048,15 +3047,15 @@ msgstr "Facturé dans le forfait de votre organisation, avec vos autres espaces 
 msgid "Billing"
 msgstr "Facturation"
 
-#: src/components/billing/BillingManager.tsx:427
+#: src/components/billing/BillingManager.tsx:426
 msgid "Billing details"
 msgstr "Coordonnées de facturation"
 
-#: src/components/billing/BillingManager.tsx:415
+#: src/components/billing/BillingManager.tsx:414
 msgid "Billing details saved."
 msgstr "Coordonnées de facturation enregistrées."
 
-#: src/components/billing/BillingManager.tsx:286
+#: src/components/billing/BillingManager.tsx:285
 msgid "Billing is managed by your organisation"
 msgstr "La facturation est gérée par votre organisation"
 
@@ -3072,7 +3071,7 @@ msgstr "Planifier"
 msgid "Book a call"
 msgstr "Prendre rendez-vous"
 
-#: src/components/common/FeedbackPortalModal.tsx:137
+#: src/components/common/FeedbackPortalModal.tsx:134
 msgid "Book a call with us"
 msgstr "Reservez un appel avec nous"
 
@@ -3139,8 +3138,8 @@ msgid "C_Med: {0}"
 msgstr "C_Med : {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:708
-msgid "Can you tell us more?"
-msgstr "Pouvez-vous nous en dire plus ?"
+#~ msgid "Can you tell us more?"
+#~ msgstr "Pouvez-vous nous en dire plus ?"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
@@ -3227,7 +3226,7 @@ msgstr "Annuler"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Annuler"
 
-#: src/components/billing/BillingManager.tsx:1431
+#: src/components/billing/BillingManager.tsx:1430
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Résiliez à tout moment. Vous conservez votre accès jusqu'à la fin de la période."
 
@@ -3239,8 +3238,8 @@ msgstr "Annuler l'exécution en cours"
 msgid "Cancel override"
 msgstr "Annuler le remplacement"
 
-#: src/components/billing/BillingManager.tsx:611
-#: src/components/billing/BillingManager.tsx:1446
+#: src/components/billing/BillingManager.tsx:610
+#: src/components/billing/BillingManager.tsx:1445
 msgid "Cancel plan"
 msgstr "Résilier le forfait"
 
@@ -3262,16 +3261,16 @@ msgstr "Annuler la sélection"
 msgid "Cancel training"
 msgstr "Annuler la formation"
 
-#: src/components/billing/BillingManager.tsx:572
+#: src/components/billing/BillingManager.tsx:571
 msgid "Cancel your plan"
 msgstr "Résilier votre forfait"
 
-#: src/components/billing/BillingManager.tsx:232
+#: src/components/billing/BillingManager.tsx:231
 msgid "Cancelled"
 msgstr "Annulé"
 
 #. placeholder {0}: tierLabel(currentTier)
-#: src/components/billing/BillingManager.tsx:578
+#: src/components/billing/BillingManager.tsx:577
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "La résiliation empêche le renouvellement de votre forfait. Vous conservez {0} jusqu'à la fin de votre période de facturation en cours, puis vous passerez au forfait Free."
 
@@ -3323,7 +3322,7 @@ msgstr "Rattrapage {0}"
 msgid "Certified training for teams using dembrane in high-risk settings. A separate product, billed per session."
 msgstr "Formation certifiante pour les équipes utilisant dembrane dans des contextes à haut risque. Produit distinct, facturé par session."
 
-#: src/components/billing/BillingManager.tsx:1391
+#: src/components/billing/BillingManager.tsx:1390
 msgid "Change"
 msgstr "Modifier"
 
@@ -3359,8 +3358,8 @@ msgstr "Modifier le rôle dans l'organisation ?"
 msgid "Change password"
 msgstr "Changer le mot de passe"
 
-#: src/components/billing/BillingManager.tsx:1224
-#: src/components/billing/BillingManager.tsx:1467
+#: src/components/billing/BillingManager.tsx:1223
+#: src/components/billing/BillingManager.tsx:1466
 msgid "Change payment method"
 msgstr "Changer de moyen de paiement"
 
@@ -3654,7 +3653,7 @@ msgstr "Choisissez votre langue préférée pour l'interface"
 #~ msgid "Choose your preferred theme for the interface"
 #~ msgstr "Choisis le thème que tu préfères pour l’interface"
 
-#: src/components/billing/BillingManager.tsx:487
+#: src/components/billing/BillingManager.tsx:486
 msgid "City"
 msgstr "Ville"
 
@@ -3813,7 +3812,7 @@ msgstr "Cloner le projet"
 #: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
-#: src/components/common/FeedbackPortalModal.tsx:158
+#: src/components/common/FeedbackPortalModal.tsx:155
 #: src/components/agent-access/AgentAccessSection.tsx:98
 msgid "Close"
 msgstr "Fermer"
@@ -4143,11 +4142,10 @@ msgstr "Suggestions contextuelles"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
-#: src/components/billing/BillingManager.tsx:1469
+#: src/components/billing/BillingManager.tsx:1468
 msgid "Continue"
 msgstr "Continuer"
 
@@ -4445,7 +4443,7 @@ msgstr "Votre sélection n'a pas pu être reprise. Sélectionnez à nouveau ci-d
 #~ msgid "Could not complete that action."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:987
+#: src/components/billing/BillingManager.tsx:986
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Impossible de confirmer le paiement. Actualisez pour réessayer."
 
@@ -4712,7 +4710,7 @@ msgstr "Impossible d'enregistrer"
 #~ msgid "Couldn't send invite"
 #~ msgstr "Impossible d'envoyer l'invitation"
 
-#: src/components/billing/BillingManager.tsx:493
+#: src/components/billing/BillingManager.tsx:492
 msgid "Country"
 msgstr "Pays"
 
@@ -4888,13 +4886,13 @@ msgstr "Logo actuel"
 msgid "Current password"
 msgstr "Mot de passe actuel"
 
-#: src/components/billing/BillingManager.tsx:325
-#: src/components/billing/BillingManager.tsx:656
-#: src/components/billing/BillingManager.tsx:1230
+#: src/components/billing/BillingManager.tsx:324
+#: src/components/billing/BillingManager.tsx:655
+#: src/components/billing/BillingManager.tsx:1229
 msgid "Current plan"
 msgstr "Forfait actuel"
 
-#: src/components/billing/BillingManager.tsx:1335
+#: src/components/billing/BillingManager.tsx:1334
 msgid "Current rate"
 msgstr "Tarif actuel"
 
@@ -4996,7 +4994,7 @@ msgstr "Politique de confidentialité et mentions légales"
 #: src/routes/admin/AdminSettingsRoute.tsx:2547
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
-#: src/components/billing/BillingManager.tsx:773
+#: src/components/billing/BillingManager.tsx:772
 msgid "Date"
 msgstr "Date"
 
@@ -5301,7 +5299,7 @@ msgstr "Décrivez ce que le modèle de langage doit extraire ou résumer de la c
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
-#: src/components/billing/BillingManager.tsx:776
+#: src/components/billing/BillingManager.tsx:775
 msgid "Description"
 msgstr "Description"
 
@@ -5541,7 +5539,7 @@ msgstr "Téléchargez l'audio des conversations."
 msgid "Download event printouts"
 msgstr "Télécharger les documents à imprimer pour l’événement"
 
-#: src/components/billing/BillingManager.tsx:835
+#: src/components/billing/BillingManager.tsx:834
 msgid "Download PDF"
 msgstr "Télécharger le PDF"
 
@@ -5979,7 +5977,7 @@ msgstr "Activé"
 msgid "Ended"
 msgstr "Terminé"
 
-#: src/components/billing/BillingManager.tsx:1249
+#: src/components/billing/BillingManager.tsx:1248
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Prend fin le {endDate}, puis passe au forfait Free"
 
@@ -6226,7 +6224,7 @@ msgstr "Développer les espaces de travail"
 msgid "Experimental"
 msgstr "Expérimental"
 
-#: src/components/billing/BillingManager.tsx:234
+#: src/components/billing/BillingManager.tsx:233
 #: src/components/agent-access/format.ts:32
 msgid "Expired"
 msgstr "Expiré"
@@ -6370,7 +6368,7 @@ msgstr "Le statut factuel ne s'applique pas à cet objet."
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:911
-#: src/components/billing/BillingManager.tsx:230
+#: src/components/billing/BillingManager.tsx:229
 msgid "Failed"
 msgstr "Échec"
 
@@ -6584,7 +6582,7 @@ msgstr "Fonctionnalité bientôt disponible"
 #~ msgid "Feedback"
 #~ msgstr "Commentaires"
 
-#: src/components/common/FeedbackPortalModal.tsx:62
+#: src/components/common/FeedbackPortalModal.tsx:63
 msgid "Feedback portal"
 msgstr "Portail de commentaires"
 
@@ -7566,7 +7564,7 @@ msgstr "Inactif"
 msgid "If an account exists for <0>{0}</0>, we sent it a link to reset your password. Check your inbox and spam folder."
 msgstr "Si un compte existe pour <0>{0}</0>, nous lui avons envoyé un lien pour réinitialiser votre mot de passe. Vérifiez votre boîte de réception et vos spams."
 
-#: src/components/common/FeedbackPortalModal.tsx:90
+#: src/components/common/FeedbackPortalModal.tsx:91
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Si ce que vous avez repéré concerne des données visibles par les mauvaises personnes, un accès dont quelqu'un ne devrait pas disposer, ou une possible faille de sécurité, utilisez plutôt notre <0>formulaire de signalement de sécurité</0>. Il parvient à une autre équipe par une voie plus rapide. Pour toute urgence, envoyez un e-mail à <1>privacy@dembrane.com</1>"
 
@@ -7575,7 +7573,7 @@ msgstr "Si ce que vous avez repéré concerne des données visibles par les mauv
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Si vous êtes satisfait de {objectLabel}, cliquez sur \"Approuver\" pour montrer que vous vous sentez entendu."
 
-#: src/components/billing/BillingManager.tsx:679
+#: src/components/billing/BillingManager.tsx:678
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Si vous avez d'autres besoins, nous vous préparerons une offre sur mesure."
 
@@ -7889,7 +7887,7 @@ msgstr "Facture marquée comme payée."
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Facturé hors ligne, aucun mandat Mollie."
 
-#: src/components/billing/BillingManager.tsx:754
+#: src/components/billing/BillingManager.tsx:753
 msgid "Invoices"
 msgstr "Factures"
 
@@ -8058,7 +8056,7 @@ msgstr "Rejoindre pour l'assistance"
 msgid "Join for support (24h)"
 msgstr "Rejoindre pour l'assistance (24 h)"
 
-#: src/components/common/FeedbackPortalModal.tsx:153
+#: src/components/common/FeedbackPortalModal.tsx:150
 msgid "Join our Slack community"
 msgstr "Rejoindre notre communauté Slack"
 
@@ -8119,7 +8117,7 @@ msgstr "à l'instant"
 msgid "Just one."
 msgstr "Un seul."
 
-#: src/components/billing/BillingManager.tsx:515
+#: src/components/billing/BillingManager.tsx:514
 msgid "Just pausing for now"
 msgstr "Simple pause pour l'instant"
 
@@ -8140,7 +8138,7 @@ msgstr "Tout juste actualisé. Patientez un instant."
 msgid "Just started"
 msgstr "Vient de commencer"
 
-#: src/components/common/FeedbackPortalModal.tsx:83
+#: src/components/common/FeedbackPortalModal.tsx:84
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Parlez ou écrivez naturellement. Votre contribution va directement à notre équipe produit et nous aide vraiment à améliorer dembrane. Nous lisons tout."
 
@@ -8190,7 +8188,7 @@ msgstr "Le conserver"
 msgid "Keep license"
 msgstr "Conserver la licence"
 
-#: src/components/billing/BillingManager.tsx:619
+#: src/components/billing/BillingManager.tsx:618
 msgid "Keep my plan"
 msgstr "Conserver mon forfait"
 
@@ -8377,7 +8375,7 @@ msgstr "Base juridique"
 msgid "Legal basis saved"
 msgstr "Base juridique enregistrée"
 
-#: src/components/billing/BillingManager.tsx:434
+#: src/components/billing/BillingManager.tsx:433
 msgid "Legal entity name"
 msgstr "Raison sociale"
 
@@ -8608,7 +8606,7 @@ msgstr "Canvas vivant et popcorn"
 #~ msgid "Load latest revision"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:854
+#: src/components/billing/BillingManager.tsx:853
 msgid "Load more"
 msgstr "Charger plus"
 
@@ -8869,7 +8867,7 @@ msgstr "Rendre privé"
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
 #: src/components/conversation/ProjectConversationsPanel.tsx:386
-#: src/components/billing/BillingManager.tsx:1555
+#: src/components/billing/BillingManager.tsx:1554
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
 msgstr "Gérer"
@@ -8887,7 +8885,7 @@ msgstr "Gérer les comptes de facturation, les paiements et les demandes de mise
 msgid "Manage members"
 msgstr "Gérer les membres"
 
-#: src/components/billing/BillingManager.tsx:300
+#: src/components/billing/BillingManager.tsx:299
 msgid "Manage organisation billing"
 msgstr "Gérer la facturation de l'organisation"
 
@@ -8916,7 +8914,7 @@ msgstr "Les comptes gérés paient par facture, pas par carte. Définir un compt
 msgid "Managed billing"
 msgstr "Facturation gérée"
 
-#: src/components/billing/BillingManager.tsx:329
+#: src/components/billing/BillingManager.tsx:328
 msgid "Managed by dembrane"
 msgstr "Géré par dembrane"
 
@@ -9179,7 +9177,7 @@ msgstr "Intervalle minimum entre les popcorns"
 msgid "Missed the question"
 msgstr "Ne répond pas à la question"
 
-#: src/components/billing/BillingManager.tsx:512
+#: src/components/billing/BillingManager.tsx:511
 msgid "Missing features I need"
 msgstr "Il manque des fonctionnalités dont j'ai besoin"
 
@@ -9589,7 +9587,7 @@ msgstr "Suivant"
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Prochain changement dans <0>{remainingSeconds}s</0>"
 
-#: src/components/billing/BillingManager.tsx:1316
+#: src/components/billing/BillingManager.tsx:1315
 msgid "Next invoice"
 msgstr "Prochaine facture"
 
@@ -9651,7 +9649,7 @@ msgstr "Aucun argument pour le moment. Ils apparaîtront après la première ana
 msgid "No audit logs match the current filters."
 msgstr "Aucun journal d'audit ne correspond aux filtres actuels."
 
-#: src/components/billing/BillingManager.tsx:1095
+#: src/components/billing/BillingManager.tsx:1094
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Aucun compte de facturation pour le moment. Écrivez à <0>support@dembrane.com</0> et nous en créerons un."
 
@@ -9772,7 +9770,7 @@ msgstr "Aucun résultat ne correspond."
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Pas encore de résultats. Ils apparaissent après la première analyse."
 
-#: src/components/billing/BillingManager.tsx:1312
+#: src/components/billing/BillingManager.tsx:1311
 msgid "No further charges"
 msgstr "Aucuns frais supplémentaires"
 
@@ -9901,11 +9899,11 @@ msgstr "Aucun rôle dans l'organisation. Accès via les invitations à l'espace 
 msgid "No payments match the filter."
 msgstr "Aucun paiement ne correspond au filtre."
 
-#: src/components/billing/BillingManager.tsx:765
+#: src/components/billing/BillingManager.tsx:764
 msgid "No payments yet."
 msgstr "Aucun paiement pour l'instant."
 
-#: src/components/billing/BillingManager.tsx:727
+#: src/components/billing/BillingManager.tsx:726
 msgid "No PDF available for this invoice."
 msgstr "Aucun PDF disponible pour cette facture."
 
@@ -10135,7 +10133,7 @@ msgstr "Aucun"
 msgid "None in this view."
 msgstr "Aucun dans cette vue."
 
-#: src/components/billing/BillingManager.tsx:1326
+#: src/components/billing/BillingManager.tsx:1325
 msgid "None scheduled"
 msgstr "Aucun de prévu"
 
@@ -10188,7 +10186,6 @@ msgid "Not monthly"
 msgstr "Non mensuel"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10218,7 +10215,7 @@ msgstr "Non enregistré"
 msgid "Not relevant"
 msgstr "Non pertinent"
 
-#: src/components/billing/BillingManager.tsx:1239
+#: src/components/billing/BillingManager.tsx:1238
 msgid "Not renewing"
 msgstr "Non renouvelé"
 
@@ -10227,7 +10224,7 @@ msgid "Not scheduled"
 msgstr "Non planifié"
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:1398
+#: src/components/billing/BillingManager.tsx:1397
 msgid "Not set"
 msgstr "Non défini"
 
@@ -10249,7 +10246,7 @@ msgstr "Pas encore sûr."
 msgid "Not trained"
 msgstr "Non formé"
 
-#: src/components/billing/BillingManager.tsx:513
+#: src/components/billing/BillingManager.tsx:512
 msgid "Not using it enough"
 msgstr "Je ne l'utilise pas assez"
 
@@ -10734,9 +10731,9 @@ msgstr "Activez les fonctionnalités expérimentales et contribuez à façonner 
 #: src/components/project/CustomTopicModal.tsx:234
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:416
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
-#: src/components/billing/BillingManager.tsx:444
-#: src/components/billing/BillingManager.tsx:470
-#: src/components/billing/BillingManager.tsx:597
+#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:596
 msgid "Optional"
 msgstr "Optionnel"
 
@@ -10770,7 +10767,7 @@ msgstr "ou"
 msgid "Or choose a time"
 msgstr "Ou choisissez un créneau"
 
-#: src/components/common/FeedbackPortalModal.tsx:130
+#: src/components/common/FeedbackPortalModal.tsx:131
 msgid "Or prefer to chat directly?"
 msgstr "Ou preferer discuter directement ?"
 
@@ -10879,7 +10876,7 @@ msgid "Original language"
 msgstr "Langue d'origine"
 
 #: src/components/feedback/reasons.ts:27
-#: src/components/billing/BillingManager.tsx:516
+#: src/components/billing/BillingManager.tsx:515
 msgid "Other"
 msgstr "Autre"
 
@@ -10987,7 +10984,7 @@ msgstr "Titre de la page"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2694
 #: src/routes/admin/AdminSettingsRoute.tsx:2749
-#: src/components/billing/BillingManager.tsx:224
+#: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Payé"
 
@@ -11151,7 +11148,7 @@ msgstr "En pause."
 msgid "Paused. Updated {updatedAgo}."
 msgstr "En pause. Mis à jour {updatedAgo}."
 
-#: src/components/billing/BillingManager.tsx:814
+#: src/components/billing/BillingManager.tsx:813
 msgid "Pay now"
 msgstr "Payer maintenant"
 
@@ -11163,7 +11160,7 @@ msgstr "Revenus payants"
 msgid "Paying revenue this month"
 msgstr "Revenus payants ce mois-ci"
 
-#: src/components/billing/BillingManager.tsx:1241
+#: src/components/billing/BillingManager.tsx:1240
 msgid "Payment failed"
 msgstr "Paiement échoué"
 
@@ -11175,7 +11172,7 @@ msgstr "Montant du lien de paiement, EUR"
 msgid "Payment link issued."
 msgstr "Lien de paiement émis."
 
-#: src/components/billing/BillingManager.tsx:1382
+#: src/components/billing/BillingManager.tsx:1381
 msgid "Payment method"
 msgstr "Moyen de paiement"
 
@@ -11183,7 +11180,7 @@ msgstr "Moyen de paiement"
 msgid "Payment reference"
 msgstr "Référence du paiement"
 
-#: src/components/billing/BillingManager.tsx:1078
+#: src/components/billing/BillingManager.tsx:1077
 msgid "Payment went through. Your plan is up to date."
 msgstr "Le paiement a été accepté. Votre forfait est à jour."
 
@@ -11198,7 +11195,7 @@ msgstr "en attente"
 #: src/components/project/ProjectUsageAndSharing.tsx:354
 #: src/components/project/ProjectSharingModal.tsx:404
 #: src/components/members/PendingInvitesSection.tsx:168
-#: src/components/billing/BillingManager.tsx:228
+#: src/components/billing/BillingManager.tsx:227
 msgid "Pending"
 msgstr "En attente"
 
@@ -11283,14 +11280,13 @@ msgstr "Choisir une date"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Choisissez un point pour lire ses mots ci-dessous."
 
-#: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Choisir un créneau"
 
 #: src/components/pricing/PricingConfigurator.tsx:695
-msgid "Pick a time with {host}."
-msgstr "Choisissez un créneau avec {host}."
+#~ msgid "Pick a time with {host}."
+#~ msgstr "Choisissez un créneau avec {host}."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
@@ -11308,7 +11304,7 @@ msgstr "Choisissez au moins un espace de travail pour envoyer l'invitation."
 msgid "Pick from your organisation, or type an email to invite."
 msgstr "Choisissez dans votre organisation, ou saisissez une adresse e-mail à inviter."
 
-#: src/components/billing/BillingManager.tsx:586
+#: src/components/billing/BillingManager.tsx:585
 msgid "Pick one"
 msgstr "En choisir un"
 
@@ -11360,7 +11356,7 @@ msgstr "Modèles épinglés"
 msgid "Plan"
 msgstr "Plan"
 
-#: src/components/billing/BillingManager.tsx:1303
+#: src/components/billing/BillingManager.tsx:1302
 msgid "Plan ends"
 msgstr "Fin du forfait"
 
@@ -11631,7 +11627,7 @@ msgstr "Tutoriel du portail"
 msgid "Positive"
 msgstr "Positif"
 
-#: src/components/billing/BillingManager.tsx:479
+#: src/components/billing/BillingManager.tsx:478
 msgid "Postal code"
 msgstr "Code postal"
 
@@ -11956,11 +11952,11 @@ msgstr "paramètres du projet"
 #~ msgid "Project Settings"
 #~ msgstr "Paramètres du projet"
 
-#: src/components/billing/BillingManager.tsx:1338
+#: src/components/billing/BillingManager.tsx:1337
 msgid "Projected monthly total"
 msgstr "Total mensuel estimé"
 
-#: src/components/billing/BillingManager.tsx:1337
+#: src/components/billing/BillingManager.tsx:1336
 msgid "Projected yearly total"
 msgstr "Total annuel estimé"
 
@@ -12440,8 +12436,6 @@ msgstr "Les enregistrements sont en pause pour ce projet avec le forfait Free. L
 #~ msgstr "Thèmes récurrents"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:157
-#: src/components/pricing/PricingConfigurator.tsx:928
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -13130,7 +13124,7 @@ msgstr "Reprendre"
 msgid "Resume physics"
 msgstr "Reprendre la physique"
 
-#: src/components/billing/BillingManager.tsx:1442
+#: src/components/billing/BillingManager.tsx:1441
 msgid "Resume plan"
 msgstr "Reprendre le forfait"
 
@@ -13330,8 +13324,8 @@ msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Estimation approximative pour terminer la transcription en attente"
 
 #: src/components/pricing/PricingConfigurator.tsx:1139
-msgid "Roughly how many?"
-msgstr "Environ combien ?"
+#~ msgid "Roughly how many?"
+#~ msgstr "Environ combien ?"
 
 #: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
@@ -13413,7 +13407,7 @@ msgstr "Enregistrer les accès"
 msgid "Save as template"
 msgstr "Enregistrer comme modèle"
 
-#: src/components/billing/BillingManager.tsx:502
+#: src/components/billing/BillingManager.tsx:501
 msgid "Save billing details"
 msgstr "Enregistrer les coordonnées de facturation"
 
@@ -13480,7 +13474,7 @@ msgstr "Enregistrement..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Dites-le avec vos propres mots. Écrivez, ou appuyez sur enregistrer et parlez."
 
-#: src/components/common/FeedbackPortalModal.tsx:124
+#: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scannez ou cliquez sur le code QR pour ouvrir le portail de retours"
 
@@ -13733,8 +13727,8 @@ msgstr "places"
 #: src/routes/admin/AdminSettingsRoute.tsx:1681
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
-#: src/components/billing/BillingManager.tsx:342
-#: src/components/billing/BillingManager.tsx:1260
+#: src/components/billing/BillingManager.tsx:341
+#: src/components/billing/BillingManager.tsx:1259
 msgid "Seats"
 msgstr "Places"
 
@@ -13794,7 +13788,7 @@ msgid "Sees usage and invoices. No project or content access."
 msgstr "Consulte l'utilisation et les factures. Aucun accès aux projets ou aux contenus."
 
 #: src/routes/project/ProjectsHome.tsx:455
-#: src/components/billing/BillingManager.tsx:451
+#: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Sélectionner"
 
@@ -14574,7 +14568,6 @@ msgstr "Six week-ends répartis sur sept mois"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:879
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -14948,7 +14941,7 @@ msgstr "Affirmation"
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:33
-#: src/components/billing/BillingManager.tsx:782
+#: src/components/billing/BillingManager.tsx:781
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:85
 #: src/components/agent-access/AgentGrantsCard.tsx:105
 msgid "Status"
@@ -14983,10 +14976,9 @@ msgstr "Reste à jour jusqu'à {0}"
 msgid "Stays up to date until tomorrow {0}"
 msgstr "Reste à jour jusqu'à demain {0}"
 
-#. placeholder {0}: phase.step
 #: src/components/pricing/PricingConfigurator.tsx:748
-msgid "Step {0} of {STEP_COUNT}"
-msgstr "Étape {0} sur {STEP_COUNT}"
+#~ msgid "Step {0} of {STEP_COUNT}"
+#~ msgstr "Étape {0} sur {STEP_COUNT}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:791
 msgid "Steps and logs"
@@ -15253,7 +15245,7 @@ msgstr "Passer à la saisie de texte"
 msgid "Switching it off comes with a paid plan."
 msgstr "La désactiver fait partie d'un forfait payant."
 
-#: src/components/billing/BillingManager.tsx:514
+#: src/components/billing/BillingManager.tsx:513
 msgid "Switching to another tool"
 msgstr "Je passe à un autre outil"
 
@@ -15357,7 +15349,8 @@ msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre d
 
 #: src/components/workspace/FreeAllowanceCard.tsx:180
 #: src/components/workspace/FeatureGatePopover.tsx:115
-#: src/components/billing/BillingManager.tsx:690
+#: src/components/workspace/FeatureGate.tsx:301
+#: src/components/billing/BillingManager.tsx:689
 msgid "Tell us what you need"
 msgstr "Dites-nous ce dont vous avez besoin"
 
@@ -15457,8 +15450,8 @@ msgid "Thank you! We will get in touch as soon as possible. You can also write t
 msgstr "Merci ! Nous vous recontacterons dès que possible. Vous pouvez aussi nous écrire à info@dembrane.com."
 
 #: src/components/pricing/PricingConfigurator.tsx:920
-msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
-msgstr "Merci d'avoir rempli ceci. Vérifiez vos e-mails pour la confirmation de l'appel. Si vous avez des questions, vous pouvez toujours nous contacter à info@dembrane.com."
+#~ msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
+#~ msgstr "Merci d'avoir rempli ceci. Vérifiez vos e-mails pour la confirmation de l'appel. Si vous avez des questions, vous pouvez toujours nous contacter à info@dembrane.com."
 
 #: src/components/results/curate/RowTools.tsx:276
 msgid "Thanks! That helps a lot."
@@ -15481,8 +15474,8 @@ msgid "That did not save. Your words are still here."
 msgstr "Cela n'a pas été enregistré. Vos mots sont toujours là."
 
 #: src/components/pricing/PricingConfigurator.tsx:819
-msgid "That didn't send. Your answers are still here, so try again."
-msgstr "L'envoi a échoué. Vos réponses sont conservées, vous pouvez réessayer."
+#~ msgid "That didn't send. Your answers are still here, so try again."
+#~ msgstr "L'envoi a échoué. Vos réponses sont conservées, vous pouvez réessayer."
 
 #: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
@@ -15493,8 +15486,8 @@ msgid "That recording is too long to send. Record a shorter note."
 msgstr "Cet enregistrement est trop long pour être envoyé. Enregistrez un message plus court."
 
 #: src/components/pricing/PricingConfigurator.tsx:779
-msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr "Cela nécessite un forfait payant. Nous allons vous poser 5 questions rapides supplémentaires, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
+#~ msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
+#~ msgstr "Cela nécessite un forfait payant. Nous allons vous poser 5 questions rapides supplémentaires, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
 
 #: src/components/voice/VoiceInputError.tsx:33
 msgid "That was too short to transcribe. Hold the recording a little longer."
@@ -15709,8 +15702,8 @@ msgid "The host hasn’t prepared a presentation yet."
 msgstr "L'hôte n'a pas encore préparé de présentation."
 
 #: src/components/pricing/PricingConfigurator.tsx:906
-msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
-msgstr "L'invitation est dans votre boîte de réception. Nous lirons vos réponses d'ici là pour vous proposer une première offre. Vous avez des questions entre-temps ? Contactez"
+#~ msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
+#~ msgstr "L'invitation est dans votre boîte de réception. Nous lirons vos réponses d'ici là pour vous proposer une première offre. Vous avez des questions entre-temps ? Contactez"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:341
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
@@ -15837,8 +15830,8 @@ msgid "The participant flow has clearer microphone checks."
 msgstr "Le parcours des participants propose des vérifications du micro plus claires."
 
 #: src/components/pricing/PricingConfigurator.tsx:735
-msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
-msgstr "Les portails continueront de fonctionner ! Vos participants ne sont jamais coupés et rien de ce qu'ils disent n'est perdu. Dès que vous passez à un forfait payant, la transcription rattrape tout ce qui a déjà été enregistré."
+#~ msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
+#~ msgstr "Les portails continueront de fonctionner ! Vos participants ne sont jamais coupés et rien de ce qu'ils disent n'est perdu. Dès que vous passez à un forfait payant, la transcription rattrape tout ce qui a déjà été enregistré."
 
 #: src/routes/project/present/PresentRoute.tsx:981
 msgid "The presentation could not be loaded"
@@ -16046,7 +16039,7 @@ msgstr "Ces modifications de tags sont appliquées à votre projet."
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Ces espaces de travail sont facturés séparément. Chaque personne ajoutée occupe un siège dans {billingContextCount} contextes de facturation, chacun facturé individuellement."
 
-#: src/components/billing/BillingManager.tsx:1527
+#: src/components/billing/BillingManager.tsx:1526
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Ces espaces de travail ont leur propre forfait, géré depuis chaque espace. Ils ne font pas partie du forfait de cette organisation."
 
@@ -16543,7 +16536,7 @@ msgstr "Cet espace de travail a utilisé ses heures d'enregistrement. Passez à 
 msgid "This workspace is billed separately"
 msgstr "Cet espace de travail est facturé séparément"
 
-#: src/components/billing/BillingManager.tsx:289
+#: src/components/billing/BillingManager.tsx:288
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Cet espace de travail est facturé via {orgName}. Les forfaits et les paiements sont gérés globalement pour toute l'organisation, et chaque espace de travail les partage."
 
@@ -16677,7 +16670,7 @@ msgstr "À trancher"
 msgid "To resolve:"
 msgstr "À résoudre :"
 
-#: src/components/billing/BillingManager.tsx:694
+#: src/components/billing/BillingManager.tsx:693
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Pour discuter de vos besoins, écrivez à <0>support@dembrane.com</0>."
 
@@ -16689,7 +16682,7 @@ msgstr "Activer/désactiver la mise en évidence de « {contextMenuWord} »"
 msgid "Tone deaf"
 msgstr "Inapproprié"
 
-#: src/components/billing/BillingManager.tsx:511
+#: src/components/billing/BillingManager.tsx:510
 msgid "Too expensive"
 msgstr "Trop cher"
 
@@ -16988,7 +16981,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
-#: src/components/billing/BillingManager.tsx:1217
+#: src/components/billing/BillingManager.tsx:1216
 msgid "Try again"
 msgstr "Réessayer"
 
@@ -17626,7 +17619,7 @@ msgstr "utiliser votre voix dans le chat"
 msgid "Used by this workspace only"
 msgstr "Utilisé uniquement par cet espace de travail"
 
-#: src/components/billing/BillingManager.tsx:430
+#: src/components/billing/BillingManager.tsx:429
 msgid "Used on your invoices. Prices exclude VAT."
 msgstr "Utilisé sur vos factures. Les prix sont hors VAT."
 
@@ -17667,11 +17660,11 @@ msgstr "Valence"
 msgid "Validation progress"
 msgstr "Progression de la validation"
 
-#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:442
 msgid "VAT ID"
 msgstr "Numéro de VAT"
 
-#: src/components/billing/BillingManager.tsx:450
+#: src/components/billing/BillingManager.tsx:449
 msgid "VAT region"
 msgstr "Région de VAT"
 
@@ -17947,7 +17940,7 @@ msgstr "Impossible de joindre dembrane. Vérifiez votre connexion Internet et r�
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "Impossible de joindre dembrane. Vérifiez votre connexion Internet et réessayez."
 
-#: src/components/billing/BillingManager.tsx:1201
+#: src/components/billing/BillingManager.tsx:1200
 msgid "We couldn't charge your payment method"
 msgstr "Nous n'avons pas pu débiter votre moyen de paiement"
 
@@ -18000,7 +17993,7 @@ msgstr "Impossible de charger vos organisations. Vérifiez votre connexion et r�
 msgid "We couldn't load your pending invites. Try again in a moment."
 msgstr "Impossible de charger vos invitations en attente. Réessayez dans un instant."
 
-#: src/components/billing/BillingManager.tsx:980
+#: src/components/billing/BillingManager.tsx:979
 msgid "We couldn't update your payment method. Your old one is still active. Please try again."
 msgstr "Impossible de mettre à jour votre moyen de paiement. L'ancien reste actif. Veuillez réessayer."
 
@@ -18037,7 +18030,7 @@ msgstr "Nous vous avons envoyé un lien de vérification. Cliquez dessus pour fi
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Nous configurons le projet, vous accompagnons le jour J et vous aidons ensuite à rédiger le rapport."
 
-#: src/components/billing/BillingManager.tsx:1081
+#: src/components/billing/BillingManager.tsx:1080
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "Impossible de débiter votre moyen de paiement. Mettez-le à jour et réessayez."
 
@@ -18045,7 +18038,7 @@ msgstr "Impossible de débiter votre moyen de paiement. Mettez-le à jour et ré
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Nous vous envoyerons un message uniquement si votre hôte génère un rapport, nous ne partageons jamais vos informations avec personne. Vous pouvez vous désinscrire à tout moment."
 
-#: src/components/common/FeedbackPortalModal.tsx:68
+#: src/components/common/FeedbackPortalModal.tsx:69
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Nous serions ravis de vous lire. Que vous ayez une idée pour quelque chose de nouveau, repéré une traduction qui sonne faux, ou envie de nous dire comment ça se passe. Vous avez trouvé un bug ? Utilisez <0>Signaler un problème</0> pour l'envoyer avec des captures d'écran."
 
@@ -18189,8 +18182,8 @@ msgid "What is at stake here"
 msgstr "Ce qui est en jeu ici"
 
 #: src/components/pricing/PricingConfigurator.tsx:1049
-msgid "What is it?"
-msgstr "De quoi s'agit-il ?"
+#~ msgid "What is it?"
+#~ msgstr "De quoi s'agit-il ?"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:737
 msgid "What should be different about this?"
@@ -18251,7 +18244,7 @@ msgstr "Ce que vous mettez en lumière est conservé ici : cliquez sur un argume
 msgid "What's new"
 msgstr "Nouveautés"
 
-#: src/components/billing/BillingManager.tsx:585
+#: src/components/billing/BillingManager.tsx:584
 msgid "What's the main reason?"
 msgstr "Quelle est la raison principale ?"
 
@@ -18563,7 +18556,7 @@ msgstr "Invité uniquement sur cet espace de travail. Non ajouté à l'organisat
 msgid "Workspaces"
 msgstr "Espaces de travail"
 
-#: src/components/billing/BillingManager.tsx:1524
+#: src/components/billing/BillingManager.tsx:1523
 msgid "Workspaces billed separately"
 msgstr "Espaces de travail facturés séparément"
 
@@ -18646,10 +18639,10 @@ msgid "You are not in an organisation yet."
 msgstr "Vous ne faites pas encore partie d'une organisation."
 
 #: src/components/pricing/PricingConfigurator.tsx:775
-msgid "You are on the free plan."
-msgstr "Vous utilisez le forfait Free."
+#~ msgid "You are on the free plan."
+#~ msgstr "Vous utilisez le forfait Free."
 
-#: src/components/billing/BillingManager.tsx:673
+#: src/components/billing/BillingManager.tsx:672
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr "Vous utilisez le forfait Free. Il n'y a aucun paiement à gérer pour le moment."
 
@@ -18886,8 +18879,8 @@ msgid "You stopped this run."
 msgstr "Vous avez interrompu cette exécution."
 
 #: src/components/pricing/PricingConfigurator.tsx:773
-msgid "You were trying to {action}."
-msgstr "Vous tentiez de {action}."
+#~ msgid "You were trying to {action}."
+#~ msgstr "Vous tentiez de {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:412
@@ -18919,7 +18912,7 @@ msgstr "Vous perdrez l'accès à cet espace de travail. Les projets que vous ave
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "Vous recevrez bientôt {objectLabel} à vérifier."
 
-#: src/components/billing/BillingManager.tsx:1468
+#: src/components/billing/BillingManager.tsx:1467
 msgid "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 msgstr "Vous validerez votre nouveau moyen de paiement sur l'écran suivant. Aucun montant ne vous sera débité, cela confirme simplement la nouvelle carte."
 
@@ -19049,12 +19042,12 @@ msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Votre navigateur bloque le micro. Autorisez l'accès, puis réessayez."
 
 #: src/components/pricing/PricingConfigurator.tsx:700
-msgid "Your call is booked: {bookedTime}."
-msgstr "Votre appel est réservé : {bookedTime}."
+#~ msgid "Your call is booked: {bookedTime}."
+#~ msgstr "Votre appel est réservé : {bookedTime}."
 
 #: src/components/pricing/PricingConfigurator.tsx:702
-msgid "Your call is booked."
-msgstr "Votre appel est réservé."
+#~ msgid "Your call is booked."
+#~ msgstr "Votre appel est réservé."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:69
@@ -19108,8 +19101,8 @@ msgstr "Votre retour et cette réponse sont transmis à l'équipe dembrane."
 #~ msgstr "Votre forfait Free comprend un rapport. Passez à un forfait supérieur pour en créer d'autres."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
-msgid "Your free transcription allowance is used up."
-msgstr "Votre quota de transcription gratuite est épuisé."
+#~ msgid "Your free transcription allowance is used up."
+#~ msgstr "Votre quota de transcription gratuite est épuisé."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
 #~ msgid "Your free transcription hour is used up."
@@ -19128,7 +19121,7 @@ msgstr "Votre invitation est toujours en attente. Réessayez une fois que l'admi
 msgid "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 msgstr "Votre invitation a déjà été acceptée, mais vous ne faites plus partie de {resolvedWorkspaceName}. Demandez à l'administrateur de vous réinviter."
 
-#: src/components/billing/BillingManager.tsx:1210
+#: src/components/billing/BillingManager.tsx:1209
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Votre dernier paiement a échoué. Votre forfait reste actif. Mettez à jour votre moyen de paiement ou relancez le prélèvement pour régulariser la situation."
 
@@ -19177,31 +19170,31 @@ msgstr "L'ajout de votre propre logo nécessite un forfait payant."
 msgid "Your own member card stays at the top of the list."
 msgstr "Votre propre fiche de membre reste en haut de la liste."
 
-#: src/components/billing/BillingManager.tsx:1016
+#: src/components/billing/BillingManager.tsx:1015
 msgid "Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you."
 msgstr "Votre période payante est terminée, ce forfait ne peut donc pas être réactivé ici. Écrivez à support@dembrane.com et nous réglerons cela avec vous."
 
-#: src/components/billing/BillingManager.tsx:977
+#: src/components/billing/BillingManager.tsx:976
 msgid "Your payment method has been updated."
 msgstr "Votre moyen de paiement a été mis à jour."
 
-#: src/components/billing/BillingManager.tsx:983
+#: src/components/billing/BillingManager.tsx:982
 msgid "Your payment method update is still processing."
 msgstr "La mise à jour de votre moyen de paiement est toujours en cours de traitement."
 
-#: src/components/billing/BillingManager.tsx:1428
+#: src/components/billing/BillingManager.tsx:1427
 msgid "Your plan ends at the period end."
 msgstr "Votre forfait prendra fin au terme de la période."
 
-#: src/components/billing/BillingManager.tsx:1426
+#: src/components/billing/BillingManager.tsx:1425
 msgid "Your plan ends on {endDate}."
 msgstr "Votre forfait prend fin le {endDate}."
 
-#: src/components/billing/BillingManager.tsx:668
+#: src/components/billing/BillingManager.tsx:667
 msgid "Your plan is arranged with dembrane, so there is nothing to pay here. Everything your plan includes stays available."
 msgstr "Votre forfait est géré directement avec dembrane, vous n'avez donc rien à payer ici. Tout ce qu'inclut votre forfait reste disponible."
 
-#: src/components/billing/BillingManager.tsx:1012
+#: src/components/billing/BillingManager.tsx:1011
 msgid "Your plan is back on. You keep your current period."
 msgstr "Votre forfait est réactivé. Vous conservez votre période en cours."
 
@@ -19209,7 +19202,7 @@ msgstr "Votre forfait est réactivé. Vous conservez votre période en cours."
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Votre forfait est inactif. Réactivez-le pour ajouter des membres."
 
-#: src/components/billing/BillingManager.tsx:333
+#: src/components/billing/BillingManager.tsx:332
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Votre forfait est géré par dembrane. Contactez votre responsable de compte pour effectuer des modifications."
 
@@ -19217,7 +19210,7 @@ msgstr "Votre forfait est géré par dembrane. Contactez votre responsable de co
 msgid "Your plan lets you take the mark off."
 msgstr "Votre forfait vous permet de retirer le filigrane."
 
-#: src/components/billing/BillingManager.tsx:557
+#: src/components/billing/BillingManager.tsx:556
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Votre forfait ne sera pas renouvelé. Vous conservez votre accès jusqu'à la fin de la période."
 
@@ -19227,8 +19220,8 @@ msgid "Your recording, {0}"
 msgstr "Votre enregistrement, {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:705
-msgid "Your request is in."
-msgstr "Votre demande a bien été envoyée."
+#~ msgid "Your request is in."
+#~ msgstr "Votre demande a bien été envoyée."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."

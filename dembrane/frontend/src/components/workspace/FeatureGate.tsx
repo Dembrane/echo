@@ -1,37 +1,35 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Stack, Text } from "@mantine/core";
+import { Badge, Box, Button, Modal, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { LockIcon } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef } from "react";
-import {
-	PricingConfigurator,
-	usePricingConfigurator,
-} from "@/components/pricing";
-import { useWorkspace } from "@/hooks/useWorkspace";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
+import { pricingCalculatorUrl } from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
-import { variantFor, type WallKey, wallPopoverLine } from "./gateWalls";
-import { useGateViewed, usePricingGateEmitter } from "./pricingGateEvents";
+import { type WallKey, wallPopoverLine } from "./gateWalls";
+import { useGateViewed } from "./pricingGateEvents";
 
 /**
  * The tier gate.
  *
- * One modal, from all fifteen mount points, and it names no feature. The
+ * One prompt, from all fifteen mount points, and it names no feature. The
  * feature is named one click earlier, in the popover on the blocked control.
- * The price table is gone: this path no longer sells a plan, it asks the
- * person what they need and ends in a booked call.
+ * No price appears here: planning a paid account and booking the call happen
+ * in the pricing calculator on the dembrane website, which the prompt opens in
+ * a new tab.
  *
  * The locked data family is the one exception. The transcription cap and the
  * locked conversation are about data the person already has, not a feature
- * they do not, so they open the modal directly with the cap line above the
- * free plan block. See `gateWalls.ts`.
+ * they do not, so they open the prompt directly, without a popover first. See
+ * `gateWalls.ts`.
  *
  * Exports:
  *   - <FeatureGate />  — the placeholder for a whole feature surface.
  *     The card is the blocked control, so the card carries the popover.
- *   - <UpgradeModal /> — the one modal, usable standalone. Every wall that is
+ *   - <UpgradeModal /> — the one prompt, usable standalone. Every wall that is
  *     met by doing something (a cap reached mid action) opens this directly.
  *
  * What this path no longer renders:
@@ -88,7 +86,7 @@ export function FeatureGate({
 	wallKey,
 	workspaceId,
 }: FeatureGateProps) {
-	const configurator = usePricingConfigurator(wallKey);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (meetsTier(currentTier, requiredTier)) {
 		return <>{children}</>;
@@ -115,7 +113,7 @@ export function FeatureGate({
 		<>
 			<FeatureGatePopover
 				canRequestUpgrade={canRequestUpgrade}
-				onStart={configurator.open}
+				onStart={upgradeHandlers.open}
 				requiredTier={requiredTier}
 				wallKey={wallKey}
 				workspaceId={workspaceId}
@@ -155,8 +153,8 @@ export function FeatureGate({
 				)}
 			</FeatureGatePopover>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier={currentTier}
 				requiredTier={requiredTier}
 				wallKey={wallKey}
@@ -176,7 +174,7 @@ interface UpgradeModalProps {
 	 * The tier this wall needs, where there is one.
 	 *
 	 * `null` on an entry point that is not a wall. The billing page of an
-	 * account with nothing to pay carries the configurator (`billing_page`),
+	 * account with nothing to pay carries the upgrade prompt (`billing_page`),
 	 * and nothing there is blocked, so there is no tier to already hold and
 	 * R5's suppression below must not fire. Every real wall passes a tier.
 	 */
@@ -191,15 +189,20 @@ interface UpgradeModalProps {
 	 * `pricing_config_gate_viewed` already fired there. `modal_direct` when
 	 * this is the first surface the person meets. */
 	entry?: "popover_link" | "modal_direct";
-	/** Transcription is billed to a project. Passed where the mount has one,
-	 * so the voice answer works on the walls that sit inside a project. */
+	/** Not read since the calculator moved to the website. Kept so the mounts
+	 * that pass them need no change. */
 	projectId?: string;
-	/** The org the upgrade is for, when it is not the active workspace's. */
 	orgId?: string;
 }
 
 /**
- * The one modal. Same content from every mount point.
+ * The one prompt. Same from every mount point.
+ *
+ * Opening it sends the person to the pricing calculator on the website, in a
+ * new tab, and closes it again. That happens in the same click as the one that
+ * opened it, so the browser allows the tab. When a wall opens after a request
+ * has answered (a cap reached mid action) a browser may refuse the tab, and the
+ * modal then stays up with a link that cannot be refused.
  *
  * A gate must never offer a tier the account already holds. That happened
  * before: gates told accounts to upgrade to the tier they were already on,
@@ -212,15 +215,11 @@ export function UpgradeModal({
 	entry = "modal_direct",
 	onClose,
 	opened,
-	orgId,
-	projectId,
 	requiredTier,
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
-	const { workspace } = useWorkspace();
 	const { i18n } = useLingui();
-	const emit = usePricingGateEmitter(workspaceId);
 	const gateViewed = useGateViewed(workspaceId);
 	// One opening is one event. The old `upgrade_prompt_viewed` sat in a
 	// `useEffect` whose deps held `currentTier`, which arrives from a query, so
@@ -228,6 +227,10 @@ export function UpgradeModal({
 	// matters here too: the emitter's identity moves when the workspace query
 	// settles.
 	const viewedRef = useRef(false);
+	// One opening is one tab, also under StrictMode's second effect run.
+	const redirectedRef = useRef(false);
+	const [refused, setRefused] = useState(false);
+	const url = pricingCalculatorUrl(i18n.locale);
 	// No required tier means no wall, so there is nothing the person can
 	// already hold. See the prop.
 	const alreadyHas =
@@ -258,21 +261,45 @@ export function UpgradeModal({
 		wallKey,
 	]);
 
+	useEffect(() => {
+		if (!opened) {
+			redirectedRef.current = false;
+			setRefused(false);
+			return;
+		}
+		if (alreadyHas || redirectedRef.current) return;
+		redirectedRef.current = true;
+		const tab = window.open(url, "_blank");
+		if (tab) {
+			tab.opener = null;
+			onClose();
+		} else {
+			setRefused(true);
+		}
+	}, [alreadyHas, onClose, opened, url]);
+
 	if (alreadyHas) return null;
 
 	return (
-		<PricingConfigurator
-			entry={entry}
-			locale={i18n.locale}
-			mount="app"
+		<Modal
+			opened={opened && refused}
 			onClose={onClose}
-			onEvent={emit}
-			opened={opened}
-			orgId={orgId ?? workspace?.org_id}
-			projectId={projectId}
-			variant={variantFor(wallKey)}
-			wallKey={wallKey}
-			workspaceId={workspaceId || workspace?.id}
-		/>
+			centered
+			size="sm"
+			withCloseButton
+			{...testId("upgrade-modal")}
+		>
+			<Button
+				component="a"
+				href={url}
+				target="_blank"
+				rel="noopener noreferrer"
+				fullWidth
+				onClick={onClose}
+				{...testId("upgrade-modal-link")}
+			>
+				<Trans>Tell us what you need</Trans>
+			</Button>
+		</Modal>
 	);
 }

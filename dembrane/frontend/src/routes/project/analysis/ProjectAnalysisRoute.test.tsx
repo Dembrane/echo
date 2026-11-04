@@ -9,6 +9,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { StrictMode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -95,6 +96,7 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
+	vi.unstubAllGlobals();
 	sessionStorage.clear();
 });
 
@@ -112,8 +114,10 @@ const refusal = (limit: string) =>
 
 // StrictMode runs mount effects twice, as the dev build does.
 it.each(["map", "popcorn"])(
-	"keeps the upgrade wall open after a used-up free %s",
+	"opens the pricing calculator once after a used-up free %s",
 	async (limit) => {
+		const openTab = vi.fn().mockReturnValue({ opener: window });
+		vi.stubGlobal("open", openTab);
 		vi.mocked(bff.post).mockRejectedValue(refusal(limit));
 		// The results tab reads quietly in the background.
 		vi.mocked(bff.get).mockResolvedValue({ items: [], openedAt: null });
@@ -147,13 +151,12 @@ it.each(["map", "popcorn"])(
 		await act(async () => {
 			fireEvent.click(await screen.findByRole("button", { name: "Prepare" }));
 		});
-		expect(
-			await screen.findByTestId("pricing-configurator-modal"),
-		).toBeTruthy();
+		await waitFor(() => expect(openTab).toHaveBeenCalledTimes(1));
 		await act(async () => {
 			await new Promise((r) => setTimeout(r, 50));
 		});
-		expect(screen.queryByTestId("pricing-configurator-modal")).toBeTruthy();
+		expect(openTab).toHaveBeenCalledTimes(1);
+		expect(openTab.mock.calls[0][0]).toContain("/pricing-calculator");
 		// The wall answers it; no inline notice links elsewhere.
 		expect(screen.queryByText("See plans")).toBeNull();
 	},

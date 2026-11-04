@@ -3,6 +3,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
@@ -11,14 +12,11 @@ import { FeatureGatePopover } from "./FeatureGatePopover";
 import { type WallKey, wallActionLine, wallPopoverLine } from "./gateWalls";
 
 const capture = vi.fn();
+const openTab = vi.fn();
 
 vi.mock("posthog-js", () => ({
 	default: {
 		capture: (...args: unknown[]) => capture(...args),
-		// The price anchor line reads a feature flag. Unresolved here, which is
-		// the quiet variant: no number is drawn.
-		getFeatureFlag: () => undefined,
-		onFeatureFlags: () => () => {},
 	},
 }));
 
@@ -67,10 +65,15 @@ beforeAll(() => {
 beforeEach(() => {
 	sessionStorage.clear();
 	capture.mockClear();
+	openTab.mockReset();
+	openTab.mockReturnValue({ opener: window });
+	vi.stubGlobal("open", openTab);
 });
 
 afterEach(() => {
 	cleanup();
+	vi.unstubAllGlobals();
+	i18n.activate("en");
 });
 
 const wrap = (node: React.ReactNode) =>
@@ -85,11 +88,13 @@ const wrap = (node: React.ReactNode) =>
 const renderModal = ({
 	currentTier = "free" as Tier,
 	entry = "modal_direct" as "modal_direct" | "popover_link",
+	onClose = () => {},
 	requiredTier = "changemaker" as Tier,
 	wallKey,
 }: {
 	currentTier?: Tier;
 	entry?: "modal_direct" | "popover_link";
+	onClose?: () => void;
 	requiredTier?: Tier;
 	wallKey: WallKey;
 }) =>
@@ -98,7 +103,7 @@ const renderModal = ({
 			canRequestUpgrade
 			currentTier={currentTier}
 			entry={entry}
-			onClose={() => {}}
+			onClose={onClose}
 			opened
 			requiredTier={requiredTier}
 			wallKey={wallKey}
@@ -106,79 +111,8 @@ const renderModal = ({
 		/>,
 	);
 
-const modalText = () =>
-	screen.getByTestId("pricing-configurator-modal").textContent ?? "";
-
 const gateViewedCalls = () =>
 	capture.mock.calls.filter((call) => call[0] === "pricing_config_gate_viewed");
-
-// 1. One modal, from every mount point. One line varies: the opening.
-
-it("renders the same modal from two different walls, but for the opening line", () => {
-	const first = renderModal({ wallKey: "custom_logo" });
-	const custom = modalText();
-	expect(custom).toContain("You were trying to add your logo.");
-	first.unmount();
-
-	renderModal({ wallKey: "report_cap" });
-	expect(modalText()).toContain("You were trying to create another report.");
-	// Swap that one line back and the two are the same text.
-	expect(modalText().replace("create another report", "add your logo")).toBe(
-		custom,
-	);
-});
-
-it("names the attempt, never the feature or the plan, because the popover named those", () => {
-	renderModal({ wallKey: "custom_logo" });
-	const text = modalText();
-
-	// The wall is keyed, so the app already knows what they were doing.
-	expect(text).toContain("You were trying to add your logo.");
-	expect(text).toContain("That requires a paid plan.");
-	// The control's own name, the feature list and the other walls stay out.
-	expect(text).not.toMatch(/custom logo/i);
-	expect(text).not.toMatch(/webhook/i);
-	expect(text).not.toMatch(/report/i);
-});
-
-it("names the free allowance as the referent when opened from the allowance card", () => {
-	renderModal({ wallKey: "free_allowance" });
-	const text = modalText();
-	expect(text).toContain(
-		"You were trying to go beyond this month's free allowance.",
-	);
-	expect(text).toContain("That requires a paid plan.");
-	expect(text).not.toContain("You are on the free plan.");
-	expect(wallPopoverLine("free_allowance")).toBe("");
-});
-
-// 2. The locked data family is the only exception.
-
-it("puts the cap block above the opening for the transcription cap", () => {
-	renderModal({ wallKey: "transcription_cap" });
-	const text = modalText();
-
-	expect(text).toContain("Your free transcription allowance is used up.");
-	expect(text).toContain(
-		"The portals will keep working! Your participants are never cut off and nothing they say is lost.",
-	);
-	// The cap block sits above the opening, not below it.
-	expect(
-		text.indexOf("Your free transcription allowance is used up."),
-	).toBeLessThan(text.indexOf("You were trying to"));
-});
-
-it("keeps every other wall byte for byte the same as every other", () => {
-	const cap = renderModal({ wallKey: "transcription_cap" });
-	const capText = modalText();
-	cap.unmount();
-
-	renderModal({ wallKey: "upload_cap" });
-	expect(modalText()).not.toBe(capText);
-	expect(modalText()).not.toContain(
-		"Your free transcription allowance is used up.",
-	);
-});
 
 it("carries an attempt for every wall, and none for the page that is not one", () => {
 	const walls: WallKey[] = [
@@ -245,7 +179,67 @@ it("states the free content limits without a number or an em dash", () => {
 	expect(wallActionLine("popcorn_cap")).toBe("keep analysing with popcorn");
 });
 
-// 3. No tier name anywhere on the gate path, and no price table.
+// 2. Opening the prompt sends the person to the pricing calculator.
+
+it("opens the website's pricing calculator in a new tab and closes", () => {
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "custom_logo" });
+
+	expect(openTab).toHaveBeenCalledTimes(1);
+	expect(openTab).toHaveBeenCalledWith(
+		"https://www.dembrane.com/pricing-calculator",
+		"_blank",
+	);
+	expect(onClose).toHaveBeenCalledTimes(1);
+	expect(screen.queryByTestId("upgrade-modal-link")).toBeNull();
+});
+
+it("sends Dutch speakers to the Dutch calculator", () => {
+	i18n.load("nl-NL", {});
+	i18n.activate("nl-NL");
+	renderModal({ wallKey: "custom_logo" });
+
+	expect(openTab).toHaveBeenCalledWith(
+		"https://www.dembrane.com/nl/pricing-calculator",
+		"_blank",
+	);
+});
+
+it("opens one tab under StrictMode", () => {
+	wrap(
+		<StrictMode>
+			<UpgradeModal
+				canRequestUpgrade
+				currentTier="free"
+				onClose={() => {}}
+				opened
+				requiredTier="changemaker"
+				wallKey="custom_logo"
+				workspaceId="workspace-1"
+			/>
+		</StrictMode>,
+	);
+
+	expect(openTab).toHaveBeenCalledTimes(1);
+});
+
+it("keeps a link on screen when the browser refuses the tab", () => {
+	openTab.mockReturnValue(null);
+	const onClose = vi.fn();
+	renderModal({ onClose, wallKey: "report_cap" });
+
+	expect(onClose).not.toHaveBeenCalled();
+	const link = screen.getByTestId("upgrade-modal-link");
+	expect(link.getAttribute("href")).toBe(
+		"https://www.dembrane.com/pricing-calculator",
+	);
+	expect(link.getAttribute("target")).toBe("_blank");
+
+	fireEvent.click(link);
+	expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+// 3. No tier name anywhere on the gate path.
 
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
@@ -274,10 +268,6 @@ it("names no tier in any gate copy", () => {
 		expect(wallPopoverLine(wall)).not.toMatch(tierNames);
 	}
 
-	const view = renderModal({ wallKey: "custom_logo" });
-	expect(modalText()).not.toMatch(tierNames);
-	view.unmount();
-
 	wrap(
 		<FeatureGate
 			canRequestUpgrade
@@ -296,14 +286,6 @@ it("names no tier in any gate copy", () => {
 	expect(screen.getByTestId("feature-gate-card").textContent).toContain(
 		"Available on a paid plan",
 	);
-});
-
-it("shows no price and no price table", () => {
-	renderModal({ wallKey: "custom_logo" });
-	const text = modalText();
-
-	expect(text).not.toContain("€");
-	expect(text).not.toMatch(/per seat|\/seat|billed annually|billed monthly/i);
 });
 
 // 4. The gate viewed event, the denominator.
@@ -383,7 +365,7 @@ it("fires gate_viewed from the popover, with surface popover, once", () => {
 
 // 5. The popover names the feature and carries the way in.
 
-it("names the feature in the popover and starts the configurator from it", () => {
+it("names the feature in the popover and starts the upgrade prompt from it", () => {
 	const onStart = vi.fn();
 	wrap(
 		<FeatureGatePopover
@@ -414,7 +396,7 @@ it("names the feature in the popover and starts the configurator from it", () =>
 	expect(onStart).toHaveBeenCalledTimes(1);
 });
 
-it("opens the modal directly for a wall with no agreed popover line", () => {
+it("opens the prompt directly for a wall with no agreed popover line", () => {
 	const onStart = vi.fn();
 	wrap(
 		<FeatureGatePopover
@@ -444,7 +426,7 @@ it("opens the modal directly for a wall with no agreed popover line", () => {
 it("shows no gate to a workspace that already holds the tier", () => {
 	renderModal({ currentTier: "changemaker", wallKey: "custom_logo" });
 
-	expect(screen.queryByTestId("pricing-configurator-modal")).toBeNull();
+	expect(openTab).not.toHaveBeenCalled();
 	expect(gateViewedCalls()).toHaveLength(0);
 });
 
@@ -456,7 +438,7 @@ it("still gates when the required tier is one nobody knows", () => {
 		wallKey: "upload_cap",
 	});
 
-	expect(screen.getByTestId("pricing-configurator-modal")).toBeTruthy();
+	expect(openTab).toHaveBeenCalledTimes(1);
 });
 
 // 7. The keyboard reaches the card, and the card says what it is.

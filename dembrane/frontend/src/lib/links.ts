@@ -74,3 +74,16 @@ export const eventEnquiryUrl = ({
 	url.hash = "share";
 	return url.toString();
 };
+
+/**
+ * The website's pricing calculator, the one place a person plans a paid
+ * account and books the call. Dutch speakers get the Dutch page; every other
+ * language gets English, which is what the site has. The site picks the
+ * language from the path, not from a parameter.
+ */
+export const pricingCalculatorUrl = (language: string): string => {
+	const path = language.toLowerCase().startsWith("nl")
+		? "/nl/pricing-calculator"
+		: "/pricing-calculator";
+	return new URL(path, "https://www.dembrane.com").toString();
+};
