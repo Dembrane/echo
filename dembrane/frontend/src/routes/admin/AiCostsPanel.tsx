@@ -28,6 +28,7 @@ import {
 	formatShare,
 	type GroupCost,
 	groupFeatures,
+	providerName,
 } from "./aiCostBreakdown";
 
 const COLUMNS = 7;
@@ -198,7 +199,7 @@ function Breakdown({ account }: { account: AiCostAccount }) {
 						name={m.model}
 						secondary={
 							<Text size="xs" c="dimmed">
-								{m.provider}
+								{providerName(m.provider)}
 							</Text>
 						}
 						calls={m.calls}
@@ -590,7 +591,7 @@ export function AiCostsPanel({
 									<Stat
 										label={t`Internal`}
 										value={formatAiCost(data.internal_micro_eur)}
-										caption={t`Samples, demos and dev tools`}
+										caption={t`Demos, voice outside projects, dev tools`}
 										testId="ai-cost-internal"
 									/>
 								</Strip>
@@ -608,17 +609,17 @@ export function AiCostsPanel({
 										testId="ai-cost-over-budget"
 									/>
 									{providers.map((p) => {
-										const provider = p.provider;
+										const provider = providerName(p.provider);
 										const share = formatShare(
 											total > 0 ? p.cost_micro_eur / total : 0,
 										);
 										return (
 											<Stat
-												key={provider}
+												key={p.provider}
 												label={t`Provider: ${provider}`}
 												value={formatAiCost(p.cost_micro_eur)}
 												caption={t`${share} of the total`}
-												testId={`ai-cost-provider-${provider}`}
+												testId={`ai-cost-provider-${p.provider}`}
 											/>
 										);
 									})}

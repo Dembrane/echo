@@ -5,6 +5,7 @@ import {
 	formatAiCost,
 	formatShare,
 	groupFeatures,
+	providerName,
 } from "./aiCostBreakdown";
 
 beforeAll(() => {
@@ -192,5 +193,18 @@ describe("groupFeatures", () => {
 				share: 0,
 			},
 		]);
+	});
+});
+
+describe("providerName", () => {
+	it("names the providers staff check invoices against", () => {
+		expect(providerName("vertex")).toBe("Google Vertex");
+		expect(providerName("openai-compatible")).toBe("Scaleway");
+		expect(providerName("fake")).toBe("Test");
+		expect(providerName("unknown")).toBe("Unknown");
+	});
+
+	it("keeps any other provider as recorded", () => {
+		expect(providerName("anthropic")).toBe("anthropic");
 	});
 });

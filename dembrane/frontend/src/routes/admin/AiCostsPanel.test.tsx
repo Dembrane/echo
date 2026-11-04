@@ -247,13 +247,17 @@ it("sums the month in captioned tiles", async () => {
 	expect(summary.getByText("Spend")).toBeTruthy();
 	expect(summary.getByText("Accounts and providers")).toBeTruthy();
 	expect(summary.getByText("88% of the total")).toBeTruthy();
+	expect(summary.getByText("Provider: Google Vertex")).toBeTruthy();
+	expect(summary.getByText("Provider: anthropic")).toBeTruthy();
 	expect(summary.queryByTestId("ai-cost-provider-unknown")).toBeNull();
 	expect(summary.getByText("Free accounts at 100% or more")).toBeTruthy();
 	expect(summary.getByText("Accounts with AI calls")).toBeTruthy();
 	expect(
 		summary.getByText("Calls no account could be matched to"),
 	).toBeTruthy();
-	expect(summary.getByText("Samples, demos and dev tools")).toBeTruthy();
+	expect(
+		summary.getByText("Demos, voice outside projects, dev tools"),
+	).toBeTruthy();
 });
 
 it("the spend tiles reconcile: total is charged to accounts plus unattributed plus internal", async () => {
@@ -356,7 +360,7 @@ it("breaks an account down by feature group and by model", async () => {
 	expect(models).toHaveLength(2);
 	const gemini = within(models[0] as HTMLElement);
 	expect(gemini.getByText("gemini-flash")).toBeTruthy();
-	expect(gemini.getByText("vertex")).toBeTruthy();
+	expect(gemini.getByText("Google Vertex")).toBeTruthy();
 	expect(gemini.getByText("€1.20")).toBeTruthy();
 	expect(gemini.getByText("80%")).toBeTruthy();
 	expect(gemini.getByText("15 calls")).toBeTruthy();

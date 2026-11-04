@@ -20,6 +20,15 @@ export function formatAiCost(micro: number): string {
 export const formatShare = (share: number): string =>
 	share > 0 && share < 0.005 ? "<1%" : `${Math.round(share * 100)}%`;
 
+// Display names for recorded providers; openai-compatible is our Scaleway deployment.
+export function providerName(provider: string): string {
+	if (provider === "vertex") return "Google Vertex";
+	if (provider === "openai-compatible") return "Scaleway";
+	if (provider === "fake") return t`Test`;
+	if (provider === "unknown") return t`Unknown`;
+	return provider;
+}
+
 export type FeatureGroup =
 	| "chat"
 	| "assistant"
