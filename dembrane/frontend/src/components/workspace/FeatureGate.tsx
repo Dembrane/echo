@@ -340,6 +340,7 @@ export function UpgradeModal({
 				<Group gap="sm" mt="xs">
 					<Button
 						component="a"
+						variant="filled"
 						href={url}
 						target="_blank"
 						rel="noopener noreferrer"
