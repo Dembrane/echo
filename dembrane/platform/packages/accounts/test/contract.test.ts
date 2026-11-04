@@ -18,6 +18,7 @@ const cases: [string, z.ZodType, unknown][] = [
   ["signingRequests", C.SigningRequests, F.signingRequests],
   ["accountList", C.AccountList, F.accountList],
   ["accountCard", C.AccountCard, F.accountCard],
+  ["accountEmail", C.AccountEmail, F.accountEmail],
   ["pushOfferRequest", C.PushOfferRequest, F.pushOfferRequest],
   ["pushOfferResponse", C.PushOfferResponse, F.pushOfferResponse],
   ["createAccountResponse", C.CreateAccountResponse, F.createAccountResponse],

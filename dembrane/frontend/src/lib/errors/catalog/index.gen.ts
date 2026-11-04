@@ -2,6 +2,7 @@
 // Do not edit: change the platform file and run the script.
 import { access } from "./access.gen";
 import { account } from "./account.gen";
+import { account_email } from "./account_email.gen";
 import { agent } from "./agent.gen";
 import { agent_access } from "./agent_access.gen";
 import { analysis } from "./analysis.gen";
@@ -90,6 +91,7 @@ export const ERROR_CATALOG = {
   ...task,
   ...offer,
   ...demo,
+  ...account_email,
   ...staff,
   ...privacy,
   ...question,

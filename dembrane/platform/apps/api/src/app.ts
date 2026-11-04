@@ -4,6 +4,7 @@ import {
   accountsRoutes,
   demoDeckHook,
   demoProspectHook,
+  gmailFromConfig,
   httpFetchText,
   onboardingSignals,
   queueJobs,
@@ -130,6 +131,13 @@ export function buildApp(deps: Deps) {
     limiter: deps.limiter,
     now: () => new Date(),
     fetchText: deps.fetchText ?? httpFetchText,
+    gmail:
+      deps.gmail !== undefined
+        ? deps.gmail
+        : gmailFromConfig(
+            deps.config.accounts.gmailServiceAccount,
+            deps.config.accounts.gmailMailboxes,
+          ),
     settings: {
       dashboardUrl: deps.config.http.dashboardUrl,
       company: {

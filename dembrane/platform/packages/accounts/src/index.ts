@@ -8,6 +8,7 @@ export { demoDeckHook, demoProspectHook } from "./demo-hook";
 export { type AccountsDeps, type AccountsSettings, type Company, httpFetchText } from "./deps";
 export { ACCOUNT_EVENTS, type AccountEvent } from "./events";
 export * as fixtures from "./fixtures";
+export { type GmailReader, gmailFromConfig, serviceAccountGmail } from "./gmail";
 export {
   accountPageUrl,
   accountsApiJobs,
