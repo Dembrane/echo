@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Writable } from "node:stream";
 import { overageInboxMessage } from "@dembrane/billing";
 import { runForwardSupport, type SupportRow, supportInboxMessage } from "@dembrane/feedback";
+import { postCostAlert } from "@dembrane/metering";
 import { createLogger } from "@dembrane/observability";
 import {
   bookingInboxMessage,
@@ -16,6 +17,7 @@ import {
   quarantineSamMessage,
   runDeliverSamMessage,
   type SamEnvelope,
+  samInboxAll,
   samInboxForwarder,
   samInboxSignature,
 } from "@dembrane/webhooks";
@@ -169,6 +171,39 @@ describe("outboxes to sam", () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]?.code).toBe("echo_billing_overage_v1");
     expect(JSON.parse(sent[0]?.body ?? "").json.message).toContain("has 5 recordings");
+  });
+
+  test("an AI cost alert is one signed dembrane_ai_cost_alert_v1 message, sent once per id", async () => {
+    const q = new MemorySamQueue();
+    const alerts = samInboxAll({ url: `${base}/inbox`, scope: "all" }, q);
+    const at = new Date("2026-11-05T00:30:00Z");
+    const text =
+      "Unattributed AI spend yesterday: 2.0% (EUR 0.10). Check model_call rows with payer 'unattributed'.";
+    // The rollup rerun the same day repeats the alert: one message.
+    await postCostAlert(alerts, text, logger, at);
+    await postCostAlert(alerts, text, logger, at);
+    const queued = q.of<SamEnvelope>(deliverSamMessage.name);
+    expect(queued).toHaveLength(1);
+    seen.length = 0;
+    const post = httpSamInbox({ url: `${base}/inbox`, secret, from }, { allowPrivate: true });
+    await runDeliverSamMessage(
+      { post, logger, quarantine: async () => {} },
+      queued[0] as SamEnvelope,
+    );
+    const [r] = seen;
+    expect(r?.raw).toBe(
+      JSON.stringify({ code: "dembrane_ai_cost_alert_v1", json: { text, day: "2026-11-05" } }),
+    );
+    expect(r?.headers.get("x-webhook-id")).toMatch(/^2026-11-05-[0-9a-f]{16}$/);
+    expect(r?.headers.get("x-webhook-signature")).toBe(
+      samInboxSignature({
+        secret,
+        from,
+        timestamp: r?.headers.get("x-webhook-timestamp") as string,
+        id: r?.headers.get("x-webhook-id") as string,
+        body: r?.raw as string,
+      }),
+    );
   });
 
   const booking = (mount: "app" | "site") =>

@@ -645,15 +645,10 @@ export const schema = defineSchema({
     ),
     scope: key("SAM_INBOX_SCOPE", z.enum(["all", "support"]).default("all"), {
       description:
-        "What goes to sam's inbox. all: support requests, account events, bookings, overage notices, project webhooks and MCP tool requests. support: support requests only; the rest keeps its old route or stays in this deployment, so a deployment whose data must stay home sends sam nothing but support pointers.",
+        "What goes to sam's inbox. all: support requests, account events, bookings, overage notices, AI cost alerts, project webhooks and MCP tool requests. support: support requests only; the rest keeps its old route or stays in this deployment, so a deployment whose data must stay home sends sam nothing but support pointers.",
     }),
   },
   metering: {
-    slackWebhookUrl: key("AI_COST_SLACK_WEBHOOK_URL", z.url().optional(), {
-      description:
-        "Slack incoming webhook for AI price changes, missing prices and unattributed spend. Unset is off.",
-      secret: true,
-    }),
     modelsDevUrl: key("MODELS_DEV_URL", z.url().default("https://models.dev/api.json"), {
       description: "Where the daily price sync reads model prices.",
     }),

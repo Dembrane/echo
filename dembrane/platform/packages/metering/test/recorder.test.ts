@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { ModelCall } from "@dembrane/llm";
 import { type Payer, withCorrelation, withPayer } from "@dembrane/observability";
 import {
+  type CostAlertMessage,
   type ModelCallSink,
   modelCallRecorder,
   type PendingCall,
@@ -295,46 +296,37 @@ describe("model call recorder", () => {
     expect(n).toBe(2);
   });
 
-  test("a call priced without a price row is posted to Slack once per model", async () => {
-    const posts: string[] = [];
-    const slack = Bun.serve({
-      port: 0,
-      fetch: async (req) => {
-        posts.push(((await req.json()) as { text: string }).text);
-        return new Response("ok");
-      },
+  test("a call priced without a price row is sent to sam's inbox once per model", async () => {
+    const sent: CostAlertMessage[] = [];
+    const { logger, lines } = fakeLogger();
+    const r = modelCallRecorder({
+      sink: fakeSink(),
+      logger,
+      service: "echo-api",
+      prices: stubBook(),
+      flushMs: 60_000,
+      alerts: async (m) => void sent.push(m),
     });
-    try {
-      const { logger, lines } = fakeLogger();
-      const r = modelCallRecorder({
-        sink: fakeSink(),
-        logger,
-        service: "echo-api",
-        prices: stubBook(),
-        flushMs: 60_000,
-        slackUrl: `http://localhost:${slack.port}/hook`,
-      });
-      withPayer(project, () => {
-        r.observe(call({ model: "gemini-unknown" }));
-        r.observe(call({ model: "gemini-unknown" }));
-        r.observe(call({ model: "gemini-other" }));
-        r.observe(call());
-      });
-      await r.flush();
-      await Bun.sleep(100);
-      expect(posts).toHaveLength(2);
-      expect(posts.some((p) => p.includes("vertex/gemini-unknown"))).toBe(true);
-      expect(posts.some((p) => p.includes("vertex/gemini-other"))).toBe(true);
-      expect(posts.join(" ")).not.toContain("\u2014");
-      expect(
-        lines.filter((l) => l.fields.signal === "metering.price_missing").map((l) => l.level),
-      ).toEqual(["error", "error"]);
-    } finally {
-      slack.stop(true);
-    }
+    withPayer(project, () => {
+      r.observe(call({ model: "gemini-unknown" }));
+      r.observe(call({ model: "gemini-unknown" }));
+      r.observe(call({ model: "gemini-other" }));
+      r.observe(call());
+    });
+    await r.flush();
+    const posts = sent.map((m) => m.json.text);
+    expect(posts).toHaveLength(2);
+    expect(sent.every((m) => m.code === "dembrane_ai_cost_alert_v1")).toBe(true);
+    expect(new Set(sent.map((m) => m.id)).size).toBe(2);
+    expect(posts.some((p) => p.includes("vertex/gemini-unknown"))).toBe(true);
+    expect(posts.some((p) => p.includes("vertex/gemini-other"))).toBe(true);
+    expect(posts.join(" ")).not.toContain("\u2014");
+    expect(
+      lines.filter((l) => l.fields.signal === "metering.price_missing").map((l) => l.level),
+    ).toEqual(["error", "error"]);
   });
 
-  test("an unreachable Slack never fails a call priced without a row", async () => {
+  test("an inbox that cannot queue never fails a call priced without a row", async () => {
     const sink = fakeSink();
     const r = modelCallRecorder({
       sink,
@@ -342,13 +334,14 @@ describe("model call recorder", () => {
       service: "x",
       prices: stubBook(),
       flushMs: 60_000,
-      slackUrl: "http://127.0.0.1:1/hook",
+      alerts: async () => {
+        throw new Error("queue not started");
+      },
     });
     expect(() =>
       withPayer(project, () => r.observe(call({ model: "gemini-unknown" }))),
     ).not.toThrow();
     await r.flush();
-    await Bun.sleep(50);
     expect(sink.writes[0]?.batch[0]?.row.price_missing).toBe(true);
   });
 

@@ -1,6 +1,6 @@
 import { type Db, schema } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
-import { type FetchText, postSlack } from "../slack";
+import { type CostAlertSink, type FetchText, postCostAlert } from "../alerts";
 import { loadOverrides, type OverrideFile, type PriceRow, type UnitPrices } from "./book";
 import { pricesFromModelsDev } from "./models-dev";
 import { FALLBACK_USD_TO_EUR, latestPrices, latestRate, type PriceBook, toColumns } from "./store";
@@ -19,7 +19,8 @@ export interface SyncDeps {
   readonly db: Db;
   readonly fetchText: FetchText;
   readonly logger: Logger;
-  readonly slackUrl: string | null;
+  /** sam's inbox for the alerts; null logs them only. */
+  readonly alerts: CostAlertSink | null;
   readonly modelsDevUrl: string;
   readonly ecbUrl: string;
   readonly now: () => Date;
@@ -41,7 +42,7 @@ type Flat = Record<
   number | null
 >;
 
-/** Each price unit: its Slack label and what it is charged per. */
+/** Each price unit: its alert label and what it is charged per. */
 const UNITS: readonly [keyof Flat, string, string][] = [
   ["input", "input", "per million"],
   ["cached", "cached input", "per million"],
@@ -124,10 +125,11 @@ async function syncRate(d: SyncDeps): Promise<boolean> {
       { usd_to_eur: usdToEur, url: d.ecbUrl, signal: "metering.fx_rejected" },
       "ECB USD to EUR rate out of range; keeping the last",
     );
-    await postSlack(
-      d.slackUrl,
+    await postCostAlert(
+      d.alerts,
       `ECB rate rejected: 1 USD = ${eur(usdToEur)} EUR is outside ${SANE_USD_TO_EUR.min} to ${SANE_USD_TO_EUR.max} EUR, so the last good rate is kept.`,
       d.logger,
+      d.now(),
     );
     return false;
   }
@@ -142,10 +144,11 @@ async function syncRate(d: SyncDeps): Promise<boolean> {
     });
   const move = before ? (usdToEur - before) / before : 0;
   if (Math.abs(move) > FX_POST_SHARE)
-    await postSlack(
-      d.slackUrl,
+    await postCostAlert(
+      d.alerts,
       `USD to EUR rate moved ${(move * 100).toFixed(1)}%: 1 USD was ${eur(before as number)} EUR, now ${eur(usdToEur)} EUR.`,
       d.logger,
+      d.now(),
     );
   return before !== usdToEur;
 }
@@ -258,7 +261,7 @@ export async function syncPrices(d: SyncDeps): Promise<SyncResult> {
   if (inserts.length) await d.db.insert(schema.ai_price).values(inserts).onConflictDoNothing();
   if (changed.length) d.logger.info({ changed, rejected }, "AI prices changed");
   else if (rejected.length) d.logger.warn({ rejected }, "AI prices rejected; last good kept");
-  for (const text of texts) await postSlack(d.slackUrl, text, d.logger);
+  for (const text of texts) await postCostAlert(d.alerts, text, d.logger, d.now());
   return { changed, rejected, fxChanged, sourceRead: api !== null };
 }
 
@@ -290,10 +293,11 @@ export async function priceStartup(
           { err, signal: "metering.price_sync_failed" },
           "AI price sync failed at startup",
         );
-        await postSlack(
-          d.slackUrl,
+        await postCostAlert(
+          d.alerts,
           `AI price sync failed at startup: ${(err as Error).message}`,
           d.logger,
+          d.now(),
         );
       }
       await book.reload();
@@ -304,8 +308,8 @@ export async function priceStartup(
         { missing, signal: "metering.price_missing" },
         "configured models have no AI price",
       );
-      await postSlack(
-        d.slackUrl,
+      await postCostAlert(
+        d.alerts,
         missingPriceText(missing, {
           listed: new Set(Object.keys((d.overrides ?? loadOverrides()).models)),
           sync:
@@ -313,6 +317,7 @@ export async function priceStartup(
           held: book.current().prices.size === 0,
         }),
         d.logger,
+        d.now(),
       );
     }
   })().catch((err) => d.logger.error({ err }, "AI price startup check failed"));

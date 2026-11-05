@@ -62,6 +62,7 @@ import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
 import {
   dispatchWebhook,
+  enqueueSamMessage,
   httpDeliver,
   httpSamInbox,
   runDispatch,
@@ -281,7 +282,8 @@ export function registrations(deps: {
     meteringRegistration({
       db,
       logger,
-      slackUrl: config.metering.slackWebhookUrl ?? null,
+      // AI cost alerts: sam's inbox where it takes everything, else only the log.
+      alerts: inboxAll ? (m) => enqueueSamMessage(deps.accountsJobs, m) : null,
       modelsDevUrl: config.metering.modelsDevUrl,
       ecbUrl: config.metering.ecbRatesUrl,
       book: deps.prices,

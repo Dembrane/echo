@@ -47,7 +47,7 @@ import { samplesApiJobs } from "@dembrane/samples/jobs";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
-import { httpDeliver, webhookJobs } from "@dembrane/webhooks";
+import { httpDeliver, samInboxAll, webhookJobs } from "@dembrane/webhooks";
 import { buildApp } from "./app";
 import { API_ASSETS } from "./assets";
 import { principalLookup } from "./principals";
@@ -257,13 +257,15 @@ void (async () => {
 
 // AI prices held in memory and reloaded every few minutes; every model call is priced from them.
 const prices = priceBook(database.db, logger);
+// AI cost alerts go to sam's inbox where it takes everything (production, staging), else only the log.
+const costAlerts = samInboxAll(config.samInbox, enqueuer);
 // Every model call is metered: one log line at once, one model_call row and its spend per batch.
 const metering = modelCallRecorder({
   sink: modelCallTable(database.db),
   logger,
   service,
   prices,
-  slackUrl: config.metering.slackWebhookUrl ?? null,
+  alerts: costAlerts,
 });
 // The transcription profile the worker runs: the API transcribes typed text and short audio
 // with the same live model, and refuses to start when the deployment lacks what it needs.
@@ -298,7 +300,7 @@ await priceStartup(
     db: database.db,
     fetchText: httpText,
     logger,
-    slackUrl: config.metering.slackWebhookUrl ?? null,
+    alerts: costAlerts,
     modelsDevUrl: config.metering.modelsDevUrl,
     ecbUrl: config.metering.ecbRatesUrl,
     now: () => new Date(),

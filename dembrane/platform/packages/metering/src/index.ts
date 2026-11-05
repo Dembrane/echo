@@ -3,11 +3,21 @@ import { type Db, schema } from "@dembrane/db";
 import type { ModelCall, ModelCallObserver } from "@dembrane/llm";
 import { correlation, type Logger, type Payer, payer, payerKey } from "@dembrane/observability";
 import { sql } from "drizzle-orm";
+import { type CostAlertSink, postCostAlert } from "./alerts";
 import { priceCall } from "./prices/pricer";
 import type { PriceBook } from "./prices/store";
 import { type Resolution, resolvePayers } from "./resolve";
-import { postSlack } from "./slack";
 
+export {
+  AI_COST_ALERT_CODE,
+  AI_COST_ALERT_MAX_CHARS,
+  type CostAlertMessage,
+  type CostAlertSink,
+  costAlertMessage,
+  type FetchText,
+  httpText,
+  postCostAlert,
+} from "./alerts";
 export { configuredModels, type MeteringJobDeps, meteringRegistration, priceSync } from "./jobs";
 export {
   loadOverrides,
@@ -29,7 +39,6 @@ export {
   syncPrices,
 } from "./prices/sync";
 export { type Resolution, type ResolvedPayer, resolvePayers } from "./resolve";
-export { type FetchText, httpText, postSlack } from "./slack";
 
 /** A model_call row as stored: the call plus who made it and under which operation. */
 export type ModelCallRow = typeof schema.model_call.$inferInsert;
@@ -62,8 +71,8 @@ export interface RecorderOptions {
   readonly flushMs?: number;
   /** Rows kept while the database is unreachable; older ones are dropped beyond this. */
   readonly maxPending?: number;
-  /** Where a model priced without a row is posted, once per model per process; unset is off. */
-  readonly slackUrl?: string | null;
+  /** Where a model priced without a row is sent, once per model per process; unset logs it only. */
+  readonly alerts?: CostAlertSink | null;
 }
 
 export interface ModelCallRecorder {
@@ -111,8 +120,8 @@ export function modelCallRecorder(opts: RecorderOptions): ModelCallRecorder {
       { model, signal: "metering.price_missing" },
       "model call priced without an AI price",
     );
-    void postSlack(
-      opts.slackUrl ?? null,
+    void postCostAlert(
+      opts.alerts ?? null,
       `No AI price for ${model} (${opts.service}). Its calls are charged at the highest price held until it has one in prices/overrides.json or models.dev.`,
       opts.logger,
     );

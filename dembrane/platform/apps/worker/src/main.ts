@@ -20,6 +20,7 @@ import {
 } from "@dembrane/llm";
 import { type Mailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import {
+  type CostAlertSink,
   configuredModels,
   httpText,
   modelCallRecorder,
@@ -40,6 +41,7 @@ import {
   requestLimits,
   WhisperFinal,
 } from "@dembrane/transcription";
+import { samInboxAll } from "@dembrane/webhooks";
 import { WORKER_ASSETS } from "./assets";
 import { registrations } from "./jobs";
 
@@ -123,13 +125,25 @@ const billing = createBilling({
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
 // AI prices held in memory; the daily sync job reloads them, a timer every few minutes too.
 const prices = priceBook(database.db, logger);
+// AI cost alerts: sam's inbox where it takes everything, else only the log; sent once the queue starts.
+let markQueueStarted = () => {};
+const queueStarted = new Promise<void>((resolve) => {
+  markQueueStarted = resolve;
+});
+const toSam = samInboxAll(config.samInbox, queue);
+const costAlerts: CostAlertSink | null =
+  toSam &&
+  (async (m) => {
+    await queueStarted;
+    await toSam(m);
+  });
 // Every model call is metered: one log line at once, one model_call row and its spend per batch.
 const metering = modelCallRecorder({
   sink: modelCallTable(database.db),
   logger,
   service,
   prices,
-  slackUrl: config.metering.slackWebhookUrl ?? null,
+  alerts: costAlerts,
 });
 // One structured line per request to a speech model: what is sent, how long it took, how it ended.
 const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
@@ -314,7 +328,7 @@ try {
       db: database.db,
       fetchText: httpText,
       logger,
-      slackUrl: config.metering.slackWebhookUrl ?? null,
+      alerts: costAlerts,
       modelsDevUrl: config.metering.modelsDevUrl,
       ecbUrl: config.metering.ecbRatesUrl,
       now: () => new Date(),
@@ -323,6 +337,7 @@ try {
     configuredModels(config.llm, profile),
   );
   await queue.start(regs.flatMap((r) => r.jobs));
+  markQueueStarted();
   for (const r of regs) await r.register(queue);
   await queue.run();
 } catch (err) {

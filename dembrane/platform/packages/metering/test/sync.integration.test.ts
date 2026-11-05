@@ -2,7 +2,14 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { connect, createDb, migrate } from "@dembrane/db";
 import type { ModelCall } from "@dembrane/llm";
 import type postgres from "postgres";
-import { type OverrideFile, priceBook, priceCall, priceStartup, syncPrices } from "../src";
+import {
+  type CostAlertMessage,
+  type OverrideFile,
+  priceBook,
+  priceCall,
+  priceStartup,
+  syncPrices,
+} from "../src";
 import { loadOverrides } from "../src/prices/book";
 import fixture from "./fixtures/models-dev.json";
 
@@ -42,15 +49,15 @@ run("price sync", () => {
   setDefaultTimeout(60_000);
   let sql: postgres.Sql;
   let db: ReturnType<typeof createDb>;
-  let slack: ReturnType<typeof Bun.serve>;
   const posts: string[] = [];
-  let slackUrl = "";
+  // sam's inbox: each alert's text, in order.
+  const alerts = async (m: CostAlertMessage) => void posts.push(m.json.text);
 
   const deps = (fetchText: (url: string) => Promise<string>) => ({
     db: db.db,
     fetchText,
     logger,
-    slackUrl,
+    alerts,
     modelsDevUrl: MODELS_DEV,
     ecbUrl: ECB,
     now: () => new Date(),
@@ -79,18 +86,9 @@ run("price sync", () => {
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 1, onnotice: () => {} });
     db = createDb({ url, poolMax: 2 });
-    slack = Bun.serve({
-      port: 0,
-      fetch: async (req) => {
-        posts.push(((await req.json()) as { text: string }).text);
-        return new Response("ok");
-      },
-    });
-    slackUrl = `http://localhost:${slack.port}/hook`;
   });
 
   afterAll(async () => {
-    slack?.stop(true);
     await sql?.end();
     await db?.close();
     const a = connect(admin as string, { max: 1, onnotice: () => {} });

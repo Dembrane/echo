@@ -9,6 +9,7 @@ import {
 } from "bun:test";
 import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
+import type { CostAlertMessage } from "../src";
 import { runSpendRollup } from "../src/jobs";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -25,9 +26,9 @@ run("spend rollup", () => {
   setDefaultTimeout(60_000);
   let sql: postgres.Sql;
   let db: ReturnType<typeof createDb>;
-  let slack: ReturnType<typeof Bun.serve>;
   const posts: string[] = [];
-  let slackUrl = "";
+  // sam's inbox: each alert's text, in order.
+  const alerts = async (m: CostAlertMessage) => void posts.push(m.json.text);
 
   type Row = {
     at: string;
@@ -57,7 +58,7 @@ run("spend rollup", () => {
     sql`insert into ai_spend_daily (day, model, calls, input_tokens, output_tokens, cost_micro_eur)
         values (${day}, 'seed', 0, 0, 0, 0)`;
   const rollup = (now = NOW) =>
-    runSpendRollup({ db: db.db, logger, slackUrl, now: () => now, batch: 2 });
+    runSpendRollup({ db: db.db, logger, alerts, now: () => now, batch: 2 });
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
@@ -68,18 +69,9 @@ run("spend rollup", () => {
     await migrate(url, { appEnv: "test" });
     sql = connect(url, { max: 1, onnotice: () => {} });
     db = createDb({ url, poolMax: 2 });
-    slack = Bun.serve({
-      port: 0,
-      fetch: async (req) => {
-        posts.push(((await req.json()) as { text: string }).text);
-        return new Response("ok");
-      },
-    });
-    slackUrl = `http://localhost:${slack.port}/hook`;
   });
 
   afterAll(async () => {
-    slack?.stop(true);
     await sql?.end();
     await db?.close();
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
@@ -323,7 +315,7 @@ run("spend rollup", () => {
     expect((await rollup()).deleted).toBe(0);
   });
 
-  test("an unattributed share above 1% posts one Slack text", async () => {
+  test("an unattributed share above 1% sends one alert", async () => {
     await insert({
       at: "2026-11-02T10:00:00Z",
       account: A,

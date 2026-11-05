@@ -104,6 +104,14 @@ export async function enqueueSamMessage<T>(
   });
 }
 
+/** Queues messages for sam where it takes everything (SAM_INBOX_SCOPE=all); null keeps them home. */
+export function samInboxAll<T>(
+  inbox: { readonly url?: string | null | undefined; readonly scope: "all" | "support" },
+  sink: SamQueue<T>,
+): ((message: SamMessage) => Promise<void>) | null {
+  return inbox.url && inbox.scope === "all" ? (message) => enqueueSamMessage(sink, message) : null;
+}
+
 /** The shape the scheduled outboxes (support, pricing bookings, overage notices) post through. */
 export interface OutboxForwarder {
   post(payload: Record<string, unknown>): Promise<Delivery>;

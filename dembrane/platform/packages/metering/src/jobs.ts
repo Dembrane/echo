@@ -9,9 +9,9 @@ import type { Logger } from "@dembrane/observability";
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { type CostAlertSink, type FetchText, httpText, postCostAlert } from "./alerts";
 import type { PriceBook } from "./prices/store";
 import { syncPrices } from "./prices/sync";
-import { type FetchText, httpText, postSlack } from "./slack";
 
 /** Daily at 03:15 UTC, once across workers. */
 export const priceSync = defineJob("metering.price-sync", z.object({}), {
@@ -32,7 +32,8 @@ const SPEND_ROLLUP_CRON = "30 0 * * *";
 export interface MeteringJobDeps {
   readonly db: Db;
   readonly logger: Logger;
-  readonly slackUrl: string | null;
+  /** sam's inbox for the alerts; null logs them only. */
+  readonly alerts: CostAlertSink | null;
   readonly modelsDevUrl: string;
   readonly ecbUrl: string;
   /** This process's book, reloaded right after each sync. */
@@ -51,7 +52,7 @@ export function meteringRegistration(d: MeteringJobDeps): {
         await syncPrices({
           db: d.db,
           logger: d.logger,
-          slackUrl: d.slackUrl,
+          alerts: d.alerts,
           modelsDevUrl: d.modelsDevUrl,
           ecbUrl: d.ecbUrl,
           fetchText: d.fetchText ?? httpText,
@@ -64,7 +65,7 @@ export function meteringRegistration(d: MeteringJobDeps): {
         await runSpendRollup({
           db: d.db,
           logger: d.logger,
-          slackUrl: d.slackUrl,
+          alerts: d.alerts,
           now: () => new Date(),
         });
       });
@@ -100,7 +101,7 @@ async function rollUpDays(db: Db, from: Date, to: Date): Promise<number> {
 export async function runSpendRollup(d: {
   db: Db;
   logger: Logger;
-  slackUrl: string | null;
+  alerts: CostAlertSink | null;
   now: () => Date;
   keepDays?: number;
   batch?: number;
@@ -153,10 +154,11 @@ export async function runSpendRollup(d: {
   if (unattributedShare > UNATTRIBUTED_ALERT_SHARE) {
     const pct = (unattributedShare * 100).toFixed(1);
     const euros = `EUR ${(unattributed / 1_000_000).toFixed(2)}`;
-    await postSlack(
-      d.slackUrl,
+    await postCostAlert(
+      d.alerts,
       `Unattributed AI spend yesterday: ${pct}% (${euros}). Check model_call rows with payer 'unattributed'.`,
       d.logger,
+      now,
     );
   }
   return { rolledUp, deleted, unattributedShare };
