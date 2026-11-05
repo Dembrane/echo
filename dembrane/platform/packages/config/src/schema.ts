@@ -621,7 +621,7 @@ export const schema = defineSchema({
         .transform((v) => (v?.trim() ? v : undefined)),
       {
         description:
-          "The JSON key of the Google Workspace service account that reads dembrane's mailboxes for the account card's email, with domain-wide delegation of gmail.readonly only. Set with ACCOUNTS_GMAIL_MAILBOXES or not at all; unset or empty leaves the email section off.",
+          "The JSON key of the Google Workspace service account that reads dembrane's mailboxes for the account card's email, with domain-wide delegation of gmail.readonly only. The email section is on only when ACCOUNTS_GMAIL_MAILBOXES names mailboxes too, so the key can sit in place while the list is still empty.",
         secret: true,
       },
     ),
@@ -680,7 +680,6 @@ export const schema = defineSchema({
 /** Keys that mean nothing alone: a partial set fails at boot instead of sending unsigned. */
 export const together: readonly (readonly string[])[] = [
   ["samInbox.url", "samInbox.secret", "samInbox.from"],
-  ["accounts.gmailServiceAccount", "accounts.gmailMailboxes"],
 ];
 
 export type Schema = typeof schema;

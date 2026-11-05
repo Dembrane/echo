@@ -31,6 +31,11 @@ locals {
     "SAM_INBOX_URL",
     "SAM_INBOX_SECRET",
     "SAM_INBOX_FROM",
+    # The account card's email (Gmail, read-only). Both were made by hand with gcloud on
+    # 2026-11-05; import them before the next apply, e.g.
+    # terraform import 'module.platform.google_secret_manager_secret.pending["ACCOUNTS_GMAIL_SERVICE_ACCOUNT"]' projects/dembrane-web-staging/secrets/echo-staging-accounts-gmail-service-account
+    "ACCOUNTS_GMAIL_SERVICE_ACCOUNT",
+    "ACCOUNTS_GMAIL_MAILBOXES",
   ]
 }
 
