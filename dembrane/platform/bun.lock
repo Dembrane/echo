@@ -820,6 +820,7 @@
         "@dembrane/http": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/llm": "workspace:*",
+        "@dembrane/observability": "workspace:*",
         "@dembrane/projects": "workspace:*",
         "@dembrane/prompts": "workspace:*",
         "ai": "^7.0.118",
@@ -828,7 +829,6 @@
       },
       "devDependencies": {
         "@dembrane/allowance": "workspace:*",
-        "@dembrane/observability": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",

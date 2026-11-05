@@ -24,6 +24,7 @@
     "@dembrane/http": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "@dembrane/projects": "workspace:*",
     "@dembrane/prompts": "workspace:*",
     "ai": "^7.0.118",
@@ -32,7 +33,6 @@
   },
   "devDependencies": {
     "@dembrane/allowance": "workspace:*",
-    "@dembrane/observability": "workspace:*",
     "@dembrane/storage": "workspace:*",
     "postgres": "^3.4.9",
     "hono": "^4.9.0"
