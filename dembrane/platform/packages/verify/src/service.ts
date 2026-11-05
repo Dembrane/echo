@@ -123,7 +123,7 @@ export function slugify(text: string): string {
     .replace(/[^\p{L}\p{N}_\s-]/gu, "")
     .replace(/[\s_]+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-|-$/g, "");
   return s ? [...s].slice(0, 60).join("") : "custom";
 }
 
