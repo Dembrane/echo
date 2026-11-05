@@ -111,6 +111,8 @@ export function statelessRoutes(d: ConversationsDeps) {
       projectId: f.project_id,
       workspaceId: f.workspace_id,
       budgetExempt: purpose === "issue_report",
+      // The pricing form always spends a workspace's budget; issue reports may stay internal.
+      ownWorkspace: purpose === "pricing_intake",
       file: f.file,
       audioFileUri: f.audio_file_uri,
       language: f.language,

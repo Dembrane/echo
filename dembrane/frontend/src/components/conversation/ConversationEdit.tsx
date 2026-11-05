@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useParams } from "react-router";
 import { notifyError } from "@/components/error/notifyError";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import {
 	AiBudgetWall,
 	useAiBudgetWall,
@@ -167,28 +168,53 @@ export const ConversationEdit = ({
 		title: conversation.title ?? "",
 	};
 
-	const { register, formState, reset, setValue, control, watch, getValues } =
-		useForm<ConversationEditFormValues>({
-			defaultValues,
-		});
+	const {
+		register,
+		formState,
+		reset,
+		setValue,
+		control,
+		watch,
+		getValues,
+		getFieldState,
+	} = useForm<ConversationEditFormValues>({
+		defaultValues,
+	});
 
-	const updateConversationMutation = useUpdateConversationByIdMutation();
+	// An AI budget refusal opens the wall below instead of a toast.
+	const updateConversationMutation = useUpdateConversationByIdMutation({
+		onError: (error) => {
+			if (isFreeTierLimitError(error) !== "ai_budget") void notifyError(error);
+		},
+	});
 	const updateConversationTagsMutation = useUpdateConversationTagsMutation();
 
 	const { dispatchAutoSave, isPendingSave, isSaving, isError, lastSavedAt } =
 		useAutoSave({
 			initialLastSavedAt: conversation.updated_at ?? new Date(),
-			onSave: async (data: ConversationEditFormValues) => {
-				await updateConversationMutation.mutateAsync({
-					id: conversation.id,
-					payload: {
-						participant_name: data.participant_name,
-						title: data.title || null,
-						// Only the modal variant edits summary; don't clobber it
-						// from the detail page where the field isn't rendered.
-						...(showSummary ? { summary: data.summary } : {}),
-					},
-				});
+			onSave: async (form: ConversationEditFormValues) => {
+				let data = form;
+				const update = (withSummary: boolean) =>
+					updateConversationMutation.mutateAsync({
+						id: conversation.id,
+						payload: {
+							participant_name: data.participant_name,
+							title: data.title || null,
+							// Only a summary the host edited here; the form's copy may be older than the saved one.
+							...(withSummary ? { summary: data.summary } : {}),
+						},
+					});
+				const summaryEdited = showSummary && getFieldState("summary").isDirty;
+				try {
+					await update(summaryEdited);
+				} catch (error) {
+					// Clearing a summary at a used-up AI budget is a regenerate: keep it, save the rest.
+					if (!summaryEdited || !openAiWall(error, "summary_again"))
+						throw error;
+					data = { ...data, summary: conversation.summary ?? "" };
+					setValue("summary", data.summary, { shouldDirty: false });
+					await update(false);
+				}
 
 				await updateConversationTagsMutation.mutateAsync({
 					conversationId: conversation.id,

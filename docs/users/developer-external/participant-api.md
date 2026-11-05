@@ -76,7 +76,7 @@ Content-Type: application/json
 { "timestamp": "2026-10-13T09:30:00Z", "content": "What the participant typed." }
 ```
 
-An optional `source` defaults to `PORTAL_TEXT`. The text becomes a chunk that already has its transcript.
+An optional `source` defaults to `PORTAL_TEXT`. The text becomes a chunk that already has its transcript. When the project is not taking responses, the call is refused with `402` and the code `billing.tier_limit`, the same answer `initiate` gives for a typed start.
 
 ### 5. Finish
 

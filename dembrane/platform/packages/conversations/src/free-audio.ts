@@ -20,7 +20,7 @@ import { type Db, schema } from "@dembrane/db";
 import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import type { ConversationsDeps } from "./deps";
 import type { PipelineDeps } from "./pipeline/steps";
-import { type ChunkRow, conversationStore } from "./storage";
+import { type ChunkRow, type ConversationRow, conversationStore } from "./storage";
 
 export const LIVE_SOURCE = "PORTAL_AUDIO";
 // Past the limit by this much before a live chunk is refused: the portal stops itself first.
@@ -74,6 +74,16 @@ async function aiBudgetGone(
   }
 }
 
+type Closable = Pick<
+  ConversationRow,
+  "is_finished" | "is_all_chunks_transcribed" | "merged_audio_path"
+>;
+
+// Finished and finalized: more audio or text would reopen it and summarise it again.
+export function isClosed(c: Partial<Closable>): boolean {
+  return Boolean(c.is_finished && (c.is_all_chunks_transcribed || c.merged_audio_path));
+}
+
 // Past the grace from a recording's first AI budget stop, its chunks are refused.
 function aiGraceOver(stoppedAt: string | null, now: Date): boolean {
   return stoppedAt !== null && now.getTime() > Date.parse(stoppedAt) + LIVE_GRACE_SECONDS * 1000;
@@ -91,6 +101,33 @@ export async function requireAudioStart(
   // No budget figures: participants never see them.
   if (await aiBudgetGone(d, v.a, projectId, v.used)) throw freeLimitError("ai_budget");
   return v.a;
+}
+
+/**
+ * Typed text into an existing conversation, at a used-up AI budget: the same grace as a live
+ * chunk while it is in progress, refused once it was finished and finalized. Fails open.
+ */
+export async function textChunkCheck(
+  d: AudioDeps,
+  conv: Pick<ConversationRow, "id" | "project_id" | "ai_stopped_at"> & Partial<Closable>,
+): Promise<AudioRefusal | null> {
+  let v: AiLive;
+  try {
+    const a = await allowanceForProject(d.db, conv.project_id, d.now());
+    if (!a) return null;
+    const gone = await aiBudgetGone(d, a, conv.project_id);
+    if (gone && isClosed(conv)) v = { refuse: "ai_budget", stop: null };
+    else if (!gone && conv.ai_stopped_at === null) return null;
+    else v = await stampAiStop(d.db, conv.id, gone, d.now());
+  } catch (err) {
+    d.logger?.error(
+      { err, conversationId: conv.id, signal: "free_audio.text_check_failed" },
+      "typed text limit check failed",
+    );
+    return null;
+  }
+  if (v.refuse) throw freeLimitError(v.refuse);
+  return v.stop;
 }
 
 // Typed text records nothing, so only a used-up AI budget refuses it, the same way as a recording.
@@ -369,7 +406,7 @@ async function stampAiStop(db: Db, conversationId: string, gone: boolean, now: D
  */
 export async function liveChunkCheck(
   d: Pick<ConversationsDeps, "db" | "now" | "logger">,
-  conv: { id: string; project_id: string; ai_stopped_at: string | null },
+  conv: { id: string; project_id: string; ai_stopped_at: string | null } & Partial<Closable>,
   opts: { home?: boolean } = {},
 ): Promise<AudioRefusal | null> {
   let v: AiLive;
@@ -387,7 +424,10 @@ export async function liveChunkCheck(
     }
     if (!v.refuse) {
       const gone = await aiBudgetGone(d, a, conv.project_id, usage);
-      const ai = aiLive(gone, conv.ai_stopped_at, d.now());
+      const ai: AiLive =
+        gone && isClosed(conv)
+          ? { refuse: "ai_budget", stop: null }
+          : aiLive(gone, conv.ai_stopped_at, d.now());
       v = { refuse: ai.refuse, stop: v.stop ?? ai.stop };
     }
   } catch (err) {
@@ -409,7 +449,7 @@ export async function liveChunkCheck(
 export async function confirmLiveChunk(
   d: ConversationsDeps,
   a: AllowanceAccount,
-  conv: { id: string; project_id: string; ai_stopped_at: string | null },
+  conv: { id: string; project_id: string; ai_stopped_at: string | null } & Partial<Closable>,
   key: string,
   bytes: number,
   write: ChunkWrite,
@@ -436,6 +476,8 @@ export async function confirmLiveChunk(
       const aiStop = aiGone ? "ai_budget" : null;
       if (prior) return { chunk: prior, recordingStop: (v && (v.refuse ?? v.stop)) ?? aiStop };
       if (v?.refuse) throw freeLimitError(v.refuse);
+      // No grace for a finished recording: the chunk would reopen it.
+      if (aiGone && isClosed(conv)) throw freeLimitError("ai_budget");
       // No stamp to write when the loaded one already fits; a failed stamp keeps the chunk and says stop.
       const ai =
         aiGone === (conv.ai_stopped_at !== null)

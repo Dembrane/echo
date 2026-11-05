@@ -305,7 +305,14 @@ export const useUploadConversationTextChunk = () => {
 				],
 			});
 		},
-		retry: 10,
+		// A refusal answers the same on every retry: show it at once.
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
+				return false;
+			}
+			return failureCount < 10;
+		},
 	});
 };
 

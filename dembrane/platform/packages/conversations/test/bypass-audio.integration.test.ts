@@ -612,6 +612,7 @@ run("bypass: free audio limits", () => {
         {
           projectId,
           workspaceId: null,
+          ownWorkspace: false,
           budgetExempt: false,
           file,
           audioFileUri: null,

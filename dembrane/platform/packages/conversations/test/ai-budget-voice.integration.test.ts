@@ -150,11 +150,14 @@ run("AI budget: voice input", () => {
       headers: { "x-as": as },
       body: fd,
     });
-    const body = (await res.json()) as { detail?: { code?: string; limit?: string } };
+    const body = (await res.json()) as {
+      code?: string;
+      detail?: { code?: string; limit?: string };
+    };
     return {
       status: res.status,
       limit: body.detail?.limit,
-      code: body.detail?.code,
+      code: body.detail?.code ?? body.code,
       transcribed: transcriber.calls.length - before,
       payer: transcriber.calls.length > before ? transcriber.payers.at(-1) : undefined,
     };
@@ -252,11 +255,53 @@ run("AI budget: voice input", () => {
     });
   });
 
-  test("without a workspace a purpose stays internal", async () => {
+  test("without a workspace an issue report stays internal", async () => {
     const { as } = await account();
     expect(await voice(as, { purpose: "issue_report" })).toMatchObject({
       status: 200,
       payer: { internal: "voice_without_project" },
+    });
+  });
+
+  test("the pricing form without a workspace bills the caller's own workspace", async () => {
+    const { ws, as } = await account();
+    expect(await voice(as, { purpose: "pricing_intake" })).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { ref: "workspace", id: ws },
+    });
+  });
+
+  test("the pricing form without a workspace at zero is refused with ai_budget", async () => {
+    const { ws, as } = await account();
+    await spend(ws);
+    expect(await voice(as, { purpose: "pricing_intake" })).toMatchObject({
+      status: 402,
+      limit: "ai_budget",
+      transcribed: 0,
+    });
+  });
+
+  test("the pricing form picks the caller's default workspace over another", async () => {
+    const { ws: other, as } = await account();
+    const own = await account();
+    const me = people.get(as)?.appUserId as string;
+    await sql`update workspace set is_default = true where id = ${own.ws}`;
+    await sql`insert into workspace_membership (id, workspace_id, user_id, role)
+      values (${newId()}, ${own.ws}, ${me}, 'owner')`;
+    await spend(other);
+    expect(await voice(as, { purpose: "pricing_intake" })).toMatchObject({
+      status: 200,
+      payer: { ref: "workspace", id: own.ws },
+    });
+  });
+
+  test("the pricing form from someone with no workspace is refused", async () => {
+    const nobody = await person();
+    expect(await voice(nobody, { purpose: "pricing_intake" })).toMatchObject({
+      status: 403,
+      code: "access.not_onboarded",
+      transcribed: 0,
     });
   });
 

@@ -8,11 +8,13 @@ import {
 	useConfirmConversationChunkUpload,
 	useInitiateConversationMutation,
 	useUploadConversationChunk,
+	useUploadConversationTextChunk,
 } from "./index";
 
 const confirm = vi.fn();
 const upload = vi.fn();
 const initiate = vi.fn();
+const uploadText = vi.fn();
 const toastError = vi.hoisted(() => vi.fn());
 
 vi.mock("posthog-js", () => ({ default: { capture: () => {} } }));
@@ -23,6 +25,7 @@ vi.mock("@/lib/api", () => ({
 	confirmConversationChunkUpload: (...a: unknown[]) => confirm(...a),
 	initiateConversation: (...a: unknown[]) => initiate(...a),
 	uploadConversationChunk: (...a: unknown[]) => upload(...a),
+	uploadConversationText: (...a: unknown[]) => uploadText(...a),
 }));
 
 const tierLimit = (limit: string) => ({
@@ -104,6 +107,23 @@ it("reports a 402 on confirm once and never retries it", async () => {
 	expect(onRecordingStop).toHaveBeenCalledTimes(1);
 	expect(onRecordingStop).toHaveBeenCalledWith("audio_conversation");
 	expect(confirm).toHaveBeenCalledTimes(1);
+});
+
+it("a refused text submit fails at once and is never retried", async () => {
+	uploadText.mockRejectedValue(tierLimit("ai_budget"));
+	const { result } = renderHook(() => useUploadConversationTextChunk(), {
+		wrapper,
+	});
+	act(() =>
+		result.current.mutate({
+			content: "Hi",
+			conversationId: "c1",
+			source: "PORTAL_TEXT",
+			timestamp: new Date(),
+		}),
+	);
+	await waitFor(() => expect(result.current.isError).toBe(true));
+	expect(uploadText).toHaveBeenCalledTimes(1);
 });
 
 it("a 500 on confirm never opens the wrap modal", async () => {

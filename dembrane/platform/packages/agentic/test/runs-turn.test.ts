@@ -271,6 +271,51 @@ run("turn workflow on a fake model", () => {
     expect(notified[0]).toMatchObject({ eventCode: "AGENTIC_RUN_FINISHED" });
   });
 
+  test("a turn started at zero well after its message was admitted runs no step", async () => {
+    await database.db.$client`
+      update project_agentic_run_event set timestamp = now() - interval '10 minutes'
+      where project_agentic_run_id = ${ids.run} and seq = 1`;
+    const seen: unknown[] = [];
+    await runTurn(
+      deps(fakeAgent({ seen: seen as never }), { budgetLeft: async () => false }),
+      args,
+      direct,
+    );
+    expect(seen).toHaveLength(0);
+    const said = (await events()).filter((e) => e.event_type === "assistant.message");
+    expect(said.map((e) => String(e.payload.content))).toEqual([
+      expect.stringContaining("AI budget is used up"),
+    ]);
+    const r = await runRow();
+    expect(r.status).toBe("completed");
+    expect(r.latest_output).toContain("AI budget is used up");
+  });
+
+  test("a turn started right after its admit reads no budget before its first step", async () => {
+    const seen: unknown[] = [];
+    const checked: number[] = [];
+    const budgetLeft = async () => {
+      checked.push(seen.length);
+      return true;
+    };
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen.length).toBeGreaterThan(1);
+    expect(checked[0]).toBe(1);
+  });
+
+  test("a failed budget read at the first step lets the turn run", async () => {
+    await database.db.$client`
+      update project_agentic_run_event set timestamp = now() - interval '10 minutes'
+      where project_agentic_run_id = ${ids.run} and seq = 1`;
+    const seen: unknown[] = [];
+    const budgetLeft = async (): Promise<boolean> => {
+      throw new Error("db down");
+    };
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen.length).toBeGreaterThan(0);
+    expect((await runRow()).status).toBe("completed");
+  });
+
   test("a turn that is no longer the latest does not start", async () => {
     await database.db.$client`
       insert into project_agentic_run_event (project_agentic_run_id, seq, event_type, payload, timestamp)

@@ -200,9 +200,13 @@ export const useConversationFinalTranscript = (
 		staleTime: 5 * 60 * 1000,
 	});
 
-export const useUpdateConversationByIdMutation = () => {
+export const useUpdateConversationByIdMutation = (
+	opts: { onError?: (error: unknown) => void } = {},
+) => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		// Set, it replaces the app-wide error toast.
+		...(opts.onError && { onError: opts.onError }),
 		mutationFn: ({
 			id,
 			payload,

@@ -284,6 +284,125 @@ run("AI budget: recording and uploads", () => {
     expect(await chunkIds(cid)).not.toContain(chunkId);
   });
 
+  const typed = (cid: string, content = "Typed words.") =>
+    post(`/api/participant/conversations/${cid}/upload-text`, {
+      content,
+      timestamp: new Date().toISOString(),
+      source: "PORTAL_TEXT",
+    });
+  const finalizeRuns = async (cid: string) =>
+    Number(
+      (
+        await h.sql`select count(*)::int as n from dbos.workflow_status
+          where workflow_uuid like ${`conversations.finalize:${cid}:%`}`
+      )[0]?.n,
+    );
+  // Tests run one at a time, so every finish run in the database is this test's or done.
+  const finishRuns = async () =>
+    (await h.sql`select status from dbos.workflow_status where name = 'conversations.finish'`).map(
+      (r) => String(r.status),
+    );
+  const settled = async (n: number) => {
+    const runs = await finishRuns();
+    return runs.length === n && runs.every((s) => s === "SUCCESS");
+  };
+  // A typed conversation finished and summarised below the limit.
+  async function summarised() {
+    const { p, cid } = await account("free", "PORTAL_TEXT");
+    expect((await typed(cid)).status).toBe(200);
+    const before = (await finishRuns()).length;
+    await post(`/api/participant/conversations/${cid}/finish`, {});
+    const row = await until(async () => {
+      const [c] = await h.sql`select summary from conversation where id = ${cid}`;
+      return c?.summary ? c : null;
+    });
+    await until(() => settled(before + 1));
+    return { p, cid, summary: String(row.summary) };
+  }
+
+  test("typed text on a finished conversation at zero is refused like a typed start", async () => {
+    const { p, cid, summary } = await summarised();
+    await spend(p);
+    const res = await typed(cid, "More words after the end.");
+    expect(res.status).toBe(402);
+    const dt = await detail(res);
+    expect(dt.limit).toBe("ai_budget");
+    expect(dt).not.toHaveProperty("percent");
+    expect(dt).not.toHaveProperty("resets_at");
+    const [c] = await h.sql`select summary, is_finished from conversation where id = ${cid}`;
+    expect({
+      summary: c?.summary,
+      finished: c?.is_finished,
+      chunks: (await chunkIds(cid)).length,
+    }).toEqual({ summary, finished: true, chunks: 1 });
+  });
+
+  test("typed text while a conversation is in progress keeps the grace at zero, then is refused", async () => {
+    const { p, cid } = await account("free", "PORTAL_TEXT");
+    expect((await typed(cid, "First thought.")).status).toBe(200);
+    await spend(p);
+    const inGrace = await typed(cid, "Last thought, just after zero.");
+    expect(inGrace.status).toBe(200);
+    expect((await body(inGrace)).recording_stop).toBe("ai_budget");
+    const [c] = await h.sql`select ai_stopped_at from conversation where id = ${cid}`;
+    expect(c?.ai_stopped_at).not.toBeNull();
+    clock = later(LIVE_GRACE_SECONDS + 10);
+    const late = await typed(cid, "Too late.");
+    expect(late.status).toBe(402);
+    expect((await detail(late)).limit).toBe("ai_budget");
+    expect(await chunkIds(cid)).toHaveLength(2);
+  });
+
+  test("a finished recording reopened at zero takes no audio, with no grace", async () => {
+    const { p, cid } = await account("free");
+    expect((await confirm(cid)).res.status).toBe(200);
+    const before = (await finishRuns()).length;
+    await post(`/api/participant/conversations/${cid}/finish`, {});
+    const row = await until(async () => {
+      const [c] = await h.sql`select summary from conversation where id = ${cid}`;
+      return c?.summary ? c : null;
+    });
+    await until(() => settled(before + 1));
+    await spend(p);
+    const url = await uploadUrl(cid);
+    expect(url.status).toBe(402);
+    expect((await detail(url)).limit).toBe("ai_budget");
+    const { res, key } = await confirm(cid);
+    expect(res.status).toBe(402);
+    expect((await detail(res)).limit).toBe("ai_budget");
+    expect(await h.bucket.storage.size(key)).toBeNull();
+    const [c] =
+      await h.sql`select summary, is_finished, ai_stopped_at from conversation where id = ${cid}`;
+    expect({
+      summary: c?.summary,
+      finished: c?.is_finished,
+      stamped: c?.ai_stopped_at !== null,
+      chunks: (await chunkIds(cid)).length,
+      finalizes: await finalizeRuns(cid),
+    }).toEqual({ summary: row.summary, finished: true, stamped: false, chunks: 1, finalizes: 1 });
+  });
+
+  test("finishing again with nothing new runs no second summary", async () => {
+    const { p, cid, summary } = await summarised();
+    await spend(p);
+    expect(await finalizeRuns(cid)).toBe(1);
+    const before = (await finishRuns()).length;
+    expect((await post(`/api/participant/conversations/${cid}/finish`, {})).status).toBe(200);
+    await until(() => settled(before + 1));
+    const [c] = await h.sql`select summary from conversation where id = ${cid}`;
+    expect({ finalizes: await finalizeRuns(cid), summary: c?.summary }).toEqual({
+      finalizes: 1,
+      summary,
+    });
+  });
+
+  test("below the limit, typed text reopens a finished conversation and is summarised again", async () => {
+    const { cid } = await summarised();
+    expect((await typed(cid, "An afterthought.")).status).toBe(200);
+    await post(`/api/participant/conversations/${cid}/finish`, {});
+    await until(async () => ((await finalizeRuns(cid)) === 2 ? true : null));
+  });
+
   test("a paid account never stops for the AI budget", async () => {
     const { acc, cid } = await account("changemaker");
     await h.sql`insert into free_usage (billing_account_id, period_start, key, amount)

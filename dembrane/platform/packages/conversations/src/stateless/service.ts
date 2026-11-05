@@ -6,7 +6,7 @@ import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { type Payer, withPayer } from "@dembrane/observability";
 import { TranscriptionError } from "@dembrane/transcription";
-import { and, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, ne, or } from "drizzle-orm";
 import type { ConversationsDeps } from "../deps";
 import { isUuid } from "../storage";
 
@@ -21,6 +21,8 @@ export interface StatelessInput {
   readonly projectId: string | null;
   /** Pays for a note without a project; the caller must be in it. */
   readonly workspaceId: string | null;
+  /** Without a project or workspace, the caller's own workspace pays. */
+  readonly ownWorkspace: boolean;
   /** Issue reports transcribe even at zero budget. */
   readonly budgetExempt: boolean;
   readonly file: File | null;
@@ -86,6 +88,31 @@ async function ownedKey(d: ConversationsDeps, input: StatelessInput): Promise<st
   return key;
 }
 
+// The workspace the dashboard opens for the caller: their default one, else their first.
+async function ownWorkspace(d: ConversationsDeps, who: Signed): Promise<string> {
+  const { workspace, workspace_membership: m } = schema;
+  const now = d.now().toISOString();
+  const [row] = who.appUserId
+    ? await d.db
+        .select({ id: workspace.id })
+        .from(m)
+        .innerJoin(workspace, eq(workspace.id, m.workspace_id))
+        .where(
+          and(
+            eq(m.user_id, who.appUserId),
+            isNull(m.deleted_at),
+            ne(m.source, "staff_support"),
+            or(isNull(m.expires_at), gt(m.expires_at, now)),
+            isNull(workspace.deleted_at),
+          ),
+        )
+        .orderBy(desc(workspace.is_default), asc(m.created_at), asc(workspace.id))
+        .limit(1)
+    : [];
+  if (!row) throw new ForbiddenError("access.not_onboarded");
+  return row.id;
+}
+
 // Any role in the workspace counts, billing included; no role answers 403.
 async function requireMember(d: ConversationsDeps, who: Signed, workspaceId: string) {
   if (!who.appUserId || !isUuid(workspaceId)) throw new ForbiddenError("workspace.no_access");
@@ -106,6 +133,7 @@ export async function transcribeStateless(
   input: StatelessInput,
   hooks: StatelessHooks,
 ): Promise<{ transcript: string; note: string }> {
+  let workspaceId = input.workspaceId;
   // Writing access, not reading: this spends the workspace's audio hours (Q H-14: staff
   // act through their own workspace role, as everywhere on the platform).
   if (input.projectId) {
@@ -115,10 +143,10 @@ export async function transcribeStateless(
     if (!input.budgetExempt) await requireAiBudget(d.db, input.projectId, d.now());
   } else {
     await hooks.gate();
-    if (input.workspaceId) {
-      await requireMember(d, who, input.workspaceId);
-      if (!input.budgetExempt) await requireAiBudgetForWorkspace(d.db, input.workspaceId, d.now());
-    }
+    if (input.workspaceId) await requireMember(d, who, input.workspaceId);
+    else if (input.ownWorkspace) workspaceId = await ownWorkspace(d, who);
+    if (workspaceId && !input.budgetExempt)
+      await requireAiBudgetForWorkspace(d.db, workspaceId, d.now());
   }
   if ((input.file === null) === (input.audioFileUri === null))
     throw new StatusError(400, "upload.source_ambiguous");
@@ -144,8 +172,8 @@ export async function transcribeStateless(
   let duration: number | null = null;
   const payer: Payer = input.projectId
     ? { ref: "project", id: input.projectId }
-    : input.workspaceId
-      ? { ref: "workspace", id: input.workspaceId }
+    : workspaceId
+      ? { ref: "workspace", id: workspaceId }
       : { internal: "voice_without_project" };
   try {
     try {

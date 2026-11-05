@@ -114,8 +114,10 @@ conversations still count. Paid plans have no cap on hours.
   stopped for now. Everything you recorded is saved."
 - A portal with no hours left, or of a project that does not take recordings, shows "This
   project isn't taking recordings right now." It never mentions plans. A portal for
-  typed text still works, until the month's AI is used up: then a new typed conversation
-  is refused with "This project isn't taking responses right now."
+  typed text still works until the month's AI is used up. Then a new typed conversation,
+  or more text in a finished one, is refused with "This project isn't taking responses
+  right now." Text typed while a conversation is going on gets the same short grace as a
+  recording. A finished conversation reopened from its link takes no more audio either.
 - Upload checks each file's length first: "This file is {file} long. You have {left} of
   recording left this month."
 - Everything that was recorded is transcribed and summarised as usual. No conversation is

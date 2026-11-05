@@ -24,7 +24,7 @@ For what a host sees, read [chat and Ask](../../features/chat-and-ask.md).
 
 A third mode, `overview`, is still stored on older chats. Those chats still open, and nothing creates a new one. A chat's mode is set once and cannot be changed. New chats start as "Specific Details", and a host opts in to the assistant from the Ask screen.
 
-Both paths need the `chat:use` policy on the project. See [roles and policies in code](./roles-and-policies.md). On the free tier both check the account's AI budget before the turn (`requireAiBudget`), and the assistant checks it again before every step after the first. There is no chat or turn count; a sample project keeps its 10-turn cap. See [the free tier in code](./free-tier.md).
+Both paths need the `chat:use` policy on the project. See [roles and policies in code](./roles-and-policies.md). On the free tier both check the account's AI budget before the turn (`requireAiBudget`), and the assistant checks it again before every step. The first step skips the check only when the host's message was admitted less than 30 seconds before, so a run started long after it was created is checked before any model call. There is no chat or turn count; a sample project keeps its 10-turn cap. See [the free tier in code](./free-tier.md).
 
 ## Plain chat
 

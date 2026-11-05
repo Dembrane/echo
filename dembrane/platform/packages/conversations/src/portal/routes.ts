@@ -2,6 +2,7 @@ import type { Env } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
+import { textChunkCheck } from "../free-audio";
 import { liveServices } from "../live/routes";
 import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
 import { conversationStore } from "../storage";
@@ -128,13 +129,16 @@ export function portalRoutes(d: ConversationsDeps) {
     const cid = c.req.param("conversation_id");
     d.tokens.check(token(c), cid);
     const { body } = await p.validate(c.req, { body: UploadTextBody });
+    // Typed text is summarised on finish: at zero it gets a live chunk's grace, or none once finished.
+    const conv = await conversationStore(d.db).conversation(cid);
+    const stop = conv ? await textChunkCheck(d, conv) : null;
     const chunk = await addChunk(d, {
       conversationId: cid,
       timestamp: body.data.timestamp,
       transcript: body.data.content,
       source: body.data.source || "PORTAL_TEXT",
     });
-    return c.json(publicChunk(chunk));
+    return c.json(stop ? { ...publicChunk(chunk), recording_stop: stop } : publicChunk(chunk));
   });
 
   app.post("/api/participant/conversations/:conversation_id/check-s3", async (c) => {

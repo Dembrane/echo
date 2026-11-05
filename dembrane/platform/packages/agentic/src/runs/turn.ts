@@ -84,7 +84,7 @@ export interface TurnDeps {
   readonly capture: Capture;
   readonly notify: (e: Emit) => Promise<unknown>;
   readonly now: () => Date;
-  /** False once the project's free AI budget is used up; checked before every step after the first. */
+  /** False once the project's free AI budget is used up; checked before every step. */
   readonly budgetLeft: (projectId: string) => Promise<boolean>;
   /** How often a running step re-reads the run to notice Stop. */
   readonly cancelPollMs?: number;
@@ -119,7 +119,12 @@ interface Begin {
   readonly chatId: string | null;
   readonly distinctId: string;
   readonly appUserId: string | null;
+  /** When the host's message was admitted (ms); missing on turns begun before it was kept. */
+  readonly admittedAt?: number | null;
 }
+
+// A turn this close to its admit skips the first step's budget read: the admit just did it.
+const ADMIT_FRESH_MS = 30_000;
 
 type End =
   | { kind: "limit" }
@@ -190,6 +195,7 @@ async function beginTurn(d: TurnDeps, a: TurnArgs): Promise<Begin> {
     chatId: null,
     distinctId: a.runId,
     appUserId: null,
+    admittedAt: null,
   };
   // A turn only starts from its own queued state: a Stop that landed first, or a newer
   // host message that superseded it, leaves nothing to do.
@@ -208,6 +214,8 @@ async function beginTurn(d: TurnDeps, a: TurnArgs): Promise<Begin> {
     canvasEnabled: await canvasEnabled(d.store.sql, a.projectId, d.config.canvas.enabled),
     triggeringMessageId:
       trigger?.event_type === "user.message" ? String(trigger.id ?? "") || null : null,
+    admittedAt:
+      trigger?.event_type === "user.message" ? Date.parse(String(trigger.timestamp)) || null : null,
     persistedNonExempt: await countPersistedNonExemptToolStarts(d.store, a.runId),
     deadline: d.now().getTime() + d.config.agentic.runTimeoutSeconds * 1000,
     baseSeq: Number(last?.seq ?? a.turnSeq),
@@ -258,7 +266,7 @@ async function agentStep(
     return { state: s, responseMessages: [], done: true, end: { kind: "cancelled" } };
   if (d.now().getTime() >= begin.deadline)
     return { state: s, responseMessages: [], done: true, end: timeoutEnd() };
-  if (stepIndex > 0 && !(await budgetLeft(d, a))) {
+  if (budgetDue(begin, stepIndex, d.now()) && !(await budgetLeft(d, a))) {
     const say = new StepEmitter(d, a, begin, s, stepIndex, () => false);
     s.latestOutput = await say.assistantMessage(aiBudgetStopMessage(), null, false, "ai-budget");
     return { state: s, responseMessages: [], done: true, end: { kind: "limit" } };
@@ -357,6 +365,13 @@ async function agentStep(
       clearTimeout(timer);
     }
   }
+}
+
+// Every step but a first one started right after its admit, which the admit already checked.
+function budgetDue(begin: Begin, stepIndex: number, now: Date): boolean {
+  if (stepIndex > 0) return true;
+  const at = begin.admittedAt;
+  return !at || now.getTime() - at > ADMIT_FRESH_MS;
 }
 
 // A failed read lets the turn go on; started work finishes.

@@ -71,20 +71,23 @@ When the month's AI is used up:
 
 - An AI action opens the upgrade popup: "This month's AI budget is used up." It names what you
   tried and the date AI comes back. Regenerating a conversation's summary or title is an AI
-  action too.
+  action too, and so is clearing a summary.
 - New recordings and uploads stop, and a recording that is going on stops, as when the hours
   run out (below). Audio already received is still transcribed. The project home and the
   conversations list say "This month's AI is used up. AI features and new recordings are paused
   until {date}.", and a refused upload says "This month's AI is used up. New recordings and
   uploads are paused until {date}." Plan a live event with this in mind: heavy chat use can
   stop your participants from recording.
-- The assistant stops before its next step and says so.
+- The assistant stops before its next step and says so. A run that starts after the budget ran
+  out stops before it does anything.
 - A scheduled report does not run and ends in error: "This month's AI budget is used up."
 - Live popcorn goes back to manual. Start it again after the reset.
 - Canvas updates on a schedule pause, and start again on their own after the reset.
 - In the portal, Verify and Explore show "Not available right now", and finishing a recording
-  no longer offers to verify. A participant who wants to type instead sees "This project isn't
-  taking responses right now." Participants never see anything about plans.
+  no longer offers to verify. A participant who wants to type instead, or to add text to a
+  finished conversation, sees "This project isn't taking responses right now." Someone typing
+  when it runs out gets the same short grace as a recording. Participants never see anything
+  about plans.
 - "Give feedback" keeps working, voice included.
 - Owners and admins get a notice and the email "{name} has used this month's AI budget".
 - Nothing is locked. Every transcript, summary, report and map stays readable.

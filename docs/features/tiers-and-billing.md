@@ -72,24 +72,28 @@ When the month's AI is used up:
 - An AI action opens the upgrade popup instead: "This month's AI budget is used up." and
   "AI features and new recordings are paused until {date}. Upgrade to keep going now."
   It names what you tried, such as "You were trying to ask in chat.". Regenerating a
-  conversation's summary or title is an AI action too.
+  conversation's summary or title is an AI action too, and so is clearing a summary, which
+  would have it written again.
 - The banner reads "This month's AI is used up. AI features and new recordings are paused
   until {date}."
 - New recordings and uploads stop, as when the hours run out (below). A recording that is
-  going on stops with "That's a wrap". The project home and the conversations list show the
-  banner, and a refused upload says "This month's AI is used up. New recordings and uploads
-  are paused until {date}."
+  going on stops with "That's a wrap", and typed text that is going on gets the same short
+  grace. A finished conversation reopened from its link takes no more audio or text. The
+  project home and the conversations list show the banner, and a refused upload says "This
+  month's AI is used up. New recordings and uploads are paused until {date}."
 - Audio already received is still transcribed and summarised.
-- The assistant stops before its next step: "This month's AI budget is used up, so I
-  stopped here. You can upgrade to continue, or pick this up after it resets."
+- The assistant stops before its next step, or before its first when a run starts after
+  the budget ran out: "This month's AI budget is used up, so I stopped here. You can
+  upgrade to continue, or pick this up after it resets."
 - A scheduled report does not run. It ends in error: "This month's AI budget is used up."
 - Live popcorn goes back to manual and stays manual after the reset. Popcorn shows "This
   month's AI is used up, so popcorn is paused until {date}."
 - Canvas updates on a schedule pause and start again on their own after the reset.
 - A presentation keeps showing what it has. The host sees a notice.
 - In the portal, Verify and Explore show "Not available right now". A new typed
-  conversation is refused like a new recording, with "This project isn't taking responses
-  right now." The portal never mentions plans.
+  conversation, or more typed text in a finished one, is refused like a new recording,
+  with "This project isn't taking responses right now." Text that was refused stays on the
+  screen so the participant can copy it. The portal never mentions plans.
 - "Give feedback" keeps working, voice included.
 - The account's owners and admins get a notice and the email "{name} has used this month's
   AI budget".

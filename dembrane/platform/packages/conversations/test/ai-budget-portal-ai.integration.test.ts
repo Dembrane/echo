@@ -19,10 +19,13 @@ import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FakeTranscriber } from "@dembrane/transcription";
 import { Hono } from "hono";
 import postgres from "postgres";
+import { bffConversationRoutes } from "../src/bff/routes";
 import type { ConversationsDeps } from "../src/deps";
 import { ParticipantTokens } from "../src/participant-token";
+import { unsummarizedConversations } from "../src/pipeline/steps";
 import { conversationAudioRoutes } from "../src/v1/audio-routes";
 import { conversationV1Routes } from "../src/v1/routes";
+import { NO_TRANSCRIPT_SUMMARY } from "../src/v1/summary";
 import { admin, fakeModels, freshDatabase, localBucket, quiet } from "./pipeline-harness";
 
 // Explore refuses plainly at a used-up AI budget; retranscribe refuses with ai_budget.
@@ -77,6 +80,7 @@ run("portal AI and retranscribe at the AI budget", () => {
     });
     app.route("/", conversationV1Routes(d));
     app.route("/", conversationAudioRoutes(d));
+    app.route("/", bffConversationRoutes(d));
     app.onError((err, c) =>
       err instanceof PlatformError
         ? c.json(errorBody(err), err.status as 400)
@@ -174,6 +178,58 @@ run("portal AI and retranscribe at the AI budget", () => {
     );
     expect(res.status).toBe(200);
     expect(fakeCalls().length).toBeGreaterThan(0);
+  });
+
+  // A summary and the transcribed flag, as a finalized conversation has them, made old enough for the sweep.
+  async function summarised(spent: number) {
+    const s = await seed(spent);
+    await sql`update conversation set summary = 'People want chargers.', is_finished = true,
+      is_all_chunks_transcribed = true, created_at = now() - interval '1 hour'
+      where id = ${s.conversation}`;
+    return s;
+  }
+  const patch = (conversation: string, body: Record<string, unknown>) =>
+    app.request(`/api/v2/bff/conversations/${conversation}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const summaryOf = async (conversation: string) =>
+    (await sql`select summary from conversation where id = ${conversation}`)[0]?.summary;
+  const swept = async (conversation: string) =>
+    (await unsummarizedConversations(database.db, new Date(), 1000)).includes(conversation);
+
+  test("clearing a summary at zero budget is refused like a regenerate, so the sweep never redoes it", async () => {
+    const { conversation } = await summarised(LIMIT);
+    for (const summary of ["", NO_TRANSCRIPT_SUMMARY]) {
+      const res = await patch(conversation, { summary, participant_name: "Renamed" });
+      expect(res.status).toBe(402);
+      expect(await res.json()).toMatchObject({
+        code: "billing.tier_limit",
+        detail: { limit: "ai_budget" },
+      });
+    }
+    expect(await summaryOf(conversation)).toBe("People want chargers.");
+    expect(await swept(conversation)).toBe(false);
+  });
+
+  test("editing a summary, or saving an empty one that was already empty, still works at zero", async () => {
+    const { conversation } = await summarised(LIMIT);
+    expect((await patch(conversation, { summary: "Edited by hand." })).status).toBe(200);
+    expect(await summaryOf(conversation)).toBe("Edited by hand.");
+    // Blank text is not rewritten by the sweep, so it is an ordinary edit.
+    expect((await patch(conversation, { summary: "   " })).status).toBe(200);
+    expect(await swept(conversation)).toBe(false);
+    const empty = await seed(LIMIT);
+    expect((await patch(empty.conversation, { summary: "", participant_name: "N" })).status).toBe(
+      200,
+    );
+  });
+
+  test("below the limit a host may clear a summary, and the sweep writes a new one", async () => {
+    const { conversation } = await summarised(LIMIT - 1);
+    expect((await patch(conversation, { summary: "" })).status).toBe(200);
+    expect(await swept(conversation)).toBe(true);
   });
 
   test("retranscribe at zero budget is refused with ai_budget and clones nothing", async () => {
