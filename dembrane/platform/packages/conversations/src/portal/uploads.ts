@@ -20,6 +20,7 @@ import {
   LIVE_SOURCE,
   liveChunkCheck,
   liveStopNow,
+  refuseClosedAtZero,
   requireAudioStart,
   reserveUpload,
 } from "../free-audio";
@@ -183,6 +184,16 @@ export async function confirmUpload(
       if (!conv) throw new NotFoundError("conversation.not_found");
       const chunk = await reserveUpload(d, conv, key, size, write);
       if (chunk) return { chunk, recordingStop: null };
+    } else {
+      // A file too small to measure still reopens a finished conversation.
+      const conv = await store.conversation(conversationId);
+      if (!conv) throw new NotFoundError("conversation.not_found");
+      try {
+        await refuseClosedAtZero(d, conv);
+      } catch (err) {
+        await d.audio.delete(key).catch(() => undefined);
+        throw err;
+      }
     }
     const chunk = await addChunk(d, {
       ...chunkInput,

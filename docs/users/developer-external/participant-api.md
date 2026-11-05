@@ -76,7 +76,7 @@ Content-Type: application/json
 { "timestamp": "2026-10-13T09:30:00Z", "content": "What the participant typed." }
 ```
 
-An optional `source` defaults to `PORTAL_TEXT`. The text becomes a chunk that already has its transcript. When the project is not taking responses, the call is refused with `402` and the code `billing.tier_limit`, the same answer `initiate` gives for a typed start.
+An optional `source` defaults to `PORTAL_TEXT`. The text becomes a chunk that already has its transcript. When the project stops taking responses while a conversation is going on, the text is still accepted for a short grace, and the response then carries `recording_stop: "ai_budget"`: stop sending and finish. After the grace, or for a conversation that was already finished and processed, the call is refused with `402` and the code `billing.tier_limit`, the same answer `initiate` gives for a typed start.
 
 ### 5. Finish
 
@@ -84,7 +84,7 @@ An optional `source` defaults to `PORTAL_TEXT`. The text becomes a chunk that al
 POST /api/participant/conversations/:conversation_id/finish
 ```
 
-When the conversation is finished and every chunk is transcribed, dembrane merges the audio and writes the summary. A conversation that gets no new chunk for 5 minutes is finished automatically. Audio that arrives after that reopens the conversation, and the next finish processes it again.
+When the conversation is finished and every chunk is transcribed, dembrane merges the audio and writes the summary. A conversation that gets no new chunk for 5 minutes is finished automatically. Audio or text that arrives after that reopens the conversation, and the next finish processes it again. The exception: when the project is not taking recordings because the account's monthly AI budget is used up, audio and text for a conversation that is already finished and processed are refused with `402` and the code `billing.tier_limit` instead of reopening it.
 
 To follow the result, subscribe to [webhooks](./webhooks.md) for `conversation.transcribed` and `conversation.summarized`.
 
@@ -100,7 +100,7 @@ To follow the result, subscribe to [webhooks](./webhooks.md) for `conversation.t
 | Report subscriptions | 20 per 10 minutes per address |
 
 - `get-upload-url` answers `500` with the code `upload.url_failed` when the rate limit is hit and when the project is closed. It does not answer `429`.
-- A file under 1024 bytes is kept as a chunk marked "Audio not playable".
+- A file under 1024 bytes is kept as a chunk marked "Audio not playable", except that it is refused like any other audio for a finished conversation at a used-up AI budget.
 - A project that is closed to new conversations refuses the other participant calls with `403` and the code `conversation.not_open`.
 
 ## All the endpoints

@@ -84,6 +84,25 @@ export function isClosed(c: Partial<Closable>): boolean {
   return Boolean(c.is_finished && (c.is_all_chunks_transcribed || c.merged_audio_path));
 }
 
+// At zero a finished, finalized conversation takes no more chunks: one would reopen it. Fails open.
+export async function refuseClosedAtZero(
+  d: AudioDeps,
+  conv: Pick<ConversationRow, "id" | "project_id"> & Partial<Closable>,
+): Promise<void> {
+  if (!isClosed(conv)) return;
+  let gone = false;
+  try {
+    const a = await allowanceForProject(d.db, conv.project_id, d.now());
+    gone = a !== null && (await aiBudgetGone(d, a, conv.project_id));
+  } catch (err) {
+    d.logger?.error(
+      { err, conversationId: conv.id, signal: "free_audio.closed_check_failed" },
+      "closed conversation check failed",
+    );
+  }
+  if (gone) throw freeLimitError("ai_budget");
+}
+
 // Past the grace from a recording's first AI budget stop, its chunks are refused.
 function aiGraceOver(stoppedAt: string | null, now: Date): boolean {
   return stoppedAt !== null && now.getTime() > Date.parse(stoppedAt) + LIVE_GRACE_SECONDS * 1000;

@@ -382,6 +382,30 @@ run("AI budget: recording and uploads", () => {
     }).toEqual({ summary: row.summary, finished: true, stamped: false, chunks: 1, finalizes: 1 });
   });
 
+  test("a tiny upload confirmed at zero does not reopen a finished conversation", async () => {
+    const { p, cid, summary } = await summarised();
+    // The upload URL was issued before zero; the confirm comes after.
+    await spend(p);
+    const chunkId = newId();
+    const key = `conversation/${cid}/chunks/${chunkId}-rec.webm`;
+    await h.bucket.storage.put(key, new Uint8Array(100));
+    const res = await post(`/api/participant/conversations/${cid}/confirm-upload`, {
+      chunk_id: chunkId,
+      file_url: h.bucket.urls.fileUrl(key),
+      timestamp: new Date().toISOString(),
+      source: "PORTAL_UPLOAD",
+    });
+    expect(res.status).toBe(402);
+    expect((await detail(res)).limit).toBe("ai_budget");
+    expect(await h.bucket.storage.size(key)).toBeNull();
+    const [c] = await h.sql`select summary, is_finished from conversation where id = ${cid}`;
+    expect({
+      summary: c?.summary,
+      finished: c?.is_finished,
+      chunks: (await chunkIds(cid)).length,
+    }).toEqual({ summary, finished: true, chunks: 1 });
+  });
+
   test("finishing again with nothing new runs no second summary", async () => {
     const { p, cid, summary } = await summarised();
     await spend(p);

@@ -11,7 +11,10 @@ const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
-	onRecordingStop: undefined as ((r: string) => void) | undefined,
+	onChunkAccepted: undefined as (() => void) | undefined,
+	onRecordingStop: undefined as
+		| ((r: string, accepted: boolean) => void)
+		| undefined,
 	project: {} as Record<string, unknown>,
 	recordingTime: 0,
 	stopRecording: vi.fn(),
@@ -40,8 +43,10 @@ vi.mock("./hooks", () => ({
 		isLoading: false,
 	}),
 	useUploadConversationChunk: (options: {
-		onRecordingStop?: (r: string) => void;
+		onChunkAccepted?: () => void;
+		onRecordingStop?: (r: string, accepted: boolean) => void;
 	}) => {
+		state.onChunkAccepted = options.onChunkAccepted;
 		state.onRecordingStop = options.onRecordingStop;
 		return { mutateAsync: vi.fn() };
 	},
@@ -220,7 +225,7 @@ it("opens the account wrap-up when a chunk comes back with recording_stop ai_bud
 	state.isRecording = true;
 	renderPage();
 
-	act(() => state.onRecordingStop?.("ai_budget"));
+	act(() => state.onRecordingStop?.("ai_budget", true));
 
 	expect(state.stopRecording).toHaveBeenCalledTimes(1);
 	expect(
@@ -228,6 +233,46 @@ it("opens the account wrap-up when a chunk comes back with recording_stop ai_bud
 			"Recording has stopped for now. Everything you recorded is saved.",
 		),
 	).toBeTruthy();
+});
+
+// Nothing recorded here was kept: "everything you recorded is saved" would be false.
+it.each([
+	["a finished conversation reopened at zero", [{ id: "ch-1" }]],
+	["an empty conversation finished before recording started", []],
+])(
+	"shows not-taking when the AI budget refuses and nothing was kept (%s)",
+	async (_case, chunks) => {
+		state.taking = true;
+		state.chunks = chunks;
+		state.isRecording = true;
+		state.recordingTime = 30;
+		renderPage();
+
+		act(() => state.onRecordingStop?.("ai_budget", false));
+
+		expect(state.stopRecording).toHaveBeenCalledTimes(1);
+		expect(
+			await screen.findByTestId("portal-not-taking-recordings"),
+		).toBeTruthy();
+		expect(screen.queryByText(/Everything you recorded is saved/)).toBeNull();
+	},
+);
+
+it("keeps the wrap-up when a chunk was kept here before the refusal", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+
+	act(() => state.onChunkAccepted?.());
+	act(() => state.onRecordingStop?.("ai_budget", false));
+
+	expect(
+		await screen.findByText(
+			"Recording has stopped for now. Everything you recorded is saved.",
+		),
+	).toBeTruthy();
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
 });
 
 it.each([
