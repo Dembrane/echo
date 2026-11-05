@@ -14,6 +14,19 @@ struct AskView: View {
     private var inputEmpty: Bool { input.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
+        if model.hasAIConsent {
+            chat
+        } else {
+            // Asking sends the question and the chosen conversations to AI.
+            NavigationStack {
+                AIConsentView()
+                    .navigationTitle("Ask")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
+
+    private var chat: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 contextBar

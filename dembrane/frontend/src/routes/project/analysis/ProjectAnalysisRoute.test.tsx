@@ -147,16 +147,13 @@ it.each(["ai_budget"])(
 		await act(async () => {
 			fireEvent.click(await screen.findByRole("button", { name: "Prepare" }));
 		});
-		expect(
-			await screen.findByTestId("pricing-configurator-modal"),
-		).toBeTruthy();
+		expect(await screen.findByTestId("upgrade-modal")).toBeTruthy();
 		await act(async () => {
 			await new Promise((r) => setTimeout(r, 50));
 		});
-		expect(screen.queryByTestId("pricing-configurator-modal")).toBeTruthy();
-		const text =
-			screen.getByTestId("pricing-configurator-modal").textContent ?? "";
-		expect(text).toContain("This month's AI budget is used up.");
+		expect(screen.queryByTestId("upgrade-modal")).toBeTruthy();
+		const text = screen.getByTestId("upgrade-modal").textContent ?? "";
+		expect(text).toContain("This month's AI is used up");
 		expect(text).toContain("You were trying to run an analysis.");
 		// The wall answers it; no inline notice links elsewhere.
 		expect(screen.queryByText("See plans")).toBeNull();

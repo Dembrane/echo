@@ -141,11 +141,12 @@ The billing role has no access to projects. See
 
 Reports need no paid plan. On the Free plan a report uses the account's monthly AI
 allowance, with no count of reports. From 80% the report form shows a banner. When it is
-used up, generating or scheduling a report opens the upgrade popup ("This month's AI
-budget is used up."), and a scheduled report that is due does not run: it ends in error
+used up, generating or scheduling a report opens the upgrade popup ("This month's AI is
+used up"), and a scheduled report that is due does not run: it ends in error
 with "This month's AI budget is used up.". A report that has started always finishes. A
 sample project keeps one report of its own; its upgrade popup says "Sample projects allow one
-report." and offers to create your own project or answer 5 quick questions for a paid plan. See [tiers & billing](./tiers-and-billing.md).
+report" and "Create your own project to keep going.", and offers to continue on
+dembrane.com. See [tiers & billing](./tiers-and-billing.md).
 
 A finished report can also trigger a webhook, "Report generated". Webhooks are set up under
 "Automation" (Beta) by a workspace admin and need the Changemaker plan or higher. See

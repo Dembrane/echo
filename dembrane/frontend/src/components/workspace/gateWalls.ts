@@ -17,7 +17,7 @@ export type WallKey =
 	 * The one entry that is not a wall.
 	 *
 	 * The billing page of an account with nothing to pay (free, or comped)
-	 * carries the configurator too. Managed accounts and accounts with an
+	 * carries the upgrade prompt too. Managed accounts and accounts with an
 	 * existing subscription are the two exceptions and keep their own panels.
 	 * Nothing is blocked here, so there is no control to hang a popover on and
 	 * no tier to require. It opens the modal directly and reports
@@ -48,7 +48,7 @@ export type WallKey =
  *
  * These walls are about data the person already has, not about a feature they
  * do not. The recording kept running and the participants never met a wall,
- * so the modal opens with the cap line above the free plan block instead of
+ * so the prompt says that nothing they recorded is lost instead of
  * naming a feature.
  *
  * A locked data wall has no popover. It opens the modal directly, so
@@ -58,15 +58,6 @@ const LOCKED_DATA_WALLS: WallKey[] = ["transcription_cap"];
 
 export function isLockedDataWall(wall: WallKey): boolean {
 	return LOCKED_DATA_WALLS.includes(wall);
-}
-
-/** The variant the configurator renders for this wall. */
-export function variantFor(
-	wall: WallKey,
-): "default" | "transcription_cap" | "ai_budget" | "sample_cap" {
-	if (wall === "ai_budget") return "ai_budget";
-	if (wall === "sample_cap") return "sample_cap";
-	return isLockedDataWall(wall) ? "transcription_cap" : "default";
 }
 
 /** The AI action a free account was refused when the budget ran out. */
@@ -153,48 +144,111 @@ export function wallPopoverLine(wall: WallKey): string {
 }
 
 /**
- * What the person was trying to do when they met this wall.
+ * The title of the upgrade prompt: what the person just ran into, in their
+ * words, before anything asks them to go anywhere. A monthly allowance says it
+ * is used up, a paid feature says what it is, a count says the free plan's
+ * number. The billing page blocks nothing, so it opens on the plain offer to
+ * find what fits.
  *
- * It fills the opening line, "You were trying to {action}.", which is the
- * first thing the modal says. The modal still names no feature and no tier:
- * it names the ATTEMPT, which the app already knows, because the wall is
- * keyed. That is the whole of the per-wall variation, and everything under it
- * is byte for byte the same from every mount.
- *
- * A phrase, never a sentence: it is read inside that line, so it starts
- * lowercase and carries no full stop of its own.
- *
- * An empty string means there is no attempt to name, and the opening falls
- * back to "You are on the free plan.":
- *   - `billing_page` because it is not a wall. Nothing is blocked there, so
- *     nobody was stopped from doing anything.
- *   - any mount that names no wall at all, which is the website mount and the
- *     configurator used standalone.
+ * No line names a tier or a number: staff edit the free limits.
  */
-export function wallActionLine(wall: WallKey | string | undefined): string {
-	if (!wall) return "";
-	const actions: Record<WallKey, string> = {
-		// Fallback only: AiBudgetWall names the refused action through aiActionLine.
-		ai_budget: t`use AI features`,
-		billing_page: "",
-		chat_voice_cap: t`use your voice in chat`,
-		custom_logo: t`add your logo`,
-		event_cta: t`hide the dembrane event invitation`,
-		free_allowance: t`go beyond this month's free allowance`,
-		org_cap: t`create more organisations`,
-		private_workspace: t`make a workspace private`,
-		project_cap: t`add more projects`,
-		recording_project: t`record in every project`,
-		// Never rendered: the sample_cap opening names the cap, not an attempt.
-		sample_cap: "",
-		// The one locked data wall. Nothing was blocked in the room: the
-		// recording ran and the participants never met a wall. What stopped is
-		// the transcription of what they said.
-		transcription_cap: t`have your recordings transcribed`,
-		transcripts_view: t`see transcripts`,
-		upload_cap: t`upload recordings`,
-		webhooks: t`use webhooks`,
-		workspace_cap: t`add a workspace`,
+export function wallHandoverTitle(wall: WallKey): string {
+	const titles: Record<WallKey, string> = {
+		ai_budget: t`This month's AI is used up`,
+		billing_page: t`Let's find what fits you`,
+		chat_voice_cap: t`You've reached the limit for speaking in chat`,
+		custom_logo: t`Your own logo comes with a paid plan`,
+		event_cta: t`Hiding the dembrane event invitation comes with a paid plan`,
+		free_allowance: t`You've used part of this month's free allowance`,
+		org_cap: t`The free plan includes one organisation`,
+		private_workspace: t`Private workspaces come with a paid plan`,
+		project_cap: t`You've reached the free plan's project limit`,
+		recording_project: t`On the free plan, one project takes recordings`,
+		// The cap is named by sampleCapHandover; this is only its fallback.
+		sample_cap: t`Sample projects have their own limits`,
+		transcription_cap: t`You've used this month's free transcription`,
+		transcripts_view: t`Transcripts come with a paid plan`,
+		upload_cap: t`Uploading recordings comes with a paid plan`,
+		webhooks: t`Webhooks come with a paid plan`,
+		workspace_cap: t`The free plan covers one workspace`,
 	};
-	return actions[wall as WallKey] ?? "";
+	return titles[wall] ?? titles.billing_page;
+}
+
+/**
+ * The sentence that opens the upgrade prompt's body: going further needs a
+ * paid plan. Only the walls whose title names what was used up carry it. A
+ * paid feature's title already says it comes with a paid plan, so saying it
+ * again would repeat, and the billing page blocks nothing.
+ */
+export function wallHandoverLead(wall: WallKey): string {
+	const keepGoing = t`A paid plan lets you keep going.`;
+	const leads: Record<WallKey, string> = {
+		// aiBudgetHandover writes this wall's lead.
+		ai_budget: keepGoing,
+		billing_page: "",
+		chat_voice_cap: keepGoing,
+		custom_logo: "",
+		event_cta: "",
+		free_allowance: keepGoing,
+		org_cap: keepGoing,
+		private_workspace: "",
+		project_cap: keepGoing,
+		recording_project: keepGoing,
+		// sampleCapHandover writes this wall's lead.
+		sample_cap: "",
+		transcription_cap: keepGoing,
+		transcripts_view: "",
+		upload_cap: "",
+		webhooks: "",
+		workspace_cap: keepGoing,
+	};
+	return leads[wall] ?? "";
+}
+
+/**
+ * The AI budget wall's title and lead. Used up, it names the refused action
+ * (the allowance card refuses none, so it names the allowance) and the reset
+ * day. Not used up yet (the 80% banner), it only offers more AI.
+ */
+export function aiBudgetHandover({
+	action: refused,
+	resetDay,
+	usedUp,
+}: {
+	action?: AiAction;
+	resetDay: string | null;
+	usedUp: boolean;
+}): { title: string; lead: string } {
+	const allowance = t`You're on the free plan, which includes a monthly AI allowance.`;
+	if (!usedUp) {
+		return {
+			lead: t`A paid plan gives you more AI every month.`,
+			title: t`Your free plan includes a monthly AI allowance`,
+		};
+	}
+	const action = refused ? aiActionLine(refused) : "";
+	const opening = action ? t`You were trying to ${action}.` : allowance;
+	const paused = resetDay
+		? t`AI features and new recordings are paused until ${resetDay}.`
+		: t`AI features and new recordings are paused until next month.`;
+	return {
+		lead: `${opening} ${paused} ${t`A paid plan lets you keep going.`}`,
+		title: wallHandoverTitle("ai_budget"),
+	};
+}
+
+/** The sample project wall's title and lead: the cap reached, and the way on. */
+export function sampleCapHandover(
+	cap: SampleCap | undefined,
+	questions: number | null | undefined,
+): { title: string; lead: string } {
+	const count = questions ?? SAMPLE_CHAT_QUESTIONS;
+	return {
+		lead: t`Create your own project to keep going.`,
+		title:
+			cap === "report"
+				? t`Sample projects allow one report`
+				: t`Sample projects allow ${count} questions`,
+	};
 }

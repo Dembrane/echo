@@ -69,7 +69,7 @@ use none of it.
 
 When the month's AI is used up:
 
-- An AI action opens the upgrade popup: "This month's AI budget is used up." It names what you
+- An AI action opens the upgrade popup: "This month's AI is used up". It names what you
   tried and the date AI comes back. Regenerating a conversation's summary or title is an AI
   action too, and so is clearing a summary.
 - New recordings and uploads stop, and a recording that is going on stops, as when the hours

@@ -11,7 +11,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
 import {
@@ -111,7 +111,7 @@ function AiMeterRow({ ai }: { ai: NonNullable<FreeAllowance["ai"]> }) {
 export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 	const { i18n } = useLingui();
 	const { data } = useFreeAllowance(workspaceId);
-	const configurator = usePricingConfigurator("free_allowance");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (!data?.free) return null;
 
@@ -168,7 +168,7 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 					<Group>
 						<Button
 							size="xs"
-							onClick={configurator.open}
+							onClick={upgradeHandlers.open}
 							data-testid="free-allowance-upgrade"
 						>
 							<Trans>Tell us what you need</Trans>
@@ -177,8 +177,8 @@ export function FreeAllowanceCard({ workspaceId }: { workspaceId: string }) {
 				)}
 			</Stack>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier="free"
 				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade

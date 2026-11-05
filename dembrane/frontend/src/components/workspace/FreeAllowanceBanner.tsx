@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { AiBudgetWall } from "@/components/workspace/AiBudgetWall";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import type { AiAction } from "@/components/workspace/gateWalls";
@@ -40,9 +40,7 @@ export function FreeAllowanceBanner({
 }) {
 	const { i18n } = useLingui();
 	const { data } = useFreeAllowance(workspaceId);
-	const configurator = usePricingConfigurator(
-		feature === "ai" ? "ai_budget_banner" : "free_allowance",
-	);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	const aiState = feature === "ai" ? aiBannerState(data) : null;
 	const shown =
@@ -84,7 +82,7 @@ export function FreeAllowanceBanner({
 					<Button
 						size="xs"
 						variant="light"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("free-allowance-banner-upgrade")}
 					>
 						{t`See upgrade options`}
@@ -93,8 +91,8 @@ export function FreeAllowanceBanner({
 			</Stack>
 			{feature === "ai" ? (
 				<AiBudgetWall
-					opened={configurator.opened}
-					onClose={configurator.close}
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
 					action={action}
 					usedUp={!!aiState?.exhausted}
 					resetsAt={data.resets_at}
@@ -102,8 +100,8 @@ export function FreeAllowanceBanner({
 				/>
 			) : (
 				<UpgradeModal
-					opened={configurator.opened}
-					onClose={configurator.close}
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
 					currentTier="free"
 					requiredTier={SELLABLE_TIER}
 					canRequestUpgrade

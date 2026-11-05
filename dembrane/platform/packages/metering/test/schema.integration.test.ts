@@ -82,11 +82,11 @@ run("ai spend schema", () => {
         .map((s) => s.replace(/^\s*--.*$/gm, "").trim())
         .filter(Boolean);
     expect(
-      (await statements("0045_expand_ai_spend")).some((s) => s.includes('"billing_account"')),
+      (await statements("0046_expand_ai_spend")).some((s) => s.includes('"billing_account"')),
     ).toBe(false);
-    // 0047 is a no-op; its conversation column moved into 0048.
-    expect(await statements("0047_expand_ai_recording_stop")).toEqual(["SELECT 1;"]);
-    const last = await statements("0048_expand_retire_free_counts");
+    // 0048 is a no-op; its conversation column moved into 0049.
+    expect(await statements("0048_expand_ai_recording_stop")).toEqual(["SELECT 1;"]);
+    const last = await statements("0049_expand_retire_free_counts");
     // The deletes, then the hot tables: conversation, and billing_account at the very end.
     expect(last.map((s) => s.split(" ").slice(0, 3).join(" "))).toEqual([
       'DELETE FROM "free_usage"',

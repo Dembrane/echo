@@ -148,13 +148,13 @@ page built from recent conversations.
 
 - Free plan: chat and the assistant use the account's monthly AI allowance, with no count of
   chats or questions. From 80% a banner on new chat shows how much is used. When it is used
-  up, sending opens the upgrade popup ("This month's AI budget is used up."), and an assistant
+  up, sending opens the upgrade popup ("This month's AI is used up"), and an assistant
   run that is going on stops before its next step. A reply that has started always finishes.
   See [tiers, billing and usage](./tiers-billing-and-usage.md).
 - Free plan, sample projects: the chats of a sample project take 10 questions in all, then
   show "Upgrade to continue": "You've used this sample project's 10 questions." Its popup
-  says "Sample projects allow 10 questions." and offers to create your own project or answer
-  5 quick questions for a paid plan. They use none of the AI allowance.
+  says "Sample projects allow 10 questions" and "Create your own project to keep going.", and
+  offers to continue on dembrane.com. They use none of the AI allowance.
 - No paid plan is needed for either chat mode.
 
 Answers in both modes come from Gemini language models served from an EU endpoint.

@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { PauseCircleIcon, UploadSimpleIcon } from "@phosphor-icons/react";
-import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	recordingPaused,
@@ -27,7 +27,7 @@ export const RecordingPausedNotice = ({
 }: RecordingPausedNoticeProps) => {
 	const { data } = useProjectRecording(projectId);
 	const useForRecordings = useUseForRecordings(projectId);
-	const configurator = usePricingConfigurator("recording_project");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (!recordingPaused(data)) return null;
 	const name = projectName(data.recording_project.name);
@@ -60,7 +60,7 @@ export const RecordingPausedNotice = ({
 					<Button
 						size="xs"
 						variant="subtle"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("recording-paused-notice-upgrade")}
 					>
 						<Trans>Record in every project</Trans>
@@ -68,8 +68,8 @@ export const RecordingPausedNotice = ({
 				</Group>
 			</Stack>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier="free"
 				requiredTier={SELLABLE_TIER}
 				canRequestUpgrade

@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { AiBudgetWall } from "@/components/workspace/AiBudgetWall";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -31,7 +31,7 @@ export function MapFreeNotice({
 	const { i18n } = useLingui();
 	const applies = useAllowanceApplies(projectId).applies && mapOn;
 	const allowance = useFreeAllowance(applies ? workspaceId : null);
-	const configurator = usePricingConfigurator("map_ai_budget");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	const data = allowance.data;
 	if (!applies || !data?.free || !data.ai?.exhausted) return null;
@@ -56,7 +56,7 @@ export function MapFreeNotice({
 					<Button
 						size="xs"
 						variant="light"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("map-free-upgrade")}
 					>
 						{t`See upgrade options`}
@@ -64,8 +64,8 @@ export function MapFreeNotice({
 				</Group>
 			</Stack>
 			<AiBudgetWall
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				action="map"
 				resetsAt={data.resets_at}
 				workspaceId={workspaceId}

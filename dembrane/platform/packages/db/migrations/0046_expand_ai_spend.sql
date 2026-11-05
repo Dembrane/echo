@@ -1,5 +1,5 @@
 -- Model calls carry their payer, token kinds and cost; prices, daily FX and daily spend get
--- their own tables. The billing_account override columns are in 0048, the last step of the run. Safe to run twice.
+-- their own tables. The billing_account override columns are in 0049, the last step of the run. Safe to run twice.
 CREATE TABLE IF NOT EXISTS "ai_fx_rate" (
 	"day" date PRIMARY KEY NOT NULL,
 	"usd_to_eur" numeric NOT NULL,

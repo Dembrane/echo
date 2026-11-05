@@ -17,6 +17,7 @@ import {
 	getSecurityReportFormUrl,
 } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { BookingLinks } from "@/lib/links";
 import { QRCode } from "./QRCode";
 
 interface FeedbackPortalModalProps {
@@ -129,11 +130,7 @@ export const FeedbackPortalModal = ({
 							<Text size="xs" c="dimmed">
 								<Trans>Or prefer to chat directly?</Trans>
 							</Text>
-							<Anchor
-								href="https://cal.com/sameer-dembrane"
-								target="_blank"
-								size="xs"
-							>
+							<Anchor href={BookingLinks.BOOK_A_CALL} target="_blank" size="xs">
 								<Trans>Book a call with us</Trans>
 							</Anchor>
 						</Group>

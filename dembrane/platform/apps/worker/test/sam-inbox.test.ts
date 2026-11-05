@@ -229,6 +229,7 @@ describe("outboxes to sam", () => {
     await runForwardBookings({
       store: {
         unforwardedBookings: async () => rows.filter((r) => !stamped.includes(r.id)),
+        unforwardedEnquiries: async () => [],
         update: async (id: string) => {
           stamped.push(id);
           return null as never;

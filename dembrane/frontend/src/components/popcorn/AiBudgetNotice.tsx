@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import { usePricingConfigurator } from "@/components/pricing";
+import { useDisclosure } from "@mantine/hooks";
 import { AiBudgetWall } from "@/components/workspace/AiBudgetWall";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { formatResetDay } from "@/lib/freeTier";
@@ -20,7 +20,7 @@ export function AiBudgetNotice({
 }) {
 	const { i18n } = useLingui();
 	const allowance = useFreeAllowance(status?.exhausted ? workspaceId : null);
-	const configurator = usePricingConfigurator("popcorn_ai_budget");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	if (!status?.exhausted) return null;
 
@@ -44,7 +44,7 @@ export function AiBudgetNotice({
 					<Button
 						size="xs"
 						variant="light"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						{...testId("popcorn-ai-budget-upgrade")}
 					>
 						{t`See upgrade options`}
@@ -52,8 +52,8 @@ export function AiBudgetNotice({
 				</Group>
 			</Stack>
 			<AiBudgetWall
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				action="popcorn"
 				resetsAt={resetsAt}
 				workspaceId={workspaceId}

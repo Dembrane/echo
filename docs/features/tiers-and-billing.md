@@ -69,9 +69,10 @@ recordings stop until {date}."
 
 When the month's AI is used up:
 
-- An AI action opens the upgrade popup instead: "This month's AI budget is used up." and
-  "AI features and new recordings are paused until {date}. Upgrade to keep going now."
-  It names what you tried, such as "You were trying to ask in chat.". Regenerating a
+- An AI action opens the upgrade popup instead, titled "This month's AI is used up". It
+  names what you tried and the reset day, such as "You were trying to ask in chat. AI
+  features and new recordings are paused until {date}.", and offers to continue on
+  dembrane.com. Regenerating a
   conversation's summary or title is an AI action too, and so is clearing a summary, which
   would have it written again.
 - The banner reads "This month's AI is used up. AI features and new recordings are paused

@@ -8,7 +8,7 @@ const run = admin ? describe : describe.skip;
 const dbName = `allowance_schema_${process.pid}`;
 const ACCOUNT = "ba000000-0000-4000-8000-000000000001";
 const OTHER = "ba000000-0000-4000-8000-000000000002";
-const RETIRE = new URL("../../db/migrations/0048_expand_retire_free_counts.sql", import.meta.url);
+const RETIRE = new URL("../../db/migrations/0049_expand_retire_free_counts.sql", import.meta.url);
 const OLD_USAGE = ["chats", "reports", "maps", "popcorn_analyses"];
 const OLD_LIMITS = [
   "chats_month",
@@ -74,7 +74,7 @@ run("tier_limit and free_usage tables", () => {
     expect(rows).toHaveLength(0);
   });
 
-  test("0048 deletes the retired counts and keeps everything else", async () => {
+  test("0049 deletes the retired counts and keeps everything else", async () => {
     const period = "2026-09-01T00:00:00Z";
     for (const key of OLD_USAGE)
       await sql`insert into free_usage (billing_account_id, period_start, key, amount)

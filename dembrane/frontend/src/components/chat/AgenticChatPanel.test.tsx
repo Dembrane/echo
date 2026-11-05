@@ -328,21 +328,21 @@ const renderPanel = () =>
 		</MemoryRouter>,
 	);
 
-const configuratorText = () =>
+const upgradePromptText = () =>
 	screen
-		.queryAllByTestId("pricing-configurator-modal")
+		.queryAllByTestId("upgrade-modal")
 		.map((m) => m.textContent ?? "")
 		.join("");
 
-// The text of the configurator that opened (Mantine can leave an empty root beside it).
-const openedConfigurator = async () => {
+// The text of the upgrade prompt that opened (Mantine can leave an empty root beside it).
+const openedUpgradePrompt = async () => {
 	let text = "";
 	await waitFor(() => {
 		text = screen
-			.getAllByTestId("pricing-configurator-modal")
+			.getAllByTestId("upgrade-modal")
 			.map((m) => m.textContent ?? "")
 			.join(" ");
-		expect(text).toContain("Step 1 of 6");
+		expect(text).toContain("Continue on dembrane.com");
 	});
 	return text;
 };
@@ -746,10 +746,10 @@ describe("AgenticChatPanel, voice input", () => {
 		).not.toHaveBeenCalled();
 		expect(screen.queryByTestId("chat-voice-recording-bar")).toBeNull();
 		expect(transcribeMock).not.toHaveBeenCalled();
-		// The dead-looking button still has somewhere to send the host: the needs
-		// form, opened on the attempt the voice cap wall names.
+		// The dead-looking button still has somewhere to send the host: the
+		// upgrade prompt, titled for the voice cap wall.
 		expect(
-			await screen.findByText(/You were trying to use your voice in chat/),
+			await screen.findByText(/You.ve reached the limit for speaking in chat/),
 		).toBeTruthy();
 	});
 
@@ -798,8 +798,8 @@ describe("AgenticChatPanel, voice input", () => {
 			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
 		});
 
-		const modal = await openedConfigurator();
-		expect(modal).toContain("This month's AI budget is used up.");
+		const modal = await openedUpgradePrompt();
+		expect(modal).toContain("This month's AI is used up");
 		expect(modal).toContain("paused until 1 December 2026");
 		expect(modal).toContain("You were trying to use your voice in chat.");
 		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
@@ -832,20 +832,20 @@ describe("AgenticChatPanel, voice input", () => {
 		await act(async () => {
 			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
 		});
-		expect(await openedConfigurator()).toContain(
+		expect(await openedUpgradePrompt()).toContain(
 			"You were trying to use your voice in chat.",
 		);
 		fireEvent.keyDown(document.activeElement ?? document.body, {
 			key: "Escape",
 		});
-		await waitFor(() => expect(configuratorText()).toBe(""));
+		await waitFor(() => expect(upgradePromptText()).toBe(""));
 
 		const input = await screen.findByTestId("chat-input-textarea");
 		fireEvent.change(input, { target: { value: "one more?" } });
 		await act(async () => {
 			fireEvent.click(screen.getByTestId("chat-send-button"));
 		});
-		expect(await openedConfigurator()).toContain(
+		expect(await openedUpgradePrompt()).toContain(
 			"You were trying to ask the assistant.",
 		);
 	});
@@ -874,7 +874,7 @@ describe("AgenticChatPanel, voice input", () => {
 		});
 
 		expect(await screen.findByTestId("chat-voice-error")).toBeTruthy();
-		expect(configuratorText()).toBe("");
+		expect(upgradePromptText()).toBe("");
 	});
 
 	it("shows any other 402 as a voice error, not the free wall", async () => {
@@ -901,7 +901,7 @@ describe("AgenticChatPanel, voice input", () => {
 			"Something went wrong while transcribing",
 		);
 		expect(
-			screen.queryByText(/You were trying to use your voice in chat/),
+			screen.queryByText(/You.ve reached the limit for speaking in chat/),
 		).toBeNull();
 	});
 
@@ -997,15 +997,12 @@ describe("AgenticChatPanel, free turn limit", () => {
 		expect(document.body.textContent).toContain(
 			"You've used this sample project's 7 questions.",
 		);
-		const modal = await openedConfigurator();
+		const modal = await openedUpgradePrompt();
 		// The cap comes from the refusal.
-		expect(modal).toContain("Sample projects allow 7 questions.");
-		expect(modal).toContain(
-			"Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan.",
-		);
-		expect(modal).not.toContain("requires a paid plan");
+		expect(modal).toContain("Sample projects allow 7 questions");
+		expect(modal).toContain("Create your own project to keep going.");
 		expect(modal).not.toContain("monthly AI allowance");
-		expect(modal).not.toContain("This month's AI budget is used up.");
+		expect(modal).not.toContain("This month's AI is used up");
 	});
 
 	it("opens the AI wall, not an error, when this month's AI is used up", async () => {
@@ -1034,8 +1031,8 @@ describe("AgenticChatPanel, free turn limit", () => {
 		await act(async () => {
 			fireEvent.click(screen.getByTestId("chat-send-button"));
 		});
-		const modal = await openedConfigurator();
-		expect(modal).toContain("This month's AI budget is used up.");
+		const modal = await openedUpgradePrompt();
+		expect(modal).toContain("This month's AI is used up");
 		expect(modal).toContain("paused until 1 December 2026");
 		expect(modal).toContain("You were trying to ask the assistant.");
 		expect(document.body.textContent).not.toContain(TURN_CARD);

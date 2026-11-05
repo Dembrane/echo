@@ -351,7 +351,7 @@ msgstr "{0, plural, one {# projet} other {# projets}}"
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
 #: src/components/invite/WorkspaceSelectList.tsx:128
-#: src/components/billing/BillingManager.tsx:1262
+#: src/components/billing/BillingManager.tsx:1261
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# place} other {# places}}"
 
@@ -363,7 +363,7 @@ msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at
 msgstr "{0, plural, one {# place} other {# places}} · {1} maintenant · +{2}/{cadence} au renouvellement"
 
 #. placeholder {0}: overview.available_seats
-#: src/components/billing/BillingManager.tsx:1266
+#: src/components/billing/BillingManager.tsx:1265
 msgid "{0, plural, one {# seat} other {# seats}} paid for this period and unused. Invite someone to fill them at no charge until renewal."
 msgstr "{0, plural, one {# place payée} other {# places payées}} pour cette période et non utilisée{0, plural, one {} other {s}}. Invitez quelqu'un pour les occuper sans frais jusqu'au renouvellement."
 
@@ -491,19 +491,19 @@ msgstr "{0} (partenaire)"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1350
+#: src/components/billing/BillingManager.tsx:1349
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr "{0} / siège / mois × {1}, facturé annuellement. Hors VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1355
+#: src/components/billing/BillingManager.tsx:1354
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr "{0} / siège × {1}. Hors VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1345
+#: src/components/billing/BillingManager.tsx:1344
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr "{0} / siège × {1}. Non facturé après cette période."
 
@@ -700,7 +700,7 @@ msgstr "{0} sélectionné(s)"
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
 #. placeholder {2}: pendingInvites === 1 ? "invite is" : "invites are"
-#: src/components/billing/BillingManager.tsx:1364
+#: src/components/billing/BillingManager.tsx:1363
 msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "Le total {0} passe à {1} quand {pendingInvites} {2} en attente"
 
@@ -871,7 +871,7 @@ msgstr "{currentCadence} min"
 msgid "{days} days"
 msgstr "{days} jours"
 
-#: src/components/billing/BillingManager.tsx:1373
+#: src/components/billing/BillingManager.tsx:1372
 msgid "{discountPct}% discount applied"
 msgstr "Remise de {discountPct} % appliquée"
 
@@ -1013,7 +1013,7 @@ msgstr "{overflow} autres personnes"
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# conversation n'a pas pu être incluse dans ce chat. Démarrez un autre chat pour le reste.} other {# conversations n'ont pas pu être incluses dans ce chat. Démarrez un autre chat pour le reste.}}"
 
-#: src/components/billing/BillingManager.tsx:1279
+#: src/components/billing/BillingManager.tsx:1278
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} invitation(s) en attente. Prises en compte dès acceptation."
 
@@ -1068,7 +1068,7 @@ msgstr "{s} s"
 msgid "{s}s"
 msgstr "{s} s"
 
-#: src/components/billing/BillingManager.tsx:344
+#: src/components/billing/BillingManager.tsx:343
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# place} other {# places}}"
 
@@ -1224,7 +1224,7 @@ msgstr "1 heure"
 #~ msgid "1 view"
 #~ msgstr "1 vue"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:699
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. Vous fournissez une URL où vous souhaitez recevoir les notifications"
 
@@ -1240,7 +1240,7 @@ msgstr "Il y a 2 mois"
 msgid "2 to 5."
 msgstr "2 à 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:704
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:705
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Lorsqu'un événement de conversation ou de rapport se produit, nous envoyons automatiquement les données à votre URL"
 
@@ -1261,7 +1261,7 @@ msgstr "3 jours"
 msgid "3 months ago"
 msgstr "Il y a 3 mois"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:710
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:711
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Votre système reçoit les données et peut agir sur elles (par exemple, enregistrer dans une base de données, envoyer un e-mail, mettre à jour un tableau de bord)"
 
@@ -1311,7 +1311,7 @@ msgstr "Quelques mots de plus, pour que la personne qui lira plus tard comprenne
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Une première version apparaîtra ici dès qu'elle sera prête."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 msgid "A friendly name to identify this webhook"
 msgstr "Un nom convivial pour identifier ce webhook"
 
@@ -1347,6 +1347,15 @@ msgstr "Un nouvel assistant et un suivi en direct"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Un nouveau rapport sera automatiquement généré et publié à l'heure prévue."
 
+#: src/components/workspace/gateWalls.ts:226
+msgid "A paid plan gives you more AI every month."
+msgstr "Un forfait payant vous donne plus d'IA chaque mois."
+
+#: src/components/workspace/gateWalls.ts:185
+#: src/components/workspace/gateWalls.ts:236
+msgid "A paid plan lets you keep going."
+msgstr "Avec un forfait payant, vous pouvez continuer."
+
 #: src/components/release/PilotHistory.tsx:23
 msgid "A participant portal for recording conversations."
 msgstr "Un portail participant pour enregistrer les conversations."
@@ -1370,8 +1379,8 @@ msgstr "Un rapport est déjà en cours de génération pour ce projet. Veuillez 
 
 #: src/components/pricing/PricingConfigurator.tsx:1217
 #: src/components/pricing/PricingConfigurator.tsx:1221
-msgid "A rough number or \"not sure\". Either is useful."
-msgstr "Une estimation approximative ou « pas sûr ». Les deux sont utiles."
+#~ msgid "A rough number or \"not sure\". Either is useful."
+#~ msgstr "Une estimation approximative ou « pas sûr ». Les deux sont utiles."
 
 #: src/components/popcorn/PopcornIntroModal.tsx:41
 msgid "A sample session, not your data. Yours will look like this."
@@ -1389,11 +1398,11 @@ msgstr "Un écran avant le compte à rebours qui indique ce que la salle regarde
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr "Un écran qui explique, étape par étape, ce qu'il advient des enregistrements. Ses termes respectent l'anonymisation et la base juridique de ce projet."
 
-#: src/components/billing/BillingManager.tsx:1291
+#: src/components/billing/BillingManager.tsx:1290
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr "Un siège correspond à un membre. Ajoutez ou supprimez des membres dans l'onglet Membres de chaque espace de travail ; votre prochaine facture s'ajustera automatiquement."
 
-#: src/components/billing/BillingManager.tsx:1286
+#: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Un siège correspond à un membre. Les sièges restent disponibles jusqu'à la fin du forfait ; les modifications ne seront pas facturées."
 
@@ -1533,7 +1542,7 @@ msgid "Account default"
 msgstr "Valeur par défaut du compte"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3042
-#: src/components/billing/BillingManager.tsx:351
+#: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Responsable de compte"
 
@@ -1595,7 +1604,7 @@ msgstr "Action sur"
 #~ msgstr "Action sur"
 
 #: src/components/project/ProjectDangerZone.tsx:87
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:929
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:930
 msgid "Actions"
 msgstr "Actions"
 
@@ -1604,7 +1613,7 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:2040
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
-#: src/components/billing/BillingManager.tsx:1243
+#: src/components/billing/BillingManager.tsx:1242
 #: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Actif"
@@ -1629,7 +1638,7 @@ msgstr "Activité"
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
-#: src/components/billing/BillingManager.tsx:1393
+#: src/components/billing/BillingManager.tsx:1392
 msgid "Add"
 msgstr "Ajouter"
 
@@ -1669,8 +1678,8 @@ msgid "Add a project goal before saving."
 msgstr "Ajoutez un objectif de projet avant d'enregistrer."
 
 #: src/components/workspace/gateWalls.ts:197
-msgid "add a workspace"
-msgstr "ajouter un espace de travail"
+#~ msgid "add a workspace"
+#~ msgstr "ajouter un espace de travail"
 
 #: src/components/view/CreateViewForm.tsx:132
 #~ msgid "Add additional context (Optional)"
@@ -1718,8 +1727,8 @@ msgstr "Ajouter des images"
 #~ msgstr "Ajoutez des termes clés ou des noms propres pour améliorer la qualité et la précision de la transcription."
 
 #: src/components/workspace/gateWalls.ts:186
-msgid "add more projects"
-msgstr "ajouter d'autres projets"
+#~ msgid "add more projects"
+#~ msgstr "ajouter d'autres projets"
 
 #: src/components/project/ProjectUploadSection.tsx:56
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
@@ -1807,10 +1816,10 @@ msgstr "Ajouter des traductions"
 msgid "Add verification prompt"
 msgstr "Ajouter une consigne de vérification"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:897
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:964
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:469
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:898
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:965
 msgid "Add webhook"
 msgstr "Ajouter un webhook"
 
@@ -1824,8 +1833,8 @@ msgstr "Ajouter un webhook"
 #~ msgstr "Ajouter votre premier webhook"
 
 #: src/components/workspace/gateWalls.ts:181
-msgid "add your logo"
-msgstr "ajouter votre logo"
+#~ msgid "add your logo"
+#~ msgstr "ajouter votre logo"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
@@ -1911,11 +1920,11 @@ msgstr "Forces supplémentaires"
 msgid "Address"
 msgstr "Adresse"
 
-#: src/components/billing/BillingManager.tsx:461
+#: src/components/billing/BillingManager.tsx:460
 msgid "Address line 1"
 msgstr "Adresse ligne 1"
 
-#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:468
 msgid "Address line 2"
 msgstr "Adresse ligne 2"
 
@@ -1954,7 +1963,7 @@ msgstr "Administrateurs"
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Les administrateurs ont accès à tous les espaces de travail de cette organisation. Les membres et personnes externes ne voient que ceux auxquels ils ont accès."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:881
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
 msgid "Advanced"
 msgstr "Avancé"
 
@@ -2046,12 +2055,20 @@ msgid "AI costs"
 msgstr "Coûts IA"
 
 #: src/components/pricing/PricingConfigurator.tsx:780
-msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
-msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont en pause jusqu'au {resetDate}. Passez au forfait supérieur pour continuer dès maintenant."
+#~ msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
+#~ msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont en pause jusqu'au {resetDate}. Passez au forfait supérieur pour continuer dès maintenant."
+
+#: src/components/workspace/gateWalls.ts:233
+msgid "AI features and new recordings are paused until {resetDay}."
+msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont suspendus jusqu'au {resetDay}."
+
+#: src/components/workspace/gateWalls.ts:234
+msgid "AI features and new recordings are paused until next month."
+msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont suspendus jusqu'au mois prochain."
 
 #: src/components/pricing/PricingConfigurator.tsx:785
-msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
-msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont en pause jusqu'au mois prochain. Passez au forfait supérieur pour continuer dès maintenant."
+#~ msgid "AI features and new recordings are paused until next month. Upgrade to keep going now."
+#~ msgstr "Les fonctionnalités d'IA et les nouveaux enregistrements sont en pause jusqu'au mois prochain. Passez au forfait supérieur pour continuer dès maintenant."
 
 #: src/components/workspace/FreeAllowanceCard.tsx:89
 msgid "AI this month"
@@ -2230,7 +2247,7 @@ msgid "Always on. The screen opens here, so the room has something to read while
 msgstr "Toujours actif. L'écran s'ouvre ici pour donner de la lecture à la salle pendant que le reste se prépare."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2613
-#: src/components/billing/BillingManager.tsx:779
+#: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Montant"
 
@@ -2467,7 +2484,7 @@ msgstr "Autre chose que vous souhaitez partager"
 msgid "Anything else?"
 msgstr "Autre chose ?"
 
-#: src/components/billing/BillingManager.tsx:596
+#: src/components/billing/BillingManager.tsx:595
 msgid "Anything we could have done better?"
 msgstr "Y a-t-il quelque chose que nous aurions pu améliorer ?"
 
@@ -2548,7 +2565,7 @@ msgid "Archived"
 msgstr "Archivé"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:612
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:613
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer le webhook \"{0}\" ? Cette action ne peut pas être annulée."
 
@@ -2641,7 +2658,7 @@ msgstr "Arguments ({0})"
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Les arguments expriment des points de vue ou des préférences et ne font pas l'objet d'une vérification des faits."
 
-#: src/components/billing/BillingManager.tsx:661
+#: src/components/billing/BillingManager.tsx:660
 msgid "Arranged with dembrane"
 msgstr "Convenu avec dembrane"
 
@@ -2710,7 +2727,7 @@ msgstr "Demander le nom ?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Demander l'adresse e-mail des participants à la fin d'une conversation."
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:91
 msgid "ask in chat"
 msgstr "demander dans le chat"
 
@@ -2735,7 +2752,7 @@ msgstr "Demander leur e-mail aux participants"
 msgid "Ask participants for their name"
 msgstr "Demander leur nom aux participants"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:89
 msgid "ask the assistant"
 msgstr "demander à l'assistant"
 
@@ -2785,7 +2802,7 @@ msgstr "Au moins 8 caractères"
 msgid "At least one topic must be selected to enable Verify"
 msgstr "Sélectionne au moins un sujet pour activer la vérification"
 
-#: src/components/billing/BillingManager.tsx:1308
+#: src/components/billing/BillingManager.tsx:1307
 msgid "At the end of this period"
 msgstr "À la fin de cette période"
 
@@ -2929,7 +2946,7 @@ msgstr "Titres automatiques et tags en brouillon"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque conversation après la synthèse. Le titre décrit ce qui a été discuté, pas qui a participé. Le nom original du participant est conservé séparément, s'il a fourni un nom."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:789
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Enregistrer automatiquement les transcriptions dans votre CRM ou base de données"
 
@@ -2937,7 +2954,7 @@ msgstr "Enregistrer automatiquement les transcriptions dans votre CRM ou base de
 msgid "Automatically select relevant conversations for your question."
 msgstr "Sélectionnez automatiquement les conversations pertinentes pour votre question."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:886
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:887
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Envoyer automatiquement les données de conversation à vos autres outils et services lorsque des événements se produisent."
 
@@ -2945,7 +2962,7 @@ msgstr "Envoyer automatiquement les données de conversation à vos autres outil
 msgid "Automation"
 msgstr "Automatisation"
 
-#: src/components/workspace/FeatureGate.tsx:156
+#: src/components/workspace/FeatureGate.tsx:162
 msgid "Available on a paid plan"
 msgstr "Disponible avec un forfait payant"
 
@@ -2974,9 +2991,8 @@ msgstr "Absent"
 #: src/routes/organisation/OrganisationRoute.tsx:708
 #: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:289
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:322
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:360
-#: src/components/pricing/PricingConfigurator.tsx:949
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:361
 #: src/components/dropzone/UploadConversationDropzone.tsx:980
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -3006,8 +3022,8 @@ msgid "Back to conversations"
 msgstr "Retour aux conversations"
 
 #: src/components/pricing/PricingConfigurator.tsx:1020
-msgid "Back to dembrane"
-msgstr "Retour à dembrane"
+#~ msgid "Back to dembrane"
+#~ msgstr "Retour à dembrane"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:315
 msgid "Back to live"
@@ -3135,11 +3151,11 @@ msgstr "De meilleurs enregistrements, plus de façons de répondre"
 msgid "Better uploads, transcripts and discovery"
 msgstr "De meilleurs imports, transcriptions et recherches"
 
-#: src/components/billing/BillingManager.tsx:1253
+#: src/components/billing/BillingManager.tsx:1252
 msgid "Billed annually"
 msgstr "Facturé annuellement"
 
-#: src/components/billing/BillingManager.tsx:1251
+#: src/components/billing/BillingManager.tsx:1250
 msgid "Billed monthly"
 msgstr "Facturé mensuellement"
 
@@ -3173,15 +3189,15 @@ msgstr "Facturation"
 msgid "Billing accounts that made AI calls"
 msgstr "Comptes de facturation ayant effectué des appels IA"
 
-#: src/components/billing/BillingManager.tsx:427
+#: src/components/billing/BillingManager.tsx:426
 msgid "Billing details"
 msgstr "Coordonnées de facturation"
 
-#: src/components/billing/BillingManager.tsx:415
+#: src/components/billing/BillingManager.tsx:414
 msgid "Billing details saved."
 msgstr "Coordonnées de facturation enregistrées."
 
-#: src/components/billing/BillingManager.tsx:286
+#: src/components/billing/BillingManager.tsx:285
 msgid "Billing is managed by your organisation"
 msgstr "La facturation est gérée par votre organisation"
 
@@ -3193,11 +3209,11 @@ msgstr "Mode de facturation"
 msgid "Book"
 msgstr "Planifier"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:995
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:992
 msgid "Book a call"
 msgstr "Prendre rendez-vous"
 
-#: src/components/common/FeedbackPortalModal.tsx:137
+#: src/components/common/FeedbackPortalModal.tsx:134
 msgid "Book a call with us"
 msgstr "Reservez un appel avec nous"
 
@@ -3242,7 +3258,7 @@ msgstr "Budget"
 msgid "Bug fixes"
 msgstr "Corrections de bugs"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:808
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:809
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Construire des tableaux de bord personnalisés avec des données de conversation en temps réel"
 
@@ -3292,8 +3308,8 @@ msgstr "Appels sans compte associé"
 #~ msgstr "Appels sans compte ou payeur interne"
 
 #: src/components/pricing/PricingConfigurator.tsx:736
-msgid "Can you tell us more?"
-msgstr "Pouvez-vous nous en dire plus ?"
+#~ msgid "Can you tell us more?"
+#~ msgstr "Pouvez-vous nous en dire plus ?"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
@@ -3329,8 +3345,8 @@ msgstr "Pouvez-vous nous en dire plus ?"
 #: src/components/project/ProjectDangerZone.tsx:168
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:134
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:477
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:631
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:478
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:632
 #: src/components/organisation/CreateOrganisationModal.tsx:248
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -3380,7 +3396,7 @@ msgstr "Annuler"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Annuler"
 
-#: src/components/billing/BillingManager.tsx:1431
+#: src/components/billing/BillingManager.tsx:1430
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Résiliez à tout moment. Vous conservez votre accès jusqu'à la fin de la période."
 
@@ -3392,8 +3408,8 @@ msgstr "Annuler l'exécution en cours"
 msgid "Cancel override"
 msgstr "Annuler le remplacement"
 
-#: src/components/billing/BillingManager.tsx:611
-#: src/components/billing/BillingManager.tsx:1446
+#: src/components/billing/BillingManager.tsx:610
+#: src/components/billing/BillingManager.tsx:1445
 msgid "Cancel plan"
 msgstr "Résilier le forfait"
 
@@ -3415,16 +3431,16 @@ msgstr "Annuler la sélection"
 msgid "Cancel training"
 msgstr "Annuler la formation"
 
-#: src/components/billing/BillingManager.tsx:572
+#: src/components/billing/BillingManager.tsx:571
 msgid "Cancel your plan"
 msgstr "Résilier votre forfait"
 
-#: src/components/billing/BillingManager.tsx:232
+#: src/components/billing/BillingManager.tsx:231
 msgid "Cancelled"
 msgstr "Annulé"
 
 #. placeholder {0}: tierLabel(currentTier)
-#: src/components/billing/BillingManager.tsx:578
+#: src/components/billing/BillingManager.tsx:577
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "La résiliation empêche le renouvellement de votre forfait. Vous conservez {0} jusqu'à la fin de votre période de facturation en cours, puis vous passerez au forfait Free."
 
@@ -3482,7 +3498,7 @@ msgstr "Rattrapage {0}"
 msgid "Certified training for teams using dembrane in high-risk settings. A separate product, billed per session."
 msgstr "Formation certifiante pour les équipes utilisant dembrane dans des contextes à haut risque. Produit distinct, facturé par session."
 
-#: src/components/billing/BillingManager.tsx:1391
+#: src/components/billing/BillingManager.tsx:1390
 msgid "Change"
 msgstr "Modifier"
 
@@ -3518,8 +3534,8 @@ msgstr "Modifier le rôle dans l'organisation ?"
 msgid "Change password"
 msgstr "Changer le mot de passe"
 
-#: src/components/billing/BillingManager.tsx:1224
-#: src/components/billing/BillingManager.tsx:1467
+#: src/components/billing/BillingManager.tsx:1223
+#: src/components/billing/BillingManager.tsx:1466
 msgid "Change payment method"
 msgstr "Changer de moyen de paiement"
 
@@ -3786,7 +3802,7 @@ msgstr "Choisissez d'abord une organisation"
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr "Choisissez des espaces de travail découvrables, sur invitation ou privés."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
 msgid "Choose from your other projects"
 msgstr "Choisir parmi vos autres projets"
 
@@ -3806,7 +3822,7 @@ msgstr "Choisissez les résultats que votre public peut explorer."
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Choisissez ce que voit la salle : Popcorn, Tensions, Carte et Parties prenantes."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
 msgid "Choose when you want to receive notifications"
 msgstr "Choisir quand vous souhaitez recevoir les notifications"
 
@@ -3818,7 +3834,7 @@ msgstr "Choisissez votre langue préférée pour l'interface"
 #~ msgid "Choose your preferred theme for the interface"
 #~ msgstr "Choisis le thème que tu préfères pour l’interface"
 
-#: src/components/billing/BillingManager.tsx:487
+#: src/components/billing/BillingManager.tsx:486
 msgid "City"
 msgstr "Ville"
 
@@ -3946,11 +3962,11 @@ msgstr "Gestion client"
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr "Les boutons de presse-papiers fonctionnent sous Safari, et la langue choisie pour l'interface est mémorisée."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:279
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:280
 msgid "Clone from another project"
 msgstr "Cloner depuis un autre projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
 msgid "Clone from project"
 msgstr "Cloner depuis un projet"
 
@@ -3978,7 +3994,7 @@ msgstr "Cloner le projet"
 #: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:990
 #: src/components/conversation/ConversationLinks.tsx:105
-#: src/components/common/FeedbackPortalModal.tsx:158
+#: src/components/common/FeedbackPortalModal.tsx:155
 #: src/components/agent-access/AgentAccessSection.tsx:98
 msgid "Close"
 msgstr "Fermer"
@@ -4117,7 +4133,7 @@ msgstr "Regroupé à partir de {0} arguments"
 msgid "Coming soon"
 msgstr "Bientôt disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:784
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
 msgid "Common use cases:"
 msgstr "Cas d'utilisation courants :"
 
@@ -4308,11 +4324,10 @@ msgstr "Suggestions contextuelles"
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:242
-#: src/components/pricing/PricingConfigurator.tsx:926
 #: src/components/organisation/CreateOrganisationModal.tsx:240
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
-#: src/components/billing/BillingManager.tsx:1469
+#: src/components/billing/BillingManager.tsx:1468
 msgid "Continue"
 msgstr "Continuer"
 
@@ -4340,6 +4355,10 @@ msgstr "Continuer"
 #: src/components/participant/verify/VerifyInstructions.tsx:109
 msgid "participant.verify.instructions.button.next"
 msgstr "Continuer"
+
+#: src/components/workspace/FeatureGate.tsx:398
+msgid "Continue on dembrane.com"
+msgstr "Continuer sur dembrane.com"
 
 #: src/components/map/panels/ExplorePanel.tsx:52
 #~ msgid "Contributing nodes ({0})"
@@ -4402,7 +4421,7 @@ msgstr "Les pages de conversation et le chargement des données sont fluidifiés
 msgid "Conversation removed from chat"
 msgstr "Conversation retirée de la discussion"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:59
 msgid "Conversation started"
 msgstr "Conversation démarrée"
 
@@ -4431,11 +4450,11 @@ msgstr "Résumés de conversation"
 msgid "Conversation summaries no longer hang in the affected processing cases."
 msgstr "Les résumés de conversation ne se bloquent plus dans les cas de traitement concernés."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:69
 msgid "Conversation summarized"
 msgstr "Conversation résumée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:756
 msgid "Conversation tags"
 msgstr "Tags de conversation"
 
@@ -4443,7 +4462,7 @@ msgstr "Tags de conversation"
 msgid "Conversation tags are easier to read."
 msgstr "Les étiquettes de conversation sont plus lisibles."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:64
 msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
@@ -4494,7 +4513,7 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/ParticipantConversationText.tsx:247
 #: src/components/participant/InAppBrowserNotice.tsx:66
@@ -4574,7 +4593,7 @@ msgstr "Copier le résumé"
 #~ msgid "Copy Summary"
 #~ msgstr "Copier le résumé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1025
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Copier dans le presse-papiers"
@@ -4620,7 +4639,7 @@ msgstr "Votre sélection n'a pas pu être reprise. Sélectionnez à nouveau ci-d
 #~ msgid "Could not complete that action."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:987
+#: src/components/billing/BillingManager.tsx:986
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Impossible de confirmer le paiement. Actualisez pour réessayer."
 
@@ -4891,7 +4910,7 @@ msgstr "Impossible d'enregistrer"
 #~ msgid "Couldn't send invite"
 #~ msgstr "Impossible d'envoyer l'invitation"
 
-#: src/components/billing/BillingManager.tsx:493
+#: src/components/billing/BillingManager.tsx:492
 msgid "Country"
 msgstr "Pays"
 
@@ -4903,7 +4922,7 @@ msgstr "Créer"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Créer un nouveau webhook à partir de zéro"
 
-#: src/components/workspace/gateWalls.ts:103
+#: src/components/workspace/gateWalls.ts:94
 msgid "create a report"
 msgstr "créer un rapport"
 
@@ -4946,8 +4965,8 @@ msgid "Create methodology"
 msgstr "Créer une méthodologie"
 
 #: src/components/workspace/gateWalls.ts:184
-msgid "create more organisations"
-msgstr "créer d'autres organisations"
+#~ msgid "create more organisations"
+#~ msgstr "créer d'autres organisations"
 
 #: src/features/sidebar/shell/UserMenu.tsx:164
 #~ msgid "Create new organisation"
@@ -5015,12 +5034,12 @@ msgid "Create workspace | dembrane"
 msgstr "Créer un espace de travail | dembrane"
 
 #: src/components/pricing/PricingConfigurator.tsx:844
-msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
-msgstr "Créez votre propre projet pour continuer, ou répondez à 5 questions rapides et choisissez un créneau avec l'équipe de dembrane pour un forfait payant."
+#~ msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
+#~ msgstr "Créez votre propre projet pour continuer, ou répondez à 5 questions rapides et choisissez un créneau avec l'équipe de dembrane pour un forfait payant."
 
-#: src/components/pricing/PricingConfigurator.tsx:838
-#~ msgid "Create your own project to keep going."
-#~ msgstr "Créez votre propre projet pour continuer."
+#: src/components/workspace/gateWalls.ts:248
+msgid "Create your own project to keep going."
+msgstr "Créez votre propre projet pour continuer."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2406
 #: src/components/workspace/OrganisationProjectsTable.tsx:230
@@ -5083,13 +5102,13 @@ msgstr "Logo actuel"
 msgid "Current password"
 msgstr "Mot de passe actuel"
 
-#: src/components/billing/BillingManager.tsx:325
-#: src/components/billing/BillingManager.tsx:656
-#: src/components/billing/BillingManager.tsx:1230
+#: src/components/billing/BillingManager.tsx:324
+#: src/components/billing/BillingManager.tsx:655
+#: src/components/billing/BillingManager.tsx:1229
 msgid "Current plan"
 msgstr "Forfait actuel"
 
-#: src/components/billing/BillingManager.tsx:1335
+#: src/components/billing/BillingManager.tsx:1334
 msgid "Current rate"
 msgstr "Tarif actuel"
 
@@ -5167,7 +5186,7 @@ msgstr "Mode sombre"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:772
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "URL du tableau de bord (lien direct vers l'aperçu de la conversation)"
 
@@ -5191,7 +5210,7 @@ msgstr "Politique de confidentialité et mentions légales"
 #: src/routes/admin/AdminSettingsRoute.tsx:2563
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
-#: src/components/billing/BillingManager.tsx:773
+#: src/components/billing/BillingManager.tsx:772
 msgid "Date"
 msgstr "Date"
 
@@ -5289,8 +5308,8 @@ msgstr "Déléguer une analyse multi-étapes avec l'exécution en direct des out
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:590
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:625
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
@@ -5371,7 +5390,7 @@ msgstr "Supprimer cet espace de travail. Les membres perdront immédiatement l'a
 msgid "Delete topic"
 msgstr "Supprimer le sujet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:607
 msgid "Delete webhook"
 msgstr "Supprimer le webhook"
 
@@ -5505,7 +5524,7 @@ msgstr "Décrivez ce que le modèle de langage doit extraire ou résumer de la c
 #: src/routes/admin/AdminSettingsRoute.tsx:2660
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
-#: src/components/billing/BillingManager.tsx:776
+#: src/components/billing/BillingManager.tsx:775
 msgid "Description"
 msgstr "Description"
 
@@ -5646,7 +5665,7 @@ msgstr "Liens dissemblables : {0}"
 msgid "Distilling core idea…"
 msgstr "Distillation de l’idée centrale…"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:816
 msgid "Do I need this?"
 msgstr "Dois-je avoir cela ?"
 
@@ -5745,7 +5764,7 @@ msgstr "Téléchargez l'audio des conversations."
 msgid "Download event printouts"
 msgstr "Télécharger les documents à imprimer pour l’événement"
 
-#: src/components/billing/BillingManager.tsx:835
+#: src/components/billing/BillingManager.tsx:834
 msgid "Download PDF"
 msgstr "Télécharger le PDF"
 
@@ -5855,7 +5874,7 @@ msgstr "ex. Nous sommes une agence de recherche. Les rapports sont destinés à 
 msgid "e.g. Weekly stakeholder digest"
 msgstr "ex. Résumé hebdomadaire des parties prenantes"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "par exemple : notifications Slack, workflow Make"
 
@@ -5898,7 +5917,7 @@ msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:585
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
@@ -6001,7 +6020,7 @@ msgstr "Modifier le contenu du rapport en utilisant l'éditeur de texte enrichi 
 msgid "Edit topic"
 msgstr "Modifier le sujet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
 msgid "Edit webhook"
 msgstr "Modifier le webhook"
 
@@ -6174,7 +6193,7 @@ msgid "Enable Verify"
 msgstr "Activer la vérification"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:927
 msgid "Enabled"
 msgstr "Activé"
 
@@ -6183,7 +6202,7 @@ msgstr "Activé"
 msgid "Ended"
 msgstr "Terminé"
 
-#: src/components/billing/BillingManager.tsx:1249
+#: src/components/billing/BillingManager.tsx:1248
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Prend fin le {endDate}, puis passe au forfait Free"
 
@@ -6215,7 +6234,7 @@ msgstr "Saisis un mot de passe"
 msgid "Enter a presentation title"
 msgstr "Saisissez un titre de présentation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
 msgid "Enter a secret key"
 msgstr "Entrez une clé secrète"
 
@@ -6323,11 +6342,11 @@ msgstr "LLM hébergés dans l'UE inclus"
 msgid "Event help from the dembrane team"
 msgstr "Assistance pour vos événements par l'équipe dembrane"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:924
 msgid "Events"
 msgstr "Événements"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Events to listen for"
 msgstr "Événements à écouter"
 
@@ -6400,6 +6419,10 @@ msgstr "Toutes les personnes de la liste sont formées."
 msgid "participant.alert.microphone.access.success"
 msgstr "Tout semble bon – vous pouvez continuer."
 
+#: src/components/workspace/FeatureGate.tsx:384
+msgid "Everything you've made here stays as it is."
+msgstr "Tout ce que vous avez créé ici reste tel quel."
+
 #: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Éléments probants"
@@ -6416,7 +6439,7 @@ msgstr "Éléments probants"
 msgid "Evidenced connections"
 msgstr "Connexions étayées"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1006
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1003
 msgid "Example webhook payload"
 msgstr "Exemple de payload de webhook"
 
@@ -6442,7 +6465,7 @@ msgstr "Développer les espaces de travail"
 msgid "Experimental"
 msgstr "Expérimental"
 
-#: src/components/billing/BillingManager.tsx:234
+#: src/components/billing/BillingManager.tsx:233
 #: src/components/agent-access/format.ts:32
 msgid "Expired"
 msgstr "Expiré"
@@ -6591,7 +6614,7 @@ msgstr "Le statut factuel ne s'applique pas à cet objet."
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:911
-#: src/components/billing/BillingManager.tsx:230
+#: src/components/billing/BillingManager.tsx:229
 msgid "Failed"
 msgstr "Échec"
 
@@ -6671,7 +6694,7 @@ msgstr "Impossible de générer le résumé. Réessaie plus tard."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Impossible de charger l'audio ou l'audio n'est pas disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:912
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:913
 msgid "Failed to load webhooks"
 msgstr "Échec du chargement des webhooks"
 
@@ -6805,7 +6828,7 @@ msgstr "Fonctionnalité bientôt disponible"
 #~ msgid "Feedback"
 #~ msgstr "Commentaires"
 
-#: src/components/common/FeedbackPortalModal.tsx:62
+#: src/components/common/FeedbackPortalModal.tsx:63
 msgid "Feedback portal"
 msgstr "Portail de commentaires"
 
@@ -7043,7 +7066,7 @@ msgstr "Pour"
 msgid "For <0>{0}</0>"
 msgstr "Pour <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:420
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:421
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Pour les utilisateurs avancés : Une clé secrète pour vérifier l'authenticité du webhook. Nécessaire si votre service de réception requiert une vérification de signature."
 
@@ -7194,7 +7217,7 @@ msgstr "Extrait de la transcription"
 msgid "Full screen"
 msgstr "Plein écran"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:759
 msgid "Full transcript (when available)"
 msgstr "Transcription complète (lorsqu'elle est disponible)"
 
@@ -7232,7 +7255,7 @@ msgstr "Répulsion générale : {0}"
 msgid "Generate"
 msgstr "Générer"
 
-#: src/components/workspace/gateWalls.ts:101
+#: src/components/workspace/gateWalls.ts:92
 msgid "generate a map"
 msgstr "générer une carte"
 
@@ -7248,7 +7271,7 @@ msgstr "Générer un nouveau rapport"
 #~ msgid "Generate a Report"
 #~ msgstr "Générer un rapport"
 
-#: src/components/workspace/gateWalls.ts:105
+#: src/components/workspace/gateWalls.ts:96
 msgid "generate a summary"
 msgstr "générer un résumé"
 
@@ -7256,7 +7279,7 @@ msgstr "générer un résumé"
 msgid "Generate a summary first"
 msgstr "Générer un résumé d'abord"
 
-#: src/components/workspace/gateWalls.ts:107
+#: src/components/workspace/gateWalls.ts:98
 msgid "generate a title"
 msgstr "générer un titre"
 
@@ -7396,8 +7419,8 @@ msgid "Go back"
 msgstr "Retour"
 
 #: src/components/workspace/gateWalls.ts:183
-msgid "go beyond this month's free allowance"
-msgstr "dépasser le quota gratuit de ce mois-ci"
+#~ msgid "go beyond this month's free allowance"
+#~ msgstr "dépasser le quota gratuit de ce mois-ci"
 
 #: src/routes/project/HostGuidePage.tsx:1569
 msgid "Go fullscreen"
@@ -7535,8 +7558,8 @@ msgid "Have you completed a training?"
 msgstr "Avez-vous suivi une formation ?"
 
 #: src/components/workspace/gateWalls.ts:193
-msgid "have your recordings transcribed"
-msgstr "faire transcrire vos enregistrements"
+#~ msgid "have your recordings transcribed"
+#~ msgstr "faire transcrire vos enregistrements"
 
 #: src/features/sidebar/views/HelpView.tsx:18
 #: src/features/sidebar/blocks/HelpBlock.tsx:167
@@ -7628,10 +7651,14 @@ msgid "Hide the changes"
 msgstr "Masquer les modifications"
 
 #: src/components/workspace/gateWalls.ts:182
-msgid "hide the dembrane event invitation"
-msgstr "masquer l'invitation événement dembrane"
+#~ msgid "hide the dembrane event invitation"
+#~ msgstr "masquer l'invitation événement dembrane"
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:161
+msgid "Hiding the dembrane event invitation comes with a paid plan"
+msgstr "Masquer l'invitation événement dembrane est inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:129
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Masquer l'invitation événement dembrane fait partie d'un forfait payant."
 
@@ -7727,7 +7754,7 @@ msgstr "Comment fonctionne Ask et ce qu'il peut faire."
 msgid "How dembrane improves your transcript"
 msgstr "Comment dembrane améliore votre transcription"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
 msgid "How it works:"
 msgstr "Comment ça marche :"
 
@@ -7824,7 +7851,7 @@ msgstr "Inactif"
 msgid "If an account exists for <0>{0}</0>, we sent it a link to reset your password. Check your inbox and spam folder."
 msgstr "Si un compte existe pour <0>{0}</0>, nous lui avons envoyé un lien pour réinitialiser votre mot de passe. Vérifiez votre boîte de réception et vos spams."
 
-#: src/components/common/FeedbackPortalModal.tsx:90
+#: src/components/common/FeedbackPortalModal.tsx:91
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Si ce que vous avez repéré concerne des données visibles par les mauvaises personnes, un accès dont quelqu'un ne devrait pas disposer, ou une possible faille de sécurité, utilisez plutôt notre <0>formulaire de signalement de sécurité</0>. Il parvient à une autre équipe par une voie plus rapide. Pour toute urgence, envoyez un e-mail à <1>privacy@dembrane.com</1>"
 
@@ -7833,7 +7860,7 @@ msgstr "Si ce que vous avez repéré concerne des données visibles par les mauv
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Si vous êtes satisfait de {objectLabel}, cliquez sur \"Approuver\" pour montrer que vous vous sentez entendu."
 
-#: src/components/billing/BillingManager.tsx:679
+#: src/components/billing/BillingManager.tsx:678
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Si vous avez d'autres besoins, nous vous préparerons une offre sur mesure."
 
@@ -7841,11 +7868,11 @@ msgstr "Si vous avez d'autres besoins, nous vous préparerons une offre sur mesu
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Si vous attendiez un accès, veuillez demander à la personne qui vous a invité de vous le renvoyer."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:818
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:819
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "Si vous n'êtes pas sûr, vous n'avez probablement pas besoin de cela encore. Les webhooks sont une fonctionnalité avancée généralement utilisée par les développeurs ou les équipes avec des intégrations personnalisées. Vous pouvez toujours les configurer plus tard."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:982
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:983
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "Si vous configurez des intégrations webhook, nous aimerions en savoir plus sur votre cas d'utilisation. Nous construisons également des fonctionnalités d'observabilité incluant les journaux d'audit et le suivi de la livraison."
 
@@ -8159,7 +8186,7 @@ msgstr "Facture marquée comme payée."
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Facturé hors ligne, aucun mandat Mollie."
 
-#: src/components/billing/BillingManager.tsx:754
+#: src/components/billing/BillingManager.tsx:753
 msgid "Invoices"
 msgstr "Factures"
 
@@ -8328,7 +8355,7 @@ msgstr "Rejoindre pour l'assistance"
 msgid "Join for support (24h)"
 msgstr "Rejoindre pour l'assistance (24 h)"
 
-#: src/components/common/FeedbackPortalModal.tsx:153
+#: src/components/common/FeedbackPortalModal.tsx:150
 msgid "Join our Slack community"
 msgstr "Rejoindre notre communauté Slack"
 
@@ -8389,7 +8416,7 @@ msgstr "à l'instant"
 msgid "Just one."
 msgstr "Un seul."
 
-#: src/components/billing/BillingManager.tsx:515
+#: src/components/billing/BillingManager.tsx:514
 msgid "Just pausing for now"
 msgstr "Simple pause pour l'instant"
 
@@ -8410,7 +8437,7 @@ msgstr "Tout juste actualisé. Patientez un instant."
 msgid "Just started"
 msgstr "Vient de commencer"
 
-#: src/components/common/FeedbackPortalModal.tsx:83
+#: src/components/common/FeedbackPortalModal.tsx:84
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Parlez ou écrivez naturellement. Votre contribution va directement à notre équipe produit et nous aide vraiment à améliorer dembrane. Nous lisons tout."
 
@@ -8442,7 +8469,7 @@ msgstr "Conserver {tier} jusqu'à une date"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Sécurisez l'accès avec un code à usage unique de votre application d'authentification. Activez ou désactivez l'authentification à deux facteurs pour ce compte."
 
-#: src/components/workspace/gateWalls.ts:102
+#: src/components/workspace/gateWalls.ts:93
 msgid "keep analysing with popcorn"
 msgstr "continuer d'analyser avec Popcorn"
 
@@ -8464,7 +8491,7 @@ msgstr "Le conserver"
 msgid "Keep license"
 msgstr "Conserver la licence"
 
-#: src/components/billing/BillingManager.tsx:619
+#: src/components/billing/BillingManager.tsx:618
 msgid "Keep my plan"
 msgstr "Conserver mon forfait"
 
@@ -8611,11 +8638,11 @@ msgstr "Dernier rapport"
 msgid "Learn more"
 msgstr "En savoir plus"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:831
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:832
 msgid "Learn more about webhooks"
 msgstr "En savoir plus sur les webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
 msgid "Leave empty to keep existing"
 msgstr "Laisser vide pour conserver l'existant"
 
@@ -8656,7 +8683,7 @@ msgstr "Base juridique"
 msgid "Legal basis saved"
 msgstr "Base juridique enregistrée"
 
-#: src/components/billing/BillingManager.tsx:434
+#: src/components/billing/BillingManager.tsx:433
 msgid "Legal entity name"
 msgstr "Raison sociale"
 
@@ -8664,6 +8691,10 @@ msgstr "Raison sociale"
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Légende"
+
+#: src/components/workspace/gateWalls.ts:158
+msgid "Let's find what fits you"
+msgstr "Trouvons ce qui vous convient"
 
 #: src/components/pricing/PricingConfigurator.tsx:869
 #~ msgid "Let's go!"
@@ -8887,7 +8918,7 @@ msgstr "Canvas vivant et popcorn"
 #~ msgid "Load latest revision"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:854
+#: src/components/billing/BillingManager.tsx:853
 msgid "Load more"
 msgstr "Charger plus"
 
@@ -9130,8 +9161,8 @@ msgid "Low battery"
 msgstr "Batterie faible"
 
 #: src/components/workspace/gateWalls.ts:185
-msgid "make a workspace private"
-msgstr "rendre un espace de travail privé"
+#~ msgid "make a workspace private"
+#~ msgstr "rendre un espace de travail privé"
 
 #: src/components/project/ProjectSharingModal.tsx:304
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -9148,7 +9179,7 @@ msgstr "Rendre privé"
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
 #: src/components/conversation/ProjectConversationsPanel.tsx:386
-#: src/components/billing/BillingManager.tsx:1555
+#: src/components/billing/BillingManager.tsx:1554
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
 msgstr "Gérer"
@@ -9166,7 +9197,7 @@ msgstr "Gérer les comptes de facturation, les paiements et les demandes de mise
 msgid "Manage members"
 msgstr "Gérer les membres"
 
-#: src/components/billing/BillingManager.tsx:300
+#: src/components/billing/BillingManager.tsx:299
 msgid "Manage organisation billing"
 msgstr "Gérer la facturation de l'organisation"
 
@@ -9195,7 +9226,7 @@ msgstr "Les comptes gérés paient par facture, pas par carte. Définir un compt
 msgid "Managed billing"
 msgstr "Facturation gérée"
 
-#: src/components/billing/BillingManager.tsx:329
+#: src/components/billing/BillingManager.tsx:328
 msgid "Managed by dembrane"
 msgstr "Géré par dembrane"
 
@@ -9307,6 +9338,10 @@ msgstr "Définit {orgName} comme partenaire. Ses espaces de travail distinguent 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:281
 msgid "max {maximum}"
 msgstr "max {maximum}"
+
+#: src/components/workspace/FeatureGate.tsx:405
+msgid "Maybe later"
+msgstr "Plus tard"
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:56
 #: src/components/agent-access/YourOrganisations.tsx:58
@@ -9460,7 +9495,7 @@ msgstr "Intervalle minimum entre les popcorns"
 msgid "Missed the question"
 msgstr "Ne répond pas à la question"
 
-#: src/components/billing/BillingManager.tsx:512
+#: src/components/billing/BillingManager.tsx:511
 msgid "Missing features I need"
 msgstr "Il manque des fonctionnalités dont j'ai besoin"
 
@@ -9634,7 +9669,7 @@ msgstr "Mes modèles"
 #: src/routes/project/CreateProjectRoute.tsx:365
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:109
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:416
@@ -9649,7 +9684,7 @@ msgstr "Nom"
 msgid "Name A-Z"
 msgstr "Nom A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:368
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:369
 msgid "Name is required"
 msgstr "Le nom est requis"
 
@@ -9874,7 +9909,7 @@ msgstr "Suivant"
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Prochain changement dans <0>{remainingSeconds}s</0>"
 
-#: src/components/billing/BillingManager.tsx:1316
+#: src/components/billing/BillingManager.tsx:1315
 msgid "Next invoice"
 msgstr "Prochaine facture"
 
@@ -9956,7 +9991,7 @@ msgstr "Aucun argument pour le moment. Ils apparaîtront après la première ana
 msgid "No audit logs match the current filters."
 msgstr "Aucun journal d'audit ne correspond aux filtres actuels."
 
-#: src/components/billing/BillingManager.tsx:1095
+#: src/components/billing/BillingManager.tsx:1094
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Aucun compte de facturation pour le moment. Écrivez à <0>support@dembrane.com</0> et nous en créerons un."
 
@@ -10081,7 +10116,7 @@ msgstr "Aucun résultat ne correspond."
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Pas encore de résultats. Ils apparaissent après la première analyse."
 
-#: src/components/billing/BillingManager.tsx:1312
+#: src/components/billing/BillingManager.tsx:1311
 msgid "No further charges"
 msgstr "Aucuns frais supplémentaires"
 
@@ -10219,11 +10254,11 @@ msgstr "Aucun rôle dans l'organisation. Accès via les invitations à l'espace 
 msgid "No payments match the filter."
 msgstr "Aucun paiement ne correspond au filtre."
 
-#: src/components/billing/BillingManager.tsx:765
+#: src/components/billing/BillingManager.tsx:764
 msgid "No payments yet."
 msgstr "Aucun paiement pour l'instant."
 
-#: src/components/billing/BillingManager.tsx:727
+#: src/components/billing/BillingManager.tsx:726
 msgid "No PDF available for this invoice."
 msgstr "Aucun PDF disponible pour cette facture."
 
@@ -10417,11 +10452,11 @@ msgstr "Aucune version pour l'instant"
 #~ msgid "No webhooks configured"
 #~ msgstr "Aucun webhook configuré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:335
 msgid "No webhooks found"
 msgstr "Aucun webhook trouvé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:955
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:956
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Aucun webhook pour l'instant. Ajoutez un webhook pour recevoir automatiquement les données de conversation lorsque des événements se produisent."
 
@@ -10457,7 +10492,7 @@ msgstr "Aucun"
 msgid "None in this view."
 msgstr "Aucun dans cette vue."
 
-#: src/components/billing/BillingManager.tsx:1326
+#: src/components/billing/BillingManager.tsx:1325
 msgid "None scheduled"
 msgstr "Aucun de prévu"
 
@@ -10515,7 +10550,6 @@ msgid "Not monthly"
 msgstr "Non mensuel"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:579
-#: src/components/pricing/PricingConfigurator.tsx:938
 #: src/components/popcorn/PopcornIntroModal.tsx:67
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Not now"
@@ -10545,7 +10579,7 @@ msgstr "Non enregistré"
 msgid "Not relevant"
 msgstr "Non pertinent"
 
-#: src/components/billing/BillingManager.tsx:1239
+#: src/components/billing/BillingManager.tsx:1238
 msgid "Not renewing"
 msgstr "Non renouvelé"
 
@@ -10554,7 +10588,7 @@ msgid "Not scheduled"
 msgstr "Non planifié"
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:1398
+#: src/components/billing/BillingManager.tsx:1397
 msgid "Not set"
 msgstr "Non défini"
 
@@ -10576,7 +10610,7 @@ msgstr "Pas encore sûr."
 msgid "Not trained"
 msgstr "Non formé"
 
-#: src/components/billing/BillingManager.tsx:513
+#: src/components/billing/BillingManager.tsx:512
 msgid "Not using it enough"
 msgstr "Je ne l'utilise pas assez"
 
@@ -10731,9 +10765,13 @@ msgstr "Facturation gérée par dembrane. Passer en libre-service conserve le ni
 msgid "On recording page"
 msgstr "Sur la page d'enregistrement"
 
-#: src/components/workspace/gateWalls.ts:143
+#: src/components/workspace/gateWalls.ts:134
 msgid "On the free plan one project takes recordings."
 msgstr "Avec le forfait Free, un seul projet permet d'enregistrer."
+
+#: src/components/workspace/gateWalls.ts:166
+msgid "On the free plan, one project takes recordings"
+msgstr "Avec le forfait Free, un seul projet permet d'enregistrer"
 
 #: src/components/project/RecordingPausedNotice.tsx:89
 msgid "On the free plan, uploads go to {name}."
@@ -11065,11 +11103,11 @@ msgstr "Activez les fonctionnalités expérimentales et contribuez à façonner 
 
 #: src/routes/auth/Register.tsx:187
 #: src/components/project/CustomTopicModal.tsx:234
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:416
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:417
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
-#: src/components/billing/BillingManager.tsx:444
-#: src/components/billing/BillingManager.tsx:470
-#: src/components/billing/BillingManager.tsx:597
+#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:469
+#: src/components/billing/BillingManager.tsx:596
 msgid "Optional"
 msgstr "Optionnel"
 
@@ -11103,7 +11141,7 @@ msgstr "ou"
 msgid "Or choose a time"
 msgstr "Ou choisissez un créneau"
 
-#: src/components/common/FeedbackPortalModal.tsx:130
+#: src/components/common/FeedbackPortalModal.tsx:131
 msgid "Or prefer to chat directly?"
 msgstr "Ou preferer discuter directement ?"
 
@@ -11213,7 +11251,7 @@ msgstr "Langue d'origine"
 
 #: src/routes/admin/aiCostBreakdown.ts:51
 #: src/components/feedback/reasons.ts:27
-#: src/components/billing/BillingManager.tsx:516
+#: src/components/billing/BillingManager.tsx:515
 msgid "Other"
 msgstr "Autre"
 
@@ -11321,7 +11359,7 @@ msgstr "Titre de la page"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2710
 #: src/routes/admin/AdminSettingsRoute.tsx:2765
-#: src/components/billing/BillingManager.tsx:224
+#: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Payé"
 
@@ -11375,7 +11413,7 @@ msgstr "Fonctionnalités participant"
 msgid "Participant name"
 msgstr "Nom du participant"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:753
 msgid "Participant name and email"
 msgstr "Nom et email du participant"
 
@@ -11489,7 +11527,7 @@ msgstr "En pause."
 msgid "Paused. Updated {updatedAgo}."
 msgstr "En pause. Mis à jour {updatedAgo}."
 
-#: src/components/billing/BillingManager.tsx:814
+#: src/components/billing/BillingManager.tsx:813
 msgid "Pay now"
 msgstr "Payer maintenant"
 
@@ -11501,7 +11539,7 @@ msgstr "Revenus payants"
 msgid "Paying revenue this month"
 msgstr "Revenus payants ce mois-ci"
 
-#: src/components/billing/BillingManager.tsx:1241
+#: src/components/billing/BillingManager.tsx:1240
 msgid "Payment failed"
 msgstr "Paiement échoué"
 
@@ -11513,7 +11551,7 @@ msgstr "Montant du lien de paiement, EUR"
 msgid "Payment link issued."
 msgstr "Lien de paiement émis."
 
-#: src/components/billing/BillingManager.tsx:1382
+#: src/components/billing/BillingManager.tsx:1381
 msgid "Payment method"
 msgstr "Moyen de paiement"
 
@@ -11521,7 +11559,7 @@ msgstr "Moyen de paiement"
 msgid "Payment reference"
 msgstr "Référence du paiement"
 
-#: src/components/billing/BillingManager.tsx:1078
+#: src/components/billing/BillingManager.tsx:1077
 msgid "Payment went through. Your plan is up to date."
 msgstr "Le paiement a été accepté. Votre forfait est à jour."
 
@@ -11536,7 +11574,7 @@ msgstr "en attente"
 #: src/components/project/ProjectUsageAndSharing.tsx:354
 #: src/components/project/ProjectSharingModal.tsx:404
 #: src/components/members/PendingInvitesSection.tsx:168
-#: src/components/billing/BillingManager.tsx:228
+#: src/components/billing/BillingManager.tsx:227
 msgid "Pending"
 msgstr "En attente"
 
@@ -11621,14 +11659,13 @@ msgstr "Choisir une date"
 #~ msgid "Pick a dot to read its words below."
 #~ msgstr "Choisissez un point pour lire ses mots ci-dessous."
 
-#: src/components/pricing/PricingConfigurator.tsx:924
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
 msgstr "Choisir un créneau"
 
 #: src/components/pricing/PricingConfigurator.tsx:723
-msgid "Pick a time with {host}."
-msgstr "Choisissez un créneau avec {host}."
+#~ msgid "Pick a time with {host}."
+#~ msgstr "Choisissez un créneau avec {host}."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3007
 msgid "Pick an account"
@@ -11646,7 +11683,7 @@ msgstr "Choisissez au moins un espace de travail pour envoyer l'invitation."
 msgid "Pick from your organisation, or type an email to invite."
 msgstr "Choisissez dans votre organisation, ou saisissez une adresse e-mail à inviter."
 
-#: src/components/billing/BillingManager.tsx:586
+#: src/components/billing/BillingManager.tsx:585
 msgid "Pick one"
 msgstr "En choisir un"
 
@@ -11698,7 +11735,7 @@ msgstr "Modèles épinglés"
 msgid "Plan"
 msgstr "Plan"
 
-#: src/components/billing/BillingManager.tsx:1303
+#: src/components/billing/BillingManager.tsx:1302
 msgid "Plan ends"
 msgstr "Fin du forfait"
 
@@ -11982,7 +12019,7 @@ msgstr "Tutoriel du portail"
 msgid "Positive"
 msgstr "Positif"
 
-#: src/components/billing/BillingManager.tsx:479
+#: src/components/billing/BillingManager.tsx:478
 msgid "Postal code"
 msgstr "Code postal"
 
@@ -12152,7 +12189,11 @@ msgstr "Projet privé"
 msgid "Private workspace"
 msgstr "Espace de travail privé"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:164
+msgid "Private workspaces come with a paid plan"
+msgstr "Les espaces de travail privés sont inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:132
 msgid "Private workspaces come with a paid plan."
 msgstr "Les espaces de travail privés sont inclus dans les forfaits payants."
 
@@ -12275,7 +12316,7 @@ msgstr "Projet déplacé"
 msgid "Project name"
 msgstr "Nom du projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
 msgid "Project name and ID"
 msgstr "Nom et ID du projet"
 
@@ -12307,11 +12348,11 @@ msgstr "paramètres du projet"
 #~ msgid "Project Settings"
 #~ msgstr "Paramètres du projet"
 
-#: src/components/billing/BillingManager.tsx:1338
+#: src/components/billing/BillingManager.tsx:1337
 msgid "Projected monthly total"
 msgstr "Total mensuel estimé"
 
-#: src/components/billing/BillingManager.tsx:1337
+#: src/components/billing/BillingManager.tsx:1336
 msgid "Projected yearly total"
 msgstr "Total annuel estimé"
 
@@ -12479,7 +12520,7 @@ msgstr "Revérifier"
 msgid "Re-enter new password"
 msgstr "Ressaisir le nouveau mot de passe"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:282
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:283
 msgid "Re-use settings from an existing webhook"
 msgstr "Réutiliser les paramètres d'un webhook existant"
 
@@ -12709,8 +12750,8 @@ msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
 #: src/components/workspace/gateWalls.ts:187
-msgid "record in every project"
-msgstr "enregistrer dans chaque projet"
+#~ msgid "record in every project"
+#~ msgstr "enregistrer dans chaque projet"
 
 #: src/components/project/RecordingPausedNotice.tsx:66
 msgid "Record in every project"
@@ -12797,8 +12838,6 @@ msgstr "Les enregistrements sont en pause pour ce projet avec le forfait Free. L
 #~ msgstr "Thèmes récurrents"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:176
-#: src/components/pricing/PricingConfigurator.tsx:1010
 #: src/components/pricing/PricingBookingStep.tsx:334
 #: src/components/pricing/PricingBookingStep.tsx:369
 msgid "Reference {reference}"
@@ -12836,7 +12875,7 @@ msgstr "Actualiser les journaux d'audit"
 msgid "Refresh started"
 msgstr "Actualisation lancée"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:90
 msgid "refresh the canvas"
 msgstr "actualiser le canevas"
 
@@ -12860,11 +12899,11 @@ msgstr "Actualisation…"
 msgid "Regenerate"
 msgstr "Régénérer"
 
-#: src/components/workspace/gateWalls.ts:106
+#: src/components/workspace/gateWalls.ts:97
 msgid "regenerate a summary"
 msgstr "régénérer un résumé"
 
-#: src/components/workspace/gateWalls.ts:108
+#: src/components/workspace/gateWalls.ts:99
 msgid "regenerate a title"
 msgstr "régénérer un titre"
 
@@ -13153,7 +13192,7 @@ msgstr "Rapport créé · {0}"
 msgid "Report failed"
 msgstr "Échec du rapport"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:74
 msgid "Report generated"
 msgstr "Rapport généré"
 
@@ -13510,7 +13549,7 @@ msgstr "Reprendre"
 msgid "Resume physics"
 msgstr "Reprendre la physique"
 
-#: src/components/billing/BillingManager.tsx:1442
+#: src/components/billing/BillingManager.tsx:1441
 msgid "Resume plan"
 msgstr "Reprendre le forfait"
 
@@ -13539,7 +13578,7 @@ msgstr "Retrait d'une note pour l'équipe dembrane"
 msgid "Retranscribe"
 msgstr "Rétranscrire"
 
-#: src/components/workspace/gateWalls.ts:104
+#: src/components/workspace/gateWalls.ts:95
 msgid "retranscribe a conversation"
 msgstr "retranscrire une conversation"
 
@@ -13715,8 +13754,8 @@ msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Estimation approximative pour terminer la transcription en attente"
 
 #: src/components/pricing/PricingConfigurator.tsx:1225
-msgid "Roughly how many?"
-msgstr "Environ combien ?"
+#~ msgid "Roughly how many?"
+#~ msgstr "Environ combien ?"
 
 #: src/components/settings/AuditLogsCard.tsx:594
 msgid "Rows per page"
@@ -13730,7 +13769,7 @@ msgstr "Lancer"
 msgid "Run again from scratch"
 msgstr "Relancer depuis le début"
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:88
 msgid "run an analysis"
 msgstr "lancer une analyse"
 
@@ -13772,13 +13811,25 @@ msgstr "Facture émise."
 msgid "Sample popcorn session"
 msgstr "Exemple de session Popcorn"
 
+#: src/components/workspace/gateWalls.ts:252
+msgid "Sample projects allow {count} questions"
+msgstr "Les projets d'exemple autorisent {count} questions"
+
 #: src/components/pricing/PricingConfigurator.tsx:825
-msgid "Sample projects allow {sampleQuestions} questions."
-msgstr "Les projets d'exemple permettent de poser {sampleQuestions} questions."
+#~ msgid "Sample projects allow {sampleQuestions} questions."
+#~ msgstr "Les projets d'exemple permettent de poser {sampleQuestions} questions."
+
+#: src/components/workspace/gateWalls.ts:251
+msgid "Sample projects allow one report"
+msgstr "Les projets d'exemple autorisent un rapport"
 
 #: src/components/pricing/PricingConfigurator.tsx:823
-msgid "Sample projects allow one report."
-msgstr "Les projets d'exemple permettent de créer un rapport."
+#~ msgid "Sample projects allow one report."
+#~ msgstr "Les projets d'exemple permettent de créer un rapport."
+
+#: src/components/workspace/gateWalls.ts:168
+msgid "Sample projects have their own limits"
+msgstr "Les projets d'exemple ont leurs propres limites"
 
 #: src/routes/admin/AiCostsPanel.tsx:543
 #~ msgid "Samples, demo building and dev tools; no account pays"
@@ -13822,11 +13873,11 @@ msgstr "Enregistrer le budget IA"
 msgid "Save as template"
 msgstr "Enregistrer comme modèle"
 
-#: src/components/billing/BillingManager.tsx:502
+#: src/components/billing/BillingManager.tsx:501
 msgid "Save billing details"
 msgstr "Enregistrer les coordonnées de facturation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:466
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
 msgid "Save changes"
 msgstr "Enregistrer les modifications"
 
@@ -13889,7 +13940,7 @@ msgstr "Enregistrement..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Dites-le avec vos propres mots. Écrivez, ou appuyez sur enregistrer et parlez."
 
-#: src/components/common/FeedbackPortalModal.tsx:124
+#: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scannez ou cliquez sur le code QR pour ouvrir le portail de retours"
 
@@ -14094,7 +14145,7 @@ msgstr "Rechercher des templates..."
 msgid "select.all.modal.search.text"
 msgstr "Texte de recherche :"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 msgid "Search webhooks..."
 msgstr "Rechercher des webhooks..."
 
@@ -14142,8 +14193,8 @@ msgstr "places"
 #: src/routes/admin/AdminSettingsRoute.tsx:1697
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
-#: src/components/billing/BillingManager.tsx:342
-#: src/components/billing/BillingManager.tsx:1260
+#: src/components/billing/BillingManager.tsx:341
+#: src/components/billing/BillingManager.tsx:1259
 msgid "Seats"
 msgstr "Places"
 
@@ -14156,7 +14207,7 @@ msgstr "Places complètes"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:408
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:409
 msgid "Secret"
 msgstr "Secret"
 
@@ -14178,11 +14229,11 @@ msgid "See the arguments from your conversations and the quotes behind them on t
 msgstr "Retrouvez sur la Carte les arguments de vos conversations et les citations qui les appuient."
 
 #: src/components/workspace/gateWalls.ts:194
-msgid "see transcripts"
-msgstr "voir les transcriptions"
+#~ msgid "see transcripts"
+#~ msgstr "voir les transcriptions"
 
 #: src/routes/project/present/MapFreeNotice.tsx:62
-#: src/components/workspace/FreeAllowanceBanner.tsx:90
+#: src/components/workspace/FreeAllowanceBanner.tsx:88
 #: src/components/report/UpdateReportModalButton.tsx:223
 #: src/components/report/CreateReportForm.tsx:182
 #: src/components/popcorn/AiBudgetNotice.tsx:50
@@ -14203,7 +14254,7 @@ msgid "Sees usage and invoices. No project or content access."
 msgstr "Consulte l'utilisation et les factures. Aucun accès aux projets ou aux contenus."
 
 #: src/routes/project/ProjectsHome.tsx:455
-#: src/components/billing/BillingManager.tsx:451
+#: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Sélectionner"
 
@@ -14232,7 +14283,7 @@ msgstr "Sélectionner un microphone"
 #~ msgid "Select a tab to show results on the screen."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:327
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
 msgid "Select a webhook to clone"
 msgstr "Sélectionner un webhook à cloner"
 
@@ -14272,7 +14323,7 @@ msgstr "Sélectionner tous les résultats"
 msgid "Select all visible ({remainingCount})"
 msgstr "Sélectionner tous les éléments visibles ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:437
 msgid "Select at least one event"
 msgstr "Sélectionner au moins un événement"
 
@@ -14456,7 +14507,7 @@ msgstr "Envoyer la demande"
 msgid "Send reset link"
 msgstr "Envoyer le lien de réinitialisation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:795
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:796
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Envoyer des notifications Slack/Teams lorsque de nouvelles conversations sont terminées"
 
@@ -14531,7 +14582,7 @@ msgstr "Passer en géré"
 msgid "Set to managed billing"
 msgstr "Passer en facturation gérée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:300
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:301
 msgid "Set up a new webhook from scratch"
 msgstr "Configurer un nouveau webhook à partir de zéro"
 
@@ -14987,7 +15038,6 @@ msgstr "Six week-ends répartis sur sept mois"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
 #: src/routes/onboarding/OnboardingRoute.tsx:542
-#: src/components/pricing/PricingConfigurator.tsx:961
 #: src/components/organisation/CreateOrganisationModal.tsx:281
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -15306,7 +15356,7 @@ msgstr "Démarrer une nouvelle discussion"
 msgid "Start again from your agent. It will open a fresh request here."
 msgstr "Recommencez depuis votre agent. Cela ouvrira une nouvelle requête ici."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:297
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:298
 msgid "Start fresh"
 msgstr "Commencer de zéro"
 
@@ -15367,7 +15417,7 @@ msgstr "Affirmation"
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:33
-#: src/components/billing/BillingManager.tsx:782
+#: src/components/billing/BillingManager.tsx:781
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:85
 #: src/components/agent-access/AgentGrantsCard.tsx:105
 msgid "Status"
@@ -15402,10 +15452,9 @@ msgstr "Reste à jour jusqu'à {0}"
 msgid "Stays up to date until tomorrow {0}"
 msgstr "Reste à jour jusqu'à demain {0}"
 
-#. placeholder {0}: phase.step
 #: src/components/pricing/PricingConfigurator.tsx:797
-msgid "Step {0} of {STEP_COUNT}"
-msgstr "Étape {0} sur {STEP_COUNT}"
+#~ msgid "Step {0} of {STEP_COUNT}"
+#~ msgstr "Étape {0} sur {STEP_COUNT}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 msgid "Steps and logs"
@@ -15578,7 +15627,7 @@ msgstr "Résume cet entretien en un article partageable"
 msgid "Summary"
 msgstr "Résumé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:762
 msgid "Summary (when available)"
 msgstr "Résumé (lorsqu'il est disponible)"
 
@@ -15676,7 +15725,7 @@ msgstr "Passer à la saisie de texte"
 msgid "Switching it off comes with a paid plan."
 msgstr "La désactiver fait partie d'un forfait payant."
 
-#: src/components/billing/BillingManager.tsx:514
+#: src/components/billing/BillingManager.tsx:513
 msgid "Switching to another tool"
 msgstr "Je passe à un autre outil"
 
@@ -15780,7 +15829,7 @@ msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre d
 
 #: src/components/workspace/FreeAllowanceCard.tsx:174
 #: src/components/workspace/FeatureGatePopover.tsx:115
-#: src/components/billing/BillingManager.tsx:690
+#: src/components/billing/BillingManager.tsx:689
 msgid "Tell us what you need"
 msgstr "Dites-nous ce dont vous avez besoin"
 
@@ -15847,7 +15896,7 @@ msgstr "Testez et sélectionnez votre microphone avant d'enregistrer."
 msgid "test mode"
 msgstr "mode test"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
 msgid "Test webhook"
 msgstr "Tester le webhook"
 
@@ -15884,8 +15933,8 @@ msgid "Thank you! We will get in touch as soon as possible. You can also write t
 msgstr "Merci ! Nous vous recontacterons dès que possible. Vous pouvez aussi nous écrire à info@dembrane.com."
 
 #: src/components/pricing/PricingConfigurator.tsx:1002
-msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
-msgstr "Merci d'avoir rempli ceci. Vérifiez vos e-mails pour la confirmation de l'appel. Si vous avez des questions, vous pouvez toujours nous contacter à info@dembrane.com."
+#~ msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
+#~ msgstr "Merci d'avoir rempli ceci. Vérifiez vos e-mails pour la confirmation de l'appel. Si vous avez des questions, vous pouvez toujours nous contacter à info@dembrane.com."
 
 #: src/components/results/curate/RowTools.tsx:276
 msgid "Thanks! That helps a lot."
@@ -15908,8 +15957,8 @@ msgid "That did not save. Your words are still here."
 msgstr "Cela n'a pas été enregistré. Vos mots sont toujours là."
 
 #: src/components/pricing/PricingConfigurator.tsx:901
-msgid "That didn't send. Your answers are still here, so try again."
-msgstr "L'envoi a échoué. Vos réponses sont conservées, vous pouvez réessayer."
+#~ msgid "That didn't send. Your answers are still here, so try again."
+#~ msgstr "L'envoi a échoué. Vos réponses sont conservées, vous pouvez réessayer."
 
 #: src/components/pricing/PricingTextInput.tsx:335
 msgid "That didn't work out. We have saved your recording."
@@ -15920,8 +15969,8 @@ msgid "That recording is too long to send. Record a shorter note."
 msgstr "Cet enregistrement est trop long pour être envoyé. Enregistrez un message plus court."
 
 #: src/components/pricing/PricingConfigurator.tsx:859
-msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr "Cela nécessite un forfait payant. Nous allons vous poser 5 questions rapides supplémentaires, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
+#~ msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
+#~ msgstr "Cela nécessite un forfait payant. Nous allons vous poser 5 questions rapides supplémentaires, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
 
 #: src/components/voice/VoiceInputError.tsx:33
 msgid "That was too short to transcribe. Hold the recording a little longer."
@@ -16020,7 +16069,7 @@ msgstr "Le budget de liaisons doit être un nombre entier supérieur à zéro ; 
 msgid "The email or password is not right. Check them and try again."
 msgstr "L'e-mail ou le mot de passe est incorrect. Vérifiez-les et réessayez."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "L'endpoint où nous enverrons les données. Obtenez cela de votre service de réception (par exemple, Zapier, Make, ou votre propre serveur)."
 
@@ -16051,7 +16100,11 @@ msgstr "Le portail de retours explique comment signaler les failles de sécurit�
 msgid "The following conversations were automatically added to the context"
 msgstr "Les conversations suivantes ont été automatiquement ajoutées au contexte"
 
-#: src/components/workspace/gateWalls.ts:150
+#: src/components/workspace/gateWalls.ts:173
+msgid "The free plan covers one workspace"
+msgstr "Le forfait Free couvre un seul espace de travail"
+
+#: src/components/workspace/gateWalls.ts:141
 msgid "The free plan covers one workspace."
 msgstr "Le forfait Free couvre un seul espace de travail."
 
@@ -16068,7 +16121,7 @@ msgstr "Le forfait Free couvre un seul espace de travail."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "Le forfait Free comprend quelques discussions par mois, chacune avec un nombre défini de questions."
 
-#: src/components/workspace/gateWalls.ts:142
+#: src/components/workspace/gateWalls.ts:133
 msgid "The free plan includes a limited number of projects."
 msgstr "Le forfait Free comprend un nombre limité de projets."
 
@@ -16094,7 +16147,11 @@ msgstr "Le forfait Free comprend un nombre limité de projets."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Le forfait Free comprend une carte par mois."
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:163
+msgid "The free plan includes one organisation"
+msgstr "Le forfait Free comprend une seule organisation"
+
+#: src/components/workspace/gateWalls.ts:131
 msgid "The free plan includes one organisation."
 msgstr "Le forfait Free comprend une seule organisation."
 
@@ -16140,8 +16197,8 @@ msgid "The host hasn’t prepared a presentation yet."
 msgstr "L'hôte n'a pas encore préparé de présentation."
 
 #: src/components/pricing/PricingConfigurator.tsx:988
-msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
-msgstr "L'invitation est dans votre boîte de réception. Nous lirons vos réponses d'ici là pour vous proposer une première offre. Vous avez des questions entre-temps ? Contactez"
+#~ msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
+#~ msgstr "L'invitation est dans votre boîte de réception. Nous lirons vos réponses d'ici là pour vous proposer une première offre. Vous avez des questions entre-temps ? Contactez"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:341
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
@@ -16268,8 +16325,8 @@ msgid "The participant flow has clearer microphone checks."
 msgstr "Le parcours des participants propose des vérifications du micro plus claires."
 
 #: src/components/pricing/PricingConfigurator.tsx:761
-msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
-msgstr "Les portails continueront de fonctionner ! Vos participants ne sont jamais coupés et rien de ce qu'ils disent n'est perdu. Dès que vous passez à un forfait payant, la transcription rattrape tout ce qui a déjà été enregistré."
+#~ msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
+#~ msgstr "Les portails continueront de fonctionner ! Vos participants ne sont jamais coupés et rien de ce qu'ils disent n'est perdu. Dès que vous passez à un forfait payant, la transcription rattrape tout ce qui a déjà été enregistré."
 
 #: src/routes/project/present/PresentRoute.tsx:979
 msgid "The presentation could not be loaded"
@@ -16384,7 +16441,7 @@ msgstr "Impossible de lancer la traduction"
 msgid "The valence of this object has not been assessed."
 msgstr "La valence de cet objet n'a pas été évaluée."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:338
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:339
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "L'URL du webhook et les événements seront clonés. Vous devrez entrer à nouveau le secret si un était configuré."
 
@@ -16477,7 +16534,7 @@ msgstr "Ces modifications de tags sont appliquées à votre projet."
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Ces espaces de travail sont facturés séparément. Chaque personne ajoutée occupe un siège dans {billingContextCount} contextes de facturation, chacun facturé individuellement."
 
-#: src/components/billing/BillingManager.tsx:1527
+#: src/components/billing/BillingManager.tsx:1526
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Ces espaces de travail ont leur propre forfait, géré depuis chaque espace. Ils ne font pas partie du forfait de cette organisation."
 
@@ -16665,7 +16722,7 @@ msgstr "Ceci est un projet d'exemple. Les organisations, les personnes et les co
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Ceci est une démo synthétique. Ses mentions et son cadre sont définis avec la démo et s'affichent toujours."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1011
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1008
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "C'est un exemple des données JSON envoyées à votre URL de webhook lorsqu'une conversation est résumée."
 
@@ -16737,9 +16794,12 @@ msgid "This month"
 msgstr "Ce mois-ci"
 
 #: src/components/report/reportError.ts:9
-#: src/components/pricing/PricingConfigurator.tsx:776
 msgid "This month's AI budget is used up."
 msgstr "Le budget IA de ce mois-ci est épuisé."
+
+#: src/components/workspace/gateWalls.ts:157
+msgid "This month's AI is used up"
+msgstr "Le quota d'IA de ce mois-ci est épuisé"
 
 #: src/components/popcorn/AiBudgetNotice.tsx:34
 msgid "This month's AI is used up, so popcorn is paused until {date}."
@@ -16761,7 +16821,7 @@ msgstr "Le crédit d'IA de ce mois-ci est épuisé, la carte ne peut donc pas se
 msgid "This month's AI is used up."
 msgstr "Le quota d'IA de ce mois-ci est épuisé."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:71
+#: src/components/workspace/FreeAllowanceBanner.tsx:69
 msgid "This month's AI is used up. AI features and new recordings are paused until {date}."
 msgstr "Le quota d'IA de ce mois-ci est épuisé. Les fonctionnalités d'IA et les nouveaux enregistrements sont suspendus jusqu'au {date}."
 
@@ -17018,7 +17078,7 @@ msgstr "Cet espace de travail a utilisé ses heures d'enregistrement. Passez à 
 msgid "This workspace is billed separately"
 msgstr "Cet espace de travail est facturé séparément"
 
-#: src/components/billing/BillingManager.tsx:289
+#: src/components/billing/BillingManager.tsx:288
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Cet espace de travail est facturé via {orgName}. Les forfaits et les paiements sont gérés globalement pour toute l'organisation, et chaque espace de travail les partage."
 
@@ -17093,7 +17153,7 @@ msgstr "Chronologie"
 msgid "Timestamp"
 msgstr "Horodatage"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:765
 msgid "Timestamps and duration"
 msgstr "Horodatages et durée"
 
@@ -17101,7 +17161,7 @@ msgstr "Horodatages et durée"
 msgid "Tip"
 msgstr "Conseil"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:946
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:947
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Conseil : Utilisez le bouton de lecture (▶) pour envoyer un payload de test à votre webhook et vérifier qu'il fonctionne correctement."
 
@@ -17156,7 +17216,7 @@ msgstr "À trancher"
 msgid "To resolve:"
 msgstr "À résoudre :"
 
-#: src/components/billing/BillingManager.tsx:694
+#: src/components/billing/BillingManager.tsx:693
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Pour discuter de vos besoins, écrivez à <0>support@dembrane.com</0>."
 
@@ -17168,7 +17228,7 @@ msgstr "Activer/désactiver la mise en évidence de « {contextMenuWord} »"
 msgid "Tone deaf"
 msgstr "Inapproprié"
 
-#: src/components/billing/BillingManager.tsx:511
+#: src/components/billing/BillingManager.tsx:510
 msgid "Too expensive"
 msgstr "Trop cher"
 
@@ -17375,7 +17435,11 @@ msgstr "Erreur de transcription"
 msgid "Transcription failed"
 msgstr "Échec de la transcription"
 
-#: src/components/workspace/gateWalls.ts:147
+#: src/components/workspace/gateWalls.ts:170
+msgid "Transcripts come with a paid plan"
+msgstr "Les transcriptions sont incluses dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:138
 msgid "Transcripts come with a paid plan."
 msgstr "Les transcriptions nécessitent un forfait payant."
 
@@ -17461,7 +17525,7 @@ msgstr "Essai"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Comptes d'essai et offerts, exclus du total payant."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:802
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:803
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Déclencher des workflows automatisés dans des outils comme Zapier, Make, ou n8n"
 
@@ -17484,7 +17548,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:970
 #: src/components/common/FetchErrorPanel.tsx:35
-#: src/components/billing/BillingManager.tsx:1217
+#: src/components/billing/BillingManager.tsx:1216
 msgid "Try again"
 msgstr "Réessayer"
 
@@ -17707,8 +17771,8 @@ msgstr "Heure inconnue"
 msgid "Unlabelled"
 msgstr "Sans libellé"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:555
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:138
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:556
 msgid "Unnamed webhook"
 msgstr "Webhook sans nom"
 
@@ -17904,8 +17968,8 @@ msgstr "Mise à jour des tags du projet"
 #~ msgstr "Changer de forfait"
 
 #: src/components/pricing/PricingConfigurator.tsx:852
-msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr "Passez à la vitesse supérieure pour avoir plus d'IA chaque mois. Nous allons vous poser 5 questions rapides, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
+#~ msgid "Upgrade for more AI every month. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
+#~ msgstr "Passez à la vitesse supérieure pour avoir plus d'IA chaque mois. Nous allons vous poser 5 questions rapides, puis vous choisirez un créneau avec l'équipe dembrane. Nous lirons vos réponses avant l'appel afin de vous proposer une offre adaptée à vos besoins."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:155
 #: src/components/conversation/ConversationAccordion.tsx:157
@@ -18004,8 +18068,8 @@ msgid "Upload logo"
 msgstr "Importer le logo"
 
 #: src/components/workspace/gateWalls.ts:195
-msgid "upload recordings"
-msgstr "importer des enregistrements"
+#~ msgid "upload recordings"
+#~ msgstr "importer des enregistrements"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:646
 msgid "Uploading audio files"
@@ -18025,7 +18089,11 @@ msgstr "Envoi de l'audio..."
 msgid "participant.modal.interruption.uploading"
 msgstr "Envoi de l'audio..."
 
-#: src/components/workspace/gateWalls.ts:148
+#: src/components/workspace/gateWalls.ts:171
+msgid "Uploading recordings comes with a paid plan"
+msgstr "L'importation d'enregistrements est incluse dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:139
 msgid "Uploading recordings comes with a paid plan."
 msgstr "L'importation d'enregistrements nécessite un forfait payant."
 
@@ -18037,11 +18105,11 @@ msgstr "Les téléversements indiquent clairement lorsqu'ils échouent."
 msgid "URL copied"
 msgstr "URL copiée"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:388
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 msgid "URL is required"
 msgstr "L'URL est requise"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:385
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:386
 msgid "URL must start with http:// or https://"
 msgstr "L'URL doit commencer par http:// ou https://"
 
@@ -18078,8 +18146,8 @@ msgid "Usage this cycle"
 msgstr "Utilisation ce cycle"
 
 #: src/components/workspace/gateWalls.ts:178
-msgid "use AI features"
-msgstr "utiliser les fonctionnalités d'IA"
+#~ msgid "use AI features"
+#~ msgstr "utiliser les fonctionnalités d'IA"
 
 #: src/components/release/releaseHistory.ts:275
 msgid "Use dembrane in Czech."
@@ -18132,11 +18200,10 @@ msgid "Use Ukrainian for chat and participant replies."
 msgstr "Utilisez l'ukrainien pour le chat et les réponses des participants."
 
 #: src/components/workspace/gateWalls.ts:196
-msgid "use webhooks"
-msgstr "utiliser les webhooks"
+#~ msgid "use webhooks"
+#~ msgstr "utiliser les webhooks"
 
-#: src/components/workspace/gateWalls.ts:109
-#: src/components/workspace/gateWalls.ts:180
+#: src/components/workspace/gateWalls.ts:100
 msgid "use your voice in chat"
 msgstr "utiliser votre voix dans le chat"
 
@@ -18148,7 +18215,7 @@ msgstr "Utilisé"
 msgid "Used by this workspace only"
 msgstr "Utilisé uniquement par cet espace de travail"
 
-#: src/components/billing/BillingManager.tsx:430
+#: src/components/billing/BillingManager.tsx:429
 msgid "Used on your invoices. Prices exclude VAT."
 msgstr "Utilisé sur vos factures. Les prix sont hors VAT."
 
@@ -18180,7 +18247,7 @@ msgstr "Utilisation du logo dembrane par défaut"
 msgid "Using fixture data."
 msgstr "Utilisation de données fictives."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:980
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Utilisez des webhooks ? Nous aimerions en savoir plus sur votre cas d'utilisation"
 
@@ -18193,11 +18260,11 @@ msgstr "Valence"
 msgid "Validation progress"
 msgstr "Progression de la validation"
 
-#: src/components/billing/BillingManager.tsx:443
+#: src/components/billing/BillingManager.tsx:442
 msgid "VAT ID"
 msgstr "Numéro de VAT"
 
-#: src/components/billing/BillingManager.tsx:450
+#: src/components/billing/BillingManager.tsx:449
 msgid "VAT region"
 msgstr "Région de VAT"
 
@@ -18327,7 +18394,7 @@ msgstr "Vue"
 #~ msgid "View Details"
 #~ msgstr "Voir les détails"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:779
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
 msgid "View example payload"
 msgstr "Voir un exemple de payload"
 
@@ -18479,7 +18546,7 @@ msgstr "Impossible de joindre dembrane. Vérifiez votre connexion Internet et r�
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "Impossible de joindre dembrane. Vérifiez votre connexion Internet et réessayez."
 
-#: src/components/billing/BillingManager.tsx:1201
+#: src/components/billing/BillingManager.tsx:1200
 msgid "We couldn't charge your payment method"
 msgstr "Nous n'avons pas pu débiter votre moyen de paiement"
 
@@ -18532,7 +18599,7 @@ msgstr "Impossible de charger vos organisations. Vérifiez votre connexion et r�
 msgid "We couldn't load your pending invites. Try again in a moment."
 msgstr "Impossible de charger vos invitations en attente. Réessayez dans un instant."
 
-#: src/components/billing/BillingManager.tsx:980
+#: src/components/billing/BillingManager.tsx:979
 msgid "We couldn't update your payment method. Your old one is still active. Please try again."
 msgstr "Impossible de mettre à jour votre moyen de paiement. L'ancien reste actif. Veuillez réessayer."
 
@@ -18569,7 +18636,7 @@ msgstr "Nous vous avons envoyé un lien de vérification. Cliquez dessus pour fi
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
 msgstr "Nous configurons le projet, vous accompagnons le jour J et vous aidons ensuite à rédiger le rapport."
 
-#: src/components/billing/BillingManager.tsx:1081
+#: src/components/billing/BillingManager.tsx:1080
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "Impossible de débiter votre moyen de paiement. Mettez-le à jour et réessayez."
 
@@ -18577,9 +18644,13 @@ msgstr "Impossible de débiter votre moyen de paiement. Mettez-le à jour et ré
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Nous vous envoyerons un message uniquement si votre hôte génère un rapport, nous ne partageons jamais vos informations avec personne. Vous pouvez vous désinscrire à tout moment."
 
-#: src/components/common/FeedbackPortalModal.tsx:68
+#: src/components/common/FeedbackPortalModal.tsx:69
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Nous serions ravis de vous lire. Que vous ayez une idée pour quelque chose de nouveau, repéré une traduction qui sonne faux, ou envie de nous dire comment ça se passe. Vous avez trouvé un bug ? Utilisez <0>Signaler un problème</0> pour l'envoyer avec des captures d'écran."
+
+#: src/components/workspace/FeatureGate.tsx:370
+msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
+msgstr "Nous aimerions en savoir un peu plus sur la façon dont vous utilisez dembrane, pour mieux vous aider. Cela prend environ deux minutes sur notre site, et à la fin, vous pouvez réserver un court appel avec nous si vous le souhaitez."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:300
@@ -18612,20 +18683,20 @@ msgstr "Réseau faible"
 msgid "Weak password"
 msgstr "Mot de passe faible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:921
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
 msgid "Webhook URL"
 msgstr "URL du webhook"
 
 #: src/routes/project/ProjectRoutes.tsx:219
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:879
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:880
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:687
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:688
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Les webhooks sont des messages automatisés envoyés d'une application à une autre lorsqu'un événement se produit. Pensez à eux comme à un \"système de notification\" pour vos autres outils."
 
@@ -18633,7 +18704,11 @@ msgstr "Les webhooks sont des messages automatisés envoyés d'une application �
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
-#: src/components/workspace/gateWalls.ts:149
+#: src/components/workspace/gateWalls.ts:172
+msgid "Webhooks come with a paid plan"
+msgstr "Les webhooks sont inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:140
 msgid "Webhooks come with a paid plan."
 msgstr "Les webhooks sont inclus avec un forfait payant."
 
@@ -18678,7 +18753,7 @@ msgstr "Bienvenue, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Bienvenue !"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:680
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:681
 msgid "What are webhooks? (2 min read)"
 msgstr "Qu'est-ce que les webhooks ? (2 min de lecture)"
 
@@ -18686,7 +18761,7 @@ msgstr "Qu'est-ce que les webhooks ? (2 min de lecture)"
 msgid "What are you trying to learn?"
 msgstr "Que cherchez-vous à savoir ?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "What data is sent?"
 msgstr "Quelles données sont envoyées ?"
 
@@ -18721,8 +18796,8 @@ msgid "What is at stake here"
 msgstr "Ce qui est en jeu ici"
 
 #: src/components/pricing/PricingConfigurator.tsx:1133
-msgid "What is it?"
-msgstr "De quoi s'agit-il ?"
+#~ msgid "What is it?"
+#~ msgstr "De quoi s'agit-il ?"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:737
 msgid "What should be different about this?"
@@ -18783,7 +18858,7 @@ msgstr "Ce que vous mettez en lumière est conservé ici : cliquez sur un argume
 msgid "What's new"
 msgstr "Nouveautés"
 
-#: src/components/billing/BillingManager.tsx:585
+#: src/components/billing/BillingManager.tsx:584
 msgid "What's the main reason?"
 msgstr "Quelle est la raison principale ?"
 
@@ -18795,31 +18870,31 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Date"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:723
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:724
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "Lorsqu'un participant ouvre le portail, entre ses détails et commence une conversation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:57
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:58
 msgid "When a participant starts a new conversation"
 msgstr "Lorsqu'un participant commence une nouvelle conversation"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:72
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:73
 msgid "When a report has been generated"
 msgstr "Lorsqu'un rapport a été généré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:743
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
 msgid "When a report has been generated for the project"
 msgstr "Lorsqu'un rapport a été généré pour le projet"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:62
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:63
 msgid "When all audio has been converted to text"
 msgstr "Lorsque tout l'audio a été converti en texte"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:730
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:731
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "Lorsque tout l'audio a été converti en texte et que le transcript complet est disponible"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:718
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
 msgid "When are webhooks triggered?"
 msgstr "Quand sont déclenchés les webhooks ?"
 
@@ -18860,11 +18935,11 @@ msgstr "À la fin de la conversation, dembrane réécoute tout l'enregistrement.
 #~ msgid "When the conversation ends, we listen to the whole recording again."
 #~ msgstr "À la fin de la conversation, nous réécoutons tout l'enregistrement."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:67
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:68
 msgid "When the summary is generated"
 msgstr "Lorsque le résumé est généré"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:737
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:738
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le résumé)"
 
@@ -19095,7 +19170,7 @@ msgstr "Invité uniquement sur cet espace de travail. Non ajouté à l'organisat
 msgid "Workspaces"
 msgstr "Espaces de travail"
 
-#: src/components/billing/BillingManager.tsx:1524
+#: src/components/billing/BillingManager.tsx:1523
 msgid "Workspaces billed separately"
 msgstr "Espaces de travail facturés séparément"
 
@@ -19178,10 +19253,10 @@ msgid "You are not in an organisation yet."
 msgstr "Vous ne faites pas encore partie d'une organisation."
 
 #: src/components/pricing/PricingConfigurator.tsx:837
-msgid "You are on the free plan."
-msgstr "Vous utilisez le forfait Free."
+#~ msgid "You are on the free plan."
+#~ msgstr "Vous utilisez le forfait Free."
 
-#: src/components/billing/BillingManager.tsx:673
+#: src/components/billing/BillingManager.tsx:672
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr "Vous utilisez le forfait Free. Il n'y a aucun paiement à gérer pour le moment."
 
@@ -19372,7 +19447,7 @@ msgstr "Vous avez un accès d'assistance à cet espace de travail. Il prend fin 
 #~ msgid "You have used this month's free popcorn analyses. The results stay here. Analysis starts again on {date}."
 #~ msgstr "Vous avez utilisé vos analyses Popcorn gratuites de ce mois-ci. Les résultats restent accessibles ici. Les analyses reprendront le {date}."
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:65
+#: src/components/workspace/FreeAllowanceBanner.tsx:63
 msgid "You have used this month's free recording time. New recordings and uploads are paused until it resets on {date}."
 msgstr "Vous avez utilisé le temps d'enregistrement gratuit de ce mois. Les nouveaux enregistrements et imports sont en pause jusqu'à sa réinitialisation le {date}."
 
@@ -19417,7 +19492,7 @@ msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion intern
 msgid "You stopped this run."
 msgstr "Vous avez interrompu cette exécution."
 
-#: src/components/pricing/PricingConfigurator.tsx:835
+#: src/components/workspace/gateWalls.ts:231
 msgid "You were trying to {action}."
 msgstr "Vous tentiez de {action}."
 
@@ -19451,7 +19526,7 @@ msgstr "Vous perdrez l'accès à cet espace de travail. Les projets que vous ave
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "Vous recevrez bientôt {objectLabel} à vérifier."
 
-#: src/components/billing/BillingManager.tsx:1468
+#: src/components/billing/BillingManager.tsx:1467
 msgid "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 msgstr "Vous validerez votre nouveau moyen de paiement sur l'écran suivant. Aucun montant ne vous sera débité, cela confirme simplement la nouvelle carte."
 
@@ -19501,7 +19576,7 @@ msgstr "Vous ne faites encore partie d'aucune organisation. Créez un espace de 
 msgid "You're not part of any organisation right now."
 msgstr "Vous ne faites partie d'aucune organisation pour l'instant."
 
-#: src/components/pricing/PricingConfigurator.tsx:830
+#: src/components/workspace/gateWalls.ts:223
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Vous utilisez le forfait Free, qui comprend un quota mensuel d'IA."
 
@@ -19537,6 +19612,14 @@ msgstr "Vous avez été invité à rejoindre <0>{0}</0>. Nous vous y redirigeons
 #~ msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 #~ msgstr "Vous avez atteint la limite du forfait Free pour cette discussion. Passez à un forfait supérieur pour poursuivre la conversation."
 
+#: src/components/workspace/gateWalls.ts:165
+msgid "You've reached the free plan's project limit"
+msgstr "Vous avez atteint la limite de projets du forfait Free"
+
+#: src/components/workspace/gateWalls.ts:159
+msgid "You've reached the limit for speaking in chat"
+msgstr "Vous avez atteint la limite de saisie vocale dans le chat"
+
 #: src/components/conversation/LockedTranscriptOverlay.tsx:21
 msgid "You've reached your summary limit"
 msgstr "Vous avez atteint votre limite de résumés"
@@ -19545,13 +19628,21 @@ msgstr "Vous avez atteint votre limite de résumés"
 msgid "You've reached your transcript limit"
 msgstr "Vous avez atteint votre limite de transcriptions"
 
-#: src/components/workspace/FreeAllowanceBanner.tsx:77
+#: src/components/workspace/FreeAllowanceBanner.tsx:75
 msgid "You've used {percent}% of this month's AI. When it runs out, AI features and new recordings stop until {date}."
 msgstr "Vous avez utilisé {percent} % de votre quota d'IA de ce mois-ci. Une fois épuisé, les fonctionnalités d'IA et les nouveaux enregistrements s'arrêtent jusqu'au {date}."
 
 #: src/components/workspace/PilotBlockModal.tsx:39
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Vous avez utilisé l'intégralité des 10 heures du pilote. Les outils d'hôte (chat, rapports, analyses, exports) sont suspendus."
+
+#: src/components/workspace/gateWalls.ts:162
+msgid "You've used part of this month's free allowance"
+msgstr "Vous avez utilisé une partie de votre quota gratuit de ce mois"
+
+#: src/components/workspace/gateWalls.ts:169
+msgid "You've used this month's free transcription"
+msgstr "Vous avez utilisé la transcription gratuite de ce mois"
 
 #: src/components/chat/FreeTierChatGate.tsx:56
 msgid "You've used this sample project's {count} questions. Create your own project or upgrade to keep going."
@@ -19593,12 +19684,12 @@ msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Votre navigateur bloque le micro. Autorisez l'accès, puis réessayez."
 
 #: src/components/pricing/PricingConfigurator.tsx:728
-msgid "Your call is booked: {bookedTime}."
-msgstr "Votre appel est réservé : {bookedTime}."
+#~ msgid "Your call is booked: {bookedTime}."
+#~ msgstr "Votre appel est réservé : {bookedTime}."
 
 #: src/components/pricing/PricingConfigurator.tsx:730
-msgid "Your call is booked."
-msgstr "Votre appel est réservé."
+#~ msgid "Your call is booked."
+#~ msgstr "Votre appel est réservé."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:69
@@ -19646,14 +19737,18 @@ msgstr "Votre retour"
 msgid "Your feedback and this response go to the dembrane team."
 msgstr "Votre retour et cette réponse sont transmis à l'équipe dembrane."
 
+#: src/components/workspace/gateWalls.ts:227
+msgid "Your free plan includes a monthly AI allowance"
+msgstr "Votre forfait Free inclut un quota mensuel d'IA"
+
 #: src/components/report/UpdateReportModalButton.tsx:224
 #: src/components/report/CreateReportForm.tsx:161
 #~ msgid "Your free plan includes one report. Upgrade to create more."
 #~ msgstr "Votre forfait Free comprend un rapport. Passez à un forfait supérieur pour en créer d'autres."
 
 #: src/components/pricing/PricingConfigurator.tsx:758
-msgid "Your free transcription allowance is used up."
-msgstr "Votre quota de transcription gratuite est épuisé."
+#~ msgid "Your free transcription allowance is used up."
+#~ msgstr "Votre quota de transcription gratuite est épuisé."
 
 #: src/components/pricing/PricingConfigurator.tsx:732
 #~ msgid "Your free transcription hour is used up."
@@ -19672,7 +19767,7 @@ msgstr "Votre invitation est toujours en attente. Réessayez une fois que l'admi
 msgid "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 msgstr "Votre invitation a déjà été acceptée, mais vous ne faites plus partie de {resolvedWorkspaceName}. Demandez à l'administrateur de vous réinviter."
 
-#: src/components/billing/BillingManager.tsx:1210
+#: src/components/billing/BillingManager.tsx:1209
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Votre dernier paiement a échoué. Votre forfait reste actif. Mettez à jour votre moyen de paiement ou relancez le prélèvement pour régulariser la situation."
 
@@ -19713,7 +19808,11 @@ msgstr "Votre organisation ou entreprise"
 msgid "Your organisations"
 msgstr "Vos organisations"
 
-#: src/components/workspace/gateWalls.ts:137
+#: src/components/workspace/gateWalls.ts:160
+msgid "Your own logo comes with a paid plan"
+msgstr "Votre propre logo est inclus dans les forfaits payants"
+
+#: src/components/workspace/gateWalls.ts:128
 msgid "Your own logo comes with a paid plan."
 msgstr "L'ajout de votre propre logo nécessite un forfait payant."
 
@@ -19721,31 +19820,31 @@ msgstr "L'ajout de votre propre logo nécessite un forfait payant."
 msgid "Your own member card stays at the top of the list."
 msgstr "Votre propre fiche de membre reste en haut de la liste."
 
-#: src/components/billing/BillingManager.tsx:1016
+#: src/components/billing/BillingManager.tsx:1015
 msgid "Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you."
 msgstr "Votre période payante est terminée, ce forfait ne peut donc pas être réactivé ici. Écrivez à support@dembrane.com et nous réglerons cela avec vous."
 
-#: src/components/billing/BillingManager.tsx:977
+#: src/components/billing/BillingManager.tsx:976
 msgid "Your payment method has been updated."
 msgstr "Votre moyen de paiement a été mis à jour."
 
-#: src/components/billing/BillingManager.tsx:983
+#: src/components/billing/BillingManager.tsx:982
 msgid "Your payment method update is still processing."
 msgstr "La mise à jour de votre moyen de paiement est toujours en cours de traitement."
 
-#: src/components/billing/BillingManager.tsx:1428
+#: src/components/billing/BillingManager.tsx:1427
 msgid "Your plan ends at the period end."
 msgstr "Votre forfait prendra fin au terme de la période."
 
-#: src/components/billing/BillingManager.tsx:1426
+#: src/components/billing/BillingManager.tsx:1425
 msgid "Your plan ends on {endDate}."
 msgstr "Votre forfait prend fin le {endDate}."
 
-#: src/components/billing/BillingManager.tsx:668
+#: src/components/billing/BillingManager.tsx:667
 msgid "Your plan is arranged with dembrane, so there is nothing to pay here. Everything your plan includes stays available."
 msgstr "Votre forfait est géré directement avec dembrane, vous n'avez donc rien à payer ici. Tout ce qu'inclut votre forfait reste disponible."
 
-#: src/components/billing/BillingManager.tsx:1012
+#: src/components/billing/BillingManager.tsx:1011
 msgid "Your plan is back on. You keep your current period."
 msgstr "Votre forfait est réactivé. Vous conservez votre période en cours."
 
@@ -19753,7 +19852,7 @@ msgstr "Votre forfait est réactivé. Vous conservez votre période en cours."
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Votre forfait est inactif. Réactivez-le pour ajouter des membres."
 
-#: src/components/billing/BillingManager.tsx:333
+#: src/components/billing/BillingManager.tsx:332
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Votre forfait est géré par dembrane. Contactez votre responsable de compte pour effectuer des modifications."
 
@@ -19761,9 +19860,13 @@ msgstr "Votre forfait est géré par dembrane. Contactez votre responsable de co
 msgid "Your plan lets you take the mark off."
 msgstr "Votre forfait vous permet de retirer le filigrane."
 
-#: src/components/billing/BillingManager.tsx:557
+#: src/components/billing/BillingManager.tsx:556
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Votre forfait ne sera pas renouvelé. Vous conservez votre accès jusqu'à la fin de la période."
+
+#: src/components/workspace/FeatureGate.tsx:378
+msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
+msgstr "Vos portails continuent de fonctionner et rien de ce que disent vos participants n'est perdu. Dès que vous passez à un forfait payant, tout ce qui a déjà été enregistré est transcrit."
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
 #: src/components/pricing/PricingTextInput.tsx:327
@@ -19771,8 +19874,8 @@ msgid "Your recording, {0}"
 msgstr "Votre enregistrement, {0}"
 
 #: src/components/pricing/PricingConfigurator.tsx:733
-msgid "Your request is in."
-msgstr "Votre demande a bien été envoyée."
+#~ msgid "Your request is in."
+#~ msgstr "Votre demande a bien été envoyée."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."

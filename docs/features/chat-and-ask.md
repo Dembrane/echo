@@ -186,8 +186,8 @@ wrong?". Your feedback and the reply go to the dembrane team.
   upgrade popup, and a running assistant stops before its next step with "This month's AI
   budget is used up, so I stopped here.". A sample project's chats take 10 questions in all,
   then show "Upgrade to continue": "You've used this sample project's 10 questions." Its
-  upgrade popup says "Sample projects allow 10 questions." and offers to create your own
-  project or answer 5 quick questions for a paid plan. It never mentions the AI allowance.
+  upgrade popup says "Sample projects allow 10 questions" and "Create your own project to
+  keep going.", and offers to continue on dembrane.com. It never mentions the AI allowance.
   See [tiers & billing](./tiers-and-billing.md).
 - Replies are written by Gemini models served from an EU endpoint.
 

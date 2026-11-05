@@ -49,6 +49,7 @@ import {
 import { presentAdoption } from "@dembrane/present";
 import {
   bookingInboxMessage,
+  enquiryInboxMessage,
   environmentName,
   httpForwarder,
   pricingRegistration,
@@ -299,6 +300,7 @@ export function registrations(deps: {
     pricingRegistration({
       store: pricingStorage(db),
       forwarder: toSamAll(bookingInboxMessage),
+      enquiryForwarder: inboxAll ? toSam(enquiryInboxMessage) : null,
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
