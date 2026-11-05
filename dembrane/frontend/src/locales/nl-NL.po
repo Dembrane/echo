@@ -1347,12 +1347,12 @@ msgstr "Een nieuwe assistent en een live monitor"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Er wordt automatisch een nieuw rapport gegenereerd en gepubliceerd op het geplande tijdstip."
 
-#: src/components/workspace/gateWalls.ts:226
+#: src/components/workspace/gateWalls.ts:222
 msgid "A paid plan gives you more AI every month."
 msgstr "Met een betaald abonnement krijg je elke maand meer AI."
 
 #: src/components/workspace/gateWalls.ts:185
-#: src/components/workspace/gateWalls.ts:236
+#: src/components/workspace/gateWalls.ts:232
 msgid "A paid plan lets you keep going."
 msgstr "Met een betaald abonnement kun je verder."
 
@@ -2058,11 +2058,11 @@ msgstr "AI-kosten"
 #~ msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 #~ msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot {resetDate}. Upgrade om nu verder te gaan."
 
-#: src/components/workspace/gateWalls.ts:233
+#: src/components/workspace/gateWalls.ts:229
 msgid "AI features and new recordings are paused until {resetDay}."
 msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot {resetDay}."
 
-#: src/components/workspace/gateWalls.ts:234
+#: src/components/workspace/gateWalls.ts:230
 msgid "AI features and new recordings are paused until next month."
 msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot volgende maand."
 
@@ -2724,9 +2724,9 @@ msgstr "Vraag om naam?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Vraag na afloop van een gesprek om e-mailadressen van deelnemers."
 
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:94
 msgid "ask in chat"
-msgstr "vragen in de chat"
+msgstr "iets vragen in de chat"
 
 #: src/routes/project/library/LibraryRoute.tsx:227
 #~ msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
@@ -2749,9 +2749,9 @@ msgstr "Vraag deelnemers om hun e-mailadres"
 msgid "Ask participants for their name"
 msgstr "Vraag deelnemers om hun naam"
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:92
 msgid "ask the assistant"
-msgstr "vraag het de assistent"
+msgstr "de assistent iets vragen"
 
 #: src/components/agent-access/YourOrganisations.tsx:104
 msgid "Ask your admin"
@@ -4919,7 +4919,7 @@ msgstr "Maak"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Een nieuwe webhook vanaf nul maken"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:97
 msgid "create a report"
 msgstr "een rapport maken"
 
@@ -5034,7 +5034,7 @@ msgstr "Werkruimte aanmaken | dembrane"
 #~ msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
 #~ msgstr "Maak je eigen project aan om door te gaan, of beantwoord 5 korte vragen en kies een moment met het dembrane-team voor een betaald abonnement."
 
-#: src/components/workspace/gateWalls.ts:248
+#: src/components/workspace/gateWalls.ts:244
 msgid "Create your own project to keep going."
 msgstr "Maak je eigen project om door te gaan."
 
@@ -7252,7 +7252,7 @@ msgstr "Algemene afstoting: {0}"
 msgid "Generate"
 msgstr "Genereren"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:95
 msgid "generate a map"
 msgstr "een kaart genereren"
 
@@ -7268,7 +7268,7 @@ msgstr "Nieuw rapport genereren"
 #~ msgid "Generate a Report"
 #~ msgstr "Rapport genereren"
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:99
 msgid "generate a summary"
 msgstr "een samenvatting genereren"
 
@@ -7276,7 +7276,7 @@ msgstr "een samenvatting genereren"
 msgid "Generate a summary first"
 msgstr "Genereer eerst een samenvatting"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:101
 msgid "generate a title"
 msgstr "een titel genereren"
 
@@ -7651,11 +7651,11 @@ msgstr "Wijzigingen verbergen"
 #~ msgid "hide the dembrane event invitation"
 #~ msgstr "de dembrane event-uitnodiging verbergen"
 
-#: src/components/workspace/gateWalls.ts:161
+#: src/components/workspace/gateWalls.ts:163
 msgid "Hiding the dembrane event invitation comes with a paid plan"
 msgstr "De dembrane event-uitnodiging verbergen kan met een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:132
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "De dembrane event-uitnodiging verbergen kan met een betaald plan."
 
@@ -8466,9 +8466,9 @@ msgstr "{tier} houden tot een datum"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Houd de toegang veilig met een eenmalige code uit je authenticator-app. Gebruik deze schakelaar om tweestapsverificatie voor dit account te beheren."
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:96
 msgid "keep analysing with popcorn"
-msgstr "blijf analyseren met Popcorn"
+msgstr "verder analyseren met Popcorn"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
 #: src/routes/project/CreateProjectRoute.tsx:193
@@ -8689,7 +8689,7 @@ msgstr "Naam rechtspersoon"
 msgid "Legend"
 msgstr "Legenda"
 
-#: src/components/workspace/gateWalls.ts:158
+#: src/components/workspace/gateWalls.ts:160
 msgid "Let's find what fits you"
 msgstr "Laten we kijken wat bij je past"
 
@@ -10762,11 +10762,11 @@ msgstr "Facturatie wordt beheerd door dembrane. Overschakelen naar self-serve be
 msgid "On recording page"
 msgstr "Op opnamepagina"
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:137
 msgid "On the free plan one project takes recordings."
 msgstr "In het Free-abonnement kan één project opnames maken."
 
-#: src/components/workspace/gateWalls.ts:166
+#: src/components/workspace/gateWalls.ts:168
 msgid "On the free plan, one project takes recordings"
 msgstr "In het gratis abonnement kan één project opnemen"
 
@@ -12186,11 +12186,11 @@ msgstr "Privéproject"
 msgid "Private workspace"
 msgstr "Privéwerkruimte"
 
-#: src/components/workspace/gateWalls.ts:164
+#: src/components/workspace/gateWalls.ts:166
 msgid "Private workspaces come with a paid plan"
 msgstr "Privéwerkruimtes horen bij een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:132
+#: src/components/workspace/gateWalls.ts:135
 msgid "Private workspaces come with a paid plan."
 msgstr "Privéwerkruimtes zijn beschikbaar met een betaald abonnement."
 
@@ -12872,7 +12872,7 @@ msgstr "Auditlogboeken vernieuwen"
 msgid "Refresh started"
 msgstr "Verversen gestart"
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:93
 msgid "refresh the canvas"
 msgstr "het canvas vernieuwen"
 
@@ -12896,11 +12896,11 @@ msgstr "Vernieuwen…"
 msgid "Regenerate"
 msgstr "Opnieuw genereren"
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:100
 msgid "regenerate a summary"
 msgstr "een samenvatting opnieuw genereren"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:102
 msgid "regenerate a title"
 msgstr "een titel opnieuw genereren"
 
@@ -13575,7 +13575,7 @@ msgstr "Een notitie voor het dembrane-team intrekken"
 msgid "Retranscribe"
 msgstr "Hertranscriptie"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:98
 msgid "retranscribe a conversation"
 msgstr "een gesprek opnieuw transcriberen"
 
@@ -13766,7 +13766,7 @@ msgstr "Starten"
 msgid "Run again from scratch"
 msgstr "Helemaal opnieuw uitvoeren"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:91
 msgid "run an analysis"
 msgstr "een analyse uitvoeren"
 
@@ -13808,7 +13808,7 @@ msgstr "Verkoopfactuur uitgegeven."
 msgid "Sample popcorn session"
 msgstr "Voorbeeld-Popcorn-sessie"
 
-#: src/components/workspace/gateWalls.ts:252
+#: src/components/workspace/gateWalls.ts:248
 msgid "Sample projects allow {count} questions"
 msgstr "Voorbeeldprojecten staan {count} vragen toe"
 
@@ -13816,17 +13816,13 @@ msgstr "Voorbeeldprojecten staan {count} vragen toe"
 #~ msgid "Sample projects allow {sampleQuestions} questions."
 #~ msgstr "Voorbeeldprojecten staan {sampleQuestions} vragen toe."
 
-#: src/components/workspace/gateWalls.ts:251
+#: src/components/workspace/gateWalls.ts:247
 msgid "Sample projects allow one report"
 msgstr "Voorbeeldprojecten staan één rapport toe"
 
 #: src/components/pricing/PricingConfigurator.tsx:823
 #~ msgid "Sample projects allow one report."
 #~ msgstr "Voorbeeldprojecten staan één rapport toe."
-
-#: src/components/workspace/gateWalls.ts:168
-msgid "Sample projects have their own limits"
-msgstr "Voorbeeldprojecten hebben hun eigen limieten"
 
 #: src/routes/admin/AiCostsPanel.tsx:543
 #~ msgid "Samples, demo building and dev tools; no account pays"
@@ -16101,7 +16097,7 @@ msgstr "De volgende gesprekken werden automatisch toegevoegd aan de context"
 msgid "The free plan covers one workspace"
 msgstr "Het gratis abonnement heeft één werkruimte"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:144
 msgid "The free plan covers one workspace."
 msgstr "Het gratis plan dekt één werkruimte."
 
@@ -16118,7 +16114,7 @@ msgstr "Het gratis plan dekt één werkruimte."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "Het Free-abonnement bevat een paar chats per maand, elk met een vast aantal vragen."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:136
 msgid "The free plan includes a limited number of projects."
 msgstr "Het Free-abonnement bevat een beperkt aantal projecten."
 
@@ -16144,11 +16140,11 @@ msgstr "Het Free-abonnement bevat een beperkt aantal projecten."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Het Free-abonnement bevat één kaart per maand."
 
-#: src/components/workspace/gateWalls.ts:163
+#: src/components/workspace/gateWalls.ts:165
 msgid "The free plan includes one organisation"
 msgstr "Het gratis abonnement heeft één organisatie"
 
-#: src/components/workspace/gateWalls.ts:131
+#: src/components/workspace/gateWalls.ts:134
 msgid "The free plan includes one organisation."
 msgstr "Het Free-abonnement bevat één organisatie."
 
@@ -16791,9 +16787,9 @@ msgstr "Deze maand"
 
 #: src/components/report/reportError.ts:9
 msgid "This month's AI budget is used up."
-msgstr "Het AI-tegoed voor deze maand is op."
+msgstr "Het AI-budget voor deze maand is op."
 
-#: src/components/workspace/gateWalls.ts:157
+#: src/components/workspace/gateWalls.ts:233
 msgid "This month's AI is used up"
 msgstr "De AI voor deze maand is op"
 
@@ -17435,7 +17431,7 @@ msgstr "Transcriptie mislukt"
 msgid "Transcripts come with a paid plan"
 msgstr "Transcripten horen bij een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:141
 msgid "Transcripts come with a paid plan."
 msgstr "Transcripten zijn beschikbaar met een betaald abonnement."
 
@@ -18090,7 +18086,7 @@ msgstr "Audio uploaden..."
 msgid "Uploading recordings comes with a paid plan"
 msgstr "Opnames uploaden hoort bij een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:142
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Opnames uploaden is beschikbaar met een betaald abonnement."
 
@@ -18200,9 +18196,9 @@ msgstr "Gebruik Oekraïens voor chat en antwoorden aan deelnemers."
 #~ msgid "use webhooks"
 #~ msgstr "webhooks te gebruiken"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:103
 msgid "use your voice in chat"
-msgstr "je stem in de chat te gebruiken"
+msgstr "je stem in de chat gebruiken"
 
 #: src/routes/admin/AiCostsPanel.tsx:678
 msgid "Used"
@@ -18704,7 +18700,7 @@ msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 msgid "Webhooks come with a paid plan"
 msgstr "Webhooks horen bij een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:143
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks zijn beschikbaar met een betaald abonnement."
 
@@ -19488,9 +19484,9 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 msgid "You stopped this run."
 msgstr "Je hebt deze run gestopt."
 
-#: src/components/workspace/gateWalls.ts:231
+#: src/components/workspace/gateWalls.ts:227
 msgid "You were trying to {action}."
-msgstr "Je probeerde {action}."
+msgstr "Je wilde {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:412
@@ -19572,9 +19568,9 @@ msgstr "Je zit nog in geen enkele organisatie. Maak een werkruimte om een organi
 msgid "You're not part of any organisation right now."
 msgstr "Je maakt op dit moment deel uit van geen enkele organisatie."
 
-#: src/components/workspace/gateWalls.ts:223
+#: src/components/workspace/gateWalls.ts:219
 msgid "You're on the free plan, which includes a monthly AI allowance."
-msgstr "Je hebt het Free-abonnement, inclusief een maandelijks AI-tegoed."
+msgstr "Je hebt het Free-abonnement, inclusief een maandelijks AI-budget."
 
 #: src/components/invite/InviteModal.tsx:744
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
@@ -19608,11 +19604,11 @@ msgstr "Je bent uitgenodigd voor <0>{0}</0>. We brengen je er zo naartoe."
 #~ msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 #~ msgstr "Je hebt de limiet van het gratis plan voor deze chat bereikt. Upgrade om verder te chatten."
 
-#: src/components/workspace/gateWalls.ts:165
+#: src/components/workspace/gateWalls.ts:167
 msgid "You've reached the free plan's project limit"
 msgstr "Je zit aan het maximum aantal projecten van het gratis abonnement"
 
-#: src/components/workspace/gateWalls.ts:159
+#: src/components/workspace/gateWalls.ts:161
 msgid "You've reached the limit for speaking in chat"
 msgstr "Je zit aan de limiet voor inspreken in de chat"
 
@@ -19632,7 +19628,7 @@ msgstr "Je hebt {percent}% van de AI van deze maand gebruikt. Als het op is, sto
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Je hebt alle 10 uur van de pilot gebruikt. Tools voor hosts (Chat, rapporten, analyse, exports) staan op pauze."
 
-#: src/components/workspace/gateWalls.ts:162
+#: src/components/workspace/gateWalls.ts:164
 msgid "You've used part of this month's free allowance"
 msgstr "Je hebt een deel van je gratis tegoed van deze maand opgebruikt"
 
@@ -19733,9 +19729,9 @@ msgstr "Je feedback"
 msgid "Your feedback and this response go to the dembrane team."
 msgstr "Je feedback en dit antwoord gaan naar het dembrane-team."
 
-#: src/components/workspace/gateWalls.ts:227
+#: src/components/workspace/gateWalls.ts:223
 msgid "Your free plan includes a monthly AI allowance"
-msgstr "Je Free-abonnement bevat een maandelijks AI-tegoed"
+msgstr "Je Free-abonnement bevat een maandelijks AI-budget"
 
 #: src/components/report/UpdateReportModalButton.tsx:224
 #: src/components/report/CreateReportForm.tsx:161
@@ -19804,11 +19800,11 @@ msgstr "Je organisatie of bedrijf"
 msgid "Your organisations"
 msgstr "Je organisaties"
 
-#: src/components/workspace/gateWalls.ts:160
+#: src/components/workspace/gateWalls.ts:162
 msgid "Your own logo comes with a paid plan"
 msgstr "Je eigen logo hoort bij een betaald abonnement"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:131
 msgid "Your own logo comes with a paid plan."
 msgstr "Je eigen logo is beschikbaar met een betaald abonnement."
 

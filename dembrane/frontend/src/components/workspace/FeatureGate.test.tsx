@@ -12,6 +12,8 @@ import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
 	type AiAction,
 	aiActionLine,
+	aiBudgetHandover,
+	type PlainWall,
 	type SampleCap,
 	type WallKey,
 	wallHandoverLead,
@@ -140,8 +142,7 @@ const gateViewedCalls = () =>
 	capture.mock.calls.filter((call) => call[0] === "pricing_config_gate_viewed");
 
 it("names what the person ran into, for every wall, in a title of its own", () => {
-	const walls: WallKey[] = [
-		"ai_budget",
+	const walls: PlainWall[] = [
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
@@ -150,7 +151,6 @@ it("names what the person ran into, for every wall, in a title of its own", () =
 		"private_workspace",
 		"project_cap",
 		"recording_project",
-		"sample_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",
@@ -166,7 +166,9 @@ it("names what the person ran into, for every wall, in a title of its own", () =
 		expect(title).not.toContain("\u2014");
 		expect(title).not.toMatch(/\d/);
 	}
-	expect(wallHandoverTitle("ai_budget")).toBe("This month's AI is used up");
+	expect(
+		aiBudgetHandover({ action: "chat", resetDay: null, usedUp: true }).title,
+	).toBe("This month's AI is used up");
 	expect(wallHandoverTitle("webhooks")).toBe("Webhooks come with a paid plan");
 	expect(wallHandoverTitle("billing_page")).toBe("Let's find what fits you");
 });
@@ -412,8 +414,7 @@ it("lets the person stay with Maybe later, and saves nothing", () => {
 });
 
 it("says a paid plan is needed once, in the title or in the body", () => {
-	const usageWalls: WallKey[] = [
-		"ai_budget",
+	const usageWalls: PlainWall[] = [
 		"chat_voice_cap",
 		"free_allowance",
 		"org_cap",
@@ -422,7 +423,7 @@ it("says a paid plan is needed once, in the title or in the body", () => {
 		"transcription_cap",
 		"workspace_cap",
 	];
-	const featureWalls: WallKey[] = [
+	const featureWalls: PlainWall[] = [
 		"custom_logo",
 		"event_cta",
 		"private_workspace",

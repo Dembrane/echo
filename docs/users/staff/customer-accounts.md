@@ -38,8 +38,9 @@ An organisation that signed up on its own shows "This organisation has no accoun
 the "Stage" and the "Language", then select "Enable account". After that you can push offers and
 tasks.
 
-A customer who wants a paid plan answers a short needs form in the dashboard and books a call.
-Their answers show under "Needs form and demo". There is no upgrade request for you to approve.
+A customer who wants a paid plan goes from the dashboard to the pricing calculator on
+dembrane.com, and can book a call there. What they fill in is saved with their account's email,
+workspace and organisation. There is no upgrade request for you to approve.
 
 ## Build a demo
 

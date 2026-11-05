@@ -76,6 +76,9 @@ export type AiAction =
 	| "title"
 	| "title_again";
 
+/** Walls with fixed prompt copy; aiBudgetHandover and sampleCapHandover write the other two. */
+export type PlainWall = Exclude<WallKey, "ai_budget" | "sample_cap">;
+
 /** Which of a sample project's own caps was reached. */
 export type SampleCap = "chat" | "report";
 
@@ -152,9 +155,8 @@ export function wallPopoverLine(wall: WallKey): string {
  *
  * No line names a tier or a number: staff edit the free limits.
  */
-export function wallHandoverTitle(wall: WallKey): string {
-	const titles: Record<WallKey, string> = {
-		ai_budget: t`This month's AI is used up`,
+export function wallHandoverTitle(wall: PlainWall): string {
+	const titles: Record<PlainWall, string> = {
 		billing_page: t`Let's find what fits you`,
 		chat_voice_cap: t`You've reached the limit for speaking in chat`,
 		custom_logo: t`Your own logo comes with a paid plan`,
@@ -164,8 +166,6 @@ export function wallHandoverTitle(wall: WallKey): string {
 		private_workspace: t`Private workspaces come with a paid plan`,
 		project_cap: t`You've reached the free plan's project limit`,
 		recording_project: t`On the free plan, one project takes recordings`,
-		// The cap is named by sampleCapHandover; this is only its fallback.
-		sample_cap: t`Sample projects have their own limits`,
 		transcription_cap: t`You've used this month's free transcription`,
 		transcripts_view: t`Transcripts come with a paid plan`,
 		upload_cap: t`Uploading recordings comes with a paid plan`,
@@ -181,11 +181,9 @@ export function wallHandoverTitle(wall: WallKey): string {
  * paid feature's title already says it comes with a paid plan, so saying it
  * again would repeat, and the billing page blocks nothing.
  */
-export function wallHandoverLead(wall: WallKey): string {
+export function wallHandoverLead(wall: PlainWall): string {
 	const keepGoing = t`A paid plan lets you keep going.`;
-	const leads: Record<WallKey, string> = {
-		// aiBudgetHandover writes this wall's lead.
-		ai_budget: keepGoing,
+	const leads: Record<PlainWall, string> = {
 		billing_page: "",
 		chat_voice_cap: keepGoing,
 		custom_logo: "",
@@ -195,8 +193,6 @@ export function wallHandoverLead(wall: WallKey): string {
 		private_workspace: "",
 		project_cap: keepGoing,
 		recording_project: keepGoing,
-		// sampleCapHandover writes this wall's lead.
-		sample_cap: "",
 		transcription_cap: keepGoing,
 		transcripts_view: "",
 		upload_cap: "",
@@ -234,7 +230,7 @@ export function aiBudgetHandover({
 		: t`AI features and new recordings are paused until next month.`;
 	return {
 		lead: `${opening} ${paused} ${t`A paid plan lets you keep going.`}`,
-		title: wallHandoverTitle("ai_budget"),
+		title: t`This month's AI is used up`,
 	};
 }
 

@@ -140,14 +140,14 @@ popup directly.
 
 1. Choose "Tell us what you need". You find it at every limit, and on the billing page
    under "Current plan".
-2. Answer the questions in "Can you tell us more?". There are six short steps and nothing
-   is required. dembrane asks what you want to use it for, when you need it, how many
-   recordings you expect in your first year, how many conversations run at the same time at
-   your busiest moment, and whether you need anything else. You can speak your answers:
-   "Prefer talking? Press record and just say it."
-3. Choose "Pick a time" and book a call with the dembrane team. You then read "Your call is
-   booked: {time}." and "The invite is in your inbox. We will read your answers before then
-   and bring a draft offer."
+2. A short upgrade screen opens. Its title says what you ran into, such as "This month's AI
+   is used up" or "Webhooks come with a paid plan". It has no prices and no questions. Choose
+   "Continue on dembrane.com", or "Maybe later" to close it.
+3. The pricing calculator on dembrane.com opens in a new tab, in Dutch if your dashboard is
+   in Dutch and in English otherwise. It asks how you use dembrane, which takes about two
+   minutes, and you can book a short call with the dembrane team at the end. The dashboard
+   saves a row for your account and gives the website only that row's random id, never
+   your email, so what you fill in there within a week is linked back to your account.
 4. dembrane sends your organisation an offer. You sign it in the dashboard and fill in your
    billing details. See [offers & invoices](./offers-and-invoices.md).
 5. dembrane puts your account on the plan. Signing the offer does not switch the plan by

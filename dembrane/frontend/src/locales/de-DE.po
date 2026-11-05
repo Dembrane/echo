@@ -1347,12 +1347,12 @@ msgstr "Ein neuer Assistent und ein Live-Monitor"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Ein neuer Bericht wird automatisch zum geplanten Zeitpunkt erstellt und veröffentlicht."
 
-#: src/components/workspace/gateWalls.ts:226
+#: src/components/workspace/gateWalls.ts:222
 msgid "A paid plan gives you more AI every month."
 msgstr "Mit einem kostenpflichtigen Tarif erhalten Sie jeden Monat mehr KI."
 
 #: src/components/workspace/gateWalls.ts:185
-#: src/components/workspace/gateWalls.ts:236
+#: src/components/workspace/gateWalls.ts:232
 msgid "A paid plan lets you keep going."
 msgstr "Mit einem kostenpflichtigen Tarif können Sie weitermachen."
 
@@ -2058,11 +2058,11 @@ msgstr "KI-Kosten"
 #~ msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 #~ msgstr "KI-Funktionen und neue Aufnahmen sind bis zum {resetDate} pausiert. Upgraden Sie jetzt, um direkt weiterzumachen."
 
-#: src/components/workspace/gateWalls.ts:233
+#: src/components/workspace/gateWalls.ts:229
 msgid "AI features and new recordings are paused until {resetDay}."
 msgstr "KI-Funktionen und neue Aufnahmen sind bis zum {resetDay} pausiert."
 
-#: src/components/workspace/gateWalls.ts:234
+#: src/components/workspace/gateWalls.ts:230
 msgid "AI features and new recordings are paused until next month."
 msgstr "KI-Funktionen und neue Aufnahmen sind bis zum nächsten Monat pausiert."
 
@@ -2727,7 +2727,7 @@ msgstr "Nach Namen fragen?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Nach dem Ende eines Gesprächs nach den E-Mail-Adressen der Teilnehmer fragen."
 
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:94
 msgid "ask in chat"
 msgstr "im Chat nachfragen"
 
@@ -2752,7 +2752,7 @@ msgstr "Teilnehmer nach ihrer E-Mail-Adresse fragen"
 msgid "Ask participants for their name"
 msgstr "Teilnehmer nach ihrem Namen fragen"
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:92
 msgid "ask the assistant"
 msgstr "den Assistenten fragen"
 
@@ -4922,7 +4922,7 @@ msgstr "Erstellen"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Einen neuen Webhook von Grund auf erstellen"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:97
 msgid "create a report"
 msgstr "einen Bericht erstellen"
 
@@ -5037,7 +5037,7 @@ msgstr "Arbeitsbereich erstellen | dembrane"
 #~ msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
 #~ msgstr "Erstellen Sie Ihr eigenes Projekt, um fortzufahren, oder beantworten Sie 5 kurze Fragen und wählen Sie einen Termin mit dem dembrane-Team für einen kostenpflichtigen Tarif."
 
-#: src/components/workspace/gateWalls.ts:248
+#: src/components/workspace/gateWalls.ts:244
 msgid "Create your own project to keep going."
 msgstr "Erstellen Sie Ihr eigenes Projekt, um fortzufahren."
 
@@ -7255,7 +7255,7 @@ msgstr "Allgemeine Abstoßung: {0}"
 msgid "Generate"
 msgstr "Generieren"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:95
 msgid "generate a map"
 msgstr "eine Map erstellen"
 
@@ -7271,17 +7271,17 @@ msgstr "Neuen Bericht erstellen"
 #~ msgid "Generate a Report"
 #~ msgstr "Bericht erstellen"
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:99
 msgid "generate a summary"
-msgstr "Zusammenfassung erstellen"
+msgstr "eine Zusammenfassung erstellen"
 
 #: src/components/conversation/ConversationEdit.tsx:443
 msgid "Generate a summary first"
 msgstr "Erstellen Sie zuerst eine Zusammenfassung"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:101
 msgid "generate a title"
-msgstr "Titel generieren"
+msgstr "einen Titel generieren"
 
 #: src/components/workspace/gateWalls.ts:183
 #~ msgid "generate another map"
@@ -7654,11 +7654,11 @@ msgstr "Änderungen ausblenden"
 #~ msgid "hide the dembrane event invitation"
 #~ msgstr "die dembrane Event-Einladung ausblenden"
 
-#: src/components/workspace/gateWalls.ts:161
+#: src/components/workspace/gateWalls.ts:163
 msgid "Hiding the dembrane event invitation comes with a paid plan"
 msgstr "Das Ausblenden der dembrane Event-Einladung ist in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:132
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Das Ausblenden der dembrane Event-Einladung ist Teil eines bezahlten Plans."
 
@@ -8469,7 +8469,7 @@ msgstr "{tier} bis zu einem Datum behalten"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Halten Sie den Zugriff sicher mit einem Einmalcode aus Ihrer Authentifizierungs-App. Aktivieren oder deaktivieren Sie die Zwei-Faktor-Authentifizierung für dieses Konto."
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:96
 msgid "keep analysing with popcorn"
 msgstr "weiter mit Popcorn analysieren"
 
@@ -8692,7 +8692,7 @@ msgstr "Name der juristischen Person"
 msgid "Legend"
 msgstr "Legende"
 
-#: src/components/workspace/gateWalls.ts:158
+#: src/components/workspace/gateWalls.ts:160
 msgid "Let's find what fits you"
 msgstr "Finden wir heraus, was zu Ihnen passt"
 
@@ -10765,11 +10765,11 @@ msgstr "Abrechnung über dembrane verwaltet. Beim Wechsel zur Selbstbedienung bl
 msgid "On recording page"
 msgstr "Auf Aufnahmeseite"
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:137
 msgid "On the free plan one project takes recordings."
 msgstr "Im Free-Tarif kann ein Projekt Aufnahmen machen."
 
-#: src/components/workspace/gateWalls.ts:166
+#: src/components/workspace/gateWalls.ts:168
 msgid "On the free plan, one project takes recordings"
 msgstr "Im Free-Tarif kann ein Projekt Aufnahmen machen"
 
@@ -12189,11 +12189,11 @@ msgstr "Privates Projekt"
 msgid "Private workspace"
 msgstr "Privater Arbeitsbereich"
 
-#: src/components/workspace/gateWalls.ts:164
+#: src/components/workspace/gateWalls.ts:166
 msgid "Private workspaces come with a paid plan"
 msgstr "Private Arbeitsbereiche sind in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:132
+#: src/components/workspace/gateWalls.ts:135
 msgid "Private workspaces come with a paid plan."
 msgstr "Private Arbeitsbereiche sind Teil eines kostenpflichtigen Tarifs."
 
@@ -12875,7 +12875,7 @@ msgstr "Audit-Protokolle aktualisieren"
 msgid "Refresh started"
 msgstr "Aktualisierung gestartet"
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:93
 msgid "refresh the canvas"
 msgstr "das Canvas aktualisieren"
 
@@ -12899,13 +12899,13 @@ msgstr "Wird aktualisiert…"
 msgid "Regenerate"
 msgstr "Neu generieren"
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:100
 msgid "regenerate a summary"
-msgstr "Zusammenfassung neu generieren"
+msgstr "eine Zusammenfassung neu generieren"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:102
 msgid "regenerate a title"
-msgstr "Titel neu generieren"
+msgstr "einen Titel neu generieren"
 
 #: src/components/popcorn/PopcornActions.tsx:88
 msgid "Regenerate popcorn?"
@@ -13578,7 +13578,7 @@ msgstr "Notiz für das dembrane-Team wird zurückgezogen"
 msgid "Retranscribe"
 msgstr "Hertranskribieren"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:98
 msgid "retranscribe a conversation"
 msgstr "ein Gespräch erneut transkribieren"
 
@@ -13769,7 +13769,7 @@ msgstr "Starten"
 msgid "Run again from scratch"
 msgstr "Von Grund auf neu ausführen"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:91
 msgid "run an analysis"
 msgstr "eine Analyse durchführen"
 
@@ -13811,7 +13811,7 @@ msgstr "Rechnung ausgestellt."
 msgid "Sample popcorn session"
 msgstr "Beispiel-Popcorn-Sitzung"
 
-#: src/components/workspace/gateWalls.ts:252
+#: src/components/workspace/gateWalls.ts:248
 msgid "Sample projects allow {count} questions"
 msgstr "Beispielprojekte erlauben {count} Fragen"
 
@@ -13819,17 +13819,13 @@ msgstr "Beispielprojekte erlauben {count} Fragen"
 #~ msgid "Sample projects allow {sampleQuestions} questions."
 #~ msgstr "Beispielprojekte erlauben {sampleQuestions} Fragen."
 
-#: src/components/workspace/gateWalls.ts:251
+#: src/components/workspace/gateWalls.ts:247
 msgid "Sample projects allow one report"
 msgstr "Beispielprojekte erlauben einen Bericht"
 
 #: src/components/pricing/PricingConfigurator.tsx:823
 #~ msgid "Sample projects allow one report."
 #~ msgstr "Beispielprojekte erlauben einen Bericht."
-
-#: src/components/workspace/gateWalls.ts:168
-msgid "Sample projects have their own limits"
-msgstr "Für Beispielprojekte gelten eigene Limits"
 
 #: src/routes/admin/AiCostsPanel.tsx:543
 #~ msgid "Samples, demo building and dev tools; no account pays"
@@ -16104,7 +16100,7 @@ msgstr "Die folgenden Gespräche wurden automatisch zum Kontext hinzugefügt"
 msgid "The free plan covers one workspace"
 msgstr "Der Free-Tarif umfasst einen Arbeitsbereich"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:144
 msgid "The free plan covers one workspace."
 msgstr "Der Free-Tarif umfasst einen Arbeitsbereich."
 
@@ -16121,7 +16117,7 @@ msgstr "Der Free-Tarif umfasst einen Arbeitsbereich."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "Der Free-Tarif enthält einige Chats pro Monat mit jeweils einer festgelegten Anzahl von Fragen."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:136
 msgid "The free plan includes a limited number of projects."
 msgstr "Der Free-Tarif enthält eine begrenzte Anzahl von Projekten."
 
@@ -16147,11 +16143,11 @@ msgstr "Der Free-Tarif enthält eine begrenzte Anzahl von Projekten."
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Der Free-Tarif enthält eine Karte pro Monat."
 
-#: src/components/workspace/gateWalls.ts:163
+#: src/components/workspace/gateWalls.ts:165
 msgid "The free plan includes one organisation"
 msgstr "Der Free-Tarif enthält eine Organisation"
 
-#: src/components/workspace/gateWalls.ts:131
+#: src/components/workspace/gateWalls.ts:134
 msgid "The free plan includes one organisation."
 msgstr "Der Free-Tarif enthält eine Organisation."
 
@@ -16797,7 +16793,7 @@ msgstr "Diesen Monat"
 msgid "This month's AI budget is used up."
 msgstr "Das KI-Guthaben für diesen Monat ist aufgebraucht."
 
-#: src/components/workspace/gateWalls.ts:157
+#: src/components/workspace/gateWalls.ts:233
 msgid "This month's AI is used up"
 msgstr "Das KI-Kontingent für diesen Monat ist aufgebraucht"
 
@@ -17439,7 +17435,7 @@ msgstr "Transkription fehlgeschlagen"
 msgid "Transcripts come with a paid plan"
 msgstr "Transkripte sind in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:141
 msgid "Transcripts come with a paid plan."
 msgstr "Transkripte sind in einem kostenpflichtigen Tarif enthalten."
 
@@ -18094,7 +18090,7 @@ msgstr "Audio wird hochgeladen..."
 msgid "Uploading recordings comes with a paid plan"
 msgstr "Das Hochladen von Aufnahmen ist in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:142
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Das Hochladen von Aufnahmen ist in einem kostenpflichtigen Tarif enthalten."
 
@@ -18204,7 +18200,7 @@ msgstr "Verwenden Sie Ukrainisch für Chat und Antworten von Teilnehmern."
 #~ msgid "use webhooks"
 #~ msgstr "Webhooks nutzen"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:103
 msgid "use your voice in chat"
 msgstr "Ihre Stimme im Chat nutzen"
 
@@ -18709,7 +18705,7 @@ msgstr "Webhooks sind für diese Umgebung nicht aktiviert."
 msgid "Webhooks come with a paid plan"
 msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:143
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten."
 
@@ -19493,9 +19489,9 @@ msgstr "Sie scheinen offline zu sein. Bitte überprüfen Sie Ihre Internetverbin
 msgid "You stopped this run."
 msgstr "Sie haben diesen Durchlauf angehalten."
 
-#: src/components/workspace/gateWalls.ts:231
+#: src/components/workspace/gateWalls.ts:227
 msgid "You were trying to {action}."
-msgstr "Sie haben versucht, {action}."
+msgstr "Sie wollten {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:412
@@ -19577,7 +19573,7 @@ msgstr "Sie gehören noch keiner Organisation an. Erstellen Sie einen Arbeitsber
 msgid "You're not part of any organisation right now."
 msgstr "Sie sind derzeit Teil keiner Organisation."
 
-#: src/components/workspace/gateWalls.ts:223
+#: src/components/workspace/gateWalls.ts:219
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Sie nutzen den Free-Tarif, der ein monatliches KI-Kontingent enthält."
 
@@ -19613,11 +19609,11 @@ msgstr "Sie wurden eingeladen, <0>{0}</0> beizutreten. Wir leiten Sie gleich wei
 #~ msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 #~ msgstr "Sie haben das Limit des Free-Tarifs für diesen Chat erreicht. Upgraden Sie, um das Gespräch fortzusetzen."
 
-#: src/components/workspace/gateWalls.ts:165
+#: src/components/workspace/gateWalls.ts:167
 msgid "You've reached the free plan's project limit"
 msgstr "Sie haben die Projektgrenze des Free-Tarifs erreicht"
 
-#: src/components/workspace/gateWalls.ts:159
+#: src/components/workspace/gateWalls.ts:161
 msgid "You've reached the limit for speaking in chat"
 msgstr "Sie haben das Limit für Spracheingaben im Chat erreicht"
 
@@ -19637,7 +19633,7 @@ msgstr "Sie haben {percent} % Ihres KI-Kontingents für diesen Monat verbraucht.
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Sie haben alle 10 Stunden der Testphase aufgebraucht. Host-Tools (Chat, Berichte, Analysen, Exporte) sind pausiert."
 
-#: src/components/workspace/gateWalls.ts:162
+#: src/components/workspace/gateWalls.ts:164
 msgid "You've used part of this month's free allowance"
 msgstr "Sie haben einen Teil Ihres kostenlosen Kontingents für diesen Monat aufgebraucht"
 
@@ -19738,7 +19734,7 @@ msgstr "Dein Feedback"
 msgid "Your feedback and this response go to the dembrane team."
 msgstr "Ihr Feedback und diese Antwort gehen an das dembrane-Team."
 
-#: src/components/workspace/gateWalls.ts:227
+#: src/components/workspace/gateWalls.ts:223
 msgid "Your free plan includes a monthly AI allowance"
 msgstr "Ihr Free-Tarif enthält ein monatliches KI-Kontingent"
 
@@ -19809,11 +19805,11 @@ msgstr "Ihre Organisation oder Ihr Unternehmen"
 msgid "Your organisations"
 msgstr "Ihre Organisationen"
 
-#: src/components/workspace/gateWalls.ts:160
+#: src/components/workspace/gateWalls.ts:162
 msgid "Your own logo comes with a paid plan"
 msgstr "Ein eigenes Logo ist in kostenpflichtigen Tarifen enthalten"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:131
 msgid "Your own logo comes with a paid plan."
 msgstr "Ein eigenes Logo ist in kostenpflichtigen Tarifen enthalten."
 

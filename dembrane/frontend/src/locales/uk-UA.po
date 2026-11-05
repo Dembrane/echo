@@ -1346,12 +1346,12 @@ msgstr "Новий помічник і монітор наживо"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
 
-#: src/components/workspace/gateWalls.ts:226
+#: src/components/workspace/gateWalls.ts:222
 msgid "A paid plan gives you more AI every month."
 msgstr "Платний тариф надає більше можливостей ШІ щомісяця."
 
 #: src/components/workspace/gateWalls.ts:185
-#: src/components/workspace/gateWalls.ts:236
+#: src/components/workspace/gateWalls.ts:232
 msgid "A paid plan lets you keep going."
 msgstr "З платним тарифом ви зможете продовжити."
 
@@ -2057,11 +2057,11 @@ msgstr "Витрати на ШІ"
 #~ msgid "AI features and new recordings are paused until {resetDate}. Upgrade to keep going now."
 #~ msgstr "Функції ШІ та нові записи призупинено до {resetDate}. Оновіть тариф, щоб продовжити роботу зараз."
 
-#: src/components/workspace/gateWalls.ts:233
+#: src/components/workspace/gateWalls.ts:229
 msgid "AI features and new recordings are paused until {resetDay}."
 msgstr "Функції ШІ та нові записи призупинено до {resetDay}."
 
-#: src/components/workspace/gateWalls.ts:234
+#: src/components/workspace/gateWalls.ts:230
 msgid "AI features and new recordings are paused until next month."
 msgstr "Функції ШІ та нові записи призупинено до наступного місяця."
 
@@ -2726,7 +2726,7 @@ msgstr "Запитувати ім'я?"
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr "Запитувати електронні адреси учасників після завершення розмови."
 
-#: src/components/workspace/gateWalls.ts:91
+#: src/components/workspace/gateWalls.ts:94
 msgid "ask in chat"
 msgstr "запитати в чаті"
 
@@ -2751,7 +2751,7 @@ msgstr "Запитувати в учасників їхню електронну
 msgid "Ask participants for their name"
 msgstr "Запитувати в учасників їхні імена"
 
-#: src/components/workspace/gateWalls.ts:89
+#: src/components/workspace/gateWalls.ts:92
 msgid "ask the assistant"
 msgstr "запитати в асистента"
 
@@ -4921,7 +4921,7 @@ msgstr "Create"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Create a new webhook from scratch"
 
-#: src/components/workspace/gateWalls.ts:94
+#: src/components/workspace/gateWalls.ts:97
 msgid "create a report"
 msgstr "створити звіт"
 
@@ -5036,7 +5036,7 @@ msgstr "Створити робочий простір | dembrane"
 #~ msgid "Create your own project to keep going, or answer 5 quick questions and pick a time with the dembrane team for a paid plan."
 #~ msgstr "Створіть власний проєкт, щоб продовжити, або дайте відповіді на 5 швидких запитань і виберіть зручний час для зустрічі з командою dembrane щодо платного тарифу."
 
-#: src/components/workspace/gateWalls.ts:248
+#: src/components/workspace/gateWalls.ts:244
 msgid "Create your own project to keep going."
 msgstr "Створіть власний проєкт, щоб продовжити."
 
@@ -7254,7 +7254,7 @@ msgstr "Загальне відштовхування: {0}"
 msgid "Generate"
 msgstr "Generate"
 
-#: src/components/workspace/gateWalls.ts:92
+#: src/components/workspace/gateWalls.ts:95
 msgid "generate a map"
 msgstr "згенерувати карту"
 
@@ -7270,7 +7270,7 @@ msgstr "Generate a new report"
 #~ msgid "Generate a Report"
 #~ msgstr "Generate a Report"
 
-#: src/components/workspace/gateWalls.ts:96
+#: src/components/workspace/gateWalls.ts:99
 msgid "generate a summary"
 msgstr "згенерувати підсумок"
 
@@ -7278,7 +7278,7 @@ msgstr "згенерувати підсумок"
 msgid "Generate a summary first"
 msgstr "Generate a summary first"
 
-#: src/components/workspace/gateWalls.ts:98
+#: src/components/workspace/gateWalls.ts:101
 msgid "generate a title"
 msgstr "згенерувати назву"
 
@@ -7653,11 +7653,11 @@ msgstr "Сховати зміни"
 #~ msgid "hide the dembrane event invitation"
 #~ msgstr "приховати запрошення на подію dembrane"
 
-#: src/components/workspace/gateWalls.ts:161
+#: src/components/workspace/gateWalls.ts:163
 msgid "Hiding the dembrane event invitation comes with a paid plan"
 msgstr "Приховати запрошення на подію dembrane можна в платному тарифі"
 
-#: src/components/workspace/gateWalls.ts:129
+#: src/components/workspace/gateWalls.ts:132
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Приховати запрошення на подію dembrane можна в платному плані."
 
@@ -8468,7 +8468,7 @@ msgstr "Зберегти {tier} до певної дати"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 
-#: src/components/workspace/gateWalls.ts:93
+#: src/components/workspace/gateWalls.ts:96
 msgid "keep analysing with popcorn"
 msgstr "продовжити аналізувати з Popcorn"
 
@@ -8691,7 +8691,7 @@ msgstr "Назва юридичної особи"
 msgid "Legend"
 msgstr "Легенда"
 
-#: src/components/workspace/gateWalls.ts:158
+#: src/components/workspace/gateWalls.ts:160
 msgid "Let's find what fits you"
 msgstr "Знайдімо те, що вам підходить"
 
@@ -10764,11 +10764,11 @@ msgstr "На білінгу, керованому dembrane. Перехід на 
 msgid "On recording page"
 msgstr "На сторінці запису"
 
-#: src/components/workspace/gateWalls.ts:134
+#: src/components/workspace/gateWalls.ts:137
 msgid "On the free plan one project takes recordings."
 msgstr "У тарифі Free запис доступний лише в одному проєкті."
 
-#: src/components/workspace/gateWalls.ts:166
+#: src/components/workspace/gateWalls.ts:168
 msgid "On the free plan, one project takes recordings"
 msgstr "У тарифі Free запис доступний лише в одному проєкті"
 
@@ -12188,11 +12188,11 @@ msgstr "Приватний проєкт"
 msgid "Private workspace"
 msgstr "Приватний робочий простір"
 
-#: src/components/workspace/gateWalls.ts:164
+#: src/components/workspace/gateWalls.ts:166
 msgid "Private workspaces come with a paid plan"
 msgstr "Приватні робочі простори доступні в платних тарифах"
 
-#: src/components/workspace/gateWalls.ts:132
+#: src/components/workspace/gateWalls.ts:135
 msgid "Private workspaces come with a paid plan."
 msgstr "Приватні робочі простори доступні у платних тарифах."
 
@@ -12874,7 +12874,7 @@ msgstr "Refresh audit logs"
 msgid "Refresh started"
 msgstr "Оновлення розпочато"
 
-#: src/components/workspace/gateWalls.ts:90
+#: src/components/workspace/gateWalls.ts:93
 msgid "refresh the canvas"
 msgstr "оновити полотно"
 
@@ -12898,11 +12898,11 @@ msgstr "Оновлення…"
 msgid "Regenerate"
 msgstr "Regenerate"
 
-#: src/components/workspace/gateWalls.ts:97
+#: src/components/workspace/gateWalls.ts:100
 msgid "regenerate a summary"
 msgstr "згенерувати підсумок знову"
 
-#: src/components/workspace/gateWalls.ts:99
+#: src/components/workspace/gateWalls.ts:102
 msgid "regenerate a title"
 msgstr "повторно згенерувати назву"
 
@@ -13577,7 +13577,7 @@ msgstr "Відкликання нотатки для команди dembrane"
 msgid "Retranscribe"
 msgstr "Retranscribe"
 
-#: src/components/workspace/gateWalls.ts:95
+#: src/components/workspace/gateWalls.ts:98
 msgid "retranscribe a conversation"
 msgstr "повторно розшифрувати розмову"
 
@@ -13768,7 +13768,7 @@ msgstr "Запустити"
 msgid "Run again from scratch"
 msgstr "Запустити знову з нуля"
 
-#: src/components/workspace/gateWalls.ts:88
+#: src/components/workspace/gateWalls.ts:91
 msgid "run an analysis"
 msgstr "запустити аналіз"
 
@@ -13810,7 +13810,7 @@ msgstr "Рахунок-фактуру виставлено."
 msgid "Sample popcorn session"
 msgstr "Зразок сесії Popcorn"
 
-#: src/components/workspace/gateWalls.ts:252
+#: src/components/workspace/gateWalls.ts:248
 msgid "Sample projects allow {count} questions"
 msgstr "Зразкові проєкти дозволяють {count} запитань"
 
@@ -13818,17 +13818,13 @@ msgstr "Зразкові проєкти дозволяють {count} запит�
 #~ msgid "Sample projects allow {sampleQuestions} questions."
 #~ msgstr "Приклади проєктів дозволяють {sampleQuestions} запитань."
 
-#: src/components/workspace/gateWalls.ts:251
+#: src/components/workspace/gateWalls.ts:247
 msgid "Sample projects allow one report"
 msgstr "Зразкові проєкти дозволяють один звіт"
 
 #: src/components/pricing/PricingConfigurator.tsx:823
 #~ msgid "Sample projects allow one report."
 #~ msgstr "Приклади проєктів дозволяють один звіт."
-
-#: src/components/workspace/gateWalls.ts:168
-msgid "Sample projects have their own limits"
-msgstr "Зразкові проєкти мають власні обмеження"
 
 #: src/routes/admin/AiCostsPanel.tsx:543
 #~ msgid "Samples, demo building and dev tools; no account pays"
@@ -16103,7 +16099,7 @@ msgstr "The following conversations were automatically added to the context"
 msgid "The free plan covers one workspace"
 msgstr "Тариф Free містить один робочий простір"
 
-#: src/components/workspace/gateWalls.ts:141
+#: src/components/workspace/gateWalls.ts:144
 msgid "The free plan covers one workspace."
 msgstr "Тариф Free містить один робочий простір."
 
@@ -16120,7 +16116,7 @@ msgstr "Тариф Free містить один робочий простір."
 #~ msgid "The free plan includes a few chats a month, each with a set number of questions."
 #~ msgstr "Тариф Free включає кілька чатів на місяць, кожен із фіксованою кількістю запитань."
 
-#: src/components/workspace/gateWalls.ts:133
+#: src/components/workspace/gateWalls.ts:136
 msgid "The free plan includes a limited number of projects."
 msgstr "Тариф Free включає обмежену кількість проєктів."
 
@@ -16146,11 +16142,11 @@ msgstr "Тариф Free включає обмежену кількість пр�
 #~ msgid "The free plan includes one map a month."
 #~ msgstr "Тариф Free містить одну мапу на місяць."
 
-#: src/components/workspace/gateWalls.ts:163
+#: src/components/workspace/gateWalls.ts:165
 msgid "The free plan includes one organisation"
 msgstr "Тариф Free містить одну організацію"
 
-#: src/components/workspace/gateWalls.ts:131
+#: src/components/workspace/gateWalls.ts:134
 msgid "The free plan includes one organisation."
 msgstr "Тариф Free містить одну організацію."
 
@@ -16796,7 +16792,7 @@ msgstr "Цього місяця"
 msgid "This month's AI budget is used up."
 msgstr "Бюджет на ШІ на цей місяць вичерпано."
 
-#: src/components/workspace/gateWalls.ts:157
+#: src/components/workspace/gateWalls.ts:233
 msgid "This month's AI is used up"
 msgstr "Ліміт ШІ на цей місяць вичерпано"
 
@@ -17438,7 +17434,7 @@ msgstr "Не вдалося транскрибувати"
 msgid "Transcripts come with a paid plan"
 msgstr "Стенограми доступні в платних тарифах"
 
-#: src/components/workspace/gateWalls.ts:138
+#: src/components/workspace/gateWalls.ts:141
 msgid "Transcripts come with a paid plan."
 msgstr "Стенограми доступні в платному тарифі."
 
@@ -18095,7 +18091,7 @@ msgstr "Uploading audio..."
 msgid "Uploading recordings comes with a paid plan"
 msgstr "Завантаження записів доступне в платних тарифах"
 
-#: src/components/workspace/gateWalls.ts:139
+#: src/components/workspace/gateWalls.ts:142
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Завантаження записів доступне на платному тарифі."
 
@@ -18205,7 +18201,7 @@ msgstr "Використовуйте українську мову для чат
 #~ msgid "use webhooks"
 #~ msgstr "використовувати вебхуки"
 
-#: src/components/workspace/gateWalls.ts:100
+#: src/components/workspace/gateWalls.ts:103
 msgid "use your voice in chat"
 msgstr "використовувати голос у чаті"
 
@@ -18710,7 +18706,7 @@ msgstr "Вебхуки не ввімкнено для цього середов�
 msgid "Webhooks come with a paid plan"
 msgstr "Вебхуки доступні в платних тарифах"
 
-#: src/components/workspace/gateWalls.ts:140
+#: src/components/workspace/gateWalls.ts:143
 msgid "Webhooks come with a paid plan."
 msgstr "Вебхуки доступні на платному тарифі."
 
@@ -19494,7 +19490,7 @@ msgstr "You seem to be offline, please check your internet connection"
 msgid "You stopped this run."
 msgstr "Ви зупинили цей запуск."
 
-#: src/components/workspace/gateWalls.ts:231
+#: src/components/workspace/gateWalls.ts:227
 msgid "You were trying to {action}."
 msgstr "Ви намагалися {action}."
 
@@ -19578,7 +19574,7 @@ msgstr "Ви ще не належите до жодної організації
 msgid "You're not part of any organisation right now."
 msgstr "Зараз ви не належите до жодної організації."
 
-#: src/components/workspace/gateWalls.ts:223
+#: src/components/workspace/gateWalls.ts:219
 msgid "You're on the free plan, which includes a monthly AI allowance."
 msgstr "Ви використовуєте тариф Free, який включає щомісячний ліміт ШІ."
 
@@ -19614,11 +19610,11 @@ msgstr "Вас запросили приєднатися до <0>{0}</0>. Зар
 #~ msgid "You've reached the free plan limit for this chat. Upgrade to keep the conversation going."
 #~ msgstr "Ви досягли ліміту тарифу Free для цього чату. Оновіть тариф, щоб продовжити розмову."
 
-#: src/components/workspace/gateWalls.ts:165
+#: src/components/workspace/gateWalls.ts:167
 msgid "You've reached the free plan's project limit"
 msgstr "Ви досягли ліміту проєктів у тарифі Free"
 
-#: src/components/workspace/gateWalls.ts:159
+#: src/components/workspace/gateWalls.ts:161
 msgid "You've reached the limit for speaking in chat"
 msgstr "Ви досягли ліміту голосового введення в чаті"
 
@@ -19638,7 +19634,7 @@ msgstr "Ви використали {percent}% ліміту ШІ на цей м�
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Ви використали всі 10 годин пілоту. Інструменти ведучого (чат, звіти, аналіз, експорт) призупинено."
 
-#: src/components/workspace/gateWalls.ts:162
+#: src/components/workspace/gateWalls.ts:164
 msgid "You've used part of this month's free allowance"
 msgstr "Ви використали частину безкоштовного ліміту цього місяця"
 
@@ -19739,7 +19735,7 @@ msgstr "Ваш відгук"
 msgid "Your feedback and this response go to the dembrane team."
 msgstr "Ваш відгук і ця відповідь надходять команді dembrane."
 
-#: src/components/workspace/gateWalls.ts:227
+#: src/components/workspace/gateWalls.ts:223
 msgid "Your free plan includes a monthly AI allowance"
 msgstr "Ваш тариф Free включає щомісячний ліміт ШІ"
 
@@ -19810,11 +19806,11 @@ msgstr "Ваша організація або компанія"
 msgid "Your organisations"
 msgstr "Ваші організації"
 
-#: src/components/workspace/gateWalls.ts:160
+#: src/components/workspace/gateWalls.ts:162
 msgid "Your own logo comes with a paid plan"
 msgstr "Власний логотип доступний у платних тарифах"
 
-#: src/components/workspace/gateWalls.ts:128
+#: src/components/workspace/gateWalls.ts:131
 msgid "Your own logo comes with a paid plan."
 msgstr "Власний логотип доступний у платному тарифі."
 

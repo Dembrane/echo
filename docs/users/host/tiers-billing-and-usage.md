@@ -169,11 +169,12 @@ There is no checkout, no plan picker and no upgrade request in the dashboard. Th
 
 1. Press "Tell us what you need". The button is on the billing page of a free account. The same
    link is in the popover that opens when you press a control your plan does not include.
-2. Answer the form "Can you tell us more?". It asks what you want to use dembrane for, when,
-   how many recordings you expect, how many will run at once, and what else you need. Nothing
-   is required, and you can speak the written answers instead of typing them.
-3. Press "Pick a time" and book a call with the dembrane team. They read your answers before
-   the call and bring a draft offer.
+2. A short screen says what you ran into and asks no questions. Press "Continue on
+   dembrane.com", or "Maybe later" to close it. Everything you made stays as it is.
+3. The pricing calculator on dembrane.com opens in a new tab. It asks how you use dembrane,
+   which takes about two minutes, and you can book a short call with the dembrane team at the
+   end. What you fill in there is linked to your dashboard account without your email being
+   put in the link.
 4. The offer arrives by email and under your organisation's "Documents" and "Tasks". It is
    valid for 14 days. An organisation admin or billing member signs it on screen, or sends it
    to someone else to sign. The data processing agreement comes with it as its own document.
