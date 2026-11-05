@@ -3,6 +3,7 @@ import { i18n } from "@lingui/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeAll, expect, it, vi } from "vitest";
 import {
 	initiateAndUploadConversationChunk,
@@ -178,6 +179,52 @@ it("a file the server cannot read shows the catalog message, not the raw error",
 	await waitFor(() =>
 		expect(result.current.uploadErrors["a.mp3"]).toBe(
 			"This file could not be read as audio. Choose another file.",
+		),
+	);
+});
+
+it("a used-up AI budget names the allowance's reset day for the refused file", async () => {
+	const refusal = Object.assign(new Error("402"), {
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: { error: "FREE_TIER_LIMIT", limit: "ai_budget" },
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	});
+	vi.mocked(initiateAndUploadConversationChunk).mockRejectedValueOnce(
+		new UploadFailedError([{ error: refusal, name: "a.mp3" }], 0),
+	);
+	const qc = new QueryClient();
+	qc.setQueryData(["workspace", "w1", "free-allowance"], {
+		ai: { exhausted: true, percent_used: 100, unlimited: false },
+		free: true,
+		resets_at: "2026-12-01T00:00:00Z",
+	});
+	const wrapper = ({ children }: { children: ReactNode }) => (
+		<QueryClientProvider client={qc}>
+			<MemoryRouter initialEntries={["/w/w1/projects/p1"]}>
+				<Routes>
+					<Route
+						path="/w/:workspaceId/projects/:projectId"
+						element={children}
+					/>
+				</Routes>
+			</MemoryRouter>
+		</QueryClientProvider>
+	);
+	const { result } = renderHook(() => useConversationUploader(), { wrapper });
+	act(() =>
+		result.current.uploadFiles({
+			...payload,
+			chunks: [new File(["x"], "a.mp3", { type: "audio/mpeg" })],
+		}),
+	);
+	await waitFor(() =>
+		expect(result.current.uploadErrors["a.mp3"]).toBe(
+			"This month's AI is used up. New recordings and uploads are paused until 1 December 2026.",
 		),
 	);
 });

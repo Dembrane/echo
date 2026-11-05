@@ -31,6 +31,7 @@ import {
 } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
+import { meteringRegistration, type PriceBook } from "@dembrane/metering";
 import { audiences, Notifier } from "@dembrane/notifications";
 import type { Logger } from "@dembrane/observability";
 import {
@@ -62,6 +63,7 @@ import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
 import {
   dispatchWebhook,
+  enqueueSamMessage,
   httpDeliver,
   httpSamInbox,
   runDispatch,
@@ -107,6 +109,7 @@ export function registrations(deps: {
     | "accounts"
     | "samInbox"
     | "samples"
+    | "metering"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -132,6 +135,8 @@ export function registrations(deps: {
   databaseUrl: string;
   /** Where the popcorn tick enqueues its workflows and where participant links point. */
   popcorn: { databaseUrl: string; portalUrl: string };
+  /** This worker's AI prices, reloaded after each daily sync. */
+  prices: PriceBook;
 }): Registration[] {
   const { logger, db, config } = deps;
   // Support requests, pricing bookings and overage notices share the team's webhook.
@@ -275,6 +280,15 @@ export function registrations(deps: {
       },
     }),
     popcornWorker(popcornDeps),
+    meteringRegistration({
+      db,
+      logger,
+      // AI cost alerts: sam's inbox where it takes everything, else only the log.
+      alerts: inboxAll ? (m) => enqueueSamMessage(deps.accountsJobs, m) : null,
+      modelsDevUrl: config.metering.modelsDevUrl,
+      ecbUrl: config.metering.ecbRatesUrl,
+      book: deps.prices,
+    }),
     supportForwardRegistration({
       outbox: supportOutbox(db),
       forwarder: toSam(supportInboxMessage),

@@ -1,9 +1,14 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
-import type { LanguageModelV4 } from "@ai-sdk/provider";
 import { AudioError } from "@dembrane/audio";
 import { newId } from "@dembrane/core";
-import { FallbackModel } from "@dembrane/llm";
+import {
+  FallbackModel,
+  fakeCalls,
+  fakeLanguageModel,
+  lastPayer,
+  takeUnscopedFakeCalls,
+} from "@dembrane/llm";
 import { GeminiTranscriber } from "@dembrane/transcription";
 import { createChunk } from "../src/chunks";
 import { catchUpSummaries, finishConversation } from "../src/pipeline/defs";
@@ -82,11 +87,15 @@ run("conversation pipeline", () => {
     expect(done?.diarization).toMatchObject({ schema: "Dembrane-26-07-gemini" });
     expect((await conversation(cid)).recording_started_at).not.toBeNull();
 
+    takeUnscopedFakeCalls();
     await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
     const final = await until(async () => {
       const c = await conversation(cid);
       return c.summary && c.merged_audio_path && c.token_count !== null ? c : null;
     });
+    // The finalize's summary is billed to the conversation.
+    expect(lastPayer()).toEqual({ ref: "conversation", id: cid });
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     expect(final.is_finished).toBe(true);
     expect(final.is_all_chunks_transcribed).toBe(true);
     expect(final.summary).toBe("A short summary.");
@@ -211,36 +220,16 @@ run("conversation pipeline", () => {
 
   /** Deployments that answer like prod's refusals (SAFETY, no text) until told otherwise. */
   function refusingGroup(answers: Record<string, string[]>, calls: string[]) {
-    const deployment = (id: string): LanguageModelV4 => ({
-      specificationVersion: "v4",
-      provider: "fake",
-      modelId: id,
-      supportedUrls: {},
-      async doGenerate() {
-        const text = answers[id]?.shift();
-        calls.push(`${id}:${text ? "answer" : "safety"}`);
-        const usage = {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 0, text: 0, reasoning: 0 },
-        };
-        return text
-          ? ({
-              content: [{ type: "text", text }],
-              finishReason: { unified: "stop", raw: "STOP" },
-              usage,
-              warnings: [],
-            } as never)
-          : ({
-              content: [],
-              finishReason: { unified: "content-filter", raw: "SAFETY" },
-              usage,
-              warnings: [],
-            } as never);
-      },
-      async doStream() {
-        throw new Error("not used");
-      },
-    });
+    const deployment = (id: string) =>
+      fakeLanguageModel({
+        modelId: id,
+        usage: { output: 0 },
+        text: () => {
+          const text = answers[id]?.shift();
+          calls.push(`${id}:${text ? "answer" : "safety"}`);
+          return text || null;
+        },
+      });
     const group = (name: string) =>
       new FallbackModel(
         name,
@@ -261,6 +250,7 @@ run("conversation pipeline", () => {
   test("a chunk the first model refuses is transcribed by the next one", async () => {
     const cid = newId();
     await seed(h.sql, cid);
+    takeUnscopedFakeCalls();
     const calls: string[] = [];
     const gemini = refusingGroup(
       { "gemini-b": ['{"corrected_transcript": "hallo van b", "note": ""}'] },
@@ -276,6 +266,12 @@ run("conversation pipeline", () => {
       });
       expect(row?.transcript).toBe("hallo van b");
       expect(row?.error).toBeNull();
+      // The chunk job names only its chunk; its calls are billed to the chunk's conversation.
+      const gemini = fakeCalls().filter((c) => c.model.startsWith("gemini-"));
+      expect(gemini.length).toBeGreaterThan(0);
+      expect(gemini.map((c) => c.payer)).toEqual(
+        gemini.map(() => ({ ref: "conversation", id: cid })),
+      );
     } finally {
       h.transcriber.transcribe = original;
     }
@@ -394,12 +390,16 @@ run("conversation pipeline", () => {
     expect(due).not.toContain(empty);
     expect(due).not.toContain(blank);
 
+    takeUnscopedFakeCalls();
     await h.queue.enqueue(catchUpSummaries, {});
     const c = await until(async () => {
       const x = await conversation(withText);
       return x.summary !== "[No transcript available]" ? x : null;
     });
     expect(c.summary).toBe("A short summary.");
+    // The summary job it queues is billed to its conversation.
+    expect(lastPayer()).toEqual({ ref: "conversation", id: withText });
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     expect((await conversation(empty)).summary).toBe("[No transcript available]");
   });
 

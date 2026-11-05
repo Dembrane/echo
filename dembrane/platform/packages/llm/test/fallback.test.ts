@@ -6,6 +6,7 @@ import {
   FALL_BACK_ON_REFUSAL,
   FallbackModel,
   isRetryable,
+  type ModelCall,
   ModelRefusalError,
 } from "../src";
 
@@ -271,6 +272,25 @@ describe("fallback", () => {
       }),
     ).rejects.toBeDefined();
     expect(calls).toEqual(["a:hang"]);
+  });
+
+  test("each call names the provider of the deployment that took it", async () => {
+    const calls: string[] = [];
+    const seen: ModelCall[] = [];
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", provider: "vertex", model: model("a", [503, 503], calls) },
+        { label: "b", provider: "openai-compatible", model: model("b", ["ok"], calls) },
+      ],
+      { ...fast, observe: (c) => seen.push(c) },
+    );
+    await generateText({ model: m, prompt: "hi", maxRetries: 0 });
+    expect(seen.map((c) => [c.provider, c.model, c.status])).toEqual([
+      ["vertex", "a", "error"],
+      ["vertex", "a", "error"],
+      ["openai-compatible", "b", "ok"],
+    ]);
   });
 
   test("retryable classification", () => {

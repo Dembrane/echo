@@ -46,13 +46,24 @@ it("maps each failure the endpoint can return onto its own message", () => {
 	);
 });
 
-it("reads only the free-tier 402 as the free wall", () => {
-	const free = axiosErrorWithStatus(402, {
+it("reads only the AI budget 402 as the AI wall", () => {
+	const budget = axiosErrorWithStatus(402, {
+		code: "billing.tier_limit",
+		detail: {
+			error: "FREE_TIER_LIMIT",
+			limit: "ai_budget",
+			resets_at: "2026-12-01T00:00:00Z",
+		},
+		params: { limit: "ai_budget" },
+	});
+	expect(transcribeErrorKind(budget)).toBe("free_limit");
+	// Voice never spends audio hours, so another free limit is no AI wall.
+	const audio = axiosErrorWithStatus(402, {
 		code: "billing.tier_limit",
 		detail: { error: "FREE_TIER_LIMIT", limit: "audio_month" },
 		params: { limit: "audio_month" },
 	});
-	expect(transcribeErrorKind(free)).toBe("free_limit");
+	expect(transcribeErrorKind(audio)).toBe("unknown");
 	expect(transcribeErrorKind(axiosErrorWithStatus(402))).toBe("unknown");
 	const locked = axiosErrorWithStatus(402, {
 		code: "conversation.locked",

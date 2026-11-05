@@ -10,6 +10,11 @@ import type { Tier } from "@/lib/tiers";
 import { FeatureGate, UpgradeModal } from "./FeatureGate";
 import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
+	type AiAction,
+	aiActionLine,
+	aiBudgetHandover,
+	type PlainWall,
+	type SampleCap,
 	type WallKey,
 	wallHandoverLead,
 	wallHandoverTitle,
@@ -93,26 +98,41 @@ const wrap = (node: React.ReactNode) =>
 	);
 
 const renderModal = ({
+	aiAction,
+	aiUsedUp,
 	currentTier = "free" as Tier,
 	entry = "modal_direct" as "modal_direct" | "popover_link",
 	onClose = () => {},
 	requiredTier = "changemaker" as Tier,
+	resetsAt,
+	sampleCap,
+	sampleQuestions,
 	wallKey,
 }: {
+	aiAction?: AiAction;
+	aiUsedUp?: boolean;
 	currentTier?: Tier;
 	entry?: "modal_direct" | "popover_link";
 	onClose?: () => void;
 	requiredTier?: Tier;
+	resetsAt?: string | null;
+	sampleCap?: SampleCap;
+	sampleQuestions?: number | null;
 	wallKey: WallKey;
 }) =>
 	wrap(
 		<UpgradeModal
+			aiAction={aiAction}
+			aiUsedUp={aiUsedUp}
 			canRequestUpgrade
+			resetsAt={resetsAt}
 			currentTier={currentTier}
 			entry={entry}
 			onClose={onClose}
 			opened
 			requiredTier={requiredTier}
+			sampleCap={sampleCap}
+			sampleQuestions={sampleQuestions}
 			wallKey={wallKey}
 			workspaceId="workspace-1"
 		/>,
@@ -122,20 +142,15 @@ const gateViewedCalls = () =>
 	capture.mock.calls.filter((call) => call[0] === "pricing_config_gate_viewed");
 
 it("names what the person ran into, for every wall, in a title of its own", () => {
-	const walls: WallKey[] = [
-		"chat_cap",
-		"chat_turn_cap",
+	const walls: PlainWall[] = [
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
-		"map_cap",
 		"org_cap",
-		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",
-		"report_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",
@@ -151,29 +166,15 @@ it("names what the person ran into, for every wall, in a title of its own", () =
 		expect(title).not.toContain("\u2014");
 		expect(title).not.toMatch(/\d/);
 	}
-	expect(wallHandoverTitle("report_cap")).toBe(
-		"You've used this month's free reports",
-	);
+	expect(
+		aiBudgetHandover({ action: "chat", resetDay: null, usedUp: true }).title,
+	).toBe("This month's AI is used up");
 	expect(wallHandoverTitle("webhooks")).toBe("Webhooks come with a paid plan");
 	expect(wallHandoverTitle("billing_page")).toBe("Let's find what fits you");
 });
 
 it("states the free content limits without a number or an em dash", () => {
 	const lines: [WallKey, string][] = [
-		[
-			"chat_cap",
-			"The free plan includes a few chats a month, each with a set number of questions.",
-		],
-		[
-			"chat_turn_cap",
-			"The free plan includes a few chats a month, each with a set number of questions.",
-		],
-		["report_cap", "The free plan includes a monthly allowance of reports."],
-		["map_cap", "The free plan includes a monthly allowance of maps."],
-		[
-			"popcorn_cap",
-			"The free plan includes a monthly allowance of popcorn analyses.",
-		],
 		["project_cap", "The free plan includes a limited number of projects."],
 	];
 	for (const [wall, line] of lines) {
@@ -184,6 +185,121 @@ it("states the free content limits without a number or an em dash", () => {
 	}
 });
 
+// The AI budget wall: one prompt for every AI action, naming the action and the reset day.
+
+const modalText = () => screen.getByTestId("upgrade-modal").textContent ?? "";
+const bodyText = () =>
+	screen.getByTestId("upgrade-modal-body").textContent ?? "";
+
+it("names the refused action and the reset day on the ai_budget wall", () => {
+	renderModal({
+		aiAction: "report",
+		resetsAt: "2026-12-01T00:00:00Z",
+		wallKey: "ai_budget",
+	});
+
+	expect(modalText()).toContain("This month's AI is used up");
+	expect(bodyText()).toMatch(
+		/^You were trying to create a report\. AI features and new recordings are paused until 1 December 2026\. A paid plan lets you keep going\. We'd love/,
+	);
+	expect(modalText()).not.toMatch(/€|euro|credit/i);
+	expect(modalText()).not.toContain("\u2014");
+	expect(screen.getByTestId("upgrade-modal-reassurance").textContent).toBe(
+		"Everything you've made here stays as it is.",
+	);
+});
+
+it("says next month when the ai_budget refusal carries no reset date", () => {
+	renderModal({ aiAction: "chat", resetsAt: null, wallKey: "ai_budget" });
+	expect(bodyText()).toContain(
+		"You were trying to ask in chat. AI features and new recordings are paused until next month.",
+	);
+});
+
+it("opens on the monthly AI allowance when used up but nothing was refused", () => {
+	renderModal({
+		aiUsedUp: true,
+		resetsAt: "2026-12-01T00:00:00Z",
+		wallKey: "ai_budget",
+	});
+	expect(modalText()).toContain("This month's AI is used up");
+	expect(bodyText()).toMatch(
+		/^You're on the free plan, which includes a monthly AI allowance\. AI features and new recordings are paused until 1 December 2026\./,
+	);
+	expect(bodyText()).not.toContain("You were trying to");
+});
+
+it("opens neutrally while the budget still has room, even with an action passed", () => {
+	renderModal({
+		aiAction: "chat",
+		aiUsedUp: false,
+		resetsAt: "2026-12-01T00:00:00Z",
+		wallKey: "ai_budget",
+	});
+	expect(modalText()).toContain(
+		"Your free plan includes a monthly AI allowance",
+	);
+	expect(bodyText()).toMatch(
+		/^A paid plan gives you more AI every month\. We'd love/,
+	);
+	expect(modalText()).not.toContain("You were trying to");
+	expect(modalText()).not.toContain("used up");
+	expect(modalText()).not.toContain("paused until");
+});
+
+it.each([
+	["chat", "Sample projects allow 10 questions"],
+	["report", "Sample projects allow one report"],
+] as const)(
+	"a sample project's %s cap has its own wall: only the cap and the way on",
+	(cap, title) => {
+		renderModal({ sampleCap: cap, wallKey: "sample_cap" });
+		expect(modalText()).toContain(title);
+		expect(bodyText()).toMatch(
+			/^Create your own project to keep going\. We'd love/,
+		);
+		expect(modalText()).not.toContain("You were trying to");
+		expect(modalText()).not.toMatch(/AI allowance|AI is used up/);
+		expect(gateViewedCalls()[0]?.[1]).toMatchObject({ wall_key: "sample_cap" });
+		expect(new URL(continueLink().href).searchParams.get("trigger")).toBe(
+			"sample_cap",
+		);
+	},
+);
+
+it("names the question cap the refusal carried", () => {
+	renderModal({
+		sampleCap: "chat",
+		sampleQuestions: 12,
+		wallKey: "sample_cap",
+	});
+	expect(modalText()).toContain("Sample projects allow 12 questions");
+});
+
+it("keeps the AI copy off every other wall", () => {
+	renderModal({ wallKey: "custom_logo" });
+	expect(modalText()).not.toContain("AI");
+	expect(wallPopoverLine("ai_budget")).toBe("");
+	expect(wallPopoverLine("sample_cap")).toBe("");
+});
+
+it("names every AI action as a lowercase phrase", () => {
+	const lines: [AiAction, string][] = [
+		["chat", "ask in chat"],
+		["assistant", "ask the assistant"],
+		["voice", "use your voice in chat"],
+		["report", "create a report"],
+		["map", "generate a map"],
+		["analysis", "run an analysis"],
+		["popcorn", "keep analysing with popcorn"],
+		["canvas", "refresh the canvas"],
+		["retranscribe", "retranscribe a conversation"],
+	];
+	for (const [action, line] of lines) {
+		expect(aiActionLine(action)).toBe(line);
+	}
+});
+
 // 2. The prompt is one screen, and the person chooses whether to go.
 
 const continueLink = () =>
@@ -191,10 +307,12 @@ const continueLink = () =>
 
 it("says what they hit and offers the website, without sending them anywhere", () => {
 	const onClose = vi.fn();
-	renderModal({ onClose, wallKey: "report_cap" });
+	renderModal({ onClose, wallKey: "project_cap" });
 
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.textContent).toContain("You've used this month's free reports");
+	expect(modal.textContent).toContain(
+		"You've reached the free plan's project limit",
+	);
 	const body = screen.getByTestId("upgrade-modal-body").textContent;
 	expect(body).toMatch(/^A paid plan lets you keep going\. We'd love/);
 	expect(body).toContain("about two minutes on our website");
@@ -251,7 +369,7 @@ it("opens the tab with the same id it saves, though closing re-renders in the sa
 				onClose={() => setOpened(false)}
 				opened={opened}
 				requiredTier="changemaker"
-				wallKey="report_cap"
+				wallKey="project_cap"
 				workspaceId="workspace-1"
 			/>
 		);
@@ -283,7 +401,7 @@ it("sends Dutch speakers to the Dutch calculator", () => {
 
 it("lets the person stay with Maybe later, and saves nothing", () => {
 	const onClose = vi.fn();
-	renderModal({ onClose, wallKey: "map_cap" });
+	renderModal({ onClose, wallKey: "org_cap" });
 
 	fireEvent.click(screen.getByTestId("upgrade-modal-later"));
 	expect(onClose).toHaveBeenCalledTimes(1);
@@ -296,21 +414,16 @@ it("lets the person stay with Maybe later, and saves nothing", () => {
 });
 
 it("says a paid plan is needed once, in the title or in the body", () => {
-	const usageWalls: WallKey[] = [
-		"chat_cap",
-		"chat_turn_cap",
+	const usageWalls: PlainWall[] = [
 		"chat_voice_cap",
 		"free_allowance",
-		"map_cap",
 		"org_cap",
-		"popcorn_cap",
 		"project_cap",
 		"recording_project",
-		"report_cap",
 		"transcription_cap",
 		"workspace_cap",
 	];
-	const featureWalls: WallKey[] = [
+	const featureWalls: PlainWall[] = [
 		"custom_logo",
 		"event_cta",
 		"private_workspace",
@@ -354,19 +467,16 @@ it("keeps the save from blocking the way forward", async () => {
 
 it("names no tier in any gate copy", () => {
 	const walls: WallKey[] = [
-		"chat_cap",
-		"chat_turn_cap",
+		"ai_budget",
 		"chat_voice_cap",
 		"custom_logo",
 		"event_cta",
 		"free_allowance",
-		"map_cap",
 		"org_cap",
-		"popcorn_cap",
 		"private_workspace",
 		"project_cap",
 		"recording_project",
-		"report_cap",
+		"sample_cap",
 		"transcription_cap",
 		"transcripts_view",
 		"upload_cap",
@@ -435,6 +545,28 @@ it("fires gate_viewed on the modal when no popover came first, once", () => {
 		</I18nProvider>,
 	);
 	expect(gateViewedCalls()).toHaveLength(1);
+});
+
+it("names the refused AI action on the ai_budget wall's gate events", () => {
+	renderModal({ aiAction: "report", wallKey: "ai_budget" });
+	expect(gateViewedCalls()[0][1]).toMatchObject({
+		ai_action: "report",
+		wall_key: "ai_budget",
+	});
+	fireEvent.click(continueLink());
+	const configEvents = capture.mock.calls.filter(
+		(call) =>
+			String(call[0]).startsWith("pricing_config_") &&
+			call[0] !== "pricing_config_gate_viewed",
+	);
+	expect(configEvents.length).toBeGreaterThan(0);
+	for (const call of configEvents)
+		expect(call[1]).toMatchObject({ ai_action: "report" });
+});
+
+it("carries no AI action on any other wall's gate event", () => {
+	renderModal({ wallKey: "custom_logo" });
+	expect(gateViewedCalls()[0][1]).not.toHaveProperty("ai_action");
 });
 
 it("does not fire gate_viewed on the modal when the popover already did", () => {

@@ -1,3 +1,4 @@
+import { withPayer } from "@dembrane/observability";
 import { type StepConfig, step } from "@dembrane/queue";
 import { conversationStore } from "../storage";
 import {
@@ -73,53 +74,57 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       const loaded = await step("load", () => loadChunk(d, p.chunkId, typed), retry.db);
       const conversationId = loaded.conversationId;
       if (!conversationId) return;
-      if (!loaded.skip && typed) {
-        try {
-          await step(
-            "redact",
-            () =>
-              redactTypedChunk(d, p.chunkId, {
-                usePiiRedaction: p.usePiiRedaction,
-                anonymize: loaded.anonymize,
-              }),
-            retry.transcribe,
-          );
-        } catch {
-          // Out of retries: the last attempt saved its error on the chunk, so it counts as
-          // done and holds no text: the raw text is cleared with it, never kept.
-        }
-      } else if (!loaded.skip) {
-        let pieces: string[] = [];
-        try {
-          pieces = await step("prepare", () => prepareChunk(d, p.chunkId), retry.media);
-        } catch (err) {
-          // Out of retries. The Python left such a chunk pending forever, which kept its
-          // conversation from ever finalizing; marking it lets the rest go through.
-          const message = (err as Error).message;
-          await step(
-            "prepare-failed",
-            () => updateChunk(d, p.chunkId, conversationId, { error: message }, false),
-            retry.db,
-          );
-        }
-        for (const piece of pieces) {
+      // The job names only its chunk: its calls are billed to the conversation the load
+      // found, a checkpoint, so a recovered run gets the same one.
+      await withPayer({ ref: "conversation", id: conversationId }, async () => {
+        if (!loaded.skip && typed) {
           try {
             await step(
-              "transcribe",
+              "redact",
               () =>
-                transcribePiece(d, piece, {
+                redactTypedChunk(d, p.chunkId, {
                   usePiiRedaction: p.usePiiRedaction,
                   anonymize: loaded.anonymize,
                 }),
               retry.transcribe,
             );
           } catch {
-            // Out of retries: the last attempt saved its error on the chunk, which is
-            // what makes it count as done rather than pending.
+            // Out of retries: the last attempt saved its error on the chunk, so it counts as
+            // done and holds no text: the raw text is cleared with it, never kept.
+          }
+        } else if (!loaded.skip) {
+          let pieces: string[] = [];
+          try {
+            pieces = await step("prepare", () => prepareChunk(d, p.chunkId), retry.media);
+          } catch (err) {
+            // Out of retries. The Python left such a chunk pending forever, which kept its
+            // conversation from ever finalizing; marking it lets the rest go through.
+            const message = (err as Error).message;
+            await step(
+              "prepare-failed",
+              () => updateChunk(d, p.chunkId, conversationId, { error: message }, false),
+              retry.db,
+            );
+          }
+          for (const piece of pieces) {
+            try {
+              await step(
+                "transcribe",
+                () =>
+                  transcribePiece(d, piece, {
+                    usePiiRedaction: p.usePiiRedaction,
+                    anonymize: loaded.anonymize,
+                  }),
+                retry.transcribe,
+              );
+            } catch {
+              // Out of retries: the last attempt saved its error on the chunk, which is
+              // what makes it count as done rather than pending.
+            }
           }
         }
-      }
-      await step("hand-over", () => handOver(d, conversationId), retry.db);
+        await step("hand-over", () => handOver(d, conversationId), retry.db);
+      });
     },
 
     /** conversations.finish: claim, stamp the cap, hand over. */

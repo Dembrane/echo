@@ -44,7 +44,8 @@ Adding key terms does not change transcripts that already exist. Retranscribing 
 - "Attach verified artifacts" shows when the original has approved outcomes. Switch it on to
   copy them to the new conversation.
 - The new conversation shows in your usage like any other. On the free plan it does not use
-  up the month's hours.
+  up the month's hours, but it uses the monthly AI allowance. When that is used up,
+  "Retranscribe" opens the upgrade popup until the 1st.
 - An anonymised conversation cannot be retranscribed.
 
 ### Marks you can find in a transcript

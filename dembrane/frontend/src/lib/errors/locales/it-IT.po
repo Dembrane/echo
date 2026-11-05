@@ -309,6 +309,11 @@ msgid "error.agent_access.no_enabled_organisation"
 msgstr "Nessuna delle organizzazioni che hai scelto consente l'accesso agli agenti. Scegline un'altra o chiedi al tuo amministratore di attivarlo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:5
+msgid "error.portal.ai_unavailable"
+msgstr "Al momento non disponibile."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
 msgid "error.invite.observer_internal_workspace"
 msgstr "Gli osservatori possono unirsi solo agli spazi di lavoro per clienti esterni. Scegli un altro ruolo."

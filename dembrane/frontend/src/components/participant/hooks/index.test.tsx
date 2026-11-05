@@ -8,11 +8,13 @@ import {
 	useConfirmConversationChunkUpload,
 	useInitiateConversationMutation,
 	useUploadConversationChunk,
+	useUploadConversationTextChunk,
 } from "./index";
 
 const confirm = vi.fn();
 const upload = vi.fn();
 const initiate = vi.fn();
+const uploadText = vi.fn();
 const toastError = vi.hoisted(() => vi.fn());
 
 vi.mock("posthog-js", () => ({ default: { capture: () => {} } }));
@@ -23,6 +25,7 @@ vi.mock("@/lib/api", () => ({
 	confirmConversationChunkUpload: (...a: unknown[]) => confirm(...a),
 	initiateConversation: (...a: unknown[]) => initiate(...a),
 	uploadConversationChunk: (...a: unknown[]) => upload(...a),
+	uploadConversationText: (...a: unknown[]) => uploadText(...a),
 }));
 
 const tierLimit = (limit: string) => ({
@@ -86,10 +89,25 @@ it("reports a recording stop carried on the confirm response", async () => {
 		{ wrapper },
 	);
 	act(() => result.current.mutate(chunk));
+	// The chunk itself was kept.
 	await waitFor(() =>
-		expect(onRecordingStop).toHaveBeenCalledWith("audio_month"),
+		expect(onRecordingStop).toHaveBeenCalledWith("audio_month", true),
 	);
 	expect(onRecordingStop).toHaveBeenCalledTimes(1);
+});
+
+it("reports each accepted chunk", async () => {
+	confirm.mockResolvedValue({ id: "k1" });
+	const onChunkAccepted = vi.fn();
+	const onRecordingStop = vi.fn();
+	const { result } = renderHook(
+		() =>
+			useConfirmConversationChunkUpload({ onChunkAccepted, onRecordingStop }),
+		{ wrapper },
+	);
+	act(() => result.current.mutate(chunk));
+	await waitFor(() => expect(onChunkAccepted).toHaveBeenCalledTimes(1));
+	expect(onRecordingStop).not.toHaveBeenCalled();
 });
 
 it("reports a 402 on confirm once and never retries it", async () => {
@@ -102,8 +120,26 @@ it("reports a 402 on confirm once and never retries it", async () => {
 	act(() => result.current.mutate(chunk));
 	await waitFor(() => expect(result.current.isError).toBe(true));
 	expect(onRecordingStop).toHaveBeenCalledTimes(1);
-	expect(onRecordingStop).toHaveBeenCalledWith("audio_conversation");
+	// Refused: nothing of this chunk was kept.
+	expect(onRecordingStop).toHaveBeenCalledWith("audio_conversation", false);
 	expect(confirm).toHaveBeenCalledTimes(1);
+});
+
+it("a refused text submit fails at once and is never retried", async () => {
+	uploadText.mockRejectedValue(tierLimit("ai_budget"));
+	const { result } = renderHook(() => useUploadConversationTextChunk(), {
+		wrapper,
+	});
+	act(() =>
+		result.current.mutate({
+			content: "Hi",
+			conversationId: "c1",
+			source: "PORTAL_TEXT",
+			timestamp: new Date(),
+		}),
+	);
+	await waitFor(() => expect(result.current.isError).toBe(true));
+	expect(uploadText).toHaveBeenCalledTimes(1);
 });
 
 it("a 500 on confirm never opens the wrap modal", async () => {
@@ -139,7 +175,7 @@ it("reports a 402 on the upload URL once and never retries it", async () => {
 	);
 	await waitFor(() => expect(result.current.isError).toBe(true));
 	expect(onRecordingStop).toHaveBeenCalledTimes(1);
-	expect(onRecordingStop).toHaveBeenCalledWith("audio_month");
+	expect(onRecordingStop).toHaveBeenCalledWith("audio_month", false);
 	expect(upload).toHaveBeenCalledTimes(1);
 });
 
@@ -161,7 +197,7 @@ it("passes the stop from a confirm that follows an upload", async () => {
 		}),
 	);
 	await waitFor(() =>
-		expect(onRecordingStop).toHaveBeenCalledWith("recording_project"),
+		expect(onRecordingStop).toHaveBeenCalledWith("recording_project", true),
 	);
 });
 

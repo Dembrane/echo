@@ -40,12 +40,10 @@ export function tickStore(sql: Sql) {
       detail: string | null;
       startedAt: string;
       finishedAt: string;
-      freePeriodStart?: string | null;
-      freeAccountId?: string | null;
     }): Promise<Row> {
       const [r] =
-        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at, free_period_start, free_account_id)
-        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt}, ${v.freePeriodStart ?? null}, ${v.freeAccountId ?? null})
+        await sql`insert into agent_loop_run (id, loop_id, status, detail, started_at, finished_at)
+        values (${v.id}, ${v.loopId}, ${v.status}, ${v.detail}, ${v.startedAt}, ${v.finishedAt})
         returning *`;
       return r as Row;
     },
@@ -58,18 +56,14 @@ export function tickStore(sql: Sql) {
       detail: string | null;
       startedAt: string;
       finishedAt: string;
-      freePeriodStart?: string | null;
-      freeAccountId?: string | null;
     }): Promise<Row> {
       const [r] = await sql`update agent_loop_run set loop_id = ${v.loopId}, status = ${v.status},
-        detail = ${v.detail}, started_at = ${v.startedAt}, finished_at = ${v.finishedAt},
-        free_period_start = ${v.freePeriodStart === undefined ? sql`free_period_start` : v.freePeriodStart},
-        free_account_id = ${v.freeAccountId === undefined ? sql`free_account_id` : v.freeAccountId}
+        detail = ${v.detail}, started_at = ${v.startedAt}, finished_at = ${v.finishedAt}
         where id = ${v.id} returning *`;
       return r as Row;
     },
 
-    /** Free-charged runs still running since before `before`, on loops with no tick alive. */
+    /** Pre-budget free runs still running since before `before`, on loops with no tick alive. */
     async stuckRuns(before: string, limit: number): Promise<Row[]> {
       return sql`select r.* from agent_loop_run r
         where r.status = 'running' and r.started_at < ${before} and r.free_period_start is not null
@@ -79,14 +73,7 @@ export function tickStore(sql: Sql) {
         order by r.started_at limit ${limit}`;
     },
 
-    /** When the loop's next run after `after` started, other than `id`; null when none did. */
-    async nextRunStart(loopId: string, id: string, after: Date): Promise<Date | null> {
-      const [r] = await sql`select min(started_at) as at from agent_loop_run
-        where loop_id = ${loopId} and id <> ${id} and started_at > ${after.toISOString()}`;
-      return (r?.at as Date | null) ?? null;
-    },
-
-    /** Ends a stuck free-charged run once; false when it finished, restarted or holds no charge. */
+    /** Ends a stuck pre-budget free run once; false when it finished or holds no stamp. */
     async closeStuckRun(id: string, before: string, detail: string, now: string): Promise<boolean> {
       const rows =
         await sql`update agent_loop_run set status = 'error', detail = ${detail}, finished_at = ${now}

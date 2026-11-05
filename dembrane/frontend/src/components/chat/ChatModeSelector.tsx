@@ -63,7 +63,7 @@ type ModeCardProps = {
 	examples: string[];
 	icon: typeof SparkleIcon;
 	isBeta?: boolean;
-	atLimit?: boolean;
+	aiUsedUp?: boolean;
 	selectedMode: ChatMode | null;
 	isLoading: boolean;
 	onSelectMode: (mode: ChatMode) => void;
@@ -76,7 +76,7 @@ const ModeCard = ({
 	examples,
 	icon: Icon,
 	isBeta = false,
-	atLimit = false,
+	aiUsedUp = false,
 	selectedMode,
 	isLoading,
 	onSelectMode,
@@ -105,13 +105,13 @@ const ModeCard = ({
 									<Trans>Beta</Trans>
 								</Badge>
 							)}
-							{atLimit && (
+							{aiUsedUp && (
 								<Badge
 									size="sm"
 									color="gray"
 									leftSection={<LockIcon size={16} />}
 								>
-									<Trans>Chat limit reached</Trans>
+									<Trans>AI budget used up</Trans>
 								</Badge>
 							)}
 						</Group>
@@ -146,7 +146,7 @@ type ChatModeSelectorProps = {
 	// For new chat flow (mode selection before chat created)
 	isNewChat?: boolean;
 	isCreating?: boolean;
-	atChatLimit?: boolean;
+	aiUsedUp?: boolean;
 };
 
 export const ChatModeSelector = ({
@@ -155,7 +155,7 @@ export const ChatModeSelector = ({
 	onModeSelected,
 	isNewChat = false,
 	isCreating = false,
-	atChatLimit = false,
+	aiUsedUp = false,
 }: ChatModeSelectorProps) => {
 	const [selectedMode, setSelectedMode] = useState<ChatMode | null>(null);
 	const initializeModeMutation = useInitializeChatModeMutation();
@@ -216,7 +216,7 @@ export const ChatModeSelector = ({
 							examples={getAgenticExamples()}
 							icon={SparkleIcon}
 							isBeta
-							atLimit={atChatLimit}
+							aiUsedUp={aiUsedUp}
 							selectedMode={selectedMode}
 							isLoading={isLoading}
 							onSelectMode={handleSelectMode}
@@ -229,7 +229,7 @@ export const ChatModeSelector = ({
 						subtitle={t`Select conversations and find exact quotes`}
 						examples={getDeepDiveExamples()}
 						icon={ChatCircleIcon}
-						atLimit={atChatLimit}
+						aiUsedUp={aiUsedUp}
 						selectedMode={selectedMode}
 						isLoading={isLoading}
 						onSelectMode={handleSelectMode}

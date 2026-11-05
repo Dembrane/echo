@@ -1,8 +1,12 @@
 import { Trans } from "@lingui/react/macro";
 import { Alert, Text } from "@mantine/core";
 import { WarningCircleIcon } from "@phosphor-icons/react";
+import { AiUnavailableText, isAiUnavailableError } from "./AiUnavailable";
 
 export const EchoErrorAlert = ({ error }: { error: Error }) => {
+	if (isAiUnavailableError(error)) {
+		return <AiUnavailableText className="my-5 md:my-7" />;
+	}
 	return (
 		<Alert
 			icon={<WarningCircleIcon size={20} />}

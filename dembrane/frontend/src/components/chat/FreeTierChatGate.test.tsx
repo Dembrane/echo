@@ -29,35 +29,42 @@ beforeAll(() => {
 
 afterEach(() => cleanup());
 
-const renderCard = (frozen?: boolean) => {
+const renderCard = (questions?: number | null) => {
 	const onUpgrade = vi.fn();
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
-				<ChatTurnLimitCard onUpgrade={onUpgrade} frozen={frozen} />
+				<ChatTurnLimitCard onUpgrade={onUpgrade} questions={questions} />
 			</MantineProvider>
 		</I18nProvider>,
 	);
 	return onUpgrade;
 };
 
-const FROZEN =
-	"This chat is from an earlier free period and can't take new questions. Start a new chat or upgrade to keep going.";
 const TURNS =
-	"You've reached the free plan limit for this chat. Upgrade to keep the conversation going.";
+	"You've used this sample project's 10 questions. Create your own project or upgrade to keep going.";
 
-it("says a frozen chat is read-only and offers the upgrade", () => {
-	const onUpgrade = renderCard(true);
-	expect(document.body.textContent).toContain(FROZEN);
-	expect(document.body.textContent).not.toContain(TURNS);
+it("names the refusal's cap, shared by the whole sample project", () => {
+	renderCard(7);
+	expect(document.body.textContent).toContain(
+		"You've used this sample project's 7 questions.",
+	);
+	expect(document.body.textContent).not.toContain("this chat");
+});
+
+it("says the sample project's questions are used and offers the upgrade", () => {
+	const onUpgrade = renderCard();
+	expect(document.body.textContent).toContain(TURNS);
+	expect(document.body.textContent).not.toContain("earlier free period");
+	expect(document.body.textContent).not.toContain("this month's free chats");
 	fireEvent.click(screen.getByRole("button", { name: "See upgrade options" }));
 	expect(onUpgrade).toHaveBeenCalledTimes(1);
 });
 
-it("keeps the turn limit text when the chat is not frozen", () => {
-	const onUpgrade = renderCard();
-	expect(document.body.textContent).toContain(TURNS);
-	expect(document.body.textContent).not.toContain(FROZEN);
-	fireEvent.click(screen.getByRole("button", { name: "See upgrade options" }));
-	expect(onUpgrade).toHaveBeenCalledTimes(1);
+it("keeps only the voice wall and the sample card", async () => {
+	const gate = await import("./FreeTierChatGate");
+	expect(Object.keys(gate).sort()).toEqual([
+		"ChatTurnLimitCard",
+		"VoiceCapUpgradeModal",
+	]);
 });

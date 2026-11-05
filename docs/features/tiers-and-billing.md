@@ -33,23 +33,73 @@ Changemaker.
 | Recording | One project takes recordings and uploads. You choose which one |
 | Organisations | 1. A person who owns or runs a free organisation cannot create another |
 | Workspaces | 1 on your organisation's plan. A workspace for an external organisation is not counted |
-| Chat | 2 new chats a month, each with 20 questions. Deleting a chat does not free the place |
-| Reports | 1 a month. Deleted reports still count |
-| Maps | 1 map a month |
-| Popcorn | 12 analyses a month. Live analysis runs at most every 5 minutes |
+| AI | A monthly AI allowance, shown as a percentage used. It covers every AI feature, see below |
+| Popcorn | Live analysis runs at most every 5 minutes |
 | [Agent (MCP)](./mcp-and-bring-your-own-llm.md) tool calls | 1,000 each calendar month for the whole organisation |
 | People | No limit. The free plan is not limited to one user |
 
 The limits are counted for the whole billing account, across all its workspaces. The
 month starts on the 1st (UTC). Workspace settings, "Usage and billing", shows "Free plan
-allowance": what you used, of how much, and "Resets on {date}". dembrane can change the
-numbers, and that card always shows the current ones.
+allowance": the audio you used, of how much, "AI this month" as "{percent}% used", and
+"Resets on {date}". dembrane can change the numbers, and that card always shows the
+current ones.
 
-- A chat from an earlier month stays readable but takes no new questions.
-- A report or popcorn analysis that fails before it produces anything is given back. So is a
-  map that fails to start.
 - An account that moves down to Free gets the full allowance from that moment.
-- Nothing is ever locked. Every transcript and summary stays readable.
+- Nothing is ever locked. Every transcript, summary, report and map stays readable.
+
+### The AI allowance
+
+Every AI feature uses the same monthly AI allowance:
+
+- chat and the assistant, including chat titles, summaries and suggestions
+- reports
+- maps: generating, titles, groups and fact-checks
+- the analysis page, popcorn and canvas
+- Verify and Explore in the portal
+- the AI work on recordings: transcripts, summaries, titles and tags, and "Retranscribe"
+- voice input in chat, in "Give feedback" and in "Tell us what you need"
+
+Voice input does not count toward the hours of audio. Sample projects use none of it.
+AI that has started always finishes: a chat reply, a report or an analysis is never cut
+off halfway, so the last one can take the allowance a little past 100%.
+
+From 80% a banner shows on new chat, the report form, the map page and the allowance
+card: "You've used {percent}% of this month's AI. When it runs out, AI features and new
+recordings stop until {date}."
+
+When the month's AI is used up:
+
+- An AI action opens the upgrade popup instead, titled "This month's AI is used up". It
+  names what you tried and the reset day, such as "You were trying to ask in chat. AI
+  features and new recordings are paused until {date}.", and offers to continue on
+  dembrane.com. Regenerating a
+  conversation's summary or title is an AI action too, and so is clearing a summary, which
+  would have it written again.
+- The banner reads "This month's AI is used up. AI features and new recordings are paused
+  until {date}."
+- New recordings and uploads stop, as when the hours run out (below). A recording that is
+  going on stops with "That's a wrap", and typed text that is going on gets the same short
+  grace. A finished conversation reopened from its link takes no more audio or text. The
+  project home and the conversations list show the banner, and a refused upload says "This
+  month's AI is used up. New recordings and uploads are paused until {date}."
+- Audio already received is still transcribed and summarised.
+- The assistant stops before its next step, or before its first when a run starts after
+  the budget ran out: "This month's AI budget is used up, so I stopped here. You can
+  upgrade to continue, or pick this up after it resets."
+- A scheduled report does not run. It ends in error: "This month's AI budget is used up."
+- Live popcorn goes back to manual and stays manual after the reset. Popcorn shows "This
+  month's AI is used up, so popcorn is paused until {date}."
+- Canvas updates on a schedule pause and start again on their own after the reset.
+- A presentation keeps showing what it has. The host sees a notice.
+- In the portal, Verify and Explore show "Not available right now". A new typed
+  conversation, or more typed text in a finished one, is refused like a new recording,
+  with "This project isn't taking responses right now." Text that was refused stays on the
+  screen so the participant can copy it. The portal never mentions plans.
+- "Give feedback" keeps working, voice included.
+- The account's owners and admins get a notice and the email "{name} has used this month's
+  AI budget".
+- While staff have turned the AI budget check off, nothing stops and no banner warns about
+  it.
 
 When the month's hours are used up:
 
@@ -61,14 +111,14 @@ When the month's hours are used up:
 - The account's owners and admins get a notice and the email "{name} has used this month's
   recording hours".
 
-The microphone in chat needs a paid plan.
+The microphone in chat works on the free plan. It uses the AI allowance, not the hours.
 
 ## What needs a paid plan
 
 | Feature | Plan | Who can use it |
 |---|---|---|
-| More audio, projects, workspaces, chats, reports, maps and popcorn analyses than the free plan includes | any paid plan | |
-| Recording in every project, and the microphone in chat | any paid plan | |
+| More audio, projects, workspaces and AI than the free plan includes | any paid plan | |
+| Recording in every project | any paid plan | |
 | Agent (MCP) tool calls that are not counted | any paid plan, on at least one workspace of the organisation | |
 | Hide the dembrane event invitation in the portal | any paid plan | anyone who can edit the project |
 | A workspace that is "Invite only" or "Private" | Innovator or above | workspace admins, and organisation admins when they create it |
@@ -82,21 +132,22 @@ Going back is always free: making a project visible to the workspace again, or s
 workspace back to "Everyone in your organisation", needs no plan.
 
 A feature your plan does not include shows the badge "Available on a paid plan". A control
-you cannot use opens one short line, such as "The free plan includes a monthly allowance of reports.", with the
-link "Tell us what you need".
+you cannot use opens one short line, such as "The free plan includes a limited number of projects.", with
+the link "Tell us what you need". An AI action at a used-up allowance opens the upgrade
+popup directly.
 
 ## How you get a paid plan
 
 1. Choose "Tell us what you need". You find it at every limit, and on the billing page
    under "Current plan".
-2. Answer the questions in "Can you tell us more?". There are six short steps and nothing
-   is required. dembrane asks what you want to use it for, when you need it, how many
-   recordings you expect in your first year, how many conversations run at the same time at
-   your busiest moment, and whether you need anything else. You can speak your answers:
-   "Prefer talking? Press record and just say it."
-3. Choose "Pick a time" and book a call with the dembrane team. You then read "Your call is
-   booked: {time}." and "The invite is in your inbox. We will read your answers before then
-   and bring a draft offer."
+2. A short upgrade screen opens. Its title says what you ran into, such as "This month's AI
+   is used up" or "Webhooks come with a paid plan". It has no prices and no questions. Choose
+   "Continue on dembrane.com", or "Maybe later" to close it.
+3. The pricing calculator on dembrane.com opens in a new tab, in Dutch if your dashboard is
+   in Dutch and in English otherwise. It asks how you use dembrane, which takes about two
+   minutes, and you can book a short call with the dembrane team at the end. The dashboard
+   saves a row for your account and gives the website only that row's random id, never
+   your email, so what you fill in there within a week is linked back to your account.
 4. dembrane sends your organisation an offer. You sign it in the dashboard and fill in your
    billing details. See [offers & invoices](./offers-and-invoices.md).
 5. dembrane puts your account on the plan. Signing the offer does not switch the plan by

@@ -1,5 +1,10 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
-import { freeLimitDetails, isFreeTierLimitError } from "./freeTier";
+import {
+	formatResetDay,
+	freeLimitDetails,
+	isFreeTierLimitError,
+} from "./freeTier";
 import { formatDuration } from "./time";
 
 // The server allows this much over the per-file limit.
@@ -76,8 +81,18 @@ const num = (v: unknown) =>
 	typeof v === "number" && Number.isFinite(v) ? v : null;
 
 // The words for a free-limit upload refusal from the server, or null for any other error.
-export function uploadRefusalMessage(err: unknown): string | null {
+// `resetsAt` is the allowance's reset: the AI budget refusal carries no date.
+export function uploadRefusalMessage(
+	err: unknown,
+	resetsAt?: string | null,
+): string | null {
 	const limit = isFreeTierLimitError(err);
+	if (limit === "ai_budget") {
+		const date = formatResetDay(resetsAt, i18n.locale);
+		return date
+			? t`This month's AI is used up. New recordings and uploads are paused until ${date}.`
+			: t`This month's AI is used up. New recordings and uploads are paused until next month.`;
+	}
 	if (limit === "recording_project")
 		return t`This project is not the one taking recordings on the free plan.`;
 	if (limit !== "audio_month" && limit !== "audio_conversation") return null;

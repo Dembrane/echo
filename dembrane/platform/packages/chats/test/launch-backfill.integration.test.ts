@@ -16,7 +16,6 @@ import {
 } from "@dembrane/allowance";
 import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
-import { freeChats } from "../src/free";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -27,12 +26,6 @@ const MIGRATION = new URL(
 );
 const MIN = 60_000;
 const DAY = 24 * 60 * MIN;
-
-const rejection = (p: Promise<unknown>) =>
-  Promise.resolve(p).then(
-    () => null,
-    (e) => e,
-  );
 
 run("free tier launch backfill", () => {
   setDefaultTimeout(60_000);
@@ -206,7 +199,7 @@ run("free tier launch backfill", () => {
     });
   });
 
-  test("the two most recently active chats this month are claimed, older ones freeze", async () => {
+  test("the two most recently active chats this month are claimed, older ones stamped earlier", async () => {
     const s = await seed();
     // a started last but its latest turn is the oldest of the three.
     const a = await chat(s.project, [at(4 * MIN), at(5 * MIN)]);
@@ -220,26 +213,9 @@ run("free tier launch backfill", () => {
     expect(await stampOf("project_chat", a)).not.toBeNull();
     expect(await stampOf("project_chat", a)).not.toBe(M.toISOString());
     expect(await stampOf("project_chat", sampleChat)).toBeNull();
-    const fc = freeChats(database.db);
-    expect(await fc.turnStatus(c, s.clientProject, new Date())).toEqual({
-      limit: 20,
-      used: 2,
-      frozen: false,
-    });
-    expect((await fc.turnStatus(a, s.project, new Date()))?.frozen).toBe(true);
-    const err = await rejection(
-      fc.admitTurn({
-        projectId: s.project,
-        chatId: a,
-        messageId: id(),
-        text: "x",
-        now: new Date(),
-      }),
-    );
-    expect(err).toMatchObject({ details: { limit: "chat_turns", reason: "frozen" } });
   });
 
-  test("chats from earlier months are frozen", async () => {
+  test("chats from earlier months keep their first month's stamp", async () => {
     const s = await seed();
     const first = new Date(M.getTime() - 40 * DAY);
     const turns = [0, 1, 2, 3].map((i) => new Date(first.getTime() + i * MIN).toISOString());
@@ -248,16 +224,6 @@ run("free tier launch backfill", () => {
     const firstMonth = monthStart(first).toISOString();
     expect(await stampOf("project_chat", old)).toBe(firstMonth);
     expect((await usage(s.pooled)).chats).toBeUndefined();
-    const err = await rejection(
-      freeChats(database.db).admitTurn({
-        projectId: s.project,
-        chatId: old,
-        messageId: id(),
-        text: "again",
-        now: new Date(),
-      }),
-    );
-    expect(err).toMatchObject({ details: { limit: "chat_turns" } });
   });
 
   test("reports, maps and popcorn are counted", async () => {
@@ -323,11 +289,6 @@ run("free tier launch backfill", () => {
     expect(await stampOf("project_chat", earlier)).toBeNull();
     expect(await stampOf("project_chat", spanning)).toBe(period);
     expect((await usage(s.pooled)).chats).toEqual({ amount: 1, period });
-    expect(await freeChats(database.db).turnStatus(spanning, s.project, new Date())).toEqual({
-      limit: 20,
-      used: 1,
-      frozen: false,
-    });
   });
 
   test("downgrade: report and popcorn stamps equal the runtime period, so they refund", async () => {

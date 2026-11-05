@@ -168,7 +168,7 @@ describe("summaries", () => {
 
 describe("a failed report", () => {
   const payload = { projectId: "p", reportId: 7, language: "en", userInstructions: "" };
-  const fake = (refundFreeReport: (id: number) => Promise<unknown>, status = "draft") => {
+  const fake = (status = "draft") => {
     const logged: unknown[] = [];
     const updates: unknown[] = [];
     const d = {
@@ -180,24 +180,19 @@ describe("a failed report", () => {
       },
       logger: { error: (o: unknown) => logged.push(o), warn: () => {}, info: () => {} },
       now: () => new Date("2026-10-20T10:00:00Z"),
-      refundFreeReport,
     } as unknown as GenerateDeps;
     return { d, logged, updates };
   };
 
-  test("markError asks for a refund", async () => {
-    const ids: number[] = [];
-    const { d, updates } = fake(async (id) => ids.push(id));
-    await markError(d, payload, "GENERATION_FAILED", "x");
-    expect(ids).toEqual([7]);
+  test("markError ends the report in error", async () => {
+    const { d, updates } = fake();
+    expect(await markError(d, payload, "GENERATION_FAILED", "x")).toBe(true);
     expect(updates).toMatchObject([{ status: "error", error_code: "GENERATION_FAILED" }]);
   });
 
   test("markError on a report another run saved changes nothing", async () => {
-    const ids: number[] = [];
-    const { d, updates } = fake(async (id) => ids.push(id), "archived");
-    await markError(d, payload, "GENERATION_FAILED", "x");
-    expect(ids).toEqual([]);
+    const { d, updates } = fake("archived");
+    expect(await markError(d, payload, "GENERATION_FAILED", "x")).toBe(false);
     expect(updates).toEqual([]);
   });
 
@@ -206,7 +201,7 @@ describe("a failed report", () => {
       ["draft", 1],
       ["archived", 0],
     ] as const) {
-      const { d } = fake(async () => {}, status);
+      const { d } = fake(status);
       const emitted: unknown[] = [];
       const store = d.store as unknown as Record<string, unknown>;
       store.report = async () => ({ user_created: "du" });
@@ -222,9 +217,8 @@ describe("a failed report", () => {
     }
   });
 
-  test("a failRun that throws sends no failure and no refund; the sweep ends it later", async () => {
-    const ids: number[] = [];
-    const { d, logged } = fake(async (id) => ids.push(id));
+  test("a failRun that throws sends no failure; the sweep ends it later", async () => {
+    const { d, logged } = fake();
     const published: unknown[] = [];
     const emitted: unknown[] = [];
     const store = d.store as unknown as Record<string, unknown>;
@@ -242,18 +236,9 @@ describe("a failed report", () => {
     } as GenerateDeps;
     expect(await markError(deps, payload, "GENERATION_FAILED", "x")).toBe(false);
     await reportFailed(deps, payload, "boom", Date.now());
-    expect(ids).toEqual([]);
     expect(published).toEqual([]);
     expect(emitted).toEqual([]);
     expect(logged).toHaveLength(2);
-  });
-
-  test("a refund that throws is logged, not rethrown", async () => {
-    const { d, logged } = fake(async () => {
-      throw new Error("db down");
-    });
-    await markError(d, payload, "GENERATION_FAILED", "x");
-    expect(logged).toHaveLength(1);
   });
 });
 

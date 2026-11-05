@@ -25,10 +25,7 @@ includes everything a lower one has.
 | More than 5 hours of recording a month, or conversations longer than 1 hour | Any paid plan |
 | Recording in more than one project | Any paid plan |
 | More than one project | Any paid plan |
-| More than two chats a month, or more than 20 questions in a chat | Any paid plan |
-| More than one report or one map a month | Any paid plan |
-| More than 12 popcorn analyses a month | Any paid plan |
-| The microphone in chat | Any paid plan |
+| More AI than the free plan's monthly AI allowance | Any paid plan |
 | A second workspace on your organisation's plan | Any paid plan |
 | Hide the dembrane event invitation in the portal | Any paid plan |
 | Private projects, and sharing them with chosen people | Innovator or higher |
@@ -47,19 +44,53 @@ No plan caps the number of seats, and paid plans have no cap on recording hours.
 | Recording | 5 hours a month, and at most 1 hour per conversation. Deleted conversations still count. |
 | Projects | 1. Sample projects do not count. Deleting the project frees the slot. |
 | Recording project | One project takes recordings and uploads. "Use this project for recordings" switches it. |
-| Chats | 2 new chats a month, 20 questions in each. Deleting a chat does not free the slot. |
-| Reports | 1 a month. A deleted report still counts. |
-| Maps | 1 a month. |
-| Popcorn | 12 analyses a month. |
+| AI | A monthly AI allowance for every AI feature, shown as a percentage used. |
 | Organisations | 1. You cannot create a second free organisation. |
 | Workspaces | 1 on your organisation's plan. |
 | People | No limit. |
 | Agent (MCP) tool calls | 1,000 per calendar month per organisation. |
 
 The limits cover all the workspaces of your billing account together. They start again on the
-1st of each month (UTC). A chat from an earlier month stays readable, but takes no new
-questions. Workspace "Settings", "Usage and billing" shows "Free plan allowance", with what you
-used and "Resets on {date}".
+1st of each month (UTC). Workspace "Settings", "Usage and billing" shows "Free plan allowance",
+with the audio you used, "AI this month" as "{percent}% used", and "Resets on {date}".
+
+### The monthly AI allowance
+
+Chat, the assistant, reports, maps, the analysis page, popcorn, canvas, Verify and Explore,
+voice input, and the AI work on your recordings (transcripts, summaries, titles) all use one
+monthly AI allowance. Voice input does not count toward your recording hours. Sample projects
+use none of it.
+
+- From 80% a banner shows on new chat, the report form, the map page and the allowance card:
+  "You've used {percent}% of this month's AI. When it runs out, AI features and new recordings
+  stop until {date}."
+- AI that has started always finishes. A chat reply, a report or an analysis is never cut off
+  halfway.
+
+When the month's AI is used up:
+
+- An AI action opens the upgrade popup: "This month's AI is used up". It names what you
+  tried and the date AI comes back. Regenerating a conversation's summary or title is an AI
+  action too, and so is clearing a summary.
+- New recordings and uploads stop, and a recording that is going on stops, as when the hours
+  run out (below). Audio already received is still transcribed. The project home and the
+  conversations list say "This month's AI is used up. AI features and new recordings are paused
+  until {date}.", and a refused upload says "This month's AI is used up. New recordings and
+  uploads are paused until {date}." Plan a live event with this in mind: heavy chat use can
+  stop your participants from recording.
+- The assistant stops before its next step and says so. A run that starts after the budget ran
+  out stops before it does anything.
+- A scheduled report does not run and ends in error: "This month's AI budget is used up."
+- Live popcorn goes back to manual. Start it again after the reset.
+- Canvas updates on a schedule pause, and start again on their own after the reset.
+- In the portal, Verify and Explore show "Not available right now", and finishing a recording
+  no longer offers to verify. A participant who wants to type instead, or to add text to a
+  finished conversation, sees "This project isn't taking responses right now." Someone typing
+  when it runs out gets the same short grace as a recording. Participants never see anything
+  about plans.
+- "Give feedback" keeps working, voice included.
+- Owners and admins get a notice and the email "{name} has used this month's AI budget".
+- Nothing is locked. Every transcript, summary, report and map stays readable.
 
 When the month's hours are used up:
 
@@ -68,6 +99,8 @@ When the month's hours are used up:
 - The portal shows "This project isn't taking recordings right now." Uploads pause too.
 - Nothing is locked. Every transcript and summary stays readable.
 - Owners and admins get a notice and the email "{name} has used this month's recording hours".
+
+The microphone in chat works on the free plan. It uses the AI allowance, not your hours.
 
 > [!TIP]
 > Planning a session longer than an hour, or more hours than you have left? Sort out your plan
@@ -136,11 +169,12 @@ There is no checkout, no plan picker and no upgrade request in the dashboard. Th
 
 1. Press "Tell us what you need". The button is on the billing page of a free account. The same
    link is in the popover that opens when you press a control your plan does not include.
-2. Answer the form "Can you tell us more?". It asks what you want to use dembrane for, when,
-   how many recordings you expect, how many will run at once, and what else you need. Nothing
-   is required, and you can speak the written answers instead of typing them.
-3. Press "Pick a time" and book a call with the dembrane team. They read your answers before
-   the call and bring a draft offer.
+2. A short screen says what you ran into and asks no questions. Press "Continue on
+   dembrane.com", or "Maybe later" to close it. Everything you made stays as it is.
+3. The pricing calculator on dembrane.com opens in a new tab. It asks how you use dembrane,
+   which takes about two minutes, and you can book a short call with the dembrane team at the
+   end. What you fill in there is linked to your dashboard account without your email being
+   put in the link.
 4. The offer arrives by email and under your organisation's "Documents" and "Tasks". It is
    valid for 14 days. An organisation admin or billing member signs it on screen, or sends it
    to someone else to sign. The data processing agreement comes with it as its own document.

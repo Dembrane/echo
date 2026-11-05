@@ -3,14 +3,20 @@ export {
   allowanceForCountedProject,
   allowanceForProject,
   allowanceForWorkspace,
+  isSampleProject,
+  type ProjectAllowance,
+  projectAllowance,
 } from "./account";
 export {
-  chargeFreeUnit,
-  type FreeCharge,
-  type FreeUnit,
-  requireFreeUnitRoom,
-  takeFreeUnit,
-} from "./charge";
+  AI_SPEND_KEY,
+  type AiBudget,
+  aiBudgetFor,
+  aiBudgetForProject,
+  aiBudgetForWorkspace,
+  requireAccountBudget,
+  requireAiBudget,
+  requireAiBudgetForWorkspace,
+} from "./budget";
 export { type FreeLimitName, freeLimitError, isFreeLimit } from "./errors";
 export { isFreeTier } from "./free";
 export {
@@ -35,7 +41,12 @@ export {
   type LimitKey,
   setFreeLimit,
 } from "./limits";
+export {
+  type PayingAccount,
+  payingAccountsForProjects,
+  payingAccountsForWorkspaces,
+} from "./payer";
 export { monthStart, nextReset, periodStart } from "./period";
 export { accountWorkspaceIds, liveProjectCount, requireProjectRoom } from "./projects";
 export { recordingProject, setRecordingProject } from "./recording";
-export { type AllowanceSnapshot, allowanceSnapshot, type Meter } from "./snapshot";
+export { type AiMeter, type AllowanceSnapshot, allowanceSnapshot, type Meter } from "./snapshot";

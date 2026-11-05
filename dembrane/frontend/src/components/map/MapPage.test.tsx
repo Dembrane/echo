@@ -51,11 +51,15 @@ vi.mock("@/components/project/hooks", async (importOriginal) => ({
 
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -64,13 +68,21 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
 
 vi.mock("@/components/workspace/FreeAllowanceBanner", () => ({
-	FreeAllowanceBanner: ({ feature }: { feature: string }) => (
-		<div data-testid={`allowance-banner-${feature}`} />
+	FreeAllowanceBanner: ({
+		feature,
+		action,
+	}: {
+		feature: string;
+		action?: string;
+	}) => (
+		<div data-testid={`allowance-banner-${feature}`} data-action={action} />
 	),
 }));
 
@@ -173,7 +185,7 @@ describe("MapPage in fixture mode", () => {
 });
 
 describe("MapPage free tier", () => {
-	it("a spent map opens the upgrade modal", async () => {
+	it("a used-up AI budget opens the AI wall for the map", async () => {
 		bffMock.get.mockImplementation((path: string) => {
 			if (path === "/map/projects/p1/graph") return Promise.resolve(null);
 			if (path === "/map/projects/p1") {
@@ -189,7 +201,12 @@ describe("MapPage free tier", () => {
 			new ApiRequestError(402, {
 				action: "upgrade",
 				code: "billing.tier_limit",
-				params: { cap: 1, limit: "map", used: 1 },
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
 			}),
 		);
 		render(
@@ -211,13 +228,19 @@ describe("MapPage free tier", () => {
 			await screen.findByRole("button", { name: "Generate map" }),
 		);
 		const modal = await screen.findByTestId("upgrade-modal");
-		expect(modal.dataset.wall).toBe("map_cap");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("map");
+		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
 		expect(modal.dataset.tier).toBe("free");
 		await waitFor(() => expect(bffMock.post).toHaveBeenCalledTimes(1));
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 
+	let liveClient = new QueryClient();
 	const renderLive = (summary: unknown, graph: () => Promise<unknown>) => {
+		liveClient = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
 		bffMock.get.mockImplementation((path: string) => {
 			if (path === "/map/projects/p1/graph") return graph();
 			if (path === "/map/projects/p1") return Promise.resolve(summary);
@@ -226,11 +249,7 @@ describe("MapPage free tier", () => {
 		return render(
 			<MantineProvider>
 				<I18nProvider i18n={i18n}>
-					<QueryClientProvider
-						client={
-							new QueryClient({ defaultOptions: { queries: { retry: false } } })
-						}
-					>
+					<QueryClientProvider client={liveClient}>
 						<MemoryRouter>
 							<MapPage projectId="p1" workspaceId="w1" />
 						</MemoryRouter>
@@ -240,7 +259,55 @@ describe("MapPage free tier", () => {
 		);
 	};
 
-	it("shows no map banner while the first map is generating", async () => {
+	it("a fact-check refused for the AI budget opens the AI wall, not the claim error", async () => {
+		// Auto fact-check on, coloured by fact-check: the page starts the claims itself.
+		window.localStorage.setItem(
+			"dembrane-map-settings",
+			JSON.stringify({
+				autoFactCheckClaims: true,
+				colorBy: "factCheck",
+				version: 7,
+			}),
+		);
+		resetMapSettingsForTests();
+		bffMock.post.mockRejectedValue(
+			new ApiRequestError(402, {
+				action: "upgrade",
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
+			}),
+		);
+		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
+			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
+		);
+		const invalidate = vi.spyOn(liveClient, "invalidateQueries");
+		const modal = await screen.findByTestId("upgrade-modal");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("map");
+		expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+		expect(bffMock.post.mock.calls[0][0]).toMatch(/fact-checks/);
+		// The meter and banners catch up with the refusal.
+		const predicates = invalidate.mock.calls.map(
+			([filters]) =>
+				(filters as { predicate?: (q: unknown) => boolean } | undefined)
+					?.predicate,
+		);
+		expect(
+			predicates.some((p) =>
+				p?.({ queryKey: ["workspace", "w1", "free-allowance"] }),
+			),
+		).toBe(true);
+		expect(document.body.textContent).not.toContain(
+			"The fact-check could not be started.",
+		);
+	});
+
+	it("carries the AI banner before the first map exists", async () => {
 		renderLive(
 			{
 				attempt: { id: "a1", progress: {}, status: "extracting" },
@@ -250,13 +317,15 @@ describe("MapPage free tier", () => {
 			() => Promise.resolve(null),
 		);
 		expect(await screen.findByText("Reading conversations")).toBeTruthy();
-		expect(screen.queryByTestId("allowance-banner-maps")).toBeNull();
+		expect(screen.getByTestId("allowance-banner-ai").dataset.action).toBe(
+			"map",
+		);
 	});
 
-	it("shows the map banner once a map exists", async () => {
+	it("carries the AI banner once a map exists", async () => {
 		renderLive({ attempt: null, current: fixtureMapResult(50).result }, () =>
 			Promise.reject(Object.assign(new Error("HTTP 404"), { status: 404 })),
 		);
-		expect(await screen.findByTestId("allowance-banner-maps")).toBeTruthy();
+		expect(await screen.findByTestId("allowance-banner-ai")).toBeTruthy();
 	});
 });

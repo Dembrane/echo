@@ -36,7 +36,7 @@ test("the staff forecast is the monthly share of what Mollie charges, discounted
 });
 
 // Two workspaces with two hours each this month: one free, one paid.
-function fakeStorage(): StaffStorage {
+function fakeStorage(override: Record<string, unknown> = {}): StaffStorage {
   const ws = (id: string, tier: string) => ({
     id,
     name: id,
@@ -56,6 +56,10 @@ function fakeStorage(): StaffStorage {
     percent_discount: null,
     type_discount: null,
     billing_period: null,
+    ai_budget_micro_eur: null,
+    ai_budget_unlimited: false,
+    ai_budget_until: null,
+    ...(id === "free-ws" ? override : {}),
   });
   const fake = {
     rollupWorkspaces: async () => [ws("free-ws", "free"), ws("paid-ws", "changemaker")],
@@ -91,6 +95,26 @@ test("the staff rollup shows no free hours cap: the monthly meter lives on the l
     at_cap: false,
   });
   expect(await atRisk(fakeStorage(), now)).toEqual([]);
+});
+
+test("each rollup account carries its AI budget override for the staff editor", async () => {
+  const now = new Date("2026-10-25T00:00:00Z");
+  const rollup = await billingRollup(
+    fakeStorage({ ai_budget_micro_eur: 20_000_000, ai_budget_until: "2026-12-31 00:00:00+00" }),
+    now,
+    0,
+  );
+  const account = (id: string) => rollup.accounts.find((a) => a.billing_account_id === id);
+  expect(account("acc-free-ws")?.ai_budget).toEqual({
+    amount_micro_eur: 20_000_000,
+    unlimited: false,
+    until: "2026-12-31T00:00:00.000Z",
+  });
+  expect(account("acc-paid-ws")?.ai_budget).toEqual({
+    amount_micro_eur: null,
+    unlimited: false,
+    until: null,
+  });
 });
 
 test("at-risk lists a free workspace at its monthly audio limit from the ledger", async () => {

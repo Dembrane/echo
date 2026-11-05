@@ -77,11 +77,11 @@ const project = (overrides: Partial<Project> = {}) =>
 		...overrides,
 	}) as unknown as Project;
 
-const wrap = (p: Project) =>
+const wrap = (p: Project, path = "/en-US/p1/start") =>
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
-				<MemoryRouter initialEntries={["/en-US/p1/start"]}>
+				<MemoryRouter initialEntries={[path]}>
 					<ParticipantInitiateForm project={p} />
 				</MemoryRouter>
 			</MantineProvider>
@@ -173,6 +173,27 @@ it("shows the neutral notice when the project refuses recordings", async () => {
 		).toBeTruthy(),
 	);
 	expect(document.querySelector("[data-error-code]")).toBeNull();
+});
+
+it("says responses, not recordings, when a typed start is refused for AI", async () => {
+	initiate.mockRejectedValue({
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: { error: "FREE_TIER_LIMIT", limit: "ai_budget" },
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	});
+	wrap(project(), "/en-US/p1/start?mode=text");
+
+	await waitFor(() =>
+		expect(
+			screen.getByText("This project isn't taking responses right now."),
+		).toBeTruthy(),
+	);
+	expect(document.body.textContent).not.toContain("recordings");
 });
 
 it("offers no Continue after an automatic start is refused", async () => {

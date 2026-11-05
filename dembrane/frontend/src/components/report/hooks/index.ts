@@ -17,6 +17,7 @@ import {
 	updateProjectReport,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export const useUpdateProjectReportMutation = () => {
 	const queryClient = useQueryClient();
@@ -31,8 +32,6 @@ export const useUpdateProjectReportMutation = () => {
 			payload: Partial<ProjectReport>;
 		}) => updateProjectReport(projectId, reportId, payload),
 		onSuccess: (_, vars) => {
-			// Cancel gives the free report back; rescheduling a cancelled one takes it.
-			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -57,8 +56,6 @@ export const useDeleteProjectReportMutation = () => {
 			reportId: number;
 		}) => deleteProjectReport(projectId, reportId),
 		onSuccess: (_, vars) => {
-			// Deleting a scheduled free report gives it back.
-			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});
@@ -76,6 +73,11 @@ export const useCreateProjectReportMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: createProjectReport,
+		// A used-up AI budget: refetch so the banner and the meter show it.
+		onError: (error) => {
+			if (isFreeTierLimitError(error) === "ai_budget")
+				void invalidateFreeAllowance(queryClient);
+		},
 		onSuccess: (_, vars) => {
 			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
@@ -102,7 +104,6 @@ export const useCancelScheduledReportMutation = () => {
 			reportId: number;
 		}) => cancelScheduledReport(projectId, reportId),
 		onSuccess: (_, vars) => {
-			void invalidateFreeAllowance(queryClient);
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "report"],
 			});

@@ -1,4 +1,6 @@
+import { isFreeLimit, requireAiBudget } from "@dembrane/allowance";
 import {
+  ACTIVE_RUN_STATUSES,
   type AnalysisRuntime,
   AnalysisStoreError,
   ARGUMENT_TYPES,
@@ -15,7 +17,6 @@ import {
   micros,
   type ObjectRevision,
   pyIso,
-  type RequestOutcome,
   type Run,
   requestRun,
   round6,
@@ -29,8 +30,7 @@ import {
   VIEW_SCOPE_KEY,
 } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
-import type { Logger } from "@dembrane/observability";
-import { startFreeMap } from "./free";
+import { withPayer } from "@dembrane/observability";
 import { ACTIVE_STATUSES, type MapStore, type Row } from "./store";
 
 /**
@@ -75,7 +75,6 @@ export interface MapDeps {
   readonly rt: AnalysisRuntime;
   readonly db: Db;
   readonly now?: () => Date;
-  readonly logger?: Logger;
 }
 
 export function attemptPayload(row: Row | null): Json | null {
@@ -323,50 +322,57 @@ export async function requestGeneration(
   await d.store.expireStale(projectId, STALE_ATTEMPT_SECONDS);
   const active = await d.store.activeAttempt(projectId);
   if (active) return active;
-  const got = await startFreeMap<
-    { kind: "pending"; row: Row | null } | { kind: "run"; outcome: RequestOutcome }
-  >(
-    d.db,
-    projectId,
-    d.now?.() ?? new Date(),
-    async () => {
-      const outcome = await requestRun(
-        {
-          projectId,
-          recipeId: ARGUMENTS_RECIPE_ID,
-          scopeKey: VIEW_SCOPE_KEY,
-          mode: "refresh",
-          requestedBy,
-        },
-        d.rt.executor,
-      );
-      return {
-        row: { kind: "run", outcome },
-        started: outcome.outcome === "created" || outcome.outcome === "requeued",
-      };
-    },
+  // A map still generating answers a repeat click at zero.
+  const pending = await budgetOr(d, projectId, () => pendingRun(d, projectId));
+  if (pending) return runAttempt(pending);
+  const outcome = await requestRun(
     {
-      logger: d.logger,
-      // A free map still generating answers a second click without counting.
-      pending: async () => {
-        let run: Run | null = null;
-        try {
-          run = await argumentsRun(d, projectId);
-        } catch (err) {
-          if (!(err instanceof AnalysisStoreError)) throw err;
-        }
-        return run && run.status !== "failed" ? { kind: "pending", row: runAttempt(run) } : null;
-      },
+      projectId,
+      recipeId: ARGUMENTS_RECIPE_ID,
+      scopeKey: VIEW_SCOPE_KEY,
+      mode: "refresh",
+      requestedBy,
     },
+    d.rt.executor,
   );
-  if (got.kind === "pending") return got.row;
-  const { outcome } = got;
   await d.rt.publishMap(projectId, {
     type: "queued",
     run_id: outcome.run.id,
     outcome: outcome.outcome,
   });
   return runAttempt(outcome.run);
+}
+
+/** Null when the AI budget allows new work; at zero, what `kept` already has, else the 402. */
+async function budgetOr<T>(
+  d: MapDeps,
+  projectId: string,
+  kept: () => Promise<T | null>,
+): Promise<T | null> {
+  try {
+    await requireAiBudget(d.db, projectId, d.now?.() ?? new Date());
+    return null;
+  } catch (err) {
+    if (!isFreeLimit(err, "ai_budget")) throw err;
+    const answer = await kept();
+    if (answer === null) throw err;
+    return answer;
+  }
+}
+
+// A row still running within its stale window: starting it again would not start a job.
+const running = (since: unknown, staleSeconds: number) =>
+  micros(since as string | null) > (Date.now() - staleSeconds * 1000) * 1000;
+
+async function pendingRun(d: MapDeps, projectId: string): Promise<Run | null> {
+  try {
+    const run = await argumentsRun(d, projectId);
+    // Only a run still working; a finished map is regenerated, which the budget refuses.
+    return run && ACTIVE_RUN_STATUSES.includes(run.status) ? run : null;
+  } catch (err) {
+    if (!(err instanceof AnalysisStoreError)) throw err;
+    return null;
+  }
 }
 
 /** What a result id names: a v1 row, or a map snapshot (by its v2 row or by its own id). */
@@ -403,6 +409,14 @@ export class TitleCache {
   private readonly titles = new Map<string, { title: string; until: number }>();
   private readonly inflight = new Map<string, Promise<string>>();
   constructor(private readonly now: () => number = Date.now) {}
+
+  /** A title already made or being made; null when asking would call the model. */
+  async peek(key: string): Promise<{ title: string; cached: boolean } | null> {
+    const hit = this.titles.get(key);
+    if (hit && hit.until > this.now()) return { title: hit.title, cached: true };
+    const running = this.inflight.get(key);
+    return running ? { title: await running, cached: true } : null;
+  }
 
   async once(
     key: string,
@@ -489,6 +503,20 @@ export interface TitleDeps extends MapDeps {
 
 export const TITLE_PROMPT = "map-title-v2";
 
+// A cached or in-flight title answers first; the budget is read only before a model call.
+async function titleOnce(
+  d: TitleDeps,
+  key: string,
+  projectId: string,
+  generate: () => Promise<string>,
+): Promise<Json> {
+  const cached =
+    (await d.cache.peek(key)) ?? (await budgetOr(d, projectId, () => d.cache.peek(key)));
+  if (cached) return cached;
+  // The title route names a result, not a project: the map's project pays.
+  return d.cache.once(key, () => withPayer({ ref: "project", id: projectId }, generate));
+}
+
 export async function selectionTitle(
   d: TitleDeps,
   row: Row,
@@ -515,7 +543,7 @@ export async function selectionTitle(
     .join(",");
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${verdictState}`;
   const key = `map:title:${titleSelectionKey(String(row.id), ordered, config)}`;
-  return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
+  return titleOnce(d, key, String(row.project_id), () => d.generate(lines, project[0], project[1]));
 }
 
 /**
@@ -572,7 +600,7 @@ export async function snapshotSelectionTitle(
   const { ordered, lines, config: pinned } = await snapshotTitleLines(d, snapshot, revisionIds);
   const config = `${TITLE_PROMPT}|${d.modelIdentity}|${pinned}`;
   const key = `map:title:v2:${titleSelectionKey(snapshot.id, ordered, config)}`;
-  return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
+  return titleOnce(d, key, snapshot.projectId, () => d.generate(lines, project[0], project[1]));
 }
 
 // ── groups ──────────────────────────────────────────────────────────────
@@ -634,10 +662,20 @@ export async function requestGroup(
 ): Promise<Json> {
   const snapshot = target.snapshot;
   const { ordered, revisions } = await snapshotTitleLines(d, snapshot, revisionIds);
+  const selectionKey = titleSelectionKey(snapshot.id, ordered, "map-group");
+  // At zero, a group already titled or still titling answers; one that would run again is refused.
+  const kept = await budgetOr(d, snapshot.projectId, async () => {
+    const g = await d.store.groupBySelection(snapshot.projectId, selectionKey);
+    const live =
+      g?.status === "ready" ||
+      (g?.status === "pending" && running(g.updated_at, GROUP_STALE_SECONDS));
+    return g && live ? groupDoc(g) : null;
+  });
+  if (kept) return kept;
   const [row, dispatch] = await d.store.startGroup({
     projectId: snapshot.projectId,
     snapshotId: snapshot.id,
-    selectionKey: titleSelectionKey(snapshot.id, ordered, "map-group"),
+    selectionKey,
     members: revisions.map((r) => ({ revisionId: r.id, objectId: r.objectId, type: r.type })),
     requestedBy,
     staleSeconds: GROUP_STALE_SECONDS,
@@ -789,6 +827,15 @@ async function start(
     force: boolean;
   },
 ): Promise<Json> {
+  // At zero, a check already done or still running answers; one that would run again is refused.
+  const kept = await budgetOr(d, o.projectId, async () => {
+    const c = (await d.store.factChecksFor(o.projectId, [o.claimKey])).get(o.claimKey);
+    const live =
+      (c?.status === "done" && !o.force) ||
+      (c?.status === "processing" && running(c.started_at, FACT_CHECK_STALE_SECONDS));
+    return c && live ? factCheckState(c) : null;
+  });
+  if (kept) return kept;
   const [check, shouldDispatch] = await d.store.startFactCheck({
     projectId: o.projectId,
     claimKey: o.claimKey,

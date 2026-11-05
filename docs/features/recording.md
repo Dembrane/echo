@@ -114,11 +114,23 @@ conversations still count. Paid plans have no cap on hours.
   stopped for now. Everything you recorded is saved."
 - A portal with no hours left, or of a project that does not take recordings, shows "This
   project isn't taking recordings right now." It never mentions plans. A portal for
-  typed text still works.
+  typed text still works until the month's AI is used up. Then a new typed conversation,
+  or more text in a finished one, is refused with "This project isn't taking responses
+  right now." Text typed while a conversation is going on gets the same short grace as a
+  recording. A finished conversation reopened from its link takes no more audio either.
 - Upload checks each file's length first: "This file is {file} long. You have {left} of
   recording left this month."
 - Everything that was recorded is transcribed and summarised as usual. No conversation is
   locked.
+
+Recording also stops when the account's monthly AI allowance is used up, because
+transcription is AI work. It looks the same as when the hours run out:
+
+- A recording that is going on stops with "Recording has stopped for now. Everything you
+  recorded is saved." Audio already sent is kept and transcribed.
+- New recordings get "This project isn't taking recordings right now." and uploads are
+  refused, until the 1st.
+- Verify and Explore show "Not available right now". The portal never mentions plans.
 
 See [tiers and billing](./tiers-and-billing.md).
 

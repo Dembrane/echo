@@ -21,6 +21,8 @@ employees by dembrane's engineers, and no screen in the product can grant it.
 | "Payments" | Follow recent card and direct debit payments across all accounts. | [Usage, billing and payments](./usage-and-billing-rollup.md#payments) |
 | "Accounts" | Run a customer account: the demo, the offer, documents to sign, tasks and questions. | [Customer accounts](./customer-accounts.md) |
 | "Training" | Schedule trainings and grant licences. | [Trainings and licences](./trainings-and-licences.md) |
+| "Free tier limits" | Change what every free account gets: audio, projects, the popcorn interval, the monthly AI budget (EUR 5 by default) and the AI budget off switch. | [Tiers and discounts](./discounts-trials-and-tiers.md#free-tier-limits) |
+| "AI costs" | See what AI cost per billing account this month or last month, on every tier, with the free accounts' budgets. | [Usage, billing and payments](./usage-and-billing-rollup.md#ai-costs) |
 | "Response feedback" | Read the thumbs that hosts give on chat replies. | [Response feedback](#response-feedback) |
 
 "Managed billing" has no sidebar entry. Open it at `/admin/managed-billing`. See
@@ -28,7 +30,8 @@ employees by dembrane's engineers, and no screen in the product can grant it.
 
 ## Actions on an account and on a workspace
 
-Most changes start on "Usage and billing". Each row there is one billing account.
+Most changes start on "Usage and billing". Each row there is one billing account. On "AI
+costs" the three-dot button on a row opens the same account actions.
 
 - The three-dot button at the end of a row opens the account actions.
 - Expand the row to see its workspaces. Each workspace has its own three-dot button for the
@@ -36,7 +39,7 @@ Most changes start on "Usage and billing". Each row there is one billing account
 
 | Where | What is in it |
 |---|---|
-| Account actions | "Partner organisation" (on an organisation account), "Change tier", "Billing mode", "Discount", and "Workspaces in this account" with a "Workspace actions" button for each. |
+| Account actions | "Partner organisation" (on an organisation account), "Change tier", "Billing mode", "Discount", "AI budget", and "Workspaces in this account" with a "Workspace actions" button for each. |
 | Workspace actions | "Join for support". For a workspace billed on its own account: also "Change tier" and "Billing mode". |
 
 A workspace on its organisation's plan has no tier of its own. Its workspace actions say: "This
@@ -45,7 +48,7 @@ it applies to every internal workspace in the org."
 
 Where each action is explained:
 
-- "Change tier", "Discount" and "Partner organisation": [tiers and discounts](./discounts-trials-and-tiers.md).
+- "Change tier", "Discount", "AI budget" and "Partner organisation": [tiers and discounts](./discounts-trials-and-tiers.md).
 - "Billing mode": [managed billing](./managed-and-offline-billing.md).
 - "Join for support": [support access](./support-access.md).
 

@@ -10,7 +10,7 @@ const run = admin ? describe : describe.skip;
 const dbName = `allowance_ledger_${process.pid}`;
 const OCT = new Date("2026-10-01T00:00:00Z");
 const NOV = new Date("2026-11-01T00:00:00Z");
-const ZERO = { audio_seconds: 0, chats: 0, reports: 0, maps: 0, popcorn_analyses: 0 };
+const ZERO = { audio_seconds: 0, ai_spend_micro_eur: 0 };
 
 run("allowance ledger", () => {
   setDefaultTimeout(60_000);
@@ -54,10 +54,10 @@ run("allowance ledger", () => {
 
   test("take adds until the limit and then refuses", async () => {
     const a = account();
-    expect(await take(db, a, "reports", 1, 2)).toEqual({ ok: true, used: 1 });
-    expect(await take(db, a, "reports", 1, 2)).toEqual({ ok: true, used: 2 });
-    expect(await take(db, a, "reports", 1, 2)).toEqual({ ok: false, used: 2, limit: 2 });
-    expect(await stored(a, "reports")).toBe(2);
+    expect(await take(db, a, "audio_seconds", 1, 2)).toEqual({ ok: true, used: 1 });
+    expect(await take(db, a, "audio_seconds", 1, 2)).toEqual({ ok: true, used: 2 });
+    expect(await take(db, a, "audio_seconds", 1, 2)).toEqual({ ok: false, used: 2, limit: 2 });
+    expect(await stored(a, "audio_seconds")).toBe(2);
   });
 
   test("take refuses an amount that would overshoot", async () => {
@@ -73,26 +73,29 @@ run("allowance ledger", () => {
 
   test("take is serialised per account", async () => {
     const a = account();
-    const results = await Promise.all(Array.from({ length: 20 }, () => take(db, a, "chats", 1, 2)));
+    const results = await Promise.all(
+      Array.from({ length: 20 }, () => take(db, a, "audio_seconds", 1, 2)),
+    );
     expect(results.filter((r) => r.ok)).toHaveLength(2);
     expect(results.filter((r) => !r.ok)).toHaveLength(18);
-    expect(await stored(a, "chats")).toBe(2);
+    expect(await stored(a, "audio_seconds")).toBe(2);
   });
 
   test("a new period starts empty", async () => {
     const a = account();
     await add(db, a, "audio_seconds", 500);
-    await take(db, a, "maps", 1, 1);
-    expect(await usedThisPeriod(db, a)).toEqual({ ...ZERO, audio_seconds: 500, maps: 1 });
+    await add(db, a, "ai_spend_micro_eur", 1);
+    expect(await usedThisPeriod(db, a)).toEqual({ audio_seconds: 500, ai_spend_micro_eur: 1 });
     expect(await usedThisPeriod(db, { ...a, periodStart: NOV })).toEqual(ZERO);
   });
 
   test("usedThisPeriod ignores keys that are not usage keys", async () => {
     const a = account();
-    await add(db, a, "popcorn_analyses", 1);
+    await add(db, a, "ai_spend_micro_eur", 1);
     await sql`insert into free_usage (billing_account_id, period_start, key, amount)
-      values (${a.accountId}, ${a.periodStart}, 'notice:audio_out', 1)`;
-    expect(await usedThisPeriod(db, a)).toEqual({ ...ZERO, popcorn_analyses: 1 });
+      values (${a.accountId}, ${a.periodStart}, 'notice:audio_out', 1),
+        (${a.accountId}, ${a.periodStart}, 'chats', 2)`;
+    expect(await usedThisPeriod(db, a)).toEqual({ ...ZERO, ai_spend_micro_eur: 1 });
   });
 
   test("giveBack never goes below zero", async () => {
@@ -102,8 +105,8 @@ run("allowance ledger", () => {
     expect(await stored(a, "audio_seconds")).toBe(60);
     await giveBack(db, a, "audio_seconds", 1000);
     expect(await stored(a, "audio_seconds")).toBe(0);
-    await giveBack(db, a, "reports", 5);
-    expect((await usedThisPeriod(db, a)).reports).toBe(0);
+    await giveBack(db, a, "ai_spend_micro_eur", 5);
+    expect((await usedThisPeriod(db, a)).ai_spend_micro_eur).toBe(0);
   });
 
   test("add ignores the limit and returns the total", async () => {
@@ -121,15 +124,15 @@ run("allowance ledger", () => {
   test("rejects negative and non-finite amounts", async () => {
     const a = account();
     for (const bad of [-1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
-      const e1 = await take(db, a, "chats", bad, 2).then(
+      const e1 = await take(db, a, "audio_seconds", bad, 2).then(
         () => null,
         (e) => e,
       );
-      const e2 = await add(db, a, "chats", bad).then(
+      const e2 = await add(db, a, "audio_seconds", bad).then(
         () => null,
         (e) => e,
       );
-      const e3 = await giveBack(db, a, "chats", bad).then(
+      const e3 = await giveBack(db, a, "audio_seconds", bad).then(
         () => null,
         (e) => e,
       );
@@ -137,19 +140,19 @@ run("allowance ledger", () => {
       expect(e2).toBeInstanceOf(Error);
       expect(e3).toBeInstanceOf(Error);
     }
-    expect(await stored(a, "chats")).toBeNull();
+    expect(await stored(a, "audio_seconds")).toBeNull();
   });
 
   test("rejects negative and non-finite limits", async () => {
     const a = account();
     for (const bad of [-1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
-      const err = await take(db, a, "chats", 1, bad).then(
+      const err = await take(db, a, "audio_seconds", 1, bad).then(
         () => null,
         (e) => e,
       );
       expect(err).toBeInstanceOf(Error);
     }
-    expect(await stored(a, "chats")).toBeNull();
+    expect(await stored(a, "audio_seconds")).toBeNull();
   });
 
   test("another account is not blocked by this one's lock", async () => {
@@ -169,7 +172,7 @@ run("allowance ledger", () => {
     });
     await held;
     const t0 = Date.now();
-    expect(await take(db, b, "reports", 1, 1)).toEqual({ ok: true, used: 1 });
+    expect(await take(db, b, "audio_seconds", 1, 1)).toEqual({ ok: true, used: 1 });
     expect(Date.now() - t0).toBeLessThan(1000);
     release();
     await holder;
@@ -191,7 +194,7 @@ run("allowance ledger", () => {
     });
     await held;
     let done = false;
-    const waiting = take(db, a, "reports", 1, 1).then((r) => {
+    const waiting = take(db, a, "audio_seconds", 1, 1).then((r) => {
       done = true;
       return r;
     });
@@ -218,7 +221,7 @@ run("allowance ledger", () => {
     });
     await held;
     let done = false;
-    const waiting = take(db, { ...a, periodStart: NOV }, "reports", 1, 1).then((r) => {
+    const waiting = take(db, { ...a, periodStart: NOV }, "audio_seconds", 1, 1).then((r) => {
       done = true;
       return r;
     });
@@ -232,7 +235,7 @@ run("allowance ledger", () => {
   test("take inside withAllowanceLock reuses the held lock", async () => {
     const a = account();
     const out = await withAllowanceLock(db, a, async (tx) => {
-      const first = await take(tx, a, "chats", 1, 2);
+      const first = await take(tx, a, "ai_spend_micro_eur", 1, 2);
       const total = await add(tx, a, "audio_seconds", 10);
       await giveBack(tx, a, "audio_seconds", 4);
       const used = await usedThisPeriod(tx, a);
@@ -240,20 +243,20 @@ run("allowance ledger", () => {
     });
     expect(out.first).toEqual({ ok: true, used: 1 });
     expect(out.total).toBe(10);
-    expect(out.used).toEqual({ ...ZERO, chats: 1, audio_seconds: 6 });
-    expect(await stored(a, "chats")).toBe(1);
+    expect(out.used).toEqual({ ai_spend_micro_eur: 1, audio_seconds: 6 });
+    expect(await stored(a, "ai_spend_micro_eur")).toBe(1);
   });
 
   test("withAllowanceLock rolls back writes when fn throws", async () => {
     const a = account();
     const err = await withAllowanceLock(db, a, async (tx) => {
-      await add(tx, a, "maps", 1);
+      await add(tx, a, "ai_spend_micro_eur", 1);
       throw new Error("boom");
     }).then(
       () => null,
       (e) => e,
     );
     expect(err).toBeInstanceOf(Error);
-    expect(await stored(a, "maps")).toBeNull();
+    expect(await stored(a, "ai_spend_micro_eur")).toBeNull();
   });
 });

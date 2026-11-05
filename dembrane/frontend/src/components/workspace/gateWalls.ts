@@ -24,20 +24,19 @@ export type WallKey =
 	 * `surface="modal"`.
 	 */
 	| "billing_page"
-	| "chat_cap"
-	| "chat_turn_cap"
+	/** The monthly AI budget is used up; one wall for every AI action. */
+	| "ai_budget"
 	| "chat_voice_cap"
 	| "custom_logo"
 	| "event_cta"
 	/** The free allowance card's upgrade button: opens the modal directly, no popover. */
 	| "free_allowance"
-	| "map_cap"
 	| "org_cap"
-	| "popcorn_cap"
 	| "private_workspace"
 	| "project_cap"
 	| "recording_project"
-	| "report_cap"
+	/** A free sample project's own caps (its questions, its one report); not the AI budget. */
+	| "sample_cap"
 	| "transcription_cap"
 	| "transcripts_view"
 	| "upload_cap"
@@ -61,6 +60,51 @@ export function isLockedDataWall(wall: WallKey): boolean {
 	return LOCKED_DATA_WALLS.includes(wall);
 }
 
+/** The AI action a free account was refused when the budget ran out. */
+export type AiAction =
+	| "chat"
+	| "assistant"
+	| "voice"
+	| "report"
+	| "map"
+	| "analysis"
+	| "popcorn"
+	| "canvas"
+	| "retranscribe"
+	| "summary"
+	| "summary_again"
+	| "title"
+	| "title_again";
+
+/** Walls with fixed prompt copy; aiBudgetHandover and sampleCapHandover write the other two. */
+export type PlainWall = Exclude<WallKey, "ai_budget" | "sample_cap">;
+
+/** Which of a sample project's own caps was reached. */
+export type SampleCap = "chat" | "report";
+
+/** Fallback when the chat_turns refusal carries no cap; mirrors FREE_TIER_MAX_SAMPLE_USER_TURNS. */
+export const SAMPLE_CHAT_QUESTIONS = 10;
+
+/** The opening's phrase for the refused AI action, read as "You were trying to {action}." */
+export function aiActionLine(action: AiAction): string {
+	const actions: Record<AiAction, string> = {
+		analysis: t`run an analysis`,
+		assistant: t`ask the assistant`,
+		canvas: t`refresh the canvas`,
+		chat: t`ask in chat`,
+		map: t`generate a map`,
+		popcorn: t`keep analysing with popcorn`,
+		report: t`create a report`,
+		retranscribe: t`retranscribe a conversation`,
+		summary: t`generate a summary`,
+		summary_again: t`regenerate a summary`,
+		title: t`generate a title`,
+		title_again: t`regenerate a title`,
+		voice: t`use your voice in chat`,
+	};
+	return actions[action] ?? "";
+}
+
 /**
  * The one line the popover carries. One line per wall.
  *
@@ -80,21 +124,19 @@ export function isLockedDataWall(wall: WallKey): boolean {
  */
 export function wallPopoverLine(wall: WallKey): string {
 	const lines: Record<WallKey, string> = {
+		// Opens the popup directly.
+		ai_budget: "",
 		billing_page: "",
-		// Both chat walls read the same line: it covers chats and turns.
-		chat_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
-		chat_turn_cap: t`The free plan includes a few chats a month, each with a set number of questions.`,
 		chat_voice_cap: "",
 		custom_logo: t`Your own logo comes with a paid plan.`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan.`,
 		free_allowance: "",
-		map_cap: t`The free plan includes a monthly allowance of maps.`,
 		org_cap: t`The free plan includes one organisation.`,
-		popcorn_cap: t`The free plan includes a monthly allowance of popcorn analyses.`,
 		private_workspace: t`Private workspaces come with a paid plan.`,
 		project_cap: t`The free plan includes a limited number of projects.`,
 		recording_project: t`On the free plan one project takes recordings.`,
-		report_cap: t`The free plan includes a monthly allowance of reports.`,
+		// Opens the popup directly.
+		sample_cap: "",
 		transcription_cap: "",
 		transcripts_view: t`Transcripts come with a paid plan.`,
 		upload_cap: t`Uploading recordings comes with a paid plan.`,
@@ -113,22 +155,17 @@ export function wallPopoverLine(wall: WallKey): string {
  *
  * No line names a tier or a number: staff edit the free limits.
  */
-export function wallHandoverTitle(wall: WallKey): string {
-	const titles: Record<WallKey, string> = {
+export function wallHandoverTitle(wall: PlainWall): string {
+	const titles: Record<PlainWall, string> = {
 		billing_page: t`Let's find what fits you`,
-		chat_cap: t`You've used this month's free chats`,
-		chat_turn_cap: t`You've used the free questions in this chat`,
 		chat_voice_cap: t`You've reached the limit for speaking in chat`,
 		custom_logo: t`Your own logo comes with a paid plan`,
 		event_cta: t`Hiding the dembrane event invitation comes with a paid plan`,
 		free_allowance: t`You've used part of this month's free allowance`,
-		map_cap: t`You've used this month's free maps`,
 		org_cap: t`The free plan includes one organisation`,
-		popcorn_cap: t`You've used this month's free popcorn analyses`,
 		private_workspace: t`Private workspaces come with a paid plan`,
 		project_cap: t`You've reached the free plan's project limit`,
 		recording_project: t`On the free plan, one project takes recordings`,
-		report_cap: t`You've used this month's free reports`,
 		transcription_cap: t`You've used this month's free transcription`,
 		transcripts_view: t`Transcripts come with a paid plan`,
 		upload_cap: t`Uploading recordings comes with a paid plan`,
@@ -144,23 +181,18 @@ export function wallHandoverTitle(wall: WallKey): string {
  * paid feature's title already says it comes with a paid plan, so saying it
  * again would repeat, and the billing page blocks nothing.
  */
-export function wallHandoverLead(wall: WallKey): string {
+export function wallHandoverLead(wall: PlainWall): string {
 	const keepGoing = t`A paid plan lets you keep going.`;
-	const leads: Record<WallKey, string> = {
+	const leads: Record<PlainWall, string> = {
 		billing_page: "",
-		chat_cap: keepGoing,
-		chat_turn_cap: keepGoing,
 		chat_voice_cap: keepGoing,
 		custom_logo: "",
 		event_cta: "",
 		free_allowance: keepGoing,
-		map_cap: keepGoing,
 		org_cap: keepGoing,
-		popcorn_cap: keepGoing,
 		private_workspace: "",
 		project_cap: keepGoing,
 		recording_project: keepGoing,
-		report_cap: keepGoing,
 		transcription_cap: keepGoing,
 		transcripts_view: "",
 		upload_cap: "",
@@ -168,4 +200,51 @@ export function wallHandoverLead(wall: WallKey): string {
 		workspace_cap: keepGoing,
 	};
 	return leads[wall] ?? "";
+}
+
+/**
+ * The AI budget wall's title and lead. Used up, it names the refused action
+ * (the allowance card refuses none, so it names the allowance) and the reset
+ * day. Not used up yet (the 80% banner), it only offers more AI.
+ */
+export function aiBudgetHandover({
+	action: refused,
+	resetDay,
+	usedUp,
+}: {
+	action?: AiAction;
+	resetDay: string | null;
+	usedUp: boolean;
+}): { title: string; lead: string } {
+	const allowance = t`You're on the free plan, which includes a monthly AI allowance.`;
+	if (!usedUp) {
+		return {
+			lead: t`A paid plan gives you more AI every month.`,
+			title: t`Your free plan includes a monthly AI allowance`,
+		};
+	}
+	const action = refused ? aiActionLine(refused) : "";
+	const opening = action ? t`You were trying to ${action}.` : allowance;
+	const paused = resetDay
+		? t`AI features and new recordings are paused until ${resetDay}.`
+		: t`AI features and new recordings are paused until next month.`;
+	return {
+		lead: `${opening} ${paused} ${t`A paid plan lets you keep going.`}`,
+		title: t`This month's AI is used up`,
+	};
+}
+
+/** The sample project wall's title and lead: the cap reached, and the way on. */
+export function sampleCapHandover(
+	cap: SampleCap | undefined,
+	questions: number | null | undefined,
+): { title: string; lead: string } {
+	const count = questions ?? SAMPLE_CHAT_QUESTIONS;
+	return {
+		lead: t`Create your own project to keep going.`,
+		title:
+			cap === "report"
+				? t`Sample projects allow one report`
+				: t`Sample projects allow ${count} questions`,
+	};
 }

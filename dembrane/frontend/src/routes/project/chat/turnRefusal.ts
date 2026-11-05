@@ -1,16 +1,26 @@
-import { freeLimitDetails, isFreeTierLimitError } from "@/lib/freeTier";
+import {
+	aiBudgetDetails,
+	isFreeTierLimitError,
+	sampleTurnCap,
+} from "@/lib/freeTier";
 
-/** A free-limit 402 on a chat turn, from useChat's error (its message is the body). */
-export const turnRefusalOf = (error: Error | undefined) => {
+// useChat's error carries the response body as its message.
+const bodyOf = (error: Error | undefined): unknown => {
 	try {
-		const body: unknown = JSON.parse(error?.message ?? "");
-		const limit = isFreeTierLimitError(body);
-		if (limit !== "chat_turns" && limit !== "chats") return null;
-		return {
-			frozen: freeLimitDetails(body)?.reason === "frozen",
-			monthly: limit === "chats",
-		};
+		return JSON.parse(error?.message ?? "");
 	} catch {
 		return null;
 	}
 };
+
+/** True when a sample project's chat turn was refused (402 chat_turns). */
+export const turnRefusalOf = (error: Error | undefined): boolean =>
+	isFreeTierLimitError(bodyOf(error)) === "chat_turns";
+
+/** The question cap a refused sample turn carried, or null. */
+export const turnCapOf = (error: Error | undefined): number | null =>
+	sampleTurnCap(bodyOf(error));
+
+/** The used-up AI budget behind a refused reply, or null. */
+export const aiBudgetRefusalOf = (error: Error | undefined) =>
+	aiBudgetDetails(bodyOf(error));

@@ -104,7 +104,15 @@ export interface AccountRow {
   type_discount: string | null;
   percent_discount: number | null;
   payment_mode: string | null;
+  // The staff AI budget override; all empty means the free default applies.
+  ai_budget: AiBudgetOverride;
   workspaces: BillingRow[];
+}
+
+export interface AiBudgetOverride {
+  amount_micro_eur: number | null;
+  unlimited: boolean;
+  until: string | null;
 }
 
 export function isTrialAccount(p: {
@@ -157,6 +165,7 @@ function aggregateAccounts(
   labels: Map<string, string | null>,
   paymentModes: Map<string, string | null>,
   pooledSeats: Map<string, number>,
+  budgets: Map<string, AiBudgetOverride>,
   now: Date,
 ): AccountRow[] {
   const by = new Map<string, BillingRow[]>();
@@ -213,6 +222,7 @@ function aggregateAccounts(
       type_discount: first.type_discount,
       percent_discount: first.percent_discount,
       payment_mode: paymentMode,
+      ai_budget: budgets.get(id) ?? { amount_micro_eur: null, unlimited: false, until: null },
       workspaces: members,
     });
   }
@@ -289,6 +299,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
   let totalBase = 0;
   const labels = new Map<string, string | null>();
   const modes = new Map<string, string | null>();
+  const budgets = new Map<string, AiBudgetOverride>();
   for (const ws of workspaces) {
     const tier = ws.tier ?? "pioneer";
     const cap = getCapacity(tier);
@@ -348,6 +359,11 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     if (ws.account_id) {
       labels.set(ws.account_id, ws.label);
       modes.set(ws.account_id, ws.payment_mode);
+      budgets.set(ws.account_id, {
+        amount_micro_eur: ws.ai_budget_micro_eur ?? null,
+        unlimited: ws.ai_budget_unlimited ?? false,
+        until: parseTime(ws.ai_budget_until)?.toISOString() ?? null,
+      });
     }
     if (base !== null) totalBase += base;
   }
@@ -377,7 +393,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     for (const id of ids) for (const u of seatUserIds(membersByWs.get(id) ?? [])) all.add(u);
     pooled.set(acc, all.size);
   }
-  const accounts = aggregateAccounts(rows, orgNames, labels, modes, pooled, now);
+  const accounts = aggregateAccounts(rows, orgNames, labels, modes, pooled, budgets, now);
   const totalForecast = accounts.reduce((s2, a) => s2 + a.total_forecast_eur, 0);
   const mrr = accounts
     .filter((a) => !a.is_comped && a.tier !== "pilot")

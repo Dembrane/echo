@@ -34,7 +34,7 @@ import {
   translationTargets,
   truthy,
   updateSettingsUnlocked,
-  withFreePopcorn,
+  withAiBudget,
   writeSettings,
 } from "@dembrane/popcorn";
 import type { MapStore } from "./map";
@@ -209,7 +209,7 @@ export async function payload(d: PopcornDeps, report: Row, project: Row): Promis
     capture.state ?? freshState(),
     capture.run ?? null,
   );
-  return withFreePopcorn(d.db, detail, String(report.project_id), d.now());
+  return withAiBudget(d.db, detail, String(report.project_id), d.now());
 }
 
 export async function draftPayload(
@@ -237,7 +237,7 @@ export async function draftPayload(
   );
   // The same settings the preview resolves, so a pin reads here as the bundle reads it.
   detail.result_snapshots = await resultSnapshots(d, String(report.project_id), resolved);
-  return withFreePopcorn(d.db, detail, String(report.project_id), d.now());
+  return withAiBudget(d.db, detail, String(report.project_id), d.now());
 }
 
 /**

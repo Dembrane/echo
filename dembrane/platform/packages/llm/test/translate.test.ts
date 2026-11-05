@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { withPayer } from "@dembrane/observability";
 import { FakeCompleter, translateTexts } from "../src";
 import { withoutClosingFence } from "../src/translate";
 
@@ -15,15 +16,17 @@ test("translates in batches, keeps order, and leaves a failed batch's texts null
     });
   });
   const warnings: string[] = [];
-  const out = await translateTexts(fake, ["a", "b", "c", "boom"], {
-    system: "translate these",
-    target: "Dutch",
-    batch: 2,
-    parallel: 2,
-    extra: { glossary: { workspace: "werkruimte" } },
-    notes: ["first", undefined, undefined, undefined],
-    warn: (m) => warnings.push(m),
-  });
+  const out = await withPayer({ internal: "test" }, () =>
+    translateTexts(fake, ["a", "b", "c", "boom"], {
+      system: "translate these",
+      target: "Dutch",
+      batch: 2,
+      parallel: 2,
+      extra: { glossary: { workspace: "werkruimte" } },
+      notes: ["first", undefined, undefined, undefined],
+      warn: (m) => warnings.push(m),
+    }),
+  );
   expect(out).toEqual(["Dutch:a", "Dutch:b", null, null]);
   expect(warnings).toEqual(["vertex 503"]);
   const first = JSON.parse(fake.calls[0]?.user as string);

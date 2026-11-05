@@ -34,6 +34,7 @@ import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { inArray } from "drizzle-orm";
 import { Hono } from "hono";
+import { aiCosts } from "./ai-costs";
 import { atRisk, billingRollup } from "./rollup";
 import { cancelPendingTasks, SUPPORT_TASKS, scheduleTask } from "./scheduled";
 import { staffStorage } from "./storage";
@@ -53,6 +54,21 @@ const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
 const MOLLIE_DASHBOARD_TEST = "https://www.mollie.com/dashboard/org_test/payments";
 const STAFF_EMAIL_DOMAIN = "@dembrane.com";
 const MAX_LIMIT = 10_000_000;
+// EUR 1,000: the most a budget, default or per account, may be.
+const MAX_AI_BUDGET = 1_000_000_000;
+// ISO 8601: a UTC day (what the staff screen sends) or a date and time with a zone.
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2}))?$/;
+
+// The date part must be a real day: Date rolls 2026-02-30 over into March.
+function realDay(iso: string): boolean {
+  const [y = 0, m = 0, d = 0] = iso.slice(0, 10).split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+const KEY_MAX: Partial<Record<LimitKey, number>> = {
+  ai_budget_micro_eur: MAX_AI_BUDGET,
+  ai_budget_enforce: 1,
+};
 
 // The free limit rows, each naming the staff user who last changed it.
 async function freeLimitView(db: Db) {
@@ -526,7 +542,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
     // Strict: no numeric strings, booleans or fractions.
     if (!(LIMIT_KEYS as readonly string[]).includes(key))
       throw new BadRequestError("request.invalid");
-    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > MAX_LIMIT)
+    const max = KEY_MAX[key as LimitKey] ?? MAX_LIMIT;
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > max)
       throw new BadRequestError("request.invalid");
     const who = await staff(c, "staff:set_tier", "free_limit.update", ["free_limit", key], {
       key,
@@ -534,6 +551,74 @@ export function staffRoutes(deps: StaffRouteDeps) {
     });
     await setFreeLimit(deps.db, key as LimitKey, value, who.directusUserId);
     return c.json({ limits: await freeLimitView(deps.db) });
+  });
+
+  // ── AI budget ────────────────────────────────────────────────────────
+  app.put(`${A}/billing-accounts/:account_id/ai-budget`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, {
+      body: {
+        amount_micro_eur: v.withDefault(v.any(), null),
+        unlimited: v.withDefault(v.any(), false),
+        until: v.withDefault(v.any(), null),
+      },
+    });
+    const { amount_micro_eur: amount, unlimited, until } = body;
+    // Strict like the free limits: no numeric strings, lax booleans or past end dates.
+    const amountOk =
+      typeof amount === "number" &&
+      Number.isInteger(amount) &&
+      amount >= 0 &&
+      amount <= MAX_AI_BUDGET;
+    const untilAt =
+      typeof until === "string" && ISO_INSTANT.test(until) && realDay(until)
+        ? new Date(until)
+        : null;
+    const now = clock();
+    const untilOk = until === null || (untilAt !== null && untilAt > now);
+    if (typeof unlimited !== "boolean" || (!unlimited && !amountOk) || !untilOk)
+      throw new BadRequestError("request.invalid");
+    const id = c.req.param("account_id");
+    const patch = {
+      ai_budget_micro_eur: unlimited ? null : (amount as number),
+      ai_budget_unlimited: unlimited,
+      ai_budget_until: untilAt?.toISOString() ?? null,
+    };
+    // The audit records what is stored, not the raw body.
+    await staff(
+      c,
+      "staff:set_tier",
+      "billing_account.ai_budget.set",
+      ["billing_account", id],
+      patch,
+    );
+    await liveAccount(id);
+    await billingStore.updateAccount(id, patch, now);
+    return c.json({ status: "ok", billing_account_id: id, ...patch });
+  });
+
+  app.delete(`${A}/billing-accounts/:account_id/ai-budget`, async (c) => {
+    const id = c.req.param("account_id");
+    await staff(c, "staff:set_tier", "billing_account.ai_budget.clear", ["billing_account", id]);
+    await liveAccount(id);
+    const patch = { ai_budget_micro_eur: null, ai_budget_unlimited: false, ai_budget_until: null };
+    await billingStore.updateAccount(id, patch, clock());
+    return c.json({ status: "ok", billing_account_id: id, ...patch });
+  });
+
+  app.get(`${A}/ai-costs`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { query } = v.validateRaw(raw, {
+      query: { month_offset: v.withDefault(v.int({ ge: 0, le: 1 }), 0) },
+    });
+    await staff(c, "staff:set_tier", "ai_costs.read", undefined, {
+      month_offset: query.month_offset,
+    });
+    const now = clock();
+    const limits = await freeLimits(deps.db, clock, deps.logger);
+    return c.json(await aiCosts(deps.db, now, query.month_offset, limits.ai_budget_micro_eur));
   });
 
   // ── Support access ───────────────────────────────────────────────────

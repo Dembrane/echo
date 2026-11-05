@@ -6,14 +6,10 @@ import postgres from "postgres";
 import { type Json, pyIso } from "../src/py";
 import { goLive, type PopcornDeps, popcornPayload, stopLive } from "../src/service";
 import { popcornStore, type Row } from "../src/storage";
-import {
-  enqueueNextIfDue,
-  reconcileMissingTicks,
-  runPopcornTick,
-  type TickDeps,
-} from "../src/tick/run";
+import { enqueueNextIfDue, reconcileMissingTicks, type TickDeps } from "../src/tick/run";
 import { tickDeps, tickWorkflowId } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import {
   type Call,
   fixture,

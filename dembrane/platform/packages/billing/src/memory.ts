@@ -67,6 +67,9 @@ export function accountRow(p: Partial<AccountRow> & { id: string }): AccountRow 
     billing_country_code: null,
     no_vat_number: null,
     invoice_portal: null,
+    ai_budget_micro_eur: null,
+    ai_budget_unlimited: false,
+    ai_budget_until: null,
     ...p,
   };
 }
@@ -196,6 +199,9 @@ export class MemoryBillingStore implements BillingStore {
       .map((a) => ({ id: a.id, tier: a.tier, workspace_id: a.workspace_id }));
   }
   async freeAudioCandidates(_since: Date) {
+    return [];
+  }
+  async freeAiCandidates(_since: Date, _budget: { now: Date; defaultLimit: number }) {
     return [];
   }
   async prewarnAccounts(from: Date, until: Date) {

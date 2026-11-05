@@ -8,7 +8,7 @@ import {
 } from "@dembrane/analysis";
 import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, lastPayer, takeUnscopedFakeCalls } from "@dembrane/llm";
 import postgres from "postgres";
 import { runGroup } from "../src/groups";
 import * as service from "../src/service";
@@ -135,7 +135,10 @@ run("map groups", () => {
     expect(await runGroup(worker, dispatched[0] as service.GroupJob)).toBe("stale");
     expect(woken).toHaveLength(3);
     // The title lands: the Map page and the room are both told.
+    takeUnscopedFakeCalls();
     expect(await runGroup(worker, dispatched[1] as service.GroupJob)).toBe("ready");
+    // The job names only its group; the title is billed to the group's project.
+    expect(lastPayer()).toEqual({ ref: "project", id: project });
     expect(published.at(-1)).toEqual({ type: "group", group_id: first.id });
     expect(woken).toEqual([project, project, project, project]);
     const user = String(completer.calls[0]?.user);

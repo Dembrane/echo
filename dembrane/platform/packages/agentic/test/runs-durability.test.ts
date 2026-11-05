@@ -66,7 +66,7 @@ run("agent turn survives a worker crash", () => {
     await api.enqueue(startTurn, payload, { singletonKey: `${ids.run}:1` });
     await api.enqueue(startTurn, payload, { singletonKey: `${ids.run}:1` });
 
-    await until(() => lines().includes("worker-a lookup"));
+    await until(() => lines().some((l) => l.startsWith("worker-a lookup")));
     const before = await sql`
       select event_type from project_agentic_run_event where project_agentic_run_id = ${ids.run} order by seq`;
     expect(before.map((r) => r.event_type)).toContain("on_tool_start");
@@ -100,9 +100,10 @@ run("agent turn survives a worker crash", () => {
     ]);
     // Step 1 (the ack) ran once, on the first worker; only the unfinished step ran again.
     const trail = lines();
-    expect(trail.filter((l) => l.endsWith("lookup"))).toEqual([
-      "worker-a lookup",
-      "worker-b lookup",
+    // The resumed step runs under the run's payer again, in another process.
+    expect(trail.filter((l) => l.includes(" lookup"))).toEqual([
+      `worker-a lookup agent_run:${ids.run}`,
+      `worker-b lookup agent_run:${ids.run}`,
     ]);
     expect(trail).toContain("worker-b capture server_chat_response_received");
     const msgs = await sql`

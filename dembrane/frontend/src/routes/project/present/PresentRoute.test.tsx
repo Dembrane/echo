@@ -62,11 +62,15 @@ vi.mock("@/components/popcorn/PopcornShare", () => ({
 }));
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -75,6 +79,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
@@ -236,10 +242,10 @@ describe("The host's free map notice", () => {
 		expect(mapNotice).not.toHaveBeenCalled();
 	});
 });
-describe("A free host with this month's analyses used up", () => {
+describe("A free host with this month's AI used up", () => {
 	const usedUp = {
 		...presentation,
-		free_popcorn: { exhausted: true, limit: 12, used: 12 },
+		ai_budget: { exhausted: true },
 	};
 	const serve = (p: Record<string, unknown>) =>
 		vi.mocked(bff.get).mockImplementation(async (url) => {
@@ -252,7 +258,7 @@ describe("A free host with this month's analyses used up", () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		serve(usedUp);
 		show();
-		expect(await screen.findByTestId("popcorn-free-notice")).toBeTruthy();
+		expect(await screen.findByTestId("popcorn-ai-budget-notice")).toBeTruthy();
 		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
 		expect(open).toHaveBeenCalledWith(
 			"/present/screen/empty-screen",
@@ -262,7 +268,8 @@ describe("A free host with this month's analyses used up", () => {
 		expect(goLive).not.toHaveBeenCalled();
 		const modal = screen.getAllByTestId("upgrade-modal");
 		expect(modal).toHaveLength(1);
-		expect(modal[0].dataset.wall).toBe("popcorn_cap");
+		expect(modal[0].dataset.wall).toBe("ai_budget");
+		expect(modal[0].dataset.action).toBe("popcorn");
 		expect(modal[0].dataset.tier).toBe("free");
 	});
 	it("opens the screen with no wall while already live", async () => {
@@ -274,7 +281,7 @@ describe("A free host with this month's analyses used up", () => {
 		expect(goLive).not.toHaveBeenCalled();
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
-	it("opens the wall when going live is refused for popcorn", async () => {
+	it("opens the AI wall when going live is refused for the AI budget", async () => {
 		vi.spyOn(window, "open").mockReturnValue(null);
 		goLive.mockImplementation(
 			(_vars: unknown, opts?: { onError?: (e: unknown) => void }) =>
@@ -282,7 +289,12 @@ describe("A free host with this month's analyses used up", () => {
 					body: {
 						action: "upgrade",
 						code: "billing.tier_limit",
-						params: { cap: 12, limit: "popcorn", used: 12 },
+						detail: {
+							error: "FREE_TIER_LIMIT",
+							limit: "ai_budget",
+							resets_at: "2026-12-01T00:00:00Z",
+						},
+						params: { limit: "ai_budget" },
 					},
 					status: 402,
 				}),
@@ -291,7 +303,8 @@ describe("A free host with this month's analyses used up", () => {
 		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
 		expect(goLive).toHaveBeenCalledTimes(1);
 		const modal = await screen.findByTestId("upgrade-modal");
-		expect(modal.dataset.wall).toBe("popcorn_cap");
+		expect(modal.dataset.wall).toBe("ai_budget");
+		expect(modal.dataset.action).toBe("popcorn");
 		expect(modal.dataset.tier).toBe("free");
 		goLive.mockReset();
 	});

@@ -15,6 +15,7 @@ import {
   SamInboxQuarantined,
   SamInboxRetry,
   samEnvelope,
+  samInboxAll,
   samInboxForwarder,
   samInboxSignature,
   samOutcome,
@@ -327,5 +328,25 @@ describe("the outbox forwarder", () => {
     const sent = q.of<SamEnvelope>(deliverSamMessage.name);
     expect(sent).toHaveLength(1);
     expect(JSON.parse(sent[0]?.body ?? "").json.peak).toBe(5);
+  });
+});
+
+describe("sending to sam only where it takes everything", () => {
+  const message = { code: "dembrane_ai_cost_alert_v1", json: { text: "x" }, id: "2026-11-05-a" };
+
+  test("SAM_INBOX_SCOPE=all with the inbox configured queues each message", async () => {
+    const q = new MemorySamQueue();
+    const send = samInboxAll({ url: "https://sam.example/inbox", scope: "all" }, q);
+    await send?.(message);
+    await send?.(message);
+    expect(q.of<SamEnvelope>(deliverSamMessage.name)).toEqual([
+      samEnvelope(message) as unknown as SamEnvelope,
+    ]);
+  });
+
+  test("scope support (EU) or no inbox sends nothing", () => {
+    const q = new MemorySamQueue();
+    expect(samInboxAll({ url: "https://sam.example/inbox", scope: "support" }, q)).toBeNull();
+    expect(samInboxAll({ url: undefined, scope: "all" }, q)).toBeNull();
   });
 });

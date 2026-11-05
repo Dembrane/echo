@@ -31,6 +31,8 @@ export type UseMapFactCheckOptions = {
 	offline?: boolean;
 	/** Fixture mode: states to start from. */
 	initialStates?: FactCheckStates;
+	/** True when the page answered a refused start itself (a used-up AI budget opens its wall). */
+	onRefused?: (error: unknown) => boolean;
 };
 
 type Override = {
@@ -90,6 +92,7 @@ export function useMapFactCheck({
 	readOnly,
 	offline = false,
 	initialStates,
+	onRefused,
 }: UseMapFactCheckOptions) {
 	const queryClient = useQueryClient();
 	const query = useMapFactChecks(offline ? "" : resultId);
@@ -103,6 +106,8 @@ export function useMapFactCheck({
 	const queueRef = useRef<StartJob[]>([]);
 	const activeRef = useRef(0);
 	const pauseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const onRefusedRef = useRef(onRefused);
+	onRefusedRef.current = onRefused;
 
 	// Requests in flight for the previous result still settle and free their
 	// slot; their tokens are gone, so they change nothing.
@@ -186,6 +191,17 @@ export function useMapFactCheck({
 					return;
 				}
 				tokensRef.current.delete(nodeId);
+				if (onRefusedRef.current?.(error)) {
+					// Every waiting start would be refused too: drop them, no error per claim.
+					for (const waiting of queueRef.current.splice(0)) {
+						if (!isCurrent(tokensRef.current, waiting.nodeId, waiting.token))
+							continue;
+						tokensRef.current.delete(waiting.nodeId);
+						setOverride(waiting.nodeId, null);
+					}
+					setOverride(nodeId, null);
+					return;
+				}
 				setOverride(nodeId, {
 					server:
 						queryClient.getQueryData<FactCheckStates>(

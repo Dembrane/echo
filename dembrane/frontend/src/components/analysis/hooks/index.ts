@@ -569,9 +569,8 @@ export function useRequestAnalysisRun(projectId: string) {
 				idempotency_key: crypto.randomUUID(),
 			}),
 		onError: (error) => {
-			// The page opens the wall for a used-up month.
-			const limit = isFreeTierLimitError(error);
-			if (limit === "map" || limit === "popcorn") {
+			// The page opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") {
 				void invalidateFreeAllowance(queryClient);
 				return;
 			}
@@ -587,7 +586,7 @@ export function useRequestAnalysisRun(projectId: string) {
 			void queryClient.invalidateQueries({
 				queryKey: analysisKeys.runs(projectId),
 			});
-			// A free map or analysis may have been spent.
+			// The run spends AI.
 			void invalidateFreeAllowance(queryClient);
 		},
 	});

@@ -1,4 +1,5 @@
 import type { Access } from "@dembrane/access";
+import { requireAiBudget } from "@dembrane/allowance";
 import type { Capture } from "@dembrane/analytics";
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
@@ -36,6 +37,7 @@ export function chatDeps(deps: ChatRoutesDeps): ChatDeps {
     reads: chatReads(deps.db),
     access: deps.access,
     freeChats: freeChats(deps.db),
+    requireAiBudget: (projectId, now, tier) => requireAiBudget(deps.db, projectId, now, tier),
     models: deps.models,
     limiter: deps.limiter,
     capture: deps.capture,

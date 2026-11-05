@@ -248,3 +248,79 @@ it("hands the microphone back when the recording ends", async () => {
 	});
 	expect(track.stop).toHaveBeenCalled();
 });
+
+const recordAndStop = async (result: {
+	current: { start: () => void; stop: () => void };
+}) => {
+	await startRecording(result);
+	await act(async () => {
+		await vi.advanceTimersByTimeAsync(2000);
+	});
+	await act(async () => {
+		result.current.stop();
+	});
+};
+
+it("names the paying workspace beside the purpose", async () => {
+	vi.useFakeTimers({ shouldAdvanceTime: true });
+	transcribeMock.mockResolvedValue({ note: "", transcript: "hi" });
+	const { result } = renderHook(() =>
+		useVoiceTranscription({
+			onTranscript: vi.fn(),
+			purpose: "pricing_intake",
+			workspaceId: "workspace-1",
+		}),
+	);
+	await recordAndStop(result);
+	await waitFor(() => expect(transcribeMock).toHaveBeenCalled());
+	const call = transcribeMock.mock.calls[0][0];
+	expect(call.purpose).toBe("pricing_intake");
+	expect(call.workspaceId).toBe("workspace-1");
+	expect(call.projectId).toBeUndefined();
+});
+
+it("keeps the issue report purpose beside a project", async () => {
+	vi.useFakeTimers({ shouldAdvanceTime: true });
+	transcribeMock.mockResolvedValue({ note: "", transcript: "hi" });
+	const { result } = renderHook(() =>
+		useVoiceTranscription({
+			onTranscript: vi.fn(),
+			projectId: "project-1",
+			purpose: "issue_report",
+			workspaceId: "workspace-1",
+		}),
+	);
+	await recordAndStop(result);
+	await waitFor(() => expect(transcribeMock).toHaveBeenCalled());
+	const call = transcribeMock.mock.calls[0][0];
+	expect(call.projectId).toBe("project-1");
+	expect(call.purpose).toBe("issue_report");
+	expect(call.workspaceId).toBe("workspace-1");
+});
+
+it("hands back the refusal behind a used-up AI budget", async () => {
+	vi.useFakeTimers({ shouldAdvanceTime: true });
+	const headers = new AxiosHeaders();
+	const refusal = new AxiosError("failed", "ERR", { headers }, undefined, {
+		config: { headers },
+		data: {
+			code: "billing.tier_limit",
+			detail: {
+				error: "FREE_TIER_LIMIT",
+				limit: "ai_budget",
+				resets_at: "2026-12-01T00:00:00Z",
+			},
+			params: { limit: "ai_budget" },
+		},
+		headers: {},
+		status: 402,
+		statusText: "",
+	});
+	transcribeMock.mockRejectedValue(refusal);
+	const { result } = renderVoice();
+	await recordAndStop(result);
+	await waitFor(() => expect(result.current.errorKind).toBe("free_limit"));
+	expect(result.current.errorCause).toBe(refusal);
+	act(() => result.current.dismissError());
+	expect(result.current.errorCause).toBeNull();
+});

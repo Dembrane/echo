@@ -52,20 +52,26 @@ vi.mock("@/components/project/hooks", () => ({
 			: { data: undefined, isSuccess: false },
 }));
 
-vi.mock("@/components/chat/FreeTierChatGate", () => ({
-	ChatUpgradeModal: ({
+vi.mock("@/components/workspace/FeatureGate", () => ({
+	UpgradeModal: ({
+		aiAction,
 		opened,
-		reason,
+		resetsAt,
+		wallKey,
 	}: {
+		aiAction?: string;
 		opened: boolean;
-		reason: string;
+		resetsAt?: string | null;
+		wallKey: string;
 	}) =>
 		opened ? (
-			<div data-testid="chat-upgrade-modal" data-reason={reason} />
+			<div
+				data-testid="upgrade-modal"
+				data-wall={wallKey}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
+			/>
 		) : null,
-}));
-vi.mock("@/components/workspace/FeatureGate", () => ({
-	UpgradeModal: () => null,
 }));
 vi.mock("@/components/chat/ChatTemplatesMenuConnected", () => ({
 	ChatTemplatesMenuConnected: () => null,
@@ -96,15 +102,33 @@ const answer = (body: unknown) =>
 	});
 
 const SPENT = {
+	ai: { exhausted: true, percent_used: 100, unlimited: false },
 	audio_seconds: { limit: 18000, used: 0 },
-	chats: { limit: 2, used: 2 },
 	free: true,
-	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_analyses: { limit: 12, used: 0 },
 	projects: { limit: 1, used: 1 },
-	reports: { limit: 1, used: 0 },
 	resets_at: "2026-11-01T00:00:00Z",
+};
+
+const ROOM = {
+	...SPENT,
+	ai: { exhausted: false, percent_used: 40, unlimited: false },
+};
+
+const aiRefusal = {
+	response: {
+		data: {
+			code: "billing.tier_limit",
+			detail: {
+				error: "FREE_TIER_LIMIT",
+				limit: "ai_budget",
+				percent: 100,
+				resets_at: "2026-12-01T00:00:00Z",
+			},
+			params: { limit: "ai_budget" },
+		},
+		status: 402,
+	},
 };
 
 beforeAll(() => {
@@ -184,21 +208,36 @@ const send = async () => {
 	});
 };
 
-it("walls a new chat once this month's chats are spent", async () => {
+it("opens the AI wall instead of a new chat once this month's AI is used up", async () => {
 	await renderRoute();
 	expect(screen.getByTestId("free-allowance-banner")).toBeTruthy();
 	await send();
 	expect(createChat).not.toHaveBeenCalled();
-	expect(screen.getByTestId("chat-upgrade-modal").dataset.reason).toBe("chats");
+	const modal = screen.getByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("chat");
+	expect(modal.dataset.resets).toBe("2026-11-01T00:00:00Z");
 });
 
-it("lets a sample project start a chat when the month's chats are spent", async () => {
+it("opens the AI wall when the server refuses the new chat", async () => {
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockRejectedValueOnce(aiRefusal);
+	await renderRoute();
+	await send();
+	expect(createChat).toHaveBeenCalledTimes(1);
+	const modal = await screen.findByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("chat");
+	expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+});
+
+it("lets a sample project start a chat when this month's AI is used up", async () => {
 	project.isSample = true;
 	await renderRoute();
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
 	await send();
 	expect(createChat).toHaveBeenCalledTimes(1);
-	expect(screen.queryByTestId("chat-upgrade-modal")).toBeNull();
+	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });
 
 it("walls nothing while is_sample is still loading", async () => {
@@ -207,5 +246,5 @@ it("walls nothing while is_sample is still loading", async () => {
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
 	await send();
 	expect(createChat).toHaveBeenCalledTimes(1);
-	expect(screen.queryByTestId("chat-upgrade-modal")).toBeNull();
+	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });

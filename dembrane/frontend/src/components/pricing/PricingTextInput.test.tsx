@@ -98,7 +98,7 @@ afterEach(() => {
 	cleanup();
 });
 
-const mount = (projectId?: string) => {
+const mount = (projectId?: string, workspaceId?: string) => {
 	const onAudioRetained = vi.fn();
 	const onChange = vi.fn();
 	render(
@@ -111,6 +111,7 @@ const mount = (projectId?: string) => {
 					questionKey="timing"
 					testIdPrefix="pricing-timing"
 					value=""
+					workspaceId={workspaceId}
 				/>
 			</MantineProvider>
 		</I18nProvider>,
@@ -182,4 +183,50 @@ it("keeps the recording when the purpose call fails, and offers one retry", asyn
 		purpose: "pricing_intake",
 	});
 	expect(screen.queryByTestId("pricing-timing-voice-retry")).toBeNull();
+});
+
+it("names the workspace that pays when the form opens inside one", async () => {
+	transcribeMock.mockResolvedValue({ note: "", transcript: "six weekends" });
+	mount(undefined, "workspace-1");
+
+	await speak();
+
+	await waitFor(() => expect(transcribeMock).toHaveBeenCalledTimes(1));
+	expect(transcribeMock.mock.calls[0][0]).toMatchObject({
+		purpose: "pricing_intake",
+		workspaceId: "workspace-1",
+	});
+});
+
+it("says this month's AI is used up and steps the mic aside", async () => {
+	transcribeMock.mockRejectedValue({
+		isAxiosError: true,
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	});
+	const { onAudioRetained } = mount(undefined, "workspace-1");
+
+	await speak();
+
+	const blocked = await screen.findByTestId("pricing-timing-voice-blocked");
+	expect(blocked.textContent).toBe("This month's AI is used up.");
+	expect(screen.queryByTestId("pricing-timing-voice-record")).toBeNull();
+	expect(screen.queryByTestId("pricing-timing-voice-retry")).toBeNull();
+	expect(screen.queryByTestId("pricing-timing-voice-failed")).toBeNull();
+	expect(screen.queryByTestId("pricing-timing-voice-nudge")).toBeNull();
+	// Typing still works, and the recording travels with the answers.
+	expect(screen.getByTestId("pricing-timing-input")).toBeTruthy();
+	expect(onAudioRetained).toHaveBeenCalledWith(
+		expect.objectContaining({ question_key: "timing" }),
+	);
 });

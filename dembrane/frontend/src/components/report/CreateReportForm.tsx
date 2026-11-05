@@ -21,29 +21,24 @@ import {
 	ClockIcon,
 } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
-import {
-	invalidateFreeAllowance,
-	useFreeAllowance,
-} from "@/hooks/useFreeAllowance";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import {
-	allowanceSpent,
-	freeReportsLine,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
+import { aiBudgetDetails, isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useCreateProjectReportMutation } from "./hooks";
@@ -95,16 +90,17 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 	const posthog = usePostHog();
 
-	// Free tier: this month's reports. Past the limit, generating opens the wall.
+	// Free tier: once this month's AI is used up, generating opens the AI wall.
 	const { workspace } = useWorkspace();
-	const queryClient = useQueryClient();
-	const { applies: allowanceApplies, isSample } =
-		useAllowanceApplies(projectId);
+	const { applies: allowanceApplies } = useAllowanceApplies(projectId);
 	const freeAllowance = useFreeAllowance(workspace?.id);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	const isAtReportLimit =
-		allowanceApplies && allowanceSpent(freeAllowance.data, "reports");
-	const is402ReportError = isFreeTierLimitError(error) === "report";
+	const aiWall = useAiBudgetWall();
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
+	const aiUsedUp =
+		allowanceApplies && Boolean(freeAllowance.data?.ai?.exhausted);
+	// A sample project keeps one report of its own.
+	const isSampleRefusal = isFreeTierLimitError(error) === "report";
+	const isAiRefusal = aiBudgetDetails(error) !== null;
 
 	const hasConversations = conversationCounts && conversationCounts.total > 0;
 	const hasFinishedConversations =
@@ -115,8 +111,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 		error instanceof AxiosError && error.response?.status === 409;
 
 	const handleCreate = (schedule?: boolean) => {
-		if (isAtReportLimit) {
-			upgradeHandlers.open();
+		if (aiUsedUp) {
+			aiWall.open(freeAllowance.data?.resets_at ?? null);
 			return;
 		}
 		posthog?.capture("report_generated", {
@@ -135,16 +131,15 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			},
 			{
 				onError: (err) => {
-					if (isFreeTierLimitError(err) !== "report") return;
-					void invalidateFreeAllowance(queryClient);
-					upgradeHandlers.open();
+					if (aiWall.openFor(err)) return;
+					if (isFreeTierLimitError(err) === "report") sampleWall.open();
 				},
 				onSuccess: () => onSuccess(),
 			},
 		);
 	};
 
-	if (error && !is402ReportError) {
+	if (error && !isSampleRefusal && !isAiRefusal) {
 		return (
 			<Alert
 				title={
@@ -171,19 +166,19 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	return (
 		<Stack maw="540px" className="pt-4">
 			{workspace?.id && allowanceApplies && (
-				<FreeAllowanceBanner workspaceId={workspace.id} feature="reports" />
+				<FreeAllowanceBanner
+					workspaceId={workspace.id}
+					feature="ai"
+					action="report"
+				/>
 			)}
-			{is402ReportError && !isAtReportLimit && (
+			{isSampleRefusal && (
 				<Alert title={t`Report limit reached`} color="primary" variant="light">
 					<Stack gap="sm" align="flex-start">
 						<Text size="sm">
-							{isSample ? (
-								<Trans>This sample project includes one report.</Trans>
-							) : (
-								freeReportsLine(freeAllowance.data)
-							)}
+							<Trans>This sample project includes one report.</Trans>
 						</Text>
-						<Button size="xs" onClick={upgradeHandlers.open}>
+						<Button size="xs" onClick={sampleWall.open}>
 							{t`See upgrade options`}
 						</Button>
 					</Stack>
@@ -303,7 +298,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							onClick={() => handleCreate(true)}
 							loading={isPending}
 							disabled={
-								isPending || !isDateFarEnough(scheduledDate) || is402ReportError
+								isPending || !isDateFarEnough(scheduledDate) || isSampleRefusal
 							}
 							fullWidth
 							variant="filled"
@@ -347,7 +342,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							<Button
 								onClick={() => handleCreate(false)}
 								loading={isPending}
-								disabled={isPending || !hasConversations || is402ReportError}
+								disabled={isPending || !hasConversations || isSampleRefusal}
 								variant="filled"
 								style={{ flex: 7 }}
 								{...testId("report-create-button")}
@@ -357,11 +352,13 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						</Tooltip>
 						<Button
 							onClick={() =>
-								isAtReportLimit ? upgradeHandlers.open() : setShowSchedule(true)
+								aiUsedUp
+									? aiWall.open(freeAllowance.data?.resets_at ?? null)
+									: setShowSchedule(true)
 							}
 							leftSection={<ClockIcon size={20} />}
 							style={{ flex: 3 }}
-							disabled={is402ReportError}
+							disabled={isSampleRefusal}
 						>
 							<Trans>Schedule</Trans>
 						</Button>
@@ -389,15 +386,17 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					)}
 				</Stack>
 			)}
-			<UpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				currentTier="free"
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade
+			<AiBudgetWall
+				{...aiWall.props}
+				action="report"
 				workspaceId={workspace?.id ?? ""}
-				wallKey="report_cap"
-				entry="modal_direct"
+				projectId={projectId}
+			/>
+			<SampleCapWall
+				cap="report"
+				opened={sampleWallOpened}
+				onClose={sampleWall.close}
+				workspaceId={workspace?.id ?? ""}
 				projectId={projectId}
 			/>
 		</Stack>

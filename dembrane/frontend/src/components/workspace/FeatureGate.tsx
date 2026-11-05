@@ -7,13 +7,18 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { newConfigSessionId } from "@/components/pricing/configuratorState";
 import { saveHandover } from "@/components/pricing/submitConfiguration";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { formatResetDay } from "@/lib/freeTier";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { pricingHandoverUrl } from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { TIER_ORDER, type Tier } from "@/lib/tiers";
 import { FeatureGatePopover } from "./FeatureGatePopover";
 import {
+	type AiAction,
+	aiBudgetHandover,
 	isLockedDataWall,
+	type SampleCap,
+	sampleCapHandover,
 	type WallKey,
 	wallHandoverLead,
 	wallHandoverTitle,
@@ -203,6 +208,16 @@ interface UpgradeModalProps {
 	projectId?: string;
 	/** The org the upgrade is for, when it is not the active workspace's. */
 	orgId?: string;
+	/** The refused AI action, named in the opening on the ai_budget wall. */
+	aiAction?: AiAction;
+	/** When the AI budget resets; null when the refusal carried no date. */
+	resetsAt?: string | null;
+	/** False opens the ai_budget wall on a neutral opening (budget not spent yet). */
+	aiUsedUp?: boolean;
+	/** The sample project cap reached, on the sample_cap wall. */
+	sampleCap?: SampleCap;
+	/** The question cap the chat_turns refusal carried, if any. */
+	sampleQuestions?: number | null;
 }
 
 /**
@@ -222,6 +237,8 @@ interface UpgradeModalProps {
  * met renders nothing and emits nothing.
  */
 export function UpgradeModal({
+	aiAction,
+	aiUsedUp = true,
 	canRequestUpgrade,
 	currentTier,
 	entry = "modal_direct",
@@ -230,13 +247,16 @@ export function UpgradeModal({
 	orgId,
 	projectId,
 	requiredTier,
+	resetsAt,
+	sampleCap,
+	sampleQuestions,
 	wallKey,
 	workspaceId,
 }: UpgradeModalProps) {
 	const { i18n } = useLingui();
 	const { workspace } = useWorkspace();
 	const gateViewed = useGateViewed(workspaceId);
-	const emit = usePricingGateEmitter(workspaceId);
+	const emit = usePricingGateEmitter(workspaceId, aiAction);
 	// One opening is one event. The old `upgrade_prompt_viewed` sat in a
 	// `useEffect` whose deps held `currentTier`, which arrives from a query, so
 	// it refired when the real tier landed. This ref is what stops that, and it
@@ -270,6 +290,7 @@ export function UpgradeModal({
 		if (entry !== "modal_direct") return;
 		viewedRef.current = true;
 		gateViewed({
+			aiAction,
 			canRequestUpgrade,
 			// The event property is a string, and "none" says out loud that this
 			// entry point had no tier requirement. An empty value would read as a
@@ -279,6 +300,7 @@ export function UpgradeModal({
 			wallKey,
 		});
 	}, [
+		aiAction,
 		alreadyHas,
 		canRequestUpgrade,
 		entry,
@@ -317,7 +339,21 @@ export function UpgradeModal({
 		onClose();
 	};
 
-	const lead = wallHandoverLead(wallKey);
+	// The AI budget and sample walls carry details the other walls do not.
+	const copy =
+		wallKey === "ai_budget"
+			? aiBudgetHandover({
+					action: aiAction,
+					resetDay: formatResetDay(resetsAt, i18n.locale),
+					usedUp: aiUsedUp,
+				})
+			: wallKey === "sample_cap"
+				? sampleCapHandover(sampleCap, sampleQuestions)
+				: {
+						lead: wallHandoverLead(wallKey),
+						title: wallHandoverTitle(wallKey),
+					};
+	const lead = copy.lead;
 
 	return (
 		<Modal
@@ -325,7 +361,7 @@ export function UpgradeModal({
 			onClose={later}
 			centered
 			size="md"
-			title={wallHandoverTitle(wallKey)}
+			title={copy.title}
 			{...testId("upgrade-modal")}
 		>
 			<Stack gap="md">

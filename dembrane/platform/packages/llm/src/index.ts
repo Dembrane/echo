@@ -24,7 +24,20 @@ export {
   vertexEmbedder,
   vertexName,
 } from "./complete";
-export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
+export {
+  type FakeAnswer,
+  type FakeCall,
+  FakeCompleter,
+  FakeEmbedder,
+  type FakeModelOptions,
+  type FakeObserving,
+  type FakeStreamItem,
+  fakeCalls,
+  fakeLanguageModel,
+  fakeModels,
+  lastPayer,
+  takeUnscopedFakeCalls,
+} from "./fake";
 export {
   attemptTimeout,
   type Deployment,
@@ -43,11 +56,13 @@ export {
   speechHint,
 } from "./models";
 export {
+  type CallMeta,
   errorLabel,
   type ModelCall,
   type ModelCallObserver,
   observeSafely,
   resetObserverFaults,
+  takeObserverFaults,
 } from "./observe";
 export {
   checkProfileModels,

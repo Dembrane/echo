@@ -6,7 +6,6 @@ import {
   AnalysisValidationError,
   type ClaimResult,
   DEFAULT_LEASE_SECONDS,
-  type FreeStamp,
   type Json,
   type NewRelation,
   type NewRevision,
@@ -133,7 +132,6 @@ export function parseVector(text: string): number[] {
 export interface Requeue {
   readonly run: Run;
   readonly requeued: boolean;
-  readonly chargeKept: boolean;
 }
 
 export interface StoreOptions {
@@ -366,10 +364,10 @@ export class AnalysisStore {
                      input_fingerprint, hash_version, input_manifest, parameters, context,
                      depends_on, status, progress, attempt, writer_fence, output_manifest,
                      metrics, reused_run_id, requested_by, created_at, updated_at,
-                     completed_at, free_account_id, free_period_start)
+                     completed_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'c14n-v1', $13, $14,
                      $15, $16, $17, $18, 0, $19, $20, $21, $22, $23, now(), now(),
-                     CASE WHEN $24::boolean THEN now() END, $25, $26)
+                     CASE WHEN $24::boolean THEN now() END)
              RETURNING *`,
             [
               newId(),
@@ -396,8 +394,6 @@ export class AnalysisStore {
               n.reusedRunId ?? null,
               n.requestedBy,
               ready,
-              n.freeStamp?.accountId ?? null,
-              n.freeStamp?.periodStart ?? null,
             ],
           );
           if (!row) throw new AnalysisStoreError("the run insert returned nothing");
@@ -676,13 +672,8 @@ export class AnalysisStore {
    * Binds a retry request to its run, atomically: the run the key already answers; else
    * the failed run queued again with its saved steps and pinned inputs (lease cleared);
    * else the run as it stands. An equivalent run in flight refuses with RetryConflict.
-   * `chargeKept`: the run already held this same charge, so the new one is not needed.
    */
-  async requeueRun(
-    runId: string,
-    idempotencyKey: string | null,
-    freeStamp: FreeStamp | null = null,
-  ): Promise<Requeue | null> {
+  async requeueRun(runId: string, idempotencyKey: string | null): Promise<Requeue | null> {
     if (!isUuid(runId)) return null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -697,7 +688,7 @@ export class AnalysisStore {
                 WHERE k.project_id = $1 AND k.idempotency_key = $2`,
               [target.projectId, idempotencyKey],
             );
-            if (mapped) return { run: runOf(mapped), requeued: false, chargeKept: false };
+            if (mapped) return { run: runOf(mapped), requeued: false };
           }
           await q(tx, "SELECT id FROM analysis_scope WHERE id = $1 FOR UPDATE", [target.scopeId]);
           const locked = await one(tx, "SELECT * FROM analysis_run WHERE id = $1 FOR UPDATE", [
@@ -706,13 +697,6 @@ export class AnalysisStore {
           if (!locked) throw new AnalysisStoreError("the run vanished under its lock");
           let run = runOf(locked);
           let requeued = false;
-          // An unrefunded stamp of this same account and period stays; any other was never refundable.
-          const chargeKept =
-            freeStamp !== null &&
-            locked.free_period_start !== null &&
-            String(locked.free_account_id) === freeStamp.accountId &&
-            new Date(locked.free_period_start as string).getTime() ===
-              new Date(freeStamp.periodStart).getTime();
           if (run.status === "failed") {
             const active = await one(
               tx,
@@ -728,12 +712,10 @@ export class AnalysisStore {
                   SET status = 'queued', lease = NULL, lease_expires_at = NULL, error = NULL,
                       completed_at = NULL, updated_at = now(),
                       progress = (COALESCE(progress::jsonb, '{}'::jsonb)
-                                  || jsonb_build_object('stage', 'queued'))::json,
-                      free_account_id = COALESCE($2::uuid, free_account_id),
-                      free_period_start = COALESCE($3::timestamptz, free_period_start)
+                                  || jsonb_build_object('stage', 'queued'))::json
                 WHERE id = $1
                 RETURNING *`,
-              [runId, freeStamp?.accountId ?? null, freeStamp?.periodStart ?? null],
+              [runId],
             );
             if (!row) throw new AnalysisStoreError("the requeue returned nothing");
             run = runOf(row);
@@ -752,7 +734,7 @@ export class AnalysisStore {
             // Rolls this transaction back, requeue included.
             if (!inserted) throw new KeyTaken();
           }
-          return { run, requeued, chargeKept: requeued && chargeKept };
+          return { run, requeued };
         });
       } catch (err) {
         if (err instanceof KeyTaken || err instanceof UniqueViolation) continue;

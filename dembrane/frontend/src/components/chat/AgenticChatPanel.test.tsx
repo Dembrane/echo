@@ -197,19 +197,6 @@ vi.mock("@/hooks/useFreeAllowance", async (importOriginal) => ({
 	useFreeAllowance: () => ({ data: { free: usageState.free } }),
 }));
 
-vi.mock("./FreeTierChatGate", async (importOriginal) => ({
-	...(await importOriginal<typeof import("./FreeTierChatGate")>()),
-	ChatUpgradeModal: ({
-		opened,
-		reason,
-	}: {
-		opened: boolean;
-		reason: string;
-	}) =>
-		opened ? (
-			<div data-testid="chat-upgrade-modal" data-reason={reason} />
-		) : null,
-}));
 vi.mock("./ChatAccordion", () => ({ ChatAccordionItemMenu: () => null }));
 vi.mock("./ChatTemplatesMenuConnected", () => ({
 	ChatTemplatesMenuConnected: () => null,
@@ -310,6 +297,7 @@ beforeEach(() => {
 	stopAgenticRunMock.mockClear();
 	streamOptionsRef.current = null;
 	createAgenticRunMock.mockClear();
+	appendAgenticRunMessageMock.mockClear();
 	transcribeMock.mockClear();
 	runState.events = [];
 	runState.pollFails = false;
@@ -339,6 +327,25 @@ const renderPanel = () =>
 			</I18nProvider>
 		</MemoryRouter>,
 	);
+
+const upgradePromptText = () =>
+	screen
+		.queryAllByTestId("upgrade-modal")
+		.map((m) => m.textContent ?? "")
+		.join("");
+
+// The text of the upgrade prompt that opened (Mantine can leave an empty root beside it).
+const openedUpgradePrompt = async () => {
+	let text = "";
+	await waitFor(() => {
+		text = screen
+			.getAllByTestId("upgrade-modal")
+			.map((m) => m.textContent ?? "")
+			.join(" ");
+		expect(text).toContain("Continue on dembrane.com");
+	});
+	return text;
+};
 
 const settledGroup = async () =>
 	await screen.findByTestId("agentic-tool-group");
@@ -746,27 +753,104 @@ describe("AgenticChatPanel, voice input", () => {
 		).toBeTruthy();
 	});
 
-	it("locks the microphone on a free project and offers the upgrade", async () => {
+	it("leaves the microphone open on a free account", async () => {
 		usageState.free = true;
 		runState.status = "completed";
 		renderPanel();
 
 		const mic = await screen.findByTestId("chat-voice-record-button");
-		expect(mic.hasAttribute("data-disabled")).toBe(true);
-		await act(async () => {
-			fireEvent.click(mic);
-		});
+		expect(mic.hasAttribute("data-disabled")).toBe(false);
+		await startRecording();
 
+		expect(globalThis.navigator.mediaDevices.getUserMedia).toHaveBeenCalled();
+		expect(screen.getByTestId("chat-voice-recording-bar")).toBeTruthy();
 		expect(
-			globalThis.navigator.mediaDevices.getUserMedia,
-		).not.toHaveBeenCalled();
-		expect(transcribeMock).not.toHaveBeenCalled();
-		expect(
-			await screen.findByText(/You.ve reached the limit for speaking in chat/),
-		).toBeTruthy();
+			screen.queryByText(/You were trying to use your voice in chat/),
+		).toBeNull();
 	});
 
-	it("opens the upgrade wall when the server refuses a free voice note", async () => {
+	it("opens the AI wall when this month's AI is used up", async () => {
+		usageState.free = true;
+		transcribeMock.mockRejectedValueOnce(
+			Object.assign(new Error("402"), {
+				isAxiosError: true,
+				response: {
+					data: {
+						code: "billing.tier_limit",
+						detail: {
+							error: "FREE_TIER_LIMIT",
+							limit: "ai_budget",
+							percent: 100,
+							resets_at: "2026-12-01T00:00:00Z",
+						},
+						params: { limit: "ai_budget" },
+					},
+					status: 402,
+				},
+			}),
+		);
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+
+		const modal = await openedUpgradePrompt();
+		expect(modal).toContain("This month's AI is used up");
+		expect(modal).toContain("paused until 1 December 2026");
+		expect(modal).toContain("You were trying to use your voice in chat.");
+		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
+		// Still usable: the next voice note is the server's call, not a lock.
+		const mic = await screen.findByTestId("chat-voice-record-button");
+		expect(mic.hasAttribute("data-disabled")).toBe(false);
+	});
+
+	it("asks the assistant, not voice, after a voice refusal then a chat refusal", async () => {
+		const refusal = () =>
+			Object.assign(new Error("402"), {
+				isAxiosError: true,
+				response: {
+					data: {
+						code: "billing.tier_limit",
+						detail: { error: "FREE_TIER_LIMIT", limit: "ai_budget" },
+						params: { limit: "ai_budget" },
+					},
+					status: 402,
+				},
+			});
+		transcribeMock.mockRejectedValueOnce(refusal());
+		appendAgenticRunMessageMock.mockRejectedValueOnce(refusal());
+		runState.events = FINISHED_TURN;
+		runState.status = "completed";
+		renderPanel();
+		await screen.findByText("three themes came up.");
+		await startRecording();
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+		expect(await openedUpgradePrompt()).toContain(
+			"You were trying to use your voice in chat.",
+		);
+		fireEvent.keyDown(document.activeElement ?? document.body, {
+			key: "Escape",
+		});
+		await waitFor(() => expect(upgradePromptText()).toBe(""));
+
+		const input = await screen.findByTestId("chat-input-textarea");
+		fireEvent.change(input, { target: { value: "one more?" } });
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-send-button"));
+		});
+		expect(await openedUpgradePrompt()).toContain(
+			"You were trying to ask the assistant.",
+		);
+	});
+
+	it("shows another free limit as a voice error, not the AI wall", async () => {
 		transcribeMock.mockRejectedValueOnce(
 			Object.assign(new Error("402"), {
 				isAxiosError: true,
@@ -789,10 +873,8 @@ describe("AgenticChatPanel, voice input", () => {
 			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
 		});
 
-		expect(
-			await screen.findByText(/You.ve reached the limit for speaking in chat/),
-		).toBeTruthy();
-		expect(screen.queryByTestId("chat-voice-error")).toBeNull();
+		expect(await screen.findByTestId("chat-voice-error")).toBeTruthy();
+		expect(upgradePromptText()).toBe("");
 	});
 
 	it("shows any other 402 as a voice error, not the free wall", async () => {
@@ -844,7 +926,7 @@ describe("AgenticChatPanel, voice input", () => {
 });
 
 describe("AgenticChatPanel, free turn limit", () => {
-	const TURN_CARD = "You've reached the free plan limit for this chat.";
+	const TURN_CARD = "You've used this sample project's";
 
 	const tree = (chatId: string) => (
 		<MemoryRouter>
@@ -892,18 +974,13 @@ describe("AgenticChatPanel, free turn limit", () => {
 		);
 	});
 
-	it("shows the monthly chat limit, not an error, when the month's chats are used", async () => {
+	it("offers the upgrade without a used-up claim when the sample's turns run out", async () => {
 		runState.events = FINISHED_TURN;
 		runState.status = "completed";
 		appendAgenticRunMessageMock.mockRejectedValueOnce({
 			response: {
 				data: {
-					detail: {
-						cap: 2,
-						error: "FREE_TIER_LIMIT",
-						limit: "chats",
-						used: 2,
-					},
+					detail: { cap: 7, error: "FREE_TIER_LIMIT", limit: "chat_turns" },
 				},
 				status: 402,
 			},
@@ -916,17 +993,55 @@ describe("AgenticChatPanel, free turn limit", () => {
 		await act(async () => {
 			fireEvent.click(screen.getByTestId("chat-send-button"));
 		});
-		await waitFor(() =>
-			expect(document.body.textContent).toContain(
-				"You have used this month's free chats.",
-			),
+		await waitFor(() => expect(document.body.textContent).toContain(TURN_CARD));
+		expect(document.body.textContent).toContain(
+			"You've used this sample project's 7 questions.",
 		);
-		expect(
-			screen.getByTestId("chat-upgrade-modal").getAttribute("data-reason"),
-		).toBe("chats");
+		const modal = await openedUpgradePrompt();
+		// The cap comes from the refusal.
+		expect(modal).toContain("Sample projects allow 7 questions");
+		expect(modal).toContain("Create your own project to keep going.");
+		expect(modal).not.toContain("monthly AI allowance");
+		expect(modal).not.toContain("This month's AI is used up");
+	});
+
+	it("opens the AI wall, not an error, when this month's AI is used up", async () => {
+		runState.events = FINISHED_TURN;
+		runState.status = "completed";
+		appendAgenticRunMessageMock.mockRejectedValueOnce({
+			response: {
+				data: {
+					code: "billing.tier_limit",
+					detail: {
+						error: "FREE_TIER_LIMIT",
+						limit: "ai_budget",
+						percent: 100,
+						resets_at: "2026-12-01T00:00:00Z",
+					},
+					params: { limit: "ai_budget" },
+				},
+				status: 402,
+			},
+		});
+		render(tree("chat-1"));
+
+		await screen.findByText("three themes came up.");
+		const input = await screen.findByTestId("chat-input-textarea");
+		fireEvent.change(input, { target: { value: "one more?" } });
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-send-button"));
+		});
+		const modal = await openedUpgradePrompt();
+		expect(modal).toContain("This month's AI is used up");
+		expect(modal).toContain("paused until 1 December 2026");
+		expect(modal).toContain("You were trying to ask the assistant.");
 		expect(document.body.textContent).not.toContain(TURN_CARD);
-		expect(screen.queryByTestId("chat-error-alert")).toBeNull();
+		expect(screen.queryByText("Error")).toBeNull();
 		expect(document.body.textContent).not.toContain("[object Object]");
+		// The question goes back in the composer.
+		expect(
+			(screen.getByTestId("chat-input-textarea") as HTMLTextAreaElement).value,
+		).toBe("one more?");
 	});
 });
 

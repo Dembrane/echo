@@ -1,3 +1,4 @@
+import type { Payer } from "@dembrane/observability";
 import { defineJob } from "@dembrane/queue";
 import { z } from "zod";
 
@@ -11,6 +12,12 @@ import { z } from "zod";
 // than the default before it sets one aside. The cost: a run that cannot finish is resumed
 // that many times, each on another worker, before it is left for a person.
 const LOST_WORKER_LIMIT = 10;
+
+/** A run that names its conversation is billed to it. */
+const byConversation = (p: { conversationId: string }): Payer => ({
+  ref: "conversation",
+  id: p.conversationId,
+});
 
 /**
  * One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. A typed
@@ -32,14 +39,24 @@ export const processChunk = defineJob(
 export const finishConversation = defineJob(
   "conversations.finish",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /** Every chunk is transcribed and the conversation is finished: flag, merge, summarise, count. */
 export const finalizeConversation = defineJob(
   "conversations.finalize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 6 * 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /**
@@ -54,14 +71,24 @@ export const finalTranscript = defineJob(
     record: z.boolean(),
     hash: z.string(),
   }),
-  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 6 * 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /** A summary on its own: the catch-up for conversations still without one. */
 export const summarizeConversation = defineJob(
   "conversations.summarize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /** Every two minutes: finish conversations nobody has added to for five minutes. */

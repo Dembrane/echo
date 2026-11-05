@@ -1076,11 +1076,9 @@ export type StatelessTranscriptionResponse = {
  * choice rather than a pair of optionals, because a call carrying neither is
  * a 403 nobody meant to send.
  *
- * `project_id` is the project to bill, and the audio duration is metered
- * against that workspace's hours. `purpose` is for the surfaces that have no
- * project to bill: the pricing intake form opens from org and workspace
- * routes, so it names `pricing_intake` instead, and that call is not metered
- * and carries a tighter per-person ceiling of its own.
+ * Voice spends the AI budget, never audio hours: `project_id` pays where there
+ * is one, else `workspace_id`. `purpose` names a project-less surface (rate
+ * limited per person); `issue_report` is never budget-checked, even with a project.
  *
  * The whole recording goes in one part named `file`. There is no chunked
  * variant of this endpoint and no job to poll: the response arrives when the
@@ -1098,14 +1096,17 @@ export const transcribeStateless = async (
 		/** Comma-separated proper nouns. Without them the model mishears names. */
 		hotwords?: string;
 		signal?: AbortSignal;
+		/** Pays when there is no project; the caller must be a member. */
+		workspaceId?: string;
 	} & (
-		| { projectId: string; purpose?: never }
+		| { projectId: string; purpose?: TranscribePurpose }
 		| { projectId?: never; purpose: TranscribePurpose }
 	),
 ) => {
 	const form = new FormData();
 	form.append("file", payload.file, payload.filename);
 	if (payload.projectId) form.append("project_id", payload.projectId);
+	if (payload.workspaceId) form.append("workspace_id", payload.workspaceId);
 	if (payload.purpose) form.append("purpose", payload.purpose);
 	if (payload.language) form.append("language", payload.language);
 	if (payload.hotwords) form.append("hotwords", payload.hotwords);
@@ -1428,6 +1429,7 @@ export const getLatestProjectReport = async (projectId: string) => {
 				| "project_id"
 				| "show_portal_link"
 				| "date_created"
+				| "error_code"
 				| "error_message"
 		  > & { title?: string | null })
 		| null

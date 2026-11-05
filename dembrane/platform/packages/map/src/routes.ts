@@ -144,7 +144,6 @@ export function mapRoutes(deps: MapRoutesDeps) {
     store,
     rt,
     db: deps.db,
-    logger: deps.logger,
     cache: new service.TitleCache(),
     modelIdentity: deps.completer.modelIdentity("multi_modal_fast"),
     generate: (lines, projectName, projectContext) =>

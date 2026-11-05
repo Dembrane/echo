@@ -2,9 +2,10 @@
 // model, and with HANG=1 stops inside the generate step so the test can kill it there.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
+import { aiBudgetForProject } from "@dembrane/allowance";
 import { createDb } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
-import { createLogger, initTracing } from "@dembrane/observability";
+import { FakeCompleter, lastPayer } from "@dembrane/llm";
+import { createLogger, initTracing, payerKey } from "@dembrane/observability";
 import { generateReport } from "@dembrane/projects";
 import { Queue } from "@dembrane/queue";
 import { generateReportWorkflow } from "../../src/jobs";
@@ -20,15 +21,22 @@ const logger = createLogger(
 );
 const { tracer } = initTracing({ service: "fixture", release: "r", env: "test", sampleRatio: 0 });
 const database = createDb({ url, poolMax: 4 });
+// The test's fixed instant for budget reads, when it gives one.
+const budgetNow = () => (process.env.BUDGET_NOW ? new Date(process.env.BUDGET_NOW) : new Date());
+// The payer the fake recorded for the call it is answering.
+const paidBy = () => {
+  const p = lastPayer();
+  return p ? payerKey(p) : "none";
+};
 const completer = new FakeCompleter()
   .on("<transcripts>", () => {
-    log("model report");
+    log(`model report ${paidBy()}`);
     return "Here it is.\n<article>\n# Crash-safe report\n\nResidents want buses.\n</article>";
   })
   .on(
     () => true,
     () => {
-      log("model summary");
+      log(`model summary ${paidBy()}`);
       return "Residents want later buses.";
     },
   );
@@ -55,7 +63,8 @@ await queue.workflow(
     maxContextTokens: 100_000,
     notifier: { emit: async (e) => log(`notify ${e.eventCode}`) },
     reportGenerated: async () => log("webhook"),
-    refundFreeReport: async () => false,
+    budgetLeft: (projectId) =>
+      aiBudgetForProject(database.db, projectId, budgetNow()).then((b) => b?.exhausted !== true),
     pause: async (name) => {
       log(`step ${name}`);
       if (name === "generate" && process.env.HANG === "1") await Bun.sleep(600_000);

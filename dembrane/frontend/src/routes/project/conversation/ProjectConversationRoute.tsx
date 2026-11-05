@@ -28,6 +28,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import posthog from "posthog-js";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
@@ -46,12 +47,18 @@ import { getConversationStartTime } from "@/components/conversation/utils";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useProjectById } from "@/components/project/hooks";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
 import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { generateConversationSummary } from "@/lib/api";
 import { readApiError } from "@/lib/errors/read";
+import { aiBudgetDetails } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -119,41 +126,56 @@ export const ProjectConversationRoute = () => {
 			}).format(new Date(startedAt))
 		: null;
 
+	const aiWall = useAiBudgetWall();
+	const [aiAction, setAiAction] = useState<AiAction>("summary");
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
 			if (isRegeneration) {
 				posthog.capture("conversation_summary_regenerated");
 			}
 
-			const promise = generateConversationSummary(conversationId ?? "");
-
-			toast.promise(promise, {
-				error: isRegeneration
-					? t`Failed to regenerate the summary. Please try again later.`
-					: t`Failed to generate the summary. Please try again later.`,
-				loading: isRegeneration
+			const toastId = toast.loading(
+				isRegeneration
 					? t`Regenerating the summary. Please wait...`
 					: t`Generating the summary. Please wait...`,
-				success: (response) => {
-					// Show different message based on whether summary was generated or is being processed
-					if (
-						response.status === "success" &&
-						"summary" in response &&
-						response.summary
-					) {
-						return isRegeneration
-							? t`Summary regenerated.`
-							: t`Summary generated.`;
-					}
-					return isRegeneration
+			);
+			let response: Awaited<ReturnType<typeof generateConversationSummary>>;
+			try {
+				response = await generateConversationSummary(conversationId ?? "");
+			} catch (error) {
+				// A used-up AI budget opens its wall (onError) instead of a failure toast.
+				if (aiBudgetDetails(error)) toast.dismiss(toastId);
+				else
+					toast.error(
+						isRegeneration
+							? t`Failed to regenerate the summary. Please try again later.`
+							: t`Failed to generate the summary. Please try again later.`,
+						{ id: toastId },
+					);
+				throw error;
+			}
+			// Show different message based on whether summary was generated or is being processed
+			const done =
+				response.status === "success" &&
+				"summary" in response &&
+				response.summary;
+			toast.success(
+				done
+					? isRegeneration
+						? t`Summary regenerated.`
+						: t`Summary generated.`
+					: isRegeneration
 						? t`The summary is being regenerated. Please wait for it to be available.`
-						: t`The summary is being generated. Please wait for it to be available.`;
-				},
-			});
-
-			return promise;
+						: t`The summary is being generated. Please wait for it to be available.`,
+				{ id: toastId },
+			);
+			return response;
 		},
 		mutationKey: ["generateSummary", conversationId],
+		onError: (error, isRegeneration) => {
+			setAiAction(isRegeneration ? "summary_again" : "summary");
+			aiWall.openFor(error);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["conversations", conversationId],
@@ -464,6 +486,14 @@ export const ProjectConversationRoute = () => {
 					closeRegenerateConfirm();
 				}}
 			/>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action={aiAction}
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
+			)}
 		</Stack>
 	);
 };

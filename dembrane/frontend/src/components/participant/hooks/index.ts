@@ -21,7 +21,9 @@ import {
 } from "@/lib/freeTier";
 
 type RecordingStopOptions = {
-	onRecordingStop?: (r: RecordingRefusal) => void;
+	/** accepted: the chunk that carried the stop was kept (false when it was refused). */
+	onRecordingStop?: (r: RecordingRefusal, accepted: boolean) => void;
+	onChunkAccepted?: () => void;
 };
 
 // A 402 is a limit; retrying it can only repeat the refusal.
@@ -37,6 +39,7 @@ const uploadFailureStage = (
 
 export const useConfirmConversationChunkUpload = ({
 	onRecordingStop,
+	onChunkAccepted,
 }: RecordingStopOptions = {}) => {
 	const queryClient = useQueryClient();
 
@@ -44,7 +47,7 @@ export const useConfirmConversationChunkUpload = ({
 		mutationFn: confirmConversationChunkUpload,
 		onError: (error, variables) => {
 			const refusal = portalRecordingRefusal(error);
-			if (refusal) onRecordingStop?.(refusal);
+			if (refusal) onRecordingStop?.(refusal, false);
 			console.error(
 				`[Confirm Upload] Failed to confirm chunk ${variables.chunk_id}:`,
 				error,
@@ -60,8 +63,9 @@ export const useConfirmConversationChunkUpload = ({
 			console.log(
 				`[Confirm Upload] Successfully confirmed chunk ${variables.chunk_id}`,
 			);
+			onChunkAccepted?.();
 			const stop = recordingStopOf(data);
-			if (stop) onRecordingStop?.(stop);
+			if (stop) onRecordingStop?.(stop, true);
 			// Invalidate queries after successful confirmation
 			queryClient.invalidateQueries({
 				queryKey: ["conversations", variables.conversationId],
@@ -90,9 +94,13 @@ export const useConfirmConversationChunkUpload = ({
 
 export const useUploadConversationChunk = ({
 	onRecordingStop,
+	onChunkAccepted,
 }: RecordingStopOptions = {}) => {
 	const queryClient = useQueryClient();
-	const confirmUpload = useConfirmConversationChunkUpload({ onRecordingStop });
+	const confirmUpload = useConfirmConversationChunkUpload({
+		onChunkAccepted,
+		onRecordingStop,
+	});
 
 	return useMutation({
 		mutationFn: uploadConversationChunk,
@@ -100,7 +108,7 @@ export const useUploadConversationChunk = ({
 		// use the context returned from onMutate to roll back
 		onError: (err, variables, context) => {
 			const refusal = portalRecordingRefusal(err);
-			if (refusal) onRecordingStop?.(refusal);
+			if (refusal) onRecordingStop?.(refusal, false);
 			queryClient.setQueryData(
 				["conversations", variables.conversationId, "chunks"],
 				(context as { previousChunks?: ConversationChunk[] })?.previousChunks,
@@ -305,7 +313,14 @@ export const useUploadConversationTextChunk = () => {
 				],
 			});
 		},
-		retry: 10,
+		// A refusal answers the same on every retry: show it at once.
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
+				return false;
+			}
+			return failureCount < 10;
+		},
 	});
 };
 

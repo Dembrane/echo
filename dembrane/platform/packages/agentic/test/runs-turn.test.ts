@@ -10,6 +10,7 @@ import {
 import { Writable } from "node:stream";
 import { APICallError } from "@ai-sdk/provider";
 import { createDb } from "@dembrane/db";
+import { fakeModels } from "@dembrane/llm";
 import type { Emit } from "@dembrane/notifications";
 import { createLogger } from "@dembrane/observability";
 import type { AgentData } from "../src/agent/data";
@@ -33,10 +34,10 @@ run("turn workflow on a fake model", () => {
   let url = "";
   const captured: { event: string; props: Record<string, unknown> }[] = [];
   const notified: Emit[] = [];
-  const deps = (agent: Agent): TurnDeps => ({
+  const deps = (agent: Agent, over: Partial<TurnDeps> = {}): TurnDeps => ({
     store: runsStorage(database.db),
     logger,
-    models: { model: () => ({}) as never, embedding: () => ({}) as never },
+    models: fakeModels(),
     config: {
       agentic: { modelGroup: "multi_modal_pro", runTimeoutSeconds: 600 },
       canvas: { enabled: false },
@@ -51,7 +52,9 @@ run("turn workflow on a fake model", () => {
       notified.push(e);
     },
     now: () => new Date(),
+    budgetLeft: async () => true,
     cancelPollMs: 50,
+    ...over,
   });
   const direct = <T>(_name: string, fn: () => Promise<T>) => fn();
   const args = {
@@ -249,6 +252,67 @@ run("turn workflow on a fake model", () => {
     expect(String(last?.payload.content)).toContain(
       'I need to pause this pass on your request: "What did people say about parking?"',
     );
+    expect((await runRow()).status).toBe("completed");
+  });
+
+  test("a used-up AI budget stops the turn before its next step", async () => {
+    const seen: unknown[] = [];
+    let checks = 0;
+    const budgetLeft = async () => ++checks < 2;
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen).toHaveLength(2);
+    const said = (await events()).filter((e) => e.event_type === "assistant.message");
+    const stops = said.filter((e) => String(e.payload.content).includes("AI budget is used up"));
+    expect(stops).toHaveLength(1);
+    expect(said.at(-1)).toBe(stops[0]);
+    const r = await runRow();
+    expect(r.status).toBe("completed");
+    expect(r.latest_output).toContain("AI budget is used up");
+    expect(notified[0]).toMatchObject({ eventCode: "AGENTIC_RUN_FINISHED" });
+  });
+
+  test("a turn started at zero well after its message was admitted runs no step", async () => {
+    await database.db.$client`
+      update project_agentic_run_event set timestamp = now() - interval '10 minutes'
+      where project_agentic_run_id = ${ids.run} and seq = 1`;
+    const seen: unknown[] = [];
+    await runTurn(
+      deps(fakeAgent({ seen: seen as never }), { budgetLeft: async () => false }),
+      args,
+      direct,
+    );
+    expect(seen).toHaveLength(0);
+    const said = (await events()).filter((e) => e.event_type === "assistant.message");
+    expect(said.map((e) => String(e.payload.content))).toEqual([
+      expect.stringContaining("AI budget is used up"),
+    ]);
+    const r = await runRow();
+    expect(r.status).toBe("completed");
+    expect(r.latest_output).toContain("AI budget is used up");
+  });
+
+  test("a turn started right after its admit reads no budget before its first step", async () => {
+    const seen: unknown[] = [];
+    const checked: number[] = [];
+    const budgetLeft = async () => {
+      checked.push(seen.length);
+      return true;
+    };
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen.length).toBeGreaterThan(1);
+    expect(checked[0]).toBe(1);
+  });
+
+  test("a failed budget read at the first step lets the turn run", async () => {
+    await database.db.$client`
+      update project_agentic_run_event set timestamp = now() - interval '10 minutes'
+      where project_agentic_run_id = ${ids.run} and seq = 1`;
+    const seen: unknown[] = [];
+    const budgetLeft = async (): Promise<boolean> => {
+      throw new Error("db down");
+    };
+    await runTurn(deps(fakeAgent({ seen: seen as never }), { budgetLeft }), args, direct);
+    expect(seen.length).toBeGreaterThan(0);
     expect((await runRow()).status).toBe("completed");
   });
 

@@ -36,8 +36,8 @@ export function PopcornActions({
 	const [rerunOpened, rerunModal] = useDisclosure(false);
 	const isLive = popcorn.loop?.mode === "live";
 	const booking = liveBooking(popcorn.loop);
-	// A free account's month of analyses is used up: nothing new can start.
-	const usedUp = !!popcorn.free_popcorn?.exhausted;
+	// A free account's AI budget is used up: nothing new can start.
+	const usedUp = !!popcorn.ai_budget?.exhausted;
 
 	return (
 		<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>

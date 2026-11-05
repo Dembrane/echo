@@ -309,6 +309,11 @@ msgid "error.agent_access.no_enabled_organisation"
 msgstr "Geen van de gekozen organisaties staat agent-toegang toe. Kies een andere, of vraag je beheerder om agent-toegang aan te zetten."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:5
+msgid "error.portal.ai_unavailable"
+msgstr "Nu niet beschikbaar."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
 msgid "error.invite.observer_internal_workspace"
 msgstr "Waarnemers kunnen alleen deelnemen aan werkruimtes voor een externe klant. Kies een andere rol."

@@ -133,6 +133,20 @@ describe("uploadRefusalMessage", () => {
 		);
 	});
 
+	it("says a used-up AI budget pauses uploads until the reset day", () => {
+		expect(
+			uploadRefusalMessage(tierLimit("ai_budget"), "2026-12-01T00:00:00Z"),
+		).toBe(
+			"This month's AI is used up. New recordings and uploads are paused until 1 December 2026.",
+		);
+	});
+
+	it("says next month when the reset day is not known", () => {
+		expect(uploadRefusalMessage(tierLimit("ai_budget"))).toBe(
+			"This month's AI is used up. New recordings and uploads are paused until next month.",
+		);
+	});
+
 	it("is null for other errors", () => {
 		expect(uploadRefusalMessage(new Error("boom"))).toBeNull();
 		expect(uploadRefusalMessage(tierLimit("chats"))).toBeNull();

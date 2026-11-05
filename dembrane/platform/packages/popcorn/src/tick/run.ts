@@ -156,11 +156,11 @@ export interface TickDeps {
   readonly collisionCalls?: number;
   /** Vectors for texts, kept per project; null leaves large sessions on the full listing. */
   readonly similar?: SimilarFor | null;
-  /** Asks for a new argument map. Its run is its own workflow, beside the read. */
-  readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<void>) | null;
+  /** Asks for a new argument map (its own workflow, beside the read); false when the AI budget refused it. */
+  readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<boolean>) | null;
   /** Tells the project's people that the read of a booked start is ready to review. */
   readonly notifyReady?: ((o: { projectId: string; reportId: string }) => Promise<void>) | null;
-  /** The free tier's monthly analyses; null counts nothing. */
+  /** The free tier's AI budget and cadence floor; null leaves every read in. */
   readonly free?: PopcornAllowance | null;
   readonly flags: PopcornFlags;
   readonly participantBaseUrl: string;
@@ -218,9 +218,6 @@ async function createRun(
     startedAt: Date;
     detail?: string | null;
     requestId?: string | null;
-    /** The period an analysis counted in; omitted keeps a retried row's stamp. */
-    freePeriodStart?: string;
-    freeAccountId?: string | null;
   },
 ): Promise<Row> {
   const id = o.requestId || newId();
@@ -232,24 +229,12 @@ async function createRun(
     detail,
     startedAt: pyIso(o.startedAt),
     finishedAt: utcNowIso(d.now()),
-    ...(o.freePeriodStart !== undefined && {
-      freePeriodStart: o.freePeriodStart,
-      freeAccountId: o.freeAccountId ?? null,
-    }),
   };
   // An on-request tick's durable backup carries the same id; its retry replaces the
   // failed attempt instead of colliding with the row already written.
   const existing = o.requestId ? await d.ticks.run(id) : null;
   if (existing && asIdTruthy(existing.loop_id) === o.loopId) return d.ticks.replaceRun(payload);
   return d.ticks.insertRun(payload);
-}
-
-/** The run id of a counted analysis: the request's, or one fixed by the workflow's token. */
-export function attemptRunId(loopId: string, token: number, requestId: string | null): string {
-  if (requestId) return requestId;
-  const h = sha1Hex(`popcorn-run:${loopId}:${token}`);
-  const variant = ((Number.parseInt(h.charAt(16), 16) & 3) | 8).toString(16);
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${variant}${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
 /** Serialise ticks per loop; an unreachable store is not a reason to stop the room. */
@@ -308,12 +293,9 @@ async function updateLoopAfterTick(d: TickDeps, loop: Row, status: string) {
   }
 }
 
-/** A counted analysis in progress; run readers skip it. */
-export const RUNNING = "running";
-
 /**
- * Free analyses used up: back to manual as stopLive does, in one transaction. A start booked
- * for later stays, with its start read, for a month that has analyses again.
+ * AI budget used up: back to manual as stopLive does, in one transaction. A start booked
+ * for later stays, with its start read, for a month that has budget again.
  */
 async function pauseUsedUp(d: TickDeps, loop: Row, at: Date): Promise<void> {
   const loopId = String(loop.id);
@@ -333,77 +315,43 @@ async function pauseUsedUp(d: TickDeps, loop: Row, at: Date): Promise<void> {
   });
 }
 
-/** Whether the saved session holds a phrase or a view read in [from, until). */
-export function readBetween(state: unknown, from: Date, until: Date | null): boolean {
-  const s = dict(state);
-  const within = (v: unknown) => {
-    const t = parseDt(v)?.getTime() ?? -1;
-    return t >= from.getTime() && (until === null || t < until.getTime());
-  };
-  const read = Object.values(dict(s.conversations)).some(
-    (c) => !truthy(dict(c).error) && within(dict(c).extracted_at),
-  );
-  return read || Object.values(dict(dict(s.analysis).updated)).some(within);
+/** Whether the free account's AI budget lets this read call a model. */
+async function admitted(d: TickDeps, projectId: string, at: Date): Promise<boolean> {
+  return !d.free || (await d.free.admit(projectId, at));
 }
 
-/**
- * A run that never finished is given back unless the session kept something it read before
- * the loop's next run. `startedBefore` refunds only a row not started again since.
- */
-async function refundUnread(d: TickDeps, run: Row, startedBefore?: string): Promise<void> {
-  if (!d.free || run.free_period_start == null) return;
-  const id = String(run.id);
-  const loopId = String(run.loop_id);
-  const startedAt = parseDt(run.started_at);
-  if (startedAt) {
-    const until = parseDt(await d.ticks.nextRunStart(loopId, id, startedAt));
-    const loop = await d.store.loop(loopId);
-    if (readBetween(loop?.popcorn_state, startedAt, until)) return;
-  }
-  await d.free.refund(id, d.now(), startedBefore === undefined ? undefined : { startedBefore });
-}
-
-/** A crashed attempt's analysis never finished: its count comes back and its row is closed. */
-async function settleInterrupted(d: TickDeps, loopId: string, attemptId: string, at: Date) {
-  if (!d.free) return;
-  try {
-    const prior = await d.ticks.run(attemptId);
-    if (!prior || asIdTruthy(prior.loop_id) !== loopId || prior.status !== RUNNING) return;
-    await refundUnread(d, prior);
-    await createRun(d, {
-      loopId,
-      status: "error",
-      detail: "Interrupted",
-      startedAt: parseDt(prior.started_at) ?? at,
-      requestId: attemptId,
-    });
-  } catch (exc) {
-    d.logger.warn(
-      { err: errText(exc), loop_id: loopId },
-      "popcorn interrupted attempt not settled",
-    );
-  }
+/** Ends the tick at budget zero before any model call, the loop back to manual. */
+async function usedUp(
+  d: TickDeps,
+  loop: Row,
+  at: Date,
+  requestId: string | null,
+): Promise<TickOutcome> {
+  await pauseUsedUp(d, loop, at);
+  const run = await createRun(d, {
+    loopId: String(loop.id),
+    status: "no_op",
+    detail: "AI budget used up",
+    startedAt: at,
+    requestId,
+  });
+  await nudgeLoop(d, loop);
+  return { status: "no_op", run };
 }
 
 /** Past the tick job's deadline, plus a margin: a run this old is no longer alive. */
 export const STUCK_RUN_MS =
   popcornTick.expireInSeconds * 1000 * (popcornTick.retryLimit + 1) + 30 * 60_000;
 
-/**
- * A counted run whose step never ran again (DBOS cancelled or set it aside) ends in error
- * and gives its analysis back once, unless the session kept something it read. Paid
- * (unstamped) runs are never touched.
- */
+/** A run a pre-budget free tick left running (its step never ran again) ends in error. */
 export async function settleStuckRuns(d: TickDeps): Promise<number> {
   const now = d.now();
   const before = pyIso(new Date(now.getTime() - STUCK_RUN_MS));
   let closed = 0;
   for (const run of await d.ticks.stuckRuns(before, 50)) {
     try {
-      if (!(await d.ticks.closeStuckRun(String(run.id), before, "Interrupted", utcNowIso(now))))
-        continue;
-      closed++;
-      await refundUnread(d, run, before);
+      if (await d.ticks.closeStuckRun(String(run.id), before, "Interrupted", utcNowIso(now)))
+        closed++;
     } catch (exc) {
       d.logger.warn({ err: errText(exc), run_id: run.id }, "stuck popcorn run not settled");
     }
@@ -1312,9 +1260,6 @@ export async function runPopcornTick(
 ): Promise<TickOutcome> {
   const startedAt = d.now();
   const sleep = d.sleep ?? ((ms: number) => Bun.sleep(ms));
-  // Its run row, written when counted, so a re-run of a crashed attempt finds and refunds it.
-  const attemptId = attemptRunId(loopId, d.token, requestId);
-  await settleInterrupted(d, loopId, attemptId, startedAt);
   let loop = await d.store.loop(loopId);
   if (!loop || !isPopcornLoop(loop)) throw new Error("Popcorn loop not found");
 
@@ -1445,9 +1390,6 @@ export async function runPopcornTick(
     cacheVersion(promptText("collisions-batch"), promptText("tension-verify")),
     tickKind === "rerun",
   );
-  // The period this tick's analysis counted in, until it finishes or is given back.
-  let counted: string | null = null;
-  let countedAccount: string | null = null;
   try {
     if (!reportId || !projectId || !actingUser)
       throw new Error("Popcorn loop is missing required ids");
@@ -1496,6 +1438,8 @@ export async function runPopcornTick(
     };
 
     if (tickKind === "translation") {
+      if (!(await admitted(d, projectId, startedAt)))
+        return await usedUp(d, currentLoop, startedAt, requestId);
       const writer = new TickWriter(d, loopId, reportId, state);
       let translated: string | null;
       try {
@@ -1649,8 +1593,13 @@ export async function runPopcornTick(
     ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
       let translated: string | null = null;
-      // A publishing read asks no language model, translation included.
-      if (!publishOnly)
+      // A publishing read asks no language model, translation included; nor does one at budget zero.
+      // No target language: nothing to translate, so no budget read.
+      if (
+        !publishOnly &&
+        targetLanguages(settings).length > 0 &&
+        (await admitted(d, projectId, startedAt))
+      )
         try {
           translated = await translateSession(d, state, settings, {
             reportId,
@@ -1694,38 +1643,11 @@ export async function runPopcornTick(
       return { status: "no_op", run };
     }
 
-    // A read that only asks for the map is counted by the map's own allowance.
+    // A read that only asks for the map answers to the map's own budget check.
     const analyses =
       extractionWork.length > 0 || analysisOwed || owed.length > 0 || tickKind === "rerun";
-    if (d.free && analyses) {
-      // A re-run of an attempt that counted gives that count back first.
-      const prior = await d.ticks.run(attemptId);
-      if (prior && asIdTruthy(prior.loop_id) === loopId) await d.free.refund(attemptId, d.now());
-      const admit = await d.free.admit(projectId, startedAt);
-      if (!admit.ok) {
-        await pauseUsedUp(d, currentLoop, startedAt);
-        const run = await createRun(d, {
-          loopId,
-          status: "no_op",
-          detail: "Free analyses used up",
-          startedAt,
-          requestId,
-        });
-        await nudgeLoop(d, currentLoop);
-        return { status: "no_op", run };
-      }
-      counted = admit.periodStart;
-      countedAccount = admit.accountId;
-      if (counted)
-        await createRun(d, {
-          loopId,
-          status: RUNNING,
-          startedAt,
-          requestId: attemptId,
-          freePeriodStart: counted,
-          freeAccountId: countedAccount,
-        });
-    }
+    if (analyses && !(await admitted(d, projectId, startedAt)))
+      return await usedUp(d, currentLoop, startedAt, requestId);
 
     state.run = (truthy(state.run) ? Number(state.run) : 0) + 1;
     // A conversation being re-read shows as reading until its extractor lands.
@@ -1750,17 +1672,16 @@ export async function runPopcornTick(
     // The argument map is part of the same run: asked for here, it works as its own
     // workflow while this read extracts. One already running is left to finish.
     if (d.requestMap && mapOwed) {
+      let requested = true;
       try {
-        await d.requestMap(projectId, actingUser || null);
+        requested = await d.requestMap(projectId, actingUser || null);
       } catch (exc) {
         // The read goes on without a new map; the next change asks again.
         d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
-      } finally {
-        state.map_fingerprint = analysisFingerprint;
       }
+      // Refused for the AI budget: the map stays owed, so a read after the reset asks again.
+      if (requested) state.map_fingerprint = analysisFingerprint;
     }
-    // Every conversation this read tried failed: a free analysis that read nothing.
-    let readNothing = false;
     if (extractionWork.length) {
       const slots = new Semaphore(MAX_PARALLEL_EXTRACTORS);
       await Promise.all(
@@ -1778,8 +1699,6 @@ export async function runPopcornTick(
           ),
         ),
       );
-      const read = writer.state.conversations as Json;
-      readNothing = extractionWork.every((t) => truthy(dict(read[String(t.id)]).error));
     }
 
     // One quote registry for the tick, seeded with the session's so the deck's ids stay valid.
@@ -1816,8 +1735,6 @@ export async function runPopcornTick(
           : staleViews(state, analysisFingerprint, analysisViews);
       const large = await largeSession(d, kept, projectId, transcripts);
       const fresh = await runAnalysisPass(d, transcripts, outcomes, book, views, publisher, large);
-      // A view made is an analysis had, whatever the extractors did.
-      if (Object.values(fresh).some((v) => v !== null && v !== undefined)) readNothing = false;
       commitViews(
         state,
         fresh,
@@ -1883,7 +1800,12 @@ export async function runPopcornTick(
     }
     let translated: string | null = null;
     // A publishing read asks no language model, translation included: the next full read translates.
-    if (!publishOnly)
+    // A read past the gate with no analysis (map, publication) translates only with budget left.
+    if (
+      !publishOnly &&
+      targetLanguages(settings).length > 0 &&
+      (analyses || (await admitted(d, projectId, startedAt)))
+    )
       try {
         translated = await translateSession(d, state, settings, { reportId, projectId, writer });
       } catch (exc) {
@@ -1897,22 +1819,7 @@ export async function runPopcornTick(
       ...outcomes,
     ].join("; ");
     await kept.save();
-    const run = await createRun(d, {
-      loopId,
-      status: "ok",
-      detail,
-      startedAt,
-      requestId: counted ? attemptId : requestId,
-      ...(counted ? { freePeriodStart: counted, freeAccountId: countedAccount } : {}),
-    });
-    if (counted && readNothing && d.free)
-      try {
-        await d.free.refund(attemptId, d.now());
-      } catch (err) {
-        d.logger.warn({ err: errText(err), loop_id: loopId }, "popcorn free refund failed");
-      }
-    // A finished analysis stays counted whatever happens after.
-    counted = null;
+    const run = await createRun(d, { loopId, status: "ok", detail, startedAt, requestId });
     let snapshotted = false;
     try {
       await snapshotVersion(d, {
@@ -1943,29 +1850,10 @@ export async function runPopcornTick(
     await finish("ok");
     return { status: "ok", run, state };
   } catch (exc) {
+    // What the read already worked out is kept for the next one.
+    await kept.save();
     const detail = exc instanceof Error ? exc.message : String(exc);
-    let run: Row;
-    try {
-      // What the read already worked out is kept for the next one.
-      await kept.save();
-      run = await createRun(d, {
-        loopId,
-        status: "error",
-        detail,
-        startedAt,
-        ...(counted
-          ? { requestId: attemptId, freePeriodStart: counted, freeAccountId: countedAccount }
-          : {}),
-      });
-    } finally {
-      // A failed analysis gives its count back, whatever else failed with it.
-      if (counted && d.free)
-        try {
-          await d.free.refund(attemptId, d.now());
-        } catch (err) {
-          d.logger.warn({ err: errText(err), loop_id: loopId }, "popcorn free refund failed");
-        }
-    }
+    const run = await createRun(d, { loopId, status: "error", detail, startedAt });
     await updateLoopAfterTick(d, currentLoop, "error");
     await enqueueNextIfDue(d, currentLoop);
     await nudgeLoop(d, currentLoop);

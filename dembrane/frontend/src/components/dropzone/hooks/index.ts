@@ -1,8 +1,10 @@
 import { i18n } from "@lingui/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import {
 	initiateAndUploadConversationChunk,
 	UploadFailedError,
@@ -12,8 +14,8 @@ import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
 import { uploadRefusalMessage } from "@/lib/uploadPrecheck";
 
 // A failed file's words: the free-limit refusal, else the presented error, never raw text.
-const failedFileMessage = (err: Error) =>
-	uploadRefusalMessage(err) ?? presentErrorNow(err, i18n).message;
+const failedFileMessage = (err: Error, resetsAt: string | null) =>
+	uploadRefusalMessage(err, resetsAt) ?? presentErrorNow(err, i18n).message;
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -75,6 +77,10 @@ export const useConversationUploader = () => {
 	);
 	const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
 	const uploadMutation = useUploadConversation();
+	// The AI budget refusal carries no date; the cached allowance names the reset day.
+	const { workspaceId } = useParams();
+	const { data: allowance } = useFreeAllowance(workspaceId);
+	const resetsAt = allowance?.resets_at ?? null;
 	// Use a ref to track if we've completed the upload to avoid multiple state updates
 	const hasCompletedRef = useRef(false);
 	// Use refs to track previous state to avoid unnecessary updates
@@ -208,14 +214,14 @@ export const useConversationUploader = () => {
 				const completed = { ...progressRef.current };
 				const failedNames = new Set(uploadError.failed.map((f) => f.name));
 				uploadError.failed.forEach((f) => {
-					newErrors[f.name] = failedFileMessage(f.error);
+					newErrors[f.name] = failedFileMessage(f.error, resetsAt);
 				});
 				// Re-present once the error messages have loaded.
 				void loadErrorMessages(i18n).then(() => {
 					if (errorsRef.current !== newErrors) return;
 					const loaded = { ...newErrors };
 					for (const f of uploadError.failed)
-						loaded[f.name] = failedFileMessage(f.error);
+						loaded[f.name] = failedFileMessage(f.error, resetsAt);
 					errorsRef.current = loaded;
 					setUploadErrors(loaded);
 				});
@@ -234,7 +240,7 @@ export const useConversationUploader = () => {
 			// Then update state - do this once rather than per file
 			setUploadErrors(newErrors);
 		}
-	}, [uploadMutation.isError, isUploading, uploadMutation.error]);
+	}, [uploadMutation.isError, isUploading, uploadMutation.error, resetsAt]);
 
 	return {
 		error: uploadMutation.error,

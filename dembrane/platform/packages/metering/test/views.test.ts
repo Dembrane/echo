@@ -3,7 +3,7 @@ import { createDb, migrate } from "@dembrane/db";
 import type { ModelCall } from "@dembrane/llm";
 import { withCorrelation } from "@dembrane/observability";
 import postgres from "postgres";
-import { modelCallRecorder, modelCallTable } from "../src";
+import { modelCallRecorder, modelCallTable, type PriceRow } from "../src";
 
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -15,6 +15,23 @@ const NAME = "metering_views";
 const ROLE = `grafana_obs_t${process.pid}`;
 
 const quiet = { info() {}, warn() {}, error() {}, debug() {} } as never;
+
+// Any price will do: an empty book would hold the rows back.
+const FLASH: PriceRow = {
+  id: 1,
+  provider: "vertex",
+  model: "gemini-3.8-flash",
+  source: "override",
+  effectiveFrom: new Date("2026-10-01T00:00:00Z"),
+  currency: "EUR",
+  inputPerM: 1,
+  cachedInputPerM: null,
+  audioInputPerM: null,
+  outputPerM: 2,
+  longContext: null,
+  perAudioSecond: null,
+  perSearchQuery: null,
+};
 
 run("obs views", () => {
   const sql = admin ? postgres(admin, { max: 1, onnotice: () => {} }) : (undefined as never);
@@ -37,12 +54,19 @@ run("obs views", () => {
 
   const call = (over: Partial<ModelCall> = {}): ModelCall => ({
     group: "multi_modal_pro",
+    provider: "vertex",
     model: "gemini-3.8-flash",
     kind: "generate",
     startedAt: new Date(),
     ms: 1000,
     inputTokens: 4000,
+    cachedInputTokens: null,
+    audioInputTokens: null,
     outputTokens: 200,
+    reasoningTokens: null,
+    audioSeconds: null,
+    searchQueries: null,
+    usageEstimated: false,
     finishReason: "stop",
     status: "ok",
     error: null,
@@ -56,6 +80,9 @@ run("obs views", () => {
       sink: modelCallTable(db.db),
       logger: quiet,
       service: "echo-worker",
+      prices: {
+        current: () => ({ prices: new Map([["vertex/gemini-3.8-flash", FLASH]]), usdToEur: 1 }),
+      },
     });
     withCorrelation({ requestId: "job-1", operation: "conversations.chunk" }, () => {
       r.observe(call());
@@ -109,6 +136,7 @@ run("obs views", () => {
       "day_chats",
       "day_assistant",
       "minute_model_calls",
+      "day_ai_spend",
     ])
       expect(Array.isArray(await db.client.unsafe(`select * from obs.${view} limit 1`))).toBe(true);
     const [live] = await db.client.unsafe("select * from obs.live_now");
@@ -152,6 +180,8 @@ run("obs views", () => {
       );
       expect(counted[0]?.n).toBe(2);
       expect(await outcome("select one from obs.later_view")).toBe("allowed");
+      expect(await outcome("select * from obs.day_ai_spend")).toBe("allowed");
+      expect(await outcome("select * from public.ai_spend_daily")).toMatch(/permission denied/);
       expect(await outcome("select * from public.model_call")).toMatch(/permission denied/);
       expect(await outcome("select * from public.conversation")).toMatch(/permission denied/);
     } finally {

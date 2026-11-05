@@ -1,3 +1,4 @@
+import type { Payer } from "@dembrane/observability";
 import type { z } from "zod";
 import type { EnqueueOptions } from "./queue";
 
@@ -24,6 +25,8 @@ export interface JobDefinition<S extends z.ZodType = z.ZodType> {
    * that shared its workers keep running. Raise it for jobs that must not wait.
    */
   readonly lostWorkerLimit: number;
+  /** Who pays for the run's model calls; set again on every start, recovery included. */
+  payer?(payload: z.output<S>): Payer | null;
 }
 
 export function defineJob<S extends z.ZodType>(
@@ -42,6 +45,7 @@ export function defineJob<S extends z.ZodType>(
     expireInSeconds: opts.expireInSeconds ?? 15 * 60,
     policy: opts.policy ?? "standard",
     lostWorkerLimit: opts.lostWorkerLimit ?? DEFAULT_LOST_WORKER_LIMIT,
+    ...(opts.payer && { payer: opts.payer }),
   };
 }
 
