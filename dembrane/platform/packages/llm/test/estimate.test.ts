@@ -211,7 +211,9 @@ describe("estimate", () => {
 
   test("a long run with no word breaks stays cheap", () => {
     const run = japanese(300_000, 5).replace(/[、。]/g, "");
-    const prompt: LanguageModelV4Prompt = [{ role: "user", content: [{ type: "text", text: run }] }];
+    const prompt: LanguageModelV4Prompt = [
+      { role: "user", content: [{ type: "text", text: run }] },
+    ];
     const got = estimateInput(prompt).inputTokens;
     // Encoding it whole would take minutes: BPE cost grows with the square of a word.
     expect(fastestMs(() => estimateInput(prompt))).toBeLessThan(30);
