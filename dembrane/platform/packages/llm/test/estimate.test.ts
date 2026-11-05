@@ -13,6 +13,17 @@ import {
 
 const cl = new Tiktoken(cl100k);
 
+// Fastest of three runs, so a GC pause or a busy CI runner can't fail a cost bound.
+function fastestMs(run: () => void): number {
+  let best = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < 3; i++) {
+    const t0 = performance.now();
+    run();
+    best = Math.min(best, performance.now() - t0);
+  }
+  return best;
+}
+
 // Transcript-like text: mixed English and Dutch words, numbers and punctuation, seeded.
 const WORDS =
   'the residents said that buses should run later at night because many people work late shifts in the hospital and harbour; others asked for more cycle lanes, safer crossings near schools and better lighting in parks. Bewoners zeiden dat de bussen later moeten rijden omdat velen laat werken. 2026-11-04 12:30 EUR 5,00 #42 (Table 3) "yes"'.split(
@@ -171,9 +182,8 @@ describe("estimate", () => {
         content: [{ type: "text" as const, text: t }],
       })),
     ];
-    const t0 = performance.now();
     const got = estimateInput(prompt).inputTokens;
-    const ms = performance.now() - t0;
+    const ms = fastestMs(() => estimateInput(prompt));
     const want = exact([system, ...turns]);
     expect(Math.abs(got - want) / want).toBeLessThan(0.03);
     // Encoding all 2 MB takes ~250 ms here; sampling takes ~5 ms (bound left loose for CI).
@@ -191,9 +201,8 @@ describe("estimate", () => {
         { role: "user", content: [{ type: "text", text: blocks.join("\n") }] },
       ];
       const want = exact([transcript(4_000, seed), blocks.join("\n")]);
-      const t0 = performance.now();
       const got = estimateInput(prompt).inputTokens;
-      const ms = performance.now() - t0;
+      const ms = fastestMs(() => estimateInput(prompt));
       expect(got / want).toBeGreaterThan(0.92);
       expect(got / want).toBeLessThan(1.08);
       expect(ms).toBeLessThan(30);
@@ -202,12 +211,10 @@ describe("estimate", () => {
 
   test("a long run with no word breaks stays cheap", () => {
     const run = japanese(300_000, 5).replace(/[、。]/g, "");
-    const t0 = performance.now();
-    const got = estimateInput([
-      { role: "user", content: [{ type: "text", text: run }] },
-    ]).inputTokens;
+    const prompt: LanguageModelV4Prompt = [{ role: "user", content: [{ type: "text", text: run }] }];
+    const got = estimateInput(prompt).inputTokens;
     // Encoding it whole would take minutes: BPE cost grows with the square of a word.
-    expect(performance.now() - t0).toBeLessThan(30);
+    expect(fastestMs(() => estimateInput(prompt))).toBeLessThan(30);
     expect(got / run.length).toBeGreaterThan(0.8);
     expect(got / run.length).toBeLessThan(1.6);
   });
@@ -224,7 +231,8 @@ describe("estimate", () => {
 
   test("symbol, box-drawing and blank-line runs and many tiny parts stay cheap", () => {
     estimateInput([{ role: "system", content: transcript(40_000, 9) }]);
-    const row = (s: string) => s.repeat(Math.ceil(1_000_000 / s.length)).slice(0, 1_000_000);
+    // 10 MB each: encoding one whole takes 350-700 ms, sampling about 10 ms whatever the size.
+    const row = (s: string) => s.repeat(Math.ceil(10_000_000 / s.length)).slice(0, 10_000_000);
     const cases: LanguageModelV4Prompt[] = [
       ...[
         `|${"-".repeat(78)}|\n| a | 1 |\n`,
@@ -236,17 +244,18 @@ describe("estimate", () => {
       ].map(
         (s): LanguageModelV4Prompt => [{ role: "user", content: [{ type: "text", text: row(s) }] }],
       ),
-      Array.from({ length: 200_000 }, () => ({
-        role: "user" as const,
-        content: [{ type: "text" as const, text: "a" }],
-      })),
     ];
     for (const prompt of cases) {
-      const t0 = performance.now();
       expect(estimateInput(prompt).inputTokens).toBeGreaterThan(0);
-      // About 5-10 ms each here; encoding them whole takes 35-70 ms per MB.
-      expect(performance.now() - t0).toBeLessThan(30);
+      expect(fastestMs(() => estimateInput(prompt))).toBeLessThan(30);
     }
+    // Every part is visited, so this one grows with the part count: about 20 ms here.
+    const tiny: LanguageModelV4Prompt = Array.from({ length: 200_000 }, () => ({
+      role: "user" as const,
+      content: [{ type: "text" as const, text: "a" }],
+    }));
+    expect(estimateInput(tiny).inputTokens).toBeGreaterThan(0);
+    expect(fastestMs(() => estimateInput(tiny))).toBeLessThan(100);
   });
 
   test("a call the provider never accepted: a 4xx or a connection error", () => {
