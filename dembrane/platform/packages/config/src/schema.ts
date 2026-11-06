@@ -613,6 +613,33 @@ export const schema = defineSchema({
       description:
         "sam's inbox takes the messages of the offer flow: echo_account_document_sent_v1, echo_account_document_voided_v1, echo_account_invoice_requested_v1 and echo_account_task_waiting_v1. Turn on once the sam that handles them runs for this environment; before that sam refuses the codes and each message stays in the queue as failed. While it is off nobody is told that a customer task waits.",
     }),
+    gmailServiceAccount: key(
+      "ACCOUNTS_GMAIL_SERVICE_ACCOUNT",
+      z
+        .string()
+        .optional()
+        .transform((v) => (v?.trim() ? v : undefined)),
+      {
+        description:
+          "The JSON key of the Google Workspace service account that reads dembrane's mailboxes for the account card's email, with domain-wide delegation of gmail.readonly only. The email section is on only when ACCOUNTS_GMAIL_MAILBOXES names mailboxes too, so the key can sit in place while the list is still empty.",
+        secret: true,
+      },
+    ),
+    gmailMailboxes: key(
+      "ACCOUNTS_GMAIL_MAILBOXES",
+      z
+        .string()
+        .regex(
+          /^\s*[a-z0-9._+-]+@dembrane\.com(\s*,\s*[a-z0-9._+-]+@dembrane\.com)*\s*$/i,
+          "comma-separated @dembrane.com addresses",
+        )
+        .optional()
+        .or(z.literal("").transform(() => undefined)),
+      {
+        description:
+          "Comma-separated dembrane mailboxes the account card's email reads, e.g. jorim@dembrane.com,evelien@dembrane.com. Only people who agreed to it; each is read, never written.",
+      },
+    ),
     eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
       description:
         "Where account events (document signed, billing details updated, ...) are posted for sam. Unset keeps them on the timeline only.",

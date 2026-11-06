@@ -1476,6 +1476,59 @@ export const EventName = z.enum([
   "account.ticket.opened",
 ]);
 
+// ── the account's email (staff and sam) ─────────────────────────────────
+
+/** Who wrote a message or took part: one of us, the organisation, or someone else. */
+export const MailSide = z.enum(["dembrane", "organisation", "other"]);
+export const MailPerson = z.object({
+  name: z.string().nullable(),
+  email: z.string(),
+  side: MailSide,
+});
+/** One email as a chat bubble: the text it added, quoted history and signature cut off. */
+export const MailMessage = z.object({
+  /** The RFC 5322 Message-ID; the same message in two mailboxes is listed once. */
+  id: z.string(),
+  from: MailPerson,
+  to: z.array(z.string()),
+  cc: z.array(z.string()),
+  sent_at: IsoTime,
+  text: z.string(),
+  /** The dembrane mailboxes it sits in. */
+  mailboxes: z.array(z.string()),
+});
+/** One conversation, merged across mailboxes, oldest message first. */
+export const MailThread = z.object({
+  id: z.string(),
+  subject: z.string(),
+  last_message_at: IsoTime,
+  participants: z.array(MailPerson),
+  /** Where to reply: the thread in each mailbox that has it. */
+  gmail: z.array(z.object({ mailbox: z.string(), url: z.url() })),
+  messages: z.array(MailMessage),
+});
+/**
+ * GET /api/v2/admin/accounts/:orgId/email: the organisation's email with dembrane, read
+ * live from the configured mailboxes and stored nowhere. Matched on the members' own
+ * domains and the exact address of members at public providers; mail with anyone else
+ * never appears. Read-only: replies happen in Gmail.
+ */
+export const AccountEmail = z.object({
+  organisation: z.object({ id: Uuid, name: z.string() }),
+  matched: z.object({ domains: z.array(z.string()), addresses: z.array(z.string()) }),
+  /** Each mailbox searched; ok false when it could not be read this time. */
+  mailboxes: z.array(z.object({ mailbox: z.string(), ok: z.boolean() })),
+  threads: z.array(MailThread),
+  fetched_at: IsoTime,
+});
+export const AccountEmailQuery = z.object({
+  /** Skip the few minutes of cache, e.g. right after a reply in Gmail. */
+  refresh: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
+});
+
 // ── the route table ─────────────────────────────────────────────────────
 
 export type Permission =
@@ -1685,6 +1738,13 @@ export const ROUTES = {
     path: `${S}/:orgId`,
     permission: "staff:accounts",
     response: AccountCard,
+  },
+  accountEmail: {
+    method: "GET",
+    path: `${S}/:orgId/email`,
+    permission: "staff:accounts",
+    query: AccountEmailQuery,
+    response: AccountEmail,
   },
   updateAccount: {
     method: "PATCH",
@@ -1949,3 +2009,4 @@ export type SignRequestT = z.output<typeof SignRequest>;
 export type DemoStatusT = z.output<typeof DemoStatus>;
 export type TasksSummaryT = z.output<typeof TasksSummary>;
 export type OnboardingResponseT = z.output<typeof OnboardingResponse>;
+export type AccountEmailT = z.output<typeof AccountEmail>;

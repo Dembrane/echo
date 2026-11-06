@@ -1,5 +1,6 @@
 import type { Access, StaffAudit } from "@dembrane/access";
 import type { Jobs } from "@dembrane/account";
+import type { GmailReader } from "@dembrane/accounts";
 import type { Media } from "@dembrane/audio";
 import type { Auth, IdentityAccount } from "@dembrane/auth";
 import type { Billing } from "@dembrane/billing";
@@ -60,6 +61,8 @@ export interface Deps {
   readonly hub: Hub | null;
   /** GETs dembrane.com's legal pages when an offer is pushed; a fake in tests. */
   readonly fetchText?: (url: string) => Promise<string>;
+  /** Reads dembrane's mailboxes for the account card's email; a fake in tests. */
+  readonly gmail?: GmailReader | null;
 }
 
 export type { Env, Signed };
