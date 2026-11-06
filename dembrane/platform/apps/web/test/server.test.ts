@@ -231,3 +231,73 @@ test("only a PR preview names its pull request in the runtime config", () => {
   expect(previewRuntime("staging", web)).toEqual({});
   expect(previewRuntime("prod", web)).toEqual({});
 });
+
+test("portal redirects root / to the dashboard URL", async () => {
+  const portalHandler = createHandler({
+    distDir: dist,
+    release: "r1",
+    runtime: {
+      env: "testing",
+      role: "portal",
+      apiBase: "/api",
+      dashboardUrl: "https://dash.example",
+    },
+    headers: {},
+  });
+  const res = await portalHandler(new Request("https://portal.example/"));
+  expect(res.status).toBe(302);
+  expect(res.headers.get("location")).toBe("https://dash.example/");
+});
+
+test("portal preserves query parameters when redirecting root / to dashboard", async () => {
+  const portalHandler = createHandler({
+    distDir: dist,
+    release: "r1",
+    runtime: {
+      env: "testing",
+      role: "portal",
+      apiBase: "/api",
+      dashboardUrl: "https://dash.example",
+    },
+    headers: {},
+  });
+  const res = await portalHandler(new Request("https://portal.example/?ref=email"));
+  expect(res.status).toBe(302);
+  expect(res.headers.get("location")).toBe("https://dash.example/?ref=email");
+});
+
+test("portal redirects dashboard paths like /o and /login to dashboard", async () => {
+  const portalHandler = createHandler({
+    distDir: dist,
+    release: "r1",
+    runtime: {
+      env: "testing",
+      role: "portal",
+      apiBase: "/api",
+      dashboardUrl: "https://dash.example",
+    },
+    headers: {},
+  });
+  const res = await portalHandler(new Request("https://portal.example/o/123/account"));
+  expect(res.status).toBe(302);
+  expect(res.headers.get("location")).toBe("https://dash.example/o/123/account");
+});
+
+test("portal serves index.html for participant routes", async () => {
+  const portalHandler = createHandler({
+    distDir: dist,
+    release: "r1",
+    runtime: {
+      env: "testing",
+      role: "portal",
+      apiBase: "/api",
+      dashboardUrl: "https://dash.example",
+    },
+    headers: {},
+  });
+  const res = await portalHandler(
+    new Request("https://portal.example/nl-NL/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start"),
+  );
+  expect(res.status).toBe(200);
+  expect(await res.text()).toBe("<html>app</html>");
+});

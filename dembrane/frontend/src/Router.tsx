@@ -20,7 +20,13 @@ import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
-import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
+import {
+	ADMIN_BASE_URL,
+	ENABLE_CANVAS,
+	ENABLE_MONITOR,
+	ENABLE_PRESENT,
+	SUPPORTED_LANGUAGES,
+} from "./config";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -753,6 +759,42 @@ export const mainRouter = createBrowserRouter([
 ]);
 
 export const participantRouter = createBrowserRouter([
+	{
+		loader: () => {
+			const target = new URL(ADMIN_BASE_URL);
+			target.search = window.location.search;
+			target.hash = window.location.hash;
+			window.location.replace(target.toString());
+			return null;
+		},
+		path: "/",
+	},
+	...[
+		"o",
+		"o/*",
+		"login",
+		"register",
+		"settings",
+		"settings/*",
+		"admin",
+		"admin/*",
+		"invites",
+		"w",
+		"w/*",
+		"account",
+		"account/*",
+		...SUPPORTED_LANGUAGES,
+	].map((p) => ({
+		loader: () => {
+			const target = new URL(
+				window.location.pathname + window.location.search + window.location.hash,
+				ADMIN_BASE_URL,
+			);
+			window.location.replace(target.toString());
+			return null;
+		},
+		path: p,
+	})),
 	{
 		children: [
 			{
