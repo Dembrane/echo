@@ -297,6 +297,13 @@ export async function prepareChunk(d: PipelineDeps, chunkId: string): Promise<st
       await updateChunk(d, chunkId, chunk.conversation_id, { error: UNPLAYABLE });
       return [];
     }
+    // A retryable failure (an ffmpeg killed for running too long, a media instance that is
+    // gone) leaves the chunk for the step's retry; the worker moves on to other chunks meanwhile.
+    if (err instanceof AudioError)
+      d.logger.warn(
+        { chunkId, kind: err.kind, err: err.message },
+        "chunk conversion failed, will retry",
+      );
     throw err;
   }
 }

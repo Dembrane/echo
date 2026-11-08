@@ -223,3 +223,41 @@ describe("media auth", () => {
     expect(metadataCalls).toBe(0);
   });
 });
+
+// The convert job (the one that hung on browser chunks) must get the caller's signal, so a
+// request that is dropped kills ffmpeg instead of leaving the instance pinned.
+test("a dropped convert request aborts the job and frees the queue for the next one", async () => {
+  let aborted = false;
+  let calls = 0;
+  const media = {
+    convert: (_req: unknown, o?: { signal?: AbortSignal }) => {
+      if (++calls > 1) return Promise.resolve({ bytes: 1 });
+      return new Promise((_, reject) =>
+        o?.signal?.addEventListener("abort", () => {
+          aborted = true;
+          reject(new AudioError("transient", "ffmpeg timed out"));
+        }),
+      );
+    },
+  } as unknown as Media;
+  const service = Bun.serve({ port: 0, fetch: mediaApp(media, logger).fetch });
+  try {
+    const body = JSON.stringify({
+      source: { url: "http://x.test/a.webm", format: "webm" },
+      target: { url: "http://x.test/out", contentType: "audio/mpeg" },
+      outputFormat: "mp3",
+    });
+    const url = `http://127.0.0.1:${service.port}/convert`;
+    const ctl = new AbortController();
+    const first = fetch(url, { method: "POST", body, signal: ctl.signal }).catch(() => null);
+    await Bun.sleep(100);
+    ctl.abort();
+    await first;
+    await Bun.sleep(100);
+    expect(aborted).toBe(true);
+    const next = await fetch(url, { method: "POST", body });
+    expect(next.status).toBe(200);
+  } finally {
+    await service.stop(true);
+  }
+});
