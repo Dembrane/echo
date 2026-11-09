@@ -10,15 +10,22 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { isRouteErrorResponse, useLocation, useRouteError } from "react-router";
+import { Fragment } from "react";
+import {
+	isRouteErrorResponse,
+	useLocation,
+	useParams,
+	useRouteError,
+} from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
-import { DEBUG_MODE, USE_PARTICIPANT_ROUTER } from "@/config";
+import { ADMIN_BASE_URL, DEBUG_MODE, USE_PARTICIPANT_ROUTER } from "@/config";
 import { BaseLayout } from "../layout/BaseLayout";
 
 export const ErrorPage = () => {
 	const error = useRouteError();
 	const location = useLocation();
+	const { language, projectId } = useParams();
 
 	// Don't gate on auth for the participant portal (participants don't log in)
 	// or on the public auth pages. Everywhere else an invalid session redirects
@@ -68,8 +75,16 @@ export const ErrorPage = () => {
 			</Trans>
 		));
 
+	// No dashboard chrome on the portal: a signed-in visitor would get the dashboard sidebar.
+	const Layout = USE_PARTICIPANT_ROUTER ? Fragment : BaseLayout;
+	const homeHref = !USE_PARTICIPANT_ROUTER
+		? "/"
+		: projectId
+			? `/${language ? `${language}/` : ""}${projectId}/start`
+			: ADMIN_BASE_URL;
+
 	return (
-		<BaseLayout>
+		<Layout>
 			<Box className="flex h-[calc(100vh-60px)] flex-col justify-center p-4">
 				<Stack gap="md" w="100%" maw={440} mx="auto">
 					<Title order={2}>{title}</Title>
@@ -90,7 +105,7 @@ export const ErrorPage = () => {
 						<Button
 							variant={isNotFound ? "filled" : undefined}
 							onClick={() => {
-								window.location.href = "/";
+								window.location.href = homeHref;
 							}}
 						>
 							<Trans>Return home</Trans>
@@ -98,6 +113,6 @@ export const ErrorPage = () => {
 					</Group>
 				</Stack>
 			</Box>
-		</BaseLayout>
+		</Layout>
 	);
 };

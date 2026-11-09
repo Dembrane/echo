@@ -2316,7 +2316,7 @@ msgstr "Un objeto fuera de esta vista"
 msgid "An optional second screen after the disclosure."
 msgstr "Una segunda pantalla opcional después del aviso legal."
 
-#: src/components/error/ErrorPage.tsx:66
+#: src/components/error/ErrorPage.tsx:73
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Ha ocurrido un error inesperado. Recargar la página o volver al inicio suele ayudar."
 
@@ -11345,7 +11345,7 @@ msgstr "Contenido de la página"
 #~ msgid "Page Content"
 #~ msgstr "Contenido de la Página"
 
-#: src/components/error/ErrorPage.tsx:54
+#: src/components/error/ErrorPage.tsx:61
 msgid "Page not found"
 msgstr "Página no encontrada"
 
@@ -12964,7 +12964,7 @@ msgstr "Relevante"
 
 #: src/features/sidebar/AppSidebar.tsx:119
 #: src/components/layout/BaseLayout.tsx:33
-#: src/components/error/ErrorPage.tsx:87
+#: src/components/error/ErrorPage.tsx:102
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Recargar la página"
@@ -13616,7 +13616,7 @@ msgstr "La retranscripción ha comenzado. La nueva conversación estará disponi
 #~ msgid "Retry Upload"
 #~ msgstr "Reintentar subida"
 
-#: src/components/error/ErrorPage.tsx:96
+#: src/components/error/ErrorPage.tsx:111
 #: src/components/error/ErrorBoundary.tsx:62
 msgid "Return home"
 msgstr "Volver al inicio"
@@ -15122,7 +15122,7 @@ msgstr "Algo está bloqueando tu conexión. Tu audio no se guardará a menos que
 #: src/routes/auth/Login.tsx:342
 #: src/components/report/reportError.ts:22
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/error/ErrorPage.tsx:56
+#: src/components/error/ErrorPage.tsx:63
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:350
 msgid "Something went wrong"
@@ -18557,7 +18557,7 @@ msgstr "No pudimos cobrar a tu método de pago"
 #~ msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
 #~ msgstr "No pudimos activar la autenticación de dos factores. Verifica tu código e inténtalo de nuevo."
 
-#: src/components/error/ErrorPage.tsx:62
+#: src/components/error/ErrorPage.tsx:69
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "No encontramos la página que buscabas. Puede que se haya movido."
 
