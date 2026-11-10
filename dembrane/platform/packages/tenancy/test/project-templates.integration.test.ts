@@ -271,4 +271,54 @@ run("project templates", () => {
     const [n] = await sql`select count(*)::int as n from project where workspace_id = ${w.ws}`;
     expect(n?.n).toBe(0);
   });
+
+  // ECHO-1052: asking participants for their email sits behind ENABLE_PARTICIPANT_EMAIL.
+  // No way of making a new project switches it (or the report notifications it feeds) on.
+  test("a new project never asks for the participant's email: blank, any template, or overrides", async () => {
+    const w = await workspace("innovator");
+    const email = (r: Record<string, unknown>) => [
+      r.default_conversation_ask_for_participant_email,
+      r.is_project_notification_subscription_allowed,
+    ];
+    const made: string[] = [];
+    for (const body of [
+      { name: "Blank", language: "en" },
+      // A field the create body does not take is not written either.
+      {
+        name: "Blank, asking",
+        language: "en",
+        default_conversation_ask_for_participant_email: true,
+      },
+      ...PROJECT_TEMPLATES.map((t) => ({ name: t.key, language: "nl", template_key: t.key })),
+      {
+        name: "With overrides",
+        language: "en",
+        template_key: "event",
+        overrides: { is_verify_enabled: true, is_get_reply_enabled: true },
+      },
+    ]) {
+      const res = await create(w, body);
+      if (res.status !== 200) {
+        expect([body.name, res.status]).toEqual([body.name, 422]);
+        continue;
+      }
+      const { id } = (await res.json()) as { id: string };
+      made.push(id);
+      expect([body.name, ...email(await row(id))]).toEqual([body.name, false, false]);
+    }
+    for (const overrides of [
+      { default_conversation_ask_for_participant_email: true },
+      { is_project_notification_subscription_allowed: true },
+    ])
+      for (const template_key of [null, "event"]) {
+        const res = await create(w, { name: "Nope", language: "en", template_key, overrides });
+        expect([JSON.stringify(overrides), template_key, res.status]).toEqual([
+          JSON.stringify(overrides),
+          template_key,
+          422,
+        ]);
+      }
+    const [n] = await sql`select count(*)::int as n from project where workspace_id = ${w.ws}`;
+    expect(n?.n).toBe(made.length);
+  });
 });
