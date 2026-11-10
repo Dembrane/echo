@@ -275,6 +275,23 @@ describe("settings proposals", () => {
     ]);
   });
 
+  test("a proposal equal to what the template already sets is dropped", () => {
+    // The live event template has Verify, Verify on finish, replies, the name box and the
+    // advanced tutorial on already.
+    expect(
+      cleanSettings(
+        [
+          { field: "is_verify_enabled", value: "true", reason: "12 tables" },
+          { field: "is_verify_on_finish_enabled", value: "true", reason: "r" },
+          { field: "is_get_reply_enabled", value: "true", reason: "r" },
+          { field: "default_conversation_ask_for_participant_name", value: "true", reason: "r" },
+          { field: "default_conversation_tutorial_slug", value: "advanced", reason: "r" },
+        ],
+        event,
+      ),
+    ).toEqual([]);
+  });
+
   test("bad values, empty reasons and repeats are dropped; zero is a valid answer", () => {
     expect(
       cleanSettings(
