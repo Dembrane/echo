@@ -1764,7 +1764,7 @@ msgstr "Añade un objetivo al proyecto antes de guardar."
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Añadir contexto adicional (Opcional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/components/participant/ParticipantInitiateForm.tsx:308
 msgid "Add all that apply"
 msgstr "Añade todos los que correspondan"
 
@@ -4467,7 +4467,7 @@ msgid "participant.button.next"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
+#: src/components/participant/ParticipantInitiateForm.tsx:345
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuar"
 
@@ -7679,6 +7679,10 @@ msgstr "Entendido"
 #: src/components/training/TrainingRowActions.tsx:309
 msgid "Grant licenses"
 msgstr "Otorgar licencias"
+
+#: src/components/participant/ParticipantInitiateForm.tsx:297
+msgid "Group 1, Table 3, etc."
+msgstr "Grupo 1, Mesa 3, etc."
 
 #: src/components/conversation/LiveMonitorSection.tsx:704
 msgid "Group by"
@@ -14800,7 +14804,7 @@ msgid "Separate with commas, spaces, or new lines."
 msgstr "Separa con comas, espacios o saltos de línea."
 
 #: src/components/project/ProjectPortalEditor.tsx:731
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/components/participant/ParticipantInitiateForm.tsx:291
 msgid "Session name"
 msgstr "Nombre de la sesión"
 
@@ -16072,7 +16076,7 @@ msgid "Tag deleted"
 msgstr "Etiqueta eliminada"
 
 #: src/components/project/ProjectTagsInput.tsx:281
-#: src/components/participant/ParticipantInitiateForm.tsx:301
+#: src/components/participant/ParticipantInitiateForm.tsx:307
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
 #: src/components/conversation/ConversationsMiniList.tsx:189

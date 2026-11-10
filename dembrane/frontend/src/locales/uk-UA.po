@@ -1763,7 +1763,7 @@ msgstr "Додайте мету проєкту перед збереженням
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Add additional context (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/components/participant/ParticipantInitiateForm.tsx:308
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
@@ -4466,7 +4466,7 @@ msgid "participant.button.next"
 msgstr "Продовжити"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
+#: src/components/participant/ParticipantInitiateForm.tsx:345
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
@@ -7678,6 +7678,10 @@ msgstr "Зрозуміло"
 #: src/components/training/TrainingRowActions.tsx:309
 msgid "Grant licenses"
 msgstr "Надати ліцензії"
+
+#: src/components/participant/ParticipantInitiateForm.tsx:297
+msgid "Group 1, Table 3, etc."
+msgstr "Група 1, Стіл 3 тощо"
 
 #: src/components/conversation/LiveMonitorSection.tsx:704
 msgid "Group by"
@@ -14799,7 +14803,7 @@ msgid "Separate with commas, spaces, or new lines."
 msgstr "Розділяйте комами, пробілами або новими рядками."
 
 #: src/components/project/ProjectPortalEditor.tsx:731
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/components/participant/ParticipantInitiateForm.tsx:291
 msgid "Session name"
 msgstr "Назва сесії"
 
@@ -16071,7 +16075,7 @@ msgid "Tag deleted"
 msgstr "Тег видалено"
 
 #: src/components/project/ProjectTagsInput.tsx:281
-#: src/components/participant/ParticipantInitiateForm.tsx:301
+#: src/components/participant/ParticipantInitiateForm.tsx:307
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
 #: src/components/conversation/ConversationsMiniList.tsx:189
