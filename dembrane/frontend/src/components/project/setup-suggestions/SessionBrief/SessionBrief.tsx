@@ -1,8 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { Button, Stack, Text, Textarea, TextInput } from "@mantine/core";
-import { ListMagnifyingGlassIcon } from "@phosphor-icons/react";
-import { useId } from "react";
+import { Button, Collapse, Group, Stack, Text, TextInput } from "@mantine/core";
+import {
+	CaretDownIcon,
+	CaretRightIcon,
+	ListMagnifyingGlassIcon,
+} from "@phosphor-icons/react";
+import { type ReactNode, useId, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { testId } from "@/lib/testUtils";
 import { SuggestedSettings } from "../SuggestedSettings/SuggestedSettings";
@@ -17,14 +21,16 @@ export type BriefStatus = "idle" | "loading" | "results" | "error";
 
 export interface SessionBriefProps {
 	status: BriefStatus;
-	/** Hidden in the portal editor, which suggests from the project itself. */
-	showInputs?: boolean;
-	text?: string;
+	/** The create wizard offers an optional link behind "Add a link"; the portal editor does not. */
+	withLink?: boolean;
 	url?: string;
-	onTextChange?: (value: string) => void;
 	onUrlChange?: (value: string) => void;
 	/** False while there is nothing to suggest from. */
 	canSuggest: boolean;
+	/** What to do first, shown under the action while it cannot run. */
+	hint?: ReactNode;
+	/** The project context was longer than a request reads: only its start was read. */
+	readStartOnly?: boolean;
 	onSuggest: () => void;
 	terms: readonly ProposedTerm[];
 	settings: readonly ProposedSetting[];
@@ -36,24 +42,25 @@ export interface SessionBriefProps {
 	onAcceptAll: () => void;
 	checkedSettings: Readonly<Record<string, boolean>>;
 	onToggleSetting: (field: string, checked: boolean) => void;
-	/** Where the block sits; the empty and error lines say what to do there. */
+	/** Where the block sits; the error line says what to do there. */
 	surface: "wizard" | "portal_editor";
 }
 
 /**
- * "Tell dembrane about your session": one text box, an optional link and "Suggest key
- * terms". Results appear in place: key terms as chips, then any settings worth changing.
- * Optional on every side: nothing here holds up creating the project, and a failure is
- * one quiet line. Props in, callbacks out; SessionBriefConnected does the request.
+ * "Suggest key terms" under the project context: dembrane reads what the host wrote
+ * there (and, in the wizard, an optional link behind "Add a link") and proposes key
+ * terms as chips, then any settings worth changing. No field of its own: the context is
+ * the one place a host describes the session. Never in the way: nothing here holds up
+ * creating the project, and a failure is one quiet line. Props in, callbacks out.
  */
 export const SessionBrief = ({
 	status,
-	showInputs = true,
-	text = "",
+	withLink = false,
 	url = "",
-	onTextChange,
 	onUrlChange,
 	canSuggest,
+	hint,
+	readStartOnly = false,
 	onSuggest,
 	terms,
 	settings,
@@ -67,46 +74,62 @@ export const SessionBrief = ({
 	onToggleSetting,
 	surface,
 }: SessionBriefProps) => {
-	const headingId = useId();
+	const linkId = useId();
+	const [linkOpen, setLinkOpen] = useState(false);
 	const loading = status === "loading";
 	const empty =
 		status === "results" && terms.length === 0 && settings.length === 0;
-	const termCount = terms.length;
-	const settingCount = settings.length;
+	const showLink = linkOpen || url.trim() !== "";
 
 	return (
 		<Stack
 			gap="sm"
 			role="group"
-			aria-labelledby={showInputs ? headingId : undefined}
-			aria-label={showInputs ? undefined : t`Suggested key terms`}
+			aria-label={t`Suggested key terms`}
 			data-tour="setup-suggestions"
 			{...testId("setup-suggestions")}
 		>
-			{showInputs ? (
-				<>
-					<Stack gap="xs">
-						<Text size="md" component="h3" m={0} id={headingId}>
-							<Trans>Tell dembrane about your session</Trans>
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								Optional. dembrane suggests the names and words transcription
-								should spell right, and any settings worth changing.
-							</Trans>
-						</Text>
-					</Stack>
-					<Textarea
-						aria-label={t`About your session`}
-						placeholder={t`What is it about, who takes part and where? You can also paste the agenda or the invitation.`}
-						autosize
-						minRows={3}
-						maxRows={10}
-						value={text}
-						onChange={(e) => onTextChange?.(e.currentTarget.value)}
-						{...testId("setup-suggestions-text")}
-					/>
+			<Group gap="xs" wrap="wrap">
+				<Button
+					variant="outline"
+					size="sm"
+					leftSection={<ListMagnifyingGlassIcon size={16} aria-hidden />}
+					loading={loading}
+					disabled={!canSuggest}
+					onClick={onSuggest}
+					{...testId("setup-suggestions-submit")}
+				>
+					{status === "results" ? (
+						<Trans>Suggest again</Trans>
+					) : (
+						<Trans>Suggest key terms</Trans>
+					)}
+				</Button>
+				{withLink ? (
+					<Button
+						variant="subtle"
+						size="sm"
+						leftSection={
+							showLink ? (
+								<CaretDownIcon size={16} aria-hidden />
+							) : (
+								<CaretRightIcon size={16} aria-hidden />
+							)
+						}
+						aria-expanded={showLink}
+						aria-controls={linkId}
+						onClick={() => setLinkOpen((open) => !open)}
+						{...testId("setup-suggestions-link-toggle")}
+					>
+						<Trans>Add a link</Trans>
+					</Button>
+				) : null}
+			</Group>
+
+			{withLink ? (
+				<Collapse in={showLink}>
 					<TextInput
+						id={linkId}
 						label={t`Link to a page about it`}
 						description={t`Optional. An invitation or project page; dembrane reads it once.`}
 						placeholder="https://"
@@ -116,25 +139,14 @@ export const SessionBrief = ({
 						onChange={(e) => onUrlChange?.(e.currentTarget.value)}
 						{...testId("setup-suggestions-url")}
 					/>
-				</>
+				</Collapse>
 			) : null}
 
-			<Button
-				variant="outline"
-				size="sm"
-				w="fit-content"
-				leftSection={<ListMagnifyingGlassIcon size={16} aria-hidden />}
-				loading={loading}
-				disabled={!canSuggest}
-				onClick={onSuggest}
-				{...testId("setup-suggestions-submit")}
-			>
-				{status === "results" ? (
-					<Trans>Suggest again</Trans>
-				) : (
-					<Trans>Suggest key terms</Trans>
-				)}
-			</Button>
+			{!canSuggest && hint ? (
+				<Text size="xs" c="dimmed" {...testId("setup-suggestions-hint")}>
+					{hint}
+				</Text>
+			) : null}
 
 			{/* One polite live region: the start of a request, its result and a failure are
 			    read out once each, without moving focus. */}
@@ -168,9 +180,21 @@ export const SessionBrief = ({
 					</Text>
 				) : null}
 				{status === "results" && !empty ? (
-					<VisuallyHiddenSummary terms={termCount} settings={settingCount} />
+					<VisuallyHiddenSummary
+						terms={terms.length}
+						settings={settings.length}
+					/>
 				) : null}
 			</div>
+
+			{status !== "idle" && readStartOnly ? (
+				<Text size="xs" c="dimmed" {...testId("setup-suggestions-long-note")}>
+					<Trans>
+						Your project context is long, so suggestions read its first 20,000
+						characters. The whole text is saved.
+					</Trans>
+				</Text>
+			) : null}
 
 			{status === "results" && notes.includes("url_not_read") ? (
 				<Text size="xs" c="dimmed" {...testId("setup-suggestions-url-note")}>

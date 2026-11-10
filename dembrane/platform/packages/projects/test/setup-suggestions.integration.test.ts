@@ -199,6 +199,18 @@ run("setup suggestions", () => {
     expect(lastPayer()).toEqual({ ref: "workspace", id: w.ws });
   });
 
+  test("a pasted agenda in the project context (up to 20,000 characters) is read as the description", async () => {
+    const w = await workspace();
+    const agenda = `${AGENDA}\n${"Welkom en koffie. ".repeat(1_000)}`.slice(0, 20_000);
+    answer = () =>
+      JSON.stringify({ key_terms: [{ term: "Klokgebouw", reason: "De locatie." }], settings: [] });
+    const res = await ask(w, { description: agenda });
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { key_terms: unknown[] }).key_terms).toEqual([
+      { term: "Klokgebouw", reason: "De locatie.", source: "description" },
+    ]);
+  });
+
   test("an empty answer is a valid answer", async () => {
     const w = await workspace();
     const res = await ask(w, { description: "Een gesprek" });
@@ -381,6 +393,7 @@ run("setup suggestions", () => {
     const w = await workspace();
     expect((await ask(w, { template_key: "festival" })).status).toBe(422);
     expect((await ask(w, { source_text: "x".repeat(20_001) })).status).toBe(422);
+    expect((await ask(w, { description: "x".repeat(20_001) })).status).toBe(422);
     expect(completer.calls).toHaveLength(0);
   });
 

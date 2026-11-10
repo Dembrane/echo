@@ -21,8 +21,8 @@ export const ProjectContextInput = forwardRef<
 	return (
 		<Textarea
 			label={t`Project context`}
-			description={t`What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question.`}
-			placeholder={t`What are you trying to learn?`}
+			description={t`Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms.`}
+			placeholder={t`What is it about, who takes part and where? You can also paste the agenda or the invitation.`}
 			minRows={3}
 			autosize
 			{...props}

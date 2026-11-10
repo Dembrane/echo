@@ -93,8 +93,8 @@ async function setVisibility(projectId: string, visibility: Access) {
  * "Start blank". A ?template=<key> link (workspace home's picker) arrives on step 2 with
  * that template chosen.
  *
- * Step 2 "Name": name, the optional project context and the optional "Tell dembrane about
- * your session" (setup suggestions: key terms and settings to accept), then Create. Key terms, access,
+ * Step 2 "Name": name and the optional project context, with "Suggest key terms" under it
+ * (setup suggestions from the context: key terms and settings to accept), then Create. Key terms, access,
  * the assistant switch and the review sit behind "More options", with the defaults they
  * always had: no key terms, open to the workspace, assistant off.
  *
@@ -398,27 +398,30 @@ export const CreateProjectRoute = () => {
 								}}
 							/>
 
-							<ProjectContextInput
-								value={context}
-								onChange={(e) => setContext(e.currentTarget.value)}
-							/>
-
-							{/* Optional and never in the way: Create stays enabled while it
-							    runs, and accepted terms land in the key terms below. */}
-							<LazySessionBrief
-								workspaceId={workspaceId ?? null}
-								templateKey={template ?? "blank"}
-								name={name}
-								description={context}
-								language={projectLanguageForLocale(language)}
-								keyTerms={keyTerms}
-								onKeyTermsChange={setKeyTerms}
-								overrides={overrides}
-								onOverridesChange={setOverrides}
-								onResult={(result) => {
-									suggestedRef.current = result;
-								}}
-							/>
+							{/* One field: the context is saved with the project and is what
+							    "Suggest key terms" reads. Optional and never in the way: Create
+							    stays enabled while it runs, and accepted terms land in the key
+							    terms under "More options". */}
+							<Stack gap="xs">
+								<ProjectContextInput
+									value={context}
+									onChange={(e) => setContext(e.currentTarget.value)}
+								/>
+								<LazySessionBrief
+									workspaceId={workspaceId ?? null}
+									templateKey={template ?? "blank"}
+									name={name}
+									description={context}
+									language={projectLanguageForLocale(language)}
+									keyTerms={keyTerms}
+									onKeyTermsChange={setKeyTerms}
+									overrides={overrides}
+									onOverridesChange={setOverrides}
+									onResult={(result) => {
+										suggestedRef.current = result;
+									}}
+								/>
+							</Stack>
 
 							<Stack gap="xs">
 								<Button

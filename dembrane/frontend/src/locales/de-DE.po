@@ -244,12 +244,12 @@ msgid "(direct workspace access)"
 msgstr "(direkter Arbeitsbereichszugriff)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
-#: src/routes/project/CreateProjectRoute.tsx:528
+#: src/routes/project/CreateProjectRoute.tsx:531
 msgid "(missing)"
 msgstr "(fehlt)"
 
-#: src/routes/project/CreateProjectRoute.tsx:534
 #: src/routes/project/CreateProjectRoute.tsx:537
+#: src/routes/project/CreateProjectRoute.tsx:540
 msgid "(none)"
 msgstr "(keine)"
 
@@ -1141,7 +1141,7 @@ msgstr "{sent} Einladungen gesendet. Das Projekt wird beim Beitritt geteilt."
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} Einladungen gesendet."
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:224
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:248
 msgid "{settings, plural, one {# setting suggested.} other {# settings suggested.}}"
 msgstr "{settings, plural, one {# Einstellung vorgeschlagen.} other {# Einstellungen vorgeschlagen.}}"
 
@@ -1157,7 +1157,7 @@ msgstr "{stored} Min."
 msgid "{tag} (preselected)"
 msgstr "{tag} (vorausgewählt)"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:218
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:242
 msgid "{terms, plural, one {# key term suggested.} other {# key terms suggested.}}"
 msgstr "{terms, plural, one {# Schlüsselbegriff vorgeschlagen.} other {# Schlüsselbegriffe vorgeschlagen.}}"
 
@@ -1513,10 +1513,6 @@ msgstr "Zur vorgeschlagenen Projektaktualisierung: {hostNote}"
 msgid "About you"
 msgstr "Über Sie"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:100
-msgid "About your session"
-msgstr "Über Ihre Sitzung"
-
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:718
 msgid "Accept"
 msgstr "Akzeptieren"
@@ -1542,7 +1538,7 @@ msgstr "Bedingungen akzeptiert"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
-#: src/routes/project/CreateProjectRoute.tsx:542
+#: src/routes/project/CreateProjectRoute.tsx:545
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
 #: src/components/project/ProjectUsageAndSharing.tsx:217
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -1730,6 +1726,10 @@ msgstr "{0} zu {1} als <0>{2}</0> hinzufügen?"
 #: src/components/release/releaseHistory.ts:587
 msgid "Add a conversation directly to chat context."
 msgstr "Gespräch direkt zum Chat-Kontext hinzufügen."
+
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:124
+msgid "Add a link"
+msgstr "Link hinzufügen"
 
 #: src/components/project/ProjectUsageAndSharing.tsx:280
 msgid "Add a member and pick their access."
@@ -3076,7 +3076,7 @@ msgstr "Abwesend"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/CreateProjectRoute.tsx:588
+#: src/routes/project/CreateProjectRoute.tsx:591
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:685
 #: src/routes/organisation/OrganisationRoute.tsx:708
@@ -5104,7 +5104,7 @@ msgid "Create password"
 msgstr "Passwort erstellen"
 
 #: src/routes/project/CreateProjectRoute.tsx:336
-#: src/routes/project/CreateProjectRoute.tsx:580
+#: src/routes/project/CreateProjectRoute.tsx:583
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:194
@@ -5641,9 +5641,17 @@ msgstr "Ablehnen"
 #~ msgid "Describe the issue"
 #~ msgstr "Beschreiben Sie das Problem"
 
+#: src/components/project/setup-suggestions/SuggestKeyTerms/SuggestKeyTermsConnected.tsx:66
+msgid "Describe the session in the <0>project context</0> first, and dembrane suggests key terms from it."
+msgstr "Beschreiben Sie die Sitzung zuerst im <0>Projektkontext</0>, dann schlägt dembrane daraus Schlüsselbegriffe vor."
+
 #: src/components/project/CustomTopicModal.tsx:217
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschreiben Sie, was die Sprachmodell aus dem Gespräch extrahieren oder zusammenfassen soll..."
+
+#: src/components/project/setup-suggestions/SessionBrief/SessionBriefConnected.tsx:65
+msgid "Describe your session in the project context, or add a link, and dembrane suggests key terms."
+msgstr "Beschreiben Sie Ihre Sitzung im Projektkontext oder fügen Sie einen Link hinzu, dann schlägt dembrane Schlüsselbegriffe vor."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1578
 #: src/routes/organisation/OrganisationRoute.tsx:1140
@@ -6521,7 +6529,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Jeder kann ihn finden. Administratoren treten direkt bei; Mitglieder können anfragen."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:474
+#: src/routes/project/CreateProjectRoute.tsx:477
 msgid "Everyone in {0} can find and open this project."
 msgstr "Jeder in {0} kann dieses Projekt finden und öffnen."
 
@@ -7624,7 +7632,7 @@ msgstr "Zum Portal-Editor"
 msgid "Go to previous release notes"
 msgstr "Zu früheren Versionshinweisen"
 
-#: src/routes/project/CreateProjectRoute.tsx:556
+#: src/routes/project/CreateProjectRoute.tsx:559
 msgid "Go to project home"
 msgstr "Zur Projekt-Startseite"
 
@@ -7636,7 +7644,7 @@ msgstr "Zum Bericht"
 msgid "Go to settings"
 msgstr "Zu den Einstellungen"
 
-#: src/routes/project/CreateProjectRoute.tsx:554
+#: src/routes/project/CreateProjectRoute.tsx:557
 msgid "Go to the upload page"
 msgstr "Zur Upload-Seite"
 
@@ -8141,7 +8149,7 @@ msgstr "von der Organisation geerbt"
 msgid "Initial"
 msgstr "Initial"
 
-#: src/routes/project/CreateProjectRoute.tsx:495
+#: src/routes/project/CreateProjectRoute.tsx:498
 msgid "Innovator or higher"
 msgstr "Innovator oder höher"
 
@@ -8673,8 +8681,8 @@ msgstr "Arbeiten Sie weiter, während Audio im Hintergrund hochgeladen wird."
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Behält den Tarif bis zum unten stehenden Datum, danach wird auf Free zurückgesetzt, sofern kein Abonnement abgeschlossen wird."
 
-#: src/routes/project/CreateProjectRoute.tsx:450
-#: src/routes/project/CreateProjectRoute.tsx:536
+#: src/routes/project/CreateProjectRoute.tsx:453
+#: src/routes/project/CreateProjectRoute.tsx:539
 #: src/components/project/ProjectPortalEditor.tsx:136
 #: src/components/project/KeyTermsInput.tsx:89
 #: src/components/common/settingChange.tsx:24
@@ -8937,7 +8945,7 @@ msgstr "Link"
 msgid "Link copied"
 msgstr "Link kopiert"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:110
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:133
 msgid "Link to a page about it"
 msgstr "Link zu einer Seite darüber"
 
@@ -9710,7 +9718,7 @@ msgstr "Weitere Aktionen"
 msgid "More dependable anonymisation and recording"
 msgstr "Zuverlässiger anonymisieren und aufnehmen"
 
-#: src/routes/project/CreateProjectRoute.tsx:440
+#: src/routes/project/CreateProjectRoute.tsx:443
 msgid "More options"
 msgstr "Weitere Optionen"
 
@@ -9841,7 +9849,7 @@ msgstr "Meine Vorlagen"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
 #: src/routes/project/CreateProjectRoute.tsx:381
-#: src/routes/project/CreateProjectRoute.tsx:527
+#: src/routes/project/CreateProjectRoute.tsx:530
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:124
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:372
@@ -10859,7 +10867,7 @@ msgstr "Nichts voreingestellt. Sie wählen jede Einstellung selbst."
 msgid "Nothing to fill in before recording"
 msgstr "Vor der Aufnahme ist nichts auszufüllen"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:164
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:176
 msgid "Nothing to suggest from this. Names, places and abbreviations help most."
 msgstr "Daraus ergibt sich kein Vorschlag. Namen, Orte und Abkürzungen helfen am meisten."
 
@@ -11076,7 +11084,7 @@ msgstr "Nur Personen, die Sie hinzufügen oder einladen, können dies sehen."
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Nur bei Erfassung einer Rechnung, die bereits anderweitig bezahlt wurde."
 
-#: src/routes/project/CreateProjectRoute.tsx:500
+#: src/routes/project/CreateProjectRoute.tsx:503
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Nur Arbeitsbereichs-Administratoren und von Ihnen eingeladene Personen können dieses Projekt öffnen."
 
@@ -11250,8 +11258,8 @@ msgstr "Öffnen Sie diese Seite über das Menü der App in {browserName} oder ko
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Öffnen Sie diese Seite über das Menü der App in Ihrem Browser oder kopieren Sie den Link."
 
-#: src/routes/project/CreateProjectRoute.tsx:471
-#: src/routes/project/CreateProjectRoute.tsx:544
+#: src/routes/project/CreateProjectRoute.tsx:474
+#: src/routes/project/CreateProjectRoute.tsx:547
 msgid "Open to the workspace"
 msgstr "Für den Arbeitsbereich freigeben"
 
@@ -11327,13 +11335,9 @@ msgstr "Optionales Feld auf der Startseite"
 msgid "Optional field on the thank you page"
 msgstr "Optionales Feld auf der Danksagungsseite"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:111
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:134
 msgid "Optional. An invitation or project page; dembrane reads it once."
 msgstr "Optional. Eine Einladung oder Projektseite; dembrane liest sie einmal."
-
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:93
-msgid "Optional. dembrane suggests the names and words transcription should spell right, and any settings worth changing."
-msgstr "Optional. dembrane schlägt die Namen und Wörter vor, die die Transkription richtig schreiben soll, und Einstellungen, die sich zu ändern lohnen."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1579
 msgid "Optional. What this workspace is for."
@@ -12386,8 +12390,8 @@ msgstr "URL der Datenschutzerklärung"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1947
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
-#: src/routes/project/CreateProjectRoute.tsx:491
-#: src/routes/project/CreateProjectRoute.tsx:546
+#: src/routes/project/CreateProjectRoute.tsx:494
+#: src/routes/project/CreateProjectRoute.tsx:549
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
 #: src/components/sharing/StatusLine.tsx:93
@@ -12478,7 +12482,7 @@ msgstr "Projektkarten zeigen die Sprache des Projekts an."
 msgid "project chats"
 msgstr "Projekt-Chats"
 
-#: src/routes/project/CreateProjectRoute.tsx:531
+#: src/routes/project/CreateProjectRoute.tsx:534
 #: src/components/project/ProjectContextInput.tsx:23
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
@@ -12868,7 +12872,7 @@ msgstr "Gespräche noch einmal lesen"
 msgid "Reading the documentation"
 msgstr "Dokumentation lesen"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:144
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:156
 msgid "Reading what you wrote…"
 msgstr "Ihr Text wird gelesen…"
 
@@ -14175,6 +14179,10 @@ msgstr "Speichern..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Sagen Sie es mit Ihren eigenen Worten. Tippen Sie, oder drücken Sie auf Aufnahme und sprechen Sie."
 
+#: src/components/project/ProjectContextInput.tsx:24
+msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
+msgstr "Sagen Sie, worum es in der Sitzung geht, wer teilnimmt und wo; Sie können eine Tagesordnung oder Einladung einfügen. dembrane nutzt das, damit Chat-Antworten, Antworten an Teilnehmende und Popcorn bei Ihrer Frage bleiben, und um Schlüsselbegriffe vorzuschlagen."
+
 #: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "QR-Code scannen oder anklicken, um das Feedback-Portal zu öffnen"
@@ -14821,7 +14829,7 @@ msgstr "Auf verwaltete Abrechnung setzen"
 msgid "Set up a new webhook from scratch"
 msgstr "Einen neuen Webhook von Grund auf einrichten"
 
-#: src/routes/project/CreateProjectRoute.tsx:517
+#: src/routes/project/CreateProjectRoute.tsx:520
 msgid "Set up with the assistant after creating"
 msgstr "Nach dem Erstellen mit dem Assistenten einrichten"
 
@@ -14890,7 +14898,7 @@ msgstr "Einstellungen zum Ändern"
 msgid "Settings updated"
 msgstr "Einstellungen aktualisiert"
 
-#: src/routes/project/CreateProjectRoute.tsx:550
+#: src/routes/project/CreateProjectRoute.tsx:553
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Setup"
 msgstr "Einrichtung"
@@ -15608,7 +15616,7 @@ msgstr "Leer beginnen"
 msgid "Start fresh"
 msgstr "Neu starten"
 
-#: src/routes/project/CreateProjectRoute.tsx:552
+#: src/routes/project/CreateProjectRoute.tsx:555
 msgid "Start in assistant chat"
 msgstr "Im Assistenten-Chat starten"
 
@@ -15818,7 +15826,7 @@ msgstr "Benachrichtigungen zu Berichten abonnieren."
 msgid "Success"
 msgstr "Erfolg"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:133
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:103
 msgid "Suggest again"
 msgstr "Erneut vorschlagen"
 
@@ -15826,11 +15834,11 @@ msgstr "Erneut vorschlagen"
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische Vorschläge basierend auf Ihrem Gespräch vorschlagen."
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:135
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:105
 msgid "Suggest key terms"
 msgstr "Schlüsselbegriffe vorschlagen"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:82
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:88
 msgid "Suggested key terms"
 msgstr "Vorgeschlagene Schlüsselbegriffe"
 
@@ -15874,11 +15882,11 @@ msgstr "Tag-Änderungen werden vorgeschlagen"
 msgid "Suggestions"
 msgstr "Vorschläge"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:155
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:167
 msgid "Suggestions are not available right now. You can add key terms yourself."
 msgstr "Vorschläge sind gerade nicht verfügbar. Sie können Schlüsselbegriffe selbst hinzufügen."
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:150
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:162
 msgid "Suggestions are not available right now. You can create the project without them."
 msgstr "Vorschläge sind gerade nicht verfügbar. Sie können das Projekt auch ohne sie erstellen."
 
@@ -16094,10 +16102,6 @@ msgstr "Aufgaben"
 #~ msgid "Technical lineage"
 #~ msgstr ""
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:90
-msgid "Tell dembrane about your session"
-msgstr "Erzählen Sie dembrane von Ihrer Sitzung"
-
 #: src/routes/admin/AdminSettingsRoute.tsx:1159
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr "Teilen Sie den Administratoren des Arbeitsbereichs mit, wofür Sie Zugriff benötigen. Diese Notiz ist optional."
@@ -16109,7 +16113,7 @@ msgid "Tell us what you need"
 msgstr "Sagen Sie uns, was Sie benötigen"
 
 #: src/routes/project/CreateProjectRoute.tsx:352
-#: src/routes/project/CreateProjectRoute.tsx:524
+#: src/routes/project/CreateProjectRoute.tsx:527
 msgid "Template"
 msgstr "Vorlage"
 
@@ -16497,7 +16501,7 @@ msgstr "Das Layout konnte für diesen Bereich nicht berechnet werden."
 msgid "The Library gains clearer views of recurring themes, available on request."
 msgstr "Die Bibliothek bietet jetzt klarere Ansichten wiederkehrender Themen, auf Anfrage verfügbar."
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:177
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:201
 msgid "The link could not be read, so these come from what you wrote."
 msgstr "Der Link konnte nicht gelesen werden, daher stammen diese aus Ihrem Text."
 
@@ -17415,7 +17419,7 @@ msgstr "Wählen Sie alle relevanten Optionen aus"
 msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Haken Sie an, was Sie möchten. Der Rest bleibt, wie die Vorlage es einstellt."
 
-#: src/routes/project/CreateProjectRoute.tsx:560
+#: src/routes/project/CreateProjectRoute.tsx:563
 #: src/routes/admin/AdminSettingsRoute.tsx:1576
 #: src/routes/admin/AdminSettingsRoute.tsx:2603
 #: src/routes/admin/AdminSettingsRoute.tsx:3025
@@ -19064,8 +19068,8 @@ msgid "What are you going to do?"
 msgstr "Was haben Sie vor?"
 
 #: src/components/project/ProjectContextInput.tsx:25
-msgid "What are you trying to learn?"
-msgstr "Was möchten Sie herausfinden?"
+#~ msgid "What are you trying to learn?"
+#~ msgstr "Was möchten Sie herausfinden?"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "What data is sent?"
@@ -19101,7 +19105,7 @@ msgstr "Was gesendet wird"
 msgid "What is at stake here"
 msgstr "Was hier auf dem Spiel steht"
 
-#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:101
+#: src/components/project/ProjectContextInput.tsx:25
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "Worum geht es, wer nimmt teil und wo? Sie können auch die Tagesordnung oder die Einladung einfügen."
 
@@ -19138,8 +19142,8 @@ msgid "What this person or group told us, in their own words."
 msgstr "Was uns diese Person oder Gruppe erzählt hat, in ihren eigenen Worten."
 
 #: src/components/project/ProjectContextInput.tsx:24
-msgid "What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question."
-msgstr "Worum es in diesem Projekt geht und was Sie herausfinden möchten. dembrane nutzt dies, um Chat-Antworten, Rückmeldungen an Teilnehmer und Popcorn auf Ihre Fragestellung auszurichten."
+#~ msgid "What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question."
+#~ msgstr "Worum es in diesem Projekt geht und was Sie herausfinden möchten. dembrane nutzt dies, um Chat-Antworten, Rückmeldungen an Teilnehmer und Popcorn auf Ihre Fragestellung auszurichten."
 
 #: src/components/project/ProjectUsageAndSharing.tsx:438
 msgid "What this project is consuming this cycle."
@@ -19296,7 +19300,7 @@ msgstr "Während gesprochen wird, erscheint der Text Stück für Stück."
 msgid "Who can see and collaborate on this project."
 msgstr "Wer dieses Projekt sehen und daran mitwirken kann."
 
-#: src/routes/project/CreateProjectRoute.tsx:460
+#: src/routes/project/CreateProjectRoute.tsx:463
 #: src/components/project/ProjectSharingModal.tsx:283
 msgid "Who can see this project?"
 msgstr "Wer kann dieses Projekt sehen?"
@@ -19410,7 +19414,7 @@ msgstr "Antwort wird erstellt..."
 #~ msgid "workspace"
 #~ msgstr "Arbeitsbereich"
 
-#: src/routes/project/CreateProjectRoute.tsx:539
+#: src/routes/project/CreateProjectRoute.tsx:542
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/routes/admin/AdminSettingsRoute.tsx:2230
 #: src/features/sidebar/hooks/useSearchHits.ts:166
@@ -19596,7 +19600,7 @@ msgstr "Sie sind Dateneigentümer"
 msgid "You can change this anytime in settings."
 msgstr "Sie können dies jederzeit in den Einstellungen ändern."
 
-#: src/routes/project/CreateProjectRoute.tsx:461
+#: src/routes/project/CreateProjectRoute.tsx:464
 msgid "You can change this later in project settings."
 msgstr "Sie können dies später in den Projekteinstellungen ändern."
 
@@ -19831,7 +19835,7 @@ msgstr "Sie werden als Administrator zu {singleName} hinzugefügt. Der Arbeitsbe
 msgid "You'll find all your projects waiting for you."
 msgstr "Alle Ihre Projekte warten bereits auf Sie."
 
-#: src/routes/project/CreateProjectRoute.tsx:518
+#: src/routes/project/CreateProjectRoute.tsx:521
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Sie landen in einem Chat, in dem dembrane Ihnen hilft, das Projekt zu gestalten, bevor Sie Gespräche aufnehmen."
 
@@ -20189,6 +20193,10 @@ msgstr "Ihr Tarif wird nicht verlängert. Sie behalten den Zugriff bis zum Ende 
 #: src/components/workspace/FeatureGate.tsx:378
 msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
 msgstr "Ihre Portale funktionieren weiter, und nichts, was Ihre Teilnehmenden sagen, geht verloren. Sobald Sie einen kostenpflichtigen Tarif haben, wird alles bereits Aufgenommene nachträglich transkribiert."
+
+#: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:192
+msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
+msgstr "Ihr Projektkontext ist lang, daher lesen die Vorschläge die ersten 20.000 Zeichen. Der ganze Text wird gespeichert."
 
 #: src/routes/project/ProjectsHome.tsx:314
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."

@@ -53,7 +53,8 @@ export function useSuggestionBlock(o: {
 				setRemoved(new Set());
 				o.onResult?.(data);
 				track("project_setup_ai_suggested", {
-					has_text: Boolean(body.source_text?.trim()),
+					// The project context had content (it is the only text a host gives).
+					has_text: Boolean(body.description?.trim()),
 					has_url: Boolean(body.source_url?.trim()),
 					settings_proposed: data.settings.length,
 					surface: o.surface,

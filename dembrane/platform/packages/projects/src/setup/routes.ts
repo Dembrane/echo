@@ -29,7 +29,9 @@ const { model, optional, nullable, required, str, list, bool } = p;
 export const SuggestionBody = model({
   template_key: required(str({ min: 1, max: 64 })),
   name: required(str({ max: 255 })),
-  description: optional(nullable(str({ max: 4_000 })), null),
+  // The project context, which hosts paste agendas into: the create flow sends its first
+  // 20,000 characters; the saved context itself has no limit.
+  description: optional(nullable(str({ max: 20_000 })), null),
   source_text: optional(nullable(str({ max: 20_000 })), null),
   source_url: optional(nullable(str({ max: 2_000 })), null),
   language: optional(str({ max: 16 }), "en"),
