@@ -139,7 +139,7 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Als organisatiebeheerder kun je direct lid worden van deze werkruimte, zonder verzoek."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:138
 msgid "error.project.share_role_cannot_access"
 msgstr "Facturatieleden kunnen geen projecten openen. Geef ze eerst een andere rol."
 
@@ -229,7 +229,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Voer tekst in voor {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_needs_private"
 msgstr "Iedereen in de werkruimte kan dit project al zien. Maak het eerst privé om het met individuele personen te delen."
 
@@ -434,12 +434,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen de rechtsgrond van dit project wijzigen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:148
+#: src/lib/errors/messages/project.ts:153
 msgid "error.project.visibility_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen wijzigen wie dit project kan zien."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:120
 msgid "error.project.share_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
 
@@ -554,7 +554,7 @@ msgid "error.project.move_none_selected"
 msgstr "Selecteer minstens één project om te verplaatsen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:143
 msgid "error.project.sharing_tier_required"
 msgstr "Om een privéproject met mensen te delen heb je het {tier}-abonnement of hoger nodig."
 
@@ -614,6 +614,11 @@ msgid "error.internal.unexpected"
 msgstr "Er ging iets mis aan onze kant. Probeer het zo meteen opnieuw."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Suggesties zijn nu niet beschikbaar. Je kunt zonder verder."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Die code werkte niet. Voer de huidige code uit je authenticator-app in."
@@ -634,7 +639,7 @@ msgid "error.account.credentials_invalid"
 msgstr "Dat wachtwoord klopt niet. Controleer het en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.template_unknown"
 msgstr "Dat projectsjabloon bestaat niet. Laad de pagina opnieuw en kies er nog een keer een."
 
@@ -1014,7 +1019,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Deze persoon is geen lid van deze werkruimte. Vernieuw de pagina om de huidige lijst te zien."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_member"
 msgstr "Deze persoon zit nog niet in de werkruimte. Nodig diegene eerst uit voor de werkruimte."
 
@@ -1069,7 +1074,7 @@ msgid "error.project.no_transcripts"
 msgstr "Dit project heeft nog geen transcripten."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:129
 msgid "error.project.share_not_found"
 msgstr "Dit project wordt niet meer met die persoon gedeeld."
 

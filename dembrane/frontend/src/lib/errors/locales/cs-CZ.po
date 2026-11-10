@@ -139,7 +139,7 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Jako správce organizace se můžete k tomuto pracovnímu prostoru připojit přímo, bez žádosti."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:138
 msgid "error.project.share_role_cannot_access"
 msgstr "Členové s rolí pro fakturaci nemohou otevírat projekty. Nejprve jim přiřaďte jinou roli."
 
@@ -229,7 +229,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Zadejte text pro pole {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_needs_private"
 msgstr "Tento projekt už vidí všichni v pracovním prostoru. Chcete-li ho sdílet jen s konkrétními lidmi, nastavte ho nejprve jako soukromý."
 
@@ -434,12 +434,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Právní základ tohoto projektu mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:148
+#: src/lib/errors/messages/project.ts:153
 msgid "error.project.visibility_admin_only"
 msgstr "To, kdo tento projekt uvidí, mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:120
 msgid "error.project.share_admin_only"
 msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
@@ -554,7 +554,7 @@ msgid "error.project.move_none_selected"
 msgstr "Vyberte alespoň jeden projekt k přesunutí."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:143
 msgid "error.project.sharing_tier_required"
 msgstr "Sdílení soukromého projektu s lidmi vyžaduje tarif {tier} nebo vyšší."
 
@@ -614,6 +614,11 @@ msgid "error.internal.unexpected"
 msgstr "Na naší straně došlo k chybě. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Návrhy teď nejsou k dispozici. Můžete pokračovat i bez nich."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Tento kód nefungoval. Zadejte aktuální kód z vaší ověřovací aplikace."
@@ -634,7 +639,7 @@ msgid "error.account.credentials_invalid"
 msgstr "Toto heslo není správné. Zkontrolujte ho a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.template_unknown"
 msgstr "Tato šablona projektu neexistuje. Načtěte stránku znovu a vyberte si ji ještě jednou."
 
@@ -1014,7 +1019,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Tato osoba není členem tohoto pracovního prostoru. Obnovte stránku a zobrazí se aktuální seznam."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_member"
 msgstr "Tato osoba v pracovním prostoru ještě není. Nejprve ji do něj pozvěte."
 
@@ -1069,7 +1074,7 @@ msgid "error.project.no_transcripts"
 msgstr "Tento projekt zatím nemá žádné přepisy."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:129
 msgid "error.project.share_not_found"
 msgstr "Tento projekt už s touto osobou není sdílen."
 
