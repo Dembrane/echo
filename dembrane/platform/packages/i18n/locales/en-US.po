@@ -884,6 +884,34 @@ msgid "email.account_task_reminder.body"
 msgstr "One step on the {org_name} account is still waiting for you:"
 
 #. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.subject"
+msgstr "Changes to dembrane's sub-processors"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.heading"
+msgstr "We're changing our sub-processors"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.body"
+msgstr "From {effective_date}, dembrane hosts the platform and runs AI processing (analysis and speech-to-text) with Scaleway, in the EU (Amsterdam and Paris). Google Cloud Vertex AI is then only used for organisations that choose it. DigitalOcean and Twilio SendGrid stay as they are. The updated list is in Annex III of our Data Processing Agreement."
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.objection"
+msgstr "Under article 9.2 of the DPA you can object in writing, with reasonable grounds, until {objection_deadline}. Reply to this email to do so. If you have no objection, you don't need to do anything."
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.cta"
+msgstr "Read the DPA"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.text_cta"
+msgstr "Read the DPA:"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.footer_many"
+msgstr "You're getting this because you manage the accounts of {org_names} on dembrane."
+
+#. js-lingui-explicit-id
 msgid "ticket.invoice_delivery.subject"
 msgstr "How we receive invoices"
 

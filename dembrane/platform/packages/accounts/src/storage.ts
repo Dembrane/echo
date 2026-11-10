@@ -51,6 +51,24 @@ export const store = {
     return row ?? null;
   },
 
+  /**
+   * Every live organisation, by name: not deleted, and not one staff are still building
+   * a demo in (an unpublished account_demo, whose contact is held and no member yet).
+   */
+  async liveOrgs(c: Conn): Promise<{ id: string; name: string }[]> {
+    return c
+      .select({ id: org.id, name: org.name })
+      .from(org)
+      .where(
+        and(
+          isNull(org.deleted_at),
+          sql`not exists (select 1 from account_demo d
+            where d.org_id = ${org.id} and d.published_at is null)`,
+        ),
+      )
+      .orderBy(asc(org.name), asc(org.id));
+  },
+
   async insertOrg(c: Conn, row: typeof org.$inferInsert) {
     await c.insert(org).values(row);
   },

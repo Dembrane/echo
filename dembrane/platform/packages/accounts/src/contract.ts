@@ -1281,6 +1281,66 @@ export const SendMessageResponse = z.object({
   messages: z.array(RenderedMessage),
 });
 
+/**
+ * dembrane's notice of a change to its sub-processors (DPA article 9.2), to the people who
+ * run every live organisation, each in Dutch or English. Three steps, each its own call:
+ *
+ * - `dry_run` (the default) sends nothing: who would get it, how many in each language, and
+ *   both versions rendered.
+ * - `dry_run: false` with `test_to` sends the Dutch and the English version to that one
+ *   address only, with sample organisation names.
+ * - `dry_run: false` without `test_to` sends to everyone. It needs `confirm` to read
+ *   exactly SUBPROCESSOR_NOTICE_CONFIRM and a `reply_to`, since objections arrive as
+ *   replies. One email per address and effective date: a repeat queues nothing new.
+ *
+ * Only a signed-in person sends; a staff key gets the dry run only (403
+ * `staff.key_cannot_email`).
+ */
+export const SUBPROCESSOR_NOTICE_CONFIRM = "send to all accounts";
+/** "2026-12-11" is a day; "2026-02-31" is not. */
+const realDay = (iso: string) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso;
+};
+export const SubprocessorNoticeRequest = z
+  .object({
+    dry_run: z.boolean().default(true),
+    test_to: nullish(z.email().max(255)),
+    effective_date: IsoDate,
+    objection_deadline: IsoDate,
+    reply_to: nullish(z.email().max(255)),
+    confirm: nullish(z.string().max(100)),
+  })
+  .refine((m) => realDay(m.effective_date), { message: "Not a date", path: ["effective_date"] })
+  .refine((m) => realDay(m.objection_deadline), {
+    message: "Not a date",
+    path: ["objection_deadline"],
+  })
+  .refine((m) => m.dry_run || m.test_to || m.confirm === SUBPROCESSOR_NOTICE_CONFIRM, {
+    message: `A send to all accounts needs confirm: "${SUBPROCESSOR_NOTICE_CONFIRM}"`,
+    path: ["confirm"],
+  })
+  .refine((m) => m.dry_run || m.test_to || m.reply_to, {
+    message: "A send to all accounts needs reply_to: objections arrive as replies",
+    path: ["reply_to"],
+  });
+export const NoticeLanguage = z.enum(["nl-NL", "en-US"]);
+export const NoticeRecipient = z.object({
+  to: z.string(),
+  language: NoticeLanguage,
+  /** The organisations this person runs; the email names them all. */
+  orgs: z.array(z.string()),
+});
+export const SubprocessorNoticeResponse = z.object({
+  /** Emails handed to the queue: 0 on a dry run, 2 on a test send. */
+  queued: z.number().int(),
+  /** The audience: everyone, or the test send's two emails. */
+  counts: z.object({ nl: z.number().int(), en: z.number().int(), total: z.number().int() }),
+  recipients: z.array(NoticeRecipient),
+  /** The Dutch and the English email, with sample organisation names. */
+  samples: z.array(RenderedMessage),
+});
+
 export const DocumentFields = z.object({
   document_id: Uuid,
   status: DocumentStatus,
@@ -1800,6 +1860,14 @@ export const ROUTES = {
     permission: "staff:accounts",
     request: SendMessageRequest,
     response: SendMessageResponse,
+  },
+  /** The sub-processor change notice to every account: see SubprocessorNoticeRequest. */
+  sendSubprocessorNotice: {
+    method: "POST",
+    path: `${S}/notices/subprocessors`,
+    permission: "staff:accounts",
+    request: SubprocessorNoticeRequest,
+    response: SubprocessorNoticeResponse,
   },
   upsertInvoice: {
     method: "PUT",

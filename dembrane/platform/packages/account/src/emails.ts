@@ -49,6 +49,7 @@ export type EmailTemplate =
   | { readonly template: "account_signed_copy"; readonly data: SignedCopyData }
   | { readonly template: "account_document_withdrawn"; readonly data: DocumentWithdrawnData }
   | { readonly template: "account_task_reminder"; readonly data: TaskReminderData }
+  | { readonly template: "account_subprocessor_notice"; readonly data: SubprocessorNoticeData }
   | {
       readonly template: "report_published";
       readonly data: {
@@ -124,6 +125,21 @@ export interface TaskReminderData extends ManagerMessageData {
   task_body?: string;
 }
 
+/**
+ * dembrane's notice of a change to its sub-processors (DPA article 9.2), to the people who
+ * run each account: a service notice, not a promotion. Values are strings because the job
+ * carries them as such.
+ */
+export interface SubprocessorNoticeData {
+  /** The organisations the reader runs, one name per line: one email per person. */
+  org_names: string;
+  /** ISO dates ("2026-12-11"), written out in the reader's language. */
+  effective_date: string;
+  objection_deadline: string;
+  /** The DPA on dembrane.com in the reader's language. */
+  dpa_url: string;
+}
+
 /** The subject line of a catalog email in `locale`; null for "plain", whose caller writes it. */
 export function subjectOf(t: EmailTemplate, locale?: string | null): string | null {
   const tr = translator(locale);
@@ -159,6 +175,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
         org_name: t.data.org_name,
         task_title: t.data.task_title,
       });
+    case "account_subprocessor_notice":
+      return tr("email.account_subprocessor_notice.subject");
     case "report_published":
       return tr("email.report_published.subject");
     case "plain":
@@ -173,6 +191,10 @@ const utcTime = (iso: string) => {
     ? iso
     : `${at.toISOString().slice(0, 16).replace("T", " ")} UTC`;
 };
+
+/** "A, B and C" in the reader's language ("A, B en C" in Dutch). */
+const listOf = (items: readonly string[], locale: string) =>
+  new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(items);
 
 /** Escapes every value, for the parts of the HTML that show values as plain text. */
 const escAll = (d: Readonly<Record<string, string | undefined>>) =>
@@ -459,6 +481,44 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
     case "account_document_withdrawn":
     case "account_task_reminder":
       return managerMessage(t, tr, lang, c);
+    case "account_subprocessor_notice": {
+      // One email per person, naming every organisation they run. Signed by the team;
+      // objections come back as replies, to the address the sender sets as Reply-To.
+      const d = t.data;
+      const k = "email.account_subprocessor_notice";
+      const orgs = d.org_names
+        .split("\n")
+        .map((n) => n.trim())
+        .filter(Boolean);
+      const v = {
+        effective_date: e.day(d.effective_date, lang),
+        objection_deadline: e.day(d.objection_deadline, lang),
+      };
+      const footer =
+        orgs.length > 1
+          ? tr(`${k}.footer_many`, {
+              org_names: esc(listOf(orgs, lang)),
+            })
+          : tr("email.common.footer_account", { org_name: esc(orgs[0] ?? "") });
+      return {
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.heading`),
+          heading: tr(`${k}.heading`),
+          body: `${e.lead(tr(`${k}.body`, escAll(v)))}${e.p(tr(`${k}.objection`, escAll(v)))}`,
+          action: act(tr(`${k}.cta`), d.dpa_url),
+          footer,
+        }),
+        text: emailText([
+          tr(`${k}.heading`),
+          tr(`${k}.body`, v),
+          tr(`${k}.objection`, v),
+          `${tr(`${k}.text_cta`)}\n${d.dpa_url}`,
+          signoff,
+        ]),
+      };
+    }
     case "report_published": {
       // To participants who asked on the portal to hear when the report is published.
       const d = t.data;

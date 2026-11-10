@@ -40,6 +40,7 @@ import {
 import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
+import { sendSubprocessorNotice } from "./notices";
 import { changeOfferTemplate, listOfferTemplates, resetOfferTemplate } from "./offer-template";
 import { acceptOutside, staffEvidence } from "./outside";
 import { createAccount } from "./prospect";
@@ -244,6 +245,12 @@ export function accountsRoutes(d: AccountsDeps) {
     return who;
   };
 
+  // Notices to every account, then offer templates: their paths would otherwise match /:orgId.
+  app.post(R.sendSubprocessorNotice.path, async (c) => {
+    const who = await staff(c, "accounts.notice.send", false);
+    const b = await body(c, K.SubprocessorNoticeRequest);
+    return c.json(await sendSubprocessorNotice(d, who, b));
+  });
   // Offer templates first: their paths would otherwise match /:orgId.
   app.get(R.listOfferTemplates.path, async (c) => {
     await staff(c, "accounts.offer_template.list", false);

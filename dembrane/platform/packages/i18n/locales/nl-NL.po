@@ -879,6 +879,34 @@ msgid "email.account_task_reminder.body"
 msgstr "Er wacht nog een stap op je bij het account van {org_name}:"
 
 #. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.subject"
+msgstr "Wijzigingen in de subverwerkers van dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.heading"
+msgstr "We wijzigen onze subverwerkers"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.body"
+msgstr "Vanaf {effective_date} host dembrane het platform en draait het AI-verwerking (analyse en spraak-naar-tekst) bij Scaleway, in de EU (Amsterdam en Parijs). Google Cloud Vertex AI gebruiken we dan alleen nog voor organisaties die daar zelf voor kiezen. DigitalOcean en Twilio SendGrid blijven zoals ze zijn. De bijgewerkte lijst staat in bijlage III van onze verwerkersovereenkomst."
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.objection"
+msgstr "Volgens artikel 9.2 van de verwerkersovereenkomst kun je tot {objection_deadline} schriftelijk en met redelijke gronden bezwaar maken. Beantwoord deze e-mail om dat te doen. Heb je geen bezwaar, dan hoef je niets te doen."
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.cta"
+msgstr "Lees de verwerkersovereenkomst"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.text_cta"
+msgstr "Lees de verwerkersovereenkomst:"
+
+#. js-lingui-explicit-id
+msgid "email.account_subprocessor_notice.footer_many"
+msgstr "Je krijgt deze e-mail omdat je de accounts van {org_names} op dembrane beheert."
+
+#. js-lingui-explicit-id
 msgid "ticket.invoice_delivery.subject"
 msgstr "Hoe wij facturen ontvangen"
 

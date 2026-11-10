@@ -176,3 +176,40 @@ test("the offer sent email has its own words in every language", () => {
       expect(text, `${locale} ${id}`).not.toBe(english.get(id));
     }
 });
+
+test("the sub-processor notice reads in Dutch and English, dates in the reader's words", () => {
+  const notice = (org_names: string, dpa_url: string) =>
+    ({
+      template: "account_subprocessor_notice",
+      data: {
+        org_names,
+        effective_date: "2026-12-11",
+        objection_deadline: "2026-12-10",
+        dpa_url,
+      },
+    }) as const;
+  const en = notice("Acme & Co", "https://dembrane.com/legal/dpa");
+  expect(subjectOf(en)).toBe("Changes to dembrane's sub-processors");
+  const r = render(en, "en-US");
+  expect(r.text).toStartWith(
+    "We're changing our sub-processors\n\nFrom 11 December 2026, dembrane hosts the platform",
+  );
+  expect(r.text).toContain(
+    "you can object in writing, with reasonable grounds, until 10 December 2026.",
+  );
+  expect(r.text).toContain("Read the DPA:\nhttps://dembrane.com/legal/dpa\n");
+  expect(r.html).toContain('href="https://dembrane.com/legal/dpa"');
+  expect(r.html).toContain("you manage the Acme &amp; Co account on dembrane");
+
+  const nl = notice("Gemeente A\nGemeente B", "https://dembrane.com/nl/legal/dpa");
+  expect(subjectOf(nl, "nl-NL")).toBe("Wijzigingen in de subverwerkers van dembrane");
+  const n = render(nl, "nl-NL");
+  expect(n.text).toContain("Vanaf 11 december 2026 host dembrane het platform");
+  expect(n.text).toContain("kun je tot 10 december 2026 schriftelijk");
+  expect(n.text).toContain("Lees de verwerkersovereenkomst:\nhttps://dembrane.com/nl/legal/dpa\n");
+  expect(n.html).toContain("de accounts van Gemeente A en Gemeente B op dembrane beheert");
+  for (const s of [r.html, r.text, n.html, n.text]) {
+    expect(s).not.toContain(String.fromCharCode(0x2014));
+    expect(s).not.toContain("Dembrane");
+  }
+});
