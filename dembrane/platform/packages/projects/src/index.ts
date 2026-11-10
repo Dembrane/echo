@@ -14,6 +14,7 @@ export {
   parseOverrides,
   projectTemplate,
   templateColumns,
+  templateHostGuide,
   templateTags,
 } from "./project-templates";
 export { PARTICIPANT_EMAIL_FIELDS, PROJECT_UPDATE_FIELDS, sameMoveContext } from "./projects";

@@ -639,6 +639,8 @@ export const PROJECT_UPDATE_FIELDS = [
   "default_conversation_description",
   "default_conversation_finish_text",
   "default_conversation_ask_for_participant_name",
+  // The name box's label (ECHO-1053), at most NAME_LABEL_MAX characters; blank clears it.
+  "conversation_ask_for_participant_name_label",
   "default_conversation_ask_for_participant_email",
   "default_conversation_transcript_prompt",
   "default_conversation_tutorial_slug",
@@ -733,6 +735,10 @@ export async function updateProject(
     }
     Object.assign(payload, legal.payload);
   }
+  // A blank name box label means the portal's own default ("Session name").
+  if (typeof payload.conversation_ask_for_participant_name_label === "string")
+    payload.conversation_ask_for_participant_name_label =
+      payload.conversation_ask_for_participant_name_label.trim() || null;
   // tutorial_slug is accepted by the whitelist but has no column; Directus dropped it too.
   delete payload.tutorial_slug;
   void pa;

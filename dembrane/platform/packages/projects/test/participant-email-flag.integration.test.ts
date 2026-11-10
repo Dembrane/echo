@@ -183,4 +183,26 @@ run("participant email flag and cross-pollination", () => {
     expect(off.status).toBe(200);
     expect(await stored(id)).toMatchObject({ cross: false });
   });
+
+  // ECHO-1053: the name box label is a project setting the PATCH accepts, held to one line.
+  test("the name box label saves trimmed, clears when blank, and is capped", async () => {
+    const id = await project();
+    const label = async () =>
+      (
+        await sql`select conversation_ask_for_participant_name_label as l from project where id = ${id}`
+      )[0]?.l ?? null;
+    const set = await patch("off", id, {
+      conversation_ask_for_participant_name_label: "  Tafel  ",
+    });
+    expect(set.status).toBe(200);
+    expect(await label()).toBe("Tafel");
+    const blank = await patch("off", id, { conversation_ask_for_participant_name_label: "   " });
+    expect(blank.status).toBe(200);
+    expect(await label()).toBeNull();
+    const long = await patch("off", id, {
+      conversation_ask_for_participant_name_label: "x".repeat(81),
+    });
+    expect(long.status).toBe(422);
+    expect(await label()).toBeNull();
+  });
 });
