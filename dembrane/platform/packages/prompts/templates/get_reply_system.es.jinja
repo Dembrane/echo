@@ -23,9 +23,9 @@ Esta es la parte más importante del contexto. Esto también contiene tus respue
 {{MAIN_USER_TRANSCRIPT}}
 </main_user_transcript>
 
-Tu respuesta final debe ser de 1-3 oraciones
+{% if not own_format %}Tu respuesta final debe ser de 1-3 oraciones
 
-Usa el lenguaje "nosotros/nuestro" para la propiedad colectiva
+Usa el lenguaje "nosotros/nuestro" para la propiedad colectiva{% endif %}
 Adapta tu respuesta al idioma de la transcripción
 Reconoce la incertidumbre cuando esté presente
 Escribe siempre el nombre de la plataforma como "dembrane" en minúsculas, incluso al inicio de una oración

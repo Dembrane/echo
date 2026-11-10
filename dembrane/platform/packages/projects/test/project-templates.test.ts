@@ -1,9 +1,11 @@
 import { expect, test } from "bun:test";
 import { ValidationError } from "@dembrane/core";
 import {
+  BUILT_IN_TOPICS,
   listProjectTemplates,
   PROJECT_TEMPLATE_KEYS,
   PROJECT_TEMPLATES,
+  parseOverrides,
   projectTemplate,
   templateColumns,
   templateTags,
@@ -96,4 +98,31 @@ test("the list says what each template sets up, from its preset", () => {
   });
   expect(byKey.conversation?.summary).toMatchObject({ asks_for_name: false, auto_titles: true });
   expect(byKey.blank?.summary).toMatchObject({ tutorial: "none", verify: false, tag_count: 0 });
+});
+
+// ECHO-1052: asking for the participant's email sits behind ENABLE_PARTICIPANT_EMAIL, so no
+// template may switch it on, and neither may the create request's overrides.
+test("no template asks for the participant's email or offers report notifications", () => {
+  for (const t of PROJECT_TEMPLATES)
+    for (const lang of ["en", "nl"]) {
+      const cols = templateColumns(t, lang) as Record<string, unknown>;
+      expect([t.key, cols.default_conversation_ask_for_participant_email]).toEqual([
+        t.key,
+        undefined,
+      ]);
+      expect([t.key, cols.is_project_notification_subscription_allowed]).toEqual([
+        t.key,
+        undefined,
+      ]);
+    }
+  expect(() => parseOverrides({ default_conversation_ask_for_participant_email: true })).toThrow(
+    ValidationError,
+  );
+});
+
+test("a preset may set cross-pollination, and the new topic key is a built-in", () => {
+  expect(parseOverrides({ is_get_reply_cross_pollination_enabled: true })).toEqual({
+    is_get_reply_cross_pollination_enabled: true,
+  });
+  expect(BUILT_IN_TOPICS).toContain("heard");
 });

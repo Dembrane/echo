@@ -8,8 +8,9 @@ import { oneLine } from "./rules";
  * Left out on purpose:
  * - is_conversation_allowed: closing the portal is never what a new project wants.
  * - image_generation_model and get_reply_mode: one value each, nothing to propose.
- * - default_conversation_ask_for_participant_email: collecting emails is a data protection
- *   decision (legal basis, privacy notice), the host's own, like the fields below.
+ * - default_conversation_ask_for_participant_email and the report notifications it feeds:
+ *   collecting emails is a data protection decision (legal basis, privacy notice), the
+ *   host's own, and sits behind ENABLE_PARTICIPANT_EMAIL (ECHO-1052).
  * Never, whatever the template allows: anonymize_transcripts (removes audio for good), the
  * legal basis, the privacy policy URL, visibility and anything paid (the event call to
  * action). None of the proposable fields is gated to a tier today; the test pins that.
@@ -31,6 +32,7 @@ export const NEVER_PROPOSED = [
   "visibility",
   "is_dembrane_event_cta_enabled",
   "default_conversation_ask_for_participant_email",
+  "is_project_notification_subscription_allowed",
   "is_conversation_allowed",
 ] as const;
 

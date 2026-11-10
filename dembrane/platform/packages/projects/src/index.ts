@@ -16,7 +16,7 @@ export {
   templateColumns,
   templateTags,
 } from "./project-templates";
-export { PROJECT_UPDATE_FIELDS, sameMoveContext } from "./projects";
+export { PARTICIPANT_EMAIL_FIELDS, PROJECT_UPDATE_FIELDS, sameMoveContext } from "./projects";
 export { type ProjectRoutesDeps, projectRoutes } from "./routes";
 export { type ProjectSetupRoutesDeps, projectSetupRoutes } from "./setup/routes";
 export { type ProjectsStorage, projectsStorage } from "./storage";

@@ -14,6 +14,8 @@ export interface DataDeps {
   readonly access: Access;
   readonly logger: Logger;
   readonly now: () => Date;
+  /** ENABLE_PARTICIPANT_EMAIL. Unset means off. */
+  readonly participantEmail?: boolean;
 }
 
 export const sqlOf = (d: DataDeps): postgres.Sql =>

@@ -98,6 +98,13 @@ export const project = {
     detail: "Private projects require innovator tier or above.",
     description: "Private projects need the Innovator plan or above.",
   },
+  "project.participant_email_off": {
+    action: "none",
+    detail: "Asking participants for their email is not available right now",
+    params: ["field"],
+    description:
+      "ENABLE_PARTICIPANT_EMAIL is off: asking for an email and report notifications cannot be switched on. field names the setting.",
+  },
   "project.event_invite_paid": {
     action: "upgrade",
     detail: "Hiding the dembrane event invitation comes with a paid plan",

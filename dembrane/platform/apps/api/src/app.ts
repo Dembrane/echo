@@ -183,6 +183,7 @@ export function buildApp(deps: Deps) {
       ...deps,
       onProjectOpened: onboarding.projectOpened,
       onProjectCreated: onboarding.projectCreated,
+      participantEmail: deps.config.projects.participantEmail,
     }),
   );
   app.route(
@@ -327,7 +328,10 @@ export function buildApp(deps: Deps) {
     }
   const capture = posthogCapture(deps.config.http.dashboardUrl, deps.logger);
   app.route("/", chatRoutes({ ...deps, capture }));
-  app.route("/", agenticRoutes({ ...deps, capture }));
+  app.route(
+    "/",
+    agenticRoutes({ ...deps, capture, participantEmail: deps.config.projects.participantEmail }),
+  );
   const sql = clientOf(deps.db);
   // Popcorn and Present read the deck and the map from the analysis store, and a deck
   // snapshot they assemble is dispatched through the analysis outbox like any other.

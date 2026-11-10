@@ -11,6 +11,7 @@ import { speechHint } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
+import { DEFAULT_TOPIC_KEY, defaultTopicPrompt } from "./defaults";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
 
 export type VerifyDeps = Pick<
@@ -68,14 +69,20 @@ async function topicsFor(ctx: Ctx, projectId: string): Promise<TopicView[]> {
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** The stored selection limited to topics that exist; nothing valid selected means all of them. */
-function selected(raw: string | null, topics: TopicView[]): string[] {
+/**
+ * The stored selection limited to topics that exist. Nothing valid selected means the
+ * table check alone (ECHO-1052; before, it meant every topic): one topic, so the portal
+ * starts generating at once instead of showing a picker of seven.
+ */
+export function selected(raw: string | null, topics: readonly { key: string }[]): string[] {
   const keys = new Set(topics.map((t) => t.key).filter(Boolean));
   const picked = (raw ?? "")
     .split(",")
     .map((k) => k.trim())
     .filter((k) => k && keys.has(k));
-  return picked.length ? picked : topics.map((t) => t.key).filter(Boolean);
+  if (picked.length) return picked;
+  if (keys.has(DEFAULT_TOPIC_KEY)) return [DEFAULT_TOPIC_KEY];
+  return topics.map((t) => t.key).filter(Boolean);
 }
 
 async function projectOr404(ctx: Ctx, projectId: string) {
@@ -336,6 +343,18 @@ async function audioParts(ctx: Ctx, chunks: Chunk[]) {
   return out;
 }
 
+/** What a failed model call may put in a log line: no message, no request, no prompt. */
+export function modelErrorShape(err: unknown): { name: string; status: number | null } {
+  const e = err as { name?: unknown; statusCode?: unknown; status?: unknown } | null;
+  const status =
+    typeof e?.statusCode === "number"
+      ? e.statusCode
+      : typeof e?.status === "number"
+        ? e.status
+        : null;
+  return { name: typeof e?.name === "string" ? e.name : "Error", status };
+}
+
 async function complete(
   ctx: Ctx,
   system: string,
@@ -355,10 +374,122 @@ async function complete(
     });
     return text;
   } catch (err) {
-    ctx.d.logger.error({ err }, "verify completion failed");
+    // Never the error itself: the model SDK's errors carry the request body, which holds
+    // the transcript. Its name and status say enough to find the call.
+    ctx.d.logger.error({ error: modelErrorShape(err) }, "verify completion failed");
     // A 500 with the text the old API sent when the model call failed.
     throw new StatusError(500, "verify.generation_failed", { message: failure });
   }
+}
+
+/** The project fields a Verify prompt reads. Never the participant's name or email. */
+export interface VerifyProject {
+  readonly id: string;
+  readonly name: string | null;
+  readonly language: string | null;
+  readonly context: string | null;
+  readonly default_conversation_transcript_prompt: string | null;
+  readonly anonymize_transcripts: boolean | null;
+  readonly template_key?: string | null;
+}
+
+/** Key terms as stored (comma-separated), one list without blanks or repeats. */
+export function keyTermList(raw: string | null | undefined): string {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of (raw ?? "").split(",")) {
+    const t = part.replace(/\s+/g, " ").trim();
+    if (!t || seen.has(t.toLowerCase())) continue;
+    seen.add(t.toLowerCase());
+    out.push(t);
+  }
+  return out.join(", ");
+}
+
+/**
+ * Who the draft speaks to. An event's tables read it as a table; a one-device conversation
+ * (an interview, a meeting) as "you"; anything else gets the neutral wording, because the
+ * code cannot tell how many people spoke.
+ */
+export function audienceOf(templateKey: string | null | undefined): "table" | "single" | "neutral" {
+  if (templateKey === "event") return "table";
+  if (templateKey === "conversation") return "single";
+  return "neutral";
+}
+
+/** The wrapper's language: Dutch has its own approved text; every other language reads English. */
+const wrapperLanguage = (language: string | null) =>
+  (language ?? "").toLowerCase().startsWith("nl") ? "nl" : "en";
+
+function referenceVars(project: VerifyProject) {
+  return {
+    language: project.language || "en",
+    pii_redaction: Boolean(project.anonymize_transcripts),
+    project_context: project.context?.trim() ?? "",
+    key_terms: keyTermList(project.default_conversation_transcript_prompt),
+    audience: audienceOf(project.template_key),
+  };
+}
+
+/**
+ * Everything a Verify generation sends the model, as text. The participant's name and
+ * email are not read (ECHO-1052): the draft is written for the table, not to a person, so
+ * the model has no use for either, and the email used to reach the model and, on a failed
+ * call, the logs.
+ */
+export function generationInput(i: {
+  project: VerifyProject;
+  conversationId: string;
+  topicPrompt: string;
+  artifacts: readonly { date_created: string | null; key: string | null; content: string | null }[];
+  transcript: string;
+  audio: readonly { id: string; timestamp: string | null }[];
+}): { system: string; text: string } {
+  const previous = i.artifacts.length
+    ? [
+        "Previous artifacts:",
+        ...i.artifacts.map(
+          (a) =>
+            `- [${iso(a.date_created) ?? "unknown"}] (${a.key || "unknown key"}) ${a.content ?? ""}`,
+        ),
+        "",
+      ].join("\n")
+    : "Previous artifacts: None\n";
+  const lines = [
+    `Project: ${i.project.name || i.project.id}`,
+    `Conversation ID: ${i.conversationId}`,
+    "",
+    previous,
+    "Conversation transcript:",
+    i.transcript || "No transcript available.",
+    "",
+    i.audio.length
+      ? [
+          "Audio attachments for chunks without transcripts after the last artifact:",
+          ...i.audio.map((c) => `- chunk_id=${c.id} timestamp=${pyIsoformat(c.timestamp)}`),
+        ].join("\n")
+      : "Audio attachments: None.",
+  ];
+  const system = renderPrompt("generate_artifact", wrapperLanguage(i.project.language), {
+    ...referenceVars(i.project),
+    prompt: i.topicPrompt,
+  });
+  return { system, text: lines.join("\n") };
+}
+
+/** The system prompt of a Verify revision: the same reference material, no participant details. */
+export function revisionSystem(i: {
+  project: VerifyProject;
+  transcript: string;
+  outcome: string;
+  feedback: string;
+}): string {
+  return renderPrompt("revise_artifact", wrapperLanguage(i.project.language), {
+    ...referenceVars(i.project),
+    transcript: i.transcript || "No transcript available.",
+    outcome: i.outcome,
+    feedback: i.feedback || "No textual feedback available.",
+  });
 }
 
 export async function generateArtifact(
@@ -370,7 +501,6 @@ export async function generateArtifact(
   const project = row.project as NonNullable<typeof row.project>;
   await requirePortalAi(ctx.d.db, project.id, ctx.d.now());
   const conv = row.conversation;
-  const anonymized = Boolean(project.anonymize_transcripts);
   const topics = await topicsFor(ctx, project.id);
   const targetKey = body.topic_list[0] ?? "";
   const target = topics.find((t) => t.key === targetKey);
@@ -388,45 +518,22 @@ export async function generateArtifact(
     });
   }
   const audio = audioChunks(chunks, lastTime);
-  const previous = artifacts.length
-    ? [
-        "Previous artifacts:",
-        ...artifacts.map(
-          (a) =>
-            `- [${iso(a.date_created) ?? "unknown"}] (${a.key || "unknown key"}) ${a.content ?? ""}`,
-        ),
-        "",
-      ].join("\n")
-    : "Previous artifacts: None\n";
-  const lines = [`Project: ${project.name || project.id}`, `Conversation ID: ${conv.id}`];
-  if (conv.participant_name) lines.push(`Participant name: ${conv.participant_name}`);
-  if (conv.participant_email)
-    lines.push(`Participant email: ${anonymized ? "<redacted_email>" : conv.participant_email}`);
-  const transcript = transcriptText(chunks);
-  lines.push(
-    "",
-    previous,
-    "Conversation transcript:",
-    transcript || "No transcript available.",
-    "",
-    audio.length
-      ? [
-          "Audio attachments for chunks without transcripts after the last artifact:",
-          ...audio.map((c) => `- chunk_id=${c.id} timestamp=${pyIsoformat(c.timestamp)}`),
-        ].join("\n")
-      : "Audio attachments: None.",
-  );
-  const system = renderPrompt("generate_artifact", "en", {
-    prompt: target.prompt,
-    language: project.language || "en",
-    pii_redaction: anonymized,
+  const { system, text: userText } = generationInput({
+    project,
+    conversationId: conv.id,
+    topicPrompt: target.is_custom
+      ? target.prompt
+      : (defaultTopicPrompt(target.key, target.prompt, project.language) ?? target.prompt),
+    artifacts,
+    transcript: transcriptText(chunks),
+    audio: audio.map((c) => ({ id: c.id, timestamp: c.timestamp })),
   });
   // The body names the conversation, so the payer middleware cannot.
   const text = await withPayer({ ref: "conversation", id: conv.id }, async () =>
     complete(
       ctx,
       system,
-      [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
+      [{ type: "text", text: userText }, ...(await audioParts(ctx, audio))],
       "Failed to generate verification artifact",
       project.language || "en",
     ),
@@ -470,7 +577,6 @@ export async function updateArtifact(
     // H-2: revising could pull another conversation's transcript into this artifact.
     if (body.useConversation.conversationId !== artifact.conversation_id)
       throw new BadRequestError("verify.artifact_wrong_conversation");
-    const anonymized = Boolean(project.anonymize_transcripts);
     const chunks = await ctx.store.chunks(artifact.conversation_id);
     const ref = body.useConversation.timestamp.getTime();
     const feedback = chunks
@@ -488,12 +594,11 @@ export async function updateArtifact(
           message: "No new feedback found since provided timestamp",
         },
       });
-    const system = renderPrompt("revise_artifact", "en", {
-      transcript: transcriptText(chunks) || "No transcript available.",
+    const system = revisionSystem({
+      project,
+      transcript: transcriptText(chunks),
       outcome: artifact.content || "",
-      feedback: feedback || "No textual feedback available.",
-      language: project.language || "en",
-      pii_redaction: anonymized,
+      feedback,
     });
     updates.content = await complete(
       ctx,

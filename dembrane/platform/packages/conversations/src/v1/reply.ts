@@ -8,10 +8,11 @@ import { type V1Store, v1Store } from "./storage";
 import { countTokens } from "./token-count";
 
 /**
- * The portal's "get reply" (reply_utils.py): the participant's conversation so far, the
- * project's other conversations (summaries or truncated transcripts, within a token
- * budget) and any audio not transcribed yet go to multi_modal_pro with the project's
- * reply prompt; the answer streams back and is stored as a conversation_reply.
+ * The portal's "get reply" (reply_utils.py), Explore in the portal: the participant's
+ * conversation so far, the project's other conversations when cross-pollination is on
+ * (summaries or truncated transcripts within a token budget, never named), and any audio
+ * not transcribed yet go to multi_modal_pro with the project's reply prompt; the answer
+ * streams back and is stored as a conversation_reply.
  */
 
 export type ReplyDeps = Pick<
@@ -53,12 +54,15 @@ export function buildTranscript(
   return items.map((i) => i.text).join("");
 }
 
-/** A Conversation model needs a string name; a null participant name failed validation. */
-function named(name: string | null, id: string): string {
-  if (typeof name !== "string") throw new Error(`conversation ${id} has no participant name`);
-  return name;
-}
+/**
+ * How conversations are named to the model (ECHO-1052): never by the participant's name. The
+ * model needs no one's name to ask a question, a name can identify a person, and the old
+ * behaviour (other tables by name) made replies quote other groups at this one.
+ */
+export const CURRENT_CONVERSATION_NAME = "this conversation";
+export const OTHER_CONVERSATION_NAME = "another group";
 
+/** The project's other conversations, as Explore may read them when cross-pollination is on. */
 async function adjacentConversations(
   store: V1Store,
   projectId: string,
@@ -73,7 +77,7 @@ async function adjacentConversations(
     if (useSummaries) {
       if (row.summary === null) continue;
       const f = formatConversation({
-        name: named(row.participant_name, row.id),
+        name: OTHER_CONVERSATION_NAME,
         tags: tagsOf(row.id),
         transcript: row.summary,
       });
@@ -82,7 +86,7 @@ async function adjacentConversations(
     }
     const content = await store.adjacentContent(row.id);
     const c: Conv = {
-      name: named(row.participant_name, row.id),
+      name: OTHER_CONVERSATION_NAME,
       tags: tagsOf(row.id),
       transcript: buildTranscript(content.chunks, content.replies),
     };
@@ -108,6 +112,67 @@ async function adjacentConversations(
   return out;
 }
 
+/** The project fields the Explore prompt reads. */
+export interface ReplyProject {
+  readonly context: string | null;
+  readonly default_conversation_title: string | null;
+  readonly default_conversation_description: string | null;
+  readonly default_conversation_transcript_prompt: string | null;
+  readonly get_reply_mode: string | null;
+  readonly get_reply_prompt: string | null;
+  readonly anonymize_transcripts: boolean | null;
+}
+
+/**
+ * The text prompt Explore sends (before any audio). Pure, so tests and the prompt
+ * comparison pack render it without a model. `others` is the formatted block of the
+ * project's other conversations: empty when cross-pollination is off.
+ */
+export function replyPrompt(i: {
+  project: ReplyProject;
+  language: string;
+  current: Conv;
+  others: string;
+}): string {
+  const { project, language } = i;
+  const mode = project.get_reply_mode;
+  // The approved default and brainstorm prompts set their own length and voice (ECHO-1052),
+  // so the wrapper's "1-3 sentences" and "we/our" lines do not apply to them.
+  const ownFormat = mode === "summarize" || mode === "brainstorm";
+  const description: string[] = [];
+  if (project.context !== null) description.push(project.context);
+  if (project.default_conversation_title !== null)
+    description.push(`Default Conversation Title: ${project.default_conversation_title}`);
+  if (project.default_conversation_description !== null)
+    description.push(
+      `Default Conversation Description: ${project.default_conversation_description}`,
+    );
+  if (project.default_conversation_transcript_prompt !== null)
+    description.push(
+      ownFormat
+        ? `Key terms (for names and spelling only): ${project.default_conversation_transcript_prompt}`
+        : `Default Conversation Transcript Prompt: ${project.default_conversation_transcript_prompt}`,
+    );
+
+  let globalPrompt: string;
+  if (mode === "summarize") globalPrompt = renderPrompt("get_reply_summarize", language, {});
+  else if (mode === "brainstorm") globalPrompt = renderPrompt("get_reply_brainstorm", language, {});
+  else if (mode === "custom")
+    globalPrompt = project.get_reply_prompt?.trim()
+      ? project.get_reply_prompt
+      : renderPrompt("get_reply_summarize", language, {});
+  else globalPrompt = project.get_reply_prompt ?? "";
+
+  return renderPrompt("get_reply_system", language, {
+    PROJECT_DESCRIPTION: description.join("\n\n"),
+    GLOBAL_PROMPT: globalPrompt,
+    OTHER_TRANSCRIPTS: i.others,
+    MAIN_USER_TRANSCRIPT: formatConversation(i.current),
+    pii_redaction: Boolean(project.anonymize_transcripts),
+    own_format: ownFormat,
+  });
+}
+
 /**
  * The reply text as it streams. Throws before the first part when the conversation is
  * missing or the project has replies off, as generate_reply_for_conversation did.
@@ -127,7 +192,7 @@ export async function* generateReply(
 
   const ctx = await store.replyContext(conversationId);
   const current: Conv = {
-    name: named(conv.participant_name, conv.id),
+    name: CURRENT_CONVERSATION_NAME,
     tags: ctx.tags.filter((t): t is string => t !== null),
     transcript: buildTranscript(ctx.chunks, ctx.replies),
   };
@@ -146,37 +211,11 @@ export async function* generateReply(
 
   const mode = project.get_reply_mode;
   const useSummaries = mode === "summarize" || mode === "brainstorm" || mode === "custom";
-  const others = await adjacentConversations(store, project.id, conv.id, useSummaries);
-
-  const description: string[] = [];
-  if (project.context !== null) description.push(project.context);
-  if (project.default_conversation_title !== null)
-    description.push(`Default Conversation Title: ${project.default_conversation_title}`);
-  if (project.default_conversation_description !== null)
-    description.push(
-      `Default Conversation Description: ${project.default_conversation_description}`,
-    );
-  if (project.default_conversation_transcript_prompt !== null)
-    description.push(
-      `Default Conversation Transcript Prompt: ${project.default_conversation_transcript_prompt}`,
-    );
-
-  let globalPrompt: string;
-  if (mode === "summarize") globalPrompt = renderPrompt("get_reply_summarize", language, {});
-  else if (mode === "brainstorm") globalPrompt = renderPrompt("get_reply_brainstorm", language, {});
-  else if (mode === "custom")
-    globalPrompt = project.get_reply_prompt?.trim()
-      ? project.get_reply_prompt
-      : renderPrompt("get_reply_summarize", language, {});
-  else globalPrompt = project.get_reply_prompt ?? "";
-
-  const prompt = renderPrompt("get_reply_system", language, {
-    PROJECT_DESCRIPTION: description.join("\n\n"),
-    GLOBAL_PROMPT: globalPrompt,
-    OTHER_TRANSCRIPTS: others,
-    MAIN_USER_TRANSCRIPT: formatConversation(current),
-    pii_redaction: Boolean(project.anonymize_transcripts),
-  });
+  // Cross-pollination (ECHO-1052): off, Explore reads this conversation only.
+  const others = project.is_get_reply_cross_pollination_enabled
+    ? await adjacentConversations(store, project.id, conv.id, useSummaries)
+    : "";
+  const prompt = replyPrompt({ project, language, current, others });
 
   const content: (TextPart | FilePart)[] = [{ type: "text", text: prompt }];
   for (const chunk of audioChunks) {
@@ -250,7 +289,18 @@ export async function* replyProtocol(d: ReplyDeps, conversationId: string, langu
     for await (const text of generateReply(d, conversationId, language))
       yield `0:${pythonJson(text)}\n`;
   } catch (err) {
-    d.logger.error({ err, conversationId }, "error generating reply");
+    // Not the error itself: the model SDK's errors carry the request body (the transcript).
+    const e = err as { name?: unknown; statusCode?: unknown } | null;
+    d.logger.error(
+      {
+        error: {
+          name: typeof e?.name === "string" ? e.name : "Error",
+          status: typeof e?.statusCode === "number" ? e.statusCode : null,
+        },
+        conversationId,
+      },
+      "error generating reply",
+    );
     yield `3:${pythonJson(err instanceof ContentPolicyError ? "CONTENT_POLICY_VIOLATION" : "Something went wrong.")}\n`;
   }
 }
