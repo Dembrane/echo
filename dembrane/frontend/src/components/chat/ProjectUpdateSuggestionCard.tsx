@@ -25,6 +25,7 @@ import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
+import { keyTermCount, track } from "@/lib/analytics/events";
 import { presentError } from "@/lib/errors/present";
 import { testId } from "@/lib/testUtils";
 
@@ -494,6 +495,14 @@ export const ProjectUpdateSuggestionCard = ({
 				payload,
 			});
 			await projectQuery.refetch();
+			if ("default_conversation_transcript_prompt" in payload) {
+				const value = payload.default_conversation_transcript_prompt;
+				track("key_terms_updated", {
+					count: keyTermCount(typeof value === "string" ? value : null),
+					project_id: suggestion.projectId,
+					surface: "assistant",
+				});
+			}
 			toast.success(
 				t`Changes applied. You can fine-tune them anytime in project settings.`,
 			);

@@ -42,6 +42,8 @@ import {
 	tasksSummaryKey,
 } from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { track } from "@/lib/analytics/events";
+import { identifyHost } from "@/lib/analytics/identity";
 import {
 	type OtherDevice,
 	otherSessions,
@@ -135,8 +137,9 @@ export const LoginRoute = () => {
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
 	const afterSignIn = async (email: string, curtain = true) => {
-		posthog?.identify(email);
-		posthog?.capture("user_logged_in", { email: email });
+		// The full person (invited, organisation) is set once /v2/me loads: HostIdentitySync.
+		identifyHost(posthog, { email });
+		track("user_logged_in");
 
 		const isNewUser = searchParams.get("new") === "true";
 		const next = searchParams.get("next");
@@ -307,10 +310,7 @@ export const LoginRoute = () => {
 		} catch (error) {
 			const code = authErrorCode(error);
 
-			posthog?.capture("user_login_failed", {
-				email: data.email,
-				error_code: code,
-			});
+			track("user_login_failed", { error_code: code ?? null });
 
 			if (code === "INVALID_OTP") {
 				setOtpRequired(true);

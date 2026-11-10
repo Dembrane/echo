@@ -44,6 +44,7 @@ import { SampleProjectNotice } from "@/components/project/SampleProjectNotice";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { reportStatusLabel } from "@/components/sharing/StatusLine";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -268,6 +269,10 @@ export const ProjectHomeRoute = () => {
 						{ id: projectId, payload: { name } },
 						{
 							onSuccess: () => {
+								track("project_settings_saved", {
+									fields_changed: ["name"],
+									project_id: projectId,
+								});
 								// Project lists on the workspace home and sidebar read
 								// the name from this cache, not from ["projects", id].
 								queryClient.invalidateQueries({

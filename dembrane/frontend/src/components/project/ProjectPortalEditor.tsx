@@ -42,6 +42,7 @@ import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { changedFields, keyTermCount, track } from "@/lib/analytics/events";
 import type {
 	VerificationTopicMetadata,
 	VerificationTopicsResponse,
@@ -240,6 +241,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	}, [project.id, projectLanguageCode, selectedTopicDefaults]);
 
 	const formResolver = useMemo(() => zodResolver(FormSchema), []);
+	// The values as last saved, to name the fields a save changed (names only).
+	const savedValuesRef = useRef<Record<string, unknown>>(defaultValues);
 
 	const {
 		control,
@@ -429,6 +432,23 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 			// Store what we saved to detect when query refetches
 			savedTopicsRef.current = normalizedTopics.join(",");
+
+			const saved = { ...values, verification_topics: normalizedTopics };
+			const fieldsChanged = changedFields(savedValuesRef.current, saved);
+			savedValuesRef.current = saved;
+			if (fieldsChanged.length > 0) {
+				track("portal_settings_saved", {
+					fields_changed: fieldsChanged,
+					project_id: project.id,
+				});
+			}
+			if (fieldsChanged.includes("default_conversation_transcript_prompt")) {
+				track("key_terms_updated", {
+					count: keyTermCount(values.default_conversation_transcript_prompt),
+					project_id: project.id,
+					surface: "portal_editor",
+				});
+			}
 
 			reset(
 				{

@@ -27,6 +27,8 @@ import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEma
 import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ADMIN_BASE_URL, LEGAL_TERMS_URL } from "@/config";
+import { track } from "@/lib/analytics/events";
+import { identifyHost } from "@/lib/analytics/identity";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
 
@@ -90,9 +92,7 @@ export const RegisterRoute = () => {
 			}
 			// Funnel step: $pageview (/register) -> registration_details_completed
 			// -> user_registered. Time between steps shows where people stall.
-			posthog?.capture("registration_details_completed", {
-				from_invite: lockedEmail,
-			});
+			track("registration_details_completed", { from_invite: lockedEmail });
 			setStep(1);
 		}, checkTerms)(e);
 
@@ -118,11 +118,8 @@ export const RegisterRoute = () => {
 			},
 			{
 				onSuccess: () => {
-					posthog?.identify(data.email);
-					posthog?.capture("user_registered", {
-						email: data.email,
-						first_name: data.first_name,
-					});
+					identifyHost(posthog, { email: data.email, isInvited: lockedEmail });
+					track("user_registered", { from_invite: lockedEmail });
 					setSubmittedEmail(data.email);
 					setStep(2);
 				},

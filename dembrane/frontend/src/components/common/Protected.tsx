@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
+import { HostIdentitySync } from "@/lib/analytics/HostIdentitySync";
 
 export const Protected = (props: PropsWithChildren) => {
 	const { loading, isAuthenticated } = useAuthenticated(true);
@@ -13,5 +14,10 @@ export const Protected = (props: PropsWithChildren) => {
 		return null;
 	}
 
-	return <>{props.children}</>;
+	return (
+		<>
+			<HostIdentitySync />
+			{props.children}
+		</>
+	);
 };
