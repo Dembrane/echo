@@ -105,6 +105,7 @@ async function checkedAddresses(
   url: string,
   allowPrivate: boolean,
   resolve: Resolve = resolveAll,
+  blocked: (ip: string) => boolean = isPrivateAddress,
 ): Promise<string[]> {
   let host: string;
   try {
@@ -114,7 +115,7 @@ async function checkedAddresses(
   }
   const addresses = isIP(host) ? [host] : await resolve(host);
   if (!addresses.length) throw new DeliveryError(`Could not resolve ${host}`);
-  if (!allowPrivate && addresses.some(isPrivateAddress))
+  if (!allowPrivate && addresses.some(blocked))
     throw new DeliveryError("Webhook URL points to a private or internal address");
   return addresses;
 }
@@ -141,9 +142,14 @@ const NOT_CONNECTED = new Set(["ConnectionRefused", "FailedToOpenSocket"]);
 export async function fetchChecked(
   url: string,
   init: Omit<BunFetchRequestInit, "redirect">,
-  opts: { allowPrivate: boolean; resolve?: Resolve },
+  opts: {
+    allowPrivate: boolean;
+    resolve?: Resolve;
+    /** Which addresses refuse the URL; isPrivateAddress unless a test narrows it. */
+    blocked?: (ip: string) => boolean;
+  },
 ): Promise<Response> {
-  const addresses = await checkedAddresses(url, opts.allowPrivate, opts.resolve);
+  const addresses = await checkedAddresses(url, opts.allowPrivate, opts.resolve, opts.blocked);
   const target = new URL(url);
   if (isIP(target.hostname.replace(/^\[|\]$/g, "")))
     return fetch(url, { ...init, redirect: "manual" });

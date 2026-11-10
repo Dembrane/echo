@@ -36,6 +36,12 @@ export const project = {
     description:
       "A project create named a template_key that is not in the template registry (packages/projects project-templates.ts). known lists the keys there are.",
   },
+  "project.setup_suggestions_unavailable": {
+    action: "retry",
+    detail: "Suggestions are not available right now",
+    description:
+      "The setup suggestions (POST /v2/workspaces/:id/project-setup/suggestions) could not reach the model or it gave no usable answer. The create flow shows a quiet line and the host carries on.",
+  },
   "project.no_conversations": {
     action: "none",
     detail: "No conversations found for this project",

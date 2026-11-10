@@ -16,6 +16,7 @@ export type OnboardingStep = "org" | "invite" | "questions";
 export type ProjectCreateStep = "template" | "name" | "more_options";
 export type TemplateSurface = "create" | "workspace_home";
 export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
+export type SetupSuggestionSurface = "wizard" | "portal_editor";
 export type PortalShareMethod = "qr" | "copy" | "download";
 export type OnboardingWalkthroughStep = string;
 /** Why a sign-in failed; components/auth/utils/errorUtils.ts decides it from the answer. */
@@ -90,10 +91,26 @@ export interface AnalyticsEvents {
 	agentic_chat_intro_opened: { source: string; project_id?: string };
 	agentic_chat_intro_confirmed: { source: string; project_id?: string };
 
+	// Setup suggestions (ECHO-1043): counts and flags only, never the host's text, the
+	// link or the terms. "accepted" is sent once at create in the wizard (what the host
+	// kept), and on each accept in the portal editor.
+	project_setup_ai_suggested: {
+		template_key: string;
+		has_text: boolean;
+		has_url: boolean;
+		terms_proposed: number;
+		settings_proposed: number;
+		surface: SetupSuggestionSurface;
+	};
+	project_setup_ai_accepted: {
+		terms_accepted: number;
+		settings_accepted: number;
+		surface: SetupSuggestionSurface;
+	};
+	project_setup_ai_failed: { cause: string; surface: SetupSuggestionSurface };
+
 	// Reserved for later onboarding tickets. Typed now so the names stay stable; nothing
 	// sends them yet.
-	project_setup_ai_suggested: { project_id: string };
-	project_setup_ai_accepted: { project_id: string };
 	onboarding_walkthrough_started: NoProps;
 	onboarding_walkthrough_step: { step: OnboardingWalkthroughStep };
 	onboarding_walkthrough_completed: NoProps;

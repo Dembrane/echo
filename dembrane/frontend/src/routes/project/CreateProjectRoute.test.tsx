@@ -395,3 +395,100 @@ describe("CreateProjectRoute: More options keeps the old wizard's settings", () 
 		);
 	});
 });
+
+// ECHO-1043: "Tell dembrane about your session" in the name step.
+describe("CreateProjectRoute: setup suggestions", () => {
+	const suggestions = {
+		key_terms: [
+			{ reason: "De wijk.", source: "text", term: "Strijp-S" },
+			{ reason: "De corporatie.", source: "text", term: "Woonbedrijf" },
+		],
+		max_key_terms: 30,
+		notes: [],
+		settings: [
+			{
+				current: false,
+				field: "is_verify_enabled",
+				proposed: true,
+				reason: "Je wilt dat tafels afspraken bevestigen.",
+			},
+		],
+	};
+	const suggestionsFetch = (pending = false) =>
+		vi.fn(async (url: string) => {
+			if (String(url).includes("project-setup/suggestions")) {
+				if (pending) return new Promise<Response>(() => {});
+				return new Response(JSON.stringify(suggestions));
+			}
+			return new Response("{}");
+		});
+
+	it("sits in the name step, optional, with its walkthrough anchor", async () => {
+		renderCreate();
+		chooseTemplate("event");
+		const block = await screen.findByTestId("setup-suggestions");
+		expect(block.getAttribute("data-tour")).toBe("setup-suggestions");
+		expect(screen.getByText("Tell dembrane about your session")).toBeTruthy();
+	});
+
+	it("never blocks Create: it stays enabled while suggestions load", async () => {
+		vi.stubGlobal("fetch", suggestionsFetch(true));
+		createMutate.mockResolvedValue({ id: "p7" });
+		renderCreate();
+		chooseTemplate("event");
+		nameIt("Bewonersavond");
+		fireEvent.change(await screen.findByLabelText("About your session"), {
+			target: { value: "Met Woonbedrijf in Strijp-S" },
+		});
+		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
+		await screen.findByText(/Reading what you wrote/);
+		expect(screen.getByTestId("create-project-submit")).toHaveProperty(
+			"disabled",
+			false,
+		);
+		create();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p7/home"),
+		);
+	});
+
+	it("accepted terms go into the key terms, ticked settings ride on the create as overrides", async () => {
+		vi.stubGlobal("fetch", suggestionsFetch());
+		createMutate.mockResolvedValue({ id: "p8" });
+		updateMutate.mockResolvedValue({});
+		renderCreate();
+		chooseTemplate("conversation");
+		nameIt("Bewonersavond");
+		fireEvent.change(await screen.findByLabelText("About your session"), {
+			target: { value: "Met Woonbedrijf in Strijp-S" },
+		});
+		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
+		await screen.findByTestId("setup-suggestions-results");
+		fireEvent.click(screen.getByRole("button", { name: "Strijp-S" }));
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Participant verification" }),
+		);
+		// The key terms field shows the accepted term and stays editable.
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		expect(
+			screen.getByTestId("create-project-more-options").textContent,
+		).toContain("Strijp-S");
+		create();
+		await waitFor(() => expect(navigate).toHaveBeenCalled());
+		expect(createMutate).toHaveBeenCalledWith({
+			language: "en",
+			name: "Bewonersavond",
+			overrides: { is_verify_enabled: true },
+			templateKey: "conversation",
+		});
+		expect(updateMutate).toHaveBeenCalledWith({
+			id: "p8",
+			payload: { default_conversation_transcript_prompt: "Strijp-S" },
+		});
+		expect(tracked).toHaveBeenCalledWith("project_setup_ai_accepted", {
+			settings_accepted: 1,
+			surface: "wizard",
+			terms_accepted: 1,
+		});
+	});
+});

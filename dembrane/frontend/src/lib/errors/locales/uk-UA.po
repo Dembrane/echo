@@ -139,7 +139,7 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Як адміністратор організації ви можете приєднатися до цього робочого простору напряму, без запиту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:138
 msgid "error.project.share_role_cannot_access"
 msgstr "Учасники з доступом до білінгу не можуть відкривати проєкти. Спочатку призначте їм іншу роль."
 
@@ -229,7 +229,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Введіть текст для «{label}»."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_needs_private"
 msgstr "Усі в робочому просторі вже бачать цей проєкт. Зробіть його приватним, щоб поділитися з окремими людьми."
 
@@ -434,12 +434,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати правову основу цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:148
+#: src/lib/errors/messages/project.ts:153
 msgid "error.project.visibility_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати видимість цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:120
 msgid "error.project.share_admin_only"
 msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
@@ -554,7 +554,7 @@ msgid "error.project.move_none_selected"
 msgstr "Виберіть принаймні один проєкт для переміщення."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:143
 msgid "error.project.sharing_tier_required"
 msgstr "Для надання доступу до приватного проєкту потрібен тариф {tier} або вище."
 
@@ -614,6 +614,11 @@ msgid "error.internal.unexpected"
 msgstr "Щось пішло не так із нашого боку. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Пропозиції зараз недоступні. Ви можете продовжити без них."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Цей код не підійшов. Введіть актуальний код із додатка-автентифікатора."
@@ -634,7 +639,7 @@ msgid "error.account.credentials_invalid"
 msgstr "Цей пароль неправильний. Перевірте його та спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.template_unknown"
 msgstr "Такого шаблону проєкту немає. Перезавантажте сторінку й оберіть ще раз."
 
@@ -1014,7 +1019,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Ця людина не є учасником цього робочого простору. Оновіть сторінку, щоб переглянути актуальний список."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_member"
 msgstr "Цієї людини ще немає в робочому просторі. Спочатку запросіть її до нього."
 
@@ -1069,7 +1074,7 @@ msgid "error.project.no_transcripts"
 msgstr "У цьому проєкті ще немає транскриптів."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:129
 msgid "error.project.share_not_found"
 msgstr "Цей проєкт більше не надано у спільний доступ цій людині."
 

@@ -438,6 +438,12 @@ export const schema = defineSchema({
         "Most edges a map view may draw. A host budget above it is refused, never clamped. Unset: no ceiling.",
     }),
   },
+  projects: {
+    setupWebSearch: key("PROJECT_SETUP_WEB_SEARCH", bool.default(false), {
+      description:
+        "Lets the project setup suggestions look up the organisation or topic a host names with Google Search grounding, before proposing key terms. Sends the project name and the start of the host's description to the search provider. Only takes effect where LLM_SEARCH_GROUNDING is on and LLM_PROVIDER is vertex.",
+    }),
+  },
   canvas: {
     enabled: key("ENABLE_CANVAS", bool.default(true), {
       description:

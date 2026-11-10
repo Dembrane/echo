@@ -70,6 +70,7 @@ import {
 	projectLanguageForForm,
 	projectLanguageForUpdate,
 } from "./projectLanguage";
+import { LazySuggestKeyTerms } from "./setup-suggestions/lazy";
 
 const FormSchema = z.object({
 	anonymize_transcripts: z.boolean(),
@@ -120,10 +121,12 @@ const KeyTermsSection = ({
 	value,
 	onChange,
 	isDirty,
+	project,
 }: {
 	value: string;
 	onChange: (value: string) => void;
 	isDirty: boolean;
+	project: Project;
 }) => (
 	<Stack gap="md">
 		<Group gap="xs" align="center">
@@ -144,6 +147,8 @@ const KeyTermsSection = ({
 			isDirty={isDirty}
 			inputTestId="portal-editor-specific-context-input"
 		/>
+		{/* The create wizard's suggestion block, from the project's own name and context. */}
+		<LazySuggestKeyTerms project={project} value={value} onChange={onChange} />
 	</Stack>
 );
 
@@ -1380,6 +1385,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											control={control}
 											render={({ field }) => (
 												<KeyTermsSection
+													project={project}
 													isDirty={
 														formState.dirtyFields
 															.default_conversation_transcript_prompt ?? false

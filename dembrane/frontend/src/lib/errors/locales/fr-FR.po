@@ -139,7 +139,7 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "En tant qu'administrateur de l'organisation, vous pouvez rejoindre cet espace de travail directement, sans demande."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:138
 msgid "error.project.share_role_cannot_access"
 msgstr "Les membres Facturation ne peuvent pas ouvrir les projets. Attribuez-leur d'abord un autre rôle."
 
@@ -229,7 +229,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Saisissez du texte pour {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_needs_private"
 msgstr "Tous les membres de l'espace de travail peuvent déjà voir ce projet. Rendez-le d'abord privé pour le partager avec des personnes précises."
 
@@ -434,12 +434,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la base juridique de ce projet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:148
+#: src/lib/errors/messages/project.ts:153
 msgid "error.project.visibility_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la visibilité de ce projet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:120
 msgid "error.project.share_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent partager des projets."
 
@@ -554,7 +554,7 @@ msgid "error.project.move_none_selected"
 msgstr "Sélectionnez au moins un projet à déplacer."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:143
 msgid "error.project.sharing_tier_required"
 msgstr "Le partage d'un projet privé nécessite le forfait {tier} ou supérieur."
 
@@ -614,6 +614,11 @@ msgid "error.internal.unexpected"
 msgstr "Une erreur s'est produite de notre côté. Réessayez dans un instant."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Les suggestions ne sont pas disponibles pour le moment. Vous pouvez continuer sans elles."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Ce code n'a pas fonctionné. Saisissez le code actuel depuis votre application d'authentification."
@@ -634,7 +639,7 @@ msgid "error.account.credentials_invalid"
 msgstr "Ce mot de passe est incorrect. Vérifiez-le et réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.template_unknown"
 msgstr "Ce modèle de projet n'existe pas. Rechargez la page et choisissez-en un à nouveau."
 
@@ -1014,7 +1019,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Cette personne n'est pas membre de cet espace de travail. Actualisez la page pour voir la liste à jour."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_member"
 msgstr "Cette personne n'est pas encore dans l'espace de travail. Invitez-la d'abord dans l'espace de travail."
 
@@ -1069,7 +1074,7 @@ msgid "error.project.no_transcripts"
 msgstr "Ce projet n'a pas encore de transcriptions."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:129
 msgid "error.project.share_not_found"
 msgstr "Ce projet n'est plus partagé avec cette personne."
 
