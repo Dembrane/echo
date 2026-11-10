@@ -1,6 +1,7 @@
 import "@mantine/core/styles.css";
 import "@/index.css";
 
+import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, MantineProvider, Stack } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { IconContext, StopIcon } from "@phosphor-icons/react";
@@ -138,6 +139,7 @@ const context: WorkspaceContextValue = {
 const RecorderFooter = () => (
 	<Box className="flex h-dvh flex-col justify-end">
 		<Stack className="border-t border-[var(--app-rule-color)] p-4">
+			{/* As in ParticipantConversationAudio while recording. */}
 			<Group justify="center" gap="lg">
 				<Button
 					size="lg"
@@ -146,8 +148,13 @@ const RecorderFooter = () => (
 				>
 					<RefineButtonLabel mode={refineMode(participantProject)} />
 				</Button>
-				<Button size="lg" color="red" leftSection={<StopIcon size={20} />}>
-					{nl ? "Stop" : "Stop"}
+				<Button
+					size="lg"
+					color="red"
+					leftSection={<StopIcon size={20} className="hidden md:block" />}
+					data-testid="portal-audio-stop-button"
+				>
+					<Trans id="participant.button.stop">Stop</Trans>
 				</Button>
 			</Group>
 		</Stack>

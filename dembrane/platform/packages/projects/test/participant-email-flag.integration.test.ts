@@ -163,6 +163,28 @@ run("participant email flag and cross-pollination", () => {
     expect(again.status).toBe(422);
   });
 
+  test("flag off: duplicating a project that asks for email keeps both settings", async () => {
+    for (const fields of [{ email: true, notify: true }, { email: true }, {}]) {
+      const id = await project(fields);
+      const res = await apps.off.request(`/api/projects/${id}/clone`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-app": owner.appUserId,
+          "x-directus": owner.directusUserId,
+        },
+        body: JSON.stringify({ name: "Copy" }),
+      });
+      expect(res.status).toBe(200);
+      const copy = (await res.json()) as string;
+      expect(copy).not.toBe(id);
+      expect(await stored(copy)).toMatchObject({
+        email: fields.email ?? false,
+        notify: fields.notify ?? false,
+      });
+    }
+  });
+
   test("flag on: both settings switch on as before", async () => {
     const id = await project();
     const res = await patch("on", id, {
