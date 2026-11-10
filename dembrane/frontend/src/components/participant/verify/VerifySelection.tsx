@@ -270,7 +270,7 @@ export const VerifySelection = () => {
 						>
 							<Group gap="md" wrap="nowrap" align="center">
 								<TopicIcon topicKey={option.key} size={24} />
-								<Stack gap={2} className="min-w-0 flex-1">
+								<Stack gap="xs" className="min-w-0 flex-1">
 									<Text>{option.label}</Text>
 									{option.description && (
 										<Text size="sm" c="dimmed">

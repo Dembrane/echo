@@ -43,7 +43,7 @@ export const RefineChoice = ({
 		>
 			<Group gap="md" wrap="nowrap" align="center">
 				<IconComponent size={28} aria-hidden="true" />
-				<Stack gap={4} className="min-w-0 flex-1">
+				<Stack gap="xs" className="min-w-0 flex-1">
 					<Text id={labelId} size="lg">
 						{label}
 					</Text>
