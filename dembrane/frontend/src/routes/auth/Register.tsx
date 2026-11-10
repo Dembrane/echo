@@ -29,6 +29,7 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ADMIN_BASE_URL, LEGAL_TERMS_URL } from "@/config";
 import { track } from "@/lib/analytics/events";
 import { identifyHost } from "@/lib/analytics/identity";
+import { isValidEmail } from "@/lib/emailRule";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
 
@@ -42,7 +43,7 @@ export const RegisterRoute = () => {
 	// auto-accepts and the user gets a stray personal organisation).
 	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
 	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
-	const { register, handleSubmit, watch, control } = useForm<{
+	const { register, handleSubmit, watch, control, getValues } = useForm<{
 		email: string;
 		password: string;
 		confirmPassword: string;
@@ -62,6 +63,8 @@ export const RegisterRoute = () => {
 	const confirmFieldError = errors.confirmPassword?.message;
 
 	const [step, setStep] = useState(0);
+	// Set by "Wrong address? Change email": the details step opens on the email field.
+	const [changingEmail, setChangingEmail] = useState(false);
 	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 	const [orgHelpOpen, { toggle: toggleOrgHelp }] = useDisclosure(false);
 	// ISSUE-013: explicit acceptance of the general terms. Required before
@@ -93,6 +96,7 @@ export const RegisterRoute = () => {
 			// Funnel step: $pageview (/register) -> registration_details_completed
 			// -> user_registered. Time between steps shows where people stall.
 			track("registration_details_completed", { from_invite: lockedEmail });
+			setChangingEmail(false);
 			setStep(1);
 		}, checkTerms)(e);
 
@@ -167,7 +171,8 @@ export const RegisterRoute = () => {
 							<>
 								<TextInput
 									size="md"
-									autoFocus
+									autoFocus={!changingEmail}
+									autoComplete="given-name"
 									label={t`First name`}
 									error={firstNameError}
 									{...register("first_name", {
@@ -181,6 +186,7 @@ export const RegisterRoute = () => {
 								<TextInput
 									size="md"
 									label={t`Last name`}
+									autoComplete="family-name"
 									description={t`Optional`}
 									{...register("last_name")}
 									{...testId("auth-register-last-name-input")}
@@ -190,10 +196,16 @@ export const RegisterRoute = () => {
 									size="md"
 									label={t`Email address`}
 									error={emailError}
+									autoFocus={changingEmail}
+									// The email is the account's username: password managers save
+									// it with the new password.
+									autoComplete="username"
 									{...register("email", {
 										required: t`Enter your email`,
+										// The rule the server applies; it drops other addresses
+										// without saying so.
 										validate: (v) =>
-											v.includes("@") || t`Enter a valid email address`,
+											isValidEmail(v) || t`Enter a valid email address`,
 									})}
 									{...testId("auth-register-email-input")}
 									placeholder={t`john@doe.com`}
@@ -243,9 +255,22 @@ export const RegisterRoute = () => {
 
 						{step === 1 && (
 							<>
+								{/* The email field is on the first step; this tells a password
+								    manager which account the new password belongs to. */}
+								<input
+									type="email"
+									name="username"
+									autoComplete="username"
+									value={getValues("email") ?? ""}
+									readOnly
+									hidden
+									aria-hidden
+									tabIndex={-1}
+								/>
 								<PasswordInput
 									size="md"
 									autoFocus
+									autoComplete="new-password"
 									label={t`Password`}
 									error={passwordFieldError || passwordError || undefined}
 									{...register("password", {
@@ -258,6 +283,7 @@ export const RegisterRoute = () => {
 								<PasswordInput
 									size="md"
 									label={t`Confirm password`}
+									autoComplete="new-password"
 									error={confirmFieldError || confirmError || undefined}
 									{...register("confirmPassword", {
 										onChange: () => setConfirmError(""),
@@ -314,9 +340,17 @@ export const RegisterRoute = () => {
 										email={submittedEmail ?? emailWatch}
 									/>
 									<Anchor
+										component="button"
+										type="button"
 										size="xs"
-										onClick={() => setStep(1)}
-										style={{ cursor: "pointer" }}
+										onClick={() => {
+											// Back to the step with the email field; the other
+											// answers stay as they were.
+											setSubmittedEmail(null);
+											setChangingEmail(true);
+											setStep(0);
+										}}
+										{...testId("auth-register-change-email")}
 									>
 										<Trans>Wrong address? Change email</Trans>
 									</Anchor>
