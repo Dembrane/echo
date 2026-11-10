@@ -170,7 +170,7 @@ export const TemplatePicker = ({
 			)}
 
 			{(onUpload || onStartBlank) && (
-				<Stack gap={6} data-testid="template-picker-links">
+				<Stack gap="xs" data-testid="template-picker-links">
 					{onUpload && !failed && (
 						<Group gap="xs" align="baseline" wrap="wrap">
 							<Anchor
@@ -180,7 +180,7 @@ export const TemplatePicker = ({
 								onClick={onUpload}
 								data-testid="template-picker-upload"
 							>
-								<Group gap={6} component="span" wrap="nowrap">
+								<Group gap="xs" component="span" wrap="nowrap">
 									<UploadSimpleIcon size={16} aria-hidden />
 									{linkLabel("upload")}
 								</Group>
