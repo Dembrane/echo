@@ -3,8 +3,11 @@ import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import {
+  applyDigest,
   applyOverrides,
   applyProjectTemplate,
+  digestOverrides,
+  parseDigestApply,
   parseOverrides,
   projectsStorage,
   projectTemplate,
@@ -134,11 +137,18 @@ export function projectService(deps: TenancyDeps) {
         language: string;
         template_key?: string | null;
         overrides?: Record<string, unknown> | null;
+        digest?: Record<string, unknown> | null;
       },
     ) {
       ctx.require("project:create");
       const template = body.template_key ? projectTemplate(body.template_key) : null;
-      const overrides = parseOverrides(body.overrides);
+      const accepted = parseOverrides(body.overrides);
+      // What the host kept from the context digest (ECHO-1055), checked against its
+      // allow-list and the template before anything is written. Its Explore prompt is
+      // written as overrides on the template, the rest after the preset.
+      const digest = parseDigestApply(body.digest, template, accepted);
+      const fromDigest = digestOverrides(digest);
+      const overrides = Object.keys(fromDigest).length ? { ...accepted, ...fromDigest } : accepted;
       const now = clock(deps);
       const id = newId();
       const insert = async (conn: Db) => {
@@ -159,9 +169,19 @@ export function projectService(deps: TenancyDeps) {
             language: body.language,
             now: iso(now),
             overrides,
+            tags: digest?.tags ?? null,
           });
         else if (overrides)
           await applyOverrides(projectsStorage(conn), { projectId: id, overrides, now: iso(now) });
+        if (digest)
+          await applyDigest(projectsStorage(conn), {
+            projectId: id,
+            template,
+            language: body.language,
+            digest,
+            createdBy: ctx.who.directusUserId,
+            now: iso(now),
+          });
       };
       const a = ctx.who.isStaff ? null : await allowanceForWorkspace(db, ctx.workspaceId, now);
       if (a)

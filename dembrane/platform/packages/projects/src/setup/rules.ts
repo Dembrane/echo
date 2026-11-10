@@ -131,6 +131,30 @@ export function checkTerm(
   sources: TermSources,
   language: string,
 ): { ok: true; term: string; source: TermSource } | { ok: false; why: DropReason } {
+  const ordered = (["description", "text", "url"] as const).flatMap((source) => {
+    const text = sources[source];
+    return text ? [{ name: source, text }] : [];
+  });
+  const checked = checkTermIn(candidate, ordered, language);
+  return checked.ok ? { ...checked, source: checked.source as TermSource } : checked;
+}
+
+/** A source a term may come from, by its name (a file name, "pasted text", a link). */
+export interface NamedSource {
+  readonly name: string;
+  readonly text: string;
+}
+
+/**
+ * `checkTerm` against any list of named sources, in the order a host would recognise
+ * them (ECHO-1055: the digest's files, pasted text and link). Returns the name of the
+ * first source the term occurs in.
+ */
+export function checkTermIn(
+  candidate: string,
+  sources: readonly NamedSource[],
+  language: string,
+): { ok: true; term: string; source: string } | { ok: false; why: DropReason } {
   const term = tidy(candidate);
   if (term.length < 2) return { ok: false, why: "empty" };
   if (term.length > MAX_TERM_CHARS) return { ok: false, why: "too_long" };
@@ -139,13 +163,12 @@ export function checkTerm(
   if (!/\p{L}/u.test(term)) return { ok: false, why: "number" };
   // Where it occurs, in the order a host would recognise: what they typed, what they
   // pasted, then the page. The model's own claim about the source is never trusted.
-  let found: { source: TermSource } | null = null;
+  let found: { source: string } | null = null;
   const all: Occurrence[] = [];
-  for (const source of ["description", "text", "url"] as const) {
-    const text = sources[source];
+  for (const { name, text } of sources) {
     if (!text) continue;
     const spellings = occurrences(term, text);
-    if (spellings.length && !found) found = { source };
+    if (spellings.length && !found) found = { source: name };
     all.push(...spellings);
   }
   if (!found) return { ok: false, why: "not_in_source" };

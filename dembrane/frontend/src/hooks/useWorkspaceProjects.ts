@@ -75,6 +75,7 @@ async function createWorkspaceProject(
 	language: string,
 	templateKey: string | null,
 	overrides: Record<string, boolean | string> | null,
+	digest: Record<string, unknown> | null = null,
 ): Promise<{ id: string; name: string; workspace_id: string }> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/projects`,
@@ -86,6 +87,9 @@ async function createWorkspaceProject(
 				name,
 				template_key: templateKey,
 				...(overrides && Object.keys(overrides).length > 0 && { overrides }),
+				// What the host kept from the context digest (ECHO-1055), written in the
+				// same transaction; the server holds it to its allow-list.
+				...(digest && Object.keys(digest).length > 0 && { digest }),
 			}),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
@@ -153,12 +157,15 @@ export const useCreateWorkspaceProject = () => {
 			language,
 			templateKey = null,
 			overrides = null,
+			digest = null,
 		}: {
 			name: string;
 			language: string;
 			templateKey?: string | null;
 			/** Accepted setup suggestions: preset fields only, validated by the server. */
 			overrides?: Record<string, boolean | string> | null;
+			/** The parts of the context digest the host kept (ECHO-1055). */
+			digest?: Record<string, unknown> | null;
 		}) => {
 			if (!workspaceId) throw new Error("No workspace selected");
 			return createWorkspaceProject(
@@ -167,6 +174,7 @@ export const useCreateWorkspaceProject = () => {
 				language,
 				templateKey,
 				overrides,
+				digest,
 			);
 		},
 		onError: (error: Error) => {

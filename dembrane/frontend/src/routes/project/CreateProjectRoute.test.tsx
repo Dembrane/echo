@@ -82,6 +82,45 @@ vi.mock("@/components/project/templates/projectTemplates", async (orig) => ({
 vi.mock("@/components/project/templates/i18n", () => ({
 	useTemplatesCatalog: () => true,
 }));
+// The digest's blocks are tested on their own; here a stand-in calls the route's callbacks.
+vi.mock("@/components/project/digest/lazy", () => ({
+	LazyDigest: (p: {
+		onActiveChange: (a: boolean) => void;
+		onFallback: (f: unknown) => void;
+		onCreate: (b: unknown) => Promise<boolean>;
+	}) => (
+		<div data-testid="digest-stub">
+			<button type="button" onClick={() => p.onActiveChange(true)}>
+				digest active
+			</button>
+			<button
+				type="button"
+				onClick={() =>
+					p.onFallback({
+						cause: "unavailable",
+						context: "Agenda text",
+						cut: false,
+					})
+				}
+			>
+				digest fallback
+			</button>
+			<button
+				type="button"
+				onClick={() =>
+					void p.onCreate({
+						digest: { goal: "Learn", key_terms: ["Klokgebouw"] },
+						name: "From material",
+						templateKey: "world_cafe",
+					})
+				}
+			>
+				digest create
+			</button>
+		</div>
+	),
+	LazyNameStepDigest: () => <div data-testid="name-step-digest-stub" />,
+}));
 vi.mock("@/lib/analytics/events", async (orig) => ({
 	...(await orig<typeof import("@/lib/analytics/events")>()),
 	track: tracked,
@@ -275,6 +314,7 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		});
 		expect(tracked).toHaveBeenCalledWith("project_created", {
 			project_id: "p1",
+			started_from: "picker",
 			template_key: "resident_evening",
 		});
 	});
@@ -324,11 +364,11 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		renderCreate();
 		chooseTemplate("interviews");
 		const field = screen.getByLabelText("Project context");
-		fireEvent.change(field, { target: { value: "x".repeat(2000) } });
+		fireEvent.change(field, { target: { value: "x".repeat(4000) } });
 		expect(screen.queryByTestId("project-context-long-note")).toBeNull();
-		fireEvent.change(field, { target: { value: "x".repeat(2001) } });
+		fireEvent.change(field, { target: { value: "x".repeat(4001) } });
 		expect(screen.getByTestId("project-context-long-note")).toBeTruthy();
-		expect((field as HTMLTextAreaElement).value).toHaveLength(2001);
+		expect((field as HTMLTextAreaElement).value).toHaveLength(4001);
 	});
 
 	it("counts the new steps", () => {
@@ -598,6 +638,51 @@ describe("CreateProjectRoute: setup suggestions", () => {
 			settings_accepted: 1,
 			surface: "wizard",
 			terms_accepted: 1,
+		});
+	});
+
+	describe("the context digest (ECHO-1055)", () => {
+		it("sits above the picker, which steps aside while it is active", () => {
+			renderCreate();
+			expect(screen.getByTestId("digest-stub")).toBeTruthy();
+			expect(screen.getByTestId("template-picker")).toBeTruthy();
+			fireEvent.click(screen.getByText("digest active"));
+			expect(screen.queryByTestId("template-picker")).toBeNull();
+		});
+
+		it("creates from the review in one request, with the digest", async () => {
+			createMutate.mockResolvedValue({
+				id: "p7",
+				name: "x",
+				workspace_id: "w1",
+			});
+			renderCreate();
+			fireEvent.click(screen.getByText("digest create"));
+			await waitFor(() =>
+				expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p7/home"),
+			);
+			expect(createMutate).toHaveBeenCalledWith({
+				digest: { goal: "Learn", key_terms: ["Klokgebouw"] },
+				language: "en",
+				name: "From material",
+				templateKey: "world_cafe",
+			});
+			expect(updateMutate).not.toHaveBeenCalled();
+			expect(tracked).toHaveBeenCalledWith("project_created", {
+				project_id: "p7",
+				started_from: "digest",
+				template_key: "world_cafe",
+			});
+		});
+
+		it("a failed digest puts the text in the project context for the name step", () => {
+			renderCreate();
+			fireEvent.click(screen.getByText("digest fallback"));
+			chooseTemplate("interviews");
+			expect(
+				(screen.getByLabelText("Project context") as HTMLTextAreaElement).value,
+			).toBe("Agenda text");
+			expect(screen.getByTestId("name-step-digest-stub")).toBeTruthy();
 		});
 	});
 });

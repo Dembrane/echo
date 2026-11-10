@@ -1,4 +1,5 @@
 import "@mantine/core/styles.css";
+import "@mantine/dropzone/styles.css";
 import "@/index.css";
 
 import { MantineProvider } from "@mantine/core";

@@ -22,6 +22,12 @@ import { useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import type { DigestFallback } from "@/components/project/digest/DigestConnected";
+import {
+	LazyDigest,
+	LazyNameStepDigest,
+} from "@/components/project/digest/lazy";
+import type { DigestCreateBody } from "@/components/project/digest/review";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
@@ -92,6 +98,11 @@ async function setVisibility(projectId: string, visibility: Access) {
  * Creating a project: what the host is going to do, then a name. Two choices are enough;
  * the template's preset is applied by the server in the creating transaction.
  *
+ * Above the picker, "Have an agenda or invitation? Drop it here" (the context digest,
+ * ECHO-1055): the host drops their material, dembrane reads it and proposes the whole
+ * setup on one review screen, and Create there makes the project with what they kept. If
+ * the digest fails, the picker takes over with the material's text in the project context.
+ *
  * Step 1 "What are you going to do?": templates by purpose (TemplatePicker, ECHO-1053): the
  * most used first, filters for the rest, and quiet "Upload recordings" and "Start blank"
  * links. A ?template=<key> link (workspace home's picker) arrives on step 2 with that
@@ -124,6 +135,8 @@ export const CreateProjectRoute = () => {
 	const [overrides, setOverrides] = useState<SettingOverrides>({});
 	const suggestedRef = useRef<SetupSuggestions | null>(null);
 	const [access, setAccess] = useState<Access>("workspace");
+	// The digest's reading states and review replace the picker while they show.
+	const [digestActive, setDigestActive] = useState(false);
 	const [moreOpened, moreHandlers] = useDisclosure(false);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	// Availability is not default-ness. The assistant setup starts an agentic
@@ -258,6 +271,7 @@ export const CreateProjectRoute = () => {
 			createdRef.current = true;
 			track("project_created", {
 				project_id: project.id,
+				started_from: "picker",
 				template_key: template ?? "blank",
 			});
 			const suggested = suggestedRef.current;
@@ -296,6 +310,55 @@ export const CreateProjectRoute = () => {
 			}
 		},
 	});
+
+	// Create from the digest's review: the template and everything the host kept, in one
+	// request and one transaction. Resolves false when the project was not created.
+	const createFromDigest = useMutation({
+		mutationFn: async (body: DigestCreateBody) => {
+			const project = await createProject.mutateAsync({
+				digest: body.digest,
+				language: projectLanguage,
+				name: body.name,
+				templateKey: body.templateKey,
+			});
+			return { body, project };
+		},
+		onError: (error: Error) => {
+			if (isFreeTierLimitError(error) === "projects") {
+				upgradeHandlers.open();
+				return;
+			}
+			void notifyError(error);
+		},
+		onSuccess: ({ body, project }) => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			createdRef.current = true;
+			track("project_created", {
+				project_id: project.id,
+				started_from: "digest",
+				template_key: body.templateKey,
+			});
+			const terms = body.digest.key_terms?.length ?? 0;
+			if (terms > 0)
+				track("key_terms_updated", {
+					count: terms,
+					project_id: project.id,
+					surface: "wizard",
+				});
+			toast.success(t`Project created`);
+			const lands = templates.data?.find((x) => x.key === body.templateKey);
+			const base = `/w/${workspaceId}/projects/${project.id}`;
+			navigate(lands?.landing === "upload" ? `${base}/upload` : `${base}/home`);
+		},
+	});
+
+	const onDigestFallback = (fallback: DigestFallback) => {
+		if (!fallback.context) return;
+		setContext((prev) =>
+			prev.trim() ? `${prev.trim()}\n\n${fallback.context}` : fallback.context,
+		);
+	};
 
 	const backToProjects = () => {
 		if (workspaceId) {
@@ -378,41 +441,65 @@ export const CreateProjectRoute = () => {
 				>
 					<Stepper.Step label={t`Template`}>
 						<Stack gap="lg" mt="md">
-							<TemplatePickerConnected
+							<LazyDigest
+								workspaceId={workspaceId ?? null}
 								language={projectLanguage}
-								value={template}
-								onChange={pickTemplate}
-								onFilterChange={(filter, value) =>
-									track("project_template_filter_changed", { filter, value })
-								}
-								onUpload={() => chooseTemplate("upload")}
-								onStartBlank={() => chooseTemplate("blank")}
+								templates={templates.data}
+								onActiveChange={setDigestActive}
+								onFallback={onDigestFallback}
+								onCreate={async (body) => {
+									try {
+										await createFromDigest.mutateAsync(body);
+										return true;
+									} catch {
+										return false;
+									}
+								}}
+								creating={createFromDigest.isPending}
+								pageDrop={step === 0}
 							/>
-							<Group gap="sm">
-								<Button
-									variant="filled"
-									size="sm"
-									disabled={!template}
-									onClick={() => template && chooseTemplate(template)}
-									aria-describedby={template ? undefined : continueHintId}
-									data-testid="create-project-template-continue"
-								>
-									<Trans>Continue</Trans>
-								</Button>
-								{!template && (
-									<Text size="xs" className="app-muted" id={continueHintId}>
-										<Trans>Choose a card to continue.</Trans>
-									</Text>
-								)}
-								<Button
-									variant="subtle"
-									color="gray"
-									size="sm"
-									onClick={handleCancel}
-								>
-									<Trans>Cancel</Trans>
-								</Button>
-							</Group>
+							{!digestActive && (
+								<>
+									<TemplatePickerConnected
+										language={projectLanguage}
+										value={template}
+										onChange={pickTemplate}
+										onFilterChange={(filter, value) =>
+											track("project_template_filter_changed", {
+												filter,
+												value,
+											})
+										}
+										onUpload={() => chooseTemplate("upload")}
+										onStartBlank={() => chooseTemplate("blank")}
+									/>
+									<Group gap="sm">
+										<Button
+											variant="filled"
+											size="sm"
+											disabled={!template}
+											onClick={() => template && chooseTemplate(template)}
+											aria-describedby={template ? undefined : continueHintId}
+											data-testid="create-project-template-continue"
+										>
+											<Trans>Continue</Trans>
+										</Button>
+										{!template && (
+											<Text size="xs" className="app-muted" id={continueHintId}>
+												<Trans>Choose a card to continue.</Trans>
+											</Text>
+										)}
+										<Button
+											variant="subtle"
+											color="gray"
+											size="sm"
+											onClick={handleCancel}
+										>
+											<Trans>Cancel</Trans>
+										</Button>
+									</Group>
+								</>
+							)}
 						</Stack>
 					</Stepper.Step>
 
@@ -458,6 +545,15 @@ export const CreateProjectRoute = () => {
 									onResult={(result) => {
 										suggestedRef.current = result;
 									}}
+								/>
+								<LazyNameStepDigest
+									workspaceId={workspaceId ?? null}
+									language={projectLanguage}
+									name={name}
+									context={context}
+									keyTerms={keyTerms}
+									onContextChange={setContext}
+									onKeyTermsChange={setKeyTerms}
 								/>
 							</Stack>
 

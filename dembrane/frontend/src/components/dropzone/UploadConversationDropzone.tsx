@@ -14,7 +14,6 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { usePostHog } from "@posthog/react";
 import {
 	ArrowRightIcon,
 	CheckCircleIcon,
@@ -26,6 +25,7 @@ import {
 	WarningCircleIcon,
 	XIcon,
 } from "@phosphor-icons/react";
+import { usePostHog } from "@posthog/react";
 import {
 	type PropsWithChildren,
 	useCallback,
@@ -86,44 +86,58 @@ const getFileExtension = (fileName: string): string => {
 	return fileName.split(".").pop()?.toLowerCase() || "";
 };
 
+// The audio types and extensions an upload takes: the drop zone's accept setting and the
+// check on every selected file read the same two lists.
+const AUDIO_MIME_TYPES = [
+	"audio/mp3",
+	"audio/wav",
+	"audio/mpeg",
+	"audio/ogg",
+	"audio/webm",
+	"audio/m4a",
+	"audio/aac",
+	"audio/flac",
+	"audio/opus",
+	"video/mp4", // MP4 can contain audio
+];
+
+const AUDIO_EXTENSIONS = [
+	"mp3",
+	"wav",
+	"mpeg",
+	"ogg",
+	"webm",
+	"m4a",
+	"mp4",
+	"aac",
+	"flac",
+	"opus",
+	// Apple Voice Memos; renamed to m4a on selection (see asUploadable).
+	"qta",
+];
+
+/**
+ * The drop zone's accept setting: a file passes when its type is one of the audio types
+ * or its extension one of the audio extensions, exactly what isAudioFile checks. The
+ * extensions sit under the first type; react-dropzone reads the whole object as one list.
+ */
+export const AUDIO_ACCEPT: Record<string, string[]> = Object.fromEntries(
+	AUDIO_MIME_TYPES.map((type, i) => [
+		type,
+		i === 0 ? AUDIO_EXTENSIONS.map((ext) => `.${ext}`) : [],
+	]),
+);
+
 // Check if file is a valid audio file based on its content type or extension
 const isAudioFile = (file: File): boolean => {
-	const validAudioTypes = [
-		"audio/mp3",
-		"audio/wav",
-		"audio/mpeg",
-		"audio/ogg",
-		"audio/webm",
-		"audio/m4a",
-		"audio/aac",
-		"audio/flac",
-		"audio/opus",
-		"video/mp4", // MP4 can contain audio
-	];
-
-	const validExtensions = [
-		"mp3",
-		"wav",
-		"mpeg",
-		"ogg",
-		"webm",
-		"m4a",
-		"mp4",
-		"aac",
-		"flac",
-		"opus",
-		// Apple Voice Memos; renamed to m4a on selection (see asUploadable).
-		"qta",
-	];
-
 	// Check MIME type first
-	if (validAudioTypes.includes(file.type)) {
+	if (AUDIO_MIME_TYPES.includes(file.type)) {
 		return true;
 	}
 
 	// Fallback to extension check
 	const extension = getFileExtension(file.name);
-	return validExtensions.includes(extension);
+	return AUDIO_EXTENSIONS.includes(extension);
 };
 
 // Create a new file with updated name but same content
@@ -256,20 +270,6 @@ const MIN_FILE_SIZE = 5 * 1024; // 5KB in bytes
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 // One rule between upload rows (the read grammar, a single container).
 const RULE = "var(--app-stroke) solid var(--app-rule-color)";
-
-// Valid audio MIME types
-const VALID_AUDIO_TYPES = [
-	"audio/mp3",
-	"audio/wav",
-	"audio/mpeg",
-	"audio/ogg",
-	"audio/webm",
-	"audio/m4a",
-	"video/mp4", // MP4 can contain audio
-	"audio/aac",
-	"audio/flac",
-	"audio/opus",
-];
 
 export const UploadConversationDropzone = (
 	props: PropsWithChildren<{
@@ -678,7 +678,7 @@ export const UploadConversationDropzone = (
 									}
 								}}
 								loading={uploader.isPending}
-								accept={VALID_AUDIO_TYPES}
+								accept={AUDIO_ACCEPT}
 								{...testId("conversation-upload-dropzone")}
 							>
 								<Stack align="center" gap="sm">

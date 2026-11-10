@@ -22,6 +22,9 @@ export type TemplateSurface = "create" | "workspace_home";
 export type TemplateFilterName = "verb" | "setup" | "show_all";
 export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
 export type SetupSuggestionSurface = "wizard" | "portal_editor";
+/** Where the digest's drop zone sits: the template picker or the name step. */
+export type DigestSurface = "picker" | "name_step";
+export type ProjectStartedFrom = "digest" | "picker";
 export type PortalShareMethod = "qr" | "copy" | "download";
 export type OnboardingWalkthroughStep = string;
 /** Why a sign-in failed; components/auth/utils/errorUtils.ts decides it from the answer. */
@@ -61,7 +64,12 @@ export interface AnalyticsEvents {
 	project_create_started: NoProps;
 	project_create_step_viewed: { step: ProjectCreateStep };
 	project_create_abandoned: { step: ProjectCreateStep };
-	project_created: { project_id: string; template_key: string };
+	// ECHO-1055: "digest" when the host created from the review of their material.
+	project_created: {
+		project_id: string;
+		template_key: string;
+		started_from?: ProjectStartedFrom;
+	};
 	// A host committed to a template: continued with a card, started blank or uploading, or
 	// picked one on workspace home. Not sent for each card the arrow keys pass over. Flow 3
 	// adds the card's verbs and setup, whether it was in the first view, and the filters on
@@ -128,6 +136,28 @@ export interface AnalyticsEvents {
 		surface: SetupSuggestionSurface;
 	};
 	project_setup_ai_failed: { cause: string; surface: SetupSuggestionSurface };
+
+	// The context digest (ECHO-1055): a host drops their material and dembrane proposes the
+	// setup. Counts, kinds and buckets only: never file names, text, terms or snippets.
+	project_digest_started: {
+		sources: number;
+		kinds: string[];
+		total_chars_bucket: string;
+		surface: DigestSurface;
+	};
+	project_digest_ready: {
+		fields_returned: number;
+		template_key: string | null;
+		duration_ms_bucket: string;
+		surface: DigestSurface;
+	};
+	project_digest_failed: { cause: string; surface: DigestSurface };
+	project_digest_applied: {
+		fields_accepted: number;
+		fields_edited: number;
+		fields_dropped: number;
+		template_changed: boolean;
+	};
 
 	// Reserved for later onboarding tickets. Typed now so the names stay stable; nothing
 	// sends them yet.

@@ -1,3 +1,4 @@
+import { contextForPrompt } from "@dembrane/core";
 import { conversationTranscript } from "./context";
 import type { ChatDeps } from "./deps";
 import { complete } from "./llm";
@@ -17,7 +18,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export function projectContextForPrompt(project: Record<string, unknown>): string | null {
   const parts: string[] = [];
   if (project.name) parts.push(`name: ${project.name}`);
-  if (project.context) parts.push(`context: ${project.context}`);
+  const context = contextForPrompt(project.context);
+  if (context) parts.push(`context: ${context}`);
   if (project.default_conversation_transcript_prompt)
     parts.push(`hotwords that the user set: ${project.default_conversation_transcript_prompt}`);
   if (project.default_conversation_title)

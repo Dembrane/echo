@@ -9,6 +9,7 @@ const config: LinguiConfig = {
 				"<rootDir>/src/features/accounts/**",
 				"<rootDir>/src/lib/errors/messages/**",
 				"<rootDir>/src/components/project/templates/**",
+				"<rootDir>/src/components/project/digest/**",
 			],
 			include: ["src"],
 			path: "<rootDir>/src/locales/{locale}",
@@ -25,6 +26,12 @@ const config: LinguiConfig = {
 			// and facts, loaded when the picker opens (src/components/project/templates/i18n.ts).
 			include: ["<rootDir>/src/components/project/templates"],
 			path: "<rootDir>/src/components/project/templates/locales/{locale}",
+		},
+		{
+			// The context digest's own catalog (ECHO-1055): the drop zone, the review and its
+			// messages, loaded when the drop zone first shows (src/components/project/digest/i18n.ts).
+			include: ["<rootDir>/src/components/project/digest"],
+			path: "<rootDir>/src/components/project/digest/locales/{locale}",
 		},
 		{
 			// The friendly message for every error code, loaded with the first error a

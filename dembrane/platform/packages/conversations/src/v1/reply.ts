@@ -1,3 +1,4 @@
+import { contextForPrompt } from "@dembrane/core";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import { speechHint } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
@@ -140,7 +141,8 @@ export function replyPrompt(i: {
   // so the wrapper's "1-3 sentences" and "we/our" lines do not apply to them.
   const ownFormat = mode === "summarize" || mode === "brainstorm";
   const description: string[] = [];
-  if (project.context !== null) description.push(project.context);
+  const context = contextForPrompt(project.context);
+  if (context !== null) description.push(context);
   if (project.default_conversation_title !== null)
     description.push(`Default Conversation Title: ${project.default_conversation_title}`);
   if (project.default_conversation_description !== null)
