@@ -60,6 +60,15 @@ describe("SignPromptBanner", () => {
 		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 
+	it("is a labelled region, never an alert that interrupts a screen reader on each page", () => {
+		show();
+		const banner = screen.getByTestId("sign-prompt-banner");
+		expect(banner.getAttribute("role")).toBe("region");
+		expect(banner.getAttribute("role")).not.toBe("alert");
+		expect(screen.getByRole("region", { name: "Tasks" })).toBe(banner);
+		expect(screen.queryByRole("alert")).toBeNull();
+	});
+
 	it("counts one in the singular and leaves out a next task it does not have", () => {
 		show({ nextTask: null, tasksWaiting: 1 });
 		const text = screen.getByTestId("sign-prompt-banner").textContent ?? "";

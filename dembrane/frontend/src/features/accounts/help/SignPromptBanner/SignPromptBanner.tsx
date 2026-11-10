@@ -1,6 +1,6 @@
 import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Button, Group, Text } from "@mantine/core";
+import { Button, CloseButton, Group, Paper, Text } from "@mantine/core";
 import { ListChecksIcon } from "@phosphor-icons/react";
 
 export interface SignPromptBannerProps {
@@ -19,8 +19,10 @@ export interface SignPromptBannerProps {
 /**
  * One slim line at the top of the page for someone with tasks waiting on them (most
  * often an offer to sign): how many, where, the next one, a way there and a way to
- * close it. A block: props in, callbacks out, no data of its own. It reads as an Alert,
- * so it takes the rule above and below.
+ * close it. A block: props in, callbacks out, no data of its own. Something to read, so
+ * a Paper with the rule above and below and the action tint an Alert has. Not an Alert:
+ * Mantine fixes that to role="alert", which a screen reader would announce on every page;
+ * a labelled region is found when wanted and stays quiet otherwise.
  */
 export function SignPromptBanner(props: SignPromptBannerProps) {
 	const { onOpen, onDismiss } = props;
@@ -32,34 +34,55 @@ export function SignPromptBanner(props: SignPromptBannerProps) {
 		other: `You have # things to do in ${name}`,
 	});
 	return (
-		<Alert
-			color="primary"
-			py={8}
-			icon={<ListChecksIcon size={20} />}
-			withCloseButton
-			closeButtonLabel={t`Close`}
-			onClose={onDismiss}
+		<Paper
+			component="section"
+			role="region"
+			aria-label={t`Tasks`}
+			withBorder
+			radius={0}
+			px="md"
+			py="xs"
+			bg="var(--app-action-tint)"
 			data-testid="sign-prompt-banner"
 		>
-			<Group gap="sm" wrap="wrap" align="center" justify="space-between">
-				<Text size="sm" style={{ flex: "1 1 16rem" }}>
-					{count}
-					{next && (
-						<>
-							{". "}
-							<Trans>Next: {next}</Trans>
-						</>
-					)}
-				</Text>
-				<Button
-					variant="outline"
-					size="xs"
-					onClick={onOpen}
-					data-testid="sign-prompt-open"
+			<Group gap="sm" wrap="nowrap" align="center">
+				<ListChecksIcon
+					size={20}
+					color="var(--app-action)"
+					aria-hidden
+					style={{ flexShrink: 0 }}
+				/>
+				<Group
+					gap="sm"
+					wrap="wrap"
+					align="center"
+					justify="space-between"
+					style={{ flex: 1, minWidth: 0 }}
 				>
-					<Trans>Go to your tasks</Trans>
-				</Button>
+					<Text size="sm" style={{ flex: "1 1 16rem" }}>
+						{count}
+						{next && (
+							<>
+								{". "}
+								<Trans>Next: {next}</Trans>
+							</>
+						)}
+					</Text>
+					<Button
+						variant="outline"
+						size="xs"
+						onClick={onOpen}
+						data-testid="sign-prompt-open"
+					>
+						<Trans>Go to your tasks</Trans>
+					</Button>
+				</Group>
+				<CloseButton
+					aria-label={t`Close`}
+					onClick={onDismiss}
+					data-testid="sign-prompt-close"
+				/>
 			</Group>
-		</Alert>
+		</Paper>
 	);
 }
