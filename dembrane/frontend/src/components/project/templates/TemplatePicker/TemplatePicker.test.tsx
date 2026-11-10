@@ -41,23 +41,137 @@ const renderPicker = (
 		</I18nProvider>,
 	);
 
+const cards = () =>
+	screen.getAllByRole("radio").map((r) => r.getAttribute("data-testid"));
+
 describe("TemplatePicker", () => {
-	it("asks what the host is going to do, one radio per template card", () => {
+	it("asks what the host is going to do and shows the most used cards first", () => {
 		renderPicker();
-		const group = screen.getByRole("radiogroup", {
-			name: "What are you going to do?",
-		});
-		expect(group).toBeTruthy();
 		expect(
-			screen.getAllByRole("radio").map((r) => r.getAttribute("data-testid")),
-		).toEqual([
-			"template-card-conversation",
-			"template-card-series",
-			"template-card-event",
-			"template-card-upload",
+			screen.getByRole("radiogroup", { name: "What are you going to do?" }),
+		).toBeTruthy();
+		expect(cards()).toEqual([
+			"template-card-resident_evening",
+			"template-card-focus_group",
+			"template-card-interviews",
+			"template-card-strategy_day",
+			"template-card-working_group",
+			"template-card-ideation",
 		]);
-		// Blank is the quiet button, not a card.
-		expect(screen.queryByTestId("template-card-blank")).toBeNull();
+		expect(screen.getByTestId("template-filter-count").textContent).toBe(
+			"Most used. Filter to find more.",
+		);
+	});
+
+	it("filters by verb from all cards, as pressed toggle buttons, and says how many", () => {
+		const onFilterChange = vi.fn();
+		renderPicker({ onFilterChange });
+		const decide = screen.getByTestId("template-filter-verb-decide");
+		expect(decide.getAttribute("aria-pressed")).toBe("false");
+		fireEvent.click(decide);
+		expect(decide.getAttribute("aria-pressed")).toBe("true");
+		expect(cards()).toEqual([
+			"template-card-resident_evening",
+			"template-card-working_group",
+			"template-card-citizens_assembly",
+		]);
+		expect(screen.getByTestId("template-filter-count").textContent).toBe(
+			"3 templates",
+		);
+		expect(
+			screen.getByTestId("template-filter-count").getAttribute("aria-live"),
+		).toBe("polite");
+		expect(onFilterChange).toHaveBeenLastCalledWith("verb", "decide");
+		// Pressing it again clears it.
+		fireEvent.click(decide);
+		expect(onFilterChange).toHaveBeenLastCalledWith("verb", "none");
+		expect(cards()).toHaveLength(6);
+	});
+
+	it("filters by setup, and both filters together", () => {
+		renderPicker();
+		fireEvent.click(screen.getByTestId("template-filter-setup-many_groups"));
+		expect(cards()).toHaveLength(10);
+		fireEvent.click(screen.getByTestId("template-filter-verb-gather"));
+		expect(cards()).toEqual([
+			"template-card-open_space",
+			"template-card-one_two_four_all",
+			"template-card-conference",
+		]);
+	});
+
+	it("shows all sixteen cards and clears the filters", () => {
+		const onFilterChange = vi.fn();
+		renderPicker({ onFilterChange });
+		fireEvent.click(screen.getByTestId("template-filter-verb-explore"));
+		fireEvent.click(screen.getByTestId("template-filter-show-all"));
+		expect(cards()).toHaveLength(16);
+		expect(
+			screen
+				.getByTestId("template-filter-verb-explore")
+				.getAttribute("aria-pressed"),
+		).toBe("false");
+		expect(
+			screen
+				.getByTestId("template-filter-show-all")
+				.getAttribute("aria-pressed"),
+		).toBe("true");
+		expect(onFilterChange).toHaveBeenLastCalledWith("show_all", "on");
+	});
+
+	it("hands the chosen key out with what the picker knew, and shows it checked", () => {
+		const onChange = vi.fn();
+		const view = renderPicker({ onChange });
+		fireEvent.click(screen.getByTestId("template-filter-verb-understand"));
+		fireEvent.click(screen.getByTestId("template-card-kitchen_table"));
+		expect(onChange).toHaveBeenCalledWith("kitchen_table", {
+			featured: false,
+			filtersActive: ["verb:understand"],
+			setup: "one_recording",
+			verbs: ["understand"],
+		});
+		view.unmount();
+		renderPicker({ value: "resident_evening" });
+		expect(
+			screen
+				.getByTestId("template-card-resident_evening")
+				.getAttribute("aria-checked"),
+		).toBe("true");
+	});
+
+	it("shows Great for and the facts on each card", () => {
+		renderPicker();
+		const evening = screen.getByTestId("template-card-resident_evening");
+		expect(evening.textContent).toContain("Resident evening");
+		expect(evening.textContent).toContain("Great for resident");
+		expect(evening.textContent).toContain("Each table checks its own summary");
+		expect(evening.textContent).toContain(
+			"Understand · Decide · Many groups at once",
+		);
+	});
+
+	it("names the format on a card that follows one", () => {
+		renderPicker();
+		fireEvent.click(screen.getByTestId("template-filter-show-all"));
+		expect(
+			screen.getByTestId("template-card-world_cafe").textContent,
+		).toContain("World Café");
+	});
+
+	it("offers Upload recordings and Start blank as quiet links, only when they can be used", () => {
+		const onStartBlank = vi.fn();
+		const onUpload = vi.fn();
+		const view = renderPicker({ onStartBlank, onUpload });
+		fireEvent.click(screen.getByTestId("template-picker-upload"));
+		fireEvent.click(screen.getByTestId("template-picker-start-blank"));
+		expect(onUpload).toHaveBeenCalled();
+		expect(onStartBlank).toHaveBeenCalled();
+		// Links, not cards.
+		expect(cards()).not.toContain("template-card-upload");
+		expect(cards()).not.toContain("template-card-blank");
+		view.unmount();
+		renderPicker();
+		expect(screen.queryByTestId("template-picker-links")).toBeNull();
 	});
 
 	it("carries the walkthrough anchor", () => {
@@ -67,35 +181,6 @@ describe("TemplatePicker", () => {
 		).toBe("template-picker");
 	});
 
-	it("hands the chosen key out and shows it checked", () => {
-		const onChange = vi.fn();
-		const view = renderPicker({ onChange });
-		fireEvent.click(screen.getByTestId("template-card-event"));
-		expect(onChange).toHaveBeenCalledWith("event");
-		view.unmount();
-		renderPicker({ value: "event" });
-		expect(
-			screen.getByTestId("template-card-event").getAttribute("aria-checked"),
-		).toBe("true");
-	});
-
-	it("shows what each card sets up from the summary", () => {
-		renderPicker();
-		const event = screen.getByTestId("template-card-event");
-		expect(event.textContent).toContain("A live event");
-		expect(event.textContent).toContain("Asks each table for its name");
-	});
-
-	it("offers Start blank only when it can be used", () => {
-		const onStartBlank = vi.fn();
-		const view = renderPicker({ onStartBlank });
-		fireEvent.click(screen.getByTestId("template-picker-start-blank"));
-		expect(onStartBlank).toHaveBeenCalled();
-		view.unmount();
-		renderPicker();
-		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
-	});
-
 	it("waits while loading and keeps blank open when the list fails", () => {
 		const view = renderPicker({ templates: undefined });
 		expect(screen.queryAllByRole("radio")).toHaveLength(0);
@@ -103,9 +188,11 @@ describe("TemplatePicker", () => {
 		renderPicker({
 			failed: true,
 			onStartBlank: () => {},
+			onUpload: () => {},
 			templates: undefined,
 		});
 		expect(screen.getByTestId("template-picker-failed")).toBeTruthy();
 		expect(screen.getByTestId("template-picker-start-blank")).toBeTruthy();
+		expect(screen.queryByTestId("template-picker-upload")).toBeNull();
 	});
 });

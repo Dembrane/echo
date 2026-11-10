@@ -314,15 +314,22 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/new": {
 		params: { workspaceId: "$workspace" },
-		// The template picker, then the name step with "More options" open (ECHO-1042).
+		// The template picker by purpose: a verb filter, all cards, then the name step with
+		// "What this sets up" and "More options" open (ECHO-1042, ECHO-1053).
 		states: [
+			{ clicks: ["template-filter-verb-decide"], name: "filtered" },
+			{ clicks: ["template-filter-show-all"], name: "all templates" },
 			{
-				clicks: ["template-card-event", "create-project-template-continue"],
+				clicks: [
+					"template-card-resident_evening",
+					"create-project-template-continue",
+					"template-setup-summary-toggle",
+				],
 				name: "name",
 			},
 			{
 				clicks: [
-					"template-card-event",
+					"template-card-resident_evening",
 					"create-project-template-continue",
 					"create-project-more-options-toggle",
 				],

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { MantineProvider } from "@mantine/core";
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import { HouseLineIcon } from "@phosphor-icons/react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TemplateCard } from "./TemplateCard";
@@ -20,39 +20,45 @@ beforeAll(() => {
 		}) as unknown as MediaQueryList) as typeof window.matchMedia;
 });
 
+const renderCard = (props: Partial<Parameters<typeof TemplateCard>[0]> = {}) =>
+	render(
+		<MantineProvider>
+			<TemplateCard
+				icon={HouseLineIcon}
+				name="Resident evening"
+				greatFor="Great for resident evenings."
+				facts={["Each table checks its own summary", "Rounds as tags"]}
+				labels={["Understand", "Many groups at once"]}
+				testId="card"
+				{...props}
+			/>
+		</MantineProvider>,
+	);
+
 describe("TemplateCard", () => {
-	it("shows the name, when to pick it and each fact as a list item", () => {
-		render(
-			<MantineProvider>
-				<TemplateCard
-					icon={UsersThreeIcon}
-					name="A live event"
-					when="Many tables at once."
-					facts={["Asks each table for its name", "Adds 2 tags"]}
-					testId="card"
-				/>
-			</MantineProvider>,
-		);
-		expect(screen.getByText("A live event")).toBeTruthy();
-		expect(screen.getByText("Many tables at once.")).toBeTruthy();
-		expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual(
-			["Asks each table for its name", "Adds 2 tags"],
-		);
-		// The icon is decoration: the name says what the card is.
-		expect(
-			screen
-				.getByTestId("card")
-				.querySelector("svg")
-				?.getAttribute("aria-hidden"),
-		).toBe("true");
+	it("reads name, Great for, facts, then the quiet labels", () => {
+		renderCard();
+		const text = screen.getByTestId("card").textContent ?? "";
+		const order = [
+			"Resident evening",
+			"Great for resident evenings.",
+			"Each table checks its own summary",
+			"Understand · Many groups at once",
+		].map((s) => text.indexOf(s));
+		expect(order.every((i) => i >= 0)).toBe(true);
+		expect([...order].sort((a, b) => a - b)).toEqual(order);
 	});
 
-	it("leaves the list out when there is nothing to list", () => {
-		render(
-			<MantineProvider>
-				<TemplateCard icon={UsersThreeIcon} name="N" when="W" facts={[]} />
-			</MantineProvider>,
+	it("puts a named format first among the labels", () => {
+		renderCard({ method: "World Café" });
+		expect(screen.getByTestId("template-card-labels").textContent).toBe(
+			"World Café · Understand · Many groups at once",
 		);
+	});
+
+	it("leaves out the fact list and labels when there are none", () => {
+		renderCard({ facts: [], labels: [] });
 		expect(screen.queryByRole("list")).toBeNull();
+		expect(screen.queryByTestId("template-card-labels")).toBeNull();
 	});
 });

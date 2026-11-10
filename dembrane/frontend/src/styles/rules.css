@@ -739,6 +739,46 @@
   position: relative;
   z-index: 1;
 }
+/* A filter that is a toggle button (ECHO-1053, the template picker): the chip's sides and
+ * its checked tint, at a 44px touch height, joined in a row with single dividers. */
+:root .app-filter {
+  background: transparent;
+  border-color: var(--app-control-rule);
+  border-radius: 0;
+  border-style: solid;
+  border-width: 0 var(--app-stroke);
+  color: var(--app-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 320;
+  min-height: 44px;
+  padding: 0 14px;
+}
+:root .app-filter:hover {
+  background: var(--app-quiet);
+}
+:root .app-filter:active {
+  background: var(--app-pressed);
+}
+:root .app-filter[aria-pressed="true"] {
+  background: var(--app-action-tint);
+  border-color: var(--app-action);
+  position: relative;
+  z-index: 1;
+}
+:root .app-filter:focus-visible {
+  outline: 2px solid var(--app-action);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 2;
+}
+:root .app-filter-row {
+  gap: 0;
+}
+:root .app-filter-row > .app-filter + .app-filter {
+  margin-left: calc(-1 * var(--app-stroke));
+}
 
 /* Pressed (the :active state): the tab, row or chit you hold down previews
  * the selection: its stretch of the rule turns blue and its text graphite. */

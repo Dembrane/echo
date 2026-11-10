@@ -26,20 +26,37 @@ describe("track", () => {
 	it("sends events without properties", () => {
 		track("project_create_started");
 		expect(capture).toHaveBeenCalledWith("project_create_started", {
-			flow_version: 2,
+			flow_version: 3,
 		});
 	});
 
-	it("tells the template flow (2) apart from the four-step wizard (1)", () => {
-		expect(FLOW_VERSION).toBe(2);
+	it("tells templates by purpose (3) apart from the earlier flows", () => {
+		expect(FLOW_VERSION).toBe(3);
 		track("project_template_selected", {
+			featured: true,
+			filters_active: ["verb:understand"],
+			setup: "many_groups",
 			surface: "create",
-			template_key: "series",
+			template_key: "resident_evening",
+			verbs: ["understand", "decide"],
 		});
 		expect(capture).toHaveBeenCalledWith("project_template_selected", {
-			flow_version: 2,
+			featured: true,
+			filters_active: ["verb:understand"],
+			flow_version: 3,
+			setup: "many_groups",
 			surface: "create",
-			template_key: "series",
+			template_key: "resident_evening",
+			verbs: ["understand", "decide"],
+		});
+		track("project_template_filter_changed", {
+			filter: "verb",
+			value: "decide",
+		});
+		expect(capture).toHaveBeenCalledWith("project_template_filter_changed", {
+			filter: "verb",
+			flow_version: 3,
+			value: "decide",
 		});
 	});
 

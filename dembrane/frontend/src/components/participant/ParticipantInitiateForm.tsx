@@ -286,7 +286,7 @@ export const ParticipantInitiateForm = ({
 						required
 						size="md"
 						label={
-							project.conversation_ask_for_participant_name_label ??
+							project.conversation_ask_for_participant_name_label?.trim() ||
 							t`Session name`
 						}
 						placeholder="Group 1, John Doe, etc."

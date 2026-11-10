@@ -313,3 +313,38 @@ describe("ProjectPortalEditor participant email flag", () => {
 		).toBeTruthy();
 	});
 });
+
+// ECHO-1053: the name box's label, next to "Ask for name?".
+describe("ProjectPortalEditor name box label", () => {
+	it("shows the label field only while asking for a name, with the default as placeholder", () => {
+		renderWith({
+			conversation_ask_for_participant_name_label: "Table name or number",
+		});
+		const input = screen.getByTestId(
+			"portal-editor-name-label-input",
+		) as HTMLInputElement;
+		expect(input.value).toBe("Table name or number");
+		expect(input.placeholder).toBe("Session name");
+		expect(input.maxLength).toBe(80);
+		fireEvent.click(screen.getByLabelText(/Ask for name\?/));
+		expect(screen.queryByTestId("portal-editor-name-label-input")).toBeNull();
+	});
+
+	it("saves what the host types", () => {
+		vi.useFakeTimers();
+		renderWith({ conversation_ask_for_participant_name_label: null });
+		const input = screen.getByTestId("portal-editor-name-label-input");
+		expect((input as HTMLInputElement).value).toBe("");
+		fireEvent.change(input, { target: { value: "Interview code" } });
+		act(() => {
+			vi.advanceTimersByTime(2000);
+		});
+		expect(updateMutateAsync).toHaveBeenCalledWith(
+			expect.objectContaining({
+				payload: expect.objectContaining({
+					conversation_ask_for_participant_name_label: "Interview code",
+				}),
+			}),
+		);
+	});
+});

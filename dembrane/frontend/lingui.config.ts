@@ -8,6 +8,7 @@ const config: LinguiConfig = {
 			exclude: [
 				"<rootDir>/src/features/accounts/**",
 				"<rootDir>/src/lib/errors/messages/**",
+				"<rootDir>/src/components/project/templates/**",
 			],
 			include: ["src"],
 			path: "<rootDir>/src/locales/{locale}",
@@ -18,6 +19,12 @@ const config: LinguiConfig = {
 			// participant portal's first load.
 			include: ["<rootDir>/src/features/accounts"],
 			path: "<rootDir>/src/features/accounts/locales/{locale}",
+		},
+		{
+			// The template picker's own catalog (ECHO-1053): sixteen templates' names, lines
+			// and facts, loaded when the picker opens (src/components/project/templates/i18n.ts).
+			include: ["<rootDir>/src/components/project/templates"],
+			path: "<rootDir>/src/components/project/templates/locales/{locale}",
 		},
 		{
 			// The friendly message for every error code, loaded with the first error a

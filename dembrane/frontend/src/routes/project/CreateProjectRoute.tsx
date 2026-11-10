@@ -32,13 +32,16 @@ import {
 	hasTerm,
 	type SetupSuggestions,
 } from "@/components/project/setup-suggestions/setupSuggestions";
+import { useTemplatesCatalog } from "@/components/project/templates/i18n";
 import {
 	isTemplateKey,
 	type TemplateKey,
 	templateName,
 	useProjectTemplates,
 } from "@/components/project/templates/projectTemplates";
+import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
 import { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
+import { TemplateSetupSummary } from "@/components/project/templates/TemplateSetupSummary/TemplateSetupSummary";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
@@ -64,8 +67,8 @@ type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
 
-// The wizard's steps, in order, as analytics names them (flow 2). "More options" is not a
-// step: opening it is counted as "more_options".
+// The wizard's steps, in order, as analytics names them (flow 3, as flow 2). "More options"
+// is not a step: opening it is counted as "more_options".
 const CREATE_STEPS: readonly ProjectCreateStep[] = ["template", "name"];
 
 async function setVisibility(projectId: string, visibility: Access) {
@@ -89,12 +92,14 @@ async function setVisibility(projectId: string, visibility: Access) {
  * Creating a project: what the host is going to do, then a name. Two choices are enough;
  * the template's preset is applied by the server in the creating transaction.
  *
- * Step 1 "What are you going to do?": one card per template (TemplatePicker) and a quiet
- * "Start blank". A ?template=<key> link (workspace home's picker) arrives on step 2 with
- * that template chosen.
+ * Step 1 "What are you going to do?": templates by purpose (TemplatePicker, ECHO-1053): the
+ * most used first, filters for the rest, and quiet "Upload recordings" and "Start blank"
+ * links. A ?template=<key> link (workspace home's picker) arrives on step 2 with that
+ * template chosen.
  *
  * Step 2 "Name": name and the optional project context, with "Suggest key terms" under it
- * (setup suggestions from the context: key terms and settings to accept), then Create. Key terms, access,
+ * (setup suggestions from the context: key terms and settings to accept), and "What this
+ * sets up", collapsed, then Create. Key terms, access,
  * the assistant switch and the review sit behind "More options", with the defaults they
  * always had: no key terms, open to the workspace, assistant off.
  *
@@ -128,9 +133,14 @@ export const CreateProjectRoute = () => {
 	const [setupWithAssistant, setSetupWithAssistant] = useState(
 		AGENTIC_CHAT_IS_DEFAULT,
 	);
-	const templates = useProjectTemplates();
-	const landing =
-		templates.data?.find((tpl) => tpl.key === template)?.landing ?? "home";
+	const projectLanguage = projectLanguageForLocale(language);
+	const templates = useProjectTemplates(projectLanguage);
+	const chosen = templates.data?.find((tpl) => tpl.key === template);
+	const landing = chosen?.landing ?? "home";
+	// The picker's words are in their own catalog, loaded when this page opens.
+	const catalogReady = useTemplatesCatalog();
+	// What the picker knew when the card was chosen; sent when the host continues.
+	const choiceRef = useRef<TemplateChoiceContext | null>(null);
 
 	useDocumentTitle(t`Create project | dembrane`);
 
@@ -178,11 +188,27 @@ export const CreateProjectRoute = () => {
 	const createProject = useCreateWorkspaceProject();
 	const updateProject = useUpdateProjectByIdMutation();
 
-	const chooseTemplate = (key: TemplateKey) => {
+	// Settings accepted for one template are not carried to another.
+	const pickTemplate = (key: TemplateKey, context?: TemplateChoiceContext) => {
+		if (key !== template) setOverrides({});
 		setTemplate(key);
+		choiceRef.current = context ?? null;
+	};
+
+	const chooseTemplate = (
+		key: TemplateKey,
+		context?: TemplateChoiceContext,
+	) => {
+		pickTemplate(key, context ?? choiceRef.current ?? undefined);
+		const tpl = templates.data?.find((x) => x.key === key);
+		const ctx = context ?? choiceRef.current;
 		track("project_template_selected", {
+			featured: ctx?.featured ?? tpl?.card.featured ?? false,
+			filters_active: ctx?.filtersActive ?? [],
+			setup: ctx?.setup ?? tpl?.card.setup ?? null,
 			surface: "create",
 			template_key: key,
+			verbs: ctx?.verbs ?? tpl?.card.verbs ?? [],
 		});
 		setStep(1);
 	};
@@ -198,7 +224,7 @@ export const CreateProjectRoute = () => {
 	const submit = useMutation({
 		mutationFn: async () => {
 			const project = await createProject.mutateAsync({
-				language: projectLanguageForLocale(language),
+				language: projectLanguage,
 				name: name.trim(),
 				templateKey: template ?? "blank",
 				...(Object.keys(overrides).length > 0 && { overrides }),
@@ -297,7 +323,7 @@ export const CreateProjectRoute = () => {
 		}
 	};
 
-	if (!workspace) {
+	if (!workspace || !catalogReady) {
 		return <BeautifulLoading />;
 	}
 
@@ -326,6 +352,7 @@ export const CreateProjectRoute = () => {
 	}
 
 	const canCreate = name.trim().length > 0;
+	const continueHintId = "create-project-continue-hint";
 	const templateLabel = templateName(template ?? "blank");
 
 	return (
@@ -352,8 +379,13 @@ export const CreateProjectRoute = () => {
 					<Stepper.Step label={t`Template`}>
 						<Stack gap="lg" mt="md">
 							<TemplatePickerConnected
+								language={projectLanguage}
 								value={template}
-								onChange={setTemplate}
+								onChange={pickTemplate}
+								onFilterChange={(filter, value) =>
+									track("project_template_filter_changed", { filter, value })
+								}
+								onUpload={() => chooseTemplate("upload")}
 								onStartBlank={() => chooseTemplate("blank")}
 							/>
 							<Group gap="sm">
@@ -362,10 +394,16 @@ export const CreateProjectRoute = () => {
 									size="sm"
 									disabled={!template}
 									onClick={() => template && chooseTemplate(template)}
+									aria-describedby={template ? undefined : continueHintId}
 									data-testid="create-project-template-continue"
 								>
 									<Trans>Continue</Trans>
 								</Button>
+								{!template && (
+									<Text size="xs" className="app-muted" id={continueHintId}>
+										<Trans>Choose a card to continue.</Trans>
+									</Text>
+								)}
 								<Button
 									variant="subtle"
 									color="gray"
@@ -412,7 +450,7 @@ export const CreateProjectRoute = () => {
 									templateKey={template ?? "blank"}
 									name={name}
 									description={context}
-									language={projectLanguageForLocale(language)}
+									language={projectLanguage}
 									keyTerms={keyTerms}
 									onKeyTermsChange={setKeyTerms}
 									overrides={overrides}
@@ -422,6 +460,10 @@ export const CreateProjectRoute = () => {
 									}}
 								/>
 							</Stack>
+
+							{chosen && template !== "blank" && (
+								<TemplateSetupSummary key={chosen.key} template={chosen} />
+							)}
 
 							<Stack gap="xs">
 								<Button

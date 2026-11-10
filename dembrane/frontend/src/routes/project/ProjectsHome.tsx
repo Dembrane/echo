@@ -10,6 +10,7 @@ import {
 	Container,
 	Group,
 	SimpleGrid,
+	Skeleton,
 	Stack,
 	Text,
 	TextInput,
@@ -27,7 +28,15 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	lazy,
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -40,14 +49,16 @@ import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
+import { projectLanguageForLocale } from "@/components/project/projectLanguage";
 import {
 	isTemplateKey,
 	type TemplateKey,
 } from "@/components/project/templates/projectTemplates";
-import { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
+import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
 import { API_BASE_URL } from "@/config";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
@@ -55,6 +66,14 @@ import { track } from "@/lib/analytics/events";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
+
+// The picker and its catalog load only for a workspace with no project of its own yet.
+const LazyTemplatePicker = lazy(
+	() =>
+		import(
+			"@/components/project/templates/TemplatePicker/TemplatePickerConnected"
+		),
+);
 
 const MAX_PINNED = 3;
 
@@ -233,12 +252,19 @@ export const ProjectsHomeRoute = () => {
 		allProjects.every((p) => p.is_sample);
 	const showStart = canCreateProject && noOwnProjects;
 	const [startTemplate, setStartTemplate] = useState<TemplateKey | null>(null);
+	const choiceRef = useRef<TemplateChoiceContext | null>(null);
+	const { language } = useLanguage();
 	const startFromTemplate = (key: TemplateKey | null = startTemplate) => {
 		if (!workspaceId || !isTemplateKey(key)) return;
+		const ctx = key === startTemplate ? choiceRef.current : null;
 		track("project_create_started");
 		track("project_template_selected", {
+			featured: ctx?.featured ?? false,
+			filters_active: ctx?.filtersActive ?? [],
+			setup: ctx?.setup ?? null,
 			surface: "workspace_home",
 			template_key: key,
+			verbs: ctx?.verbs ?? [],
 		});
 		navigate(`/w/${workspaceId}/projects/new?template=${key}`);
 	};
@@ -318,11 +344,26 @@ export const ProjectsHomeRoute = () => {
 								</Trans>
 							</Text>
 						</Stack>
-						<TemplatePickerConnected
-							order={5}
-							value={startTemplate}
-							onChange={setStartTemplate}
-						/>
+						<Suspense fallback={<Skeleton height={132} />}>
+							<LazyTemplatePicker
+								order={5}
+								language={projectLanguageForLocale(language)}
+								value={startTemplate}
+								onChange={(key, ctx) => {
+									choiceRef.current = ctx;
+									setStartTemplate(key);
+								}}
+								onFilterChange={(filter, value) =>
+									track("project_template_filter_changed", {
+										filter,
+										surface: "workspace_home",
+										value,
+									})
+								}
+								onUpload={() => startFromTemplate("upload")}
+								onStartBlank={() => startFromTemplate("blank")}
+							/>
+						</Suspense>
 						<Group gap="sm">
 							<CreateProjectButton
 								size="sm"
@@ -330,17 +371,6 @@ export const ProjectsHomeRoute = () => {
 								disabled={!startTemplate}
 								onCreate={() => startFromTemplate()}
 							/>
-							<Button
-								variant="subtle"
-								size="sm"
-								onClick={() => {
-									setStartTemplate("blank");
-									startFromTemplate("blank");
-								}}
-								data-testid="workspace-home-start-blank"
-							>
-								<Trans>Start blank</Trans>
-							</Button>
 						</Group>
 					</Stack>
 				)}
