@@ -101,7 +101,7 @@ export function paragraphs(xml: string, rules: ParagraphRules): string[] {
 /** The value of one attribute in a tag's attribute text. */
 export const attr = (attrs: string, name: string): string | null => {
 	const m = new RegExp(
-		`(?:^|\\s)${name.replace(/[:.]/g, "\\$&")}="([^"]*)"`,
+		`(?:^|\\s)${name.replace(/[.*+?^${}()|[\]\\:]/g, "\\$&")}="([^"]*)"`,
 	).exec(attrs);
 	return m ? decodeEntities(m[1] as string) : null;
 };
