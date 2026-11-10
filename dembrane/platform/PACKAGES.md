@@ -8,7 +8,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 **Apps**
 
 - **api** (in 0, out 42): The HTTP server: mounts every namespace's routes and answers the dashboard, the portal and outside agents. Uses 24 namespaces and 18 capabilities.
-- **worker** (in 0, out 31): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 17 namespaces and 14 capabilities.
+- **worker** (in 0, out 32): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 17 namespaces and 15 capabilities.
 - **migrate** (in 0, out 8): The job that runs before every rollout: schema migrations, the queue schema, database grants, the default verification topics, and on PR previews the sample data. Uses samples, accounts, verify and 5 capabilities.
 - **media** (in 0, out 3): The ffmpeg service: probes, converts, splits and merges audio, one job per instance. Uses observability, config, audio.
 - **web** (in 0, out 3): Serves the built dashboard and participant portal and proxies /api to the API. Uses observability, http, config.
@@ -20,7 +20,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **analysis** (in 5, out 11): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, llm.
 - **notifications** (in 5, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api and 1 more. Uses only the common ones.
 - **samples** (in 5, out 5): Sample data: the best-practices sample every workspace gets its own copy of, and the Millbrook (sample) workspace in the Acme Civic (sample) org that every PR preview carries. Used by account, tenancy, api, migrate and 1 more. Uses config, llm.
-- **conversations** (in 5, out 17): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 3 more.
+- **conversations** (in 5, out 18): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 4 more.
 - **projects** (in 4, out 8): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses realtime.
 - **account** (in 4, out 16): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, reports, api, worker. Uses tenancy, notifications, samples, billing, auth and 4 more.
 - **popcorn** (in 4, out 14): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, config, llm.
@@ -56,8 +56,8 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, conversations, projects, popcorn and 6 more. Uses observability, core.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, tenancy, accounts and 5 more. Uses nothing.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, tenancy, accounts and 4 more. Uses nothing.
+- **analytics** (in 7, out 1): Product analytics capture (PostHog). Used by conversations, popcorn, chats, agentic and 3 more. Uses observability.
 - **i18n** (in 7, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by billing, account, tenancy, accounts and 3 more. Uses config, llm, db, core.
-- **analytics** (in 5, out 1): Product analytics capture (PostHog). Used by popcorn, chats, agentic, agent-access and 1 more. Uses observability.
 - **audio** (in 4, out 0): ffmpeg and ffprobe wrappers, audio formats, and the client for the media app. Used by conversations, api, media, worker. Uses nothing.
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **transcription** (in 3, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api, worker. Uses prompts, llm, observability.

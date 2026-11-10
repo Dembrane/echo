@@ -280,6 +280,7 @@ export function buildApp(deps: Deps) {
       },
     },
     now: () => new Date(),
+    capture: posthogCapture(deps.config.http.dashboardUrl, deps.logger),
   };
   app.route("/", conversationRoutes(conversations));
   app.route("/", verifyRoutes(conversations));

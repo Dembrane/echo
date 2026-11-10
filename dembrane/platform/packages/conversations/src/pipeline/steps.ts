@@ -1,3 +1,4 @@
+import type { Capture } from "@dembrane/analytics";
 import { AudioError, durationOf, fileFormatOf, planPieces } from "@dembrane/audio";
 import { PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
@@ -23,6 +24,7 @@ import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
 import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } from "../free-audio";
+import { afterResponse, hostEventStore, transcriptReady } from "../host-events";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
@@ -62,6 +64,8 @@ export interface PipelineDeps {
   ) => Promise<void>;
   /** The final pass over the whole recording; absent or empty means the live text is the record. */
   readonly final?: FinalSettings;
+  /** Product analytics for host events (server_transcript_ready); none in tests. */
+  readonly capture?: Capture;
   /** Files above this are split before transcription; tests lower it to split small files. */
   /** Which speech model the live text goes to; its limits cut uploads. Defaults to whisper. */
   readonly liveProvider?: SpeechProvider;
@@ -795,7 +799,7 @@ export async function claimFinalize(
   d: PipelineDeps,
   conversationId: string,
 ): Promise<string | null> {
-  return transaction(d.db, async (tx) => {
+  const projectId = await transaction(d.db, async (tx) => {
     const [row] = await tx.sql<
       {
         project_id: string;
@@ -814,6 +818,16 @@ export async function claimFinalize(
     await d.onTranscribed?.(tx.sql, row.project_id, conversationId);
     return row.project_id;
   });
+  // After the commit: the claim above flips once, so the event is sent once.
+  const capture = d.capture;
+  if (projectId && capture)
+    afterResponse(d.logger, "server_transcript_ready", () =>
+      transcriptReady(
+        { store: hostEventStore(d.db), capture, logger: d.logger, now: d.now },
+        { conversationId, projectId },
+      ),
+    );
+  return projectId;
 }
 
 async function webhook(

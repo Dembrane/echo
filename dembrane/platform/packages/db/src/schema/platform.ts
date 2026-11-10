@@ -214,3 +214,24 @@ export const free_usage = pgTable(
   },
   (t) => [primaryKey({ columns: [t.billing_account_id, t.period_start, t.key] })],
 );
+
+/**
+ * Product milestones a host reached, once each (packages/conversations host-events.ts).
+ * The primary key is the claim: of two concurrent conversations exactly one inserts the
+ * row, so the analytics event for a milestone is sent once per host however often a
+ * step is retried.
+ */
+export const host_milestone = pgTable(
+  "host_milestone",
+  {
+    directus_user_id: uuid("directus_user_id").notNull(),
+    /** "first_value": the first conversation captured in a project the host created. */
+    milestone: text("milestone").notNull(),
+    /** The project it was reached in; no foreign key, so a deleted project keeps the row. */
+    project_id: uuid("project_id"),
+    reached_at: timestamp("reached_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.directus_user_id, t.milestone] })],
+);

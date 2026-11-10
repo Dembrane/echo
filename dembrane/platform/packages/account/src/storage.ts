@@ -1,7 +1,7 @@
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, asc, desc, eq, gt, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from "drizzle-orm";
 
 const {
   directus_users,
@@ -79,6 +79,43 @@ export function accountStorage(db: Db) {
             isNull(org_invite.accepted_at),
             isNull(org_invite.deleted_at),
             gt(org_invite.expires_at, iso),
+          ),
+        )
+        .limit(1);
+      return o.length > 0;
+    },
+
+    /**
+     * Whether the person came to dembrane through an invite: a workspace or org invite to
+     * their email existed before their account did (any invite, without an account yet).
+     * Analytics reads it to tell invited hosts from self-serve signups.
+     */
+    async isInvited(email: string, accountCreatedAt: string | null) {
+      const address = email.trim().toLowerCase();
+      if (!address) return false;
+      const before = (
+        createdAt: typeof workspace_invite.created_at | typeof org_invite.created_at,
+      ) => (accountCreatedAt ? lte(createdAt, accountCreatedAt) : undefined);
+      const ws = await db
+        .select({ id: workspace_invite.id })
+        .from(workspace_invite)
+        .where(
+          and(
+            eq(sql`lower(${workspace_invite.email})`, address),
+            isNull(workspace_invite.deleted_at),
+            before(workspace_invite.created_at),
+          ),
+        )
+        .limit(1);
+      if (ws.length) return true;
+      const o = await db
+        .select({ id: org_invite.id })
+        .from(org_invite)
+        .where(
+          and(
+            eq(sql`lower(${org_invite.email})`, address),
+            isNull(org_invite.deleted_at),
+            before(org_invite.created_at),
           ),
         )
         .limit(1);
