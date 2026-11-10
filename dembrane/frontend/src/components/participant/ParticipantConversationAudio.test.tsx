@@ -332,12 +332,12 @@ it("with only Explore on, the button says Explore and asks for a question at onc
 	expect(localStorage.getItem("cooldown_c-1_echo")).not.toBeNull();
 });
 
-it("with both on, the button offers the choice", () => {
+it("with both on, the button is named ECHO and offers the choice", () => {
 	const button = recordingAMinute({
 		is_get_reply_enabled: true,
 		is_verify_enabled: true,
 	});
-	expect(button?.textContent).toBe("Verify or explore");
+	expect(button?.textContent).toBe("ECHO");
 	act(() => button?.click());
 	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1/refine");
 });

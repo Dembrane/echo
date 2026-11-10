@@ -204,6 +204,11 @@ msgstr "Bon retour"
 #~ msgid "participant.modal.verify_prompt.description"
 #~ msgstr "Vous n'avez encore vérifié aucun résultat. Souhaitez-vous vérifier avant de terminer ?"
 
+#. js-lingui-explicit-id
+#: src/components/participant/refine/RefineButtonLabel.tsx:13
+#~ msgid "participant.button.refine.both"
+#~ msgstr "Vérifier ou explorer"
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} retenus"
@@ -221,6 +226,11 @@ msgstr "· échec"
 #~ msgstr " Se désabonner des notifications"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:837
+msgid "participant.modal.refine.info.title.both"
+msgstr "\"ECHO\" bientôt disponible"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:851
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explorer\" bientôt disponible"
@@ -228,11 +238,6 @@ msgstr "\"Explorer\" bientôt disponible"
 #: src/components/popcorn/PopcornScreenSettings.tsx:143
 msgid "\"made with dembrane\" stays on the screen."
 msgstr "« made with dembrane » reste à l'écran."
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:837
-msgid "participant.modal.refine.info.title.both"
-msgstr "\"Vérifier ou explorer\" bientôt disponible"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:844
@@ -1759,7 +1764,7 @@ msgstr "Ajoutez un objectif de projet avant d'enregistrer."
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Ajouter un contexte supplémentaire (Optionnel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/components/participant/ParticipantInitiateForm.tsx:308
 msgid "Add all that apply"
 msgstr "Ajouter tout ce qui s'applique"
 
@@ -4463,7 +4468,7 @@ msgid "participant.button.next"
 msgstr "Continuer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
+#: src/components/participant/ParticipantInitiateForm.tsx:345
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuer"
 
@@ -6625,7 +6630,7 @@ msgid "participant.echo.explore"
 msgstr "Explorer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:12
+#: src/components/participant/refine/RefineButtonLabel.tsx:13
 msgid "participant.button.refine.explore"
 msgstr "Explorer"
 
@@ -7676,6 +7681,10 @@ msgstr "Compris"
 #: src/components/training/TrainingRowActions.tsx:309
 msgid "Grant licenses"
 msgstr "Attribuer des licences"
+
+#: src/components/participant/ParticipantInitiateForm.tsx:297
+msgid "Group 1, Table 3, etc."
+msgstr "Groupe 1, Table 3, etc."
 
 #: src/components/conversation/LiveMonitorSection.tsx:704
 msgid "Group by"
@@ -14797,7 +14806,7 @@ msgid "Separate with commas, spaces, or new lines."
 msgstr "Séparez par des virgules, des espaces ou des retours à la ligne."
 
 #: src/components/project/ProjectPortalEditor.tsx:731
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/components/participant/ParticipantInitiateForm.tsx:291
 msgid "Session name"
 msgstr "Nom de la séance"
 
@@ -15753,6 +15762,7 @@ msgid "Stop"
 msgstr "Arrêter"
 
 #. js-lingui-explicit-id
+#: src/e2e/verifyExploreHarness.tsx:157
 #: src/components/participant/ParticipantConversationAudio.tsx:1236
 msgid "participant.button.stop"
 msgstr "Arrêter"
@@ -16071,7 +16081,7 @@ msgid "Tag deleted"
 msgstr "Étiquette supprimée"
 
 #: src/components/project/ProjectTagsInput.tsx:281
-#: src/components/participant/ParticipantInitiateForm.tsx:301
+#: src/components/participant/ParticipantInitiateForm.tsx:307
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
 #: src/components/conversation/ConversationsMiniList.tsx:189
@@ -18671,7 +18681,7 @@ msgid "participant.echo.verify"
 msgstr "Vérifier"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:10
+#: src/components/participant/refine/RefineButtonLabel.tsx:11
 msgid "participant.button.refine.verify"
 msgstr "Vérifier"
 
@@ -18682,11 +18692,6 @@ msgstr "Vérifier le code"
 #: src/routes/auth/Register.tsx:161
 msgid "Verify email"
 msgstr "Vérifier l'e-mail"
-
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:13
-msgid "participant.button.refine.both"
-msgstr "Vérifier ou explorer"
 
 #: src/components/release/releaseHistory.ts:534
 msgid "Verify outcomes and refine replies"

@@ -41,7 +41,8 @@ for (const lang of ["en-US", "nl-NL"]) {
 		for (const [view, label] of [
 			["button-verify", nl ? "Verifiëren" : "Verify"],
 			["button-explore", nl ? "Verkennen" : "Explore"],
-			["button-both", nl ? "Verifiëren of verkennen" : "Verify or explore"],
+			// Both on: the product name, in every language.
+			["button-both", "ECHO"],
 		] as const) {
 			await open(page, view, lang);
 			await expect(page.getByTestId("portal-audio-echo-button")).toHaveText(
@@ -120,5 +121,31 @@ for (const lang of ["en-US", "nl-NL"]) {
 				.screenshot({ path: `${shots}/editor-${lang}-explore-verify.png` });
 		}
 		expect(errors).toEqual([]);
+	});
+}
+
+// The recorder's footer (the ECHO, Verify or Explore button beside Stop) stays on one row
+// on a 390px phone in the languages with the longest words.
+for (const lang of ["nl-NL", "de-DE"]) {
+	test(`recorder footer on one row at 390px, ${lang}`, async ({ page }) => {
+		await page.setViewportSize({ height: 844, width: 390 });
+		for (const view of ["button-both", "button-verify", "button-explore"]) {
+			await open(page, view, lang);
+			const refine = page.getByTestId("portal-audio-echo-button");
+			const stop = page.getByTestId("portal-audio-stop-button");
+			await expect(refine).toBeVisible();
+			if (view === "button-both") await expect(refine).toHaveText("ECHO");
+			const [a, b] = [await refine.boundingBox(), await stop.boundingBox()];
+			expect([view, Math.abs((a?.y ?? 0) - (b?.y ?? 1)) < 2]).toEqual([
+				view,
+				true,
+			]);
+			expect(await noSideScroll(page)).toBe(true);
+			if (shots && lang === "de-DE")
+				await page.screenshot({
+					fullPage: true,
+					path: `${shots}/portal-${lang}-${view}.png`,
+				});
+		}
 	});
 }

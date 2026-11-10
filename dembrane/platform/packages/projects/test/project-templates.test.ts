@@ -253,3 +253,52 @@ test("an override equal to the template's own value is dropped", () => {
     }),
   ).toEqual({ is_get_reply_enabled: false, enable_ai_title_and_tags: false });
 });
+
+// The portal's button names (the participant catalogs' participant.button.refine.* and
+// participant.echo.*): with Verify and Explore both on there is one button, "ECHO", and
+// the two choices behind it; otherwise one button named after the one that is on.
+const PORTAL_BUTTONS: Record<string, { verify: string; explore: string }> = {
+  en: { verify: "Verify", explore: "Explore" },
+  nl: { verify: "Verifiëren", explore: "Verkennen" },
+  de: { verify: "Verifizieren", explore: "Erkunden" },
+  fr: { verify: "Vérifier", explore: "Explorer" },
+  es: { verify: "Verificar", explore: "Explorar" },
+  it: { verify: "Verify", explore: "Explore" },
+  uk: { verify: "Verify", explore: "Explore" },
+  cs: { verify: "Verify", explore: "Explore" },
+};
+
+test("every host script names the buttons the portal shows for its settings", () => {
+  expect(Object.keys(PORTAL_BUTTONS).sort()).toEqual([...TEMPLATE_LANGUAGES].sort());
+  const problems: string[] = [];
+  const seen = { both: 0, one: 0 };
+  for (const t of PROJECT_TEMPLATES) {
+    const guide = t.preset.host_guide;
+    if (!guide) continue;
+    const verify = Boolean(t.preset.fields.is_verify_enabled);
+    const explore = Boolean(t.preset.fields.is_get_reply_enabled);
+    for (const language of TEMPLATE_LANGUAGES) {
+      const words = PORTAL_BUTTONS[language] as { verify: string; explore: string };
+      for (const item of [guide.title, ...guide.steps, ...guide.tips]) {
+        const text = item[language];
+        const where = `${t.key} (${language}): ${text}`;
+        const echo = text.includes("ECHO");
+        const v = text.indexOf(words.verify);
+        const x = text.indexOf(words.explore);
+        if (echo) seen.both++;
+        else if (v >= 0 || x >= 0) seen.one++;
+        if (echo && !(verify && explore)) problems.push(`ECHO without both on: ${where}`);
+        if (v >= 0 && !verify) problems.push(`${words.verify} while Verify is off: ${where}`);
+        if (x >= 0 && !explore) problems.push(`${words.explore} while Explore is off: ${where}`);
+        if (verify && explore)
+          for (const at of [v, x])
+            if (at >= 0 && !(echo && text.indexOf("ECHO") < at))
+              problems.push(`a choice without ECHO first: ${where}`);
+      }
+    }
+  }
+  expect(problems).toEqual([]);
+  // Both kinds of script exist, so the walk checks something.
+  expect(seen.both).toBeGreaterThan(0);
+  expect(seen.one).toBeGreaterThan(0);
+});

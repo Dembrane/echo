@@ -63,12 +63,12 @@ async function answerApi(page: Page, nl: boolean) {
 				},
 				default_conversation_ask_for_participant_name: true,
 				host_guide: guide(nl),
-				legal_basis: null,
-				privacy_policy_url: null,
 				id: "p1",
 				is_conversation_allowed: true,
 				language: nl ? "nl" : "en",
+				legal_basis: null,
 				name: nl ? "Bewonersavond Lindenwijk" : "Lindenwijk resident evening",
+				privacy_policy_url: null,
 			},
 		}),
 	);
@@ -186,6 +186,35 @@ for (const size of sizes)
 			).toBeVisible();
 			await page.waitForTimeout(300);
 			await shot("07-host-guide");
+
+			// The portal's name box: the example follows the label (ECHO-1053).
+			for (const [name, label, placeholder] of [
+				[
+					"09-portal-name-default",
+					"",
+					nl ? "Groep 1, Tafel 3, enz." : "Group 1, Table 3, etc.",
+				],
+				[
+					"09-portal-name-table",
+					nl ? "Naam of nummer van je tafel" : "Table name or number",
+					null,
+				],
+				[
+					"09-portal-name-interview",
+					nl
+						? "Interviewcode (geen echte namen)"
+						: "Interview code (no real names)",
+					null,
+				],
+			] as const) {
+				await page.goto(
+					`/e2e/templates-harness.html?path=/${lang}/p1/start&label=${encodeURIComponent(label)}`,
+				);
+				const input = page.getByTestId("portal-initiate-name-input");
+				await expect(input).toBeVisible();
+				expect(await input.getAttribute("placeholder")).toBe(placeholder);
+				await shot(name);
+			}
 
 			await page.goto(`/e2e/templates-harness.html?path=/${lang}/w/w1/home`);
 			await expect(page.getByTestId("workspace-home-start")).toBeVisible();

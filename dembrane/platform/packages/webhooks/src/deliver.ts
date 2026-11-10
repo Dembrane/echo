@@ -40,25 +40,38 @@ function v4Private(ip: string): boolean {
   );
 }
 
+/** One to four hex digits, checked by hand: no regular expression on host-supplied text. */
+function hexGroup(g: string): number {
+  if (g.length < 1 || g.length > 4) return Number.NaN;
+  for (const ch of g)
+    if (!((ch >= "0" && ch <= "9") || (ch >= "a" && ch <= "f"))) return Number.NaN;
+  return Number.parseInt(g, 16);
+}
+
 /** The eight 16-bit groups of an IPv6 address, an embedded dotted IPv4 tail included. */
 function v6Groups(ip: string): number[] | null {
-  let text = ip.toLowerCase().replace(/%.*$/, "");
-  const tail = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
-  if (tail?.[1]) {
-    if (isIP(tail[1]) !== 4) return null;
-    const [a = 0, b = 0, c = 0, d = 0] = tail[1].split(".").map(Number);
-    text = `${text.slice(0, -tail[1].length)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  let text = ip.toLowerCase();
+  const zone = text.indexOf("%");
+  if (zone !== -1) text = text.slice(0, zone);
+  const tail = text.slice(text.lastIndexOf(":") + 1);
+  if (tail.includes(".")) {
+    if (isIP(tail) !== 4) return null;
+    const [a = 0, b = 0, c = 0, d = 0] = tail.split(".").map(Number);
+    text = `${text.slice(0, -tail.length)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
   }
   const halves = text.split("::");
   if (halves.length > 2) return null;
   const head = halves[0] ? halves[0].split(":") : [];
   const rest = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
   const fill = halves.length === 2 ? 8 - head.length - rest.length : 0;
-  const all = [...head, ...Array(fill).fill("0"), ...rest];
+  const all = [...head, ...Array(Math.max(fill, 0)).fill("0"), ...rest];
   if (all.length !== 8) return null;
-  const groups = all.map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? Number.parseInt(g, 16) : Number.NaN));
+  const groups = all.map(hexGroup);
   return groups.some(Number.isNaN) ? null : groups;
 }
+
+/** Longer than any IPv6 literal with a reasonable zone id. */
+const MAX_ADDRESS_LENGTH = 100;
 
 const v4Of = (hi: number, lo: number) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
 
@@ -69,7 +82,12 @@ const v4Of = (hi: number, lo: number) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo
  * [::ffff:7f00:1], which a textual match would let through.
  */
 export function isPrivateAddress(ip: string): boolean {
-  if (isIP(ip) === 4) return v4Private(ip);
+  // Only an IP literal is judged; anything else (and anything absurdly long, zone id and
+  // all) is refused before it is parsed.
+  if (ip.length > MAX_ADDRESS_LENGTH) return true;
+  const family = isIP(ip);
+  if (family === 0) return true;
+  if (family === 4) return v4Private(ip);
   const g = v6Groups(ip);
   if (!g) return true;
   const [g0 = 0, g1 = 0, g2 = 0, g3 = 0, g4 = 0, g5 = 0, g6 = 0, g7 = 0] = g;
