@@ -25,6 +25,8 @@ interface V2ProjectSummary {
 	conversations_count: number;
 	audio_hours?: number;
 	visibility?: "workspace" | "private";
+	// The best-practices sample every workspace gets; not a project of the host's own.
+	is_sample?: boolean;
 	access_preview?: ProjectAccessPreview[];
 	access_count?: number;
 }
@@ -71,11 +73,13 @@ async function createWorkspaceProject(
 	workspaceId: string,
 	name: string,
 	language: string,
+	templateKey: string | null,
 ): Promise<{ id: string; name: string; workspace_id: string }> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/projects`,
 		{
-			body: JSON.stringify({ language, name }),
+			// The server applies the template's preset in the creating transaction.
+			body: JSON.stringify({ language, name, template_key: templateKey }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -140,12 +144,14 @@ export const useCreateWorkspaceProject = () => {
 		mutationFn: async ({
 			name,
 			language,
+			templateKey = null,
 		}: {
 			name: string;
 			language: string;
+			templateKey?: string | null;
 		}) => {
 			if (!workspaceId) throw new Error("No workspace selected");
-			return createWorkspaceProject(workspaceId, name, language);
+			return createWorkspaceProject(workspaceId, name, language, templateKey);
 		},
 		onError: (error: Error) => {
 			// The screen opens the upgrade wall for the project cap.

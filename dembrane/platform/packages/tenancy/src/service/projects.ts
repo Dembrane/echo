@@ -1,6 +1,8 @@
 import { allowanceForWorkspace, requireProjectRoom, withAllowanceLock } from "@dembrane/allowance";
 import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import { isoTimestamp } from "@dembrane/legacy-shape";
+import { applyProjectTemplate, projectsStorage, projectTemplate } from "@dembrane/projects";
 import type { WorkspaceContext } from "../context";
 import { iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";
@@ -98,6 +100,8 @@ export function projectService(deps: TenancyDeps) {
           conversations_count: p.conversations_count ?? 0,
           audio_hours: pyRound((hours.get(p.id) ?? 0) / 3600, 1),
           visibility: p.visibility || "workspace",
+          // Workspace home tells a host with only the sample that they have no project yet.
+          is_sample: p.is_sample,
           access_preview: bubbles,
           access_count: count,
         };
@@ -111,13 +115,21 @@ export function projectService(deps: TenancyDeps) {
       };
     },
 
-    /** Creates a project in the workspace; the caller is recorded as its Directus-era creator. */
-    async create(ctx: WorkspaceContext, body: { name: string; language: string }) {
+    /**
+     * Creates a project in the workspace; the caller is recorded as its Directus-era
+     * creator. A template's preset is written in the same transaction as the row, so the
+     * project never exists without it. An unknown key is refused before anything is written.
+     */
+    async create(
+      ctx: WorkspaceContext,
+      body: { name: string; language: string; template_key?: string | null },
+    ) {
       ctx.require("project:create");
+      const template = body.template_key ? projectTemplate(body.template_key) : null;
       const now = clock(deps);
       const id = newId();
-      const insert = (conn: typeof db) =>
-        insertProject(conn, {
+      const insert = async (conn: Db) => {
+        await insertProject(conn, {
           id,
           name: body.name,
           language: body.language,
@@ -127,13 +139,21 @@ export function projectService(deps: TenancyDeps) {
           created_at: iso(now),
           updated_at: iso(now),
         });
+        if (template)
+          await applyProjectTemplate(projectsStorage(conn), {
+            projectId: id,
+            template,
+            language: body.language,
+            now: iso(now),
+          });
+      };
       const a = ctx.who.isStaff ? null : await allowanceForWorkspace(db, ctx.workspaceId, now);
       if (a)
         await withAllowanceLock(db, a, async (tx) => {
           await requireProjectRoom(tx, a);
           await insert(tx);
         });
-      else await insert(db);
+      else await db.transaction((tx) => insert(tx as unknown as Db));
       return { id, name: body.name, workspace_id: ctx.workspaceId };
     },
   };

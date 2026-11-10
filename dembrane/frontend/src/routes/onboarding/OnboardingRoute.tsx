@@ -30,6 +30,7 @@ import { track } from "@/lib/analytics/events";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { isOutsiderRole } from "@/lib/roles";
+import { postOnboardingPath } from "./landing";
 
 async function completeOnboarding(orgName: string) {
 	const response = await fetch(`${API_BASE_URL}/v2/onboarding/complete`, {
@@ -139,12 +140,26 @@ export const OnboardingRoute = () => {
 				? 2
 				: 0;
 
-	// Everyone lands on the general home /o after onboarding (ISSUE-015 /
-	// Founder decision D3) — not a specific workspace. useCallback keeps the
-	// effect dep stable.
+	// The general home /o after onboarding (ISSUE-015 / Founder decision D3), except a new
+	// self-serve host, who goes straight to the template picker (ECHO-1042, landing.ts).
+	// workspaceId is only set when the organisation step ran in this visit, so a returning
+	// host still lands on /o. useCallback keeps the effect dep stable.
 	const goToHome = useCallback(() => {
-		navigate("/o");
-	}, [navigate]);
+		navigate(
+			postOnboardingPath({
+				createdWorkspaceId: workspaceId,
+				hasLegacyProjects: meV2?.has_legacy_projects === true,
+				isInvited: meV2?.is_invited === true,
+				startedWithInvites: startedWithInvites === true,
+			}),
+		);
+	}, [
+		navigate,
+		workspaceId,
+		meV2?.has_legacy_projects,
+		meV2?.is_invited,
+		startedWithInvites,
+	]);
 
 	// Advance to the questionnaire, or skip straight to /o when the user has
 	// already answered it.

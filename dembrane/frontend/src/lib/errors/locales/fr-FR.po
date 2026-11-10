@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la base juridique de ce projet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la visibilité de ce projet."
 
@@ -632,6 +632,11 @@ msgstr "Cette date et heure n'ont pas pu être lues. Sélectionnez à nouveau l'
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Ce mot de passe est incorrect. Vérifiez-le et réessayez."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "Ce modèle de projet n'existe pas. Rechargez la page et choisissez-en un à nouveau."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13

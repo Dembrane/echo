@@ -80,6 +80,9 @@ export const ProjectListQuery = {
 export const CreateProject = p.model({
   name: p.optional(p.str(), "New Project"),
   language: p.optional(p.str(), "en"),
+  // A key from @dembrane/projects' template registry; without one, the project starts bare
+  // as it always did (old clients, the iOS app before it sends one).
+  template_key: optStr({ max: 64 }),
 });
 
 export const SupportEventsQuery = {

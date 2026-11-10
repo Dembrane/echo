@@ -3,11 +3,18 @@ import posthog from "posthog-js";
 /**
  * The onboarding flow the events describe. Bumped when the flow changes enough that
  * funnels from before and after should not be compared.
+ *
+ * 1: signup to the organisation overview, then a four-step project wizard (name, key
+ *    terms, access, review).
+ * 2 (ECHO-1042): a self-serve host goes from signup to the template picker; the wizard is
+ *    template, then name, with key terms, access and review behind "More options".
  */
-export const FLOW_VERSION = 1;
+export const FLOW_VERSION = 2;
 
 export type OnboardingStep = "org" | "invite" | "questions";
-export type ProjectCreateStep = "name" | "key_terms" | "access" | "review";
+/** Flow 2's steps; flow 1 also sent "key_terms", "access" and "review". */
+export type ProjectCreateStep = "template" | "name" | "more_options";
+export type TemplateSurface = "create" | "workspace_home";
 export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
 export type PortalShareMethod = "qr" | "copy" | "download";
 export type OnboardingWalkthroughStep = string;
@@ -34,7 +41,10 @@ export interface AnalyticsEvents {
 	project_create_started: NoProps;
 	project_create_step_viewed: { step: ProjectCreateStep };
 	project_create_abandoned: { step: ProjectCreateStep };
-	project_created: { project_id: string };
+	project_created: { project_id: string; template_key: string };
+	// A host committed to a template: continued with a card, started blank, or picked one
+	// on workspace home. Not sent for each card the arrow keys pass over.
+	project_template_selected: { template_key: string; surface: TemplateSurface };
 
 	// Setting up a project.
 	key_terms_updated: {
@@ -68,7 +78,6 @@ export interface AnalyticsEvents {
 
 	// Reserved for later onboarding tickets. Typed now so the names stay stable; nothing
 	// sends them yet.
-	project_template_selected: { template_key: string; project_id?: string };
 	project_setup_ai_suggested: { project_id: string };
 	project_setup_ai_accepted: { project_id: string };
 	onboarding_walkthrough_started: NoProps;

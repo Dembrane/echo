@@ -7,6 +7,7 @@ import { boundedEventStream } from "@dembrane/realtime";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import { progressStream } from "./progress";
+import { listProjectTemplates } from "./project-templates";
 import * as projects from "./projects";
 import { PROJECT_UPDATE_FIELDS, type ProjectDeps } from "./projects";
 import { recordingStatus, useForRecordings } from "./recording";
@@ -218,6 +219,13 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(
       await projects.bulkMoveProjects(d, who, body.data.project_ids, body.data.target_workspace_id),
     );
+  });
+
+  // The templates a new project can start from, with what each sets up. The same for
+  // everyone; the cards word them by key.
+  app.get("/api/v2/project-templates", (c) => {
+    requireUser(c);
+    return c.json(listProjectTemplates());
   });
 
   app.get("/api/v2/projects/:project_id", async (c) => {

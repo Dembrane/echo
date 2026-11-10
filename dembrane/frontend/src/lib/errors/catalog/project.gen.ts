@@ -31,6 +31,13 @@ export const project = {
     detail: "pin_order must be 1, 2, or 3",
     description: "A pinned project's slot must be 1, 2 or 3.",
   },
+  "project.template_unknown": {
+    action: "fix_input",
+    detail: "Unknown project template: {template_key}",
+    params: ["known"],
+    description:
+      "A project create named a template_key that is not in the template registry (packages/projects project-templates.ts). known lists the keys there are.",
+  },
   "project.no_conversations": {
     action: "none",
     detail: "No conversations found for this project",

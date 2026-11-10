@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Only workspace admins can change the legal basis of this project."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "Only workspace admins can change who sees this project."
 
@@ -632,6 +632,11 @@ msgstr "That date and time could not be read. Pick the time again."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "That password is not right. Check it and try again."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "That project template does not exist. Reload the page and pick one again."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
