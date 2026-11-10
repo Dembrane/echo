@@ -43,6 +43,8 @@ import {
 import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { AccountsApiError, call, type ResponseOf } from "../api/client";
 import { AccountsI18n } from "../i18n";
+import { LogInButton, signPath as signPathOf } from "./signInLink";
+import { clearAllDrafts } from "./signingDraft";
 import { SignRoute } from "./SignRoute";
 
 type Invite = ResponseOf<"signerInvite">;
@@ -122,6 +124,7 @@ function SignedInWithInvite({ token }: { token: string }) {
 	const switchAccount = async () => {
 		setLeaving(true);
 		await signOut().catch(() => {});
+		clearAllDrafts();
 		emitAuthCacheBoundary();
 		// Reset, not clear: the gate's own session query must refetch to show the invitation.
 		await queryClient.resetQueries();
@@ -166,7 +169,7 @@ function InvitePage({ token }: { token: string }) {
 			? `${invite.data.document.title} | dembrane`
 			: t`Sign | dembrane`,
 	);
-	const signPath = `/o/${orgId}/account/documents/${docId}/sign`;
+	const signPath = signPathOf(orgId, docId);
 
 	if (invite.isLoading) return <BeautifulLoading />;
 	if (!invite.data) {
@@ -270,6 +273,7 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 			params: { docId, orgId },
 		});
 		resetPromptSeen();
+		clearAllDrafts();
 		emitAuthCacheBoundary();
 		// Reset, not clear: nothing of a previous session survives, and the gate's own
 		// session query refetches and opens the document.
@@ -470,19 +474,6 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 				</Text>
 			</Stack>
 		</Frame>
-	);
-}
-
-function LogInButton({ next }: { next: string }) {
-	return (
-		<Button
-			component={I18nLink}
-			to={`/login?next=${encodeURIComponent(next)}`}
-			size="md"
-			variant="filled"
-		>
-			<Trans>Log in</Trans>
-		</Button>
 	);
 }
 

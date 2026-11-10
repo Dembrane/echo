@@ -5678,7 +5678,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Voulez-vous rester dans la boucle ?"
 
 #: src/features/sidebar/views/HelpView.tsx:20
-#: src/features/sidebar/blocks/HelpBlock.tsx:91
+#: src/features/sidebar/blocks/HelpBlock.tsx:69
 #: src/components/chat/ChatHistoryMessage.tsx:237
 msgid "Documentation"
 msgstr "Documentation"
@@ -7399,7 +7399,7 @@ msgid "Give chat responses a thumbs up or thumbs down."
 msgstr "Évaluez les réponses du chat avec un pouce vers le haut ou vers le bas."
 
 #: src/features/sidebar/views/HelpView.tsx:43
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/features/sidebar/blocks/HelpBlock.tsx:47
 #: src/components/feedback/ReportIssueModal.tsx:185
 msgid "Give feedback"
 msgstr "Donner votre avis"
@@ -7562,9 +7562,9 @@ msgstr "Avez-vous suivi une formation ?"
 #~ msgstr "faire transcrire vos enregistrements"
 
 #: src/features/sidebar/views/HelpView.tsx:18
-#: src/features/sidebar/blocks/HelpBlock.tsx:167
-#: src/features/sidebar/blocks/HelpBlock.tsx:182
-#: src/features/sidebar/blocks/HelpBlock.tsx:196
+#: src/features/sidebar/blocks/HelpBlock.tsx:145
+#: src/features/sidebar/blocks/HelpBlock.tsx:160
+#: src/features/sidebar/blocks/HelpBlock.tsx:174
 msgid "Help"
 msgstr "Aide"
 
@@ -7942,7 +7942,7 @@ msgstr "Inactif"
 
 #: src/features/sidebar/views/InboxView.tsx:142
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
-#: src/components/layout/BaseLayout.tsx:70
+#: src/components/layout/BaseLayout.tsx:83
 #: src/components/inbox/Inbox.tsx:166
 #: src/components/inbox/Inbox.tsx:181
 msgid "Inbox"
@@ -11740,7 +11740,7 @@ msgid "Plan ends"
 msgstr "Fin du forfait"
 
 #: src/features/sidebar/views/HelpView.tsx:37
-#: src/features/sidebar/blocks/HelpBlock.tsx:105
+#: src/features/sidebar/blocks/HelpBlock.tsx:83
 msgid "Planned"
 msgstr "Prévu"
 
@@ -12963,7 +12963,7 @@ msgid "Relevant"
 msgstr "Pertinent"
 
 #: src/features/sidebar/AppSidebar.tsx:119
-#: src/components/layout/BaseLayout.tsx:33
+#: src/components/layout/BaseLayout.tsx:39
 #: src/components/error/ErrorPage.tsx:87
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
@@ -15012,7 +15012,7 @@ msgstr "Affiché dans l'en-tête de l'organisation et dans l'objet des e-mails."
 msgid "Side by side"
 msgstr "Côte à côte"
 
-#: src/components/layout/BaseLayout.tsx:25
+#: src/components/layout/BaseLayout.tsx:31
 msgid "Sidebar couldn't load."
 msgstr "Impossible de charger la barre latérale."
 
@@ -15740,7 +15740,7 @@ msgid "System follows your device's light or dark setting."
 msgstr "Système suit le réglage clair ou sombre de votre appareil."
 
 #: src/features/sidebar/views/HelpView.tsx:34
-#: src/features/sidebar/blocks/HelpBlock.tsx:102
+#: src/features/sidebar/blocks/HelpBlock.tsx:80
 msgid "System status"
 msgstr "État du système"
 
@@ -18849,7 +18849,7 @@ msgstr "Qu’est-ce que tu veux explorer ?"
 msgid "What you spotlight is kept here: click an argument, or rest the cursor on a cluster until the circle closes."
 msgstr "Ce que vous mettez en lumière est conservé ici : cliquez sur un argument, ou laissez le curseur sur un groupe jusqu’à ce que le cercle se ferme."
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:81
+#: src/features/sidebar/blocks/HelpBlock.tsx:59
 #: src/components/release/ReleaseVideoModal.tsx:317
 msgid "What's new"
 msgstr "Nouveautés"

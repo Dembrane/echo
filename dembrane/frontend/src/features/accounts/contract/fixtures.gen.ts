@@ -771,6 +771,8 @@ export const tasksSummary: Out<typeof TasksSummary> = [
       offer_template: "subscription",
       offer_reference: "DMB-DEMO-1",
     },
+    next_task_document_id: OFFER,
+    next_task_document_kind: "offer",
   },
 ];
 

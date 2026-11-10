@@ -56,6 +56,24 @@ describe("documents that form the agreement", () => {
 		);
 	});
 
+	it("leaves out a text the document has no pinned copy of, so no link leads nowhere", () => {
+		show({
+			...offerDetail,
+			legal: offerDetail.legal.map((pin) =>
+				pin.kind === "sla" ? { ...pin, text_url: null } : pin,
+			),
+		});
+		expect(screen.queryByTestId("sign-document-sla")).toBeNull();
+		expect(screen.getByTestId("sign-document-terms")).toBeTruthy();
+		cleanup();
+		// None pinned at all: no heading over an empty list either.
+		show({
+			...offerDetail,
+			legal: offerDetail.legal.map((pin) => ({ ...pin, text_url: null })),
+		});
+		expect(screen.queryByTestId("sign-documents")).toBeNull();
+	});
+
 	it("shows nothing on the DPA itself or when nothing is pinned", () => {
 		show({ ...offerDetail, kind: "dpa" });
 		expect(screen.queryByTestId("sign-documents")).toBeNull();
