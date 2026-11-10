@@ -1,44 +1,59 @@
-import { plural, t } from "@lingui/core/macro";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { AiBudgetWall } from "@/components/workspace/AiBudgetWall";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import type { WallKey } from "@/components/workspace/gateWalls";
-import { useFreeAllowance } from "@/hooks/useFreeAllowance";
-import { allowanceSpent, audioUsedUp, formatResetDate } from "@/lib/freeTier";
+import type { AiAction } from "@/components/workspace/gateWalls";
+import { type FreeAllowance, useFreeAllowance } from "@/hooks/useFreeAllowance";
+import { audioUsedUp, formatResetDate, formatResetDay } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER } from "@/lib/tiers";
 
-type Feature = "chats" | "reports" | "maps" | "audio";
+type Feature = "ai" | "audio";
 
-const WALLS: Record<Feature, WallKey> = {
-	audio: "free_allowance",
-	chats: "chat_cap",
-	maps: "map_cap",
-	reports: "report_cap",
-};
+// The AI banner shows from this share of the month's budget (inclusive).
+const AI_WARN_PERCENT = 80;
 
-// Shown on free accounts once this month's chats, report, map or audio are used up.
+/** The AI meter state the banner shows, or null when it shows none. */
+function aiBannerState(
+	s: FreeAllowance | undefined,
+): { exhausted: boolean; percent: number } | null {
+	const ai = s?.free ? s.ai : null;
+	// Nothing stops while staff turned the check off, so no banner says it will.
+	if (!ai || ai.unlimited || ai.enforced === false) return null;
+	if (!ai.exhausted && ai.percent_used < AI_WARN_PERCENT) return null;
+	return { exhausted: ai.exhausted, percent: Math.min(100, ai.percent_used) };
+}
+
+// Shown on free accounts from 80% of this month's AI, or once the month's audio is used up.
 export function FreeAllowanceBanner({
 	workspaceId,
 	feature,
+	action,
 }: {
 	workspaceId: string;
 	feature: Feature;
+	// The action the AI wall names; none on the allowance card.
+	action?: AiAction;
 }) {
 	const { i18n } = useLingui();
 	const { data } = useFreeAllowance(workspaceId);
-	const wallKey = WALLS[feature];
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
-	const spent =
-		feature === "audio"
-			? !!data?.free && !!data.audio_seconds && audioUsedUp(data.audio_seconds)
-			: allowanceSpent(data, feature);
-	if (!data || !spent) return null;
-	const date = formatResetDate(data.resets_at, i18n.locale) ?? "";
-	const limit = feature === "audio" ? 1 : (data[feature]?.limit ?? 1);
+	const aiState = feature === "ai" ? aiBannerState(data) : null;
+	const shown =
+		feature === "ai"
+			? !!aiState
+			: !!data?.free && !!data.audio_seconds && audioUsedUp(data.audio_seconds);
+	if (!data || !shown) return null;
+	// The AI budget resets at 00:00 UTC on the 1st, so it names the day only.
+	const date =
+		(feature === "ai"
+			? formatResetDay(data.resets_at, i18n.locale)
+			: formatResetDate(data.resets_at, i18n.locale)) ?? "";
+	const percent = aiState?.percent ?? 0;
 
 	return (
 		<Alert variant="light" color="gray" {...testId("free-allowance-banner")}>
@@ -50,29 +65,18 @@ export function FreeAllowanceBanner({
 							uploads are paused until it resets on {date}.
 						</Trans>
 					)}
-					{feature === "chats" && (
+					{aiState?.exhausted && (
 						<Trans>
-							You have used this month's free chats. They reset on {date}.
+							This month's AI is used up. AI features and new recordings are
+							paused until {date}.
 						</Trans>
 					)}
-					{feature === "reports" &&
-						limit <= 0 &&
-						t`You have used this month's free reports. They reset on ${date}.`}
-					{feature === "reports" &&
-						limit > 0 &&
-						plural(limit, {
-							one: `You have used this month's free report. It resets on ${date}.`,
-							other: `You have used this month's # free reports. They reset on ${date}.`,
-						})}
-					{feature === "maps" &&
-						limit <= 0 &&
-						t`You have used this month's free maps. Your current maps stay here. They reset on ${date}.`}
-					{feature === "maps" &&
-						limit > 0 &&
-						plural(limit, {
-							one: `You have used this month's free map. Your current map stays here. It resets on ${date}.`,
-							other: `You have used this month's # free maps. Your current maps stay here. They reset on ${date}.`,
-						})}
+					{aiState && !aiState.exhausted && (
+						<Trans>
+							You've used {percent}% of this month's AI. When it runs out, AI
+							features and new recordings stop until {date}.
+						</Trans>
+					)}
 				</Text>
 				<Group>
 					<Button
@@ -85,16 +89,27 @@ export function FreeAllowanceBanner({
 					</Button>
 				</Group>
 			</Stack>
-			<UpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				currentTier="free"
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade
-				workspaceId={workspaceId}
-				wallKey={wallKey}
-				entry="modal_direct"
-			/>
+			{feature === "ai" ? (
+				<AiBudgetWall
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
+					action={action}
+					usedUp={!!aiState?.exhausted}
+					resetsAt={data.resets_at}
+					workspaceId={workspaceId}
+				/>
+			) : (
+				<UpgradeModal
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
+					currentTier="free"
+					requiredTier={SELLABLE_TIER}
+					canRequestUpgrade
+					workspaceId={workspaceId}
+					wallKey="free_allowance"
+					entry="modal_direct"
+				/>
+			)}
 		</Alert>
 	);
 }

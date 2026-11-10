@@ -7,7 +7,6 @@ import { z } from "zod";
 import type { Json } from "./contracts";
 import { clientOf } from "./db";
 import { type ExecutorDeps, liveChannel } from "./executor";
-import { refundFailedRuns } from "./free";
 import { mapViewHook } from "./mapview";
 import type { OutboxDeps } from "./outbox";
 import {
@@ -31,6 +30,7 @@ import { AnalysisStore } from "./store";
 /** One recipe run: claim, execute, publish or settle (see jobs.ts). */
 export const analysisRun = defineJob("analysis.run", z.object({ runId: z.string() }), {
   retryLimit: 0,
+  payer: (p) => ({ ref: "analysis_run", id: p.runId }),
   // The whole workflow, deferrals included; each execute step has its own 60-minute limit.
   expireInSeconds: 3 * 60 * 60,
 });
@@ -119,9 +119,6 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
       [POPCORN_TENSIONS_SOURCES_KEY]: sessionTensionSources(store),
     },
     logger: d.logger,
-    refundFailed: async (projectId) => {
-      await refundFailedRuns(d.db, new Date(), projectId, d.logger);
-    },
   };
   return {
     store,

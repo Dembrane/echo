@@ -44,6 +44,9 @@ export function staffStorage(db: Db) {
           percent_discount: billing_account.percent_discount,
           type_discount: billing_account.type_discount,
           billing_period: billing_account.billing_period,
+          ai_budget_micro_eur: billing_account.ai_budget_micro_eur,
+          ai_budget_unlimited: billing_account.ai_budget_unlimited,
+          ai_budget_until: billing_account.ai_budget_until,
         })
         .from(workspace)
         .leftJoin(billing_account, eq(billing_account.id, workspace.billing_account_id))

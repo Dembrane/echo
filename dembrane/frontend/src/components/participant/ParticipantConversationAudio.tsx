@@ -90,8 +90,19 @@ export const ParticipantConversationAudio = () => {
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	// Set after the recorder exists; upload callbacks reach it through this ref.
 	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
+	// Whether this page kept any chunk; a budget refusal before one means nothing was saved.
+	const keptChunkRef = useRef(false);
+	const [refusedUnsaved, setRefusedUnsaved] = useState(false);
 	const uploadChunkMutation = useUploadConversationChunk({
-		onRecordingStop: (r) => wrapUpRef.current?.(wrapUpReasonOf(r)),
+		onChunkAccepted: () => {
+			keptChunkRef.current = true;
+		},
+		onRecordingStop: (r, accepted) => {
+			if (accepted) keptChunkRef.current = true;
+			else if (r === "ai_budget" && !keptChunkRef.current)
+				setRefusedUnsaved(true);
+			wrapUpRef.current?.(wrapUpReasonOf(r));
+		},
 	});
 	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploadsRef = useRef<Promise<unknown>[]>([]);
@@ -501,6 +512,8 @@ export const ParticipantConversationAudio = () => {
 	const shouldVerifyOnFinish =
 		!!projectQuery.data?.is_verify_on_finish_enabled &&
 		!!projectQuery.data?.is_verify_enabled &&
+		// Verify needs AI; at a used-up budget it would open on "Not available right now".
+		projectQuery.data?.is_ai_available !== false &&
 		!hasApprovedArtefacts &&
 		effectiveRecordingTime >= REFINE_BUTTON_THRESHOLD_SECONDS;
 
@@ -784,6 +797,9 @@ export const ParticipantConversationAudio = () => {
 	) {
 		return <NotTakingRecordings />;
 	}
+
+	// The wrap-up's "everything you recorded is saved" would be false here.
+	if (refusedUnsaved) return <NotTakingRecordings />;
 
 	const refineProgress = Math.min(
 		(recordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,

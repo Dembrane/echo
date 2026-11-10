@@ -35,7 +35,7 @@ export async function queueFinishRead(
   if (!report) return false;
   const loop = await store.loopForReport(String(report.id));
   if (!loop || !isPopcornLoop(loop)) return false;
-  // A free read outside live or a booked start would spend the month's analyses unseen.
+  // A free read outside live or a booked start would spend the AI budget unseen.
   if (
     free &&
     loopMode(loop) !== "live" &&

@@ -1,4 +1,5 @@
 import type { ProjectAccess } from "@dembrane/access";
+import { requireAiBudget } from "@dembrane/allowance";
 import { BadRequestError, ForbiddenError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
@@ -7,6 +8,7 @@ import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
 import { type Row, UPLOAD_SOURCE } from "../storage";
+import { NO_TRANSCRIPT_SUMMARY } from "../v1/summary";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
 import {
   type BffStore,
@@ -231,6 +233,9 @@ export async function getConversation(
   return conv;
 }
 
+// What the summary sweep writes again: no summary, an empty one, or the no-transcript placeholder.
+const sweepRewrites = (v: unknown) => v == null || v === "" || v === NO_TRANSCRIPT_SUMMARY;
+
 /**
  * Writable fields only: project, deletion, duration and processing state are internal
  * or have their own routes. Null means "not sent", as the pydantic model dump did.
@@ -241,9 +246,16 @@ export async function updateConversation(
   conversationId: string,
   body: Record<string, unknown>,
 ): Promise<Row> {
-  await conversationForBff(d, who, conversationId, "project:update");
+  const a = await conversationForBff(d, who, conversationId, "project:update");
   const payload = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== null));
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
+  // The summary sweep rewrites a cleared summary, so clearing one at zero is a regenerate.
+  if (
+    "summary" in payload &&
+    sweepRewrites(payload.summary) &&
+    !sweepRewrites(a.conversation.summary)
+  )
+    await requireAiBudget(d.db, a.conversation.project_id, d.now(), a.project.tier);
   const store = bffStore(d.db);
   await store.updateConversation(conversationId, payload, d.now());
   return (await store.conversationStar(conversationId)) ?? {};

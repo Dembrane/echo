@@ -47,7 +47,7 @@ export async function reply(
   protocol: string,
   language: string,
 ): Promise<Response> {
-  const { chat } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
+  const { chat, access } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
     withUsed: true,
   });
   if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
@@ -65,7 +65,8 @@ export async function reply(
     now: d.now(),
     templateKey: body.template_key,
   };
-  const admitted = await d.freeChats.admitTurn(turn);
+  // chatFor read the chat as live and in this project.
+  const admitted = await d.freeChats.admitTurn(turn, { chatChecked: true, tier: access.tier });
 
   let formatted: { role: "system" | "user" | "assistant"; content: string }[];
   try {

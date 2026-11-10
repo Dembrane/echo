@@ -195,8 +195,8 @@ describe("requesting a run", () => {
 		},
 	});
 
-	it.each(["map", "popcorn"])(
-		"leaves a used-up free %s to the page's wall",
+	it.each(["ai_budget"])(
+		"leaves a used-up %s to the page's wall",
 		async (limit) => {
 			vi.mocked(bff.post).mockRejectedValue(refusal(limit));
 			const run = renderHook(() => useRequestAnalysisRun("project-1"), {

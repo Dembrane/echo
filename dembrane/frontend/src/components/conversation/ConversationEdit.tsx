@@ -19,6 +19,14 @@ import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useParams } from "react-router";
+import { notifyError } from "@/components/error/notifyError";
+import { isFreeTierLimitError } from "@/lib/freeTier";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
 	generateConversationSummary,
@@ -103,6 +111,14 @@ export const ConversationEdit = ({
 	showSummary?: boolean;
 }) => {
 	const queryClient = useQueryClient();
+	const { projectId, workspaceId } = useParams();
+	const aiWall = useAiBudgetWall();
+	const [aiAction, setAiAction] = useState<AiAction>("summary");
+	// True when a used-up AI budget opened its wall for this refusal.
+	const openAiWall = (error: unknown, action: AiAction) => {
+		setAiAction(action);
+		return aiWall.openFor(error);
+	};
 	const emailsQuery = useConversationEmails(conversation.id);
 	const emails = emailsQuery.data?.emails_csv
 		? emailsQuery.data.emails_csv.split(",").filter(Boolean)
@@ -152,28 +168,53 @@ export const ConversationEdit = ({
 		title: conversation.title ?? "",
 	};
 
-	const { register, formState, reset, setValue, control, watch, getValues } =
-		useForm<ConversationEditFormValues>({
-			defaultValues,
-		});
+	const {
+		register,
+		formState,
+		reset,
+		setValue,
+		control,
+		watch,
+		getValues,
+		getFieldState,
+	} = useForm<ConversationEditFormValues>({
+		defaultValues,
+	});
 
-	const updateConversationMutation = useUpdateConversationByIdMutation();
+	// An AI budget refusal opens the wall below instead of a toast.
+	const updateConversationMutation = useUpdateConversationByIdMutation({
+		onError: (error) => {
+			if (isFreeTierLimitError(error) !== "ai_budget") void notifyError(error);
+		},
+	});
 	const updateConversationTagsMutation = useUpdateConversationTagsMutation();
 
 	const { dispatchAutoSave, isPendingSave, isSaving, isError, lastSavedAt } =
 		useAutoSave({
 			initialLastSavedAt: conversation.updated_at ?? new Date(),
-			onSave: async (data: ConversationEditFormValues) => {
-				await updateConversationMutation.mutateAsync({
-					id: conversation.id,
-					payload: {
-						participant_name: data.participant_name,
-						title: data.title || null,
-						// Only the modal variant edits summary; don't clobber it
-						// from the detail page where the field isn't rendered.
-						...(showSummary ? { summary: data.summary } : {}),
-					},
-				});
+			onSave: async (form: ConversationEditFormValues) => {
+				let data = form;
+				const update = (withSummary: boolean) =>
+					updateConversationMutation.mutateAsync({
+						id: conversation.id,
+						payload: {
+							participant_name: data.participant_name,
+							title: data.title || null,
+							// Only a summary the host edited here; the form's copy may be older than the saved one.
+							...(withSummary ? { summary: data.summary } : {}),
+						},
+					});
+				const summaryEdited = showSummary && getFieldState("summary").isDirty;
+				try {
+					await update(summaryEdited);
+				} catch (error) {
+					// Clearing a summary at a used-up AI budget is a regenerate: keep it, save the rest.
+					if (!summaryEdited || !openAiWall(error, "summary_again"))
+						throw error;
+					data = { ...data, summary: conversation.summary ?? "" };
+					setValue("summary", data.summary, { shouldDirty: false });
+					await update(false);
+				}
 
 				await updateConversationTagsMutation.mutateAsync({
 					conversationId: conversation.id,
@@ -191,6 +232,11 @@ export const ConversationEdit = ({
 			return result;
 		},
 		mutationKey: ["generateTitle", conversation.id],
+		onError: (error) => {
+			if (openAiWall(error, getValues("title") ? "title_again" : "title"))
+				return;
+			void notifyError(error);
+		},
 		onSuccess: (data) => {
 			if (data?.title) {
 				setValue("title", data.title, { shouldDirty: false });
@@ -210,7 +256,14 @@ export const ConversationEdit = ({
 			return result;
 		},
 		mutationKey: ["generateSummary", conversation.id],
-		onError: () => {
+		onError: (error) => {
+			if (
+				openAiWall(
+					error,
+					getValues("summary")?.trim() ? "summary_again" : "summary",
+				)
+			)
+				return;
 			toast.error(t`Could not generate a summary. Please try again.`);
 		},
 		onSuccess: (data) => {
@@ -397,6 +450,7 @@ export const ConversationEdit = ({
 											loading={isGeneratingTitle}
 											disabled={!canGenerateTitle}
 											onClick={() => generateTitleMutation.mutate()}
+											{...testId("conversation-edit-title-generate-button")}
 										>
 											{hasTitle ? t`Regenerate` : t`Generate`}
 										</Button>
@@ -465,6 +519,7 @@ export const ConversationEdit = ({
 											loading={generateSummaryMutation.isPending}
 											disabled={isLocked}
 											onClick={() => generateSummaryMutation.mutate()}
+											{...testId("conversation-edit-summary-generate-button")}
 										>
 											{watch("summary")?.trim() ? t`Regenerate` : t`Generate`}
 										</Button>
@@ -480,6 +535,14 @@ export const ConversationEdit = ({
 					)}
 				</Stack>
 			</form>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action={aiAction}
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
+			)}
 		</Stack>
 	);
 };

@@ -27,6 +27,12 @@ When a limit is reached, recording stops and the participant sees "That's a wrap
 Everything recorded up to then is saved, transcribed and summarised. Once the month's hours
 are used, the portal shows "This project isn't taking recordings right now." until the 1st.
 
+The same happens when the account's monthly AI allowance is used up, because transcription
+is AI work: recordings stop, new ones (typed ones too) and uploads wait until the 1st, and Verify and Explore
+show "Not available right now". From 80% the dashboard shows a banner, so you can see it
+coming. Heavy use of chat, reports or other AI features before an event can stop your
+participants from recording.
+
 An example: eight groups record 40 minutes each at the same time, on an account with 5 hours
 left. Together they reach 5 hours after about 37 minutes, so every recording stops there.
 

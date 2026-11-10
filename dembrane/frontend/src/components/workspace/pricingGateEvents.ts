@@ -3,7 +3,7 @@ import posthog from "posthog-js";
 import { useCallback, useMemo } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import type { WallKey } from "./gateWalls";
+import type { AiAction, WallKey } from "./gateWalls";
 
 /**
  * The account side of every pricing configurator event.
@@ -54,14 +54,20 @@ export function usePricingGateBase(workspaceId?: string) {
  */
 export function usePricingGateEmitter(
 	workspaceId?: string,
+	// The refused AI action on the ai_budget wall.
+	aiAction?: AiAction,
 ): PricingGateEmitter {
 	const base = usePricingGateBase(workspaceId);
 
 	return useCallback(
 		(name: string, props: Record<string, unknown> = {}) => {
-			posthog.capture(name, { ...base, ...props });
+			posthog.capture(name, {
+				...base,
+				...(aiAction ? { ai_action: aiAction } : {}),
+				...props,
+			});
 		},
-		[base],
+		[aiAction, base],
 	);
 }
 
@@ -80,6 +86,7 @@ export function usePricingGateEmitter(
  */
 export type GateViewedProps = {
 	wallKey: WallKey;
+	aiAction?: AiAction;
 	surface: "popover" | "modal";
 	requiredTier: string;
 	canRequestUpgrade: boolean;
@@ -91,12 +98,14 @@ export function useGateViewed(workspaceId?: string) {
 	return useCallback(
 		({
 			wallKey,
+			aiAction,
 			surface,
 			requiredTier,
 			canRequestUpgrade,
 		}: GateViewedProps) => {
 			posthog.capture("pricing_config_gate_viewed", {
 				...base,
+				...(aiAction ? { ai_action: aiAction } : {}),
 				can_request_upgrade: canRequestUpgrade,
 				mount: "app",
 				required_tier: requiredTier,

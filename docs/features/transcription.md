@@ -96,6 +96,11 @@ Every conversation is transcribed and summarised, on every plan. The free plan l
 much audio comes in: 5 hours a month for the account, and 1 hour per conversation. Nothing
 that was recorded is hidden. See [recording](./recording.md).
 
+Transcription, summaries, titles and tags use the account's monthly AI allowance. Audio
+that was already received is always transcribed and summarised, even when the allowance
+runs out on the way. When it is used up, new recordings stop and "Retranscribe" opens the
+upgrade popup until the 1st.
+
 ## Related
 
 - [Recording](./recording.md): where the audio comes from.

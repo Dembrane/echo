@@ -17,6 +17,10 @@ import {
 } from "@/components/canvas/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { testId } from "@/lib/testUtils";
 
 export type CanvasSuggestion = CanvasProposal;
@@ -118,6 +122,7 @@ export const CanvasSuggestionCard = ({
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const previewMutation = usePreviewCanvasMutation();
+	const aiWall = useAiBudgetWall();
 	const createMutation = useCreateCanvasMutation();
 	const updateMutation = useUpdateCanvasMutation();
 	const canvasesQuery = useProjectCanvases(suggestion.projectId);
@@ -173,6 +178,7 @@ export const CanvasSuggestionCard = ({
 			const response = await previewMutation.mutateAsync(suggestion);
 			setPreviewHtml(response.content_html);
 		} catch (error) {
+			if (aiWall.openFor(error)) return;
 			const bffError = error as BffError;
 			if (bffError.status === 429) {
 				setPreviewNotice(t`Just previewed. Give it a moment.`);
@@ -363,6 +369,14 @@ export const CanvasSuggestionCard = ({
 					)}
 				</Group>
 			</Stack>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="canvas"
+					workspaceId={workspaceId}
+					projectId={suggestion.projectId}
+				/>
+			)}
 		</SuggestionCardFrame>
 	);
 };

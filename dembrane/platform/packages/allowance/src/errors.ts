@@ -5,12 +5,10 @@ export type FreeLimitName =
   | "audio_conversation"
   | "projects"
   | "organisations"
-  | "chats"
   | "chat_turns"
   | "report"
-  | "map"
-  | "popcorn"
-  | "recording_project";
+  | "recording_project"
+  | "ai_budget";
 
 // Params go first so they can never overwrite the reason.
 export function freeLimitError(

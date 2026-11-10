@@ -1,8 +1,16 @@
 import { expect, test } from "bun:test";
 import { type ObjectRevision, titleLines, titleSelectionKey } from "@dembrane/analysis";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { stripQuotes, titleSelection } from "../src/model";
-import { TitleCache, typedTitleLines } from "../src/service";
+import {
+  type SnapshotTarget,
+  selectionTitle,
+  snapshotSelectionTitle,
+  TitleCache,
+  type TitleDeps,
+  typedTitleLines,
+} from "../src/service";
 import python from "./python-titles.json" with { type: "json" };
 
 // python-titles.json is the Python map service's output for the same selection, captured
@@ -86,14 +94,51 @@ test("selection lines, keys and the title prompt match the Python map service", 
   expect(titleSelectionKey("res", ["b", "a", "b"], "map-title-v2|m|x")).toBe(python.key);
 
   const completer = new FakeCompleter().on("Arguments in cluster", '  "A title here" \nmore');
-  const title = await titleSelection(completer, {
-    lines,
-    projectName: " City ",
-    projectContext: "Context x",
-  });
+  const title = await withPayer({ ref: "project", id: "p1" }, () =>
+    titleSelection(completer, { lines, projectName: " City ", projectContext: "Context x" }),
+  );
   expect(title).toBe(python.title);
   expect(completer.calls[0]?.user).toBe(python.user);
   expect(completer.calls[0]?.thinkingBudget).toBe(0);
+});
+
+test("a selection title is billed to the map's project, which the route path does not name", async () => {
+  const completer = new FakeCompleter().on("Arguments in cluster", "A title here");
+  const d = {
+    store: { factChecksFor: async () => new Map() },
+    rt: {
+      store: {
+        getRevisions: async (_p: string, ids: string[]) =>
+          new Map(revisions.filter((r) => ids.includes(r.id)).map((r) => [r.id, r])),
+      },
+    },
+    cache: new TitleCache(),
+    modelIdentity: "m",
+    generate: (lines: string[], projectName: string, projectContext: string) =>
+      titleSelection(completer, { lines, projectName, projectContext }),
+  } as unknown as TitleDeps;
+  const row = {
+    id: "res",
+    project_id: "p-row",
+    status: "ready",
+    manifest: { arguments: ["a1", "a2", "a3"].map((id) => ({ id, statement: id })) },
+  };
+  const target = {
+    kind: "snapshot",
+    resultId: null,
+    snapshot: {
+      id: "snap",
+      projectId: "p-snap",
+      manifest: { objects: revisions.map((r) => ({ revisionId: r.id })) },
+    },
+  } as unknown as SnapshotTarget;
+  takeUnscopedFakeCalls();
+  await selectionTitle(d, row, ["a1", "a2", "a3"], ["P", ""]);
+  await snapshotSelectionTitle(d, target, ["r1", "r2", "r3"], ["P", ""]);
+  expect(fakeCalls().map((c) => c.payer)).toEqual([
+    { ref: "project", id: "p-row" },
+    { ref: "project", id: "p-snap" },
+  ]);
 });
 
 test("a title is generated once per key, even when asked twice at once", async () => {

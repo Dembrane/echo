@@ -17,7 +17,7 @@ import {
 } from "./access";
 import { roomFiles, sampleBundle } from "./bundle";
 import { updateStream } from "./events";
-import { popcornAllowance, withFreePopcorn } from "./free";
+import { popcornAllowance, withAiBudget } from "./free";
 import { dict, type Json, orStr, parseDt, truthy } from "./py";
 import {
   bundleForReport,
@@ -136,13 +136,8 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     return loop;
   };
   const payload = async (report: Row) =>
-    withFreePopcorn(
-      d.db,
-      await popcornPayload(d.store, report),
-      String(report.project_id),
-      d.now(),
-    );
-  // A free account with its month's analyses used up may not start another.
+    withAiBudget(d.db, await popcornPayload(d.store, report), String(report.project_id), d.now());
+  // A free account with its AI budget used up may not start another read.
   const requireRoom = (report: Row) =>
     popcornAllowance(d.db).requireRoom(String(report.project_id), d.now());
 

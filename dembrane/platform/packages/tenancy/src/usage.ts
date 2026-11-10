@@ -86,21 +86,17 @@ export async function freeIncludedHours(db: Db): Promise<number> {
 
 export const FREE_TIER_MAX_WORKSPACES = 1;
 
-/** The free tier block the frontend gates on, read from the account's monthly allowance. */
+/** The free tier block the frontend gates on: the AI meter as a percentage, never euros. */
 export async function freeTierBlock(db: Db, workspaceId: string, now: Date) {
   const s = await allowanceSnapshot(db, workspaceId, now);
   return {
     active: s.free,
-    chats_used: s.chats?.used ?? 0,
-    chats_limit: s.chats?.limit ?? 0,
-    primary_chat_id: null,
-    reports_used: s.reports?.used ?? 0,
-    reports_limit: s.reports?.limit ?? 0,
-    primary_report_id: null,
+    ai_percent_used: s.ai?.percent_used ?? 0,
+    ai_exhausted: s.ai?.exhausted ?? false,
   };
 }
 
 /** The 402 body the frontend keys on to show the upgrade path. */
-export function freeTierLimit(limit: "workspaces" | "chats" | "report") {
+export function freeTierLimit(limit: "workspaces") {
   return { error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" };
 }

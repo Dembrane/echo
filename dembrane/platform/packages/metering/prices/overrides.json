@@ -1,0 +1,79 @@
+{
+  "_source": "Hand-kept; wins over models.dev. Keys are provider/model as our config names them. Prices per million tokens, per audio second or per lookup.",
+  "models": {
+    "vertex/gemini-3.8-flash": {
+      "provider": "vertex",
+      "modelsDev": "google-vertex/gemini-3.8-flash"
+    },
+    "vertex/gemini-3.7-flash": {
+      "provider": "vertex",
+      "modelsDev": "google-vertex/gemini-3.7-flash"
+    },
+    "vertex/gemini-3.5-flash": {
+      "provider": "vertex",
+      "modelsDev": "google-vertex/gemini-3.5-flash"
+    },
+    "vertex/text-embedding-004": {
+      "provider": "vertex",
+      "_source": "Not on models.dev. LiteLLM's vertex_ai text-embedding-004 price, USD 0.10 per million input tokens.",
+      "prices": {
+        "currency": "USD",
+        "inputPerM": 0.1,
+        "cachedInputPerM": null,
+        "audioInputPerM": null,
+        "outputPerM": 0,
+        "longContext": null,
+        "perAudioSecond": null,
+        "perSearchQuery": null
+      }
+    },
+    "openai-compatible/glm-5.3": {
+      "provider": "openai-compatible",
+      "_source": "Scaleway Generative APIs, fr-par realtime, read 2026-11-03: input EUR 0.0018 and output EUR 0.0055 per 1000 tokens. https://www.scaleway.com/en/pricing/model-as-a-service/ (public catalog: https://api.scaleway.com/product-catalog/v2alpha1/public-catalog/products?product_types=generative_apis)",
+      "prices": {
+        "currency": "EUR",
+        "inputPerM": 1.8,
+        "cachedInputPerM": null,
+        "audioInputPerM": null,
+        "outputPerM": 5.5,
+        "longContext": null,
+        "perAudioSecond": null,
+        "perSearchQuery": null
+      }
+    },
+    "openai-compatible/qwen3-embedding-8b": {
+      "provider": "openai-compatible",
+      "_source": "Scaleway Generative APIs, fr-par realtime, read 2026-11-03: input EUR 0.0001 per 1000 tokens. https://www.scaleway.com/en/pricing/model-as-a-service/ (public catalog: https://api.scaleway.com/product-catalog/v2alpha1/public-catalog/products?product_types=generative_apis)",
+      "prices": {
+        "currency": "EUR",
+        "inputPerM": 0.1,
+        "cachedInputPerM": null,
+        "audioInputPerM": null,
+        "outputPerM": 0,
+        "longContext": null,
+        "perAudioSecond": null,
+        "perSearchQuery": null
+      }
+    },
+    "openai-compatible/whisper-large-v3": {
+      "provider": "openai-compatible",
+      "_source": "Scaleway Generative APIs, fr-par realtime, read 2026-11-03: input audio EUR 0.003 per 60 seconds. https://www.scaleway.com/en/pricing/model-as-a-service/ (public catalog: https://api.scaleway.com/product-catalog/v2alpha1/public-catalog/products?product_types=generative_apis)",
+      "prices": {
+        "currency": "EUR",
+        "inputPerM": null,
+        "cachedInputPerM": null,
+        "audioInputPerM": null,
+        "outputPerM": null,
+        "longContext": null,
+        "perAudioSecond": 0.00005,
+        "perSearchQuery": null
+      }
+    }
+  },
+  "searchQuery": {
+    "provider": "vertex",
+    "_source": "Vertex AI grounding with Google Search list price, USD 14 per 1000 queries; Google's free monthly lookups are project-wide, so every lookup is charged.",
+    "currency": "USD",
+    "perQuery": 0.014
+  }
+}

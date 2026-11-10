@@ -600,7 +600,7 @@ run("bypass: free audio limits", () => {
     );
   });
 
-  // A7: project-billed stateless transcription is refused on free outright.
+  // A7: voice spends the AI budget on free, never the audio hours.
   const voiceNote = async (projectId: string) => {
     const wav = await audioOf(30, "wav");
     const file = new File([await wav.arrayBuffer()], "note.wav", { type: "audio/wav" });
@@ -611,6 +611,9 @@ run("bypass: free audio limits", () => {
         who,
         {
           projectId,
+          workspaceId: null,
+          ownWorkspace: false,
+          budgetExempt: false,
           file,
           audioFileUri: null,
           language: "en",
@@ -628,26 +631,25 @@ run("bypass: free audio limits", () => {
     );
   };
 
-  test("stateless transcription spends a free account's audio with no check", async () => {
+  test("stateless transcription on free spends no audio hours", async () => {
     const { p } = await account();
     const before = transcriber.calls.length;
     const err = await voiceNote(p);
-    expect({
-      status: err?.status,
-      limit: (err?.details as { limit?: string } | undefined)?.limit,
-      transcribed: transcriber.calls.length - before,
-      used: await used(p),
-    }).toEqual({ status: 402, limit: "audio_month", transcribed: 0, used: 0 });
+    expect({ err, transcribed: transcriber.calls.length - before, used: await used(p) }).toEqual({
+      err: null,
+      transcribed: 1,
+      used: 0,
+    });
   });
 
-  test("stateless transcription is refused on a free sample project too", async () => {
+  test("stateless transcription runs on a free sample project too", async () => {
     const { p } = await account();
     await sql`update project set is_sample = true where id = ${p}`;
     const before = transcriber.calls.length;
     const err = await voiceNote(p);
-    expect({ status: err?.status, transcribed: transcriber.calls.length - before }).toEqual({
-      status: 402,
-      transcribed: 0,
+    expect({ err, transcribed: transcriber.calls.length - before }).toEqual({
+      err: null,
+      transcribed: 1,
     });
   });
 

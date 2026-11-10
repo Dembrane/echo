@@ -359,6 +359,7 @@ export function projectsStorage(db: Db) {
           project_id: project_report.project_id,
           show_portal_link: project_report.show_portal_link,
           date_created: project_report.date_created,
+          error_code: project_report.error_code,
           error_message: project_report.error_message,
           content: project_report.content,
         })

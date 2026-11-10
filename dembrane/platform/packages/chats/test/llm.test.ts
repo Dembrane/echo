@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { generateTitle } from "../src/llm";
-import { generateSuggestions, SUGGESTIONS_TIMEOUT_MS } from "../src/suggestions";
-import { cleanGeneratedTitle, ensureConversationSummaries } from "../src/summaries";
+import { fakeLanguageModel } from "@dembrane/llm";
+import { SUGGESTIONS_TIMEOUT_MS } from "../src/suggestions";
+import { cleanGeneratedTitle } from "../src/summaries";
 import { countMessageTokens } from "../src/tokens";
-import { fakeDeps, fakeModel } from "./fakes";
+import { fakeDeps } from "./fakes";
+import { ensureConversationSummaries, generateSuggestions, generateTitle } from "./scoped";
 
 describe("tokens", () => {
   test("match litellm's token_counter for Gemini (cl100k plus message overhead)", () => {
@@ -21,7 +22,9 @@ describe("tokens", () => {
 describe("titles", () => {
   test("a chat title comes from the fast group; a one-letter message gets none", async () => {
     const calls: LanguageModelV4CallOptions[] = [];
-    const d = fakeDeps({ models: { multi_modal_fast: fakeModel({ text: "Bus gaps", calls }) } });
+    const d = fakeDeps({
+      models: { multi_modal_fast: fakeLanguageModel({ text: "Bus gaps", calls }) },
+    });
     expect(await generateTitle(d.models, "Why are buses late?", "nl")).toBe("Bus gaps");
     expect(JSON.stringify(calls[0]?.prompt)).toContain('in \\"nl\\" (2 letter language code)');
     expect(await generateTitle(d.models, " a ", "en")).toBeNull();
@@ -57,7 +60,7 @@ describe("suggestions", () => {
     });
     const d = fakeDeps({
       store: store(true),
-      models: { multi_modal_fast: fakeModel({ text: answer, calls }) },
+      models: { multi_modal_fast: fakeLanguageModel({ text: answer, calls }) },
     });
     const out = await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     expect(out).toHaveLength(3);
@@ -68,7 +71,7 @@ describe("suggestions", () => {
   });
 
   test("no mode, bad output or a failing model answer an empty list", async () => {
-    const d = fakeDeps({ store: store(true), model: fakeModel({ text: "not json" }) });
+    const d = fakeDeps({ store: store(true), model: fakeLanguageModel({ text: "not json" }) });
     expect(await generateSuggestions(d, "p1", "chat", null, "en")).toEqual([]);
     expect(await generateSuggestions(d, "p1", "chat", "deep_dive", "en")).toEqual([]);
   });
@@ -76,7 +79,7 @@ describe("suggestions", () => {
   test("a fresh chat's suggestions are cached", async () => {
     const calls: LanguageModelV4CallOptions[] = [];
     const answer = JSON.stringify({ suggestions: [{ icon: "sparkles", label: "a", prompt: "p" }] });
-    const d = fakeDeps({ store: store(false), model: fakeModel({ text: answer, calls }) });
+    const d = fakeDeps({ store: store(false), model: fakeLanguageModel({ text: answer, calls }) });
     await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     expect(calls).toHaveLength(1);
@@ -94,14 +97,8 @@ describe("suggestions limits", () => {
   const answer = JSON.stringify({ suggestions: [{ icon: "sparkles", label: "a", prompt: "p" }] });
 
   test("a stalled model answers an empty list within the time limit", async () => {
-    const stalled = {
-      ...fakeModel({}),
-      doGenerate: (o: LanguageModelV4CallOptions) =>
-        new Promise<never>((_, reject) => {
-          o.abortSignal?.addEventListener("abort", () => reject(o.abortSignal?.reason));
-        }),
-    };
-    const d = { ...fakeDeps({ store, model: stalled as never }), suggestionTimeoutMs: 50 };
+    const stalled = fakeLanguageModel({ delayMs: Number.POSITIVE_INFINITY });
+    const d = { ...fakeDeps({ store, model: stalled }), suggestionTimeoutMs: 50 };
     const started = Date.now();
     expect(await generateSuggestions(d, "p1", "chat", "deep_dive", "en")).toEqual([]);
     expect(Date.now() - started).toBeLessThan(2_000);
@@ -113,7 +110,7 @@ describe("suggestions limits", () => {
     let reply = "Buses stop at eleven.";
     const d = fakeDeps({
       store: { ...store, lastAssistantMessage: async () => reply },
-      model: fakeModel({ text: answer, calls }),
+      model: fakeLanguageModel({ text: answer, calls }),
     });
     const first = await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
     const again = await generateSuggestions(d, "p1", "chat", "deep_dive", "en");
@@ -160,10 +157,10 @@ describe("overview summaries", () => {
     const d = fakeDeps({
       reads,
       models: {
-        multi_modal_pro: fakeModel({ text: "Wants buses." }),
-        multi_modal_fast: fakeModel({
-          text: (o) =>
-            JSON.stringify(o.prompt).includes("tag_ids") ? '{"tag_ids":["t1","nope"]}' : "Buses",
+        multi_modal_pro: fakeLanguageModel({ text: "Wants buses." }),
+        multi_modal_fast: fakeLanguageModel({
+          text: (prompt) =>
+            JSON.stringify(prompt).includes("tag_ids") ? '{"tag_ids":["t1","nope"]}' : "Buses",
         }),
       },
     });
@@ -186,7 +183,10 @@ describe("overview summaries", () => {
         updates.push([id, v]);
       },
     };
-    const d = fakeDeps({ reads, models: { multi_modal_pro: fakeModel({ text: "Wants buses." }) } });
+    const d = fakeDeps({
+      reads,
+      models: { multi_modal_pro: fakeLanguageModel({ text: "Wants buses." }) },
+    });
     expect(await ensureConversationSummaries(d, ["c9"])).toEqual({ succeeded: ["c9"], failed: [] });
     expect(updates).toEqual([["c9", { summary: "Wants buses." }]]);
   });

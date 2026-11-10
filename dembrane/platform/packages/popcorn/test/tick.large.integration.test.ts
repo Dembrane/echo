@@ -2,10 +2,11 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { createDb, migrate } from "@dembrane/db";
 import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
-import { runPopcornTick, type TickDeps } from "../src/tick/run";
+import type { TickDeps } from "../src/tick/run";
 import { NEIGHBOURS } from "../src/tick/scale";
 import { tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
+import { runPopcornTick } from "./fixtures/tick/scoped";
 import { freshDatabase } from "./fixtures/tick/seed";
 
 // A large session's tensions against Postgres: what each read asks the model.

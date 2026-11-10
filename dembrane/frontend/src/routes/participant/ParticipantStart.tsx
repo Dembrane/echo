@@ -87,14 +87,19 @@ export const ParticipantStartRoute = () => {
 		);
 	}
 
+	// Typed text records nothing, so only a used-up AI budget closes it.
+	const closed =
+		resolvePortalMode(searchParams) === "text"
+			? project?.is_ai_available === false
+			: project?.is_taking_recordings === false;
+
 	return (
 		<div className="h-full grow">
 			{isLoadingProject ? (
 				<div {...testId("portal-loading-spinner")}>
 					<DembraneLoadingSpinner isLoading />
 				</div>
-			) : project?.is_taking_recordings === false &&
-				resolvePortalMode(searchParams) !== "text" ? (
+			) : closed ? (
 				// The start route hides the portal header; this draws its logo row, centred the same way.
 				<div className="flex h-full flex-col">
 					<header
@@ -109,7 +114,9 @@ export const ParticipantStartRoute = () => {
 						</div>
 					</header>
 					<div className="flex flex-grow flex-col items-center justify-center p-4">
-						<NotTakingRecordings />
+						<NotTakingRecordings
+							text={resolvePortalMode(searchParams) === "text"}
+						/>
 					</div>
 				</div>
 			) : (

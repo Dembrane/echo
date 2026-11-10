@@ -2,8 +2,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 /**
  * Correlation carried through one request or one job, so every log line and span can be
- * joined back to what caused it. This is the only AsyncLocalStorage in the codebase:
- * business code receives identity and tenancy as arguments, never from here.
+ * joined back to what caused it. Business code receives identity and tenancy as
+ * arguments, never from here.
  */
 export interface Correlation {
   readonly requestId: string;

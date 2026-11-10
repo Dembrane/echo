@@ -113,7 +113,7 @@ export const billing = {
     detail: "Free tier limit",
     params: ["limit", "organisation_id"],
     description:
-      "The free tier's limit for this feature is used up. limit names which: chats, chat_turns, report, workspaces, projects or organisations.",
+      "The free tier's limit for this feature is used up. limit names which: ai_budget, audio_month, audio_conversation, recording_project, projects, organisations, or chat_turns and report on sample projects.",
   },
   "billing.tier_required": {
     action: "upgrade",

@@ -3,7 +3,7 @@ import { Writable } from "node:stream";
 import { newId } from "@dembrane/core";
 import { migrate } from "@dembrane/db";
 import { FakeCompleter } from "@dembrane/llm";
-import { createLogger } from "@dembrane/observability";
+import { createLogger, withPayer } from "@dembrane/observability";
 import postgres from "postgres";
 import { summarizeConversation } from "../src/summarize";
 
@@ -47,7 +47,8 @@ run("report summaries and the retired hour lock", () => {
       values (${newId()}, ${conv}, now(), 'we want buses', 'PORTAL_AUDIO')`;
     const completer = new FakeCompleter().on(() => true, "Residents want buses.");
     const s = summarizeConversation({ sql, completer, logger: quiet, now: () => new Date() });
-    expect(await s.summarize(conv)).toBe("summarized");
+    // Report generation summarises inside its workflow, which bills the report.
+    expect(await withPayer({ ref: "report", id: "1" }, () => s.summarize(conv))).toBe("summarized");
     const [row] = await sql`select summary from conversation where id = ${conv}`;
     expect(row?.summary).toBe("Residents want buses.");
   });

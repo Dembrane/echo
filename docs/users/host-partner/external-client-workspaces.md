@@ -52,7 +52,10 @@ The ones you meet first:
 
 - 5 hours of recorded audio a month, and at most 1 hour per conversation. Nothing that was
   recorded is ever locked.
-- One project, two chats a month with 20 questions each, and one report a month.
+- One project.
+- A monthly AI allowance for chat, reports, maps and the other AI features, shown on the
+  "Free plan allowance" card as a percentage used. When it is used up, AI features and new
+  recordings pause until the 1st.
 
 To arrange a paid plan, open the workspace's settings and go to "Usage and billing". It reads
 "This workspace is billed separately". Choose "Tell us what you need": a short form, then a call

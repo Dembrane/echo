@@ -342,6 +342,7 @@
       "dependencies": {
         "@dbos-inc/dbos-sdk": "^5.1.10",
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -473,6 +474,9 @@
         "@dembrane/llm": "workspace:*",
         "drizzle-orm": "^0.45.3",
       },
+      "devDependencies": {
+        "@dembrane/observability": "workspace:*",
+      },
     },
     "packages/legacy-shape": {
       "name": "@dembrane/legacy-shape",
@@ -489,6 +493,7 @@
         "@ai-sdk/provider": "*",
         "@dembrane/observability": "workspace:*",
         "ai": "^7.0.118",
+        "js-tiktoken": "^1.0.21",
       },
     },
     "packages/mail": {
@@ -517,11 +522,17 @@
     "packages/metering": {
       "name": "@dembrane/metering",
       "dependencies": {
+        "@dembrane/allowance": "workspace:*",
+        "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/llm": "workspace:*",
         "@dembrane/observability": "workspace:*",
+        "@dembrane/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "zod": "^4.1.0",
       },
       "devDependencies": {
+        "@dembrane/config": "workspace:*",
         "postgres": "^3.4.9",
       },
     },
@@ -682,6 +693,7 @@
       "dependencies": {
         "@dembrane/access": "workspace:*",
         "@dembrane/account": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -808,6 +820,7 @@
         "@dembrane/http": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/llm": "workspace:*",
+        "@dembrane/observability": "workspace:*",
         "@dembrane/projects": "workspace:*",
         "@dembrane/prompts": "workspace:*",
         "ai": "^7.0.118",
@@ -815,7 +828,7 @@
         "hono": "^4.9.0",
       },
       "devDependencies": {
-        "@dembrane/observability": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",

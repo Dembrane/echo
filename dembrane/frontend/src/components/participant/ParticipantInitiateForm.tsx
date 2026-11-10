@@ -270,7 +270,7 @@ export const ParticipantInitiateForm = ({
 		>
 			<Stack className="relative">
 				{refused ? (
-					<NotTakingRecordings />
+					<NotTakingRecordings text={portalMode === "text"} />
 				) : (
 					Boolean(initiateError) && (
 						<Box {...testId("portal-initiate-error-alert")}>

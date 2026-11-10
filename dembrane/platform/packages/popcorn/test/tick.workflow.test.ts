@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createDb, migrate } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, fakeCalls, lastPayer, takeUnscopedFakeCalls } from "@dembrane/llm";
 import { correlation, createLogger, initTracing } from "@dembrane/observability";
 import { installQueueSchema, Queue } from "@dembrane/queue";
 import postgres from "postgres";
@@ -79,6 +79,7 @@ run("popcorn tick workflow on DBOS", () => {
   });
 
   test("a dispatched request runs once, however often it is delivered", async () => {
+    takeUnscopedFakeCalls();
     await queue.enqueue(popcornTick, { loopId: ids.loop, tickKind: "manual", requestId: REQUEST });
     await until(async () => {
       const [r] = await raw`select status from agent_loop_run where id = ${REQUEST}`;
@@ -88,6 +89,10 @@ run("popcorn tick workflow on DBOS", () => {
     expect(calls).toBe(2);
     // Metered under the kind of read.
     expect(operations).toEqual(["popcorn.tick.manual", "popcorn.tick.manual"]);
+    // Billed to the loop the tick reads.
+    expect(fakeCalls()).toHaveLength(2);
+    expect(lastPayer()).toEqual({ ref: "popcorn_loop", id: ids.loop });
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     await queue.enqueue(popcornTick, { loopId: ids.loop, tickKind: "manual", requestId: REQUEST });
     await Bun.sleep(1500);
     const runs = await raw`select id from agent_loop_run where loop_id = ${ids.loop}`;

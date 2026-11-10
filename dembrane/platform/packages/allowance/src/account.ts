@@ -11,7 +11,7 @@ export interface AllowanceAccount {
   readonly orgId: string | null;
 }
 
-interface Row extends Record<string, unknown> {
+export interface AccountRow extends Record<string, unknown> {
   own_id: string;
   own_tier: string;
   own_org_id: string | null;
@@ -25,12 +25,13 @@ interface Row extends Record<string, unknown> {
 const ISO = `'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`;
 
 // Own account, plus the org's oldest live pooled account (mirrors tenancy orgBillingAccountId).
-function resolve(db: Db, from: SQL, where: SQL) {
-  return db.execute<Row>(sql`
+export function accountQuery(from: SQL, where: SQL, extra: SQL = sql``): SQL {
+  return sql`
     select own.id as own_id, own.tier as own_tier, own.org_id as own_org_id,
       to_char(own.downgraded_at at time zone 'UTC', ${sql.raw(ISO)}) as own_downgraded_at,
       pool.id as pool_id, pool.tier as pool_tier, pool.org_id as pool_org_id,
       to_char(pool.downgraded_at at time zone 'UTC', ${sql.raw(ISO)}) as pool_downgraded_at
+      ${extra}
     ${from}
     join billing_account own on own.id = w.billing_account_id
     left join lateral (
@@ -39,14 +40,26 @@ function resolve(db: Db, from: SQL, where: SQL) {
       order by b.created_at asc nulls last, b.id asc
       limit 1
     ) pool on true
-    where ${where}
-    limit 1`);
+    where ${where}`;
 }
 
-function pick(row: Row | undefined, now: Date): AllowanceAccount | null {
+// A free account without an org of its own pools into the org's account when that is free too.
+export function pooled(row: AccountRow): boolean {
+  return (
+    isFreeTier(row.own_tier) &&
+    row.own_org_id === null &&
+    row.pool_id !== null &&
+    isFreeTier(row.pool_tier)
+  );
+}
+
+function resolve<R extends AccountRow = AccountRow>(db: Db, from: SQL, where: SQL, extra?: SQL) {
+  return db.execute<R>(sql`${accountQuery(from, where, extra)} limit 1`);
+}
+
+function pick(row: AccountRow | undefined, now: Date): AllowanceAccount | null {
   if (!row || !isFreeTier(row.own_tier)) return null;
-  const pooled = row.own_org_id === null && row.pool_id !== null && isFreeTier(row.pool_tier);
-  const [id, tier, orgId, downgradedAt] = pooled
+  const [id, tier, orgId, downgradedAt] = pooled(row)
     ? [row.pool_id as string, row.pool_tier, row.pool_org_id, row.pool_downgraded_at]
     : [row.own_id, row.own_tier, row.own_org_id, row.own_downgraded_at];
   return {
@@ -83,16 +96,41 @@ export async function allowanceForProject(
   return pick(rows[0], now);
 }
 
+export interface ProjectAllowance {
+  readonly account: AllowanceAccount | null;
+  readonly sample: boolean;
+}
+
+// The project's account and whether it is a sample, in one read.
+export async function projectAllowance(
+  db: Db,
+  projectId: string,
+  now: Date,
+): Promise<ProjectAllowance> {
+  if (!isUuid(projectId)) return { account: null, sample: false };
+  const rows = await resolve<AccountRow & { is_sample: boolean | null }>(
+    db,
+    sql`from project p join workspace w on w.id = p.workspace_id`,
+    sql`p.id = ${projectId}`,
+    sql`, p.is_sample`,
+  );
+  return { account: pick(rows[0], now), sample: rows[0]?.is_sample === true };
+}
+
 // The account a project's usage counts against; null when unlimited or a sample project.
 export async function allowanceForCountedProject(
   db: Db,
   projectId: string,
   now: Date,
 ): Promise<AllowanceAccount | null> {
-  const a = await allowanceForProject(db, projectId, now);
-  if (!a) return null;
+  const { account, sample } = await projectAllowance(db, projectId, now);
+  return sample ? null : account;
+}
+
+// A workspace's sample copy: its usage counts against no one.
+export async function isSampleProject(db: Db, projectId: string): Promise<boolean> {
   const rows = await db.execute<{ is_sample: boolean | null }>(
     sql`select is_sample from project where id = ${projectId}`,
   );
-  return rows[0]?.is_sample === true ? null : a;
+  return rows[0]?.is_sample === true;
 }

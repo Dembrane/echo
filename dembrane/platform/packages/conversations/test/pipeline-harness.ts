@@ -6,10 +6,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import type { LanguageModelV4 } from "@ai-sdk/provider";
 import { LocalMedia, type Media } from "@dembrane/audio";
 import { createDb, migrate } from "@dembrane/db";
-import type { Models } from "@dembrane/llm";
+import { fakeModels as sharedFakeModels } from "@dembrane/llm";
 import { createLogger, initTracing, type Logger } from "@dembrane/observability";
 import { installQueueSchema, Queue } from "@dembrane/queue";
 import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
@@ -96,37 +95,9 @@ export async function tone(path: string, seconds: number, codec: string[] = ["-c
   return Bun.file(path);
 }
 
-/** A model that answers every call with the same text, and counts the calls. */
+/** Models that answer every call with the same text. */
 export function fakeModels(text = "A short summary.") {
-  const calls: string[] = [];
-  const model: LanguageModelV4 = {
-    specificationVersion: "v4",
-    provider: "fake",
-    modelId: "fake",
-    supportedUrls: {},
-    async doGenerate() {
-      calls.push("generate");
-      return {
-        content: [{ type: "text", text }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage: {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 1, text: 1, reasoning: 0 },
-        },
-        warnings: [],
-      } as never;
-    },
-    async doStream() {
-      throw new Error("not used");
-    },
-  };
-  const models: Models = {
-    model: () => model,
-    embedding: () => {
-      throw new Error("not used");
-    },
-  };
-  return { models, calls };
+  return { models: sharedFakeModels({ text }) };
 }
 
 export interface Harness {

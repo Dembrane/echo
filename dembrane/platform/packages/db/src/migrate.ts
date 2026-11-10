@@ -149,7 +149,7 @@ async function recordedMigrations(sql: postgres.Sql): Promise<Set<number>> {
 
 /**
  * Runs the pending migrations in journal order in one transaction (retried on a lock
- * timeout) and records each as
+ * timeout or a deadlock) and records each as
  * drizzle's migrator does (same table, hash and created_at), so drizzle-kit and older
  * builds read the same history.
  */
@@ -172,7 +172,7 @@ async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<
       return;
     } catch (err) {
       // The whole run rolled back, so trying again is safe.
-      if (!isLockTimeout(err) || attempt >= LOCK_ATTEMPTS) throw err;
+      if (!isRetryableLock(err) || attempt >= LOCK_ATTEMPTS) throw err;
       await Bun.sleep(LOCK_BACKOFF_MS * attempt + Math.random() * LOCK_BACKOFF_MS);
     }
   }
@@ -182,9 +182,11 @@ const LOCK_TIMEOUT = "5s";
 export const LOCK_ATTEMPTS = 3;
 const LOCK_BACKOFF_MS = 1000;
 
-function isLockTimeout(err: unknown): boolean {
+/** A lock timeout (55P03) or a deadlock (40P01): the run rolled back whole, so trying again is safe. */
+export function isRetryableLock(err: unknown): boolean {
   const e = err as { code?: string; cause?: { code?: string } } | null;
-  return (e?.code ?? e?.cause?.code) === "55P03";
+  const code = e?.code ?? e?.cause?.code;
+  return code === "55P03" || code === "40P01";
 }
 
 async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {

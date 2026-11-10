@@ -1,63 +1,11 @@
 import { Writable } from "node:stream";
-import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
+import type { LanguageModelV4 } from "@ai-sdk/provider";
 import { Access, MemoryAccessStore } from "@dembrane/access";
 import { freeLimitError } from "@dembrane/allowance";
+import { fakeLanguageModel } from "@dembrane/llm";
 import { createLogger, type Logger } from "@dembrane/observability";
 import type { ChatDeps } from "../src/deps";
-import type { Admitted, FreeChats, FreeTurns, UserTurn } from "../src/free";
-
-const usage = {
-  inputTokens: { total: 3, noCache: 3, cacheRead: 0, cacheWrite: 0 },
-  outputTokens: { total: 4, text: 4, reasoning: 0 },
-};
-const finishReason = { unified: "stop" as const, raw: "stop" };
-
-/** A language model that answers from a script and records every prompt it was sent. */
-export function fakeModel(opts: {
-  text?: string | ((o: LanguageModelV4CallOptions) => string);
-  chunks?: string[];
-  failStream?: boolean;
-  calls?: LanguageModelV4CallOptions[];
-}): LanguageModelV4 {
-  const calls = opts.calls ?? [];
-  const answer = (o: LanguageModelV4CallOptions) =>
-    typeof opts.text === "function" ? opts.text(o) : (opts.text ?? "ok");
-  return {
-    specificationVersion: "v4",
-    provider: "fake",
-    modelId: "fake",
-    supportedUrls: {},
-    async doGenerate(o) {
-      calls.push(o);
-      return {
-        content: [{ type: "text", text: answer(o) }],
-        finishReason,
-        usage,
-        warnings: [],
-      } as never;
-    },
-    async doStream(o) {
-      calls.push(o);
-      if (opts.failStream) throw Object.assign(new Error("boom"), { isRetryable: false });
-      const chunks = opts.chunks ?? [answer(o)];
-      const parts = [
-        { type: "stream-start", warnings: [] },
-        { type: "text-start", id: "t" },
-        ...chunks.map((delta) => ({ type: "text-delta", id: "t", delta })),
-        { type: "text-end", id: "t" },
-        { type: "finish", finishReason, usage },
-      ];
-      return {
-        stream: new ReadableStream({
-          start(c) {
-            for (const p of parts) c.enqueue(p);
-            c.close();
-          },
-        }),
-      } as never;
-    },
-  };
-}
+import type { Admitted, FreeChats, UserTurn } from "../src/free";
 
 export const quietLogger: Logger = createLogger(
   { service: "test", release: "r", env: "test", level: "error" },
@@ -67,7 +15,7 @@ export const quietLogger: Logger = createLogger(
 /** A FreeChats over a fake store: admits by storing, undoes by deleting, records undo calls. */
 export function fakeFreeChats(
   store: Record<string, unknown> | undefined,
-  opts: { refuse?: "chats" | "chat_turns"; turns?: FreeTurns | null } = {},
+  opts: { refuse?: "ai_budget" | "chat_turns" } = {},
 ): FreeChats & { undone: [UserTurn, Admitted][] } {
   const s = store as {
     createMessage?: (v: Record<string, unknown>) => Promise<unknown>;
@@ -77,7 +25,7 @@ export function fakeFreeChats(
   return {
     undone,
     async canStartChat() {
-      if (opts.refuse === "chats") throw freeLimitError("chats");
+      if (opts.refuse === "ai_budget") throw freeLimitError("ai_budget");
     },
     async admitTurn(turn) {
       if (opts.refuse) throw freeLimitError(opts.refuse);
@@ -89,14 +37,11 @@ export function fakeFreeChats(
         templateKey: turn.templateKey ?? null,
         now: turn.now,
       });
-      return { account: null, claimed: false };
+      return { inserted: true };
     },
     async undoTurn(turn, admitted) {
       undone.push([turn, admitted]);
       await s.deleteMessage?.(turn.messageId);
-    },
-    async turnStatus() {
-      return opts.turns ?? null;
     },
   };
 }
@@ -109,15 +54,17 @@ export function fakeDeps(parts: {
   models?: Record<string, LanguageModelV4>;
   captured?: unknown[][];
   freeChats?: FreeChats;
+  requireAiBudget?: ChatDeps["requireAiBudget"];
 }): ChatDeps {
   let n = 0;
   return {
     store: parts.store as never,
     reads: parts.reads as never,
     freeChats: parts.freeChats ?? fakeFreeChats(parts.store),
+    requireAiBudget: parts.requireAiBudget ?? (async () => {}),
     access: hostAccess(),
     models: {
-      model: (g: string) => (parts.models?.[g] ?? parts.model ?? fakeModel({})) as never,
+      model: (g: string) => (parts.models?.[g] ?? parts.model ?? fakeLanguageModel()) as never,
     },
     limiter: { check: async () => {} },
     capture: async (...args) => {

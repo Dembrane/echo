@@ -14,17 +14,21 @@ export interface FreeAllowance {
 	period_start: string | null;
 	resets_at: string | null;
 	audio_seconds: FreeMeter | null;
-	chats: FreeMeter | null;
-	reports: FreeMeter | null;
-	maps: FreeMeter | null;
-	popcorn_analyses: FreeMeter | null;
 	projects: FreeMeter | null;
+	// The monthly AI budget; null when not free.
+	// enforced is false while staff turned the AI budget check off.
+	ai: {
+		percent_used: number;
+		exhausted: boolean;
+		unlimited: boolean;
+		enforced: boolean;
+	} | null;
 }
 
 export const freeAllowanceQueryKey = (workspaceId: string) =>
 	["workspace", workspaceId, "free-allowance"] as const;
 
-/** Refetches every workspace's free allowance after a spend or a refund. */
+/** Refetches every workspace's free allowance after a spend or a refusal. */
 export const invalidateFreeAllowance = (qc: QueryClient) =>
 	qc.invalidateQueries({
 		predicate: ({ queryKey }) =>

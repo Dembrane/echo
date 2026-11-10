@@ -179,6 +179,60 @@ describe("useMapFactCheck", () => {
 		expect(result.current.states.c1.status).toBe("idle");
 	});
 
+	it("hands a used-up AI budget to the page, with no error on any claim", async () => {
+		const refusal = Object.assign(new Error("HTTP 402"), {
+			body: {
+				action: "upgrade",
+				code: "billing.tier_limit",
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		});
+		const first = deferred<FactCheckState>();
+		bffMock.post.mockReturnValueOnce(first.promise);
+		const onRefused = vi.fn(() => true);
+		const { result } = renderHook(
+			() => useMapFactCheck({ onRefused, readOnly: false, resultId: "r1" }),
+			{ wrapper },
+		);
+		await waitFor(() => expect(result.current.ready).toBe(true));
+		const many = Array.from(
+			{ length: FACT_CHECK_CONCURRENCY + 2 },
+			(_, i) => `c${i + 1}`,
+		);
+		bffMock.post.mockReturnValue(deferred<FactCheckState>().promise);
+		act(() => {
+			result.current.runAll(many);
+		});
+		await act(async () => {
+			first.reject(refusal);
+		});
+		expect(onRefused).toHaveBeenCalledWith(refusal);
+		// The refused claim and the ones still waiting go back to their saved state.
+		expect(result.current.states.c1.status).toBe("idle");
+		for (const id of many.slice(FACT_CHECK_CONCURRENCY))
+			expect(result.current.states[id]?.status ?? "idle").toBe("idle");
+		expect(
+			Object.values(result.current.states).some((s) => s.status === "error"),
+		).toBe(false);
+		// The waiting starts were dropped, not sent.
+		expect(bffMock.post).toHaveBeenCalledTimes(FACT_CHECK_CONCURRENCY);
+	});
+
+	it("keeps the claim error when the page does not answer the refusal", async () => {
+		bffMock.post.mockRejectedValueOnce(httpError(503));
+		const onRefused = vi.fn(() => false);
+		const { result } = renderHook(
+			() => useMapFactCheck({ onRefused, readOnly: false, resultId: "r1" }),
+			{ wrapper },
+		);
+		act(() => {
+			result.current.run("c1");
+		});
+		await waitFor(() => expect(result.current.states.c1.status).toBe("error"));
+		expect(onRefused).toHaveBeenCalledTimes(1);
+	});
+
 	it("turns a refused start into a retryable error", async () => {
 		bffMock.post.mockRejectedValueOnce(httpError(503));
 		const { result } = renderHook(

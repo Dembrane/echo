@@ -7,6 +7,7 @@ test("slugify matches the Python helper", () => {
   expect(slugify("  Été _ à  --  Paris ")).toBe("été-à-paris");
   expect(slugify("!!!")).toBe("custom");
   expect(slugify("x".repeat(80))).toHaveLength(60);
+  expect(slugify(`--${"-".repeat(50_000)}a b${"-".repeat(50_000)}--`)).toBe("a-b");
 });
 
 test("timestamps in prompts read as Python's isoformat printed them", () => {

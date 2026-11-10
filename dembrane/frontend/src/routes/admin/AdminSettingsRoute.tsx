@@ -66,6 +66,7 @@ import { notifyError } from "@/components/error/notifyError";
 import { AdminResponseFeedbackPanel } from "@/components/feedback/AdminResponseFeedbackPanel";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
+import type { AiBudgetOverride } from "@/hooks/useAiCosts";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -75,6 +76,7 @@ import {
 	TIER_ORDER,
 	type Tier,
 } from "@/lib/tiers";
+import { AiBudgetEditor } from "./AiBudgetEditor";
 
 const _tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
@@ -159,7 +161,14 @@ type AccountRow = {
 	type_discount: string | null;
 	percent_discount: number | null;
 	payment_mode: string | null;
+	ai_budget?: AiBudgetOverride;
 	workspaces: BillingRow[];
+};
+
+const NO_AI_BUDGET_OVERRIDE: AiBudgetOverride = {
+	amount_micro_eur: null,
+	unlimited: false,
+	until: null,
 };
 
 type BillingRollup = {
@@ -1485,6 +1494,13 @@ function AccountActionsModal({
 					accountId={account.billing_account_id}
 					initialType={account.type_discount ?? null}
 					initialPercent={account.percent_discount ?? null}
+				/>
+
+				<AiBudgetEditor
+					// A saved or cleared override remounts the editor with fresh values.
+					key={JSON.stringify(account.ai_budget ?? null)}
+					accountId={account.billing_account_id}
+					current={account.ai_budget ?? NO_AI_BUDGET_OVERRIDE}
 				/>
 
 				<Divider my={4} />
@@ -3124,6 +3140,50 @@ const FreeLimitsPanel = lazy(() =>
 	})),
 );
 
+const AiCostsPanel = lazy(() =>
+	import("./AiCostsPanel").then((m) => ({
+		default: m.AiCostsPanel,
+	})),
+);
+
+// The cost view; the 3 dots open the account modal from this month's rollup.
+function AiCostsTab() {
+	const { data } = useQuery({
+		queryFn: () =>
+			fetchJson<BillingRollup>("/v2/admin/billing-rollup?month_offset=0"),
+		queryKey: ["v2", "admin", "billing-rollup", 0],
+		staleTime: 60_000,
+	});
+	const [accountId, setAccountId] = useState<string | null>(null);
+	const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+	const accounts = data?.accounts;
+	const account =
+		accounts?.find((a) => a.billing_account_id === accountId) ?? null;
+	const workspace =
+		accounts
+			?.flatMap((a) => a.workspaces)
+			.find((w) => w.workspace_id === workspaceId) ?? null;
+
+	return (
+		<>
+			<Suspense fallback={<Skeleton h={240} />}>
+				<AiCostsPanel onOpenAccount={setAccountId} />
+			</Suspense>
+			<AccountActionsModal
+				account={account}
+				opened={account !== null}
+				onClose={() => setAccountId(null)}
+				onOpenWorkspace={(row) => setWorkspaceId(row.workspace_id)}
+			/>
+			<WorkspaceActionsModal
+				row={workspace}
+				opened={workspace !== null}
+				onClose={() => setWorkspaceId(null)}
+			/>
+		</>
+	);
+}
+
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -3185,6 +3245,9 @@ export const AdminSettingsRoute = () => {
 						<Suspense fallback={<Skeleton h={240} />}>
 							<FreeLimitsPanel />
 						</Suspense>
+					</Tabs.Panel>
+					<Tabs.Panel value="ai-costs" pt="md">
+						<AiCostsTab />
 					</Tabs.Panel>
 					<Tabs.Panel value="payments" pt="md">
 						<PaymentsPanel />

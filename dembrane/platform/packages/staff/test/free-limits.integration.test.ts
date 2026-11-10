@@ -151,59 +151,91 @@ run("staff free limits", () => {
   });
 
   test("updates a key and records the actor", async () => {
-    const res = await put("chats_month", 4);
+    const res = await put("popcorn_cadence_minutes", 4);
     expect(res.status).toBe(200);
     const { limits } = (await res.json()) as { limits: Row[] };
-    const row = limits.find((r) => r.key === "chats_month");
+    const row = limits.find((r) => r.key === "popcorn_cadence_minutes");
     expect(row).toMatchObject({
       value: 4,
-      default: 2,
+      default: 5,
       updated_by: STAFF.directusUserId,
       updated_by_name: "Sam Staff (sam@dembrane.com)",
     });
     const [stored] = await database.db
       .select()
       .from(schema.tier_limit)
-      .where(eq(schema.tier_limit.key, "chats_month"));
+      .where(eq(schema.tier_limit.key, "popcorn_cadence_minutes"));
     expect(stored).toMatchObject({ tier: "free", value: 4, updated_by: STAFF.directusUserId });
     const trail = await audits("free_limit.update");
     expect(trail.map((a) => [a.permission, a.staffUserId, a.detail, a.requestId])).toEqual([
-      ["staff:set_tier", STAFF.directusUserId, { key: "chats_month", value: 4 }, "req-1"],
+      [
+        "staff:set_tier",
+        STAFF.directusUserId,
+        { key: "popcorn_cadence_minutes", value: 4 },
+        "req-1",
+      ],
     ]);
   });
 
   test("rejects invalid values", async () => {
     for (const value of [-1, 1.5, "5", 10_000_001, true, null]) {
-      const res = await put("reports_month", value);
+      const res = await put("audio_seconds_conversation", value);
       expect(res.status).toBe(400);
     }
     expect((await put("bogus", 5)).status).toBe(400);
-    expect((await put("reports_month", 10_000_000)).status).toBe(200);
-    expect((await put("reports_month", 0)).status).toBe(200);
+    expect((await put("audio_seconds_conversation", 10_000_000)).status).toBe(200);
+    expect((await put("audio_seconds_conversation", 0)).status).toBe(200);
+  });
+
+  test("the AI budget allows up to EUR 1,000", async () => {
+    expect((await put("ai_budget_micro_eur", 20_000_000)).status).toBe(200);
+    invalidateFreeLimits();
+    expect((await freeLimits(database.db)).ai_budget_micro_eur).toBe(20_000_000);
+    expect((await put("ai_budget_micro_eur", 1_000_000_000)).status).toBe(200);
+    for (const value of [1_000_000_001, -1, 1.5, "5000000", null])
+      expect((await put("ai_budget_micro_eur", value)).status).toBe(400);
+    invalidateFreeLimits();
+    expect((await freeLimits(database.db)).ai_budget_micro_eur).toBe(1_000_000_000);
+    const trail = await audits("free_limit.update");
+    expect(
+      trail.filter((a) => (a.detail as { key: string }).key === "ai_budget_micro_eur"),
+    ).toHaveLength(2);
+  });
+
+  test("the off switch is exactly 0 or 1", async () => {
+    for (const value of [2, -1, 0.5, true, "0"])
+      expect((await put("ai_budget_enforce", value)).status).toBe(400);
+    expect((await put("ai_budget_enforce", 0)).status).toBe(200);
+    invalidateFreeLimits();
+    expect((await freeLimits(database.db)).ai_budget_enforce).toBe(0);
+    expect((await put("ai_budget_enforce", 1)).status).toBe(200);
+    invalidateFreeLimits();
+    expect((await freeLimits(database.db)).ai_budget_enforce).toBe(1);
   });
 
   test("a value of 0 is stored and served", async () => {
-    expect((await put("maps_month", 0)).status).toBe(200);
+    expect((await put("projects", 0)).status).toBe(200);
     const [stored] = await database.db
       .select()
       .from(schema.tier_limit)
-      .where(eq(schema.tier_limit.key, "maps_month"));
+      .where(eq(schema.tier_limit.key, "projects"));
     expect(stored?.value).toBe(0);
     invalidateFreeLimits();
-    expect((await freeLimits(database.db)).maps_month).toBe(0);
+    expect((await freeLimits(database.db)).projects).toBe(0);
     const res = await call("staff", "GET", "/api/v2/admin/free-limits");
     const { limits } = (await res.json()) as { limits: Row[] };
-    expect(limits.find((r) => r.key === "maps_month")?.value).toBe(0);
-    await database.db.delete(schema.tier_limit).where(eq(schema.tier_limit.key, "maps_month"));
+    expect(limits.find((r) => r.key === "projects")?.value).toBe(0);
+    await database.db.delete(schema.tier_limit).where(eq(schema.tier_limit.key, "projects"));
   });
 
   test("a non-staff caller gets 403", async () => {
     expect((await call("alice", "GET", "/api/v2/admin/free-limits")).status).toBe(403);
-    expect((await put("maps_month", 3, "alice")).status).toBe(403);
-    const [stored] = await database.db
+    expect((await put("projects", 3, "alice")).status).toBe(403);
+    expect((await put("ai_budget_micro_eur", 3, "alice")).status).toBe(403);
+    const stored = await database.db
       .select()
       .from(schema.tier_limit)
-      .where(eq(schema.tier_limit.key, "maps_month"));
-    expect(stored).toBeUndefined();
+      .where(eq(schema.tier_limit.key, "projects"));
+    expect(stored).toEqual([]);
   });
 });

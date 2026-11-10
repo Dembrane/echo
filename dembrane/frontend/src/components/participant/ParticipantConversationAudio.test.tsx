@@ -11,6 +11,12 @@ const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
+	onChunkAccepted: undefined as (() => void) | undefined,
+	onRecordingStop: undefined as
+		| ((r: string, accepted: boolean) => void)
+		| undefined,
+	project: {} as Record<string, unknown>,
+	recordingTime: 0,
 	stopRecording: vi.fn(),
 	taking: false as boolean | undefined,
 }));
@@ -33,10 +39,17 @@ vi.mock("./hooks", () => ({
 		isLoading: false,
 	}),
 	useParticipantProjectById: () => ({
-		data: { id: "p-1", is_taking_recordings: state.taking },
+		data: { id: "p-1", is_taking_recordings: state.taking, ...state.project },
 		isLoading: false,
 	}),
-	useUploadConversationChunk: () => ({ mutateAsync: vi.fn() }),
+	useUploadConversationChunk: (options: {
+		onChunkAccepted?: () => void;
+		onRecordingStop?: (r: string, accepted: boolean) => void;
+	}) => {
+		state.onChunkAccepted = options.onChunkAccepted;
+		state.onRecordingStop = options.onRecordingStop;
+		return { mutateAsync: vi.fn() };
+	},
 }));
 vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 	default: (options: { onRecordingInterrupted?: () => void }) => {
@@ -50,7 +63,7 @@ vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 			isRecording: state.isRecording,
 			isStarting: false,
 			permissionError: null,
-			recordingTime: 0,
+			recordingTime: state.recordingTime,
 			startRecording: vi.fn(),
 			stopRecording: state.stopRecording,
 		};
@@ -85,6 +98,15 @@ vi.mock("@/hooks/useVideoWakeLockFallback", () => ({
 }));
 vi.mock("./ParticipantRecordingWaveform", () => ({
 	ParticipantRecordingWaveform: () => null,
+}));
+vi.mock("./StopRecordingConfirmationModal", () => ({
+	StopRecordingConfirmationModal: ({
+		showVerifyOnFinish,
+	}: {
+		showVerifyOnFinish: boolean;
+	}) => (
+		<div data-testid="stop-modal" data-verify={String(showVerifyOnFinish)} />
+	),
 }));
 
 beforeAll(() => {
@@ -121,6 +143,8 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	state.isRecording = false;
+	state.project = {};
+	state.recordingTime = 0;
 	state.stopRecording.mockReset();
 });
 
@@ -193,3 +217,78 @@ it("stops recording and shows the interruption notice when the recorder reports 
 	expect(state.stopRecording).toHaveBeenCalledTimes(1);
 	expect(await screen.findByText("Recording interrupted")).toBeTruthy();
 });
+
+// The AI budget ran out mid-recording: the same wrap-up as the monthly audio limit.
+it("opens the account wrap-up when a chunk comes back with recording_stop ai_budget", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+
+	act(() => state.onRecordingStop?.("ai_budget", true));
+
+	expect(state.stopRecording).toHaveBeenCalledTimes(1);
+	expect(
+		await screen.findByText(
+			"Recording has stopped for now. Everything you recorded is saved.",
+		),
+	).toBeTruthy();
+});
+
+// Nothing recorded here was kept: "everything you recorded is saved" would be false.
+it.each([
+	["a finished conversation reopened at zero", [{ id: "ch-1" }]],
+	["an empty conversation finished before recording started", []],
+])(
+	"shows not-taking when the AI budget refuses and nothing was kept (%s)",
+	async (_case, chunks) => {
+		state.taking = true;
+		state.chunks = chunks;
+		state.isRecording = true;
+		state.recordingTime = 30;
+		renderPage();
+
+		act(() => state.onRecordingStop?.("ai_budget", false));
+
+		expect(state.stopRecording).toHaveBeenCalledTimes(1);
+		expect(
+			await screen.findByTestId("portal-not-taking-recordings"),
+		).toBeTruthy();
+		expect(screen.queryByText(/Everything you recorded is saved/)).toBeNull();
+	},
+);
+
+it("keeps the wrap-up when a chunk was kept here before the refusal", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+
+	act(() => state.onChunkAccepted?.());
+	act(() => state.onRecordingStop?.("ai_budget", false));
+
+	expect(
+		await screen.findByText(
+			"Recording has stopped for now. Everything you recorded is saved.",
+		),
+	).toBeTruthy();
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
+});
+
+it.each([
+	[true, "true"],
+	[false, "false"],
+])(
+	"offers verify on finish only while AI is available (is_ai_available %s)",
+	(available, offered) => {
+		state.taking = true;
+		state.recordingTime = 120;
+		state.project = {
+			is_ai_available: available,
+			is_verify_enabled: true,
+			is_verify_on_finish_enabled: true,
+		};
+		renderPage();
+		expect(screen.getByTestId("stop-modal").dataset.verify).toBe(offered);
+	},
+);

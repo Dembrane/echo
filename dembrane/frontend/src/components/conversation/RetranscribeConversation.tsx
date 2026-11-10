@@ -20,6 +20,10 @@ import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
@@ -39,6 +43,8 @@ export const RetranscribeConversationModalActionIcon = ({
 	disabled?: boolean;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
+	const { projectId, workspaceId } = useParams();
+	const aiWall = useAiBudgetWall();
 
 	return (
 		<>
@@ -65,7 +71,16 @@ export const RetranscribeConversationModalActionIcon = ({
 				conversationName={conversationName}
 				opened={opened}
 				onClose={close}
+				onRefused={aiWall.openFor}
 			/>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="retranscribe"
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
+			)}
 		</>
 	);
 };
@@ -75,11 +90,14 @@ export const RetranscribeConversationModal = ({
 	conversationName,
 	opened,
 	onClose,
+	onRefused,
 }: {
 	conversationId: string;
 	conversationName: string;
 	opened: boolean;
 	onClose: () => void;
+	// True when the caller answered the refusal (a used-up AI budget opens its wall).
+	onRefused?: (error: unknown) => boolean;
 }) => {
 	// this should rly be a prop im lazy
 	const { projectId, workspaceId } = useParams();
@@ -115,14 +133,21 @@ export const RetranscribeConversationModal = ({
 
 		posthog.capture("conversation_retranscribed");
 
-		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
-			conversationId,
-			newConversationName: newConversationName.trim(),
-			usePiiRedaction,
-			attachVerifiedArtifacts: hasVerifiedArtifacts
-				? attachVerifiedArtifacts
-				: false,
-		});
+		let new_conversation_id: string | undefined;
+		try {
+			({ new_conversation_id } = await retranscribeMutation.mutateAsync({
+				attachVerifiedArtifacts: hasVerifiedArtifacts
+					? attachVerifiedArtifacts
+					: false,
+				conversationId,
+				newConversationName: newConversationName.trim(),
+				usePiiRedaction,
+			}));
+		} catch (error) {
+			// The mutation toasts any other failure.
+			if (onRefused?.(error)) onClose();
+			return;
+		}
 		if (new_conversation_id) {
 			onClose();
 			toast.success(

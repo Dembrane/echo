@@ -1,5 +1,3 @@
-import { plural, t } from "@lingui/core/macro";
-import type { FreeAllowance } from "@/hooks/useFreeAllowance";
 import { readApiError } from "./errors/read";
 
 // Detects the shared free-tier 402 contract raised by the backend
@@ -7,7 +5,7 @@ import { readApiError } from "./errors/read";
 // UpgradeModal key on this.
 
 export type FreeTierLimit =
-	| "chats"
+	// chat_turns and report: a sample project's own caps.
 	| "chat_turns"
 	| "report"
 	| "workspaces"
@@ -16,17 +14,16 @@ export type FreeTierLimit =
 	| "audio_month"
 	| "audio_conversation"
 	| "recording_project"
-	| "map"
-	| "popcorn";
+	| "ai_budget";
 
 /** The limits that stop a recording or an upload. */
 export type RecordingRefusal =
 	| "audio_month"
 	| "audio_conversation"
-	| "recording_project";
+	| "recording_project"
+	| "ai_budget";
 
 const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
-	"chats",
 	"chat_turns",
 	"report",
 	"workspaces",
@@ -35,43 +32,15 @@ const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
 	"audio_month",
 	"audio_conversation",
 	"recording_project",
-	"map",
-	"popcorn",
+	"ai_budget",
 ]);
 
 const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
 	"audio_month",
 	"audio_conversation",
 	"recording_project",
+	"ai_budget",
 ]);
-
-/** A chat's turn meter: a frozen chat (opened before the free limits) takes no more turns. */
-export function chatTurnGate(
-	t: { limit: number; used: number; frozen: boolean } | null | undefined,
-): { atLimit: boolean; frozen: boolean } {
-	if (!t) return { atLimit: false, frozen: false };
-	return { atLimit: t.frozen || t.used >= t.limit, frozen: t.frozen };
-}
-
-/** True when a free account has used this month's meter up. */
-export function allowanceSpent(
-	s: FreeAllowance | undefined,
-	key: "chats" | "reports" | "maps" | "popcorn_analyses",
-): boolean {
-	const meter = s?.free ? s[key] : null;
-	return !!meter && meter.used >= meter.limit;
-}
-
-/** The monthly free report line, with the live limit when the snapshot has it. */
-export function freeReportsLine(s: FreeAllowance | undefined): string {
-	const limit = s?.free ? s.reports?.limit : undefined;
-	if (limit === undefined || limit <= 0)
-		return t`The free plan includes a monthly allowance of reports.`;
-	return plural(limit, {
-		one: "The free plan includes # report a month.",
-		other: "The free plan includes # reports a month.",
-	});
-}
 
 // Billing (free-audio-out) counts under a minute left as used up; refusals and rounding leave the ledger short.
 export const AUDIO_USED_UP_SLACK_SECONDS = 60;
@@ -90,6 +59,24 @@ export function formatResetDate(
 	const d = new Date(iso);
 	if (Number.isNaN(d.getTime())) return null;
 	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
+
+/** The reset day (UTC, the budget resets at 00:00 UTC) in the reader's locale; null when missing or unreadable. */
+export function formatResetDay(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	// English reads day-first, as on the audience screen.
+	const tag = locale === "en" || locale.startsWith("en-") ? "en-GB" : locale;
+	return new Intl.DateTimeFormat(tag, {
+		day: "numeric",
+		month: "long",
+		timeZone: "UTC",
+		year: "numeric",
+	}).format(d);
 }
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
@@ -125,6 +112,25 @@ export function freeLimitDetails(
 	return detail && typeof detail === "object" && !Array.isArray(detail)
 		? (detail as Record<string, unknown>)
 		: null;
+}
+
+/** The budget figures of an ai_budget 402 (null when absent), or null for anything else. */
+export function aiBudgetDetails(
+	err: unknown,
+): { percent: number | null; resetsAt: string | null } | null {
+	if (isFreeTierLimitError(err) !== "ai_budget") return null;
+	const d = freeLimitDetails(err);
+	return {
+		percent: typeof d?.percent === "number" ? d.percent : null,
+		resetsAt: typeof d?.resets_at === "string" ? d.resets_at : null,
+	};
+}
+
+/** The question cap a sample chat_turns 402 carries, or null. */
+export function sampleTurnCap(err: unknown): number | null {
+	if (isFreeTierLimitError(err) !== "chat_turns") return null;
+	const cap = freeLimitDetails(err)?.cap;
+	return typeof cap === "number" && cap > 0 ? cap : null;
 }
 
 /** The recording reason of a free-limit 402, or null for anything else. */

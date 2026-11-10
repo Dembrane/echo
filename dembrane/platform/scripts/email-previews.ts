@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { type EmailTemplate, render, subjectOf } from "../packages/account/src/emails";
 import {
+  freeAiOutEmail,
   paymentFailedEmail,
   tierExpiredEmail,
   tierExpiringSoonEmail,
@@ -99,6 +100,15 @@ const previews: Record<string, Preview> = {
         fromTier: "Pro",
         freezeItems: ["Freeze API access (existing tokens keep working; no new tokens)"],
         revertItems: ["Remove your custom logo (revert to dembrane logo)"],
+        workspaceUrl: `${D}/w/1/settings/billing`,
+      },
+      l,
+    ),
+  free_ai_out: (l) =>
+    freeAiOutEmail(
+      {
+        name: "Gemeente Utrecht",
+        resetDate: "1 December 2026",
         workspaceUrl: `${D}/w/1/settings/billing`,
       },
       l,

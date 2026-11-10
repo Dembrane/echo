@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { useParams } from "react-router";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AiBudgetNotice } from "@/components/popcorn/AiBudgetNotice";
 import {
 	liveBooking,
 	type PopcornDetail,
@@ -23,7 +24,6 @@ import {
 	useProjectPopcorn,
 } from "@/components/popcorn/hooks";
 import { PopcornActions } from "@/components/popcorn/PopcornActions";
-import { PopcornFreeNotice } from "@/components/popcorn/PopcornFreeNotice";
 import { PopcornHistory } from "@/components/popcorn/PopcornHistory";
 import { PopcornIntroModal } from "@/components/popcorn/PopcornIntroModal";
 import { PopcornLanguageSettings } from "@/components/popcorn/PopcornLanguageSettings";
@@ -116,8 +116,8 @@ function PopcornSession({
 					</Text>
 				</Stack>
 				<PopcornActions projectId={projectId} popcorn={popcorn} />
-				<PopcornFreeNotice
-					status={popcorn.free_popcorn}
+				<AiBudgetNotice
+					status={popcorn.ai_budget}
 					workspaceId={workspaceId}
 					projectId={projectId}
 				/>

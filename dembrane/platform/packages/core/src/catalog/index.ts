@@ -24,6 +24,7 @@ import { offer } from "./offer";
 import { organisation } from "./organisation";
 import { participant } from "./participant";
 import { popcorn } from "./popcorn";
+import { portal } from "./portal";
 import { present } from "./present";
 import { pricing } from "./pricing";
 import { privacy } from "./privacy";
@@ -68,6 +69,7 @@ export const ERROR_CATALOG = {
   ...conversation,
   ...upload,
   ...participant,
+  ...portal,
   ...chat,
   ...memory,
   ...agent,

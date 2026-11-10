@@ -6,12 +6,9 @@ export const LIMIT_KEYS = [
   "audio_seconds_month",
   "audio_seconds_conversation",
   "projects",
-  "chats_month",
-  "chat_turns_per_chat",
-  "reports_month",
-  "maps_month",
-  "popcorn_analyses_month",
   "popcorn_cadence_minutes",
+  "ai_budget_micro_eur",
+  "ai_budget_enforce",
 ] as const;
 
 export type LimitKey = (typeof LIMIT_KEYS)[number];
@@ -21,12 +18,10 @@ export const FREE_LIMIT_DEFAULTS: FreeLimits = Object.freeze({
   audio_seconds_month: 18000,
   audio_seconds_conversation: 3600,
   projects: 1,
-  chats_month: 2,
-  chat_turns_per_chat: 20,
-  reports_month: 1,
-  maps_month: 1,
-  popcorn_analyses_month: 12,
   popcorn_cadence_minutes: 5,
+  ai_budget_micro_eur: 5_000_000,
+  // 0 is the staff off switch: spend is still recorded, nothing refuses.
+  ai_budget_enforce: 1,
 });
 
 const FREE = "free";

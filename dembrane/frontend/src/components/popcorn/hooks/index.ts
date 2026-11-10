@@ -131,9 +131,6 @@ export type PopcornCounts = {
 	run?: number | null;
 };
 
-// A free account's popcorn analyses this month; null when unlimited.
-export type FreePopcorn = { used: number; limit: number; exhausted: boolean };
-
 export type PopcornDetail = {
 	id: string;
 	kind: "popcorn";
@@ -147,7 +144,8 @@ export type PopcornDetail = {
 	public_token?: string | null;
 	loop?: PopcornLoop | null;
 	counts: PopcornCounts;
-	free_popcorn?: FreePopcorn | null;
+	// A free account's AI budget for the host; null when it does not apply.
+	ai_budget?: { exhausted: boolean } | null;
 };
 
 // What a first read would find, before a session exists.
@@ -313,8 +311,8 @@ export const usePopcornSettingsMutation = (
 	});
 };
 
-// A free account's month of analyses is used up: the notice says so, no toast.
-const usedUp = (error: unknown) => isFreeTierLimitError(error) === "popcorn";
+// A free account's AI budget is used up: the notice says so, no toast.
+const usedUp = (error: unknown) => isFreeTierLimitError(error) === "ai_budget";
 
 export const useRefreshPopcornMutation = (
 	projectId: string,
@@ -330,6 +328,7 @@ export const useRefreshPopcornMutation = (
 		onError: (error: Error & { status?: number }) => {
 			if (usedUp(error)) {
 				invalidate();
+				void invalidateFreeAllowance(queryClient);
 				return;
 			}
 			if (error.status === 429) {
@@ -360,6 +359,7 @@ export const useRerunPopcornMutation = (
 		onError: (error: Error & { status?: number }) => {
 			if (usedUp(error)) {
 				invalidate();
+				void invalidateFreeAllowance(queryClient);
 				return;
 			}
 			if (error.status === 429) {
@@ -390,6 +390,7 @@ export const usePopcornLiveMutation = (
 			),
 		onError: (error) => {
 			if (usedUp(error)) {
+				void invalidateFreeAllowance(queryClient);
 				queryClient.invalidateQueries({ queryKey: projectKey(projectId) });
 				queryClient.invalidateQueries({
 					queryKey: ["project", projectId, "presentation"],

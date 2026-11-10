@@ -38,6 +38,7 @@ test("schedules keep the old cadence", () => {
     ["billing.overage-close", "*/2 * * * *", "singleton"],
     ["billing.overage-notify", "1-59/2 * * * *", "singleton"],
     ["billing.free-audio-out", "*/5 * * * *", "singleton"],
+    ["billing.free-ai-out", "*/5 * * * *", "singleton"],
   ]);
 });
 

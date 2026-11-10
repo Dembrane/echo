@@ -77,10 +77,11 @@ run("report generation survives a killed worker", () => {
     const work = lines().filter((l) => !l.endsWith(" ready"));
     expect(work).toEqual([
       `worker-a step summarize:${CONVERSATION}`,
-      "worker-a model summary",
+      // Every call of the run, the resumed one too, is billed to the report.
+      "worker-a model summary report:1",
       "worker-a step generate",
       "worker-b step generate",
-      "worker-b model report",
+      "worker-b model report report:1",
       "worker-b webhook",
     ]);
     const [report] = await sql`select status, content, error_code from project_report where id = 1`;

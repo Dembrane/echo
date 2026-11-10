@@ -6,7 +6,7 @@ import { migrate } from "@dembrane/db";
 import { installQueueSchema } from "@dembrane/queue";
 import postgres from "postgres";
 
-// The guard step restarts a free draft's sweep timer when its run starts.
+// The guard step restarts a draft's sweep timer when its run starts.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const url = admin ? `${admin.slice(0, admin.lastIndexOf("/"))}/reports_run_start_test` : "";
@@ -25,7 +25,7 @@ async function until(check: () => boolean, ms = 45_000) {
   }
 }
 
-run("a free report's run start", () => {
+run("a report's run start", () => {
   setDefaultTimeout(90_000);
   const procs: ReturnType<typeof Bun.spawn>[] = [];
   afterAll(async () => {
@@ -35,7 +35,7 @@ run("a free report's run start", () => {
     await a.end();
   });
 
-  test("moves a stamped draft's date_updated to the start of the run", async () => {
+  test("moves a draft's date_updated to the start of the run", async () => {
     const a = postgres(admin as string, { max: 1, onnotice: () => {} });
     await a.unsafe("drop database if exists reports_run_start_test with (force)");
     await a.unsafe("create database reports_run_start_test");
@@ -49,8 +49,8 @@ run("a free report's run start", () => {
       values (${CONVERSATION}, ${PROJECT}, 'Resident', now(), now())`;
     await sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, created_at, updated_at)
       values ('c2000000-0000-4000-8000-00000000ab01', ${CONVERSATION}, now(), 'The buses stop at eleven.', now(), now())`;
-    await sql`insert into project_report (project_id, status, language, kind, content, date_created, date_updated, free_period_start)
-      values (${PROJECT}, 'draft', 'en', 'report', '', ${OLD}, ${OLD}, '2026-10-01T00:00:00Z')`;
+    await sql`insert into project_report (project_id, status, language, kind, content, date_created, date_updated)
+      values (${PROJECT}, 'draft', 'en', 'report', '', ${OLD}, ${OLD})`;
     writeFileSync(trace, "");
 
     const started = Date.now();

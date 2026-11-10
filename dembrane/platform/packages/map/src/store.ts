@@ -220,6 +220,13 @@ export class MapStore {
    * caller should dispatch the run: a new group, a retry after a failure, or a group whose
    * run went quiet past `staleSeconds`.
    */
+  groupBySelection(projectId: string, selectionKey: string): Promise<Row | null> {
+    return this.one(
+      `SELECT ${GROUP_COLUMNS} FROM map_group WHERE project_id = $1 AND selection_key = $2`,
+      [projectId, selectionKey],
+    );
+  }
+
   async startGroup(o: {
     projectId: string;
     snapshotId: string;

@@ -17,14 +17,19 @@ import { UpdateReportModalButton } from "./UpdateReportModalButton";
 
 const fetchMock = vi.fn();
 const project = { isSample: false, loaded: true };
+const mutateAsync = vi.hoisted(() => vi.fn());
 
 vi.mock("@/components/workspace/FeatureGate", () => ({
 	UpgradeModal: ({
+		aiAction,
 		opened,
+		resetsAt,
 		wallKey,
 		currentTier,
 	}: {
+		aiAction?: string;
 		opened: boolean;
+		resetsAt?: string | null;
 		wallKey: string;
 		currentTier: string;
 	}) =>
@@ -33,6 +38,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 				data-testid="upgrade-modal"
 				data-wall={wallKey}
 				data-tier={currentTier}
+				data-action={aiAction}
+				data-resets={resetsAt ?? ""}
 			/>
 		) : null,
 }));
@@ -60,7 +67,7 @@ vi.mock("./hooks", () => ({
 	useCreateProjectReportMutation: () => ({
 		error: null,
 		isPending: false,
-		mutateAsync: vi.fn(),
+		mutateAsync,
 	}),
 	useProjectReport: () => ({
 		data: { language: "en", show_portal_link: false, user_instructions: "" },
@@ -73,15 +80,12 @@ const answer = (body: unknown) =>
 		status: 200,
 	});
 
-const snapshot = (reports: { used: number; limit: number }) => ({
+const snapshot = (exhausted: boolean) => ({
+	ai: { exhausted, percent_used: exhausted ? 100 : 0, unlimited: false },
 	audio_seconds: { limit: 18000, used: 0 },
-	chats: { limit: 2, used: 0 },
 	free: true,
-	maps: { limit: 1, used: 0 },
 	period_start: "2026-10-01T00:00:00Z",
-	popcorn_analyses: { limit: 12, used: 0 },
 	projects: { limit: 1, used: 1 },
-	reports,
 	resets_at: "2026-11-01T00:00:00Z",
 });
 
@@ -110,14 +114,15 @@ beforeAll(() => {
 
 beforeEach(() => {
 	fetchMock.mockReset();
+	mutateAsync.mockReset();
 	project.isSample = false;
 	project.loaded = true;
 });
 
 afterEach(() => cleanup());
 
-const renderButton = async (reports: { used: number; limit: number }) => {
-	fetchMock.mockImplementation(async () => answer(snapshot(reports)));
+const renderButton = async (exhausted: boolean) => {
+	fetchMock.mockImplementation(async () => answer(snapshot(exhausted)));
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -147,26 +152,57 @@ const renderButton = async (reports: { used: number; limit: number }) => {
 	});
 };
 
-it("opens the create flow while this month's report is unspent", async () => {
-	await renderButton({ limit: 1, used: 0 });
+it("opens the create flow while this month's AI has room", async () => {
+	await renderButton(false);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	expect(await screen.findByTestId("report-generate-button")).toBeTruthy();
 });
 
-it("opens the wall once this month's report is spent", async () => {
-	await renderButton({ limit: 1, used: 1 });
+it("opens the AI wall once this month's AI is used up", async () => {
+	await renderButton(true);
 	const modal = screen.getByTestId("upgrade-modal");
-	expect(modal.dataset.wall).toBe("report_cap");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.action).toBe("report");
+	expect(modal.dataset.resets).toBe("2026-11-01T00:00:00Z");
 	expect(modal.dataset.tier).toBe("free");
 });
 
-it("leaves a sample project's report open when the month's report is spent", async () => {
+it("closes the form and opens the AI wall when the server refuses the report", async () => {
+	mutateAsync.mockRejectedValueOnce({
+		response: {
+			data: {
+				code: "billing.tier_limit",
+				detail: {
+					error: "FREE_TIER_LIMIT",
+					limit: "ai_budget",
+					resets_at: "2026-12-01T00:00:00Z",
+				},
+				params: { limit: "ai_budget" },
+			},
+			status: 402,
+		},
+	});
+	await renderButton(false);
+	const generate = await screen.findByTestId("report-generate-button");
+	await act(async () => {
+		fireEvent.click(generate);
+	});
+	const modal = await screen.findByTestId("upgrade-modal");
+	expect(modal.dataset.wall).toBe("ai_budget");
+	expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
+	await waitFor(() =>
+		expect(screen.queryByTestId("report-generate-button")).toBeNull(),
+	);
+});
+
+it("leaves a sample project's report open when this month's AI is used up", async () => {
 	project.isSample = true;
-	await renderButton({ limit: 1, used: 1 });
+	await renderButton(true);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });
 
 it("walls nothing while is_sample is still loading", async () => {
 	project.loaded = false;
-	await renderButton({ limit: 1, used: 1 });
+	await renderButton(true);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 });

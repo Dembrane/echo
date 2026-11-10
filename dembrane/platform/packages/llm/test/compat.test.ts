@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
+import type { ModelCall } from "../src";
 import {
   CompatEmbeddingModel,
   CompatLanguageModel,
@@ -10,6 +11,7 @@ import {
   type ModelsConfig,
   modelsConfigOf,
   searchGroundingOn,
+  takeObserverFaults,
   transcribeAudio,
   vertexCompleter,
 } from "../src";
@@ -246,4 +248,159 @@ test("every speech-to-text request is reported once with what it carried and how
     path: "upload",
   });
   expect(typeof seen[0]?.ms).toBe("number");
+});
+
+test("createModels names the openai-compatible provider on every metered call", async () => {
+  const { generateText, embed } = await import("ai");
+  const fetcher = (async (url: string | URL) =>
+    new Response(
+      JSON.stringify(
+        String(url).endsWith("/embeddings")
+          ? { data: [{ embedding: [0.1], index: 0 }], usage: { prompt_tokens: 3 } }
+          : {
+              choices: [{ message: { role: "assistant", content: "ok" }, finish_reason: "stop" }],
+              usage: {
+                prompt_tokens: 10,
+                completion_tokens: 5,
+                prompt_tokens_details: { cached_tokens: 4 },
+                completion_tokens_details: { reasoning_tokens: 2 },
+              },
+            },
+      ),
+      { headers: { "content-type": "application/json" } },
+    )) as unknown as typeof fetch;
+  const calls: { provider: string; kind: string }[] = [];
+  const models = createModels(
+    {
+      ...modelsConfigOf(
+        settings({ provider: "openai-compatible", baseUrl: "https://x/v1", apiKey: "k" }),
+      ),
+      openaiCompatible: { ...ep(fetcher), baseUrl: "https://x/v1" },
+      embeddingDimensions: 1,
+    },
+    { observe: (c) => calls.push(c) },
+  );
+  await generateText({ model: models.model("text_fast"), prompt: "hi" });
+  await embed({ model: models.embedding().model, value: "hi" });
+  expect(calls).toMatchObject([
+    {
+      provider: "openai-compatible",
+      kind: "generate",
+      inputTokens: 10,
+      cachedInputTokens: 4,
+      outputTokens: 5,
+      reasoningTokens: 2,
+    },
+    { provider: "openai-compatible", kind: "embed", inputTokens: 3 },
+  ]);
+});
+
+const chatAnswer = {
+  choices: [{ message: { role: "assistant", content: "ok" }, finish_reason: "stop" }],
+  usage: { prompt_tokens: 10, completion_tokens: 5 },
+};
+
+const compatModels = (baseUrl: string, fetcher: typeof fetch, calls: ModelCall[]) =>
+  createModels(
+    {
+      ...modelsConfigOf(settings({ provider: "openai-compatible", baseUrl, apiKey: "k" })),
+      openaiCompatible: { ...ep(fetcher), baseUrl },
+    },
+    { observe: (c) => calls.push(c) },
+  );
+
+test("a speech-to-text call is metered once, in audio seconds, and a rate-limited attempt is not", async () => {
+  const answers = [
+    new Response("{}", { status: 429, headers: { "retry-after": "0.01" } }),
+    Response.json({ text: "hallo", duration: 12.5, segments: [] }),
+  ];
+  let n = 0;
+  const calls: ModelCall[] = [];
+  const models = compatModels(
+    "https://speech-metered.example/v1",
+    (async () => answers[n++] as Response) as unknown as typeof fetch,
+    calls,
+  );
+  await models.speechToText?.transcribeSegments(new Uint8Array(100));
+  expect(n).toBe(2);
+  expect(calls).toHaveLength(1);
+  expect(calls[0]).toMatchObject({
+    group: "speech",
+    provider: "openai-compatible",
+    model: "whisper-large-v3",
+    kind: "speech",
+    audioSeconds: 12.5,
+    usageEstimated: false,
+    inputTokens: null,
+    outputTokens: null,
+    status: "ok",
+    error: null,
+    attempt: 2,
+    fallback: false,
+  });
+});
+
+test("a chat call with audio on the compatible provider meters the speech call and the chat call", async () => {
+  const calls: ModelCall[] = [];
+  const models = compatModels(
+    "https://speech-chat.example/v1",
+    (async (url: string | URL) =>
+      String(url).endsWith("/audio/transcriptions")
+        ? Response.json({ text: "hello", duration: 3 })
+        : Response.json(chatAnswer)) as unknown as typeof fetch,
+    calls,
+  );
+  await models.model("multi_modal_fast").doGenerate({
+    prompt: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "file",
+            data: { type: "data", data: new Uint8Array(8_000) },
+            mediaType: "audio/mp3",
+          },
+        ],
+      },
+    ],
+  });
+  expect(calls.map((c) => c.kind)).toEqual(["speech", "generate"]);
+  expect(calls[0]).toMatchObject({ group: "speech", audioSeconds: 3, usageEstimated: false });
+});
+
+test("a speech answer without a duration is billed on the request's own estimate", async () => {
+  const calls: ModelCall[] = [];
+  const models = compatModels(
+    "https://speech-no-duration.example/v1",
+    (async () => Response.json({ text: "hi" })) as unknown as typeof fetch,
+    calls,
+  );
+  await models.speechToText?.transcribe(new Uint8Array(80_000));
+  expect(calls).toHaveLength(1);
+  expect(calls[0]).toMatchObject({ kind: "speech", audioSeconds: 10, usageEstimated: true });
+});
+
+test("a speech call is answered even when metering throws", async () => {
+  const models = createModels(
+    {
+      ...modelsConfigOf(
+        settings({
+          provider: "openai-compatible",
+          baseUrl: "https://speech-fault.example/v1",
+          apiKey: "k",
+        }),
+      ),
+      openaiCompatible: {
+        ...ep((async () => Response.json({ text: "hi" })) as unknown as typeof fetch),
+        baseUrl: "https://speech-fault.example/v1",
+      },
+    },
+    {
+      observe: () => {
+        throw new Error("sink down");
+      },
+    },
+  );
+  expect(await models.speechToText?.transcribe(new Uint8Array(100))).toBe("hi");
+  expect(takeObserverFaults().map(String)).toEqual(["Error: sink down"]);
 });

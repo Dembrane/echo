@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { reply } from "../src/reply";
-import { fakeDeps, fakeFreeChats, fakeModel, host, P1 } from "./fakes";
+import { fakeLanguageModel } from "@dembrane/llm";
+import { fakeDeps, fakeFreeChats, host, P1 } from "./fakes";
+import { reply } from "./scoped";
 
 const CHAT = "c3000000-0000-4000-8000-000000000001";
 const CONV = "c1000000-0000-4000-8000-000000000001";
@@ -98,8 +99,8 @@ describe("chat reply stream", () => {
       reads: w.reads,
       captured,
       models: {
-        multi_modal_pro: fakeModel({ chunks: ["Char", "ging é"], calls }),
-        multi_modal_fast: fakeModel({ text: "Charging needs" }),
+        multi_modal_pro: fakeLanguageModel({ stream: ["Char", "ging é"], calls }),
+        multi_modal_fast: fakeLanguageModel({ text: "Charging needs" }),
       },
     });
     const res = await reply(
@@ -138,7 +139,7 @@ describe("chat reply stream", () => {
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
-      model: fakeModel({ chunks: ["a", "b"] }),
+      model: fakeLanguageModel({ stream: ["a", "b"] }),
     });
     const res = await reply(
       d,
@@ -162,7 +163,7 @@ describe("chat reply stream", () => {
       reads: w.reads,
       captured,
       freeChats: free,
-      model: fakeModel({ failStream: true }),
+      model: fakeLanguageModel({ fail: Object.assign(new Error("boom"), { isRetryable: false }) }),
     });
     const res = await reply(
       d,
@@ -176,7 +177,7 @@ describe("chat reply stream", () => {
     expect(w.deleted).toEqual([w.created[0]?.id as string]);
     expect(free.undone).toHaveLength(1);
     expect(free.undone[0]?.[0]).toMatchObject({ projectId: P1, chatId: CHAT, text: "Hi" });
-    expect(free.undone[0]?.[1]).toEqual({ account: null, claimed: false });
+    expect(free.undone[0]?.[1]).toEqual({ inserted: true });
     expect((captured[0] as unknown[])[1]).toBe("server_chat_error");
     const textRes = await reply(
       d,
@@ -193,12 +194,7 @@ describe("chat reply stream", () => {
 
   test("a silent model gets the high-load notice first", async () => {
     const w = world();
-    const slow = fakeModel({ chunks: ["late"] });
-    const inner = slow.doStream.bind(slow);
-    slow.doStream = async (o) => {
-      await Bun.sleep(60);
-      return inner(o);
-    };
+    const slow = fakeLanguageModel({ stream: ["late"], delayMs: 60 });
     const d = { ...fakeDeps({ store: w.store, reads: w.reads, model: slow }), highLoadDelayMs: 10 };
     const res = await reply(
       d,
@@ -215,7 +211,7 @@ describe("chat reply stream", () => {
 
   test("the host stopping the reply keeps their message", async () => {
     const w = world();
-    const slow = fakeModel({ chunks: ["a", "b", "c", "d"] });
+    const slow = fakeLanguageModel({ stream: ["a", "b", "c", "d"] });
     const inner = slow.doStream.bind(slow);
     slow.doStream = async (o) => {
       const r = await inner(o);
@@ -256,7 +252,7 @@ describe("chat reply stream", () => {
     });
     // Vertex refuses a turn with no text in it (400 INVALID_ARGUMENT).
     const calls: LanguageModelV4CallOptions[] = [];
-    const strict = fakeModel({ chunks: ["Fine"], calls });
+    const strict = fakeLanguageModel({ stream: ["Fine"], calls });
     const inner = strict.doStream.bind(strict);
     strict.doStream = async (o) => {
       const blank = o.prompt.some(
@@ -289,7 +285,7 @@ describe("chat reply stream", () => {
       store: w.store,
       reads: w.reads,
       captured,
-      model: fakeModel({ chunks: [] }),
+      model: fakeLanguageModel({ stream: [] }),
     });
     const res = await reply(
       d,
@@ -322,14 +318,14 @@ describe("chat reply stream", () => {
     expect(agentic.created.length).toBe(0);
   });
 
-  test("spent free turns are refused before anything is stored", async () => {
+  test("a used-up AI budget is refused before anything is stored", async () => {
     const w = world();
     const calls: LanguageModelV4CallOptions[] = [];
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
-      freeChats: fakeFreeChats(w.store, { refuse: "chat_turns" }),
-      model: fakeModel({ calls }),
+      freeChats: fakeFreeChats(w.store, { refuse: "ai_budget" }),
+      model: fakeLanguageModel({ calls }),
     });
     const err = await reply(
       d,
@@ -342,7 +338,7 @@ describe("chat reply stream", () => {
       () => null,
       (e) => e,
     );
-    expect(err).toMatchObject({ status: 402, details: { limit: "chat_turns" } });
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
     expect(w.created).toHaveLength(0);
     expect(calls).toHaveLength(0);
   });
