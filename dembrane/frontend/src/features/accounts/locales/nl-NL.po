@@ -31,7 +31,7 @@ msgstr "{0, plural, one {# veld} other {# velden}}"
 #~ msgstr "{0, plural, one {# stap klaar} other {# stappen klaar}}"
 
 #. placeholder {0}: props.tasksWaiting
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:30
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Er staat # taak voor je klaar bij {name}} other {Er staan # taken voor je klaar bij {name}}}"
 
@@ -77,7 +77,7 @@ msgstr "{0} pagina's"
 
 #. placeholder {0}: doc.signature.name
 #. placeholder {1}: formatDateTime(doc.signature.signed_at, i18n.locale)
-#: src/features/accounts/signing/SignRoute.tsx:1524
+#: src/features/accounts/signing/SignRoute.tsx:1550
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} tekende op {1}. Het ondertekende exemplaar staat bij je documenten."
 
@@ -100,7 +100,7 @@ msgstr "{days, plural, one {# dag te laat} other {# dagen te laat}}"
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# dag} other {# dagen}}"
 
-#: src/features/accounts/signing/SignRoute.tsx:571
+#: src/features/accounts/signing/SignRoute.tsx:579
 msgid "{done} of {total} filled"
 msgstr "{done} van {total} ingevuld"
 
@@ -108,7 +108,7 @@ msgstr "{done} van {total} ingevuld"
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} van {org} vraagt je om te ondertekenen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1017
+#: src/features/accounts/signing/SignRoute.tsx:1043
 msgid "{label} is empty."
 msgstr "{label} is leeg."
 
@@ -283,7 +283,7 @@ msgstr "Opsommingstekens toevoegen"
 msgid "Add their DPA"
 msgstr "Hun verwerkersovereenkomst toevoegen"
 
-#: src/features/accounts/signing/SignRoute.tsx:503
+#: src/features/accounts/signing/SignRoute.tsx:511
 msgid "Add your signature first."
 msgstr "Zet eerst je handtekening."
 
@@ -328,7 +328,7 @@ msgstr "Nog iemand van hen"
 msgid "Another way"
 msgstr "Op een andere manier"
 
-#: src/features/accounts/signing/SignRoute.tsx:1357
+#: src/features/accounts/signing/SignRoute.tsx:1383
 msgid "Answer the question"
 msgstr "Beantwoord de vraag"
 
@@ -373,7 +373,7 @@ msgid "At signing, they tick"
 msgstr "Bij ondertekening kruisen ze aan"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:233
-#: src/features/accounts/signing/SignRoute.tsx:968
+#: src/features/accounts/signing/SignRoute.tsx:994
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 msgid "Back"
@@ -381,7 +381,7 @@ msgstr "Terug"
 
 #: src/features/accounts/signing/SignRoute.tsx:151
 #: src/features/accounts/signing/SignRoute.tsx:243
-#: src/features/accounts/signing/SignRoute.tsx:1550
+#: src/features/accounts/signing/SignRoute.tsx:1576
 msgid "Back to account"
 msgstr "Terug naar account"
 
@@ -470,7 +470,7 @@ msgstr "Per bankoverschrijving"
 msgid "By email"
 msgstr "Per e-mail"
 
-#: src/features/accounts/signing/SignRoute.tsx:1316
+#: src/features/accounts/signing/SignRoute.tsx:1342
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Door op Ondertekenen te klikken, onderteken je elektronisch. Je elektronische handtekening is net zo bindend als een handgeschreven handtekening."
 
@@ -498,7 +498,7 @@ msgid "Cancelled"
 msgstr "Geannuleerd"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:214
-#: src/features/accounts/signing/SignRoute.tsx:1133
+#: src/features/accounts/signing/SignRoute.tsx:1159
 msgid "Change"
 msgstr "Wijzigen"
 
@@ -565,12 +565,12 @@ msgstr "Kies een antwoord"
 msgid "Choose an image"
 msgstr "Kies een afbeelding"
 
-#: src/features/accounts/signing/SignRoute.tsx:1159
+#: src/features/accounts/signing/SignRoute.tsx:1185
 msgid "Choose one"
 msgstr "Kies er één"
 
-#: src/features/accounts/signing/SignRoute.tsx:1160
-#: src/features/accounts/signing/SignRoute.tsx:1291
+#: src/features/accounts/signing/SignRoute.tsx:1186
+#: src/features/accounts/signing/SignRoute.tsx:1317
 msgid "Choose one to continue."
 msgstr "Kies er een om verder te gaan."
 
@@ -600,7 +600,7 @@ msgstr "Plaats"
 msgid "Clear"
 msgstr "Wissen"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:81
 #: src/features/accounts/customer/WhoSigns.tsx:239
 msgid "Close"
 msgstr "Sluiten"
@@ -741,7 +741,7 @@ msgstr "Klantstatus"
 #~ msgid "Customers"
 #~ msgstr "Klanten"
 
-#: src/features/accounts/signing/SignRoute.tsx:1376
+#: src/features/accounts/signing/SignRoute.tsx:1402
 msgid "Data processing agreement"
 msgstr "Verwerkersovereenkomst"
 
@@ -872,7 +872,7 @@ msgstr "Document ingetrokken"
 msgid "Documents"
 msgstr "Documenten"
 
-#: src/features/accounts/signing/SignRoute.tsx:1389
+#: src/features/accounts/signing/SignRoute.tsx:1415
 msgid "Documents that form the agreement"
 msgstr "Documenten die bij de overeenkomst horen"
 
@@ -925,7 +925,7 @@ msgstr "Concept opgeslagen"
 msgid "Draw"
 msgstr "Tekenen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1131
+#: src/features/accounts/signing/SignRoute.tsx:1157
 msgid "Draw initials instead"
 msgstr "Paraaf apart tekenen"
 
@@ -1053,7 +1053,7 @@ msgstr "Velden opgeslagen"
 #~ msgid "Fill in"
 #~ msgstr "Invullen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1017
+#: src/features/accounts/signing/SignRoute.tsx:1043
 msgid "Fill in {label}"
 msgstr "Vul {label} in"
 
@@ -1061,7 +1061,7 @@ msgstr "Vul {label} in"
 msgid "Fill in billing details"
 msgstr "Vul factuurgegevens in"
 
-#: src/features/accounts/signing/SignRoute.tsx:991
+#: src/features/accounts/signing/SignRoute.tsx:1017
 msgid "Fill in the date"
 msgstr "Vul de datum in"
 
@@ -1077,11 +1077,11 @@ msgstr "Vul het e-mailadres in"
 msgid "Fill in their name"
 msgstr "Vul de naam in"
 
-#: src/features/accounts/signing/SignRoute.tsx:1339
+#: src/features/accounts/signing/SignRoute.tsx:1365
 msgid "Fill in what is left"
 msgstr "Vul in wat nog ontbreekt"
 
-#: src/features/accounts/signing/SignRoute.tsx:1002
+#: src/features/accounts/signing/SignRoute.tsx:1028
 msgid "Fill in your address"
 msgstr "Vul je adres in"
 
@@ -1089,23 +1089,23 @@ msgstr "Vul je adres in"
 msgid "Fill in your first name."
 msgstr "Vul je voornaam in."
 
-#: src/features/accounts/signing/SignRoute.tsx:987
+#: src/features/accounts/signing/SignRoute.tsx:1013
 msgid "Fill in your job title"
 msgstr "Vul je functie in"
 
-#: src/features/accounts/signing/SignRoute.tsx:984
+#: src/features/accounts/signing/SignRoute.tsx:1010
 msgid "Fill in your name"
 msgstr "Vul je naam in"
 
-#: src/features/accounts/signing/SignRoute.tsx:997
+#: src/features/accounts/signing/SignRoute.tsx:1023
 msgid "Fill in your organisation"
 msgstr "Vul je organisatie in"
 
-#: src/features/accounts/signing/SignRoute.tsx:1012
+#: src/features/accounts/signing/SignRoute.tsx:1038
 msgid "Fill in your PO number"
 msgstr "Vul je PO-nummer in"
 
-#: src/features/accounts/signing/SignRoute.tsx:1007
+#: src/features/accounts/signing/SignRoute.tsx:1033
 msgid "Fill in your VAT number"
 msgstr "Vul je btw-nummer in"
 
@@ -1133,7 +1133,7 @@ msgstr "Bijvoorbeeld een factuurportaal"
 msgid "For the attention of"
 msgstr "Ter attentie van"
 
-#: src/features/accounts/signing/SignRoute.tsx:1373
+#: src/features/accounts/signing/SignRoute.tsx:1399
 msgid "General terms and conditions"
 msgstr "Algemene voorwaarden"
 
@@ -1148,14 +1148,14 @@ msgstr "Aan de slag"
 msgid "Give feedback"
 msgstr "Feedback geven"
 
-#: src/features/accounts/signing/SignRoute.tsx:1615
+#: src/features/accounts/signing/SignRoute.tsx:1641
 msgid "Go to the account page"
 msgstr "Naar de accountpagina"
 
 #~ msgid "Go to the next one"
 #~ msgstr "Naar het volgende"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:60
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:77
 msgid "Go to your tasks"
 msgstr "Naar je taken"
 
@@ -1197,7 +1197,7 @@ msgstr "Zo factureren we"
 msgid "I do"
 msgstr "Ik"
 
-#: src/features/accounts/signing/SignRoute.tsx:1290
+#: src/features/accounts/signing/SignRoute.tsx:1316
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Zo niet, dan wordt de verwerkersovereenkomst een apart document voor iemand die dat wel mag."
 
@@ -1246,7 +1246,7 @@ msgstr "Inclusief de verwerkersovereenkomst"
 msgid "Initials"
 msgstr "Paraaf"
 
-#: src/features/accounts/signing/SignRoute.tsx:1139
+#: src/features/accounts/signing/SignRoute.tsx:1165
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Paraafvelden gebruiken deze handtekening, tenzij je een paraaf tekent."
 
@@ -1454,7 +1454,7 @@ msgstr "Log in met het e-mailadres waar de offerte naartoe is gestuurd."
 msgid "Lost"
 msgstr "Verloren"
 
-#: src/features/accounts/signing/SignRoute.tsx:1289
+#: src/features/accounts/signing/SignRoute.tsx:1315
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Mag je ook verwerkingsafspraken maken voor je organisatie?"
 
@@ -1524,7 +1524,7 @@ msgid "New task"
 msgstr "Nieuwe taak"
 
 #: src/features/accounts/FitLabel.tsx:11
-#: src/features/accounts/signing/SignRoute.tsx:1093
+#: src/features/accounts/signing/SignRoute.tsx:1119
 #: src/features/accounts/customer/WhoSigns.tsx:383
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:240
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:246
@@ -1546,7 +1546,7 @@ msgstr "Daarna plaats je de velden en verstuur je het."
 msgid "Next: {0}"
 msgstr "Volgende: {0}"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:50
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:67
 msgid "Next: {next}"
 msgstr "Volgende: {next}"
 
@@ -1590,7 +1590,7 @@ msgstr "Geen bestand gekozen"
 msgid "No needs form or demo linked."
 msgstr "Geen behoefteformulier of demo gekoppeld."
 
-#: src/features/accounts/signing/SignRoute.tsx:947
+#: src/features/accounts/signing/SignRoute.tsx:973
 msgid "No options chosen. Total {total} incl. VAT."
 msgstr "Geen opties gekozen. Totaal {total} incl. btw."
 
@@ -1609,7 +1609,7 @@ msgstr "Nog geen vragen."
 msgid "No tasks."
 msgstr "Geen taken."
 
-#: src/features/accounts/signing/SignRoute.tsx:1297
+#: src/features/accounts/signing/SignRoute.tsx:1323
 msgid "No, someone else signs it"
 msgstr "Nee, iemand anders tekent die"
 
@@ -1805,7 +1805,7 @@ msgstr "Open de pdf"
 msgid "Open the record"
 msgstr "Dossier openen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1542
+#: src/features/accounts/signing/SignRoute.tsx:1568
 msgid "Open the signed PDF"
 msgstr "Open de ondertekende pdf"
 
@@ -1859,7 +1859,7 @@ msgstr "optioneel"
 #: src/features/accounts/staff/LinesEditor.tsx:252
 #: src/features/accounts/staff/BillToFields.tsx:144
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
-#: src/features/accounts/signing/SignRoute.tsx:1066
+#: src/features/accounts/signing/SignRoute.tsx:1092
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
 msgstr "Optioneel"
@@ -2017,7 +2017,7 @@ msgstr "Offerte klaarzetten"
 msgid "Price"
 msgstr "Prijs"
 
-#: src/features/accounts/signing/SignRoute.tsx:563
+#: src/features/accounts/signing/SignRoute.tsx:571
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Voortgang"
@@ -2220,7 +2220,7 @@ msgstr "Btw verlegd"
 msgid "Review and send"
 msgstr "Bekijken en versturen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1272
+#: src/features/accounts/signing/SignRoute.tsx:1298
 #: src/features/accounts/customer/WhoSigns.tsx:257
 #: src/features/accounts/customer/NextSteps.tsx:295
 msgid "Review and sign"
@@ -2430,7 +2430,7 @@ msgstr "vandaag verstuurd"
 msgid "Sent. The customer has a signing task."
 msgstr "Verstuurd. De klant heeft een ondertekentaak."
 
-#: src/features/accounts/signing/SignRoute.tsx:1375
+#: src/features/accounts/signing/SignRoute.tsx:1401
 msgid "Service level agreement"
 msgstr "Service level agreement (SLA)"
 
@@ -2475,7 +2475,7 @@ msgstr "Komt letterlijk onder de opening. Schrijf het in de taal van de klant."
 msgid "Shown on the offer before signing"
 msgstr "Staat op de offerte vóór ondertekening"
 
-#: src/features/accounts/signing/SignRoute.tsx:1360
+#: src/features/accounts/signing/SignRoute.tsx:1386
 msgid "Sign"
 msgstr "Ondertekenen"
 
@@ -2524,7 +2524,7 @@ msgstr "Handtekeningen"
 #: src/features/accounts/format.ts:64
 #: src/features/accounts/staff/AccountsPanel.tsx:161
 #: src/features/accounts/staff/AccountCardRoute.tsx:641
-#: src/features/accounts/signing/SignRoute.tsx:1520
+#: src/features/accounts/signing/SignRoute.tsx:1546
 msgid "Signed"
 msgstr "Ondertekend"
 
@@ -2593,7 +2593,7 @@ msgstr "Sinds {0}"
 msgid "So the signature record can read it"
 msgstr "Zodat het ondertekenverslag het kan lezen"
 
-#: src/features/accounts/signing/SignRoute.tsx:1276
+#: src/features/accounts/signing/SignRoute.tsx:1302
 msgid "Some required fields are still empty."
 msgstr "Er zijn nog verplichte velden leeg."
 
@@ -2636,7 +2636,7 @@ msgstr "Fase"
 msgid "Stage set"
 msgstr "Fase ingesteld"
 
-#: src/features/accounts/signing/SignRoute.tsx:596
+#: src/features/accounts/signing/SignRoute.tsx:604
 msgid "Start"
 msgstr "Beginnen"
 
@@ -2725,6 +2725,7 @@ msgid "Task withdrawn"
 msgstr "Taak ingetrokken"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:481
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
@@ -2795,7 +2796,7 @@ msgstr "Het account"
 #~ msgid "The account could not be loaded. Try again in a moment."
 #~ msgstr "Het account kon niet worden geladen. Probeer het zo opnieuw."
 
-#: src/features/accounts/signing/SignRoute.tsx:993
+#: src/features/accounts/signing/SignRoute.tsx:1019
 msgid "The box is not ticked yet."
 msgstr "Het vakje is nog niet aangevinkt."
 
@@ -2823,11 +2824,11 @@ msgstr "De klant krijgt geen automatische herinnering. Na zeven dagen wordt de a
 msgid "The customer has no VAT number"
 msgstr "De klant heeft geen btw-nummer"
 
-#: src/features/accounts/signing/SignRoute.tsx:991
+#: src/features/accounts/signing/SignRoute.tsx:1017
 msgid "The date is empty."
 msgstr "De datum is leeg."
 
-#: src/features/accounts/signing/SignRoute.tsx:1592
+#: src/features/accounts/signing/SignRoute.tsx:1618
 msgid "The document could not be loaded. Check your connection and try again."
 msgstr "Het document kon niet worden geladen. Controleer je verbinding en probeer het opnieuw."
 
@@ -2852,7 +2853,7 @@ msgstr "Het concept is klaar. Controleer het en publiceer."
 msgid "The email address is empty."
 msgstr "Het e-mailadres is leeg."
 
-#: src/features/accounts/signing/SignRoute.tsx:1586
+#: src/features/accounts/signing/SignRoute.tsx:1612
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Het bestand van dit document ontbreekt bij ons, dus het kan nog niet worden ondertekend. Laat het ons weten met een vraag op je accountpagina, dan sturen we het opnieuw."
 
@@ -2884,7 +2885,7 @@ msgstr "De herinnering is niet verstuurd. Probeer het zo opnieuw."
 msgid "The same person who signs the offer"
 msgstr "Dezelfde persoon die de offerte tekent"
 
-#: src/features/accounts/signing/SignRoute.tsx:1530
+#: src/features/accounts/signing/SignRoute.tsx:1556
 msgid "The signed copy is in your documents."
 msgstr "Het ondertekende exemplaar staat bij je documenten."
 
@@ -3042,7 +3043,7 @@ msgstr "Deze pagina kon niet worden geladen. Probeer het zo opnieuw."
 msgid "Through Peppol"
 msgstr "Via Peppol"
 
-#: src/features/accounts/signing/SignRoute.tsx:993
+#: src/features/accounts/signing/SignRoute.tsx:1019
 msgid "Tick the box"
 msgstr "Vink het vakje aan"
 
@@ -3102,7 +3103,7 @@ msgstr "Aan: {0}"
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
 #~ msgstr "Maak {amount} over naar {0}, IBAN {1}, BIC {2}"
 
-#: src/features/accounts/signing/SignRoute.tsx:1606
+#: src/features/accounts/signing/SignRoute.tsx:1632
 #: src/features/accounts/pdf/PdfPages.tsx:144
 msgid "Try again"
 msgstr "Opnieuw proberen"
@@ -3468,7 +3469,7 @@ msgstr "Schrijf een antwoord"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/features/accounts/signing/SignRoute.tsx:1294
+#: src/features/accounts/signing/SignRoute.tsx:1320
 msgid "Yes, I may"
 msgstr "Ja, dat mag ik"
 
@@ -3495,7 +3496,7 @@ msgstr "Je bent uitgelogd. Log opnieuw in om dit document te openen."
 msgid "You can review and sign the offer now."
 msgstr "Je kunt de offerte nu bekijken en tekenen."
 
-#: src/features/accounts/signing/SignRoute.tsx:949
+#: src/features/accounts/signing/SignRoute.tsx:975
 msgid "You chose {names}. Total {total} incl. VAT."
 msgstr "U koos {names}. Totaal {total} incl. btw."
 
@@ -3512,7 +3513,7 @@ msgstr "Je bent ingelogd als {0}. Log uit om hem te openen als {invitee}."
 msgid "Your active devices changed. Choose a device again."
 msgstr "Je actieve apparaten zijn gewijzigd. Kies opnieuw een apparaat."
 
-#: src/features/accounts/signing/SignRoute.tsx:1003
+#: src/features/accounts/signing/SignRoute.tsx:1029
 msgid "Your address is empty."
 msgstr "Je adres is leeg."
 
@@ -3532,7 +3533,7 @@ msgstr "Uw keuze"
 msgid "Your initials"
 msgstr "Je paraaf"
 
-#: src/features/accounts/signing/SignRoute.tsx:988
+#: src/features/accounts/signing/SignRoute.tsx:1014
 msgid "Your job title is empty."
 msgstr "Je functie is leeg."
 
@@ -3540,7 +3541,7 @@ msgstr "Je functie is leeg."
 msgid "Your name"
 msgstr "Je naam"
 
-#: src/features/accounts/signing/SignRoute.tsx:984
+#: src/features/accounts/signing/SignRoute.tsx:1010
 msgid "Your name is empty."
 msgstr "Je naam is leeg."
 
@@ -3548,7 +3549,7 @@ msgstr "Je naam is leeg."
 #~ msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
 #~ msgstr "Je nummers staan niet in de Peppol-directory. Facturen komen per e-mail, tenzij je hieronder een Peppol-ID invult."
 
-#: src/features/accounts/signing/SignRoute.tsx:998
+#: src/features/accounts/signing/SignRoute.tsx:1024
 msgid "Your organisation is empty."
 msgstr "Je organisatie is leeg."
 
@@ -3556,7 +3557,7 @@ msgstr "Je organisatie is leeg."
 msgid "Your own line (optional)"
 msgstr "Je eigen regel (optioneel)"
 
-#: src/features/accounts/signing/SignRoute.tsx:1013
+#: src/features/accounts/signing/SignRoute.tsx:1039
 msgid "Your PO number is empty."
 msgstr "Je PO-nummer is leeg."
 
@@ -3564,7 +3565,7 @@ msgstr "Je PO-nummer is leeg."
 msgid "Your question"
 msgstr "Je vraag"
 
-#: src/features/accounts/signing/SignRoute.tsx:581
+#: src/features/accounts/signing/SignRoute.tsx:589
 msgid "Your signature completes the agreement."
 msgstr "Met je handtekening is de overeenkomst compleet."
 
@@ -3572,6 +3573,6 @@ msgstr "Met je handtekening is de overeenkomst compleet."
 msgid "Your signature is in"
 msgstr "Uw handtekening staat erop"
 
-#: src/features/accounts/signing/SignRoute.tsx:1008
+#: src/features/accounts/signing/SignRoute.tsx:1034
 msgid "Your VAT number is empty."
 msgstr "Je btw-nummer is leeg."

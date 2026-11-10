@@ -31,7 +31,7 @@ msgstr "{0, plural, one {# pole} few {# pole} other {# polí}}"
 #~ msgstr ""
 
 #. placeholder {0}: props.tasksWaiting
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:30
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {V {name} na vás čeká # úkol} few {V {name} na vás čekají # úkoly} many {V {name} na vás čeká # úkolu} other {V {name} na vás čeká # úkolů}}"
 
@@ -77,7 +77,7 @@ msgstr "{0} stran"
 
 #. placeholder {0}: doc.signature.name
 #. placeholder {1}: formatDateTime(doc.signature.signed_at, i18n.locale)
-#: src/features/accounts/signing/SignRoute.tsx:1524
+#: src/features/accounts/signing/SignRoute.tsx:1550
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech."
 
@@ -100,7 +100,7 @@ msgstr "{days, plural, one {# den po splatnosti} few {# dny po splatnosti} many 
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# den} few {# dny} many {# dne} other {# dní}}"
 
-#: src/features/accounts/signing/SignRoute.tsx:571
+#: src/features/accounts/signing/SignRoute.tsx:579
 msgid "{done} of {total} filled"
 msgstr "{done} z {total} vyplněno"
 
@@ -108,7 +108,7 @@ msgstr "{done} z {total} vyplněno"
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} z {org} vás zve k podpisu"
 
-#: src/features/accounts/signing/SignRoute.tsx:1017
+#: src/features/accounts/signing/SignRoute.tsx:1043
 msgid "{label} is empty."
 msgstr "{label} je prázdné."
 
@@ -283,7 +283,7 @@ msgstr "Přidat odrážky"
 msgid "Add their DPA"
 msgstr "Přidat jejich DPA"
 
-#: src/features/accounts/signing/SignRoute.tsx:503
+#: src/features/accounts/signing/SignRoute.tsx:511
 msgid "Add your signature first."
 msgstr "Nejprve přidejte svůj podpis."
 
@@ -328,7 +328,7 @@ msgstr "Další jejich podepisující"
 msgid "Another way"
 msgstr "Jiným způsobem"
 
-#: src/features/accounts/signing/SignRoute.tsx:1357
+#: src/features/accounts/signing/SignRoute.tsx:1383
 msgid "Answer the question"
 msgstr "Odpovězte na otázku"
 
@@ -373,7 +373,7 @@ msgid "At signing, they tick"
 msgstr "Při podpisu zaškrtnou"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:233
-#: src/features/accounts/signing/SignRoute.tsx:968
+#: src/features/accounts/signing/SignRoute.tsx:994
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 msgid "Back"
@@ -381,7 +381,7 @@ msgstr "Zpět"
 
 #: src/features/accounts/signing/SignRoute.tsx:151
 #: src/features/accounts/signing/SignRoute.tsx:243
-#: src/features/accounts/signing/SignRoute.tsx:1550
+#: src/features/accounts/signing/SignRoute.tsx:1576
 msgid "Back to account"
 msgstr "Zpět na účet"
 
@@ -470,7 +470,7 @@ msgstr "Bankovním převodem"
 msgid "By email"
 msgstr "E-mailem"
 
-#: src/features/accounts/signing/SignRoute.tsx:1316
+#: src/features/accounts/signing/SignRoute.tsx:1342
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Výběrem Podepsat podepisujete elektronicky. Váš elektronický podpis je stejně závazný jako vlastnoruční."
 
@@ -498,7 +498,7 @@ msgid "Cancelled"
 msgstr "Zrušeno"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:214
-#: src/features/accounts/signing/SignRoute.tsx:1133
+#: src/features/accounts/signing/SignRoute.tsx:1159
 msgid "Change"
 msgstr "Změnit"
 
@@ -565,12 +565,12 @@ msgstr "Vyberte odpověď"
 msgid "Choose an image"
 msgstr "Vybrat obrázek"
 
-#: src/features/accounts/signing/SignRoute.tsx:1159
+#: src/features/accounts/signing/SignRoute.tsx:1185
 msgid "Choose one"
 msgstr "Vyberte jednu"
 
-#: src/features/accounts/signing/SignRoute.tsx:1160
-#: src/features/accounts/signing/SignRoute.tsx:1291
+#: src/features/accounts/signing/SignRoute.tsx:1186
+#: src/features/accounts/signing/SignRoute.tsx:1317
 msgid "Choose one to continue."
 msgstr "Pro pokračování vyberte jednu možnost."
 
@@ -600,7 +600,7 @@ msgstr "Město"
 msgid "Clear"
 msgstr "Vymazat"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:81
 #: src/features/accounts/customer/WhoSigns.tsx:239
 msgid "Close"
 msgstr "Zavřít"
@@ -741,7 +741,7 @@ msgstr "Stav zákazníka"
 #~ msgid "Customers"
 #~ msgstr "Zákazníci"
 
-#: src/features/accounts/signing/SignRoute.tsx:1376
+#: src/features/accounts/signing/SignRoute.tsx:1402
 msgid "Data processing agreement"
 msgstr "Smlouva o zpracování údajů"
 
@@ -872,7 +872,7 @@ msgstr "Dokument stažen zpět"
 msgid "Documents"
 msgstr "Dokumenty"
 
-#: src/features/accounts/signing/SignRoute.tsx:1389
+#: src/features/accounts/signing/SignRoute.tsx:1415
 msgid "Documents that form the agreement"
 msgstr "Dokumenty, které tvoří součást smlouvy"
 
@@ -925,7 +925,7 @@ msgstr "Koncept uložen"
 msgid "Draw"
 msgstr "Nakreslit"
 
-#: src/features/accounts/signing/SignRoute.tsx:1131
+#: src/features/accounts/signing/SignRoute.tsx:1157
 msgid "Draw initials instead"
 msgstr "Místo toho nakreslit iniciály"
 
@@ -1053,7 +1053,7 @@ msgstr "Pole uložena"
 #~ msgid "Fill in"
 #~ msgstr "Vyplnit"
 
-#: src/features/accounts/signing/SignRoute.tsx:1017
+#: src/features/accounts/signing/SignRoute.tsx:1043
 msgid "Fill in {label}"
 msgstr "Vyplňte {label}"
 
@@ -1061,7 +1061,7 @@ msgstr "Vyplňte {label}"
 msgid "Fill in billing details"
 msgstr "Vyplnit fakturační údaje"
 
-#: src/features/accounts/signing/SignRoute.tsx:991
+#: src/features/accounts/signing/SignRoute.tsx:1017
 msgid "Fill in the date"
 msgstr "Vyplňte datum"
 
@@ -1077,11 +1077,11 @@ msgstr "Vyplňte e-mail"
 msgid "Fill in their name"
 msgstr "Vyplňte jméno"
 
-#: src/features/accounts/signing/SignRoute.tsx:1339
+#: src/features/accounts/signing/SignRoute.tsx:1365
 msgid "Fill in what is left"
 msgstr "Vyplňte zbývající"
 
-#: src/features/accounts/signing/SignRoute.tsx:1002
+#: src/features/accounts/signing/SignRoute.tsx:1028
 msgid "Fill in your address"
 msgstr "Vyplňte adresu"
 
@@ -1089,23 +1089,23 @@ msgstr "Vyplňte adresu"
 msgid "Fill in your first name."
 msgstr "Vyplňte své křestní jméno."
 
-#: src/features/accounts/signing/SignRoute.tsx:987
+#: src/features/accounts/signing/SignRoute.tsx:1013
 msgid "Fill in your job title"
 msgstr "Vyplňte pracovní pozici"
 
-#: src/features/accounts/signing/SignRoute.tsx:984
+#: src/features/accounts/signing/SignRoute.tsx:1010
 msgid "Fill in your name"
 msgstr "Vyplňte jméno"
 
-#: src/features/accounts/signing/SignRoute.tsx:997
+#: src/features/accounts/signing/SignRoute.tsx:1023
 msgid "Fill in your organisation"
 msgstr "Vyplňte organizaci"
 
-#: src/features/accounts/signing/SignRoute.tsx:1012
+#: src/features/accounts/signing/SignRoute.tsx:1038
 msgid "Fill in your PO number"
 msgstr "Vyplňte číslo objednávky"
 
-#: src/features/accounts/signing/SignRoute.tsx:1007
+#: src/features/accounts/signing/SignRoute.tsx:1033
 msgid "Fill in your VAT number"
 msgstr "Vyplňte DIČ"
 
@@ -1133,7 +1133,7 @@ msgstr "Například fakturační portál"
 msgid "For the attention of"
 msgstr "K rukám"
 
-#: src/features/accounts/signing/SignRoute.tsx:1373
+#: src/features/accounts/signing/SignRoute.tsx:1399
 msgid "General terms and conditions"
 msgstr "Všeobecné obchodní podmínky"
 
@@ -1148,14 +1148,14 @@ msgstr "Začínáme"
 msgid "Give feedback"
 msgstr "Dát zpětnou vazbu"
 
-#: src/features/accounts/signing/SignRoute.tsx:1615
+#: src/features/accounts/signing/SignRoute.tsx:1641
 msgid "Go to the account page"
 msgstr "Přejít na stránku účtu"
 
 #~ msgid "Go to the next one"
 #~ msgstr "Přejít na další"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:60
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:77
 msgid "Go to your tasks"
 msgstr "Přejít na úkoly"
 
@@ -1197,7 +1197,7 @@ msgstr "Jak fakturujeme"
 msgid "I do"
 msgstr "Já"
 
-#: src/features/accounts/signing/SignRoute.tsx:1290
+#: src/features/accounts/signing/SignRoute.tsx:1316
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným dokumentem pro oprávněnou osobu."
 
@@ -1246,7 +1246,7 @@ msgstr "Včetně smlouvy o zpracování osobních údajů"
 msgid "Initials"
 msgstr "Iniciály"
 
-#: src/features/accounts/signing/SignRoute.tsx:1139
+#: src/features/accounts/signing/SignRoute.tsx:1165
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Pole pro iniciály použijí tento podpis, pokud nenakreslíte iniciály."
 
@@ -1444,17 +1444,17 @@ msgstr "Přihlaste se a stáhněte si podepsanou kopii."
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:106
 msgid "Log in with another address"
-msgstr ""
+msgstr "Přihlásit se jinou adresou"
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:96
 msgid "Log in with the email address the offer was sent to."
-msgstr ""
+msgstr "Přihlaste se e-mailovou adresou, na kterou byla nabídka odeslána."
 
 #: src/features/accounts/format.ts:109
 msgid "Lost"
 msgstr "Ztraceno"
 
-#: src/features/accounts/signing/SignRoute.tsx:1289
+#: src/features/accounts/signing/SignRoute.tsx:1315
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Můžete také odsouhlasit zpracování údajů za vaši organizaci?"
 
@@ -1524,7 +1524,7 @@ msgid "New task"
 msgstr "Nový úkol"
 
 #: src/features/accounts/FitLabel.tsx:11
-#: src/features/accounts/signing/SignRoute.tsx:1093
+#: src/features/accounts/signing/SignRoute.tsx:1119
 #: src/features/accounts/customer/WhoSigns.tsx:383
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:240
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:246
@@ -1546,7 +1546,7 @@ msgstr "Dále rozmístíte pole a poté odešlete."
 msgid "Next: {0}"
 msgstr "Další: {0}"
 
-#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:50
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:67
 msgid "Next: {next}"
 msgstr "Další: {next}"
 
@@ -1590,7 +1590,7 @@ msgstr "Není vybrán žádný soubor"
 msgid "No needs form or demo linked."
 msgstr "Není propojen žádný formulář potřeb ani demo."
 
-#: src/features/accounts/signing/SignRoute.tsx:947
+#: src/features/accounts/signing/SignRoute.tsx:973
 msgid "No options chosen. Total {total} incl. VAT."
 msgstr "Žádné možnosti nevybrány. Celkem {total} vč. DPH."
 
@@ -1609,7 +1609,7 @@ msgstr "Zatím žádné otázky."
 msgid "No tasks."
 msgstr "Žádné úkoly."
 
-#: src/features/accounts/signing/SignRoute.tsx:1297
+#: src/features/accounts/signing/SignRoute.tsx:1323
 msgid "No, someone else signs it"
 msgstr "Ne, podepíše to někdo jiný"
 
@@ -1805,7 +1805,7 @@ msgstr "Otevřít PDF"
 msgid "Open the record"
 msgstr "Otevřít záznam"
 
-#: src/features/accounts/signing/SignRoute.tsx:1542
+#: src/features/accounts/signing/SignRoute.tsx:1568
 msgid "Open the signed PDF"
 msgstr "Otevřít podepsané PDF"
 
@@ -1859,7 +1859,7 @@ msgstr "nepovinné"
 #: src/features/accounts/staff/LinesEditor.tsx:252
 #: src/features/accounts/staff/BillToFields.tsx:144
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
-#: src/features/accounts/signing/SignRoute.tsx:1066
+#: src/features/accounts/signing/SignRoute.tsx:1092
 #: src/features/accounts/customer/NextSteps.tsx:658
 msgid "Optional"
 msgstr "Nepovinné"
@@ -2017,7 +2017,7 @@ msgstr "Připravit nabídku"
 msgid "Price"
 msgstr "Cena"
 
-#: src/features/accounts/signing/SignRoute.tsx:563
+#: src/features/accounts/signing/SignRoute.tsx:571
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Průběh"
@@ -2220,7 +2220,7 @@ msgstr "Přenesená daňová povinnost"
 msgid "Review and send"
 msgstr "Zkontrolovat a odeslat"
 
-#: src/features/accounts/signing/SignRoute.tsx:1272
+#: src/features/accounts/signing/SignRoute.tsx:1298
 #: src/features/accounts/customer/WhoSigns.tsx:257
 #: src/features/accounts/customer/NextSteps.tsx:295
 msgid "Review and sign"
@@ -2430,7 +2430,7 @@ msgstr "odesláno dnes"
 msgid "Sent. The customer has a signing task."
 msgstr "Odesláno. Zákazník má úkol k podpisu."
 
-#: src/features/accounts/signing/SignRoute.tsx:1375
+#: src/features/accounts/signing/SignRoute.tsx:1401
 msgid "Service level agreement"
 msgstr "Smlouva o úrovni služeb"
 
@@ -2475,7 +2475,7 @@ msgstr "Zobrazí se doslova pod úvodem. Napište ho v jazyce zákazníka."
 msgid "Shown on the offer before signing"
 msgstr "Uvedeno v nabídce před podpisem"
 
-#: src/features/accounts/signing/SignRoute.tsx:1360
+#: src/features/accounts/signing/SignRoute.tsx:1386
 msgid "Sign"
 msgstr "Podepsat"
 
@@ -2532,7 +2532,7 @@ msgstr "Podpisy"
 #: src/features/accounts/format.ts:64
 #: src/features/accounts/staff/AccountsPanel.tsx:161
 #: src/features/accounts/staff/AccountCardRoute.tsx:641
-#: src/features/accounts/signing/SignRoute.tsx:1520
+#: src/features/accounts/signing/SignRoute.tsx:1546
 msgid "Signed"
 msgstr "Podepsáno"
 
@@ -2601,7 +2601,7 @@ msgstr "Od {0}"
 msgid "So the signature record can read it"
 msgstr "Aby byl záznam o podpisu čitelný"
 
-#: src/features/accounts/signing/SignRoute.tsx:1276
+#: src/features/accounts/signing/SignRoute.tsx:1302
 msgid "Some required fields are still empty."
 msgstr "Některá povinná pole jsou stále prázdná."
 
@@ -2644,7 +2644,7 @@ msgstr "Fáze"
 msgid "Stage set"
 msgstr "Fáze nastavena"
 
-#: src/features/accounts/signing/SignRoute.tsx:596
+#: src/features/accounts/signing/SignRoute.tsx:604
 msgid "Start"
 msgstr "Začít"
 
@@ -2733,6 +2733,7 @@ msgid "Task withdrawn"
 msgstr "Úkol stažen"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:481
+#: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
@@ -2803,7 +2804,7 @@ msgstr "Účet"
 #~ msgid "The account could not be loaded. Try again in a moment."
 #~ msgstr "Účet se nepodařilo načíst. Zkuste to za chvíli znovu."
 
-#: src/features/accounts/signing/SignRoute.tsx:993
+#: src/features/accounts/signing/SignRoute.tsx:1019
 msgid "The box is not ticked yet."
 msgstr "Políčko ještě není zaškrtnuté."
 
@@ -2831,11 +2832,11 @@ msgstr "Zákazník nedostává žádnou automatickou připomínku. Po sedmi dnec
 msgid "The customer has no VAT number"
 msgstr "Zákazník nemá DIČ"
 
-#: src/features/accounts/signing/SignRoute.tsx:991
+#: src/features/accounts/signing/SignRoute.tsx:1017
 msgid "The date is empty."
 msgstr "Datum je prázdné."
 
-#: src/features/accounts/signing/SignRoute.tsx:1592
+#: src/features/accounts/signing/SignRoute.tsx:1618
 msgid "The document could not be loaded. Check your connection and try again."
 msgstr "Dokument se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu."
 
@@ -2860,7 +2861,7 @@ msgstr "Koncept je připraven. Zkontrolujte jej a poté publikujte."
 msgid "The email address is empty."
 msgstr "E-mailová adresa je prázdná."
 
-#: src/features/accounts/signing/SignRoute.tsx:1586
+#: src/features/accounts/signing/SignRoute.tsx:1612
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Soubor tohoto dokumentu na naší straně chybí, takže jej zatím nelze podepsat. Dejte nám vědět prostřednictvím dotazu na stránce svého účtu a my vám jej pošleme znovu."
 
@@ -2892,7 +2893,7 @@ msgstr "Připomínka se neodeslala. Zkuste to za chvíli znovu."
 msgid "The same person who signs the offer"
 msgstr "Stejná osoba, která podepisuje nabídku"
 
-#: src/features/accounts/signing/SignRoute.tsx:1530
+#: src/features/accounts/signing/SignRoute.tsx:1556
 msgid "The signed copy is in your documents."
 msgstr "Podepsaná kopie je ve vašich dokumentech."
 
@@ -3003,7 +3004,7 @@ msgstr "Tento dokument již nelze podepsat."
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:81
 msgid "This document is not shared with the address you use."
-msgstr ""
+msgstr "Tento dokument není sdílen s adresou, kterou používáte."
 
 #: src/features/accounts/signing/SignRoute.tsx:99
 #~ msgid "This document is not shared with you. Sign in with the email address the link was sent to."
@@ -3050,7 +3051,7 @@ msgstr "Stránku se nepodařilo načíst. Zkuste to za chvíli znovu."
 msgid "Through Peppol"
 msgstr "Přes Peppol"
 
-#: src/features/accounts/signing/SignRoute.tsx:993
+#: src/features/accounts/signing/SignRoute.tsx:1019
 msgid "Tick the box"
 msgstr "Zaškrtněte políčko"
 
@@ -3110,7 +3111,7 @@ msgstr "Komu: {0}"
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1606
+#: src/features/accounts/signing/SignRoute.tsx:1632
 #: src/features/accounts/pdf/PdfPages.tsx:144
 msgid "Try again"
 msgstr "Zkusit znovu"
@@ -3321,11 +3322,11 @@ msgstr "Vytvoříme syntetické demo na základě jejich webu a vašeho zadání
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:84
 msgid "We could not find this document for {email}. It may have been sent to another address."
-msgstr ""
+msgstr "Tento dokument jsme pro {email} nenašli. Možná byl odeslán na jinou adresu."
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:89
 msgid "We could not find this document for the address you use. It may have been sent to another address."
-msgstr ""
+msgstr "Tento dokument jsme pro adresu, kterou používáte, nenašli. Možná byl odeslán na jinou adresu."
 
 #~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
 #~ msgstr ""
@@ -3476,7 +3477,7 @@ msgstr "Napsat odpověď"
 msgid "Yes"
 msgstr "Ano"
 
-#: src/features/accounts/signing/SignRoute.tsx:1294
+#: src/features/accounts/signing/SignRoute.tsx:1320
 msgid "Yes, I may"
 msgstr "Ano, mám oprávnění"
 
@@ -3493,17 +3494,17 @@ msgstr "S adresou {email} už účet dembrane máte. Pošleme vám e-mailem kód
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:76
 msgid "You are signed in as {email}, and this document is not shared with that address."
-msgstr ""
+msgstr "Jste přihlášeni jako {email} a tento dokument není sdílen s touto adresou."
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:47
 msgid "You are signed out. Log in again to open this document."
-msgstr ""
+msgstr "Jste odhlášeni. Přihlaste se znovu a otevřete tento dokument."
 
 #: src/features/accounts/customer/WhoSigns.tsx:224
 msgid "You can review and sign the offer now."
 msgstr "Nyní můžete nabídku zkontrolovat a podepsat."
 
-#: src/features/accounts/signing/SignRoute.tsx:949
+#: src/features/accounts/signing/SignRoute.tsx:975
 msgid "You chose {names}. Total {total} incl. VAT."
 msgstr "Vybrali jste {names}. Celkem {total} vč. DPH."
 
@@ -3520,7 +3521,7 @@ msgstr "Jste přihlášeni jako {0}. Odhlaste se a otevřete ji jako {invitee}."
 msgid "Your active devices changed. Choose a device again."
 msgstr "Vaše aktivní zařízení se změnila. Vyberte zařízení znovu."
 
-#: src/features/accounts/signing/SignRoute.tsx:1003
+#: src/features/accounts/signing/SignRoute.tsx:1029
 msgid "Your address is empty."
 msgstr "Adresa je prázdná."
 
@@ -3540,7 +3541,7 @@ msgstr "Vaše volba"
 msgid "Your initials"
 msgstr "Vaše iniciály"
 
-#: src/features/accounts/signing/SignRoute.tsx:988
+#: src/features/accounts/signing/SignRoute.tsx:1014
 msgid "Your job title is empty."
 msgstr "Pracovní pozice je prázdná."
 
@@ -3548,7 +3549,7 @@ msgstr "Pracovní pozice je prázdná."
 msgid "Your name"
 msgstr "Vaše jméno"
 
-#: src/features/accounts/signing/SignRoute.tsx:984
+#: src/features/accounts/signing/SignRoute.tsx:1010
 msgid "Your name is empty."
 msgstr "Jméno je prázdné."
 
@@ -3556,7 +3557,7 @@ msgstr "Jméno je prázdné."
 #~ msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
 #~ msgstr "Vaše čísla nejsou v adresáři Peppol. Faktury chodí e-mailem, pokud níže nevyplníte Peppol ID."
 
-#: src/features/accounts/signing/SignRoute.tsx:998
+#: src/features/accounts/signing/SignRoute.tsx:1024
 msgid "Your organisation is empty."
 msgstr "Organizace je prázdná."
 
@@ -3564,7 +3565,7 @@ msgstr "Organizace je prázdná."
 msgid "Your own line (optional)"
 msgstr "Vlastní řádek (nepovinné)"
 
-#: src/features/accounts/signing/SignRoute.tsx:1013
+#: src/features/accounts/signing/SignRoute.tsx:1039
 msgid "Your PO number is empty."
 msgstr "Číslo objednávky je prázdné."
 
@@ -3572,7 +3573,7 @@ msgstr "Číslo objednávky je prázdné."
 msgid "Your question"
 msgstr "Váš dotaz"
 
-#: src/features/accounts/signing/SignRoute.tsx:581
+#: src/features/accounts/signing/SignRoute.tsx:589
 msgid "Your signature completes the agreement."
 msgstr "Váš podpis dokončí uzavření smlouvy."
 
@@ -3580,6 +3581,6 @@ msgstr "Váš podpis dokončí uzavření smlouvy."
 msgid "Your signature is in"
 msgstr "Váš podpis je zaznamenán"
 
-#: src/features/accounts/signing/SignRoute.tsx:1008
+#: src/features/accounts/signing/SignRoute.tsx:1034
 msgid "Your VAT number is empty."
 msgstr "DIČ je prázdné."
