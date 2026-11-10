@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
-import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
@@ -284,6 +284,7 @@ export const ProjectPortalSettingsRoute = () => {
 				"get_reply_mode",
 				"get_reply_prompt",
 				"is_get_reply_enabled",
+				"is_get_reply_cross_pollination_enabled",
 				"is_verify_enabled",
 				"is_verify_on_finish_enabled",
 				"selected_verification_key_list",

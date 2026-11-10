@@ -29,6 +29,7 @@ export const FIELD_LABELS: Record<string, () => string> = {
 	host_guide: () => t`Host guide`,
 	image_generation_model: () => t`Image style`,
 	is_conversation_allowed: () => t`Portal open for new conversations`,
+	is_get_reply_cross_pollination_enabled: () => t`Cross-pollination`,
 	is_get_reply_enabled: () => t`Replies to participants`,
 	is_project_notification_subscription_allowed: () =>
 		t`Participant updates subscription`,

@@ -6,7 +6,6 @@ import { testId } from "@/lib/testUtils";
 import { ArtefactModal } from "./ArtefactModal";
 import { useConversationArtefacts, useVerificationTopics } from "./hooks";
 import { VerifiedArtefactItem } from "./VerifiedArtefactItem";
-import { TOPIC_ICON_MAP } from "./VerifySelection";
 
 type VerifiedArtefactsListProps = {
 	conversationId: string;
@@ -46,9 +45,9 @@ export const VerifiedArtefactsList = ({
 		availableTopics.map((topic) => [
 			topic.key,
 			{
+				// A host's own emoji; built-in topics carry the seal the item already shows.
 				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
+					topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined,
 				label:
 					topic.translations?.[locale]?.label ??
 					topic.translations?.["en-US"]?.label ??

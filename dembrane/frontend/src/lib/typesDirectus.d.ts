@@ -231,6 +231,7 @@ interface Project {
 	is_conversation_allowed: boolean;
 	is_enhanced_audio_processing_enabled: boolean | null;
 	is_get_reply_enabled: boolean | null;
+	is_get_reply_cross_pollination_enabled?: boolean | null;
 	is_project_notification_subscription_allowed: boolean | null;
 	language:
 		| "cs"
