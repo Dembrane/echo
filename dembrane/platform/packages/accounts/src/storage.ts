@@ -742,7 +742,11 @@ export const store = {
             title: string | null;
             code: string | null;
             params: unknown;
-          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params) from account_task t2
+            document_id: string | null;
+            document_kind: string | null;
+          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params,
+            'document_id', t2.document_id,
+            'document_kind', (select d2.kind from account_document d2 where d2.id = t2.document_id)) from account_task t2
           where t2.org_id = ${org.id} and t2.status in ('open', 'changes_requested')
           order by t2.created_at, t2.id limit 1)`,
         })

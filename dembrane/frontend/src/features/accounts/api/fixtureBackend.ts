@@ -1158,6 +1158,9 @@ export async function handle(
 							);
 							return {
 								next_task_code: next?.code ?? null,
+								next_task_document_id: next?.document_id ?? null,
+								next_task_document_kind:
+									x.docs.find((d) => d.id === next?.document_id)?.kind ?? null,
 								next_task_params: next?.params ?? null,
 								next_task_title: next && !next.code ? next.title : null,
 							};

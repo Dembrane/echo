@@ -207,6 +207,9 @@ run("accounts for any organisation, and the tasks summary", () => {
       offer_reference: expect.stringMatching(/^DMB-/),
       offer_template: "subscription",
     });
+    // And the offer it is about, so the banner and its events can name the document.
+    expect(mine?.next_task_document_kind).toBe("offer");
+    expect(mine?.next_task_document_id).toEqual(expect.any(String));
     // The billing role sees Gemeente Testdorp but not the self-serve org, where it has no role.
     expect(
       K.TasksSummary.parse(
