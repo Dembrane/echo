@@ -168,7 +168,7 @@ export const DigestConnected = ({
 					{...testId("project-digest-page-drop")}
 				>
 					<Stack align="center" justify="center" mih="40vh" gap="xs">
-						<FileArrowUpIcon size={32} aria-hidden />
+						<FileArrowUpIcon size={20} aria-hidden />
 						<Text size="lg">
 							<Trans>Drop it to set up the project from it</Trans>
 						</Text>

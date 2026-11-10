@@ -31,7 +31,7 @@ export const Provenance = ({
 					variant="subtle"
 					size="compact-xs"
 					color="gray"
-					leftSection={<QuotesIcon size={14} aria-hidden />}
+					leftSection={<QuotesIcon size={16} aria-hidden />}
 					aria-describedby={snippetId}
 					styles={{ label: { textTransform: "none" } }}
 					{...testId(`project-digest-provenance-${id}`)}

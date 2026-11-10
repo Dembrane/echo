@@ -101,7 +101,7 @@ export const DigestReview = ({
 	return (
 		<Stack gap="lg" {...testId("project-digest-review")}>
 			<Stack gap="xs">
-				<Title order={3}>
+				<Title order={4}>
 					<Trans>Here is what dembrane understood</Trans>
 				</Title>
 				<Text size="sm">
