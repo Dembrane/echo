@@ -835,7 +835,7 @@ export const ParticipantConversationAudio = () => {
 		if (showVerify && showEcho) {
 			return (
 				<Trans id="participant.modal.refine.info.title.both">
-					"Verify or explore" available soon
+					"ECHO" available soon
 				</Trans>
 			);
 		}

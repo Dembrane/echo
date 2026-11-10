@@ -203,6 +203,11 @@ msgstr "Welcome back"
 #~ msgid "participant.modal.verify_prompt.description"
 #~ msgstr "You haven't verified any outcomes yet. Would you like to verify before finishing?"
 
+#. js-lingui-explicit-id
+#: src/components/participant/refine/RefineButtonLabel.tsx:13
+#~ msgid "participant.button.refine.both"
+#~ msgstr "Verify o Explore"
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} trattenuti"
@@ -220,6 +225,11 @@ msgstr "· non riuscito"
 #~ msgstr " Unsubscribe from Notifications"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:837
+msgid "participant.modal.refine.info.title.both"
+msgstr "\"ECHO\" disponibile a breve"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:851
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explore\" available soon"
@@ -227,11 +237,6 @@ msgstr "\"Explore\" available soon"
 #: src/components/popcorn/PopcornScreenSettings.tsx:143
 msgid "\"made with dembrane\" stays on the screen."
 msgstr "\"made with dembrane\" rimane sullo schermo."
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:837
-msgid "participant.modal.refine.info.title.both"
-msgstr "\"Verify o Explore\" disponibile a breve"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:844
@@ -6619,7 +6624,7 @@ msgid "participant.echo.explore"
 msgstr "Explore"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:12
+#: src/components/participant/refine/RefineButtonLabel.tsx:13
 msgid "participant.button.refine.explore"
 msgstr "Explore"
 
@@ -15731,6 +15736,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
+#: src/e2e/verifyExploreHarness.tsx:157
 #: src/components/participant/ParticipantConversationAudio.tsx:1236
 msgid "participant.button.stop"
 msgstr "Stop"
@@ -18642,7 +18648,7 @@ msgid "participant.echo.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:10
+#: src/components/participant/refine/RefineButtonLabel.tsx:11
 msgid "participant.button.refine.verify"
 msgstr "Verify"
 
@@ -18653,11 +18659,6 @@ msgstr "Verify code"
 #: src/routes/auth/Register.tsx:157
 msgid "Verify email"
 msgstr "Verifica l'email"
-
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineButtonLabel.tsx:13
-msgid "participant.button.refine.both"
-msgstr "Verify o Explore"
 
 #: src/components/release/releaseHistory.ts:534
 msgid "Verify outcomes and refine replies"
