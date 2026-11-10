@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden cambiar la base legal de este proyecto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden cambiar quién ve este proyecto."
 
@@ -632,6 +632,11 @@ msgstr "No se ha podido leer esa fecha y hora. Elige la hora de nuevo."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Esa contraseña no es correcta. Compruébala e inténtalo de nuevo."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "Esa plantilla de proyecto no existe. Vuelve a cargar la página y elige otra vez."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13

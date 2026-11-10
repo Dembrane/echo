@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Právní základ tohoto projektu mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "To, kdo tento projekt uvidí, mohou změnit pouze správci pracovního prostoru."
 
@@ -632,6 +632,11 @@ msgstr "Toto datum a čas se nepodařilo načíst. Zvolte čas znovu."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Toto heslo není správné. Zkontrolujte ho a zkuste to znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "Tato šablona projektu neexistuje. Načtěte stránku znovu a vyberte si ji ještě jednou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13

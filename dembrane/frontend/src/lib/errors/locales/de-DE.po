@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Nur Administratoren des Arbeitsbereichs können die Rechtsgrundlage dieses Projekts ändern."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "Nur Administratoren des Arbeitsbereichs können ändern, wer dieses Projekt sehen kann."
 
@@ -632,6 +632,11 @@ msgstr "Dieses Datum und diese Uhrzeit konnten nicht gelesen werden. Wählen Sie
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Dieses Passwort stimmt nicht. Überprüfen Sie es und versuchen Sie es erneut."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "Diese Projektvorlage gibt es nicht. Laden Sie die Seite neu und wählen Sie erneut."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13

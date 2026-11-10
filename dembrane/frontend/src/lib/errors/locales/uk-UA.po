@@ -434,7 +434,7 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати правову основу цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:148
 msgid "error.project.visibility_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати видимість цього проєкту."
 
@@ -632,6 +632,11 @@ msgstr "Не вдалося розпізнати цю дату й час. Виб
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Цей пароль неправильний. Перевірте його та спробуйте ще раз."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.template_unknown"
+msgstr "Такого шаблону проєкту немає. Перезавантажте сторінку й оберіть ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
