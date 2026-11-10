@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
+	Collapse,
 	Container,
 	Group,
 	Paper,
@@ -14,14 +15,24 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
+import { projectLanguageForLocale } from "@/components/project/projectLanguage";
+import {
+	isTemplateKey,
+	type TemplateKey,
+	templateName,
+	useProjectTemplates,
+} from "@/components/project/templates/projectTemplates";
+import { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
@@ -47,13 +58,9 @@ type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
 
-// The wizard's steps, in order, as analytics names them.
-const CREATE_STEPS: readonly ProjectCreateStep[] = [
-	"name",
-	"key_terms",
-	"access",
-	"review",
-];
+// The wizard's steps, in order, as analytics names them (flow 2). "More options" is not a
+// step: opening it is counted as "more_options".
+const CREATE_STEPS: readonly ProjectCreateStep[] = ["template", "name"];
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -73,31 +80,36 @@ async function setVisibility(projectId: string, visibility: Access) {
 }
 
 /**
- * Project creation wizard — mirrors the workspace creation wizard
- * (CreateWorkspaceRoute) so creating a project feels like creating a
- * workspace: a few deliberate steps instead of an instant POST.
+ * Creating a project: what the host is going to do, then a name. Two choices are enough;
+ * the template's preset is applied by the server in the creating transaction.
  *
- * Four steps: Name & Context → Key terms → Access → Review.
+ * Step 1 "What are you going to do?": one card per template (TemplatePicker) and a quiet
+ * "Start blank". A ?template=<key> link (workspace home's picker) arrives on step 2 with
+ * that template chosen.
  *
- * Key terms get their own step because they decide how names are spelt in
- * every transcript, and hosts only found them under advanced settings after
- * the first conversations were already transcribed. The step is skippable.
+ * Step 2 "Name": name and the optional project context, then Create. Key terms, access,
+ * the assistant switch and the review sit behind "More options", with the defaults they
+ * always had: no key terms, open to the workspace, assistant off.
  *
- * Access step surfaces the workspace's current tier inline so the
- * creator can see what that tier includes before picking Private
- * (which requires Innovator+).
+ * After creating: project home, the upload page for a template that lands there, or the
+ * assistant chat when its switch is on.
  */
 export const CreateProjectRoute = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const { workspace, workspaceId } = useWorkspace();
 	const { language } = useLanguage();
+	const [searchParams] = useSearchParams();
+	const linked = searchParams.get("template");
+	const linkedTemplate = isTemplateKey(linked) ? linked : null;
 
-	const [step, setStep] = useState(0);
+	const [step, setStep] = useState(linkedTemplate ? 1 : 0);
+	const [template, setTemplate] = useState<TemplateKey | null>(linkedTemplate);
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
+	const [moreOpened, moreHandlers] = useDisclosure(false);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	// Availability is not default-ness. The assistant setup starts an agentic
 	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it.
@@ -106,11 +118,14 @@ export const CreateProjectRoute = () => {
 	const [setupWithAssistant, setSetupWithAssistant] = useState(
 		AGENTIC_CHAT_IS_DEFAULT,
 	);
+	const templates = useProjectTemplates();
+	const landing =
+		templates.data?.find((tpl) => tpl.key === template)?.landing ?? "home";
 
 	useDocumentTitle(t`Create project | dembrane`);
 
 	// Funnel: each step shown, and the step a host left on without creating.
-	const createStep = CREATE_STEPS[step] ?? "review";
+	const createStep = CREATE_STEPS[step] ?? "name";
 	const lastStepRef = useRef<ProjectCreateStep>(createStep);
 	const createdRef = useRef(false);
 	useEffect(() => {
@@ -136,7 +151,7 @@ export const CreateProjectRoute = () => {
 	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
 	const cap = useProjectCapStatus(workspace);
 	const capDecided = useRef(false);
-	const wizardStarted = step > 0 || name.trim() !== "";
+	const wizardStarted = step > 0 || template !== null || name.trim() !== "";
 	const [atProjectCap, setAtProjectCap] = useState(false);
 	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
 	useEffect(() => {
@@ -153,26 +168,39 @@ export const CreateProjectRoute = () => {
 	const createProject = useCreateWorkspaceProject();
 	const updateProject = useUpdateProjectByIdMutation();
 
+	const chooseTemplate = (key: TemplateKey) => {
+		setTemplate(key);
+		track("project_template_selected", {
+			surface: "create",
+			template_key: key,
+		});
+		setStep(1);
+	};
+
+	const openMore = () => {
+		if (!moreOpened) {
+			lastStepRef.current = "more_options";
+			track("project_create_step_viewed", { step: "more_options" });
+		}
+		moreHandlers.toggle();
+	};
+
 	const submit = useMutation({
 		mutationFn: async () => {
-			const lang =
-				language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en";
-
 			const project = await createProject.mutateAsync({
-				language: lang,
+				language: projectLanguageForLocale(language),
 				name: name.trim(),
+				templateKey: template ?? "blank",
 			});
 
-			await updateProject.mutateAsync({
-				id: project.id,
-				payload: {
-					context: context.trim() || null,
-					default_conversation_ask_for_participant_name: true,
-					default_conversation_transcript_prompt: keyTerms || null,
-					default_conversation_tutorial_slug: "None",
-					image_generation_model: "MODEST",
-				},
-			});
+			// Only what the host typed: the template wrote every other setting.
+			const typed = {
+				...(context.trim() && { context: context.trim() }),
+				...(keyTerms && { default_conversation_transcript_prompt: keyTerms }),
+			};
+			if (Object.keys(typed).length) {
+				await updateProject.mutateAsync({ id: project.id, payload: typed });
+			}
 
 			if (access === "private" && privateAvailable) {
 				await setVisibility(project.id, "private");
@@ -191,7 +219,10 @@ export const CreateProjectRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			createdRef.current = true;
-			track("project_created", { project_id: project.id });
+			track("project_created", {
+				project_id: project.id,
+				template_key: template ?? "blank",
+			});
 			const terms = keyTermCount(keyTerms);
 			if (terms > 0) {
 				track("key_terms_updated", {
@@ -201,17 +232,20 @@ export const CreateProjectRoute = () => {
 				});
 			}
 			toast.success(t`Project created`);
+			const base = `/w/${workspaceId}/projects/${project.id}`;
 			if (ENABLE_AGENTIC_CHAT && setupWithAssistant) {
 				// Ticking the toggle is the opt-in, so name the mode explicitly
 				// rather than letting the Ask screen assume agentic.
-				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
+				navigate(`${base}/chats/new`, {
 					state: {
 						initialMessage: SETUP_INITIAL_MESSAGE,
 						preferMode: "agentic",
 					},
 				});
+			} else if (landing === "upload") {
+				navigate(`${base}/upload`);
 			} else {
-				navigate(`/w/${workspaceId}/projects/${project.id}/home`);
+				navigate(`${base}/home`);
 			}
 		},
 	});
@@ -270,11 +304,11 @@ export const CreateProjectRoute = () => {
 		);
 	}
 
-	const canAdvanceFromName = name.trim().length > 0;
-	const canCreate = canAdvanceFromName;
+	const canCreate = name.trim().length > 0;
+	const templateLabel = templateName(template ?? "blank");
 
 	return (
-		<Container size="sm" py="xl" px="lg">
+		<Container size="md" py="xl" px="lg">
 			<Stack gap="xl">
 				<Stack gap="xs">
 					<Title order={2}>
@@ -294,8 +328,40 @@ export const CreateProjectRoute = () => {
 					}}
 					size="sm"
 				>
+					<Stepper.Step label={t`Template`}>
+						<Stack gap="lg" mt="md">
+							<TemplatePickerConnected
+								value={template}
+								onChange={setTemplate}
+								onStartBlank={() => chooseTemplate("blank")}
+							/>
+							<Group gap="sm">
+								<Button
+									variant="filled"
+									size="sm"
+									disabled={!template}
+									onClick={() => template && chooseTemplate(template)}
+									data-testid="create-project-template-continue"
+								>
+									<Trans>Continue</Trans>
+								</Button>
+								<Button
+									variant="subtle"
+									color="gray"
+									size="sm"
+									onClick={handleCancel}
+								>
+									<Trans>Cancel</Trans>
+								</Button>
+							</Group>
+						</Stack>
+					</Stepper.Step>
+
 					<Stepper.Step label={t`Name`}>
 						<Stack gap="md" mt="md">
+							<Text size="sm" data-testid="create-project-chosen-template">
+								<Trans>Starting from: {templateLabel}</Trans>
+							</Text>
 							<TextInput
 								autoFocus
 								label={t`Project name`}
@@ -304,9 +370,9 @@ export const CreateProjectRoute = () => {
 								value={name}
 								onChange={(e) => setName(e.currentTarget.value)}
 								onKeyDown={(e) => {
-									if (e.key === "Enter" && canAdvanceFromName) {
+									if (e.key === "Enter" && canCreate && !submit.isPending) {
 										e.preventDefault();
-										setStep(1);
+										submit.mutate();
 									}
 								}}
 							/>
@@ -316,199 +382,177 @@ export const CreateProjectRoute = () => {
 								onChange={(e) => setContext(e.currentTarget.value)}
 							/>
 
-							{ENABLE_AGENTIC_CHAT ? (
-								<Switch
-									checked={setupWithAssistant}
-									onChange={(event) =>
-										setSetupWithAssistant(event.currentTarget.checked)
+							<Stack gap="xs">
+								<Button
+									variant="subtle"
+									size="sm"
+									w="fit-content"
+									leftSection={
+										moreOpened ? (
+											<CaretDownIcon size={16} />
+										) : (
+											<CaretRightIcon size={16} />
+										)
 									}
-									label={t`Set up with the assistant after creating`}
-									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
-								/>
-							) : null}
-						</Stack>
-					</Stepper.Step>
+									aria-expanded={moreOpened}
+									aria-controls="create-project-more-options"
+									onClick={openMore}
+									data-testid="create-project-more-options-toggle"
+								>
+									<Trans>More options</Trans>
+								</Button>
+								<Collapse in={moreOpened}>
+									<Stack
+										gap="lg"
+										id="create-project-more-options"
+										data-testid="create-project-more-options"
+									>
+										<Stack gap="xs">
+											<Text size="md" component="h3" m={0}>
+												<Trans>Key terms</Trans>
+											</Text>
+											<KeyTermsInput
+												value={keyTerms}
+												onChange={setKeyTerms}
+												inputTestId="create-project-key-terms-input"
+											/>
+										</Stack>
 
-					<Stepper.Step label={t`Key terms`}>
-						<Stack gap="md" mt="md">
-							<KeyTermsInput
-								autoFocus
-								value={keyTerms}
-								onChange={setKeyTerms}
-								inputTestId="create-project-key-terms-input"
-							/>
-							<Text size="sm">
-								<Trans>You can skip this and add them later.</Trans>
-							</Text>
-						</Stack>
-					</Stepper.Step>
-
-					<Stepper.Step label={t`Access`}>
-						<Stack gap="md" mt="md">
-							<Radio.Group
-								label={t`Who can see this project?`}
-								description={t`You can change this later in project settings.`}
-								value={access}
-								onChange={(v) => setAccess(v as Access)}
-							>
-								<Stack gap="sm" mt="sm">
-									<Radio
-										value="workspace"
-										label={
-											<Stack gap="xs">
-												<Text size="sm">
-													<Trans>Open to the workspace</Trans>
-												</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>
-														Everyone in {workspace.name} can find and open this
-														project.
-													</Trans>
-												</Text>
+										<Radio.Group
+											label={t`Who can see this project?`}
+											description={t`You can change this later in project settings.`}
+											value={access}
+											onChange={(v) => setAccess(v as Access)}
+										>
+											<Stack gap="sm" mt="sm">
+												<Radio
+													value="workspace"
+													label={
+														<Stack gap="xs">
+															<Text size="sm">
+																<Trans>Open to the workspace</Trans>
+															</Text>
+															<Text size="xs" c="dimmed">
+																<Trans>
+																	Everyone in {workspace.name} can find and open
+																	this project.
+																</Trans>
+															</Text>
+														</Stack>
+													}
+												/>
+												<Radio
+													value="private"
+													disabled={!privateAvailable}
+													label={
+														<Stack gap="xs">
+															<Text
+																size="sm"
+																c={privateAvailable ? undefined : "dimmed"}
+															>
+																<Trans>Private</Trans>
+																{!privateAvailable && (
+																	<Text span size="xs" c="dimmed">
+																		{" "}
+																		(<Trans>Innovator or higher</Trans>)
+																	</Text>
+																)}
+															</Text>
+															<Text size="xs" c="dimmed">
+																<Trans>
+																	Only workspace admins and the people you
+																	invite can open this project.
+																</Trans>
+															</Text>
+														</Stack>
+													}
+												/>
 											</Stack>
-										}
-									/>
-									<Radio
-										value="private"
-										disabled={!privateAvailable}
-										label={
-											<Stack gap="xs">
-												<Text
-													size="sm"
-													c={privateAvailable ? undefined : "dimmed"}
+										</Radio.Group>
+
+										{ENABLE_AGENTIC_CHAT ? (
+											<Switch
+												checked={setupWithAssistant}
+												onChange={(event) =>
+													setSetupWithAssistant(event.currentTarget.checked)
+												}
+												label={t`Set up with the assistant after creating`}
+												description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
+											/>
+										) : null}
+
+										<Paper withBorder p="md">
+											<Stack gap="sm" data-testid="create-project-review">
+												<ReviewRow label={t`Template`}>
+													{templateLabel}
+												</ReviewRow>
+												<ReviewRow label={t`Name`}>
+													{name.trim() || t`(missing)`}
+												</ReviewRow>
+												<ReviewRow
+													label={t`Project context`}
+													muted={!context.trim()}
 												>
-													<Trans>Private</Trans>
-													{!privateAvailable && (
-														<Text span size="xs" c="dimmed">
-															{" "}
-															(<Trans>Innovator or higher</Trans>)
-														</Text>
+													{context.trim() || t`(none)`}
+												</ReviewRow>
+												<ReviewRow label={t`Key terms`} muted={!keyTerms}>
+													{keyTerms || t`(none)`}
+												</ReviewRow>
+												<ReviewRow label={t`Workspace`}>
+													{workspace.name}
+												</ReviewRow>
+												<ReviewRow label={t`Access`}>
+													{access === "workspace" ? (
+														<Trans>Open to the workspace</Trans>
+													) : (
+														<Trans>Private</Trans>
 													)}
-												</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>
-														Only workspace admins and the people you invite can
-														open this project.
-													</Trans>
-												</Text>
+												</ReviewRow>
+												{ENABLE_AGENTIC_CHAT ? (
+													<ReviewRow label={t`Setup`}>
+														{setupWithAssistant ? (
+															<Trans>Start in assistant chat</Trans>
+														) : landing === "upload" ? (
+															<Trans>Go to the upload page</Trans>
+														) : (
+															<Trans>Go to project home</Trans>
+														)}
+													</ReviewRow>
+												) : null}
+												<ReviewRow label={t`Tier`}>
+													<span style={{ textTransform: "capitalize" }}>
+														{tier}
+													</span>
+												</ReviewRow>
 											</Stack>
-										}
-									/>
-								</Stack>
-							</Radio.Group>
-						</Stack>
-					</Stepper.Step>
+										</Paper>
+									</Stack>
+								</Collapse>
+							</Stack>
 
-					<Stepper.Step label={t`Review`}>
-						<Stack gap="md" mt="md">
-							<Paper withBorder p="md">
-								<Stack gap="sm">
-									<Group gap="md" align="baseline">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Name</Trans>
-										</Text>
-										<Text size="sm">{name.trim() || t`(missing)`}</Text>
-									</Group>
-									<Group gap="md" align="flex-start" wrap="nowrap">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Project context</Trans>
-										</Text>
-										<Text
-											size="sm"
-											c={context.trim() ? undefined : "dimmed"}
-											style={{ flex: 1, whiteSpace: "pre-wrap" }}
-										>
-											{context.trim() || t`(none)`}
-										</Text>
-									</Group>
-									<Group gap="md" align="flex-start" wrap="nowrap">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Key terms</Trans>
-										</Text>
-										<Text
-											size="sm"
-											c={keyTerms ? undefined : "dimmed"}
-											style={{ flex: 1 }}
-										>
-											{keyTerms || t`(none)`}
-										</Text>
-									</Group>
-									<Group gap="md" align="baseline">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Workspace</Trans>
-										</Text>
-										<Text size="sm">{workspace.name}</Text>
-									</Group>
-									<Group gap="md" align="baseline">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Access</Trans>
-										</Text>
-										<Text size="sm">
-											{access === "workspace" ? (
-												<Trans>Open to the workspace</Trans>
-											) : (
-												<Trans>Private</Trans>
-											)}
-										</Text>
-									</Group>
-									{ENABLE_AGENTIC_CHAT ? (
-										<Group gap="md" align="baseline">
-											<Text size="xs" c="dimmed" w={100}>
-												<Trans>Setup</Trans>
-											</Text>
-											<Text size="sm">
-												{setupWithAssistant ? (
-													<Trans>Start in assistant chat</Trans>
-												) : (
-													<Trans>Go to project home</Trans>
-												)}
-											</Text>
-										</Group>
-									) : null}
-									<Group gap="md" align="baseline">
-										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Tier</Trans>
-										</Text>
-										<Text size="sm" style={{ textTransform: "capitalize" }}>
-											{tier}
-										</Text>
-									</Group>
-								</Stack>
-							</Paper>
+							<Group gap="sm" mt="sm">
+								<Button
+									variant="filled"
+									size="sm"
+									loading={submit.isPending}
+									disabled={!canCreate}
+									onClick={() => submit.mutate()}
+									data-testid="create-project-submit"
+								>
+									<Trans>Create project</Trans>
+								</Button>
+								<Button
+									variant="subtle"
+									color="gray"
+									size="sm"
+									onClick={() => setStep(0)}
+								>
+									<Trans>Back</Trans>
+								</Button>
+							</Group>
 						</Stack>
 					</Stepper.Step>
 				</Stepper>
-
-				<Group gap="sm" mt="sm">
-					{step < 3 ? (
-						<Button
-							variant="filled"
-							size="sm"
-							disabled={step === 0 && !canAdvanceFromName}
-							onClick={() => setStep(step + 1)}
-						>
-							<Trans>Continue</Trans>
-						</Button>
-					) : (
-						<Button
-							variant="filled"
-							size="sm"
-							loading={submit.isPending}
-							disabled={!canCreate}
-							onClick={() => submit.mutate()}
-						>
-							<Trans>Create project</Trans>
-						</Button>
-					)}
-					<Button
-						variant="subtle"
-						color="gray"
-						size="sm"
-						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
-					>
-						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
-					</Button>
-				</Group>
 			</Stack>
 			<UpgradeModal
 				opened={upgradeOpened}
@@ -523,3 +567,26 @@ export const CreateProjectRoute = () => {
 		</Container>
 	);
 };
+
+const ReviewRow = ({
+	label,
+	muted = false,
+	children,
+}: {
+	label: string;
+	muted?: boolean;
+	children: ReactNode;
+}) => (
+	<Group gap="md" align="flex-start" wrap="nowrap">
+		<Text size="xs" c="dimmed" w={100} style={{ flexShrink: 0 }}>
+			{label}
+		</Text>
+		<Text
+			size="sm"
+			c={muted ? "dimmed" : undefined}
+			style={{ flex: 1, whiteSpace: "pre-wrap" }}
+		>
+			{children}
+		</Text>
+	</Group>
+);

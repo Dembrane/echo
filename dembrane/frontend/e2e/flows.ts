@@ -312,7 +312,24 @@ export const flows: Record<string, Flow> = {
 		params: project,
 		variants: [...EMPTY],
 	},
-	"/w/:workspaceId/projects/new": { params: { workspaceId: "$workspace" } },
+	"/w/:workspaceId/projects/new": {
+		params: { workspaceId: "$workspace" },
+		// The template picker, then the name step with "More options" open (ECHO-1042).
+		states: [
+			{
+				clicks: ["template-card-event", "create-project-template-continue"],
+				name: "name",
+			},
+			{
+				clicks: [
+					"template-card-event",
+					"create-project-template-continue",
+					"create-project-more-options-toggle",
+				],
+				name: "more options",
+			},
+		],
+	},
 	"/w/:workspaceId/settings/*": {
 		params: {
 			"*": ["general", "members", "training", "billing", "danger"],

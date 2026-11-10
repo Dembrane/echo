@@ -15,17 +15,31 @@ describe("track", () => {
 	beforeEach(() => capture.mockClear());
 
 	it("sends the event with its properties and the flow version", () => {
-		track("project_created", { project_id: "p1" });
+		track("project_created", { project_id: "p1", template_key: "event" });
 		expect(capture).toHaveBeenCalledWith("project_created", {
 			flow_version: FLOW_VERSION,
 			project_id: "p1",
+			template_key: "event",
 		});
 	});
 
 	it("sends events without properties", () => {
 		track("project_create_started");
 		expect(capture).toHaveBeenCalledWith("project_create_started", {
-			flow_version: 1,
+			flow_version: 2,
+		});
+	});
+
+	it("tells the template flow (2) apart from the four-step wizard (1)", () => {
+		expect(FLOW_VERSION).toBe(2);
+		track("project_template_selected", {
+			surface: "create",
+			template_key: "series",
+		});
+		expect(capture).toHaveBeenCalledWith("project_template_selected", {
+			flow_version: 2,
+			surface: "create",
+			template_key: "series",
 		});
 	});
 

@@ -140,6 +140,11 @@ export const project = {
 		message:
 			"Sharing a private project with people needs the {tier} plan or higher.",
 	}),
+	"project.template_unknown": msg({
+		id: "error.project.template_unknown",
+		message:
+			"That project template does not exist. Reload the page and pick one again.",
+	}),
 	"project.visibility_admin_only": msg({
 		id: "error.project.visibility_admin_only",
 		message: "Only workspace admins can change who sees this project.",
