@@ -5608,6 +5608,10 @@ msgstr "Головна dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane не несе відповідальності за дії третіх сторін із цим вмістом."
 
+#: src/components/project/ProjectContextInput.tsx:49
+msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
+msgstr "dembrane читає перші 4000 символів у кожній відповіді, тож постав головне на початок: людей, місця і питання."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "Доступ команди dembrane завершився автоматично"
@@ -9326,8 +9330,8 @@ msgstr "Logo updated"
 #~ msgstr "Logout"
 
 #: src/components/project/ProjectContextInput.tsx:44
-msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
-msgstr "Довгий контекст читається під час кожної відповіді, тож залиш головне: людей, місця й питання."
+#~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+#~ msgstr "Довгий контекст читається під час кожної відповіді, тож залиш головне: людей, місця й питання."
 
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
@@ -12506,7 +12510,7 @@ msgid "project chats"
 msgstr "чати проєкту"
 
 #: src/routes/project/CreateProjectRoute.tsx:576
-#: src/components/project/ProjectContextInput.tsx:30
+#: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -14202,7 +14206,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Висловіть це своїми словами. Напишіть або натисніть запис і говоріть."
 
-#: src/components/project/ProjectContextInput.tsx:31
+#: src/components/project/ProjectContextInput.tsx:36
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Розкажіть, про що сесія, хто бере участь і де; можна вставити порядок денний або запрошення. dembrane використовує це, щоб відповіді в чаті, відповіді учасникам і Popcorn трималися вашого питання, і щоб пропонувати ключові терміни."
 
@@ -19127,7 +19131,7 @@ msgstr "Що надсилається"
 msgid "What is at stake here"
 msgstr "Що тут на кону"
 
-#: src/components/project/ProjectContextInput.tsx:32
+#: src/components/project/ProjectContextInput.tsx:37
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "Про що вона, хто бере участь і де? Можна також вставити порядок денний або запрошення."
 

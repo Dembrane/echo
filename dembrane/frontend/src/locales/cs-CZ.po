@@ -5608,6 +5608,10 @@ msgstr "Domů na dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane neodpovídá za to, jak s tímto obsahem naloží třetí strana."
 
+#: src/components/project/ProjectContextInput.tsx:49
+msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
+msgstr "dembrane při každé odpovědi čte prvních 4 000 znaků, takže dej to podstatné nahoru: lidi, místa a otázku."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "Přístup týmu dembrane byl automaticky ukončen"
@@ -9326,8 +9330,8 @@ msgstr "Logo updated"
 #~ msgstr "Logout"
 
 #: src/components/project/ProjectContextInput.tsx:44
-msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
-msgstr "Dlouhý kontext se čte při každé odpovědi, tak nech to podstatné: lidi, místa a otázku."
+#~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+#~ msgstr "Dlouhý kontext se čte při každé odpovědi, tak nech to podstatné: lidi, místa a otázku."
 
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
@@ -12506,7 +12510,7 @@ msgid "project chats"
 msgstr "chaty projektu"
 
 #: src/routes/project/CreateProjectRoute.tsx:576
-#: src/components/project/ProjectContextInput.tsx:30
+#: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -14202,7 +14206,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Řekněte to vlastními slovy. Napište to, nebo stiskněte nahrávání a mluvte."
 
-#: src/components/project/ProjectContextInput.tsx:31
+#: src/components/project/ProjectContextInput.tsx:36
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Napište, o čem setkání je, kdo se účastní a kde; můžete vložit program nebo pozvánku. dembrane podle toho drží odpovědi v chatu, odpovědi účastníkům a Popcorn u vaší otázky a navrhuje klíčové výrazy."
 
@@ -19125,7 +19129,7 @@ msgstr "Co se odešle"
 msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
-#: src/components/project/ProjectContextInput.tsx:32
+#: src/components/project/ProjectContextInput.tsx:37
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "O čem to je, kdo se účastní a kde? Můžete také vložit program nebo pozvánku."
 

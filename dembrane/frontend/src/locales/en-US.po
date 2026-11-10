@@ -5603,6 +5603,10 @@ msgstr "dembrane home"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane is not responsible for what a third party does with that content."
 
+#: src/components/project/ProjectContextInput.tsx:49
+msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
+msgstr "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "dembrane staff access ended automatically"
@@ -9321,8 +9325,8 @@ msgstr "Logo updated"
 #~ msgstr "Logout"
 
 #: src/components/project/ProjectContextInput.tsx:44
-msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
-msgstr "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+#~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+#~ msgstr "Long context is read on every answer, so keep the essentials: the people, the places and the question."
 
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
@@ -12501,7 +12505,7 @@ msgid "project chats"
 msgstr "project chats"
 
 #: src/routes/project/CreateProjectRoute.tsx:576
-#: src/components/project/ProjectContextInput.tsx:30
+#: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -14197,7 +14201,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Say it in your own words. Type, or press record and talk."
 
-#: src/components/project/ProjectContextInput.tsx:31
+#: src/components/project/ProjectContextInput.tsx:36
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 
@@ -19120,7 +19124,7 @@ msgstr "What gets sent"
 msgid "What is at stake here"
 msgstr "What is at stake here"
 
-#: src/components/project/ProjectContextInput.tsx:32
+#: src/components/project/ProjectContextInput.tsx:37
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 

@@ -324,11 +324,11 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		renderCreate();
 		chooseTemplate("interviews");
 		const field = screen.getByLabelText("Project context");
-		fireEvent.change(field, { target: { value: "x".repeat(2000) } });
+		fireEvent.change(field, { target: { value: "x".repeat(4000) } });
 		expect(screen.queryByTestId("project-context-long-note")).toBeNull();
-		fireEvent.change(field, { target: { value: "x".repeat(2001) } });
+		fireEvent.change(field, { target: { value: "x".repeat(4001) } });
 		expect(screen.getByTestId("project-context-long-note")).toBeTruthy();
-		expect((field as HTMLTextAreaElement).value).toHaveLength(2001);
+		expect((field as HTMLTextAreaElement).value).toHaveLength(4001);
 	});
 
 	it("counts the new steps", () => {

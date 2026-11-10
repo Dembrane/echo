@@ -1,6 +1,6 @@
 import { type ProjectAccess, resolveProject, resolveWorkspace } from "@dembrane/access";
 import { conversationForBff, enrich } from "@dembrane/conversations";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import { BadRequestError, contextForPrompt, ForbiddenError, NotFoundError } from "@dembrane/core";
 import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
 import { enqueueSamMessage } from "@dembrane/webhooks";
@@ -87,7 +87,8 @@ async function projectOut(d: ToolDeps, row: Row, orgId: string | null) {
     organisation_id: orgId,
     organisation_name: organisationName,
     language: s(row.language),
-    context: s(row.context),
+    // An outside agent's prompt reads it too: the same budget as dembrane's own prompts.
+    context: contextForPrompt(s(row.context)),
     is_conversation_allowed: row.is_conversation_allowed ?? null,
     created_at: s(row.created_at),
     updated_at: s(row.updated_at),

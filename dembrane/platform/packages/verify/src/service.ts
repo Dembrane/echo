@@ -4,7 +4,14 @@ import {
   PARTICIPANT_TOKEN_HEADER,
   requirePortalAi,
 } from "@dembrane/conversations";
-import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
+import {
+  BadRequestError,
+  contextForPrompt,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  StatusError,
+} from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
 import { speechHint } from "@dembrane/llm";
@@ -425,7 +432,7 @@ function referenceVars(project: VerifyProject) {
   return {
     language: project.language || "en",
     pii_redaction: Boolean(project.anonymize_transcripts),
-    project_context: project.context?.trim() ?? "",
+    project_context: contextForPrompt(project.context)?.trim() ?? "",
     key_terms: keyTermList(project.default_conversation_transcript_prompt),
     audience: audienceOf(project.template_key),
   };

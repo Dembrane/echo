@@ -7,14 +7,19 @@ import { useFocusOnHash } from "@/hooks/useFocusOnHash";
 
 export const PROJECT_CONTEXT_HASH = "project-context";
 
-/** Past this many characters the field says to keep the essentials (ECHO-1053). */
-export const LONG_CONTEXT_CHARS = 2000;
+/**
+ * Past this many characters the field says only the start is read (ECHO-1053). The same
+ * number as the platform's prompt budget (PROJECT_CONTEXT_BUDGET in @dembrane/core,
+ * ECHO-1055): every prompt reads at most this much of the context.
+ */
+export const LONG_CONTEXT_CHARS = 4000;
 
 /**
  * The project context field, with the one explanation of what it does.
  * The create wizard and project settings both render this, so the copy
  * lives with the control instead of being repeated per screen. A long
- * context gets a quiet note under it; nothing is cut.
+ * context gets a quiet note under it; the stored text is never cut, the
+ * prompts read its first LONG_CONTEXT_CHARS characters.
  */
 export const ProjectContextInput = forwardRef<
 	HTMLTextAreaElement,
@@ -42,8 +47,9 @@ export const ProjectContextInput = forwardRef<
 					data-testid="project-context-long-note"
 				>
 					<Trans>
-						Long context is read on every answer, so keep the essentials: the
-						people, the places and the question.
+						dembrane reads the first 4,000 characters on every answer, so keep
+						the essentials near the top: the people, the places and the
+						question.
 					</Trans>
 				</Text>
 			)}
