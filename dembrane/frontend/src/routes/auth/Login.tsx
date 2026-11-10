@@ -725,14 +725,18 @@ export const LoginRoute = () => {
 					) : (
 						!otpRequired && (
 							<Stack gap="xs" align="center">
-								<Button
-									variant="subtle"
-									color="gray"
-									onClick={switchToCode}
-									{...testId("auth-login-code-mode")}
-								>
-									<Trans>Email me a sign-in code instead</Trans>
-								</Button>
+								{/* The blocked notice offers the code itself, as every notice
+								    carries its own way out; one offer on the page is enough. */}
+								{!blocked && (
+									<Button
+										variant="subtle"
+										color="gray"
+										onClick={switchToCode}
+										{...testId("auth-login-code-mode")}
+									>
+										<Trans>Email me a sign-in code instead</Trans>
+									</Button>
+								)}
 								<Button
 									variant="subtle"
 									color="gray"

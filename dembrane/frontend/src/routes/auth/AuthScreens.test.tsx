@@ -217,6 +217,10 @@ it("a login blocked before dembrane says so and offers the emailed code", async 
 		{ cause: "blocked", error_code: "HTTP_403", http_status: 403 },
 	]);
 	expect(events("login_blocked_shown")).toHaveLength(1);
+	// The notice carries the way out, so the link under Log in steps aside meanwhile.
+	expect(screen.getAllByText("Email me a sign-in code instead")).toHaveLength(1);
+	expect(screen.queryByTestId("auth-login-code-mode")).toBeNull();
+	expect(screen.getByTestId("auth-login-forgot-password-link")).toBeTruthy();
 	fireEvent.click(screen.getByTestId("auth-login-blocked-use-code"));
 	const email = await screen.findByTestId("auth-login-code-email-input");
 	expect((email as HTMLInputElement).value).toBe("blocked@example.com");
