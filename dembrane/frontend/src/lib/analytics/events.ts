@@ -8,13 +8,18 @@ import posthog from "posthog-js";
  *    terms, access, review).
  * 2 (ECHO-1042): a self-serve host goes from signup to the template picker; the wizard is
  *    template, then name, with key terms, access and review behind "More options".
+ * 3 (ECHO-1053): templates by purpose. The picker shows the most used cards first, with
+ *    filters for the rest and "Upload recordings" and "Start blank" as links; the name step
+ *    says what the template sets up. The steps are flow 2's.
  */
-export const FLOW_VERSION = 2;
+export const FLOW_VERSION = 3;
 
 export type OnboardingStep = "org" | "invite" | "questions";
-/** Flow 2's steps; flow 1 also sent "key_terms", "access" and "review". */
+/** Flow 2's and 3's steps; flow 1 also sent "key_terms", "access" and "review". */
 export type ProjectCreateStep = "template" | "name" | "more_options";
 export type TemplateSurface = "create" | "workspace_home";
+/** A picker filter (ECHO-1053): a verb, the setup, or "Show all". */
+export type TemplateFilterName = "verb" | "setup" | "show_all";
 export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
 export type SetupSuggestionSurface = "wizard" | "portal_editor";
 export type PortalShareMethod = "qr" | "copy" | "download";
@@ -57,9 +62,24 @@ export interface AnalyticsEvents {
 	project_create_step_viewed: { step: ProjectCreateStep };
 	project_create_abandoned: { step: ProjectCreateStep };
 	project_created: { project_id: string; template_key: string };
-	// A host committed to a template: continued with a card, started blank, or picked one
-	// on workspace home. Not sent for each card the arrow keys pass over.
-	project_template_selected: { template_key: string; surface: TemplateSurface };
+	// A host committed to a template: continued with a card, started blank or uploading, or
+	// picked one on workspace home. Not sent for each card the arrow keys pass over. Flow 3
+	// adds the card's verbs and setup, whether it was in the first view, and the filters on
+	// ("verb:<verb>", "setup:<setup>", "show_all"): keys only, never free text.
+	project_template_selected: {
+		template_key: string;
+		surface: TemplateSurface;
+		verbs: string[];
+		setup: string | null;
+		featured: boolean;
+		filters_active: string[];
+	};
+	// A picker filter changed: its new value is a verb, a setup, "none", "on" or "off".
+	project_template_filter_changed: {
+		filter: TemplateFilterName;
+		value: string;
+		surface?: TemplateSurface;
+	};
 
 	// Setting up a project.
 	key_terms_updated: {

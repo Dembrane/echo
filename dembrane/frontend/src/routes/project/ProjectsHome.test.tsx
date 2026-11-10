@@ -70,6 +70,12 @@ vi.mock("@/components/project/templates/projectTemplates", async (orig) => ({
 	>()),
 	useProjectTemplates: () => ({ data: TEMPLATE_SUMMARIES, isError: false }),
 }));
+vi.mock("@/components/project/templates/i18n", () => ({
+	useTemplatesCatalog: () => true,
+}));
+vi.mock("@/hooks/useLanguage", () => ({
+	useLanguage: () => ({ language: "en-US" }),
+}));
 vi.mock("@/lib/analytics/events", async (orig) => ({
 	...(await orig<typeof import("@/lib/analytics/events")>()),
 	track: tracked,
@@ -119,34 +125,48 @@ describe("workspace home for a host with no project of their own", () => {
 	it.each([
 		["no projects at all", []],
 		["only the sample", [sample]],
-	])("with %s, the template picker is the one primary action", (_, list) => {
-		projects.current = list;
-		renderHome();
-		expect(screen.getByTestId("workspace-home-start")).toBeTruthy();
-		expect(screen.getByTestId("template-picker")).toBeTruthy();
-		// One create button, waiting for a card.
-		const create = screen.getAllByTestId("project-home-create-button");
-		expect(create).toHaveLength(1);
-		expect(create[0]).toHaveProperty("disabled", true);
-		expect(screen.getByText(/Your projects will appear here/)).toBeTruthy();
-	});
+	])(
+		"with %s, the template picker is the one primary action",
+		async (_, list) => {
+			projects.current = list;
+			renderHome();
+			expect(screen.getByTestId("workspace-home-start")).toBeTruthy();
+			// Loaded on its own, only here.
+			expect(await screen.findByTestId("template-picker")).toBeTruthy();
+			// One create button, waiting for a card.
+			const create = screen.getAllByTestId("project-home-create-button");
+			expect(create).toHaveLength(1);
+			expect(create[0]).toHaveProperty("disabled", true);
+			expect(screen.getByText(/Your projects will appear here/)).toBeTruthy();
+		},
+	);
 
-	it("continues to the name step with the chosen template", () => {
+	it("continues to the name step with the chosen template", async () => {
 		projects.current = [sample];
 		renderHome();
-		fireEvent.click(screen.getByTestId("template-card-event"));
+		fireEvent.click(
+			await screen.findByTestId("template-card-resident_evening"),
+		);
 		fireEvent.click(screen.getByTestId("project-home-create-button"));
-		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=event");
+		expect(navigate).toHaveBeenCalledWith(
+			"/w/w1/projects/new?template=resident_evening",
+		);
 		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
+			featured: true,
+			filters_active: [],
+			setup: "many_groups",
 			surface: "workspace_home",
-			template_key: "event",
+			template_key: "resident_evening",
+			verbs: ["understand", "decide"],
 		});
 	});
 
-	it("starts blank from the quiet option", () => {
+	it("starts blank or uploads from the quiet links", async () => {
 		renderHome();
-		fireEvent.click(screen.getByTestId("workspace-home-start-blank"));
+		fireEvent.click(await screen.findByTestId("template-picker-start-blank"));
 		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=blank");
+		fireEvent.click(screen.getByTestId("template-picker-upload"));
+		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=upload");
 	});
 
 	it("shows the list as before once the host has a project", () => {

@@ -13,6 +13,8 @@ import { Text } from "@mantine/core";
 export const FIELD_LABELS: Record<string, () => string> = {
 	anonymize_transcripts: () => t`Anonymise transcripts`,
 	context: () => t`Project context`,
+	conversation_ask_for_participant_name_label: () =>
+		t`What the name box asks for`,
 	conversation_title_prompt: () => t`Title guidance`,
 	default_conversation_ask_for_participant_email: () =>
 		t`Ask participants for their email`,

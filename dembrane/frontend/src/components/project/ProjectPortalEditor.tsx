@@ -73,8 +73,13 @@ import {
 } from "./projectLanguage";
 import { LazySuggestKeyTerms } from "./setup-suggestions/lazy";
 
+/** The longest name box label the API takes (platform project-templates NAME_LABEL_MAX). */
+const NAME_LABEL_MAX = 80;
+
 const FormSchema = z.object({
 	anonymize_transcripts: z.boolean(),
+	// The name box's label (ECHO-1053); empty means the portal's own "Session name".
+	conversation_ask_for_participant_name_label: z.string().max(NAME_LABEL_MAX),
 	conversation_title_prompt: z.string(),
 	default_conversation_ask_for_participant_email: z.boolean(),
 	default_conversation_ask_for_participant_name: z.boolean(),
@@ -217,6 +222,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 		return {
 			anonymize_transcripts: project.anonymize_transcripts ?? false,
+			conversation_ask_for_participant_name_label:
+				project.conversation_ask_for_participant_name_label ?? "",
 			conversation_title_prompt: project.conversation_title_prompt ?? "",
 			default_conversation_ask_for_participant_email:
 				project.default_conversation_ask_for_participant_email ?? false,
@@ -280,6 +287,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const watchedVerifyEnabled = useWatch({
 		control,
 		name: "is_verify_enabled",
+	});
+
+	const watchedAskForName = useWatch({
+		control,
+		name: "default_conversation_ask_for_participant_name",
 	});
 
 	const watchedAskForEmail = useWatch({
@@ -695,6 +707,42 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												/>
 											)}
 										/>
+										{watchedAskForName && (
+											<Controller
+												name="conversation_ask_for_participant_name_label"
+												control={control}
+												render={({ field }) => (
+													<TextInput
+														label={
+															<FormLabel
+																label={t`What the name box asks for`}
+																isDirty={
+																	formState.dirtyFields
+																		.conversation_ask_for_participant_name_label
+																}
+																error={
+																	formState.errors
+																		.conversation_ask_for_participant_name_label
+																		?.message
+																}
+															/>
+														}
+														description={t`Participants read this above the box, for example "Table name or number". Leave it empty for the default.`}
+														placeholder={t`Session name`}
+														maxLength={NAME_LABEL_MAX}
+														error={
+															formState.errors
+																.conversation_ask_for_participant_name_label
+																? t`Keep it to ${NAME_LABEL_MAX} characters.`
+																: undefined
+														}
+														{...field}
+														readOnly={readOnly}
+														{...testId("portal-editor-name-label-input")}
+													/>
+												)}
+											/>
+										)}
 										{showAskForEmail && (
 											<Controller
 												name="default_conversation_ask_for_participant_email"

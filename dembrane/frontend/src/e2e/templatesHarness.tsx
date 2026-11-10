@@ -9,23 +9,48 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { TEMPLATE_SUMMARIES } from "@/components/project/templates/projectTemplates.fixture";
+import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import {
+	TEMPLATE_SUMMARIES,
+	TEMPLATE_SUMMARIES_NL,
+} from "@/components/project/templates/projectTemplates.fixture";
 import { AppPreferencesProvider } from "@/hooks/useAppPreferences";
 import {
 	WorkspaceContext,
 	type WorkspaceContextValue,
 } from "@/hooks/useWorkspace";
 import { CreateProjectRoute } from "@/routes/project/CreateProjectRoute";
+import { HostGuidePage } from "@/routes/project/HostGuidePage";
 import { ProjectsHomeRoute } from "@/routes/project/ProjectsHome";
 import { cssVariablesResolver, theme } from "@/theme";
 
-// The create flow and workspace home's first-project state (ECHO-1042) outside the
+// The create flow and workspace home's first-project state (ECHO-1042, ECHO-1053), the
+// portal editor's name box label and a host guide a template filled in, outside the
 // signed-in shell, for screenshots. ?path= picks the page; the spec answers the API.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
-queryClient.setQueryData(["v2", "project-templates"], TEMPLATE_SUMMARIES);
+queryClient.setQueryData(["v2", "project-templates", "en"], TEMPLATE_SUMMARIES);
+queryClient.setQueryData(
+	["v2", "project-templates", "nl"],
+	TEMPLATE_SUMMARIES_NL,
+);
 queryClient.setQueryData(["v2", "me"], { is_staff: false });
+// The portal editor's legal basis section and Verify topics, for the editor page.
+const clientManaged = {
+	legal_basis: "client-managed",
+	privacy_policy_url: null,
+	source: "system",
+};
+queryClient.setQueryData(["projects", "p1", "legal"], {
+	_legal: {
+		effective: clientManaged,
+		inherited: clientManaged,
+		organiser_name: null,
+	},
+	legal_basis: null,
+	privacy_policy_url: null,
+});
 
 const workspace = {
 	id: "w1",
@@ -52,6 +77,49 @@ const context: WorkspaceContextValue = {
 	workspaces: [workspace],
 };
 
+// A project as the resident evening template creates it, for the portal editor.
+const Editor = () => {
+	const nl = window.location.search.includes("nl-NL");
+	return (
+		<div style={{ padding: 24 }}>
+			<ProjectPortalEditor
+				project={
+					{
+						conversation_ask_for_participant_name_label: nl
+							? "Naam of nummer van je tafel"
+							: "Table name or number",
+						default_conversation_ask_for_participant_email: false,
+						default_conversation_ask_for_participant_name: true,
+						default_conversation_description: "",
+						default_conversation_finish_text: "",
+						default_conversation_title: "",
+						default_conversation_transcript_prompt: "",
+						default_conversation_tutorial_slug: "advanced",
+						get_reply_mode: "summarize",
+						get_reply_prompt: "",
+						id: "p1",
+						is_get_reply_cross_pollination_enabled: false,
+						is_get_reply_enabled: true,
+						is_project_notification_subscription_allowed: false,
+						is_verify_enabled: true,
+						is_verify_on_finish_enabled: true,
+						language: nl ? "nl" : "en",
+						name: nl
+							? "Bewonersavond Lindenwijk"
+							: "Lindenwijk resident evening",
+						tags: [],
+						updated_at: "2026-11-10T09:00:00Z",
+					} as never
+				}
+				verificationTopics={{
+					available_topics: [],
+					selected_topics: ["agreements"],
+				}}
+			/>
+		</div>
+	);
+};
+
 const path =
 	new URLSearchParams(window.location.search).get("path") ??
 	"/en-US/w/w1/projects/new";
@@ -62,6 +130,11 @@ const router = createMemoryRouter(
 			path: "/:language/w/:workspaceId/projects/new",
 		},
 		{ element: <ProjectsHomeRoute />, path: "/:language/w/:workspaceId/home" },
+		{ element: <Editor />, path: "/:language/editor" },
+		{
+			element: <HostGuidePage />,
+			path: "/:language/w/:workspaceId/projects/:projectId/host-guide",
+		},
 		{ element: <div data-testid="harness-landed" />, path: "*" },
 	],
 	{ initialEntries: [path] },

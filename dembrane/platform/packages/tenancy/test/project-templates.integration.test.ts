@@ -8,6 +8,7 @@ import {
   PROJECT_TEMPLATES,
   PROJECT_UPDATE_FIELDS,
   templateColumns,
+  templateHostGuide,
   templateTags,
 } from "@dembrane/projects";
 import { Hono } from "hono";
@@ -15,8 +16,10 @@ import type postgres from "postgres";
 import { MemoryJobSink } from "../src/jobs";
 import { tenancyRoutes } from "../src/routes";
 
-// ECHO-1042: POST /v2/workspaces/:id/projects with a template_key writes the preset in the
-// creating transaction, on the free path (under the allowance lock) and the paid one.
+// ECHO-1042, ECHO-1053: POST /v2/workspaces/:id/projects with a template_key writes the
+// preset in the creating transaction (settings, Verify topics, Explore, cross-pollination,
+// the name box label, tags and the host guide), on the free path (under the allowance lock)
+// and the paid one.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const dbName = `tenancy_project_templates_${process.pid}`;
@@ -147,9 +150,33 @@ run("project templates", () => {
           const r = await row(id);
           const expected = templateColumns(t, language);
           for (const [k, v] of Object.entries(expected)) expect([k, r[k]]).toEqual([k, v]);
+          // What the definition says, column by column, not only what templateColumns wrote.
+          const f = t.preset.fields as Record<string, unknown>;
+          expect(r.is_verify_enabled).toBe((f.is_verify_enabled as boolean | undefined) ?? false);
+          expect(r.selected_verification_key_list ?? null).toBe(
+            t.preset.verification_topics.length ? t.preset.verification_topics.join(",") : null,
+          );
+          expect(r.is_get_reply_enabled).toBe(
+            (f.is_get_reply_enabled as boolean | undefined) ?? false,
+          );
+          expect(r.get_reply_mode).toBe((f.get_reply_mode as string | undefined) ?? "summarize");
+          expect(r.get_reply_prompt ?? null).toBe(
+            (f.get_reply_prompt as string | undefined) ?? null,
+          );
+          expect(r.is_get_reply_cross_pollination_enabled).toBe(
+            (f.is_get_reply_cross_pollination_enabled as boolean | undefined) ?? false,
+          );
+          expect(r.conversation_ask_for_participant_name_label ?? null).toBe(
+            t.preset.name_label ? t.preset.name_label[language as "en" | "nl"] : null,
+          );
+          expect(r.host_guide ?? null).toEqual(templateHostGuide(t, language));
+          if (t.card.offer === "card")
+            expect((r.host_guide as { title: string }).title).toBe(
+              t.preset.host_guide?.title[language as "en" | "nl"] as string,
+            );
           expect(r.template_key).toBe(t.key);
           expect(r.template_version).toBe(t.version);
-          expect(await tags(id)).toEqual(templateTags(t, language));
+          expect(await tags(id)).toEqual(t.preset.tags.map((tag) => tag[language as "en" | "nl"]));
           // Never preset, whatever the template: the database defaults stay.
           expect(r.anonymize_transcripts).toBe(false);
           expect(r.legal_basis).toBeNull();

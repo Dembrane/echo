@@ -275,6 +275,7 @@ export const ProjectPortalSettingsRoute = () => {
 				"context",
 				"workspace_id",
 				"default_conversation_ask_for_participant_name",
+				"conversation_ask_for_participant_name_label",
 				"default_conversation_ask_for_participant_email",
 				"default_conversation_description",
 				"default_conversation_finish_text",

@@ -7,7 +7,7 @@ import { boundedEventStream } from "@dembrane/realtime";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import { progressStream } from "./progress";
-import { listProjectTemplates } from "./project-templates";
+import { listProjectTemplates, NAME_LABEL_MAX } from "./project-templates";
 import * as projects from "./projects";
 import { PROJECT_UPDATE_FIELDS, type ProjectDeps } from "./projects";
 import { recordingStatus, useForRecordings } from "./recording";
@@ -46,14 +46,16 @@ const updateShape = Object.fromEntries(
     const kind =
       f === "host_guide"
         ? dict()
-        : f === "legal_basis"
-          ? literal("client-managed", "consent", "dembrane-events")
-          : f.startsWith("is_") ||
-              f.startsWith("default_conversation_ask") ||
-              f === "anonymize_transcripts" ||
-              f === "enable_ai_title_and_tags"
-            ? bool()
-            : str();
+        : f === "conversation_ask_for_participant_name_label"
+          ? str({ max: NAME_LABEL_MAX })
+          : f === "legal_basis"
+            ? literal("client-managed", "consent", "dembrane-events")
+            : f.startsWith("is_") ||
+                f.startsWith("default_conversation_ask") ||
+                f === "anonymize_transcripts" ||
+                f === "enable_ai_title_and_tags"
+              ? bool()
+              : str();
     return [f, optional(nullable(kind as p.Type<unknown>), null)];
   }),
 );
@@ -224,11 +226,13 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     );
   });
 
-  // The templates a new project can start from, with what each sets up. The same for
-  // everyone; the cards word them by key.
+  // The templates a new project can start from, with what each sets up and how the picker
+  // offers it. The same for everyone; the cards word them by key. ?language= picks the
+  // participant-facing words (name box label, tags, host guide title); English otherwise.
   app.get("/api/v2/project-templates", (c) => {
     requireUser(c);
-    return c.json(listProjectTemplates());
+    const language = (c.req.query("language") ?? "").slice(0, 16) || null;
+    return c.json(listProjectTemplates(language));
   });
 
   app.get("/api/v2/projects/:project_id", async (c) => {
