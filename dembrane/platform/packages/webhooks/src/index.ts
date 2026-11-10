@@ -2,6 +2,7 @@ export {
   assertPublicTarget,
   type Deliver,
   type Delivery,
+  DeliveryError,
   fetchChecked,
   httpDeliver,
   isPrivateAddress,

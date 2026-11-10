@@ -83,6 +83,9 @@ export const CreateProject = p.model({
   // A key from @dembrane/projects' template registry; without one, the project starts bare
   // as it always did (old clients, the iOS app before it sends one).
   template_key: optStr({ max: 64 }),
+  // Settings the host accepted from the setup suggestions (ECHO-1043), written over the
+  // preset in the same transaction. Only preset fields; @dembrane/projects validates them.
+  overrides: p.optional(p.nullable(p.dict()), null),
 });
 
 export const SupportEventsQuery = {

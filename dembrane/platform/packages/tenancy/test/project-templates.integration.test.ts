@@ -216,4 +216,59 @@ run("project templates", () => {
     const flags = Object.fromEntries(body.projects.map((p) => [p.id, p.is_sample]));
     expect(flags).toEqual({ [own]: false, [sample]: true });
   });
+  // ECHO-1043: settings the host accepted from the setup suggestions ride on the create.
+  test("overrides are written over the preset in the same transaction", async () => {
+    const w = await workspace("free");
+    const res = await create(w, {
+      name: "Avond",
+      language: "nl",
+      template_key: "conversation",
+      overrides: { default_conversation_ask_for_participant_name: true, is_verify_enabled: true },
+    });
+    expect(res.status).toBe(200);
+    const r = await row(((await res.json()) as { id: string }).id);
+    expect(r.default_conversation_ask_for_participant_name).toBe(true);
+    expect(r.is_verify_enabled).toBe(true);
+    // The rest of the preset stands.
+    expect(r.enable_ai_title_and_tags).toBe(true);
+    expect(r.template_key).toBe("conversation");
+  });
+
+  test("overrides apply to a project made without a template too", async () => {
+    const w = await workspace("innovator");
+    const res = await create(w, {
+      name: "Bare",
+      language: "en",
+      overrides: { is_get_reply_enabled: true },
+    });
+    const r = await row(((await res.json()) as { id: string }).id);
+    expect(r.is_get_reply_enabled).toBe(true);
+    expect(r.template_key).toBeNull();
+  });
+
+  test("an override outside the preset fields, or of the wrong type, writes nothing", async () => {
+    const w = await workspace("innovator");
+    for (const overrides of [
+      { anonymize_transcripts: true },
+      { legal_basis: "consent" },
+      { is_verify_enabled: "yes" },
+      { default_conversation_tutorial_slug: "expert" },
+    ]) {
+      const res = await create(w, {
+        name: "Nope",
+        language: "en",
+        template_key: "event",
+        overrides,
+      });
+      expect([JSON.stringify(overrides), res.status]).toEqual([JSON.stringify(overrides), 422]);
+      const body = (await res.json()) as {
+        code: string;
+        params: { fields: { field: string }[] };
+      };
+      expect(body.code).toBe("validation.invalid_input");
+      expect(body.params.fields[0]?.field).toBe(`overrides.${Object.keys(overrides)[0]}`);
+    }
+    const [n] = await sql`select count(*)::int as n from project where workspace_id = ${w.ws}`;
+    expect(n?.n).toBe(0);
+  });
 });

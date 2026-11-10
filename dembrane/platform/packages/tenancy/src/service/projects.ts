@@ -2,7 +2,13 @@ import { allowanceForWorkspace, requireProjectRoom, withAllowanceLock } from "@d
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { isoTimestamp } from "@dembrane/legacy-shape";
-import { applyProjectTemplate, projectsStorage, projectTemplate } from "@dembrane/projects";
+import {
+  applyOverrides,
+  applyProjectTemplate,
+  parseOverrides,
+  projectsStorage,
+  projectTemplate,
+} from "@dembrane/projects";
 import type { WorkspaceContext } from "../context";
 import { iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";
@@ -117,15 +123,22 @@ export function projectService(deps: TenancyDeps) {
 
     /**
      * Creates a project in the workspace; the caller is recorded as its Directus-era
-     * creator. A template's preset is written in the same transaction as the row, so the
-     * project never exists without it. An unknown key is refused before anything is written.
+     * creator. A template's preset, and any accepted overrides on top of it, are written in
+     * the same transaction as the row, so the project never exists without them. An unknown
+     * key or an override outside the preset fields is refused before anything is written.
      */
     async create(
       ctx: WorkspaceContext,
-      body: { name: string; language: string; template_key?: string | null },
+      body: {
+        name: string;
+        language: string;
+        template_key?: string | null;
+        overrides?: Record<string, unknown> | null;
+      },
     ) {
       ctx.require("project:create");
       const template = body.template_key ? projectTemplate(body.template_key) : null;
+      const overrides = parseOverrides(body.overrides);
       const now = clock(deps);
       const id = newId();
       const insert = async (conn: Db) => {
@@ -145,7 +158,10 @@ export function projectService(deps: TenancyDeps) {
             template,
             language: body.language,
             now: iso(now),
+            overrides,
           });
+        else if (overrides)
+          await applyOverrides(projectsStorage(conn), { projectId: id, overrides, now: iso(now) });
       };
       const a = ctx.who.isStaff ? null : await allowanceForWorkspace(db, ctx.workspaceId, now);
       if (a)

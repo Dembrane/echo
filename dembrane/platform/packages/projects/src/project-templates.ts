@@ -1,5 +1,6 @@
 import { newId, ValidationError } from "@dembrane/core";
 import type { schema } from "@dembrane/db";
+import { v } from "@dembrane/http";
 import { z } from "zod";
 import type { PROJECT_UPDATE_FIELDS } from "./projects";
 import type { ProjectsStorage } from "./storage";
@@ -50,7 +51,7 @@ export const BUILT_IN_TOPICS = [
  * The project fields a preset may set: a strict subset of PROJECT_UPDATE_FIELDS (the
  * type below fails to compile otherwise). Anything else in a preset is a parse error.
  */
-const PresetFields = z
+export const PresetFields = z
   .object({
     is_conversation_allowed: z.boolean(),
     default_conversation_ask_for_participant_name: z.boolean(),
@@ -65,7 +66,10 @@ const PresetFields = z
   })
   .partial()
   .strict();
-type PresetField = keyof z.infer<typeof PresetFields>;
+export type PresetField = keyof z.infer<typeof PresetFields>;
+/** Settings a host accepted on top of a template's preset (ECHO-1043): any preset field. */
+export type PresetOverrides = z.infer<typeof PresetFields>;
+export const PRESET_FIELD_NAMES = Object.keys(PresetFields.shape) as PresetField[];
 // Compile-time: every preset field is one the project PATCH accepts.
 const _fieldsAreUpdatable: readonly (typeof PROJECT_UPDATE_FIELDS)[number][] = [] as PresetField[];
 void _fieldsAreUpdatable;
@@ -251,10 +255,18 @@ export function templateTags(t: ProjectTemplate, language: string | null | undef
  */
 export async function applyProjectTemplate(
   store: ProjectsStorage,
-  c: { projectId: string; template: ProjectTemplate; language: string | null; now: string },
+  c: {
+    projectId: string;
+    template: ProjectTemplate;
+    language: string | null;
+    now: string;
+    /** Accepted proposals, written over the preset in the same update. */
+    overrides?: PresetOverrides | null;
+  },
 ) {
   await store.updateProject(c.projectId, {
     ...templateColumns(c.template, c.language),
+    ...definedFields(c.overrides),
     updated_at: c.now,
   });
   await store.insertTags(
@@ -266,6 +278,50 @@ export async function applyProjectTemplate(
       created_at: c.now,
     })),
   );
+}
+
+const definedFields = (o: PresetOverrides | null | undefined): ProjectColumns =>
+  Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined)) as ProjectColumns;
+
+/**
+ * Overrides as a create request carries them: only preset fields, each with a value its
+ * field accepts. Anything else is a 422 naming the field, before anything is written.
+ */
+export function parseOverrides(raw: unknown): PresetOverrides | null {
+  if (raw === null || raw === undefined) return null;
+  const parsed = PresetFields.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  const issues: v.Issue[] = parsed.error.issues.flatMap((i) =>
+    i.code === "unrecognized_keys"
+      ? i.keys.map((k) => ({
+          type: "extra_forbidden",
+          loc: ["body", "overrides", k],
+          msg: "Extra inputs are not permitted",
+          input: (raw as Record<string, unknown>)[k],
+        }))
+      : [
+          {
+            type: i.path.length ? "value_error" : "dict_type",
+            loc: ["body", "overrides", ...i.path.map(String)],
+            msg: i.message,
+            input: i.path.length ? (raw as Record<string, unknown>)[String(i.path[0])] : raw,
+          },
+        ],
+  );
+  throw new ValidationError("validation.invalid_input", {
+    details: issues,
+    params: { fields: v.fieldProblems(issues) },
+  });
+}
+
+/** Overrides on a project that starts bare (no template_key): the same columns, no preset. */
+export async function applyOverrides(
+  store: ProjectsStorage,
+  c: { projectId: string; overrides: PresetOverrides; now: string },
+) {
+  const set = definedFields(c.overrides);
+  if (Object.keys(set).length)
+    await store.updateProject(c.projectId, { ...set, updated_at: c.now });
 }
 
 /**
