@@ -1,6 +1,6 @@
 {% if is_overview_mode %}GESPRÄCHSZUSAMMENFASSUNGEN:{% else %}GESPRÄCHSTRANSKRIPTE:{% endif %}
 {% if conversations|length == 0 %}
-Noch keine Gespräche vom Benutzer hinzugefügt. Ermutigen Sie sie vorsichtig, einige auszuwählen, indem Sie Gespräche aus der Seitenleiste auswählen.
+Noch keine Gespräche vom Benutzer hinzugefügt. Ermutige sie vorsichtig, einige auszuwählen, indem du Gespräche aus der Seitenleiste auswählst.
 {% else %}
    {% for conversation in conversations %}
 <conversation>

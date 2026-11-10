@@ -64,10 +64,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
+								"Nimm deine Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
 							cta: "Los geht's!",
 							extraHelp:
-								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
+								"Dies ist ein Mini-Tutorial. Nutze die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangst du zum Aufnahmeportal.",
 							title: "Willkommen bei dembrane!",
 						},
 						{
@@ -75,22 +75,22 @@ export const useOnboardingCards = () => {
 								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
 							cta: "Mehr erfahren",
 							extraHelp:
-								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
+								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – deine Stimme zählt!",
 							title: "Was ist dembrane?",
 						},
 						{
 							content:
-								"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
+								"Beantworte Fragen in deinem eigenen Tempo durch Sprechen oder Tippen.",
 							cta: "Weiter",
 							extraHelp:
 								"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
-							title: "Sagen Sie einfach Ihre Meinung",
+							title: "Sag einfach deine Meinung",
 						},
 						{
 							content: "dembrane macht in Gruppen mehr Spaß!",
 							cta: "Weiter",
 							extraHelp:
-								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+								"dembrane macht mehr Spaß, wenn du jemanden findest, um die Fragen gemeinsam zu besprechen und dein Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
 							title: "Allein oder in der Gruppe",
 						},
 					],
@@ -100,10 +100,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
+								"Du erhältst die Fragen, sobald du im Aufnahmeportal bist.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, kannst du gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -113,10 +113,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person hast du die Kontrolle über das, was du teilst.",
 							cta: "Mehr erfahren",
 							extraHelp:
-								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
+								"Vermeide die Weitergabe von Details, die du dem Gastgeber nicht mitteilen möchtest. Sei achtsam und nimm andere nicht ohne deren Zustimmung auf.",
 							title: "Datenschutz ist wichtig",
 						},
 					],
@@ -519,10 +519,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
+								"Nimm deine Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
 							cta: "Los geht's!",
 							extraHelp:
-								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
+								"Dies ist ein Mini-Tutorial. Nutze die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangst du zum Aufnahmeportal.",
 							title: "Willkommen bei dembrane!",
 						},
 						{
@@ -530,22 +530,22 @@ export const useOnboardingCards = () => {
 								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
 							cta: "Mehr erfahren",
 							extraHelp:
-								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
+								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – deine Stimme zählt!",
 							title: "Was ist dembrane?",
 						},
 						{
 							content:
-								"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
+								"Beantworte Fragen in deinem eigenen Tempo durch Sprechen oder Tippen.",
 							cta: "Weiter",
 							extraHelp:
 								"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
-							title: "Sagen Sie einfach Ihre Meinung",
+							title: "Sag einfach deine Meinung",
 						},
 						{
 							content: "dembrane macht in Gruppen mehr Spaß!",
 							cta: "Weiter",
 							extraHelp:
-								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+								"dembrane macht mehr Spaß, wenn du jemanden findest, um die Fragen gemeinsam zu besprechen und dein Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
 							title: "Allein oder in der Gruppe",
 						},
 					],
@@ -555,10 +555,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
+								"Du erhältst die Fragen, sobald du im Aufnahmeportal bist.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, kannst du gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -568,10 +568,10 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person hast du die Kontrolle über das, was du teilst.",
 							cta: "Mehr erfahren",
 							extraHelp:
-								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
+								"Vermeide die Weitergabe von Details, die du dem Gastgeber nicht mitteilen möchtest. Sei achtsam und nimm andere nicht ohne deren Zustimmung auf.",
 							title: "Datenschutz ist wichtig",
 						},
 						...(getPrivacyCard(
@@ -587,7 +587,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Stellen Sie sich vor, dembrane ist auf Lautsprecher mit Ihnen. Wenn Sie sich selbst hören können, ist alles in Ordnung.",
+								"Stell dir vor, dembrane ist auf Lautsprecher mit dir. Wenn du dich selbst hören kannst, ist alles in Ordnung.",
 							cta: "Verstanden",
 							extraHelp:
 								"Etwas Hintergrundgeräusch ist in Ordnung, solange klar ist, wer spricht.",
@@ -595,18 +595,18 @@ export const useOnboardingCards = () => {
 						},
 						{
 							content:
-								"Stellen Sie eine stabile Verbindung für eine reibungslose Aufnahme sicher.",
+								"Stelle eine stabile Verbindung für eine reibungslose Aufnahme sicher.",
 							cta: "Bereit!",
 							extraHelp:
-								"WLAN oder gute mobile Daten funktionieren am besten. Wenn Ihre Verbindung abbricht, keine Sorge. Sie können immer dort weitermachen, wo Sie aufgehört haben.",
+								"WLAN oder gute mobile Daten funktionieren am besten. Wenn deine Verbindung abbricht, keine Sorge. Du kannst immer dort weitermachen, wo du aufgehört hast.",
 							title: "Starke Internetverbindung",
 						},
 						{
 							content:
-								"Vermeiden Sie Unterbrechungen, indem Sie Ihr Gerät entsperrt halten. Wenn es sich sperrt, entsperren Sie es einfach und fahren Sie fort.",
+								"Vermeide Unterbrechungen, indem du dein Gerät entsperrt hältst. Wenn es sich sperrt, entsperre es einfach und fahre fort.",
 							cta: "Okay",
 							extraHelp:
-								"dembrane versucht, Ihr Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Sie können Ihre Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
+								"dembrane versucht, dein Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Du kannst deine Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
 							title: "Gerät nicht sperren!",
 						},
 					],
