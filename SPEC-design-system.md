@@ -57,9 +57,12 @@ component APIs.
 | Layout | **Wrapped.** `Stack`/`Group` are catalog primitives with token-based gaps. `Box` is dropped in favour of plain elements. |
 | Props | **Serializable by default** (see API conventions). Pieces too complex for that are marked *app-only* and kept out of the catalog. |
 | Portal | Portal components live in the package. The portal is the first target for generated UI. |
-| Styling inside the package | **Follows #1139:** Mantine theme overrides, `--app-*` variables, and CSS modules where an override isn't enough. No Tailwind inside the package. |
+| Styling inside the package | **Follows the theme layer:** Mantine theme overrides (as in `theme.tsx`), `--app-*` variables (`rules.css`, from the roles in `colors.ts`), and CSS modules where an override isn't enough. No Tailwind inside the package. |
 | Name | `@dembrane/ui` |
 | Commit the spec? | Undecided until the first ADRs are written. The draft and this revision are committed on `feat/design-system` for review. |
+
+The reasoning for the first four decisions is in
+`dembrane/frontend/docs/decisions/0001`–`0004`.
 
 ## Background: how the frontend is styled today
 
@@ -69,10 +72,10 @@ There are three layers. Only the newest one was designed on purpose.
 |---|---|---|
 | Mantine style props at call sites (`c=`, `mt=`, `gap=`, `fz=`…) | ~2,560 uses | initial commit (Feb 2025) |
 | Tailwind classes at call sites | ~1,350 `className=`. 182 files mix both layers. | initial commit |
-| Theme layer: `--app-*` variables (`styles/rules.css`), roles in `colors.ts` feeding both Mantine and Tailwind, overrides in `theme.tsx`, the border grammar, an AA contrast gate (`scripts/check-contrast.mjs`) | global | #1139 (2026-10-06) |
+| Theme layer: `--app-*` variables (`styles/rules.css`), roles in `colors.ts` feeding both Mantine and Tailwind, overrides in `theme.tsx`, the border grammar, a WCAG AA contrast check (`scripts/check-contrast.mjs`, which can be run but isn't in CI) | global | 2026-10-06, Jorim's design-system pull request ([#1139](https://github.com/Dembrane/echo/pull/1139)), still current |
 
 There are also 21 CSS modules, added one at a time. The package continues
-#1139. Both kinds of call-site styling are what the catalog absorbs.
+the theme layer. Both kinds of call-site styling are what the catalog absorbs.
 
 ## Assumptions
 
@@ -329,7 +332,9 @@ dembrane/frontend/
    can be assembled.
 6. No package file contains Tailwind classes or imports `@/`, `@lingui/*`,
    `react-router`, `@tanstack/*` or `posthog-*`, and lint enforces this.
-7. `check:contrast` and `check:raw-colours` pass in CI.
+7. `check:contrast` and `check:raw-colours` run in CI and pass. Neither runs in CI
+   today: the contrast check exists but isn't wired in, and the raw-colour check is
+   new.
 8. The package README explains how to add a component, and the
    catalog-vs-app-only rule, in no more than a screenful. The frontend's
    CLAUDE.md or AGENTS.md points to it.
