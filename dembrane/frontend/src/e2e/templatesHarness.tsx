@@ -9,6 +9,7 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
+import { ParticipantInitiateForm } from "@/components/participant/ParticipantInitiateForm";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import {
 	TEMPLATE_SUMMARIES,
@@ -120,6 +121,25 @@ const Editor = () => {
 	);
 };
 
+// The portal's name box: ?label= the host's label, none for the default "Session name".
+const PortalNameBox = () => {
+	const label = new URLSearchParams(window.location.search).get("label");
+	return (
+		<div style={{ margin: "0 auto", maxWidth: 672, padding: "24px 16px" }}>
+			<ParticipantInitiateForm
+				project={
+					{
+						conversation_ask_for_participant_name_label: label,
+						default_conversation_ask_for_participant_name: true,
+						id: "p1",
+						tags: [],
+					} as never
+				}
+			/>
+		</div>
+	);
+};
+
 const path =
 	new URLSearchParams(window.location.search).get("path") ??
 	"/en-US/w/w1/projects/new";
@@ -135,6 +155,7 @@ const router = createMemoryRouter(
 			element: <HostGuidePage />,
 			path: "/:language/w/:workspaceId/projects/:projectId/host-guide",
 		},
+		{ element: <PortalNameBox />, path: "/:language/:projectId/start" },
 		{ element: <div data-testid="harness-landed" />, path: "*" },
 	],
 	{ initialEntries: [path] },
