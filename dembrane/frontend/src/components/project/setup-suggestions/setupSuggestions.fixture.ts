@@ -1,6 +1,6 @@
 import type { SetupSuggestions } from "./setupSuggestions";
 
-/** A realistic answer for a Dutch residents' evening, for tests and the screenshot harness. */
+/** A realistic answer for a Dutch residents' evening started from the "conversation" template, for tests and the screenshot harness. */
 export const SUGGESTIONS: SetupSuggestions = {
 	key_terms: [
 		{
@@ -31,18 +31,20 @@ export const SUGGESTIONS: SetupSuggestions = {
 	],
 	max_key_terms: 30,
 	notes: [],
+	// Proposals on top of the "conversation" template, which asks no name and has Verify
+	// off: both are real changes there.
 	settings: [
+		{
+			current: false,
+			field: "default_conversation_ask_for_participant_name",
+			proposed: true,
+			reason: "Twaalf tafels nemen op; zo weet je welke tafel wat zei.",
+		},
 		{
 			current: false,
 			field: "is_verify_enabled",
 			proposed: true,
 			reason: "Je wilt dat iedere tafel de afspraken bevestigt.",
-		},
-		{
-			current: "None",
-			field: "default_conversation_tutorial_slug",
-			proposed: "advanced",
-			reason: "Twaalf tafels nemen tegelijk op met hun telefoon.",
 		},
 	],
 };

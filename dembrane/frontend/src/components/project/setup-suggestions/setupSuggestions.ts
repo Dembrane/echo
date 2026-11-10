@@ -11,6 +11,8 @@ import { ApiRequestError } from "@/lib/errors/read";
 
 /** Most key terms a project holds after accepting, the host's own ones included. */
 export const MAX_KEY_TERMS = 30;
+/** The most of the project context a suggestion request reads; the saved context is not cut. */
+export const MAX_SOURCE_CHARS = 20_000;
 /** From here on the block says "x of 30". */
 export const NEAR_CAP = 24;
 

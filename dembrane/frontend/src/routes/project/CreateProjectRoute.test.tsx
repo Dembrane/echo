@@ -423,12 +423,52 @@ describe("CreateProjectRoute: setup suggestions", () => {
 			return new Response("{}");
 		});
 
-	it("sits in the name step, optional, with its walkthrough anchor", async () => {
+	it("sits under the project context, the one field, with its walkthrough anchor", async () => {
 		renderCreate();
 		chooseTemplate("event");
 		const block = await screen.findByTestId("setup-suggestions");
 		expect(block.getAttribute("data-tour")).toBe("setup-suggestions");
-		expect(screen.getByText("Tell dembrane about your session")).toBeTruthy();
+		// Name and context are the only text fields before More options.
+		expect(
+			screen
+				.getAllByRole("textbox")
+				.map(
+					(el) =>
+						el.getAttribute("aria-label") ??
+						(el as HTMLInputElement).labels?.[0]?.textContent,
+				),
+		).toEqual(["Project name", "Project context"]);
+		expect(
+			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
+		).toBe(true);
+	});
+
+	it("a long pasted agenda is saved whole as the context; suggestions read its first 20,000 characters", async () => {
+		const fetchMock = suggestionsFetch();
+		vi.stubGlobal("fetch", fetchMock);
+		createMutate.mockResolvedValue({ id: "p9" });
+		updateMutate.mockResolvedValue({});
+		renderCreate();
+		chooseTemplate("conversation");
+		nameIt("Regiotafel");
+		const agenda = `Agenda ${"Evoluon Eindhoven, ".repeat(1_500)}`.trim();
+		expect(agenda.length).toBeGreaterThan(20_000);
+		fireEvent.change(screen.getByLabelText("Project context"), {
+			target: { value: agenda },
+		});
+		fireEvent.click(await screen.findByTestId("setup-suggestions-submit"));
+		await screen.findByTestId("setup-suggestions-results");
+		const call = fetchMock.mock.calls.find(([url]) =>
+			String(url).includes("project-setup/suggestions"),
+		) as unknown as [string, RequestInit];
+		expect(JSON.parse(String(call[1].body)).description).toHaveLength(20_000);
+		expect(screen.getByTestId("setup-suggestions-long-note")).toBeTruthy();
+		create();
+		await waitFor(() => expect(navigate).toHaveBeenCalled());
+		expect(updateMutate).toHaveBeenCalledWith({
+			id: "p9",
+			payload: { context: agenda },
+		});
 	});
 
 	it("never blocks Create: it stays enabled while suggestions load", async () => {
@@ -437,7 +477,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		renderCreate();
 		chooseTemplate("event");
 		nameIt("Bewonersavond");
-		fireEvent.change(await screen.findByLabelText("About your session"), {
+		fireEvent.change(screen.getByLabelText("Project context"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
 		});
 		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
@@ -459,7 +499,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		renderCreate();
 		chooseTemplate("conversation");
 		nameIt("Bewonersavond");
-		fireEvent.change(await screen.findByLabelText("About your session"), {
+		fireEvent.change(screen.getByLabelText("Project context"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
 		});
 		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
@@ -483,7 +523,10 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		});
 		expect(updateMutate).toHaveBeenCalledWith({
 			id: "p8",
-			payload: { default_conversation_transcript_prompt: "Strijp-S" },
+			payload: {
+				context: "Met Woonbedrijf in Strijp-S",
+				default_conversation_transcript_prompt: "Strijp-S",
+			},
 		});
 		expect(tracked).toHaveBeenCalledWith("project_setup_ai_accepted", {
 			settings_accepted: 1,

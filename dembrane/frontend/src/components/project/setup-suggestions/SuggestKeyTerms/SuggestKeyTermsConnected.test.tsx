@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
+import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SUGGESTIONS } from "../setupSuggestions.fixture";
 import { Providers, setUpDom } from "../testing";
@@ -21,13 +22,18 @@ afterEach(() => {
 beforeAll(setUpDom);
 
 let value = "";
-const Harness = () => {
+const Harness = ({
+	context = "Bewonersavond over het warmtenet",
+}: {
+	context?: string;
+}) => {
 	const [v, setV] = useState("Klokgebouw");
 	value = v;
 	return (
 		<SuggestKeyTermsConnected
 			project={{
-				context: "Bewonersavond over het warmtenet",
+				context,
+				id: "p1",
 				language: "nl",
 				name: "Strijp-S",
 				workspace_id: "w1",
@@ -52,7 +58,7 @@ describe("SuggestKeyTermsConnected (portal editor)", () => {
 				</Providers>
 			</QueryClientProvider>,
 		);
-		expect(screen.queryByLabelText("About your session")).toBeNull();
+		expect(screen.queryByRole("textbox")).toBeNull();
 		fireEvent.click(screen.getByRole("button", { name: "Suggest key terms" }));
 		await screen.findByTestId("setup-suggestions-results");
 		const init = (
@@ -79,5 +85,25 @@ describe("SuggestKeyTermsConnected (portal editor)", () => {
 			surface: "portal_editor",
 			terms_accepted: 4,
 		});
+	});
+});
+
+describe("SuggestKeyTermsConnected without a project context", () => {
+	it("waits, and its hint links to the context field", () => {
+		render(
+			<QueryClientProvider client={new QueryClient()}>
+				<Providers>
+					<MemoryRouter>
+						<Harness context="" />
+					</MemoryRouter>
+				</Providers>
+			</QueryClientProvider>,
+		);
+		expect(
+			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
+		).toBe(true);
+		expect(
+			screen.getByTestId("setup-suggestions-context-link").getAttribute("href"),
+		).toContain("/w/w1/projects/p1/overview#project-context");
 	});
 });
