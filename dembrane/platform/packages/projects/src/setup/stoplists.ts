@@ -96,8 +96,23 @@ const sets = new Map(
   ]),
 );
 
+/**
+ * Months and weekdays (ECHO-1055): an agenda or an invitation always has a date, and a
+ * capital proves nothing about them. In English, Dutch and German, the languages most
+ * material comes in.
+ */
+const CALENDAR = `january february march april may june july august september october november
+  december monday tuesday wednesday thursday friday saturday sunday
+  januari februari maart mei juni juli augustus oktober maandag dinsdag woensdag donderdag
+  vrijdag zaterdag zondag
+  januar februar märz juni juli oktober dezember montag dienstag mittwoch donnerstag freitag
+  samstag sonntag`;
+
 /** Every list at once: a Dutch session quotes English words, and the other way round. */
-const ALL = new Set([...sets.values()].flatMap((s) => [...s]));
+const ALL = new Set([
+  ...[...sets.values()].flatMap((s) => [...s]),
+  ...CALENDAR.split(/\s+/).filter(Boolean),
+]);
 
 /** True for a word (lowercased) that is common in the project language or any other we know. */
 export function isCommonWord(word: string, language: string): boolean {

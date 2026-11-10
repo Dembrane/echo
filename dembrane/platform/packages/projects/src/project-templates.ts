@@ -1700,6 +1700,9 @@ const BUTTON_WORDS: Record<TemplateLanguage, readonly string[]> = {
 };
 
 /** One step or tip as the host guide page stores it: the text, and the words it colours. */
+export const hostGuideItem = (text: string, language: string | null | undefined) =>
+  guideItem(text, languageOf(language) ?? "en");
+
 const guideItem = (text: string, language: TemplateLanguage) => ({
   content: text,
   highlights: BUTTON_WORDS[language].filter((w) => text.includes(w)),
@@ -1766,6 +1769,8 @@ export async function applyProjectTemplate(
     now: string;
     /** Accepted proposals, written over the preset in the same update. */
     overrides?: PresetOverrides | null;
+    /** Tags in place of the template's (the context digest's rounds, ECHO-1055). */
+    tags?: readonly string[] | null;
   },
 ) {
   await store.updateProject(c.projectId, {
@@ -1774,7 +1779,7 @@ export async function applyProjectTemplate(
     updated_at: c.now,
   });
   await store.insertTags(
-    templateTags(c.template, c.language).map((text, i) => ({
+    (c.tags?.length ? c.tags : templateTags(c.template, c.language)).map((text, i) => ({
       id: newId(),
       project_id: c.projectId,
       text,

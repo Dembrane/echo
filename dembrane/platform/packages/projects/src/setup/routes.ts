@@ -7,6 +7,7 @@ import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { projectsStorage } from "../storage";
+import { digestProjectSetup } from "./digest";
 import { fetchPageText } from "./fetch-page";
 import { suggestProjectSetup } from "./service";
 
@@ -24,7 +25,7 @@ export interface ProjectSetupRoutesDeps {
   readonly now?: () => Date;
 }
 
-const { model, optional, nullable, required, str, list, bool } = p;
+const { model, optional, nullable, required, str, list, bool, literal, nested } = p;
 
 export const SuggestionBody = model({
   template_key: required(str({ min: 1, max: 64 })),
@@ -40,7 +41,35 @@ export const SuggestionBody = model({
   include_settings: optional(bool(), true),
 });
 
-/** POST /api/v2/workspaces/:workspace_id/project-setup/suggestions */
+// ECHO-1055: text the browser extracted from files, pasted text or a link. Never a file.
+const DigestSourceBody = model({
+  name: optional(str({ max: 255 }), ""),
+  kind: required(literal("file", "text", "url")),
+  text: optional(nullable(str({ max: 200_000 })), null),
+  url: optional(nullable(str({ max: 2_000 })), null),
+});
+
+export const DigestBody = model({
+  sources: required(list(nested(DigestSourceBody), { min: 1, max: 7 })),
+  language: optional(str({ max: 16 }), "en"),
+  existing: optional(
+    nullable(
+      nested(
+        model({
+          name: optional(nullable(str({ max: 255 })), null),
+          context: optional(nullable(str({ max: 20_000 })), null),
+          key_terms: optional(nullable(list(str({ max: 200 }), { max: 200 })), null),
+        }),
+      ),
+    ),
+    null,
+  ),
+});
+
+/**
+ * POST /api/v2/workspaces/:workspace_id/project-setup/suggestions
+ * POST /api/v2/workspaces/:workspace_id/project-setup/digest
+ */
 export function projectSetupRoutes(deps: ProjectSetupRoutesDeps) {
   const d = {
     db: deps.db,
@@ -55,12 +84,15 @@ export function projectSetupRoutes(deps: ProjectSetupRoutesDeps) {
       deps.fetchPage ??
       ((url: string) => fetchPageText(url, { allowPrivate: deps.allowPrivateTargets })),
   };
-  return new Hono<Env>().post(
-    "/api/v2/workspaces/:workspace_id/project-setup/suggestions",
-    async (c) => {
+  return new Hono<Env>()
+    .post("/api/v2/workspaces/:workspace_id/project-setup/suggestions", async (c) => {
       const who = requireUser(c);
       const { body } = await p.validate(c.req, { body: SuggestionBody });
       return c.json(await suggestProjectSetup(d, who, c.req.param("workspace_id"), body.data));
-    },
-  );
+    })
+    .post("/api/v2/workspaces/:workspace_id/project-setup/digest", async (c) => {
+      const who = requireUser(c);
+      const { body } = await p.validate(c.req, { body: DigestBody });
+      return c.json(await digestProjectSetup(d, who, c.req.param("workspace_id"), body.data));
+    });
 }
