@@ -162,6 +162,23 @@
   outline: 2px solid var(--app-action);
   outline-offset: 2px;
 }
+/* A choice a participant presses on a phone (ECHO-1052): the do box drawn in the control
+ * grey, as a secondary button's is, so it reads as pressable at a glance, and never shorter
+ * than a 44px touch target. Held down it takes the pressed grey; locked, the pollen line. */
+:root .app-choice:is(*, [data-with-border]) {
+  --app-rule-color: var(--app-control-rule);
+  min-height: 44px;
+}
+:root .app-choice:is(*, [data-with-border]):active {
+  background: var(--app-pressed);
+}
+:root .app-choice[data-selected]:is(*, [data-with-border]) {
+  border-color: var(--app-action);
+}
+:root .app-choice[aria-disabled="true"]:is(*, [data-with-border]) {
+  --app-rule-color: var(--app-disabled);
+  cursor: not-allowed;
+}
 
 /* Avatars are the one round thing besides the primary pill. */
 :root .mantine-Avatar-root {

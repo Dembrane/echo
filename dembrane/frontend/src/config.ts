@@ -243,6 +243,10 @@ export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
 // reworked: an open or half-booked training will live on the organisation's
 // overview. Staff still manage trainings in the admin console.
 export const ENABLE_TRAINING = false;
+// Asking participants for their email (on the thank-you page) and the report notifications
+// it feeds, with the server's ENABLE_PARTICIPANT_EMAIL (ECHO-1052). Off: the portal editor
+// hides both settings unless a project already has one on, so its host can switch it off.
+export const ENABLE_PARTICIPANT_EMAIL = false;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

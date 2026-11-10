@@ -3,6 +3,7 @@ import { createDb, migrate, schema } from "@dembrane/db";
 import { and, eq } from "drizzle-orm";
 import postgres from "postgres";
 import { DEFAULT_TOPICS, seedDefaultTopics } from "../src/defaults";
+import { PREVIOUS_TOPICS } from "../src/previous-defaults";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -33,12 +34,14 @@ run("seedDefaultTopics", () => {
 
   test("a fresh database gets every topic and label, and a second run adds nothing", async () => {
     expect(await seedDefaultTopics(database.db)).toEqual({
-      topicsAdded: 6,
-      translationsAdded: 48,
+      topicsAdded: 7,
+      topicsUpdated: 0,
+      translationsAdded: 56,
       translationsUpdated: 0,
     });
     expect(await seedDefaultTopics(database.db)).toEqual({
       topicsAdded: 0,
+      topicsUpdated: 0,
       translationsAdded: 0,
       translationsUpdated: 0,
     });
@@ -62,11 +65,29 @@ run("seedDefaultTopics", () => {
       );
     expect(await seedDefaultTopics(database.db)).toEqual({
       topicsAdded: 0,
+      topicsUpdated: 0,
       translationsAdded: 1,
       translationsUpdated: 1,
     });
     const [row] = await database.db.select().from(translations).where(gemsNl);
-    expect(row?.label).toBe("Verborgen parels");
+    expect(row?.label).toBe("Ideeën om te bewaren");
+  });
+
+  test("a topic still on the Python stack's text moves to the new prompt, sort and icon", async () => {
+    const old = PREVIOUS_TOPICS.find((t) => t.key === "actions");
+    if (!old) throw new Error("no previous actions topic");
+    await database.db
+      .update(verification_topic)
+      .set({ prompt: old.prompt, sort: old.sort, icon: old.icon })
+      .where(eq(verification_topic.key, "actions"));
+    const result = await seedDefaultTopics(database.db);
+    expect(result.topicsUpdated).toBe(1);
+    const [row] = await database.db
+      .select()
+      .from(verification_topic)
+      .where(eq(verification_topic.key, "actions"));
+    const now = DEFAULT_TOPICS.find((t) => t.key === "actions");
+    expect(row).toMatchObject({ prompt: now?.prompt, sort: now?.sort, icon: now?.icon });
   });
 
   test("an edited default topic keeps its prompt, icon and sort", async () => {
@@ -77,6 +98,7 @@ run("seedDefaultTopics", () => {
       .where(eq(verification_topic.key, "agreements"));
     expect(await seedDefaultTopics(database.db)).toEqual({
       topicsAdded: 0,
+      topicsUpdated: 0,
       translationsAdded: 0,
       translationsUpdated: 0,
     });
@@ -103,6 +125,7 @@ run("seedDefaultTopics", () => {
       .values({ verification_topic_key: "truths", languages_code: "en-US", label: "Our truths" });
     expect(await seedDefaultTopics(database.db)).toEqual({
       topicsAdded: 0,
+      topicsUpdated: 0,
       translationsAdded: 0,
       translationsUpdated: 0,
     });

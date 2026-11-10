@@ -15,10 +15,8 @@ import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
-import { RefineSelection } from "./components/participant/refine/RefineSelection";
 import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
-import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
 import {
@@ -45,6 +43,16 @@ import {
 
 // Lazy-loaded route components
 // The conversation page is dashboard only; loaded lazily so the portal's first load stays small.
+// The choice between Verify and Explore and the Verify picker open only after a minute of
+// recording, so they stay out of the portal's first load (ECHO-1052).
+const RefineSelection = createLazyNamedRoute(
+	() => import("./components/participant/refine/RefineSelection"),
+	"RefineSelection",
+);
+const VerifySelection = createLazyNamedRoute(
+	() => import("./components/participant/verify/VerifySelection"),
+	"VerifySelection",
+);
 const ProjectConversationRoute = createLazyNamedRoute(
 	() => import("./routes/project/conversation/ProjectConversationRoute"),
 	"ProjectConversationRoute",

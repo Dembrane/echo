@@ -55,6 +55,9 @@ import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { ParticipantSettingsModal } from "./ParticipantSettingsModal";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { recordingClosed } from "./recordingCap";
+import { RefineButtonLabel } from "./refine/RefineButtonLabel";
+import { refineMode } from "./refine/refineMode";
+import { useRefineActions } from "./refine/useRefineActions";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { useConversationArtefacts } from "./verify/hooks";
 import { WrapUpModal } from "./WrapUpModal";
@@ -739,13 +742,22 @@ export const ParticipantConversationAudio = () => {
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
+	const mode = refineMode(projectQuery.data);
+	const refine = useRefineActions({
+		aiUnavailable: projectQuery.data?.is_ai_available === false,
+		conversationId,
+		projectId,
+	});
 
+	// One feature on: straight to it. Both on, or the one on locked: the choice screen,
+	// which says why a locked one cannot open yet.
 	const handleRefineClick = () => {
 		if (recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS) {
 			openRefineInfoModal();
 			return;
 		}
-
+		if (mode === "verify" && refine.goVerify()) return;
+		if (mode === "explore" && refine.goExplore()) return;
 		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
@@ -808,13 +820,13 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoText = () => {
 		if (showVerify && showEcho) {
-			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation.`;
+			return t`Check what we captured together, or get a question to go deeper.`;
 		}
 		if (showVerify) {
-			return t`Take some time to create an outcome that makes your contribution concrete.`;
+			return t`Check what we captured together.`;
 		}
 		if (showEcho) {
-			return t`Get an immediate reply from dembrane to help you deepen the conversation.`;
+			return t`Get a question to go deeper.`;
 		}
 		return "";
 	};
@@ -822,8 +834,8 @@ export const ParticipantConversationAudio = () => {
 	const getRefineModalTitle = () => {
 		if (showVerify && showEcho) {
 			return (
-				<Trans id="participant.modal.echo.info.title.generic">
-					"ECHO" available soon
+				<Trans id="participant.modal.refine.info.title.both">
+					"Verify or explore" available soon
 				</Trans>
 			);
 		}
@@ -850,9 +862,8 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoReason = () => {
 		return (
-			<Trans id="participant.modal.echo.info.reason">
-				We need a bit more context to help you use ECHO effectively. Please
-				continue recording so we can provide better suggestions.
+			<Trans id="participant.modal.refine.info.reason">
+				We need a bit more of your conversation first. Please keep recording.
 			</Trans>
 		);
 	};
@@ -1191,6 +1202,7 @@ export const ParticipantConversationAudio = () => {
 													? undefined
 													: "filled"
 											}
+											data-mode={mode ?? undefined}
 											{...testId("portal-audio-echo-button")}
 										>
 											{recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS && (
@@ -1200,7 +1212,7 @@ export const ParticipantConversationAudio = () => {
 												/>
 											)}
 											<span className="relative z-10">
-												<Trans id="participant.button.echo">ECHO</Trans>
+												<RefineButtonLabel mode={mode} />
 											</span>
 										</Button>
 									)}

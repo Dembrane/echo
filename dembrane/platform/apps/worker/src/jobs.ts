@@ -111,6 +111,7 @@ export function registrations(deps: {
     | "samInbox"
     | "samples"
     | "metering"
+    | "projects"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -401,6 +402,7 @@ export function registrations(deps: {
       config,
       databaseUrl: deps.databaseUrl,
       models: deps.models,
+      participantEmail: config.projects.participantEmail,
     }),
   ];
 }

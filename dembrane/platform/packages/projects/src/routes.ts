@@ -32,6 +32,8 @@ export interface ProjectRoutesDeps {
    * must never throw; the project exists.
    */
   readonly onProjectCreated?: (projectId: string) => Promise<void>;
+  /** ENABLE_PARTICIPANT_EMAIL: whether email settings may be switched on. Unset means off. */
+  readonly participantEmail?: boolean;
 }
 
 const { model, nested, optional, required, nullable, str, int, bool, literal, list, dict, any } = p;
@@ -69,6 +71,7 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     access: deps.access,
     jobs: deps.queue,
     now: deps.now ?? (() => new Date()),
+    participantEmail: deps.participantEmail ?? false,
   };
   const app = new Hono<Env>();
 

@@ -69,8 +69,8 @@ export const StopRecordingConfirmationModal = ({
 			centered
 			title={
 				showVerifyPrompt ? (
-					<Trans id="participant.modal.verify_prompt.title">
-						Verification reminder
+					<Trans id="participant.modal.verify_reminder.title">
+						Before you finish
 					</Trans>
 				) : (
 					<Trans id="participant.modal.pause.title">Recording paused</Trans>
@@ -84,9 +84,8 @@ export const StopRecordingConfirmationModal = ({
 				{showVerifyPrompt ? (
 					<>
 						<Text size="sm" c="dimmed">
-							<Trans id="participant.modal.verify_prompt.description">
-								You haven't verified any outcomes yet. Would you like to verify
-								before finishing?
+							<Trans id="participant.modal.verify_reminder.description">
+								Check what we captured together? It takes about a minute.
 							</Trans>
 						</Text>
 						<Group gap="sm" py="sm">

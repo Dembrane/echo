@@ -15,10 +15,17 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ProjectPortalEditor } from "./ProjectPortalEditor";
 
 const role = vi.hoisted(() => ({ current: "owner" }));
+const emailFlag = vi.hoisted(() => ({ on: false }));
 const updateMutateAsync = vi.hoisted(() => vi.fn(async () => ({})));
 const editorReadOnly = vi.hoisted(() => [] as (boolean | undefined)[]);
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
+vi.mock("@/config", async (original) => ({
+	...(await original<typeof import("@/config")>()),
+	get ENABLE_PARTICIPANT_EMAIL() {
+		return emailFlag.on;
+	},
+}));
 vi.mock("@/hooks/useWorkspace", () => ({
 	useWorkspace: () => ({
 		workspace: { id: "w1", role: role.current, tier: "innovator" },
@@ -79,6 +86,7 @@ afterEach(() => {
 	cleanup();
 	vi.useRealTimers();
 	role.current = "owner";
+	emailFlag.on = false;
 	updateMutateAsync.mockClear();
 	editorReadOnly.length = 0;
 });
@@ -177,5 +185,131 @@ describe("ProjectPortalEditor role gating", () => {
 			vi.advanceTimersByTime(2000);
 		});
 		expect(updateMutateAsync).toHaveBeenCalled();
+	});
+});
+
+const topic = (key: string, label: string, isCustom = false) => ({
+	is_custom: isCustom,
+	key,
+	translations: { "en-US": { label } },
+});
+
+const renderWith = (
+	overrides: Record<string, unknown>,
+	topics = {
+		available_topics: [] as ReturnType<typeof topic>[],
+		selected_topics: [] as string[],
+	},
+) =>
+	render(
+		<QueryClientProvider client={new QueryClient()}>
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<MemoryRouter>
+						<ProjectPortalEditor
+							project={{ ...project, ...overrides } as unknown as Project}
+							verificationTopics={topics as never}
+						/>
+					</MemoryRouter>
+				</MantineProvider>
+			</I18nProvider>
+		</QueryClientProvider>,
+	);
+
+// ECHO-1052
+describe("ProjectPortalEditor Verify and Explore", () => {
+	it("lists every Verify option with its one line, and the host's own topics", () => {
+		renderWith(
+			{ is_verify_enabled: true },
+			{
+				available_topics: [
+					topic("agreements", "Table check"),
+					topic("disagreements", "Differences"),
+					topic("actions", "Decisions and actions"),
+					topic("gems", "Ideas worth keeping"),
+					topic("truths", "Hard points"),
+					topic("heard", "What we heard"),
+					topic("moments", "Turning points"),
+					topic("our-own-1234", "Our own check", true),
+				],
+				selected_topics: ["agreements"],
+			},
+		);
+		for (const [key, line] of [
+			["agreements", "What this group mostly agreed on, and what differed."],
+			["disagreements", "Where views stayed different, each side in one line."],
+			["actions", "Actions and proposals said out loud, and who was named."],
+			["gems", "Ideas mentioned only briefly that could matter."],
+			["truths", "Problems, risks or doubts the group named itself."],
+			["heard", "What this person or group told us, in their own words."],
+			["moments", "Moments where the group's view changed."],
+		]) {
+			const box = screen.getByTestId(`portal-editor-verify-topic-${key}`);
+			// The line sits in the option's own box, under its label.
+			const option = box.closest(".mantine-Checkbox-root")?.textContent ?? "";
+			expect([key, option.includes(line)]).toEqual([key, true]);
+		}
+		const tableCheck = screen.getByTestId(
+			"portal-editor-verify-topic-agreements",
+		) as HTMLInputElement;
+		expect(tableCheck.checked).toBe(true);
+		const heard = screen.getByTestId(
+			"portal-editor-verify-topic-heard",
+		) as HTMLInputElement;
+		expect(heard.checked).toBe(false);
+		expect(screen.getByText("Our own check")).toBeTruthy();
+		expect(screen.getByTestId("custom-topic-edit-our-own-1234")).toBeTruthy();
+		fireEvent.click(heard);
+		expect(heard.checked).toBe(true);
+	});
+
+	it("shows cross-pollination with its line only when Explore is on", () => {
+		renderWith({ is_get_reply_enabled: false });
+		expect(
+			screen.queryByTestId("portal-editor-cross-pollination-switch"),
+		).toBeNull();
+		cleanup();
+		renderWith({
+			is_get_reply_cross_pollination_enabled: false,
+			is_get_reply_enabled: true,
+		});
+		expect(
+			screen.getByTestId("portal-editor-cross-pollination-switch"),
+		).toBeTruthy();
+		expect(screen.getByText("Cross-pollination")).toBeTruthy();
+		expect(
+			screen.getByText(
+				"Explore may bring in what other groups in this project said. Off: it only looks at this conversation.",
+			),
+		).toBeTruthy();
+		expect(screen.getByText("One question")).toBeTruthy();
+	});
+});
+
+describe("ProjectPortalEditor participant email flag", () => {
+	it("off: hides asking for email and report notifications", () => {
+		renderWith({});
+		expect(screen.queryByTestId("portal-editor-ask-email-checkbox")).toBeNull();
+		expect(screen.queryByTestId("portal-editor-report-notifications")).toBeNull();
+	});
+
+	it("off: still shows them on a project that has them on, to switch off", () => {
+		renderWith({
+			default_conversation_ask_for_participant_email: true,
+			is_project_notification_subscription_allowed: true,
+		});
+		expect(screen.getByTestId("portal-editor-ask-email-checkbox")).toBeTruthy();
+		expect(
+			screen.getByTestId("portal-editor-report-notifications"),
+		).toBeTruthy();
+	});
+
+	it("on: shows both as before", () => {
+		emailFlag.on = true;
+		renderWith({});
+		expect(screen.getByTestId("portal-editor-ask-email-checkbox")).toBeTruthy();
+		expect(
+			screen.getByTestId("portal-editor-report-notifications"),
+		).toBeTruthy();
 	});
 });

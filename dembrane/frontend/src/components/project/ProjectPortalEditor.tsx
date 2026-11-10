@@ -39,6 +39,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ProjectLegalBasisSection } from "@/components/project/ProjectLegalBasisSection";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import { ENABLE_PARTICIPANT_EMAIL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -54,7 +55,7 @@ import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
+import { TopicIcon, topicDescription } from "../participant/verify/topics";
 import { CustomTopicModal } from "./CustomTopicModal";
 import {
 	useCreateCustomTopicMutation,
@@ -86,6 +87,7 @@ const FormSchema = z.object({
 	get_reply_mode: z.string(),
 	get_reply_prompt: z.string(),
 	is_dembrane_event_cta_enabled: z.boolean(),
+	is_get_reply_cross_pollination_enabled: z.boolean(),
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
@@ -187,9 +189,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const availableVerifyTopics = useMemo(
 		() =>
 			(verificationTopics?.available_topics ?? []).map((topic) => ({
-				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
+				description: topic.is_custom ? null : topicDescription(topic.key),
 				is_custom: !!topic.is_custom,
 				key: topic.key,
 				label:
@@ -235,6 +235,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			get_reply_prompt: project.get_reply_prompt ?? "",
 			is_dembrane_event_cta_enabled:
 				project.is_dembrane_event_cta_enabled ?? true,
+			is_get_reply_cross_pollination_enabled:
+				project.is_get_reply_cross_pollination_enabled ?? false,
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
@@ -284,6 +286,15 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		control,
 		name: "default_conversation_ask_for_participant_email",
 	});
+
+	// Asking for email sits behind ENABLE_PARTICIPANT_EMAIL (ECHO-1052). Off, the settings
+	// show only where a project already has them on, so its host can switch them off.
+	const showAskForEmail =
+		ENABLE_PARTICIPANT_EMAIL ||
+		!!project.default_conversation_ask_for_participant_email;
+	const showReportNotifications =
+		ENABLE_PARTICIPANT_EMAIL ||
+		!!project.is_project_notification_subscription_allowed;
 
 	const watchedAiTitleEnabled = useWatch({
 		control,
@@ -684,36 +695,40 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												/>
 											)}
 										/>
-										<Controller
-											name="default_conversation_ask_for_participant_email"
-											control={control}
-											render={({ field }) => (
-												<Checkbox
-													label={
-														<FormLabel
-															label={t`Ask for email?`}
-															isDirty={
-																formState.dirtyFields
-																	.default_conversation_ask_for_participant_email
-															}
-															error={
-																formState.errors
-																	.default_conversation_ask_for_participant_email
-																	?.message
-															}
-														/>
-													}
-													description={
-														<Trans>Optional field on the thank you page</Trans>
-													}
-													checked={field.value}
-													onChange={(e) =>
-														field.onChange(e.currentTarget.checked)
-													}
-													{...testId("portal-editor-ask-name-checkbox")}
-												/>
-											)}
-										/>
+										{showAskForEmail && (
+											<Controller
+												name="default_conversation_ask_for_participant_email"
+												control={control}
+												render={({ field }) => (
+													<Checkbox
+														label={
+															<FormLabel
+																label={t`Ask for email?`}
+																isDirty={
+																	formState.dirtyFields
+																		.default_conversation_ask_for_participant_email
+																}
+																error={
+																	formState.errors
+																		.default_conversation_ask_for_participant_email
+																		?.message
+																}
+															/>
+														}
+														description={
+															<Trans>
+																Optional field on the thank you page
+															</Trans>
+														}
+														checked={field.value}
+														onChange={(e) =>
+															field.onChange(e.currentTarget.checked)
+														}
+														{...testId("portal-editor-ask-email-checkbox")}
+													/>
+												)}
+											/>
+										)}
 										<ProjectLegalBasisSection projectId={project.id} />
 										<Controller
 											name="default_conversation_tutorial_slug"
@@ -819,6 +834,36 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											{watchedReplyEnabled && (
 												<>
 													<Controller
+														name="is_get_reply_cross_pollination_enabled"
+														control={control}
+														render={({ field }) => (
+															<Switch
+																label={
+																	<FormLabel
+																		label={t`Cross-pollination`}
+																		isDirty={
+																			formState.dirtyFields
+																				.is_get_reply_cross_pollination_enabled
+																		}
+																		error={
+																			formState.errors
+																				.is_get_reply_cross_pollination_enabled
+																				?.message
+																		}
+																	/>
+																}
+																description={t`Explore may bring in what other groups in this project said. Off: it only looks at this conversation.`}
+																checked={field.value}
+																onChange={(e) =>
+																	field.onChange(e.currentTarget.checked)
+																}
+																{...testId(
+																	"portal-editor-cross-pollination-switch",
+																)}
+															/>
+														)}
+													/>
+													<Controller
 														name="get_reply_mode"
 														control={control}
 														render={({ field }) => (
@@ -848,7 +893,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																						"portal-editor-reply-mode-default",
 																					)}
 																				>
-																					<Trans>Default</Trans>
+																					<Trans id="dashboard.explore.mode.question">
+																						One question
+																					</Trans>
 																				</span>
 																			),
 																			value: "summarize",
@@ -1033,10 +1080,24 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																						<Checkbox
 																							value={topic.key}
 																							label={
-																								topic.icon
-																									? `${topic.icon} ${topic.label}`
-																									: topic.label
+																								<Group
+																									gap="xs"
+																									wrap="nowrap"
+																									component="span"
+																								>
+																									<TopicIcon
+																										topicKey={topic.key}
+																										size={18}
+																									/>
+																									<span>{topic.label}</span>
+																								</Group>
 																							}
+																							description={
+																								topic.description ?? undefined
+																							}
+																							{...testId(
+																								`portal-editor-verify-topic-${topic.key}`,
+																							)}
 																						/>
 																						{topic.is_custom && (
 																							<Group gap={0} wrap="nowrap">
@@ -1152,57 +1213,62 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											)}
 										</Stack>
 
-										<Stack gap="md">
-											<Group>
-												<Title order={5}>
-													<Trans>Report notifications</Trans>
-												</Title>
-											</Group>
+										{showReportNotifications && (
+											<Stack
+												gap="md"
+												{...testId("portal-editor-report-notifications")}
+											>
+												<Group>
+													<Title order={5}>
+														<Trans>Report notifications</Trans>
+													</Title>
+												</Group>
 
-											<Text size="sm" c="dimmed">
-												<Trans>
-													Notify participants when a report is published.
-												</Trans>
-											</Text>
-
-											{watchedAskForEmail ? (
-												<Controller
-													name="is_project_notification_subscription_allowed"
-													control={control}
-													render={({ field }) => (
-														<Stack>
-															<Switch
-																label={
-																	<FormLabel
-																		label={t`Enable report notifications`}
-																		isDirty={
-																			formState.dirtyFields
-																				.is_project_notification_subscription_allowed
-																		}
-																		error={
-																			formState.errors
-																				.is_project_notification_subscription_allowed
-																				?.message
-																		}
-																	/>
-																}
-																checked={field.value}
-																onChange={(e) =>
-																	field.onChange(e.currentTarget.checked)
-																}
-																{...testId(
-																	"portal-editor-report-notifications-switch",
-																)}
-															/>
-														</Stack>
-													)}
-												/>
-											) : (
 												<Text size="sm" c="dimmed">
-													{t`Requires "Ask for email?" to be enabled`}
+													<Trans>
+														Notify participants when a report is published.
+													</Trans>
 												</Text>
-											)}
-										</Stack>
+
+												{watchedAskForEmail ? (
+													<Controller
+														name="is_project_notification_subscription_allowed"
+														control={control}
+														render={({ field }) => (
+															<Stack>
+																<Switch
+																	label={
+																		<FormLabel
+																			label={t`Enable report notifications`}
+																			isDirty={
+																				formState.dirtyFields
+																					.is_project_notification_subscription_allowed
+																			}
+																			error={
+																				formState.errors
+																					.is_project_notification_subscription_allowed
+																					?.message
+																			}
+																		/>
+																	}
+																	checked={field.value}
+																	onChange={(e) =>
+																		field.onChange(e.currentTarget.checked)
+																	}
+																	{...testId(
+																		"portal-editor-report-notifications-switch",
+																	)}
+																/>
+															</Stack>
+														)}
+													/>
+												) : (
+													<Text size="sm" c="dimmed">
+														{t`Requires "Ask for email?" to be enabled`}
+													</Text>
+												)}
+											</Stack>
+										)}
 									</Stack>
 								</Stack>
 								<Divider />

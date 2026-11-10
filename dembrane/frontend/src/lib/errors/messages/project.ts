@@ -88,6 +88,10 @@ export const project = {
 		id: "error.project.not_owner",
 		message: "Only the owner of this project can do this.",
 	}),
+	"project.participant_email_off": msg({
+		id: "error.project.participant_email_off",
+		message: "Asking participants for their email is not available right now.",
+	}),
 	"project.pin_order_invalid": msg({
 		id: "error.project.pin_order_invalid",
 		message: "A project can be pinned in place 1, 2 or 3.",

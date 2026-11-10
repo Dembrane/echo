@@ -45,22 +45,26 @@ export const BUILT_IN_TOPICS = [
   "moments",
   "actions",
   "disagreements",
+  "heard",
 ] as const;
 
 /**
  * The project fields a preset may set: a strict subset of PROJECT_UPDATE_FIELDS (the
  * type below fails to compile otherwise). Anything else in a preset is a parse error.
+ * Asking for the participant's email is left out on purpose (ECHO-1052): it sits behind
+ * ENABLE_PARTICIPANT_EMAIL, and neither a template nor accepted setup suggestions (the
+ * create request's overrides) may switch it on.
  */
 export const PresetFields = z
   .object({
     is_conversation_allowed: z.boolean(),
     default_conversation_ask_for_participant_name: z.boolean(),
-    default_conversation_ask_for_participant_email: z.boolean(),
     default_conversation_tutorial_slug: TUTORIAL,
     image_generation_model: z.enum(["MODEST"]),
     is_verify_enabled: z.boolean(),
     is_verify_on_finish_enabled: z.boolean(),
     is_get_reply_enabled: z.boolean(),
+    is_get_reply_cross_pollination_enabled: z.boolean(),
     get_reply_mode: z.enum(["summarize"]),
     enable_ai_title_and_tags: z.boolean(),
   })
@@ -84,7 +88,7 @@ const Preset = z
     name_label: Localized.optional(),
     /** Portal tags, in order. */
     tags: z.array(Localized).max(12).default([]),
-    /** Verify topics participants choose from; empty means every topic, as today. */
+    /** Verify topics participants choose from; empty means the table check alone (ECHO-1052). */
     verification_topics: z.array(z.enum(BUILT_IN_TOPICS)).default([]),
     /** Where the host lands after creating. */
     landing: z.enum(["home", "upload"]).default("home"),

@@ -1,140 +1,91 @@
 import { Trans } from "@lingui/react/macro";
-import { Progress, Stack, Text, Title, UnstyledButton } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
+import { Stack, Title } from "@mantine/core";
+import { ChatCircleDotsIcon, SealCheckIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { AiUnavailableText } from "@/components/participant/AiUnavailable";
 import { useParticipantProjectById } from "@/components/participant/hooks";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { testId } from "@/lib/testUtils";
-import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
+import { RefineChoice } from "./RefineChoice";
+import { refineMode } from "./refineMode";
+import { useRefineActions } from "./useRefineActions";
 
+/**
+ * The choice between Verify and Explore (ECHO-1052). The recorder's button leads here when
+ * both are on, or when the one that is on is locked (cooling down, or AI not available), so
+ * the participant sees why.
+ */
 export const RefineSelection = () => {
 	const { projectId, conversationId } = useParams();
-	const navigate = useI18nNavigate();
-	const cooldown = useRefineSelectionCooldown(conversationId);
 	const projectQuery = useParticipantProjectById(projectId ?? "");
-	const [_isRefineDisabled, setIsRefineDisabled] = useLocalStorage({
-		defaultValue: false,
-		key: `refine_disabled_${conversationId}`,
+	const aiUnavailable = projectQuery.data?.is_ai_available === false;
+	const actions = useRefineActions({
+		aiUnavailable,
+		conversationId,
+		projectId,
 	});
 
-	const aiUnavailable = projectQuery.data?.is_ai_available === false;
-	const verifyLocked = aiUnavailable || cooldown.verify.isActive;
-	const echoLocked = aiUnavailable || cooldown.echo.isActive;
-
-	const handleVerifyClick = () => {
-		if (verifyLocked) return;
-		navigate(`/${projectId}/conversation/${conversationId}/verify`);
-	};
-
-	const handleEchoClick = () => {
-		if (echoLocked) return;
-		cooldown.startEchoCooldown();
-		// Disable refine button while echo is generating
-		setIsRefineDisabled(true);
-		navigate(`/${projectId}/conversation/${conversationId}?echo=1`);
-	};
-
-	const showVerify = projectQuery.data?.is_verify_enabled ?? false;
-	const showEcho = projectQuery.data?.is_get_reply_enabled ?? false;
-
 	// If still loading, return null to avoid flicker
-	if (projectQuery.isLoading) {
-		return null;
-	}
-
-	if (!showVerify && !showEcho) {
-		return null;
-	}
-
-	const flexClass = showVerify && showEcho ? "flex-1" : "h-[50%]";
+	if (projectQuery.isLoading) return null;
+	const mode = refineMode(projectQuery.data);
+	if (!mode) return null;
+	const showVerify = mode !== "explore";
+	const showExplore = mode !== "verify";
 
 	return (
-		<Stack gap="md" className="h-full">
-			{/* Verify option */}
-			{showVerify && (
-				<UnstyledButton
-					onClick={handleVerifyClick}
-					className={`${flexClass} app-do block w-full p-6`}
-					aria-disabled={verifyLocked || undefined}
-					style={{
-						cursor: verifyLocked ? "not-allowed" : "pointer",
-						opacity: verifyLocked ? 0.6 : 1,
-					}}
-					{...testId("portal-echo-verify-card")}
-				>
-					<Stack gap="md" className="h-full py-6 justify-center">
-						<Title order={4}>
-							<Trans id="participant.echo.verify">Verify</Trans>
-						</Title>
-						<Text c="dimmed">
-							<Trans id="participant.refine.make.concrete.description">
-								Take some time to create an outcome that makes your contribution
-								concrete.
-							</Trans>
-						</Text>
-
-						{aiUnavailable && <AiUnavailableText />}
-
-						{!aiUnavailable && cooldown.verify.isActive && (
-							<Stack gap="xs" w="100%">
-								<Text size="sm" c="dimmed">
-									<Trans id="participant.refine.cooling.down">
-										Cooling down. Available in {cooldown.verify.formattedTime}
-									</Trans>
-								</Text>
-								<Progress
-									value={cooldown.verify.progress}
-									size="md"
-									animated={cooldown.verify.isActive}
-								/>
-							</Stack>
-						)}
-					</Stack>
-				</UnstyledButton>
+		<Stack gap="md" className="h-full justify-center py-6">
+			{mode === "both" && (
+				<Title order={2}>
+					<Trans id="participant.refine.choice.title">
+						What would help now?
+					</Trans>
+				</Title>
 			)}
-
-			{/* Explore option */}
-			{showEcho && (
-				<UnstyledButton
-					onClick={handleEchoClick}
-					className={`${flexClass} app-do block w-full p-6`}
-					aria-disabled={echoLocked || undefined}
-					style={{
-						cursor: echoLocked ? "not-allowed" : "pointer",
-						opacity: echoLocked ? 0.6 : 1,
-					}}
-					{...testId("portal-echo-explore-card")}
-				>
-					<Stack gap="md" className="h-full py-6 justify-center">
-						<Title order={4}>
-							<Trans id="participant.echo.explore">Explore</Trans>
-						</Title>
-						<Text c="dimmed">
-							<Trans id="participant.refine.go.deeper.description">
-								Get an immediate reply from dembrane to help you deepen the
-								conversation.
+			{showVerify && (
+				<RefineChoice
+					icon={SealCheckIcon}
+					label={<Trans id="participant.echo.verify">Verify</Trans>}
+					description={
+						<Trans id="participant.refine.verify.line">
+							Check what we captured together
+						</Trans>
+					}
+					onPress={actions.goVerify}
+					locked={actions.verifyLocked}
+					aiUnavailable={aiUnavailable}
+					cooldown={{
+						isActive: actions.cooldown.verify.isActive,
+						progress: actions.cooldown.verify.progress,
+						text: (
+							<Trans id="participant.refine.cooling.down">
+								Cooling down. Available in{" "}
+								{actions.cooldown.verify.formattedTime}
 							</Trans>
-						</Text>
-
-						{aiUnavailable && <AiUnavailableText />}
-
-						{!aiUnavailable && cooldown.echo.isActive && (
-							<Stack gap="xs" w="100%">
-								<Text size="sm" c="dimmed">
-									<Trans id="participant.refine.cooling.down">
-										Cooling down. Available in {cooldown.echo.formattedTime}
-									</Trans>
-								</Text>
-								<Progress
-									value={cooldown.echo.progress}
-									size="md"
-									animated={cooldown.echo.isActive}
-								/>
-							</Stack>
-						)}
-					</Stack>
-				</UnstyledButton>
+						),
+					}}
+					testId="portal-echo-verify-card"
+				/>
+			)}
+			{showExplore && (
+				<RefineChoice
+					icon={ChatCircleDotsIcon}
+					label={<Trans id="participant.echo.explore">Explore</Trans>}
+					description={
+						<Trans id="participant.refine.explore.line">
+							Get a question to go deeper
+						</Trans>
+					}
+					onPress={actions.goExplore}
+					locked={actions.exploreLocked}
+					aiUnavailable={aiUnavailable}
+					cooldown={{
+						isActive: actions.cooldown.echo.isActive,
+						progress: actions.cooldown.echo.progress,
+						text: (
+							<Trans id="participant.refine.cooling.down">
+								Cooling down. Available in {actions.cooldown.echo.formattedTime}
+							</Trans>
+						),
+					}}
+					testId="portal-echo-explore-card"
+				/>
 			)}
 		</Stack>
 	);
