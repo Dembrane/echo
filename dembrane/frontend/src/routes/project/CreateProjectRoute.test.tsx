@@ -423,10 +423,10 @@ describe("CreateProjectRoute: setup suggestions", () => {
 			return new Response("{}");
 		});
 
-	it("sits in the name step, optional, with its walkthrough anchor", () => {
+	it("sits in the name step, optional, with its walkthrough anchor", async () => {
 		renderCreate();
 		chooseTemplate("event");
-		const block = screen.getByTestId("setup-suggestions");
+		const block = await screen.findByTestId("setup-suggestions");
 		expect(block.getAttribute("data-tour")).toBe("setup-suggestions");
 		expect(screen.getByText("Tell dembrane about your session")).toBeTruthy();
 	});
@@ -437,7 +437,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		renderCreate();
 		chooseTemplate("event");
 		nameIt("Bewonersavond");
-		fireEvent.change(screen.getByLabelText("About your session"), {
+		fireEvent.change(await screen.findByLabelText("About your session"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
 		});
 		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
@@ -459,7 +459,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		renderCreate();
 		chooseTemplate("conversation");
 		nameIt("Bewonersavond");
-		fireEvent.change(screen.getByLabelText("About your session"), {
+		fireEvent.change(await screen.findByLabelText("About your session"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
 		});
 		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));

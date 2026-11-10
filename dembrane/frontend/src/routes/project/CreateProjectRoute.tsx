@@ -26,10 +26,8 @@ import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
 import { projectLanguageForLocale } from "@/components/project/projectLanguage";
-import {
-	SessionBriefConnected,
-	type SettingOverrides,
-} from "@/components/project/setup-suggestions/SessionBrief/SessionBriefConnected";
+import { LazySessionBrief } from "@/components/project/setup-suggestions/lazy";
+import type { SettingOverrides } from "@/components/project/setup-suggestions/SessionBrief/SessionBriefConnected";
 import {
 	hasTerm,
 	type SetupSuggestions,
@@ -407,7 +405,7 @@ export const CreateProjectRoute = () => {
 
 							{/* Optional and never in the way: Create stays enabled while it
 							    runs, and accepted terms land in the key terms below. */}
-							<SessionBriefConnected
+							<LazySessionBrief
 								workspaceId={workspaceId ?? null}
 								templateKey={template ?? "blank"}
 								name={name}
