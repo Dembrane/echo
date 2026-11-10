@@ -2772,6 +2772,12 @@ export const project = pgTable(
     is_sample: boolean().default(false).notNull(),
     /** The fixture a sample copy was last seeded from, so a newer fixture updates it once. */
     sample_version: varchar({ length: 64 }),
+    /**
+     * The template the project was created from (packages/projects project-templates.ts)
+     * and its version; null for projects made before templates, clones and the old API.
+     */
+    template_key: varchar({ length: 64 }),
+    template_version: integer(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

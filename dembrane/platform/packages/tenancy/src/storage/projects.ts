@@ -92,6 +92,7 @@ const summaryFields = {
   language: project.language,
   pin_order: project.pin_order,
   visibility: project.visibility,
+  is_sample: project.is_sample,
   // Live conversations only; Directus's count(conversations) also counted deleted rows.
   conversations_count: sql<number>`(select count(*)::int from "conversation" c where c.project_id = "project"."id" and c.deleted_at is null)`,
 };
