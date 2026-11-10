@@ -422,6 +422,14 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			setVisited(new Set(d.visited));
 			if (d.finishing) setFinishing(true);
 			else if (d.current) setCurrent(d.current);
+			captureSigning(SIGNING_EVENTS.resumed, doc, {
+				step_index: d.finishing
+					? fields.length
+					: Math.max(
+							0,
+							fields.findIndex((f) => f.id === d.current),
+						),
+			});
 		},
 		values,
 		visited,
@@ -888,7 +896,6 @@ function useSigningEvents(
 		[doc.id, doc.kind],
 	);
 	const last = useRef<{ index: number; kind: string } | null>(null);
-	const left = useRef(false);
 	const index = step?.index ?? null;
 	const kind = step?.kind ?? null;
 	useEffect(() => {
@@ -903,10 +910,16 @@ function useSigningEvents(
 	// Left before signing: the page closed, reloaded or was navigated away from.
 	useEffect(() => {
 		if (!started) return;
-		left.current = false;
+		// Mounted again straight after an unmount (React's development double mount, or
+		// the same walk coming back): that unmount was not a leave.
+		const pending = pendingLeave.get(ref.id);
+		if (pending !== undefined) {
+			clearTimeout(pending);
+			pendingLeave.delete(ref.id);
+		}
 		const leave = () => {
-			if (left.current || signedDocs.has(ref.id)) return;
-			left.current = true;
+			if (signedDocs.has(ref.id) || abandonedDocs.has(ref.id)) return;
+			abandonedDocs.add(ref.id);
 			captureSigning(SIGNING_EVENTS.abandoned, ref, {
 				step_index: last.current?.index ?? 0,
 			});
@@ -914,13 +927,26 @@ function useSigningEvents(
 		window.addEventListener("pagehide", leave);
 		return () => {
 			window.removeEventListener("pagehide", leave);
-			leave();
+			// Deferred, so a mount that follows at once can call it off.
+			pendingLeave.set(
+				ref.id,
+				setTimeout(() => {
+					pendingLeave.delete(ref.id);
+					leave();
+				}, 0),
+			);
 		};
 	}, [ref, started]);
 }
 
-/** Documents signed on this page, so leaving the thank-you screen is not "abandoned". */
+/**
+ * Per page life, by document: signed here, so leaving the thank-you screen is not
+ * "abandoned"; already sent as abandoned, so it is sent once; and an unmount whose
+ * abandoned event waits to see whether the walk mounts again.
+ */
 const signedDocs = new Set<string>();
+const abandonedDocs = new Set<string>();
+const pendingLeave = new Map<string, ReturnType<typeof setTimeout>>();
 
 const isOptionField = (f: DocumentFieldT) =>
 	f.kind === "checkbox" && Boolean(f.key?.startsWith("option:"));

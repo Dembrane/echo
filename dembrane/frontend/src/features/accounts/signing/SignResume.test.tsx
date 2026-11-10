@@ -10,6 +10,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
+import { StrictMode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import {
 	afterEach,
@@ -28,6 +29,9 @@ import { draftKey } from "./signingDraft";
 // carry the document and the step, never what was typed. The API is stood in for; the
 // PDF never arrives, which leaves the panel to work with.
 const capture = vi.hoisted(() => vi.fn());
+// Which document the API answers with; a test that needs a fresh page life for its
+// events takes its own id.
+const served = vi.hoisted(() => ({ id: "" }));
 const me = vi.hoisted(() => ({
 	data: {
 		directus_user_id: "user-1",
@@ -47,7 +51,9 @@ vi.mock("../api/client", async (importOriginal) => {
 	return {
 		...real,
 		call: async (name: string) =>
-			name === "readDocument" ? { ...offerDetail, status: "viewed" } : {},
+			name === "readDocument"
+				? { ...offerDetail, id: served.id || offerDetail.id, status: "viewed" }
+				: {},
 		fetchPdf: () => new Promise(() => {}),
 	};
 });
@@ -84,26 +90,28 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const open = () =>
+const open = (wrap: (n: React.ReactNode) => React.ReactNode = (n) => n) =>
 	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<QueryClientProvider
-					client={
-						new QueryClient({ defaultOptions: { queries: { retry: false } } })
-					}
-				>
-					<MemoryRouter initialEntries={[SIGN]}>
-						<Routes>
-							<Route
-								path="/:language/o/:organisationId/account/documents/:docId/sign"
-								element={<SignRoute />}
-							/>
-						</Routes>
-					</MemoryRouter>
-				</QueryClientProvider>
-			</MantineProvider>
-		</I18nProvider>,
+		wrap(
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<QueryClientProvider
+						client={
+							new QueryClient({ defaultOptions: { queries: { retry: false } } })
+						}
+					>
+						<MemoryRouter initialEntries={[SIGN]}>
+							<Routes>
+								<Route
+									path="/:language/o/:organisationId/account/documents/:docId/sign"
+									element={<SignRoute />}
+								/>
+							</Routes>
+						</MemoryRouter>
+					</QueryClientProvider>
+				</MantineProvider>
+			</I18nProvider>,
+		) as React.ReactElement,
 	);
 
 const input = () => screen.getByTestId("sign-field-input") as HTMLInputElement;
@@ -119,9 +127,9 @@ describe("signing survives a reload", () => {
 		fireEvent.click(screen.getByTestId("sign-next"));
 		// Organisation, prefilled from billing; change it.
 		fireEvent.change(input(), { target: { value: "Gemeente Testdorp" } });
+		// The reload: the browser hides the page, then loads it again.
+		window.dispatchEvent(new Event("pagehide"));
 		cleanup();
-
-		// The reload.
 		open();
 		await waitFor(() => expect(input().value).toBe("Gemeente Testdorp"));
 		expect(screen.queryByTestId("sign-start")).toBeNull();
@@ -139,16 +147,47 @@ describe("signing survives a reload", () => {
 			step_index: 1,
 			step_kind: "text",
 		});
-		// Leaving the page mid-walk counts once, at the step it was on.
-		expect(events("document_signing_abandoned")).toContainEqual({
-			document_id: offerDetail.id,
-			document_kind: "offer",
-			step_index: 1,
-		});
+		// A reload reads as abandoned, then resumed at the same step.
+		expect(events("document_signing_abandoned")).toEqual([
+			{ document_id: offerDetail.id, document_kind: "offer", step_index: 1 },
+		]);
+		expect(events("document_signing_resumed")).toEqual([
+			{ document_id: offerDetail.id, document_kind: "offer", step_index: 1 },
+		]);
+		const order = capture.mock.calls.map(([e]) => e);
+		expect(order.indexOf("document_signing_abandoned")).toBeLessThan(
+			order.indexOf("document_signing_resumed"),
+		);
+		// Leaving again in the same page life sends no second abandoned event.
+		window.dispatchEvent(new Event("pagehide"));
+		cleanup();
+		await new Promise((r) => setTimeout(r, 5));
+		expect(events("document_signing_abandoned")).toHaveLength(1);
 		// Nothing typed goes out with any event.
 		expect(JSON.stringify(capture.mock.calls)).not.toMatch(
 			/Gemeente Testdorp|Ada Lovelace|ada@example\.org/,
 		);
+	});
+
+	it("a development double mount is not a leave; a real unmount is", async () => {
+		served.id = "0199a1bd-0000-7000-8000-0000000000d1";
+		try {
+			open((n) => <StrictMode>{n}</StrictMode>);
+			fireEvent.click(await screen.findByTestId("sign-start"));
+			await waitFor(() => expect(input().value).toBe("Ada Lovelace"));
+			await new Promise((r) => setTimeout(r, 5));
+			expect(events("document_signing_abandoned")).toEqual([]);
+			cleanup();
+			await waitFor(() =>
+				expect(events("document_signing_abandoned")).toEqual([
+					{ document_id: served.id, document_kind: "offer", step_index: 0 },
+				]),
+			);
+			// No stored draft was restored on that first load.
+			expect(events("document_signing_resumed")).toEqual([]);
+		} finally {
+			served.id = "";
+		}
 	});
 
 	it("another person signed in starts clean", async () => {
