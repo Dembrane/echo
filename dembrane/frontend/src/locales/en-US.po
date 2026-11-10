@@ -238,12 +238,12 @@ msgid "(direct workspace access)"
 msgstr "(direct workspace access)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
-#: src/routes/project/CreateProjectRoute.tsx:531
+#: src/routes/project/CreateProjectRoute.tsx:573
 msgid "(missing)"
 msgstr "(missing)"
 
-#: src/routes/project/CreateProjectRoute.tsx:537
-#: src/routes/project/CreateProjectRoute.tsx:540
+#: src/routes/project/CreateProjectRoute.tsx:579
+#: src/routes/project/CreateProjectRoute.tsx:582
 msgid "(none)"
 msgstr "(none)"
 
@@ -335,7 +335,7 @@ msgstr "{0, plural, one {# live} other {# live}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:276
+#: src/routes/project/ProjectsHome.tsx:302
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -398,7 +398,7 @@ msgstr "{0, plural, one {# seat} other {# seats}} paid for this period and unuse
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:481
+#: src/routes/project/ProjectsHome.tsx:511
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# selected} other {# selected}}"
@@ -440,10 +440,9 @@ msgstr "{0, plural, one {# word removed} other {# words removed}}"
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
-#. placeholder {0}: s.tag_count
 #: src/components/project/templates/projectTemplates.ts:133
-msgid "{0, plural, one {Adds # tag to pick when recording starts} other {Adds # tags to pick when recording starts}}"
-msgstr "{0, plural, one {Adds # tag to pick when recording starts} other {Adds # tags to pick when recording starts}}"
+#~ msgid "{0, plural, one {Adds # tag to pick when recording starts} other {Adds # tags to pick when recording starts}}"
+#~ msgstr "{0, plural, one {Adds # tag to pick when recording starts} other {Adds # tags to pick when recording starts}}"
 
 #. placeholder {0}: conversations - NAMED_CONVERSATIONS
 #: src/components/map/panels/Legend.tsx:97
@@ -1378,8 +1377,8 @@ msgid "A host"
 msgstr "A host"
 
 #: src/components/project/templates/projectTemplates.ts:91
-msgid "A live event"
-msgstr "A live event"
+#~ msgid "A live event"
+#~ msgstr "A live event"
 
 #: src/components/project/ProjectExperimentalSection.tsx:54
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
@@ -1418,7 +1417,7 @@ msgstr "A participant portal for recording conversations."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 
-#: src/routes/project/ProjectsHome.tsx:364
+#: src/routes/project/ProjectsHome.tsx:394
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 
@@ -1465,8 +1464,8 @@ msgid "A separate data-ownership and billing context. It can be handed off to th
 msgstr "A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement."
 
 #: src/components/project/templates/projectTemplates.ts:89
-msgid "A series of sessions"
-msgstr "A series of sessions"
+#~ msgid "A series of sessions"
+#~ msgstr "A series of sessions"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1141
 msgid "A short blurb shown on the organisation overview."
@@ -1532,7 +1531,7 @@ msgstr "Accepted terms"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
-#: src/routes/project/CreateProjectRoute.tsx:545
+#: src/routes/project/CreateProjectRoute.tsx:587
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
 #: src/components/project/ProjectUsageAndSharing.tsx:217
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -1868,7 +1867,7 @@ msgstr "Add to this chat"
 msgid "Add to workspaces"
 msgstr "Add to workspaces"
 
-#: src/components/project/ProjectPortalEditor.tsx:1173
+#: src/components/project/ProjectPortalEditor.tsx:1221
 #: src/components/project/CustomTopicModal.tsx:252
 msgid "Add topic"
 msgstr "Add topic"
@@ -2036,7 +2035,7 @@ msgstr "Admins can reach every workspace in this organisation. Members and exter
 msgid "Advanced"
 msgstr "Advanced"
 
-#: src/components/project/ProjectPortalEditor.tsx:767
+#: src/components/project/ProjectPortalEditor.tsx:815
 msgid "Advanced (tips and best practices)"
 msgstr "Advanced (tips and best practices)"
 
@@ -2048,7 +2047,7 @@ msgstr "Advanced (tips and best practices)"
 msgid "Advanced details"
 msgstr "Advanced details"
 
-#: src/components/project/ProjectPortalEditor.tsx:1445
+#: src/components/project/ProjectPortalEditor.tsx:1493
 #: src/components/project/PortalSettingsOverview.tsx:42
 msgid "Advanced settings"
 msgstr "Advanced settings"
@@ -2196,7 +2195,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "All kinds"
 
-#: src/routes/project/ProjectsHome.tsx:408
+#: src/routes/project/ProjectsHome.tsx:438
 msgid "All projects"
 msgstr "All projects"
 
@@ -2381,8 +2380,8 @@ msgid "An improved transcript is on its way."
 msgstr "An improved transcript is on its way."
 
 #: src/components/project/templates/projectTemplates.ts:103
-msgid "An interview or a meeting, recorded on one device."
-msgstr "An interview or a meeting, recorded on one device."
+#~ msgid "An interview or a meeting, recorded on one device."
+#~ msgstr "An interview or a meeting, recorded on one device."
 
 #: src/components/map/panels/NodeDetailCard.tsx:200
 #: src/components/map/panels/DetailsSheet.tsx:258
@@ -2486,7 +2485,7 @@ msgstr "Anonymised transcripts have clearer labels."
 msgid "Anonymize transcript"
 msgstr "Anonymize transcript"
 
-#: src/components/project/ProjectPortalEditor.tsx:1469
+#: src/components/project/ProjectPortalEditor.tsx:1517
 #: src/components/project/PortalSettingsOverview.tsx:135
 msgid "Anonymize transcripts"
 msgstr "Anonymize transcripts"
@@ -2654,7 +2653,7 @@ msgstr "Are you sure you want to delete this chat? This action cannot be undone.
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Are you sure you want to delete this conversation? This action cannot be undone."
 
-#: src/components/project/ProjectPortalEditor.tsx:1736
+#: src/components/project/ProjectPortalEditor.tsx:1784
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Are you sure you want to delete this custom topic? This cannot be undone."
 
@@ -2755,7 +2754,7 @@ msgstr "Ask a question about the conversations in this project, or get help sett
 msgid "Ask a workspace admin for an invite, or pick a different workspace from your list."
 msgstr "Ask a workspace admin for an invite, or pick a different workspace from your list."
 
-#: src/routes/project/CreateProjectRoute.tsx:318
+#: src/routes/project/CreateProjectRoute.tsx:344
 msgid "Ask a workspace admin to create the project for you."
 msgstr "Ask a workspace admin to create the project for you."
 
@@ -2780,7 +2779,7 @@ msgstr "Ask about your conversations..."
 msgid "Ask could not answer"
 msgstr "Ask could not answer"
 
-#: src/components/project/ProjectPortalEditor.tsx:706
+#: src/components/project/ProjectPortalEditor.tsx:754
 #: src/components/project/PortalSettingsOverview.tsx:118
 msgid "Ask for email?"
 msgstr "Ask for email?"
@@ -2790,7 +2789,7 @@ msgstr "Ask for email?"
 #~ msgid "Ask for Email?"
 #~ msgstr "Ask for Email?"
 
-#: src/components/project/ProjectPortalEditor.tsx:676
+#: src/components/project/ProjectPortalEditor.tsx:688
 #: src/components/project/PortalSettingsOverview.tsx:113
 msgid "Ask for name?"
 msgstr "Ask for name?"
@@ -2821,11 +2820,11 @@ msgstr "ask in chat"
 #~ msgid "ask more in this sample project"
 #~ msgstr "ask more in this sample project"
 
-#: src/components/common/settingChange.tsx:18
+#: src/components/common/settingChange.tsx:20
 msgid "Ask participants for their email"
 msgstr "Ask participants for their email"
 
-#: src/components/common/settingChange.tsx:20
+#: src/components/common/settingChange.tsx:22
 msgid "Ask participants for their name"
 msgstr "Ask participants for their name"
 
@@ -2838,12 +2837,12 @@ msgid "Ask your admin"
 msgstr "Ask your admin"
 
 #: src/components/project/templates/projectTemplates.ts:126
-msgid "Asks each table for its name"
-msgstr "Asks each table for its name"
+#~ msgid "Asks each table for its name"
+#~ msgstr "Asks each table for its name"
 
 #: src/components/project/templates/projectTemplates.ts:143
-msgid "Asks for a session name before recording"
-msgstr "Asks for a session name before recording"
+#~ msgid "Asks for a session name before recording"
+#~ msgstr "Asks for a session name before recording"
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
 #~ msgid "Aspect"
@@ -2883,7 +2882,7 @@ msgstr "Assistant turns"
 msgid "At least 8 characters"
 msgstr "At least 8 characters"
 
-#: src/components/project/ProjectPortalEditor.tsx:1065
+#: src/components/project/ProjectPortalEditor.tsx:1113
 msgid "At least one topic must be selected to enable Verify"
 msgstr "At least one topic must be selected to enable Verify"
 
@@ -2994,8 +2993,8 @@ msgstr "Authenticator code"
 msgid "Auto fact-check new claims"
 msgstr "Auto fact-check new claims"
 
-#: src/components/project/ProjectPortalEditor.tsx:1549
-#: src/components/project/ProjectPortalEditor.tsx:1571
+#: src/components/project/ProjectPortalEditor.tsx:1597
+#: src/components/project/ProjectPortalEditor.tsx:1619
 msgid "Auto-generate titles"
 msgstr "Auto-generate titles"
 
@@ -3023,11 +3022,11 @@ msgstr "Automatic conversation titles remain visible when a name is removed."
 msgid "Automatic summaries, conversation merging and durations work more reliably."
 msgstr "Automatic summaries, conversation merging and durations work more reliably."
 
-#: src/components/common/settingChange.tsx:26
+#: src/components/common/settingChange.tsx:28
 msgid "Automatic titles and draft tags"
 msgstr "Automatic titles and draft tags"
 
-#: src/components/project/ProjectPortalEditor.tsx:1556
+#: src/components/project/ProjectPortalEditor.tsx:1604
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
@@ -3070,7 +3069,7 @@ msgstr "Away"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/CreateProjectRoute.tsx:591
+#: src/routes/project/CreateProjectRoute.tsx:633
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:685
 #: src/routes/organisation/OrganisationRoute.tsx:708
@@ -3129,7 +3128,7 @@ msgstr "Back to log in"
 msgid "Back to my workspaces"
 msgstr "Back to my workspaces"
 
-#: src/routes/project/CreateProjectRoute.tsx:321
+#: src/routes/project/CreateProjectRoute.tsx:347
 msgid "Back to projects"
 msgstr "Back to projects"
 
@@ -3162,7 +3161,7 @@ msgstr "Back to your workspaces"
 msgid "Base"
 msgstr "Base"
 
-#: src/components/project/ProjectPortalEditor.tsx:763
+#: src/components/project/ProjectPortalEditor.tsx:811
 msgid "Basic (essential tutorial slides)"
 msgstr "Basic (essential tutorial slides)"
 
@@ -3170,7 +3169,7 @@ msgstr "Basic (essential tutorial slides)"
 #~ msgid "Basic (Essential tutorial slides)"
 #~ msgstr "Basic (Essential tutorial slides)"
 
-#: src/components/project/ProjectPortalEditor.tsx:629
+#: src/components/project/ProjectPortalEditor.tsx:641
 #: src/components/project/PortalSettingsOverview.tsx:32
 msgid "Basic settings"
 msgstr "Basic settings"
@@ -3208,8 +3207,8 @@ msgstr "Before you finish"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:168
 #: src/components/report/UpdateReportModalButton.tsx:200
 #: src/components/report/CreateReportForm.tsx:241
-#: src/components/project/ProjectPortalEditor.tsx:1472
-#: src/components/project/ProjectPortalEditor.tsx:1552
+#: src/components/project/ProjectPortalEditor.tsx:1520
+#: src/components/project/ProjectPortalEditor.tsx:1600
 #: src/components/project/ProjectExperimentalSection.tsx:50
 #: src/components/map/MapPage.tsx:680
 #: src/components/conversation/RetranscribeConversation.tsx:180
@@ -3220,12 +3219,12 @@ msgid "Beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:792
+#: src/components/project/ProjectPortalEditor.tsx:840
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:983
+#: src/components/project/ProjectPortalEditor.tsx:1031
 msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
@@ -3300,8 +3299,8 @@ msgid "Billing mode"
 msgstr "Billing mode"
 
 #: src/components/project/templates/projectTemplates.ts:95
-msgid "Blank project"
-msgstr "Blank project"
+#~ msgid "Blank project"
+#~ msgstr "Blank project"
 
 #: src/components/sharing/LiveButton.tsx:119
 msgid "Book"
@@ -3323,7 +3322,7 @@ msgstr "Book a certified training to keep using dembrane in high-risk settings."
 msgid "Both"
 msgstr "Both"
 
-#: src/components/project/ProjectPortalEditor.tsx:910
+#: src/components/project/ProjectPortalEditor.tsx:958
 msgid "Brainstorm ideas"
 msgstr "Brainstorm ideas"
 
@@ -3415,8 +3414,8 @@ msgstr "Calls no account could be matched to"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/ProjectsHome.tsx:510
-#: src/routes/project/CreateProjectRoute.tsx:375
+#: src/routes/project/ProjectsHome.tsx:540
+#: src/routes/project/CreateProjectRoute.tsx:413
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1819
 #: src/routes/organisation/OrganisationRoute.tsx:1842
@@ -3889,6 +3888,10 @@ msgstr "Checking…"
 msgid "Checks"
 msgstr "Checks"
 
+#: src/routes/project/CreateProjectRoute.tsx:404
+msgid "Choose a card to continue."
+msgstr "Choose a card to continue."
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:527
 msgid "Choose a conversation"
 msgstr "Choose a conversation"
@@ -3995,7 +3998,7 @@ msgid "Clear filters"
 msgstr "Clear filters"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:431
+#: src/routes/project/ProjectsHome.tsx:461
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -4436,7 +4439,7 @@ msgid "Contextual suggestions"
 msgstr "Contextual suggestions"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:763
-#: src/routes/project/CreateProjectRoute.tsx:367
+#: src/routes/project/CreateProjectRoute.tsx:400
 #: src/routes/onboarding/OnboardingRoute.tsx:561
 #: src/routes/onboarding/OnboardingRoute.tsx:702
 #: src/routes/auth/Register.tsx:239
@@ -5097,8 +5100,8 @@ msgstr "Create organisation"
 msgid "Create password"
 msgstr "Create password"
 
-#: src/routes/project/CreateProjectRoute.tsx:336
-#: src/routes/project/CreateProjectRoute.tsx:583
+#: src/routes/project/CreateProjectRoute.tsx:363
+#: src/routes/project/CreateProjectRoute.tsx:625
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:194
@@ -5106,7 +5109,7 @@ msgstr "Create password"
 msgid "Create project"
 msgstr "Create project"
 
-#: src/routes/project/CreateProjectRoute.tsx:135
+#: src/routes/project/CreateProjectRoute.tsx:145
 msgid "Create project | dembrane"
 msgstr "Create project | dembrane"
 
@@ -5171,7 +5174,7 @@ msgid "Created on"
 msgstr "Created on"
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:339
+#: src/routes/project/CreateProjectRoute.tsx:366
 msgid "Creating in <0>{0}</0>"
 msgstr "Creating in <0>{0}</0>"
 
@@ -5205,8 +5208,8 @@ msgstr "Crop logo"
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 
-#: src/components/project/ProjectPortalEditor.tsx:843
-#: src/components/common/settingChange.tsx:32
+#: src/components/project/ProjectPortalEditor.tsx:891
+#: src/components/common/settingChange.tsx:34
 msgid "Cross-pollination"
 msgstr "Cross-pollination"
 
@@ -5234,7 +5237,7 @@ msgid "Current rate"
 msgstr "Current rate"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:225
-#: src/components/project/ProjectPortalEditor.tsx:922
+#: src/components/project/ProjectPortalEditor.tsx:970
 msgid "Custom"
 msgstr "Custom"
 
@@ -5258,7 +5261,7 @@ msgstr "Custom logo"
 #~ msgid "Custom Logo"
 #~ msgstr "Custom Logo"
 
-#: src/components/project/ProjectPortalEditor.tsx:1596
+#: src/components/project/ProjectPortalEditor.tsx:1644
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
@@ -5270,7 +5273,7 @@ msgstr "Custom workspace logo shown to participants."
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 
-#: src/components/project/ProjectPortalEditor.tsx:660
+#: src/components/project/ProjectPortalEditor.tsx:672
 msgid "Czech (only ECHO features, transcription and summaries)"
 msgstr "Czech (only ECHO features, transcription and summaries)"
 
@@ -5399,7 +5402,7 @@ msgstr "Deep Dive"
 msgid "Default"
 msgstr "Default"
 
-#: src/components/project/ProjectPortalEditor.tsx:759
+#: src/components/project/ProjectPortalEditor.tsx:807
 msgid "Default - no tutorial (only privacy statements)"
 msgstr "Default - no tutorial (only privacy statements)"
 
@@ -5426,7 +5429,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/routes/project/report/ProjectReportRoute.tsx:1264
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
-#: src/components/project/ProjectPortalEditor.tsx:1737
+#: src/components/project/ProjectPortalEditor.tsx:1785
 #: src/components/project/ProjectDangerZone.tsx:179
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:591
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:625
@@ -5465,7 +5468,7 @@ msgstr "Delete conversation"
 #~ msgid "Delete Conversation"
 #~ msgstr "Delete Conversation"
 
-#: src/components/project/ProjectPortalEditor.tsx:1735
+#: src/components/project/ProjectPortalEditor.tsx:1783
 msgid "Delete custom topic"
 msgstr "Delete custom topic"
 
@@ -5506,7 +5509,7 @@ msgstr "Delete this workspace"
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 
-#: src/components/project/ProjectPortalEditor.tsx:1131
+#: src/components/project/ProjectPortalEditor.tsx:1179
 msgid "Delete topic"
 msgstr "Delete topic"
 
@@ -5576,7 +5579,7 @@ msgstr "dembrane can make mistakes. Please double-check responses."
 msgid "dembrane default"
 msgstr "dembrane default"
 
-#: src/components/project/ProjectPortalEditor.tsx:1384
+#: src/components/project/ProjectPortalEditor.tsx:1432
 #: src/components/project/PortalSettingsOverview.tsx:138
 msgid "dembrane event invitation"
 msgstr "dembrane event invitation"
@@ -5724,11 +5727,11 @@ msgid "Disabled"
 msgstr "Disabled"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:291
+#: src/routes/project/CreateProjectRoute.tsx:317
 msgid "Discard"
 msgstr "Discard"
 
-#: src/routes/project/CreateProjectRoute.tsx:293
+#: src/routes/project/CreateProjectRoute.tsx:319
 msgid "Discard this project?"
 msgstr "Discard this project?"
 
@@ -5950,7 +5953,7 @@ msgstr "Duplicate"
 msgid "Duration"
 msgstr "Duration"
 
-#: src/components/project/ProjectPortalEditor.tsx:647
+#: src/components/project/ProjectPortalEditor.tsx:659
 msgid "Dutch"
 msgstr "Dutch"
 
@@ -5970,7 +5973,7 @@ msgstr "E-invoice"
 msgid "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 msgstr "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 
-#: src/components/project/ProjectPortalEditor.tsx:1614
+#: src/components/project/ProjectPortalEditor.tsx:1662
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 
@@ -5986,7 +5989,7 @@ msgstr "e.g. Client Alpha, Q1 Research"
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "e.g. Client onboarding interviews, Q1 product research"
 
-#: src/routes/project/CreateProjectRoute.tsx:390
+#: src/routes/project/CreateProjectRoute.tsx:428
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "e.g. Climate Listening, Q1 Research"
 
@@ -6139,7 +6142,7 @@ msgstr "Edit the report content using the rich text editor below. You can format
 #~ msgid "Edit the wording, check the evidence, or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr "Edit the wording, check the evidence, or hide a finding from this presentation. Shared results stay available in Analysis."
 
-#: src/components/project/ProjectPortalEditor.tsx:1106
+#: src/components/project/ProjectPortalEditor.tsx:1154
 msgid "Edit topic"
 msgstr "Edit topic"
 
@@ -6252,7 +6255,7 @@ msgstr "Emoji"
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji shown next to the topic e.g. 💡 🔍 📊"
 
-#: src/components/common/settingChange.tsx:94
+#: src/components/common/settingChange.tsx:96
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:473
 msgid "emptied out"
 msgstr "emptied out"
@@ -6278,7 +6281,7 @@ msgstr "Enable 2FA"
 #~ msgid "Enable a visualization from the panel settings menu"
 #~ msgstr "Enable a visualization from the panel settings menu"
 
-#: src/components/project/ProjectPortalEditor.tsx:816
+#: src/components/project/ProjectPortalEditor.tsx:864
 msgid "Enable Explore"
 msgstr "Enable Explore"
 
@@ -6286,7 +6289,7 @@ msgstr "Enable Explore"
 msgid "Enable participation"
 msgstr "Enable participation"
 
-#: src/components/project/ProjectPortalEditor.tsx:1242
+#: src/components/project/ProjectPortalEditor.tsx:1290
 msgid "Enable report notifications"
 msgstr "Enable report notifications"
 
@@ -6294,16 +6297,16 @@ msgstr "Enable report notifications"
 #~ msgid "Enable Report Notifications"
 #~ msgstr "Enable Report Notifications"
 
-#: src/components/project/ProjectPortalEditor.tsx:799
+#: src/components/project/ProjectPortalEditor.tsx:847
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:990
+#: src/components/project/ProjectPortalEditor.tsx:1038
 msgid "dashboard.dembrane.feature.verify.description"
 msgstr "Enable this feature to allow participants to verify and approve \"outcomes\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified outcomes and review them in the overview."
 
-#: src/components/project/ProjectPortalEditor.tsx:1492
+#: src/components/project/ProjectPortalEditor.tsx:1540
 msgid "Enable transcript anonymization"
 msgstr "Enable transcript anonymization"
 
@@ -6311,7 +6314,7 @@ msgstr "Enable transcript anonymization"
 msgid "Enable two-factor authentication"
 msgstr "Enable two-factor authentication"
 
-#: src/components/project/ProjectPortalEditor.tsx:1007
+#: src/components/project/ProjectPortalEditor.tsx:1055
 msgid "Enable Verify"
 msgstr "Enable Verify"
 
@@ -6329,7 +6332,7 @@ msgstr "Ended"
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Ends on {endDate}, then moves to Free"
 
-#: src/components/project/ProjectPortalEditor.tsx:646
+#: src/components/project/ProjectPortalEditor.tsx:658
 msgid "English"
 msgstr "English"
 
@@ -6436,8 +6439,8 @@ msgstr "Error creating report"
 
 #: src/routes/project/ProjectRoutes.tsx:120
 #: src/routes/project/ProjectRoutes.tsx:246
-#: src/routes/project/ProjectRoutes.tsx:326
-#: src/routes/project/ProjectRoutes.tsx:362
+#: src/routes/project/ProjectRoutes.tsx:327
+#: src/routes/project/ProjectRoutes.tsx:363
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -6523,7 +6526,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Everyone can find it. Admins join directly; members can ask."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:477
+#: src/routes/project/CreateProjectRoute.tsx:519
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
@@ -6603,7 +6606,7 @@ msgid "Expiring soon"
 msgstr "Expiring soon"
 
 #: src/routes/admin/aiCostBreakdown.ts:112
-#: src/components/project/ProjectPortalEditor.tsx:789
+#: src/components/project/ProjectPortalEditor.tsx:837
 #: src/components/project/PortalSettingsOverview.tsx:126
 msgid "Explore"
 msgstr "Explore"
@@ -6618,7 +6621,7 @@ msgstr "Explore"
 msgid "participant.button.refine.explore"
 msgstr "Explore"
 
-#: src/components/project/ProjectPortalEditor.tsx:855
+#: src/components/project/ProjectPortalEditor.tsx:903
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 
@@ -7324,7 +7327,7 @@ msgstr "Free-plan limits and upgrade options are clearer."
 msgid "Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports."
 msgstr "Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports."
 
-#: src/components/project/ProjectPortalEditor.tsx:650
+#: src/components/project/ProjectPortalEditor.tsx:662
 msgid "French"
 msgstr "French"
 
@@ -7499,7 +7502,7 @@ msgstr "Generating the summary. Please wait..."
 msgid "Generating your report..."
 msgstr "Generating your report..."
 
-#: src/components/project/ProjectPortalEditor.tsx:648
+#: src/components/project/ProjectPortalEditor.tsx:660
 msgid "German"
 msgstr "German"
 
@@ -7554,8 +7557,8 @@ msgid "Give the session a title"
 msgstr "Give the session a title"
 
 #: src/components/project/templates/projectTemplates.ts:140
-msgid "Gives each conversation a title"
-msgstr "Gives each conversation a title"
+#~ msgid "Gives each conversation a title"
+#~ msgstr "Gives each conversation a title"
 
 #: src/routes/settings/UserSettingsRoute.tsx:53
 #: src/components/agent-access/AgentAccessSection.tsx:127
@@ -7626,7 +7629,7 @@ msgstr "Go to portal editor"
 msgid "Go to previous release notes"
 msgstr "Go to previous release notes"
 
-#: src/routes/project/CreateProjectRoute.tsx:559
+#: src/routes/project/CreateProjectRoute.tsx:601
 msgid "Go to project home"
 msgstr "Go to project home"
 
@@ -7638,7 +7641,7 @@ msgstr "Go to report"
 msgid "Go to settings"
 msgstr "Go to settings"
 
-#: src/routes/project/CreateProjectRoute.tsx:557
+#: src/routes/project/CreateProjectRoute.tsx:599
 msgid "Go to the upload page"
 msgstr "Go to the upload page"
 
@@ -7674,7 +7677,7 @@ msgstr "Group by"
 msgid "Groups"
 msgstr "Groups"
 
-#: src/components/project/ProjectPortalEditor.tsx:1608
+#: src/components/project/ProjectPortalEditor.tsx:1656
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 
@@ -7778,7 +7781,7 @@ msgstr "Hide from this presentation"
 msgid "Hide missing arguments"
 msgstr "Hide missing arguments"
 
-#: src/components/project/ProjectPortalEditor.tsx:605
+#: src/components/project/ProjectPortalEditor.tsx:617
 msgid "Hide preview"
 msgstr "Hide preview"
 
@@ -7863,7 +7866,7 @@ msgstr "host guide"
 #: src/routes/project/ProjectHomeRoute.tsx:110
 #: src/routes/project/present/PresentRoute.tsx:137
 #: src/components/project/ProjectHostGuideLink.tsx:34
-#: src/components/common/settingChange.tsx:29
+#: src/components/common/settingChange.tsx:31
 msgid "Host guide"
 msgstr "Host guide"
 
@@ -8036,7 +8039,7 @@ msgstr "If you're trying to join an existing organisation, you should not create
 #~ msgid "If you're trying to join an existing organization, you should not create a new one. Some reasons that you may accidentally end up here are:"
 #~ msgstr "If you're trying to join an existing organization, you should not create a new one. Some reasons that you may accidentally end up here are:"
 
-#: src/components/common/settingChange.tsx:30
+#: src/components/common/settingChange.tsx:32
 msgid "Image style"
 msgstr "Image style"
 
@@ -8143,7 +8146,7 @@ msgstr "inherited from organisation"
 msgid "Initial"
 msgstr "Initial"
 
-#: src/routes/project/CreateProjectRoute.tsx:498
+#: src/routes/project/CreateProjectRoute.tsx:540
 msgid "Innovator or higher"
 msgstr "Innovator or higher"
 
@@ -8430,7 +8433,7 @@ msgstr "It may have been deleted."
 msgid "It will send you back to {0}."
 msgstr "It will send you back to {0}."
 
-#: src/components/project/ProjectPortalEditor.tsx:652
+#: src/components/project/ProjectPortalEditor.tsx:664
 msgid "Italian (only ECHO features, transcription and summaries)"
 msgstr "Italian (only ECHO features, transcription and summaries)"
 
@@ -8626,7 +8629,7 @@ msgid "keep analysing with popcorn"
 msgstr "keep analysing with popcorn"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:291
+#: src/routes/project/CreateProjectRoute.tsx:317
 msgid "Keep editing"
 msgstr "Keep editing"
 
@@ -8638,6 +8641,10 @@ msgstr "Keep editing"
 #: src/components/members/PendingInvitesSection.tsx:229
 msgid "Keep it"
 msgstr "Keep it"
+
+#: src/components/project/ProjectPortalEditor.tsx:736
+msgid "Keep it to {NAME_LABEL_MAX} characters."
+msgstr "Keep it to {NAME_LABEL_MAX} characters."
 
 #: src/components/training/TrainingRowActions.tsx:352
 msgid "Keep license"
@@ -8675,11 +8682,11 @@ msgstr "Keep working while audio uploads in the background."
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 
-#: src/routes/project/CreateProjectRoute.tsx:453
-#: src/routes/project/CreateProjectRoute.tsx:539
-#: src/components/project/ProjectPortalEditor.tsx:136
+#: src/routes/project/CreateProjectRoute.tsx:495
+#: src/routes/project/CreateProjectRoute.tsx:581
+#: src/components/project/ProjectPortalEditor.tsx:141
 #: src/components/project/KeyTermsInput.tsx:89
-#: src/components/common/settingChange.tsx:24
+#: src/components/common/settingChange.tsx:26
 msgid "Key terms"
 msgstr "Key terms"
 
@@ -8719,7 +8726,7 @@ msgstr "Knowledge graph"
 #: src/components/report/UpdateReportModalButton.tsx:327
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/report/CreateReportForm.tsx:324
-#: src/components/project/ProjectPortalEditor.tsx:639
+#: src/components/project/ProjectPortalEditor.tsx:651
 #: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
 #: src/components/language/LanguagePicker.tsx:124
@@ -8826,7 +8833,7 @@ msgstr "Left"
 
 #: src/components/settings/LegalBasisCard.tsx:118
 #: src/components/project/ProjectLegalBasisSection.tsx:164
-#: src/components/common/settingChange.tsx:39
+#: src/components/common/settingChange.tsx:41
 msgid "Legal basis"
 msgstr "Legal basis"
 
@@ -8856,8 +8863,8 @@ msgstr "Let's find what fits you"
 #~ msgid "Let's go!"
 #~ msgstr "Let's go!"
 
-#: src/routes/project/ProjectsHome.tsx:311
-#: src/routes/project/ProjectsHome.tsx:354
+#: src/routes/project/ProjectsHome.tsx:337
+#: src/routes/project/ProjectsHome.tsx:384
 msgid "Let's hear your first conversation."
 msgstr "Let's hear your first conversation."
 
@@ -9016,7 +9023,7 @@ msgstr "Live participant flow"
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 
-#: src/components/project/ProjectPortalEditor.tsx:1674
+#: src/components/project/ProjectPortalEditor.tsx:1722
 msgid "Live preview"
 msgstr "Live preview"
 
@@ -9144,8 +9151,8 @@ msgstr "Loading presentation"
 #~ msgstr "Loading projects..."
 
 #: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:61
-msgid "Loading templates"
-msgstr "Loading templates"
+#~ msgid "Loading templates"
+#~ msgstr "Loading templates"
 
 #: src/components/map/MapPage.tsx:562
 msgid "Loading the map."
@@ -9164,7 +9171,7 @@ msgstr "Loading this chat..."
 msgid "Loading transcript..."
 msgstr "Loading transcript..."
 
-#: src/components/project/ProjectPortalEditor.tsx:1050
+#: src/components/project/ProjectPortalEditor.tsx:1098
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
@@ -9304,6 +9311,10 @@ msgstr "Logo updated"
 #~ msgid "Logout"
 #~ msgstr "Logout"
 
+#: src/components/project/ProjectContextInput.tsx:44
+msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+msgstr "Long context is read on every answer, so keep the essentials: the people, the places and the question."
+
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
 msgstr "Longest first"
@@ -9408,8 +9419,8 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/components/project/templates/projectTemplates.ts:107
-msgid "Many tables or groups talking at the same time, each on a phone."
-msgstr "Many tables or groups talking at the same time, each on a phone."
+#~ msgid "Many tables or groups talking at the same time, each on a phone."
+#~ msgstr "Many tables or groups talking at the same time, each on a phone."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/routes/admin/aiCostBreakdown.ts:50
@@ -9672,7 +9683,7 @@ msgstr "Missing features I need"
 msgid "mo"
 msgstr "mo"
 
-#: src/components/project/ProjectPortalEditor.tsx:872
+#: src/components/project/ProjectPortalEditor.tsx:920
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:130
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:347
 msgid "Mode"
@@ -9712,7 +9723,7 @@ msgstr "More actions"
 msgid "More dependable anonymisation and recording"
 msgstr "More dependable anonymisation and recording"
 
-#: src/routes/project/CreateProjectRoute.tsx:443
+#: src/routes/project/CreateProjectRoute.tsx:485
 msgid "More options"
 msgstr "More options"
 
@@ -9784,7 +9795,7 @@ msgstr "Move history"
 msgid "Move project"
 msgstr "Move project"
 
-#: src/routes/project/ProjectsHome.tsx:500
+#: src/routes/project/ProjectsHome.tsx:530
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Move projects"
@@ -9842,8 +9853,8 @@ msgstr "My templates"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1551
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
-#: src/routes/project/CreateProjectRoute.tsx:381
-#: src/routes/project/CreateProjectRoute.tsx:530
+#: src/routes/project/CreateProjectRoute.tsx:419
+#: src/routes/project/CreateProjectRoute.tsx:572
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:124
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:372
@@ -9869,7 +9880,7 @@ msgstr "Name is required"
 msgid "Name it after the client, engagement, or purpose."
 msgstr "Name it after the client, engagement, or purpose."
 
-#: src/routes/project/CreateProjectRoute.tsx:389
+#: src/routes/project/CreateProjectRoute.tsx:427
 msgid "Name it after the topic, engagement, or question you're exploring."
 msgstr "Name it after the topic, engagement, or question you're exploring."
 
@@ -10468,7 +10479,7 @@ msgstr "No project activity this period."
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:450
+#: src/routes/project/ProjectsHome.tsx:480
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10620,7 +10631,7 @@ msgstr "No valid audio files were selected. Please select audio files only (MP3,
 msgid "No verification topics are configured for this project."
 msgstr "No verification topics are configured for this project."
 
-#: src/components/project/ProjectPortalEditor.tsx:1054
+#: src/components/project/ProjectPortalEditor.tsx:1102
 msgid "No verify topics available."
 msgstr "No verify topics available."
 
@@ -10825,11 +10836,11 @@ msgstr "Notes the assistant saved about this workspace from chats. Everyone in t
 msgid "Nothing from dembrane right now."
 msgstr "Nothing from dembrane right now."
 
-#: src/routes/project/ProjectsHome.tsx:352
+#: src/routes/project/ProjectsHome.tsx:382
 msgid "Nothing here for you yet."
 msgstr "Nothing here for you yet."
 
-#: src/components/common/settingChange.tsx:92
+#: src/components/common/settingChange.tsx:94
 msgid "nothing here yet"
 msgstr "nothing here yet"
 
@@ -10854,18 +10865,18 @@ msgid "Nothing saved yet. The assistant adds notes here as you chat."
 msgstr "Nothing saved yet. The assistant adds notes here as you chat."
 
 #: src/components/project/templates/projectTemplates.ts:111
-msgid "Nothing set up. Choose every setting yourself."
-msgstr "Nothing set up. Choose every setting yourself."
+#~ msgid "Nothing set up. Choose every setting yourself."
+#~ msgstr "Nothing set up. Choose every setting yourself."
 
 #: src/components/project/templates/projectTemplates.ts:141
-msgid "Nothing to fill in before recording"
-msgstr "Nothing to fill in before recording"
+#~ msgid "Nothing to fill in before recording"
+#~ msgstr "Nothing to fill in before recording"
 
 #: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:176
 msgid "Nothing to suggest from this. Names, places and abbreviations help most."
 msgstr "Nothing to suggest from this. Names, places and abbreviations help most."
 
-#: src/components/project/ProjectPortalEditor.tsx:1228
+#: src/components/project/ProjectPortalEditor.tsx:1276
 msgid "Notify participants when a report is published."
 msgstr "Notify participants when a report is published."
 
@@ -10901,7 +10912,7 @@ msgid "Observers are only available in workspaces for an external client. Pick o
 msgstr "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 
 #: src/components/results/curate/CurateTabs.tsx:105
-#: src/components/common/settingChange.tsx:104
+#: src/components/common/settingChange.tsx:106
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:469
 msgid "off"
@@ -10937,7 +10948,7 @@ msgstr "Oldest first"
 msgid "Oldest First"
 msgstr "Oldest First"
 
-#: src/components/common/settingChange.tsx:102
+#: src/components/common/settingChange.tsx:104
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:467
 msgid "on"
@@ -10989,8 +11000,8 @@ msgid "One big event at the end of the year"
 msgstr "One big event at the end of the year"
 
 #: src/components/project/templates/projectTemplates.ts:87
-msgid "One conversation"
-msgstr "One conversation"
+#~ msgid "One conversation"
+#~ msgstr "One conversation"
 
 #: src/components/results/ResultRow.tsx:68
 #: src/components/results/curate/CurateMeta.tsx:57
@@ -11010,7 +11021,7 @@ msgid "One number"
 msgstr "One number"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:896
+#: src/components/project/ProjectPortalEditor.tsx:944
 msgid "dashboard.explore.mode.question"
 msgstr "One question"
 
@@ -11078,7 +11089,7 @@ msgstr "Only the people you add or invite can see it."
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Only when recording an invoice already paid out-of-band."
 
-#: src/routes/project/CreateProjectRoute.tsx:503
+#: src/routes/project/CreateProjectRoute.tsx:545
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Only workspace admins and the people you invite can open this project."
 
@@ -11252,8 +11263,8 @@ msgstr "Open this page in {browserName} from the app's menu, or copy the link."
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Open this page in your browser from the app's menu, or copy the link."
 
-#: src/routes/project/CreateProjectRoute.tsx:474
-#: src/routes/project/CreateProjectRoute.tsx:547
+#: src/routes/project/CreateProjectRoute.tsx:516
+#: src/routes/project/CreateProjectRoute.tsx:589
 msgid "Open to the workspace"
 msgstr "Open to the workspace"
 
@@ -11296,8 +11307,8 @@ msgid "Opening screens"
 msgstr "Opening screens"
 
 #: src/components/project/templates/projectTemplates.ts:125
-msgid "Opens on the upload page"
-msgstr "Opens on the upload page"
+#~ msgid "Opens on the upload page"
+#~ msgstr "Opens on the upload page"
 
 #: src/components/map/panels/SpotlightPanel.tsx:206
 msgid "Opinion"
@@ -11321,11 +11332,11 @@ msgstr "Optional"
 msgid "Optional (falls back to English)"
 msgstr "Optional (falls back to English)"
 
-#: src/components/project/ProjectPortalEditor.tsx:689
+#: src/components/project/ProjectPortalEditor.tsx:701
 msgid "Optional field on the start page"
 msgstr "Optional field on the start page"
 
-#: src/components/project/ProjectPortalEditor.tsx:719
+#: src/components/project/ProjectPortalEditor.tsx:767
 msgid "Optional field on the thank you page"
 msgstr "Optional field on the thank you page"
 
@@ -11547,7 +11558,7 @@ msgstr "Owning organisation"
 #~ msgid "Page {0}"
 #~ msgstr "Page {0}"
 
-#: src/components/project/ProjectPortalEditor.tsx:1312
+#: src/components/project/ProjectPortalEditor.tsx:1360
 msgid "Page content"
 msgstr "Page content"
 
@@ -11559,7 +11570,7 @@ msgstr "Page content"
 msgid "Page not found"
 msgstr "Page not found"
 
-#: src/components/project/ProjectPortalEditor.tsx:1288
+#: src/components/project/ProjectPortalEditor.tsx:1336
 msgid "Page title"
 msgstr "Page title"
 
@@ -11609,7 +11620,7 @@ msgstr "Participant emails"
 #~ msgid "Participant Emails"
 #~ msgstr "Participant Emails"
 
-#: src/components/project/ProjectPortalEditor.tsx:783
+#: src/components/project/ProjectPortalEditor.tsx:831
 #: src/components/project/PortalSettingsOverview.tsx:37
 msgid "Participant features"
 msgstr "Participant features"
@@ -11631,11 +11642,11 @@ msgstr "Participant name and email"
 msgid "Participant onboarding cards have clearer wording and corrected translations."
 msgstr "Participant onboarding cards have clearer wording and corrected translations."
 
-#: src/components/common/settingChange.tsx:35
+#: src/components/common/settingChange.tsx:37
 msgid "Participant updates subscription"
 msgstr "Participant updates subscription"
 
-#: src/components/common/settingChange.tsx:36
+#: src/components/common/settingChange.tsx:38
 msgid "Participant verification"
 msgstr "Participant verification"
 
@@ -11644,8 +11655,8 @@ msgid "Participants"
 msgstr "Participants"
 
 #: src/components/project/templates/projectTemplates.ts:130
-msgid "Participants can ask for a question to go deeper (Explore)"
-msgstr "Participants can ask for a question to go deeper (Explore)"
+#~ msgid "Participants can ask for a question to go deeper (Explore)"
+#~ msgstr "Participants can ask for a question to go deeper (Explore)"
 
 #: src/components/release/releaseHistory.ts:781
 msgid "Participants can request a reply during a recording."
@@ -11658,6 +11669,10 @@ msgstr "Participants can share the portal from the header or the thank you page:
 #: src/components/release/releaseHistory.ts:511
 msgid "Participants can verify outcomes and refine replies."
 msgstr "Participants can verify outcomes and refine replies."
+
+#: src/components/project/ProjectPortalEditor.tsx:730
+msgid "Participants read this above the box, for example \"Table name or number\". Leave it empty for the default."
+msgstr "Participants read this above the box, for example \"Table name or number\". Leave it empty for the default."
 
 #: src/components/release/releaseHistory.ts:402
 msgid "Participants receive a reminder to verify before ending a conversation."
@@ -11906,8 +11921,8 @@ msgid "Pick the approach that fits your question"
 msgstr "Pick the approach that fits your question"
 
 #: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:53
-msgid "Pick the closest fit and dembrane sets the project up for it. You can change every setting later."
-msgstr "Pick the closest fit and dembrane sets the project up for it. You can change every setting later."
+#~ msgid "Pick the closest fit and dembrane sets the project up for it. You can change every setting later."
+#~ msgstr "Pick the closest fit and dembrane sets the project up for it. You can change every setting later."
 
 #: src/components/workspace/PilotBlockModal.tsx:36
 msgid "Pilot limit reached"
@@ -11933,7 +11948,7 @@ msgstr "Pin up to three projects to the top of your project list."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Pin your most-used templates directly in chat."
 
-#: src/routes/project/ProjectsHome.tsx:385
+#: src/routes/project/ProjectsHome.tsx:415
 msgid "Pinned"
 msgstr "Pinned"
 
@@ -12165,7 +12180,7 @@ msgstr "Popular"
 msgid "Portal"
 msgstr "Portal"
 
-#: src/components/project/ProjectPortalEditor.tsx:1278
+#: src/components/project/ProjectPortalEditor.tsx:1326
 msgid "Portal content"
 msgstr "Portal content"
 
@@ -12173,7 +12188,7 @@ msgstr "Portal content"
 #~ msgid "Portal Content"
 #~ msgstr "Portal Content"
 
-#: src/components/common/settingChange.tsx:21
+#: src/components/common/settingChange.tsx:23
 msgid "Portal description"
 msgstr "Portal description"
 
@@ -12182,7 +12197,7 @@ msgid "portal editor"
 msgstr "portal editor"
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:104
-#: src/components/project/ProjectPortalEditor.tsx:582
+#: src/components/project/ProjectPortalEditor.tsx:594
 #: src/components/project/PortalSettingsOverview.tsx:161
 #: src/components/layout/ProjectOverviewLayout.tsx:51
 msgid "Portal editor"
@@ -12192,15 +12207,15 @@ msgstr "Portal editor"
 #~ msgid "Portal Editor"
 #~ msgstr "Portal Editor"
 
-#: src/components/common/settingChange.tsx:22
+#: src/components/common/settingChange.tsx:24
 msgid "Portal finish message"
 msgstr "Portal finish message"
 
-#: src/components/common/settingChange.tsx:38
+#: src/components/common/settingChange.tsx:40
 msgid "Portal language"
 msgstr "Portal language"
 
-#: src/components/common/settingChange.tsx:31
+#: src/components/common/settingChange.tsx:33
 msgid "Portal open for new conversations"
 msgstr "Portal open for new conversations"
 
@@ -12212,7 +12227,7 @@ msgstr "Portal open for new conversations"
 #~ msgid "Portal Overview"
 #~ msgstr "Portal Overview"
 
-#: src/components/project/ProjectPortalEditor.tsx:1700
+#: src/components/project/ProjectPortalEditor.tsx:1748
 msgid "Portal preview"
 msgstr "Portal preview"
 
@@ -12224,11 +12239,11 @@ msgstr "Portal previews and supporting images display correctly."
 msgid "Portal settings"
 msgstr "Portal settings"
 
-#: src/components/common/settingChange.tsx:23
+#: src/components/common/settingChange.tsx:25
 msgid "Portal title"
 msgstr "Portal title"
 
-#: src/components/common/settingChange.tsx:25
+#: src/components/common/settingChange.tsx:27
 msgid "Portal tutorial"
 msgstr "Portal tutorial"
 
@@ -12384,8 +12399,8 @@ msgstr "Privacy policy URL"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1947
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
-#: src/routes/project/CreateProjectRoute.tsx:494
-#: src/routes/project/CreateProjectRoute.tsx:549
+#: src/routes/project/CreateProjectRoute.tsx:536
+#: src/routes/project/CreateProjectRoute.tsx:591
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
 #: src/components/sharing/StatusLine.tsx:93
@@ -12476,14 +12491,14 @@ msgstr "Project cards show the project's language."
 msgid "project chats"
 msgstr "project chats"
 
-#: src/routes/project/CreateProjectRoute.tsx:534
-#: src/components/project/ProjectContextInput.tsx:23
+#: src/routes/project/CreateProjectRoute.tsx:576
+#: src/components/project/ProjectContextInput.tsx:30
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
 msgstr "Project context"
 
-#: src/routes/project/CreateProjectRoute.tsx:255
+#: src/routes/project/CreateProjectRoute.tsx:281
 #: src/components/report/ReportTimeline.tsx:277
 #: src/components/report/ReportTimeline.tsx:313
 msgid "Project created"
@@ -12531,10 +12546,10 @@ msgid "Project moved"
 msgstr "Project moved"
 
 #: src/routes/project/ProjectHomeRoute.tsx:270
-#: src/routes/project/CreateProjectRoute.tsx:388
+#: src/routes/project/CreateProjectRoute.tsx:426
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:146
-#: src/components/common/settingChange.tsx:40
+#: src/components/common/settingChange.tsx:42
 msgid "Project name"
 msgstr "Project name"
 
@@ -12589,7 +12604,7 @@ msgstr "projects"
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:62
+#: src/routes/project/ProjectsHome.tsx:81
 msgid "Projects | dembrane"
 msgstr "Projects | dembrane"
 
@@ -12602,7 +12617,7 @@ msgstr "Projects across organisation · {0}"
 msgid "Projects moved"
 msgstr "Projects moved"
 
-#: src/routes/project/ProjectsHome.tsx:359
+#: src/routes/project/ProjectsHome.tsx:389
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Projects will show up here once someone on the organisation shares one with you."
 
@@ -13059,12 +13074,12 @@ msgid "Recordings are paused for this project on the free plan. New recordings g
 msgstr "Recordings are paused for this project on the free plan. New recordings go to {name}."
 
 #: src/components/project/templates/projectTemplates.ts:93
-msgid "Recordings you already have"
-msgstr "Recordings you already have"
+#~ msgid "Recordings you already have"
+#~ msgstr "Recordings you already have"
 
 #: src/components/project/templates/projectTemplates.ts:105
-msgid "Recurring meetings or a working group, all in one project."
-msgstr "Recurring meetings or a working group, all in one project."
+#~ msgid "Recurring meetings or a working group, all in one project."
+#~ msgstr "Recurring meetings or a working group, all in one project."
 
 #: src/components/view/DummyViews.tsx:17
 #: src/components/library/LibraryTemplatesMenu.tsx:25
@@ -13085,7 +13100,7 @@ msgstr "References"
 msgid "Refine shows the correct label and cannot run while another reply is being generated."
 msgstr "Refine shows the correct label and cannot run while another reply is being generated."
 
-#: src/components/project/ProjectPortalEditor.tsx:1681
+#: src/components/project/ProjectPortalEditor.tsx:1729
 #: src/components/popcorn/PopcornActions.tsx:62
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:157
 #: src/components/common/UsageFreshness.tsx:32
@@ -13213,7 +13228,7 @@ msgstr "Reload page"
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Reload page"
 
-#: src/components/project/ProjectPortalEditor.tsx:1190
+#: src/components/project/ProjectPortalEditor.tsx:1238
 msgid "Remind users to verify before finishing"
 msgstr "Remind users to verify before finishing"
 
@@ -13367,7 +13382,7 @@ msgstr "Replay"
 msgid "Replies"
 msgstr "Replies"
 
-#: src/components/common/settingChange.tsx:33
+#: src/components/common/settingChange.tsx:35
 msgid "Replies to participants"
 msgstr "Replies to participants"
 
@@ -13375,15 +13390,15 @@ msgstr "Replies to participants"
 msgid "Reply buttons, chat templates and the Library have corrected translations."
 msgstr "Reply buttons, chat templates and the Library have corrected translations."
 
-#: src/components/common/settingChange.tsx:28
+#: src/components/common/settingChange.tsx:30
 msgid "Reply guidance"
 msgstr "Reply guidance"
 
-#: src/components/common/settingChange.tsx:27
+#: src/components/common/settingChange.tsx:29
 msgid "Reply mode"
 msgstr "Reply mode"
 
-#: src/components/project/ProjectPortalEditor.tsx:941
+#: src/components/project/ProjectPortalEditor.tsx:989
 msgid "Reply prompt"
 msgstr "Reply prompt"
 
@@ -13472,7 +13487,7 @@ msgstr "Report limit reached"
 msgid "Report not generated"
 msgstr "Report not generated"
 
-#: src/components/project/ProjectPortalEditor.tsx:1223
+#: src/components/project/ProjectPortalEditor.tsx:1271
 msgid "Report notifications"
 msgstr "Report notifications"
 
@@ -13625,7 +13640,7 @@ msgstr "Requesting microphone access to detect available devices..."
 msgid "Required"
 msgstr "Required"
 
-#: src/components/project/ProjectPortalEditor.tsx:1267
+#: src/components/project/ProjectPortalEditor.tsx:1315
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Requires \"Ask for email?\" to be enabled"
 
@@ -14173,7 +14188,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Say it in your own words. Type, or press record and talk."
 
-#: src/components/project/ProjectContextInput.tsx:24
+#: src/components/project/ProjectContextInput.tsx:31
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 
@@ -14339,7 +14354,7 @@ msgstr "Search people, or type an email"
 msgid "Search project or workspace"
 msgstr "Search project or workspace"
 
-#: src/routes/project/ProjectsHome.tsx:438
+#: src/routes/project/ProjectsHome.tsx:468
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -14490,7 +14505,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Sees usage and invoices. No project or content access."
 
-#: src/routes/project/ProjectsHome.tsx:522
+#: src/routes/project/ProjectsHome.tsx:552
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Select"
@@ -14533,7 +14548,7 @@ msgstr "Select a word first"
 msgid "Select a workspace"
 msgstr "Select a workspace"
 
-#: src/routes/project/ProjectsHome.tsx:487
+#: src/routes/project/ProjectsHome.tsx:517
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -14564,7 +14579,7 @@ msgstr "Select all visible ({remainingCount})"
 msgid "Select at least one event"
 msgstr "Select at least one event"
 
-#: src/components/project/ProjectPortalEditor.tsx:1120
+#: src/components/project/ProjectPortalEditor.tsx:1168
 msgid "Select at least one other topic before deleting this one"
 msgstr "Select at least one other topic before deleting this one"
 
@@ -14620,11 +14635,11 @@ msgstr "Select Project"
 msgid "Select tags"
 msgstr "Select tags"
 
-#: src/components/project/ProjectPortalEditor.tsx:752
+#: src/components/project/ProjectPortalEditor.tsx:800
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Select the instructions that will be shown to participants when they start a conversation"
 
-#: src/components/project/ProjectPortalEditor.tsx:879
+#: src/components/project/ProjectPortalEditor.tsx:927
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
 
@@ -14632,7 +14647,7 @@ msgstr "Select the type of feedback or engagement you want to encourage."
 msgid "Select this finding"
 msgstr "Select this finding"
 
-#: src/components/project/ProjectPortalEditor.tsx:740
+#: src/components/project/ProjectPortalEditor.tsx:788
 msgid "Select tutorial"
 msgstr "Select tutorial"
 
@@ -14641,7 +14656,7 @@ msgid "Select up to 2 focus areas for your report"
 msgstr "Select up to 2 focus areas for your report"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1043
+#: src/components/project/ProjectPortalEditor.tsx:1091
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Select which topics participants can use for \"Verify\"."
 
@@ -14773,6 +14788,7 @@ msgstr "Separate (client)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Separate with commas, spaces, or new lines."
 
+#: src/components/project/ProjectPortalEditor.tsx:731
 #: src/components/participant/ParticipantInitiateForm.tsx:290
 msgid "Session name"
 msgstr "Session name"
@@ -14823,7 +14839,7 @@ msgstr "Set to managed billing"
 msgid "Set up a new webhook from scratch"
 msgstr "Set up a new webhook from scratch"
 
-#: src/routes/project/CreateProjectRoute.tsx:520
+#: src/routes/project/CreateProjectRoute.tsx:562
 msgid "Set up with the assistant after creating"
 msgstr "Set up with the assistant after creating"
 
@@ -14857,7 +14873,7 @@ msgid "Setting up"
 msgstr "Setting up"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:271
+#: src/routes/project/ProjectsHome.tsx:297
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:108
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -14892,7 +14908,7 @@ msgstr "Settings to change"
 msgid "Settings updated"
 msgstr "Settings updated"
 
-#: src/routes/project/CreateProjectRoute.tsx:553
+#: src/routes/project/CreateProjectRoute.tsx:595
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Setup"
 msgstr "Setup"
@@ -15132,7 +15148,7 @@ msgstr "Show only what changed"
 msgid "Show popcorn in up to three extra languages at once."
 msgstr "Show popcorn in up to three extra languages at once."
 
-#: src/components/project/ProjectPortalEditor.tsx:607
+#: src/components/project/ProjectPortalEditor.tsx:619
 msgid "Show preview"
 msgstr "Show preview"
 
@@ -15169,8 +15185,8 @@ msgstr "Show the full text"
 msgid "Show the host guide"
 msgstr "Show the host guide"
 
-#: src/components/project/ProjectPortalEditor.tsx:1409
-#: src/components/project/ProjectPortalEditor.tsx:1427
+#: src/components/project/ProjectPortalEditor.tsx:1457
+#: src/components/project/ProjectPortalEditor.tsx:1475
 msgid "Show the invitation"
 msgstr "Show the invitation"
 
@@ -15253,8 +15269,8 @@ msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
 
 #: src/components/project/templates/projectTemplates.ts:139
-msgid "Shows participants a short tutorial first"
-msgstr "Shows participants a short tutorial first"
+#~ msgid "Shows participants a short tutorial first"
+#~ msgstr "Shows participants a short tutorial first"
 
 #: src/components/map/panels/MapToolbar.tsx:266
 #: src/components/map/panels/MapSettingsMenu.tsx:415
@@ -15497,7 +15513,7 @@ msgstr "Sources"
 msgid "Sources and references no longer appear empty in the affected cases."
 msgstr "Sources and references no longer appear empty in the affected cases."
 
-#: src/components/project/ProjectPortalEditor.tsx:649
+#: src/components/project/ProjectPortalEditor.tsx:661
 msgid "Spanish"
 msgstr "Spanish"
 
@@ -15603,14 +15619,14 @@ msgstr "Start again from your agent. It will open a fresh request here."
 
 #: src/routes/project/ProjectsHome.tsx:342
 #: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:103
-msgid "Start blank"
-msgstr "Start blank"
+#~ msgid "Start blank"
+#~ msgstr "Start blank"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:298
 msgid "Start fresh"
 msgstr "Start fresh"
 
-#: src/routes/project/CreateProjectRoute.tsx:555
+#: src/routes/project/CreateProjectRoute.tsx:597
 msgid "Start in assistant chat"
 msgstr "Start in assistant chat"
 
@@ -15636,7 +15652,7 @@ msgstr "Start recording without an extra ready-to-record confirmation."
 msgid "Started recording"
 msgstr "Started recording"
 
-#: src/routes/project/CreateProjectRoute.tsx:384
+#: src/routes/project/CreateProjectRoute.tsx:422
 msgid "Starting from: {templateLabel}"
 msgstr "Starting from: {templateLabel}"
 
@@ -15995,7 +16011,7 @@ msgstr "Switch to text"
 msgid "participant.link.switch.text"
 msgstr "Switch to text input"
 
-#: src/components/project/ProjectPortalEditor.tsx:1410
+#: src/components/project/ProjectPortalEditor.tsx:1458
 msgid "Switching it off comes with a paid plan."
 msgstr "Switching it off comes with a paid plan."
 
@@ -16023,8 +16039,8 @@ msgid "System status"
 msgstr "System status"
 
 #: src/components/project/templates/projectTemplates.ts:128
-msgid "Tables check and approve their own outcome (Verify)"
-msgstr "Tables check and approve their own outcome (Verify)"
+#~ msgid "Tables check and approve their own outcome (Verify)"
+#~ msgstr "Tables check and approve their own outcome (Verify)"
 
 #: src/routes/project/present/PresentRoute.tsx:140
 #~ msgid "Tabs"
@@ -16106,8 +16122,8 @@ msgstr "Tell the workspace admins what you need access for. This note is optiona
 msgid "Tell us what you need"
 msgstr "Tell us what you need"
 
-#: src/routes/project/CreateProjectRoute.tsx:352
-#: src/routes/project/CreateProjectRoute.tsx:527
+#: src/routes/project/CreateProjectRoute.tsx:379
+#: src/routes/project/CreateProjectRoute.tsx:569
 msgid "Template"
 msgstr "Template"
 
@@ -16194,7 +16210,7 @@ msgstr "Text contributions and follow-up forms."
 msgid "Thank you for participating!"
 msgstr "Thank you for participating!"
 
-#: src/components/project/ProjectPortalEditor.tsx:1345
+#: src/components/project/ProjectPortalEditor.tsx:1393
 msgid "Thank you page content"
 msgstr "Thank you page content"
 
@@ -16695,10 +16711,10 @@ msgid "The summary is being regenerated. Please wait for it to be available."
 msgstr "The summary is being regenerated. Please wait for it to be available."
 
 #: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:68
-msgid "The templates did not load. You can still start blank and set it up yourself."
-msgstr "The templates did not load. You can still start blank and set it up yourself."
+#~ msgid "The templates did not load. You can still start blank and set it up yourself."
+#~ msgstr "The templates did not load. You can still start blank and set it up yourself."
 
-#: src/components/project/ProjectPortalEditor.tsx:1394
+#: src/components/project/ProjectPortalEditor.tsx:1442
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "The thank you page ends on a card inviting participants to run their own event with dembrane."
 
@@ -16991,7 +17007,7 @@ msgstr "This invite link isn't valid for this account"
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "This invite spans {0} billing contexts, each invoiced on its own:"
 
-#: src/components/project/ProjectPortalEditor.tsx:1685
+#: src/components/project/ProjectPortalEditor.tsx:1733
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 
@@ -17044,7 +17060,7 @@ msgstr "This is urgent"
 msgid "This isn't available to you"
 msgstr "This isn't available to you"
 
-#: src/components/project/ProjectPortalEditor.tsx:644
+#: src/components/project/ProjectPortalEditor.tsx:656
 msgid "This language will be used for the participant portal."
 msgstr "This language will be used for the participant portal."
 
@@ -17147,11 +17163,11 @@ msgstr "This organisation no longer exists"
 msgid "This page is about {orgName} only. To get your MCP URL, or to manage other organisations, go to <0>Connect your agent</0>."
 msgstr "This page is about {orgName} only. To get your MCP URL, or to manage other organisations, go to <0>Connect your agent</0>."
 
-#: src/components/project/ProjectPortalEditor.tsx:1355
+#: src/components/project/ProjectPortalEditor.tsx:1403
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "This page is shown after the participant has completed the conversation."
 
-#: src/components/project/ProjectPortalEditor.tsx:1322
+#: src/components/project/ProjectPortalEditor.tsx:1370
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 
@@ -17224,7 +17240,7 @@ msgstr "This project isn't taking responses right now."
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "This project will follow the inherited setting instead: {0} ({1})."
 
-#: src/components/project/ProjectPortalEditor.tsx:953
+#: src/components/project/ProjectPortalEditor.tsx:1001
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
@@ -17304,7 +17320,7 @@ msgstr "This sets the language participants see in the portal, including the que
 msgid "This stakeholder's role"
 msgstr "This stakeholder's role"
 
-#: src/components/project/ProjectPortalEditor.tsx:1299
+#: src/components/project/ProjectPortalEditor.tsx:1347
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
 
@@ -17412,7 +17428,7 @@ msgstr "Tick as many as relevant"
 msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Tick the ones you want. The rest stay as the template sets them."
 
-#: src/routes/project/CreateProjectRoute.tsx:563
+#: src/routes/project/CreateProjectRoute.tsx:605
 #: src/routes/admin/AdminSettingsRoute.tsx:1576
 #: src/routes/admin/AdminSettingsRoute.tsx:2603
 #: src/routes/admin/AdminSettingsRoute.tsx:3025
@@ -17471,7 +17487,7 @@ msgstr "Title auto-generated"
 msgid "Title generated from the conversation"
 msgstr "Title generated from the conversation"
 
-#: src/components/common/settingChange.tsx:16
+#: src/components/common/settingChange.tsx:18
 msgid "Title guidance"
 msgstr "Title guidance"
 
@@ -17886,7 +17902,7 @@ msgid "Turn conversations into live slides. Run a live session or an on-demand a
 msgstr "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1527
+#: src/components/project/ProjectPortalEditor.tsx:1575
 msgid "portal.anonymization.disable.confirm"
 msgstr "Turn off"
 
@@ -17894,7 +17910,7 @@ msgstr "Turn off"
 msgid "Turn off"
 msgstr "Turn off"
 
-#: src/components/project/ProjectPortalEditor.tsx:1517
+#: src/components/project/ProjectPortalEditor.tsx:1565
 msgid "Turn off anonymization?"
 msgstr "Turn off anonymization?"
 
@@ -17916,7 +17932,7 @@ msgid "Turn on popcorn"
 msgstr "Turn on popcorn"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1519
+#: src/components/project/ProjectPortalEditor.tsx:1567
 msgid "portal.anonymization.disable.warning"
 msgstr "Turning off anonymization while recordings are ongoing may have unintended consequences. Active conversations will also be affected mid-recording. Please use this with caution."
 
@@ -17936,7 +17952,7 @@ msgstr "Turning your voice note into text"
 #~ msgid "Turns per chat"
 #~ msgstr "Turns per chat"
 
-#: src/components/common/settingChange.tsx:42
+#: src/components/common/settingChange.tsx:44
 msgid "Tutorial"
 msgstr "Tutorial"
 
@@ -17977,7 +17993,7 @@ msgstr "Type your response here"
 msgid "Typing"
 msgstr "Typing"
 
-#: src/components/project/ProjectPortalEditor.tsx:656
+#: src/components/project/ProjectPortalEditor.tsx:668
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrainian (only ECHO features, transcription and summaries)"
 
@@ -18072,7 +18088,7 @@ msgstr "Unnamed webhook"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:183
+#: src/routes/project/ProjectsHome.tsx:202
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -18317,8 +18333,8 @@ msgid "Upload audio"
 msgstr "Upload audio"
 
 #: src/components/project/templates/projectTemplates.ts:109
-msgid "Upload audio files and analyse what was said."
-msgstr "Upload audio files and analyse what was said."
+#~ msgid "Upload audio files and analyse what was said."
+#~ msgstr "Upload audio files and analyse what was said."
 
 #: src/components/settings/AccountSettingsCard.tsx:150
 msgid "Upload avatar"
@@ -18564,7 +18580,7 @@ msgstr "VAT ID"
 msgid "VAT region"
 msgstr "VAT region"
 
-#: src/components/common/settingChange.tsx:37
+#: src/components/common/settingChange.tsx:39
 msgid "Verification on the finish screen"
 msgstr "Verification on the finish screen"
 
@@ -18581,7 +18597,7 @@ msgstr "Verification prompts allow 10,000 characters, and verified outcomes have
 msgid "participant.banner.verification_required"
 msgstr "Verification required"
 
-#: src/components/common/settingChange.tsx:41
+#: src/components/common/settingChange.tsx:43
 msgid "Verification topics"
 msgstr "Verification topics"
 
@@ -18621,7 +18637,7 @@ msgid "Verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:978
+#: src/components/project/ProjectPortalEditor.tsx:1026
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
@@ -18657,7 +18673,7 @@ msgstr "Verify or explore"
 msgid "Verify outcomes and refine replies"
 msgstr "Verify outcomes and refine replies"
 
-#: src/components/project/ProjectPortalEditor.tsx:1033
+#: src/components/project/ProjectPortalEditor.tsx:1081
 msgid "Verify topics"
 msgstr "Verify topics"
 
@@ -19058,8 +19074,8 @@ msgid "What are webhooks? (2 min read)"
 msgstr "What are webhooks? (2 min read)"
 
 #: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:50
-msgid "What are you going to do?"
-msgstr "What are you going to do?"
+#~ msgid "What are you going to do?"
+#~ msgstr "What are you going to do?"
 
 #: src/components/project/ProjectContextInput.tsx:25
 #~ msgid "What are you trying to learn?"
@@ -19099,7 +19115,7 @@ msgstr "What gets sent"
 msgid "What is at stake here"
 msgstr "What is at stake here"
 
-#: src/components/project/ProjectContextInput.tsx:25
+#: src/components/project/ProjectContextInput.tsx:32
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 
@@ -19118,6 +19134,11 @@ msgstr "What should ECHO analyse or generate from the conversations?"
 #: src/components/feedback/ReportIssueModal.tsx:211
 msgid "What should we know? Paste a screenshot here to attach it"
 msgstr "What should we know? Paste a screenshot here to attach it"
+
+#: src/components/project/ProjectPortalEditor.tsx:718
+#: src/components/common/settingChange.tsx:17
+msgid "What the name box asks for"
+msgstr "What the name box asks for"
 
 #: src/components/chat/AgenticChatPanel.tsx:1935
 msgid "What themes came up across the conversations in this project?"
@@ -19223,11 +19244,11 @@ msgstr "When are webhooks triggered?"
 msgid "When do you need dembrane?"
 msgstr "When do you need dembrane?"
 
-#: src/components/project/ProjectPortalEditor.tsx:1476
+#: src/components/project/ProjectPortalEditor.tsx:1524
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 
-#: src/components/project/ProjectPortalEditor.tsx:1201
+#: src/components/project/ProjectPortalEditor.tsx:1249
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
@@ -19294,7 +19315,7 @@ msgstr "While people talk, the text appears piece by piece."
 msgid "Who can see and collaborate on this project."
 msgstr "Who can see and collaborate on this project."
 
-#: src/routes/project/CreateProjectRoute.tsx:463
+#: src/routes/project/CreateProjectRoute.tsx:505
 #: src/components/project/ProjectSharingModal.tsx:283
 msgid "Who can see this project?"
 msgstr "Who can see this project?"
@@ -19408,7 +19429,7 @@ msgstr "Working on your answer..."
 #~ msgid "workspace"
 #~ msgstr "workspace"
 
-#: src/routes/project/CreateProjectRoute.tsx:542
+#: src/routes/project/CreateProjectRoute.tsx:584
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/routes/admin/AdminSettingsRoute.tsx:2230
 #: src/features/sidebar/hooks/useSearchHits.ts:166
@@ -19594,7 +19615,7 @@ msgstr "You are the data owner"
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
 
-#: src/routes/project/CreateProjectRoute.tsx:464
+#: src/routes/project/CreateProjectRoute.tsx:506
 msgid "You can change this later in project settings."
 msgstr "You can change this later in project settings."
 
@@ -19643,7 +19664,7 @@ msgstr "You can try again below."
 msgid "You can't create a workspace yet"
 msgstr "You can't create a workspace yet"
 
-#: src/routes/project/CreateProjectRoute.tsx:315
+#: src/routes/project/CreateProjectRoute.tsx:341
 msgid "You can't create projects in this workspace."
 msgstr "You can't create projects in this workspace."
 
@@ -19829,7 +19850,7 @@ msgstr "You'll be added as an admin to {singleName}. It'll appear in your sideba
 msgid "You'll find all your projects waiting for you."
 msgstr "You'll find all your projects waiting for you."
 
-#: src/routes/project/CreateProjectRoute.tsx:521
+#: src/routes/project/CreateProjectRoute.tsx:563
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 
@@ -20025,7 +20046,7 @@ msgid "Your details"
 msgstr "Your details"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:330
-#: src/routes/project/CreateProjectRoute.tsx:287
+#: src/routes/project/CreateProjectRoute.tsx:313
 msgid "Your draft won't be saved."
 msgstr "Your draft won't be saved."
 
@@ -20192,7 +20213,7 @@ msgstr "Your portals keep working and nothing your participants say is lost. Onc
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 
-#: src/routes/project/ProjectsHome.tsx:314
+#: src/routes/project/ProjectsHome.tsx:340
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 
