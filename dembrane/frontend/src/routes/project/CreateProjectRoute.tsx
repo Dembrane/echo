@@ -14,7 +14,6 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
@@ -34,6 +33,11 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useProjectCapStatus } from "@/hooks/useProjectCap";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
+import {
+	keyTermCount,
+	type ProjectCreateStep,
+	track,
+} from "@/lib/analytics/events";
 import { ApiRequestError } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
@@ -42,6 +46,14 @@ import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
+
+// The wizard's steps, in order, as analytics names them.
+const CREATE_STEPS: readonly ProjectCreateStep[] = [
+	"name",
+	"key_terms",
+	"access",
+	"review",
+];
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -78,7 +90,6 @@ async function setVisibility(projectId: string, visibility: Access) {
 export const CreateProjectRoute = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
-	const posthog = usePostHog();
 	const { workspace, workspaceId } = useWorkspace();
 	const { language } = useLanguage();
 
@@ -97,6 +108,29 @@ export const CreateProjectRoute = () => {
 	);
 
 	useDocumentTitle(t`Create project | dembrane`);
+
+	// Funnel: each step shown, and the step a host left on without creating.
+	const createStep = CREATE_STEPS[step] ?? "review";
+	const lastStepRef = useRef<ProjectCreateStep>(createStep);
+	const createdRef = useRef(false);
+	useEffect(() => {
+		lastStepRef.current = createStep;
+		track("project_create_step_viewed", { step: createStep });
+	}, [createStep]);
+	// Leaving counts once: by navigating away (unmount) or by closing the tab.
+	useEffect(() => {
+		let left = false;
+		const leave = () => {
+			if (left || createdRef.current) return;
+			left = true;
+			track("project_create_abandoned", { step: lastStepRef.current });
+		};
+		window.addEventListener("pagehide", leave);
+		return () => {
+			window.removeEventListener("pagehide", leave);
+			leave();
+		};
+	}, []);
 
 	const tier = workspace?.tier ?? "pilot";
 	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
@@ -156,7 +190,16 @@ export const CreateProjectRoute = () => {
 		onSuccess: (project) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
-			posthog?.capture("project_created", { project_id: project.id });
+			createdRef.current = true;
+			track("project_created", { project_id: project.id });
+			const terms = keyTermCount(keyTerms);
+			if (terms > 0) {
+				track("key_terms_updated", {
+					count: terms,
+					project_id: project.id,
+					surface: "wizard",
+				});
+			}
 			toast.success(t`Project created`);
 			if (ENABLE_AGENTIC_CHAT && setupWithAssistant) {
 				// Ticking the toggle is the opt-in, so name the mode explicitly

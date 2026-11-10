@@ -11,6 +11,7 @@ import {
 } from "@dembrane/accounts";
 import { agenticWorker } from "@dembrane/agentic";
 import { analysisWorker } from "@dembrane/analysis";
+import { posthogCapture } from "@dembrane/analytics";
 import { type Billing, billingRegistration, overageInboxMessage } from "@dembrane/billing";
 import { canvasWorker } from "@dembrane/canvas";
 import type { Config } from "@dembrane/config";
@@ -307,6 +308,7 @@ export function registrations(deps: {
     // A finished conversation's transcript books one popcorn read of its project.
     conversationWorker({
       ...deps.conversations,
+      capture: posthogCapture(deps.dashboardUrl, logger),
       onTranscribed: finishReads({
         flags: popcornFlags(config),
         logger,

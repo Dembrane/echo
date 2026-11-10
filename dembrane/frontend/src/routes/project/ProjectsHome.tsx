@@ -26,7 +26,6 @@ import {
 	TrayArrowUp,
 	XIcon,
 } from "@phosphor-icons/react";
-import { usePostHog } from "@posthog/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -47,6 +46,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
+import { track } from "@/lib/analytics/events";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -129,14 +129,12 @@ export const ProjectsHomeRoute = () => {
 
 	const navigate = useI18nNavigate();
 	const user = useCurrentUser();
-	const posthog = usePostHog();
-
 	const handleCreateProject = () => {
 		// Route to the creation wizard (name → access → review). Matches the
 		// workspace creation flow — a few deliberate steps instead of an
 		// instant POST that leaves the new project with a "New Project"
 		// placeholder name. See CreateProjectRoute.tsx.
-		posthog?.capture("project_create_started");
+		track("project_create_started");
 		if (!workspaceId) return;
 		navigate(`/w/${workspaceId}/projects/new`);
 	};

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import { EventPrintoutsItem, QRShare } from "@/components/sharing/Share";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import { type PortalShareMethod, track } from "@/lib/analytics/events";
 
 interface ProjectQRCodeProps {
 	project?: Project;
@@ -98,8 +99,18 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		);
 	}
 
+	// The portal link handed on: copied, the QR saved as an image, or printed on the
+	// event sheets (the QR people scan). Opening the link is the host testing, not sharing.
+	const shared = (method: PortalShareMethod) => {
+		if (project?.id)
+			track("portal_link_shared", { method, project_id: project.id });
+	};
+
 	return (
 		<QRShare
+			onAction={(action) => {
+				if (action === "copy" || action === "download") shared(action);
+			}}
 			links={{
 				download: downloadLink ?? undefined,
 				open: clickLink ?? undefined,
@@ -112,6 +123,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 					<EventPrintoutsItem
 						workspaceId={workspaceId}
 						projectId={project.id}
+						onClick={() => shared("qr")}
 					/>
 				)
 			}

@@ -28,7 +28,6 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
-import posthog from "posthog-js";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useLocation, useParams, useSearchParams } from "react-router";
@@ -74,6 +73,7 @@ import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import type { ChatMode } from "@/lib/api";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
@@ -362,7 +362,7 @@ export const NewChatRoute = () => {
 				chatId = chat.id;
 			}
 
-			posthog.capture("chat_started", {
+			track("chat_started", {
 				chat_id: chatId,
 				mode,
 				project_id: projectId,
@@ -696,7 +696,8 @@ export const NewChatRoute = () => {
 									section: { marginRight: "var(--mantine-spacing-sm)" },
 								}}
 								onClick={() => {
-									posthog.capture("agentic_chat_intro_opened", {
+									track("agentic_chat_intro_opened", {
+										project_id: projectId,
 										source: "ask_home",
 									});
 									agenticIntroHandlers.open();
@@ -759,7 +760,8 @@ export const NewChatRoute = () => {
 				opened={agenticIntroOpened}
 				onClose={agenticIntroHandlers.close}
 				onConfirm={() => {
-					posthog.capture("agentic_chat_intro_confirmed", {
+					track("agentic_chat_intro_confirmed", {
+						project_id: projectId,
 						source: "ask_home",
 					});
 					agenticIntroHandlers.close();

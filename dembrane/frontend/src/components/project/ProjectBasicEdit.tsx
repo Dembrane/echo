@@ -3,10 +3,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, TextInput } from "@mantine/core";
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { changedFields, track } from "@/lib/analytics/events";
 import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
@@ -43,12 +44,26 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 
+	// The values as last saved, to name the fields a save changed (names only).
+	const savedValuesRef = useRef<Record<string, unknown>>({
+		context: project.context ?? "",
+		name: project.name ?? "",
+	});
+
 	const onSave = async (values: TFormSchema) => {
 		await updateProjectMutation.mutateAsync({
 			id: project.id,
 			payload: values,
 		});
 		reset(values, { keepDirty: false, keepValues: true });
+		const fieldsChanged = changedFields(savedValuesRef.current, values);
+		savedValuesRef.current = { ...values };
+		if (fieldsChanged.length > 0) {
+			track("project_settings_saved", {
+				fields_changed: fieldsChanged,
+				project_id: project.id,
+			});
+		}
 	};
 
 	const {

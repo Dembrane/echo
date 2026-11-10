@@ -16,7 +16,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -26,6 +26,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { isOutsiderRole } from "@/lib/roles";
@@ -161,6 +162,14 @@ export const OnboardingRoute = () => {
 
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
+	// One view per step shown; going back to a step counts it again.
+	const lastViewedStep = useRef<string | null>(null);
+	useEffect(() => {
+		if (step === "loading" || lastViewedStep.current === step) return;
+		lastViewedStep.current = step;
+		track("onboarding_step_viewed", { step });
+	}, [step]);
+
 	useEffect(() => {
 		// Only run the "already onboarded → bounce" check while the page
 		// is still in the loading gate. Otherwise this effect re-fires
@@ -199,6 +208,7 @@ export const OnboardingRoute = () => {
 			void notifyError(error);
 		},
 		onSuccess: (data) => {
+			track("onboarding_step_completed", { step: "org" });
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			// Onboarding's auto-accept loop can fire personal notifications
@@ -240,6 +250,7 @@ export const OnboardingRoute = () => {
 		const validEmails = inviteEmails.filter((e) => e.trim() && e.includes("@"));
 
 		if (validEmails.length === 0) {
+			track("onboarding_step_completed", { skipped: true, step: "invite" });
 			goToQuestionsOrHome();
 			return;
 		}
@@ -259,6 +270,7 @@ export const OnboardingRoute = () => {
 		if (sent > 0) {
 			toast.success(sent === 1 ? t`Invite sent` : t`${sent} invites sent`);
 		}
+		track("onboarding_step_completed", { skipped: sent === 0, step: "invite" });
 		goToQuestionsOrHome();
 	};
 
@@ -267,6 +279,7 @@ export const OnboardingRoute = () => {
 	// A skip persists too (skipped=true): the login gate re-nudges anyone with
 	// no onboarding_answer_json, so a skip that wrote nothing looped every login.
 	const submitAnswers = async (skip: boolean) => {
+		track("onboarding_step_completed", { skipped: skip, step: "questions" });
 		setSubmittingAnswers(true);
 		try {
 			await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
