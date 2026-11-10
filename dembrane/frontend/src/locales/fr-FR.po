@@ -2214,7 +2214,7 @@ msgid "Already added to this chat"
 msgstr "Déjà ajouté à cette conversation"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:324
-#: src/routes/auth/Register.tsx:378
+#: src/routes/auth/Register.tsx:379
 msgid "Already have an account? Log in"
 msgstr "Vous avez déjà un compte ? Connectez-vous"
 
@@ -7878,7 +7878,7 @@ msgstr "Si vous n'êtes pas sûr, vous n'avez probablement pas besoin de cela en
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "Si vous configurez des intégrations webhook, nous aimerions en savoir plus sur votre cas d'utilisation. Nous construisons également des fonctionnalités d'observabilité incluant les journaux d'audit et le suivi de la livraison."
 
-#: src/routes/auth/Register.tsx:400
+#: src/routes/auth/Register.tsx:401
 msgid "If you're trying to join an existing organisation, you should not create a new one. Some reasons that you may accidentally end up here are:"
 msgstr "Si vous essayez de rejoindre une organisation existante, ne créez pas de nouvelle organisation. Voici quelques raisons pour lesquelles vous pourriez être arrivé ici par erreur :"
 
@@ -11134,7 +11134,7 @@ msgstr "Facultatif. L'utilité de cet espace de travail."
 msgid "Options"
 msgstr "Options"
 
-#: src/routes/auth/Register.tsx:365
+#: src/routes/auth/Register.tsx:366
 #: src/routes/auth/Login.tsx:749
 msgid "or"
 msgstr "ou"
@@ -12554,11 +12554,11 @@ msgstr "lire les conversations, transcriptions, projets et paramètres visibles"
 #~ msgid "Read every 2 minutes for"
 #~ msgstr "Lire toutes les 2 minutes pour"
 
-#: src/routes/auth/Register.tsx:392
+#: src/routes/auth/Register.tsx:393
 msgid "Read less"
 msgstr "Lire moins"
 
-#: src/routes/auth/Register.tsx:394
+#: src/routes/auth/Register.tsx:395
 msgid "Read more"
 msgstr "En savoir plus"
 
@@ -17592,7 +17592,7 @@ msgstr "Essayer"
 msgid "Trying again…"
 msgstr "Nouvelle tentative…"
 
-#: src/routes/auth/Register.tsx:383
+#: src/routes/auth/Register.tsx:384
 msgid "Trying to join an existing organisation?"
 msgstr "Vous souhaitez rejoindre une organisation existante ?"
 
@@ -19222,7 +19222,7 @@ msgstr "Écrit par un hôte"
 msgid "Written by a host, {day}"
 msgstr "Rédigé par un hôte, le {day}"
 
-#: src/routes/auth/Register.tsx:355
+#: src/routes/auth/Register.tsx:356
 msgid "Wrong address? Change email"
 msgstr "Adresse incorrecte ? Modifier l'e-mail"
 
@@ -19503,7 +19503,7 @@ msgstr "Vous avez quitté l'espace de travail"
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilisé pour vous inscrire. Si vous rencontrez des problèmes, veuillez contacter le support."
 
-#: src/routes/auth/Register.tsx:413
+#: src/routes/auth/Register.tsx:414
 msgid "You need an invitation from a colleague"
 msgstr "Vous avez besoin d'une invitation d'un collègue"
 
@@ -19583,7 +19583,7 @@ msgstr "Vous y êtes"
 msgid "You’re live, so changes wait until you show them."
 msgstr "Vous êtes en direct : les modifications attendent que vous les affichiez."
 
-#: src/routes/auth/Register.tsx:408
+#: src/routes/auth/Register.tsx:409
 msgid "You're logging in with the wrong email address"
 msgstr "Vous vous connectez avec la mauvaise adresse e-mail"
 

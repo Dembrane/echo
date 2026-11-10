@@ -343,6 +343,7 @@ export const RegisterRoute = () => {
 										component="button"
 										type="button"
 										size="xs"
+										style={{ alignSelf: "flex-start" }}
 										onClick={() => {
 											// Back to the step with the email field; the other
 											// answers stay as they were.
