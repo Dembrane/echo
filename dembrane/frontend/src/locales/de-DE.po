@@ -15459,7 +15459,7 @@ msgstr "Schritte und Protokolle"
 
 #: src/components/auth/LoginBlockedNotice.tsx:41
 msgid "Still stuck? Email <0>{SUPPORT_EMAIL}</0> and we will help you log in."
-msgstr "Klappt es immer noch nicht? Schreiben Sie an <0>{SUPPORT_EMAIL}</0>, und wir helfen Ihnen bei der Anmeldung."
+msgstr "Klappt es immer noch nicht? Schreib an <0>{SUPPORT_EMAIL}</0>, und wir helfen dir bei der Anmeldung."
 
 #: src/routes/auth/CheckYourEmail.tsx:54
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
@@ -16988,7 +16988,7 @@ msgstr "Diese Anfrage hat zu lange gedauert und wurde abgebrochen. Senden Sie si
 
 #: src/components/auth/utils/errorUtils.ts:117
 msgid "This request was stopped before it reached dembrane. Try another network or another browser."
-msgstr "Diese Anfrage wurde gestoppt, bevor sie dembrane erreicht hat. Versuchen Sie es mit einem anderen Netzwerk oder einem anderen Browser."
+msgstr "Diese Anfrage wurde gestoppt, bevor sie dembrane erreicht hat. Versuche es mit einem anderen Netzwerk oder einem anderen Browser."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:312
 #~ msgid "This result changed while you were reviewing it."
@@ -17253,7 +17253,7 @@ msgstr "Zu lang oder unklar"
 #: src/components/auth/LoginRateLimitNotice.tsx:34
 #: src/components/auth/utils/errorUtils.ts:112
 msgid "Too many login attempts. Wait a moment, then try again."
-msgstr "Zu viele Anmeldeversuche. Warten Sie einen Moment und versuchen Sie es dann erneut."
+msgstr "Zu viele Anmeldeversuche. Warte einen Moment und versuche es dann erneut."
 
 #: src/components/feedback/ReportIssueModal.tsx:150
 #~ msgid "Too many reports. Wait a few minutes and try again"
@@ -19258,7 +19258,7 @@ msgstr "Sie sind bereits abgemeldet oder Ihre Verknüpfung ist ungültig."
 
 #: src/components/auth/SignedInRecoveryNotice.tsx:23
 msgid "You are logged in, but we could not open dembrane just now. Try again in a moment."
-msgstr "Sie sind angemeldet, aber wir konnten dembrane gerade nicht öffnen. Versuchen Sie es gleich noch einmal."
+msgstr "Du bist angemeldet, aber wir konnten dembrane gerade nicht öffnen. Versuche es gleich noch einmal."
 
 #: src/routes/settings/AgentConsentRoute.tsx:269
 msgid "You are not a member of any organisation, so there is nothing to connect yet."
@@ -19332,11 +19332,11 @@ msgstr "Sie können es unten erneut versuchen."
 
 #: src/components/auth/LoginRateLimitNotice.tsx:46
 msgid "You can try again in {clock}."
-msgstr "Sie können es in {clock} erneut versuchen."
+msgstr "Du kannst es in {clock} erneut versuchen."
 
 #: src/components/auth/LoginRateLimitNotice.tsx:48
 msgid "You can try again now."
-msgstr "Sie können es jetzt erneut versuchen."
+msgstr "Du kannst es jetzt erneut versuchen."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:356
 msgid "You can't create a workspace yet"
@@ -19802,7 +19802,7 @@ msgstr "Die Erstellung deines neuesten Berichts wurde abgebrochen. Dein letzter 
 #: src/components/auth/LoginBlockedNotice.tsx:25
 #: src/components/auth/utils/errorUtils.ts:116
 msgid "Your login was stopped before it reached dembrane, so we could not check your details. Try another network or another browser."
-msgstr "Ihre Anmeldung wurde gestoppt, bevor sie dembrane erreicht hat, daher konnten wir Ihre Angaben nicht prüfen. Versuchen Sie es mit einem anderen Netzwerk oder einem anderen Browser."
+msgstr "Deine Anmeldung wurde gestoppt, bevor sie dembrane erreicht hat, daher konnten wir deine Angaben nicht prüfen. Versuche es mit einem anderen Netzwerk oder einem anderen Browser."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1736
 msgid "Your logo is still active but can't be changed on this tier."
