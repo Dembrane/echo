@@ -270,6 +270,10 @@ export const ProjectPortalSettingsRoute = () => {
 				"id",
 				"updated_at",
 				"language",
+				// Read by "Suggest key terms" next to the key terms field.
+				"name",
+				"context",
+				"workspace_id",
 				"default_conversation_ask_for_participant_name",
 				"default_conversation_ask_for_participant_email",
 				"default_conversation_description",

@@ -27,6 +27,14 @@ import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
 import { projectLanguageForLocale } from "@/components/project/projectLanguage";
 import {
+	SessionBriefConnected,
+	type SettingOverrides,
+} from "@/components/project/setup-suggestions/SessionBrief/SessionBriefConnected";
+import {
+	hasTerm,
+	type SetupSuggestions,
+} from "@/components/project/setup-suggestions/setupSuggestions";
+import {
 	isTemplateKey,
 	type TemplateKey,
 	templateName,
@@ -87,7 +95,8 @@ async function setVisibility(projectId: string, visibility: Access) {
  * "Start blank". A ?template=<key> link (workspace home's picker) arrives on step 2 with
  * that template chosen.
  *
- * Step 2 "Name": name and the optional project context, then Create. Key terms, access,
+ * Step 2 "Name": name, the optional project context and the optional "Tell dembrane about
+ * your session" (setup suggestions: key terms and settings to accept), then Create. Key terms, access,
  * the assistant switch and the review sit behind "More options", with the defaults they
  * always had: no key terms, open to the workspace, assistant off.
  *
@@ -108,6 +117,9 @@ export const CreateProjectRoute = () => {
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [keyTerms, setKeyTerms] = useState("");
+	// Settings accepted from the setup suggestions, sent as overrides on the template.
+	const [overrides, setOverrides] = useState<SettingOverrides>({});
+	const suggestedRef = useRef<SetupSuggestions | null>(null);
 	const [access, setAccess] = useState<Access>("workspace");
 	const [moreOpened, moreHandlers] = useDisclosure(false);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
@@ -191,6 +203,7 @@ export const CreateProjectRoute = () => {
 				language: projectLanguageForLocale(language),
 				name: name.trim(),
 				templateKey: template ?? "blank",
+				...(Object.keys(overrides).length > 0 && { overrides }),
 			});
 
 			// Only what the host typed: the template wrote every other setting.
@@ -223,6 +236,16 @@ export const CreateProjectRoute = () => {
 				project_id: project.id,
 				template_key: template ?? "blank",
 			});
+			const suggested = suggestedRef.current;
+			if (suggested) {
+				track("project_setup_ai_accepted", {
+					settings_accepted: Object.keys(overrides).length,
+					surface: "wizard",
+					terms_accepted: suggested.key_terms.filter((s) =>
+						hasTerm(keyTerms, s.term),
+					).length,
+				});
+			}
 			const terms = keyTermCount(keyTerms);
 			if (terms > 0) {
 				track("key_terms_updated", {
@@ -380,6 +403,23 @@ export const CreateProjectRoute = () => {
 							<ProjectContextInput
 								value={context}
 								onChange={(e) => setContext(e.currentTarget.value)}
+							/>
+
+							{/* Optional and never in the way: Create stays enabled while it
+							    runs, and accepted terms land in the key terms below. */}
+							<SessionBriefConnected
+								workspaceId={workspaceId ?? null}
+								templateKey={template ?? "blank"}
+								name={name}
+								description={context}
+								language={projectLanguageForLocale(language)}
+								keyTerms={keyTerms}
+								onKeyTermsChange={setKeyTerms}
+								overrides={overrides}
+								onOverridesChange={setOverrides}
+								onResult={(result) => {
+									suggestedRef.current = result;
+								}}
 							/>
 
 							<Stack gap="xs">

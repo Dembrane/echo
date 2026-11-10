@@ -112,6 +112,11 @@ export const project = {
 		message:
 			"Private projects come with the Innovator plan and above. Upgrade to make this project private.",
 	}),
+	"project.setup_suggestions_unavailable": msg({
+		id: "error.project.setup_suggestions_unavailable",
+		message:
+			"Suggestions are not available right now. You can carry on without them.",
+	}),
 	"project.share_admin_only": msg({
 		id: "error.project.share_admin_only",
 		message: "Only workspace admins can share projects.",

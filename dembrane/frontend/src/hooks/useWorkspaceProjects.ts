@@ -74,12 +74,19 @@ async function createWorkspaceProject(
 	name: string,
 	language: string,
 	templateKey: string | null,
+	overrides: Record<string, boolean | string> | null,
 ): Promise<{ id: string; name: string; workspace_id: string }> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/projects`,
 		{
-			// The server applies the template's preset in the creating transaction.
-			body: JSON.stringify({ language, name, template_key: templateKey }),
+			// The server applies the template's preset in the creating transaction, then
+			// the settings the host accepted from the setup suggestions on top of it.
+			body: JSON.stringify({
+				language,
+				name,
+				template_key: templateKey,
+				...(overrides && Object.keys(overrides).length > 0 && { overrides }),
+			}),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -145,13 +152,22 @@ export const useCreateWorkspaceProject = () => {
 			name,
 			language,
 			templateKey = null,
+			overrides = null,
 		}: {
 			name: string;
 			language: string;
 			templateKey?: string | null;
+			/** Accepted setup suggestions: preset fields only, validated by the server. */
+			overrides?: Record<string, boolean | string> | null;
 		}) => {
 			if (!workspaceId) throw new Error("No workspace selected");
-			return createWorkspaceProject(workspaceId, name, language, templateKey);
+			return createWorkspaceProject(
+				workspaceId,
+				name,
+				language,
+				templateKey,
+				overrides,
+			);
 		},
 		onError: (error: Error) => {
 			// The screen opens the upgrade wall for the project cap.
