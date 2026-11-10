@@ -1,9 +1,9 @@
 import type { TasksSummaryT } from "../contract/contract.gen";
 
 /**
- * The popup after sign-in for someone with tasks waiting on them: which organisation it
- * names and whether it already showed. It shows once per sign-in (sessionStorage, cleared
- * when someone signs in), so a reload or a new tab in the same session stays quiet.
+ * The banner for someone with tasks waiting on them: which organisation it names and
+ * whether it was closed. Closing it holds for the browser session (sessionStorage, cleared
+ * when someone signs in), so a reload stays quiet and the next session shows it again.
  */
 export const TASKS_PROMPT_SEEN_KEY = "dembrane_tasks_prompt_seen";
 
@@ -32,7 +32,7 @@ export function markPromptSeen(): void {
 	} catch {}
 }
 
-/** A new sign-in may see the popup again. */
+/** A new sign-in may see the banner again. */
 export function resetPromptSeen(): void {
 	try {
 		sessionStorage.removeItem(TASKS_PROMPT_SEEN_KEY);

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Text } from "@mantine/core";
-import type { PropsWithChildren } from "react";
+import { lazy, type PropsWithChildren, Suspense } from "react";
 import { Outlet, useSearchParams } from "react-router";
 import { roles } from "@/colors";
 import { useAuthenticated } from "@/components/auth/hooks";
@@ -12,6 +12,12 @@ import { InboxView } from "@/features/sidebar/views/InboxView";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
 import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
+
+// The banner for someone with tasks waiting. Its own chunk: it fetches the account tasks
+// summary, which the portal never needs.
+const SignPromptBanner = lazy(
+	() => import("@/features/accounts/help/TasksPrompt"),
+);
 
 const SidebarFailure = () => (
 	<aside
@@ -53,6 +59,13 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
+						{isAuthenticated ? (
+							<ErrorBoundary fallback={null}>
+								<Suspense fallback={null}>
+									<SignPromptBanner />
+								</Suspense>
+							</ErrorBoundary>
+						) : null}
 						<div className="flex-1 overflow-auto" data-app-scroll-root>
 							{holdLoading ? (
 								<BeautifulLoading />

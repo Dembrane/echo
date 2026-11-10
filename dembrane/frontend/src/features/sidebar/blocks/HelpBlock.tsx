@@ -8,15 +8,7 @@ import {
 	Sparkle,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import {
-	Fragment,
-	lazy,
-	type ReactNode,
-	Suspense,
-	useCallback,
-	useRef,
-	useState,
-} from "react";
+import { Fragment, type ReactNode, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { roles } from "@/colors";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
@@ -26,10 +18,6 @@ import { useHelpModals } from "../hooks/useHelpModals";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
-
-// The popup after sign-in for someone with tasks waiting. Its own chunk: it fetches the
-// account tasks summary, which the portal never needs.
-const TasksPrompt = lazy(() => import("@/features/accounts/help/TasksPrompt"));
 
 export const HelpBlock = () => {
 	const { language } = useParams();
@@ -42,21 +30,11 @@ export const HelpBlock = () => {
 	const [bubbled, setBubbled] = useState(false);
 	const reduced = useReducedMotion();
 	const helpButton = useRef<HTMLButtonElement>(null);
-	// What's new shows itself only once the tasks popup has decided not to show, or closed.
-	const [promptSettled, setPromptSettled] = useState(false);
-	const settlePrompt = useCallback(() => setPromptSettled(true), []);
-
 	const releaseModal = (
-		<>
-			<ReleaseVideoModal
-				requested={releaseRequested}
-				onRequestedClose={release.close}
-				held={!promptSettled}
-			/>
-			<Suspense fallback={null}>
-				<TasksPrompt onSettled={settlePrompt} />
-			</Suspense>
-		</>
+		<ReleaseVideoModal
+			requested={releaseRequested}
+			onRequestedClose={release.close}
+		/>
 	);
 
 	// Tasks live under their organisation and connecting an agent under its settings
