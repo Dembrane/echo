@@ -118,9 +118,33 @@ test("a sign-in code is sent at most once a minute per email, before Better Auth
   expect((await send("Jane@acme.com")).status).toBe(200);
   const again = await send("jane@acme.com ");
   expect(again.status).toBe(429);
-  expect(((await again.json()) as { code: string }).code).toBe("rate_limit.exceeded");
+  const refused = (await again.json()) as { code: string; params: Record<string, unknown> };
+  expect(refused.code).toBe("rate_limit.exceeded");
+  // The login page counts down from this instead of guessing.
+  expect(refused.params.retry_after_seconds).toBeGreaterThan(0);
+  expect(refused.params.retry_after_seconds).toBeLessThanOrEqual(60);
   expect((await send("bob@acme.com")).status).toBe(200);
   expect(sent).toBe(2);
+});
+
+test("the dashboard may read how long a rate-limited sign-in must wait", async () => {
+  const auth = {
+    handler: async () =>
+      new Response(JSON.stringify({ message: "Too many requests. Please try again later." }), {
+        status: 429,
+        headers: { "X-Retry-After": "7" },
+      }),
+    api: { getSession: async () => null },
+  } as unknown as Deps["auth"];
+  const app = buildApp(deps({ auth }));
+  const res = await app.request("/api/auth/sign-in/email", {
+    method: "POST",
+    headers: { origin: loaded.values.http.dashboardUrl },
+  });
+  expect(res.status).toBe(429);
+  expect(res.headers.get("X-Retry-After")).toBe("7");
+  const exposed = (res.headers.get("access-control-expose-headers") ?? "").toLowerCase();
+  expect(exposed.split(/\s*,\s*/)).toContain("x-retry-after");
 });
 
 test("ready fails when the database does not answer", async () => {

@@ -18,6 +18,14 @@ export type TemplateSurface = "create" | "workspace_home";
 export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
 export type PortalShareMethod = "qr" | "copy" | "download";
 export type OnboardingWalkthroughStep = string;
+/** Why a sign-in failed; components/auth/utils/errorUtils.ts decides it from the answer. */
+export type LoginFailureCause =
+	| "wrong_credentials"
+	| "unverified"
+	| "rate_limited"
+	| "blocked"
+	| "network"
+	| "server";
 
 type NoProps = Record<never, never>;
 
@@ -31,7 +39,13 @@ export interface AnalyticsEvents {
 	registration_details_completed: { from_invite: boolean };
 	user_registered: { from_invite: boolean };
 	user_logged_in: NoProps;
-	user_login_failed: { error_code: string | null };
+	user_login_failed: {
+		error_code: string | null;
+		cause: LoginFailureCause;
+		http_status: number | null;
+	};
+	login_rate_limit_shown: { retry_after_s: number };
+	login_blocked_shown: NoProps;
 
 	// Onboarding.
 	onboarding_step_viewed: { step: OnboardingStep };

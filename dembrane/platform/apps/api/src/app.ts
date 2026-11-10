@@ -96,8 +96,9 @@ export function buildApp(deps: Deps) {
     cors({
       origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
       credentials: true,
-      // The portal reads its participant token from initiate's response.
-      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
+      // The portal reads its participant token from initiate's response. The login page
+      // reads how long a rate-limited sign-in must wait: Better Auth sends X-Retry-After.
+      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER, "X-Retry-After", "Retry-After"],
     }),
   );
   // One emailed code per address a minute, checked here: Better Auth replaces the stored code

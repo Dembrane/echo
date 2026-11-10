@@ -1,5 +1,6 @@
 import { directusTime } from "@dembrane/http";
 import { localeOfEmail } from "@dembrane/i18n";
+import { EMAIL_RE } from "./email";
 import type { InviteCtx } from "./invites/accept";
 import { hashMatches, urlencode } from "./invites/hash";
 import { sendEmail } from "./jobs";
@@ -8,9 +9,6 @@ import { accountStorage } from "./storage";
 /** Hashes are the gate; 30 probes per 5 minutes per IP make guessing them per email expensive. */
 const STATUS_LIMIT = { name: "auth_invite_status", capacity: 30, windowSeconds: 300 };
 const REGISTER_LIMIT = { name: "auth_register", capacity: 10, windowSeconds: 300 };
-
-/** Cheap shape check before any lookup. Domain labels exclude "." so the pattern cannot backtrack. */
-const EMAIL_RE = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 const status = (s: {
   status: string;

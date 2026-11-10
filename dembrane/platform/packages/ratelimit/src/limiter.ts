@@ -6,6 +6,17 @@ import { ForbiddenError, RateLimitedError } from "@dembrane/core";
  */
 export interface RateCounter {
   hit(key: string, windowSeconds: number, now: Date): Promise<number>;
+  /**
+   * The same hit, also saying when its window ends. Counters that know it implement this,
+   * so a refusal can tell the caller how long to wait; it counts exactly as `hit` does.
+   */
+  hitWindow?(key: string, windowSeconds: number, now: Date): Promise<RateWindow>;
+}
+
+/** A counter's answer to one hit: the count after it, and when the window ends. */
+export interface RateWindow {
+  readonly count: number;
+  readonly resetAt: Date;
 }
 
 export interface Limit {
@@ -30,8 +41,18 @@ export class RateLimiter {
     private readonly onError: (err: unknown, limit: Limit) => void = () => {},
   ) {}
 
+  /**
+   * Refuses with rate_limit.exceeded when over capacity. When the counter knows when the
+   * window ends, the refusal carries `retry_after_seconds`, so the caller can say how long
+   * to wait. Only the report: the limit itself is the same either way.
+   */
   async check(limit: Limit, identifier: string): Promise<void> {
-    if (!(await this.allow(limit, identifier))) throw new RateLimitedError("rate_limit.exceeded");
+    const verdict = await this.consume(limit, identifier);
+    if (verdict.allowed) return;
+    if (verdict.retryAfterSeconds === undefined) throw new RateLimitedError("rate_limit.exceeded");
+    throw new RateLimitedError("rate_limit.exceeded", {
+      params: { retry_after_seconds: verdict.retryAfterSeconds },
+    });
   }
 
   /** Per signed-in user; an empty user id is refused, as the old user limiter did. */
@@ -46,17 +67,29 @@ export class RateLimiter {
    * take sign-up, invites and onboarding down with it.
    */
   async allow(limit: Limit, identifier: string): Promise<boolean> {
-    if (!identifier) return true;
+    return (await this.consume(limit, identifier)).allowed;
+  }
+
+  private async consume(
+    limit: Limit,
+    identifier: string,
+  ): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
+    if (!identifier) return { allowed: true };
+    const key = `${limit.name}:${identifier}`;
+    const now = this.clock();
     try {
-      const count = await this.counter.hit(
-        `${limit.name}:${identifier}`,
-        limit.windowSeconds,
-        this.clock(),
-      );
-      return count <= limit.capacity;
+      if (!this.counter.hitWindow) {
+        const count = await this.counter.hit(key, limit.windowSeconds, now);
+        return { allowed: count <= limit.capacity };
+      }
+      const w = await this.counter.hitWindow(key, limit.windowSeconds, now);
+      if (w.count <= limit.capacity) return { allowed: true };
+      // Whole seconds, at least one: a refusal never says "try again in 0 seconds".
+      const left = Math.ceil((w.resetAt.getTime() - now.getTime()) / 1000);
+      return { allowed: false, retryAfterSeconds: Math.max(1, left) };
     } catch (err) {
       this.onError(err, limit);
-      return true;
+      return { allowed: true };
     }
   }
 }
