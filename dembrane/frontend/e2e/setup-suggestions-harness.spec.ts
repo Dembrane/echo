@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { SUGGESTIONS } from "../src/components/project/setup-suggestions/setupSuggestions.fixture";
 
-// ECHO-1043: "Tell dembrane about your session" in the create flow's name step, in each
-// state (idle, loading, results, empty, error), at desktop and phone width, in English
+// ECHO-1043: "Suggest key terms" under the project context in the create flow's name step
+// (the "conversation" template, which the fixture's proposals change), in each state (idle, loading, results, empty, error), at desktop and phone width, in English
 // and Dutch. Reuses the templates harness page. E2E_SHOTS=<dir> also saves screenshots.
 const shots = process.env.E2E_SHOTS;
 const sizes = [
@@ -72,10 +72,12 @@ for (const size of sizes)
 				page.getByTestId("setup-suggestions-submit").click();
 
 			await page.goto(
-				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new?template=event`,
+				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new?template=conversation`,
 			);
 			await expect(block).toBeVisible();
-			await page.getByTestId("setup-suggestions-text").fill(AGENDA);
+			const context = page.getByRole("textbox").nth(1);
+			await shot("0-empty");
+			await context.fill(AGENDA);
 			await shot("1-idle");
 			await noSideScroll();
 
@@ -93,12 +95,15 @@ for (const size of sizes)
 			const fresh = async (a: Answer) => {
 				answer = a;
 				await page.goto(
-					`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new?template=event`,
+					`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new?template=conversation`,
 				);
-				await page.getByTestId("setup-suggestions-text").fill(AGENDA);
-				await page
-					.getByTestId("setup-suggestions-url")
-					.fill(a === "url_note" ? "https://example.org/avond" : "");
+				await page.getByRole("textbox").nth(1).fill(AGENDA);
+				if (a === "url_note") {
+					await page.getByTestId("setup-suggestions-link-toggle").click();
+					await page
+						.getByTestId("setup-suggestions-url")
+						.fill("https://example.org/avond");
+				}
 				await suggest();
 			};
 
@@ -125,6 +130,8 @@ for (const size of sizes)
 				page.getByTestId("setup-suggestions-url-note"),
 			).toBeVisible();
 			await page.getByTestId("setup-suggestions-accept-all").click();
+			await page.mouse.move(0, 0);
+			await page.waitForTimeout(300);
 			await shot("4-accepted-all-url-note");
 
 			await fresh("empty");

@@ -36,7 +36,13 @@ let latest: { keyTerms: string; overrides: SettingOverrides } = {
 	keyTerms: "",
 	overrides: {},
 };
-const Harness = ({ initialTerms = "" }: { initialTerms?: string }) => {
+const Harness = ({
+	initialTerms = "",
+	description = "Over het warmtenet, met Woonbedrijf",
+}: {
+	initialTerms?: string;
+	description?: string;
+}) => {
 	const [keyTerms, setKeyTerms] = useState(initialTerms);
 	const [overrides, setOverrides] = useState<SettingOverrides>({});
 	latest = { keyTerms, overrides };
@@ -45,7 +51,7 @@ const Harness = ({ initialTerms = "" }: { initialTerms?: string }) => {
 			workspaceId="w1"
 			templateKey="event"
 			name="Bewonersavond"
-			description="Over het warmtenet"
+			description={description}
 			language="nl"
 			keyTerms={keyTerms}
 			onKeyTermsChange={setKeyTerms}
@@ -54,23 +60,20 @@ const Harness = ({ initialTerms = "" }: { initialTerms?: string }) => {
 		/>
 	);
 };
-const renderConnected = (initialTerms?: string) =>
+const renderConnected = (initialTerms?: string, description?: string) =>
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<Providers>
-				<Harness initialTerms={initialTerms} />
+				<Harness initialTerms={initialTerms} description={description} />
 			</Providers>
 		</QueryClientProvider>,
 	);
 
 describe("SessionBriefConnected", () => {
-	it("sends what the host gave and the terms they have, and tracks counts only", async () => {
+	it("sends the project context and the terms the host has, and tracks counts only", async () => {
 		const fetchMock = answer(200, SUGGESTIONS);
 		vi.stubGlobal("fetch", fetchMock);
 		renderConnected("GGD");
-		fireEvent.change(screen.getByLabelText("About your session"), {
-			target: { value: "Agenda met Woonbedrijf" },
-		});
 		fireEvent.click(screen.getByRole("button", { name: "Suggest key terms" }));
 		await screen.findByTestId("setup-suggestions-results");
 		const [url, init] = fetchMock.mock.calls[0] as unknown as [
@@ -79,11 +82,10 @@ describe("SessionBriefConnected", () => {
 		];
 		expect(url).toContain("/v2/workspaces/w1/project-setup/suggestions");
 		expect(JSON.parse(String(init.body))).toEqual({
-			description: "Over het warmtenet",
+			description: "Over het warmtenet, met Woonbedrijf",
 			existing_key_terms: ["GGD"],
 			language: "nl",
 			name: "Bewonersavond",
-			source_text: "Agenda met Woonbedrijf",
 			source_url: null,
 			template_key: "event",
 		});
@@ -124,12 +126,52 @@ describe("SessionBriefConnected", () => {
 		renderConnected();
 		fireEvent.click(screen.getByRole("button", { name: "Suggest key terms" }));
 		await screen.findByTestId("setup-suggestions-results");
-		fireEvent.click(screen.getByRole("checkbox", { name: "Portal tutorial" }));
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Ask participants for their name" }),
+		);
 		expect(latest.overrides).toEqual({
-			default_conversation_tutorial_slug: "advanced",
+			default_conversation_ask_for_participant_name: true,
 		});
-		fireEvent.click(screen.getByRole("checkbox", { name: "Portal tutorial" }));
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Ask participants for their name" }),
+		);
 		expect(latest.overrides).toEqual({});
+	});
+
+	it("a paste longer than a request reads: the first 20,000 characters are sent, and the host is told", async () => {
+		const fetchMock = answer(200, SUGGESTIONS);
+		vi.stubGlobal("fetch", fetchMock);
+		const long = `Agenda ${"Strijp-S ".repeat(3_000)}`;
+		renderConnected("", long);
+		fireEvent.click(screen.getByRole("button", { name: "Suggest key terms" }));
+		await screen.findByTestId("setup-suggestions-results");
+		const [, init] = fetchMock.mock.calls[0] as unknown as [
+			string,
+			RequestInit,
+		];
+		const sent = JSON.parse(String(init.body)).description as string;
+		expect(long.length).toBeGreaterThan(20_000);
+		expect(sent).toBe(long.trim().slice(0, 20_000));
+		expect(
+			screen.getByTestId("setup-suggestions-long-note").textContent,
+		).toContain("The whole text is saved.");
+	});
+
+	it("with no context and no link, the action waits and says to describe the session", () => {
+		renderConnected("", "");
+		expect(
+			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
+		).toBe(true);
+		expect(screen.getByTestId("setup-suggestions-hint").textContent).toContain(
+			"Describe your session in the project context",
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Add a link" }));
+		fireEvent.change(screen.getByLabelText(/Link to a page about it/), {
+			target: { value: "https://example.org/avond" },
+		});
+		expect(
+			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
+		).toBe(false);
 	});
 
 	it.each([

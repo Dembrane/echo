@@ -1,5 +1,6 @@
+import { Trans } from "@lingui/react/macro";
 import { useState } from "react";
-import type { SetupSuggestions } from "../setupSuggestions";
+import { MAX_SOURCE_CHARS, type SetupSuggestions } from "../setupSuggestions";
 import { useSuggestionBlock } from "../useSuggestionBlock";
 import { SessionBrief } from "./SessionBrief";
 
@@ -8,8 +9,11 @@ export type SettingOverrides = Record<string, boolean | string>;
 interface SessionBriefConnectedProps {
 	workspaceId: string | null;
 	templateKey: string;
-	/** The project name and context the host typed above: part of what dembrane reads. */
 	name: string;
+	/**
+	 * The project context the host typed just above: saved with the project as it is, and
+	 * what dembrane reads for suggestions (its first 20,000 characters).
+	 */
 	description: string;
 	language: string;
 	/** The key terms value the wizard submits (one comma-separated string). */
@@ -34,7 +38,6 @@ export const SessionBriefConnected = ({
 	onOverridesChange,
 	onResult,
 }: SessionBriefConnectedProps) => {
-	const [text, setText] = useState("");
 	const [url, setUrl] = useState("");
 	const block = useSuggestionBlock({
 		keyTerms,
@@ -47,29 +50,33 @@ export const SessionBriefConnected = ({
 		surface: "wizard",
 		workspaceId,
 	});
-	const canSuggest =
-		Boolean(workspaceId) &&
-		Boolean(text.trim() || url.trim() || description.trim() || name.trim());
+	const context = description.trim();
+	const canSuggest = Boolean(workspaceId) && Boolean(context || url.trim());
 
 	return (
 		<SessionBrief
 			surface="wizard"
+			withLink
 			status={block.status}
-			text={text}
 			url={url}
-			onTextChange={setText}
 			onUrlChange={setUrl}
 			canSuggest={canSuggest}
+			hint={
+				<Trans>
+					Describe your session in the project context, or add a link, and
+					dembrane suggests key terms.
+				</Trans>
+			}
+			readStartOnly={context.length > MAX_SOURCE_CHARS}
 			onSuggest={() =>
 				block.suggest({
-					description: description.trim() || null,
+					description: context.slice(0, MAX_SOURCE_CHARS) || null,
 					existing_key_terms: keyTerms
 						.split(",")
 						.map((term) => term.trim())
 						.filter(Boolean),
 					language,
 					name: name.trim(),
-					source_text: text.trim() || null,
 					source_url: url.trim() || null,
 					template_key: templateKey,
 				})
