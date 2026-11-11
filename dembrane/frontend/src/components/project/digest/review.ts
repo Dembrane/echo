@@ -93,7 +93,10 @@ export function initialReview(
 	};
 }
 
-/** Which sections the digest returned something for: only those are shown. */
+/**
+ * Which sections the digest returned something for: only those are shown. Verify counts
+ * only when the digest chose topics; otherwise it stays on with the template's own.
+ */
 export function sectionsShown(r: DigestResult): SectionKey[] {
 	return SECTIONS.filter((s) => {
 		switch (s) {
@@ -108,7 +111,7 @@ export function sectionsShown(r: DigestResult): SectionKey[] {
 			case "nameLabel":
 				return Boolean(r.name_label);
 			case "verify":
-				return true;
+				return Boolean(r.verify_topics?.length);
 			case "explore":
 				return Boolean(r.explore_prompt);
 			case "hostSteps":
@@ -215,3 +218,33 @@ export function appliedCounts(
 		template_changed: s.template !== proposedTemplate,
 	};
 }
+
+/** One screen of the stepped review (ECHO-1058): a part, or the summary at the end. */
+export type ReviewStep = "name" | "template" | SectionKey | "summary";
+
+/**
+ * The review's screens, in order: the name, the parts before the template, the template,
+ * the parts after it, then the summary. Parts the digest proposed nothing for are left out;
+ * the name and the template are always asked, Create needs both.
+ */
+export function reviewSteps(r: DigestResult): ReviewStep[] {
+	const shown = sectionsShown(r);
+	const before: SectionKey[] = ["goal", "context", "keyTerms"];
+	return [
+		"name",
+		...shown.filter((k) => before.includes(k)),
+		"template",
+		...shown.filter((k) => !before.includes(k)),
+		"summary",
+	];
+}
+
+/** A step as analytics names it: snake_case, never what the part says. */
+export const stepName = (step: ReviewStep) =>
+	step === "keyTerms"
+		? "key_terms"
+		: step === "nameLabel"
+			? "name_label"
+			: step === "hostSteps"
+				? "host_steps"
+				: step;

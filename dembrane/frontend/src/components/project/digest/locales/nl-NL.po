@@ -13,6 +13,14 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:133
+msgid "Accept and continue"
+msgstr "Akkoord, verder"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:249
+msgid "Accept the rest"
+msgstr "Accepteer de rest"
+
 #: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
 msgid "Add a link"
 msgstr "Link toevoegen"
@@ -25,11 +33,11 @@ msgstr "Toevoegen uit een bestand"
 msgid "Added what the session is about to the project context. Check it above."
 msgstr "Waar de sessie over gaat staat nu in de projectcontext. Kijk het hierboven na."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:314
+#: src/components/project/digest/DigestReview/DigestReview.tsx:543
 msgid "All templates"
 msgstr "Alle sjablonen"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:281
+#: src/components/project/digest/DigestReview/DigestReview.tsx:509
 msgid "Also fits:"
 msgstr "Past ook:"
 
@@ -37,27 +45,51 @@ msgstr "Past ook:"
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Een uitnodiging of projectpagina. dembrane leest die één keer."
 
+#: src/components/project/digest/DigestReview/DigestReview.tsx:239
+msgid "Back"
+msgstr "Terug"
+
 #: src/components/project/digest/DigestProgress/DigestProgress.tsx:59
 msgid "Cancel"
 msgstr "Annuleren"
 
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:110
+msgid "Change"
+msgstr "Wijzig"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:64
+msgid "Change any part, then create the project. Nothing is saved before."
+msgstr "Wijzig wat je wilt en maak dan het project. Tot dan wordt er niets opgeslagen."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:103
+#~ msgid "Change: {0}"
+#~ msgstr ""
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:107
+msgid "Change: {part}"
+msgstr "Wijzig: {part}"
+
 #: src/components/project/digest/DigestReview/DigestReview.tsx:108
-msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
-msgstr "Kijk elk onderdeel na, pas aan wat niet klopt en zet uit wat je niet wilt. Er wordt niets opgeslagen tot je het project aanmaakt."
+#~ msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
+#~ msgstr "Kijk elk onderdeel na, pas aan wat niet klopt en zet uit wat je niet wilt. Er wordt niets opgeslagen tot je het project aanmaakt."
+
+#: src/components/project/digest/DigestConnected.tsx:222
+msgid "Choose a format below to continue."
+msgstr "Kies hieronder een werkvorm om verder te gaan."
 
 #: src/components/project/digest/DigestConnected.tsx:204
-msgid "Choose a template below to continue."
-msgstr "Kies hieronder een sjabloon om verder te gaan."
+#~ msgid "Choose a template below to continue."
+#~ msgstr "Kies hieronder een sjabloon om verder te gaan."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:270
+#: src/components/project/digest/DigestReview/DigestReview.tsx:498
 msgid "Choose the template that fits the session."
 msgstr "Kies het sjabloon dat bij de sessie past."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:138
+#: src/components/project/digest/DigestReview/DigestReview.tsx:342
 msgid "Contact details and lists of names were left out of the context."
 msgstr "Contactgegevens en lijsten met namen zijn uit de context weggelaten."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:471
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:125
 msgid "Create project"
 msgstr "Project aanmaken"
 
@@ -65,7 +97,7 @@ msgstr "Project aanmaken"
 msgid "dembrane couldn't read anything to add from this."
 msgstr "dembrane kon hier niets uit halen om toe te voegen."
 
-#: src/components/project/digest/DigestConnected.tsx:196
+#: src/components/project/digest/DigestConnected.tsx:214
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane kon het project hiermee niet inrichten."
 
@@ -77,12 +109,16 @@ msgstr "Sleep bestanden hierheen, of kies ze"
 msgid "Drop files or choose them"
 msgstr "Sleep bestanden of kies ze"
 
-#: src/components/project/digest/DigestConnected.tsx:173
+#: src/components/project/digest/DigestConnected.tsx:191
 msgid "Drop it to set up the project from it"
 msgstr "Laat los om het project hiermee in te richten"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:407
-#: src/components/project/digest/DigestReview/DigestReview.tsx:414
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:142
+msgid "Edit"
+msgstr "Aanpassen"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:191
+#: src/components/project/digest/DigestReview/DigestReview.tsx:628
 msgid "Explore question"
 msgstr "Verkennen-vraag"
 
@@ -97,32 +133,37 @@ msgstr "Uit {0}"
 
 #. placeholder {0}: term.source
 #. placeholder {1}: term.snippet
-#: src/components/project/digest/DigestReview/DigestReview.tsx:91
+#: src/components/project/digest/DigestReview/DigestReview.tsx:180
 msgid "From {0}: “{1}”"
 msgstr "Uit {0}: “{1}”"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:167
+#: src/components/project/digest/DigestReview/DigestReview.tsx:403
 msgid "Give the project a name to create it."
 msgstr "Geef het project een naam om het aan te maken."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:176
-#: src/components/project/digest/DigestReview/DigestReview.tsx:183
+#: src/components/project/digest/DigestReview/DigestReview.tsx:192
+#: src/components/project/digest/DigestReview/DigestReview.tsx:416
 msgid "Goal"
 msgstr "Doel"
 
 #: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
-msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
-msgstr "Heb je een agenda of uitnodiging? Sleep die hierheen en dembrane richt het project in."
+#~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
+#~ msgstr "Heb je een agenda of uitnodiging? Sleep die hierheen en dembrane richt het project in."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:105
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
+msgstr "Heb je een agenda, uitnodiging of draaiboek? Sleep het hierheen en dembrane richt het project in."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:52
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:94
 msgid "Here is what dembrane understood"
 msgstr "Dit heeft dembrane begrepen"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:428
+#: src/components/project/digest/DigestReview/DigestReview.tsx:193
 msgid "Host script additions"
 msgstr "Aanvullingen op het hostscript"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:218
+#: src/components/project/digest/DigestReview/DigestReview.tsx:194
 msgid "Key terms"
 msgstr "Kernbegrippen"
 
@@ -134,16 +175,16 @@ msgstr "Groter dan 10 MB. Probeer een kortere versie, of plak het deel dat ertoe
 msgid "Link to a page about it"
 msgstr "Link naar een pagina erover"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:157
+#: src/components/project/digest/DigestReview/DigestReview.tsx:195
 msgid "Name"
 msgstr "Naam"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:386
-#: src/components/project/digest/DigestReview/DigestReview.tsx:393
+#: src/components/project/digest/DigestReview/DigestReview.tsx:196
+#: src/components/project/digest/DigestReview/DigestReview.tsx:613
 msgid "Name box"
 msgstr "Naamvak"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:219
+#: src/components/project/digest/DigestReview/DigestReview.tsx:446
 msgid "Names and words transcription should spell right. Each one is in your material."
 msgstr "Namen en woorden die de transcriptie goed moet spellen. Elk ervan staat in je materiaal."
 
@@ -155,15 +196,24 @@ msgstr "Niet gelezen: dembrane leest tot {MAX_FILES} bestanden tegelijk."
 msgid "Not read: together the files are longer than 200,000 characters."
 msgstr "Niet gelezen: samen zijn de bestanden langer dan 200.000 tekens."
 
-#: src/components/project/digest/DigestConnected.tsx:209
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
+#: src/components/project/digest/DigestReview/DigestReview.tsx:370
+msgid "Nothing yet"
+msgstr "Nog niets"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:312
+msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
+msgstr "Eén onderdeel tegelijk: neem het over, pas het aan of sla het over. Er wordt niets opgeslagen tot je het project maakt."
+
+#: src/components/project/digest/DigestConnected.tsx:227
 msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
 msgstr "Alleen het begin past: dembrane leest de eerste 4.000 tekens van de context."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:313
+#: src/components/project/digest/DigestReview/DigestReview.tsx:542
 msgid "Or choose another"
 msgstr "Of kies een ander"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:333
+#: src/components/project/digest/DigestReview/DigestReview.tsx:563
 msgid "Participants tap the round they are in before they record."
 msgstr "Deelnemers tikken op hun ronde voordat ze opnemen."
 
@@ -188,12 +238,12 @@ msgstr "PDF, Word, PowerPoint of tekst. Tot {MAX_FILES} bestanden van 10 MB."
 msgid "Pictures aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Afbeeldingen worden niet gelezen. PDF, Word, PowerPoint en tekstbestanden werken wel."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:197
-#: src/components/project/digest/DigestReview/DigestReview.tsx:204
+#: src/components/project/digest/DigestReview/DigestReview.tsx:190
+#: src/components/project/digest/DigestReview/DigestReview.tsx:433
 msgid "Project context"
 msgstr "Projectcontext"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:159
+#: src/components/project/digest/DigestReview/DigestReview.tsx:395
 msgid "Project name"
 msgstr "Projectnaam"
 
@@ -202,7 +252,7 @@ msgid "read"
 msgstr "gelezen"
 
 #. placeholder {0}: result.sources.map((s) => s.name).join(", ")
-#: src/components/project/digest/DigestReview/DigestReview.tsx:118
+#: src/components/project/digest/DigestReview/DigestReview.tsx:322
 msgid "Read from: {0}"
 msgstr "Gelezen uit: {0}"
 
@@ -222,8 +272,12 @@ msgstr "Je bestanden worden op dit apparaat gelezen…"
 msgid "Reading your material"
 msgstr "Je materiaal wordt gelezen"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:332
-#: src/components/project/digest/DigestReview/DigestReview.tsx:339
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:61
+msgid "Ready to create"
+msgstr "Klaar om te maken"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:197
+#: src/components/project/digest/DigestReview/DigestReview.tsx:568
 msgid "Rounds as tags"
 msgstr "Rondes als tags"
 
@@ -231,28 +285,37 @@ msgstr "Rondes als tags"
 msgid "Set up from this"
 msgstr "Hiermee inrichten"
 
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:152
+msgid "Skip this part"
+msgstr "Sla dit over"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
+msgid "Skipped"
+msgstr "Overgeslagen"
+
 #: src/components/project/digest/messages.ts:15
 msgid "Spreadsheets aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Spreadsheets worden niet gelezen. PDF, Word, PowerPoint en tekstbestanden werken wel."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:480
+#: src/components/project/digest/DigestReview/DigestReview.tsx:226
+#: src/components/project/digest/DigestReview/DigestReview.tsx:259
 msgid "Start over"
 msgstr "Opnieuw beginnen"
 
 #. placeholder {0}: i + 1
-#: src/components/project/digest/DigestReview/DigestReview.tsx:439
+#: src/components/project/digest/DigestReview/DigestReview.tsx:649
 msgid "Step {0}"
 msgstr "Stap {0}"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:429
+#: src/components/project/digest/DigestReview/DigestReview.tsx:641
 msgid "Steps for this session, added after the template's host script."
 msgstr "Stappen voor deze sessie, toegevoegd na het hostscript van het sjabloon."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:245
+#: src/components/project/digest/DigestReview/DigestReview.tsx:198
 msgid "Template"
 msgstr "Sjabloon"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:149
+#: src/components/project/digest/DigestReview/DigestReview.tsx:353
 msgid "The link could not be read, so this comes from your files and text."
 msgstr "De link kon niet gelezen worden, dus dit komt uit je bestanden en tekst."
 
@@ -281,42 +344,42 @@ msgid "This takes up to half a minute for long documents."
 msgstr "Bij lange documenten duurt dit tot een halve minuut."
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:431
-msgid "Use these host script steps"
-msgstr "Deze hostscriptstappen gebruiken"
+#~ msgid "Use these host script steps"
+#~ msgstr "Deze hostscriptstappen gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:220
-msgid "Use these key terms"
-msgstr "Deze kernbegrippen gebruiken"
+#~ msgid "Use these key terms"
+#~ msgstr "Deze kernbegrippen gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:335
-msgid "Use these tags"
-msgstr "Deze tags gebruiken"
+#~ msgid "Use these tags"
+#~ msgstr "Deze tags gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:355
-msgid "Use these Verify options"
-msgstr "Deze Verifiëren-opties gebruiken"
+#~ msgid "Use these Verify options"
+#~ msgstr "Deze Verifiëren-opties gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:200
-msgid "Use this context"
-msgstr "Deze context gebruiken"
+#~ msgid "Use this context"
+#~ msgstr "Deze context gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:410
-msgid "Use this Explore question"
-msgstr "Deze Verkennen-vraag gebruiken"
+#~ msgid "Use this Explore question"
+#~ msgstr "Deze Verkennen-vraag gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:179
-msgid "Use this goal"
-msgstr "Dit doel gebruiken"
+#~ msgid "Use this goal"
+#~ msgstr "Dit doel gebruiken"
 
 #: src/components/project/digest/DigestReview/DigestReview.tsx:389
-msgid "Use this name box label"
-msgstr "Dit label voor het naamvak gebruiken"
+#~ msgid "Use this name box label"
+#~ msgstr "Dit label voor het naamvak gebruiken"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:352
+#: src/components/project/digest/DigestReview/DigestReview.tsx:199
 msgid "Verify"
 msgstr "Verifiëren"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:359
+#: src/components/project/digest/DigestReview/DigestReview.tsx:585
 msgid "Verify options"
 msgstr "Verifiëren-opties"
 
@@ -324,32 +387,36 @@ msgstr "Verifiëren-opties"
 msgid "waiting"
 msgstr "wacht"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:353
+#: src/components/project/digest/DigestReview/DigestReview.tsx:581
 msgid "What participants check together at the end of their conversation."
 msgstr "Wat deelnemers aan het eind van hun gesprek samen nakijken."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:387
+#: src/components/project/digest/DigestReview/DigestReview.tsx:609
 msgid "What the portal asks each group to type before recording."
 msgstr "Wat de portal elke groep vraagt in te typen voor de opname."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:177
+#: src/components/project/digest/DigestReview/DigestReview.tsx:412
 msgid "What you want to learn or decide. Saved as the project's first goal."
 msgstr "Wat je wilt leren of beslissen. Opgeslagen als het eerste doel van het project."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:198
+#: src/components/project/digest/DigestReview/DigestReview.tsx:429
 msgid "What, who, where and the questions. dembrane reads it to keep answers and summaries on your question."
 msgstr "Wat, wie, waar en de vragen. dembrane leest dit om antwoorden en samenvattingen bij je vraag te houden."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:408
+#: src/components/project/digest/DigestReview/DigestReview.tsx:624
 msgid "When a group presses Explore, dembrane asks one open question built from your questions. It never gives its own opinion."
 msgstr "Als een groep op Verkennen drukt, stelt dembrane één open vraag op basis van jouw vragen. Het geeft nooit een eigen mening."
 
 #. placeholder {0}: result.template.reason
-#: src/components/project/digest/DigestReview/DigestReview.tsx:264
+#: src/components/project/digest/DigestReview/DigestReview.tsx:492
 msgid "Why this one: {0}"
 msgstr "Waarom dit sjabloon: {0}"
 
-#: src/components/project/digest/DigestConnected.tsx:191
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:122
+msgid "You skipped this part. Accept it to use it after all."
+msgstr "Je hebt dit overgeslagen. Neem het over om het toch te gebruiken."
+
+#: src/components/project/digest/DigestConnected.tsx:209
 msgid "You've set up several projects from material in the last hour. Try again later."
 msgstr "Je hebt het afgelopen uur al een paar projecten met materiaal ingericht. Probeer het later opnieuw."
 
@@ -357,14 +424,18 @@ msgstr "Je hebt het afgelopen uur al een paar projecten met materiaal ingericht.
 msgid "Your files"
 msgstr "Je bestanden"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:126
+#: src/components/project/digest/DigestReview/DigestReview.tsx:330
 msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
 msgstr "Je materiaal was lang, dus dembrane las het begin en een ingekorte versie. Kijk of er niets belangrijks ontbreekt."
 
-#: src/components/project/digest/DigestConnected.tsx:199
-msgid "Your text is in the project context: choose a template below to continue."
-msgstr "Je tekst staat in de projectcontext: kies hieronder een sjabloon om verder te gaan."
+#: src/components/project/digest/DigestConnected.tsx:217
+msgid "Your text is in the project context: choose a format below to continue."
+msgstr "Je tekst staat in de projectcontext: kies hieronder een werkvorm om verder te gaan."
 
-#: src/components/project/digest/DigestConnected.tsx:186
+#: src/components/project/digest/DigestConnected.tsx:199
+#~ msgid "Your text is in the project context: choose a template below to continue."
+#~ msgstr "Je tekst staat in de projectcontext: kies hieronder een sjabloon om verder te gaan."
+
+#: src/components/project/digest/DigestConnected.tsx:204
 msgid "Your workspace's AI budget for this month is used up, so dembrane can't read this now."
 msgstr "Het AI-budget van je werkruimte voor deze maand is op, dus dembrane kan dit nu niet lezen."

@@ -93,10 +93,10 @@ export const DigestEntry = ({
 			)}
 		>
 			{!compact && (
-				<Text size="sm" id={`${privacyId}-lead`}>
+				<Text size="lg" id={`${privacyId}-lead`}>
 					<Trans>
-						Have an agenda or invitation? Drop it here and dembrane sets the
-						project up.
+						Have an agenda, invitation or run sheet? Drop it here and dembrane
+						sets the project up.
 					</Trans>
 				</Text>
 			)}
@@ -107,7 +107,7 @@ export const DigestEntry = ({
 				onDrop={() => {}}
 				accept={DIGEST_ACCEPT}
 				disabled={disabled}
-				p={compact ? "xs" : "sm"}
+				p={compact ? "xs" : "xl"}
 				onPaste={onPaste}
 				aria-label={t`Drop files or choose them`}
 				aria-describedby={privacyId}

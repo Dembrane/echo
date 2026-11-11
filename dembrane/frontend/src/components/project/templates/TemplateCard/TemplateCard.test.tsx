@@ -1,64 +1,60 @@
 // @vitest-environment jsdom
-import { MantineProvider } from "@mantine/core";
-import { HouseLineIcon } from "@phosphor-icons/react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import {
+	Providers,
+	setUpDom,
+} from "@/components/project/setup-suggestions/testing";
 import { TemplateCard } from "./TemplateCard";
 
 afterEach(cleanup);
-beforeAll(() => {
-	window.matchMedia ||= ((query: string) =>
-		({
-			addEventListener: () => {},
-			addListener: () => {},
-			dispatchEvent: () => false,
-			matches: false,
-			media: query,
-			onchange: null,
-			removeEventListener: () => {},
-			removeListener: () => {},
-		}) as unknown as MediaQueryList) as typeof window.matchMedia;
-});
+beforeAll(setUpDom);
 
 const renderCard = (props: Partial<Parameters<typeof TemplateCard>[0]> = {}) =>
 	render(
-		<MantineProvider>
+		<Providers>
 			<TemplateCard
-				icon={HouseLineIcon}
-				name="Resident evening"
+				template="resident_evening"
+				name="Table conversations"
 				greatFor="Great for resident evenings."
-				facts={["Each table checks its own summary", "Rounds as tags"]}
-				labels={["Understand", "Many groups at once"]}
+				tags={["Understand", "Many groups at once"]}
 				testId="card"
 				{...props}
 			/>
-		</MantineProvider>,
+		</Providers>,
 	);
 
 describe("TemplateCard", () => {
-	it("reads name, Great for, facts, then the quiet labels", () => {
+	it("shows the room, then name, Great for and the tags, in that order", () => {
 		renderCard();
-		const text = screen.getByTestId("card").textContent ?? "";
+		const card = screen.getByTestId("card");
+		expect(card.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+		const text = card.textContent ?? "";
 		const order = [
-			"Resident evening",
+			"Table conversations",
 			"Great for resident evenings.",
-			"Each table checks its own summary",
-			"Understand · Many groups at once",
+			"Understand",
+			"Many groups at once",
 		].map((s) => text.indexOf(s));
 		expect(order.every((i) => i >= 0)).toBe(true);
 		expect([...order].sort((a, b) => a - b)).toEqual(order);
 	});
 
-	it("puts a named format first among the labels", () => {
-		renderCard({ method: "World Café" });
-		expect(screen.getByTestId("template-card-labels").textContent).toBe(
-			"World Café · Understand · Many groups at once",
-		);
+	it("hides the drawing from screen readers", () => {
+		renderCard();
+		const svg = screen.getByTestId("template-illustration-resident_evening");
+		expect(svg.getAttribute("aria-hidden")).toBe("true");
 	});
 
-	it("leaves out the fact list and labels when there are none", () => {
-		renderCard({ facts: [], labels: [] });
-		expect(screen.queryByRole("list")).toBeNull();
-		expect(screen.queryByTestId("template-card-labels")).toBeNull();
+	it("shows each tag on its own, and none when there are none", () => {
+		renderCard({ tags: ["World Café", "Explore"] });
+		expect(
+			screen
+				.getByTestId("template-card-tags")
+				.querySelectorAll(".mantine-Badge-root"),
+		).toHaveLength(2);
+		cleanup();
+		renderCard({ tags: [] });
+		expect(screen.queryByTestId("template-card-tags")).toBeNull();
 	});
 });
