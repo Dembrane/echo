@@ -372,7 +372,7 @@ export const DigestReview = ({
 		);
 	const readTags = (items: readonly string[]) =>
 		items.filter(Boolean).length ? (
-			<Group gap={6} wrap="wrap">
+			<Group gap="xs" wrap="wrap">
 				{items.filter(Boolean).map((x) => (
 					<Badge key={x} size="md">
 						{x}

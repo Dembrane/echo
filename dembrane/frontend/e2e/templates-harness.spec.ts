@@ -1,11 +1,16 @@
+import { appendFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { RESIDENT_EVENING_GUIDE } from "../src/components/project/templates/hostGuide.fixture";
+import { grammarAudit } from "./grammar-checks";
 
 // ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats, all formats with each
 // verb filter and the setup filter, the name step with "What this sets up" open, the portal editor's name
 // box label, a host guide a template filled in, and workspace home's first-project state,
 // at desktop and phone width. E2E_SHOTS=<dir> also saves screenshots.
 const shots = process.env.E2E_SHOTS;
+// E2E_GRAMMAR=<file> also runs the rendered design-grammar audit on every screen shot here
+// and appends its findings to that file, one JSON line per screen.
+const grammarLog = process.env.E2E_GRAMMAR;
 const sizes = [
 	{ height: 900, name: "desktop", width: 1280 },
 	{ height: 844, name: "phone", width: 390 },
@@ -95,6 +100,16 @@ for (const size of sizes)
 						fullPage: true,
 						path: `${shots}/${size.name}-${lang}-${name}.png`,
 					});
+				if (grammarLog) {
+					const audit = await page.evaluate(grammarAudit, {
+						phone: size.name === "phone",
+						portal: false,
+					});
+					appendFileSync(
+						grammarLog,
+						`${JSON.stringify({ lang, name, size: size.name, ...audit })}\n`,
+					);
+				}
 			};
 			const noSideScroll = async () =>
 				expect(

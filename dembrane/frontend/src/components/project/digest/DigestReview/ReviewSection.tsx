@@ -94,7 +94,7 @@ export const ReviewSection = ({
 					<Trans>Here is what dembrane understood</Trans>
 				</Text>
 				<Title
-					order={3}
+					order={2}
 					ref={headingRef}
 					tabIndex={-1}
 					id={`project-digest-title-${id}`}
