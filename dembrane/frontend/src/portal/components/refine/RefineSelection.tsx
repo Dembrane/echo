@@ -2,9 +2,9 @@ import { Trans } from "@lingui/react/macro";
 import { Progress, Stack, Text, Title, UnstyledButton } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { useParams } from "react-router";
-import { AiUnavailableText } from "@/portal/components/AiUnavailable";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { AiUnavailableText } from "@/portal/components/AiUnavailable";
 import { useParticipantProjectById } from "@/portal/hooks";
 import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
 

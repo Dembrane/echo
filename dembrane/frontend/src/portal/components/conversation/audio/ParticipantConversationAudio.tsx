@@ -34,8 +34,8 @@ import {
 	useUploadConversationChunk,
 } from "../../../hooks";
 import { NotTakingRecordings } from "../../NotTakingRecordings";
+import { recordingClosed } from "../../recordingCap";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
-import { recordingClosed } from "../../start/recordingCap";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";

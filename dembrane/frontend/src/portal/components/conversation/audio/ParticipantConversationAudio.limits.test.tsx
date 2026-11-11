@@ -14,8 +14,8 @@ import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
 const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
-	onRecordingInterrupted: undefined as (() => void) | undefined,
 	onChunkAccepted: undefined as (() => void) | undefined,
+	onRecordingInterrupted: undefined as (() => void) | undefined,
 	onRecordingStop: undefined as
 		| ((r: string, accepted: boolean) => void)
 		| undefined,

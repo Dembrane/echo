@@ -13,12 +13,12 @@ import {
 import { API_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
-import { AiUnavailableText } from "../../AiUnavailable";
 import {
 	useConversationQuery,
 	useConversationRepliesQuery,
 	useParticipantProjectById,
 } from "../../../hooks";
+import { AiUnavailableText } from "../../AiUnavailable";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";
 import { ConversationMessages } from "../ConversationMessages";

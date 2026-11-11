@@ -11,9 +11,9 @@ import { ENABLE_MONITOR } from "@/config";
 import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
 import { testId } from "@/lib/testUtils";
 import { NotTakingRecordings } from "@/portal/components/NotTakingRecordings";
+import { resolvePortalMode } from "@/portal/components/recordingCap";
 import { InAppBrowserNotice } from "@/portal/components/start/InAppBrowserNotice";
 import ParticipantOnboardingCards from "@/portal/components/start/ParticipantOnboardingCards";
-import { resolvePortalMode } from "@/portal/components/start/recordingCap";
 import { useParticipantProjectById } from "@/portal/hooks";
 
 type FunnelStageReport = {
