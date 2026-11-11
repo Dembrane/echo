@@ -2316,7 +2316,7 @@ msgstr "Ein Objekt außerhalb dieser Ansicht"
 msgid "An optional second screen after the disclosure."
 msgstr "Ein optionaler zweiter Bildschirm nach dem Hinweis."
 
-#: src/components/error/ErrorPage.tsx:66
+#: src/components/error/ErrorPage.tsx:73
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Ein unerwarteter Fehler ist aufgetreten. Neu laden oder zur Startseite zurückkehren hilft meistens."
 
@@ -11345,7 +11345,7 @@ msgstr "Seiteninhalt"
 #~ msgid "Page Content"
 #~ msgstr "Seiteninhalt"
 
-#: src/components/error/ErrorPage.tsx:54
+#: src/components/error/ErrorPage.tsx:61
 msgid "Page not found"
 msgstr "Seite nicht gefunden"
 
@@ -12964,7 +12964,7 @@ msgstr "Relevant"
 
 #: src/features/sidebar/AppSidebar.tsx:119
 #: src/components/layout/BaseLayout.tsx:33
-#: src/components/error/ErrorPage.tsx:87
+#: src/components/error/ErrorPage.tsx:102
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Seite neu laden"
@@ -13616,7 +13616,7 @@ msgstr "Hertranskription gestartet. Das neue Gespräch wird bald verfügbar sein
 #~ msgid "Retry Upload"
 #~ msgstr "Upload erneut versuchen"
 
-#: src/components/error/ErrorPage.tsx:96
+#: src/components/error/ErrorPage.tsx:111
 #: src/components/error/ErrorBoundary.tsx:62
 msgid "Return home"
 msgstr "Zur Startseite"
@@ -15122,7 +15122,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/auth/Login.tsx:342
 #: src/components/report/reportError.ts:22
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/error/ErrorPage.tsx:56
+#: src/components/error/ErrorPage.tsx:63
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:350
 msgid "Something went wrong"
@@ -18555,7 +18555,7 @@ msgstr "Ihre Zahlungsmethode konnte nicht belastet werden"
 #~ msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
 #~ msgstr "Wir konnten die Zwei-Faktor-Authentifizierung nicht aktivieren. Überprüfen Sie Ihren Code und versuchen Sie es erneut."
 
-#: src/components/error/ErrorPage.tsx:62
+#: src/components/error/ErrorPage.tsx:69
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "Wir konnten die gesuchte Seite nicht finden. Möglicherweise wurde sie verschoben."
 
