@@ -50,6 +50,7 @@ export interface ModelAnswer {
   readonly settings: { field: string; value: string; reason: string }[];
 }
 
+/** Vertex rejects a schema with maxItems or maxLength inside it, so sizes are checked in code (rules.ts). */
 export const SETUP_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -57,28 +58,26 @@ export const SETUP_SCHEMA = {
   properties: {
     key_terms: {
       type: "array",
-      maxItems: 40,
       items: {
         type: "object",
         additionalProperties: false,
         required: ["term", "reason"],
         properties: {
-          term: { type: "string", maxLength: 80 },
-          reason: { type: "string", maxLength: 200 },
+          term: { type: "string" },
+          reason: { type: "string" },
         },
       },
     },
     settings: {
       type: "array",
-      maxItems: 6,
       items: {
         type: "object",
         additionalProperties: false,
         required: ["field", "value", "reason"],
         properties: {
           field: { type: "string", enum: [...PROPOSABLE_FIELDS] },
-          value: { type: "string", maxLength: 20 },
-          reason: { type: "string", maxLength: 200 },
+          value: { type: "string" },
+          reason: { type: "string" },
         },
       },
     },
