@@ -1,51 +1,54 @@
-import { Group, List, Stack, Text } from "@mantine/core";
-import type { Icon } from "@phosphor-icons/react";
+import { useLingui } from "@lingui/react";
+import { Badge, Group, Stack, Text } from "@mantine/core";
+import type { CardKey } from "../projectTemplates";
+import { TemplateIllustration } from "../TemplateIllustration/TemplateIllustration";
 
 interface TemplateCardProps {
-	icon: Icon;
+	template: CardKey;
 	name: string;
-	/** "Great for ...": who it is for, in one line. */
+	/** "Great for ...": the occasions, and what sets the format apart, in one line. */
 	greatFor: string;
-	/** What it sets up: two or three short facts. */
-	facts: readonly string[];
-	/** Quiet labels: the verbs and the setup, then a named format if it follows one. */
-	labels?: readonly string[];
-	method?: string | null;
+	/** Small tags: a named method, the verbs, the setup. */
+	tags?: readonly string[];
 	testId?: string;
 }
 
 /**
- * The face of one template, scannable in two seconds: name, who it is for, what it sets up,
- * and quiet labels last. Holds no state and no button; SelectableCardGrid makes it a radio.
+ * The face of one template (ECHO-1058), read in two seconds: the room seen from above, its
+ * name, who it is for, and small tags last. Holds no state and no button; the row, the grid
+ * and the review put it in one.
  */
 export const TemplateCard = ({
-	icon: IconComponent,
+	template,
 	name,
 	greatFor,
-	facts,
-	labels = [],
-	method,
+	tags = [],
 	testId,
-}: TemplateCardProps) => (
-	<Stack gap="xs" {...(testId ? { "data-testid": testId } : {})}>
-		<Group gap="xs" wrap="nowrap" align="center">
-			<IconComponent size={24} aria-hidden />
-			<Text size="lg" lh={1.25}>
+}: TemplateCardProps) => {
+	// Long compound names (Keukentafelgesprek) break at a syllable, in the UI's language.
+	const { i18n } = useLingui();
+	return (
+		<Stack gap="xs" {...(testId ? { "data-testid": testId } : {})}>
+			<TemplateIllustration template={template} />
+			<Text
+				size="lg"
+				lh={1.25}
+				mt="xs"
+				lang={i18n.locale}
+				style={{ hyphens: "auto", overflowWrap: "break-word" }}
+			>
 				{name}
 			</Text>
-		</Group>
-		<Text size="sm">{greatFor}</Text>
-		{facts.length > 0 && (
-			<List size="sm" spacing={2} className="app-muted">
-				{facts.map((fact) => (
-					<List.Item key={fact}>{fact}</List.Item>
-				))}
-			</List>
-		)}
-		{(labels.length > 0 || method) && (
-			<Text size="xs" className="app-muted" data-testid="template-card-labels">
-				{[...(method ? [method] : []), ...labels].join(" · ")}
-			</Text>
-		)}
-	</Stack>
-);
+			<Text size="sm">{greatFor}</Text>
+			{tags.length > 0 && (
+				<Group gap={4} wrap="wrap" data-testid="template-card-tags">
+					{tags.map((tag) => (
+						<Badge key={tag} size="sm">
+							{tag}
+						</Badge>
+					))}
+				</Group>
+			)}
+		</Stack>
+	);
+};

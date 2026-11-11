@@ -21,6 +21,8 @@ interface TemplateFiltersProps {
 	onShowAll: (showAll: boolean) => void;
 	/** How many cards the current view shows, said politely to a screen reader. */
 	count: number;
+	/** False where every card already shows (all formats): no "Show all", only the count. */
+	withShowAll?: boolean;
 }
 
 const FilterButton = ({
@@ -71,6 +73,7 @@ export const TemplateFilters = ({
 	showAll,
 	onShowAll,
 	count,
+	withShowAll = true,
 }: TemplateFiltersProps) => {
 	const verbsId = useId();
 	const setupId = useId();
@@ -131,12 +134,14 @@ export const TemplateFilters = ({
 				</Stack>
 			</Group>
 			<Group gap="sm" align="center" wrap="nowrap">
-				<FilterButton
-					label={t`Show all`}
-					pressed={showAll && !filtering}
-					onClick={() => onShowAll(!(showAll && !filtering))}
-					testId="template-filter-show-all"
-				/>
+				{withShowAll && (
+					<FilterButton
+						label={t`Show all`}
+						pressed={showAll && !filtering}
+						onClick={() => onShowAll(!(showAll && !filtering))}
+						testId="template-filter-show-all"
+					/>
+				)}
 
 				<Text
 					size="xs"
@@ -144,7 +149,7 @@ export const TemplateFilters = ({
 					aria-live="polite"
 					data-testid="template-filter-count"
 				>
-					{filtering || showAll ? (
+					{filtering || showAll || !withShowAll ? (
 						<Plural value={count} one="# template" other="# templates" />
 					) : (
 						<Trans>Most used. Filter to find more.</Trans>

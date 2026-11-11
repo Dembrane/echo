@@ -129,6 +129,24 @@ export const DigestConnected = ({
 				creating={creating}
 				onCreate={() => void create()}
 				onStartOver={startOver}
+				onStep={(e) => {
+					if (e.type === "viewed")
+						track("project_digest_step_viewed", {
+							index: e.index,
+							step: e.step,
+							total: e.total,
+						});
+					else if (e.type === "answered")
+						track("project_digest_step_answered", {
+							action: e.action,
+							step: e.step,
+						});
+					else
+						track("project_digest_rest_accepted", {
+							remaining: e.remaining,
+							step: e.step,
+						});
+				}}
 			/>
 		);
 
@@ -197,11 +215,11 @@ const FallbackNotice = ({ fallback }: { fallback: DigestFallback }) => (
 			)}{" "}
 			{fallback.context ? (
 				<Trans>
-					Your text is in the project context: choose a template below to
+					Your text is in the project context: choose a format below to
 					continue.
 				</Trans>
 			) : (
-				<Trans>Choose a template below to continue.</Trans>
+				<Trans>Choose a format below to continue.</Trans>
 			)}
 		</Text>
 		{fallback.cut ? (

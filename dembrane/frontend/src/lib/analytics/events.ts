@@ -11,12 +11,35 @@ import posthog from "posthog-js";
  * 3 (ECHO-1053): templates by purpose. The picker shows the most used cards first, with
  *    filters for the rest and "Upload recordings" and "Start blank" as links; the name step
  *    says what the template sets up. The steps are flow 2's.
+ * 4 (ECHO-1058): one thing at a time. The start screen offers the upload and one row of
+ *    drawn format cards; pressing a card goes straight to the name (no Continue). "See all
+ *    formats" opens the full list with its filters (step "formats"). The review after an
+ *    upload is one part per screen, with step events of its own.
  */
-export const FLOW_VERSION = 3;
+export const FLOW_VERSION = 4;
 
 export type OnboardingStep = "org" | "invite" | "questions";
-/** Flow 2's and 3's steps; flow 1 also sent "key_terms", "access" and "review". */
-export type ProjectCreateStep = "template" | "name" | "more_options";
+/** Flow 2's to 4's steps ("formats" from 4); flow 1 also sent "key_terms", "access", "review". */
+export type ProjectCreateStep =
+	| "template"
+	| "formats"
+	| "name"
+	| "more_options";
+/** Where a card was pressed (flow 4): the start screen's row, all formats, the old picker. */
+export type TemplateList = "row" | "all_formats" | "picker";
+/** One screen of the stepped digest review: a part, or the summary at the end. */
+export type DigestReviewStep =
+	| "name"
+	| "goal"
+	| "context"
+	| "key_terms"
+	| "template"
+	| "tags"
+	| "verify"
+	| "name_label"
+	| "explore"
+	| "host_steps"
+	| "summary";
 export type TemplateSurface = "create" | "workspace_home";
 /** A picker filter (ECHO-1053): a verb, the setup, or "Show all". */
 export type TemplateFilterName = "verb" | "setup" | "show_all";
@@ -81,6 +104,7 @@ export interface AnalyticsEvents {
 		setup: string | null;
 		featured: boolean;
 		filters_active: string[];
+		list?: TemplateList;
 	};
 	// A picker filter changed: its new value is a verb, a setup, "none", "on" or "off".
 	project_template_filter_changed: {
@@ -158,6 +182,18 @@ export interface AnalyticsEvents {
 		fields_dropped: number;
 		template_changed: boolean;
 	};
+	// The stepped review (ECHO-1058): which screen showed (its place and how many there are),
+	// and what the host did with a part. Step names only, never what a part says.
+	project_digest_step_viewed: {
+		step: DigestReviewStep;
+		index: number;
+		total: number;
+	};
+	project_digest_step_answered: {
+		step: DigestReviewStep;
+		action: "accepted" | "edited" | "skipped";
+	};
+	project_digest_rest_accepted: { step: DigestReviewStep; remaining: number };
 
 	// Reserved for later onboarding tickets. Typed now so the names stay stable; nothing
 	// sends them yet.

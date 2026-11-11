@@ -90,6 +90,8 @@ it("reads the file here, sends only its text, and shows the review", async () =>
 	expect(body.sources).toEqual([
 		{ kind: "file", name: "agenda.txt", text: AGENDA },
 	]);
+	fireEvent.click(screen.getByTestId("project-digest-accept"));
+	fireEvent.click(screen.getByTestId("project-digest-accept-rest"));
 	fireEvent.click(screen.getByTestId("project-digest-create"));
 	await waitFor(() => expect(onCreate).toHaveBeenCalled());
 	await waitFor(() =>
@@ -98,7 +100,16 @@ it("reads the file here, sends only its text, and shows the review", async () =>
 	expect(events.map((e) => e[0])).toEqual([
 		"project_digest_started",
 		"project_digest_ready",
+		"project_digest_step_viewed",
+		"project_digest_step_answered",
+		"project_digest_step_viewed",
+		"project_digest_rest_accepted",
+		"project_digest_step_viewed",
 		"project_digest_applied",
+	]);
+	expect(events[5]).toEqual([
+		"project_digest_rest_accepted",
+		{ remaining: 8, step: "goal" },
 	]);
 	// Never names, text or terms in an event.
 	expect(JSON.stringify(events)).not.toMatch(/agenda|Kanaalzone|Thuisbasis/i);

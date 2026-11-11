@@ -26,12 +26,12 @@ describe("track", () => {
 	it("sends events without properties", () => {
 		track("project_create_started");
 		expect(capture).toHaveBeenCalledWith("project_create_started", {
-			flow_version: 3,
+			flow_version: 4,
 		});
 	});
 
-	it("tells templates by purpose (3) apart from the earlier flows", () => {
-		expect(FLOW_VERSION).toBe(3);
+	it("tells the calm create flow (4) apart from the earlier flows", () => {
+		expect(FLOW_VERSION).toBe(4);
 		track("project_template_selected", {
 			featured: true,
 			filters_active: ["verb:understand"],
@@ -43,7 +43,7 @@ describe("track", () => {
 		expect(capture).toHaveBeenCalledWith("project_template_selected", {
 			featured: true,
 			filters_active: ["verb:understand"],
-			flow_version: 3,
+			flow_version: 4,
 			setup: "many_groups",
 			surface: "create",
 			template_key: "resident_evening",
@@ -55,7 +55,7 @@ describe("track", () => {
 		});
 		expect(capture).toHaveBeenCalledWith("project_template_filter_changed", {
 			filter: "verb",
-			flow_version: 3,
+			flow_version: 4,
 			value: "decide",
 		});
 	});

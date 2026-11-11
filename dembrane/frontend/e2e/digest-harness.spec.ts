@@ -145,7 +145,7 @@ for (const size of sizes)
 			);
 			const entry = page.getByTestId("project-digest-entry");
 			await expect(entry).toBeVisible();
-			await expect(page.getByTestId("template-picker")).toBeVisible();
+			await expect(page.getByTestId("template-row")).toBeVisible();
 			await expect(page.getByTestId("project-digest-privacy")).toBeVisible();
 			await shot("01-entry", false);
 			await noSideScroll();
@@ -158,7 +158,7 @@ for (const size of sizes)
 			await expect(
 				page.getByTestId("project-digest-file-0-reason"),
 			).toContainText(nl ? "scan" : "scan");
-			await expect(page.getByTestId("template-picker")).toBeVisible();
+			await expect(page.getByTestId("template-row")).toBeVisible();
 			await shot("02-scanned-refused", false);
 			expect(api.sent.filter((s) => s.url.includes("digest"))).toHaveLength(0);
 
@@ -169,15 +169,17 @@ for (const size of sizes)
 			).toContainText(
 				nl ? "Je materiaal wordt gelezen" : "Reading your material",
 			);
-			await expect(page.getByTestId("template-picker")).toBeHidden();
+			await expect(page.getByTestId("template-row")).toBeHidden();
 			await shot("03-reading", false);
 			await noSideScroll();
 			answer = "result";
 			api.release();
 
+			// The review, one part per screen (ECHO-1058): each screen, then the summary.
 			const review = page.getByTestId("project-digest-review");
 			await expect(review).toBeVisible();
-			for (const id of [
+			const accept = page.getByTestId("project-digest-accept");
+			const order = [
 				"name",
 				"goal",
 				"context",
@@ -188,39 +190,56 @@ for (const size of sizes)
 				"name-label",
 				"explore",
 				"host-steps",
-			])
+			];
+			for (const [i, id] of order.entries()) {
+				await expect(review).toHaveAttribute("data-step", id);
 				await expect(
 					page.getByTestId(`project-digest-section-${id}`),
 				).toBeVisible();
-			await page.waitForTimeout(300);
-			await shot("04-review");
+				await page.waitForTimeout(250);
+				await shot(`04-review-${String(i + 1).padStart(2, "0")}-${id}`);
+				await noSideScroll();
+				if (id === "goal") {
+					// Provenance: the source on the button, the words on hover (and on keyboard focus).
+					const from = page.getByTestId("project-digest-provenance-goal");
+					await from.hover();
+					await expect(page.getByRole("tooltip")).toContainText(
+						"Samen met jou",
+					);
+					await page.waitForTimeout(200);
+					await shot("05-provenance", false);
+					// Edit in place: the goal rewritten.
+					await page.getByTestId("project-digest-edit").click();
+					await page
+						.getByTestId("project-digest-goal")
+						.fill(
+							nl
+								? "Weten wat bewoners willen aan de Sluisweg."
+								: "Learn what residents want at the Sluisweg.",
+						);
+					await shot("06-edited-goal");
+				}
+				if (id === "template") {
+					await page.getByTestId("project-digest-runner-up-world_cafe").click();
+					await shot("06-template-changed");
+				}
+				if (id === "explore") {
+					await page.getByTestId("project-digest-skip").click();
+					continue;
+				}
+				// Enter accepts on a screen whose focus is its heading.
+				if (id === "context") await page.keyboard.press("Enter");
+				else await accept.click();
+			}
+			await expect(review).toHaveAttribute("data-step", "summary");
+			await page.waitForTimeout(250);
+			await shot("04-review-11-summary");
 			await noSideScroll();
-
-			// Provenance: the source on the button, the words on focus.
-			const from = page.getByTestId("project-digest-provenance-goal");
-			await from.scrollIntoViewIfNeeded();
-			await from.focus();
-			await expect(page.getByRole("tooltip")).toContainText("Samen met jou");
-			await page.waitForTimeout(200);
-			await shot("05-provenance", false);
-
-			// Edited: the goal rewritten, the Explore question switched off, another template.
-			await page
-				.getByTestId("project-digest-goal")
-				.fill(
-					nl
-						? "Weten wat bewoners willen aan de Sluisweg."
-						: "Learn what residents want at the Sluisweg.",
-				);
-			await page
-				.getByTestId("project-digest-section-explore-switch")
-				.evaluate((el) => (el as HTMLInputElement).click());
-			await page.getByTestId("project-digest-runner-up-world_cafe").click();
-			await page
-				.getByTestId("project-digest-section-goal")
-				.scrollIntoViewIfNeeded();
-			await page.waitForTimeout(300);
-			await shot("06-edited");
+			// Back to change one part from the summary, and back to the summary.
+			await page.getByTestId("project-digest-summary-change-name").click();
+			await expect(review).toHaveAttribute("data-step", "name");
+			await accept.click();
+			await expect(review).toHaveAttribute("data-step", "summary");
 
 			// The network: only text and names went out, never a file's bytes.
 			const digestCalls = api.sent.filter((s) =>
@@ -267,10 +286,9 @@ for (const size of sizes)
 				.locator("[data-testid=project-digest-dropzone] input[type=file]")
 				.setInputFiles([files.agenda]);
 			await expect(page.getByTestId("project-digest-fallback")).toBeVisible();
-			await expect(page.getByTestId("template-picker")).toBeVisible();
+			await expect(page.getByTestId("template-row")).toBeVisible();
 			await shot("07-fallback", false);
 			await page.getByTestId("template-card-resident_evening").click();
-			await page.getByTestId("create-project-template-continue").click();
 			await expect(
 				page.getByLabel(nl ? "Projectcontext" : "Project context"),
 			).toHaveValue(/Ronde 1: Wat gaat goed/);

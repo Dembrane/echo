@@ -6,19 +6,16 @@ import { useId, useState } from "react";
 import { SelectableCardGrid } from "@/components/common/SelectableCardGrid/SelectableCardGrid";
 import {
 	type CardKey,
+	cardTags,
 	isCardKey,
 	linkLabel,
 	linkLine,
 	NO_FILTER,
-	setupLabel,
-	TEMPLATE_ICONS,
 	type TemplateFilter,
 	type TemplateKey,
 	type TemplateSummary,
-	templateFacts,
 	templateGreatFor,
 	templateName,
-	verbLabel,
 	visibleCards,
 } from "../projectTemplates";
 import { TemplateCard } from "../TemplateCard/TemplateCard";
@@ -31,6 +28,8 @@ export interface TemplateChoiceContext {
 	setup: string;
 	/** "verb:<verb>", "setup:<setup>" or "show_all"; empty in the first view. */
 	filtersActive: string[];
+	/** Where the card was pressed: the start screen's row, all formats, or the old picker. */
+	list?: "row" | "all_formats" | "picker";
 }
 
 interface TemplatePickerProps {
@@ -149,15 +148,10 @@ export const TemplatePicker = ({
 								return {
 									render: () => (
 										<TemplateCard
-											icon={TEMPLATE_ICONS[key]}
+											template={key}
 											name={templateName(key)}
 											greatFor={templateGreatFor(key)}
-											facts={templateFacts(tpl)}
-											method={tpl.card.method}
-											labels={[
-												...tpl.card.verbs.map(verbLabel),
-												setupLabel(tpl.card.setup),
-											]}
+											tags={cardTags(tpl)}
 										/>
 									),
 									testId: `template-card-${key}`,

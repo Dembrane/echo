@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { RESIDENT_EVENING_GUIDE } from "../src/components/project/templates/hostGuide.fixture";
 
-// ECHO-1042, ECHO-1053: the template picker by purpose (most used first, each verb filter,
-// the setup filter), the name step with "What this sets up" open, the portal editor's name
+// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats, all formats with each
+// verb filter and the setup filter, the name step with "What this sets up" open, the portal editor's name
 // box label, a host guide a template filled in, and workspace home's first-project state,
 // at desktop and phone width. E2E_SHOTS=<dir> also saves screenshots.
 const shots = process.env.E2E_SHOTS;
@@ -106,19 +106,33 @@ for (const size of sizes)
 			await page.goto(
 				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
 			);
-			await expect(page.getByTestId("template-picker")).toBeVisible();
-			// The first view: the most used six, and a resident evening among them.
-			await expect(page.getByRole("radio")).toHaveCount(6);
+			// Start (ECHO-1058): the upload first, then every format in one row.
+			await expect(page.getByTestId("project-digest-entry")).toBeVisible();
+			const row = page.getByTestId("template-row-list");
+			await expect(row.locator("button")).toHaveCount(16);
 			await expect(
 				page.getByTestId("template-card-resident_evening"),
-			).toContainText(nl ? "Bewonersavond" : "Resident evening");
-			// Continue waits for a card, and says so.
-			await expect(
-				page.getByTestId("create-project-template-continue"),
-			).toBeDisabled();
-			await shot("01-first-view");
+			).toContainText(nl ? "Tafelgesprekken" : "Table conversations");
+			await expect(page.getByText(nl ? "Doorgaan" : "Continue")).toHaveCount(0);
+			await shot("01-start");
 			await noSideScroll();
+			// The row scrolls with its buttons; nothing moves by itself.
+			const before = await row.evaluate((el) => el.scrollLeft);
+			await page.waitForTimeout(600);
+			expect(await row.evaluate((el) => el.scrollLeft)).toBe(before);
+			await page.getByTestId("template-row-next").click();
+			await page.waitForTimeout(600);
+			expect(await row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);
+			await shot("01b-start-row-scrolled");
 
+			// All formats: the filters first, then the grid.
+			await page.getByTestId("template-row-see-all").click();
+			await expect(page.getByTestId("all-formats")).toBeVisible();
+			await expect(
+				page.getByTestId("all-formats-grid").locator("button"),
+			).toHaveCount(16);
+			await shot("02-all-formats");
+			await noSideScroll();
 			for (const verb of VERBS) {
 				await page.getByTestId(`template-filter-verb-${verb}`).click();
 				await expect(
@@ -129,25 +143,22 @@ for (const size of sizes)
 			// The last verb pressed again clears it.
 			await page.getByTestId("template-filter-verb-decide").click();
 			await page.getByTestId("template-filter-setup-many_groups").click();
-			await expect(page.getByRole("radio")).toHaveCount(10);
+			await expect(
+				page.getByTestId("all-formats-grid").locator("button"),
+			).toHaveCount(10);
 			await shot("03-many-groups");
 			await noSideScroll();
 
+			// One press chooses and moves on to the name.
 			await page.getByTestId("template-card-resident_evening").click();
-			await expect(
-				page.getByTestId("template-card-resident_evening"),
-			).toHaveAttribute("aria-checked", "true");
-			// The bug from the earlier screenshot: Continue must be enabled and look it.
-			const next = page.getByTestId("create-project-template-continue");
-			await expect(next).toBeEnabled();
-			expect(
-				await next.evaluate((el) => getComputedStyle(el).backgroundColor),
-			).not.toBe("rgba(0, 0, 0, 0)");
-			await shot("04-selected");
-			await next.click();
 			await expect(
 				page.getByTestId("create-project-chosen-template"),
 			).toBeVisible();
+			await expect(page.getByTestId("create-project-progress")).toHaveAttribute(
+				"aria-valuenow",
+				"2",
+			);
+			await shot("04-name");
 			await page.getByTestId("template-setup-summary-toggle").click();
 			await expect(
 				page.getByTestId("template-setup-summary-script"),
@@ -220,6 +231,16 @@ for (const size of sizes)
 			await expect(page.getByTestId("workspace-home-start")).toBeVisible();
 			await expect(page.getByTestId("template-picker")).toBeVisible();
 			await shot("08-workspace-home");
+
+			// All sixteen cards side by side.
+			await page.goto(
+				`/e2e/templates-harness.html?path=/${lang}/contact-sheet`,
+			);
+			await expect(
+				page.getByTestId("contact-sheet").locator("svg"),
+			).toHaveCount(16);
+			await page.waitForTimeout(200);
+			await shot("10-contact-sheet");
 			await noSideScroll();
 			expect(errors).toEqual([]);
 		});

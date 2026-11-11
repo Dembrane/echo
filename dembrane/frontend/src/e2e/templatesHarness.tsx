@@ -12,6 +12,15 @@ import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
 import { ParticipantInitiateForm } from "@/components/participant/ParticipantInitiateForm";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { useTemplatesCatalog } from "@/components/project/templates/i18n";
+import {
+	CARD_KEYS,
+	type CardKey,
+	cardTags,
+	templateGreatFor,
+	templateName,
+} from "@/components/project/templates/projectTemplates";
+import { TemplateCard } from "@/components/project/templates/TemplateCard/TemplateCard";
 import {
 	TEMPLATE_SUMMARIES,
 	TEMPLATE_SUMMARIES_NL,
@@ -141,6 +150,39 @@ const PortalNameBox = () => {
 	);
 };
 
+// All sixteen cards on one sheet (ECHO-1058), to judge the drawings side by side.
+const ContactSheet = () => {
+	const ready = useTemplatesCatalog();
+	const nl = window.location.search.includes("nl-NL");
+	if (!ready) return null;
+	const summaries = nl ? TEMPLATE_SUMMARIES_NL : TEMPLATE_SUMMARIES;
+	return (
+		<div
+			data-testid="contact-sheet"
+			style={{
+				display: "grid",
+				gap: 16,
+				gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+				padding: 24,
+			}}
+		>
+			{CARD_KEYS.map((key: CardKey) => {
+				const tpl = summaries.find((x) => x.key === key);
+				return (
+					<div key={key} className="app-do" style={{ padding: 16 }}>
+						<TemplateCard
+							template={key}
+							name={templateName(key)}
+							greatFor={templateGreatFor(key)}
+							tags={tpl ? cardTags(tpl) : []}
+						/>
+					</div>
+				);
+			})}
+		</div>
+	);
+};
+
 const path =
 	new URLSearchParams(window.location.search).get("path") ??
 	"/en-US/w/w1/projects/new";
@@ -152,6 +194,7 @@ const router = createMemoryRouter(
 		},
 		{ element: <ProjectsHomeRoute />, path: "/:language/w/:workspaceId/home" },
 		{ element: <Editor />, path: "/:language/editor" },
+		{ element: <ContactSheet />, path: "/:language/contact-sheet" },
 		{
 			element: <HostGuidePage />,
 			path: "/:language/w/:workspaceId/projects/:projectId/host-guide",

@@ -139,15 +139,19 @@ describe("TemplatePicker", () => {
 		).toBe("true");
 	});
 
-	it("shows Great for and the facts on each card", () => {
+	it("shows the drawing, Great for and the tags on each card, no feature lines", () => {
 		renderPicker();
 		const evening = screen.getByTestId("template-card-resident_evening");
-		expect(evening.textContent).toContain("Resident evening");
+		expect(evening.textContent).toContain("Table conversations");
 		expect(evening.textContent).toContain("Great for resident");
-		expect(evening.textContent).toContain("Each table checks its own summary");
-		expect(evening.textContent).toContain(
-			"Understand · Decide · Many groups at once",
-		);
+		expect(evening.textContent).not.toContain("Each table checks");
+		expect(
+			evening.querySelector(
+				"[data-testid=template-illustration-resident_evening]",
+			),
+		).toBeTruthy();
+		const tags = evening.querySelector("[data-testid=template-card-tags]");
+		expect(tags?.textContent).toBe("UnderstandDecideMany groups at once");
 	});
 
 	it("names the format on a card that follows one", () => {

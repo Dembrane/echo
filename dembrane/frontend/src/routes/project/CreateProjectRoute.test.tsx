@@ -178,20 +178,20 @@ const tree = (client = new QueryClient(), url = "/w/w1/projects/new") => (
 
 const renderCreate = (url?: string) => render(tree(new QueryClient(), url));
 
-/** The two choices: a template card (or a quiet link), then a name. */
-const chooseTemplate = (key: string) => {
-	if (key === "blank") {
-		fireEvent.click(screen.getByTestId("template-picker-start-blank"));
+/** The two choices: a card in the row (or a quiet link in all formats), then a name. */
+const chooseTemplate = async (key: string) => {
+	if (key === "blank" || key === "upload") {
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(
+			await screen.findByTestId(
+				key === "blank"
+					? "template-picker-start-blank"
+					: "template-picker-upload",
+			),
+		);
 		return;
 	}
-	if (key === "upload") {
-		fireEvent.click(screen.getByTestId("template-picker-upload"));
-		return;
-	}
-	if (!screen.queryByTestId(`template-card-${key}`))
-		fireEvent.click(screen.getByTestId("template-filter-show-all"));
-	fireEvent.click(screen.getByTestId(`template-card-${key}`));
-	fireEvent.click(screen.getByTestId("create-project-template-continue"));
+	fireEvent.click(await screen.findByTestId(`template-card-${key}`));
 };
 const nameIt = (name: string) =>
 	fireEvent.change(screen.getByLabelText("Project name"), {
@@ -207,10 +207,10 @@ describe("CreateProjectRoute role gating", () => {
 		["member", true],
 		["external", false],
 		["observer", false],
-	])("%s: wizard shown %s", (r, canCreate) => {
+	])("%s: wizard shown %s", async (r, canCreate) => {
 		role.current = r;
 		renderCreate();
-		expect(!!screen.queryByTestId("template-picker")).toBe(canCreate);
+		expect(!!screen.queryByTestId("create-project-start")).toBe(canCreate);
 		expect(!!screen.queryByTestId("create-project-not-allowed")).toBe(
 			!canCreate,
 		);
@@ -218,7 +218,7 @@ describe("CreateProjectRoute role gating", () => {
 });
 
 describe("CreateProjectRoute free project cap", () => {
-	it("opens the project wall on arrival when the free project cap is reached", () => {
+	it("opens the project wall on arrival when the free project cap is reached", async () => {
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
 		expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe(
@@ -226,14 +226,14 @@ describe("CreateProjectRoute free project cap", () => {
 		);
 	});
 
-	it("shows the wizard without a wall when under the cap", () => {
+	it("shows the wizard without a wall when under the cap", async () => {
 		allowance.data = projectsMeter(0, 1);
 		renderCreate();
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
-		expect(screen.getByTestId("template-picker")).toBeTruthy();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
 	});
 
-	it("does not fetch the allowance on a paid workspace", () => {
+	it("does not fetch the allowance on a paid workspace", async () => {
 		tier.current = "guardian";
 		allowance.data = projectsMeter(5, 1);
 		renderCreate();
@@ -241,7 +241,7 @@ describe("CreateProjectRoute free project cap", () => {
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
-	it("never shows the up-front wall to staff", () => {
+	it("never shows the up-front wall to staff", async () => {
 		me.current = { is_staff: true };
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
@@ -249,17 +249,19 @@ describe("CreateProjectRoute free project cap", () => {
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
-	it("closing the arrival wall returns to projects", () => {
+	it("closing the arrival wall returns to projects", async () => {
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
 		fireEvent.click(screen.getByTestId("upgrade-modal-close"));
 		expect(navigate).toHaveBeenCalledWith("/w/w1/home");
 	});
 
-	it("does not open the wall when the cap is reached after the wizard has started", () => {
+	it("does not open the wall when the cap is reached after the wizard has started", async () => {
 		const client = new QueryClient();
 		const view = render(tree(client));
-		fireEvent.click(screen.getByTestId("template-card-resident_evening"));
+		fireEvent.click(
+			await screen.findByTestId("template-card-resident_evening"),
+		);
 		allowance.data = projectsMeter(1, 1);
 		view.rerender(tree(client));
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
@@ -270,7 +272,7 @@ describe("CreateProjectRoute free project cap", () => {
 		createMutate.mockResolvedValue({ id: "p-new" });
 		const client = new QueryClient();
 		const view = render(tree(client));
-		chooseTemplate("working_group");
+		await chooseTemplate("working_group");
 		nameIt("Town hall");
 		create();
 		await waitFor(() => expect(navigate).toHaveBeenCalled());
@@ -285,13 +287,10 @@ describe("CreateProjectRoute: a template, then a name", () => {
 	it("creates with two choices: the template goes to the server, nothing else is written", async () => {
 		createMutate.mockResolvedValue({ id: "p1" });
 		renderCreate();
-		expect(
-			screen.getByTestId("create-project-template-continue"),
-		).toHaveProperty("disabled", true);
-		chooseTemplate("resident_evening");
+		await chooseTemplate("resident_evening");
 		expect(
 			screen.getByTestId("create-project-chosen-template").textContent,
-		).toBe("Starting from: Resident evening");
+		).toBe("Starting from: Table conversations");
 		nameIt("Town hall evening");
 		create();
 		await waitFor(() =>
@@ -307,6 +306,7 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
 			featured: true,
 			filters_active: [],
+			list: "row",
 			setup: "many_groups",
 			surface: "create",
 			template_key: "resident_evening",
@@ -319,29 +319,43 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		});
 	});
 
-	// The earlier screenshot showed Continue looking disabled with a card chosen.
-	it("enables Continue as soon as a card is chosen, and says why it waits before", () => {
+	it("moves on as soon as a card is pressed: no Continue, a thin progress line", async () => {
 		renderCreate();
-		const next = screen.getByTestId("create-project-template-continue");
-		expect(next).toHaveProperty("disabled", true);
-		expect(screen.getByText("Choose a card to continue.")).toBeTruthy();
-		fireEvent.click(screen.getByTestId("template-card-focus_group"));
-		expect(next).toHaveProperty("disabled", false);
-		expect(screen.queryByText("Choose a card to continue.")).toBeNull();
+		expect(
+			screen.getByRole("progressbar", { name: "Step 1 of 2" }),
+		).toBeTruthy();
+		expect(screen.queryByText("Continue")).toBeNull();
+		fireEvent.click(await screen.findByTestId("template-card-focus_group"));
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(
+			screen.getByRole("progressbar", { name: "Step 2 of 2" }),
+		).toBeTruthy();
 	});
 
-	it("sends the filters a host used, and each filter change, without free text", () => {
+	it("Back on the name returns to the screen the card was pressed on", async () => {
 		renderCreate();
-		fireEvent.click(screen.getByTestId("template-filter-verb-decide"));
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(await screen.findByTestId("template-card-futures"));
+		nameIt("Toekomst");
+		fireEvent.click(screen.getByTestId("create-project-name-back"));
+		expect(await screen.findByTestId("all-formats")).toBeTruthy();
+		fireEvent.click(screen.getByTestId("create-project-formats-back"));
+		expect(await screen.findByTestId("template-row")).toBeTruthy();
+	});
+
+	it("sends the filters a host used in all formats, and each filter change, without free text", async () => {
+		renderCreate();
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(await screen.findByTestId("template-filter-verb-decide"));
 		expect(tracked).toHaveBeenCalledWith("project_template_filter_changed", {
 			filter: "verb",
 			value: "decide",
 		});
 		fireEvent.click(screen.getByTestId("template-card-citizens_assembly"));
-		fireEvent.click(screen.getByTestId("create-project-template-continue"));
 		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
 			featured: false,
 			filters_active: ["verb:decide"],
+			list: "all_formats",
 			setup: "many_groups",
 			surface: "create",
 			template_key: "citizens_assembly",
@@ -349,9 +363,9 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		});
 	});
 
-	it("says what the template sets up on the name step, collapsed", () => {
+	it("says what the template sets up on the name step, collapsed", async () => {
 		renderCreate();
-		chooseTemplate("resident_evening");
+		await chooseTemplate("resident_evening");
 		const toggle = screen.getByTestId("template-setup-summary-toggle");
 		expect(toggle.getAttribute("aria-expanded")).toBe("false");
 		fireEvent.click(toggle);
@@ -360,9 +374,9 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		).toBe("Hosting a table at a resident evening");
 	});
 
-	it("notes a long project context quietly, and cuts nothing", () => {
+	it("notes a long project context quietly, and cuts nothing", async () => {
 		renderCreate();
-		chooseTemplate("interviews");
+		await chooseTemplate("interviews");
 		const field = screen.getByLabelText("Project context");
 		fireEvent.change(field, { target: { value: "x".repeat(4000) } });
 		expect(screen.queryByTestId("project-context-long-note")).toBeNull();
@@ -371,9 +385,9 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		expect((field as HTMLTextAreaElement).value).toHaveLength(4001);
 	});
 
-	it("counts the new steps", () => {
+	it("counts the new steps", async () => {
 		renderCreate();
-		chooseTemplate("interviews");
+		await chooseTemplate("interviews");
 		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
 		const steps = tracked.mock.calls
 			.filter(([event]) => event === "project_create_step_viewed")
@@ -381,10 +395,20 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		expect(steps).toEqual(["template", "name", "more_options"]);
 	});
 
+	it("counts all formats as a step of its own", async () => {
+		renderCreate();
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		await chooseTemplate("kitchen_table");
+		const steps = tracked.mock.calls
+			.filter(([event]) => event === "project_create_step_viewed")
+			.map(([, props]) => props.step);
+		expect(steps).toEqual(["template", "formats", "name"]);
+	});
+
 	it("starts blank from the quiet option", async () => {
 		createMutate.mockResolvedValue({ id: "p2" });
 		renderCreate();
-		chooseTemplate("blank");
+		await chooseTemplate("blank");
 		nameIt("Anything");
 		create();
 		await waitFor(() => expect(createMutate).toHaveBeenCalled());
@@ -394,7 +418,7 @@ describe("CreateProjectRoute: a template, then a name", () => {
 	it("lands on the upload page for existing recordings", async () => {
 		createMutate.mockResolvedValue({ id: "p3" });
 		renderCreate();
-		chooseTemplate("upload");
+		await chooseTemplate("upload");
 		nameIt("Archive");
 		create();
 		await waitFor(() =>
@@ -402,7 +426,7 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		);
 	});
 
-	it("arrives on the name step with an old key linked, which still works", () => {
+	it("arrives on the name step with an old key linked, which still works", async () => {
 		renderCreate("/w/w1/projects/new?template=series");
 		expect(screen.getByLabelText("Project name")).toBeTruthy();
 		expect(
@@ -410,10 +434,10 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		).toBe("Starting from: A series of sessions");
 	});
 
-	it("ignores an unknown linked template and starts at the picker", () => {
+	it("ignores an unknown linked template and starts at the picker", async () => {
 		renderCreate("/w/w1/projects/new?template=festival");
 		expect(screen.queryByLabelText("Project name")).toBeNull();
-		expect(screen.getByTestId("template-picker")).toBeTruthy();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
 	});
 
 	it.each([
@@ -424,7 +448,7 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		locale.current = ui;
 		createMutate.mockResolvedValue({ id: "p4" });
 		renderCreate();
-		chooseTemplate("kitchen_table");
+		await chooseTemplate("kitchen_table");
 		nameIt("Gesprek");
 		create();
 		await waitFor(() => expect(createMutate).toHaveBeenCalled());
@@ -433,9 +457,9 @@ describe("CreateProjectRoute: a template, then a name", () => {
 });
 
 describe("CreateProjectRoute: More options keeps the old wizard's settings", () => {
-	it("is closed by default and holds key terms, access, the review", () => {
+	it("is closed by default and holds key terms, access, the review", async () => {
 		renderCreate();
-		chooseTemplate("working_group");
+		await chooseTemplate("working_group");
 		const toggle = screen.getByTestId("create-project-more-options-toggle");
 		expect(toggle.getAttribute("aria-expanded")).toBe("false");
 		fireEvent.click(toggle);
@@ -448,7 +472,7 @@ describe("CreateProjectRoute: More options keeps the old wizard's settings", () 
 			screen.getByRole("radio", { name: /Open to the workspace/ }),
 		).toHaveProperty("checked", true);
 		expect(screen.getByTestId("create-project-review").textContent).toContain(
-			"Working group",
+			"Recurring meeting",
 		);
 	});
 
@@ -461,7 +485,7 @@ describe("CreateProjectRoute: More options keeps the old wizard's settings", () 
 		vi.stubGlobal("fetch", fetchMock);
 		createMutate.mockResolvedValue({ id: "p5" });
 		renderCreate();
-		chooseTemplate("working_group");
+		await chooseTemplate("working_group");
 		nameIt("Working group");
 		fireEvent.change(screen.getByLabelText(/Project context/), {
 			target: { value: "Monthly meetings" },
@@ -491,9 +515,9 @@ describe("CreateProjectRoute: More options keeps the old wizard's settings", () 
 		});
 	});
 
-	it("keeps Private out of reach on a free workspace", () => {
+	it("keeps Private out of reach on a free workspace", async () => {
 		renderCreate();
-		chooseTemplate("working_group");
+		await chooseTemplate("working_group");
 		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
 		expect(screen.getByRole("radio", { name: /^Private/ })).toHaveProperty(
 			"disabled",
@@ -531,7 +555,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 
 	it("sits under the project context, the one field, with its walkthrough anchor", async () => {
 		renderCreate();
-		chooseTemplate("resident_evening");
+		await chooseTemplate("resident_evening");
 		const block = await screen.findByTestId("setup-suggestions");
 		expect(block.getAttribute("data-tour")).toBe("setup-suggestions");
 		// Name and context are the only text fields before More options.
@@ -555,7 +579,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		createMutate.mockResolvedValue({ id: "p9" });
 		updateMutate.mockResolvedValue({});
 		renderCreate();
-		chooseTemplate("round_table");
+		await chooseTemplate("round_table");
 		nameIt("Regiotafel");
 		const agenda = `Agenda ${"Evoluon Eindhoven, ".repeat(1_500)}`.trim();
 		expect(agenda.length).toBeGreaterThan(20_000);
@@ -581,7 +605,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		vi.stubGlobal("fetch", suggestionsFetch(true));
 		createMutate.mockResolvedValue({ id: "p7" });
 		renderCreate();
-		chooseTemplate("resident_evening");
+		await chooseTemplate("resident_evening");
 		nameIt("Bewonersavond");
 		fireEvent.change(screen.getByLabelText("Project context"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
@@ -603,7 +627,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 		createMutate.mockResolvedValue({ id: "p8" });
 		updateMutate.mockResolvedValue({});
 		renderCreate();
-		chooseTemplate("blank");
+		await chooseTemplate("blank");
 		nameIt("Bewonersavond");
 		fireEvent.change(screen.getByLabelText("Project context"), {
 			target: { value: "Met Woonbedrijf in Strijp-S" },
@@ -642,12 +666,13 @@ describe("CreateProjectRoute: setup suggestions", () => {
 	});
 
 	describe("the context digest (ECHO-1055)", () => {
-		it("sits above the picker, which steps aside while it is active", () => {
+		it("sits above the row, which steps aside with the progress line while it is active", async () => {
 			renderCreate();
 			expect(screen.getByTestId("digest-stub")).toBeTruthy();
-			expect(screen.getByTestId("template-picker")).toBeTruthy();
+			expect(await screen.findByTestId("template-row")).toBeTruthy();
 			fireEvent.click(screen.getByText("digest active"));
-			expect(screen.queryByTestId("template-picker")).toBeNull();
+			expect(screen.queryByTestId("template-row")).toBeNull();
+			expect(screen.queryByTestId("create-project-progress")).toBeNull();
 		});
 
 		it("creates from the review in one request, with the digest", async () => {
@@ -675,10 +700,10 @@ describe("CreateProjectRoute: setup suggestions", () => {
 			});
 		});
 
-		it("a failed digest puts the text in the project context for the name step", () => {
+		it("a failed digest puts the text in the project context for the name step", async () => {
 			renderCreate();
 			fireEvent.click(screen.getByText("digest fallback"));
-			chooseTemplate("interviews");
+			await chooseTemplate("interviews");
 			expect(
 				(screen.getByLabelText("Project context") as HTMLTextAreaElement).value,
 			).toBe("Agenda text");

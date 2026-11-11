@@ -8,7 +8,6 @@ import {
 	Paper,
 	Radio,
 	Stack,
-	Stepper,
 	Switch,
 	Text,
 	TextInput,
@@ -45,8 +44,12 @@ import {
 	templateName,
 	useProjectTemplates,
 } from "@/components/project/templates/projectTemplates";
+import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
+import {
+	LazyAllFormats,
+	LazyTemplateRow,
+} from "@/components/project/templates/lazy";
 import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
-import { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
 import { TemplateSetupSummary } from "@/components/project/templates/TemplateSetupSummary/TemplateSetupSummary";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
@@ -73,9 +76,15 @@ type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
 
-// The wizard's steps, in order, as analytics names them (flow 3, as flow 2). "More options"
-// is not a step: opening it is counted as "more_options".
-const CREATE_STEPS: readonly ProjectCreateStep[] = ["template", "name"];
+// The screens (flow 4, ECHO-1058): start (the upload and the row of formats), all formats
+// when the host skips both, then the name. Analytics names them "template", "formats" and
+// "name"; "More options" is not a screen: opening it is counted as "more_options".
+type Screen = "start" | "formats" | "name";
+const CREATE_STEPS: Record<Screen, ProjectCreateStep> = {
+	formats: "formats",
+	name: "name",
+	start: "template",
+};
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -95,18 +104,17 @@ async function setVisibility(projectId: string, visibility: Access) {
 }
 
 /**
- * Creating a project: what the host is going to do, then a name. Two choices are enough;
- * the template's preset is applied by the server in the creating transaction.
+ * Creating a project, one thing at a time (ECHO-1058). The template's preset is applied by
+ * the server in the creating transaction.
  *
- * Above the picker, "Have an agenda or invitation? Drop it here" (the context digest,
- * ECHO-1055): the host drops their material, dembrane reads it and proposes the whole
- * setup on one review screen, and Create there makes the project with what they kept. If
- * the digest fails, the picker takes over with the material's text in the project context.
- *
- * Step 1 "What are you going to do?": templates by purpose (TemplatePicker, ECHO-1053): the
- * most used first, filters for the rest, and quiet "Upload recordings" and "Start blank"
- * links. A ?template=<key> link (workspace home's picker) arrives on step 2 with that
- * template chosen.
+ * Start: the offer to set up from what the host already has (the context digest,
+ * ECHO-1055: drop an agenda, invitation or run sheet, paste text or add a link). dembrane
+ * reads it and proposes the setup, reviewed one part per screen; Create there makes the
+ * project with what they kept. If the digest fails, the row takes over with the material's
+ * text in the project context. Under it, every format in one row of drawn cards: pressing
+ * one chooses it and goes to the name. "See all formats" leads to the full list with its
+ * filters (verbs and setup), and the quiet "Upload recordings" and "Start blank". A
+ * ?template=<key> link (workspace home's picker) arrives on the name with it chosen.
  *
  * Step 2 "Name": name and the optional project context, with "Suggest key terms" under it
  * (setup suggestions from the context: key terms and settings to accept), and "What this
@@ -126,7 +134,11 @@ export const CreateProjectRoute = () => {
 	const linked = searchParams.get("template");
 	const linkedTemplate = isTemplateKey(linked) ? linked : null;
 
-	const [step, setStep] = useState(linkedTemplate ? 1 : 0);
+	const [screen, setScreen] = useState<Screen>(
+		linkedTemplate ? "name" : "start",
+	);
+	// Where Back on the name goes: the screen the card was pressed on.
+	const [chosenOn, setChosenOn] = useState<Screen>("start");
 	const [template, setTemplate] = useState<TemplateKey | null>(linkedTemplate);
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
@@ -158,7 +170,7 @@ export const CreateProjectRoute = () => {
 	useDocumentTitle(t`Create project | dembrane`);
 
 	// Funnel: each step shown, and the step a host left on without creating.
-	const createStep = CREATE_STEPS[step] ?? "name";
+	const createStep = CREATE_STEPS[screen];
 	const lastStepRef = useRef<ProjectCreateStep>(createStep);
 	const createdRef = useRef(false);
 	useEffect(() => {
@@ -184,7 +196,8 @@ export const CreateProjectRoute = () => {
 	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
 	const cap = useProjectCapStatus(workspace);
 	const capDecided = useRef(false);
-	const wizardStarted = step > 0 || template !== null || name.trim() !== "";
+	const wizardStarted =
+		screen !== "start" || template !== null || name.trim() !== "";
 	const [atProjectCap, setAtProjectCap] = useState(false);
 	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
 	useEffect(() => {
@@ -218,12 +231,14 @@ export const CreateProjectRoute = () => {
 		track("project_template_selected", {
 			featured: ctx?.featured ?? tpl?.card.featured ?? false,
 			filters_active: ctx?.filtersActive ?? [],
+			...(ctx?.list && { list: ctx.list }),
 			setup: ctx?.setup ?? tpl?.card.setup ?? null,
 			surface: "create",
 			template_key: key,
 			verbs: ctx?.verbs ?? tpl?.card.verbs ?? [],
 		});
-		setStep(1);
+		setChosenOn(screen === "formats" ? "formats" : "start");
+		setScreen("name");
 	};
 
 	const openMore = () => {
@@ -415,323 +430,330 @@ export const CreateProjectRoute = () => {
 	}
 
 	const canCreate = name.trim().length > 0;
-	const continueHintId = "create-project-continue-hint";
 	const templateLabel = templateName(template ?? "blank");
 
 	return (
 		<Container size="md" py="xl" px="lg">
 			<Stack gap="xl">
-				<Stack gap="xs">
-					<Title order={2}>
-						<Trans>Create project</Trans>
-					</Title>
-					<Text size="sm" c="dimmed">
-						<Trans>
-							Creating in <em>{workspace.name}</em>
-						</Trans>
-					</Text>
-				</Stack>
+				{/* The review after an upload shows its own progress, one part per screen. */}
+				{!digestActive && (
+					<FlowProgress
+						step={screen === "name" ? 2 : 1}
+						total={2}
+						testId="create-project-progress"
+					/>
+				)}
+				{!digestActive && (
+					<Stack gap="xs">
+						<Title order={2}>
+							<Trans>Create project</Trans>
+						</Title>
+						<Text size="sm" c="dimmed">
+							<Trans>
+								Creating in <em>{workspace.name}</em>
+							</Trans>
+						</Text>
+					</Stack>
+				)}
 
-				<Stepper
-					active={step}
-					onStepClick={(i) => {
-						if (i <= step) setStep(i);
-					}}
-					size="sm"
-				>
-					<Stepper.Step label={t`Template`}>
-						<Stack gap="lg" mt="md">
-							<LazyDigest
-								workspaceId={workspaceId ?? null}
-								language={projectLanguage}
-								templates={templates.data}
-								onActiveChange={setDigestActive}
-								onFallback={onDigestFallback}
-								onCreate={async (body) => {
-									try {
-										await createFromDigest.mutateAsync(body);
-										return true;
-									} catch {
-										return false;
-									}
-								}}
-								creating={createFromDigest.isPending}
-								pageDrop={step === 0}
-							/>
-							{!digestActive && (
-								<>
-									<TemplatePickerConnected
-										language={projectLanguage}
-										value={template}
-										onChange={pickTemplate}
-										onFilterChange={(filter, value) =>
-											track("project_template_filter_changed", {
-												filter,
-												value,
-											})
-										}
-										onUpload={() => chooseTemplate("upload")}
-										onStartBlank={() => chooseTemplate("blank")}
-									/>
-									<Group gap="sm">
-										<Button
-											variant="filled"
-											size="sm"
-											disabled={!template}
-											onClick={() => template && chooseTemplate(template)}
-											aria-describedby={template ? undefined : continueHintId}
-											data-testid="create-project-template-continue"
-										>
-											<Trans>Continue</Trans>
-										</Button>
-										{!template && (
-											<Text size="xs" className="app-muted" id={continueHintId}>
-												<Trans>Choose a card to continue.</Trans>
-											</Text>
-										)}
-										<Button
-											variant="subtle"
-											color="gray"
-											size="sm"
-											onClick={handleCancel}
-										>
-											<Trans>Cancel</Trans>
-										</Button>
-									</Group>
-								</>
-							)}
-						</Stack>
-					</Stepper.Step>
+				{screen === "start" && (
+					<Stack gap="xl" data-testid="create-project-start">
+						<LazyDigest
+							workspaceId={workspaceId ?? null}
+							language={projectLanguage}
+							templates={templates.data}
+							onActiveChange={setDigestActive}
+							onFallback={onDigestFallback}
+							onCreate={async (body) => {
+								try {
+									await createFromDigest.mutateAsync(body);
+									return true;
+								} catch {
+									return false;
+								}
+							}}
+							creating={createFromDigest.isPending}
+							pageDrop
+						/>
+						{!digestActive && (
+							<>
+								<LazyTemplateRow
+									templates={templates.data}
+									failed={templates.isError}
+									onChoose={chooseTemplate}
+									onSeeAll={() => setScreen("formats")}
+								/>
+								<Group gap="sm">
+									<Button
+										variant="subtle"
+										color="gray"
+										size="sm"
+										onClick={handleCancel}
+									>
+										<Trans>Cancel</Trans>
+									</Button>
+								</Group>
+							</>
+						)}
+					</Stack>
+				)}
 
-					<Stepper.Step label={t`Name`}>
-						<Stack gap="md" mt="md">
-							<Text size="sm" data-testid="create-project-chosen-template">
-								<Trans>Starting from: {templateLabel}</Trans>
-							</Text>
-							<TextInput
-								autoFocus
-								label={t`Project name`}
-								description={t`Name it after the topic, engagement, or question you're exploring.`}
-								placeholder={t`e.g. Climate Listening, Q1 Research`}
-								value={name}
-								onChange={(e) => setName(e.currentTarget.value)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" && canCreate && !submit.isPending) {
-										e.preventDefault();
-										submit.mutate();
-									}
-								}}
-							/>
+				{screen === "formats" && (
+					<Stack gap="lg">
+						<LazyAllFormats
+							templates={templates.data}
+							failed={templates.isError}
+							onChoose={chooseTemplate}
+							onFilterChange={(filter, value) =>
+								track("project_template_filter_changed", {
+									filter,
+									value,
+								})
+							}
+							onUpload={() => chooseTemplate("upload")}
+							onStartBlank={() => chooseTemplate("blank")}
+						/>
+						<Group gap="sm">
+							<Button
+								variant="subtle"
+								color="gray"
+								size="sm"
+								onClick={() => setScreen("start")}
+								data-testid="create-project-formats-back"
+							>
+								<Trans>Back</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				)}
 
-							{/* One field: the context is saved with the project and is what
+				{screen === "name" && (
+					<Stack gap="md">
+						<Text size="sm" data-testid="create-project-chosen-template">
+							<Trans>Starting from: {templateLabel}</Trans>
+						</Text>
+						<TextInput
+							autoFocus
+							label={t`Project name`}
+							description={t`Name it after the topic, engagement, or question you're exploring.`}
+							placeholder={t`e.g. Climate Listening, Q1 Research`}
+							value={name}
+							onChange={(e) => setName(e.currentTarget.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && canCreate && !submit.isPending) {
+									e.preventDefault();
+									submit.mutate();
+								}
+							}}
+						/>
+
+						{/* One field: the context is saved with the project and is what
 							    "Suggest key terms" reads. Optional and never in the way: Create
 							    stays enabled while it runs, and accepted terms land in the key
 							    terms under "More options". */}
-							<Stack gap="xs">
-								<ProjectContextInput
-									value={context}
-									onChange={(e) => setContext(e.currentTarget.value)}
-								/>
-								<LazySessionBrief
-									workspaceId={workspaceId ?? null}
-									templateKey={template ?? "blank"}
-									name={name}
-									description={context}
-									language={projectLanguage}
-									keyTerms={keyTerms}
-									onKeyTermsChange={setKeyTerms}
-									overrides={overrides}
-									onOverridesChange={setOverrides}
-									onResult={(result) => {
-										suggestedRef.current = result;
-									}}
-								/>
-								<LazyNameStepDigest
-									workspaceId={workspaceId ?? null}
-									language={projectLanguage}
-									name={name}
-									context={context}
-									keyTerms={keyTerms}
-									onContextChange={setContext}
-									onKeyTermsChange={setKeyTerms}
-								/>
-							</Stack>
+						<Stack gap="xs">
+							<ProjectContextInput
+								value={context}
+								onChange={(e) => setContext(e.currentTarget.value)}
+							/>
+							<LazySessionBrief
+								workspaceId={workspaceId ?? null}
+								templateKey={template ?? "blank"}
+								name={name}
+								description={context}
+								language={projectLanguage}
+								keyTerms={keyTerms}
+								onKeyTermsChange={setKeyTerms}
+								overrides={overrides}
+								onOverridesChange={setOverrides}
+								onResult={(result) => {
+									suggestedRef.current = result;
+								}}
+							/>
+							<LazyNameStepDigest
+								workspaceId={workspaceId ?? null}
+								language={projectLanguage}
+								name={name}
+								context={context}
+								keyTerms={keyTerms}
+								onContextChange={setContext}
+								onKeyTermsChange={setKeyTerms}
+							/>
+						</Stack>
 
-							{chosen && template !== "blank" && (
-								<TemplateSetupSummary key={chosen.key} template={chosen} />
-							)}
+						{chosen && template !== "blank" && (
+							<TemplateSetupSummary key={chosen.key} template={chosen} />
+						)}
 
-							<Stack gap="xs">
-								<Button
-									variant="subtle"
-									size="sm"
-									w="fit-content"
-									leftSection={
-										moreOpened ? (
-											<CaretDownIcon size={16} />
-										) : (
-											<CaretRightIcon size={16} />
-										)
-									}
-									aria-expanded={moreOpened}
-									aria-controls="create-project-more-options"
-									onClick={openMore}
-									data-testid="create-project-more-options-toggle"
+						<Stack gap="xs">
+							<Button
+								variant="subtle"
+								size="sm"
+								w="fit-content"
+								leftSection={
+									moreOpened ? (
+										<CaretDownIcon size={16} />
+									) : (
+										<CaretRightIcon size={16} />
+									)
+								}
+								aria-expanded={moreOpened}
+								aria-controls="create-project-more-options"
+								onClick={openMore}
+								data-testid="create-project-more-options-toggle"
+							>
+								<Trans>More options</Trans>
+							</Button>
+							<Collapse in={moreOpened}>
+								<Stack
+									gap="lg"
+									id="create-project-more-options"
+									data-testid="create-project-more-options"
 								>
-									<Trans>More options</Trans>
-								</Button>
-								<Collapse in={moreOpened}>
-									<Stack
-										gap="lg"
-										id="create-project-more-options"
-										data-testid="create-project-more-options"
+									<Stack gap="xs">
+										<Text size="md" component="h3" m={0}>
+											<Trans>Key terms</Trans>
+										</Text>
+										<KeyTermsInput
+											value={keyTerms}
+											onChange={setKeyTerms}
+											inputTestId="create-project-key-terms-input"
+										/>
+									</Stack>
+
+									<Radio.Group
+										label={t`Who can see this project?`}
+										description={t`You can change this later in project settings.`}
+										value={access}
+										onChange={(v) => setAccess(v as Access)}
 									>
-										<Stack gap="xs">
-											<Text size="md" component="h3" m={0}>
-												<Trans>Key terms</Trans>
-											</Text>
-											<KeyTermsInput
-												value={keyTerms}
-												onChange={setKeyTerms}
-												inputTestId="create-project-key-terms-input"
+										<Stack gap="sm" mt="sm">
+											<Radio
+												value="workspace"
+												label={
+													<Stack gap="xs">
+														<Text size="sm">
+															<Trans>Open to the workspace</Trans>
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>
+																Everyone in {workspace.name} can find and open
+																this project.
+															</Trans>
+														</Text>
+													</Stack>
+												}
+											/>
+											<Radio
+												value="private"
+												disabled={!privateAvailable}
+												label={
+													<Stack gap="xs">
+														<Text
+															size="sm"
+															c={privateAvailable ? undefined : "dimmed"}
+														>
+															<Trans>Private</Trans>
+															{!privateAvailable && (
+																<Text span size="xs" c="dimmed">
+																	{" "}
+																	(<Trans>Innovator or higher</Trans>)
+																</Text>
+															)}
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>
+																Only workspace admins and the people you invite
+																can open this project.
+															</Trans>
+														</Text>
+													</Stack>
+												}
 											/>
 										</Stack>
+									</Radio.Group>
 
-										<Radio.Group
-											label={t`Who can see this project?`}
-											description={t`You can change this later in project settings.`}
-											value={access}
-											onChange={(v) => setAccess(v as Access)}
-										>
-											<Stack gap="sm" mt="sm">
-												<Radio
-													value="workspace"
-													label={
-														<Stack gap="xs">
-															<Text size="sm">
-																<Trans>Open to the workspace</Trans>
-															</Text>
-															<Text size="xs" c="dimmed">
-																<Trans>
-																	Everyone in {workspace.name} can find and open
-																	this project.
-																</Trans>
-															</Text>
-														</Stack>
-													}
-												/>
-												<Radio
-													value="private"
-													disabled={!privateAvailable}
-													label={
-														<Stack gap="xs">
-															<Text
-																size="sm"
-																c={privateAvailable ? undefined : "dimmed"}
-															>
-																<Trans>Private</Trans>
-																{!privateAvailable && (
-																	<Text span size="xs" c="dimmed">
-																		{" "}
-																		(<Trans>Innovator or higher</Trans>)
-																	</Text>
-																)}
-															</Text>
-															<Text size="xs" c="dimmed">
-																<Trans>
-																	Only workspace admins and the people you
-																	invite can open this project.
-																</Trans>
-															</Text>
-														</Stack>
-													}
-												/>
-											</Stack>
-										</Radio.Group>
+									{ENABLE_AGENTIC_CHAT ? (
+										<Switch
+											checked={setupWithAssistant}
+											onChange={(event) =>
+												setSetupWithAssistant(event.currentTarget.checked)
+											}
+											label={t`Set up with the assistant after creating`}
+											description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
+										/>
+									) : null}
 
-										{ENABLE_AGENTIC_CHAT ? (
-											<Switch
-												checked={setupWithAssistant}
-												onChange={(event) =>
-													setSetupWithAssistant(event.currentTarget.checked)
-												}
-												label={t`Set up with the assistant after creating`}
-												description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
-											/>
-										) : null}
-
-										<Paper withBorder p="md">
-											<Stack gap="sm" data-testid="create-project-review">
-												<ReviewRow label={t`Template`}>
-													{templateLabel}
-												</ReviewRow>
-												<ReviewRow label={t`Name`}>
-													{name.trim() || t`(missing)`}
-												</ReviewRow>
-												<ReviewRow
-													label={t`Project context`}
-													muted={!context.trim()}
-												>
-													{context.trim() || t`(none)`}
-												</ReviewRow>
-												<ReviewRow label={t`Key terms`} muted={!keyTerms}>
-													{keyTerms || t`(none)`}
-												</ReviewRow>
-												<ReviewRow label={t`Workspace`}>
-													{workspace.name}
-												</ReviewRow>
-												<ReviewRow label={t`Access`}>
-													{access === "workspace" ? (
-														<Trans>Open to the workspace</Trans>
+									<Paper withBorder p="md">
+										<Stack gap="sm" data-testid="create-project-review">
+											<ReviewRow label={t`Template`}>{templateLabel}</ReviewRow>
+											<ReviewRow label={t`Name`}>
+												{name.trim() || t`(missing)`}
+											</ReviewRow>
+											<ReviewRow
+												label={t`Project context`}
+												muted={!context.trim()}
+											>
+												{context.trim() || t`(none)`}
+											</ReviewRow>
+											<ReviewRow label={t`Key terms`} muted={!keyTerms}>
+												{keyTerms || t`(none)`}
+											</ReviewRow>
+											<ReviewRow label={t`Workspace`}>
+												{workspace.name}
+											</ReviewRow>
+											<ReviewRow label={t`Access`}>
+												{access === "workspace" ? (
+													<Trans>Open to the workspace</Trans>
+												) : (
+													<Trans>Private</Trans>
+												)}
+											</ReviewRow>
+											{ENABLE_AGENTIC_CHAT ? (
+												<ReviewRow label={t`Setup`}>
+													{setupWithAssistant ? (
+														<Trans>Start in assistant chat</Trans>
+													) : landing === "upload" ? (
+														<Trans>Go to the upload page</Trans>
 													) : (
-														<Trans>Private</Trans>
+														<Trans>Go to project home</Trans>
 													)}
 												</ReviewRow>
-												{ENABLE_AGENTIC_CHAT ? (
-													<ReviewRow label={t`Setup`}>
-														{setupWithAssistant ? (
-															<Trans>Start in assistant chat</Trans>
-														) : landing === "upload" ? (
-															<Trans>Go to the upload page</Trans>
-														) : (
-															<Trans>Go to project home</Trans>
-														)}
-													</ReviewRow>
-												) : null}
-												<ReviewRow label={t`Tier`}>
-													<span style={{ textTransform: "capitalize" }}>
-														{tier}
-													</span>
-												</ReviewRow>
-											</Stack>
-										</Paper>
-									</Stack>
-								</Collapse>
-							</Stack>
-
-							<Group gap="sm" mt="sm">
-								<Button
-									variant="filled"
-									size="sm"
-									loading={submit.isPending}
-									disabled={!canCreate}
-									onClick={() => submit.mutate()}
-									data-testid="create-project-submit"
-								>
-									<Trans>Create project</Trans>
-								</Button>
-								<Button
-									variant="subtle"
-									color="gray"
-									size="sm"
-									onClick={() => setStep(0)}
-								>
-									<Trans>Back</Trans>
-								</Button>
-							</Group>
+											) : null}
+											<ReviewRow label={t`Tier`}>
+												<span style={{ textTransform: "capitalize" }}>
+													{tier}
+												</span>
+											</ReviewRow>
+										</Stack>
+									</Paper>
+								</Stack>
+							</Collapse>
 						</Stack>
-					</Stepper.Step>
-				</Stepper>
+
+						<Group gap="sm" mt="sm">
+							<Button
+								variant="filled"
+								size="sm"
+								loading={submit.isPending}
+								disabled={!canCreate}
+								onClick={() => submit.mutate()}
+								data-testid="create-project-submit"
+							>
+								<Trans>Create project</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="sm"
+								onClick={() => setScreen(chosenOn)}
+								data-testid="create-project-name-back"
+							>
+								<Trans>Back</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				)}
 			</Stack>
 			<UpgradeModal
 				opened={upgradeOpened}

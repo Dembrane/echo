@@ -2,18 +2,16 @@ import { i18n } from "@lingui/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
 	CARD_KEYS,
+	cardTags,
 	isTemplateKey,
-	MAX_FACTS,
 	NO_FILTER,
+	rowCards,
 	type TemplateSummary,
-	templateFacts,
 	templateGreatFor,
+	templateName,
 	visibleCards,
 } from "./projectTemplates";
-import {
-	TEMPLATE_SUMMARIES,
-	TEMPLATE_SUMMARIES_NL,
-} from "./projectTemplates.fixture";
+import { TEMPLATE_SUMMARIES } from "./projectTemplates.fixture";
 
 beforeAll(() => {
 	i18n.load("en-US", {});
@@ -22,51 +20,38 @@ beforeAll(() => {
 
 const byKey = (key: string) =>
 	TEMPLATE_SUMMARIES.find((s) => s.key === key) as TemplateSummary;
-const facts = (key: string) => templateFacts(byKey(key));
 const keys = (list: TemplateSummary[]) => list.map((s) => s.key);
 
 describe("what a template card says", () => {
-	it("has a name, a Great for line and two or three facts for every card", () => {
+	it("has a name and a one-line Great for for every card, each name different", () => {
+		const names = CARD_KEYS.map(templateName);
+		expect(new Set(names).size).toBe(CARD_KEYS.length);
 		for (const key of CARD_KEYS) {
-			expect(templateGreatFor(key)).toMatch(/^Great for /);
-			const f = facts(key);
-			expect([key, f.length >= 2 && f.length <= MAX_FACTS]).toEqual([
-				key,
-				true,
-			]);
+			expect(templateGreatFor(key)).toMatch(/^Great for [^.]+\.$/);
+			expect(templateGreatFor(key).length).toBeLessThanOrEqual(100);
 		}
 	});
 
-	it("says what a resident evening sets up, Verify first", () => {
-		expect(facts("resident_evening")).toEqual([
-			"Each table checks its own summary",
-			"Asks a question when the group gets stuck",
-			"Rounds as tags",
+	it("names formats, not occasions: occasions are in the Great for line", () => {
+		expect(templateName("resident_evening")).toBe("Table conversations");
+		expect(templateGreatFor("resident_evening")).toContain("resident evenings");
+		expect(templateName("strategy_day")).toBe("Strategy session");
+		expect(templateName("conference")).toBe("Parallel sessions");
+		expect(templateGreatFor("conference")).toContain("conferences");
+	});
+
+	it("tags a card with its named method first, then its verbs and its setup", () => {
+		expect(cardTags(byKey("world_cafe"))).toEqual([
+			"World Café",
+			"Explore",
+			"Understand",
+			"Many groups at once",
 		]);
-	});
-
-	it("names the What if questions and the other groups for an ideation workshop", () => {
-		expect(facts("ideation")).toEqual([
-			"Saves the ideas worth keeping",
-			'Offers "What if" questions when ideas run out',
-			"Can bring in what other groups said",
+		expect(cardTags(byKey("interviews"))).toEqual([
+			"Understand",
+			"Gather",
+			"One recording",
 		]);
-	});
-
-	it("says what the name box asks for, in the project's language", () => {
-		expect(facts("interviews")).toContain(
-			"Asks for “Interview code (no real names)” first",
-		);
-		const nl = TEMPLATE_SUMMARIES_NL.find((s) => s.key === "working_group");
-		expect(templateFacts(nl as TemplateSummary)).toContain(
-			"Asks for “Naam of datum van het overleg” first",
-		);
-	});
-
-	it("never says an upload asks for a session name", () => {
-		const f = facts("upload");
-		expect(f[0]).toBe("Opens on the upload page");
-		expect(f.join(" ")).not.toMatch(/name/i);
 	});
 
 	it("knows its keys, old ones included", () => {
@@ -74,6 +59,21 @@ describe("what a template card says", () => {
 		expect(isTemplateKey("event")).toBe(true);
 		expect(isTemplateKey("festival")).toBe(false);
 		expect(isTemplateKey(undefined)).toBe(false);
+	});
+});
+
+describe("the start screen's row", () => {
+	it("holds every card once, the most used first", () => {
+		const row = keys(rowCards(TEMPLATE_SUMMARIES));
+		expect(row.slice(0, 6)).toEqual([
+			"resident_evening",
+			"focus_group",
+			"interviews",
+			"strategy_day",
+			"working_group",
+			"ideation",
+		]);
+		expect([...row].sort()).toEqual([...CARD_KEYS].sort());
 	});
 });
 

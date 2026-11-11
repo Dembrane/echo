@@ -1,0 +1,11 @@
+/* The do box (rules.css .app-do) around a card; it fills the space it is given, so cards
+ * in a row or a grid line up. */
+.button {
+	align-items: stretch;
+	display: flex;
+	flex-direction: column;
+	font: inherit;
+	height: 100%;
+	padding: var(--mantine-spacing-md);
+	width: 100%;
+}

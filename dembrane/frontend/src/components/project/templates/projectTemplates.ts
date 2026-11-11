@@ -1,23 +1,4 @@
 import { t } from "@lingui/core/macro";
-import {
-	ArrowCounterClockwiseIcon,
-	ArrowsClockwiseIcon,
-	BinocularsIcon,
-	ChatCenteredDotsIcon,
-	ChatsCircleIcon,
-	ClipboardTextIcon,
-	CoffeeIcon,
-	CompassIcon,
-	HouseLineIcon,
-	type Icon,
-	LightbulbIcon,
-	MicrophoneIcon,
-	PresentationChartIcon,
-	ScalesIcon,
-	SquaresFourIcon,
-	UsersFourIcon,
-	UsersThreeIcon,
-} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -25,7 +6,7 @@ import { ApiRequestError } from "@/lib/errors/read";
 /**
  * The templates a new project can start from (ECHO-1053: by purpose). The server holds the
  * settings and the card metadata (platform/packages/projects/src/project-templates.ts) and
- * says what each one sets up; the names, the "Great for" line and the facts are worded here.
+ * says what each one sets up; the names, the "Great for" line and the tags are worded here.
  * Every string in this folder is in the templates catalog (./locales), loaded when the
  * picker opens, so none of it weighs on the participant portal's first load.
  */
@@ -134,32 +115,16 @@ export const useProjectTemplates = (language: string) =>
 		staleTime: 60 * 60 * 1000,
 	});
 
-export const TEMPLATE_ICONS: Record<CardKey, Icon> = {
-	citizens_assembly: ScalesIcon,
-	conference: PresentationChartIcon,
-	conversation_cafe: ChatCenteredDotsIcon,
-	focus_group: ChatsCircleIcon,
-	futures: BinocularsIcon,
-	ideation: LightbulbIcon,
-	interviews: MicrophoneIcon,
-	kitchen_table: CoffeeIcon,
-	one_two_four_all: UsersFourIcon,
-	open_space: SquaresFourIcon,
-	resident_evening: HouseLineIcon,
-	retrospective: ArrowCounterClockwiseIcon,
-	round_table: UsersThreeIcon,
-	strategy_day: CompassIcon,
-	working_group: ClipboardTextIcon,
-	world_cafe: ArrowsClockwiseIcon,
-};
-
-/** A template's short name, as hosts call the occasion. */
+/**
+ * A template's short name, on one axis: the conversation format, what happens in the room
+ * (ECHO-1058). Occasions belong in the "Great for" line. Named methods keep their names.
+ */
 export const templateName = (key: TemplateKey): string => {
 	switch (key) {
 		case "resident_evening":
-			return t`Resident evening`;
+			return t`Table conversations`;
 		case "round_table":
-			return t`Stakeholder round table`;
+			return t`Round table`;
 		case "focus_group":
 			return t`Focus group`;
 		case "interviews":
@@ -167,15 +132,15 @@ export const templateName = (key: TemplateKey): string => {
 		case "kitchen_table":
 			return t`Kitchen-table conversation`;
 		case "strategy_day":
-			return t`Strategy day`;
+			return t`Strategy session`;
 		case "working_group":
-			return t`Working group`;
+			return t`Recurring meeting`;
 		case "retrospective":
-			return t`Evaluation`;
+			return t`Retrospective`;
 		case "ideation":
-			return t`Ideation workshop`;
+			return t`Brainstorm`;
 		case "futures":
-			return t`Futures session`;
+			return t`Scenario session`;
 		case "world_cafe":
 			return t`Rotating tables`;
 		case "open_space":
@@ -187,7 +152,7 @@ export const templateName = (key: TemplateKey): string => {
 		case "citizens_assembly":
 			return t`Citizens' assembly`;
 		case "conference":
-			return t`Conference sessions`;
+			return t`Parallel sessions`;
 		case "conversation":
 			return t`One conversation`;
 		case "series":
@@ -201,41 +166,41 @@ export const templateName = (key: TemplateKey): string => {
 	}
 };
 
-/** One line on what it is good for, read in two seconds. */
+/** One line: the occasions it is good for, then what sets the format apart. */
 export const templateGreatFor = (key: CardKey): string => {
 	switch (key) {
 		case "resident_evening":
-			return t`Great for resident and neighbourhood evenings, and public hearings with many tables.`;
+			return t`Great for resident evenings and public hearings: many fixed tables at once.`;
 		case "round_table":
-			return t`Great for one table of partners or experts with different interests.`;
+			return t`Great for partners or experts with different interests: one table, one recording.`;
 		case "focus_group":
-			return t`Great for focus groups, youth panels and small listening sessions.`;
+			return t`Great for youth panels and listening sessions: a moderator asks one small group.`;
 		case "interviews":
-			return t`Great for one-to-one, field and expert interviews, one after another.`;
+			return t`Great for field and expert interviews: one to one, one after another.`;
 		case "kitchen_table":
-			return t`Great for home visits and sensitive conversations, one to one.`;
+			return t`Great for home visits and sensitive topics: one calm talk at someone's table.`;
 		case "strategy_day":
-			return t`Great for strategy days, offsites and away days, from 20 to 175 people.`;
+			return t`Great for strategy days and offsites: groups find themes, then agree on actions.`;
 		case "working_group":
-			return t`Great for team meetings and working groups that need minutes, meeting after meeting.`;
+			return t`Great for teams and working groups: the same people, meeting after meeting, with minutes.`;
 		case "retrospective":
-			return t`Great for looking back after a project, a pilot or an event.`;
+			return t`Great for evaluating a project, pilot or event: one team looks back together.`;
 		case "ideation":
-			return t`Great for idea and innovation workshops where groups build on each other.`;
+			return t`Great for idea and innovation workshops: groups build on each other's ideas.`;
 		case "futures":
-			return t`Great for scenario planning, co-design and long-term visions.`;
+			return t`Great for scenario planning and long-term visions: each group builds its own future.`;
 		case "world_cafe":
-			return t`Great for café rounds where people change tables and carry ideas along.`;
+			return t`Great for café rounds: people change tables, a table host stays and carries ideas along.`;
 		case "open_space":
-			return t`Great for unconferences where participants set the agenda.`;
+			return t`Great for an open agenda: participants propose sessions and move between them.`;
 		case "one_two_four_all":
-			return t`Great for hearing everyone in a few minutes: alone, in pairs, then in fours.`;
+			return t`Great for hearing everyone in minutes: alone, in pairs, in fours, then all together.`;
 		case "conversation_cafe":
-			return t`Great for talking in turns about a hard or charged topic.`;
+			return t`Great for hard or charged topics: small circles where each person speaks in turn.`;
 		case "citizens_assembly":
-			return t`Great for citizens' assemblies, deliberative panels, policy juries and participatory budgeting.`;
+			return t`Great for deliberative panels, policy juries and participatory budgets: groups weigh options.`;
 		case "conference":
-			return t`Great for capturing breakouts and sessions across a conference.`;
+			return t`Great for conferences and festivals: one recording per breakout or talk, side by side.`;
 	}
 };
 
@@ -304,66 +269,6 @@ export const topicLabel = (key: string): string => {
 	}
 };
 
-const topicFact = (key: string, many: boolean): string | null => {
-	switch (key) {
-		case "agreements":
-			return many
-				? t`Each table checks its own summary`
-				: t`The group checks the summary together`;
-		case "disagreements":
-			return t`Keeps the differences on the record`;
-		case "actions":
-			return t`Ends with decisions and actions`;
-		case "gems":
-			return t`Saves the ideas worth keeping`;
-		case "truths":
-			return t`Names the hard points`;
-		case "heard":
-			return t`Reads back what was heard`;
-		case "moments":
-			return t`Marks the turning points`;
-		default:
-			return null;
-	}
-};
-
-/** Most facts a card shows. */
-export const MAX_FACTS = 3;
-
-/**
- * Up to three plain facts about what a template sets up, from its summary, most telling
- * first: what Verify gives back, what Explore does, then the portal. An upload says only
- * what an upload does.
- */
-export const templateFacts = (tpl: TemplateSummary): string[] => {
-	const s = tpl.summary;
-	if (tpl.landing === "upload")
-		return [t`Opens on the upload page`, t`Gives each recording a title`];
-	const many = tpl.card.setup === "many_groups";
-	const facts: string[] = [];
-	if (s.verify) {
-		const topics = s.verification_topics.length
-			? s.verification_topics
-			: ["agreements"];
-		for (const key of topics.slice(0, 2)) {
-			const fact = topicFact(key, many);
-			if (fact) facts.push(fact);
-		}
-	}
-	if (s.explore)
-		facts.push(
-			s.explore_mode === "brainstorm"
-				? t`Offers "What if" questions when ideas run out`
-				: t`Asks a question when the group gets stuck`,
-		);
-	if (s.cross_pollination) facts.push(t`Can bring in what other groups said`);
-	if (s.tag_count > 0) facts.push(t`Rounds as tags`);
-	const label = s.name_label;
-	if (s.asks_for_name && label) facts.push(t`Asks for “${label}” first`);
-	if (!s.asks_for_name) facts.push(t`Nothing to fill in before recording`);
-	return facts.slice(0, MAX_FACTS);
-};
-
 /** The filters a host has on: one verb, one setup, or neither. */
 export interface TemplateFilter {
 	verb: Verb | null;
@@ -394,3 +299,21 @@ export const visibleCards = (
 
 export const isCardKey = (v: unknown): v is CardKey =>
 	typeof v === "string" && (CARD_KEYS as readonly string[]).includes(v);
+
+/** A card's tags: the named method first if it follows one, then the verbs and the setup. */
+export const cardTags = (tpl: TemplateSummary): string[] => [
+	...(tpl.card.method ? [tpl.card.method] : []),
+	...tpl.card.verbs.map(verbLabel),
+	setupLabel(tpl.card.setup),
+];
+
+/** Every card in one row: the featured ones first, then the rest, each in registry order. */
+export const rowCards = (
+	templates: readonly TemplateSummary[],
+): TemplateSummary[] => {
+	const all = visibleCards(templates, NO_FILTER, true);
+	return [
+		...all.filter((tpl) => tpl.card.featured),
+		...all.filter((tpl) => !tpl.card.featured),
+	];
+};
