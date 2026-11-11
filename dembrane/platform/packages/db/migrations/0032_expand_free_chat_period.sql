@@ -1,0 +1,1 @@
+ALTER TABLE "project_chat" ADD COLUMN IF NOT EXISTS "free_period_start" timestamp with time zone;

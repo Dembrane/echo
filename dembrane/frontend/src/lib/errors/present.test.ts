@@ -78,6 +78,19 @@ describe("presentError", { timeout: 30_000 }, () => {
 		expect(p.action).toBe("fix_input");
 	});
 
+	// Verify's revise reaches the participant through notifyError.
+	it("says the portal's AI refusal as the neutral line", async () => {
+		const p = await presentError(
+			axiosError(403, {
+				action: "none",
+				code: "portal.ai_unavailable",
+				detail: "Not available right now.",
+			}),
+			i18n,
+		);
+		expect(p.message).toBe("Not available right now.");
+	});
+
 	it("never shows backend text for an unknown code or a body without one", async () => {
 		await loadErrorMessages(i18n);
 		for (const body of [

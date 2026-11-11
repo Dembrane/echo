@@ -113,7 +113,8 @@ What is different from "Specific Details":
   project goal arrive as a card. Nothing changes until you press "Accept" or "Apply". "Dismiss"
   leaves everything as it was.
 - You can speak. "Record a voice message" turns up to five minutes of speech into text in the
-  box, for you to check before you send it. This uses the workspace's recording hours.
+  box, for you to check before you send it. It shows in the workspace's recorded hours. On the
+  free plan it does not count toward the monthly hours, and it uses the monthly AI allowance.
 
 An empty assistant chat offers three starters: "List my conversations", "What themes came up?"
 and "Improve my setup". Its built-in templates include "Project Meta Summary", "Narratives
@@ -145,11 +146,15 @@ page built from recent conversations.
 
 ## Limits
 
-- Free plan: one chat per workspace and three questions per chat. At the limit the chat shows
-  "Upgrade to continue" and "See upgrade options". See
-  [tiers, billing and usage](./tiers-billing-and-usage.md).
-- Free plan: a conversation recorded after your free recording hour is used up cannot be added
-  to a chat.
+- Free plan: chat and the assistant use the account's monthly AI allowance, with no count of
+  chats or questions. From 80% a banner on new chat shows how much is used. When it is used
+  up, sending opens the upgrade popup ("This month's AI is used up"), and an assistant
+  run that is going on stops before its next step. A reply that has started always finishes.
+  See [tiers, billing and usage](./tiers-billing-and-usage.md).
+- Free plan, sample projects: the chats of a sample project take 10 questions in all, then
+  show "Upgrade to continue": "You've used this sample project's 10 questions." Its popup
+  says "Sample projects allow 10 questions" and "Create your own project to keep going.", and
+  offers to continue on dembrane.com. They use none of the AI allowance.
 - No paid plan is needed for either chat mode.
 
 Answers in both modes come from Gemini language models served from an EU endpoint.

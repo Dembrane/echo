@@ -28,6 +28,8 @@ const SEVERITY: Readonly<Record<string, string>> = {
   PAYMENT_FAILED: "action_required",
   SUPPORT_ACCESS_REQUESTED: "action_required",
   SUPPORT_ACCESS_REMINDER: "action_required",
+  FREE_AUDIO_OUT: "action_required",
+  FREE_AI_OUT: "action_required",
 };
 
 export function severityFor(eventCode: string): string {

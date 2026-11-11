@@ -91,7 +91,7 @@ export function accountRoutes(api: AccountApiDeps) {
     })
     .post("/api/v2/onboarding/complete", async (c) => {
       const who = requireUser(c);
-      const { body } = await v.validate(c, { body: { org_name: v.str({ min: 1, max: 100 }) } });
+      const { body } = await v.validate(c, { body: { org_name: v.optional(v.str({ max: 100 })) } });
       return c.json(await completeOnboarding(ctx(), who, body));
     })
     .post("/api/v2/onboarding/answers", async (c) => {

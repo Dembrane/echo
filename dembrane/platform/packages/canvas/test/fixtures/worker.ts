@@ -4,8 +4,8 @@
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
 import { createDb } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
-import { createLogger, initTracing } from "@dembrane/observability";
+import { FakeCompleter, lastPayer } from "@dembrane/llm";
+import { createLogger, initTracing, payerKey } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
 import { canvasTick, tickDeps, tickWorkflow } from "../../src/jobs";
 import { EXTRACTION, GUIDE, ids } from "./seed";
@@ -19,16 +19,21 @@ const logger = createLogger(
 );
 const { tracer } = initTracing({ service: "fixture", release: "r", env: "test", sampleRatio: 0 });
 const database = createDb({ url, poolMax: 4 });
+// The payer the fake recorded for the call it is answering.
+const paidBy = () => {
+  const p = lastPayer();
+  return p ? payerKey(p) : "none";
+};
 
 const completer = new FakeCompleter()
   .on("You update a dembrane tabbed living canvas", async () => {
     log("extract-start");
     if (process.env.HANG === "1") await Bun.sleep(600_000);
-    log("extract-done");
+    log(`extract-done ${paidBy()}`);
     return EXTRACTION;
   })
   .on("Open questions tab", async () => {
-    log("host-guide");
+    log(`host-guide ${paidBy()}`);
     return GUIDE;
   });
 

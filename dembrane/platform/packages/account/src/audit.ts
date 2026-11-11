@@ -29,17 +29,17 @@ export async function auditPage(
   store: AuditStorage,
   who: Signed,
   f: AuditFilter,
-  q: { page: number; page_size: number; sort: "asc" | "desc" },
+  q: { cursor?: number | null; page_size: number; sort: "asc" | "desc" },
 ) {
   const scope = auditScope(who);
-  const [rows, total] = await Promise.all([
-    store.page(scope, f, {
-      limit: q.page_size,
-      offset: q.page * q.page_size,
-      ascending: q.sort === "asc",
-    }),
-    store.total(scope, f),
-  ]);
+  // One extra row tells whether another page exists, so no count over the table is needed.
+  const fetched = await store.page(scope, f, {
+    limit: q.page_size + 1,
+    after: q.cursor ?? undefined,
+    ascending: q.sort === "asc",
+  });
+  const rows = fetched.slice(0, q.page_size);
+  const hasMore = fetched.length > rows.length;
   const deltas = who.isStaff ? await store.deltas(rows.map((r) => r.id)) : [];
   return {
     items: rows.map((r) => ({
@@ -55,21 +55,25 @@ export async function auditPage(
         : null,
       revisions: deltas.filter((d) => d.activity === r.id).map((d) => ({ delta: d.delta })),
     })),
-    total,
+    has_more: hasMore,
+    /** Pass as `cursor` to get the page after this one. */
+    next_cursor: hasMore ? (rows[rows.length - 1]?.id ?? null) : null,
   };
 }
 
 export async function auditOptions(store: AuditStorage, who: Signed) {
-  const scope = auditScope(who);
-  const [actions, collections] = await Promise.all([
-    store.counts(scope, "action"),
-    store.counts(scope, "collection"),
-  ]);
-  const options = (rows: { value: string | null; count: number }[]) =>
-    rows
-      .filter((r): r is { value: string; count: number } => !!r.value?.trim())
-      .map((r) => ({ value: r.value, label: r.value, count: r.count }));
-  return { actions: options(actions), collections: options(collections) };
+  const rows = await store.counts(auditScope(who));
+  const tally = (key: "action" | "collection") => {
+    const byValue = new Map<string, number>();
+    for (const r of rows) {
+      const value = r[key];
+      if (value?.trim()) byValue.set(value, (byValue.get(value) ?? 0) + r.count);
+    }
+    return [...byValue]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([value, count]) => ({ value, label: value, count }));
+  };
+  return { actions: tally("action"), collections: tally("collection") };
 }
 
 /** /api/user-settings/audit-logs: the caller's activity log on the settings page. */
@@ -81,7 +85,7 @@ export function auditRoutes(deps: { db: Db }) {
       const who = requireUser(c);
       const { query } = await v.validate(c, {
         query: {
-          page: v.withDefault(v.int({ ge: 0 }), 0),
+          cursor: v.optional(v.int({ ge: 0 })),
           page_size: v.withDefault(v.int({ ge: 1, le: 500 }), 25),
           sort: v.withDefault(v.literal(["asc", "desc"]), "desc"),
           actions: v.optional(v.str()),

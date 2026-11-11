@@ -31,7 +31,6 @@ import { useCallback, useEffect, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
-import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { TierBadge } from "@/components/workspace/TierBadge";
@@ -631,15 +630,15 @@ function CancelSubscriptionModal({
  * There is no plan picker, no price and no checkout here. A comped account
  * keeps every feature its tier gives it; it simply has nothing to settle.
  *
- * It carries the configurator. The two exceptions are the two panels above
+ * It carries the upgrade prompt. The two exceptions are the two panels above
  * this one, and `billingView` already decides between them: a managed account
  * keeps `ManagedBillingPanel`, an existing payer (paying now, or paid before
  * and cancelled) keeps the manage dashboard. This panel is the remainder, so
  * the rule is not re-derived here.
  *
  * This is the one entry that is not a wall. Nothing on this page is blocked,
- * so there is no control for a popover to sit on: the button opens the modal
- * directly and the modal reports `surface="modal"`. There is no required tier
+ * so there is no control for a popover to sit on: the button opens the prompt
+ * directly and it reports `surface="modal"`. There is no required tier
  * either, which is why `requiredTier` is null: there is nothing to suppress.
  *
  * `canRequestUpgrade` is true because both billing surfaces are already behind
@@ -649,7 +648,7 @@ function CancelSubscriptionModal({
  */
 function NothingToBillPanel({ tier }: { tier: string }) {
 	const comped = tier !== "free";
-	const configurator = usePricingConfigurator("billing");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap="sm">
@@ -684,7 +683,7 @@ function NothingToBillPanel({ tier }: { tier: string }) {
 				<Group>
 					<Button
 						size="xs"
-						onClick={configurator.open}
+						onClick={upgradeHandlers.open}
 						data-testid="billing-configurator-start"
 					>
 						<Trans>Tell us what you need</Trans>
@@ -701,8 +700,8 @@ function NothingToBillPanel({ tier }: { tier: string }) {
 				</Text>
 			</Stack>
 			<UpgradeModal
-				opened={configurator.opened}
-				onClose={configurator.close}
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
 				currentTier={tier as Tier}
 				requiredTier={null}
 				canRequestUpgrade

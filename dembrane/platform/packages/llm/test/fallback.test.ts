@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { generateText } from "ai";
-import { FallbackModel, isRetryable } from "../src";
+import {
+  attemptTimeout,
+  FALL_BACK_ON_REFUSAL,
+  FallbackModel,
+  isRetryable,
+  type ModelCall,
+  ModelRefusalError,
+} from "../src";
 
-type Behaviour = "ok" | 429 | 400 | 503;
+type Behaviour = "ok" | "refused" | 429 | 400 | 503;
 
 function model(id: string, script: Behaviour[], calls: string[]): LanguageModelV4 {
   const result = {
@@ -23,6 +30,12 @@ function model(id: string, script: Behaviour[], calls: string[]): LanguageModelV
     async doGenerate(_o: LanguageModelV4CallOptions) {
       const next = script.shift() ?? "ok";
       calls.push(`${id}:${next}`);
+      if (next === "refused")
+        return {
+          ...result,
+          content: [],
+          finishReason: { unified: "content-filter", raw: "SAFETY" },
+        } as never;
       if (next !== "ok")
         throw Object.assign(new Error(`${next}`), { statusCode: next, isRetryable: next !== 400 });
       return result as never;
@@ -106,6 +119,178 @@ describe("fallback", () => {
     const calls: string[] = [];
     const m = new FallbackModel("g", [{ label: "a", model: model("a", [503, 503], calls) }], fast);
     await expect(generateText({ model: m, prompt: "hi", maxRetries: 0 })).rejects.toThrow("503");
+  });
+
+  test("a refusal moves straight to the next deployment when the call asks for it", async () => {
+    const calls: string[] = [];
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: model("a", ["refused"], calls) },
+        { label: "b", model: model("b", ["ok"], calls) },
+      ],
+      fast,
+    );
+    const { text } = await generateText({
+      model: m,
+      prompt: "hi",
+      maxRetries: 0,
+      providerOptions: FALL_BACK_ON_REFUSAL,
+    });
+    expect(text).toBe("answer from b");
+    expect(calls).toEqual(["a:refused", "b:ok"]);
+  });
+
+  test("when every deployment refuses, the call ends with a refusal error", async () => {
+    const calls: string[] = [];
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: model("a", ["refused"], calls) },
+        { label: "b", model: model("b", ["refused"], calls) },
+      ],
+      fast,
+    );
+    const err = await generateText({
+      model: m,
+      prompt: "hi",
+      maxRetries: 0,
+      providerOptions: FALL_BACK_ON_REFUSAL,
+    }).catch((e) => e);
+    expect(err).toBeInstanceOf(ModelRefusalError);
+    expect((err as ModelRefusalError).finishReason).toBe("safety");
+    expect(isRetryable(err)).toBe(false);
+    expect(calls).toEqual(["a:refused", "b:refused"]);
+  });
+
+  test("without the option a refusal is returned as it was", async () => {
+    const calls: string[] = [];
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: model("a", ["refused"], calls) },
+        { label: "b", model: model("b", ["ok"], calls) },
+      ],
+      fast,
+    );
+    const { text, finishReason } = await generateText({ model: m, prompt: "hi", maxRetries: 0 });
+    expect(text).toBe("");
+    expect(finishReason).toBe("content-filter");
+    expect(calls).toEqual(["a:refused"]);
+  });
+
+  test("an attempt that outlasts the timeout is cut and the next deployment answers", async () => {
+    const calls: string[] = [];
+    const stalled: LanguageModelV4 = {
+      ...model("a", [], calls),
+      doGenerate: (o) =>
+        new Promise((_, reject) => {
+          calls.push("a:stalled");
+          o.abortSignal?.addEventListener("abort", () => reject(o.abortSignal?.reason));
+        }),
+    };
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: stalled },
+        { label: "b", model: model("b", ["ok"], calls) },
+      ],
+      { ...fast, attemptsPerDeployment: 1 },
+    );
+    const { text } = await generateText({
+      model: m,
+      prompt: "hi",
+      maxRetries: 0,
+      providerOptions: attemptTimeout(20),
+    });
+    expect(text).toBe("answer from b");
+    expect(calls).toEqual(["a:stalled", "b:ok"]);
+  });
+
+  test("only the last attempt of the last deployment gets the final bound", async () => {
+    const seen: number[] = [];
+    const probe = (id: string): LanguageModelV4 => ({
+      ...model(id, [], []),
+      doGenerate: async (o) => {
+        const t0 = Date.now();
+        await new Promise<void>((resolve) => {
+          const done = () => resolve();
+          o.abortSignal?.addEventListener("abort", done);
+          setTimeout(done, 200);
+        });
+        seen.push(Date.now() - t0);
+        throw Object.assign(new Error("slow"), { statusCode: 503 });
+      },
+    });
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: probe("a") },
+        { label: "b", model: probe("b") },
+      ],
+      fast,
+    );
+    await generateText({
+      model: m,
+      prompt: "hi",
+      maxRetries: 0,
+      providerOptions: attemptTimeout(20, 150),
+    }).catch(() => {});
+    // Three attempts are cut near 20 ms; the fourth, the last, runs to about 150 ms.
+    expect(seen).toHaveLength(4);
+    for (const ms of seen.slice(0, 3)) expect(ms).toBeLessThan(100);
+    expect(seen[3]).toBeGreaterThanOrEqual(120);
+  });
+
+  test("the caller's own abort is not retried", async () => {
+    const calls: string[] = [];
+    const hangs: LanguageModelV4 = {
+      ...model("a", [], calls),
+      doGenerate: (o) =>
+        new Promise((_, reject) => {
+          calls.push("a:hang");
+          o.abortSignal?.addEventListener("abort", () => reject(o.abortSignal?.reason));
+        }),
+    };
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", model: hangs },
+        { label: "b", model: model("b", ["ok"], calls) },
+      ],
+      fast,
+    );
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 10);
+    await expect(
+      generateText({
+        model: m,
+        prompt: "hi",
+        maxRetries: 0,
+        abortSignal: ctl.signal,
+        providerOptions: attemptTimeout(5000),
+      }),
+    ).rejects.toBeDefined();
+    expect(calls).toEqual(["a:hang"]);
+  });
+
+  test("each call names the provider of the deployment that took it", async () => {
+    const calls: string[] = [];
+    const seen: ModelCall[] = [];
+    const m = new FallbackModel(
+      "g",
+      [
+        { label: "a", provider: "vertex", model: model("a", [503, 503], calls) },
+        { label: "b", provider: "openai-compatible", model: model("b", ["ok"], calls) },
+      ],
+      { ...fast, observe: (c) => seen.push(c) },
+    );
+    await generateText({ model: m, prompt: "hi", maxRetries: 0 });
+    expect(seen.map((c) => [c.provider, c.model, c.status])).toEqual([
+      ["vertex", "a", "error"],
+      ["vertex", "a", "error"],
+      ["openai-compatible", "b", "ok"],
+    ]);
   });
 
   test("retryable classification", () => {

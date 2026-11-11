@@ -45,6 +45,49 @@ export const getReleases = (): Release[] => [
 	{
 		changes: [
 			{
+				text: t`All-new Present features: show live results on a big screen during your session.`,
+				type: "feature",
+			},
+			{
+				text: t`Choose what the room sees: Popcorn, Tensions, Map and Stakeholders.`,
+				type: "feature",
+			},
+			{
+				text: t`See the arguments from your conversations and the quotes behind them on the Map.`,
+				type: "feature",
+			},
+			{
+				text: t`Show popcorn in up to three extra languages at once.`,
+				type: "feature",
+			},
+			{
+				text: t`Stay signed in on two devices, such as your phone and laptop.`,
+				type: "feature",
+			},
+			{
+				text: t`A cleaner, more accessible dashboard and portal.`,
+				type: "improvement",
+			},
+			{
+				text: t`The app feels much faster overall.`,
+				type: "improvement",
+			},
+			{ text: t`Chat is more reliable.`, type: "fix" },
+			{ text: t`Uploads show clearly when they fail.`, type: "fix" },
+			{
+				text: t`Reports publish, schedule and notify as expected.`,
+				type: "fix",
+			},
+		],
+		description: t`The [help docs](https://docs.dembrane.com/) are rewritten and up to date.`,
+		highlight: true,
+		publication: { date: "2026-10-16", tag: "v3.3.0" },
+		title: t`dembrane v3`,
+		version: "2026-10",
+	},
+	{
+		changes: [
+			{
 				text: t`Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources.`,
 				type: "feature",
 			},

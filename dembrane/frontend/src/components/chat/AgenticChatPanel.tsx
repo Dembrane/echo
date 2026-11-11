@@ -65,7 +65,14 @@ import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
 import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import type { AiAction } from "@/components/workspace/gateWalls";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
 import { trackProcess } from "@/features/processes/store";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -88,10 +95,7 @@ import {
 	stopAgenticRun,
 	streamAgenticRun,
 } from "@/lib/api";
-import {
-	FREE_TIER_MAX_CHAT_USER_TURNS,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
+import { isFreeTierLimitError, sampleTurnCap } from "@/lib/freeTier";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
@@ -118,11 +122,7 @@ import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
-import {
-	ChatTurnLimitCard,
-	ChatUpgradeModal,
-	VoiceCapUpgradeModal,
-} from "./FreeTierChatGate";
+import { ChatTurnLimitCard, VoiceCapUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
@@ -171,6 +171,10 @@ const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
 // not: the prompt carries a size-bounded head and the assistant pages through
 // the rest, so say that instead of listing them.
 const FOCUS_CHIP_LIMIT = 12;
+
+// Fallback polls run every 1.5 s; three misses in a row is the point where
+// the answer has stopped arriving rather than a single slow request.
+const POLL_FAILURES_BEFORE_BANNER = 3;
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
@@ -840,6 +844,7 @@ export const AgenticChatPanel = ({
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
+	const [pollFailureCount, setPollFailureCount] = useState(0);
 	// Snapshot of the message being written; the durable assistant.message
 	// with the same message_id replaces it in place.
 	const [liveDraft, setLiveDraft] = useState<{
@@ -860,18 +865,13 @@ export const AgenticChatPanel = ({
 	const projectTranscriptHintsQuery = useProjectById({
 		projectId,
 		query: {
-			fields: ["id", "default_conversation_transcript_prompt", "is_sample"],
+			fields: ["id", "default_conversation_transcript_prompt"],
 		},
 	});
-	const isSample =
-		(
-			projectTranscriptHintsQuery.data as
-				| { is_sample?: boolean | null }
-				| undefined
-		)?.is_sample === true;
-	// A sample project's chats share their own allowance, which only the server
-	// counts; its 402 sets this.
-	const [sampleTurnsSpent, setSampleTurnsSpent] = useState(false);
+	// A sample project's refused turn (402 chat_turns); it learns its cap this way.
+	const [atTurnLimit, setAtTurnLimit] = useState(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on chat switch
+	useEffect(() => setAtTurnLimit(false), [chatId]);
 	const voiceHotwords =
 		(
 			projectTranscriptHintsQuery.data as
@@ -1162,24 +1162,25 @@ export const AgenticChatPanel = ({
 		if (landed) setPendingUserMessage(null);
 	}, [timeline, pendingUserMessage]);
 
-	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { freeTier, usageGates } = useWorkspaceUsage(workspace?.id);
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
+	const { usageGates } = useWorkspaceUsage(workspace?.id);
+	const aiWall = useAiBudgetWall();
+	// What the host was doing when the AI budget refused them.
+	const [aiAction, setAiAction] = useState<AiAction>("assistant");
+	// The sample cap has its own wall: nothing about the AI budget is used up.
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
+	const openSampleWall = sampleWall.open;
+	const [sampleQuestions, setSampleQuestions] = useState<number | null>(null);
+	// The gate that locks uploads locks the mic.
 	const voiceCapReached = Boolean(usageGates?.uploads_locked);
 	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
-	const userTurnCount = useMemo(
-		() =>
-			timeline.filter((item) => item.kind === "message" && item.role === "user")
-				.length,
-		[timeline],
-	);
-	const atTurnLimit = Boolean(
-		freeTier?.active &&
-			(isSample
-				? sampleTurnsSpent
-				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
-	);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: react to a refusal only
+	useEffect(() => {
+		if (voice.errorKind !== "free_limit") return;
+		setAiAction("voice");
+		if (!aiWall.openFor(voice.errorCause)) aiWall.open();
+		voice.dismissError();
+		void invalidateFreeAllowance(queryClient);
+	}, [voice.errorKind]);
 
 	const historyMessages = useMemo(
 		() =>
@@ -1332,6 +1333,7 @@ export const AgenticChatPanel = ({
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						setPollFailureCount(0);
 						if (event.event_type === "assistant.message") {
 							// Same React batch as the merge: draft and durable swap in one paint.
 							const payload = asObject(event.payload);
@@ -1359,13 +1361,10 @@ export const AgenticChatPanel = ({
 					return;
 				}
 
-				setStreamFailureCount((count) => {
-					const next = count + 1;
-					if (next >= 2) {
-						setError(t`Live stream interrupted. Falling back to polling.`);
-					}
-					return next;
-				});
+				// Two dropped streams hand over to polling. That is a normal path and
+				// the answer keeps arriving, so it shows nothing. The banner is for
+				// polling failing too (see connectionLost).
+				setStreamFailureCount((count) => count + 1);
 
 				if (streamError instanceof Error) {
 					console.warn("Agentic stream failed", streamError);
@@ -1403,6 +1402,7 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
+		setPollFailureCount(0);
 		setLiveDraft(null);
 	}, [chatId, stopStream]);
 
@@ -1469,6 +1469,13 @@ export const AgenticChatPanel = ({
 		};
 	}, [chatId, loadAllEvents, startStream]);
 
+	// Polling misses in a row after the stream is gone: the answer has really
+	// stopped arriving, so tell the host instead of leaving a silent spinner.
+	const connectionLost =
+		streamFailureCount >= 2 &&
+		pollFailureCount >= POLL_FAILURES_BEFORE_BANNER &&
+		!isTerminalStatus(runStatus);
+
 	useEffect(() => {
 		if (!runId || !runStatus || isTerminalStatus(runStatus)) return;
 		if (isStreaming || streamFailureCount < 2) return;
@@ -1477,9 +1484,16 @@ export const AgenticChatPanel = ({
 		const interval = window.setInterval(async () => {
 			if (!active) return;
 			try {
-				await refreshEvents(runId, afterSeq);
+				const payload = await refreshEvents(runId, afterSeq);
+				if (!active) return;
+				setPollFailureCount(0);
+				// Only the stream call starts a queued turn, so polling alone would wait forever.
+				if (payload.status === "queued") {
+					void startStream(runId, payload.next_seq);
+				}
 			} catch {
-				// Keep fallback polling retries lightweight.
+				// Keep retrying lightly; only a run of misses is worth telling the host.
+				if (active) setPollFailureCount((count) => count + 1);
 			}
 		}, 1500);
 
@@ -1494,6 +1508,7 @@ export const AgenticChatPanel = ({
 		isStreaming,
 		streamFailureCount,
 		refreshEvents,
+		startStream,
 	]);
 
 	useEffect(() => {
@@ -1611,6 +1626,7 @@ export const AgenticChatPanel = ({
 		void queryClient.invalidateQueries({
 			queryKey: ["projects", projectId, "chats"],
 		});
+		void invalidateFreeAllowance(queryClient);
 	}, [chatId, projectId, queryClient]);
 
 	const handleSubmit = async (overrideMessage?: string) => {
@@ -1622,7 +1638,7 @@ export const AgenticChatPanel = ({
 		}
 
 		if (atTurnLimit) {
-			upgradeHandlers.open();
+			openSampleWall();
 			return;
 		}
 
@@ -1676,10 +1692,14 @@ export const AgenticChatPanel = ({
 			// Don't strand the host's message when the send fails: restore it to
 			// the composer so it isn't lost (unless they've already typed a new one).
 			setInput((current) => (current.length === 0 ? message : current));
-			// Backend safety net: free-tier turn cap returns 402.
+			// Backend safety net: the sample cap or a used-up AI budget returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
-				if (isSample) setSampleTurnsSpent(true);
-				upgradeHandlers.open();
+				setSampleQuestions(sampleTurnCap(submitError));
+				setAtTurnLimit(true);
+				openSampleWall();
+			} else if (aiWall.openFor(submitError)) {
+				setAiAction("assistant");
+				void invalidateFreeAllowance(queryClient);
 			} else {
 				const nextError =
 					submitError instanceof Error
@@ -1843,13 +1863,13 @@ export const AgenticChatPanel = ({
 
 			<Box className="min-h-0 flex-1 overflow-y-auto" ref={threadScrollRef}>
 				<Stack className="relative min-h-full w-full pt-3 pb-6">
-					{error && (
+					{(error || connectionLost) && (
 						<Alert
 							color="red"
 							icon={<WarningCircleIcon size={20} />}
 							title={<Trans>Error</Trans>}
 						>
-							{error}
+							{error ?? t`Connection lost. Reload for the answer.`}
 						</Alert>
 					)}
 
@@ -2172,7 +2192,10 @@ export const AgenticChatPanel = ({
 					/>
 
 					{atTurnLimit && (
-						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
+						<ChatTurnLimitCard
+							onUpgrade={openSampleWall}
+							questions={sampleQuestions}
+						/>
 					)}
 					{voice.errorKind && (
 						<VoiceInputError
@@ -2272,9 +2295,11 @@ export const AgenticChatPanel = ({
 											}
 											testId="chat-voice-record-button"
 											tooltip={
-												voiceCapReached && !atTurnLimit
-													? t`This workspace has used its recording hours. Upgrade to keep using voice.`
-													: undefined
+												atTurnLimit
+													? undefined
+													: voiceCapReached
+														? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+														: undefined
 											}
 										/>
 										<Button
@@ -2387,10 +2412,19 @@ export const AgenticChatPanel = ({
 					/>
 				</Modal>
 			</Box>
-			<ChatUpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				reason="chat_turns"
+			<AiBudgetWall
+				{...aiWall.props}
+				action={aiAction}
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
+			/>
+			<SampleCapWall
+				cap="chat"
+				questions={sampleQuestions}
+				opened={sampleWallOpened}
+				onClose={sampleWall.close}
+				workspaceId={workspace?.id ?? ""}
+				projectId={projectId}
 			/>
 			<VoiceCapUpgradeModal
 				opened={voiceCapOpened}

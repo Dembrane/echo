@@ -3,7 +3,6 @@ import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { chatFor } from "./access";
 import type { ChatDeps } from "./deps";
-import { FREE_TIER_MAX_CHATS, freeTierLimit, isFreeTier } from "./tiers";
 
 /**
  * The chat BFF (/api/v2/bff/chats, /api/v2/bff/chat-messages). chat:use gates every route,
@@ -17,15 +16,8 @@ export async function createChat(
   who: Signed,
   body: { project_id: string; name: string | null },
 ) {
-  const access = await projectFor(d.access, who, body.project_id, "chat:use");
-  // A sample copy is there to be asked: its chats neither need nor spend the allowance.
-  if (
-    isFreeTier(access.tier) &&
-    !access.project.isSample &&
-    (await d.reads.workspaceChatsWithUserMessages(access.project.workspaceId)) >=
-      FREE_TIER_MAX_CHATS
-  )
-    throw freeTierLimit("chats");
+  const pa = await projectFor(d.access, who, body.project_id, "chat:use");
+  await d.freeChats.canStartChat(body.project_id, d.now(), pa.tier);
   const id = d.newId();
   // The Python API wrote through the admin token, so Directus stamped the service account
   // as the creator. The creator is who created it: private chats and "is_own" read this.
@@ -68,6 +60,8 @@ export async function getChat(d: ChatDeps, who: Signed, chatId: string) {
     chat_mode: item.chat_mode ?? null,
     date_created: item.date_created ?? null,
     date_updated: item.date_updated ?? null,
+    // Kept for one release so an older dashboard still reads it.
+    free_turns: null,
   };
 }
 

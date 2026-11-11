@@ -48,7 +48,7 @@ On the "Conversations" page a row can carry several badges at once.
 | A detective | It is anonymised. |
 
 On the conversation's own page you can also meet "Empty" (the conversation is finished and
-has no text) and "Locked" (the free plan's hour is used). Both are explained in
+has no text). It is explained in
 [troubleshooting transcripts and summaries](./troubleshooting-transcripts-and-summaries.md).
 
 ## Find a conversation
@@ -126,18 +126,18 @@ moving and deleting go one conversation at a time. See [chat and Ask](./chat-and
 |---|---|---|
 | One transcript | "Download transcript" on the conversation page | A Markdown file |
 | All transcripts of a project | "Manage", "Export", "Download all transcripts" | A zip with one Markdown file for each conversation that has text |
-| The audio of one conversation | "Download audio" | One MP3. Not for anonymised, typed or locked conversations |
+| The audio of one conversation | "Download audio" | One MP3. Not for anonymised or typed conversations |
 
 There is no spreadsheet export. More in
 [export and data portability](../../features/export-and-data-portability.md).
 
-## Anonymised and locked conversations
+## Anonymised conversations
 
-- An anonymised conversation has personal details replaced in the transcript. You cannot play
-  or download its audio, and you cannot retranscribe it.
-- A locked conversation was finished after a free workspace used its hour of audio. Its
-  transcript and summary are hidden until the workspace is on a paid plan. See
-  [tiers, billing and usage](./tiers-billing-and-usage.md).
+An anonymised conversation has personal details replaced in the transcript. You cannot play
+or download its audio, and you cannot retranscribe it.
+
+No plan hides a transcript or a summary. The free plan limits how much audio comes in. See
+[tiers, billing and usage](./tiers-billing-and-usage.md).
 
 ## After a session
 
@@ -149,7 +149,7 @@ There is no spreadsheet export. More in
 
 ## Related
 
-- [Troubleshooting transcripts and summaries](./troubleshooting-transcripts-and-summaries.md): wrong, missing or locked text.
+- [Troubleshooting transcripts and summaries](./troubleshooting-transcripts-and-summaries.md): wrong or missing text.
 - [Collecting conversations](./collecting-conversations.md): how conversations come in.
 - [Setting up the portal](./portal-editor.md): key terms, tags, anonymisation and titles.
 - [Conversations & transcripts](../../features/conversations-and-transcripts.md): the feature reference.

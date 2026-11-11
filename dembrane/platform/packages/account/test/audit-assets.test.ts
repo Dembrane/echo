@@ -18,36 +18,35 @@ test("csv filters drop blanks", () => {
   expect(csv(null)).toEqual([]);
 });
 
-function fakeStore(scopes: AuditScope[]): AuditStorage {
+function row(id: number) {
   return {
-    async page(scope) {
+    id,
+    action: "update",
+    collection: "directus_users",
+    item: me,
+    timestamp: "2026-09-27 10:00:00+00",
+    ip: "10.0.0.1",
+    user_agent: "ua",
+    userId: me,
+    email: "a@example.com",
+    first_name: "A",
+    last_name: null,
+  };
+}
+
+function fakeStore(scopes: AuditScope[], ids: number[] = [7]): AuditStorage {
+  return {
+    async page(scope, _f, opts) {
       scopes.push(scope);
+      return ids.slice(0, opts.limit).map(row);
+    },
+    async counts() {
       return [
-        {
-          id: 7,
-          action: "update",
-          collection: "directus_users",
-          item: me,
-          timestamp: "2026-09-27 10:00:00+00",
-          ip: "10.0.0.1",
-          user_agent: "ua",
-          userId: me,
-          email: "a@example.com",
-          first_name: "A",
-          last_name: null,
-        },
+        { action: "create", collection: "project", count: 2 },
+        { action: "create", collection: "directus_users", count: 1 },
+        { action: " ", collection: " ", count: 1 },
+        { action: "update", collection: "project", count: 4 },
       ];
-    },
-    async total() {
-      return 41;
-    },
-    async counts(_scope, column) {
-      return column === "action"
-        ? [
-            { value: "create", count: 3 },
-            { value: " ", count: 1 },
-          ]
-        : [{ value: "project", count: 2 }];
     },
     async deltas() {
       return [{ activity: 7, delta: { first_name: "A" } }];
@@ -57,10 +56,11 @@ function fakeStore(scopes: AuditScope[]): AuditStorage {
 
 test("audit page: the page the settings card renders, deltas for staff only", async () => {
   const scopes: AuditScope[] = [];
-  const q = { page: 1, page_size: 20, sort: "desc" as const };
+  const q = { page_size: 20, sort: "desc" as const };
   const f = { actions: [], collections: [] };
   const mine = await auditPage(fakeStore(scopes), user, f, q);
-  expect(mine.total).toBe(41);
+  expect(mine.has_more).toBe(false);
+  expect(mine.next_cursor).toBeNull();
   expect(mine.items[0]).toEqual({
     id: 7,
     action: "update",
@@ -80,10 +80,27 @@ test("audit page: the page the settings card renders, deltas for staff only", as
   ]);
 });
 
-test("audit options skip blank values", async () => {
+test("audit page: one extra row says more is coming, and its predecessor is the cursor", async () => {
+  const f = { actions: [], collections: [] };
+  const page = await auditPage(fakeStore([], [9, 8, 7]), user, f, { page_size: 2, sort: "desc" });
+  expect(page.items.map((i) => i.id)).toEqual([9, 8]);
+  expect(page.has_more).toBe(true);
+  expect(page.next_cursor).toBe(8);
+  const last = await auditPage(fakeStore([], [9, 8]), user, f, { page_size: 2, sort: "desc" });
+  expect(last.has_more).toBe(false);
+  expect(last.next_cursor).toBeNull();
+});
+
+test("audit options add the pairs up per value and skip blank values", async () => {
   expect(await auditOptions(fakeStore([]), user)).toEqual({
-    actions: [{ value: "create", label: "create", count: 3 }],
-    collections: [{ value: "project", label: "project", count: 2 }],
+    actions: [
+      { value: "create", label: "create", count: 3 },
+      { value: "update", label: "update", count: 4 },
+    ],
+    collections: [
+      { value: "directus_users", label: "directus_users", count: 1 },
+      { value: "project", label: "project", count: 6 },
+    ],
   });
 });
 

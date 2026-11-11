@@ -647,9 +647,9 @@ run("a staff demo where the deployment is production", () => {
       project_count: 0,
       audio_hours: 0,
       usage_gates: { over_cap_active: false, uploads_locked: false },
-      free_tier: { active: true, chats_used: 0, reports_used: 0 },
+      free_tier: { active: true, ai_percent_used: 0, ai_exhausted: false },
     });
-    // The prospect's first own project, in the same workspace: half an hour, then the hour.
+    // The prospect's own project counts its hours; the hour no longer locks anything.
     ownProject = newId();
     await realProject(ownProject, demoWorkspace, contact);
     await record(ownProject, 1800);
@@ -661,7 +661,7 @@ run("a staff demo where the deployment is production", () => {
     await record(ownProject, 1800);
     expect((await get(contact, path)).data).toMatchObject({
       audio_hours: 1,
-      usage_gates: { over_cap_active: true, uploads_locked: true },
+      usage_gates: { over_cap_active: false, uploads_locked: false },
     });
   });
 
@@ -687,11 +687,17 @@ run("a staff demo where the deployment is production", () => {
       message_from: "user",
       text: "What stood out?",
     });
-    expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 0 });
+    expect(await usage()).toEqual({ active: true, ai_percent_used: 0, ai_exhausted: false });
     // The free plan's one report is still there for the prospect's own project.
     expect(await report(ownProject)).toBe(202);
-    expect(await report(ownProject)).toBe(402);
-    expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 1 });
+    // A draft still generating is a 409; once it is done, only the AI budget limits the next.
+    expect(await report(ownProject)).toBe(409);
+    await db
+      .update(schema.project_report)
+      .set({ status: "archived" })
+      .where(eq(schema.project_report.project_id, ownProject));
+    expect(await report(ownProject)).toBe(202);
+    expect(await usage()).toEqual({ active: true, ai_percent_used: 0, ai_exhausted: false });
   });
 
   test("the public numbers count the real project and leave the demo out", async () => {
@@ -710,7 +716,7 @@ run("a staff demo where the deployment is production", () => {
     // The customer beside it: same workspace, same project, same conversation, nothing added.
     expect(
       (await get(people.customer, `/api/v2/workspaces/${customer.workspace}/usage`)).data,
-    ).toMatchObject({ project_count: 1, audio_hours: 0.5, free_tier: { reports_used: 0 } });
+    ).toMatchObject({ project_count: 1, audio_hours: 0.5, free_tier: { ai_percent_used: 0 } });
     const theirs = (await get(people.customer, "/api/v2/workspaces")).data as {
       organisations: { id: string }[];
     };

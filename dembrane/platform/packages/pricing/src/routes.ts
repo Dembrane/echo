@@ -10,7 +10,9 @@ import { Hono } from "hono";
 import {
   APP_PREFIX,
   type Attachment,
+  clean,
   cleanEmail,
+  handoverFrom,
   INTERNAL_EMAIL_DOMAIN,
   type PricingPayload,
   SITE_PREFIX,
@@ -186,14 +188,19 @@ export function pricingRoutes(deps: PricingRouteDeps) {
         const email =
           ((await store.directusEmail(who.directusUserId)) ?? "").trim().toLowerCase() || null;
         if (!email) deps.logger.warn("pricing configuration: no email on the directus user");
-        return c.json(
-          await upsertConfiguration(upsertDeps, payload as PricingPayload, attachments, {
+        const saved = await upsertConfiguration(
+          upsertDeps,
+          payload as PricingPayload,
+          attachments,
+          {
             email,
             userId: who.directusUserId,
             isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
             prefix: APP_PREFIX,
-          }),
+          },
         );
+        // The website writes only where its token is set (not EU), so only there can it find this row.
+        return c.json({ ...saved, handover: Boolean(deps.siteToken) });
       })
       .post("/api/v2/pricing-configurations/site", async (c) => {
         if (!deps.siteToken) throw new StatusError(503, "pricing.site_not_configured");
@@ -205,9 +212,17 @@ export function pricingRoutes(deps: PricingRouteDeps) {
           (c.req.header("x-site-visitor-ip") ?? "").trim() || "unknown",
         );
         const [body] = await readBody(c, deps.logger);
-        const payload = validatePayload(body, { email: v.optional(s255()) });
+        const payload = validatePayload(body, {
+          email: v.optional(s255()),
+          handover: v.optional(s255()),
+        });
+        // Someone the app sent here: their account's email stands in until they type one.
+        const handoverId = clean(payload.handover as string | null);
+        const handover = handoverId
+          ? handoverFrom(await store.bySession(handoverId), new Date())
+          : null;
+        const email = cleanEmail(payload.email as string | null) ?? handover?.email ?? null;
         // Whatever the body said, this row came from the site.
-        const email = cleanEmail(payload.email as string | null);
         return c.json(
           await upsertConfiguration(
             upsertDeps,
@@ -219,6 +234,7 @@ export function pricingRoutes(deps: PricingRouteDeps) {
               isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
               prefix: SITE_PREFIX,
             },
+            handover,
           ),
         );
       })

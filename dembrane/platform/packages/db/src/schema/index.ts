@@ -14,7 +14,10 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgTable,
+  pgView,
+  primaryKey,
   real,
   serial,
   text,
@@ -150,6 +153,9 @@ export const agent_loop_run = pgTable(
   {
     detail: text(),
     finished_at: timestamp({ withTimezone: true, mode: "string" }),
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account the stamped analysis was taken from. */
+    free_account_id: uuid(),
     generation_id: uuid(),
     id: uuid().primaryKey().notNull(),
     loop_id: uuid(),
@@ -157,6 +163,16 @@ export const agent_loop_run = pgTable(
     status: varchar({ length: 255 }).default(sql`NULL`),
   },
   (table): PgTableExtraConfigValue[] => [
+    // The popcorn stuck-run sweep.
+    index("agent_loop_run_running_started")
+      .using("btree", table.started_at.asc().nullsLast())
+      .where(sql`((status)::text = 'running'::text)`),
+    // latestRun: a loop's runs by start.
+    index("agent_loop_run_loop_started").using(
+      "btree",
+      table.loop_id.asc().nullsLast(),
+      table.started_at.asc().nullsLast(),
+    ),
     foreignKey({
       columns: [table.generation_id],
       foreignColumns: [canvas_generation.id],
@@ -513,6 +529,10 @@ export const analysis_run = pgTable(
     epoch: integer().default(0).notNull(),
     error: text(),
     execution_ref: varchar({ length: 128 }).default(sql`NULL`),
+    /** The free period whose popcorn analysis this run took; null when it holds none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that analysis was taken from. */
+    free_account_id: uuid(),
     hash_version: varchar({ length: 16 }).default("c14n-v1").notNull(),
     id: uuid().primaryKey().notNull(),
     idempotency_key: varchar({ length: 255 }).default(sql`NULL`).notNull(),
@@ -566,6 +586,10 @@ export const analysis_run = pgTable(
       table.status.asc().nullsLast(),
       table.created_at.desc().nullsFirst(),
     ),
+    // Failed runs still holding a free charge.
+    index("analysis_run_free_charged")
+      .using("btree", table.status.asc().nullsLast())
+      .where(sql`(free_period_start IS NOT NULL)`),
     index("analysis_run_waiting_by_project")
       .using("btree", table.project_id.asc().nullsLast(), table.created_at.asc().nullsLast())
       .where(sql`((status)::text = 'waiting_for_inputs'::text)`),
@@ -1019,6 +1043,8 @@ export const billing_account = pgTable(
     updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
     workspace_id: uuid(),
     account_manager_id: uuid(),
+    // The free account's one recording project; checked on read, no foreign key.
+    recording_project_id: uuid(),
     billing_address_line1: varchar({ length: 255 }).default(sql`NULL`),
     billing_address_line2: varchar({ length: 255 }).default(sql`NULL`),
     billing_city: varchar({ length: 255 }).default(sql`NULL`),
@@ -1045,6 +1071,11 @@ export const billing_account = pgTable(
     no_vat_number: boolean(),
     // What the customer wrote about how they receive invoices, when invoice_delivery is "other".
     invoice_portal: text(),
+    // Staff override of the free AI budget; null uses tier_limit ai_budget_micro_eur.
+    ai_budget_micro_eur: bigint({ mode: "number" }),
+    ai_budget_unlimited: boolean().default(false).notNull(),
+    // After this the account returns to the default; null means no end date.
+    ai_budget_until: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1108,7 +1139,7 @@ export const conversation = pgTable(
     merged_audio_path: text(),
     merged_transcript: text(),
     participant_email: varchar({ length: 255 }).default(sql`NULL`),
-    participant_name: varchar({ length: 255 }).default(sql`NULL`),
+    participant_name: text().default(sql`NULL`),
     participant_user_agent: varchar({ length: 255 }).default(sql`NULL`),
     project_id: uuid().notNull(),
     source: varchar({ length: 255 }).default(sql`NULL`),
@@ -1118,6 +1149,8 @@ export const conversation = pgTable(
     move_history: json(),
     token_count: integer(),
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
+    // When a live recording first got the AI budget stop; its grace runs from here.
+    ai_stopped_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1177,10 +1210,15 @@ export const conversation_chunk = pgTable(
     hallucination_score: real(),
     id: uuid().primaryKey().notNull(),
     noise_ratio: real().default(sql`'0'`),
-    path: varchar({ length: 255 }).default(sql`NULL`),
+    path: text().default(sql`NULL`),
+    pending_text: text(),
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),
+    // Seconds of audio this chunk counted against a free allowance.
+    audio_seconds: real(),
+    // Whisper's own sentences for this piece, with times from its start, and the piece's length.
+    segments: jsonb(),
     silence_ratio: real().default(sql`'0'`),
     source: varchar({ length: 255 }).default(sql`NULL`),
     timestamp: timestamp({ withTimezone: true, mode: "string" }).notNull(),
@@ -1190,10 +1228,89 @@ export const conversation_chunk = pgTable(
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.timestamp.asc().nullsLast()),
+    // Chunks are read by conversation (home search, pipeline, transcripts) and cascade-deleted
+    // with it. Hand-applied on prod under this name before it was in the repo.
+    index("idx_chunk_conv_timestamp").using(
+      "btree",
+      table.conversation_id.asc().nullsLast(),
+      table.timestamp.desc().nullsFirst(),
+    ),
     foreignKey({
       columns: [table.conversation_id],
       foreignColumns: [conversation.id],
       name: "conversation_chunk_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
+/**
+ * The whole recording transcribed again once the conversation is finished, one row per
+ * provider that ran. The live chunk text stays in conversation_chunk; the row flagged
+ * `is_record` is what the dashboard, summaries and chat read. `chunk_hash` names the chunk
+ * list it was made from (sha256 of the sorted chunk ids, 16 hex), so a conversation that
+ * gains audio later never shows an outdated record. `sentences` carry start and end in
+ * seconds of the merged file for the player; an anonymised conversation keeps text only.
+ */
+export const conversation_final_transcript = pgTable(
+  "conversation_final_transcript",
+  {
+    conversation_id: uuid().notNull(),
+    provider: text().notNull(),
+    model: text(),
+    chunk_hash: text().notNull(),
+    is_record: boolean().default(false).notNull(),
+    text: text().notNull(),
+    sentences: jsonb(),
+    /** Whisper's sentences as they were before the text pass, same ids and times, when the pass changed any; the edits stay visible and reversible. */
+    raw_sentences: jsonb(),
+    audio_seconds: real(),
+    usage: jsonb(),
+    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    updated_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    primaryKey({ columns: [table.conversation_id, table.provider] }),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "conversation_final_transcript_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
+/** Created by migration 0023; see there. Read-only: written through conversation_final_transcript. */
+export const conversation_record_transcript = pgView("conversation_record_transcript", {
+  conversation_id: uuid().notNull(),
+  provider: text().notNull(),
+  model: text(),
+  text: text().notNull(),
+  sentences: jsonb(),
+  audio_seconds: real(),
+  updated_at: timestamp({ withTimezone: true, mode: "string" }).notNull(),
+}).existing();
+
+/**
+ * What Whisper's confidence retries did for a conversation, per stage (live pieces, final pass):
+ * doubtful stretches found, requests sent again, and how each stretch ended. Numbers only.
+ */
+export const conversation_transcribe_retry = pgTable(
+  "conversation_transcribe_retry",
+  {
+    conversation_id: uuid().notNull(),
+    stage: text().notNull(),
+    spans: integer().default(0).notNull(),
+    attempts: integer().default(0).notNull(),
+    improved: integer().default(0).notNull(),
+    kept: integer().default(0).notNull(),
+    failed: integer().default(0).notNull(),
+    updated_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    primaryKey({ columns: [table.conversation_id, table.stage] }),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "conversation_transcribe_retry_conversation_id_foreign",
     }).onDelete("cascade"),
   ],
 );
@@ -2366,6 +2483,8 @@ export const pricing_configuration = pgTable(
     created_at: timestamp({ withTimezone: true, mode: "string" }),
     updated_at: timestamp({ withTimezone: true, mode: "string" }),
     booking_notified_at: timestamp({ withTimezone: true, mode: "string" }),
+    submitted_at: timestamp({ withTimezone: true, mode: "string" }),
+    enquiry_notified_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     unique("pricing_configuration_reference_unique").on(table.reference),
@@ -2424,6 +2543,10 @@ export const project_report = pgTable(
     user_created: uuid(),
     kind: varchar({ length: 255 }).default("report").notNull(),
     public_token: varchar({ length: 255 }).default(sql`NULL`),
+    /** The free period whose report this report took; null when it took none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
+    /** The billing account that report was taken from; null on rows stamped before it existed. */
+    free_account_id: uuid(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2683,6 +2806,8 @@ export const project_chat = pgTable(
     user_created: uuid(),
     user_updated: uuid(),
     is_private: boolean().default(false),
+    /** The free period whose chat slot this chat claimed; null when it claimed none. */
+    free_period_start: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.project_id.asc().nullsLast()),

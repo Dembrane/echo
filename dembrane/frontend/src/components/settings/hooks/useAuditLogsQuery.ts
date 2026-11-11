@@ -30,15 +30,17 @@ export interface AuditLogFilters {
 }
 
 export interface AuditLogQueryArgs {
+	/** Last row id of the page before; leave out for the first page. */
+	cursor?: number | null;
 	filters?: AuditLogFilters;
-	page: number;
 	pageSize: number;
 	sortDirection?: "asc" | "desc";
 }
 
 export interface AuditLogQueryResult {
+	has_more: boolean;
 	items: AuditLogEntry[];
-	total: number;
+	next_cursor: number | null;
 }
 
 export interface AuditLogOption {
@@ -91,14 +93,14 @@ const filterParams = (filters?: AuditLogFilters) => ({
 });
 
 const fetchAuditLogsPage = async ({
+	cursor,
 	filters,
-	page,
 	pageSize,
 	sortDirection,
 }: AuditLogQueryArgs): Promise<AuditLogQueryResult> =>
 	getJson<AuditLogQueryResult>("", {
 		...filterParams(filters),
-		page,
+		cursor: cursor ?? undefined,
 		page_size: pageSize,
 		sort: sortDirection === "asc" ? "asc" : "desc",
 	});
@@ -113,16 +115,17 @@ const fetchAuditLogsForExport = async ({
 }) => {
 	const records: AuditLogEntry[] = [];
 
-	for (let page = 0; ; page++) {
-		const { items } = await getJson<AuditLogQueryResult>("", {
+	let cursor: number | null = null;
+	do {
+		const page: AuditLogQueryResult = await getJson<AuditLogQueryResult>("", {
 			...filterParams(filters),
-			page,
+			cursor: cursor ?? undefined,
 			page_size: AGGREGATE_BATCH_SIZE,
 			sort: "desc",
 		});
-		records.push(...items);
-		if (items.length < AGGREGATE_BATCH_SIZE) break;
-	}
+		records.push(...page.items);
+		cursor = page.has_more ? page.next_cursor : null;
+	} while (cursor !== null);
 
 	return records;
 };

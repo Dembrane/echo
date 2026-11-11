@@ -3,7 +3,7 @@ import { orgInviteEmail, tierDowngradedEmail, workspaceInviteEmail } from "../sr
 import { inviteAcceptUrl, inviteHash } from "../src/links";
 import { seatState } from "../src/members";
 import { pyInt, pyRound } from "../src/numbers";
-import { downgradeEffects, nextTier, tierPricing } from "../src/tiers";
+import { downgradeEffects, nextTier, tierPricing, usageGates } from "../src/tiers";
 import { monthBounds, pyIso } from "../src/usage";
 
 test("rounding is Python's: exact decimal value, ties to even", () => {
@@ -14,6 +14,10 @@ test("rounding is Python's: exact decimal value, ties to even", () => {
   expect(pyRound(1234.5)).toBe(1234);
   expect(pyRound(312 / 3600, 2)).toBe(0.09);
   expect(pyInt(312.9)).toBe(312);
+});
+
+test("the lifetime hour lock is retired: free never gates", () => {
+  expect(usageGates("free", 99)).toEqual({ over_cap_active: false, uploads_locked: false });
 });
 
 test("monthly pricing rounds 172.5 to 172, as the old API showed it", () => {

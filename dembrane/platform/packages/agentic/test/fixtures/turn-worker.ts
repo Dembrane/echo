@@ -3,7 +3,8 @@
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
 import { createDb } from "@dembrane/db";
-import { createLogger, initTracing } from "@dembrane/observability";
+import { fakeModels } from "@dembrane/llm";
+import { createLogger, initTracing, payer, payerKey } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
 import { agenticWorker } from "../../src/jobs";
 import { fakeAgent } from "./fake-agent";
@@ -21,7 +22,7 @@ const database = createDb({ url, poolMax: 4 });
 const reg = agenticWorker({
   db: database.db,
   logger,
-  models: { model: () => ({}) as never, embedding: () => ({}) as never },
+  models: fakeModels(),
   config: {
     canvas: { enabled: false },
     agentic: {
@@ -43,7 +44,8 @@ const reg = agenticWorker({
   databaseUrl: url,
   agent: fakeAgent({
     inLookup: async () => {
-      log("lookup");
+      const p = payer();
+      log(`lookup ${p ? payerKey(p) : "none"}`);
       if (process.env.HANG === "1") await Bun.sleep(600_000);
     },
   }),

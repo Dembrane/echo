@@ -1,3 +1,4 @@
+import { freeLimitError, requireAiBudget } from "@dembrane/allowance";
 import {
   BadRequestError,
   ConflictError,
@@ -7,7 +8,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
-import { directusRow, PaymentRequiredError, pythonIso } from "@dembrane/legacy-shape";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
 
@@ -50,9 +51,8 @@ const ISO_FORMS =
 
 /**
  * Starts a report, now or at a scheduled time. Generating needs report:generate; a free
- * workspace gets one report, and its sample copy gets one of its own that does not spend
- * the workspace's. One
- * draft at a time per project, so a double click does not start two generations.
+ * account needs AI budget left, and a sample copy keeps one report of its own. One draft at
+ * a time per project, so a double click does not start two generations.
  */
 export async function createReport(
   d: ProjectDeps,
@@ -61,21 +61,18 @@ export async function createReport(
   body: { language: string | null; user_instructions: string | null; scheduled_at: string | null },
 ) {
   const pa = await projectFor(d.access, who, projectId, "report:generate");
-  if (pa.tier === "free" && pa.project.workspaceId) {
-    const spent = pa.project.isSample
-      ? await d.store.countProjectReports(projectId)
-      : await d.store.countWorkspaceReports(pa.project.workspaceId);
-    if (spent >= 1)
-      throw new PaymentRequiredError("billing.tier_limit", {
-        params: { limit: "report" },
-        details: { error: "FREE_TIER_LIMIT", limit: "report", upgrade_cta_tier: "changemaker" },
-      });
-  }
+  if (
+    pa.project.isSample &&
+    pa.tier === "free" &&
+    (await d.store.countProjectReports(projectId)) >= 1
+  )
+    throw freeLimitError("report");
   const language = body.language || "en";
   const now = d.now();
   const scheduled = body.scheduled_at ? parseSchedule(body.scheduled_at, now) : null;
   if (!scheduled && (await d.store.hasDraftReport(projectId)))
     throw new ConflictError("report.already_generating");
+  await requireAiBudget(d.db, projectId, now, pa.tier);
 
   return d.store.transaction(async ({ store, sql }) => {
     const created = await store.insertReport({
@@ -248,16 +245,20 @@ export async function deleteReport(d: ProjectDeps, who: Signed, projectId: strin
 /** Unschedules; needs report:publish, the policy that schedules (spec H-9). */
 export async function cancelSchedule(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:publish", "v1");
-  const r = await boundReport(d, projectId, rid);
-  if (r.status !== "scheduled") throw new BadRequestError("report.not_scheduled");
+  await boundReport(d, projectId, rid);
   const now = d.now();
-  await d.store.transaction(async ({ store }) => {
-    await store.updateReport(reportId(rid), {
-      status: "cancelled",
-      date_updated: now.toISOString(),
-    });
+  const cancelled = await d.store.transaction(async ({ store, sql }) => {
+    // Conditional, so a report the scheduler started meanwhile is not cancelled.
+    const rows =
+      await sql`update project_report set status = 'cancelled', date_updated = ${now.toISOString()}
+      where id = ${rid} and status = 'scheduled' returning id`;
+    if (!rows.length) return false;
     await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
+    return true;
   });
+  // A retry of a cancel that already happened heals instead of failing.
+  if (!cancelled && (await boundReport(d, projectId, rid)).status !== "cancelled")
+    throw new BadRequestError("report.not_scheduled");
   return { cancelled: true };
 }
 

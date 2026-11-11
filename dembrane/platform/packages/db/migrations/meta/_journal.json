@@ -148,6 +148,209 @@
       "when": 1791898495790,
       "tag": "0020_expand_billing_country_and_other_way",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791991222718,
+      "tag": "0021_expand_popcorn_tensions_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792060798557,
+      "tag": "0022_expand_signature_language",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792084180085,
+      "tag": "0023_expand_chunk_pending_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792085728096,
+      "tag": "0024_expand_final_transcript",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792153182007,
+      "tag": "0025_expand_final_transcript_raw",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792177537284,
+      "tag": "0026_expand_transcribe_retry",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792498579263,
+      "tag": "0027_expand_chunk_segments",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792510177712,
+      "tag": "0028_expand_free_tier_allowance",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792512787242,
+      "tag": "0029_expand_clear_over_cap",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792515110631,
+      "tag": "0030_expand_free_tier_recording",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792523239383,
+      "tag": "0031_expand_free_limit_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792523493752,
+      "tag": "0032_expand_free_chat_period",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792523732244,
+      "tag": "0033_expand_free_report_period",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792524000281,
+      "tag": "0034_expand_free_popcorn_run",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792525747854,
+      "tag": "0035_expand_free_tier_launch_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792581711151,
+      "tag": "0036_expand_free_account_stamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792591030194,
+      "tag": "0037_expand_free_analysis_run",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792678497235,
+      "tag": "0038_expand_offer_template",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792721090907,
+      "tag": "0039_expand_outside_acceptance",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792722000000,
+      "tag": "0040_expand_offer_choice",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792726434113,
+      "tag": "0041_expand_signature_slot",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793016772588,
+      "tag": "0042_expand_long_file_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1793083431022,
+      "tag": "0043_expand_presigned_signature",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793113352869,
+      "tag": "0044_expand_chunk_conversation_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793788484451,
+      "tag": "0045_expand_pricing_enquiry_forward",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793788485451,
+      "tag": "0046_expand_ai_spend",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793788486451,
+      "tag": "0047_expand_ai_spend_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793788487451,
+      "tag": "0048_expand_ai_recording_stop",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793788488451,
+      "tag": "0049_expand_retire_free_counts",
+      "breakpoints": true
     }
   ]
 }

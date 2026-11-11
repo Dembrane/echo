@@ -129,33 +129,48 @@ export async function hasSession(): Promise<boolean> {
 }
 
 /**
- * After a sign-in: whether the account is signed in on another browser, in which case the
- * new session is held until replaceOtherSessions, and since when. An API that cannot say
- * reads as not held, so sign-in is never blocked by this check.
+ * A selectable active device, without bearer tokens, raw user agents or network addresses.
  */
-export async function otherSessions(): Promise<{
-	held: boolean;
-	since: string | null;
-}> {
-	try {
-		const res = await fetch(`${AUTH}/other-sessions`, {
-			credentials: "include",
-			headers: { "x-device-id": deviceId() },
-		});
-		if (!res.ok) return { held: false, since: null };
-		const data = await res.json();
-		return {
-			held: data?.held === true,
-			since: typeof data?.since === "string" ? data.since : null,
-		};
-	} catch {
-		return { held: false, since: null };
-	}
+export interface OtherDevice {
+	id: string;
+	browser: string | null;
+	platform: string | null;
+	lastActiveAt: string;
 }
 
-/** Signs the account out everywhere else and completes the held sign-in on this browser. */
-export async function replaceOtherSessions(): Promise<void> {
-	await post("/other-sessions/replace", {});
+export interface OtherSessionsState {
+	held: boolean;
+	since: string | null;
+	devices: OtherDevice[];
+}
+
+export async function otherSessions(): Promise<OtherSessionsState> {
+	const res = await fetch(`${AUTH}/other-sessions`, {
+		credentials: "include",
+		headers: { "x-device-id": deviceId() },
+	});
+	if (!res.ok)
+		throw new AuthError(
+			"Could not load signed-in devices",
+			"INTERNAL_SERVER_ERROR",
+		);
+	const data = await res.json();
+	if (!Array.isArray(data?.devices))
+		throw new AuthError(
+			"Could not load signed-in devices",
+			"INTERNAL_SERVER_ERROR",
+		);
+	return {
+		devices: data.devices,
+		held: data?.held === true,
+		since: typeof data?.since === "string" ? data.since : null,
+	};
+}
+
+/** Signs out one selected device and completes the held sign-in on this browser. */
+export async function replaceOtherDevice(sessionId: string): Promise<void> {
+	// A distinct endpoint prevents an older server from interpreting this as "replace all".
+	await post("/other-sessions/replace-device", { sessionId });
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {

@@ -19,6 +19,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { useParticipantProjectById } from "../../hooks";
+import { AiUnavailableText, isAiUnavailableError } from "../AiUnavailable";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {
 	useGenerateVerificationArtefactMutation,
@@ -61,6 +62,9 @@ export const VerifySelection = () => {
 	const generateArtefactMutation = useGenerateVerificationArtefactMutation();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
+	const [aiRefused, setAiRefused] = useState(false);
+	const aiUnavailable =
+		aiRefused || projectQuery.data?.is_ai_available === false;
 
 	const projectLanguage = projectQuery.data?.language ?? "en";
 	const { iso639_1: uiLanguageIso } = useLanguage();
@@ -143,9 +147,13 @@ export const VerifySelection = () => {
 				return;
 			}
 
-			console.error("error generating verification artefact", error);
-			const label = getOptionLabel(topicKey);
-			toast.error(t`Failed to generate ${label}. Please try again.`);
+			if (isAiUnavailableError(error)) {
+				setAiRefused(true);
+			} else {
+				console.error("error generating verification artefact", error);
+				const label = getOptionLabel(topicKey);
+				toast.error(t`Failed to generate ${label}. Please try again.`);
+			}
 
 			setInstructionTopicKey(null);
 			setSelectedOption(null);
@@ -164,7 +172,7 @@ export const VerifySelection = () => {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: handleGenerationFlow is intentionally excluded; auto-skip should only react to data/route changes, not function-identity changes.
 	useEffect(() => {
-		if (hasAutoTriedSingle) return;
+		if (hasAutoTriedSingle || aiUnavailable) return;
 		if (!isLoading && !showInstructions && singleTopicKey && conversationId) {
 			setHasAutoTriedSingle(true);
 			handleGenerationFlow(singleTopicKey);
@@ -175,10 +183,11 @@ export const VerifySelection = () => {
 		singleTopicKey,
 		conversationId,
 		showInstructions,
+		aiUnavailable,
 	]);
 
 	const handleNext = () => {
-		if (!selectedOption || !conversationId) return;
+		if (!selectedOption || !conversationId || aiUnavailable) return;
 
 		handleGenerationFlow(selectedOption);
 	};
@@ -204,7 +213,10 @@ export const VerifySelection = () => {
 
 	if (
 		isLoading ||
-		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
+		(singleTopicKey &&
+			!showInstructions &&
+			!hasAutoTriedSingle &&
+			!aiUnavailable)
 	) {
 		return (
 			<Stack justify="center" className="h-full">
@@ -270,6 +282,8 @@ export const VerifySelection = () => {
 						</UnstyledButton>
 					))}
 				</Group>
+
+				{aiUnavailable && <AiUnavailableText />}
 			</Stack>
 
 			{/* Next button */}
@@ -279,7 +293,7 @@ export const VerifySelection = () => {
 				onClick={handleNext}
 				className="w-full"
 				rightSection={<ArrowRightIcon size={20} />}
-				disabled={!selectedOption}
+				disabled={!selectedOption || aiUnavailable}
 				{...testId("portal-verify-selection-next-button")}
 			>
 				<Trans id="participant.verify.selection.button.next">Continue</Trans>

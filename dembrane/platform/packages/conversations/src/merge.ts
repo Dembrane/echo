@@ -1,9 +1,10 @@
-import { AudioError, fileFormatOf, type MediaSource } from "@dembrane/audio";
+import { AudioError, fileFormatOf, type MediaSource, type MergeResult } from "@dembrane/audio";
 import { BadRequestError, type ErrorCode, NotFoundError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { asc, eq } from "drizzle-orm";
 import { sanitizeFilenameComponent } from "./audio-urls";
 import type { ConversationsDeps } from "./deps";
+import { FREE_LIMIT_SKIPPED } from "./free-audio";
 
 const { conversation, conversation_chunk } = schema;
 
@@ -31,7 +32,7 @@ export async function mergeConversationAudio(
   d: MergeDeps,
   conversationId: string,
   run: string,
-): Promise<{ path: string; duration: number }> {
+): Promise<{ path: string; duration: number; used: string[] }> {
   const chunks = await d.db
     .select({
       id: conversation_chunk.id,
@@ -43,13 +44,16 @@ export async function mergeConversationAudio(
     .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id))
     .limit(1000);
   if (!chunks.length) throw new NotFoundError("conversation.not_found");
-  const paths = chunks
-    .map((c) => c.path)
-    .filter((p): p is string => Boolean(p?.startsWith("http")));
+  // A chunk the free limit refused stays out of the recording and every transcript of it.
+  const audible = chunks.filter(
+    (c): c is typeof c & { path: string } =>
+      Boolean(c.path?.startsWith("http")) && c.error !== FREE_LIMIT_SKIPPED,
+  );
+  const paths = audible.map((c) => c.path);
   if (!paths.length) throw new NoContent("conversation.no_content");
 
   const key = `audio-conversations/merged-${sanitizeFilenameComponent(conversationId)}-${run}.mp3`;
-  let merged: { duration: number };
+  let merged: MergeResult;
   try {
     const sources: MediaSource[] = paths.map((p) => {
       const k = d.audioUrls.keyOf(p);
@@ -87,5 +91,9 @@ export async function mergeConversationAudio(
       updated_at: d.now().toISOString(),
     })
     .where(eq(conversation.id, conversationId));
-  return { path, duration: merged.duration };
+  // The chunks whose audio is in the merged file, in its order: a skipped file leaves no gap,
+  // so times built from the chunks follow this list, not the chunk list.
+  const skipped = new Set(merged.skipped.map((x) => x.name));
+  const used = audible.filter((c) => !skipped.has(d.audioUrls.keyOf(c.path))).map((c) => c.id);
+  return { path, duration: merged.duration, used };
 }

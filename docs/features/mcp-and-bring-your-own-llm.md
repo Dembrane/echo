@@ -83,8 +83,7 @@ These are the tools an assistant gets. Their names show up in your assistant and
 | `dembrane_report_issue` | Files a support ticket in your name |
 | `dembrane_request_tool` | Asks the dembrane team for a tool that does not exist yet |
 
-A conversation that is locked by the free plan's one hour returns no transcript text here
-either.
+The free plan does not hide transcripts. Every tool returns the same text on every plan.
 
 ## Bring your own language model
 

@@ -40,6 +40,14 @@ export class SendGridMailer implements Mailer {
           ...(msg.text ? [{ type: "text/plain", value: msg.text }] : []),
           { type: "text/html", value: msg.html },
         ],
+        ...(msg.attachments?.length && {
+          attachments: msg.attachments.map((a) => ({
+            content: Buffer.from(a.content).toString("base64"),
+            filename: a.filename,
+            type: a.contentType,
+            disposition: "attachment",
+          })),
+        }),
         ...(msg.tags?.length && { categories: msg.tags.slice(0, 10) }),
       }),
     });

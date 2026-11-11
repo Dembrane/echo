@@ -11,14 +11,17 @@ import {
 	MoveHistory,
 	type MoveHistoryEntry,
 } from "@/components/common/MoveHistory";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
+import { isAdminRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { useMoveProjectMutation } from "./hooks";
 import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
 export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
-	const { workspaces, setWorkspace } = useWorkspace();
+	const { workspace, workspaces, setWorkspace } = useWorkspace();
 	const { workspaceId } = useParams();
 	const moveProjectMutation = useMoveProjectMutation();
 	const navigate = useI18nNavigate();
@@ -28,6 +31,7 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 	);
 	const [isConfirmOpen, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	// Only workspaces the user administers can receive a project, the current
 	// one is never a target, AND the move must stay within one billing /
@@ -80,8 +84,12 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 			// project to its new home, then land on the project there.
 			setWorkspace(targetWorkspaceId);
 			navigate(`/w/${targetWorkspaceId}/projects/${project.id}/home`);
-		} catch (_error) {
-			// toast handled in mutation hook
+		} catch (error) {
+			// Other failures are toasted in the mutation hook.
+			if (isFreeTierLimitError(error) === "projects") {
+				closeConfirm();
+				upgradeHandlers.open();
+			}
 		}
 	};
 
@@ -144,6 +152,16 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 				confirmLabel={<Trans>Move project</Trans>}
 				loading={moveProjectMutation.isPending}
 				onConfirm={handleMove}
+			/>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdminRole(workspace?.role)}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="project_cap"
 			/>
 		</ProjectSettingsSection>
 	);

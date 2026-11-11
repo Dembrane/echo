@@ -21,6 +21,12 @@ import {
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner";
+import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import {
@@ -243,6 +249,10 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const mapQuery = useProjectMapSummary(offline ? "" : projectId);
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
+	const aiWall = useAiBudgetWall();
+	const { applies: allowanceApplies } = useAllowanceApplies(
+		offline ? "" : projectId,
+	);
 
 	const projectResultToken = mapQuery.data?.current
 		? resultToken(mapQuery.data.current)
@@ -451,6 +461,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	const factCheck = useMapFactCheck({
 		initialStates: fixtureData?.factChecks,
 		offline,
+		onRefused: aiWall.openFor,
 		readOnly,
 		resultId,
 	});
@@ -688,7 +699,13 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							readOnly={readOnly}
 							isStarting={generate.isPending}
 							nothingToRead={nothingToRead}
-							onGenerate={() => generate.mutate()}
+							onGenerate={() =>
+								generate.mutate(undefined, {
+									onError: (error) => {
+										aiWall.openFor(error);
+									},
+								})
+							}
 						/>
 					)}
 					{graph && argumentCount > 0 && (
@@ -723,6 +740,24 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					)}
 				</Group>
 			</Group>
+
+			{!offline && allowanceApplies && linkWorkspaceId && (
+				<div className="px-4 pb-2 empty:hidden md:px-6">
+					<FreeAllowanceBanner
+						workspaceId={linkWorkspaceId}
+						feature="ai"
+						action="map"
+					/>
+				</div>
+			)}
+			{!offline && linkWorkspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="map"
+					workspaceId={linkWorkspaceId}
+					projectId={projectId}
+				/>
+			)}
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||

@@ -8,7 +8,6 @@ import {
 	Group,
 	Menu,
 	MultiSelect,
-	Pagination,
 	Paper,
 	ScrollArea,
 	Select,
@@ -36,7 +35,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
@@ -97,10 +96,10 @@ const toSelectData = (options: AuditLogOption[]) =>
 export const AuditLogsCard = () => {
 	const [selectedActions, setSelectedActions] = useState<string[]>([]);
 	const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-	const [pagination, setPagination] = useState({
-		pageIndex: 0,
-		pageSize: DEFAULT_PAGE_SIZE,
-	});
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+	// One cursor per page visited, the first page has none; going back drops the last.
+	const [cursors, setCursors] = useState<(number | null)[]>([null]);
+	const pageIndex = cursors.length - 1;
 	const [showIps, setShowIps] = useState(false);
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(
 		() => new Set(),
@@ -147,9 +146,9 @@ export const AuditLogsCard = () => {
 
 	const { data, error, isError, isFetching, isLoading, refetch } =
 		useAuditLogsQuery({
+			cursor: cursors[pageIndex] ?? null,
 			filters,
-			page: pagination.pageIndex,
-			pageSize: pagination.pageSize,
+			pageSize,
 			sortDirection,
 		});
 
@@ -158,7 +157,8 @@ export const AuditLogsCard = () => {
 
 	const exportMutation = useAuditLogsExport();
 
-	const totalItems = data?.total ?? 0;
+	const hasMore = data?.has_more ?? false;
+	const nextCursor = data?.next_cursor ?? null;
 	const tableData = data?.items ?? [];
 	const displayedRows = useMemo(() => {
 		if (tableData.length <= 1) return tableData;
@@ -168,7 +168,7 @@ export const AuditLogsCard = () => {
 			return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
 		});
 	}, [tableData, sortDirection]);
-	const totalPages = Math.max(1, Math.ceil(totalItems / pagination.pageSize));
+	const goToFirstPage = useCallback(() => setCursors([null]), []);
 
 	const columns = useMemo<ColumnDef<AuditLogEntry>[]>(
 		() => [
@@ -281,14 +281,7 @@ export const AuditLogsCard = () => {
 		columns,
 		data: displayedRows,
 		getCoreRowModel: getCoreRowModel(),
-		manualPagination: true,
 		manualSorting: true,
-		onPaginationChange: (updater) => {
-			setPagination((prev) => {
-				const next = typeof updater === "function" ? updater(prev) : updater;
-				return next;
-			});
-		},
 		onSortingChange: (updater) => {
 			setSorting((prev) => {
 				const updated = typeof updater === "function" ? updater(prev) : updater;
@@ -298,11 +291,9 @@ export const AuditLogsCard = () => {
 				}
 				return next;
 			});
-			setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+			goToFirstPage();
 		},
-		pageCount: totalPages,
 		state: {
-			pagination,
 			sorting,
 		},
 	});
@@ -311,33 +302,27 @@ export const AuditLogsCard = () => {
 		(value: string | null) => {
 			if (!value) return;
 			const next = Number(value);
-			table.setPageSize(next);
+			setPageSize(next);
+			goToFirstPage();
 		},
-		[table],
+		[goToFirstPage],
 	);
 
 	const handleActionsChange = useCallback(
 		(value: string[]) => {
 			setSelectedActions(value);
-			table.setPageIndex(0);
+			goToFirstPage();
 		},
-		[table],
+		[goToFirstPage],
 	);
 
 	const handleCollectionsChange = useCallback(
 		(value: string[]) => {
 			setSelectedCollections(value);
-			table.setPageIndex(0);
+			goToFirstPage();
 		},
-		[table],
+		[goToFirstPage],
 	);
-
-	useEffect(() => {
-		const maxPageIndex = Math.max(0, totalPages - 1);
-		if (pagination.pageIndex > maxPageIndex) {
-			setPagination((prev) => ({ ...prev, pageIndex: maxPageIndex }));
-		}
-	}, [pagination.pageIndex, totalPages]);
 
 	const handleExport = async (format: AuditLogExportFormat) => {
 		try {
@@ -363,12 +348,8 @@ export const AuditLogsCard = () => {
 	};
 
 	const isEmpty = !isLoading && displayedRows.length === 0;
-	const displayFrom =
-		totalItems === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
-	const displayTo = Math.min(
-		totalItems,
-		(pagination.pageIndex + 1) * pagination.pageSize,
-	);
+	const displayFrom = displayedRows.length === 0 ? 0 : pageIndex * pageSize + 1;
+	const displayTo = pageIndex * pageSize + displayedRows.length;
 
 	return (
 		<Paper
@@ -612,29 +593,41 @@ export const AuditLogsCard = () => {
 						<Select
 							label={t`Rows per page`}
 							data={PAGE_SIZE_OPTIONS}
-							value={pagination.pageSize.toString()}
+							value={pageSize.toString()}
 							onChange={handlePageSizeChange}
 							allowDeselect={false}
 							className="w-[140px]"
 						/>
 
 						<Text size="sm" c="dimmed">
-							{displayedRows.length === 0 && pagination.pageIndex === 0 ? (
+							{displayedRows.length === 0 && pageIndex === 0 ? (
 								<Trans>No results</Trans>
 							) : (
 								<Trans>
-									Showing {displayFrom}–{displayTo} of {totalItems} entries
+									Showing {displayFrom}–{displayTo}
 								</Trans>
 							)}
 						</Text>
 					</Group>
 
-					<Pagination
-						total={totalPages}
-						value={pagination.pageIndex + 1}
-						onChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-						disabled={totalPages <= 1}
-					/>
+					<Group gap="xs">
+						<Button
+							variant="default"
+							size="xs"
+							disabled={pageIndex === 0}
+							onClick={() => setCursors((prev) => prev.slice(0, -1))}
+						>
+							<Trans>Previous</Trans>
+						</Button>
+						<Button
+							variant="default"
+							size="xs"
+							disabled={!hasMore || nextCursor === null || isFetching}
+							onClick={() => setCursors((prev) => [...prev, nextCursor])}
+						>
+							<Trans>Next</Trans>
+						</Button>
+					</Group>
 				</Group>
 			</Stack>
 		</Paper>

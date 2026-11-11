@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { queryTokens, snippet } from "../src/data/conversations";
-import { conversationLocked, stampLocked } from "../src/data/locks";
+import type { DataDeps } from "../src/data/deps";
+import { conversationLocked, stampLocked, workspaceOverCapActive } from "../src/data/locks";
 import { reportTitle } from "../src/data/project";
 
 describe("keyword search", () => {
@@ -25,16 +26,25 @@ describe("keyword search", () => {
 });
 
 describe("free tier lock", () => {
-  test("the over-cap stamp locks only on an hour-capped tier", () => {
-    expect(stampLocked(true, "free")).toBe(true);
+  test("the retired over-cap stamp never locks", () => {
+    expect(stampLocked(true, "free")).toBe(false);
     expect(stampLocked(true, "changemaker")).toBe(false);
     expect(stampLocked(true, null)).toBe(false);
     expect(stampLocked(false, "free")).toBe(false);
   });
 
-  test("a recording conversation locks on the live cap", () => {
-    expect(conversationLocked({ is_over_cap: false, is_finished: false }, "free", true)).toBe(true);
+  test("nothing locks, stamped or recording", () => {
+    expect(conversationLocked({ is_over_cap: true, is_finished: true }, "free", false)).toBe(false);
+    expect(conversationLocked({ is_over_cap: false, is_finished: false }, "free", true)).toBe(
+      false,
+    );
     expect(conversationLocked({ is_over_cap: false, is_finished: true }, "free", true)).toBe(false);
+  });
+
+  test("the lifetime hour lock is retired: no workspace is over the cap", async () => {
+    const client = async () => [{ seconds: 99 * 3600 }];
+    const d = { db: { $client: client } } as unknown as DataDeps;
+    expect(await workspaceOverCapActive(d, "w", "free")).toBe(false);
   });
 });
 

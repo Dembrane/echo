@@ -4,7 +4,7 @@ import { PDFDocument, type PDFFont, type PDFImage, type PDFPage, PDFString, rgb 
 import displayTtf from "../assets/fonts/DMSans-Display.ttf" with { type: "file" };
 import textTtf from "../assets/fonts/DMSans-Text.ttf" with { type: "file" };
 import wordmarkPng from "../assets/offer/wordmark.png" with { type: "file" };
-import type { AcceptanceField, ClauseLine, OfferContent, OfferLayout } from "./offer";
+import type { AcceptanceField, ClauseLine, OfferContent, OfferGroup, OfferLayout } from "./offer";
 import { layoutOffer } from "./offer";
 import type { PlacedField, RenderedPdf } from "./pdf";
 
@@ -14,9 +14,9 @@ import type { PlacedField, RenderedPdf } from "./pdf";
  * language choose the words (offer.ts), never the layout.
  *
  * Page one reads top to bottom: the wordmark, what this is and its title, the facts in a
- * ruled row (reference, date, valid until), the greeting, the lines table ruled above and
- * below with the numbers right-aligned, and subtotal, VAT and total with the total the
- * largest number on the page. The acceptance starts its own page: labelled lines to write
+ * ruled row (reference, date, valid until, and the customer's own reference when given),
+ * the greeting, the lines table ruled above and below with the numbers right-aligned, and
+ * subtotal, VAT and total with the total the largest number on the page. The acceptance starts its own page: labelled lines to write
  * on, which become the fields, then the incorporation clause. dembrane's company details
  * and the page number sit in the footer of every page.
  *
@@ -447,8 +447,51 @@ class Sheet {
       label: field.label,
       required: field.required,
       key: field.key,
+      ...(field.role && { role: field.role }),
     });
     return lineY;
+  }
+
+  /**
+   * A blank already filled in: its label, the value on the line, and the line. No field: the
+   * value is part of the document as sent. Returns the line's position, as `blank` does.
+   */
+  filled(label: string, value: string, x: number, width: number, top: number, room: number) {
+    this.at(label, x, top, { s: T.caption, c: MUTED });
+    const lineY = top + room;
+    // Where and how large a signature stamps a value, so both signatures read alike.
+    this.at(value, x + 2, lineY - 2.5 - ASCENT * 11, { s: 11, c: TEXT });
+    this.rule(x, x + width, lineY, CONTROL);
+    return lineY;
+  }
+
+  /**
+   * A box to tick with its label beside it, the field on the box. Returns the bottom of the
+   * line.
+   */
+  tick(field: AcceptanceField, x: number, top: number): number {
+    const SIZE = 12;
+    this.page.drawRectangle({
+      x,
+      y: PAGE_H - top - SIZE,
+      width: SIZE,
+      height: SIZE,
+      borderColor: CONTROL,
+      borderWidth: STROKE * 1.5,
+    });
+    this.at(field.label, x + SIZE + 8, top + (SIZE - T.body) / 2 - 1, { s: T.body, c: TEXT });
+    this.fields.push({
+      page: this.pageNumber,
+      x: x / PAGE_W,
+      y: top / PAGE_H,
+      width: SIZE / PAGE_W,
+      height: SIZE / PAGE_H,
+      kind: field.kind,
+      label: field.label,
+      required: field.required,
+      key: field.key,
+    });
+    return top + SIZE;
   }
 }
 
@@ -482,21 +525,47 @@ function heading(s: Sheet, kind: string | null, title: string, size: number) {
   s.para({ runs: runs(title, { s: size, c: TEXT }), leading: brand.type.leading.title });
 }
 
-/** The facts in one row ruled above and below: label over value, in equal columns. */
+/**
+ * The facts ruled above and below: label over value, in equal columns while every one fits
+ * its column. When one does not (a long customer reference), each column takes what it needs
+ * plus an equal share of what is left, and facts that still do not fit go to a second row.
+ */
 function facts(s: Sheet, l: OfferLayout) {
   s.gap(20);
   const height = 44;
-  s.room(height);
+  const GAP = 12;
+  const need = ([label, value]: readonly [string, string]) =>
+    Math.max(s.width(label, CAPTION.s), s.width(value, BODY.s)) + GAP;
+  const rows: (readonly [string, string])[][] = [[]];
+  let used = 0;
+  for (const f of l.facts) {
+    const row = rows[rows.length - 1] as (readonly [string, string])[];
+    if (row.length && used + need(f) > CONTENT_W) {
+      rows.push([f]);
+      used = need(f);
+    } else {
+      row.push(f);
+      used += need(f);
+    }
+  }
+  s.room(height * rows.length);
   const top = s.y;
   s.rule(MARGIN, RIGHT, top);
-  const col = CONTENT_W / l.facts.length;
-  l.facts.forEach(([label, value], i) => {
-    const x = MARGIN + i * col;
-    s.at(label, x, top + 9, CAPTION);
-    s.at(value, x, top + 23, BODY);
+  rows.forEach((row, r) => {
+    const y = top + r * height;
+    if (r) s.rule(MARGIN, RIGHT, y);
+    const equal = CONTENT_W / row.length;
+    const fits = row.every((f) => need(f) <= equal);
+    const spare = CONTENT_W - row.reduce((sum, f) => sum + need(f), 0);
+    let x = MARGIN;
+    for (const f of row) {
+      s.at(f[0], x, y + 9, CAPTION);
+      s.at(f[1], x, y + 23, BODY);
+      x += fits ? equal : need(f) + spare / row.length;
+    }
   });
-  s.rule(MARGIN, RIGHT, top + height);
-  s.y = top + height;
+  s.rule(MARGIN, RIGHT, top + height * rows.length);
+  s.y = top + height * rows.length;
   s.done(28);
 }
 
@@ -534,28 +603,54 @@ function lines(s: Sheet, l: OfferLayout) {
 
   s.gap(24);
   s.room(80);
-  s.rule(MARGIN, RIGHT, s.y, TEXT);
-  row(
-    l.columns.map((c, i) => [
-      { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
-    ]),
-  );
-  for (const r of l.rows) {
-    row([
-      [
-        text(r.description),
-        ...r.bullets.map(
-          (b): Para => ({
-            runs: runs(b, { ...BODY, c: MUTED }),
-            leading: BODY_LEADING,
-            left: 11,
-            marker: { at: 1, draw: { disc: T.body, c: MUTED } },
-          }),
-        ),
-      ],
-      ...r.cells.map((c): Para[] => [text(c, { align: "right" })]),
-    ]);
+  // Only options to pick from: no table here, they follow with their own.
+  if (l.groups.length) {
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
+    );
   }
+  const cells = (r: OfferLayout["rows"][number]): Para[][] => [
+    [
+      text(r.description),
+      ...r.bullets.map(
+        (b): Para => ({
+          runs: runs(b, { ...BODY, c: MUTED }),
+          leading: BODY_LEADING,
+          left: 11,
+          marker: { at: 1, draw: { disc: T.body, c: MUTED } },
+        }),
+      ),
+    ],
+    ...r.cells.map((c): Para[] => [text(c, { align: "right" })]),
+  ];
+  // A section: its heading across the table, a step up, then its lines and, ruled like a
+  // row, its subtotal in the amount column.
+  const group = (g: OfferGroup) => {
+    if (g.title) {
+      const laid = s.lay({ runs: runs(g.title, { s: T.lead, c: TEXT }), leading: 1.3 }, CONTENT_W);
+      const height = 16 + laid.height + 6;
+      // The heading never ends a page alone: room for it and a line under it.
+      if (s.y + height + 40 > BODY_BOTTOM) {
+        s.newPage();
+        s.rule(MARGIN, RIGHT, s.y, TEXT);
+      }
+      s.drawLaid(laid, MARGIN, s.y + 16);
+      s.y += height;
+      s.rule(MARGIN, RIGHT, s.y);
+    }
+    for (const r of g.rows) row(cells(r));
+    if (g.subtotal)
+      row([
+        [{ runs: runs(g.subtotal[0], { ...BODY, c: MUTED }), leading: BODY_LEADING }],
+        [],
+        [],
+        [text(g.subtotal[1], { align: "right" })],
+      ]);
+  };
+  for (const g of l.groups) group(g);
 
   // Subtotal and VAT, then the total over a rule in the text colour, one step up.
   const labelX = (xs[1] as number) + GUTTER / 2;
@@ -580,11 +675,48 @@ function lines(s: Sheet, l: OfferLayout) {
     }
   });
   // Without VAT, the reason sits under the total, as the invoice puts it.
-  if (l.vatNote)
-    s.para(
-      { runs: runs(l.vatNote, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
-      { x: labelX, width: RIGHT - labelX },
+  for (const note of [l.vatNote, l.chargeNote])
+    if (note)
+      s.para(
+        { runs: runs(note, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
+        { x: labelX, width: RIGHT - labelX },
+      );
+
+  // Optional lines apart, under their own heading and table, after the total they are not in.
+  if (l.optional) {
+    s.gap(28);
+    s.room(110);
+    s.para({ runs: runs(l.optional.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 2 });
+    s.para({ runs: runs(l.optional.note, CAPTION), leading: 1.4, after: 10 });
+    s.gap(0);
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
     );
+    for (const g of l.optional.groups) group(g);
+  }
+
+  // The options to pick from: each under its name, with its amount and, when exactly one is
+  // picked, the total the offer comes to with it. The ticks are in the acceptance.
+  if (l.choices) {
+    s.gap(28);
+    s.room(130);
+    s.para({ runs: runs(l.choices.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 2 });
+    s.para({ runs: runs(l.choices.note, CAPTION), leading: 1.4, after: 10 });
+    s.gap(0);
+    s.rule(MARGIN, RIGHT, s.y, TEXT);
+    row(
+      l.columns.map((c, i) => [
+        { runs: runs(c, CAPTION), leading: 1.4, align: i === 0 ? "left" : "right" },
+      ]),
+    );
+    for (const o of l.choices.options) {
+      group({ title: o.label, rows: o.rows, subtotal: o.amount });
+      if (o.total) row([[text(o.total[0])], [], [], [text(o.total[1], { align: "right" })]]);
+    }
+  }
   s.done(36);
 }
 
@@ -596,6 +728,15 @@ function acceptance(s: Sheet, l: OfferLayout) {
   s.para(text(l.acceptanceIntro, { before: 14 }));
   s.para(text(l.acceptance.statement, { before: 6 }));
   s.gap(18);
+  if (l.choices) {
+    s.room(30 + 22 * l.choices.fields.length);
+    s.para({ runs: runs(l.choices.acceptanceTitle, CAPTION), leading: 1.4, after: 8 });
+    for (const field of l.choices.fields) {
+      s.room(22);
+      s.y = s.tick(field, MARGIN, s.y) + 10;
+    }
+    s.y += 8;
+  }
   for (const field of l.acceptance.fields) {
     s.room(36);
     s.y = s.blank(field, MARGIN, CONTENT_W, s.y, 26) + 11;
@@ -612,6 +753,45 @@ function acceptance(s: Sheet, l: OfferLayout) {
     bottom = s.blank(signature, x, RIGHT - x, top, 48);
   }
   s.y = bottom;
+  // A second signature under the first: another signatory of theirs, or dembrane's.
+  const second = l.second;
+  if (second) {
+    s.gap(26);
+    s.room(80 + 36 * (second.printed.length + second.fields.length));
+    s.para({ runs: runs(second.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+    for (const [label, value] of second.printed) {
+      s.at(label, MARGIN, s.y, CAPTION);
+      s.at(value, MARGIN, s.y + 13, BODY);
+      s.y += 34;
+    }
+    for (const field of second.fields) {
+      s.room(36);
+      s.y = s.blank(field, MARGIN, CONTENT_W, s.y, 26) + 11;
+    }
+    s.room(56);
+    const [sDate, sSignature] = second.signing;
+    const sTop = s.y;
+    let sBottom = sTop;
+    if (sDate) sBottom = s.blank(sDate, MARGIN, dateW, sTop, 48);
+    if (sSignature) {
+      const x = MARGIN + dateW + 24;
+      sBottom = s.blank(sSignature, x, RIGHT - x, sTop, 48);
+    }
+    s.y = sBottom;
+  }
+  // dembrane's signature, applied when the offer was sent: the same lines, filled in.
+  const signed = l.signed;
+  if (signed) {
+    s.gap(26);
+    s.room(80 + 37 * signed.printed.length + 56);
+    s.para({ runs: runs(signed.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+    for (const [label, value] of signed.printed)
+      s.y = s.filled(label, value, MARGIN, CONTENT_W, s.y, 26) + 11;
+    const top = s.y;
+    s.filled(signed.date[0], signed.date[1], MARGIN, dateW, top, 48);
+    const x = MARGIN + dateW + 24;
+    s.y = s.filled(signed.signature[0], signed.signature[1], x, RIGHT - x, top, 48);
+  }
   s.done(32);
 }
 
@@ -659,24 +839,69 @@ function clause(s: Sheet, l: OfferLayout) {
   for (const p of closing) s.para(small(p, { before: 6 }));
 }
 
+/**
+ * Who the invoice goes to when it is not the customer: under the totals, where the reader
+ * has just seen what is paid, a heading and the party one line each.
+ */
+function billing(s: Sheet, l: OfferLayout) {
+  if (!l.billTo) return;
+  s.room(40 + 16 * l.billTo.lines.length);
+  s.para({ runs: runs(l.billTo.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 4 });
+  for (const line of l.billTo.lines) s.para({ runs: runs(line, BODY), leading: BODY_LEADING });
+  s.done(36);
+}
+
+/**
+ * How an offer invoiced in parts is invoiced: a heading, then one ruled row per part with
+ * its name, when it falls due and its amount, right-aligned like the lines above.
+ */
+function parts(s: Sheet, l: OfferLayout) {
+  if (!l.parts) return;
+  const ROW = 22;
+  const whenX = MARGIN + 90;
+  s.room(40 + ROW * (l.parts.rows.length + 1));
+  s.para({ runs: runs(l.parts.title, { s: T.lead, c: TEXT }), leading: 1.3, after: 8 });
+  const [part, when, amount] = l.parts.columns;
+  s.rule(MARGIN, RIGHT, s.y, TEXT);
+  s.at(part, MARGIN, s.y + 7, CAPTION);
+  s.at(when, whenX, s.y + 7, CAPTION);
+  s.atRight(amount, RIGHT, s.y + 7, CAPTION);
+  s.y += ROW;
+  for (const [name, due, money] of l.parts.rows) {
+    s.room(ROW);
+    s.rule(MARGIN, RIGHT, s.y);
+    s.at(name, MARGIN, s.y + 6, BODY);
+    s.at(due, whenX, s.y + 6, BODY);
+    s.atRight(money, RIGHT, s.y + 6, BODY);
+    s.y += ROW;
+  }
+  s.rule(MARGIN, RIGHT, s.y);
+  s.done(36);
+}
+
 /** The one layout of an offer; `l` carries the words of its template and language. */
 function draw(s: Sheet, l: OfferLayout) {
   heading(s, l.kind, l.title, T.display);
   facts(s, l);
   s.para(text(l.greeting));
-  // An event offer's introduction has a heading as its second paragraph, a step up.
-  const [opening, ...rest] = l.intro;
-  s.para(text(opening ?? "", { before: 8 }));
-  if (rest.length) {
-    const [title, ...paragraphs] = rest;
-    s.para({ runs: runs(title ?? "", { s: T.lead, c: TEXT }), leading: 1.3, before: 18, after: 4 });
-    for (const p of paragraphs) s.para(text(p, { before: 6 }));
-  }
+  // A paragraph that starts with "## " is a heading, a step up, over the ones after it.
+  l.intro.forEach((p, i) => {
+    if (p.startsWith("## "))
+      s.para({
+        runs: runs(p.slice(3), { s: T.lead, c: TEXT }),
+        leading: 1.3,
+        before: 18,
+        after: 4,
+      });
+    else s.para(text(p, { before: i === 0 ? 8 : 6 }));
+  });
   lines(s, l);
+  billing(s, l);
+  parts(s, l);
   amendments(s, l);
+  // An empty line is the space above the sign-off ("Best regards," and the team).
   l.closing.forEach((line, i) => {
-    // A line's space above the sign-off ("Best regards," and the team).
-    s.para(text(line, { before: i === 1 ? 14 : 0 }));
+    if (line) s.para(text(line, { before: l.closing[i - 1] === "" ? 14 : 0 }));
   });
 
   // The acceptance starts its own page.

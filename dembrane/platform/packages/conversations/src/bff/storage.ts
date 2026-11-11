@@ -8,6 +8,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   max,
   notInArray,
@@ -15,11 +16,12 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm";
-import { isUuid, type Row } from "../storage";
+import { FINAL_GAVE_UP, isUuid, type Row } from "../storage";
 
 const {
   conversation,
   conversation_chunk,
+  conversation_record_transcript,
   conversation_project_tag,
   conversation_artifact,
   conversation_link,
@@ -419,13 +421,60 @@ export function bffStore(db: Db) {
 
     /** Chunks of one conversation with every column plus the `*` aliases. */
     async allChunks(conversationId: string): Promise<Row[]> {
-      const rows = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.conversation_id, conversationId))
-        .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id));
+      const rows = (
+        await db
+          .select()
+          .from(conversation_chunk)
+          .where(eq(conversation_chunk.conversation_id, conversationId))
+          .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id))
+      ).map(withoutPendingText);
       const aliases = await chunkAliases(rows.map((r) => r.id));
       return rows.map((r) => ({ ...directusRow(r), ...(aliases.get(r.id) ?? {}) }));
+    },
+
+    /** The final transcript people read, when the conversation has one that is still current. */
+    async recordTranscript(conversationId: string) {
+      const [row] = await db
+        .select({
+          provider: conversation_record_transcript.provider,
+          model: conversation_record_transcript.model,
+          text: conversation_record_transcript.text,
+          sentences: conversation_record_transcript.sentences,
+        })
+        .from(conversation_record_transcript)
+        .where(eq(conversation_record_transcript.conversation_id, conversationId))
+        .limit(1);
+      return row ?? null;
+    },
+
+    /** Whether the conversation has any recorded audio: only those get a final transcript. */
+    async hasAudio(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: conversation_chunk.id })
+        .from(conversation_chunk)
+        .where(
+          and(
+            eq(conversation_chunk.conversation_id, conversationId),
+            isNotNull(conversation_chunk.path),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
+    },
+
+    /** Whether the final transcript job ended without one, so the dashboard stops saying it is on its way. */
+    async finalGaveUp(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: processing_status.id })
+        .from(processing_status)
+        .where(
+          and(
+            eq(processing_status.conversation_id, conversationId),
+            eq(processing_status.event, FINAL_GAVE_UP),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
     },
 
     async chunkPage(
@@ -437,18 +486,20 @@ export function bffStore(db: Db) {
         fields: readonly string[];
       },
     ): Promise<Row[]> {
-      const rows = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.conversation_id, conversationId))
-        .orderBy(
-          opts.sort === "timestamp"
-            ? asc(conversation_chunk.timestamp)
-            : desc(conversation_chunk.timestamp),
-          asc(conversation_chunk.id),
-        )
-        .limit(opts.limit)
-        .offset(opts.offset);
+      const rows = (
+        await db
+          .select()
+          .from(conversation_chunk)
+          .where(eq(conversation_chunk.conversation_id, conversationId))
+          .orderBy(
+            opts.sort === "timestamp"
+              ? asc(conversation_chunk.timestamp)
+              : desc(conversation_chunk.timestamp),
+            asc(conversation_chunk.id),
+          )
+          .limit(opts.limit)
+          .offset(opts.offset)
+      ).map(withoutPendingText);
       const star = opts.fields.includes("*");
       const wanted = star
         ? [...CHUNK_ALIASES]
@@ -555,3 +606,9 @@ export function bffStore(db: Db) {
 }
 
 export type BffStore = ReturnType<typeof bffStore>;
+
+/** A chunk row for a reader: typed text still waiting to be redacted is never sent out. */
+function withoutPendingText<T extends { pending_text?: unknown }>(row: T): Omit<T, "pending_text"> {
+  const { pending_text: _pending, ...rest } = row;
+  return rest;
+}

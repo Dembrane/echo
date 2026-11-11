@@ -30,6 +30,7 @@ import { InputModal } from "@/components/common/InputModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ConversationsMiniList } from "@/components/conversation/ConversationsMiniList";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AudioUsedUpNotice } from "@/components/project/AudioUsedUpNotice";
 import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
@@ -38,6 +39,7 @@ import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
 import { ProjectQRCode } from "@/components/project/ProjectQRCode";
+import { RecordingPausedNotice } from "@/components/project/RecordingPausedNotice";
 import { SampleProjectNotice } from "@/components/project/SampleProjectNotice";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { reportStatusLabel } from "@/components/sharing/StatusLine";
@@ -165,6 +167,15 @@ export const ProjectHomeRoute = () => {
 				</Stack>
 
 				{isSample && <SampleProjectNotice />}
+				{!isSample && projectId && workspaceId && (
+					<AudioUsedUpNotice projectId={projectId} workspaceId={workspaceId} />
+				)}
+				{!isSample && projectId && workspaceId && (
+					<RecordingPausedNotice
+						projectId={projectId}
+						workspaceId={workspaceId}
+					/>
+				)}
 
 				<Grid gutter="xl">
 					<Grid.Col span={{ base: 12, md: 8 }}>

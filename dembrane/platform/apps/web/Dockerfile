@@ -13,6 +13,13 @@ COPY frontend/ ./
 # moves out of dist so the web server never serves it.
 RUN pnpm exec vite build --manifest && mkdir -p /f/meta && mv dist/.vite /f/meta/.vite
 
+# A .br and .gz copy of each text file, made once here so the server never compresses per
+# request. Its own stage, so it reruns only when the frontend or the script changes.
+FROM oven/bun:1.4 AS compressed
+COPY platform/apps/web/src/precompress.ts /precompress.ts
+COPY --from=frontend /f/dist /dist
+RUN bun /precompress.ts /dist
+
 FROM oven/bun:1.4 AS server
 WORKDIR /src
 COPY platform/ ./
@@ -21,7 +28,7 @@ RUN bun build apps/web/src/main.ts --compile --minify --sourcemap --target=bun-l
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=server /out/web /app/web
-COPY --from=frontend /f/dist /app/dist
+COPY --from=compressed /dist /app/dist
 COPY --from=frontend /f/meta /app/build-meta
 ARG RELEASE=dev
 ENV APP_RELEASE=${RELEASE} WEB_DIST_DIR=/app/dist NODE_ENV=production

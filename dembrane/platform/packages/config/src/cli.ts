@@ -44,11 +44,20 @@ async function unreadKeys(root: string): Promise<string[]> {
     if (f.startsWith("packages/config/")) continue;
     code += await Bun.file(`${root}/${f}`).text();
   }
+  // These sections are handed whole to a typed reader, which names each key it reads.
+  const readers: Record<string, string> = {
+    llm: await Bun.file(`${root}/packages/llm/src/settings.ts`).text(),
+    mail: await Bun.file(`${root}/packages/mail/src/factory.ts`).text(),
+  };
+  const readByReader = (path: string) => {
+    const [section = "", leaf = ""] = path.split(".");
+    return readers[section]?.includes(`readonly ${leaf}`) ?? false;
+  };
   // Public keys are read by browsers through /config.json, so they count as read.
   return [...walk(schema)]
     .filter(([, k]) => k.meta.visibility !== "public")
     .map(([path]) => path)
-    .filter((p) => !code.includes(`.${p}`));
+    .filter((p) => !code.includes(`.${p}`) && !readByReader(p));
 }
 
 const [cmd, a, b] = process.argv.slice(2);

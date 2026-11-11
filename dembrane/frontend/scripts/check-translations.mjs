@@ -46,6 +46,28 @@ if (changed) {
 }
 console.log(`Catalogs are up to date (${dirs.join(", ")}).`);
 
+// Merge conflict markers resolved into a catalog end up inside translations, where users
+// read them ("Valence<<<<<<< HEAD"), and extract keeps them as they are.
+const marked = [];
+for (const c of catalogs)
+	for (const locale of locales) {
+		const file = c.file(locale);
+		if (!existsSync(file)) continue;
+		readFileSync(file, "utf8")
+			.split("\n")
+			.forEach((line, i) => {
+				if (/^(<<<<<<<|=======|>>>>>>>)|(<<<<<<< |>>>>>>> |"=======|=======")/.test(line))
+					marked.push(`${path.relative(root, file)}:${i + 1}: ${line.slice(0, 120)}`);
+			});
+	}
+if (marked.length) {
+	console.log(marked.join("\n"));
+	console.log(
+		`${inCI ? "::error::" : ""}Merge conflict markers are in the catalogs; remove them from the strings above.`,
+	);
+	process.exit(1);
+}
+
 // 2. Missing translations.
 // Reads the live entries of a lingui .po file into Map<key, { text, ref }>. Obsolete
 // entries (#~) are skipped; msgctxt, when present, is part of the key.

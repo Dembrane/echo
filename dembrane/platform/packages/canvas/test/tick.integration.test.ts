@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
 import { createDb, migrate } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { installQueueSchema } from "@dembrane/queue";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
@@ -12,12 +13,21 @@ import postgres from "postgres";
 import { canvasEventStream, publishGenerationNudge } from "../src/events";
 import { previewCanvas } from "../src/service";
 import { canvasStore, client } from "../src/storage";
-import { derivedId, reconcileMissingTicks, runTick, type TickDeps } from "../src/ticks";
+import {
+  derivedId,
+  reconcileMissingTicks,
+  type TickDeps,
+  runTick as unscopedTick,
+} from "../src/ticks";
 import { EXTRACTION, freshDatabase, GUIDE, ids, seed } from "./fixtures/seed";
 
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
+
+/** The tick as canvas.tick runs it: billed to the canvas. */
+const runTick: typeof unscopedTick = (d, loopId, ...rest) =>
+  withPayer({ ref: "canvas", id: loopId }, () => unscopedTick(d, loopId, ...rest));
 
 function fake() {
   return new FakeCompleter()
@@ -40,6 +50,7 @@ run("canvas tick against Postgres", () => {
       canvasEnabled: true,
       now: () => new Date(),
       nudge: async () => {},
+      budgetLeft: async () => true,
       claimWindow: async () => true,
       idFor: (label) => derivedId(`${seedLabel}:${label}`),
     };
@@ -134,6 +145,7 @@ run("canvas tick against Postgres", () => {
   test("a preview renders the wall from the fake model's receipts without writing", async () => {
     const store = canvasStore(client(database.db));
     const before = await raw`select count(*)::int as n from canvas_generation`;
+    takeUnscopedFakeCalls();
     const out = await previewCanvas(
       {
         access: new Access(new DrizzleAccessStore(database.db)),
@@ -143,6 +155,7 @@ run("canvas tick against Postgres", () => {
         completer: fake(),
         limiter: new RateLimiter(new MemoryRateCounter()),
         now: () => new Date(),
+        requireAiBudget: async () => {},
         startTick: async () => {},
         nudge: async () => {},
       },
@@ -150,6 +163,11 @@ run("canvas tick against Postgres", () => {
       { project_id: ids.project, brief: "Show the mood", gather_spec: null, tabs: null },
     );
     expect(out.content_html).toContain("Where should the next chargers go?");
+    // The body names the project; there is no route param for the middleware to read.
+    expect(fakeCalls().map((c) => c.payer)).toEqual([
+      { ref: "project", id: ids.project },
+      { ref: "project", id: ids.project },
+    ]);
     const after = await raw`select count(*)::int as n from canvas_generation`;
     expect(after[0]?.n).toBe(before[0]?.n);
   });
@@ -205,8 +223,9 @@ run("canvas tick recovery", () => {
       "worker-a gather",
       "worker-a extract-start",
       "worker-b extract-start",
-      "worker-b extract-done",
-      "worker-b host-guide",
+      // The resumed run is billed to its loop again.
+      `worker-b extract-done canvas:${ids.loop}`,
+      `worker-b host-guide canvas:${ids.loop}`,
       "worker-b finished ok",
     ]);
     const gens = await sql`select status from canvas_generation where report_id = ${ids.report}`;

@@ -136,13 +136,31 @@ export async function completeWith(
 
 export interface VertexCompleterConfig {
   readonly groups: Readonly<Record<ModelGroup, readonly string[]>>;
+  /** Names models "openai_compatible/<model>" instead of "vertex_ai/<model>". Defaults to vertex. */
+  readonly provider?: "vertex" | "openai-compatible";
+  /** False refuses requests that ask for Google Search grounding. Defaults to true. */
+  readonly searchGrounding?: boolean;
+}
+
+/** Raised for a request that needs Google Search when grounding is off. */
+export class GroundingUnavailableError extends Error {
+  override name = "GroundingUnavailableError";
+  readonly isRetryable = false;
+  constructor() {
+    super("search grounding is switched off on this deployment");
+  }
 }
 
 /** The production completer over the configured model groups. */
 export function vertexCompleter(models: Models, cfg: VertexCompleterConfig): Completer {
+  const name = cfg.provider === "openai-compatible" ? compatName : vertexName;
   return {
-    complete: (request) => completeWith(models.model(request.group), request),
-    modelIdentity: (group) => vertexName(cfg.groups[group][0] ?? group),
+    complete: (request) => {
+      if (request.googleSearch && cfg.searchGrounding === false)
+        return Promise.reject(new GroundingUnavailableError());
+      return completeWith(models.model(request.group), request);
+    },
+    modelIdentity: (group) => name(cfg.groups[group][0] ?? group),
   };
 }
 
@@ -150,6 +168,9 @@ export interface VertexEmbedderConfig {
   readonly project: string;
   readonly location: string;
   readonly model: string;
+  readonly provider?: "vertex" | "openai-compatible";
+  /** The API the vectors come from, recorded as the endpoint of an openai-compatible embedder. */
+  readonly baseUrl?: string | undefined;
 }
 
 /**
@@ -158,8 +179,11 @@ export interface VertexEmbedderConfig {
  */
 export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embedder {
   return {
-    model: vertexName(cfg.model),
-    endpoint: `vertex:${cfg.project}:${cfg.location}`,
+    model: cfg.provider === "openai-compatible" ? compatName(cfg.model) : vertexName(cfg.model),
+    endpoint:
+      cfg.provider === "openai-compatible"
+        ? `openai-compatible:${cfg.baseUrl ?? ""}`
+        : `vertex:${cfg.project}:${cfg.location}`,
     get dimensions() {
       return models.embedding().dimensions;
     },
@@ -177,3 +201,7 @@ export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embed
 
 /** A model name as the Python settings wrote it: "vertex_ai/<model>", whether or not config already carries the prefix. */
 export const vertexName = (model: string) => `vertex_ai/${model.replace(/^vertex_ai\//, "")}`;
+
+/** The same for an OpenAI-compatible provider: "openai_compatible/<model>". */
+export const compatName = (model: string) =>
+  `openai_compatible/${model.replace(/^openai_compatible\//, "")}`;

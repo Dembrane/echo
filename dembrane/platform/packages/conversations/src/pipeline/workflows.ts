@@ -1,4 +1,19 @@
+import { withPayer } from "@dembrane/observability";
 import { type StepConfig, step } from "@dembrane/queue";
+import { conversationStore } from "../storage";
+import {
+  editFinal,
+  type FinalPart,
+  type FinalPlan,
+  finalTreatment,
+  loadFinalContext,
+  markFinalGaveUp,
+  planFinal,
+  planFromFirstPass,
+  redactFinal,
+  storeFinal,
+  transcribeFinalPiece,
+} from "./final";
 import {
   claimFinalize,
   claimFinish,
@@ -8,6 +23,7 @@ import {
   mergeAudio,
   type PipelineDeps,
   prepareChunk,
+  redactTypedChunk,
   stampOverCap,
   summarize,
   summarizedWebhook,
@@ -49,42 +65,66 @@ const RUN_NAMESPACE = "2f7c6b1e-3d4a-4e8f-9b0c-1a2b3c4d5e6f";
 export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES) {
   return {
     /** conversations.chunk: load, convert and split, transcribe each piece, hand over. */
-    async chunk(p: { chunkId: string; usePiiRedaction: boolean }): Promise<void> {
-      const loaded = await step("load", () => loadChunk(d, p.chunkId), retry.db);
+    async chunk(p: {
+      chunkId: string;
+      usePiiRedaction: boolean;
+      typed?: boolean | undefined;
+    }): Promise<void> {
+      const typed = p.typed === true;
+      const loaded = await step("load", () => loadChunk(d, p.chunkId, typed), retry.db);
       const conversationId = loaded.conversationId;
       if (!conversationId) return;
-      if (!loaded.skip) {
-        let pieces: string[] = [];
-        try {
-          pieces = await step("prepare", () => prepareChunk(d, p.chunkId), retry.media);
-        } catch (err) {
-          // Out of retries. The Python left such a chunk pending forever, which kept its
-          // conversation from ever finalizing; marking it lets the rest go through.
-          const message = (err as Error).message;
-          await step(
-            "prepare-failed",
-            () => updateChunk(d, p.chunkId, conversationId, { error: message }, false),
-            retry.db,
-          );
-        }
-        for (const piece of pieces) {
+      // The job names only its chunk: its calls are billed to the conversation the load
+      // found, a checkpoint, so a recovered run gets the same one.
+      await withPayer({ ref: "conversation", id: conversationId }, async () => {
+        if (!loaded.skip && typed) {
           try {
             await step(
-              "transcribe",
+              "redact",
               () =>
-                transcribePiece(d, piece, {
+                redactTypedChunk(d, p.chunkId, {
                   usePiiRedaction: p.usePiiRedaction,
                   anonymize: loaded.anonymize,
                 }),
               retry.transcribe,
             );
           } catch {
-            // Out of retries: the last attempt saved its error on the chunk, which is
-            // what makes it count as done rather than pending.
+            // Out of retries: the last attempt saved its error on the chunk, so it counts as
+            // done and holds no text: the raw text is cleared with it, never kept.
+          }
+        } else if (!loaded.skip) {
+          let pieces: string[] = [];
+          try {
+            pieces = await step("prepare", () => prepareChunk(d, p.chunkId), retry.media);
+          } catch (err) {
+            // Out of retries. The Python left such a chunk pending forever, which kept its
+            // conversation from ever finalizing; marking it lets the rest go through.
+            const message = (err as Error).message;
+            await step(
+              "prepare-failed",
+              () => updateChunk(d, p.chunkId, conversationId, { error: message }, false),
+              retry.db,
+            );
+          }
+          for (const piece of pieces) {
+            try {
+              await step(
+                "transcribe",
+                () =>
+                  transcribePiece(d, piece, {
+                    usePiiRedaction: p.usePiiRedaction,
+                    anonymize: loaded.anonymize,
+                  }),
+                retry.transcribe,
+              );
+            } catch {
+              // Out of retries: the last attempt saved its error on the chunk, which is
+              // what makes it count as done rather than pending.
+            }
           }
         }
-      }
-      await step("hand-over", () => handOver(d, conversationId), retry.db);
+        await step("hand-over", () => handOver(d, conversationId), retry.db);
+      });
     },
 
     /** conversations.finish: claim, stamp the cap, hand over. */
@@ -122,6 +162,138 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       }
     },
 
+    /**
+     * conversations.final-transcript: merge, cut at pauses, transcribe each piece, keep the
+     * result beside the chunks and, when it is the record, summarise from it. Any failure
+     * leaves the live text as the transcript.
+     */
+    async finalTranscript(p: {
+      conversationId: string;
+      provider: "gemini" | "whisper";
+      record: boolean;
+      hash: string;
+    }): Promise<void> {
+      const final = d.final;
+      if (!final) return;
+      const transcriber = final.transcribers[p.provider];
+      let wrote = false;
+      try {
+        // An upload whose first reading is kept: its own sentences, moved to their place in
+        // the merged file; nothing is sent to the speech model again. When the first reading
+        // cannot give the times, the recording is read again as for a recorded conversation.
+        const kind = await step(
+          "final-kind",
+          async () => {
+            const conv = await conversationStore(d.db).conversation(p.conversationId);
+            const treatment = finalTreatment(final, conv?.source);
+            return {
+              treatment,
+              // The first reading's sentences are Whisper's: only a Whisper run keeps them.
+              firstPass:
+                treatment === "first-pass" && p.provider === "whisper"
+                  ? await planFromFirstPass(d, p.conversationId, p.hash)
+                  : null,
+            };
+          },
+          retry.media,
+        );
+        if (kind.treatment === "none") return;
+        let plan: FinalPlan | null = kind.firstPass?.plan ?? null;
+        let parts: FinalPart[] = kind.firstPass ? [...kind.firstPass.parts] : [];
+        if (!plan) {
+          if (!transcriber) return;
+          plan = await step(
+            "final-plan",
+            () => planFinal(d, p.conversationId, p.hash, transcriber),
+            retry.media,
+          );
+          if (!plan) return;
+        }
+        const ctx = await step(
+          "final-context",
+          () => loadFinalContext(d, p.conversationId),
+          retry.db,
+        );
+        if (!kind.firstPass) {
+          parts = [];
+          for (const piece of (plan as FinalPlan).pieces)
+            parts.push(
+              await step(
+                "final-transcribe",
+                () =>
+                  transcribeFinalPiece(
+                    d,
+                    piece,
+                    transcriber as NonNullable<typeof transcriber>,
+                    ctx,
+                  ),
+                retry.transcribe,
+              ),
+            );
+        }
+        const done = plan as FinalPlan;
+        // The text pass, then redaction, each once over the whole transcript. A failed text
+        // pass leaves Whisper's words; redaction that fails stops the run, since an anonymised
+        // conversation must never show text that was not redacted.
+        const edited = await step(
+          "final-edit",
+          () => editFinal(final, p.provider, parts, ctx),
+          retry.llm,
+        );
+        const assembled = ctx.anonymized
+          ? {
+              sentences: [],
+              text: await step(
+                "final-redact",
+                () => redactFinal(final, edited.sentences, ctx),
+                retry.llm,
+              ),
+              edit: edited.edit,
+              raw: null,
+            }
+          : {
+              sentences: edited.sentences,
+              text: edited.sentences.map((s) => s.text).join(" "),
+              edit: edited.edit,
+              raw: edited.raw,
+            };
+        wrote = await step(
+          "final-store",
+          () =>
+            storeFinal(
+              d,
+              p.conversationId,
+              p.hash,
+              p.provider,
+              p.record,
+              done,
+              parts,
+              assembled,
+              final.profile,
+            ),
+          retry.db,
+        );
+        if (wrote && p.record) await summarizeWithWebhook(d, p.conversationId, retry, true, false);
+      } catch (err) {
+        d.logger.warn(
+          {
+            conversationId: p.conversationId,
+            provider: p.provider,
+            err: (err as Error).message,
+            signal: "conversation.final_transcript_gave_up",
+          },
+          "final transcript gave up; the live text stays",
+        );
+      } finally {
+        if (!wrote && p.record)
+          await step(
+            "final-gave-up",
+            () => markFinalGaveUp(d, p.conversationId, p.hash),
+            retry.db,
+          ).catch(() => undefined);
+      }
+    },
+
     /** conversations.summarize: the catch-up for a summary that failed or was locked. */
     async summarize(p: { conversationId: string }): Promise<void> {
       await summarizeWithWebhook(d, p.conversationId, retry);
@@ -134,6 +306,7 @@ async function summarizeWithWebhook(
   conversationId: string,
   retry: RetryPolicy,
   fresh = false,
+  announce = true,
 ) {
   let wrote = false;
   try {
@@ -142,5 +315,6 @@ async function summarizeWithWebhook(
     // The summary catch-up picks it up again in five minutes.
     d.logger.warn({ conversationId, err: (err as Error).message }, "summary gave up");
   }
-  if (wrote) await step("summarized-webhook", () => summarizedWebhook(d, conversationId), retry.db);
+  if (wrote && announce)
+    await step("summarized-webhook", () => summarizedWebhook(d, conversationId), retry.db);
 }

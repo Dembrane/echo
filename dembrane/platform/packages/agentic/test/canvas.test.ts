@@ -10,7 +10,7 @@ import {
   removeHostItem,
   statePatch,
 } from "../src/canvas/ledgers";
-import { sanitizeCanvasHtml } from "../src/canvas/sanitize";
+import { sanitizeCanvasHtml, stripMarkdownFences } from "../src/canvas/sanitize";
 import type { CanvasDeps, CanvasStore } from "../src/canvas/service";
 import * as svc from "../src/canvas/service";
 
@@ -295,4 +295,23 @@ describe("canvas service", () => {
       },
     ]);
   });
+});
+
+test("stripMarkdownFences keeps the old fence regex results and is linear", () => {
+  const cases: [string, string][] = [
+    ["", ""],
+    ["```", ""],
+    ["```html\n<p>x</p>\n```", "<p>x</p>"],
+    ["``` ```", ""],
+    ["````", "`"],
+    ["x```", "x"],
+    ["```HTML x ```  ", "x"],
+    ["<p>a</p>", "<p>a</p>"],
+    ["```\n\n```", ""],
+  ];
+  for (const [s, want] of cases) expect(stripMarkdownFences(s)).toBe(want);
+  const t = performance.now();
+  const spaces = `a${" ".repeat(100_000)}b`;
+  expect(stripMarkdownFences(spaces)).toBe(spaces);
+  expect(performance.now() - t).toBeLessThan(500);
 });

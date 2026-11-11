@@ -26,9 +26,12 @@ export function PresentButton({
 	onGoLive,
 	onReadyBy,
 	onStop,
+	analysisDisabled = false,
 }: {
 	live: boolean;
 	pending: boolean;
+	/** No new analysis can start; Stop and Cancel still work. */
+	analysisDisabled?: boolean;
 	/** The presentation is still being prepared. */
 	opening?: boolean;
 	booking?: LiveBooking | null;
@@ -41,7 +44,13 @@ export function PresentButton({
 	onStop: () => void;
 }) {
 	const { hours, opened, readyByField, setOpened, stayLiveFor } =
-		useLiveChoices({ booking, live, onGoLive, onReadyBy });
+		useLiveChoices({
+			booking,
+			disabled: analysisDisabled,
+			live,
+			onGoLive,
+			onReadyBy,
+		});
 	const booked = !live && !!booking;
 
 	return (

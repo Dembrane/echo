@@ -14,6 +14,20 @@ import {
 	uploadConversationChunk,
 	uploadConversationText,
 } from "@/lib/api";
+import {
+	portalRecordingRefusal,
+	type RecordingRefusal,
+	recordingStopOf,
+} from "@/lib/freeTier";
+
+type RecordingStopOptions = {
+	/** accepted: the chunk that carried the stop was kept (false when it was refused). */
+	onRecordingStop?: (r: RecordingRefusal, accepted: boolean) => void;
+	onChunkAccepted?: () => void;
+};
+
+// A 402 is a limit; retrying it can only repeat the refusal.
+const NO_RETRY_STATUSES = [402, 403, 404, 410];
 
 const uploadFailureStage = (
 	message: string,
@@ -23,12 +37,17 @@ const uploadFailureStage = (
 	return "confirm";
 };
 
-export const useConfirmConversationChunkUpload = () => {
+export const useConfirmConversationChunkUpload = ({
+	onRecordingStop,
+	onChunkAccepted,
+}: RecordingStopOptions = {}) => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: confirmConversationChunkUpload,
 		onError: (error, variables) => {
+			const refusal = portalRecordingRefusal(error);
+			if (refusal) onRecordingStop?.(refusal, false);
 			console.error(
 				`[Confirm Upload] Failed to confirm chunk ${variables.chunk_id}:`,
 				error,
@@ -40,10 +59,13 @@ export const useConfirmConversationChunkUpload = () => {
 				stage: "confirm",
 			});
 		},
-		onSuccess: (_data, variables) => {
+		onSuccess: (data, variables) => {
 			console.log(
 				`[Confirm Upload] Successfully confirmed chunk ${variables.chunk_id}`,
 			);
+			onChunkAccepted?.();
+			const stop = recordingStopOf(data);
+			if (stop) onRecordingStop?.(stop, true);
 			// Invalidate queries after successful confirmation
 			queryClient.invalidateQueries({
 				queryKey: ["conversations", variables.conversationId],
@@ -58,7 +80,7 @@ export const useConfirmConversationChunkUpload = () => {
 		},
 		retry: (failureCount, error: Error) => {
 			const status = (error as AxiosError)?.response?.status;
-			if (status && [404, 403, 410].includes(status as number)) {
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
 				return false;
 			}
 			return failureCount < 5;
@@ -70,15 +92,23 @@ export const useConfirmConversationChunkUpload = () => {
 	});
 };
 
-export const useUploadConversationChunk = () => {
+export const useUploadConversationChunk = ({
+	onRecordingStop,
+	onChunkAccepted,
+}: RecordingStopOptions = {}) => {
 	const queryClient = useQueryClient();
-	const confirmUpload = useConfirmConversationChunkUpload();
+	const confirmUpload = useConfirmConversationChunkUpload({
+		onChunkAccepted,
+		onRecordingStop,
+	});
 
 	return useMutation({
 		mutationFn: uploadConversationChunk,
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, variables, context) => {
+			const refusal = portalRecordingRefusal(err);
+			if (refusal) onRecordingStop?.(refusal, false);
 			queryClient.setQueryData(
 				["conversations", variables.conversationId, "chunks"],
 				(context as { previousChunks?: ConversationChunk[] })?.previousChunks,
@@ -183,7 +213,7 @@ export const useUploadConversationChunk = () => {
 		},
 		retry: (failureCount, error: Error) => {
 			const status = (error as AxiosError)?.response?.status;
-			if (status && [404, 403, 410].includes(status as number)) {
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
 				return false;
 			}
 			return failureCount < 20;
@@ -283,14 +313,23 @@ export const useUploadConversationTextChunk = () => {
 				],
 			});
 		},
-		retry: 10,
+		// A refusal answers the same on every retry: show it at once.
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
+				return false;
+			}
+			return failureCount < 10;
+		},
 	});
 };
 
 export const useInitiateConversationMutation = () => {
 	return useMutation({
 		mutationFn: initiateConversation,
-		onError: () => {
+		onError: (error) => {
+			// The form shows a refusal itself.
+			if (portalRecordingRefusal(error)) return;
 			toast.error(t`Invalid PIN or email. Please try again.`);
 		},
 	});

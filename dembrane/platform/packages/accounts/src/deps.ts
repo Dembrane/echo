@@ -20,9 +20,21 @@ export interface Company {
   readonly accountName: string;
 }
 
+/**
+ * dembrane's signatory: every offer and DPA echo sends carries their signature from the
+ * moment it is sent. The name, when not given, is read from their account at sending.
+ */
+export interface Signatory {
+  readonly email: string;
+  readonly name: string | null;
+  readonly role: string | null;
+}
+
 export interface AccountsSettings {
   readonly dashboardUrl: string;
   readonly company: Company;
+  /** Absent or null: documents go out without dembrane's signature. */
+  readonly signatory?: Signatory | null;
   /** Account events are posted for sam (ACCOUNTS_EVENTS_URL set). */
   readonly eventsEnabled: boolean;
   /** Signatures, billing details and questions reach Slack (ACCOUNTS_SLACK_WEBHOOK_URL set). */

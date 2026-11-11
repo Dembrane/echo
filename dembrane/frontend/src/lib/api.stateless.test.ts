@@ -94,3 +94,45 @@ it("names no purpose where a project is billed", async () => {
 	const form = post.mock.calls[0][1] as FormData;
 	expect(form.has("purpose")).toBe(false);
 });
+
+it("names the workspace that pays when one is given", async () => {
+	const post = postSpy();
+	await transcribeStateless({
+		file: new Blob(["audio"], { type: "audio/webm" }),
+		filename: "voice-note.webm",
+		purpose: "pricing_intake",
+		workspaceId: "workspace-1",
+	});
+
+	const form = post.mock.calls[0][1] as FormData;
+	expect(form.get("workspace_id")).toBe("workspace-1");
+	expect(form.get("purpose")).toBe("pricing_intake");
+});
+
+it("sends a project and the issue report purpose together", async () => {
+	const post = postSpy();
+	await transcribeStateless({
+		file: new Blob(["audio"], { type: "audio/webm" }),
+		filename: "voice-note.webm",
+		projectId: "project-1",
+		purpose: "issue_report",
+		workspaceId: "workspace-1",
+	});
+
+	const form = post.mock.calls[0][1] as FormData;
+	expect(form.get("project_id")).toBe("project-1");
+	expect(form.get("purpose")).toBe("issue_report");
+	expect(form.get("workspace_id")).toBe("workspace-1");
+});
+
+it("omits the workspace when none is given", async () => {
+	const post = postSpy();
+	await transcribeStateless({
+		file: new Blob(["audio"], { type: "audio/webm" }),
+		filename: "voice-note.webm",
+		projectId: "project-1",
+	});
+
+	const form = post.mock.calls[0][1] as FormData;
+	expect(form.has("workspace_id")).toBe(false);
+});

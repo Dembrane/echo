@@ -44,6 +44,18 @@ export const upload = {
     description:
       "Recording a finished chunk upload failed after the file reached storage; sent as a 500.",
   },
+  "upload.unreadable": {
+    action: "fix_input",
+    detail: "This file could not be read as audio",
+    description:
+      "A free-tier upload whose length could not be measured: the file is not audio ffmpeg can read. The object is deleted.",
+  },
+  "upload.measure_failed": {
+    action: "retry",
+    detail: "Could not check the file's length. Try again.",
+    description:
+      "A free-tier upload could not be measured because the media service is away; sent as a 503 and nothing is charged.",
+  },
   "upload.wrong_conversation": {
     action: "none",
     detail: "File does not belong to this conversation",

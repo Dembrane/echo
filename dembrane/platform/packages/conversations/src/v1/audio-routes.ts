@@ -1,3 +1,4 @@
+import { isFreeLimit, requireAiBudget } from "@dembrane/allowance";
 import { AudioError } from "@dembrane/audio";
 import { BadRequestError, NotFoundError, newId, PlatformError, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
@@ -7,6 +8,7 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
+import { FREE_LIMIT_SKIPPED } from "../free-audio";
 import { liveServices } from "../live/routes";
 import { type MergeDeps, mergeConversationAudio } from "../merge";
 import { processChunk } from "../pipeline/defs";
@@ -88,7 +90,8 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
     const { query } = await p.validate(c.req, { query: ChunkContentQuery });
     const chunk = await conversationStore(d.db).chunk(c.req.param("chunk_id"));
     if (!chunk || chunk.conversation_id !== cid) throw new NotFoundError("conversation.not_found");
-    if (!chunk.path) throw new NotFoundError("conversation.no_content");
+    if (!chunk.path || chunk.error === FREE_LIMIT_SKIPPED)
+      throw new NotFoundError("conversation.no_content");
     if (!chunk.path.startsWith("http"))
       throw new BadRequestError("conversation.file_url_unsupported");
     const out = deliver(chunk.path, query.signed, query.return_url);
@@ -146,6 +149,7 @@ async function retranscribe(
     const store = conversationStore(d.db);
     const original = await store.conversationIncludingDeleted(conversationId);
     if (!original) throw new NotFoundError("conversation.not_found");
+    await requireAiBudget(d.db, original.project_id, d.now());
     let pii = body.use_pii_redaction;
     if (pii === null)
       pii = Boolean((await store.project(original.project_id))?.anonymize_transcripts);
@@ -224,6 +228,8 @@ async function retranscribe(
       new_conversation_id: newConversationId,
     };
   } catch (err) {
+    // The dashboard opens its AI budget wall on a real 402.
+    if (isFreeLimit(err, "ai_budget")) throw err;
     if (err instanceof PlatformError && err.status < 500) {
       const detail = typeof err.details === "object" && err.details ? err.details : err.message;
       return { status: "error", message: "Operation failed", error_detail: detail };

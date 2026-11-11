@@ -10,32 +10,45 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
+import { renderOffer } from "./annex";
+import { type BillToInput, checkBillTo } from "./bill-to";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
-import { dealStage } from "./deal-stage";
+import { type DealStage, dealMilestones, dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, invoiceWaits, staffDocumentUrl, uninvoicedOffers } from "./invoice";
+import { checkInvoicePlan, type InvoicePlan } from "./invoice-plan";
 import { legalForPush } from "./legal/store";
-import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
+import { charged, fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
   type Amendment,
+  type BillingUnit,
+  type DembraneSigner,
   type Language,
+  type OfferAnnex,
   type OfferContent,
   type OfferItem,
   type OfferTemplate,
+  type OfferTemplateText,
+  type OfferText,
   offerText,
   offerTitle,
   offerTotals,
+  type SecondSigner,
   validUntil,
 } from "./offer";
+import { type Change, draftText, templateText } from "./offer-template";
 import {
   ensureOnboardingTasks,
   isOnboardingCode,
   type OnboardingCode,
   withdrawOnboarding,
 } from "./onboarding";
-import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
+import { type ChooseMode, checkOptions } from "./options";
+import { voidAcceptance } from "./outside";
+import { type PlacedField, pageCountOf, textPdf } from "./pdf";
+import { dembraneSignature, offerSignature, recordDembraneSignature } from "./presign";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
 import { openDpa } from "./signing";
@@ -56,25 +69,47 @@ const actorOf = (who: Signed): Actor => ({ kind: "staff", userId: who.directusUs
 
 export async function listAccounts(
   d: AccountsDeps,
-  q: { stage: string | null; q: string | null; limit: number; offset: number },
+  q: {
+    stage: string | null;
+    deal_stage?: DealStage | null;
+    q: string | null;
+    limit: number;
+    offset: number;
+  },
 ) {
-  const rows = await store.accountList(d.db, q);
+  // The deal stage is read, not stored, so filtering on it reads every account and pages
+  // after; accounts are the organisations sales works with, a short list.
+  const byDeal = Boolean(q.deal_stage);
+  const rows = await store.accountList(
+    d.db,
+    byDeal ? { ...q, limit: 2000, offset: 0, accountsOnly: true } : q,
+  );
   const facts = await store.stageFacts(
     d.db,
     rows.map((r) => r.id),
   );
-  return {
-    accounts: rows.map((r) => ({
+  const accounts = rows.map((r) => {
+    // The first billing account is the organisation's, as store.billing reads it.
+    const billing = facts.billing.find((b) => b.org_id === r.id) ?? null;
+    const stageFacts = {
+      isAccount: r.stage !== null,
+      documents: facts.documents.filter((x) => x.orgId === r.id),
+      billingComplete: billingComplete(billing),
+      billingAt:
+        facts.billingSaved.find((b) => b.orgId === r.id)?.at ?? billing?.updated_at ?? null,
+    };
+    return {
       ...r,
       stage: r.stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: r.stage !== null,
-        documents: facts.documents.filter((x) => x.orgId === r.id),
-        // The first billing account is the organisation's, as store.billing reads it.
-        billingComplete: billingComplete(facts.billing.find((b) => b.org_id === r.id) ?? null),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: r.created_at ? new Date(r.created_at).toISOString() : null,
-    })),
+    };
+  });
+  return {
+    accounts: byDeal
+      ? accounts.filter((a) => a.deal_stage === q.deal_stage).slice(q.offset, q.offset + q.limit)
+      : accounts,
     limit: q.limit,
     offset: q.offset,
   };
@@ -120,16 +155,27 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       ),
     );
   const demo = events.find((e) => e.type === "demo.seeded");
+  const staffNames = await store.userNames(
+    d.db,
+    events.flatMap((e) => (e.actorKind === "staff" && e.actorUserId ? [e.actorUserId] : [])),
+  );
+  const stageFacts = {
+    isAccount: org.account_stage !== null,
+    documents: docs,
+    billingComplete: billingComplete(billing),
+    // Events come newest first; the billing row also changes with the plan.
+    billingAt:
+      events.find((e) => e.type === "billing_details.updated")?.createdAt ??
+      billing?.updated_at ??
+      null,
+  };
   return {
     organisation: {
       id: org.id,
       name: org.name,
       account_stage: org.account_stage as "prospect" | "customer" | "churned" | null,
-      deal_stage: dealStage({
-        isAccount: org.account_stage !== null,
-        documents: docs,
-        billingComplete: billingComplete(billing),
-      }),
+      deal_stage: dealStage(stageFacts),
+      milestones: dealMilestones(stageFacts),
       created_at: org.created_at ? new Date(org.created_at).toISOString() : null,
     },
     account_manager: manager
@@ -179,8 +225,15 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       : [],
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
-    timeline: events.map(eventView),
+    timeline: events.map((e) => eventView(e, staffNames)),
+    dembrane_signer: await defaultSigner(d),
   };
+}
+
+/** Who signs a new offer for dembrane unless staff choose another: the configured signatory. */
+async function defaultSigner(d: AccountsDeps): Promise<DembraneSigner | null> {
+  const s = await dembraneSignature(d, d.db, d.now());
+  return s && { name: s.name, role: s.role, email: s.email };
 }
 
 /**
@@ -289,10 +342,34 @@ export interface PushOfferInput {
   readonly currency: string;
   readonly date: string | null;
   readonly items: readonly OfferItem[];
+  /** Words over the template's; on a change absent keeps the draft's, null the template's. */
+  readonly text?: Change<OfferText> | null | undefined;
+  /** Absent: the template's; on a change, the draft's. */
+  readonly valid_days?: number | null | undefined;
   /** Absent means Dutch VAT on the lines. */
   readonly vat_treatment?: VatTreatment;
+  /** Subscription offers: absent means seats. */
+  readonly billing_unit?: BillingUnit | undefined;
   /** Custom offers only. */
   readonly amendments?: readonly Amendment[];
+  /** The customer's own terms for data processing, in place of our DPA. */
+  readonly processing_terms?: string | null | undefined;
+  /** The customer's PO or reference for this offer. */
+  readonly customer_reference?: string | null | undefined;
+  /** Who is invoiced when it is not the customer. */
+  readonly bill_to?: BillToInput | null | undefined;
+  /** Monthly parts or instalments; absent or null invoices at once. */
+  readonly invoice_plan?: InvoicePlan | null | undefined;
+  /** An offer of zero on purpose; never invoiced. On a change, absent keeps the draft's. */
+  readonly no_charge?: boolean | undefined;
+  /** With options on lines: one or any picked at signing. On a change, absent keeps the draft's. */
+  readonly choose?: ChooseMode | undefined;
+  /** A second signature; on a change absent keeps the draft's, null drops it. */
+  readonly second_signer?: SecondSigner | null | undefined;
+  /** Who signs for dembrane when it is sent; on a change absent keeps the draft's. */
+  readonly dembrane_signer?: DembraneSigner | null | undefined;
+  /** dembrane signs the offer itself when it is sent; on a change absent keeps the draft's. */
+  readonly dembrane_signs_offer?: boolean | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -311,6 +388,28 @@ function offerReference(dateIso: string, id: string): string {
   return `DMB-${dateIso.replace(/-/g, "")}-${id.slice(-4).toUpperCase()}`;
 }
 
+/**
+ * The document a new one replaces, locked against a signature at the same moment. A signed
+ * one cannot be replaced.
+ */
+async function replaceable(
+  tx: Parameters<typeof store.org>[0],
+  orgId: string,
+  id: string,
+  kind: string,
+) {
+  const prev = isUuid(id) ? await store.documentForUpdate(tx, orgId, id) : null;
+  if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
+  // Signed, or signed by some of those it asks to sign: it stands as it is. dembrane's own
+  // signature does not hold it: dembrane may withdraw or replace what it signed.
+  if (
+    prev.status === "signed" ||
+    (await store.signaturesOf(tx, prev.id)).some((x) => x.slot !== "dembrane")
+  )
+    throw new ConflictError("document.signed_cannot_supersede");
+  return prev;
+}
+
 /** Voids a document that supersedes, withdrawing its signing task; a signed one stays. */
 async function supersede(
   d: AccountsDeps,
@@ -319,9 +418,7 @@ async function supersede(
   id: string,
   kind: string,
 ) {
-  const prev = isUuid(id) ? await store.document(tx, orgId, id) : null;
-  if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
-  if (prev.status === "signed") throw new ConflictError("document.signed_cannot_supersede");
+  const prev = await replaceable(tx, orgId, id, kind);
   const now = d.now();
   if (prev.status !== "void")
     await store.updateDocument(tx, prev.id, { status: "void", voidedAt: now, updatedAt: now });
@@ -331,7 +428,17 @@ async function supersede(
   return prev;
 }
 
-/** What an offer says, from what staff or sam gave and the legal texts in force. */
+/** What a subscription line counted before lines had units: seats unless billed per month. */
+const SUBSCRIPTION_UNIT: Record<BillingUnit, Record<Language, readonly [string, string]>> = {
+  seat: { en: ["seat", "seats"], nl: ["seat", "seats"] },
+  month: { en: ["month", "months"], nl: ["maand", "maanden"] },
+};
+
+/**
+ * What an offer says, from what staff or sam gave, the template's words and the legal texts
+ * in force. `before` is the draft being changed: its own words and validity stay unless the
+ * change gives others, or it moves to another template or language.
+ */
 function offerContent(
   d: AccountsDeps,
   pinned: Awaited<ReturnType<typeof legalForPush>>,
@@ -344,21 +451,68 @@ function offerContent(
     | "attention"
     | "currency"
     | "items"
+    | "text"
+    | "valid_days"
     | "vat_treatment"
+    | "billing_unit"
     | "amendments"
-  > & { date: string; reference: string },
+    | "processing_terms"
+    | "customer_reference"
+    | "bill_to"
+    | "invoice_plan"
+    | "no_charge"
+    | "choose"
+    | "second_signer"
+    | "dembrane_signer"
+    | "dembrane_signs_offer"
+  > & { date: string; reference: string; annexes?: readonly OfferAnnex[] | undefined },
+  words: OfferTemplateText,
+  before?: OfferContent,
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
-  requireAmounts(o.items);
+  const noCharge = o.no_charge === true;
+  // Every pick the signer may make must leave an offer that asks for money.
+  const choose = checkOptions(o.items, o.choose, {
+    noCharge,
+    plan: Boolean(o.invoice_plan),
+    require: (lines) => requireAmounts(lines, noCharge),
+  });
+  // Nothing is invoiced, so nobody is invoiced and nothing is split.
+  if (noCharge && (o.bill_to || o.invoice_plan))
+    throw new ValidationError("offer.no_charge_invoiced");
   if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
   // Amendments change the standard documents, so they make an offer custom: a subscription
   // or event offer is the standard documents as they are.
   const amendments = o.amendments ?? [];
   if (amendments.length && o.template !== "custom")
     throw new ValidationError("offer.amendments_custom_only");
+  const billTo = o.bill_to ? checkBillTo(o.bill_to, vatTreatment) : null;
+  const second = o.second_signer ? checkSecondSigner(o.second_signer) : null;
+  const signer = o.dembrane_signer ? checkDembraneSigner(o.dembrane_signer) : null;
+  const plan = o.invoice_plan ? checkInvoicePlan(o.invoice_plan, o.items) : null;
+  const same = before?.template === o.template && before?.language === o.language;
+  const unit =
+    o.template === "subscription" ? SUBSCRIPTION_UNIT[o.billing_unit ?? "seat"][o.language] : null;
+  // Only the seat line counts seats (or months): the first charged line. Onboarding, a
+  // discount or an included line counts nothing, so it prints its quantity alone.
+  const seatLine = o.items.findIndex(charged);
+  const items = o.items.map((i, n) =>
+    i.unit || !unit || n !== seatLine ? i : { ...i, unit: unit[i.quantity === 1 ? 0 : 1] },
+  );
   return {
     vat_treatment: vatTreatment,
+    ...(o.template === "subscription" && o.billing_unit && { billing_unit: o.billing_unit }),
     ...(amendments.length && { amendments }),
+    ...(o.processing_terms && { processing_terms: o.processing_terms }),
+    ...(o.customer_reference && { customer_reference: o.customer_reference }),
+    ...(billTo && { bill_to: billTo }),
+    ...(plan && { invoice_plan: plan }),
+    ...(noCharge && { no_charge: true as const }),
+    ...(choose && { choose }),
+    ...(second && { second_signer: second }),
+    ...(signer && { dembrane_signer: signer }),
+    ...(o.dembrane_signs_offer === true && { dembrane_signs_offer: true as const }),
+    ...(o.annexes?.length && { annexes: o.annexes }),
     dpa_separate: true,
     template: o.template,
     language: o.language,
@@ -368,7 +522,11 @@ function offerContent(
     person_name: o.person_name,
     attention: o.attention,
     currency: o.currency,
-    valid_days: OFFER_VALID_DAYS,
+    text: draftText(words, same ? before?.text : undefined, o.text),
+    valid_days:
+      o.valid_days ??
+      (same && o.valid_days === undefined ? before?.valid_days : undefined) ??
+      words.valid_days,
     company: {
       name: d.settings.company.name,
       address: d.settings.company.address,
@@ -382,11 +540,29 @@ function offerContent(
       sla: pin(pinned.sla),
       dpa: pin(pinned.dpa),
     },
-    items: o.items,
+    items,
   };
 }
 
-const OFFER_VALID_DAYS = 14;
+/**
+ * A second signature as the offer keeps it: dembrane's signatory must be a staff member (they
+ * sign from the staff page as themselves); addresses are kept lower case.
+ */
+function checkSecondSigner(s: SecondSigner): SecondSigner {
+  if (s.kind === "customer")
+    return { kind: "customer", name: s.name || null, email: s.email?.toLowerCase() || null };
+  if (!isStaffEmail(s.email)) throw new ValidationError("offer.second_signer_staff");
+  return { kind: "dembrane", name: s.name, email: s.email.toLowerCase(), role: s.role || null };
+}
+
+/**
+ * Who signs for dembrane as the offer keeps it: a staff member, since the signature is
+ * applied in dembrane's name without a step of theirs; the address kept lower case.
+ */
+function checkDembraneSigner(s: DembraneSigner): DembraneSigner {
+  if (!isStaffEmail(s.email)) throw new ValidationError("offer.second_signer_staff");
+  return { name: s.name, role: s.role || null, email: s.email.toLowerCase() };
+}
 
 /** The columns of an offer that follow from its content. */
 function offerColumns(content: OfferContent, pinned: Awaited<ReturnType<typeof legalForPush>>) {
@@ -407,6 +583,15 @@ function offerColumns(content: OfferContent, pinned: Awaited<ReturnType<typeof l
     currency: content.currency,
     validUntil: validUntil(content.date, content.valid_days),
   };
+}
+
+/**
+ * The offer as its PDF is drawn: with dembrane's signature applied at `now` when staff chose
+ * that dembrane signs it, else as it is.
+ */
+async function signedForRender(d: AccountsDeps, now: Date, content: OfferContent) {
+  const signature = await offerSignature(d, d.db, now, content);
+  return signature ? { ...content, dembrane_signature: signature } : content;
 }
 
 /**
@@ -443,27 +628,47 @@ export async function pushOffer(
   const id = ids.document ?? newId();
   const date = input.date ?? now.toISOString().slice(0, 10);
   const reference = input.reference ?? offerReference(date, id);
-  const content = offerContent(d, pinned, { ...input, date, reference });
+  const words = await templateText(d.db, input.template, input.language);
+  // A revision keeps the annexes of the offer it replaces; their files stay where they are.
+  const replaced =
+    input.supersedes_id && isUuid(input.supersedes_id)
+      ? await store.document(d.db, org.id, input.supersedes_id)
+      : null;
+  const annexes = (replaced?.content as OfferContent | null)?.annexes;
+  const drafted = offerContent(d, pinned, { ...input, date, reference, annexes }, words);
+  // Sent now: it carries dembrane's signature when staff chose that. A draft keeps none in
+  // its content until it is sent, but its PDF shows the block as the customer will see it.
+  const signed = await signedForRender(d, now, drafted);
+  const content = input.send === false ? drafted : signed;
   // The PDF rendered now is what the customer sees and what a signature binds.
-  const rendered = await offerPdf(content);
+  const rendered = await renderOffer(d, signed);
   const file = await storeRendered(d, org.id, id, rendered);
   let taskId = "";
   await d.db.transaction(async (tx) => {
-    const prev = input.supersedes_id
-      ? await supersede(d, tx, org.id, input.supersedes_id, "offer")
-      : null;
+    // A draft only names the offer it replaces: that one stays with the customer until the
+    // draft is sent, and the send replaces it (sendOfferIn).
+    const prev = !input.supersedes_id
+      ? null
+      : input.send === false
+        ? await replaceable(tx, org.id, input.supersedes_id, "offer")
+        : await supersede(d, tx, org.id, input.supersedes_id, "offer");
     await store.insertDocument(tx, {
       id,
       orgId: org.id,
       kind: "offer",
-      title: input.title ?? offerTitle(content.template, content.language, content.reference),
+      title:
+        input.title ??
+        (prev?.content
+          ? keptTitle(prev.title, prev.content as OfferContent, content)
+          : offerTitle(content)),
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
       ...offerColumns(content, pinned),
       ...file,
       requiresSignature: true,
       status: "draft",
-      externalRef: input.external_ref,
+      // A new version belongs to the same deal unless it names another.
+      externalRef: input.external_ref ?? prev?.externalRef ?? null,
       createdBy: who.directusUserId,
       createdAt: now,
       updatedAt: now,
@@ -488,7 +693,17 @@ export async function pushOffer(
   };
 }
 
-export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send">;
+export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send" | "currency"> & {
+  /** Absent keeps the draft's. */
+  readonly currency?: string | undefined;
+};
+
+/**
+ * The title a changed or revised offer gets when none is given: one staff or sam set
+ * themselves stays, a generated one follows the new content.
+ */
+const keptTitle = (title: string, before: OfferContent, content: OfferContent) =>
+  title === offerTitle(before) ? offerTitle(content) : title;
 
 /**
  * Changes a draft offer in place: the same document, reference and staff link, a new PDF.
@@ -512,19 +727,46 @@ export async function updateOffer(
     logger: d.logger,
     now: d.now,
   });
-  const content = offerContent(d, pinned, {
-    ...input,
-    date: input.date ?? before.date,
-    reference: input.reference ?? before.reference,
-  });
-  const rendered = await offerPdf(content);
+  const words = await templateText(d.db, input.template, input.language);
+  const content = offerContent(
+    d,
+    pinned,
+    {
+      ...input,
+      currency: input.currency ?? before.currency,
+      date: input.date ?? before.date,
+      reference: input.reference ?? before.reference,
+      processing_terms:
+        input.processing_terms === undefined ? before.processing_terms : input.processing_terms,
+      customer_reference:
+        input.customer_reference === undefined
+          ? before.customer_reference
+          : input.customer_reference,
+      bill_to: input.bill_to === undefined ? before.bill_to : input.bill_to,
+      invoice_plan: input.invoice_plan === undefined ? before.invoice_plan : input.invoice_plan,
+      no_charge: input.no_charge === undefined ? before.no_charge === true : input.no_charge,
+      choose: input.choose === undefined ? before.choose : input.choose,
+      second_signer: input.second_signer === undefined ? before.second_signer : input.second_signer,
+      dembrane_signer:
+        input.dembrane_signer === undefined ? before.dembrane_signer : input.dembrane_signer,
+      dembrane_signs_offer:
+        input.dembrane_signs_offer === undefined
+          ? before.dembrane_signs_offer === true
+          : input.dembrane_signs_offer,
+      annexes: before.annexes,
+    },
+    words,
+    before,
+  );
+  // The draft's PDF shows dembrane's block as the customer will see it, dated today.
+  const rendered = await renderOffer(d, await signedForRender(d, d.now(), content));
   await d.db.transaction(async (tx) => {
     // Held while the PDF is replaced, so a send at the same moment cannot freeze half of it.
     const locked = await store.documentForUpdate(tx, doc.orgId, doc.id);
     if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
     const file = await storeRendered(d, doc.orgId, doc.id, rendered);
     await store.updateDocument(tx, doc.id, {
-      title: input.title ?? offerTitle(content.template, content.language, content.reference),
+      title: input.title ?? keptTitle(doc.title, before, content),
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,
@@ -565,10 +807,27 @@ async function sendOfferIn(
   if (notify) assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
+  // A revision drafted earlier replaces its offer now. One signed meanwhile stops the send,
+  // and so does another version sent first: two live versions of one offer never exist.
+  if (doc.supersedesId) {
+    const prev = await replaceable(tx, orgId, doc.supersedesId, "offer");
+    const replaced = (await store.documents(tx, orgId)).some(
+      (x) =>
+        x.id !== doc.id &&
+        x.supersedesId === prev.id &&
+        x.status !== "draft" &&
+        x.status !== "void",
+    );
+    if (replaced) throw new ConflictError("document.already_replaced");
+    await supersede(d, tx, orgId, prev.id, "offer");
+  }
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
   const content = doc.content as OfferContent | null;
+  // The PDF as sent prints dembrane's signature; its record goes in with the send.
+  if (content?.dembrane_signature)
+    await recordDembraneSignature(d, tx, doc, content.dembrane_signature);
   // The task is worded from the kind of offer and its number ("Review and sign event
   // offer 515"); the title stays for older readers and the server's own wording.
   const params = {
@@ -577,16 +836,18 @@ async function sendOfferIn(
     ...(doc.reference && { offer_reference: doc.reference }),
   };
   // First who signs: the offer and the DPA may be signed by different people, and the
-  // answer says which signing tasks there are and whose they are.
-  await createTask(d, tx, {
-    orgId,
-    code: "who_signs",
-    params,
-    title: null,
-    kind: "generic",
-    documentId: docId,
-    createdBy: who.directusUserId,
-  });
+  // answer says which signing tasks there are and whose they are. With the customer's own
+  // processing terms there is only the offer to sign, so nothing to ask.
+  if (!content?.processing_terms)
+    await createTask(d, tx, {
+      orgId,
+      code: "who_signs",
+      params,
+      title: null,
+      kind: "generic",
+      documentId: docId,
+      createdBy: who.directusUserId,
+    });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -597,10 +858,14 @@ async function sendOfferIn(
     documentId: docId,
     createdBy: who.directusUserId,
   });
-  await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  // Invoiced to another party, or not invoiced at all: the customer is not asked for
+  // billing details nobody would use. Their next offer that they pay for asks.
+  if (!content?.bill_to && !content?.no_charge)
+    await ensureBillingTask(d, tx, orgId, who.directusUserId);
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
-  if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
+  if (content?.dpa_separate && !content.processing_terms)
+    await openDpa(d, tx, orgId, doc, who.directusUserId);
   await withdrawOnboarding(d, tx, orgId, actorOf(who));
   await emit(d, tx, {
     orgId,
@@ -701,7 +966,8 @@ async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string
  * A draft offer carries the day it is sent and the texts in force that day: when the
  * draft is from an earlier day, a text changed since, or it predates the DPA being its own
  * document, its PDF, text and fields are rendered again before it freezes. A date set in
- * the future stays.
+ * the future stays. When dembrane signs the offer, it is rendered again with dembrane's
+ * signature, applied now, so the sent copy carries the send date and its hash covers it.
  */
 async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
@@ -713,7 +979,10 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
   const before = doc.content as OfferContent;
   const today = d.now().toISOString().slice(0, 10);
   const date = before.date < today ? today : before.date;
+  const signature = await offerSignature(d, d.db, d.now(), before);
   if (
+    !signature &&
+    !before.dembrane_signature &&
     before.dpa_separate &&
     date === before.date &&
     doc.termsTextId === pinned.terms.id &&
@@ -721,14 +990,17 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
     doc.dpaTextId === pinned.dpa.id
   )
     return;
+  // A signature from a send that did not go through is applied again, or dropped.
+  const { dembrane_signature: _stale, ...unsigned } = before;
   const content: OfferContent = {
-    ...before,
+    ...unsigned,
+    ...(signature && { dembrane_signature: signature }),
     date,
     legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
     // A draft from before the DPA was its own document is sent as one that names it so.
     dpa_separate: true,
   };
-  const rendered = await offerPdf(content);
+  const rendered = await renderOffer(d, content);
   const file = await storeRendered(d, doc.orgId, doc.id, rendered);
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, doc.id, {
@@ -966,7 +1238,18 @@ export async function voidDocument(
   const org = await staffOrg(d, orgId);
   const doc = isUuid(docId) ? await store.document(d.db, org.id, docId) : null;
   if (!doc) throw new NotFoundError("document.not_found");
-  if (doc.status === "signed") throw new ConflictError("document.signed_cannot_void");
+  if (doc.status === "signed") {
+    // A signature made here is final; an acceptance staff recorded may be voided, with a reason.
+    const sig = await store.signatureOf(d.db, doc.id);
+    if (sig?.method !== "outside") throw new ConflictError("document.signed_cannot_void");
+    await voidAcceptance(d, who, org, doc, sig, reason);
+    return documentDetail(
+      d,
+      (await store.document(d.db, org.id, doc.id)) as DocumentRow,
+      "staff",
+      who,
+    );
+  }
   if (doc.status === "void") return documentDetail(d, doc, "staff", who);
   await d.db.transaction(async (tx) => {
     await supersede(d, tx, org.id, doc.id, doc.kind);

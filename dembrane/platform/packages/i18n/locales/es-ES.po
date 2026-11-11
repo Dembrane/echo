@@ -254,7 +254,6 @@ msgstr "Tu código de acceso es {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Tu código de acceso."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Tu código de acceso es {code}. Caduca en 10 minutos."
@@ -266,7 +265,6 @@ msgstr "Si no intentaste iniciar sesión, puedes ignorar este correo tranquilame
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} te pide que firmes {document_title}"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Abrir espacio de trabajo"
 msgid "email.payment_failed.subject"
 msgstr "Tu pago a dembrane no se ha completado"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Tu plan sigue activo. Actualiza tu método de pago para saldar el importe pendiente."
@@ -604,7 +601,6 @@ msgstr "Actualiza tu método de pago:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} está ahora en el plan gratuito"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Solicitar una mejora"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} pasa al plan gratuito el {date}"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Tu plan {tier} termina el {date}. Todo lo que has creado se conserva."
@@ -658,6 +653,62 @@ msgstr "Todo lo que has creado se conserva. Para mantener {tier}, solicita una m
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Solicitar una mejora"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} ha agotado las horas de grabación de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Las nuevas grabaciones y subidas están en pausa hasta el {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} ha agotado las horas de grabación de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "El plan Free incluye {hours} de grabación al mes, y {name} ya las ha usado. Las nuevas grabaciones y subidas están en pausa hasta el {reset_date}. Todo lo grabado hasta ahora sigue estando disponible."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} horas"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} hora"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Pasa a un plan superior para seguir grabando"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Pasa a un plan superior para seguir grabando:"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.subject"
+msgstr "{name} ha agotado el presupuesto de IA de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.preview"
+msgstr "Las funciones de IA y las nuevas grabaciones están pausadas hasta el {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.heading"
+msgstr "{name} ha agotado el presupuesto de IA de este mes"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.body"
+msgstr "El plan Free incluye un presupuesto mensual de IA, y {name} lo ha agotado. Las funciones de IA y las nuevas grabaciones están pausadas hasta el {reset_date}, cuando se reinicie el presupuesto. Todo lo creado hasta ahora sigue disponible."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.cta"
+msgstr "Mejora tu plan para seguir usando la IA"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.text_cta"
+msgstr "Mejora tu plan para seguir usando la IA:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
@@ -858,3 +909,59 @@ msgstr "La oferta es válida hasta el {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Un saludo,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} está firmado"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} firmó {document_title} en nombre de {org_name}. Los detalles de la firma están en este correo."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} está firmado"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} firmó {document_title} en nombre de {org_name}. Este correo es su constancia de la firma."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "El PDF firmado va adjunto. Consérvelo con sus registros."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "El PDF firmado es demasiado grande para adjuntarlo. Puede descargarlo desde su cuenta."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "El SHA-256 es la huella del PDF firmado. Si el archivo cambia, su huella también cambia."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Abrir la copia firmada"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Abrir la copia firmada:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Documento"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Firmado por"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Firmado el (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "ID del documento"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 del PDF firmado"

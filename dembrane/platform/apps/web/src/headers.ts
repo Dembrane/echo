@@ -24,10 +24,21 @@ const THIRD_PARTY = {
   font: ["https://fonts.gstatic.com", "https://cal.com"],
 };
 
+/** Hosts of the analytics tools (PostHog, its proxy, Tally); left out when analytics is off. */
+const ANALYTICS_HOSTS = [
+  "https://r.dembrane.com",
+  "https://eu-assets.i.posthog.com",
+  "https://eu.i.posthog.com",
+  "https://tally.so",
+  "https://*.tally.so",
+];
+
 export interface HeaderInputs {
   /** Origins of our own apps and storage this deployment talks to. */
   readonly own: readonly string[];
   readonly storage: readonly string[];
+  /** False drops PostHog and Tally from the policy. Defaults to true. */
+  readonly analytics?: boolean;
 }
 
 /**
@@ -36,22 +47,24 @@ export interface HeaderInputs {
  */
 export function securityHeaders(inp: HeaderInputs): Record<string, string> {
   const own = [...new Set(inp.own)];
+  const keep = (hosts: readonly string[]) =>
+    inp.analytics === false ? hosts.filter((h) => !ANALYTICS_HOSTS.includes(h)) : hosts;
   const wss = own
     .filter((o) => o.startsWith("https://"))
     .map((o) => o.replace("https://", "wss://"));
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${THIRD_PARTY.script.join(" ")}`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${keep(THIRD_PARTY.script).join(" ")}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     `font-src 'self' data: ${THIRD_PARTY.font.join(" ")}`,
     `img-src 'self' data: blob: ${[...own, ...inp.storage].join(" ")}`,
-    `connect-src 'self' ${[...own, ...wss, ...inp.storage, ...THIRD_PARTY.connect].join(" ")}`,
+    `connect-src 'self' ${[...own, ...wss, ...inp.storage, ...keep(THIRD_PARTY.connect)].join(" ")}`,
     `media-src 'self' blob: mediastream: ${inp.storage.join(" ")}`,
-    `frame-src 'self' ${[...own, ...THIRD_PARTY.frame].join(" ")}`,
+    `frame-src 'self' ${[...own, ...keep(THIRD_PARTY.frame)].join(" ")}`,
     `frame-ancestors 'self' ${own.join(" ")}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
-    "form-action 'self' https://*.tally.so",
+    `form-action 'self'${inp.analytics === false ? "" : " https://*.tally.so"}`,
     "base-uri 'self'",
     "upgrade-insecure-requests",
   ].join("; ");

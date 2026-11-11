@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
+import { withPayer } from "@dembrane/observability";
 import { FakeCompleter, translateTexts } from "../src";
+import { withoutClosingFence } from "../src/translate";
 
 test("translates in batches, keeps order, and leaves a failed batch's texts null", async () => {
   const fake = new FakeCompleter().on("translate", (r) => {
@@ -14,19 +16,38 @@ test("translates in batches, keeps order, and leaves a failed batch's texts null
     });
   });
   const warnings: string[] = [];
-  const out = await translateTexts(fake, ["a", "b", "c", "boom"], {
-    system: "translate these",
-    target: "Dutch",
-    batch: 2,
-    parallel: 2,
-    extra: { glossary: { workspace: "werkruimte" } },
-    notes: ["first", undefined, undefined, undefined],
-    warn: (m) => warnings.push(m),
-  });
+  const out = await withPayer({ internal: "test" }, () =>
+    translateTexts(fake, ["a", "b", "c", "boom"], {
+      system: "translate these",
+      target: "Dutch",
+      batch: 2,
+      parallel: 2,
+      extra: { glossary: { workspace: "werkruimte" } },
+      notes: ["first", undefined, undefined, undefined],
+      warn: (m) => warnings.push(m),
+    }),
+  );
   expect(out).toEqual(["Dutch:a", "Dutch:b", null, null]);
   expect(warnings).toEqual(["vertex 503"]);
   const first = JSON.parse(fake.calls[0]?.user as string);
   expect(first.glossary).toEqual({ workspace: "werkruimte" });
   expect(first.texts[0]).toEqual({ i: 0, text: "a", note: "first" });
   expect(fake.calls[0]?.jsonSchema).toBeDefined();
+});
+
+test("withoutClosingFence keeps the old trailing-fence regex results and is linear", () => {
+  const cases: [string, string][] = [
+    ["{}\n```", "{}"],
+    ["{}   \t\n```", "{}"],
+    ["```", ""],
+    ["{}", "{}"],
+    ["{} ``` x", "{} ``` x"],
+    ["````", "`"],
+    ["  ```", ""],
+  ];
+  for (const [s, want] of cases) expect(withoutClosingFence(s)).toBe(want);
+  const t = performance.now();
+  const spaces = `${" ".repeat(100_000)}x`;
+  expect(withoutClosingFence(spaces)).toBe(spaces);
+  expect(performance.now() - t).toBeLessThan(500);
 });

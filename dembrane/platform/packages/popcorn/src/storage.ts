@@ -34,6 +34,13 @@ export const TASK_POPCORN_TICK = "popcorn_tick";
 export const START_TICK = "start";
 /** The tick kind of a read booked because a conversation's transcript is complete. */
 export const FINISH_TICK = "finish";
+/**
+ * A read that only publishes what the session already holds (phrases, tensions) and asks no
+ * language model, only embedding new text. Booked when a host opens a deck still showing
+ * provisional slides, so a session whose live reads have ended does not keep slides the
+ * host's results cannot list.
+ */
+export const PUBLISH_TICK = "publish";
 
 export function popcornStore(sql: Sql) {
   const tasks = scheduledTasks(sql);
@@ -162,6 +169,23 @@ export function popcornStore(sql: Sql) {
       return r as Row;
     },
 
+    /** What a large session's tensions kept between reads, or null. */
+    async tensionsCache(loopId: string): Promise<Json | null> {
+      const [r] = await sql`select cache from popcorn_tensions_cache where loop_id = ${loopId}`;
+      return (r?.cache as Json | undefined) ?? null;
+    },
+
+    /** Keeps the tensions cache; null forgets it. */
+    async saveTensionsCache(loopId: string, cache: Json | null, now: string): Promise<void> {
+      if (cache === null) {
+        await sql`delete from popcorn_tensions_cache where loop_id = ${loopId}`;
+        return;
+      }
+      await sql`insert into popcorn_tensions_cache (loop_id, cache, updated_at)
+        values (${loopId}, ${j(cache)}, ${now})
+        on conflict (loop_id) do update set cache = excluded.cache, updated_at = excluded.updated_at`;
+    },
+
     /** Patches a loop; Directus stamped updated_at on every update. */
     async updateLoop(id: string, patch: Json, now: string): Promise<Row | null> {
       const cols = Object.keys(patch);
@@ -176,8 +200,9 @@ export function popcornStore(sql: Sql) {
     },
 
     async latestRun(loopId: string): Promise<Row | null> {
+      // A pre-budget free run left in progress is not a run.
       const [r] = await sql`select * from agent_loop_run
-        where loop_id = ${loopId} order by started_at desc limit 1`;
+        where loop_id = ${loopId} and status is distinct from 'running' order by started_at desc limit 1`;
       return r ?? null;
     },
 
@@ -226,12 +251,12 @@ export function popcornStore(sql: Sql) {
       });
     },
 
-    /** A read booked by a finished conversation that has not started yet. */
+    /** A read booked by a finished conversation that has not started yet, locked against the worker's claim until the caller's transaction ends. */
     async pendingFinishRead(loopId: string): Promise<Row | null> {
       const [r] = await sql`select id, payload from scheduled_task
         where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
           and payload->>'loop_id' = ${loopId} and payload->>'tick_kind' = ${FINISH_TICK}
-        order by scheduled_at limit 1`;
+        order by scheduled_at limit 1 for update`;
       return r ?? null;
     },
 
@@ -246,7 +271,7 @@ export function popcornStore(sql: Sql) {
      */
     async startedFinishReads(loopId: string, limit: number): Promise<Row[]> {
       return sql`select t.payload, t.claimed_at, r.id as run_id from scheduled_task t
-        left join agent_loop_run r on r.id::text = t.payload->>'request_id'
+        left join agent_loop_run r on r.id::text = t.payload->>'request_id' and r.status is distinct from 'running'
         where t.task_type = ${TASK_POPCORN_TICK} and t.status in ('processing', 'completed')
           and t.payload->>'loop_id' = ${loopId} and t.payload->>'tick_kind' = ${FINISH_TICK}
         order by t.claimed_at desc nulls last limit ${limit}`;

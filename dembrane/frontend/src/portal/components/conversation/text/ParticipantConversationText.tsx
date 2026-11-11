@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Box,
 	Button,
+	CopyButton,
 	Group,
 	Modal,
 	Stack,
@@ -26,9 +27,11 @@ import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { finishConversation } from "@/lib/api";
+import { portalRecordingRefusal, recordingStopOf } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { ConversationErrorView } from "@/portal/components/conversation/ConversationErrorView";
 import { ConversationMessages } from "@/portal/components/conversation/ConversationMessages";
+import { NotTakingRecordings } from "@/portal/components/NotTakingRecordings";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
@@ -58,6 +61,8 @@ export const ParticipantConversationText = () => {
 		{ open: openFinishModal, close: closeFinishModal },
 	] = useDisclosure(false);
 	const [isStopping, setIsStopping] = useState(false);
+	// The last text was accepted within the wrap-up grace; nothing more is taken.
+	const [stopped, setStopped] = useState(false);
 
 	const [scrollTargetRef] = useElementOnScreen({
 		root: null,
@@ -76,17 +81,31 @@ export const ParticipantConversationText = () => {
 			}
 		}, 0);
 
-		uploadChunkMutation.mutate({
-			content: text.trim(),
-			conversationId: conversationId ?? "",
-			source: "PORTAL_TEXT",
-			timestamp: new Date(),
-		});
-
-		setText("");
+		const sent = text.trim();
+		uploadChunkMutation.mutate(
+			{
+				content: sent,
+				conversationId: conversationId ?? "",
+				source: "PORTAL_TEXT",
+				timestamp: new Date(),
+			},
+			{
+				// Cleared only once accepted, so a refused text stays with the participant.
+				onSuccess: (chunk) => {
+					setText((current) => (current.trim() === sent ? "" : current));
+					if (recordingStopOf(chunk)) setStopped(true);
+				},
+			},
+		);
 	};
 
 	const navigate = useI18nNavigate();
+	// Typed text needs AI. Like the audio page, an unstarted conversation is told up front;
+	// one under way finds out from its next submit (accepted in the grace, or refused).
+	const notTaking =
+		stopped ||
+		Boolean(portalRecordingRefusal(uploadChunkMutation.error)) ||
+		(projectQuery.data?.is_ai_available === false && chunks.data?.length === 0);
 
 	const audioModeUrl = `/${projectId}/conversation/${conversationId}`;
 	const currentSearch = searchParams.toString();
@@ -205,27 +224,58 @@ export const ParticipantConversationText = () => {
             isVisible={isVisible}
           /> */}
 				</Group>
-				<Textarea
-					minRows={4}
-					autosize
-					maxRows={10}
-					placeholder={t`Type your response here`}
-					value={text}
-					onChange={(e) => setText(e.currentTarget.value)}
-					{...testId("portal-text-input-textarea")}
-				/>
+				{notTaking ? (
+					<>
+						<NotTakingRecordings text />
+						{text.trim() !== "" && (
+							<Group align="flex-end" wrap="nowrap">
+								<Textarea
+									readOnly
+									autosize
+									maxRows={6}
+									value={text}
+									className="flex-grow"
+									{...testId("portal-text-unsent-textarea")}
+								/>
+								<CopyButton value={text} timeout={2000}>
+									{({ copied, copy }) => (
+										<Button
+											variant="subtle"
+											onClick={copy}
+											{...testId("portal-text-unsent-copy-button")}
+										>
+											{copied ? t`Copied` : t`Copy`}
+										</Button>
+									)}
+								</CopyButton>
+							</Group>
+						)}
+					</>
+				) : (
+					<Textarea
+						minRows={4}
+						autosize
+						maxRows={10}
+						placeholder={t`Type your response here`}
+						value={text}
+						onChange={(e) => setText(e.currentTarget.value)}
+						{...testId("portal-text-input-textarea")}
+					/>
+				)}
 				<Group className="w-full">
-					<Button
-						size="lg"
-						variant="filled"
-						leftSection={<UploadSimpleIcon size={20} />}
-						onClick={onChunk}
-						loading={uploadChunkMutation.isPending}
-						className="flex-grow"
-						{...testId("portal-text-submit-button")}
-					>
-						<Trans id="participant.button.submit.text.mode">Submit</Trans>
-					</Button>
+					{!notTaking && (
+						<Button
+							size="lg"
+							variant="filled"
+							leftSection={<UploadSimpleIcon size={20} />}
+							onClick={onChunk}
+							loading={uploadChunkMutation.isPending}
+							className="flex-grow"
+							{...testId("portal-text-submit-button")}
+						>
+							<Trans id="participant.button.submit.text.mode">Submit</Trans>
+						</Button>
+					)}
 
 					<I18nLink to={audioModeUrl}>
 						<Button
@@ -237,16 +287,18 @@ export const ParticipantConversationText = () => {
 							<MicrophoneIcon size={20} />
 						</Button>
 					</I18nLink>
-					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
-						<Button
-							size="lg"
-							onClick={openFinishModal}
-							leftSection={<CheckIcon size={20} />}
-							{...testId("portal-text-finish-button")}
-						>
-							<Trans id="participant.button.finish.text.mode">Finish</Trans>
-						</Button>
-					)}
+					{(text.trim() === "" || notTaking) &&
+						chunks.data &&
+						chunks.data.length > 0 && (
+							<Button
+								size="lg"
+								onClick={openFinishModal}
+								leftSection={<CheckIcon size={20} />}
+								{...testId("portal-text-finish-button")}
+							>
+								<Trans id="participant.button.finish.text.mode">Finish</Trans>
+							</Button>
+						)}
 				</Group>
 			</Stack>
 		</div>

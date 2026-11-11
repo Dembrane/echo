@@ -1,6 +1,7 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, asc, eq, gt, isNotNull, isNull, ne, not } from "drizzle-orm";
+import { and, asc, eq, gt, isNotNull, isNull, lte, ne, not, or } from "drizzle-orm";
+import { HANDOVER_SET_VERSION } from "./service";
 
 const { pricing_configuration: pc, directus_users } = schema;
 
@@ -47,8 +48,33 @@ export function pricingStorage(db: Db) {
     },
 
     /**
+     * The enquiry outbox: submitted rows with an email and no booking, submitted before
+     * `before` and not yet forwarded, oldest first. A row without an email is an anonymous
+     * website visit and is never sent.
+     */
+    async unforwardedEnquiries(before: Date, limit: number): Promise<PricingRow[]> {
+      return db
+        .select()
+        .from(pc)
+        .where(
+          and(
+            eq(pc.status, "submitted"),
+            isNull(pc.booking_uid),
+            isNotNull(pc.email),
+            ne(pc.email, ""),
+            isNotNull(pc.submitted_at),
+            lte(pc.submitted_at, before.toISOString()),
+            isNull(pc.enquiry_notified_at),
+          ),
+        )
+        .orderBy(asc(pc.submitted_at), asc(pc.id))
+        .limit(limit);
+    },
+
+    /**
      * External enquiries with an email that changed after `since`, oldest first: what sam's
-     * daily pricing digest reads. Internal (dembrane.com) rows are left out.
+     * daily pricing digest reads. Internal (dembrane.com) rows are left out, and so are the
+     * app's handover rows: one per prompt shown, with no answers; the website row has the plan.
      */
     async recentEnquiries(since: Date): Promise<PricingRow[]> {
       return db
@@ -60,6 +86,7 @@ export function pricingStorage(db: Db) {
             isNotNull(pc.email),
             ne(pc.email, ""),
             gt(pc.updated_at, since.toISOString()),
+            or(isNull(pc.question_set_version), ne(pc.question_set_version, HANDOVER_SET_VERSION)),
           ),
         )
         .orderBy(asc(pc.created_at), asc(pc.id));

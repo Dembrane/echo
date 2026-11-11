@@ -23,7 +23,6 @@ import {
 import {
 	GearIcon,
 	MagnifyingGlassIcon,
-	PlusIcon,
 	TrayArrowUp,
 	XIcon,
 } from "@phosphor-icons/react";
@@ -37,6 +36,7 @@ import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
+import { CreateProjectButton } from "@/components/project/CreateProjectButton";
 import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
@@ -302,16 +302,11 @@ export const ProjectsHomeRoute = () => {
 							)}
 						</Text>
 						{canCreateProject && (
-							<Button
+							<CreateProjectButton
 								size="sm"
 								w="fit-content"
-								variant="filled"
-								leftSection={<PlusIcon size={20} />}
-								onClick={handleCreateProject}
-								{...testId("project-home-create-button")}
-							>
-								<Trans>Create project</Trans>
-							</Button>
+								onCreate={handleCreateProject}
+							/>
 						)}
 					</Stack>
 				) : (
@@ -346,15 +341,10 @@ export const ProjectsHomeRoute = () => {
 									<Trans>All projects</Trans>
 								</Title>
 								{canCreateProject && (
-									<Button
+									<CreateProjectButton
 										size="sm"
-										variant="filled"
-										leftSection={<PlusIcon size={20} />}
-										onClick={handleCreateProject}
-										{...testId("project-home-create-button")}
-									>
-										<Trans>Create project</Trans>
-									</Button>
+										onCreate={handleCreateProject}
+									/>
 								)}
 							</Group>
 

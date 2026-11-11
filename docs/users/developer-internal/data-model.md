@@ -49,7 +49,7 @@ billing_account            (workspace.billing_account_id)
 | `workspace` | Belongs to an org. Carries `visibility`, the required `billing_account_id`, the data owner fields and `allow_support_access`. |
 | `billing_account` | The billing unit: `tier`, `status`, `payment_mode`, seats, invoice details. A workspace's tier is the tier of its billing account. |
 | `project` | Belongs to a workspace. Holds the portal settings, `language`, `visibility`, `is_conversation_allowed` and `anonymize_transcripts`. |
-| `conversation` | One contribution. Flags: `is_finished`, `is_all_chunks_transcribed`, `is_over_cap`, `is_anonymized`. Also `summary`, `title`, `duration` and `merged_audio_path`. |
+| `conversation` | One contribution. Flags: `is_finished`, `is_all_chunks_transcribed`, `is_anonymized`, and `is_over_cap`, which is retired and no longer set or read as a lock. Also `summary`, `title`, `duration` and `merged_audio_path`. |
 | `conversation_chunk` | The unit of upload and transcription: `path`, `transcript`, `error`, `diarization`, `timestamp`, `source`. |
 
 A chunk is pending while it has no transcript and no error. [The processing pipeline](./processing-pipeline.md) explains how the flags move.

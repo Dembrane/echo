@@ -13,16 +13,17 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -30,11 +31,13 @@ import {
 } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useProjectCapStatus } from "@/hooks/useProjectCap";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
-import { isOutsiderRole } from "@/lib/roles";
+import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 
 type Access = "workspace" | "private";
 
@@ -84,6 +87,7 @@ export const CreateProjectRoute = () => {
 	const [context, setContext] = useState("");
 	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	// Availability is not default-ness. The assistant setup starts an agentic
 	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it.
 	// Pre-ticking it would fire an agentic run on every project created,
@@ -95,6 +99,20 @@ export const CreateProjectRoute = () => {
 	useDocumentTitle(t`Create project | dembrane`);
 
 	const tier = workspace?.tier ?? "pilot";
+	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
+	const cap = useProjectCapStatus(workspace);
+	const capDecided = useRef(false);
+	const wizardStarted = step > 0 || name.trim() !== "";
+	const [atProjectCap, setAtProjectCap] = useState(false);
+	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
+	useEffect(() => {
+		if (capDecided.current || !cap.settled) return;
+		capDecided.current = true;
+		if (cap.atCap && !wizardStarted) {
+			setAtProjectCap(true);
+			upgradeHandlers.open();
+		}
+	}, [cap.atCap, cap.settled, wizardStarted, upgradeHandlers.open]);
 	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
 	const privateAvailable = privateTiers.has(tier);
 
@@ -129,6 +147,10 @@ export const CreateProjectRoute = () => {
 			return project;
 		},
 		onError: (error: Error) => {
+			if (isFreeTierLimitError(error) === "projects") {
+				upgradeHandlers.open();
+				return;
+			}
 			void notifyError(error);
 		},
 		onSuccess: (project) => {
@@ -445,6 +467,16 @@ export const CreateProjectRoute = () => {
 					</Button>
 				</Group>
 			</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={atProjectCap ? backToProjects : upgradeHandlers.close}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdminRole(workspace?.role)}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="project_cap"
+			/>
 		</Container>
 	);
 };

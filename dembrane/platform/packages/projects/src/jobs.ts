@@ -13,7 +13,11 @@ export const generateReport = defineJob(
     language: z.string(),
     userInstructions: z.string(),
   }),
-  { retryLimit: 3, expireInSeconds: 30 * 60 },
+  {
+    retryLimit: 3,
+    expireInSeconds: 30 * 60,
+    payer: (p) => ({ ref: "report", id: String(p.reportId) }),
+  },
 );
 
 /**

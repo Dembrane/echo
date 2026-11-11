@@ -111,7 +111,7 @@ interface Conversation {
 	// Derived by the conversations BFF: a chunk has neither transcript nor error yet.
 	has_pending_chunks?: boolean;
 	// Derived by the conversations BFF. lock_reason explains why `locked`;
-	// summary_locked marks a server-scrubbed summary (1-hour recording cap gate).
+	// summary_locked marks a server-scrubbed summary (legacy free hours cap; no longer set).
 	lock_reason?: "hours_cap" | null;
 	summary_locked?: boolean;
 }
@@ -281,6 +281,12 @@ interface ParticipantProject extends Project {
 	privacy_policy_url: string | null;
 	// consent-card name; null renders "The organiser"
 	organiser_name: string | null;
+	// Free tier: false when the portal may not start a recording.
+	is_taking_recordings?: boolean;
+	// Free tier: false when the account's AI budget is used up (Verify, Explore).
+	is_ai_available?: boolean;
+	// Recorded seconds after which the portal stops itself; null is no limit.
+	conversation_limit_seconds?: number | null;
 }
 
 interface ProjectAgenticRun {

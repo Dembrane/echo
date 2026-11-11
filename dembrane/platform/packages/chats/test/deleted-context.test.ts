@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { reply } from "../src/reply";
+import { fakeLanguageModel } from "@dembrane/llm";
 import { addContext, getContext, lockConversations } from "../src/service";
-import { fakeDeps, fakeModel, host, P1 } from "./fakes";
+import { fakeDeps, host, P1 } from "./fakes";
+import { reply } from "./scoped";
 
 const CHAT = "c3000000-0000-4000-8000-000000000011";
 const LIVE = "c1000000-0000-4000-8000-000000000011";
@@ -83,7 +84,7 @@ describe("a chat with a deleted conversation attached", () => {
   test("a message still gets an answer from the live conversation", async () => {
     const w = world();
     const calls: LanguageModelV4CallOptions[] = [];
-    const d = fakeDeps({ ...w, model: fakeModel({ text: "Charging.", calls }) });
+    const d = fakeDeps({ ...w, model: fakeLanguageModel({ text: "Charging.", calls }) });
     const res = await reply(
       d,
       host,

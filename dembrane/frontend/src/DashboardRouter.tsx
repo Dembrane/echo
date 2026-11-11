@@ -15,7 +15,8 @@ import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
-import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
+import { LegacyProjectRedirect } from "./routes/project/LegacyProjectRedirect";
+import { NewProjectRedirect } from "./routes/project/NewProjectRedirect";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
@@ -31,6 +32,10 @@ import {
 } from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
+const ProjectConversationRoute = createLazyNamedRoute(
+	() => import("./routes/project/conversation/ProjectConversationRoute"),
+	"ProjectConversationRoute",
+);
 const ProjectsHomeRoute = createLazyNamedRoute(
 	() => import("./routes/project/ProjectsHome"),
 	"ProjectsHomeRoute",
@@ -588,6 +593,33 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "w/:workspaceId",
+			},
+			{
+				// Pre-v3 links (bookmarks, emails, ?next) open the project in its workspace.
+				element: (
+					<Protected>
+						<LegacyProjectRedirect />
+					</Protected>
+				),
+				path: "projects",
+			},
+			{
+				// Static link for emails and sites: opens project creation in the
+				// person's workspace. Ranked above the :projectId splat.
+				element: (
+					<Protected>
+						<NewProjectRedirect />
+					</Protected>
+				),
+				path: "projects/new",
+			},
+			{
+				element: (
+					<Protected>
+						<LegacyProjectRedirect />
+					</Protected>
+				),
+				path: "projects/:projectId/*",
 			},
 			{
 				// Signing is one focused screen without the dashboard chrome: a person

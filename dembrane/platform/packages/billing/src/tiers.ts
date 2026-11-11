@@ -30,7 +30,8 @@ export const TIER_CAPACITIES: Readonly<Record<string, TierCapacity>> = {
     priceEurMonthly: null,
     priceNote: "free",
     includedSeats: null,
-    includedHours: 1,
+    // Default of the staff-editable audio_seconds_month limit (@dembrane/allowance).
+    includedHours: 5,
     trainingIncluded: "Sold separately",
     duration: "—",
     billingPeriodApplicable: false,

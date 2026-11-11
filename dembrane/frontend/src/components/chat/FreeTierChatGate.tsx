@@ -3,46 +3,14 @@ import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Stack, Text } from "@mantine/core";
 import { LockIcon } from "@phosphor-icons/react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { SAMPLE_CHAT_QUESTIONS } from "@/components/workspace/gateWalls";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import type { FreeTierLimit } from "@/lib/freeTier";
 import type { Tier } from "@/lib/tiers";
 
 // The single purchasable tier today (mirrors backend FREE_TIER_UPGRADE_CTA_TIER).
 const UPGRADE_TIER: Tier = "changemaker";
 
-/**
- * Chat-specific wrapper over the shared UpgradeModal. Pulls the current tier
- * and role from workspace context so call sites only manage open/close.
- */
-export function ChatUpgradeModal({
-	opened,
-	onClose,
-	reason,
-}: {
-	opened: boolean;
-	onClose: () => void;
-	reason: FreeTierLimit;
-}) {
-	// UpgradeModal resolves the workspace from context itself; we read it here
-	// only for the tier/role it needs as props.
-	const { workspace } = useWorkspace();
-	const isChatLimit = reason === "chats";
-	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
-	return (
-		<UpgradeModal
-			opened={opened}
-			onClose={onClose}
-			currentTier={(workspace?.tier ?? "free") as Tier}
-			requiredTier={UPGRADE_TIER}
-			canRequestUpgrade={isAdmin}
-			workspaceId={workspace?.id ?? ""}
-			wallKey={isChatLimit ? "chat_cap" : "chat_turn_cap"}
-		/>
-	);
-}
-
-/** The recording-hours cap, reached from the composer's microphone. Separate
- * from ChatUpgradeModal because that copy names a per-chat limit. */
+/** The recording-hours cap, reached from the composer's microphone. */
 export function VoiceCapUpgradeModal({
 	opened,
 	onClose,
@@ -67,11 +35,16 @@ export function VoiceCapUpgradeModal({
 	);
 }
 
-/**
- * Inline card rendered in the chat thread in place of the 4th turn's reply.
- * Clicking it opens the upgrade path.
- */
-export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
+/** Inline card in a sample project's chat once the project's questions are used (all its chats share them). */
+export function ChatTurnLimitCard({
+	onUpgrade,
+	questions,
+}: {
+	onUpgrade: () => void;
+	// The cap the chat_turns refusal carried; none falls back to the default.
+	questions?: number | null;
+}) {
+	const count = questions ?? SAMPLE_CHAT_QUESTIONS;
 	return (
 		<Alert
 			color="gray"
@@ -81,8 +54,8 @@ export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 			<Stack gap="sm" align="flex-start">
 				<Text size="sm">
 					<Trans>
-						You've reached the free plan limit for this chat. Upgrade to keep
-						the conversation going.
+						You've used this sample project's {count} questions. Create your own
+						project or upgrade to keep going.
 					</Trans>
 				</Text>
 				<Button size="xs" onClick={onUpgrade}>

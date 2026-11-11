@@ -2,6 +2,7 @@ import { ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@dembrane/popcorn";
 import { and, eq, isNull } from "drizzle-orm";
 import { type AccountsDeps, isStaffEmail } from "../deps";
@@ -179,7 +180,8 @@ export async function buildDemo(
         },
       });
       try {
-        const out = await fn(row);
+        // A demo is dembrane's own spend, whichever step makes the call.
+        const out = await withPayer({ internal: "demo_build" }, () => fn(row));
         const latest = (await load(d, demoId)).steps as Steps;
         await save(d, demoId, {
           ...out,

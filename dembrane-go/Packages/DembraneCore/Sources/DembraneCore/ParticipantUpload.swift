@@ -14,17 +14,73 @@ public enum UploadError: Error, Sendable, Equatable {
     case badResponse
 }
 
+/// Where the per-conversation upload tokens are kept. A protocol so the app
+/// keeps them on disk (a recording interrupted by an app kill is uploaded on a
+/// later launch) while tests keep them in memory.
+public protocol ParticipantTokenStore: Sendable {
+    func token(conversationId: String) -> String?
+    func set(_ token: String?, conversationId: String)
+}
+
+public final class InMemoryParticipantTokenStore: ParticipantTokenStore, @unchecked Sendable {
+    private var tokens: [String: String] = [:]
+    private let lock = NSLock()
+    public init() {}
+    public func token(conversationId: String) -> String? {
+        lock.lock(); defer { lock.unlock() }
+        return tokens[conversationId]
+    }
+    public func set(_ token: String?, conversationId: String) {
+        lock.lock(); defer { lock.unlock() }
+        tokens[conversationId] = token
+    }
+}
+
+/// Tokens of conversations still being uploaded, one small dictionary in
+/// UserDefaults. An entry is removed when its conversation is finished.
+public final class UserDefaultsParticipantTokenStore: ParticipantTokenStore, @unchecked Sendable {
+    private let key: String
+    private let defaults: UserDefaults
+    private let lock = NSLock()
+
+    public init(key: String = "com.dembrane.go.participantTokens", defaults: UserDefaults = .standard) {
+        self.key = key
+        self.defaults = defaults
+    }
+
+    public func token(conversationId: String) -> String? {
+        lock.lock(); defer { lock.unlock() }
+        return (defaults.dictionary(forKey: key) as? [String: String])?[conversationId]
+    }
+    public func set(_ token: String?, conversationId: String) {
+        lock.lock(); defer { lock.unlock() }
+        var all = (defaults.dictionary(forKey: key) as? [String: String]) ?? [:]
+        all[conversationId] = token
+        defaults.set(all, forKey: key)
+    }
+}
+
 /// Drives the dembrane participant recording flow: create a conversation in a
-/// project → upload an audio file to S3 → confirm → finish. These endpoints are
-/// public (no auth); the conversation lands in the given project, which must
+/// project → upload an audio file to S3 → confirm → finish. These endpoints
+/// need no sign-in; the conversation lands in the given project, which must
 /// have `is_conversation_allowed = true`.
+///
+/// Creating the conversation returns a token in the `x-participant-token`
+/// header. It is the credential for that one conversation and goes back on
+/// every later call for it. A conversation started before the app kept tokens
+/// has none; the server accepts those calls until it makes the token mandatory.
 public actor ParticipantUploadClient {
+    public static let tokenHeader = "x-participant-token"
+
     private let endpoints: DembraneEndpoints
     private let session: URLSession
+    private let tokens: ParticipantTokenStore
 
-    public init(env: AppEnvironment, session: URLSession = .shared) {
+    public init(env: AppEnvironment, session: URLSession = .shared,
+                tokens: ParticipantTokenStore = UserDefaultsParticipantTokenStore()) {
         self.endpoints = DembraneEndpoints(env: env)
         self.session = session
+        self.tokens = tokens
     }
 
     /// Run the whole flow. Returns the created conversation id.
@@ -67,10 +123,13 @@ public actor ParticipantUploadClient {
     }
 
     func initiate(projectId: String, name: String, source: String) async throws -> String {
-        let data = try await postJSON(endpoints.initiateConversation(projectId: projectId),
-                                      ["name": name, "pin": "go", "source": source, "tag_id_list": []])
+        let (data, http) = try await send(endpoints.initiateConversation(projectId: projectId),
+                                          ["name": name, "pin": "go", "source": source, "tag_id_list": []])
         guard let id = (try? DembraneJSON.decoder().decode(InitiateResponse.self, from: data))?.id else {
             throw UploadError.badResponse
+        }
+        if let token = http?.value(forHTTPHeaderField: Self.tokenHeader), !token.isEmpty {
+            tokens.set(token, conversationId: id)
         }
         return id
     }
@@ -78,7 +137,8 @@ public actor ParticipantUploadClient {
     func uploadTicket(conversationId: String, filename: String, contentType: String) async throws -> UploadTicket {
         let data = try await postJSON(endpoints.getUploadURL(conversationId: conversationId),
                                       ["filename": filename, "content_type": contentType,
-                                       "conversation_id": conversationId])
+                                       "conversation_id": conversationId],
+                                      conversationId: conversationId)
         guard let r = try? DembraneJSON.decoder().decode(UploadURLResponse.self, from: data),
               let url = URL(string: r.uploadUrl) else { throw UploadError.badResponse }
         return UploadTicket(chunkId: r.chunkId, uploadURL: url, fields: r.fields, fileURL: r.fileUrl)
@@ -111,24 +171,35 @@ public actor ParticipantUploadClient {
                  source: String, timestamp: Date) async throws {
         _ = try await postJSON(endpoints.confirmUpload(conversationId: conversationId),
                                ["chunk_id": chunkId, "file_url": fileURL,
-                                "timestamp": Self.iso8601.string(from: timestamp), "source": source])
+                                "timestamp": Self.iso8601.string(from: timestamp), "source": source],
+                               conversationId: conversationId)
     }
 
     func finish(conversationId: String) async throws {
-        _ = try await postJSON(endpoints.finishConversation(conversationId: conversationId), [:])
+        _ = try await postJSON(endpoints.finishConversation(conversationId: conversationId), [:],
+                               conversationId: conversationId)
+        tokens.set(nil, conversationId: conversationId)
     }
 
+    /// A call on an existing conversation: carries its token when one is known.
     @discardableResult
-    private func postJSON(_ url: URL, _ json: [String: Any]) async throws -> Data {
+    private func postJSON(_ url: URL, _ json: [String: Any], conversationId: String) async throws -> Data {
+        try await send(url, json, token: tokens.token(conversationId: conversationId)).0
+    }
+
+    private func send(_ url: URL, _ json: [String: Any],
+                      token: String? = nil) async throws -> (Data, HTTPURLResponse?) {
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token { req.setValue(token, forHTTPHeaderField: Self.tokenHeader) }
         req.httpBody = try JSONSerialization.data(withJSONObject: json)
         let (data, resp) = try await session.data(for: req)
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        let http = resp as? HTTPURLResponse
+        let code = http?.statusCode ?? -1
         guard (200..<300).contains(code) else { throw UploadError.badStatus(code) }
-        return data
+        return (data, http)
     }
 
     private static let iso8601: ISO8601DateFormatter = {

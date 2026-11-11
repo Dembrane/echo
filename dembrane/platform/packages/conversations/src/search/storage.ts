@@ -22,6 +22,36 @@ function allTokens(cols: AnyPgColumn[], term: string): SQL | undefined {
   return and(...toks.map((t) => or(...cols.map((c) => icontains(c, t)))));
 }
 
+/** Who is searching: decides which projects the transcript scan may touch. */
+export interface Searcher {
+  appUserId: string;
+  directusUserId: string;
+}
+
+/**
+ * The conversations of projects the searcher might read: a live membership in the
+ * workspace, an org membership that reaches the workspace, or a legacy project they
+ * created. A superset of what the access rules allow (the exact check stays in the
+ * route), built from the small membership tables. The transcript scan keeps only chunks
+ * of these conversations, so a rare phrase is no longer matched against every chunk of
+ * every project.
+ */
+async function reachableConversations(db: Db, who: Searcher): Promise<string[]> {
+  const rows = await db.execute<{ id: string }>(sql`
+    select c.id from conversation c
+    join project p on p.id = c.project_id
+    where p.deleted_at is null and (
+      p.workspace_id in (
+        select wm.workspace_id from workspace_membership wm
+        where wm.user_id = ${who.appUserId} and wm.deleted_at is null)
+      or p.workspace_id in (
+        select w.id from workspace w
+        join org_membership om on om.org_id = w.org_id
+        where om.user_id = ${who.appUserId} and om.deleted_at is null and w.deleted_at is null)
+      or (p.workspace_id is null and p.directus_user_id = ${who.directusUserId}))`);
+  return [...rows].map((r) => r.id);
+}
+
 /** The four home search sources, newest first, over-fetched so access filtering can trim them. */
 export function searchStorage(db: Db) {
   return {
@@ -74,30 +104,55 @@ export function searchStorage(db: Db) {
         .limit(limit);
     },
 
-    /** Phrase match on transcripts: a spoken phrase is contiguous. */
-    chunks(term: string, limit: number) {
-      return db
+    /**
+     * Phrase match on transcripts: a spoken phrase is contiguous. Only chunks of projects
+     * the searcher might read are matched, and the newest ones are cut to the limit before
+     * the conversation and project are joined, so the joins run for a handful of rows. The
+     * ids go in as one array value, which Postgres hashes and sizes when planning. Inlined,
+     * `= any(array(subquery))` was checked row by row (minutes for 90k conversations) and
+     * `in (subquery)` walked every chunk by timestamp for a rare phrase (4.5 s).
+     */
+    async chunks(term: string, limit: number, who: Searcher) {
+      const reachable = await reachableConversations(db, who);
+      if (!reachable.length) return [];
+      // One bound parameter however many ids, unlike inArray's one per id.
+      const reachableIds = `{${reachable.join(",")}}`;
+      const hit = db
         .select({
           id: conversation_chunk.id,
           transcript: conversation_chunk.transcript,
           timestamp: conversation_chunk.timestamp,
           created_at: conversation_chunk.created_at,
+          conversation_id: conversation_chunk.conversation_id,
+        })
+        .from(conversation_chunk)
+        .where(
+          and(
+            sql`${conversation_chunk.conversation_id} = any (${reachableIds}::uuid[])`,
+            or(
+              icontains(conversation_chunk.transcript, term),
+              icontains(conversation_chunk.raw_transcript, term),
+            ),
+          ),
+        )
+        .orderBy(desc(conversation_chunk.timestamp), conversation_chunk.id)
+        .limit(limit)
+        .as("hit");
+      return db
+        .select({
+          id: hit.id,
+          transcript: hit.transcript,
+          timestamp: hit.timestamp,
+          created_at: hit.created_at,
           conversation_id: conversation.id,
           participant_name: conversation.participant_name,
           project_id: conversation.project_id,
           workspace_id: project.workspace_id,
         })
-        .from(conversation_chunk)
-        .leftJoin(conversation, eq(conversation.id, conversation_chunk.conversation_id))
+        .from(hit)
+        .leftJoin(conversation, eq(conversation.id, hit.conversation_id))
         .leftJoin(project, eq(project.id, conversation.project_id))
-        .where(
-          or(
-            icontains(conversation_chunk.transcript, term),
-            icontains(conversation_chunk.raw_transcript, term),
-          ),
-        )
-        .orderBy(desc(conversation_chunk.timestamp), conversation_chunk.id)
-        .limit(limit);
+        .orderBy(desc(hit.timestamp), hit.id);
     },
 
     chats(term: string, limit: number) {

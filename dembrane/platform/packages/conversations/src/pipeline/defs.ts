@@ -1,3 +1,4 @@
+import type { Payer } from "@dembrane/observability";
 import { defineJob } from "@dembrane/queue";
 import { z } from "zod";
 
@@ -12,10 +13,24 @@ import { z } from "zod";
 // that many times, each on another worker, before it is left for a person.
 const LOST_WORKER_LIMIT = 10;
 
-/** One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. */
+/** A run that names its conversation is billed to it. */
+const byConversation = (p: { conversationId: string }): Payer => ({
+  ref: "conversation",
+  id: p.conversationId,
+});
+
+/**
+ * One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. A typed
+ * chunk of an anonymised conversation is marked here; its raw text waits in the row's
+ * pending_text, never in a job input or step output, which the queue keeps.
+ */
 export const processChunk = defineJob(
   "conversations.chunk",
-  z.object({ chunkId: z.string(), usePiiRedaction: z.boolean().default(false) }),
+  z.object({
+    chunkId: z.string(),
+    usePiiRedaction: z.boolean().default(false),
+    typed: z.boolean().optional(),
+  }),
   // Retries live on the steps; this bounds one run (Vertex outages back off for minutes).
   { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
@@ -24,21 +39,56 @@ export const processChunk = defineJob(
 export const finishConversation = defineJob(
   "conversations.finish",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /** Every chunk is transcribed and the conversation is finished: flag, merge, summarise, count. */
 export const finalizeConversation = defineJob(
   "conversations.finalize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 6 * 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
-/** A summary on its own: the catch-up for conversations unlocked by an upgrade. */
+/**
+ * The whole recording transcribed again once the conversation is finalized. One run per
+ * provider and chunk list; the first provider's result is the transcript people read.
+ */
+export const finalTranscript = defineJob(
+  "conversations.final-transcript",
+  z.object({
+    conversationId: z.string(),
+    provider: z.enum(["gemini", "whisper"]),
+    record: z.boolean(),
+    hash: z.string(),
+  }),
+  {
+    retryLimit: 0,
+    expireInSeconds: 6 * 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
+);
+
+/** A summary on its own: the catch-up for conversations still without one. */
 export const summarizeConversation = defineJob(
   "conversations.summarize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
+  {
+    retryLimit: 0,
+    expireInSeconds: 3600,
+    lostWorkerLimit: LOST_WORKER_LIMIT,
+    payer: byConversation,
+  },
 );
 
 /** Every two minutes: finish conversations nobody has added to for five minutes. */
@@ -48,7 +98,7 @@ export const finishIdleConversations = defineJob("conversations.finish-idle", z.
   expireInSeconds: 120,
 });
 
-/** Every five minutes: summarise transcribed conversations that have none and are not locked. */
+/** Every five minutes: summarise transcribed conversations that have none. */
 export const catchUpSummaries = defineJob("conversations.summary-catch-up", z.object({}), {
   policy: "singleton",
   retryLimit: 0,

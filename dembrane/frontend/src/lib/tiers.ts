@@ -82,7 +82,7 @@ export function capacityShortFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
 		changemaker: t`€75 / seat / month`,
-		free: t`1 h recording`,
+		free: t`Monthly free allowance`,
 		guardian: t`€150 / seat / month`,
 		innovator: t`€20 / seat / month`,
 	};
@@ -130,93 +130,4 @@ export interface MonthlyPricing {
 export interface TierPricing {
 	annual_billing?: AnnualPricing | null;
 	monthly_billing?: MonthlyPricing | null;
-}
-
-export interface TierCapacity {
-	tier: string;
-	tagline: string;
-	pricing: TierPricing | null;
-	billing_period_applicable: boolean;
-	duration: string;
-	included_seats: number | null;
-	included_hours: number | null;
-	hard_block_on_hours: boolean;
-	training_included: string;
-}
-
-/**
- * Resolve the active-cadence pricing slot for a tier capacity (per seat).
- *
- * - Annual selected -> `annual_billing`
- * - Monthly selected -> `monthly_billing`
- * - Free -> null (no displayable price)
- *
- * No longer exported. The price cards were its only reader outside this file,
- * and they are gone. The two formatters below still need it, and they belong
- * to the billing surface that existing payers keep.
- */
-function pricingForBillingPeriod(
-	cap: TierCapacity,
-	period: BillingPeriod,
-):
-	| { kind: "annual"; per_month_eur: number; total_per_year_eur: number }
-	| { kind: "monthly"; per_month_eur: number }
-	| null {
-	const p = cap.pricing;
-	if (!p) return null;
-	if (period === "monthly" && p.monthly_billing) {
-		return {
-			kind: "monthly",
-			per_month_eur: p.monthly_billing.per_month_eur,
-		};
-	}
-	if (p.annual_billing) {
-		return {
-			kind: "annual",
-			per_month_eur: p.annual_billing.per_month_eur,
-			total_per_year_eur: p.annual_billing.total_per_year_eur,
-		};
-	}
-	return null;
-}
-
-// Shared display formatters. Single source so the pricing cards and the
-// capacity matrix render the same numbers identically.
-export function formatTierPrice(
-	cap: TierCapacity,
-	billingPeriod: BillingPeriod,
-): string {
-	const resolved = pricingForBillingPeriod(cap, billingPeriod);
-	if (!resolved) return t`Free`;
-	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-}
-
-export function formatTierPricePeriod(
-	cap: TierCapacity,
-	billingPeriod: BillingPeriod,
-): string {
-	const resolved = pricingForBillingPeriod(cap, billingPeriod);
-	if (!resolved) return "";
-	if (resolved.kind === "annual") return t`/seat/mo · billed annually`;
-	return t`/seat/mo · billed monthly`;
-}
-
-export function formatTierSeats(cap: TierCapacity): string {
-	if (cap.included_seats == null) return "∞";
-	return String(cap.included_seats);
-}
-
-export function formatTierHours(cap: TierCapacity): string {
-	if (cap.included_hours == null) return "∞";
-	return String(cap.included_hours);
-}
-
-export async function fetchTierCapacities(
-	apiBaseUrl: string,
-): Promise<TierCapacity[]> {
-	const res = await fetch(`${apiBaseUrl}/v2/workspaces/tier-capacities`, {
-		credentials: "include",
-	});
-	if (!res.ok) return [];
-	return res.json();
 }

@@ -24,12 +24,42 @@ msgid "error.request.field_empty"
 msgstr "{field} cannot be empty. Fill it in or remove it."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:36
+msgid "error.document.field_date_invalid"
+msgstr "{label} must be a real date, not in the future and not before the document was sent."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:21
+msgid "error.offer.bill_to_reverse_charge"
+msgstr "{name} is a business elsewhere in the EU. Choose reverse charge."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:13
+msgid "error.offer.bill_to_in_eu"
+msgstr "{name} is in the EU, so Outside the EU does not apply."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:9
+msgid "error.offer.bill_to_dutch_vat"
+msgstr "{name} is in the Netherlands. Choose Dutch VAT."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:17
+msgid "error.offer.bill_to_outside_eu"
+msgstr "{name} is outside the EU, so reverse charge does not apply."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:25
+msgid "error.offer.bill_to_vat_format"
+msgstr "{vat_id} does not look like a VAT number from {country}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:67
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Your initials image} other {Your signature image}} is too large. Keep it under 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:62
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Your initials} other {Your signature}} must be a PNG image."
 
@@ -99,6 +129,11 @@ msgid "error.workspace.data_owner_org_required"
 msgstr "Add the name of the organisation that owns the data."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:63
+msgid "error.offer.no_charge_invoiced"
+msgstr "An offer of no charge has no invoice plan and no paying party."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
 msgstr "As an organisation admin you can join this workspace directly, no request needed."
@@ -124,7 +159,12 @@ msgid "error.field.invalid"
 msgstr "Check this field and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/offer.ts:5
+msgid "error.offer.bill_to_country"
+msgstr "Choose the country of the organisation that is invoiced."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_target"
 msgstr "Choose where this webhook goes: a web address, or sam's inbox with a known code."
 
@@ -134,7 +174,7 @@ msgid "error.map.groups_need_snapshot"
 msgstr "Clusters can be kept on a regenerated map. Regenerate the map and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:27
+#: src/lib/errors/messages/document.ts:31
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirm that you are authorised to agree to data processing for your organisation."
 
@@ -184,7 +224,7 @@ msgid "error.field.invalid_url"
 msgstr "Enter a web address that starts with http:// or https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_text_invalid"
 msgstr "Enter text for {label}."
 
@@ -199,7 +239,7 @@ msgid "error.request.field_required"
 msgstr "Fill in {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_required"
 msgstr "Fill in {label} to continue."
 
@@ -212,6 +252,11 @@ msgstr "Fill in this field."
 #: src/lib/errors/messages/access.ts:9
 msgid "error.access.not_onboarded"
 msgstr "Finish setting up your account to continue."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:37
+msgid "error.offer.invoice_part_share"
+msgstr "Give part {part} a share above zero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
@@ -229,14 +274,44 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Invite-only and private workspaces need the Innovator plan or higher. Create it as open for now, or upgrade first."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:46
+msgid "error.offer.invoice_parts_count"
+msgstr "Invoice in {min} to {max} parts."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:72
+msgid "error.offer.option_not_optional"
+msgstr "Line {line} has an option name. Make it optional, or clear the name."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:58
+msgid "error.offer.line_no_amount"
+msgstr "Line {line} has no price. For a free offer, choose No charge under How we invoice."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:82
+msgid "error.offer.section_missing"
+msgstr "Line {line} has no section. Put every line under a heading, or none."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Make a summary of this conversation first, then try again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:67
+msgid "error.offer.no_charge_total"
+msgstr "No charge means a total of zero. Set the prices to 0, or choose another way to invoice."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
 msgid "error.agent_access.no_enabled_organisation"
 msgstr "None of the organisations you picked allow agent access. Pick another one, or ask your admin to switch agent access on."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:5
+msgid "error.portal.ai_unavailable"
+msgstr "Not available right now."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
@@ -259,12 +334,17 @@ msgid "error.billing.payments_unavailable"
 msgstr "Online payments are not available right now. Contact us to change your plan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:19
+#: src/lib/errors/messages/document.ts:102
+msgid "error.document.second_signer_only"
+msgstr "Only {email} can sign second."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:23
 msgid "error.document.decline_signer_only"
 msgstr "Only {signer_email} can decline this document."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:120
 msgid "error.document.signer_only"
 msgstr "Only {signer_email} can sign this document. Ask them to sign it, or ask us to change the signer."
 
@@ -364,12 +444,22 @@ msgid "error.project.share_admin_only"
 msgstr "Only workspace admins can share projects."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:77
+msgid "error.offer.options_not_here"
+msgstr "Options picked at signing do not go with monthly, instalment or no-charge invoicing."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:41
+msgid "error.offer.invoice_part_when"
+msgstr "Part {part}: only the first part can be on signing, and each date comes after the one before."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Part of your selection is no longer on the map. Reload the map and select again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:15
+#: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
 msgstr "Pick a status for this webhook: published, draft or archived."
 
@@ -437,6 +527,11 @@ msgstr "Quick access holds up to {max} templates. Remove one first."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Removing the dembrane mark is part of the Changemaker plan. Upgrade to use it."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:29
+msgid "error.offer.bill_to_vat_number"
+msgstr "Reverse charge needs the VAT number of {name}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:27
@@ -549,7 +644,7 @@ msgid "error.rate_limit.exceeded"
 msgstr "That was a lot of requests in a short time. Wait a moment and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:14
+#: src/lib/errors/messages/document.ts:18
 msgid "error.document.confirmation_mismatch"
 msgstr "The confirmation text does not match. Type it exactly as shown: {expected}"
 
@@ -567,6 +662,11 @@ msgstr "The frame of a demo presentation is set with the demo and cannot be chan
 #: src/lib/errors/messages/agent.ts:5
 msgid "error.agent.insight_content_blank"
 msgstr "The insight cannot be empty. Write something or remove it."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:87
+msgid "error.offer.section_split"
+msgstr "The lines of {section} must sit together."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
@@ -589,7 +689,12 @@ msgid "error.map.selection_other_snapshot"
 msgstr "The map was updated since you made this selection. Reload the map and select again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/offer.ts:54
+msgid "error.offer.invoice_shares_total"
+msgstr "The parts add up to {total}. Make them add up to 100%."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:72
 msgid "error.document.no_pdf"
 msgstr "The PDF of this document is not available. Contact us and we will send it again."
 
@@ -597,6 +702,11 @@ msgstr "The PDF of this document is not available. Contact us and we will send i
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "The PDF of this invoice is not ready yet. Try again in a little while."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:91
+msgid "error.offer.zero_total"
+msgstr "The total is zero. For a free offer, choose No charge under How we invoice."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -714,12 +824,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "This data owner is already in your organisation. For an external client, name someone outside it, or create an internal workspace instead."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_declinable"
 msgstr "This document can no longer be declined."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:125
 msgid "error.document.signing_unavailable"
 msgstr "This document cannot be signed right now. We have been told and will fix it."
 
@@ -729,12 +839,12 @@ msgid "error.document.changed"
 msgstr "This document changed since you opened it. Reload the page and read it again before you sign."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:57
 msgid "error.document.field_unknown"
 msgstr "This document changed since you opened it. Reload the page and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.no_signature_needed"
 msgstr "This document does not need a signature."
 
@@ -744,22 +854,22 @@ msgid "error.document.already_signed"
 msgstr "This document is already signed. There is nothing more to do."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:93
 msgid "error.document.not_signed"
 msgstr "This document is not signed yet, so there is no signed copy to download."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_awaiting_signature"
 msgstr "This document is not waiting for a signature anymore."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:23
+#: src/lib/errors/messages/document.ts:27
 msgid "error.document.declined"
 msgstr "This document was declined, so it can no longer be signed."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:134
 msgid "error.document.withdrawn"
 msgstr "This document was withdrawn, so it can no longer be signed."
 
@@ -769,12 +879,17 @@ msgid "error.popcorn.feature_disabled"
 msgstr "This feature is not available for this project."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:37
+msgid "error.upload.unreadable"
+msgstr "This file could not be read as audio. Choose another file."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
 msgstr "This file is empty. Choose another file."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:25
+#: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.too_large"
 msgstr "This file is too large. Files can be at most {max_mb} MB."
 
@@ -844,7 +959,7 @@ msgid "error.billing.tier_required"
 msgstr "This needs the {required} plan. Upgrade to use it."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.offer_expired"
 msgstr "This offer expired on {valid_until}. Contact us for a new one."
 
@@ -1024,7 +1139,7 @@ msgid "error.training.not_available"
 msgstr "This training is not open for booking yet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:33
+#: src/lib/errors/messages/upload.ts:41
 msgid "error.upload.unsupported_type"
 msgstr "This type of file is not supported."
 
@@ -1074,14 +1189,29 @@ msgid "error.workspace.has_projects"
 msgstr "This workspace still has {count, plural, one {# project} other {# projects}}. Delete or move them first from your organisation's Projects page."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_must_tick"
 msgstr "Tick {label} to continue."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.choose_one"
+msgstr "Tick exactly one of the options, then sign."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_tick_invalid"
 msgstr "Tick or untick {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:33
+msgid "error.offer.choose_one_needs_two"
+msgstr "To have one picked, give at least two options."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/offer.ts:50
+msgid "error.offer.invoice_parts_vat"
+msgstr "To invoice in parts, give every charged line the same VAT rate."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37
@@ -1089,7 +1219,7 @@ msgid "error.project.move_needs_admin"
 msgstr "To move projects, you need to be an admin or owner of the {side} workspace."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:130
 msgid "error.document.verified_email_required"
 msgstr "To sign, sign in with a verified email address."
 
@@ -1144,12 +1274,17 @@ msgid "error.canvas.extraction_failed"
 msgstr "We could not build the canvas preview just now. Try again in a moment."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:21
+msgid "error.upload.measure_failed"
+msgstr "We could not check the length of this file. Try again."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
 msgstr "We could not check this chat just now. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:21
+#: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.probe_url_failed"
 msgstr "We could not check your connection. Try again."
 
@@ -1219,7 +1354,7 @@ msgid "error.conversation.not_found"
 msgstr "We could not find this conversation. It may have been deleted."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_found"
 msgstr "We could not find this document. It may have been withdrawn."
 
@@ -1394,7 +1529,7 @@ msgid "error.internal.unavailable"
 msgstr "We could not reach part of dembrane just now. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:111
 msgid "error.document.signature_unreadable"
 msgstr "We could not read your signature. Draw it again and try once more."
 
@@ -1424,12 +1559,12 @@ msgid "error.map.fact_check_not_started"
 msgstr "We could not start the fact-check. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:37
+#: src/lib/errors/messages/upload.ts:45
 msgid "error.upload.url_failed"
 msgstr "We could not start the upload. Try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/upload.ts:29
+#: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.transcription_failed"
 msgstr "We could not turn this audio into text. Try again."
 
@@ -1589,6 +1724,11 @@ msgid "error.map.selection_too_large"
 msgstr "You selected too many items. Select fewer and try again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:106
+msgid "error.document.second_signer_same"
+msgstr "You signed already. Someone else from your organisation signs second."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
 msgstr "You were removed from this workspace. Ask a workspace admin to invite you back."
@@ -1637,3 +1777,8 @@ msgstr "Your recording has not reached us yet. Wait a moment and try again."
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
 msgstr "Your session has ended. Log in again to continue."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:116
+msgid "error.document.signed_awaiting"
+msgstr "Your signature is in. The other signature is still to come."

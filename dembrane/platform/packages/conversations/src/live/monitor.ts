@@ -27,14 +27,6 @@ const FUNNEL_STAGES = ["scanned", "terms", "profile"] as const;
 // Stages written by portals from before the microphone check was removed; they passed consent.
 const RETIRED_MIC_STAGES = new Set(["mic_ok", "mic_skipped", "mic_blocked"]);
 const PORTAL_ONLY = ["DASHBOARD_UPLOAD", "CLONE"];
-// tier_capacity: paid tiers are never hour capped; free has a one-hour lifetime cap.
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-const INCLUDED_HOURS: Record<string, number | null> = {
-  free: 1,
-  innovator: null,
-  changemaker: null,
-  guardian: null,
-};
 
 const clip = (s: string, n: number) => [...s.trim()].slice(0, n).join("");
 
@@ -63,14 +55,13 @@ export interface ExtraConversation {
 
 type Tele = Telemetry & { seen: Date };
 
-/** tier_capacity.is_conversation_locked plus the live gate for still-recording rows. */
+/** The retired hour lock never applies, stamped or still recording. */
 export function conversationLocked(
-  conv: { is_over_cap?: unknown; is_finished?: unknown },
-  tier: string | null,
-  overCapActive: boolean,
+  _conv: { is_over_cap?: unknown; is_finished?: unknown },
+  _tier: string | null,
+  _overCapActive: boolean,
 ): boolean {
-  if (conv.is_over_cap && tier !== null && !OVERAGE_TIERS.has(tier)) return true;
-  return overCapActive && !conv.is_finished;
+  return false;
 }
 
 export function monitorStatus(a: {
@@ -555,25 +546,13 @@ export async function gatherProjectMonitor(
   return { ...payload, funnel: buildFunnel(visitors, graduated) };
 }
 
-/**
- * workspace_over_cap_active: whether a free workspace is past its lifetime hour cap now.
- * Counts every conversation, deleted ones included, since delete keeps billable hours; a
- * sample copy's invented ones are no one's audio and are left out.
- */
+/** workspace_over_cap_active: the lifetime hour lock is retired, so never active. */
 export async function workspaceOverCapActive(
-  db: Db,
-  workspaceId: string | null,
-  tier: string | null,
+  _db: Db,
+  _workspaceId: string | null,
+  _tier: string | null,
 ): Promise<boolean> {
-  if (!workspaceId || tier === null || OVERAGE_TIERS.has(tier)) return false;
-  const included = INCLUDED_HOURS[tier];
-  if (included === undefined || included === null) return false;
-  const sql = (db as unknown as { $client: postgres.Sql }).$client;
-  const [row] = await sql<{ s: number | null }[]>`
-    select coalesce(sum(c.duration), 0)::float8 as s
-    from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId} and not p.is_sample`;
-  return (row?.s ?? 0) / 3600 >= included;
+  return false;
 }
 
 /** One computation per project and window every 3 seconds, however many hosts watch. */

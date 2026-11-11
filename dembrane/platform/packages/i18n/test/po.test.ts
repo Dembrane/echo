@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { FakeCompleter } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { fillCatalog, placeholdersOf } from "../src/fill";
 import { readLedger } from "../src/ledger";
 import { fillEntry, missingEntries, parsePo, serializePo } from "../src/po";
@@ -99,7 +100,8 @@ test("fillCatalog fills from the source texts, keeps reviewed ones, drops broken
       })),
     });
   });
-  const [report] = await fillCatalog(dir, fake);
+  // The translations CLI is a developer tool; its calls are not metered.
+  const [report] = await withPayer({ internal: "translations" }, () => fillCatalog(dir, fake));
   expect(report).toMatchObject({ locale: "nl-NL", missing: 2, filled: 1, rejected: 1 });
   const after = readFileSync(path.join(dir, "nl-NL.po"), "utf8");
   expect(after).toContain('msgstr "We konden dit project niet vinden."');

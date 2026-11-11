@@ -11,11 +11,11 @@ import {
 	waveformHeights,
 } from "./voiceInput";
 
-const axiosErrorWithStatus = (status: number) => {
+const axiosErrorWithStatus = (status: number, data: unknown = {}) => {
 	const headers = new AxiosHeaders();
 	return new AxiosError("failed", "ERR", { headers }, undefined, {
 		config: { headers },
-		data: {},
+		data,
 		headers: {},
 		status,
 		statusText: "",
@@ -44,6 +44,32 @@ it("maps each failure the endpoint can return onto its own message", () => {
 	expect(transcribeErrorKind(axiosErrorWithStatus(502))).toBe(
 		"transcription_failed",
 	);
+});
+
+it("reads only the AI budget 402 as the AI wall", () => {
+	const budget = axiosErrorWithStatus(402, {
+		code: "billing.tier_limit",
+		detail: {
+			error: "FREE_TIER_LIMIT",
+			limit: "ai_budget",
+			resets_at: "2026-12-01T00:00:00Z",
+		},
+		params: { limit: "ai_budget" },
+	});
+	expect(transcribeErrorKind(budget)).toBe("free_limit");
+	// Voice never spends audio hours, so another free limit is no AI wall.
+	const audio = axiosErrorWithStatus(402, {
+		code: "billing.tier_limit",
+		detail: { error: "FREE_TIER_LIMIT", limit: "audio_month" },
+		params: { limit: "audio_month" },
+	});
+	expect(transcribeErrorKind(audio)).toBe("unknown");
+	expect(transcribeErrorKind(axiosErrorWithStatus(402))).toBe("unknown");
+	const locked = axiosErrorWithStatus(402, {
+		code: "conversation.locked",
+		detail: "locked",
+	});
+	expect(transcribeErrorKind(locked)).toBe("unknown");
 });
 
 it("calls a request that never reached the server a network problem", () => {

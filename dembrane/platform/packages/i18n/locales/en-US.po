@@ -660,6 +660,62 @@ msgid "email.tier_expiring.cta"
 msgstr "Request an upgrade"
 
 #. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} has used this month's recording hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "New recordings and uploads are paused until {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} has used this month's recording hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "The free plan includes {hours} of recording a month, and {name} has used them. New recordings and uploads are paused until {reset_date}. Everything recorded so far stays available."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} hours"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} hour"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Upgrade to keep recording"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Upgrade to keep recording:"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.subject"
+msgstr "{name} has used this month's AI budget"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.preview"
+msgstr "AI features and new recordings are paused until {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.heading"
+msgstr "{name} has used this month's AI budget"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.body"
+msgstr "The free plan includes a monthly AI budget, and {name} has used it. AI features and new recordings are paused until {reset_date}, when the budget resets. Everything made so far stays available."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.cta"
+msgstr "Upgrade to keep using AI"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.text_cta"
+msgstr "Upgrade to keep using AI:"
+
+#. js-lingui-explicit-id
 msgid "task.sign_offer.title"
 msgstr "Review and sign the offer"
 
@@ -858,3 +914,59 @@ msgstr "The offer is valid until {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Kind regards,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} is signed"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} signed {document_title} for {org_name}. The signing details are in this email."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} is signed"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} signed {document_title} for {org_name}. This email is your record of the signing."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "The signed PDF is attached. Keep it with your records."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "The signed PDF is too large to attach. You can download it from your account."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "The SHA-256 is the fingerprint of the signed PDF. If the file changes, its fingerprint changes too."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Open the signed copy"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Open the signed copy:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Document"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Signed by"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Signed at (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "Document id"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 of the signed PDF"

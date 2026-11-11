@@ -47,8 +47,8 @@ The "Conversations" list on the project's "Overview" shows one status per row in
 "Live", "Transcription error", "Empty", "Transcribing", "Verified" or "Done". "Live" is the
 same as "Ongoing". "Empty" means no piece has arrived at all.
 
-On a conversation page, "Locked" means the free plan's one hour is used and the transcript
-and summary are hidden. See [recording](./recording.md).
+The free plan never hides a transcript or a summary. It limits how much audio comes in. See
+[recording](./recording.md).
 
 ## A conversation page
 
@@ -99,7 +99,7 @@ There are no bulk actions for moving, deleting or retranscribing conversations.
 ## Download the audio
 
 "Download audio" gives one MP3 file of the whole conversation. It is not available for
-anonymised, text-only or locked conversations.
+anonymised or text-only conversations.
 
 ## Counts and usage
 

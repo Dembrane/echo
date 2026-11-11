@@ -11,6 +11,10 @@ export const document = {
 		message:
 			"This document changed since you opened it. Reload the page and read it again before you sign.",
 	}),
+	"document.choose_one": msg({
+		id: "error.document.choose_one",
+		message: "Tick exactly one of the options, then sign.",
+	}),
 	"document.confirmation_mismatch": msg({
 		id: "error.document.confirmation_mismatch",
 		message:
@@ -28,6 +32,11 @@ export const document = {
 		id: "error.document.dpa_not_authorised",
 		message:
 			"Confirm that you are authorised to agree to data processing for your organisation.",
+	}),
+	"document.field_date_invalid": msg({
+		id: "error.document.field_date_invalid",
+		message:
+			"{label} must be a real date, not in the future and not before the document was sent.",
 	}),
 	"document.field_must_tick": msg({
 		id: "error.document.field_must_tick",
@@ -90,10 +99,23 @@ export const document = {
 		id: "error.document.offer_expired",
 		message: "This offer expired on {valid_until}. Contact us for a new one.",
 	}),
+	"document.second_signer_only": msg({
+		id: "error.document.second_signer_only",
+		message: "Only {email} can sign second.",
+	}),
+	"document.second_signer_same": msg({
+		id: "error.document.second_signer_same",
+		message:
+			"You signed already. Someone else from your organisation signs second.",
+	}),
 	"document.signature_unreadable": msg({
 		id: "error.document.signature_unreadable",
 		message:
 			"We could not read your signature. Draw it again and try once more.",
+	}),
+	"document.signed_awaiting": msg({
+		id: "error.document.signed_awaiting",
+		message: "Your signature is in. The other signature is still to come.",
 	}),
 	"document.signer_only": msg({
 		id: "error.document.signer_only",

@@ -4,11 +4,15 @@ import { createLogger } from "@dembrane/observability";
 import {
   bookingInboxMessage,
   bookingPayload,
+  ENQUIRY_GRACE_MS,
+  enquiryInboxMessage,
+  enquiryPayload,
   environmentName,
   type Forwarder,
   httpForwarder,
   type PricingRow,
   runForwardBookings,
+  runForwardEnquiries,
 } from "../src";
 
 const logger = createLogger(
@@ -48,6 +52,7 @@ function harness(rows: PricingRow[], statuses: (number | Error)[]) {
   };
   const store = {
     unforwardedBookings: async () => rows.filter((r) => !stamped.includes(r.id)),
+    unforwardedEnquiries: async () => [],
     update: async (id: string) => {
       stamped.push(id);
       return null;
@@ -126,4 +131,94 @@ test("a booking configured on the website's needs form is website_pricing_bookin
   });
   // Only the origin differs between the two payloads.
   expect({ ...payload, mount: "app" } as Record<string, unknown>).toEqual(app);
+});
+
+const enquiry = (id: string, extra: Partial<PricingRow> = {}): PricingRow =>
+  row(id, {
+    reference: `WEB-${id}`,
+    mount: "site",
+    status: "submitted",
+    booking_uid: null,
+    booking_status: "none",
+    submitted_at: "2026-11-04T09:00:00.000Z",
+    enquiry_notified_at: null,
+    config: {},
+    ...extra,
+  });
+
+test("enquiries wait out the grace, go once, and are stamped only on a 2xx", async () => {
+  const sent: Record<string, unknown>[] = [];
+  const stamped: Record<string, unknown>[] = [];
+  let asked = null as Date | null;
+  const rows = [enquiry("1"), enquiry("2")];
+  const now = new Date("2026-11-04T10:00:00.000Z");
+  const d = {
+    store: {
+      unforwardedBookings: async () => [],
+      unforwardedEnquiries: async (before: Date) => {
+        asked = before;
+        return rows.filter((r) => !stamped.some((p) => p.id === r.id));
+      },
+      update: async (id: string, patch: Record<string, unknown>) => {
+        stamped.push({ id, ...patch });
+        return null;
+      },
+    },
+    forwarder: null,
+    enquiryForwarder: {
+      async post(p: Record<string, unknown>) {
+        sent.push(p);
+        return { status: sent.length === 2 ? 422 : 202, text: "" };
+      },
+    },
+    environment: "production",
+    logger,
+    clock: () => now,
+  };
+  expect(await runForwardEnquiries(d)).toBe(1);
+  expect(asked).toEqual(new Date(now.getTime() - ENQUIRY_GRACE_MS));
+  expect(stamped).toEqual([{ id: "1", enquiry_notified_at: now.toISOString() }]);
+  // The rejected one stays for the next run; nothing is sent without an enquiry forwarder.
+  expect(await runForwardEnquiries({ ...d, enquiryForwarder: null })).toBe(0);
+  expect(ENQUIRY_GRACE_MS).toBe(30 * 60_000);
+});
+
+test("enquiry payload and its inbox message match sam's enquiry handlers", () => {
+  const payload = enquiryPayload(
+    enquiry("1", { email: "lead@example.org", locale: "nl-NL", org_id: "o1", workspace_id: "w1" }),
+    "production",
+  );
+  expect(payload).toEqual({
+    kind: "pricing_enquiry",
+    environment: "production",
+    is_internal: false,
+    reference: "WEB-1",
+    email: "lead@example.org",
+    submitted_at: "2026-11-04T09:00:00.000Z",
+    locale: "nl-NL",
+    workspace_id: "w1",
+    org_id: "o1",
+    mount: "site",
+    summary: "Volume: under 50",
+  });
+  expect(enquiryInboxMessage(payload)).toEqual({
+    code: "website_pricing_enquiry_submitted_v1",
+    id: "WEB-1",
+    json: {
+      is_internal: false,
+      reference: "WEB-1",
+      email: "lead@example.org",
+      submitted_at: "2026-11-04T09:00:00.000Z",
+      locale: "nl-NL",
+      workspace_id: "w1",
+      org_id: "o1",
+      summary: "Volume: under 50",
+    },
+  });
+  expect(enquiryInboxMessage({ ...payload, mount: "app" })?.code).toBe(
+    "echo_pricing_enquiry_submitted_v1",
+  );
+  // No email, nothing to send: an anonymous website visit never reaches the team.
+  expect(enquiryInboxMessage({ ...payload, email: undefined })).toBeNull();
+  expect(enquiryInboxMessage({ ...payload, kind: "pricing_booking" })).toBeNull();
 });

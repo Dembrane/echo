@@ -56,6 +56,31 @@ export async function updateTag(
   return tag ? { ...directusRow(tag), conversations: await tagLinks(d, tagId) } : {};
 }
 
+/**
+ * Saves a project's whole tag order at once: either every tag moves or none does. Ids that
+ * are not this project's tags are skipped; tags left out keep their order after the listed ones.
+ */
+export async function reorderTags(
+  d: ProjectDeps,
+  who: Signed,
+  body: { project_id: string; tag_ids: string[] },
+) {
+  await projectFor(d.access, who, body.project_id, "project:update");
+  return d.store.transaction(async ({ store }) => {
+    const current = await store.lockTags(body.project_id);
+    const known = new Set(current.map((t) => t.id));
+    const listed = [...new Set(body.tag_ids)].filter((id) => known.has(id));
+    const rest = current.filter((t) => !listed.includes(t.id)).map((t) => t.id);
+    const sortOf = new Map(current.map((t) => [t.id, t.sort]));
+    const at = d.now().toISOString();
+    for (const [index, id] of [...listed, ...rest].entries()) {
+      if (sortOf.get(id) !== index + 1)
+        await store.updateTag(id, { sort: index + 1, updated_at: at });
+    }
+    return store.tags(body.project_id);
+  });
+}
+
 async function tagLinks(d: ProjectDeps, tagId: string) {
   return d.store.tagLinkIds(tagId);
 }

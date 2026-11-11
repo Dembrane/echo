@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import type { Snapshot } from "@dembrane/analysis";
+import { freeLimitError } from "@dembrane/allowance";
+import type { AnalysisRuntime, Snapshot } from "@dembrane/analysis";
+import type { Db } from "@dembrane/db";
+import type { MapStore as MapRows } from "@dembrane/map";
 import {
+  analysisMapStore,
   audienceAssessments,
   audienceBudgets,
   audienceMap,
@@ -122,5 +126,43 @@ describe("the room's map carries the project's groups, read-only", () => {
       expect(group.error).toBeNull();
     }
     expect(JSON.stringify(groups)).not.toContain("d2000000");
+  });
+});
+
+describe("the store's map generation", () => {
+  const storeThrowing = (err: Error) =>
+    analysisMapStore(
+      { store: {} } as unknown as AnalysisRuntime,
+      {
+        expireStale: async () => {
+          throw err;
+        },
+      } as unknown as MapRows,
+      { nodeLimit: null, edgeLimit: null },
+      {} as Db,
+    );
+
+  test("a used-up AI budget is skipped quietly", async () => {
+    expect(
+      await storeThrowing(freeLimitError("ai_budget", { percent: 100 })).requestGeneration(
+        "p1",
+        null,
+      ),
+    ).toBe(false);
+    const other = new Error("boom");
+    const err = await storeThrowing(other)
+      .requestGeneration("p1", null)
+      .then(
+        () => null,
+        (e) => e,
+      );
+    expect(err).toBe(other);
+    const report = await storeThrowing(freeLimitError("report"))
+      .requestGeneration("p1", null)
+      .then(
+        () => null,
+        (e) => e,
+      );
+    expect(report).toMatchObject({ status: 402 });
   });
 });

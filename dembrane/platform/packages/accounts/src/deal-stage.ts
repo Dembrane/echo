@@ -24,8 +24,15 @@ export type DealStage = (typeof DEAL_STAGES)[number];
 
 export type StageDocument = Pick<
   DocumentRow,
-  "kind" | "status" | "createdAt" | "signedAt" | "dpaTextId" | "invoiceStatus"
->;
+  "kind" | "status" | "createdAt" | "sentAt" | "signedAt" | "dpaTextId" | "invoiceStatus"
+> &
+  Partial<Pick<DocumentRow, "id" | "supersedesId" | "content">> & {
+    /**
+     * The offer names another party to invoice, or is of no charge: no billing details of the
+     * customer's are awaited. Read from `content` when that is loaded.
+     */
+    readonly billsOther?: boolean;
+  };
 
 export interface StageFacts {
   /** The organisation is managed as an account (it has a stage of its own). */
@@ -33,15 +40,32 @@ export interface StageFacts {
   readonly documents: readonly StageDocument[];
   /** Every billing and invoice detail the invoice needs is saved. */
   readonly billingComplete: boolean;
+  /** When the billing details were last saved. */
+  readonly billingAt?: Date | string | null;
 }
 
 const time = (d: Date | string | null) => (d ? new Date(d).getTime() : 0);
 
-export function dealStage(f: StageFacts): DealStage | null {
-  // The newest offer that still stands decides; a withdrawn one says nothing.
-  const offer = f.documents
-    .filter((x) => x.kind === "offer" && x.status !== "void")
+/**
+ * The newest offer that still stands decides; a withdrawn one says nothing, and neither does
+ * a draft revision while the offer it replaces is still with the customer.
+ */
+const standingOffer = (f: StageFacts) => {
+  const live = new Set(
+    f.documents.filter((x) => x.kind === "offer" && x.status !== "void").map((x) => x.id),
+  );
+  return f.documents
+    .filter(
+      (x) =>
+        x.kind === "offer" &&
+        x.status !== "void" &&
+        !(x.status === "draft" && x.supersedesId && live.has(x.supersedesId)),
+    )
     .sort((a, b) => time(b.createdAt) - time(a.createdAt))[0];
+};
+
+export function dealStage(f: StageFacts): DealStage | null {
+  const offer = standingOffer(f);
   if (!offer) return f.isAccount ? "in_progress" : null;
   if (offer.status === "draft") return "offer_drafted";
   if (offer.status === "declined") return "lost";
@@ -54,7 +78,10 @@ export function dealStage(f: StageFacts): DealStage | null {
       x.dpaTextId === offer.dpaTextId &&
       (x.status === "sent" || x.status === "viewed"),
   );
-  if (!f.billingComplete || dpaOpen) return "offer_sent";
+  // Invoiced to another party, or not at all: the customer's details are not awaited.
+  const content = offer.content as { bill_to?: unknown; no_charge?: unknown } | null;
+  const billsOther = offer.billsOther ?? Boolean(content?.bill_to || content?.no_charge);
+  if ((!f.billingComplete && !billsOther) || dpaOpen) return "offer_sent";
   // An invoice belongs to this offer when it came after the signature.
   const invoices = f.documents.filter(
     (x) =>
@@ -65,4 +92,62 @@ export function dealStage(f: StageFacts): DealStage | null {
   );
   if (!invoices.length) return "offer_accepted";
   return invoices.every((x) => x.invoiceStatus === "paid") ? "paid" : "invoice_sent";
+}
+
+/** When the deal reached each step the stage is made of; null until it has. */
+export interface DealMilestones {
+  readonly offer_drafted: string | null;
+  readonly offer_sent: string | null;
+  readonly signed: string | null;
+  readonly billing_details: string | null;
+  /** Every other document that goes with the offer is signed, such as its separate DPA. */
+  readonly documents_signed: string | null;
+  readonly invoice_sent: string | null;
+}
+
+const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : null);
+
+/**
+ * The dates behind the stage, from the same facts, so the list and the card can show how far
+ * a deal has come step by step under the names Attio uses.
+ */
+export function dealMilestones(f: StageFacts): DealMilestones {
+  const offer = standingOffer(f);
+  const none = {
+    offer_drafted: null,
+    offer_sent: null,
+    signed: null,
+    billing_details: null,
+    documents_signed: null,
+    invoice_sent: null,
+  };
+  if (!offer) return none;
+  const signed = offer.status === "signed" ? iso(offer.signedAt) : null;
+  // The DPA that went out with the offer; an offer without one needs only its own signature.
+  const others = f.documents.filter(
+    (x) => x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && x.status !== "void",
+  );
+  const documentsSigned = !signed
+    ? null
+    : others.every((x) => x.status === "signed")
+      ? iso([offer, ...others].map((x) => x.signedAt).sort((a, b) => time(b) - time(a))[0] ?? null)
+      : null;
+  const invoice = f.documents
+    .filter(
+      (x) =>
+        signed &&
+        x.kind === "invoice" &&
+        x.status !== "void" &&
+        x.invoiceStatus !== "void" &&
+        time(x.createdAt) >= time(offer.signedAt),
+    )
+    .sort((a, b) => time(a.createdAt) - time(b.createdAt))[0];
+  return {
+    offer_drafted: iso(offer.createdAt),
+    offer_sent: offer.status === "draft" ? null : iso(offer.sentAt),
+    signed,
+    billing_details: f.billingComplete ? iso(f.billingAt) : null,
+    documents_signed: documentsSigned,
+    invoice_sent: invoice ? iso(invoice.createdAt) : null,
+  };
 }

@@ -103,7 +103,10 @@ export const uuids = (values: readonly unknown[]) =>
 /** Postgres text timestamps compared in microseconds, which Date alone would round away. */
 export function micros(ts: string | null | undefined): number {
   if (!ts) return Number.NEGATIVE_INFINITY;
-  const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d+))?(.*)$/.exec(ts);
+  // A line break failed the old `(.*)$`; checked up front so the digits never backtrack.
+  const m = /[\n\r\u2028\u2029]/.test(ts)
+    ? null
+    : /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d+))?([\s\S]*)/.exec(ts);
   if (!m) return Date.parse(ts) * 1000;
   const [, date, time, frac = "", zone = ""] = m;
   const tz = zone === "" || zone === "Z" ? "Z" : zone.length === 3 ? `${zone}:00` : zone;

@@ -1,4 +1,5 @@
 import { DrizzleAccessStore } from "@dembrane/access";
+import { aiBudgetForProject } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
@@ -9,6 +10,7 @@ import { publishGenerationNudge } from "./events";
 import { dict, orStr, utcNowIso } from "./py";
 import { canvasStore, client } from "./storage";
 import {
+  budgetSkip,
   createRun,
   derivedId,
   enqueueNextIfDue,
@@ -31,7 +33,11 @@ import {
 export const canvasTick = defineJob(
   "canvas.tick",
   z.object({ loopId: z.string(), tickKind: z.string() }),
-  { retryLimit: 0, expireInSeconds: 4 * 60 * 60 },
+  {
+    retryLimit: 0,
+    expireInSeconds: 4 * 60 * 60,
+    payer: (p) => ({ ref: "canvas", id: p.loopId }),
+  },
 );
 
 /** Every minute: turn due canvas_tick rows of scheduled_task into tick workflows. */
@@ -67,12 +73,22 @@ export interface CanvasWorkerDeps {
 export function tickDeps(deps: CanvasWorkerDeps, runId: string): TickDeps {
   const sql = client(deps.db);
   const limiter = new RateLimiter(new PostgresRateCounter(deps.db));
+  const now = deps.now ?? (() => new Date());
   return {
     store: canvasStore(sql),
     accessStore: new DrizzleAccessStore(deps.db),
     completer: deps.completer,
     canvasEnabled: deps.canvasEnabled,
-    now: deps.now ?? (() => new Date()),
+    now,
+    // A failed read lets the tick run, so the loop keeps its schedule.
+    budgetLeft: async (projectId) => {
+      try {
+        return (await aiBudgetForProject(deps.db, projectId, now()))?.exhausted !== true;
+      } catch (err) {
+        deps.logger.warn({ err, projectId }, "reading the AI budget failed; the tick goes on");
+        return true;
+      }
+    },
     nudge: (reportId) => publishGenerationNudge(sql, reportId, deps.logger),
     claimWindow: (loopId, window, ttl) =>
       limiter.allow({ name: WINDOW_LIMIT, capacity: 1, windowSeconds: ttl }, `${loopId}:${window}`),
@@ -83,10 +99,10 @@ export function tickDeps(deps: CanvasWorkerDeps, runId: string): TickDeps {
 /** The workflow body: the tick's phases as checkpointed steps. */
 export async function tickWorkflow(d: TickDeps, loopId: string, tickKind: string): Promise<string> {
   const prepared = await step("prepare", () => prepareTick(d, loopId, tickKind), STEP);
-  if (prepared.outcome !== "continue") return prepared.outcome;
-  const plan = prepared.plan;
   const next = () =>
     step("schedule-next", () => enqueueNextIfDue(d, loopId, null, d.idFor("next")), STEP);
+  if (prepared.outcome !== "continue") return prepared.outcome;
+  const plan = prepared.plan;
   let configId: string | null = null;
   try {
     const g = await step("gather", () => gatherTick(d, plan), STEP);
@@ -106,6 +122,12 @@ export async function tickWorkflow(d: TickDeps, loopId: string, tickKind: string
       );
       await next();
       return "no_op";
+    }
+    // A skip for budget keeps the schedule, so ticks resume on their own after the reset.
+    if (g.budgetUsedUp) {
+      await step("budget-skip", () => budgetSkip(d, plan), STEP);
+      await next();
+      return "budget";
     }
     const extracted = await step("extract", () => extractTick(d, plan, g), STEP);
     if ("failed" in extracted) {

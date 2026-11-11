@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { AccessStore } from "@dembrane/access";
 import type { Completer } from "@dembrane/llm";
+import { withoutClosingFence } from "@dembrane/llm";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
 import { buildCanvasHistory } from "./history";
 import {
@@ -56,6 +57,8 @@ export interface TickDeps {
   readonly now: () => Date;
   /** Tells open canvas pages a new generation exists. */
   readonly nudge: (reportId: string) => Promise<void>;
+  /** False when the project's free AI budget is used up. */
+  readonly budgetLeft: (projectId: string) => Promise<boolean>;
   /** One scheduled tick per loop per cadence window; false when another took it. */
   readonly claimWindow: (loopId: string, window: number, ttlSeconds: number) => Promise<boolean>;
   /** Ids the tick writes, derived from its run so a replayed phase writes the same rows. */
@@ -152,7 +155,7 @@ export function generationDetail(args: {
 export function jsonFromModelText(text: string): Json {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    cleaned = withoutClosingFence(cleaned.replace(/^```(?:json)?\s*/i, ""));
   }
   const parsed: unknown = JSON.parse(cleaned);
   if (!isRecord(parsed)) throw new Error("Canvas extraction response was not a JSON object");
@@ -487,7 +490,14 @@ export async function renderWall(
 
 // ── the tick, in phases ─────────────────────────────────────────────
 
-export type TickOutcome = "ok" | "no_op" | "disabled" | "expired" | "duplicate" | "error";
+export type TickOutcome =
+  | "ok"
+  | "no_op"
+  | "disabled"
+  | "expired"
+  | "duplicate"
+  | "budget"
+  | "error";
 
 /** What the phases hand each other; serialisable so the workflow checkpoints it. */
 export interface TickPlan {
@@ -507,6 +517,8 @@ export interface Gathered {
   readonly structureChanged: boolean;
   readonly coldStart: boolean;
   readonly bundle: Json;
+  /** Set only when a model call would follow and the AI budget is used up. */
+  readonly budgetUsedUp?: boolean;
 }
 
 export async function createRun(
@@ -569,6 +581,7 @@ export async function prepareTick(
     if (!(await d.claimWindow(loopId, window, Math.max(30, cadence * 60 - 5))))
       return noOp("Duplicate tick for cadence window", "duplicate");
   }
+  const projectId = asId(loop.project_id);
   return {
     outcome: "continue",
     plan: {
@@ -577,7 +590,7 @@ export async function prepareTick(
       startedAt,
       loop,
       reportId: asId(loop.report_id),
-      projectId: asId(loop.project_id),
+      projectId,
       actingUser: orStr(loop.acting_directus_user_id),
     },
   };
@@ -602,7 +615,7 @@ export async function gatherTick(d: TickDeps, plan: TickPlan): Promise<Gathered>
     fullHistory: coldStart,
     now: d.now(),
   });
-  return {
+  const g: Gathered = {
     config,
     latestOk: latestOk ? { ...latestOk, created_at: directusTime(latestOk.created_at) } : null,
     state,
@@ -610,6 +623,20 @@ export async function gatherTick(d: TickDeps, plan: TickPlan): Promise<Gathered>
     coldStart,
     bundle,
   };
+  // Read only when a model call would follow.
+  if (nothingNew(plan, g) || (await d.budgetLeft(plan.projectId))) return g;
+  return { ...g, budgetUsedUp: true };
+}
+
+/** The no-op run of a tick skipped at a used-up AI budget; the schedule is kept. */
+export function budgetSkip(d: TickDeps, plan: TickPlan) {
+  return createRun(d, {
+    label: "budget",
+    loopId: plan.loopId,
+    status: "no_op",
+    startedAt: plan.startedAt,
+    detail: "Skipped: the AI budget is used up",
+  });
 }
 
 /** Nothing new since the last good generation and nothing forces a redraw. */
@@ -837,6 +864,11 @@ export async function runTick(
       });
       await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
       return "no_op";
+    }
+    if (g.budgetUsedUp) {
+      await budgetSkip(d, plan);
+      await enqueueNextIfDue(d, loopId, null, d.idFor("next"));
+      return "budget";
     }
     const extracted = await extractTick(d, plan, g);
     if ("failed" in extracted) {

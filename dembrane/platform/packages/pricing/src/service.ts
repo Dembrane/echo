@@ -129,6 +129,51 @@ export function mergeAudio(existing: unknown, stored: Record<string, unknown>[])
   return [...byKey.values()];
 }
 
+/**
+ * The app's upgrade prompt hands a person over to the website's calculator with the
+ * config_session_id of a row it saved for the signed-in account (mount "app"). The website
+ * sends it back as `handover` on its own writes, and the website row takes the account's
+ * email and ids from that app row. The id is a random UUID the account's own session wrote,
+ * so it carries no personal data in the URL and cannot be guessed, unlike the four
+ * character reference. It links for a week: long enough to come back to the plan, short
+ * enough that an old link found in a browser history attaches nothing.
+ */
+export const HANDOVER_TTL_MS = 7 * 86_400_000;
+
+/** The question set the app's handover rows carry: an account met a wall, no answers yet. */
+export const HANDOVER_SET_VERSION = "handover-1";
+
+export interface Handover {
+  readonly reference: string | null;
+  readonly email: string | null;
+  readonly wall_key: string | null;
+  readonly workspace_id: string | null;
+  readonly org_id: string | null;
+  readonly project_id: string | null;
+}
+
+/** The app row a website write was handed over from, if it can still vouch for the account. */
+export function handoverFrom(row: PricingRow | null, now: Date): Handover | null {
+  if (!row || row.mount !== "app" || !row.user_id || !row.created_at) return null;
+  const age = now.getTime() - Date.parse(row.created_at);
+  if (!(age >= 0 && age <= HANDOVER_TTL_MS)) return null;
+  return {
+    reference: row.reference,
+    email: row.email,
+    wall_key: row.wall_key,
+    workspace_id: row.workspace_id,
+    org_id: row.org_id,
+    project_id: row.project_id,
+  };
+}
+
+/** Which app row a website row came from. Server-owned like the booking, so it is carried. */
+function fromAppOf(existing: Pick<PricingRow, "config"> | null): unknown {
+  const stored = existing?.config;
+  if (!stored || typeof stored !== "object" || Array.isArray(stored)) return undefined;
+  return (stored as Record<string, unknown>).from_app;
+}
+
 export interface UpsertDeps {
   readonly store: PricingStore;
   readonly storage: ObjectStorage;
@@ -142,6 +187,7 @@ export async function upsertConfiguration(
   payload: PricingPayload,
   attachments: readonly Attachment[],
   identity: { email: string | null; userId: string | null; isInternal: boolean; prefix: string },
+  handover: Handover | null = null,
 ): Promise<{ reference: string; warnings: string[] }> {
   const now = (d.clock ?? (() => new Date()))();
   const sessionId = payload.config_session_id.trim();
@@ -161,21 +207,25 @@ export async function upsertConfiguration(
     is_internal: identity.isInternal,
     locale: clean(payload.locale),
     mount: payload.mount,
-    wall_key: clean(payload.wall_key),
-    workspace_id: clean(payload.workspace_id),
-    org_id: clean(payload.org_id),
-    project_id: clean(payload.project_id),
+    wall_key: clean(payload.wall_key) ?? handover?.wall_key ?? null,
+    workspace_id: clean(payload.workspace_id) ?? handover?.workspace_id ?? null,
+    org_id: clean(payload.org_id) ?? handover?.org_id ?? null,
+    project_id: clean(payload.project_id) ?? handover?.project_id ?? null,
     question_set_version: clean(payload.question_set_version),
     config_shape_version: payload.config_shape_version,
     answers_raw: payload.answers_raw,
     ...flatMirrors(payload.config),
     config: configWithBooking(payload.config, existing, booking),
   };
+  const fromApp = handover ? { reference: handover.reference } : fromAppOf(existing);
+  if (fromApp) (row.config as Record<string, unknown>).from_app = fromApp;
   if (existing && identity.email === null) {
     // A site row learns its email from the booking once; other writes must not erase it.
     delete row.email;
     delete row.is_internal;
   }
+  // The moment it became submitted starts the enquiry outbox's wait for a booking.
+  if (status === "submitted" && !existing?.submitted_at) row.submitted_at = now.toISOString();
   if (booking) {
     if (existing?.booking_uid && existing.booking_uid !== booking.uid) {
       d.logger.warn(

@@ -9,7 +9,7 @@ import { CanvasValueError } from "./ledgers";
 /** CANVAS_MAX_HTML_BYTES default of the Python settings. */
 export const MAX_CANVAS_HTML_BYTES = 240_000;
 
-const FENCE = /^\s*```(?:html)?\s*|\s*```\s*$/gi;
+const LEADING_FENCE = /^\s*```(?:html)?\s*/i;
 const ATTR_URL = /(\b(?:src|href)\s*=\s*)(["'])((?:https?:)?\/\/[^"']+)\2/gi;
 const CSS_URL = /url\(\s*(["']?)((?:https?:)?\/\/[^"')]+)\1\s*\)/gi;
 const COMMENT = /<!--[\s\S]*?-->/g;
@@ -17,8 +17,16 @@ const BODY = /<body\b[^>]*>([\s\S]*?)<\/body\s*>/i;
 const HEAD = /<head\b[^>]*>[\s\S]*?<\/head\s*>/gi;
 const DOC_CHROME = /<!DOCTYPE[^>]*>|<\/?(?:html|head|body)\b[^>]*>/gi;
 
+/** Was `.replace(/^\s*```(?:html)?\s*|\s*```\s*$/gi, "")`; the closing fence is a scan, not a quadratic regex. */
 export function stripMarkdownFences(text: string): string {
-  return text.trim().replace(FENCE, "").trim();
+  const t = text.trim();
+  const from = LEADING_FENCE.exec(t)?.[0].length ?? 0;
+  let to = t.length;
+  if (to - 3 >= from && t.endsWith("```")) {
+    to -= 3;
+    while (to > from && /\s/.test(t[to - 1] as string)) to--;
+  }
+  return t.slice(from, to).trim();
 }
 
 /** The stored generation is a body fragment; a full document is unwrapped and its head dropped. */

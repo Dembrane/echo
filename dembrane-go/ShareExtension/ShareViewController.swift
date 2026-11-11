@@ -81,6 +81,9 @@ private struct ShareSheetView: View {
     @State private var projectId: String?
     @State private var phase: Phase = .confirm
     private enum Phase { case confirm, uploading, done, failed }
+    /// The upload goes to AI for transcription, so it needs the permission the
+    /// person gave in the app.
+    private let consented = AppGroup.aiConsentAt != nil
 
     init(audioURL: URL?, defaultName: String, contentType: String,
          projects: [WorkspaceProject], initialProjectId: String?,
@@ -100,7 +103,7 @@ private struct ShareSheetView: View {
     private var selectedProject: WorkspaceProject? { projects.first { $0.project.id == projectId } }
     private var destinationName: String { selectedProject?.project.name ?? fallbackProjectName ?? "Not set" }
     private var canSave: Bool {
-        projectId != nil && audioURL != nil
+        consented && projectId != nil && audioURL != nil
             && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && phase == .confirm
     }
@@ -127,6 +130,10 @@ private struct ShareSheetView: View {
                         }
                         .disabled(phase != .confirm)
                     }
+                }
+                if !consented {
+                    Text("Open dembrane Go and allow AI processing first, then share again.")
+                        .font(.footnote).foregroundStyle(.secondary)
                 }
                 if audioURL == nil {
                     Text("Couldn't read that audio file.").font(.footnote).foregroundStyle(.red)

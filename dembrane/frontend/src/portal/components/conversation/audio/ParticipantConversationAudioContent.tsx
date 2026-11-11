@@ -13,6 +13,7 @@ import {
 import { API_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
+import { AiUnavailableText } from "../../AiUnavailable";
 import {
 	useConversationQuery,
 	useConversationRepliesQuery,
@@ -55,6 +56,8 @@ export const ParticipantConversationAudioContent = () => {
 		!!projectQuery.data?.is_verify_enabled &&
 		!hasApprovedArtefacts &&
 		recordingTime >= VERIFICATION_BANNER_THRESHOLD_SECONDS;
+
+	const aiUnavailable = projectQuery.data?.is_ai_available === false;
 
 	const hasEchoParam = searchParams.get("echo") === "1";
 
@@ -150,7 +153,7 @@ export const ParticipantConversationAudioContent = () => {
 				projectLanguage={projectQuery.data?.language}
 			/>
 
-			{showVerificationBanner && (
+			{showVerificationBanner && !aiUnavailable && (
 				<Box className="flex justify-end">
 					<Paper
 						component={Link}
@@ -167,6 +170,14 @@ export const ParticipantConversationAudioContent = () => {
 							</Text>
 							<SealCheckIcon size={16} />
 						</Group>
+					</Paper>
+				</Box>
+			)}
+
+			{showVerificationBanner && aiUnavailable && (
+				<Box className="flex justify-end">
+					<Paper p="md" my="md">
+						<AiUnavailableText />
 					</Paper>
 				</Box>
 			)}

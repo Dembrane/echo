@@ -13,6 +13,9 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func register() -> URL { api.appending(path: "v2/auth/register") }
     /// Suspends the account immediately; data is purged within 30 days.
     public func deleteAccount() -> URL { api.appending(path: "user-settings/account") }
+    /// Creates a new account's organisation and its first workspace, as the dashboard's
+    /// onboarding does.
+    public func completeOnboarding() -> URL { api.appending(path: "v2/onboarding/complete") }
     public func workspaces() -> URL { api.appending(path: "v2/workspaces") }
     public func workspaceUsage(workspaceId: String) -> URL {
         api.appending(path: "v2/workspaces/\(workspaceId)/usage")

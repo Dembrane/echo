@@ -111,8 +111,12 @@ export function chatReads(db: Db) {
       return out;
     },
 
-    /** Chunks with text, in timestamp order, capped as the transcript route capped them. */
+    /** Chunks with text, in timestamp order, capped as the transcript route capped them; or the final transcript. */
     async transcriptChunks(conversationId: string): Promise<{ transcript: string | null }[]> {
+      // The final transcript, when the conversation has one, is the transcript as one piece.
+      const [record] = await sql`
+        select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+      if (record) return [{ transcript: record.text as string }];
       const rows = await sql`
         select transcript from conversation_chunk where conversation_id = ${conversationId}
         order by timestamp limit 1500`;
@@ -229,23 +233,6 @@ export function chatReads(db: Db) {
       if (!isUuid(projectId)) return null;
       const [row] = await sql`select workspace_id from project where id = ${projectId}`;
       return (row?.workspace_id as string | null) ?? null;
-    },
-
-    /**
-     * Chats that used the free tier's allowance: live chats in the workspace's projects
-     * (deleted projects included, as the old count did) with at least one user message.
-     * Chats on a sample copy, the seeded one included, spend none of it.
-     */
-    async workspaceChatsWithUserMessages(workspaceId: string | null): Promise<number> {
-      if (!workspaceId) return 0;
-      const [row] = await sql`
-        select count(distinct m.project_chat_id)::int as n
-        from project_chat_message m
-        join project_chat c on c.id = m.project_chat_id
-        join project p on p.id = c.project_id
-        where p.workspace_id = ${workspaceId} and not p.is_sample and c.deleted_at is null
-          and m.message_from = 'user'`;
-      return Number(row?.n ?? 0);
     },
 
     /** The app user's email, for the analytics distinct id. */

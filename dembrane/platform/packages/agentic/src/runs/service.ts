@@ -1,5 +1,6 @@
-import type { Access } from "@dembrane/access";
-import type { ChatsStorage } from "@dembrane/chats";
+import type { Access, ProjectAccess } from "@dembrane/access";
+import { requireAiBudget } from "@dembrane/allowance";
+import type { Admitted, ChatsStorage, FreeChats, UserTurn } from "@dembrane/chats";
 import {
   BadRequestError,
   ConflictError,
@@ -10,21 +11,13 @@ import {
   StatusError,
   UnavailableError,
 } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import type { Logger } from "@dembrane/observability";
+import { type Logger, withPayer } from "@dembrane/observability";
 import type { Queue } from "@dembrane/queue";
 import { agentProject } from "../access";
 import { startTurn } from "../jobs";
-import {
-  currentGoal,
-  FREE_TIER_MAX_CHAT_USER_TURNS,
-  FREE_TIER_MAX_SAMPLE_USER_TURNS,
-  freeTierLimitError,
-  isSampleProject,
-  liveProject,
-  projectTier,
-  workspaceContext,
-} from "./context";
+import { currentGoal, liveProject, workspaceContext } from "./context";
 import { type Focused, followupPrompt, initialPrompt, nonEmpty } from "./focus";
 import { publishEvent } from "./live";
 import {
@@ -39,9 +32,11 @@ import { type Row, type RunsStorage, TERMINAL_RUN_STATUSES } from "./storage";
 export const MAX_AGENTIC_MESSAGE_LENGTH = 32_000;
 
 export interface RunsDeps {
+  readonly db: Db;
   readonly store: RunsStorage;
   readonly chats: ChatsStorage;
   readonly access: Access;
+  readonly freeChats: FreeChats;
   readonly queue: Pick<Queue, "enqueue">;
   readonly logger: Logger;
   readonly now: () => Date;
@@ -73,6 +68,7 @@ async function assertChatInProject(d: RunsDeps, chatId: string | null, projectId
     throw new UnavailableError("chat.verify_unavailable");
   }
   mismatch(chat.project_id?.id ?? null, projectId);
+  if (chat.deleted_at) throw new NotFoundError("chat.not_found");
 }
 
 function mismatch(chatProjectId: string | null, projectId: string | null) {
@@ -115,22 +111,40 @@ async function focusedConversations(
   return out;
 }
 
-async function checkFreeTierTurns(d: RunsDeps, projectId: string | null, chatId: string | null) {
-  if (!chatId || !projectId) return;
-  if ((await projectTier(d.store.sql, projectId)) !== "free") return;
-  // A sample copy's chats skip the per-chat cap and share the sample's own allowance.
-  const spent = (await isSampleProject(d.store.sql, projectId))
-    ? (await d.chats.countProjectUserTurns(projectId)) >= FREE_TIER_MAX_SAMPLE_USER_TURNS
-    : (await d.chats.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS;
-  if (spent) throw freeTierLimitError("chat_turns");
+interface Gated {
+  readonly turn: UserTurn;
+  readonly admitted: Admitted;
 }
 
-async function persistUserMessage(d: RunsDeps, chatId: string | null, text: string) {
-  if (!chatId) return;
+// Refuses at a used-up AI budget, then stores the host's message in the run's chat, if any.
+async function admitHostTurn(
+  d: RunsDeps,
+  projectId: string | null,
+  chatId: string | null,
+  text: string,
+  known: { tier: string | null; chatChecked: boolean },
+): Promise<Gated | null> {
+  if (!projectId) return null;
+  const now = d.now();
+  if (!chatId) {
+    await requireAiBudget(d.db, projectId, now, known.tier);
+    return null;
+  }
+  // admitTurn checks the budget too.
+  const turn = { projectId, chatId, messageId: newId(), text, now };
+  return { turn, admitted: await d.freeChats.admitTurn(turn, known) };
+}
+
+// Undoes the admitted turn when what follows fails, then rethrows the original error.
+async function undoOnFailure<T>(d: RunsDeps, gated: Gated | null, fn: () => Promise<T>) {
   try {
-    await d.store.persistChatMessage({ id: newId(), chatId, from: "user", text, now: d.now() });
+    return await fn();
   } catch (err) {
-    d.logger.warn({ err, chatId }, "persisting the host's message to the chat failed");
+    if (gated)
+      await d.freeChats.undoTurn(gated.turn, gated.admitted).catch((undoErr) => {
+        d.logger.warn({ err: undoErr, chatId: gated.turn.chatId }, "undoing the host turn failed");
+      });
+    throw err;
   }
 }
 
@@ -162,16 +176,15 @@ async function runOr404(d: RunsDeps, runId: string): Promise<Row> {
  * Runs are their creator's. Spec L-2: a creator removed from the project kept reading and
  * appending to their runs; the project gate now applies as well.
  */
-async function authorizeRun(d: RunsDeps, who: Signed, run: Row) {
+async function authorizeRun(d: RunsDeps, who: Signed, run: Row): Promise<ProjectAccess | null> {
   if (run.directus_user_id !== who.directusUserId) throw new ForbiddenError("agent.run_forbidden");
   const projectId = relatedId(run.project_id);
-  if (projectId) {
-    try {
-      await agentProject(d.access, who, projectId);
-    } catch (err) {
-      if (err instanceof PlatformError) throw new ForbiddenError("agent.run_forbidden");
-      throw err;
-    }
+  if (!projectId) return null;
+  try {
+    return await agentProject(d.access, who, projectId);
+  } catch (err) {
+    if (err instanceof PlatformError) throw new ForbiddenError("agent.run_forbidden");
+    throw err;
   }
 }
 
@@ -182,33 +195,44 @@ export async function createRun(
 ): Promise<Row> {
   const project = await liveProject(d.store.sql, body.project_id);
   if (!project) throw new NotFoundError("project.not_found");
-  await agentProject(d.access, who, body.project_id);
+  const pa = await agentProject(d.access, who, body.project_id);
   await assertChatInProject(d, body.project_chat_id, body.project_id);
   const focused = await focusedConversations(d, body.project_chat_id, body.project_id);
   // The Pilot hard block the old route checked here always answers "not blocked" now
   // (is_hard_blocked is deprecated to False), so it is not ported.
-  await checkFreeTierTurns(d, body.project_id, body.project_chat_id);
+  const gated = await admitHostTurn(d, body.project_id, body.project_chat_id, body.message, {
+    tier: pa.tier,
+    chatChecked: true,
+  });
 
-  const run = await d.store.create({
-    id: newId(),
-    projectId: body.project_id,
-    chatId: body.project_chat_id,
-    directusUserId: who.directusUserId,
-    now: d.now(),
+  const run = await undoOnFailure(d, gated, async () => {
+    const run = await d.store.create({
+      id: newId(),
+      projectId: body.project_id,
+      chatId: body.project_chat_id,
+      directusUserId: who.directusUserId,
+      now: d.now(),
+    });
+    const prompt = initialPrompt({
+      projectName: project.name,
+      projectContext: project.context,
+      projectGoal: await currentGoal(d.store.sql, body.project_id),
+      workspaceContext: await workspaceContext(d.store.sql, project.workspaceId),
+      userMessage: body.message,
+      focused,
+    });
+    const payload: Record<string, unknown> = {
+      content: body.message,
+      agent_prompt_content: prompt,
+    };
+    if (focused.length) payload.focused_conversation_ids = focused.map((f) => f.id);
+    await d.store.appendEvent(String(run.id), "user.message", payload, d.now());
+    return run;
   });
-  const prompt = initialPrompt({
-    projectName: project.name,
-    projectContext: project.context,
-    projectGoal: await currentGoal(d.store.sql, body.project_id),
-    workspaceContext: await workspaceContext(d.store.sql, project.workspaceId),
-    userMessage: body.message,
-    focused,
-  });
-  const payload: Record<string, unknown> = { content: body.message, agent_prompt_content: prompt };
-  if (focused.length) payload.focused_conversation_ids = focused.map((f) => f.id);
-  await d.store.appendEvent(String(run.id), "user.message", payload, d.now());
-  await persistUserMessage(d, body.project_chat_id, body.message);
-  scheduleTitle(d, body.project_chat_id, body.message, body.language);
+  // The body names the project; the run's own model calls are billed in the worker.
+  withPayer({ ref: "project", id: body.project_id }, () =>
+    scheduleTitle(d, body.project_chat_id, body.message, body.language),
+  );
   return runOr404(d, String(run.id));
 }
 
@@ -219,18 +243,20 @@ export async function appendMessage(
   body: { message: string; language: string },
 ): Promise<Row> {
   const run = await runOr404(d, runId);
-  await authorizeRun(d, who, run);
+  const pa = await authorizeRun(d, who, run);
   const chatId = nonEmpty(run.project_chat_id);
   const projectId = relatedId(run.project_id);
   const focused = await focusedConversations(d, chatId, projectId);
-  await checkFreeTierTurns(d, projectId, chatId);
+  const gated = await admitHostTurn(d, projectId, chatId, body.message, {
+    tier: pa?.tier ?? null,
+    chatChecked: false,
+  });
   const payload: Record<string, unknown> = { content: body.message };
   if (focused.length) {
     payload.agent_prompt_content = followupPrompt(body.message, focused);
     payload.focused_conversation_ids = focused.map((f) => f.id);
   }
-  await d.store.appendEvent(runId, "user.message", payload, d.now());
-  await persistUserMessage(d, chatId, body.message);
+  await undoOnFailure(d, gated, () => d.store.appendEvent(runId, "user.message", payload, d.now()));
   scheduleTitle(d, chatId, body.message, body.language);
   if (run.status === "running") return runOr404(d, runId);
   return (await d.store.setStatus(runId, "queued", d.now())) as Row;

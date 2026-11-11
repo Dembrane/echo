@@ -16,6 +16,8 @@ struct NowRecordingView: View {
             Group {
                 if model.isRecording {
                     recordingContent
+                } else if !model.hasAIConsent {
+                    AIConsentView(onNotNow: { dismiss() })
                 } else {
                     armedContent
                 }

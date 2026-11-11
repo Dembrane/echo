@@ -8,8 +8,10 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
@@ -42,6 +44,8 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 		{ open: openFinalDelete, close: closeFinalDelete },
 	] = useDisclosure(false);
 
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+
 	const [cloneName, setCloneName] = useState(project.name ?? "");
 
 	const handleClone = async () => {
@@ -59,8 +63,12 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			if (newProjectId) {
 				navigate(`/w/${workspaceId}/projects/${newProjectId}/home`);
 			}
-		} catch (_error) {
-			// toast handled in mutation hook
+		} catch (error) {
+			// Other failures are toasted in the mutation hook.
+			if (isFreeTierLimitError(error) === "projects") {
+				closeCloneModal();
+				upgradeHandlers.open();
+			}
 		}
 	};
 
@@ -125,7 +133,9 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					)}
 
 					{!cloneProjectByIdMutation.isPending &&
-						cloneProjectByIdMutation.error && (
+						cloneProjectByIdMutation.error &&
+						isFreeTierLimitError(cloneProjectByIdMutation.error) !==
+							"projects" && (
 							<ErrorNotice
 								error={cloneProjectByIdMutation.error}
 								title={t`Error cloning project`}
@@ -183,6 +193,16 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 				confirmColor="red"
 				loading={deleteProjectByIdMutation.isPending}
 				onConfirm={handleDelete}
+			/>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				// The 402 proves the account is free, whatever this workspace shows.
+				currentTier="free"
+				requiredTier="changemaker"
+				canRequestUpgrade={isAdminRole(workspace?.role)}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="project_cap"
 			/>
 		</ProjectSettingsSection>
 	);

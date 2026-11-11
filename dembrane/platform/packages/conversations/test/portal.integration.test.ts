@@ -11,6 +11,7 @@ import { FakeTranscriber } from "@dembrane/transcription";
 import { Hono } from "hono";
 import postgres from "postgres";
 import type { ConversationsDeps } from "../src/deps";
+import { FREE_LIMIT_SKIPPED } from "../src/free-audio";
 import { ParticipantTokens } from "../src/participant-token";
 import { portalRoutes } from "../src/portal/routes";
 import { conversationAudioRoutes } from "../src/v1/audio-routes";
@@ -219,6 +220,55 @@ run("portal uploads and audio routes", () => {
     ).toBe(200);
   });
 
+  test("no file name or browser breaks an upload: long names, dots, over-long name and user agent", async () => {
+    // A dashboard upload: the conversation is named after the file, then the file is posted.
+    const long =
+      "(Audio) Jan Peeters - Voorbereidend gesprek thematafel Wanneer begint zorg - interview met de buurtwerking en het lokaal dienstencentrum 2026-10.m4a";
+    for (const filename of [long, "Interview... deel 2.M4A", `${"x".repeat(300)}.m4a`]) {
+      await seed(sql, newId());
+      const started = await post(`/api/participant/projects/${PROJECT}/conversations/initiate`, {
+        name: filename,
+        pin: "",
+        source: "DASHBOARD_UPLOAD",
+        user_agent: `Mozilla/5.0 ${"[FBAN/FBIOS;FBAV/1]".repeat(20)}`,
+      });
+      expect(started.status).toBe(200);
+      const { id: cid } = (await started.json()) as { id: string };
+      const url = await post(`/api/participant/conversations/${cid}/get-upload-url`, {
+        filename,
+        content_type: "audio/x-m4a",
+        conversation_id: cid,
+      });
+      expect(url.status).toBe(200);
+      const issued = (await url.json()) as {
+        chunk_id: string;
+        upload_url: string;
+        fields: Record<string, string>;
+        file_url: string;
+      };
+      const form = new FormData();
+      for (const [k, v] of Object.entries(issued.fields)) form.append(k, v);
+      form.append("file", new Blob([new Uint8Array(5000)], { type: "audio/x-m4a" }), filename);
+      expect((await fetch(issued.upload_url, { method: "POST", body: form })).status).toBe(204);
+      const done = await post(`/api/participant/conversations/${cid}/confirm-upload`, {
+        chunk_id: issued.chunk_id,
+        file_url: issued.file_url,
+        timestamp: new Date().toISOString(),
+      });
+      expect(done.status).toBe(200);
+      const key = bucket.urls.keyOf(issued.file_url);
+      expect(key.startsWith(`conversation/${cid}/chunks/${issued.chunk_id}-`)).toBe(true);
+      expect(key.endsWith(".m4a")).toBe(true);
+      expect(key.length).toBeLessThan(200);
+      const [row] = await sql`select path from conversation_chunk where conversation_id = ${cid}`;
+      expect(row?.path).toBe(issued.file_url);
+      const [conv] =
+        await sql`select participant_name, participant_user_agent from conversation where id = ${cid}`;
+      expect(conv?.participant_name).toBe(filename.slice(0, 255));
+      expect(conv?.participant_user_agent).toHaveLength(255);
+    }
+  });
+
   test("the first play merges the chunks; later plays reuse the merged file; retranscribe clones it", async () => {
     const cid = newId();
     await seed(sql, cid);
@@ -262,5 +312,28 @@ run("portal uploads and audio routes", () => {
     const links =
       await sql`select link_type from conversation_link where target_conversation_id = ${body.new_conversation_id}`;
     expect(links.map((l) => l.link_type)).toEqual(["CLONE"]);
+  });
+
+  test("a chunk the free limit refused serves no audio", async () => {
+    const cid = newId();
+    await seed(sql, cid);
+    await sql`insert into directus_users (id, email, status) values (${owner.directusUserId}, 'owner@example.test', 'active')
+      on conflict do nothing`;
+    await sql`update project set directus_user_id = ${owner.directusUserId} where id = ${PROJECT}`;
+    const [ok, refused] = [newId(), newId()];
+    for (const [id, error] of [
+      [ok, null],
+      [refused, FREE_LIMIT_SKIPPED],
+    ] as const) {
+      const url = bucket.urls.fileUrl(`conversation/${cid}/chunks/${id}-a.mp3`);
+      await sql`insert into conversation_chunk (id, conversation_id, timestamp, path, source, error)
+        values (${id}, ${cid}, now(), ${url}, 'PORTAL_AUDIO', ${error})`;
+    }
+    const url = (id: string) =>
+      `/api/conversations/${cid}/chunks/${id}/content?return_url=true&signed=false`;
+    expect((await app.request(url(ok))).status).toBe(200);
+    const res = await app.request(url(refused));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ detail: "No content found" });
   });
 });

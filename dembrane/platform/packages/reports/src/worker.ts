@@ -1,3 +1,4 @@
+import { aiBudgetForProject } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
 import { Notifier } from "@dembrane/notifications";
@@ -65,6 +66,8 @@ export function reportsWorker(deps: ReportsWorkerDeps) {
         notifier: new Notifier(deps.db, deps.logger),
         reportGenerated: (projectId, reportId) =>
           enqueueReportEvent(webhookDeps, projectId, reportId, "report.generated"),
+        budgetLeft: (projectId) =>
+          aiBudgetForProject(deps.db, projectId, new Date()).then((b) => b?.exhausted !== true),
         jobs: { enqueue: (def, payload, opts) => queue.enqueue(def, payload, opts as never) },
       });
       await queue.work(notifyReportSubscribers, { concurrency: 2 }, async (p, job) => {

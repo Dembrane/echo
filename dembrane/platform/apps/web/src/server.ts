@@ -13,6 +13,24 @@ export interface WebOptions {
   /** Shared with the API, which then takes the caller's address from this server. */
   readonly proxySecret?: string | undefined;
   readonly release: string;
+  /** False removes the Tally script from the page. Defaults to true. */
+  readonly analytics?: boolean | undefined;
+}
+
+/** index.html without the Tally embed script, for deployments that switch analytics off. */
+export function withoutTally(html: string): string {
+  // Line by line, not a regex: the page is ours and puts the embed on a line of its own.
+  return html
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      return !(
+        t.startsWith("<script") &&
+        t.endsWith("</script>") &&
+        t.includes('src="https://tally.so/')
+      );
+    })
+    .join("\n");
 }
 
 /**
@@ -25,6 +43,14 @@ export function previewRuntime(
 ): { previewPr?: number; previewRepo?: string } {
   if (env !== "preview" || !web.previewPr) return {};
   return { previewPr: web.previewPr, previewRepo: web.previewRepo };
+}
+
+const PARTICIPANT_PATH =
+  /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\/|$)/i;
+
+/** A portal link, /:language?/:projectId/..., the only kind of page the portal serves. */
+export function isParticipantPath(path: string): boolean {
+  return PARTICIPANT_PATH.test(path);
 }
 
 const HOP_BY_HOP = [
@@ -70,10 +96,11 @@ export function createHandler(opts: WebOptions) {
 
     const safe = normalize(path).replace(/^(\.\.[/\\])+/, "");
     if (safe !== "/" && !safe.includes("\0")) {
-      const file = Bun.file(join(opts.distDir, safe));
+      const filePath = join(opts.distDir, safe);
+      const file = Bun.file(filePath);
       if (await file.exists()) {
         const immutable = safe.startsWith("/assets/");
-        return withHeaders(new Response(file), {
+        return withHeaders(await serveFile(req, filePath, file.type), {
           "Cache-Control": immutable
             ? "public, max-age=31536000, immutable"
             : safe === "/version.json"
@@ -84,15 +111,60 @@ export function createHandler(opts: WebOptions) {
       if (safe.startsWith("/assets/"))
         return withHeaders(new Response("Not found", { status: 404 }));
     }
+    // The portal only serves participant links; anything else is a dashboard URL.
+    if (opts.runtime.role === "portal" && !isParticipantPath(url.pathname)) {
+      const target = new URL(String(opts.runtime.dashboardUrl));
+      // Setting only the path keeps the host fixed, so "//evil.com" can't redirect off-site.
+      target.pathname = url.pathname.replace(/^\/+/, "/");
+      target.search = url.search;
+      return withHeaders(new Response(null, { status: 302, headers: { Location: target.href } }));
+    }
+    // Without analytics the page is rewritten, so the precompressed copies (which still carry
+    // the Tally script) are not used for it.
     return withHeaders(
-      new Response(Bun.file(indexPath), {
-        headers: { "content-type": "text/html; charset=utf-8" },
-      }),
-      {
-        "Cache-Control": "no-cache",
-      },
+      opts.analytics === false
+        ? new Response(withoutTally(await Bun.file(indexPath).text()), {
+            headers: { "content-type": "text/html; charset=utf-8" },
+          })
+        : await serveFile(req, indexPath, "text/html; charset=utf-8"),
+      { "Cache-Control": "no-cache" },
     );
   };
+}
+
+// Best first. The build writes these copies next to each text file (precompress.ts).
+const ENCODINGS = [
+  ["br", ".br"],
+  ["gzip", ".gz"],
+] as const;
+
+/** Whether Accept-Encoding lists the encoding without refusing it by q=0. */
+function accepts(header: string | null, encoding: string): boolean {
+  if (!header) return false;
+  return header.split(",").some((part) => {
+    const [name, ...params] = part.trim().toLowerCase().split(";");
+    if (name?.trim() !== encoding) return false;
+    const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
+    return !q || Number(q.slice(2)) > 0;
+  });
+}
+
+/**
+ * Sends the build's compressed copy of a file when the browser takes it, else the file as
+ * built. A Range request asks for byte offsets of the file as built, so it never gets a copy.
+ */
+async function serveFile(req: Request, path: string, type: string): Promise<Response> {
+  const headers = { "content-type": type, vary: "Accept-Encoding" };
+  if (!req.headers.has("range")) {
+    const accept = req.headers.get("accept-encoding");
+    for (const [encoding, ext] of ENCODINGS) {
+      if (!accepts(accept, encoding)) continue;
+      const copy = Bun.file(path + ext);
+      if (await copy.exists())
+        return new Response(copy, { headers: { ...headers, "content-encoding": encoding } });
+    }
+  }
+  return new Response(Bun.file(path), { headers });
 }
 
 async function proxy(
