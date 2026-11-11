@@ -61,6 +61,7 @@ export interface DigestAnswer {
   readonly provenance: { field: string; source: string; snippet: string }[];
 }
 
+/** Vertex rejects a schema with maxItems or maxLength inside it, so sizes are checked in code (digest-rules.ts). */
 export const DIGEST_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -80,53 +81,48 @@ export const DIGEST_SCHEMA = {
     "provenance",
   ],
   properties: {
-    name: { type: "string", maxLength: 120 },
-    goal: { type: "string", maxLength: 400 },
-    context: { type: "string", maxLength: 1800 },
+    name: { type: "string" },
+    goal: { type: "string" },
+    context: { type: "string" },
     key_terms: {
       type: "array",
-      maxItems: 40,
       items: {
         type: "object",
         additionalProperties: false,
         required: ["term", "reason"],
         properties: {
-          term: { type: "string", maxLength: 80 },
-          reason: { type: "string", maxLength: 200 },
+          term: { type: "string" },
+          reason: { type: "string" },
         },
       },
     },
     template_key: { type: "string", enum: [...LISTED_TEMPLATE_KEYS] },
-    template_reason: { type: "string", maxLength: 200 },
+    template_reason: { type: "string" },
     runner_up_keys: {
       type: "array",
-      maxItems: 2,
       items: { type: "string", enum: [...LISTED_TEMPLATE_KEYS] },
     },
-    tags: { type: "array", maxItems: 10, items: { type: "string", maxLength: 80 } },
-    name_label: { type: "string", maxLength: 80 },
+    tags: { type: "array", items: { type: "string" } },
+    name_label: { type: "string" },
     verify_topics: {
       type: "array",
-      maxItems: 3,
       items: { type: "string", enum: [...BUILT_IN_TOPICS] },
     },
-    explore_prompt: { type: "string", maxLength: 700 },
+    explore_prompt: { type: "string" },
     host_script_additions: {
       type: "array",
-      maxItems: 3,
-      items: { type: "string", maxLength: 220 },
+      items: { type: "string" },
     },
     provenance: {
       type: "array",
-      maxItems: 20,
       items: {
         type: "object",
         additionalProperties: false,
         required: ["field", "source", "snippet"],
         properties: {
           field: { type: "string", enum: [...PROVENANCE_FIELDS] },
-          source: { type: "string", maxLength: 200 },
-          snippet: { type: "string", maxLength: 200 },
+          source: { type: "string" },
+          snippet: { type: "string" },
         },
       },
     },
@@ -295,7 +291,7 @@ export async function askDigestModel(
       .replaceAll("{LANGUAGE}", languageName(i.language)),
     user: digestUserTurn(i),
     temperature: 0,
-    maxTokens: 4096,
+    maxTokens: 8192,
     thinkingBudget: 0,
     jsonSchema: DIGEST_SCHEMA as unknown as Record<string, unknown>,
     timeoutMs: DIGEST_TIMEOUT_MS,
