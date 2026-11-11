@@ -23,7 +23,7 @@ import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "@/portal/components/start/useInitiateConversationMutation";
 import { NotTakingRecordings } from "../NotTakingRecordings";
-import { resolvePortalMode } from "./recordingCap";
+import { resolvePortalMode } from "../recordingCap";
 
 const FormSchema = z.object({
 	email: z.string().optional(),
