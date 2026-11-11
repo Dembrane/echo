@@ -708,7 +708,7 @@ export const UploadConversationDropzone = (
 										<Paper withBorder p="md">
 											<Stack gap="xs">
 												{selectedFiles.map((file, index) => (
-													<Stack key={file.name} gap={2}>
+													<Stack key={file.name} gap="xs">
 														<Group
 															justify="space-between"
 															{...testId(`conversation-upload-file-${index}`)}

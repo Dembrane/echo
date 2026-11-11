@@ -63,7 +63,7 @@ export const AllFormats = ({
 	return (
 		<Stack gap="lg" data-testid="all-formats">
 			<Stack gap="xs">
-				<Title order={3}>
+				<Title order={5}>
 					<Trans>What are you going to do?</Trans>
 				</Title>
 				<Text size="sm" className="app-muted">

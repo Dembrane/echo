@@ -1,3 +1,4 @@
+import { appendFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import {
 	DIGEST_RESULT_EN,
@@ -8,6 +9,7 @@ import {
 	makePdf,
 	makePptx,
 } from "../src/components/project/digest/extract/fixtures";
+import { grammarAudit } from "./grammar-checks";
 
 // ECHO-1055: "Start from your documents" on the template picker. Real generated PDF, DOCX
 // and PPTX files go into the drop zone; the browser reads them, the digest endpoint is
@@ -16,6 +18,9 @@ import {
 // refusal, at desktop and phone width, in English and Dutch. A network capture checks
 // that only text leaves the browser. E2E_SHOTS=<dir> also saves screenshots.
 const shots = process.env.E2E_SHOTS;
+// E2E_GRAMMAR=<file> also runs the rendered design-grammar audit on every screen shot here
+// and appends its findings to that file, one JSON line per screen.
+const grammarLog = process.env.E2E_GRAMMAR;
 const sizes = [
 	{ height: 900, name: "desktop", width: 1280 },
 	{ height: 844, name: "phone", width: 390 },
@@ -132,6 +137,16 @@ for (const size of sizes)
 						fullPage: full,
 						path: `${shots}/${size.name}-${lang}-${name}.png`,
 					});
+				if (grammarLog) {
+					const audit = await page.evaluate(grammarAudit, {
+						phone: size.name === "phone",
+						portal: false,
+					});
+					appendFileSync(
+						grammarLog,
+						`${JSON.stringify({ lang, name, size: size.name, ...audit })}\n`,
+					);
+				}
 			};
 			const noSideScroll = async () =>
 				expect(

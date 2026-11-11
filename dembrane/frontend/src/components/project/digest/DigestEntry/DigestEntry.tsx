@@ -119,7 +119,7 @@ export const DigestEntry = ({
 					justify="flex-start"
 					style={{ pointerEvents: "none" }}
 				>
-					<FileArrowUpIcon size={compact ? 20 : 24} aria-hidden />
+					<FileArrowUpIcon size={20} style={{ flexShrink: 0 }} aria-hidden />
 					<Stack gap={0}>
 						<Text size="sm">
 							{compact ? (
