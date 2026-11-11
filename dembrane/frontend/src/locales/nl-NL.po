@@ -2403,7 +2403,7 @@ msgstr "Een object buiten deze weergave"
 msgid "An optional second screen after the disclosure."
 msgstr "Een optioneel tweede scherm na de disclaimer."
 
-#: src/components/error/ErrorPage.tsx:66
+#: src/components/error/ErrorPage.tsx:73
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Er ging iets onverwachts mis. Opnieuw laden of teruggaan naar home helpt meestal."
 
@@ -4484,7 +4484,7 @@ msgstr "Doorgaan"
 msgid "participant.verify.instructions.button.next"
 msgstr "Doorgaan"
 
-#: src/components/workspace/FeatureGate.tsx:398
+#: src/components/workspace/FeatureGate.tsx:425
 msgid "Continue on dembrane.com"
 msgstr "Verder op dembrane.com"
 
@@ -6559,7 +6559,7 @@ msgstr "Iedereen op de lijst is getraind."
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
 
-#: src/components/workspace/FeatureGate.tsx:384
+#: src/components/workspace/FeatureGate.tsx:411
 msgid "Everything you've made here stays as it is."
 msgstr "Alles wat je hier hebt gemaakt, blijft gewoon staan."
 
@@ -9537,7 +9537,7 @@ msgstr "Markeert {orgName} als partner. De werkruimtes geven bij het aanmaken ze
 msgid "max {maximum}"
 msgstr "max. {maximum}"
 
-#: src/components/workspace/FeatureGate.tsx:405
+#: src/components/workspace/FeatureGate.tsx:432
 msgid "Maybe later"
 msgstr "Misschien later"
 
@@ -11584,7 +11584,7 @@ msgstr "Pagina-inhoud"
 #~ msgid "Page Content"
 #~ msgstr "Pagina inhoud"
 
-#: src/components/error/ErrorPage.tsx:54
+#: src/components/error/ErrorPage.tsx:61
 msgid "Page not found"
 msgstr "Pagina niet gevonden"
 
@@ -13232,7 +13232,7 @@ msgstr "Relevant"
 
 #: src/features/sidebar/AppSidebar.tsx:119
 #: src/components/layout/BaseLayout.tsx:39
-#: src/components/error/ErrorPage.tsx:87
+#: src/components/error/ErrorPage.tsx:102
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Pagina opnieuw laden"
@@ -13888,7 +13888,7 @@ msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 #~ msgid "Retry Upload"
 #~ msgstr "Opnieuw uploaden"
 
-#: src/components/error/ErrorPage.tsx:96
+#: src/components/error/ErrorPage.tsx:111
 #: src/components/error/ErrorBoundary.tsx:62
 msgid "Return home"
 msgstr "Terug naar home"
@@ -15405,7 +15405,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/auth/Login.tsx:286
 #: src/components/report/reportError.ts:22
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/error/ErrorPage.tsx:56
+#: src/components/error/ErrorPage.tsx:63
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:350
 msgid "Something went wrong"
@@ -18901,7 +18901,7 @@ msgstr "We konden je betaalmethode niet belasten"
 #~ msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
 #~ msgstr "We konden tweestapsverificatie niet inschakelen. Controleer je code en probeer het opnieuw."
 
-#: src/components/error/ErrorPage.tsx:62
+#: src/components/error/ErrorPage.tsx:69
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "We konden de pagina die je zocht niet vinden. Misschien is hij verplaatst."
 
@@ -18990,7 +18990,7 @@ msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, w
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik <0>Probleem melden</0> om die met schermafbeeldingen te sturen."
 
-#: src/components/workspace/FeatureGate.tsx:370
+#: src/components/workspace/FeatureGate.tsx:397
 msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
 msgstr "We horen graag hoe je dembrane gebruikt, zodat we je beter kunnen helpen. Dat kost je zo'n twee minuten op onze website. Aan het eind kun je, als je wilt, een kort gesprek met ons inplannen."
 
@@ -20248,7 +20248,7 @@ msgstr "Met jouw abonnement kun je het watermerk verwijderen."
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Je abonnement wordt niet verlengd. Je houdt toegang tot het einde van de periode."
 
-#: src/components/workspace/FeatureGate.tsx:378
+#: src/components/workspace/FeatureGate.tsx:405
 msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
 msgstr "Je portalen blijven werken en niets van wat je deelnemers zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 

@@ -2403,7 +2403,7 @@ msgstr "Un élément en dehors de cette vue"
 msgid "An optional second screen after the disclosure."
 msgstr "Un second écran optionnel après la présentation."
 
-#: src/components/error/ErrorPage.tsx:66
+#: src/components/error/ErrorPage.tsx:73
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Une erreur inattendue s'est produite. Recharger la page ou revenir à l'accueil aide souvent."
 
@@ -4487,7 +4487,7 @@ msgstr "Continuer"
 msgid "participant.verify.instructions.button.next"
 msgstr "Continuer"
 
-#: src/components/workspace/FeatureGate.tsx:398
+#: src/components/workspace/FeatureGate.tsx:425
 msgid "Continue on dembrane.com"
 msgstr "Continuer sur dembrane.com"
 
@@ -6562,7 +6562,7 @@ msgstr "Toutes les personnes de la liste sont formées."
 msgid "participant.alert.microphone.access.success"
 msgstr "Tout semble bon – vous pouvez continuer."
 
-#: src/components/workspace/FeatureGate.tsx:384
+#: src/components/workspace/FeatureGate.tsx:411
 msgid "Everything you've made here stays as it is."
 msgstr "Tout ce que vous avez créé ici reste tel quel."
 
@@ -9540,7 +9540,7 @@ msgstr "Définit {orgName} comme partenaire. Ses espaces de travail distinguent 
 msgid "max {maximum}"
 msgstr "max {maximum}"
 
-#: src/components/workspace/FeatureGate.tsx:405
+#: src/components/workspace/FeatureGate.tsx:432
 msgid "Maybe later"
 msgstr "Plus tard"
 
@@ -11587,7 +11587,7 @@ msgstr "Contenu de la page"
 #~ msgid "Page Content"
 #~ msgstr "Contenu de la page"
 
-#: src/components/error/ErrorPage.tsx:54
+#: src/components/error/ErrorPage.tsx:61
 msgid "Page not found"
 msgstr "Page non trouvée"
 
@@ -13235,7 +13235,7 @@ msgstr "Pertinent"
 
 #: src/features/sidebar/AppSidebar.tsx:119
 #: src/components/layout/BaseLayout.tsx:39
-#: src/components/error/ErrorPage.tsx:87
+#: src/components/error/ErrorPage.tsx:102
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Recharger la page"
@@ -13891,7 +13891,7 @@ msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible b
 #~ msgid "Retry Upload"
 #~ msgstr "Réessayer le téléchargement"
 
-#: src/components/error/ErrorPage.tsx:96
+#: src/components/error/ErrorPage.tsx:111
 #: src/components/error/ErrorBoundary.tsx:62
 msgid "Return home"
 msgstr "Retour à l'accueil"
@@ -15408,7 +15408,7 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 #: src/routes/auth/Login.tsx:286
 #: src/components/report/reportError.ts:22
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/error/ErrorPage.tsx:56
+#: src/components/error/ErrorPage.tsx:63
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:350
 msgid "Something went wrong"
@@ -18904,7 +18904,7 @@ msgstr "Nous n'avons pas pu débiter votre moyen de paiement"
 #~ msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
 #~ msgstr "Nous n'avons pas pu activer l'authentification à deux facteurs. Vérifiez votre code et réessayez."
 
-#: src/components/error/ErrorPage.tsx:62
+#: src/components/error/ErrorPage.tsx:69
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "Nous n'avons pas trouvé la page que vous cherchiez. Elle a peut-être été déplacée."
 
@@ -18994,7 +18994,7 @@ msgstr "Nous vous envoyerons un message uniquement si votre hôte génère un ra
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
 msgstr "Nous serions ravis de vous lire. Que vous ayez une idée pour quelque chose de nouveau, repéré une traduction qui sonne faux, ou envie de nous dire comment ça se passe. Vous avez trouvé un bug ? Utilisez <0>Signaler un problème</0> pour l'envoyer avec des captures d'écran."
 
-#: src/components/workspace/FeatureGate.tsx:370
+#: src/components/workspace/FeatureGate.tsx:397
 msgid "We'd love to learn a bit about how you use dembrane, so we can help you better. It takes about two minutes on our website, and you can book a short call with us at the end if you like."
 msgstr "Nous aimerions en savoir un peu plus sur la façon dont vous utilisez dembrane, pour mieux vous aider. Cela prend environ deux minutes sur notre site, et à la fin, vous pouvez réserver un court appel avec nous si vous le souhaitez."
 
@@ -20252,7 +20252,7 @@ msgstr "Votre forfait vous permet de retirer le filigrane."
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Votre forfait ne sera pas renouvelé. Vous conservez votre accès jusqu'à la fin de la période."
 
-#: src/components/workspace/FeatureGate.tsx:378
+#: src/components/workspace/FeatureGate.tsx:405
 msgid "Your portals keep working and nothing your participants say is lost. Once you're on a paid plan, transcription catches up on everything already recorded."
 msgstr "Vos portails continuent de fonctionner et rien de ce que disent vos participants n'est perdu. Dès que vous passez à un forfait payant, tout ce qui a déjà été enregistré est transcrit."
 
