@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { assetPath } from "@dembrane/core";
+import { assetPath, withoutTrailingSlashes } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 
 /**
@@ -128,7 +128,7 @@ export function docsCorpus(opts: {
 }): DocsCorpus {
   let cached: { at: number; data: Map<string, string> } | null = null;
   let loading: Promise<Map<string, string>> | null = null;
-  const base = opts.docsBaseUrl.replace(/\/+$/, "");
+  const base = withoutTrailingSlashes(opts.docsBaseUrl);
 
   async function load(): Promise<Map<string, string>> {
     if (!base) {

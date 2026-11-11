@@ -1,8 +1,14 @@
 import type { Policy } from "@dembrane/access";
-import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conversations";
+import {
+  type ConversationsDeps,
+  PARTICIPANT_TOKEN_HEADER,
+  requirePortalAi,
+} from "@dembrane/conversations";
 import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
+import { speechHint } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
@@ -117,7 +123,7 @@ export function slugify(text: string): string {
     .replace(/[^\p{L}\p{N}_\s-]/gu, "")
     .replace(/[\s_]+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-|-$/g, "");
   return s ? [...s].slice(0, 60).join("") : "custom";
 }
 
@@ -335,13 +341,17 @@ async function complete(
   system: string,
   content: (TextPart | FilePart)[],
   failure: string,
+  language?: string,
 ) {
   try {
     const { text } = await generateText({
       model: ctx.d.models.model("multi_modal_pro"),
       system,
       messages: [{ role: "user", content }],
-      providerOptions: { vertex: { thinkingConfig: { thinkingBudget: 2048 } } },
+      providerOptions: {
+        vertex: { thinkingConfig: { thinkingBudget: 2048 } },
+        ...speechHint(ctx.d.models, language),
+      },
     });
     return text;
   } catch (err) {
@@ -358,6 +368,7 @@ export async function generateArtifact(
 ) {
   const row = await verifiableConversation(ctx, body.conversation_id, token);
   const project = row.project as NonNullable<typeof row.project>;
+  await requirePortalAi(ctx.d.db, project.id, ctx.d.now());
   const conv = row.conversation;
   const anonymized = Boolean(project.anonymize_transcripts);
   const topics = await topicsFor(ctx, project.id);
@@ -410,11 +421,15 @@ export async function generateArtifact(
     language: project.language || "en",
     pii_redaction: anonymized,
   });
-  const text = await complete(
-    ctx,
-    system,
-    [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
-    "Failed to generate verification artifact",
+  // The body names the conversation, so the payer middleware cannot.
+  const text = await withPayer({ ref: "conversation", id: conv.id }, async () =>
+    complete(
+      ctx,
+      system,
+      [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
+      "Failed to generate verification artifact",
+      project.language || "en",
+    ),
   );
   const created = await ctx.store.createArtifact({
     id: newId(),
@@ -446,13 +461,15 @@ export async function updateArtifact(
   // H-2: the artifact's own conversation is the one that must be open for verify.
   if (!artifact.conversation_id) throw new NotFoundError("conversation.not_found");
   const row = await verifiableConversation(ctx, artifact.conversation_id, token);
+  const project = row.project as NonNullable<typeof row.project>;
+  // Only a revision calls the model; hand edits and approvals always work.
+  if (body.useConversation) await requirePortalAi(ctx.d.db, project.id, ctx.d.now());
   const updates: { content?: string; approved_at?: string } = {};
   if (body.approvedAt !== null) updates.approved_at = body.approvedAt;
   if (body.useConversation) {
     // H-2: revising could pull another conversation's transcript into this artifact.
     if (body.useConversation.conversationId !== artifact.conversation_id)
       throw new BadRequestError("verify.artifact_wrong_conversation");
-    const project = row.project as NonNullable<typeof row.project>;
     const anonymized = Boolean(project.anonymize_transcripts);
     const chunks = await ctx.store.chunks(artifact.conversation_id);
     const ref = body.useConversation.timestamp.getTime();
@@ -489,6 +506,7 @@ export async function updateArtifact(
         ...(await audioParts(ctx, audio)),
       ],
       "Failed to revise verification artifact",
+      project.language || "en",
     );
   } else if (body.content !== null) updates.content = body.content;
   if (!Object.keys(updates).length)

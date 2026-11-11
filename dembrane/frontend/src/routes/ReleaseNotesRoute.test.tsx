@@ -47,11 +47,15 @@ it("keeps each walkthrough with its own release, captions on", () => {
 	).toBeTruthy();
 	expect(within(articles[0]).queryByText("Upcoming")).toBeNull();
 	expect(
-		within(articles[0]).getByRole("link", { name: "v2.4.0" }),
+		within(articles[0]).getByRole("link", { name: "v3.3.0" }),
 	).toBeTruthy();
 	expect(within(articles[0]).getByText("Latest release")).toBeTruthy();
 	expect(within(articles[1]).queryByText("Latest release")).toBeNull();
-	expect(articles[0].querySelector("iframe")?.src).toContain(
+	expect(articles[0].querySelector("iframe")).toBeNull();
+	const popcorn = articles.find((article) =>
+		within(article).queryByRole("link", { name: "v2.4.0" }),
+	);
+	expect(popcorn?.querySelector("iframe")?.src).toContain(
 		"youtube-nocookie.com/embed/nKFxtUr13sI?rel=0&cc_load_policy=1&cc_lang_pref=en",
 	);
 	expect(
@@ -118,6 +122,12 @@ it("groups releases by month and keeps the same month in different years separat
 	expect(within(august2025).queryByRole("link", { name: "v2.3.0" })).toBeNull();
 	expect(screen.queryByRole("region", { name: "Next" })).toBeNull();
 	expect(
+		within(screen.getByRole("region", { name: "October 2026" })).getByRole(
+			"heading",
+			{ name: "dembrane v3" },
+		),
+	).toBeTruthy();
+	expect(
 		within(screen.getByRole("region", { name: "September 2026" })).getByRole(
 			"heading",
 			{ name: "Introducing Popcorn" },
@@ -170,7 +180,8 @@ it("shows each category once and omits empty groups", () => {
 		expect(within(popcorn).getAllByRole("heading", { name })).toHaveLength(1);
 	}
 	expect(within(popcorn).getAllByRole("listitem")).toHaveLength(
-		releases.getReleases()[0].changes?.length ?? 0,
+		releases.getReleases().find(({ version }) => version === "2026-09")?.changes
+			?.length ?? 0,
 	);
 	const fix = screen.getByRole("link", { name: "v2.1.1" }).closest("article");
 	if (!fix) throw new Error("Missing Czech fix release");

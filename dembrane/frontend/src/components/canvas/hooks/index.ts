@@ -5,6 +5,7 @@ import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { APP_ENVIRONMENT } from "@/config";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import {
 	createFixtureCanvas,
 	createFixtureProjectCanvases,
@@ -260,6 +261,8 @@ export function useRefreshCanvasMutation(canvasId: string) {
 		mutationFn: () =>
 			bff.post<{ generation: "pending" }>(`/canvases/${canvasId}/refresh`),
 		onError: (error: BffError) => {
+			// The page opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") return;
 			if (error.status === 429) {
 				toast.message(t`Just refreshed. Give it a moment.`);
 				return;

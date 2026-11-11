@@ -19,7 +19,7 @@ export interface PrivacyDeps {
 }
 
 const SECRET_USER_FIELDS = ["password", "token", "tfa_secret", "auth_data"] as const;
-const STORAGE_KEY_FIELDS = ["imageKey", "initialsImageKey", "signedPdfKey"] as const;
+const STORAGE_KEY_FIELDS = ["imageKey", "initialsImageKey", "signedPdfKey", "evidenceKey"] as const;
 
 const omit = <T extends object>(row: T | undefined, keys: readonly string[]) =>
   row ? Object.fromEntries(Object.entries(row).filter(([k]) => !keys.includes(k))) : null;

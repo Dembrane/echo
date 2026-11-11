@@ -94,7 +94,7 @@ Each tool is also a plain REST call under `/api/v2/agent`, with the same bearer 
 
 - An MCP answer is capped at about 60,000 characters. A longer answer is cut, marked `truncated`, and says how to page.
 - An organisation on the free plan gets 1,000 tool calls per calendar month (UTC). An organisation with any workspace on a paid plan is not counted. `dembrane_whoami` and `dembrane_find_projects` never count.
-- Each tool follows the person's own permissions. A conversation that the workspace's plan has locked returns no transcript text.
+- Each tool follows the person's own permissions. No plan hides transcript text.
 
 ## Control and audit
 

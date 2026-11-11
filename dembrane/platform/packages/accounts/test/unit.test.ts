@@ -3,12 +3,35 @@ import { assetPath } from "@dembrane/core";
 import { LOCALES } from "@dembrane/i18n";
 import { PDFDocument } from "pdf-lib";
 import { walkOrder } from "../src/documents";
+import {
+  addMonths,
+  amsterdamDay,
+  checkInvoicePlan,
+  dueOn,
+  invoiceParts,
+} from "../src/invoice-plan";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
-import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
+import {
+  fitsVatTreatment,
+  hundredthsOf,
+  netOf,
+  priceLines,
+  requireAmounts,
+  sectionsOf,
+  vatOf,
+} from "../src/money";
+import {
+  euro,
+  layoutOffer,
+  legalKinds,
+  type OfferContent,
+  offerText,
+  quantityText,
+} from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
+import { checkOptions, chosenOptions, optionsOf, signedTotals, withChoice } from "../src/options";
 import { legalBlocks, offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { candidates, lookupPeppol } from "../src/peppol";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
@@ -109,6 +132,107 @@ describe("money", () => {
     expect(() => requireAmounts([line(10000), line(-10000)])).toThrow(/more than zero/);
     expect(requireAmounts([line(10000), line(-2500)]).total_cents).toBe(9075);
   });
+  test("optional and included lines are shown, never counted", () => {
+    const line = (unit_price_cents: number, kind?: "optional" | "included") => ({
+      description: "x",
+      quantity: 2,
+      unit_price_cents,
+      vat_rate_bps: 2100,
+      ...(kind && { kind }),
+    });
+    const t = requireAmounts([line(10000), line(5000, "optional"), line(0, "included")]);
+    expect([t.subtotal_cents, t.vat_cents, t.total_cents]).toEqual([20000, 4200, 24200]);
+    // The optional line still carries its own amount, for the customer to read.
+    expect(t.lines.map((l) => l.net_cents)).toEqual([20000, 10000, 0]);
+    // A line included at no charge is accepted at 0, and refused with a price.
+    expect(() => requireAmounts([line(10000), line(5000, "included")])).toThrow(
+      /Line 2 is included at no charge/,
+    );
+    // Options alone, or only included lines, ask nothing.
+    expect(() => requireAmounts([line(5000, "optional")])).toThrow(/more than zero/);
+    expect(() => requireAmounts([line(0, "included")])).toThrow(/more than zero/);
+    // An optional line without a price says nothing.
+    expect(() => requireAmounts([line(10000), line(0, "optional")])).toThrow(
+      /Line 2: give a price/,
+    );
+  });
+  test("a quantity has up to two decimals, and a line rounds to the cent half up", () => {
+    expect([hundredthsOf(1.5), hundredthsOf(0.25), hundredthsOf(0.29), hundredthsOf(12)]).toEqual([
+      150, 25, 29, 1200,
+    ]);
+    for (const bad of [0, -1, 0.001, 1.255, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(hundredthsOf(bad)).toBeNull();
+    // 0.5 x 499 cents is 249.5: half up to 250; 1.5 x 333 is 499.5: 500; 0.25 x 1 is 0.25: 0.
+    expect([netOf(0.5, 499), netOf(1.5, 333), netOf(0.25, 1), netOf(0.75, 1)]).toEqual([
+      250, 500, 0, 1,
+    ]);
+    // A discount rounds the same way, away from zero.
+    expect(netOf(0.5, -499)).toBe(-250);
+    // 0.29 is 28.999... as a float; counted in hundredths it is exactly 29.
+    expect(netOf(0.29, 10000)).toBe(2900);
+    const t = priceLines([
+      { description: "Facilitation", quantity: 1.5, unit_price_cents: 99900, vat_rate_bps: 2100 },
+      { description: "Analysis", quantity: 0.25, unit_price_cents: 12345, vat_rate_bps: 2100 },
+    ]);
+    // 1.5 x 999.00 = 1498.50; 0.25 x 123.45 = 30.8625, rounded to 30.86.
+    expect(t.lines.map((l) => [l.net_cents, l.vat_cents])).toEqual([
+      [149850, 31469],
+      [3086, 648],
+    ]);
+    expect([t.subtotal_cents, t.vat_cents, t.total_cents]).toEqual([152936, 32117, 185053]);
+    expect(() =>
+      priceLines([{ description: "x", quantity: 1.234, unit_price_cents: 100, vat_rate_bps: 0 }]),
+    ).toThrow(/at most two decimals/);
+    expect([
+      quantityText(1.5),
+      quantityText(1.5, "nl"),
+      quantityText(0.25),
+      quantityText(3),
+    ]).toEqual(["1.5", "1,5", "0.25", "3"]);
+  });
+  test("sections group lines, each with the subtotal of its charged lines", () => {
+    const line = (section: string | undefined, cents: number, kind?: "optional" | "included") => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      ...(section && { section }),
+      ...(kind && { kind }),
+    });
+    const t = requireAmounts([
+      line("A", 10000),
+      line("A", 0, "included"),
+      line("A", 5000, "optional"),
+      line("B", 2550),
+      line("B", -550),
+    ]);
+    const sections = sectionsOf(t.lines);
+    expect(sections.map((x) => [x.title, x.lines.length, x.subtotal_cents])).toEqual([
+      ["A", 3, 10000],
+      ["B", 2, 2000],
+    ]);
+    // The subtotals add up to the offer's subtotal exactly.
+    expect(sections.reduce((s, x) => s + x.subtotal_cents, 0)).toBe(t.subtotal_cents);
+    expect(() => requireAmounts([line("A", 100), line(undefined, 100)])).toThrow(
+      /Line 2 has no section/,
+    );
+    expect(() => requireAmounts([line("A", 100), line("B", 100), line("A", 100)])).toThrow(
+      /section A must sit together/,
+    );
+  });
+  test("an offer of zero only on purpose, and then exactly zero", () => {
+    const line = (cents: number) => ({
+      description: "Pilot",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+    });
+    expect(() => requireAmounts([line(0)])).toThrow(/give a price/);
+    expect(() => requireAmounts([line(41500), line(-41500)])).toThrow(/choose No charge/);
+    expect(requireAmounts([line(0)], true).total_cents).toBe(0);
+    expect(requireAmounts([line(41500), line(-41500)], true).total_cents).toBe(0);
+    expect(() => requireAmounts([line(100)], true)).toThrow(/no-charge offer totals zero/);
+  });
   test("amounts as the templates write them", () => {
     expect(euro(8600)).toBe("€86.00");
     expect(euro(125000)).toBe("€1,250.00");
@@ -118,6 +242,30 @@ describe("money", () => {
 });
 
 describe("the offer", () => {
+  test("a subscription billed per month names months, not seats", () => {
+    const month = offerText(offer({ billing_unit: "month" }));
+    expect(month).toContain("| Description | Price per month | Months | Amount |");
+    expect(month).not.toContain("seat");
+    expect(month).toContain("Subtotal (excl. VAT): €6,410.00");
+    const nl = offerText(offer({ language: "nl", billing_unit: "month" }));
+    expect(nl).toContain("| Omschrijving | Prijs per maand | Maanden | Bedrag |");
+    expect(nl).not.toContain("seat");
+    expect(nl).toContain("Subtotaal (excl. btw): €");
+    // Price first, then the quantity, as for seats.
+    expect(month).toContain(
+      "| Changemaker<br>• Unlimited recording hours | €86.00 | 60 | €5,160.00 |",
+    );
+  });
+  test("seats stay the default, and only subscriptions have a unit", () => {
+    const seat = "| Description | Price per seat per month | Seats | Amount |";
+    expect(offerText(offer())).toContain(seat);
+    expect(offerText(offer({ billing_unit: "seat" }))).toContain(seat);
+    const nl = offerText(offer({ language: "nl", billing_unit: "seat" }));
+    expect(nl).toContain("| Omschrijving | Prijs per seat per maand | Seats | Bedrag |");
+    expect(offerText(offer({ template: "event", billing_unit: "month" }))).toContain(
+      "| Description | Quantity | Unit price | Amount |",
+    );
+  });
   test("follows the template: facts, columns, totals with VAT, acceptance, pinned versions", () => {
     const text = offerText(offer());
     expect(text).toContain("Yearly license offer\n# Gemeente Voorbeeldstad\n");
@@ -191,6 +339,247 @@ describe("the offer", () => {
     expect(fitsVatTreatment("standard", zero)).toBe(true);
   });
 
+  test("a customer reference prints beside ours, and the signer is asked for it, optionally", async () => {
+    const en = layoutOffer(offer({ customer_reference: "PO 4500135224" }));
+    expect(en.facts.at(-1)).toEqual(["Your reference", "PO 4500135224"]);
+    expect(offerText(offer({ customer_reference: "PO 4500135224" }))).toContain(
+      "Your reference: PO 4500135224",
+    );
+    const nl = layoutOffer(offer({ language: "nl", customer_reference: "B-2026-1" }));
+    expect(nl.facts.at(-1)).toEqual(["Uw referentie", "B-2026-1"]);
+    // Without one the facts are as before.
+    expect(layoutOffer(offer()).facts.map(([k]) => k)).toEqual([
+      "Reference",
+      "Date",
+      "Valid until",
+    ]);
+    const field = (await offerPdf(offer())).fields.find((f) => f.key === "po_number");
+    expect([field?.kind, field?.required]).toEqual(["text", false]);
+    // A long reference beside the attention line still fits the page.
+    const long = await offerPdf(
+      offer({
+        template: "event",
+        attention: "Afdeling Inkoop en Aanbesteding",
+        customer_reference: "SAP1260013012-KOSTENPLAATS-4471-PROJECT-88",
+      }),
+    );
+    expect(long.pageCount).toBeGreaterThan(0);
+  });
+
+  test("optional lines print apart under the total; included ones in the table, without a price", async () => {
+    const items = [
+      {
+        description: "Licence",
+        bullets: [],
+        quantity: 12,
+        unit: "months",
+        unit_price_cents: 20000,
+        vat_rate_bps: 2100,
+      },
+      {
+        description: "Onboarding",
+        bullets: [],
+        quantity: 1,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included" as const,
+      },
+      {
+        description: "Extra report",
+        bullets: ["In print"],
+        quantity: 1,
+        unit_price_cents: 75000,
+        vat_rate_bps: 2100,
+        kind: "optional" as const,
+      },
+    ];
+    const l = layoutOffer(offer({ items, template: "custom" }));
+    expect(l.rows.map((r) => [r.description, ...r.cells])).toEqual([
+      ["Licence", "12 months", "€200.00", "€2,400.00"],
+      ["Onboarding", "1", "", "Included"],
+    ]);
+    expect(l.totals.at(-1)).toEqual(["Total (incl. VAT)", "€2,904.00"]);
+    expect(l.optional?.title).toBe("Optional");
+    expect(l.optional?.rows.map((r) => [r.description, ...r.cells])).toEqual([
+      ["Extra report", "1", "€750.00", "€750.00"],
+    ]);
+    const text = offerText(offer({ items }));
+    expect(text).toContain("## Optional\nNot in the total above.");
+    expect(text.indexOf("## Optional")).toBeGreaterThan(text.indexOf("Total (incl. VAT)"));
+    const nl = layoutOffer(offer({ items, language: "nl" }));
+    expect([nl.optional?.title, nl.rows[1]?.cells[2]]).toEqual(["Optioneel", "Inbegrepen"]);
+    // Without optional lines there is no block; the PDF draws one when there are.
+    expect(layoutOffer(offer()).optional).toBeNull();
+    const [plain, withOptions] = await Promise.all([
+      offerPdf(offer({ items: items.slice(0, 2) })),
+      offerPdf(offer({ items })),
+    ]);
+    expect(withOptions.bytes.length).toBeGreaterThan(plain.bytes.length);
+  });
+
+  test("sections print a heading over their lines and a subtotal under them", async () => {
+    const item = (
+      section: string,
+      description: string,
+      quantity: number,
+      cents: number,
+      extra: Record<string, unknown> = {},
+    ) => ({
+      section,
+      description,
+      bullets: [],
+      quantity,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      ...extra,
+    });
+    const items = [
+      item("Stewardship", "Hosting", 4, 25000, { unit: "months" }),
+      item("Stewardship", "External workspaces", 2, 0, { kind: "included" }),
+      item("Co-development", "Workshop", 0.5, 49900, { unit: "days" }),
+      item("Co-development", "Report in print", 1, 30000, { kind: "optional" }),
+    ];
+    const l = layoutOffer(offer({ items, template: "custom" }));
+    expect(
+      l.groups.map((g) => [g.title, g.rows.map((r) => r.cells.join(" / ")), g.subtotal]),
+    ).toEqual([
+      [
+        "Stewardship",
+        ["4 months / €250.00 / €1,000.00", "2 /  / Included"],
+        ["Subtotal Stewardship", "€1,000.00"],
+      ],
+      ["Co-development", ["0.5 days / €499.00 / €249.50"], ["Subtotal Co-development", "€249.50"]],
+    ]);
+    expect(l.totals[0]).toEqual(["Subtotal (excl. VAT)", "€1,249.50"]);
+    expect(l.optional?.groups.map((g) => [g.title, g.rows.length, g.subtotal])).toEqual([
+      ["Co-development", 1, null],
+    ]);
+    const text = offerText(offer({ items, template: "custom" }));
+    expect(text).toContain("| **Stewardship** |  |  |  |");
+    expect(text).toContain("| Subtotal Co-development |  |  | €249.50 |");
+    const nl = layoutOffer(offer({ items, template: "custom", language: "nl" }));
+    expect(nl.groups[1]?.rows[0]?.cells[0]).toBe("0,5 days");
+    expect(nl.groups[1]?.subtotal?.[0]).toBe("Subtotaal Co-development");
+    // One section prints its heading, not a subtotal that repeats the one below.
+    const one = layoutOffer(offer({ items: items.slice(0, 1), template: "custom" }));
+    expect([one.groups[0]?.title, one.groups[0]?.subtotal]).toEqual(["Stewardship", null]);
+    const [flat, sectioned] = await Promise.all([
+      offerPdf(offer({ items: items.map(({ section: _s, ...i }) => i) })),
+      offerPdf(offer({ items })),
+    ]);
+    expect(sectioned.bytes.length).toBeGreaterThan(flat.bytes.length);
+  });
+
+  test("options picked at signing: one of two scenarios, each with its total", async () => {
+    const line = (description: string, cents: number, option: string, extra = {}) => ({
+      description,
+      bullets: [],
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional" as const,
+      option,
+      ...extra,
+    });
+    const items = [
+      line("Three workshops", 150000, "Scenario 1"),
+      line("Report", 100000, "Scenario 1"),
+      line("One workshop", 89500, "Scenario 2"),
+    ];
+    const l = layoutOffer(offer({ items, template: "custom", choose: "one" }));
+    // Nothing is charged until one is picked; the table above is empty and totals zero.
+    expect(l.rows).toEqual([]);
+    expect(l.optional).toBeNull();
+    expect(l.choices?.title).toBe("Choose one");
+    expect(
+      l.choices?.options.map((o) => [o.label, o.rows.length, o.amount[1], o.total?.[1]]),
+    ).toEqual([
+      ["Scenario 1", 2, "€2,500.00", "€3,025.00"],
+      ["Scenario 2", 1, "€895.00", "€1,082.95"],
+    ]);
+    expect(l.choices?.fields.map((f) => [f.label, f.kind, f.key, f.required])).toEqual([
+      ["Scenario 1", "checkbox", "option:1", false],
+      ["Scenario 2", "checkbox", "option:2", false],
+    ]);
+    const text = offerText(offer({ items, template: "custom", choose: "one" }));
+    expect(text).toContain("## Choose one");
+    expect(text).toContain("Total with Scenario 2 (incl. VAT): €1,082.95");
+    expect(text).toContain("[ ] Scenario 1");
+    // The ticks are fields of the PDF, on the acceptance page.
+    const pdf = await offerPdf(offer({ items, template: "custom", choose: "one" }));
+    expect(pdf.fields.filter((f) => f.kind === "checkbox").map((f) => f.key)).toEqual([
+      "option:1",
+      "option:2",
+    ]);
+
+    // As signed with Scenario 2: its line is charged, the others stay optional.
+    const signed = signedTotals(items, ["Scenario 2"]);
+    expect([signed.subtotalCents, signed.vatCents, signed.totalCents]).toEqual([
+      89500, 18795, 108295,
+    ]);
+    expect(signed.lines.map((x) => [x.kind ?? "charged", x.chosen])).toEqual([
+      ["optional", false],
+      ["optional", false],
+      ["charged", true],
+    ]);
+    expect(withChoice(items, [])[0]?.chosen).toBe(false);
+
+    // The ticks say the choice; one asks for exactly one.
+    const fields = [
+      { id: "a", key: "option:1" },
+      { id: "b", key: "option:2" },
+    ];
+    expect(chosenOptions(items, "one", fields, { b: true, a: false })).toEqual(["Scenario 2"]);
+    expect(() => chosenOptions(items, "one", fields, { a: true, b: true })).toThrow(/exactly one/);
+    expect(() => chosenOptions(items, "one", fields, {})).toThrow(/exactly one/);
+    expect(chosenOptions(items, "any", fields, {})).toEqual([]);
+    expect(optionsOf(items).map((o) => o.lines)).toEqual([[0, 1], [2]]);
+  });
+
+  test("options are checked when an offer is drafted", () => {
+    const rules = { noCharge: false, plan: false, require: requireAmounts };
+    const opt = (cents: number, option: string) => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional" as const,
+      option,
+    });
+    const base = {
+      description: "Licence",
+      quantity: 1,
+      unit_price_cents: 10000,
+      vat_rate_bps: 2100,
+    };
+    expect(checkOptions([opt(100, "A"), opt(200, "B")], "one", rules)).toBe("one");
+    expect(checkOptions([base, opt(100, "A")], undefined, rules)).toBe("any");
+    expect(checkOptions([base], "one", rules)).toBeNull();
+    // Options alone with any picked could come to nothing.
+    expect(() => checkOptions([opt(100, "A")], "any", rules)).toThrow(/more than zero/);
+    expect(() => checkOptions([opt(100, "A")], "one", rules)).toThrow(/at least two options/);
+    expect(() => checkOptions([{ ...base, option: "A" }, opt(100, "B")], "one", rules)).toThrow(
+      /Line 1 has an option name/,
+    );
+    expect(() => checkOptions([base, opt(100, "A")], "any", { ...rules, plan: true })).toThrow(
+      /invoice plan/,
+    );
+  });
+
+  test("an offer of no charge says nothing is invoiced", () => {
+    const free = offer({
+      no_charge: true,
+      items: [
+        { description: "Pilot", bullets: [], quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 },
+      ],
+    });
+    const l = layoutOffer(free);
+    expect(l.totals.at(-1)).toEqual(["Total (incl. VAT)", "€0.00"]);
+    expect(l.chargeNote).toBe("No charge: nothing is invoiced for this offer.");
+    expect(offerText(free)).toContain("No charge: nothing is invoiced for this offer.");
+    expect(layoutOffer(offer()).chargeNote).toBeNull();
+  });
+
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {
     const r = await offerPdf(offer({ language: "nl" }));
     expect(r.fields.map((f) => f.kind)).toEqual([
@@ -199,6 +588,7 @@ describe("the offer", () => {
       "text",
       "text",
       "role",
+      "text",
       "date",
       "signature",
     ]);
@@ -212,6 +602,26 @@ describe("the offer", () => {
     // The same offer renders to the same bytes, so its hash is stable.
     const again = await offerPdf(offer({ language: "nl" }));
     expect(Buffer.from(again.bytes).equals(Buffer.from(r.bytes))).toBe(true);
+  });
+
+  test("a per-month subscription renders on the same two pages", async () => {
+    const items = [
+      {
+        description: "dembrane subscription",
+        bullets: [],
+        quantity: 12,
+        unit_price_cents: 30000,
+        vat_rate_bps: 2100,
+      },
+    ];
+    for (const language of ["en", "nl"] as const) {
+      const content = offer({ language, billing_unit: "month", items });
+      const text = offerText(content);
+      expect(text).toContain("| dembrane subscription | €");
+      expect(text).toContain("| 12 |");
+      const r = await offerPdf(content);
+      expect(r.pageCount).toBe(2);
+    }
   });
 
   test("each template puts the acceptance block on its own page and links the texts that apply", async () => {
@@ -261,6 +671,20 @@ describe("the offer", () => {
     expect(nl).toContain("artikel 3:15a BW");
     const pdf = await offerPdf(offer({ template: "custom", amendments }));
     expect(pdf.fields.every((f) => f.page === pdf.pageCount)).toBe(true);
+  });
+
+  test("the customer's own processing terms take the DPA's place in the list, and nothing says it is signed apart", () => {
+    const own =
+      "'GIBIT 2025 standaard' voor verwerking met aanpassingen zoals beschreven in het document 'Afwijkingen dembrane GIBIT 2025'";
+    const nl = offerText(offer({ template: "event", language: "nl", processing_terms: own }));
+    expect(nl).toContain(`3. ${own}.`);
+    expect(nl).not.toContain("Verwerkersovereenkomst");
+    expect(nl).not.toContain("apart ondertekend");
+    // A subscription keeps its SLA as the only annex, with the customer's terms after it.
+    const sub = offerText(offer({ processing_terms: "The customer's own processing terms" }));
+    expect(sub).toContain("3. Annex A: Service Level Agreement");
+    expect(sub).toContain("4. The customer's own processing terms.");
+    expect(sub).not.toContain("Data Processing Agreement");
   });
 
   test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {
@@ -344,7 +768,16 @@ describe("the offer", () => {
         signatureId: "s",
         method: "drawn",
         imageSha256: "b".repeat(64),
+        language: "en",
         legal: [],
+        trail: [
+          {
+            at: "2026-09-27T09:00:00.000Z",
+            what: "Sent by Sam Staff (sam@dembrane.example), dembrane",
+          },
+          { at: "2026-09-28T09:58:00.000Z", what: "First opened by a@b.example" },
+          { at: "2026-09-28T10:00:00.000Z", what: "Signed by a@b.example" },
+        ],
       },
     );
     expect((await PDFDocument.load(out)).getPageCount()).toBe(r.pageCount + 1);
@@ -546,5 +979,47 @@ describe("peppol", () => {
       throw new Error("down");
     };
     expect(await lookupPeppol({ fetchText, logger }, { kvk_number: "12345678" })).toBeNull();
+  });
+});
+
+describe("invoice parts", () => {
+  const line = (cents: number, bps = 2100) => ({
+    description: "Licence",
+    quantity: 1,
+    unit_price_cents: cents,
+    vat_rate_bps: bps,
+  });
+
+  test("twelve monthly parts of a year's licence: equal cents, the rest in the last", () => {
+    const parts = invoiceParts({ kind: "monthly", parts: 12 }, [line(250000)]);
+    expect(parts.slice(0, 11).every((p) => p.subtotal_cents === 20833)).toBe(true);
+    expect(parts[11]?.subtotal_cents).toBe(20837);
+    expect(parts.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(250000);
+    expect(parts.reduce((s, p) => s + p.vat_cents, 0)).toBe(52500);
+    expect(parts.map((p) => p.due)).toContainEqual({ kind: "month_start", months: 11 });
+  });
+
+  test("instalments by share: thirds that add up, at the offer's one rate", () => {
+    const plan = {
+      kind: "instalments" as const,
+      parts: [
+        { on: "signing", share_bps: 3333 },
+        { on: "2026-12-01", share_bps: 3333 },
+        { on: "2027-01-01", share_bps: 3334 },
+      ],
+    };
+    const parts = invoiceParts(checkInvoicePlan(plan, [line(100001)]), [line(100001)]);
+    expect(parts.map((p) => p.subtotal_cents)).toEqual([33330, 33330, 33341]);
+    expect(parts.reduce((s, p) => s + p.total_cents, 0)).toBe(100001 + vatOf(100001, 2100));
+  });
+
+  test("a month later is the same day, or the month's last", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2026-11-15", 2)).toBe("2027-01-15");
+    expect(dueOn({ kind: "date", date: "2026-01-01" }, "2026-03-01")).toBe("2026-03-01");
+    // Monthly parts fall on the 1st of the following calendar months.
+    expect(dueOn({ kind: "month_start", months: 1 }, "2026-10-23")).toBe("2026-11-01");
+    expect(dueOn({ kind: "month_start", months: 3 }, "2026-11-30")).toBe("2027-02-01");
+    expect(amsterdamDay(new Date("2026-10-24T22:30:00Z"))).toBe("2026-10-25");
   });
 });

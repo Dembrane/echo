@@ -2,9 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LanguageModelV4StreamPart } from "@ai-sdk/provider";
+import type {
+  LanguageModelV4,
+  LanguageModelV4CallOptions,
+  LanguageModelV4StreamPart,
+} from "@ai-sdk/provider";
+import { type FakeStreamItem, fakeLanguageModel } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import type { ModelMessage } from "ai";
-import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 import { createAgent, stepMessageId } from "../src/agent/agent";
 import type { AgentData, Json, TurnContext } from "../src/agent/data";
 import { createKnowledge, type Knowledge, NO_DOCS, safePattern } from "../src/agent/knowledge";
@@ -128,61 +133,57 @@ function fakeData(calls: Calls, over: Partial<Record<keyof AgentData, unknown>> 
   });
 }
 
-const usage = {
-  inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
-  outputTokens: { total: 5, text: 5, reasoning: 0 },
-};
-const finish = (tools: boolean): LanguageModelV4StreamPart => ({
-  type: "finish",
-  usage,
-  finishReason: { unified: tools ? "tool-calls" : "stop", raw: undefined },
-});
-const text = (t: string): LanguageModelV4StreamPart[] => [
-  { type: "text-start", id: "t" },
-  ...t.split(" ").map((w, i) => ({ type: "text-delta" as const, id: "t", delta: i ? ` ${w}` : w })),
-  { type: "text-end", id: "t" },
-];
+const text = (t: string): string[] => t.split(" ").map((w, i) => (i ? ` ${w}` : w));
 const call = (id: string, name: string, input: unknown): LanguageModelV4StreamPart => ({
   type: "tool-call",
   toolCallId: id,
   toolName: name,
   input: JSON.stringify(input),
 });
-const turn = (...parts: LanguageModelV4StreamPart[]) => ({
-  stream: convertArrayToReadableStream<LanguageModelV4StreamPart>([
-    { type: "stream-start", warnings: [] },
-    ...parts,
-    finish(parts.some((p) => p.type === "tool-call")),
-  ]),
-});
+const turn = (...items: FakeStreamItem[]) => items;
 
-function model(...turns: ReturnType<typeof turn>[]) {
-  return new MockLanguageModelV4({ doStream: turns });
+/** Answers the nth stream call with the nth turn, and keeps every call's options. */
+function model(...turns: FakeStreamItem[][]) {
+  const doStreamCalls: LanguageModelV4CallOptions[] = [];
+  let n = 0;
+  const m = fakeLanguageModel({
+    stream: () => {
+      const t = turns[n++];
+      if (!t) throw new Error("no turn scripted for this call");
+      return t;
+    },
+    usage: { input: 10, output: 5 },
+    calls: doStreamCalls,
+  });
+  return Object.assign(m, { doStreamCalls });
 }
 
 // The images carry no docs folder, and a step here must not read the repository's own.
 const withoutDocs = createKnowledge({ docsDir: join(tmpdir(), "no-docs-folder-here") });
 
 async function runStep(
-  over: Partial<StepInput> & { model: MockLanguageModelV4 },
+  over: Partial<StepInput> & { model: LanguageModelV4 },
   data?: AgentData,
   knowledge: Knowledge = withoutDocs,
 ) {
   const events: StepEvent[] = [];
   const calls: Calls = [];
   const agent = createAgent({ now: () => new Date("2026-09-27T12:00:00.000Z"), knowledge });
-  const result = await agent.step(
-    {
-      ctx: ctx(),
-      data: data ?? fakeData(calls),
-      messages: [{ role: "user", content: "Hello" }],
-      stepIndex: 0,
-      signal: new AbortController().signal,
-      ...over,
-    },
-    async (e) => {
-      events.push(e);
-    },
+  // A step runs inside the turn workflow, which bills the run.
+  const result = await withPayer({ ref: "agent_run", id: "run-1" }, () =>
+    agent.step(
+      {
+        ctx: ctx(),
+        data: data ?? fakeData(calls),
+        messages: [{ role: "user", content: "Hello" }],
+        stepIndex: 0,
+        signal: new AbortController().signal,
+        ...over,
+      },
+      async (e) => {
+        events.push(e);
+      },
+    ),
   );
   return { events, result, calls };
 }

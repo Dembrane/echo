@@ -21,6 +21,16 @@ type BeaconArgs = {
 const PING_INTERVAL_MS = 10000;
 
 /**
+ * A route param can arrive as the literal text "undefined" or "null" when a
+ * link was built from an id that was not known yet. Pinging with that would
+ * report presence for a project that does not exist, every 10 seconds.
+ */
+export const isKnownProjectId = (
+	projectId: string | undefined | null,
+): projectId is string =>
+	!!projectId && projectId !== "undefined" && projectId !== "null";
+
+/**
  * Reports a portal visitor's funnel stage to the server while they onboard,
  * before any conversation exists. Keyed by a device-persistent visitor id so a
  * re-scan is recognised as the same dot.
@@ -34,7 +44,7 @@ export const useVisitorBeacon = (
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: tags is folded into tagsKey to keep a stable dep
 	useEffect(() => {
-		if (!enabled || !projectId) return;
+		if (!enabled || !isKnownProjectId(projectId)) return;
 		const visitorId = getVisitorId(projectId);
 		if (scanCountRef.current === null) {
 			scanCountRef.current = bumpScanCount(projectId);

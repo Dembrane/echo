@@ -46,6 +46,7 @@ export type EmailTemplate =
       readonly template: "account_offer_sent";
       readonly data: OfferSentData;
     }
+  | { readonly template: "account_signed_copy"; readonly data: SignedCopyData }
   | { readonly template: "account_document_withdrawn"; readonly data: DocumentWithdrawnData }
   | { readonly template: "account_task_reminder"; readonly data: TaskReminderData }
   | {
@@ -76,6 +77,28 @@ export interface OfferSentData {
   valid_until?: string;
   /** Who at dembrane owns the account: signs the email and gets the replies. */
   manager_name?: string;
+}
+
+/**
+ * The email after a signature: the signing details, and the signed PDF either attached or
+ * (when it is too large to send) one click away in the account. Values are plain strings
+ * because the job carries them as such.
+ */
+export interface SignedCopyData {
+  org_name: string;
+  document_title: string;
+  reference?: string;
+  signer_name: string;
+  signer_email: string;
+  /** ISO 8601 time of the signature, UTC. */
+  signed_at: string;
+  document_id: string;
+  /** SHA-256 of the signed PDF. */
+  sha256: string;
+  /** "yes" when the PDF travels with the email, "no" when it is only linked. */
+  attached: string;
+  /** The signed document in the account (the person signs in to open it). */
+  document_url: string;
 }
 
 /**
@@ -125,6 +148,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.account_invite.subject", t.data);
     case "account_offer_sent":
       return tr("email.account_offer_sent.subject", { document_title: t.data.document_title });
+    case "account_signed_copy":
+      return tr("email.account_signed_copy.subject", { document_title: t.data.document_title });
     case "account_document_withdrawn":
       return tr("email.account_document_withdrawn.subject", {
         document_title: t.data.document_title,
@@ -140,6 +165,14 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return null;
   }
 }
+
+/** "2026-09-28T09:00:12.000Z" as "2026-09-28 09:00 UTC", the same for every reader. */
+const utcTime = (iso: string) => {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime())
+    ? iso
+    : `${at.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+};
 
 /** Escapes every value, for the parts of the HTML that show values as plain text. */
 const escAll = (d: Readonly<Record<string, string | undefined>>) =>
@@ -381,6 +414,45 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           `${tr(`${k}.text_cta`)}\n${d.sign_url}`,
           questions,
           manager ? `${manager}\ndembrane` : signoff,
+        ]),
+      };
+    }
+    case "account_signed_copy": {
+      // To the signer and the people who run the account, right after a signature: what
+      // they hold as evidence. The PDF is attached; the hash lets anyone check a copy.
+      const d = t.data;
+      const v = { org_name: d.org_name, document_title: d.document_title };
+      const k = "email.account_signed_copy";
+      const facts = [
+        { label: tr("email.facts.document"), value: d.document_title },
+        { label: tr("email.facts.reference"), value: d.reference ?? "" },
+        { label: tr("email.facts.signed_by"), value: `${d.signer_name} (${d.signer_email})` },
+        { label: tr("email.facts.signed_at"), value: utcTime(d.signed_at) },
+        { label: tr("email.facts.document_id"), value: d.document_id },
+        { label: tr("email.facts.sha256"), value: d.sha256 },
+      ];
+      const attached = d.attached === "yes" ? tr(`${k}.attached`) : tr(`${k}.not_attached`);
+      return {
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, v),
+          preview: tr(`${k}.preview`, { ...v, signer_name: d.signer_name }),
+          heading: tr(`${k}.heading`, v),
+          body: `${e.lead(tr(`${k}.body`, { ...escAll({ ...v, signer_name: d.signer_name }), document_title: e.em(d.document_title) }))}${e.facts(facts)}${e.p(esc(attached))}${e.note(esc(tr(`${k}.verify`)))}`,
+          action: act(tr(`${k}.cta`), d.document_url),
+          footer: tr("email.common.footer_account", escAll(v)),
+        }),
+        text: emailText([
+          tr(`${k}.heading`, v),
+          tr(`${k}.body`, { ...v, signer_name: d.signer_name }),
+          facts
+            .filter((f) => f.value)
+            .map((f) => `${f.label}: ${f.value}`)
+            .join("\n"),
+          attached,
+          tr(`${k}.verify`),
+          `${tr(`${k}.text_cta`)}\n${d.document_url}`,
+          signoff,
         ]),
       };
     }

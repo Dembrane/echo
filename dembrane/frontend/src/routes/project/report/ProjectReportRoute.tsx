@@ -57,6 +57,10 @@ import {
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
 import {
+	failedReportAlert,
+	reportErrorText,
+} from "@/components/report/reportError";
+import {
 	isDateFarEnough,
 	ScheduleDateTimePicker,
 } from "@/components/report/ScheduleDateTimePicker";
@@ -747,20 +751,16 @@ export const ProjectReportRoute = () => {
 				<Divider />
 				{latestReport && isFallbackFromFailure && (
 					<CloseableAlert
-						color={latestReport.status === "cancelled" ? "yellow" : "red"}
-						title={
-							latestReport.status === "cancelled"
-								? t`Report generation cancelled`
-								: t`Something went wrong`
-						}
+						color={failedReportAlert(latestReport).color}
+						title={failedReportAlert(latestReport).title}
 					>
 						{latestReport.status === "cancelled" ? (
 							<Trans>
 								Report generation was cancelled. You can start a new report
 								below.
 							</Trans>
-						) : latestReport.error_message ? (
-							<Text size="sm">{latestReport.error_message}</Text>
+						) : reportErrorText(latestReport) ? (
+							<Text size="sm">{reportErrorText(latestReport)}</Text>
 						) : (
 							<Trans>Something went wrong generating your report.</Trans>
 						)}
@@ -841,12 +841,8 @@ export const ProjectReportRoute = () => {
 
 				{isFallbackFromFailure && (
 					<CloseableAlert
-						color={latestReport.status === "cancelled" ? "yellow" : "red"}
-						title={
-							latestReport.status === "cancelled"
-								? t`Report generation cancelled`
-								: t`Something went wrong`
-						}
+						color={failedReportAlert(latestReport).color}
+						title={failedReportAlert(latestReport).title}
 					>
 						{latestReport.status === "cancelled" ? (
 							<Trans>
@@ -855,8 +851,8 @@ export const ProjectReportRoute = () => {
 							</Trans>
 						) : (
 							<>
-								{latestReport.error_message ? (
-									<Text size="sm">{latestReport.error_message}</Text>
+								{reportErrorText(latestReport) ? (
+									<Text size="sm">{reportErrorText(latestReport)}</Text>
 								) : (
 									<Trans>
 										Something went wrong generating your latest report.
@@ -1197,12 +1193,8 @@ export const ProjectReportRoute = () => {
 					) : isFallbackFromFailure ? (
 						<Stack>
 							<Alert
-								color={latestReport.status === "cancelled" ? "yellow" : "red"}
-								title={
-									latestReport.status === "cancelled"
-										? t`Report generation cancelled`
-										: t`Something went wrong`
-								}
+								color={failedReportAlert(latestReport).color}
+								title={failedReportAlert(latestReport).title}
 							>
 								{latestReport.status === "cancelled" ? (
 									<Trans>
@@ -1211,8 +1203,8 @@ export const ProjectReportRoute = () => {
 									</Trans>
 								) : (
 									<>
-										{latestReport.error_message ? (
-											<Text size="sm">{latestReport.error_message}</Text>
+										{reportErrorText(latestReport) ? (
+											<Text size="sm">{reportErrorText(latestReport)}</Text>
 										) : (
 											<Trans>
 												Something went wrong generating your report.

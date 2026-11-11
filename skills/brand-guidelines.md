@@ -76,6 +76,7 @@ Accents are decorative and categorical, never semantic. Green does not mean succ
 ### Shape and imagery
 
 - Border radius 0 by default. Sharp corners everywhere; the `9999px` pill is reserved for primary action buttons. Nothing in between.
+- A blue outline with blue text is allowed on anything pressable that needs to stand out; it reads as a secondary button. A blue fill means selected.
 - Icons: PhosphorIcons.
 - Real over abstract: real clients, real events, people in dialogue over product screenshots. Video over stills.
 

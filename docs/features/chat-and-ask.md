@@ -87,8 +87,8 @@ An assistant chat stays an assistant chat. A new chat from the Ask screen starts
 - Sources. It marks a claim with a numbered source. Click it and press "Open conversation"
   to open the transcript at the cited part.
 - Voice. "Record a voice message" puts your words in the box as text, so you can check them
-  before you send. A recording stops at five minutes and counts against the workspace's
-  recording hours.
+  before you send. A recording stops at five minutes. It shows in the workspace's recorded
+  hours; on the free plan it uses the monthly AI allowance instead of the monthly hours.
 - Stopping. "Cancel" on the live line stops a run. One turn can run for up to 10 minutes.
 - Only the person who started a run can follow, continue or stop it.
 
@@ -181,10 +181,14 @@ wrong?". Your feedback and the reply go to the dembrane team.
 
 - Admins, members and external collaborators can chat. Observers do not see "Ask" in the
   sidebar. See [roles & permissions](./roles-and-permissions.md).
-- Ask needs no paid plan. On the Free plan a workspace has one chat, and a chat takes three
-  questions. After that the chat shows "Upgrade to continue". On the Free plan, a
-  conversation recorded after the free recording hour is used up cannot be attached. See
-  [tiers & billing](./tiers-and-billing.md).
+- Ask needs no paid plan. On the Free plan chat and the assistant use the account's monthly
+  AI allowance, with no count of chats or questions. When it is used up, sending opens the
+  upgrade popup, and a running assistant stops before its next step with "This month's AI
+  budget is used up, so I stopped here.". A sample project's chats take 10 questions in all,
+  then show "Upgrade to continue": "You've used this sample project's 10 questions." Its
+  upgrade popup says "Sample projects allow 10 questions" and "Create your own project to
+  keep going.", and offers to continue on dembrane.com. It never mentions the AI allowance.
+  See [tiers & billing](./tiers-and-billing.md).
 - Replies are written by Gemini models served from an EU endpoint.
 
 ## Related

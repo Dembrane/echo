@@ -42,9 +42,15 @@ import { EntityListRow } from "@/components/common/EntityListRow";
 import { toast } from "@/components/common/Toaster";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
+import { AudioUsedUpNotice } from "@/components/project/AudioUsedUpNotice";
+import { RecordingPausedUploadButton } from "@/components/project/RecordingPausedNotice";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import {
+	recordingPaused,
+	useProjectRecording,
+} from "@/hooks/useProjectRecording";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
@@ -65,6 +71,7 @@ import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import {
 	type ConversationSort,
 	formatStartedAt,
+	formatStartedAtFull,
 	getTagText,
 	hasVerifiedArtifacts,
 	SORT_OPTIONS,
@@ -78,6 +85,8 @@ type ProjectConversationsPanelProps = {
 	selectionChatId?: string;
 	selectionMode?: boolean;
 	showUpload?: boolean;
+	/** Free month's audio used up banner; the Conversations tab only. */
+	showAudioNotice?: boolean;
 	/** Selection before a chat exists. With `onSelectionChange` set, the ticked
 	 * ids live in the parent's state and nothing is written to a chat: pass
 	 * `selectionChatId` instead to write straight through to an existing chat. */
@@ -226,6 +235,8 @@ export const ConversationRow = ({
 		participantLabel !== primary && participantLabel !== t`No name`;
 	const summary = conversation.summary?.trim();
 	const isLocked = !!conversation.locked;
+	const startedAt = getConversationStartTime(conversation);
+	const startedFull = formatStartedAtFull(startedAt);
 	const tags =
 		(conversation.tags as ConversationProjectTag[] | undefined) ?? [];
 	const verified = hasVerifiedArtifacts(conversation);
@@ -324,9 +335,11 @@ export const ConversationRow = ({
 									</Text>
 								</Tooltip>
 							)}
-							<Text size="xs" c="dimmed">
-								{formatStartedAt(getConversationStartTime(conversation))}
-							</Text>
+							<Tooltip label={startedFull} disabled={!startedFull}>
+								<Text size="xs" c="dimmed">
+									{formatStartedAt(startedAt)}
+								</Text>
+							</Tooltip>
 							{conversation.live && (
 								<Badge size="xs" color="red" variant="light">
 									<Trans>Ongoing</Trans>
@@ -480,6 +493,7 @@ export const ProjectConversationsPanel = ({
 	selectionChatId,
 	selectionMode = false,
 	showUpload = false,
+	showAudioNotice = false,
 	selection,
 	onSelectionChange,
 	onAskAboutSelection,
@@ -526,6 +540,7 @@ export const ProjectConversationsPanel = ({
 	const { usageGates } = useWorkspaceUsage(resolvedWorkspaceId, {
 		enabled: showUpload,
 	});
+	const recording = useProjectRecording(showUpload ? projectId : null);
 	const selectAllMutation = useSelectAllContextMutation();
 
 	const chatContextQuery = useProjectChatContext(selectionChatId ?? "");
@@ -651,12 +666,23 @@ export const ProjectConversationsPanel = ({
 										<Trans>Upload</Trans>
 									</Button>
 								</Tooltip>
+							) : recordingPaused(recording.data) ? (
+								<RecordingPausedUploadButton
+									name={recording.data.recording_project.name}
+								/>
 							) : (
 								<UploadConversationDropzone projectId={projectId} />
 							)}
 						</Box>
 					)}
 				</Group>
+
+				{showAudioNotice && resolvedWorkspaceId && (
+					<AudioUsedUpNotice
+						projectId={projectId}
+						workspaceId={resolvedWorkspaceId}
+					/>
+				)}
 
 				{showUpload && usageGates.uploads_locked && resolvedWorkspaceId && (
 					<UploadLockedCard

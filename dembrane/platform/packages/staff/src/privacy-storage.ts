@@ -19,6 +19,7 @@ const {
   auth_verification,
   conversation,
   conversation_chunk,
+  conversation_final_transcript,
   directus_files,
   directus_roles,
   directus_users,
@@ -224,7 +225,20 @@ export function privacyStorage(db: Db) {
         .from(conversation_chunk)
         .where(eq(conversation_chunk.conversation_id, conversationId))
         .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id));
-      return rows.filter((r) => r.text);
+      // The transcripts made from the whole recording are the same person's words.
+      const finals = await db
+        .select({
+          at: conversation_final_transcript.updated_at,
+          provider: conversation_final_transcript.provider,
+          text: conversation_final_transcript.text,
+        })
+        .from(conversation_final_transcript)
+        .where(eq(conversation_final_transcript.conversation_id, conversationId))
+        .orderBy(asc(conversation_final_transcript.provider));
+      return [
+        ...rows.filter((r) => r.text),
+        ...finals.map((f) => ({ at: f.at, text: `Final transcript (${f.provider}):\n${f.text}` })),
+      ];
     },
 
     async chats(id: string) {

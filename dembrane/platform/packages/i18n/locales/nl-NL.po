@@ -254,7 +254,6 @@ msgstr "Je inlogcode is {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Je inlogcode."
 
-
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
 msgstr "Je inlogcode is {code}. Deze verloopt over 10 minuten."
@@ -266,7 +265,6 @@ msgstr "Als je niet hebt geprobeerd in te loggen, kun je deze e-mail gerust nege
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
 msgstr "{inviter_name} vraagt je {document_title} te ondertekenen"
-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
@@ -576,7 +574,6 @@ msgstr "Werkruimte openen"
 msgid "email.payment_failed.subject"
 msgstr "Je betaling aan dembrane is niet gelukt"
 
-
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
 msgstr "Je abonnement blijft actief. Werk je betaalmethode bij om het openstaande bedrag te voldoen."
@@ -604,7 +601,6 @@ msgstr "Werk je betaalmethode bij:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
 msgstr "{workspace_name} zit nu op het gratis abonnement"
-
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
@@ -634,7 +630,6 @@ msgstr "Upgrade aanvragen"
 msgid "email.tier_expiring.subject"
 msgstr "{workspace_name} gaat op {date} over naar het gratis abonnement"
 
-
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
 msgstr "Je {tier}-abonnement stopt op {date}. Alles wat je hebt gemaakt blijft bewaard."
@@ -658,6 +653,62 @@ msgstr "Alles wat je hebt gemaakt blijft bewaard. Wil je {tier} houden? Vraag da
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
 msgstr "Upgrade aanvragen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.subject"
+msgstr "{name} heeft de opname-uren van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.preview"
+msgstr "Nieuwe opnames en uploads zijn gepauzeerd tot {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.heading"
+msgstr "{name} heeft de opname-uren van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.body"
+msgstr "Het Free-abonnement bevat {hours} aan opnames per maand, en {name} heeft deze verbruikt. Nieuwe opnames en uploads zijn gepauzeerd tot {reset_date}. Alles wat tot nu toe is opgenomen, blijft beschikbaar."
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours"
+msgstr "{count} uur"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.hours_one"
+msgstr "{count} uur"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.cta"
+msgstr "Upgrade om te blijven opnemen"
+
+#. js-lingui-explicit-id
+msgid "email.free_audio_out.text_cta"
+msgstr "Upgrade om te blijven opnemen:"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.subject"
+msgstr "{name} heeft het AI-budget van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.preview"
+msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot {reset_date}."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.heading"
+msgstr "{name} heeft het AI-budget van deze maand verbruikt"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.body"
+msgstr "Het Free-abonnement bevat een maandelijks AI-budget, en {name} heeft dit verbruikt. AI-functies en nieuwe opnames zijn gepauzeerd tot {reset_date}, wanneer het budget wordt gereset. Alles wat tot nu toe gemaakt is, blijft beschikbaar."
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.cta"
+msgstr "Upgrade om AI te blijven gebruiken"
+
+#. js-lingui-explicit-id
+msgid "email.free_ai_out.text_cta"
+msgstr "Upgrade om AI te blijven gebruiken:"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
@@ -858,3 +909,59 @@ msgstr "De offerte is geldig tot {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Met vriendelijke groet,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} is ondertekend"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} heeft {document_title} ondertekend voor {org_name}. De gegevens van de ondertekening staan in deze e-mail."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} is ondertekend"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} heeft {document_title} ondertekend voor {org_name}. Deze e-mail is je bewijs van de ondertekening."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "De ondertekende pdf zit als bijlage bij deze e-mail. Bewaar hem bij je administratie."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "De ondertekende pdf is te groot voor een bijlage. Je kunt hem downloaden via je account."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "De SHA-256 is de vingerafdruk van de ondertekende pdf. Verandert het bestand, dan verandert ook de vingerafdruk."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Ondertekende kopie openen"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Ondertekende kopie openen:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Document"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Ondertekend door"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Ondertekend op (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "Document-id"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 van de ondertekende pdf"

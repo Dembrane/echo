@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { computeIsOverCap, isConversationLocked, tierAllowsOverage } from "../src/tiers";
+import { isConversationLocked } from "../src/tiers";
 import { cleanGeneratedTitle, selectValidTagIds } from "../src/v1/llm";
 import { buildTranscript, formatConversation, withStatus } from "../src/v1/reply";
 import { countTokens } from "../src/v1/token-count";
@@ -13,14 +13,8 @@ test.each(fixtures.map((f) => [f.text.slice(0, 30), f] as const))(
   },
 );
 
-test("only free is hour-capped; unknown tiers never lock", () => {
-  expect(tierAllowsOverage("changemaker")).toBe(true);
-  expect(tierAllowsOverage("free")).toBe(false);
-  expect(computeIsOverCap("free", 1.5, 0.4)).toBe(true);
-  expect(computeIsOverCap("free", 1.2, 0.4)).toBe(false);
-  expect(computeIsOverCap("pilot", 99, 0)).toBe(false);
-  expect(computeIsOverCap("guardian", 99, 0)).toBe(false);
-  expect(isConversationLocked({ is_over_cap: true }, "free")).toBe(true);
+test("the retired over-cap stamp never locks, whatever the tier", () => {
+  expect(isConversationLocked({ is_over_cap: true }, "free")).toBe(false);
   expect(isConversationLocked({ is_over_cap: true }, "innovator")).toBe(false);
   expect(isConversationLocked({ is_over_cap: true }, null)).toBe(false);
   expect(isConversationLocked({ is_over_cap: false }, "free")).toBe(false);

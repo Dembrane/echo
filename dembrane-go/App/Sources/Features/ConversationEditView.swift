@@ -51,20 +51,24 @@ struct ConversationEditView: View {
                 Section {
                     TextField("Summary", text: $summary, axis: .vertical)
                         .lineLimit(4...18)
-                    Button {
-                        regenerate()
-                    } label: {
-                        if regenerating {
-                            HStack { ProgressView(); Text("Regenerating…") }
-                        } else {
-                            Label("Regenerate summary", systemImage: "sparkles")
+                    if model.hasAIConsent {
+                        Button {
+                            regenerate()
+                        } label: {
+                            if regenerating {
+                                HStack { ProgressView(); Text("Regenerating…") }
+                            } else {
+                                Label("Regenerate summary", systemImage: "sparkles")
+                            }
                         }
+                        .disabled(regenerating || isSaving)
                     }
-                    .disabled(regenerating || isSaving)
                 } header: {
                     Text("Summary")
                 } footer: {
-                    Text("Regenerate rewrites the summary from the transcript.")
+                    if model.hasAIConsent {
+                        Text("Regenerate rewrites the summary from the transcript.")
+                    }
                 }
 
                 Section("Tags") {

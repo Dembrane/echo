@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	displayTime,
 	isConfirmOpen,
+	isFinishing,
 	isHeld,
 	initialRecordingSession as live,
 	pausedAt,
@@ -19,6 +20,12 @@ const interrupted: RecordingSession = {
 	reconnecting: false,
 };
 const deleted: RecordingSession = { phase: "deleted" };
+const wrappedUp: RecordingSession = {
+	at: 120,
+	finishing: false,
+	phase: "wrappedUp",
+	reason: "conversation",
+};
 
 const run = (session: RecordingSession, ...events: RecordingSessionEvent[]) =>
 	events.reduce(reduce, session);
@@ -76,8 +83,58 @@ describe("recordingSessionReducer", () => {
 		).toEqual(interrupted);
 	});
 
+	it("wraps up a live recording at the limit's time", () => {
+		expect(
+			reduce(live, { at: 120, reason: "conversation", type: "wrapUp" }),
+		).toEqual(wrappedUp);
+	});
+
+	it("wraps up a stopped recording at the time it stopped", () => {
+		const wrap = { at: 0, reason: "account", type: "wrapUp" } as const;
+		expect(reduce(paused, wrap)).toEqual({
+			at: 75,
+			finishing: false,
+			phase: "wrappedUp",
+			reason: "account",
+		});
+		expect(reduce(interrupted, wrap)).toMatchObject({
+			at: 42,
+			phase: "wrappedUp",
+		});
+		// Finish from the bar after a reload has no stopped time of its own.
+		expect(reduce(reduce(live, { type: "confirmFinish" }), wrap)).toMatchObject(
+			{ at: 0, phase: "wrappedUp" },
+		);
+	});
+
+	it("finishes from the wrap-up, and stays in it on failure", () => {
+		const started = reduce(wrappedUp, { type: "finishStarted" });
+		expect(started).toEqual({ ...wrappedUp, finishing: true });
+		expect(reduce(started, { type: "finishFailed" })).toEqual(wrappedUp);
+	});
+
+	it("never leaves a wrap-up to record again", () => {
+		for (const event of [
+			{ type: "resume" },
+			{ type: "recordingStarted" },
+			{ type: "switchToText" },
+			{ type: "confirmFinish" },
+			{ at: 5, type: "stop" },
+			{ at: 5, type: "interrupted" },
+			{ at: 5, reason: "account", type: "wrapUp" },
+		] as RecordingSessionEvent[]) {
+			expect(reduce(wrappedUp, event)).toBe(wrappedUp);
+		}
+	});
+
+	it("doesn't wrap up a finish already under way", () => {
+		expect(
+			reduce(finishing, { at: 5, reason: "account", type: "wrapUp" }),
+		).toBe(finishing);
+	});
+
 	it("ends in deleted, from anywhere, for good", () => {
-		for (const from of [live, paused, finishing, interrupted]) {
+		for (const from of [live, paused, finishing, interrupted, wrappedUp]) {
 			expect(reduce(from, { type: "conversationDeleted" })).toEqual(deleted);
 		}
 		expect(reduce(deleted, { at: 1, type: "stop" })).toBe(deleted);
@@ -112,6 +169,14 @@ describe("selectors", () => {
 		expect(pausedAt(resuming)).toBe(75);
 		expect(pausedAt(finishing)).toBe(75);
 		expect(pausedAt(interrupted)).toBeNull();
+		expect(pausedAt(wrappedUp)).toBe(120);
+	});
+
+	it("is finishing from either modal", () => {
+		expect(isFinishing(finishing)).toBe(true);
+		expect(isFinishing({ ...wrappedUp, finishing: true })).toBe(true);
+		expect(isFinishing(wrappedUp)).toBe(false);
+		expect(isFinishing(paused)).toBe(false);
 	});
 
 	it("opens the confirm modal only while confirming", () => {
@@ -119,10 +184,11 @@ describe("selectors", () => {
 		expect(isConfirmOpen(finishing)).toBe(true);
 		expect(isConfirmOpen(resuming)).toBe(false);
 		expect(isConfirmOpen(interrupted)).toBe(false);
+		expect(isConfirmOpen(wrappedUp)).toBe(false);
 	});
 
 	it("is held by a stopped time, the confirm modal or an interruption", () => {
-		for (const held of [paused, resuming, finishing, interrupted]) {
+		for (const held of [paused, resuming, finishing, interrupted, wrappedUp]) {
 			expect(isHeld(held)).toBe(true);
 		}
 		expect(isHeld(reduce(live, { type: "confirmFinish" }))).toBe(true);

@@ -570,15 +570,15 @@ async function retry(
   // The store binds the key to this run in the same transaction that requeues it.
   const bound = await store.requeueRun(target.id, request.idempotencyKey ?? null);
   if (!bound) throw new AnalysisStoreError(`run ${target.id} could not be queued again`);
-  if (bound.id !== target.id || target.status !== "failed" || bound.status !== "queued")
-    return { run: bound, outcome: "existing", dependencies: [] };
-  await dispatch(deps, bound);
-  await deps.publishEvent(bound.projectId, {
+  if (!bound.requeued) return { run: bound.run, outcome: "existing", dependencies: [] };
+  const run = bound.run;
+  await dispatch(deps, run);
+  await deps.publishEvent(run.projectId, {
     type: "queued",
-    run_id: bound.id,
-    recipe_id: bound.recipeId,
+    run_id: run.id,
+    recipe_id: run.recipeId,
   });
-  return { run: bound, outcome: "requeued", dependencies: [] };
+  return { run, outcome: "requeued", dependencies: [] };
 }
 
 /** Cancels a run: its worker stops at its next checkpoint; runs waiting on it fail. */

@@ -90,6 +90,10 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   (`popcornStamp`, `refreshLivePops`): the second pass changes quotes, kinds
   and marks without changing the count, so the count alone was not the
   signal and a validated phrase stayed plain until the next interaction.
+  The file stamp includes each phrase's `quoteId` and `source`: deck quote
+  ids are minted per bundle and can renumber while the phrases stay put, and
+  a settled file kept on an unchanged stamp then cited another conversation's
+  quotes. `pollQuotes` reads `quotes.json` from the same bundle as the files.
 - The long list's count is a tally: popcorns, validated (with a `quoteId`),
   held back (`held_back` per file), and `reading n of m` while a second pass
   runs.

@@ -1,3 +1,4 @@
+import { requireAiBudget } from "@dembrane/allowance";
 import { ForbiddenError, NotFoundError, RateLimitedError } from "@dembrane/core";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -6,6 +7,7 @@ import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
 import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
+import { requirePortalAi } from "../portal-ai";
 import { conversationStore } from "../storage";
 import { replyProtocol, withStatus } from "./reply";
 import { v1Store } from "./storage";
@@ -74,14 +76,16 @@ export function conversationV1Routes(d: ConversationsDeps) {
   app.post("/api/conversations/:conversation_id/summarize", async (c) => {
     const who = requireUser(c);
     const id = c.req.param("conversation_id");
-    await conversationForV1(d, who, id, "project:update");
+    const { conversation } = await conversationForV1(d, who, id, "project:update");
+    await requireAiBudget(d.db, conversation.project_id, d.now());
     return c.json(await summarizeAndStore(d, id));
   });
 
   app.post("/api/conversations/:conversation_id/generate-title", async (c) => {
     const who = requireUser(c);
     const id = c.req.param("conversation_id");
-    await conversationForV1(d, who, id, "project:update");
+    const { conversation } = await conversationForV1(d, who, id, "project:update");
+    await requireAiBudget(d.db, conversation.project_id, d.now());
     return c.json(await generateTitleAndStore(d, id));
   });
 
@@ -99,6 +103,7 @@ export function conversationV1Routes(d: ConversationsDeps) {
     const project = await store.project(conv.project_id);
     if (!project) throw new NotFoundError("conversation.not_found");
     if (!project.is_conversation_allowed) throw new ForbiddenError("conversation.not_open");
+    await requirePortalAi(d.db, conv.project_id, d.now());
     if (!(await d.limiter.allow(REPLY_LIMIT, id))) {
       throw new RateLimitedError("rate_limit.exceeded", { message: TOO_MANY });
     }

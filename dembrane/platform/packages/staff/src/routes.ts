@@ -1,4 +1,16 @@
-import { requireStaff, type StaffAudit, type StaffPolicy } from "@dembrane/access";
+import { requireStaff, type StaffAudit, type StaffPolicy, TIERS } from "@dembrane/access";
+import {
+  accountWorkspaceIds,
+  allowanceForWorkspace,
+  freeLimitRows,
+  freeLimits,
+  LIMIT_KEYS,
+  type LimitKey,
+  type Meter,
+  monthStart,
+  setFreeLimit,
+  usedThisPeriod,
+} from "@dembrane/allowance";
 import {
   type Billing,
   BillingError,
@@ -15,12 +27,14 @@ import {
   NotFoundError,
   newId,
 } from "@dembrane/core";
-import type { Db } from "@dembrane/db";
+import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
+import { inArray } from "drizzle-orm";
 import { Hono } from "hono";
+import { aiCosts } from "./ai-costs";
 import { atRisk, billingRollup } from "./rollup";
 import { cancelPendingTasks, SUPPORT_TASKS, scheduleTask } from "./scheduled";
 import { staffStorage } from "./storage";
@@ -39,6 +53,49 @@ export interface StaffRouteDeps {
 const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
 const MOLLIE_DASHBOARD_TEST = "https://www.mollie.com/dashboard/org_test/payments";
 const STAFF_EMAIL_DOMAIN = "@dembrane.com";
+const MAX_LIMIT = 10_000_000;
+// EUR 1,000: the most a budget, default or per account, may be.
+const MAX_AI_BUDGET = 1_000_000_000;
+// ISO 8601: a UTC day (what the staff screen sends) or a date and time with a zone.
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2}))?$/;
+
+// The date part must be a real day: Date rolls 2026-02-30 over into March.
+function realDay(iso: string): boolean {
+  const [y = 0, m = 0, d = 0] = iso.slice(0, 10).split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+const KEY_MAX: Partial<Record<LimitKey, number>> = {
+  ai_budget_micro_eur: MAX_AI_BUDGET,
+  ai_budget_enforce: 1,
+};
+
+// The free limit rows, each naming the staff user who last changed it.
+async function freeLimitView(db: Db) {
+  const rows = await freeLimitRows(db);
+  const ids = [...new Set(rows.flatMap((r) => (r.updated_by ? [r.updated_by] : [])))];
+  const users = ids.length
+    ? await db
+        .select({
+          id: schema.directus_users.id,
+          email: schema.directus_users.email,
+          first: schema.directus_users.first_name,
+          last: schema.directus_users.last_name,
+        })
+        .from(schema.directus_users)
+        .where(inArray(schema.directus_users.id, ids))
+    : [];
+  const names = new Map(
+    users.map((u) => {
+      const name = [u.first, u.last].filter(Boolean).join(" ");
+      return [u.id, name && u.email ? `${name} (${u.email})` : name || u.email || null];
+    }),
+  );
+  return rows.map((r) => ({
+    ...r,
+    updated_by_name: r.updated_by ? (names.get(r.updated_by) ?? null) : null,
+  }));
+}
 
 /**
  * The staff console (old admin.py and admin_managed.py). Every route needs a named
@@ -48,6 +105,24 @@ export function staffRoutes(deps: StaffRouteDeps) {
   const s = staffStorage(deps.db);
   const clock = deps.clock ?? (() => new Date());
   const { service: billing, store: billingStore, notifier } = deps.billing;
+
+  // Free workspaces at their monthly audio limit, read from the allowance ledger.
+  async function freeAudioAtCap(now: Date) {
+    const limit = (await freeLimits(deps.db, clock, deps.logger)).audio_seconds_month;
+    const out = new Map<string, Meter>();
+    for (const acc of await s.freeAudioAccountsAtLeast(limit, monthStart(now).toISOString()))
+      for (const wsId of await accountWorkspaceIds(deps.db, {
+        accountId: acc.id,
+        orgId: acc.org_id,
+      })) {
+        const a = await allowanceForWorkspace(deps.db, wsId, now);
+        if (a?.accountId !== acc.id) continue;
+        const used = (await usedThisPeriod(deps.db, a)).audio_seconds;
+        if (used >= limit) out.set(wsId, { used, limit });
+      }
+    return out;
+  }
+
   const support = new SupportAccess({
     db: deps.db,
     storage: s,
@@ -88,6 +163,21 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const ws = isUuid(id) ? await s.workspace(id) : null;
     if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
     return ws;
+  }
+
+  // Downgrade stamps for a tier move, as the workspace tier change sets them.
+  function tierMovePatch(fromTier: string | null, toTier: string, now: Date) {
+    const from = fromTier || "pioneer";
+    const down = { downgraded_at: now.toISOString(), downgraded_from_tier: from };
+    const up = { downgraded_at: null, downgraded_from_tier: null };
+    if (from === toTier) return {};
+    // Legacy tiers are unlimited, so any move into or out of free counts.
+    if (toTier === "free") return down;
+    if (from === "free") return up;
+    const fromIdx = (TIERS as readonly string[]).indexOf(from);
+    const toIdx = (TIERS as readonly string[]).indexOf(toTier);
+    if (fromIdx < 0 || toIdx < 0) return {};
+    return toIdx < fromIdx ? down : up;
   }
 
   async function liveAccount(id: string) {
@@ -151,7 +241,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
 
   app.get(`${A}/at-risk`, async (c) => {
     await staff(c, "staff:billing", "admin.at_risk.read");
-    return c.json(await atRisk(s, clock()));
+    const now = clock();
+    return c.json(await atRisk(s, now, await freeAudioAtCap(now)));
   });
 
   app.get(`${A}/referral-ledger`, async (c) => {
@@ -436,6 +527,100 @@ export function staffRoutes(deps: StaffRouteDeps) {
     return c.json({ status: "ok", workspace_id: id, usage_reset_at: nowIso });
   });
 
+  // ── Free tier limits ─────────────────────────────────────────────────
+  app.get(`${A}/free-limits`, async (c) => {
+    await staff(c, "staff:set_tier", "free_limit.read");
+    return c.json({ limits: await freeLimitView(deps.db) });
+  });
+
+  app.put(`${A}/free-limits/:key`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, { body: { value: v.any() } });
+    const key = c.req.param("key");
+    const value = body.value;
+    // Strict: no numeric strings, booleans or fractions.
+    if (!(LIMIT_KEYS as readonly string[]).includes(key))
+      throw new BadRequestError("request.invalid");
+    const max = KEY_MAX[key as LimitKey] ?? MAX_LIMIT;
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > max)
+      throw new BadRequestError("request.invalid");
+    const who = await staff(c, "staff:set_tier", "free_limit.update", ["free_limit", key], {
+      key,
+      value,
+    });
+    await setFreeLimit(deps.db, key as LimitKey, value, who.directusUserId);
+    return c.json({ limits: await freeLimitView(deps.db) });
+  });
+
+  // ── AI budget ────────────────────────────────────────────────────────
+  app.put(`${A}/billing-accounts/:account_id/ai-budget`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, {
+      body: {
+        amount_micro_eur: v.withDefault(v.any(), null),
+        unlimited: v.withDefault(v.any(), false),
+        until: v.withDefault(v.any(), null),
+      },
+    });
+    const { amount_micro_eur: amount, unlimited, until } = body;
+    // Strict like the free limits: no numeric strings, lax booleans or past end dates.
+    const amountOk =
+      typeof amount === "number" &&
+      Number.isInteger(amount) &&
+      amount >= 0 &&
+      amount <= MAX_AI_BUDGET;
+    const untilAt =
+      typeof until === "string" && ISO_INSTANT.test(until) && realDay(until)
+        ? new Date(until)
+        : null;
+    const now = clock();
+    const untilOk = until === null || (untilAt !== null && untilAt > now);
+    if (typeof unlimited !== "boolean" || (!unlimited && !amountOk) || !untilOk)
+      throw new BadRequestError("request.invalid");
+    const id = c.req.param("account_id");
+    const patch = {
+      ai_budget_micro_eur: unlimited ? null : (amount as number),
+      ai_budget_unlimited: unlimited,
+      ai_budget_until: untilAt?.toISOString() ?? null,
+    };
+    // The audit records what is stored, not the raw body.
+    await staff(
+      c,
+      "staff:set_tier",
+      "billing_account.ai_budget.set",
+      ["billing_account", id],
+      patch,
+    );
+    await liveAccount(id);
+    await billingStore.updateAccount(id, patch, now);
+    return c.json({ status: "ok", billing_account_id: id, ...patch });
+  });
+
+  app.delete(`${A}/billing-accounts/:account_id/ai-budget`, async (c) => {
+    const id = c.req.param("account_id");
+    await staff(c, "staff:set_tier", "billing_account.ai_budget.clear", ["billing_account", id]);
+    await liveAccount(id);
+    const patch = { ai_budget_micro_eur: null, ai_budget_unlimited: false, ai_budget_until: null };
+    await billingStore.updateAccount(id, patch, clock());
+    return c.json({ status: "ok", billing_account_id: id, ...patch });
+  });
+
+  app.get(`${A}/ai-costs`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { query } = v.validateRaw(raw, {
+      query: { month_offset: v.withDefault(v.int({ ge: 0, le: 1 }), 0) },
+    });
+    await staff(c, "staff:set_tier", "ai_costs.read", undefined, {
+      month_offset: query.month_offset,
+    });
+    const now = clock();
+    const limits = await freeLimits(deps.db, clock, deps.logger);
+    return c.json(await aiCosts(deps.db, now, query.month_offset, limits.ai_budget_micro_eur));
+  });
+
   // ── Support access ───────────────────────────────────────────────────
   app.post(`${A}/workspaces/:workspace_id/join-support`, async (c) => {
     const id = c.req.param("workspace_id");
@@ -645,19 +830,21 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const acc = await liveAccount(id);
     if (acc.payment_mode === "mollie" && acc.mollie_subscription_id)
       throw new ConflictError("staff.active_subscription");
+    const now = clock();
     const patch: Parameters<typeof billingStore.updateAccount>[1] = {
       payment_mode: "offline",
       tier: body.tier,
       status: "active",
       tier_expires_at: null,
       pre_warning_sent: false,
+      ...tierMovePatch(acc.tier, body.tier, now),
     };
     if (body.seats !== null) patch.provisioned_seats = body.seats;
     if (body.account_manager_id !== null) {
       await accountManager(body.account_manager_id);
       patch.account_manager_id = body.account_manager_id;
     }
-    await billingStore.updateAccount(id, patch, clock());
+    await billingStore.updateAccount(id, patch, now);
     return c.json({ status: "ok", billing_account_id: id, payment_mode: "offline" });
   });
 
@@ -673,17 +860,24 @@ export function staffRoutes(deps: StaffRouteDeps) {
     if (acc.payment_mode === "mollie") throw new BadRequestError("staff.already_mollie");
     if (acc.payment_mode !== "offline") throw new BadRequestError("staff.not_managed");
     if (!body.to_free && !body.expires_at) throw new BadRequestError("staff.expiry_required");
+    const now = clock();
     await billingStore.updateAccount(
       id,
       body.to_free
-        ? { payment_mode: "none", tier: "free", status: "active", tier_expires_at: null }
+        ? {
+            payment_mode: "none",
+            tier: "free",
+            status: "active",
+            tier_expires_at: null,
+            ...tierMovePatch(acc.tier, "free", now),
+          }
         : {
             payment_mode: "none",
             tier_expires_at: body.expires_at,
             status: "active",
             pre_warning_sent: false,
           },
-      clock(),
+      now,
     );
     return c.json({ status: "ok", billing_account_id: id, payment_mode: "none" });
   });

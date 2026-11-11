@@ -18,6 +18,7 @@ import {
 	Text,
 	TextInput,
 	Title,
+	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -37,6 +38,7 @@ import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import {
 	type ConversationSort,
 	formatStartedAt,
+	formatStartedAtFull,
 	getTagText,
 	hasVerifiedArtifacts,
 	SORT_OPTIONS,
@@ -340,7 +342,9 @@ const MiniRow = ({
 	const tags =
 		(conversation.tags as ConversationProjectTag[] | undefined) ?? [];
 	const isLocked = !!conversation.locked;
-	const when = formatStartedAt(getConversationStartTime(conversation));
+	const startedAt = getConversationStartTime(conversation);
+	const when = formatStartedAt(startedAt);
+	const startedFull = formatStartedAtFull(startedAt);
 	const duration =
 		conversation.duration && conversation.duration > 0
 			? formatDuration(conversation.duration)
@@ -367,9 +371,12 @@ const MiniRow = ({
 				</Box>
 			</Group>
 			<Group gap="xs" wrap="wrap">
-				<Text size="xs" c="dimmed">
-					{duration ? `${when} · ${duration}` : when}
-				</Text>
+				{/* Above the row link's overlay so the hover reaches it. */}
+				<Tooltip label={startedFull} disabled={!startedFull}>
+					<Text size="xs" c="dimmed" pos="relative" style={{ zIndex: 1 }}>
+						{duration ? `${when} · ${duration}` : when}
+					</Text>
+				</Tooltip>
 				{tags.map((tag) => {
 					const text = getTagText(tag);
 					return text ? (

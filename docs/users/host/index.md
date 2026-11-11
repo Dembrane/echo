@@ -25,7 +25,7 @@ worth reading. The judgement stays with you and the people in the room.
 ## Read and fix
 
 - [Transcripts & conversations](./transcripts-and-conversations.md): statuses, search, editing, tags, moving, deleting, downloading.
-- [Troubleshooting transcripts & summaries](./troubleshooting-transcripts-and-summaries.md): wrong, missing or locked text.
+- [Troubleshooting transcripts & summaries](./troubleshooting-transcripts-and-summaries.md): wrong or missing text.
 
 ## Make sense and share
 

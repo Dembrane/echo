@@ -74,6 +74,15 @@ export interface BillingStore {
   activeAccountsWithSubscription(): Promise<string[]>;
   /** Accounts whose paid tier has lapsed; managed accounts never auto-expire. */
   expiredTierAccounts(now: Date): Promise<Pick<AccountRow, "id" | "tier" | "workspace_id">[]>;
+  /** Free audio ledger rows touched since the given time. */
+  freeAudioCandidates(
+    since: Date,
+  ): Promise<{ accountId: string; periodStart: Date; amount: number }[]>;
+  /** Free AI spend rows touched since `since` that reached their limit at `now`, with no notice yet. */
+  freeAiCandidates(
+    since: Date,
+    budget: { now: Date; defaultLimit: number },
+  ): Promise<{ accountId: string; periodStart: Date }[]>;
   /** Accounts expiring within the window that have not been warned yet. */
   prewarnAccounts(
     from: Date,

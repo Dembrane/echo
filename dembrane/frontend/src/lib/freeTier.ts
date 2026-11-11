@@ -4,12 +4,80 @@ import { readApiError } from "./errors/read";
 // (dembrane/free_tier.py free_tier_limit_error). Frontend gates and the
 // UpgradeModal key on this.
 
-export type FreeTierLimit = "chats" | "chat_turns" | "report" | "workspaces";
+export type FreeTierLimit =
+	// chat_turns and report: a sample project's own caps.
+	| "chat_turns"
+	| "report"
+	| "workspaces"
+	| "projects"
+	| "organisations"
+	| "audio_month"
+	| "audio_conversation"
+	| "recording_project"
+	| "ai_budget";
 
-// Mirror of the backend limits in dembrane/free_tier.py. Kept in sync by hand;
-// the backend remains the source of truth and enforces these via 402.
-export const FREE_TIER_MAX_CHATS = 1;
-export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+/** The limits that stop a recording or an upload. */
+export type RecordingRefusal =
+	| "audio_month"
+	| "audio_conversation"
+	| "recording_project"
+	| "ai_budget";
+
+const LIMITS: ReadonlySet<string> = new Set<FreeTierLimit>([
+	"chat_turns",
+	"report",
+	"workspaces",
+	"projects",
+	"organisations",
+	"audio_month",
+	"audio_conversation",
+	"recording_project",
+	"ai_budget",
+]);
+
+const RECORDING_REFUSALS: ReadonlySet<string> = new Set<RecordingRefusal>([
+	"audio_month",
+	"audio_conversation",
+	"recording_project",
+	"ai_budget",
+]);
+
+// Billing (free-audio-out) counts under a minute left as used up; refusals and rounding leave the ledger short.
+export const AUDIO_USED_UP_SLACK_SECONDS = 60;
+
+/** True when the month's audio is used up, the slack included. */
+export function audioUsedUp(meter: { used: number; limit: number }): boolean {
+	return meter.limit - meter.used < AUDIO_USED_UP_SLACK_SECONDS;
+}
+
+/** The allowance reset time in the reader's locale, or null when missing or unreadable. */
+export function formatResetDate(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	return d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
+
+/** The reset day (UTC, the budget resets at 00:00 UTC) in the reader's locale; null when missing or unreadable. */
+export function formatResetDay(
+	iso: string | null | undefined,
+	locale: string,
+): string | null {
+	if (!iso) return null;
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return null;
+	// English reads day-first, as on the audience screen.
+	const tag = locale === "en" || locale.startsWith("en-") ? "en-GB" : locale;
+	return new Intl.DateTimeFormat(tag, {
+		day: "numeric",
+		month: "long",
+		timeZone: "UTC",
+		year: "numeric",
+	}).format(d);
+}
 
 const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
 
@@ -30,16 +98,52 @@ export function isFreeTierLimitError(err: unknown): FreeTierLimit | null {
 		(detail as { error?: unknown }).error === FREE_TIER_LIMIT_ERROR
 	) {
 		const limit = (detail as { limit?: unknown }).limit;
-		if (
-			limit === "chats" ||
-			limit === "chat_turns" ||
-			limit === "report" ||
-			limit === "workspaces"
-		) {
-			return limit;
-		}
+		if (isLimit(limit)) return limit;
 	}
 	return null;
+}
+
+/** The free-limit 402's details object (the body's `detail`), or null. */
+export function freeLimitDetails(
+	err: unknown,
+): Readonly<Record<string, unknown>> | null {
+	if (!isFreeTierLimitError(err)) return null;
+	const detail = extractDetail(err);
+	return detail && typeof detail === "object" && !Array.isArray(detail)
+		? (detail as Record<string, unknown>)
+		: null;
+}
+
+/** The budget figures of an ai_budget 402 (null when absent), or null for anything else. */
+export function aiBudgetDetails(
+	err: unknown,
+): { percent: number | null; resetsAt: string | null } | null {
+	if (isFreeTierLimitError(err) !== "ai_budget") return null;
+	const d = freeLimitDetails(err);
+	return {
+		percent: typeof d?.percent === "number" ? d.percent : null,
+		resetsAt: typeof d?.resets_at === "string" ? d.resets_at : null,
+	};
+}
+
+/** The question cap a sample chat_turns 402 carries, or null. */
+export function sampleTurnCap(err: unknown): number | null {
+	if (isFreeTierLimitError(err) !== "chat_turns") return null;
+	const cap = freeLimitDetails(err)?.cap;
+	return typeof cap === "number" && cap > 0 ? cap : null;
+}
+
+/** The recording reason of a free-limit 402, or null for anything else. */
+export function portalRecordingRefusal(err: unknown): RecordingRefusal | null {
+	const limit = isFreeTierLimitError(err);
+	return isRecordingRefusal(limit) ? limit : null;
+}
+
+/** Reads `recording_stop` off a live chunk confirm response. */
+export function recordingStopOf(chunk: unknown): RecordingRefusal | null {
+	if (!chunk || typeof chunk !== "object") return null;
+	const stop = (chunk as { recording_stop?: unknown }).recording_stop;
+	return isRecordingRefusal(stop) ? stop : null;
 }
 
 function extractDetail(err: unknown): unknown {
@@ -55,7 +159,9 @@ function extractDetail(err: unknown): unknown {
 }
 
 function isLimit(v: unknown): v is FreeTierLimit {
-	return (
-		v === "chats" || v === "chat_turns" || v === "report" || v === "workspaces"
-	);
+	return typeof v === "string" && LIMITS.has(v);
+}
+
+function isRecordingRefusal(v: unknown): v is RecordingRefusal {
+	return typeof v === "string" && RECORDING_REFUSALS.has(v);
 }

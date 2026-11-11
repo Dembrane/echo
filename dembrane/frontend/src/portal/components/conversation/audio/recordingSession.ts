@@ -2,17 +2,29 @@
  * What the audio screen layers on top of the recorder. Whether audio is
  * running is the recorder's to say (`isRecording`); this tracks what the
  * participant did with it: stopped at a time and maybe confirming, finishing,
- * cut off by an interruption, or left with a deleted conversation.
+ * cut off by an interruption, stopped by a free-tier limit, or left with a
+ * deleted conversation.
  *
  * `live` means nothing is layered on: the recorder alone decides whether the
  * screen is idle or recording. `at` is null when finishing without having
  * stopped here first, from the bar's Finish after a reload.
+ *
+ * `wrappedUp` is a limit stopping the recording: what was recorded is kept and
+ * Finish is the only way on. `reason` says which limit, for the wrap-up modal.
  */
+export type WrapUpReason = "conversation" | "account";
+
 export type RecordingSession =
 	| { phase: "live" }
 	| { phase: "paused"; at: number | null; confirming: boolean }
 	| { phase: "finishing"; at: number | null; confirming: boolean }
 	| { phase: "interrupted"; at: number; reconnecting: boolean }
+	| {
+			phase: "wrappedUp";
+			at: number;
+			reason: WrapUpReason;
+			finishing: boolean;
+	  }
 	| { phase: "deleted" };
 
 export type RecordingSessionEvent =
@@ -27,6 +39,7 @@ export type RecordingSessionEvent =
 	| { type: "interrupted"; at: number }
 	| { type: "reconnectStarted" }
 	| { type: "reconnectFailed" }
+	| { type: "wrapUp"; at: number; reason: WrapUpReason }
 	| { type: "conversationDeleted" };
 
 export const initialRecordingSession: RecordingSession = { phase: "live" };
@@ -48,6 +61,7 @@ const transition = (
 	event: RecordingSessionEvent,
 ): RecordingSession => {
 	if (session.phase === "deleted") return session;
+	if (session.phase === "wrappedUp") return wrappedUpTransition(session, event);
 
 	switch (event.type) {
 		case "conversationDeleted":
@@ -103,14 +117,49 @@ const transition = (
 			return session.phase === "interrupted"
 				? { ...session, reconnecting: false }
 				: session;
+
+		// Keeps the time it was stopped at; one already finishing goes on.
+		case "wrapUp":
+			return session.phase === "finishing"
+				? session
+				: {
+						at: (session.phase === "live" ? null : session.at) ?? event.at,
+						finishing: false,
+						phase: "wrappedUp",
+						reason: event.reason,
+					};
 	}
 };
 
-/** Where the participant stopped, while stopped or finishing. */
+/** Wrapped up, the recording can't start again: only finishing moves it. */
+const wrappedUpTransition = (
+	session: Extract<RecordingSession, { phase: "wrappedUp" }>,
+	event: RecordingSessionEvent,
+): RecordingSession => {
+	switch (event.type) {
+		case "conversationDeleted":
+			return { phase: "deleted" };
+		case "finishStarted":
+			return { ...session, finishing: true };
+		case "finishFailed":
+			return { ...session, finishing: false };
+		default:
+			return session;
+	}
+};
+
+/** Where the participant stopped, while stopped, wrapped up or finishing. */
 export const pausedAt = (session: RecordingSession): number | null =>
-	session.phase === "paused" || session.phase === "finishing"
+	session.phase === "paused" ||
+	session.phase === "finishing" ||
+	session.phase === "wrappedUp"
 		? session.at
 		: null;
+
+/** Finishing, from the confirm modal or the wrap-up modal. */
+export const isFinishing = (session: RecordingSession): boolean =>
+	session.phase === "finishing" ||
+	(session.phase === "wrappedUp" && session.finishing);
 
 export const isConfirmOpen = (session: RecordingSession): boolean =>
 	(session.phase === "paused" || session.phase === "finishing") &&

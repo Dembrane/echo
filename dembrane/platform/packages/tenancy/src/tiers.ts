@@ -3,8 +3,8 @@ import { pyRound } from "./numbers";
 
 /**
  * The tier by capacity and price matrix, as the old API serves it. Paid tiers bill
- * per seat with unlimited hours; only free keeps a one hour cap. When pricing changes, this
- * is the one place to edit.
+ * per seat with unlimited hours; free hours are the live monthly audio limit (freeIncludedHours).
+ * When pricing changes, this is the one place to edit.
  */
 
 /** Monthly billing costs this much more than the annual per-seat anchor. */
@@ -30,7 +30,8 @@ export const TIER_CAPACITIES: Readonly<Record<Tier, TierCapacity>> = {
     tagline: "get started.",
     priceEurMonthly: null,
     includedSeats: null,
-    includedHours: 1,
+    // Default of the staff-editable audio_seconds_month limit; responses read it live.
+    includedHours: 5,
     hardBlockOnHours: false,
     trainingIncluded: "Sold separately",
     duration: "—",
@@ -102,12 +103,9 @@ export function allowsOverage(tier: string | null | undefined): boolean {
   return tier === "innovator" || tier === "changemaker" || tier === "guardian";
 }
 
-export function usageGates(tier: string, hoursLifetime: number) {
-  const cap = capacityOf(tier);
-  if (allowsOverage(tier) || !cap || cap.includedHours === null)
-    return { over_cap_active: false, uploads_locked: false };
-  const over = hoursLifetime >= cap.includedHours;
-  return { over_cap_active: over, uploads_locked: over };
+/** The lifetime hour lock is retired: no tier is gated by it. */
+export function usageGates(_tier: string, _hoursLifetime: number) {
+  return { over_cap_active: false, uploads_locked: false };
 }
 
 /**

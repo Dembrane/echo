@@ -2,6 +2,14 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { join } from "node:path";
 import { AudioError } from "@dembrane/audio";
 import { newId } from "@dembrane/core";
+import {
+  FallbackModel,
+  fakeCalls,
+  fakeLanguageModel,
+  lastPayer,
+  takeUnscopedFakeCalls,
+} from "@dembrane/llm";
+import { GeminiTranscriber } from "@dembrane/transcription";
 import { createChunk } from "../src/chunks";
 import { catchUpSummaries, finishConversation } from "../src/pipeline/defs";
 import {
@@ -33,7 +41,7 @@ run("conversation pipeline", () => {
   beforeAll(async () => {
     const url = await freshDatabase("conv_pipeline_test");
     // A 60 KB split threshold, so a few seconds of mp3 is cut into pieces.
-    h = await startWorker(url, { maxChunkBytes: 60_000 });
+    h = await startWorker(url, { requestLimits: { maxBytes: 60_000 } });
   });
   afterAll(async () => {
     await h?.stop();
@@ -79,11 +87,15 @@ run("conversation pipeline", () => {
     expect(done?.diarization).toMatchObject({ schema: "Dembrane-26-07-gemini" });
     expect((await conversation(cid)).recording_started_at).not.toBeNull();
 
+    takeUnscopedFakeCalls();
     await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
     const final = await until(async () => {
       const c = await conversation(cid);
       return c.summary && c.merged_audio_path && c.token_count !== null ? c : null;
     });
+    // The finalize's summary is billed to the conversation.
+    expect(lastPayer()).toEqual({ ref: "conversation", id: cid });
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     expect(final.is_finished).toBe(true);
     expect(final.is_all_chunks_transcribed).toBe(true);
     expect(final.summary).toBe("A short summary.");
@@ -117,7 +129,8 @@ run("conversation pipeline", () => {
       return r.length > 1 && r.every((c) => c.transcript) ? r : null;
     });
     const n = rows.length;
-    expect(n).toBe(Math.ceil(file.size / 60_000));
+    // Cut at the size limit or finer: pieces end where the planner finds a pause.
+    expect(n).toBeGreaterThanOrEqual(Math.ceil(file.size / 60_000));
     expect(rows.map((r) => r.id)).toEqual(
       Array.from({ length: n }, (_, i) => pieceId(chunk.id, i)),
     );
@@ -203,6 +216,92 @@ run("conversation pipeline", () => {
     const [row] = await chunks(cid);
     expect(row?.transcript).toBeNull();
     expect(String(row?.error)).toContain("vertex 503");
+  });
+
+  /** Deployments that answer like prod's refusals (SAFETY, no text) until told otherwise. */
+  function refusingGroup(answers: Record<string, string[]>, calls: string[]) {
+    const deployment = (id: string) =>
+      fakeLanguageModel({
+        modelId: id,
+        usage: { output: 0 },
+        text: () => {
+          const text = answers[id]?.shift();
+          calls.push(`${id}:${text ? "answer" : "safety"}`);
+          return text || null;
+        },
+      });
+    const group = (name: string) =>
+      new FallbackModel(
+        name,
+        [
+          { label: "a", model: deployment("gemini-a") },
+          { label: "b", model: deployment("gemini-b") },
+        ],
+        { backoffMs: 0, sleep: async () => {} },
+      );
+    const pro = group("multi_modal_pro");
+    const fast = group("multi_modal_fast");
+    return new GeminiTranscriber(
+      { model: (g) => (g === "multi_modal_fast" ? fast : pro), embedding: () => ({}) as never },
+      h.deps.logger,
+    );
+  }
+
+  test("a chunk the first model refuses is transcribed by the next one", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    takeUnscopedFakeCalls();
+    const calls: string[] = [];
+    const gemini = refusingGroup(
+      { "gemini-b": ['{"corrected_transcript": "hallo van b", "note": ""}'] },
+      calls,
+    );
+    const original = h.transcriber.transcribe.bind(h.transcriber);
+    h.transcriber.transcribe = (i) => gemini.transcribe(i);
+    try {
+      await upload(cid, await tone(join(h.bucket.root, "r1.webm"), 2), "r1.webm");
+      const [row] = await until(async () => {
+        const rows = await chunks(cid);
+        return rows[0]?.transcript || rows[0]?.error ? rows : null;
+      });
+      expect(row?.transcript).toBe("hallo van b");
+      expect(row?.error).toBeNull();
+      // The chunk job names only its chunk; its calls are billed to the chunk's conversation.
+      const gemini = fakeCalls().filter((c) => c.model.startsWith("gemini-"));
+      expect(gemini.length).toBeGreaterThan(0);
+      expect(gemini.map((c) => c.payer)).toEqual(
+        gemini.map(() => ({ ref: "conversation", id: cid })),
+      );
+    } finally {
+      h.transcriber.transcribe = original;
+    }
+  });
+
+  test("a chunk every model refuses ends at once with a refusal error", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    const calls: string[] = [];
+    const gemini = refusingGroup({}, calls);
+    const original = h.transcriber.transcribe.bind(h.transcriber);
+    h.transcriber.transcribe = (i) => gemini.transcribe(i);
+    try {
+      await upload(cid, await tone(join(h.bucket.root, "r2.webm"), 2), "r2.webm");
+      await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
+      const c = await until(async () => {
+        const x = await conversation(cid);
+        return x.is_all_chunks_transcribed ? x : null;
+      });
+      const [row] = await chunks(cid);
+      expect(c.is_finished).toBe(true);
+      expect(row?.transcript).toBeNull();
+      expect(String(row?.error)).toContain(
+        "refused to transcribe this audio (finish_reason=safety)",
+      );
+      // One call per deployment, then done: no same-model retry, no step retries.
+      expect(calls).toEqual(["gemini-a:safety", "gemini-b:safety"]);
+    } finally {
+      h.transcriber.transcribe = original;
+    }
   });
 
   test("finishing before the last chunk is transcribed finalizes once the chunk lands", async () => {
@@ -291,12 +390,16 @@ run("conversation pipeline", () => {
     expect(due).not.toContain(empty);
     expect(due).not.toContain(blank);
 
+    takeUnscopedFakeCalls();
     await h.queue.enqueue(catchUpSummaries, {});
     const c = await until(async () => {
       const x = await conversation(withText);
       return x.summary !== "[No transcript available]" ? x : null;
     });
     expect(c.summary).toBe("A short summary.");
+    // The summary job it queues is billed to its conversation.
+    expect(lastPayer()).toEqual({ ref: "conversation", id: withText });
+    expect(takeUnscopedFakeCalls()).toEqual([]);
     expect((await conversation(empty)).summary).toBe("[No transcript available]");
   });
 

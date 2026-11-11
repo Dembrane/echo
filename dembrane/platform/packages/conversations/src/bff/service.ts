@@ -1,4 +1,5 @@
 import type { ProjectAccess } from "@dembrane/access";
+import { requireAiBudget } from "@dembrane/allowance";
 import { BadRequestError, ForbiddenError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
@@ -6,7 +7,8 @@ import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
-import type { Row } from "../storage";
+import { type Row, UPLOAD_SOURCE } from "../storage";
+import { NO_TRANSCRIPT_SUMMARY } from "../v1/summary";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
 import {
   type BffStore,
@@ -21,6 +23,7 @@ import {
 } from "./storage";
 
 type Deps = Pick<ConversationsDeps, "db" | "access" | "now">;
+type AudioDeps = Deps & Pick<ConversationsDeps, "audio" | "audioUrls" | "settings">;
 
 const csv = (v: string | null | undefined) =>
   (v ?? "")
@@ -230,6 +233,9 @@ export async function getConversation(
   return conv;
 }
 
+// What the summary sweep writes again: no summary, an empty one, or the no-transcript placeholder.
+const sweepRewrites = (v: unknown) => v == null || v === "" || v === NO_TRANSCRIPT_SUMMARY;
+
 /**
  * Writable fields only: project, deletion, duration and processing state are internal
  * or have their own routes. Null means "not sent", as the pydantic model dump did.
@@ -240,9 +246,16 @@ export async function updateConversation(
   conversationId: string,
   body: Record<string, unknown>,
 ): Promise<Row> {
-  await conversationForBff(d, who, conversationId, "project:update");
+  const a = await conversationForBff(d, who, conversationId, "project:update");
   const payload = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== null));
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
+  // The summary sweep rewrites a cleared summary, so clearing one at zero is a regenerate.
+  if (
+    "summary" in payload &&
+    sweepRewrites(payload.summary) &&
+    !sweepRewrites(a.conversation.summary)
+  )
+    await requireAiBudget(d.db, a.conversation.project_id, d.now(), a.project.tier);
   const store = bffStore(d.db);
   await store.updateConversation(conversationId, payload, d.now());
   return (await store.conversationStar(conversationId)) ?? {};
@@ -372,4 +385,60 @@ export async function replaceTags(
   await store.deleteTagLinks(remove);
   for (const tagId of valid) if (!current.has(tagId)) await store.addTagLink(conversationId, tagId);
   return (await store.tagRows([conversationId])).map((t) => tagRow(t, true));
+}
+
+// A signed link outlives an hour of listening to the transcript.
+const PLAYER_URL_S = 3 * 3600;
+
+/**
+ * The final transcript for the dashboard: its text, its timed sentences and a link to the
+ * one merged file the player streams (range requests are the bucket's). Locked conversations
+ * get neither text nor audio, as their chunks do. An anonymised conversation gets text only:
+ * redaction ran on the text and the audio still holds the names.
+ */
+export async function finalTranscript(d: AudioDeps, who: Signed, conversationId: string) {
+  const a = await conversationForBff(d, who, conversationId);
+  const store = bffStore(d.db);
+  const { locked } = conversationLock(
+    a.conversation as unknown as Row,
+    a.project.tier,
+    await activeFor(store, a.project),
+  );
+  const record = await store.recordTranscript(conversationId);
+  if (!record) {
+    // Is a final transcript on its way? The profile improves this kind of conversation, it has
+    // audio, and it is not so old that the job has long since given up (a conversation it
+    // failed on must not say "draft" forever).
+    const fresh =
+      !a.conversation.is_finished ||
+      d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
+    const expected =
+      Boolean(
+        a.conversation.source === UPLOAD_SOURCE
+          ? d.settings.improves?.uploads
+          : d.settings.improves?.recordings,
+      ) &&
+      fresh &&
+      (await store.hasAudio(conversationId)) &&
+      !(await store.finalGaveUp(conversationId));
+    return { available: false as const, expected };
+  }
+  if (locked) return { available: true as const, locked: true as const };
+  const anonymised = Boolean(a.conversation.is_anonymized);
+  const merged = a.conversation.merged_audio_path;
+  const playable =
+    !anonymised && Boolean(merged?.startsWith("http")) && Array.isArray(record.sentences);
+  return {
+    available: true as const,
+    locked: false as const,
+    provider: record.provider,
+    model: record.model,
+    text: record.text,
+    sentences: anonymised ? [] : (record.sentences ?? []),
+    audio_url: playable
+      ? d.audio.presignDownload(d.audioUrls.keyOf(merged as string), {
+          expiresInSeconds: PLAYER_URL_S,
+        })
+      : null,
+  };
 }

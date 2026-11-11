@@ -25,6 +25,7 @@ import { offer } from "./offer";
 import { organisation } from "./organisation";
 import { participant } from "./participant";
 import { popcorn } from "./popcorn";
+import { portal } from "./portal";
 import { present } from "./present";
 import { pricing } from "./pricing";
 import { privacy } from "./privacy";
@@ -74,6 +75,7 @@ export const ERROR_MESSAGES: Partial<Record<ErrorCode, MessageDescriptor>> = {
 	...organisation,
 	...participant,
 	...popcorn,
+	...portal,
 	...present,
 	...pricing,
 	...privacy,

@@ -311,7 +311,7 @@ function Editor() {
 						data-testid="field-editor-pages"
 					>
 						{pdf.data ? (
-							<PdfPages data={pdf.data} overlay={overlay} />
+							<PdfPages data={pdf.data} overlay={overlay} links={false} />
 						) : (
 							<Loader size="sm" />
 						)}

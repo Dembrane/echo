@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { withoutTrailingSlashes } from "@dembrane/core";
 
 /**
  * The opaque pointer in invite emails: HMAC-SHA256 of the invite id, first 32 hex chars.
@@ -39,6 +40,6 @@ export function inviteAcceptUrl(opts: {
 
 /** Dashboard URLs the emails and notifications point at. */
 export function dashboardPath(base: string, path: string): string {
-  const b = base.replace(/\/+$/, "");
+  const b = withoutTrailingSlashes(base);
   return b ? `${b}${path}` : path;
 }

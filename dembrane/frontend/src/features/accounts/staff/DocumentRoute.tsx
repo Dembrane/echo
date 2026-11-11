@@ -16,10 +16,12 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useV2Me } from "@/hooks/useV2Me";
 import { openPdf } from "../api/client";
 import {
 	useAccountCard,
@@ -37,7 +39,13 @@ import {
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { PdfPages } from "../pdf/PdfPages";
+import {
+	AcceptedOutsideModal,
+	outsideFact,
+	VoidAcceptanceModal,
+} from "./AcceptedOutsideModals";
 import { StaffOnly } from "./AccountCardRoute";
+import { AnnexesPanel, CountersignModal } from "./OfferExtras";
 import { PushOfferModal } from "./PushOfferModal";
 import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
 
@@ -62,9 +70,19 @@ function DocumentPage() {
 	const pdf = usePdfData(doc.data?.file_url, doc.data?.sha256);
 	const fileHref = usePdfHref(doc.data?.file_url);
 	const send = useAccountsMutation("sendDocument", { orgId: orgId ?? "" });
+	const [params, setParams] = useSearchParams();
 	const [editing, setEditing] = useState(false);
+	// The account card's "Revise" lands here with ?revise=1, so the new version opens over the old.
+	const revising = params.get("revise") === "1";
+	const setRevising = (on: boolean) =>
+		setParams(on ? { revise: "1" } : {}, { replace: true });
+	const navigate = useI18nNavigate();
 	const [confirming, setConfirming] = useState(false);
 	const [emailOpen, setEmailOpen] = useState(false);
+	const [accepting, setAccepting] = useState(false);
+	const [voiding, setVoiding] = useState(false);
+	const [countersigning, setCountersigning] = useState(false);
+	const { data: me } = useV2Me();
 	useDocumentTitle(doc.data ? `${doc.data.title} | dembrane` : "dembrane");
 
 	if (doc.isLoading) return <Loader m="xl" size="sm" />;
@@ -78,20 +96,67 @@ function DocumentPage() {
 	const d = doc.data;
 	const draft = d.status === "draft";
 	const draftOffer = draft && d.kind === "offer";
+	// The customer's signatures. dembrane's own, applied when sending, holds nothing back.
+	const theirs = d.signatures.filter((s) => s.slot !== "dembrane");
+	// A sent offer is fixed; a new version replaces it until it is signed.
+	const revisable =
+		d.kind === "offer" &&
+		["sent", "viewed", "declined"].includes(d.status) &&
+		!theirs.length;
+	// Accepted outside dembrane: their order letter, an email, paper, or their own DPA.
+	const acceptable =
+		(d.kind === "offer" || d.kind === "dpa") &&
+		d.requires_signature &&
+		["sent", "viewed"].includes(d.status);
+	const outside = d.signature?.outside ?? null;
+	// An offer that asks for dembrane's counter-signature, by the staff member it names.
+	const ours =
+		d.content?.second_signer?.kind === "dembrane"
+			? d.content.second_signer
+			: null;
+	const mayCountersign =
+		Boolean(ours) &&
+		d.awaiting_signatures.includes("dembrane") &&
+		ours?.email.toLowerCase() === me?.email?.toLowerCase();
+	const waitingFor = d.awaiting_signatures
+		.map((s) =>
+			s === "dembrane"
+				? t`dembrane's signature`
+				: s === "second"
+					? t`their second signatory`
+					: t`the customer`,
+		)
+		.join(", ");
+	// Sent: who signed. A draft dembrane will sign: who will, as the PDF above shows.
+	const signedFor =
+		d.content?.dembrane_signature?.name ??
+		(draftOffer && d.content?.dembrane_signs_offer
+			? (d.content.dembrane_signer ?? card.data?.dembrane_signer)?.name
+			: undefined);
 	const orgName = card.data?.organisation.name ?? "";
 	const facts = [
 		documentKindLabel(d.kind),
 		d.reference,
+		d.version > 1 ? t`Version ${d.version}` : null,
 		d.total_cents === null
 			? null
 			: t`${formatMoney(d.total_cents, d.currency, i18n.locale)} incl. VAT`,
 		draft
 			? null
-			: d.signed_at
-				? t`Signed ${formatDate(d.signed_at, i18n.locale)}`
-				: d.sent_at
-					? t`Sent ${formatDate(d.sent_at, i18n.locale)}`
-					: null,
+			: outside
+				? outsideFact(outside.via, formatDate(outside.accepted_on, i18n.locale))
+				: d.signed_at
+					? t`Signed ${formatDate(d.signed_at, i18n.locale)}`
+					: d.sent_at
+						? t`Sent ${formatDate(d.sent_at, i18n.locale)}`
+						: null,
+		outside?.customer_reference
+			? t`Their reference ${outside.customer_reference}`
+			: null,
+		d.awaiting_signatures.length && theirs.length
+			? t`Waiting for ${waitingFor}`
+			: null,
+		signedFor ? t`Signed for dembrane by ${signedFor}` : null,
 		!draft && d.kind === "offer" && d.valid_until && !d.signed_at
 			? t`Valid until ${formatDate(d.valid_until, i18n.locale)}`
 			: null,
@@ -157,6 +222,15 @@ function DocumentPage() {
 								</Button>
 							</>
 						)}
+						{revisable && (
+							<Button
+								variant="default"
+								onClick={() => setRevising(true)}
+								data-testid="offer-revise"
+							>
+								<Trans>Revise</Trans>
+							</Button>
+						)}
 						{draft && !draftOffer && d.requires_signature && (
 							<Button
 								variant="default"
@@ -166,21 +240,67 @@ function DocumentPage() {
 								<Trans>Place fields</Trans>
 							</Button>
 						)}
+						{mayCountersign && (
+							<Button
+								variant="filled"
+								onClick={() => setCountersigning(true)}
+								data-testid="countersign-open"
+							>
+								<Trans>Sign for dembrane</Trans>
+							</Button>
+						)}
+						{acceptable && !theirs.length && (
+							<Button
+								variant="default"
+								onClick={() => setAccepting(true)}
+								data-testid="accepted-outside-open"
+							>
+								{d.kind === "dpa" ? (
+									<Trans>Signed outside dembrane</Trans>
+								) : (
+									<Trans>Accepted outside dembrane</Trans>
+								)}
+							</Button>
+						)}
+						{outside?.evidence_url && (
+							<Button
+								variant="default"
+								onClick={() => void openPdf(outside.evidence_url as string)}
+								data-testid="open-evidence"
+							>
+								<Trans>Open evidence</Trans>
+							</Button>
+						)}
 						{d.signed_pdf_url && (
 							<Button
 								variant="default"
 								onClick={() => void openPdf(d.signed_pdf_url as string)}
 							>
-								<Trans>Open signed PDF</Trans>
+								{outside ? (
+									<Trans>Open the record</Trans>
+								) : (
+									<Trans>Open signed PDF</Trans>
+								)}
+							</Button>
+						)}
+						{outside && d.status === "signed" && (
+							<Button
+								variant="subtle"
+								color="red"
+								onClick={() => setVoiding(true)}
+								data-testid="void-acceptance-open"
+							>
+								<Trans>Void acceptance</Trans>
 							</Button>
 						)}
 					</Group>
 				</Group>
+				{draftOffer && <AnnexesPanel orgId={orgId} doc={d} />}
 				{draftOffer && (
 					<Text size="sm" c="dimmed" data-testid="draft-note">
 						<Trans>
 							Only staff see this draft. When you send it, it gets that day's
-							date and is valid for 14 days.
+							date and its validity counts from then.
 						</Trans>
 					</Text>
 				)}
@@ -276,6 +396,32 @@ function DocumentPage() {
 						?.name ?? null
 				}
 			/>
+			{mayCountersign && ours && (
+				<CountersignModal
+					opened={countersigning}
+					onClose={() => setCountersigning(false)}
+					orgId={orgId}
+					doc={d}
+					name={ours.name}
+				/>
+			)}
+			{acceptable && (
+				<AcceptedOutsideModal
+					opened={accepting}
+					onClose={() => setAccepting(false)}
+					orgId={orgId}
+					doc={d}
+					reference={d.content?.customer_reference ?? null}
+				/>
+			)}
+			{outside && d.status === "signed" && (
+				<VoidAcceptanceModal
+					opened={voiding}
+					onClose={() => setVoiding(false)}
+					orgId={orgId}
+					docId={d.id}
+				/>
+			)}
 			{draftOffer && (
 				<PushOfferModal
 					opened={editing}
@@ -283,6 +429,16 @@ function DocumentPage() {
 					orgId={orgId}
 					orgName={orgName}
 					draft={d}
+				/>
+			)}
+			{revisable && (
+				<PushOfferModal
+					opened={revising}
+					onClose={() => setRevising(false)}
+					orgId={orgId}
+					orgName={orgName}
+					revise={d}
+					onDraft={(id) => navigate(`/admin/accounts/${orgId}/documents/${id}`)}
 				/>
 			)}
 		</Box>

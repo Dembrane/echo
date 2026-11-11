@@ -6,11 +6,8 @@ import { LockIcon } from "@phosphor-icons/react";
  * Overlay shown in place of gated content (summary / transcript) on a locked
  * conversation.
  *
- * Conversations lock for one reason ("hours_cap"): the workspace passed its
- * free 1-hour recording cap, so conversations recorded past the cap lock until
- * upgrade. Audio playback stays accessible: only text content is gated.
- * Upgrading unlocks everything on the next load (live computation, no batch
- * update).
+ * Legacy: the free tier now stops recording at its monthly limit instead of
+ * locking, so "hours_cap" no longer occurs. Audio playback stays accessible.
  */
 export function LockedTranscriptOverlay({
 	compact = false,

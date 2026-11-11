@@ -38,6 +38,19 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    Toggle("Allow AI processing", isOn: Binding(
+                        get: { model.hasAIConsent },
+                        set: { model.setAIConsent($0) }))
+                    Button("Privacy policy") {
+                        safariURL = URL(string: "https://www.dembrane.com/legal/privacy")!.appendingUTMSource()
+                    }
+                } header: {
+                    Text("AI processing")
+                } footer: {
+                    Text("dembrane transcribes and analyses your recordings and questions with Google Cloud Vertex AI in the EU. Without this, dembrane Go cannot record, upload or answer questions. Recordings already sent stay in your projects until you delete them.")
+                }
+
                 Section("About") {
                     LabeledContent("Version", value: appVersion)
                     Button("Source code") {

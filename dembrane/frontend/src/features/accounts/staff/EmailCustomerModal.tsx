@@ -99,9 +99,7 @@ export function EmailCustomerModal({
 							{t`To: ${preview.messages.map((m) => m.to).join(", ")}`}
 						</Text>
 						<Paper withBorder p="sm" data-testid="email-preview">
-							<Text size="md">
-								{first.subject}
-							</Text>
+							<Text size="md">{first.subject}</Text>
 							<Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
 								{first.text}
 							</Text>

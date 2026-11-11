@@ -21,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import {
+	type CSSProperties,
 	type ReactNode,
 	useCallback,
 	useEffect,
@@ -110,15 +111,20 @@ const TemplatePill = ({
 	label,
 	icon: IconComponent,
 	isSelected,
+	isSuggestion = false,
 	onClick,
 	testIdSuffix,
 }: {
 	label: string;
 	icon?: Icon;
 	isSelected: boolean;
+	isSuggestion?: boolean;
 	onClick: () => void;
 	testIdSuffix: string;
 }) => {
+	// Suggestions are a secondary button: blue box and text, apart from templates.
+	const color = isSuggestion ? "var(--app-action)" : undefined;
+
 	return (
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>
 			<UnstyledButton
@@ -126,15 +132,20 @@ const TemplatePill = ({
 				data-selected={isSelected || undefined}
 				px={8}
 				py={4}
-				style={{ maxWidth: 200 }}
+				style={
+					{
+						maxWidth: 200,
+						...(isSuggestion && { "--app-rule-color": "var(--app-action)" }),
+					} as CSSProperties
+				}
 				onClick={onClick}
 				{...testId(`chat-template-${testIdSuffix}`)}
 			>
 				<Group gap={4} wrap="nowrap" style={{ minWidth: 0 }}>
 					{IconComponent && (
-						<IconComponent size={16} style={{ flexShrink: 0 }} />
+						<IconComponent size={16} color={color} style={{ flexShrink: 0 }} />
 					)}
-					<Text size="xs" truncate style={{ minWidth: 0 }}>
+					<Text size="xs" c={color} truncate style={{ minWidth: 0 }}>
 						{label}
 					</Text>
 				</Group>
@@ -318,6 +329,7 @@ export const ChatTemplatesMenu = ({
 					label={suggestion.label}
 					icon={SUGGESTION_ICONS[suggestion.icon] || Sparkle}
 					isSelected={selectedTemplateKey === suggestion.label}
+					isSuggestion
 					onClick={() =>
 						handleTemplateSelect(
 							{

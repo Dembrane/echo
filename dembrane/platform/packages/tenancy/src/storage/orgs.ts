@@ -216,3 +216,32 @@ export async function softDeleteMembershipsInOrg(
       );
   return rows;
 }
+
+export type ManagedOrg = { org_id: string; tier: string | null; workspace_id: string | null };
+
+/** Each live org the user owns or admins, with its pooled account tier and default workspace. */
+export async function managedOrgTiers(db: Conn, appUserId: string): Promise<ManagedOrg[]> {
+  const rows = await db.execute<ManagedOrg>(sql`
+    select o.id as org_id, (
+      select b.tier from billing_account b
+      where b.org_id = o.id and b.deleted_at is null
+      order by b.created_at asc nulls last, b.id asc
+      limit 1
+    ) as tier, (
+      select w.id from workspace w
+      where w.org_id = o.id and w.deleted_at is null
+      order by w.is_default desc, w.created_at asc nulls last, w.id asc
+      limit 1
+    ) as workspace_id
+    from org o
+    join org_membership m on m.org_id = o.id
+    where o.deleted_at is null and m.deleted_at is null
+      and m.user_id = ${appUserId} and m.role in ('owner', 'admin')
+    order by o.created_at asc nulls last, o.id asc`);
+  return [...rows];
+}
+
+/** Serialises one user's org creates until the transaction ends. */
+export async function lockOrgCreate(tx: Conn, appUserId: string) {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`org-create:${appUserId}`}))`);
+}

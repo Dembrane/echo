@@ -3,8 +3,7 @@ import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
 import { projectsStorage } from "../src/storage";
 
-// A free workspace gets one report. Reports on its sample copy (project.is_sample) are not
-// the workspace's own and leave that report free; the sample counts its own.
+// A sample copy (project.is_sample) counts its own reports for its one free report.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const dbName = `projects_sample_reports_${process.pid}`;
@@ -42,12 +41,10 @@ run("the free report and a sample project", () => {
     await a.end();
   });
 
-  test("a report on the sample does not count; one on the workspace's own project does", async () => {
+  test("a sample copy counts only its own reports", async () => {
     const store = projectsStorage(database.db);
     await sql`insert into project_report (project_id, kind, status, content) values (${sample}, 'report', 'published', 'x')`;
-    expect(await store.countWorkspaceReports(ws)).toBe(0);
     await sql`insert into project_report (project_id, kind, status, content) values (${own}, 'report', 'published', 'x')`;
-    expect(await store.countWorkspaceReports(ws)).toBe(1);
     expect(await store.countProjectReports(sample)).toBe(1);
     expect(await store.countProjectReports(own)).toBe(1);
   });

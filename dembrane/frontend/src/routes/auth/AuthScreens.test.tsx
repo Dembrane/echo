@@ -201,6 +201,100 @@ it("the register check-your-email step can resend the link", async () => {
 	});
 });
 
+const fillDetails = () => {
+	fireEvent.change(screen.getByTestId("auth-register-first-name-input"), {
+		target: { value: "Reg" },
+	});
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg@example.com" },
+	});
+};
+
+it("submitting an empty register form names what is missing", async () => {
+	const calls = stubFetch(() => undefined);
+	wrap(<RegisterRoute />, "/register");
+	const button = screen.getByTestId("auth-register-continue-button");
+	expect((button as HTMLButtonElement).disabled).toBe(false);
+	fireEvent.click(button);
+	await screen.findByText("Enter your first name");
+	expect(screen.getByText("Enter your email")).toBeTruthy();
+	expect(screen.getByText("Accept the terms to continue")).toBeTruthy();
+	expect(screen.queryByTestId("auth-register-password-input")).toBeNull();
+	expect(calls).toHaveLength(0);
+});
+
+it("unticked terms show the terms error and stay on the first step", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Accept the terms to continue");
+	expect(screen.queryByText("Enter your email")).toBeNull();
+	expect(screen.queryByTestId("auth-register-password-input")).toBeNull();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	await waitFor(() =>
+		expect(screen.queryByText("Accept the terms to continue")).toBeNull(),
+	);
+});
+
+it("a named field error updates as the field is fixed", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Enter your first name");
+	fireEvent.change(screen.getByTestId("auth-register-first-name-input"), {
+		target: { value: "Reg" },
+	});
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg" },
+	});
+	await screen.findByText("Enter a valid email address");
+	expect(screen.queryByText("Enter your first name")).toBeNull();
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg@example.com" },
+	});
+	await waitFor(() =>
+		expect(screen.queryByText("Enter a valid email address")).toBeNull(),
+	);
+});
+
+it("a bad email address is named on the field", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Enter a valid email address");
+});
+
+it("Enter moves through the register steps without throwing", async () => {
+	const calls = stubFetch((url) =>
+		url.endsWith("/v2/auth/register")
+			? new Response(null, { status: 204 })
+			: undefined,
+	);
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.submit(screen.getByTestId("auth-register-first-name-input"));
+	const pw = await screen.findByTestId("auth-register-password-input");
+
+	// Enter on an empty password step names the problem and sends nothing.
+	fireEvent.submit(pw);
+	await screen.findByText("Enter a password");
+	expect(calls).toHaveLength(0);
+
+	fireEvent.change(pw, { target: { value: "Abcdefgh1!xyz" } });
+	fireEvent.change(screen.getByTestId("auth-register-confirm-password-input"), {
+		target: { value: "Abcdefgh1!xyz" },
+	});
+	fireEvent.submit(pw);
+	await screen.findByTestId("auth-register-verify-step");
+	expect(calls.filter((c) => c.url.endsWith("/v2/auth/register"))).toHaveLength(
+		1,
+	);
+});
+
 it("a failed registration shows its notice without a second toast", async () => {
 	stubFetch((url) =>
 		url.endsWith("/v2/auth/register")
@@ -255,13 +349,28 @@ it("a reset request confirms on the page instead of the verification screen", as
 	);
 });
 
-it("logging in anyway lands on onboarding with the fresh /v2/me, not the 401 from the held sign-in", async () => {
+const activeDevices = [
+	{
+		browser: "Chrome",
+		id: "laptop-session",
+		lastActiveAt: "2026-10-14T19:00:00.000Z",
+		platform: "Windows",
+	},
+	{
+		browser: "Safari",
+		id: "phone-session",
+		lastActiveAt: "2026-10-14T18:00:00.000Z",
+		platform: "iPhone",
+	},
+];
+
+it("signing out a selected device lands on onboarding with the fresh /v2/me, not the 401 from the held sign-in", async () => {
 	let held = true;
-	stubFetch((url) => {
+	const calls = stubFetch((url) => {
 		if (url.endsWith("/auth/sign-in/email")) return json(200, {});
 		if (url.endsWith("/auth/other-sessions"))
-			return json(200, { held, since: null });
-		if (url.endsWith("/auth/other-sessions/replace")) {
+			return json(200, { devices: activeDevices, held, since: null });
+		if (url.endsWith("/auth/other-sessions/replace-device")) {
 			held = false;
 			return json(200, {});
 		}
@@ -291,8 +400,90 @@ it("logging in anyway lands on onboarding with the fresh /v2/me, not the 401 fro
 		"/login",
 	);
 	logIn("invitee@example.com");
-	fireEvent.click(
-		await screen.findByText("Log in anyway", {}, { timeout: 5000 }),
+	const confirm = await screen.findByTestId(
+		"auth-login-elsewhere-confirm",
+		{},
+		{ timeout: 5000 },
 	);
+	expect((confirm as HTMLButtonElement).disabled).toBe(true);
+	fireEvent.click(confirm);
+	expect(
+		calls.some((call) =>
+			call.url.endsWith("/auth/other-sessions/replace-device"),
+		),
+	).toBe(false);
+	fireEvent.click(screen.getByRole("radio", { name: /Chrome on Windows/ }));
+	fireEvent.click(confirm);
 	await screen.findByText("invited", {}, { timeout: 5000 });
+	expect(
+		calls.find((call) =>
+			call.url.endsWith("/auth/other-sessions/replace-device"),
+		)?.body,
+	).toEqual({ sessionId: "laptop-session" });
+}, 15_000);
+
+it("cancelling a third-device sign-in never asks to replace another device", async () => {
+	const calls = stubFetch((url) => {
+		if (url.endsWith("/auth/sign-in/email")) return json(200, {});
+		if (url.endsWith("/auth/other-sessions"))
+			return json(200, { devices: activeDevices, held: true });
+		if (url.endsWith("/auth/sign-out")) return json(200, {});
+		return undefined;
+	});
+	wrap(<LoginRoute />, "/login");
+	logIn("host@example.com");
+	fireEvent.click(
+		await screen.findByTestId(
+			"auth-login-elsewhere-cancel",
+			{},
+			{ timeout: 5000 },
+		),
+	);
+	await waitFor(() =>
+		expect(calls.some((call) => call.url.endsWith("/auth/sign-out"))).toBe(
+			true,
+		),
+	);
+	expect(
+		calls.filter((call) => call.url.includes("/other-sessions/replace")),
+	).toHaveLength(0);
+	expect(screen.queryByTestId("auth-login-elsewhere")).toBeNull();
+}, 15_000);
+
+it("a stale device choice refreshes the list and requires another explicit selection", async () => {
+	let stale = false;
+	stubFetch((url) => {
+		if (url.endsWith("/auth/sign-in/email")) return json(200, {});
+		if (url.endsWith("/auth/other-sessions"))
+			return json(200, {
+				devices: stale
+					? [
+							{ ...activeDevices[0], id: "new-laptop-session" },
+							activeDevices[1],
+						]
+					: activeDevices,
+				held: true,
+			});
+		if (url.endsWith("/auth/other-sessions/replace-device")) {
+			stale = true;
+			return json(409, {
+				message: "This device is no longer available. Choose again.",
+			});
+		}
+		return undefined;
+	});
+	wrap(<LoginRoute />, "/login");
+	logIn("host@example.com");
+	const confirm = await screen.findByTestId(
+		"auth-login-elsewhere-confirm",
+		{},
+		{ timeout: 5000 },
+	);
+	fireEvent.click(screen.getByRole("radio", { name: /Chrome on Windows/ }));
+	fireEvent.click(confirm);
+	await screen.findByText(
+		"Your active devices changed. Choose a device again.",
+	);
+	expect((confirm as HTMLButtonElement).disabled).toBe(true);
+	expect(screen.getByTestId("auth-login-elsewhere")).toBeTruthy();
 }, 15_000);

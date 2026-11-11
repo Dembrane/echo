@@ -58,7 +58,7 @@ export async function writeFields(
       kind: f.kind,
       label: f.label,
       required: f.required,
-      signerRole: "signer",
+      signerRole: f.role ?? "signer",
       key: f.key,
       sort,
     })),

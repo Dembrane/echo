@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { uploadConversationText } from "@/lib/api";
+
+// A 402 is a limit; retrying it can only repeat the refusal.
+const NO_RETRY_STATUSES = [402, 403, 404, 410];
 
 export const useUploadConversationTextChunk = () => {
 	const queryClient = useQueryClient();
@@ -93,6 +97,13 @@ export const useUploadConversationTextChunk = () => {
 				],
 			});
 		},
-		retry: 10,
+		// A refusal answers the same on every retry: show it at once.
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
+				return false;
+			}
+			return failureCount < 10;
+		},
 	});
 };

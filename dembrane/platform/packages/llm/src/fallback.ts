@@ -16,6 +16,8 @@ import {
 
 export interface Deployment {
   readonly label: string;
+  /** Who bills the calls ("vertex", "openai-compatible"); the model's own provider id when unset. */
+  readonly provider?: string;
   readonly model: LanguageModelV4;
 }
 
@@ -33,6 +35,38 @@ export interface FallbackOptions {
   readonly observe?: ModelCallObserver;
   /** Hears the first fault of the observer or its mapping, once per process. */
   readonly onObserverFault?: (err: unknown) => void;
+}
+
+/** Per-call providerOptions: a refused answer moves on to the next deployment. */
+export const FALL_BACK_ON_REFUSAL = { fallback: { onRefusal: true } };
+
+/**
+ * Per-call providerOptions: each attempt on a deployment is cut after `ms`, except the last
+ * attempt of the last deployment, which gets `finalMs` (default `ms`): nothing is left to fall
+ * back to, so cutting it can only turn a slow answer into a failure. The cut is a TimeoutError,
+ * which is retryable, so it takes the same retry and next-deployment path as any other failure
+ * and is metered as one failed call. Every attempt gets a fresh clock.
+ */
+export function attemptTimeout(ms: number, finalMs: number = ms) {
+  return { fallback: { attemptTimeoutMs: ms, finalAttemptTimeoutMs: finalMs } };
+}
+
+/** Every deployment declined to answer (a content filter or safety stop). */
+export class ModelRefusalError extends Error {
+  override name = "ModelRefusalError";
+  readonly isRetryable = false;
+  constructor(
+    readonly group: string,
+    readonly finishReason: string | null,
+  ) {
+    super(`Every ${group} deployment refused to answer (finish_reason=${finishReason})`);
+  }
+}
+
+class Refused extends Error {
+  constructor(readonly finishReason: string | null) {
+    super(`refused (finish_reason=${finishReason})`);
+  }
 }
 
 const DEFAULTS: FallbackOptions = {
@@ -74,17 +108,35 @@ export class FallbackModel implements LanguageModelV4 {
     observeSafely(this.opts.observe, this.opts.onObserverFault, make);
 
   doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
-    return this.run(async (d, meta) => {
+    const onRefusal = options.providerOptions?.fallback?.onRefusal === true;
+    const bound = (v: unknown) => (typeof v === "number" && v > 0 ? v : null);
+    const limit = bound(options.providerOptions?.fallback?.attemptTimeoutMs);
+    const finalLimit = bound(options.providerOptions?.fallback?.finalAttemptTimeoutMs) ?? limit;
+    return this.run(async (d, meta, last) => {
+      const attemptMs = last ? finalLimit : limit;
       const startedAt = new Date();
       const t0 = performance.now();
       let result: LanguageModelV4GenerateResult;
       try {
-        result = await d.model.doGenerate(options);
+        result = await d.model.doGenerate(
+          attemptMs === null
+            ? options
+            : {
+                ...options,
+                abortSignal: options.abortSignal
+                  ? AbortSignal.any([options.abortSignal, AbortSignal.timeout(attemptMs)])
+                  : AbortSignal.timeout(attemptMs),
+              },
+        );
       } catch (err) {
-        this.report(() => failedCall(meta, "generate", startedAt, t0, err));
+        this.report(() => failedCall(meta, "generate", startedAt, t0, err, options.prompt));
         throw err;
       }
       this.report(() => generateCall(meta, startedAt, t0, result));
+      if (onRefusal && result.finishReason.unified === "content-filter") {
+        const raw = result.finishReason.raw ?? result.finishReason.unified;
+        throw new Refused(String(raw).toLowerCase());
+      }
       return result;
     }, options.abortSignal);
   }
@@ -97,16 +149,19 @@ export class FallbackModel implements LanguageModelV4 {
       try {
         result = await d.model.doStream(options);
       } catch (err) {
-        this.report(() => failedCall(meta, "stream", startedAt, t0, err));
+        this.report(() => failedCall(meta, "stream", startedAt, t0, err, options.prompt));
         throw err;
       }
       if (!this.opts.observe) return result;
-      return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, this.report) };
+      return {
+        ...result,
+        stream: observedStream(result.stream, meta, startedAt, t0, this.report, options.prompt),
+      };
     }, options.abortSignal);
   }
 
   private async run<T>(
-    call: (d: Deployment, meta: CallMeta) => PromiseLike<T>,
+    call: (d: Deployment, meta: CallMeta, last: boolean) => PromiseLike<T>,
     signal?: AbortSignal,
   ): Promise<T> {
     const order = this.healthyFirst();
@@ -117,14 +172,21 @@ export class FallbackModel implements LanguageModelV4 {
         if (signal?.aborted) throw signal.reason ?? new Error("aborted");
         attempts++;
         try {
-          return await call(d, {
-            group: this.group,
-            model: d.model.modelId,
-            attempt: attempts,
-            fallback: i > 0,
-          });
+          return await call(
+            d,
+            {
+              group: this.group,
+              provider: d.provider ?? d.model.provider,
+              model: d.model.modelId,
+              attempt: attempts,
+              fallback: i > 0,
+            },
+            i === order.length - 1 && attempt === this.opts.attemptsPerDeployment - 1,
+          );
         } catch (err) {
           last = err;
+          // The same prompt is refused the same way: no retry here, the next deployment gets it.
+          if (err instanceof Refused) break;
           if (!isRetryable(err)) throw err;
           this.recordFailure(d.label);
           if (attempt + 1 < this.opts.attemptsPerDeployment)
@@ -133,6 +195,7 @@ export class FallbackModel implements LanguageModelV4 {
       }
       this.opts.onFallback?.({ from: d.label, to: order[i + 1]?.label ?? null, error: last });
     }
+    if (last instanceof Refused) throw new ModelRefusalError(this.group, last.finishReason);
     throw last;
   }
 

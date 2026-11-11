@@ -29,6 +29,7 @@ import {
 import {
   ConflictError,
   NotFoundError,
+  PaymentRequiredError,
   PlatformError,
   StatusError,
   UnavailableError,
@@ -58,6 +59,8 @@ export interface MapRoutesDeps {
   readonly embedder: Embedder;
   readonly embeddingModel: string;
   readonly embeddingLocation: string;
+  /** False refuses fact-checks: they need Google Search grounding. Defaults to true. */
+  readonly factCheck?: boolean;
   readonly nodeLimitCeiling: number | null;
   readonly edgeLimitCeiling: number | null;
   /** Wakes the screens outside the Map page that show a project's groups. */
@@ -140,6 +143,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
   const d: service.FactCheckDeps & service.TitleDeps & service.GroupDeps = {
     store,
     rt,
+    db: deps.db,
     cache: new service.TitleCache(),
     modelIdentity: deps.completer.modelIdentity("multi_modal_fast"),
     generate: (lines, projectName, projectContext) =>
@@ -269,6 +273,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
     try {
       row = await service.requestGeneration(d, projectId, who.directusUserId);
     } catch (err) {
+      if (err instanceof PaymentRequiredError) throw err;
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       deps.logger.error(
         { project_id: projectId, err: { name: (err as Error)?.name } },
@@ -413,6 +418,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
     }
     const t = await target(who, c.req.param("result_id"));
     await projectFor(deps.access, who, service.targetProject(t), "project:update");
+    if (deps.factCheck === false) throw new NotFoundError("analysis.feature_disabled");
     await deps.limiter.check(FACT_CHECK_LIMIT, who.directusUserId);
     try {
       return c.json(

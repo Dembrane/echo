@@ -121,6 +121,11 @@ export function bffConversationRoutes(d: ConversationsDeps) {
     return c.json(await svc.listChunks(d, who, c.req.param("conversation_id"), query));
   });
 
+  app.get(`${base}/:conversation_id/final-transcript`, async (c) => {
+    const who = requireUser(c);
+    return c.json(await svc.finalTranscript(d, who, c.req.param("conversation_id")));
+  });
+
   app.get(`${base}/:conversation_id/chunk-count`, async (c) => {
     const who = requireUser(c);
     const { query } = await p.validate(c.req, {

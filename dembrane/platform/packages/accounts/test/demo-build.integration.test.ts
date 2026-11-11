@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { schema } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
 import { eq } from "drizzle-orm";
 import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
@@ -186,7 +186,13 @@ run("demos made in echo", () => {
 
   test("the whole build on a fake model leaves a reviewable draft", async () => {
     const status = K.DemoStatus.parse((await start()).data);
+    takeUnscopedFakeCalls();
     await buildDemo(deps, status.id, 1);
+    // Research and authoring are dembrane's own spend.
+    expect(fakeCalls().map((c) => c.payer)).toEqual([
+      { internal: "demo_build" },
+      { internal: "demo_build" },
+    ]);
     const row = await load(status.id);
     const view = K.DemoStatus.parse(
       (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,

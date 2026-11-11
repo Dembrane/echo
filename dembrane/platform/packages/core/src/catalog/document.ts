@@ -113,6 +113,67 @@ export const document = {
     detail: "{label}: tick or untick",
     description: "A checkbox field got a value that is not true or false.",
   },
+  "document.signed_awaiting": {
+    action: "none",
+    detail: "Your signature is in; the other signature is still to come",
+    description:
+      "A document that asks for more than one signature has every customer signature it asks for; the rest is dembrane's.",
+  },
+  "document.second_signer_same": {
+    action: "none",
+    detail: "You signed already; someone else from your organisation signs second",
+    description:
+      "The first signer of a document that asks for a second signatory tried to sign again.",
+  },
+  "document.second_signer_only": {
+    action: "none",
+    detail: "Only {email} can sign second",
+    description: "Someone other than the second signatory the offer names tried to sign second.",
+  },
+  "document.countersign_not_asked": {
+    action: "none",
+    detail: "This document asks for no counter-signature, or it is in already",
+    audience: "staff",
+    description:
+      "Staff tried to counter-sign a document that does not ask for dembrane's signature, or has it.",
+  },
+  "document.countersign_not_you": {
+    action: "none",
+    detail: "Only {email} can counter-sign this offer",
+    audience: "staff",
+    description:
+      "A staff member other than the one the offer names, or a staff key, tried to counter-sign.",
+  },
+  "document.annex_invalid": {
+    action: "fix_input",
+    detail: "An annex must be a PDF of at most 10 MB",
+    audience: "staff",
+    description: "The file given as an annex is not a readable PDF, or is too large.",
+  },
+  "document.annex_limit": {
+    action: "fix_input",
+    detail: "An offer takes at most {max} annexes",
+    audience: "staff",
+    description: "A draft offer already has the most annexes it can carry.",
+  },
+  "document.annex_not_found": {
+    action: "none",
+    detail: "This offer has no annex {number}",
+    audience: "staff",
+    description: "An annex number that is not on the draft.",
+  },
+  "document.choose_one": {
+    action: "fix_input",
+    detail: "Tick exactly one of the options",
+    description:
+      "An offer that asks the signer to pick one option was signed with none or several ticked.",
+  },
+  "document.option_unknown": {
+    action: "fix_input",
+    detail: "{option} is not one of this offer's options",
+    audience: "staff",
+    description: "An acceptance recorded outside dembrane names an option the offer does not have.",
+  },
   "document.field_must_tick": {
     action: "fix_input",
     detail: "{label} must be ticked",
@@ -127,6 +188,12 @@ export const document = {
     action: "fix_input",
     detail: "{label} is required",
     description: "A required text field is empty.",
+  },
+  "document.field_date_invalid": {
+    action: "fix_input",
+    detail: "{label} must be a real date, not in the future and not before the document was sent",
+    description:
+      "A date field is not a day-month-year date, is in the future, or is before the document was sent.",
   },
   "document.pdf_invalid": {
     action: "fix_input",
@@ -151,6 +218,13 @@ export const document = {
     detail: "A signed document cannot be superseded",
     audience: "staff",
     description: "Signed documents are final; a replacement is a new document.",
+  },
+  "document.already_replaced": {
+    action: "none",
+    detail: "This document was already replaced by another version",
+    audience: "staff",
+    description:
+      "A second revision of an offer another sent version already replaced; revise the newer one.",
   },
   "document.title_required": {
     action: "fix_input",
@@ -194,6 +268,38 @@ export const document = {
     detail: "A signed document cannot be voided",
     audience: "staff",
     description: "Signed documents are final and cannot be withdrawn.",
+  },
+  "document.outside_via_invalid": {
+    action: "fix_input",
+    detail: "A document of this kind cannot be accepted that way",
+    audience: "staff",
+    description:
+      "An offer is accepted outside dembrane by order letter, email or paper; a DPA on paper or as their own document.",
+  },
+  "document.outside_date_invalid": {
+    action: "fix_input",
+    detail: "The acceptance date cannot be in the future or before the document was sent",
+    audience: "staff",
+    description: "The day given for an acceptance outside dembrane falls outside the window.",
+  },
+  "document.evidence_invalid": {
+    action: "fix_input",
+    detail: "The evidence must be a PDF or an email saved as EML",
+    audience: "staff",
+    description:
+      "The evidence file of an acceptance outside dembrane is neither a PDF nor an email.",
+  },
+  "document.no_evidence": {
+    action: "none",
+    detail: "This document has no evidence of an acceptance outside dembrane",
+    audience: "staff",
+    description: "Evidence was asked for a document that was not accepted outside dembrane.",
+  },
+  "document.void_reason_required": {
+    action: "fix_input",
+    detail: "Give a reason to void an acceptance",
+    audience: "staff",
+    description: "Voiding a document accepted outside dembrane needs a reason for the record.",
   },
   "document.not_withdrawn": {
     action: "none",

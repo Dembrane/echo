@@ -1,14 +1,21 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { reply } from "../src/reply";
-import { fakeDeps, fakeModel, host, P1 } from "./fakes";
+import { fakeLanguageModel } from "@dembrane/llm";
+import { fakeDeps, fakeFreeChats, host, P1 } from "./fakes";
+import { reply } from "./scoped";
 
 const CHAT = "c3000000-0000-4000-8000-000000000001";
 const CONV = "c1000000-0000-4000-8000-000000000001";
 
-function world(
-  opts: { name?: string | null; mode?: string | null; tier?: string; turns?: number } = {},
-) {
+type Stored = { message_from: string; text: string | null };
+
+const HISTORY: Stored[] = [
+  { message_from: "user", text: "Earlier question" },
+  { message_from: "assistant", text: "Earlier answer" },
+  { message_from: "dembrane", text: "You added 1 conversation" },
+];
+
+function world(opts: { name?: string | null; mode?: string | null; history?: Stored[] } = {}) {
   const created: Record<string, unknown>[] = [];
   const deleted: string[] = [];
   const named: string[] = [];
@@ -26,33 +33,17 @@ function world(
         { id: 1, conversation_id: { id: CONV, participant_name: "Resident 1", deleted_at: null } },
       ],
     }),
-    countUserTurns: async () => opts.turns ?? 0,
     createMessage: async (v: Record<string, unknown>) => {
       created.push(v);
       return v;
     },
     messages: async () => [
-      {
-        id: "m1",
-        message_from: "user",
-        text: "Earlier question",
+      ...(opts.history ?? HISTORY).map((m, i) => ({
+        id: `m${i + 1}`,
+        ...m,
         tokens_count: 5,
         used_conversations: [],
-      },
-      {
-        id: "m2",
-        message_from: "assistant",
-        text: "Earlier answer",
-        tokens_count: 5,
-        used_conversations: [],
-      },
-      {
-        id: "m3",
-        message_from: "dembrane",
-        text: "You added 1 conversation",
-        tokens_count: 5,
-        used_conversations: [],
-      },
+      })),
       ...created.map((c) => ({
         id: c.id,
         message_from: "user",
@@ -72,7 +63,7 @@ function world(
     },
   };
   const reads = {
-    projectTier: async () => opts.tier ?? "changemaker",
+    projectTier: async () => "changemaker",
     storedTokenCounts: async () => new Map([[CONV, 100]]),
     listByIds: async () => [
       {
@@ -108,8 +99,8 @@ describe("chat reply stream", () => {
       reads: w.reads,
       captured,
       models: {
-        multi_modal_pro: fakeModel({ chunks: ["Char", "ging é"], calls }),
-        multi_modal_fast: fakeModel({ text: "Charging needs" }),
+        multi_modal_pro: fakeLanguageModel({ stream: ["Char", "ging é"], calls }),
+        multi_modal_fast: fakeLanguageModel({ text: "Charging needs" }),
       },
     });
     const res = await reply(
@@ -125,7 +116,9 @@ describe("chat reply stream", () => {
     expect(await body(res)).toBe('0:"Char"\n0:"ging \\u00e9"\n');
     expect(w.created[0]?.text).toBe("What now?");
     expect(w.named).toEqual(["Charging needs"]);
-    expect(w.updated).toContainEqual([w.created[0]?.id as string, { template_key: "t1" }]);
+    // Stored with the admitted turn, not after the model call.
+    expect(w.created[0]?.templateKey).toBe("t1");
+    expect(w.updated).toEqual([]);
     const prompt = calls[0]?.prompt ?? [];
     expect(prompt.slice(0, 3).map((m) => m.role)).toEqual(["system", "system", "system"]);
     const context = JSON.stringify(prompt[2]);
@@ -146,7 +139,7 @@ describe("chat reply stream", () => {
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
-      model: fakeModel({ chunks: ["a", "b"] }),
+      model: fakeLanguageModel({ stream: ["a", "b"] }),
     });
     const res = await reply(
       d,
@@ -164,11 +157,13 @@ describe("chat reply stream", () => {
   test("a failed stream reports the error and removes the host's message", async () => {
     const w = world();
     const captured: unknown[][] = [];
+    const free = fakeFreeChats(w.store);
     const d = fakeDeps({
       store: w.store,
       reads: w.reads,
       captured,
-      model: fakeModel({ failStream: true }),
+      freeChats: free,
+      model: fakeLanguageModel({ fail: Object.assign(new Error("boom"), { isRetryable: false }) }),
     });
     const res = await reply(
       d,
@@ -180,6 +175,9 @@ describe("chat reply stream", () => {
     );
     expect(await body(res)).toBe('3:"An error occurred while processing the chat response."\n');
     expect(w.deleted).toEqual([w.created[0]?.id as string]);
+    expect(free.undone).toHaveLength(1);
+    expect(free.undone[0]?.[0]).toMatchObject({ projectId: P1, chatId: CHAT, text: "Hi" });
+    expect(free.undone[0]?.[1]).toEqual({ inserted: true });
     expect((captured[0] as unknown[])[1]).toBe("server_chat_error");
     const textRes = await reply(
       d,
@@ -196,12 +194,7 @@ describe("chat reply stream", () => {
 
   test("a silent model gets the high-load notice first", async () => {
     const w = world();
-    const slow = fakeModel({ chunks: ["late"] });
-    const inner = slow.doStream.bind(slow);
-    slow.doStream = async (o) => {
-      await Bun.sleep(60);
-      return inner(o);
-    };
+    const slow = fakeLanguageModel({ stream: ["late"], delayMs: 60 });
     const d = { ...fakeDeps({ store: w.store, reads: w.reads, model: slow }), highLoadDelayMs: 10 };
     const res = await reply(
       d,
@@ -218,7 +211,7 @@ describe("chat reply stream", () => {
 
   test("the host stopping the reply keeps their message", async () => {
     const w = world();
-    const slow = fakeModel({ chunks: ["a", "b", "c", "d"] });
+    const slow = fakeLanguageModel({ stream: ["a", "b", "c", "d"] });
     const inner = slow.doStream.bind(slow);
     slow.doStream = async (o) => {
       const r = await inner(o);
@@ -248,7 +241,69 @@ describe("chat reply stream", () => {
     expect(captured.map((c) => c[1])).not.toContain("server_chat_error");
   });
 
-  test("agentic chats and spent free-tier turns are refused before anything is stored", async () => {
+  test("a stored empty answer is left out of the history, so the chat keeps answering", async () => {
+    const w = world({
+      history: [
+        { message_from: "user", text: "Earlier question" },
+        { message_from: "assistant", text: "" },
+        { message_from: "user", text: "Asked again" },
+        { message_from: "assistant", text: "  " },
+      ],
+    });
+    // Vertex refuses a turn with no text in it (400 INVALID_ARGUMENT).
+    const calls: LanguageModelV4CallOptions[] = [];
+    const strict = fakeLanguageModel({ stream: ["Fine"], calls });
+    const inner = strict.doStream.bind(strict);
+    strict.doStream = async (o) => {
+      const blank = o.prompt.some(
+        (m) =>
+          m.role !== "system" && !m.content.some((p) => p.type === "text" && p.text.trim() !== ""),
+      );
+      if (blank)
+        throw Object.assign(new Error("contents.parts must not be empty"), { isRetryable: false });
+      return inner(o);
+    };
+    const d = fakeDeps({ store: w.store, reads: w.reads, model: strict });
+    const res = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "What now?" }], template_key: null },
+      "data",
+      "en",
+    );
+    expect(await body(res)).toBe('0:"Fine"\n');
+    expect(w.deleted).toEqual([]);
+    const turns = (calls[0]?.prompt ?? []).filter((m) => m.role !== "system");
+    expect(turns.map((m) => m.role)).toEqual(["user", "user", "user"]);
+  });
+
+  test("a reply with no text fails the turn instead of handing back an empty answer", async () => {
+    const w = world();
+    const captured: unknown[][] = [];
+    const d = fakeDeps({
+      store: w.store,
+      reads: w.reads,
+      captured,
+      model: fakeLanguageModel({ stream: [] }),
+    });
+    const res = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "Hi" }], template_key: null },
+      "data",
+      "en",
+    );
+    // A code, so the dashboard can ask the host to reword instead of showing a generic error.
+    expect(await body(res)).toBe('3:"chat.no_answer"\n');
+    expect(w.deleted).toEqual([w.created[0]?.id as string]);
+    expect(captured).toHaveLength(1);
+    expect(captured[0]?.[1]).toBe("server_chat_error");
+    expect(captured[0]?.[2]).toMatchObject({ error_code: "NO_ANSWER" });
+  });
+
+  test("agentic chats are refused before anything is stored", async () => {
     const agentic = world({ mode: "agentic" });
     await expect(
       reply(
@@ -260,20 +315,31 @@ describe("chat reply stream", () => {
         "en",
       ),
     ).rejects.toThrow("Agentic chats must use /api/agentic endpoints");
-    const free = world({ tier: "free", turns: 3 });
-    await expect(
-      reply(
-        fakeDeps({ store: free.store, reads: free.reads }),
-        host,
-        CHAT,
-        { messages: [{ role: "user", content: "x" }], template_key: null },
-        "data",
-        "en",
-      ),
-    ).rejects.toMatchObject({
-      status: 402,
-      details: { error: "FREE_TIER_LIMIT", limit: "chat_turns" },
+    expect(agentic.created.length).toBe(0);
+  });
+
+  test("a used-up AI budget is refused before anything is stored", async () => {
+    const w = world();
+    const calls: LanguageModelV4CallOptions[] = [];
+    const d = fakeDeps({
+      store: w.store,
+      reads: w.reads,
+      freeChats: fakeFreeChats(w.store, { refuse: "ai_budget" }),
+      model: fakeLanguageModel({ calls }),
     });
-    expect(agentic.created.length + free.created.length).toBe(0);
+    const err = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "x" }], template_key: null },
+      "data",
+      "en",
+    ).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
+    expect(w.created).toHaveLength(0);
+    expect(calls).toHaveLength(0);
   });
 });

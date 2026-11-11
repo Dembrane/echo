@@ -21,7 +21,7 @@ const RECOVERABLE_KINDS = new Set<VoiceErrorKind>([
 	"empty",
 ]);
 
-const messageFor = (kind: VoiceErrorKind): string => {
+export const voiceErrorMessage = (kind: VoiceErrorKind): string => {
 	switch (kind) {
 		case "permission":
 			return t`Your browser is blocking the microphone. Allow access, then try again.`;
@@ -39,6 +39,8 @@ const messageFor = (kind: VoiceErrorKind): string => {
 			return t`You do not have permission to transcribe in this project.`;
 		case "not_found":
 			return t`This project could not be reached.`;
+		case "free_limit":
+			return t`This month's AI is used up.`;
 		case "transcription_failed":
 			return t`The transcription did not finish. Try again.`;
 		case "network":
@@ -75,7 +77,7 @@ export const VoiceInputError = ({
 			withCloseButton
 			{...testId("chat-voice-error")}
 		>
-			<Text size="sm">{messageFor(kind)}</Text>
+			<Text size="sm">{voiceErrorMessage(kind)}</Text>
 			{kind === "permission" && (
 				<Group gap="xs" mt="xs">
 					<Button

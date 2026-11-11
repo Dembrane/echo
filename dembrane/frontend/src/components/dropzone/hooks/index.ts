@@ -1,9 +1,21 @@
+import { i18n } from "@lingui/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
-import { initiateAndUploadConversationChunk } from "@/lib/api";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
+import {
+	initiateAndUploadConversationChunk,
+	UploadFailedError,
+} from "@/lib/api";
+import { loadErrorMessages, presentErrorNow } from "@/lib/errors/present";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
+import { uploadRefusalMessage } from "@/lib/uploadPrecheck";
+
+// A failed file's words: the free-limit refusal, else the presented error, never raw text.
+const failedFileMessage = (err: Error, resetsAt: string | null) =>
+	uploadRefusalMessage(err, resetsAt) ?? presentErrorNow(err, i18n).message;
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -21,12 +33,25 @@ export const useUploadConversation = () => {
 			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => initiateAndUploadConversationChunk(payload),
 		onError: (error) => {
+			// The upload already toasted which files failed.
+			if (error instanceof UploadFailedError) return;
 			void notifyError(error);
 		},
 		onMutate: () => {
 			// When the mutation starts, cancel any in-progress queries
 			// to prevent them from overwriting our optimistic update
 			queryClient.cancelQueries({ queryKey: ["conversations"] });
+		},
+		// Uploads spend (or reserve) free audio, whether or not they finish.
+		onSettled: () => {
+			void queryClient.invalidateQueries({
+				predicate: ({ queryKey }) =>
+					queryKey[0] === "workspace" && queryKey[2] === "free-allowance",
+			});
+			void queryClient.invalidateQueries({
+				predicate: ({ queryKey }) =>
+					queryKey[0] === "project" && queryKey[2] === "recording",
+			});
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -38,7 +63,9 @@ export const useUploadConversation = () => {
 			invalidateConversationCounts(queryClient);
 			toast.success("Conversation(s) uploaded successfully");
 		},
-		retry: 3, // Reduced retry count to avoid too many duplicate attempts
+		// A retry would re-run the whole upload and create new conversations.
+		// Each file already retries its storage upload inside.
+		retry: false,
 	});
 };
 
@@ -50,6 +77,10 @@ export const useConversationUploader = () => {
 	);
 	const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
 	const uploadMutation = useUploadConversation();
+	// The AI budget refusal carries no date; the cached allowance names the reset day.
+	const { workspaceId } = useParams();
+	const { data: allowance } = useFreeAllowance(workspaceId);
+	const resetsAt = allowance?.resets_at ?? null;
 	// Use a ref to track if we've completed the upload to avoid multiple state updates
 	const hasCompletedRef = useRef(false);
 	// Use refs to track previous state to avoid unnecessary updates
@@ -176,16 +207,40 @@ export const useConversationUploader = () => {
 			// Update refs first
 			const newErrors = { ...errorsRef.current };
 			const errorMessage = uploadMutation.error?.message || "Upload failed";
+			const uploadError = uploadMutation.error;
 
-			fileNames.forEach((key) => {
-				newErrors[key] = errorMessage;
-			});
+			if (uploadError instanceof UploadFailedError) {
+				// Only the failed files are in error; the others did finish.
+				const completed = { ...progressRef.current };
+				const failedNames = new Set(uploadError.failed.map((f) => f.name));
+				uploadError.failed.forEach((f) => {
+					newErrors[f.name] = failedFileMessage(f.error, resetsAt);
+				});
+				// Re-present once the error messages have loaded.
+				void loadErrorMessages(i18n).then(() => {
+					if (errorsRef.current !== newErrors) return;
+					const loaded = { ...newErrors };
+					for (const f of uploadError.failed)
+						loaded[f.name] = failedFileMessage(f.error, resetsAt);
+					errorsRef.current = loaded;
+					setUploadErrors(loaded);
+				});
+				fileNames.forEach((key) => {
+					if (!failedNames.has(key)) completed[key] = 100;
+				});
+				progressRef.current = completed;
+				setUploadProgress(completed);
+			} else {
+				fileNames.forEach((key) => {
+					newErrors[key] = errorMessage;
+				});
+			}
 			errorsRef.current = newErrors;
 
 			// Then update state - do this once rather than per file
 			setUploadErrors(newErrors);
 		}
-	}, [uploadMutation.isError, isUploading, uploadMutation.error]);
+	}, [uploadMutation.isError, isUploading, uploadMutation.error, resetsAt]);
 
 	return {
 		error: uploadMutation.error,

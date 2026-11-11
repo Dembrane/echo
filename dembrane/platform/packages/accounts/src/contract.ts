@@ -52,6 +52,8 @@ export const DealStage = z.enum([
 export const Language = z.enum(["en", "nl"]);
 /** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
 export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
+/** What a subscription offer's quantity counts: seats (default) or months of a flat price. */
+export const BillingUnit = z.enum(["seat", "month"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -80,7 +82,15 @@ export const FieldKind = z.enum([
   "text",
   "checkbox",
 ]);
-export const SignatureMethod = z.enum(["drawn", "typed", "uploaded"]);
+/** How a signature image was made on the signing screen. */
+export const SignatureImageMethod = z.enum(["drawn", "typed", "uploaded"]);
+/** `outside`: accepted outside dembrane and recorded by staff, with no signature image. */
+export const SignatureMethod = z.enum(["drawn", "typed", "uploaded", "outside"]);
+/**
+ * How a customer accepted outside dembrane: an offer by their own order letter or purchase
+ * order, by email, or by signing it on paper; a DPA on paper or as their own agreement.
+ */
+export const OutsideVia = z.enum(["order_letter", "email", "paper", "own_document"]);
 
 export const Issue = z.object({
   type: z.string(),
@@ -147,6 +157,8 @@ export const DocumentSummary = z.object({
   file_url: z.string().nullable(),
   /** The signed PDF (values and signature stamped on, audit page appended), once signed. */
   signed_pdf_url: z.string().nullable(),
+  /** Accepted outside dembrane rather than signed here: how, and the day the customer accepted. */
+  accepted_outside: z.object({ via: OutsideVia, accepted_on: IsoDate }).nullable(),
   /** Invoices only. */
   invoice: InvoiceInfo.optional(),
 });
@@ -170,15 +182,88 @@ export const OfferItem = z.object({
   description: text(500),
   /** Bulleted lines under the description, as on the offer templates. */
   bullets: z.array(text(300)).max(20).default([]),
-  quantity: z.number().int().min(1),
+  /**
+   * Above zero, with at most two decimals (1.5 days, 0.25 hours). The amount is quantity
+   * times unit price, rounded to the cent half up.
+   */
+  quantity: z
+    .number()
+    .positive()
+    .max(1_000_000)
+    .refine((q) => Math.abs(q * 100 - Math.round(q * 100)) < 1e-6, "At most two decimals"),
+  /** What the quantity counts, printed next to it: "months" gives "12 months". */
+  unit: z.string().trim().max(30).optional(),
   unit_price_cents: Cents,
   vat_rate_bps: z.number().int(),
+  /**
+   * Left out, the line is charged. `optional`: shown with its price apart under the totals,
+   * counted nowhere (the customer who wants it gets a revised offer). `included`: shown at
+   * no charge with no price (`unit_price_cents` 0), counted nowhere. Totals, the invoice
+   * request and the rule that an offer totals more than zero count charged lines only.
+   */
+  kind: z.enum(["optional", "included"]).optional(),
+  /**
+   * The heading this line sits under ("Co-development"). Give every line one, or none;
+   * a section's lines sit together, and the offer prints each heading once, over its
+   * lines, with their subtotal under them.
+   */
+  section: z.string().trim().min(1).max(120).optional(),
+  /**
+   * Optional lines only: the name of an option the customer may tick when they sign
+   * ("Scenario A"). Lines with the same name are one option, chosen together; a chosen
+   * option's lines are charged. The offer's `choose` says whether one or any are picked.
+   */
+  option: z.string().trim().min(1).max(60).optional(),
 });
+
+/**
+ * The words of an offer staff and sam may change, in the offer's language. A template gives
+ * them to every new draft; each draft can then change them for its customer alone.
+ */
+export const OfferText = z.object({
+  /** Above the customer's name, and the document's name with its number: "Offer". */
+  kind: text(60),
+  /** The word before the person's name: "Hi", "Dear", "Beste". */
+  greeting: text(40),
+  /** Paragraphs separated by a blank line; one starting with "## " is a heading. */
+  intro: z.string().trim().max(4000),
+  /** One line each; an empty line leaves space above the next ("Best regards,"). */
+  closing: z.string().trim().max(500),
+  /** The table's heads: description, quantity, unit price, amount. */
+  columns: z.tuple([text(40), text(40), text(40), text(40)]),
+});
+/** Only the words that change; the rest stay as they are. */
+export const OfferTextChange = OfferText.partial();
+
+export const OfferTemplateText = OfferText.extend({
+  /** Days an offer stays valid from its date. */
+  valid_days: z.number().int().min(1).max(365),
+});
+
+/** A template's words now: the staff's, or the built-in ones while nobody changed them. */
+export const OfferTemplateView = OfferTemplateText.extend({
+  template: OfferTemplate,
+  language: Language,
+  /** False while these are the built-in words. */
+  changed: z.boolean(),
+  updated_at: IsoTime.nullable(),
+});
+export const OfferTemplateList = z.object({ templates: z.array(OfferTemplateView) });
+/**
+ * PUT .../offer-templates/:template/:language: the words to change; the rest stay. New drafts
+ * of that template take them; drafts already made keep theirs.
+ */
+export const OfferTemplateChange = OfferTemplateText.partial();
 
 export const PricedLine = OfferItem.extend({
   net_cents: z.number().int(),
   vat_cents: z.number().int(),
   total_cents: z.number().int(),
+  /**
+   * After signing, on a line of an option: whether the customer chose it. A chosen line has
+   * no `kind` any more and counts in the totals; one not chosen stays optional.
+   */
+  chosen: z.boolean().optional(),
 });
 
 /**
@@ -192,6 +277,89 @@ export const OfferAmendment = z.object({
   /** The term itself; a blank line separates paragraphs. */
   body: text(4000),
 });
+
+/**
+ * Who is invoiced when it is not the customer: an agency, a sponsor, the customer's other
+ * entity. As the offer stores it: the VAT number cleaned, empty values null.
+ */
+export const BillTo = z.object({
+  name: z.string(),
+  address: z.string(),
+  postal_code: z.string().nullable(),
+  city: z.string(),
+  /** ISO 3166-1 alpha-2. */
+  country_code: z.string(),
+  vat_id: z.string().nullable(),
+  email: z.string(),
+  /** Their own reference for the invoice: a PO, project code or cost centre. */
+  reference: z.string().nullable(),
+});
+
+/**
+ * How an offer is invoiced when not all at once: `monthly` in equal parts, the first on
+ * signing and each next one on the 1st of the following calendar month; `instalments` each
+ * on signing (the first only) or on a date, with a share of the total in basis points that
+ * add up to 10000. The last part takes the cents left by rounding.
+ */
+/**
+ * Who signs a field: `signer`, the customer (every document); `second`, a second signatory of
+ * the customer; `dembrane`, our counter-signature. The last two only on offers that ask.
+ */
+export const SignerRole = z.enum(["signer", "second", "dembrane"]);
+/** Whose signature a row is, on a document that asks for more than one. */
+export const SignatureSlot = z.enum(["customer", "second", "dembrane"]);
+
+/**
+ * A second signature an offer asks for: another signatory of the customer (named, or any
+ * other member who may sign), or dembrane's counter-signature by the staff member named.
+ */
+export const SecondSigner = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("customer"),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+  }),
+  z.object({
+    kind: z.literal("dembrane"),
+    name: z.string(),
+    email: z.string(),
+    role: z.string().nullable(),
+  }),
+]);
+
+/** Who signs an offer and its DPA for dembrane when it is sent: a staff member. */
+export const DembraneSigner = z.object({
+  name: z.string(),
+  role: z.string().nullable(),
+  email: z.string(),
+});
+
+/** A PDF attached to an offer, listed in its clause and part of the PDF the customer signs. */
+export const OfferAnnex = z.object({
+  /** From 1, as the clause and the annex's pages name it. */
+  number: z.number().int(),
+  name: z.string(),
+  pages: z.number().int(),
+  sha256: z.string(),
+  bytes: z.number().int(),
+});
+
+export const InvoicePlan = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("monthly"), parts: z.number().int().min(2).max(24) }),
+  z.object({
+    kind: z.literal("instalments"),
+    parts: z
+      .array(
+        z.object({
+          /** "signing", or the ISO date the part falls due. */
+          on: z.union([z.literal("signing"), IsoDate]),
+          share_bps: z.number().int().min(1).max(10_000),
+        }),
+      )
+      .min(2)
+      .max(12),
+  }),
+]);
 
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
@@ -207,18 +375,63 @@ export const OfferContent = z.object({
   company: Company,
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
+  /** The offer's own words; absent on offers drafted before they were data. */
+  text: OfferText.optional(),
   vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Subscription offers: what the quantity counts. Absent means seats. */
+  billing_unit: BillingUnit.optional(),
   /** Custom offers: numbered terms that take precedence over the standard documents. */
   amendments: z.array(OfferAmendment).optional(),
   /** True when the DPA is its own document; absent on offers made before that. */
   dpa_separate: z.boolean().optional(),
+  /** The customer's own terms for data processing, named in place of our DPA. */
+  processing_terms: z.string().optional(),
+  /** The customer's PO or reference for this offer, printed beside ours. */
+  customer_reference: z.string().optional(),
+  /** Who is invoiced in place of the customer, printed as "Invoiced to". */
+  bill_to: BillTo.optional(),
+  /** How the offer is invoiced when not all at once, printed as "How we invoice". */
+  invoice_plan: InvoicePlan.optional(),
+  /** True for an offer of zero staff chose on purpose: it is signed, never invoiced. */
+  no_charge: z.literal(true).optional(),
+  /** With options on its lines: the customer ticks exactly one, or any, when signing. */
+  choose: z.enum(["any", "one"]).optional(),
+  /** A second signature the offer asks for; accepted once every signature is in. */
+  second_signer: SecondSigner.optional(),
+  /** PDFs attached to the offer, in order: in its clause, its hash and the signed PDF. */
+  annexes: z.array(OfferAnnex).optional(),
+  /**
+   * Who signs for dembrane when it is sent, as staff chose; absent takes the configured
+   * signatory then. They sign the DPA always, and the offer when `dembrane_signs_offer`.
+   */
+  dembrane_signer: DembraneSigner.optional(),
+  /** Staff chose that dembrane signs the offer itself when it is sent; absent: it does not. */
+  dembrane_signs_offer: z.literal(true).optional(),
+  /**
+   * dembrane's signature, applied when the offer was sent and printed under the customer's
+   * blanks; absent on a draft and on offers sent before dembrane signed what it sends.
+   */
+  dembrane_signature: z
+    .object({
+      name: z.string(),
+      role: z.string().nullable(),
+      email: z.string(),
+      signed_at: IsoTime,
+    })
+    .optional(),
 });
 
 export const LegalPin = z.object({
   kind: LegalKind,
   version: z.string(),
   effective_on: IsoDate.nullable(),
+  /** The page on dembrane.com, which shows the current version. */
   url: z.string(),
+  /**
+   * The text as this document pinned it (the version and hash named here), served by the
+   * API to the people who may read the document; null where no such route exists (staff).
+   */
+  text_url: z.string().nullable(),
   sha256: z.string(),
 });
 
@@ -240,8 +453,8 @@ export const DocumentFieldInput = z.object({
   kind: FieldKind,
   label: text(120),
   required: z.boolean().default(true),
-  /** Who fills it; one signer per document today, so always "signer". */
-  signer_role: z.literal("signer").default("signer"),
+  /** Who fills it: the customer's signer, unless an offer asks for a second signature. */
+  signer_role: SignerRole.default("signer"),
   key: optText(64),
 });
 export const DocumentField = DocumentFieldInput.extend({
@@ -263,10 +476,24 @@ export const Signature = z.object({
   /** SHA-256 of the unsigned PDF that was signed. */
   sha256: z.string(),
   method: SignatureMethod,
-  /** SHA-256 of the signature image. */
-  image_sha256: z.string(),
+  /** SHA-256 of the signature image; null when accepted outside dembrane. */
+  image_sha256: z.string().nullable(),
   /** The field values as submitted, by field id. */
   values: z.record(z.string(), z.union([z.string(), z.boolean()])),
+  /**
+   * Null for a signature made here. Accepted outside dembrane: how, the day, their reference,
+   * and the evidence file staff recorded with it (`evidence_url` for staff only).
+   */
+  outside: z
+    .object({
+      via: OutsideVia,
+      accepted_on: IsoDate,
+      customer_reference: z.string().nullable(),
+      evidence_name: z.string(),
+      evidence_sha256: z.string(),
+      evidence_url: z.string().nullable(),
+    })
+    .nullable(),
 });
 
 export const DocumentDetail = DocumentSummary.extend({
@@ -291,11 +518,32 @@ export const DocumentDetail = DocumentSummary.extend({
     .object({ dpa_authorised: z.string(), dpa_not_authorised: z.string().nullable() })
     .nullable(),
   signature: Signature.nullable(),
+  /** Every signature made so far, in order: one on most documents. */
+  signatures: z.array(
+    z.object({
+      slot: SignatureSlot,
+      name: z.string(),
+      role: z.string().nullable(),
+      email: z.string(),
+      signed_at: IsoTime,
+    }),
+  ),
+  /**
+   * The signatures still to come on a sent document that asks for more than one, in the
+   * order they are asked for; empty once all are in, or on a document that asks for one.
+   */
+  awaiting_signatures: z.array(SignatureSlot),
   /**
    * What the signing screen fills in for the `organisation` and `address` text fields: the
-   * billed name (else the organisation's) and the billing address, null when unknown.
+   * billed name (else the organisation's) and the billing address, null when unknown; and
+   * for the `po_number` field the reference the offer carries, never the billing PO, which
+   * may belong to another order.
    */
-  prefill: z.object({ organisation: z.string().nullable(), address: z.string().nullable() }),
+  prefill: z.object({
+    organisation: z.string().nullable(),
+    address: z.string().nullable(),
+    po_number: z.string().nullable(),
+  }),
   /** How the caller reaches it: as a member, as the named signer, or as staff. */
   access: z.enum(["member", "signer", "staff"]),
   /**
@@ -455,6 +703,8 @@ export const TimelineEvent = z.object({
   type: z.string(),
   actor: z.enum(["customer", "staff", "system"]),
   actor_user_id: Uuid.nullable(),
+  /** The staff member's display name, on staff rows of the staff card; null otherwise. */
+  actor_name: z.string().nullable(),
   subject_type: z.string().nullable(),
   subject_id: z.string().nullable(),
   detail: z.unknown().nullable(),
@@ -480,7 +730,7 @@ export const ViewResponse = z.object({ status: DocumentStatus });
 /** A PNG, base64 without the data: prefix, at most 512 KB decoded. */
 export const SignatureImage = z.object({
   png_base64: z.string().min(100).max(700_000),
-  method: SignatureMethod,
+  method: SignatureImageMethod,
 });
 
 export const SignRequest = z.object({
@@ -618,10 +868,23 @@ export const SigningRequests = z.array(
 export const AccountListQuery = z.object({
   /** A stage, or `none` for organisations that are not managed as accounts yet. */
   stage: nullish(z.enum(["prospect", "customer", "churned", "none"])),
+  /** Only accounts whose deal stands at this stage. */
+  deal_stage: nullish(DealStage),
   /** Part of the organisation's name or of a member's email address. */
   q: optText(200),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
+});
+
+/** When the deal reached each step of its stage, as the list and the card show them. */
+export const DealMilestones = z.object({
+  offer_drafted: IsoTime.nullable(),
+  offer_sent: IsoTime.nullable(),
+  signed: IsoTime.nullable(),
+  billing_details: IsoTime.nullable(),
+  /** Every other document that goes with the offer is signed, such as its separate DPA. */
+  documents_signed: IsoTime.nullable(),
+  invoice_sent: IsoTime.nullable(),
 });
 
 export const AccountListItem = z.object({
@@ -629,6 +892,7 @@ export const AccountListItem = z.object({
   name: z.string(),
   stage: AccountStage.nullable(),
   deal_stage: DealStage.nullable(),
+  milestones: DealMilestones,
   created_at: IsoTime.nullable(),
   /** Waiting on the customer. */
   open_tasks: z.number().int(),
@@ -669,6 +933,7 @@ export const AccountCard = z.object({
   organisation: OrganisationRef.extend({
     created_at: IsoTime.nullable(),
     deal_stage: DealStage.nullable(),
+    milestones: DealMilestones,
   }),
   account_manager: z
     .object({ id: Uuid, email: z.string().nullable(), name: z.string().nullable() })
@@ -705,6 +970,8 @@ export const AccountCard = z.object({
   tasks: z.array(Task),
   tickets: z.array(Ticket),
   timeline: z.array(TimelineEvent),
+  /** Who signs a new offer for dembrane unless staff choose another; null: nobody set. */
+  dembrane_signer: DembraneSigner.nullable(),
 });
 
 /** The `prospect` block of POST /api/v2/admin/popcorn/demos. */
@@ -750,9 +1017,17 @@ export const PushOfferRequest = z.object({
   reference: optText(64),
   title: optText(255),
   currency: Currency.default("EUR"),
-  /** The offer date; today when absent. Valid for 14 days from it. */
+  /** The offer date; today when absent. Valid for `valid_days` from it. */
   date: nullish(IsoDate),
   items: z.array(OfferItem).min(1).max(50),
+  /**
+   * The offer's own words over its template's (GET .../offer-templates): give only what
+   * differs. On a change, absent keeps the draft's words, a field changes that one, and null
+   * goes back to the template's. Changing the template without words takes the new one's.
+   */
+  text: OfferTextChange.nullable().optional(),
+  /** Days the offer stays valid; the template's (14) when absent. On a change, absent keeps the draft's. */
+  valid_days: z.number().int().min(1).max(365).nullable().optional(),
   /**
    * Dutch VAT on the lines (default), reverse-charged within the EU, or none outside it.
    * The last two take only 0% lines, and the offer says why there is no VAT.
@@ -763,9 +1038,119 @@ export const PushOfferRequest = z.object({
    * the agreement, and takes precedence over them where they differ.
    */
   amendments: z.array(OfferAmendment).max(10).default([]),
+  /**
+   * The customer's own terms for data processing, in the offer's language, listed among the
+   * documents that form the agreement in place of our DPA ("'GIBIT 2025 standaard' voor
+   * verwerking ..."). The customer then signs the offer only: no DPA of its own is sent and
+   * nobody is asked who signs it. On a change, absent keeps the draft's line and null drops it.
+   */
+  processing_terms: z.string().trim().max(500).nullable().optional(),
+  /**
+   * The customer's purchase order or reference for this offer ("PO 4500135224"), printed
+   * beside ours and asked again, filled in, when they sign; what they sign goes on the
+   * invoice, before the PO in the organisation's billing details. On a change, absent keeps
+   * the draft's and null drops it.
+   */
+  customer_reference: z.string().trim().max(64).nullable().optional(),
+  /**
+   * Who is invoiced when it is not the customer (an agency, a sponsor, a shared service
+   * centre): printed on the offer as "Invoiced to", and carried by the invoice request as its
+   * `billing` in place of the customer's details, which it then does not wait for. The VAT
+   * treatment is judged on this party: one that contradicts its country answers 422
+   * `offer.bill_to_*`. Its `reference` goes on the invoice before any other. On a change,
+   * absent keeps the draft's and null drops it.
+   */
+  bill_to: z
+    .object({
+      name: text(200),
+      address: text(200),
+      postal_code: optText(20),
+      city: text(100),
+      /** ISO 3166-1 alpha-2. */
+      country_code: z.string().trim().length(2),
+      /** Absent: they have none. Cleaned and checked against the country's format. */
+      vat_id: optText(32),
+      email: z.email().max(255),
+      reference: optText(64),
+    })
+    .nullable()
+    .optional(),
+  /**
+   * How the offer is invoiced when not all at once (absent or null: at once). Printed as
+   * "How we invoice". After signing echo asks for one invoice per part when it falls due,
+   * each request saying which part it is. Parts need one VAT rate on the charged lines. On
+   * a change, absent keeps the draft's and null drops it.
+   */
+  invoice_plan: InvoicePlan.nullable().optional(),
+  /**
+   * An offer of zero on purpose (a free pilot, a scholarship, an agreement with no price):
+   * lines may be 0 and the total must be exactly 0. It is sent and signed as any offer,
+   * asks the customer for no billing details and never produces an invoice request. Without
+   * it a total of zero answers 422 `offer.zero_total`. On a change, absent keeps the draft's.
+   */
+  no_charge: z.boolean().optional(),
+  /**
+   * With options on optional lines (`items[].option`): `one` (the customer ticks exactly one
+   * when signing, as between two scenarios) or `any` (none, some or all; the default). The
+   * ticks are fields of the PDF, recorded with the signature and stamped on the signed copy;
+   * the chosen lines become charged and the document's totals and the invoice request follow.
+   * With `one`, every choice must make an offer above zero. Not with an invoice plan or
+   * `no_charge`. On a change, absent keeps the draft's.
+   */
+  choose: z.enum(["any", "one"]).optional(),
+  /**
+   * A second signature: `customer`, another signatory of theirs (name and email when known;
+   * without an email any other member who may sign), or `dembrane`, our counter-signature by
+   * the staff member named, who signs from the staff page. The offer is accepted, and its
+   * tasks and invoice follow, once every signature is in; each is its own record. On a
+   * change, absent keeps the draft's and null drops it.
+   */
+  second_signer: z
+    .discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("customer"),
+        name: optText(200),
+        email: z
+          .email()
+          .max(255)
+          .nullish()
+          .transform((v) => v ?? null),
+      }),
+      z.object({
+        kind: z.literal("dembrane"),
+        name: text(200),
+        email: z.email().max(255),
+        role: optText(200),
+      }),
+    ])
+    .nullable()
+    .optional(),
+  /**
+   * Who signs the DPA the offer sends for dembrane, and the offer too when
+   * `dembrane_signs_offer`: a staff member, printed with name and role. Absent or null takes
+   * the configured signatory at sending. On a change, absent keeps the draft's and null drops it.
+   */
+  dembrane_signer: z
+    .object({ name: text(200), email: z.email().max(255), role: optText(200) })
+    .nullable()
+    .optional(),
+  /**
+   * True: dembrane signs the offer itself when it is sent, so the customer's signature
+   * completes it. Absent or false: only the customer signs the offer (the DPA is always
+   * signed by dembrane). On a change, absent keeps the draft's.
+   */
+  dembrane_signs_offer: z.boolean().optional(),
+  /**
+   * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
+   * is seats; `month` prices per month and the quantity is months, with no mention of seats.
+   */
+  billing_unit: BillingUnit.optional(),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
-  /** An unsigned offer this one replaces; it is voided. */
+  /**
+   * An unsigned offer this one replaces; it is voided when this one is sent. A draft leaves
+   * it with the customer until then, and its send answers 409 if that offer was signed.
+   */
   supersedes_id: nullish(Uuid),
   /**
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
@@ -786,10 +1171,13 @@ export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task
 
 /**
  * PUT .../offers/:docId replaces what a draft offer says, in place: the document id, its
- * reference and its staff page stay. `reference`, `date` and `external_ref` keep the
- * draft's value when absent. A sent offer answers 409.
+ * reference and its staff page stay. `reference`, `date`, `external_ref`, `currency` and a
+ * title of its own keep the draft's value when absent. A sent offer answers 409.
  */
-export const UpdateOfferRequest = PushOfferRequest.omit({ send: true, supersedes_id: true });
+export const UpdateOfferRequest = PushOfferRequest.omit({
+  send: true,
+  supersedes_id: true,
+}).extend({ currency: Currency.optional() });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),
@@ -815,7 +1203,47 @@ export const PushDocumentRequest = z.object({
 });
 export const PushDocumentResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
 
+/**
+ * POST .../offers/:docId/annexes: a PDF attached to a draft offer, at most 10 MB, 5 per
+ * offer. It is listed in the offer's clause by its name and pages, follows the offer's pages
+ * in the PDF the customer reads and signs, and is part of the hash fixed when it is sent.
+ */
+export const AddAnnexRequest = z.object({
+  name: text(120),
+  pdf_base64: z.string().min(1).max(14_000_000),
+});
+
+/**
+ * POST .../documents/:docId/countersign: dembrane's counter-signature of an offer that asks
+ * for it, by the staff member it names, signed in as themselves (a staff key cannot). The
+ * date is today; name and role are the offer's.
+ */
+export const CountersignRequest = z.object({ signature: SignatureImage });
+
+/** A reason is optional, except to void a document accepted outside dembrane. */
 export const VoidRequest = z.object({ reason: optText(2000) });
+
+/**
+ * Staff record that the customer accepted a sent offer or DPA outside dembrane: their order
+ * letter or purchase order, an email, a signature on paper, or (a DPA) their own agreement
+ * signed. It has the effects of a signature made here, and is undone only by voiding the
+ * document with a reason. `accepted_on` is the day their letter, email or signature gives:
+ * not in the future, not before the document was sent. The evidence is a PDF or the email
+ * saved as EML, at most 10 MB. `customer_reference` (offers) is their PO or reference, which
+ * goes on the invoice before the one the offer carried.
+ */
+export const AcceptOutsideRequest = z.object({
+  via: OutsideVia,
+  name: text(200),
+  role: optText(200),
+  email: z.email().max(255),
+  accepted_on: IsoDate,
+  customer_reference: optText(64),
+  /** An offer with options: the names of those the customer chose (`one`: exactly one). */
+  chosen_options: z.array(z.string().trim().max(60)).max(20).optional(),
+  evidence_name: text(255),
+  evidence_base64: z.string().min(1).max(14_000_000),
+});
 
 /**
  * A message to the people who run an account, sent by its account manager from the staff
@@ -1140,6 +1568,16 @@ export const ROUTES = {
     permission: "account:read",
     signer: true,
   },
+  /**
+   * The text of one of the legal documents the document incorporates, exactly as it was
+   * pinned when the document was sent (a LegalPin's text_url), as a page to read.
+   */
+  legalText: {
+    method: "GET",
+    path: `${C}/documents/:docId/legal/:kind`,
+    permission: "account:read",
+    signer: true,
+  },
   /** The signed PDF (signed_pdf_url). */
   signedPdf: {
     method: "GET",
@@ -1319,6 +1757,42 @@ export const ROUTES = {
     request: VoidRequest,
     response: DocumentDetail,
   },
+  acceptOutside: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/accepted-outside`,
+    permission: "staff:accounts",
+    request: AcceptOutsideRequest,
+    response: DocumentDetail,
+  },
+  /** Attaches a PDF to a draft offer; answers the draft as it now is. */
+  addAnnex: {
+    method: "POST",
+    path: `${S}/:orgId/offers/:docId/annexes`,
+    permission: "staff:accounts",
+    request: AddAnnexRequest,
+    response: DocumentDetail,
+  },
+  /** Takes an annex off a draft offer; the ones after it move up one. */
+  removeAnnex: {
+    method: "POST",
+    path: `${S}/:orgId/offers/:docId/annexes/:number/remove`,
+    permission: "staff:accounts",
+    response: DocumentDetail,
+  },
+  /** dembrane's counter-signature, by the staff member the offer names. */
+  countersign: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/countersign`,
+    permission: "staff:accounts",
+    request: CountersignRequest,
+    response: DocumentDetail,
+  },
+  /** The evidence of an acceptance outside dembrane: the PDF or EML staff recorded. */
+  staffEvidence: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId/evidence`,
+    permission: "staff:accounts",
+  },
   /** The account manager emails the account's people: see SendMessageRequest. */
   sendMessage: {
     method: "POST",
@@ -1382,6 +1856,26 @@ export const ROUTES = {
     path: "/api/v2/account/tasks-summary",
     permission: "signed-in",
     response: TasksSummary,
+  },
+  listOfferTemplates: {
+    method: "GET",
+    path: `${S}/offer-templates`,
+    permission: "staff:accounts",
+    response: OfferTemplateList,
+  },
+  changeOfferTemplate: {
+    method: "PUT",
+    path: `${S}/offer-templates/:template/:language`,
+    permission: "staff:accounts",
+    request: OfferTemplateChange,
+    response: OfferTemplateView,
+  },
+  /** Back to the built-in words. */
+  resetOfferTemplate: {
+    method: "POST",
+    path: `${S}/offer-templates/:template/:language/reset`,
+    permission: "staff:accounts",
+    response: OfferTemplateView,
   },
   listDemos: {
     method: "GET",

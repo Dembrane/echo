@@ -16,11 +16,13 @@ import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
 import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
+import { legalTextPage } from "./legal/page";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { lookupPeppol, type TaxIds } from "./peppol";
 import { continueUrl } from "./prospect";
+import { awaitingSlots, customerSlot, fieldsOf, type Slot, slotsOf } from "./signers";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -102,14 +104,26 @@ export async function documentDetail(
   /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
   withEmail = true,
 ) {
-  const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
+  const [sig, allFields, terms, sla, dpa, reminded, all] = await Promise.all([
     store.signatureOf(d.db, doc.id),
     store.fields(d.db, doc.id),
     store.legalById(d.db, doc.termsTextId),
     store.legalById(d.db, doc.slaTextId),
     store.legalById(d.db, doc.dpaTextId),
     store.lastReminders(d.db, doc.orgId, doc.id),
+    store.signaturesOf(d.db, doc.id),
   ]);
+  // A document that asks for more than one signature: staff see every field; the customer
+  // the fields of the signature that is theirs to make next, none once theirs are in.
+  const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
+  const awaiting = doc.status === "signed" ? [] : awaitingSlots(content, all);
+  const mine = customerSlot(awaiting);
+  const fields =
+    via === "staff" || slotsOf(content).length === 1
+      ? allFields
+      : mine
+        ? fieldsOf(allFields, mine)
+        : [];
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
   const [org, billing] = await Promise.all([
@@ -141,9 +155,22 @@ export async function documentDetail(
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
     // The texts the document incorporates; an event offer has no SLA.
-    legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      (x) => x && (x.kind !== "sla" || !isEvent),
-    ),
+    legal: (
+      [
+        ["terms", terms],
+        ["sla", sla],
+        ["dpa", dpa],
+      ] as const
+    )
+      .map(([kind, row]) =>
+        legalView(
+          kind,
+          row,
+          // Staff read the live pages; the customer side serves the pinned text.
+          via === "staff" ? null : `${customerBase(doc.orgId)}/documents/${doc.id}/legal/${kind}`,
+        ),
+      )
+      .filter((x) => x && (x.kind !== "sla" || !isEvent)),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
     confirmation: doc.requiresSignature
@@ -155,8 +182,23 @@ export async function documentDetail(
               : null,
         }
       : null,
-    signature: sig ? signatureView(sig) : null,
-    prefill: signingPrefill(org?.name ?? null, billing, doc.language),
+    signatures: all.map((x) => ({
+      slot: x.slot as Slot,
+      name: x.typedName,
+      role: x.typedRole,
+      email: x.email,
+      signed_at: x.signedAt.toISOString(),
+    })),
+    awaiting_signatures: doc.requiresSignature && doc.status !== "draft" ? awaiting : [],
+    signature: sig
+      ? signatureView(
+          sig,
+          via === "staff" && sig.evidenceKey
+            ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
+            : undefined,
+        )
+      : null,
+    prefill: signingPrefill(org?.name ?? null, billing, doc),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
@@ -172,9 +214,11 @@ export async function documentDetail(
 
 /**
  * What the signer need not type: the organisation as it is billed (else its name) and the
- * billing address, when we have them. The signer still sees and may change both.
+ * billing address, when we have them, and the reference the offer carries. The billing PO
+ * is never offered: it may be another order's. The signer still sees and may change each.
  */
-function signingPrefill(orgName: string | null, b: BillingRow | null, language: string) {
+function signingPrefill(orgName: string | null, b: BillingRow | null, doc: DocumentRow) {
+  const language = doc.language;
   const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
   // The country reads in the document's language; details without a code keep what was typed.
   const country = b?.billing_country_code
@@ -186,6 +230,7 @@ function signingPrefill(orgName: string | null, b: BillingRow | null, language: 
   return {
     organisation: b?.billing_legal_name || orgName || null,
     address: b?.billing_address_line1 ? address : null,
+    po_number: (doc.content as OfferContent | null)?.customer_reference ?? null,
   };
 }
 
@@ -507,9 +552,15 @@ export async function fileBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-/** The signed PDF, once signed. */
+/**
+ * The signed PDF, once signed: the copy the last signature made, which carries every
+ * signature of a document that asked for more than one.
+ */
 export async function signedBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint8Array> {
-  const sig = await store.signatureOf(d.db, doc.id);
+  const done = doc.status !== "sent" && doc.status !== "viewed";
+  const all = done ? await store.signaturesOf(d.db, doc.id) : [];
+  // dembrane's signature applied when sending is not a signed copy of its own.
+  const sig = all.some((x) => x.slot === "customer") ? all.at(-1) : null;
   const blob = sig ? await d.files.get(sig.signedPdfKey) : null;
   if (!blob) throw new NotFoundError("document.not_signed");
   return new Uint8Array(await blob.arrayBuffer());
@@ -527,6 +578,26 @@ export async function customerFile(
     doc: a.doc,
     bytes: which === "file" ? await fileBytes(d, a.doc) : await signedBytes(d, a.doc),
   };
+}
+
+/**
+ * One of the legal documents a document incorporates, as a page to read: the version it
+ * pinned when it was sent, not the one on the website today. Open to everyone who may read
+ * the document, including the person named to sign it.
+ */
+export async function customerLegalText(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  docId: string,
+  kind: string,
+) {
+  const a = await documentFor(d, who, orgId, docId, "account:read");
+  const pinned = { terms: a.doc.termsTextId, sla: a.doc.slaTextId, dpa: a.doc.dpaTextId };
+  const id = kind === "terms" || kind === "sla" || kind === "dpa" ? pinned[kind] : null;
+  const row = id ? await store.legalById(d.db, id) : null;
+  if (!row) throw new NotFoundError("document.not_found");
+  return legalTextPage(row, a.doc.reference ?? a.doc.title, a.doc.language);
 }
 
 // ── billing details ─────────────────────────────────────────────────────

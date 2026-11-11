@@ -1,3 +1,4 @@
+import { withoutTrailingSlashes } from "@dembrane/core";
 /**
  * The dashboard's issue report: text the support outbox forwards to the team. Server
  * lines come first so free text cannot forge them, and every link is checked before it
@@ -27,7 +28,7 @@ export function safeFilename(name: string | null | undefined): string {
 
 /** API_BASE_URL may or may not end in /api; links are built without it. */
 export function attachmentLinkBase(apiBase: string): string {
-  let b = apiBase.replace(/\/+$/, "");
+  let b = withoutTrailingSlashes(apiBase);
   if (b.endsWith("/api")) b = b.slice(0, -4);
   return b;
 }

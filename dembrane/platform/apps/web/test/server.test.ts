@@ -10,6 +10,10 @@ mkdirSync(join(dist, "assets"));
 writeFileSync(join(dist, "index.html"), "<html>app</html>");
 writeFileSync(join(dist, "assets", "app-abc.js"), "console.log(1)");
 writeFileSync(join(dist, "version.json"), '{"v":1}');
+// What the build's precompress step writes next to each text file.
+writeFileSync(join(dist, "assets", "app-abc.js.br"), "br-bytes");
+writeFileSync(join(dist, "assets", "app-abc.js.gz"), "gz-bytes");
+writeFileSync(join(dist, "index.html.br"), "br-index");
 
 let upstream: ReturnType<typeof Bun.serve>;
 let openStreamAborted: Promise<void> = Promise.resolve();
@@ -42,6 +46,11 @@ beforeAll(() => {
           }),
           { headers: { "content-type": "text/event-stream" } },
         );
+      }
+      if (u.pathname === "/api/gzipped") {
+        return new Response(Bun.gzipSync(JSON.stringify({ ok: true })), {
+          headers: { "content-type": "application/json", "content-encoding": "gzip" },
+        });
       }
       return Response.json({
         path: u.pathname + u.search,
@@ -85,6 +94,50 @@ test("hashed assets are cached for a year; a missing asset is a 404, not the app
   expect(ok.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
   const missing = await handler()(new Request("https://dash.example/assets/gone.js"));
   expect(missing.status).toBe(404);
+});
+
+const get = (path: string, headers: Record<string, string> = {}) =>
+  handler()(new Request(`https://dash.example${path}`, { headers }));
+
+test("assets go out as brotli when the browser takes it, else gzip, else as built", async () => {
+  const br = await get("/assets/app-abc.js", { "accept-encoding": "gzip, deflate, br" });
+  expect(br.headers.get("content-encoding")).toBe("br");
+  expect(await br.text()).toBe("br-bytes");
+  expect(br.headers.get("content-type")).toContain("javascript");
+  expect(br.headers.get("vary")).toBe("Accept-Encoding");
+  expect(br.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+
+  const gz = await get("/assets/app-abc.js", { "accept-encoding": "gzip" });
+  expect(gz.headers.get("content-encoding")).toBe("gzip");
+  expect(await gz.text()).toBe("gz-bytes");
+
+  const plain = await get("/assets/app-abc.js");
+  expect(plain.headers.get("content-encoding")).toBeNull();
+  expect(await plain.text()).toBe("console.log(1)");
+  expect(plain.headers.get("vary")).toBe("Accept-Encoding");
+});
+
+test("an encoding the browser refuses with q=0 is not sent", async () => {
+  const res = await get("/assets/app-abc.js", { "accept-encoding": "br;q=0, gzip;q=0.5" });
+  expect(res.headers.get("content-encoding")).toBe("gzip");
+});
+
+test("index.html is sent compressed on client-side routes too", async () => {
+  const res = await get("/en-US/w/123/projects", { "accept-encoding": "br" });
+  expect(res.headers.get("content-encoding")).toBe("br");
+  expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
+  expect(res.headers.get("cache-control")).toBe("no-cache");
+});
+
+test("a Range request gets the file as built, never a compressed copy", async () => {
+  const res = await get("/assets/app-abc.js", { "accept-encoding": "br", range: "bytes=0-3" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+});
+
+test("a file without a compressed copy goes out as built", async () => {
+  const res = await get("/version.json", { "accept-encoding": "br, gzip" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+  expect(await res.text()).toBe('{"v":1}');
 });
 
 test("path traversal cannot leave the dist directory", async () => {
@@ -145,7 +198,14 @@ test("without a shared secret neither header is forwarded", async () => {
 test("event streams pass through the proxy", async () => {
   const res = await handler()(new Request("https://dash.example/api/stream"));
   expect(res.headers.get("content-type")).toBe("text/event-stream");
+  expect(res.headers.get("content-encoding")).toBeNull();
   expect(await res.text()).toBe("event: connected\n\n");
+});
+
+test("a compressed API response is passed on once, not encoded twice", async () => {
+  const res = await get("/api/gzipped", { "accept-encoding": "gzip" });
+  expect(res.headers.get("content-encoding")).toBeNull();
+  expect(await res.json()).toEqual({ ok: true });
 });
 
 test("a browser that goes away cancels the upstream stream", async () => {
@@ -170,4 +230,51 @@ test("only a PR preview names its pull request in the runtime config", () => {
   // staging and prod never carry one, even if the variable leaked into their deploy.
   expect(previewRuntime("staging", web)).toEqual({});
   expect(previewRuntime("prod", web)).toEqual({});
+});
+
+const PID = "01a1aaff-233f-71c7-a330-34d273960099";
+const portal = createHandler({
+  distDir: dist,
+  release: "r1",
+  runtime: {
+    env: "testing",
+    role: "portal",
+    apiBase: "/api",
+    dashboardUrl: "https://dash.example",
+  },
+  headers: {},
+});
+const location = async (path: string) => {
+  const res = await portal(new Request(`https://portal.example${path}`));
+  return { status: res.status, location: res.headers.get("location") };
+};
+
+test("the portal sends anything that isn't a participant link to the dashboard, query kept", async () => {
+  expect(await location("/")).toEqual({ status: 302, location: "https://dash.example/" });
+  expect(await location("/?ref=email")).toEqual({
+    status: 302,
+    location: "https://dash.example/?ref=email",
+  });
+  for (const path of ["/o/123/account", "/login", "/nl-NL", "/home", `/projects/${PID}/overview`])
+    expect(await location(path)).toEqual({ status: 302, location: `https://dash.example${path}` });
+});
+
+test("the portal never redirects off the dashboard host", async () => {
+  expect((await location("//evil.example/x")).location).toBe("https://dash.example/evil.example/x");
+  expect((await location("/\\evil.example")).location).toBe("https://dash.example/evil.example");
+});
+
+test("the portal serves participant links, its files and its API", async () => {
+  for (const path of [`/${PID}`, `/nl-NL/${PID}/start`, `/en-US/${PID}/conversation/${PID}/text`]) {
+    const res = await portal(new Request(`https://portal.example${path}`));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("<html>app</html>");
+  }
+  expect((await portal(new Request("https://portal.example/version.json"))).status).toBe(200);
+  expect((await portal(new Request("https://portal.example/health"))).status).toBe(200);
+});
+
+test("the dashboard serves every path itself", async () => {
+  expect((await handler()(new Request("https://dash.example/"))).status).toBe(200);
+  expect((await handler()(new Request("https://dash.example/login"))).status).toBe(200);
 });

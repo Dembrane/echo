@@ -149,6 +149,7 @@ const offerSummary: Out<typeof DocumentSummary> = {
   signer: null,
   file_url: `${C}/documents/${OFFER}/file`,
   signed_pdf_url: null,
+  accepted_outside: null,
 };
 
 export const offerDetail: Out<typeof DocumentDetail> = {
@@ -196,16 +197,19 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     {
       kind: "terms",
       ...legal.terms,
+      text_url: `${C}/documents/${OFFER}/legal/terms`,
       sha256: "4e2d1c0b9a8f7e6d5c4b3a291807f6e5d4c3b2a1908f7e6d5c4b3a2918070f6e",
     },
     {
       kind: "sla",
       ...legal.sla,
+      text_url: `${C}/documents/${OFFER}/legal/sla`,
       sha256: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
     },
     {
       kind: "dpa",
       ...legal.dpa,
+      text_url: `${C}/documents/${OFFER}/legal/dpa`,
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],
@@ -218,7 +222,9 @@ export const offerDetail: Out<typeof DocumentDetail> = {
       'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben niet bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan; de verwerkersovereenkomst wordt apart ondertekend.',
   },
   signature: null,
-  prefill: { organisation: "Example Town Council (sample)", address: null },
+  signatures: [],
+  awaiting_signatures: [],
+  prefill: { organisation: "Example Town Council (sample)", address: null, po_number: null },
   access: "member",
   staff_url: null,
   customer_links: null,
@@ -253,6 +259,7 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   },
   file_url: `${C}/documents/${DPA}/file`,
   signed_pdf_url: `${C}/documents/${DPA}/signed.pdf`,
+  accepted_outside: null,
 };
 
 export const signedDpaDetail: Out<typeof DocumentDetail> = {
@@ -338,6 +345,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
     {
       kind: "dpa",
       ...legal.dpa,
+      text_url: `${C}/documents/${DPA}/legal/dpa`,
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],
@@ -367,8 +375,19 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
       "0199a1b9-0000-7000-8000-000000000003": "Example Town Council (sample)",
       "0199a1b9-0000-7000-8000-000000000004": "21-09-2026",
     },
+    outside: null,
   },
-  prefill: { organisation: "Example Town Council (sample)", address: null },
+  signatures: [
+    {
+      slot: "customer",
+      name: "Alex Example",
+      role: "Functionaris gegevensbescherming",
+      email: "privacy@example-town.example",
+      signed_at: "2026-09-21T08:20:31.000Z",
+    },
+  ],
+  awaiting_signatures: [],
+  prefill: { organisation: "Example Town Council (sample)", address: null, po_number: null },
   access: "member",
   staff_url: null,
   customer_links: null,
@@ -397,6 +416,7 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
   signer: null,
   file_url: `${C}/documents/${INVOICE}/file`,
   signed_pdf_url: null,
+  accepted_outside: null,
   invoice: {
     number: "2026-0421",
     exact_id: "DEMO-EXACT-0001",
@@ -598,6 +618,14 @@ export const accountList: Out<typeof AccountList> = {
       name: "Example Town Council (sample)",
       stage: "customer",
       deal_stage: "offer_sent",
+      milestones: {
+        offer_drafted: "2026-09-28T09:00:00.000Z",
+        offer_sent: "2026-09-28T09:00:00.000Z",
+        signed: null,
+        billing_details: null,
+        documents_signed: null,
+        invoice_sent: null,
+      },
       created_at: "2026-09-28T08:55:00.000Z",
       open_tasks: 2,
       waiting_on_us: 1,
@@ -616,6 +644,14 @@ export const accountCard: Out<typeof AccountCard> = {
     ...organisation,
     created_at: "2026-09-28T08:55:00.000Z",
     deal_stage: "offer_sent" as const,
+    milestones: {
+      offer_drafted: "2026-09-28T09:00:00.000Z",
+      offer_sent: "2026-09-28T09:00:00.000Z",
+      signed: null,
+      billing_details: null,
+      documents_signed: null,
+      invoice_sent: null,
+    },
   },
   account_manager: null,
   billing: emptyBilling,
@@ -658,6 +694,7 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "document.sent",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: "document",
       subject_id: OFFER,
       detail: {
@@ -672,6 +709,7 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "demo.seeded",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: null,
       subject_id: null,
       detail: { slug: "voorbeeldwonen" },
@@ -682,12 +720,14 @@ export const accountCard: Out<typeof AccountCard> = {
       type: "account.created",
       actor: "staff",
       actor_user_id: STAFF_USER,
+      actor_name: "Pauline",
       subject_type: null,
       subject_id: null,
       detail: { stage: "customer", contact: "robin@example-town.example" },
       created_at: "2026-09-28T08:55:00.000Z",
     },
   ],
+  dembrane_signer: { name: "Jamie Voorbeeld", role: "Director", email: "jamie@dembrane.com" },
 };
 
 export const pushOfferResponse: Out<typeof PushOfferResponse> = {

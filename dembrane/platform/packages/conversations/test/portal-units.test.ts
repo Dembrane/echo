@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { ForbiddenError, UnauthenticatedError } from "@dembrane/core";
-import { AudioUrls, sanitizeFilenameComponent } from "../src/audio-urls";
+import { AudioUrls, sanitizeFilenameComponent, uploadKeyName } from "../src/audio-urls";
 import { ParticipantTokens } from "../src/participant-token";
 
 const C = "c1000000-0000-4000-8000-000000000001";
@@ -40,4 +40,21 @@ test("stored audio paths round-trip to keys the way get_sanitized_s3_key parsed 
 
 test("file name components keep letters, digits, dash and underscore", () => {
   expect(sanitizeFilenameComponent("c1-ä_b/../x.mp3")).toBe("c1-ä_bxmp3");
+});
+
+test("an upload's key name is short and safe and keeps the extension", () => {
+  expect(uploadKeyName("rec.webm")).toBe("rec.webm");
+  expect(uploadKeyName("(Audio) Gesprek - deel 2.M4A")).toBe("Audio-Gesprek-deel-2.m4a");
+  expect(uploadKeyName("Interview... deel 2.mp3")).toBe("Interview-deel-2.mp3");
+  expect(uploadKeyName("../../etc/x.wav")).toBe("x.wav");
+  expect(uploadKeyName("Café ñandú.ogg")).toBe("Café-ñandú.ogg");
+  // macOS names spell an accent as letter plus combining mark.
+  expect(uploadKeyName("Café ñandú.ogg".normalize("NFD"))).toBe("Café-ñandú.ogg");
+  expect(uploadKeyName("a.verylongextension")).toBe("a.verylongex");
+  expect(uploadKeyName(".m4a")).toBe("audio.m4a");
+  expect(uploadKeyName("recording")).toBe("recording");
+  expect(uploadKeyName("?.mp3")).toBe("audio.mp3");
+  const long = uploadKeyName(`${"ab ".repeat(200)}.m4a`);
+  expect(long.length).toBeLessThanOrEqual(84);
+  expect(long.endsWith("ab.m4a")).toBe(true);
 });

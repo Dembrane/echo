@@ -1,4 +1,5 @@
 import type { Completion } from "@dembrane/llm";
+import { withoutClosingFence } from "@dembrane/llm";
 import type { Json } from "../contracts";
 import extractionPrompt from "../prompts/map-arguments-v2.md" with { type: "text" };
 import type { ProducerServices } from "./services";
@@ -51,7 +52,7 @@ export class AnswerDidNotParse extends Error {}
 export function jsonFromText(text: string): Json {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    cleaned = withoutClosingFence(cleaned.replace(/^```(?:json)?\s*/i, ""));
   }
   let parsed: unknown;
   try {

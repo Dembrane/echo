@@ -13,6 +13,11 @@ export type Row = Record<string, unknown>;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Ids arrive from paths and bodies; one that is not a uuid names nothing, like a missing row. */
+/** The processing event a final transcript run writes when it ends without a transcript; the dashboard reads it. */
+export const FINAL_GAVE_UP = "task_final_transcript.gave_up";
+/** How a conversation uploaded in the dashboard is marked; every other conversation was recorded. */
+export const UPLOAD_SOURCE = "DASHBOARD_UPLOAD";
+
 export const isUuid = (id: unknown): id is string => typeof id === "string" && UUID.test(id);
 
 /** A database handle plus the raw transaction, so jobs are enqueued in the same commit. */
@@ -30,6 +35,12 @@ export async function transaction<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promis
     const bound = Object.assign(txSql, { options: client.options }) as unknown as postgres.Sql;
     return fn({ db: drizzle(bound, { schema }) as unknown as Db, sql: txSql });
   })) as T;
+}
+
+/** A Drizzle transaction as a Tx, so a chunk can be written inside a caller's transaction. */
+export function txOf(db: Db): Tx {
+  const client = (db as unknown as { session: { client: postgres.TransactionSql } }).session.client;
+  return { db, sql: client };
 }
 
 /** The conversation reads every surface shares. Soft-deleted rows are filtered here. */

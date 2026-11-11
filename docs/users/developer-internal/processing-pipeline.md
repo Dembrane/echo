@@ -42,10 +42,10 @@ Chunk runs wait on the language model, so many run at once. The ffmpeg work they
 | `transcribe` | One Gemini call per piece on the `multi_modal_pro` model group, with the audio sent inline. On a retryable error it falls back to `multi_modal_fast`. The project's `language` and its key terms (`default_conversation_transcript_prompt`) are passed in. The result is stored in `conversation_chunk.transcript`, with `diarization.schema` set to `Dembrane-26-07-gemini`. |
 | `hand-over` | The one place that decides a conversation is ready. It locks the conversation row, checks that the conversation is finished and that no chunk is pending, and enqueues `conversations.finalize` in the same transaction. Both the chunk run and the finish run call it, so whichever commits last sees the other's work. |
 | `claim` in finish | Sets `is_finished`. Of two finishes at the same time, exactly one proceeds. |
-| `stamp-over-cap` | Sets `is_over_cap` from the workspace's recorded hours and its tier. |
+| `stamp-over-cap` | A no-op. The lifetime hour lock is retired, and the step stays so durable runs replay by order. It no longer sets `is_over_cap`. |
 | `claim` in finalize | Sets `is_all_chunks_transcribed` once, and queues the `conversation.transcribed` webhooks in the same commit. |
 | `merge` | Joins every chunk with audio, in time order, into one mp3. Sets `merged_audio_path` and `duration`. If the merge gives up, the merged file is built on demand when a host plays the conversation. |
-| `summarize` | One model call on `multi_modal_pro`. A conversation locked by its tier is skipped, and is summarised after an upgrade. Then `summarized-webhook` queues the `conversation.summarized` webhook. |
+| `summarize` | One model call on `multi_modal_pro`. Then `summarized-webhook` queues the `conversation.summarized` webhook. |
 | `measure` | Fills `duration` by probing chunks when the merge left none. |
 
 When the project anonymises transcripts, transcription also redacts. A regular-expression pass replaces emails, IBANs, phone numbers, Dutch postcodes and 8 to 9 digit numbers with placeholders. A second model pass then corrects and redacts, using the audio and the first transcript.
@@ -95,7 +95,7 @@ The media app is an HTTP shell around ffmpeg: `POST /probe`, `/probe-url`, `/con
 | Job name | Every | What it does |
 |---|---|---|
 | `conversations.finish-idle` | 2 minutes | Finishes conversations nobody added to for 5 minutes. A conversation with no chunks at all waits 30 minutes, and stays open while the portal still pings. |
-| `conversations.summary-catch-up` | 5 minutes | Summarises transcribed conversations that have no summary and are not locked. |
+| `conversations.summary-catch-up` | 5 minutes | Summarises transcribed conversations that have no summary, whatever their old `is_over_cap` stamp says. |
 
 ## Reports and chat
 

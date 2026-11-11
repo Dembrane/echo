@@ -1,13 +1,20 @@
+import { sql } from "drizzle-orm";
 import {
+  bigint,
   bigserial,
   boolean,
+  date,
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
+  uniqueIndex,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 /** One row per live worker process; a stale row marks a dead worker whose workflows get resumed. */
@@ -27,6 +34,17 @@ export const dbos_workflow_lost_worker = pgTable("dbos_workflow_lost_worker", {
   queue_name: text("queue_name"),
   lost: integer("lost").notNull(),
   set_aside_at: timestamp("set_aside_at", { withTimezone: true }),
+});
+
+/**
+ * What a large popcorn session's tensions keep between reads (popcorn tick/scale.ts): positions
+ * per conversation, the pairs found and their verdicts. Kept apart from agent_loop so the
+ * deck's frequent reads and writes never carry it. Written only by the popcorn tick.
+ */
+export const popcorn_tensions_cache = pgTable("popcorn_tensions_cache", {
+  loop_id: uuid("loop_id").primaryKey(),
+  cache: jsonb("cache").notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // Fixed-window counters for rate limits (per user or per IP). Unlogged: a crash may
@@ -83,6 +101,116 @@ export const model_call = pgTable(
     ms: integer("ms").notNull(),
     input_tokens: integer("input_tokens"),
     output_tokens: integer("output_tokens"),
+    provider: text("provider"),
+    billing_account_id: uuid("billing_account_id"),
+    project_id: uuid("project_id"),
+    /** 'account' | 'internal' | 'unattributed'. */
+    payer: text("payer").notNull().default("unattributed"),
+    /** Whether the cost was added to the account's free_usage spend. */
+    counted: boolean("counted").notNull().default(false),
+    cached_input_tokens: integer("cached_input_tokens"),
+    audio_input_tokens: integer("audio_input_tokens"),
+    reasoning_tokens: integer("reasoning_tokens"),
+    audio_seconds: real("audio_seconds"),
+    search_queries: integer("search_queries"),
+    usage_estimated: boolean("usage_estimated").notNull().default(false),
+    price_missing: boolean("price_missing").notNull().default(false),
+    cost_micro_eur: bigint("cost_micro_eur", { mode: "number" }),
+    /** The ai_price row the cost came from. */
+    price_id: bigint("price_id", { mode: "number" }),
   },
   (t) => [index("model_call_started_at_idx").on(t.started_at)],
+);
+
+/** Unit prices per model; a new row starts when any price changes, old rows stay for history. */
+export const ai_price = pgTable(
+  "ai_price",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    provider: text("provider").notNull(),
+    model: text("model").notNull(),
+    /** 'USD' | 'EUR'. */
+    currency: text("currency").notNull(),
+    input_per_m: numeric("input_per_m"),
+    cached_input_per_m: numeric("cached_input_per_m"),
+    audio_input_per_m: numeric("audio_input_per_m"),
+    output_per_m: numeric("output_per_m"),
+    /** Input tokens above which the long_* prices apply. */
+    long_context_threshold: integer("long_context_threshold"),
+    long_input_per_m: numeric("long_input_per_m"),
+    long_cached_input_per_m: numeric("long_cached_input_per_m"),
+    long_output_per_m: numeric("long_output_per_m"),
+    per_audio_second: numeric("per_audio_second"),
+    per_search_query: numeric("per_search_query"),
+    /** 'models.dev' | 'override'. */
+    source: text("source").notNull(),
+    effective_from: timestamp("effective_from", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("ai_price_provider_model_effective_from").on(t.provider, t.model, t.effective_from),
+  ],
+);
+
+/** ECB USD to EUR rate per day. */
+export const ai_fx_rate = pgTable("ai_fx_rate", {
+  day: date("day").primaryKey(),
+  usd_to_eur: numeric("usd_to_eur").notNull(),
+  fetched_at: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** model_call rolled up per UTC day, account, payer, operation and model; kept after model_call is pruned. */
+export const ai_spend_daily = pgTable(
+  "ai_spend_daily",
+  {
+    day: date("day").notNull(),
+    /** Null for unattributed spend. */
+    billing_account_id: uuid("billing_account_id"),
+    /** 'account' | 'internal' | 'unattributed', as on model_call. */
+    payer: text("payer").notNull().default("unattributed"),
+    operation: text("operation").notNull().default(""),
+    model: text("model").notNull(),
+    calls: integer("calls").notNull(),
+    input_tokens: bigint("input_tokens", { mode: "number" }).notNull(),
+    output_tokens: bigint("output_tokens", { mode: "number" }).notNull(),
+    cost_micro_eur: bigint("cost_micro_eur", { mode: "number" }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("ai_spend_daily_key").on(
+      t.day,
+      sql`coalesce(${t.billing_account_id}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      t.payer,
+      t.operation,
+      t.model,
+    ),
+  ],
+);
+
+/** One limit per tier and key; staff edit them, so each row keeps who changed it last. */
+export const tier_limit = pgTable(
+  "tier_limit",
+  {
+    tier: text("tier").notNull(),
+    key: text("key").notNull(),
+    value: bigint("value", { mode: "number" }).notNull(),
+    updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updated_by: uuid("updated_by"),
+  },
+  (t) => [primaryKey({ columns: [t.tier, t.key] })],
+);
+
+/** What a free billing account has used per period and key; deletes never decrement it. */
+export const free_usage = pgTable(
+  "free_usage",
+  {
+    billing_account_id: uuid("billing_account_id").notNull(),
+    period_start: timestamp("period_start", { withTimezone: true, mode: "string" }).notNull(),
+    key: text("key").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull().default(0),
+    updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.billing_account_id, t.period_start, t.key] })],
 );

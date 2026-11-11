@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import postgres from "postgres";
-import { ContractArchiveMissing, migrate, recordContractArchive } from "../src/migrate";
+import {
+  ContractArchiveMissing,
+  LOCK_ATTEMPTS,
+  migrate,
+  recordContractArchive,
+} from "../src/migrate";
 
 // Counted from the journal so a new migration does not require editing this test.
 const journal = (await Bun.file(
@@ -13,6 +18,9 @@ const BASELINE = 2;
 const CONTRACTS = journal.entries.filter((e) => e.tag.includes("_contract_")).map((e) => e.tag);
 const CONTRACT = CONTRACTS.length;
 // Drizzle records a migration by its journal timestamp.
+// Any recent migration that alters a busy table.
+const FREE_TIER_MILLIS = journal.entries.find((e) => e.tag === "0028_expand_free_tier_allowance")
+  ?.when as number;
 const CONTRACT_MILLIS = journal.entries
   .filter((e) => e.tag.includes("_contract_"))
   .map((e) => String(e.when));
@@ -33,6 +41,8 @@ run("migrate", () => {
       "mig_preview",
       "mig_release",
       "mig_release_guard",
+      "mig_lock",
+      "mig_lock_retry",
     ]) {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
@@ -161,6 +171,56 @@ run("migrate", () => {
     expect((await migrate(url, { appEnv: "prod" })).applied).toBe(CONTRACT);
     expect(await kept(url)).toEqual({ table: false, contractRuns: CONTRACT });
   }, 30_000);
+
+  test("migrate gives up on a held lock after its bounded retries instead of queueing", async () => {
+    const url = `${base}/mig_lock`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 2, onnotice: () => {} });
+    await db`delete from drizzle.__drizzle_migrations where created_at >= ${FREE_TIER_MILLIS}`;
+    const holder = await db.reserve();
+    await holder`begin`;
+    await holder`lock table conversation in access exclusive mode`;
+    const started = Date.now();
+    const run = migrate(url, { appEnv: "test" }).then(
+      () => "applied",
+      (e: unknown) => e,
+    );
+    const outcome = await Promise.race([run, Bun.sleep(45_000).then(() => "waiting")]);
+    const elapsed = Date.now() - started;
+    await holder`rollback`;
+    holder.release();
+    await run;
+    await db.end();
+    // Drizzle wraps the Postgres error.
+    const err = outcome as { code?: string; cause?: { code?: string } };
+    expect(err.code ?? err.cause?.code).toBe("55P03");
+    // Each attempt waits 5 s for the lock, then the run gives up.
+    expect(elapsed).toBeGreaterThanOrEqual(LOCK_ATTEMPTS * 5_000);
+    expect(elapsed).toBeLessThan(40_000);
+    // Nothing was recorded: the run rolled back.
+    const left = postgres(url, { max: 1, onnotice: () => {} });
+    const [row] = await left`select count(*)::int as n from drizzle.__drizzle_migrations
+      where created_at >= ${FREE_TIER_MILLIS}`;
+    await left.end();
+    expect(row?.n).toBe(0);
+  }, 90_000);
+
+  test("migrate applies once a held lock is released between attempts", async () => {
+    const url = `${base}/mig_lock_retry`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 2, onnotice: () => {} });
+    await db`delete from drizzle.__drizzle_migrations where created_at >= ${FREE_TIER_MILLIS}`;
+    const holder = await db.reserve();
+    await holder`begin`;
+    await holder`lock table conversation in access exclusive mode`;
+    const run = migrate(url, { appEnv: "test" });
+    await Bun.sleep(6_000);
+    await holder`rollback`;
+    holder.release();
+    const r = await run;
+    await db.end();
+    expect(r.applied).toBeGreaterThan(0);
+  }, 90_000);
 
   test("preview applies contract migrations without an archive", async () => {
     const r = await migrate(`${base}/mig_preview`, { appEnv: "preview" });

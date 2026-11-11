@@ -3,14 +3,17 @@ import { Alert } from "@mantine/core";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
+import { Logo } from "@/components/common/Logo";
 import { ENABLE_MONITOR } from "@/config";
 import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
 import { testId } from "@/lib/testUtils";
+import { NotTakingRecordings } from "@/portal/components/NotTakingRecordings";
 import { InAppBrowserNotice } from "@/portal/components/start/InAppBrowserNotice";
 import ParticipantOnboardingCards from "@/portal/components/start/ParticipantOnboardingCards";
+import { resolvePortalMode } from "@/portal/components/start/recordingCap";
 import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 
 type FunnelStageReport = {
@@ -21,6 +24,7 @@ type FunnelStageReport = {
 
 export const ParticipantStartRoute = () => {
 	const { projectId } = useParams<{ projectId: string }>();
+	const [searchParams] = useSearchParams();
 
 	// One visitor beacon for the whole portal onboarding, owned here so it
 	// fires "scanned" the moment the QR link opens — before the project even
@@ -83,11 +87,37 @@ export const ParticipantStartRoute = () => {
 		);
 	}
 
+	// Typed text records nothing, so only a used-up AI budget closes it.
+	const closed =
+		resolvePortalMode(searchParams) === "text"
+			? project?.is_ai_available === false
+			: project?.is_taking_recordings === false;
+
 	return (
 		<div className="h-full grow">
 			{isLoadingProject ? (
 				<div {...testId("portal-loading-spinner")}>
 					<DembraneLoadingSpinner isLoading />
+				</div>
+			) : closed ? (
+				// The start route hides the portal header; this draws its logo row, centred the same way.
+				<div className="flex h-full flex-col">
+					<header
+						className="border-b"
+						style={{ borderColor: "var(--app-rule-color)" }}
+					>
+						<div
+							className="container relative mx-auto max-w-2xl px-4 py-2"
+							{...testId("portal-header")}
+						>
+							<Logo h="36px" />
+						</div>
+					</header>
+					<div className="flex flex-grow flex-col items-center justify-center p-4">
+						<NotTakingRecordings
+							text={resolvePortalMode(searchParams) === "text"}
+						/>
+					</div>
 				</div>
 			) : (
 				<ParticipantOnboardingCards

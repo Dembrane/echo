@@ -1,10 +1,27 @@
-import type { LanguageModelV4, LanguageModelV4Prompt } from "@ai-sdk/provider";
-import { isRetryable, type Models } from "@dembrane/llm";
+import type {
+  LanguageModelV4,
+  LanguageModelV4GenerateResult,
+  LanguageModelV4Prompt,
+} from "@ai-sdk/provider";
+import {
+  attemptTimeout,
+  FALL_BACK_ON_REFUSAL,
+  isRetryable,
+  ModelRefusalError,
+  type Models,
+  speechHint,
+} from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
-import { TranscriptParseError } from "./errors";
+import { TranscriptParseError, TranscriptRefusedError } from "./errors";
 import { regexRedactPii } from "./pii";
-import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcriber";
+import { type RetryPolicy, transcribeChecked } from "./speech-retry";
+import type {
+  RedactTextInput,
+  TranscribeInput,
+  TranscribeResult,
+  Transcriber,
+} from "./transcriber";
 
 const SCHEMA = {
   type: "object",
@@ -14,6 +31,17 @@ const SCHEMA = {
   },
   required: ["corrected_transcript", "note"],
 } as const;
+
+// Filters off did not lower 3.8-flash refusals in replay; the fallback is what recovers them (ECHO-980).
+const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" } };
+// A stalled Vertex call otherwise holds a chunk about 300 s (up to 12 minutes with retries) before the retry runs.
+// Successful chunk calls over 14 days to 25 Oct (n=50024): p50 11.9 s, p90 28.4 s, p99 79.2 s, p99.9 209 s (incident days), max 348 s; about 1 in 1000 healthy calls passes 180 s.
+export const TRANSCRIBE_CALL_TIMEOUT_MS = 180_000;
+// The final attempt of the last group in the chain (multi_modal_fast) has nothing to fall back to, so it waits past the slowest success ever seen (348 s); the pro group keeps the short bound.
+export const TRANSCRIBE_FINAL_CALL_TIMEOUT_MS = 400_000;
+// The redaction pass copies a transcript with names masked; reasoning adds time and
+// answer tokens and nothing else. Read by the OpenAI-compatible provider only.
+const NO_REASONING = { openaiCompatible: { reasoningEffort: "none" } };
 
 // Gemini sometimes emits a literal backslash-u that is not a \uXXXX escape. The
 // lookbehind and the even-backslash group keep already-escaped backslashes intact.
@@ -67,11 +95,17 @@ export class GeminiTranscriber implements Transcriber {
   constructor(
     private readonly models: Models,
     private readonly logger: Logger,
+    private readonly opts: {
+      retry?: RetryPolicy | null;
+      callTimeoutMs?: number;
+      finalCallTimeoutMs?: number;
+    } = {},
   ) {}
 
   async transcribe(input: TranscribeInput): Promise<TranscribeResult> {
     const piiOn = Boolean(input.usePiiRedaction || input.anonymizeTranscripts);
     const hotwordsStr = input.hotwords?.length ? input.hotwords.join(", ") : "";
+    if (this.models.speechToText) return this.transcribeWithSpeechModel(input, piiOn, hotwordsStr);
     const prompt =
       input.promptOverride ||
       renderPrompt("transcript_from_audio_workflow", "en", {
@@ -80,10 +114,29 @@ export class GeminiTranscriber implements Transcriber {
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
         language: input.language ?? null,
       });
-    const first = await this.complete([
-      { role: "system", content: prompt },
-      { role: "user", content: [audioPart(input.audio)] },
-    ]);
+    const began = Date.now();
+    const first = await this.complete(
+      [
+        { role: "system", content: prompt },
+        { role: "user", content: [audioPart(input.audio)] },
+      ],
+      input.language,
+    );
+    this.logger.info(
+      {
+        signal: "speech.request",
+        provider: "gemini",
+        model: first.model,
+        audioSeconds: null,
+        estimated: true,
+        bytes: input.audio.byteLength,
+        ms: Date.now() - began,
+        status: 200,
+        attempt: 1,
+        path: input.priority ?? "live",
+      },
+      "speech request",
+    );
     let transcript = first.json.corrected_transcript;
     let note = first.json.note;
     const models: (string | null)[] = [first.model];
@@ -99,13 +152,112 @@ export class GeminiTranscriber implements Transcriber {
         pii_redaction: true,
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
       });
-      const second = await this.complete([
-        { role: "system", content: correction },
-        {
-          role: "user",
-          content: [{ type: "text", text: transcript }, audioPart(input.audio)],
-        },
-      ]);
+      const second = await this.complete(
+        [
+          { role: "system", content: correction },
+          {
+            role: "user",
+            content: [{ type: "text", text: transcript }, audioPart(input.audio)],
+          },
+        ],
+        input.language,
+      );
+      transcript = second.json.corrected_transcript;
+      note = second.json.note;
+      models.push(second.model);
+    }
+    return { transcript: transcript === "" ? "[Nothing to transcribe]" : transcript, note, models };
+  }
+
+  /**
+   * A provider with a speech-to-text model (Whisper on the OpenAI-compatible provider): its
+   * text is the transcript. A chat model asked to rewrite it paraphrases and, with reasoning
+   * on, ran out of answer tokens on long chunks. The chat model only does the redaction pass,
+   * on text, with reasoning off.
+   */
+  private async transcribeWithSpeechModel(
+    input: TranscribeInput,
+    piiOn: boolean,
+    hotwordsStr: string,
+  ): Promise<TranscribeResult> {
+    const stt = this.models.speechToText as NonNullable<Models["speechToText"]>;
+    const retrying = Boolean(this.opts.retry && input.cutSpan);
+    const checked = retrying
+      ? await transcribeChecked(
+          stt,
+          input.audio,
+          {
+            language: input.language ?? null,
+            ...(hotwordsStr && { prompt: hotwordsStr }),
+            priority: input.priority ?? "live",
+          },
+          undefined,
+          input.cutSpan,
+          this.opts.retry ?? null,
+          undefined,
+          input.pauses,
+        )
+      : null;
+    // The same request either way (verbose_json); asking for segments keeps Whisper's times.
+    const read =
+      checked?.result ??
+      (await stt.transcribeSegments(input.audio, {
+        language: input.language ?? null,
+        ...(hotwordsStr && { prompt: hotwordsStr }),
+        priority: input.priority ?? "live",
+      }));
+    const transcript = read.text;
+    const seconds = read.seconds ?? Math.max(0, ...read.segments.map((s) => s.end));
+    const redacted = await this.redactText({
+      text: transcript,
+      language: input.language ?? null,
+      usePiiRedaction: piiOn,
+      anonymizeTranscripts: input.anonymizeTranscripts ?? false,
+      customGuidancePrompt: input.customGuidancePrompt ?? null,
+      hotwords: input.hotwords ?? null,
+    });
+    return {
+      transcript: redacted.transcript,
+      note: redacted.note,
+      models: [stt.model, ...redacted.models],
+      ...(checked && { retry: checked.stats }),
+      ...(!piiOn &&
+        read.segments.length > 0 &&
+        seconds > 0 && {
+          segments: {
+            seconds,
+            sentences: read.segments.map((s) => ({ start: s.start, end: s.end, text: s.text })),
+          },
+        }),
+    };
+  }
+
+  /**
+   * The redaction of text alone, shared by the speech-model path and by typed contributions:
+   * the regex pass when anonymising, then the model pass with reasoning off. An allow-list
+   * of hotwords is never passed, so names are redacted too.
+   */
+  async redactText(input: RedactTextInput): Promise<TranscribeResult> {
+    const piiOn = Boolean(input.usePiiRedaction || input.anonymizeTranscripts);
+    const hotwordsStr = input.hotwords?.length ? input.hotwords.join(", ") : "";
+    let transcript = input.text;
+    let note = "";
+    const models: (string | null)[] = [];
+    if (input.anonymizeTranscripts) transcript = regexRedactPii(transcript);
+    if (piiOn && transcript !== "") {
+      const correction = renderPrompt("transcript_correction_workflow", "en", {
+        hotwords_str: hotwordsStr,
+        pii_redaction: true,
+        custom_guidance_prompt: input.customGuidancePrompt ?? null,
+      });
+      const second = await this.complete(
+        [
+          { role: "system", content: correction },
+          { role: "user", content: [{ type: "text", text: transcript }] },
+        ],
+        input.language,
+        NO_REASONING,
+      );
       transcript = second.json.corrected_transcript;
       note = second.json.note;
       models.push(second.model);
@@ -119,10 +271,12 @@ export class GeminiTranscriber implements Transcriber {
    */
   private async complete(
     prompt: LanguageModelV4Prompt,
+    language?: string | null,
+    extraOptions: Record<string, Record<string, unknown>> = {},
   ): Promise<{ json: Parsed; model: string | null }> {
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
-      const { text, finishReason, model } = await this.call(prompt);
+      const { text, finishReason, model } = await this.call(prompt, language, extraOptions);
       this.logger.info({ model }, "transcript call answered");
       try {
         return { json: parseTranscriptJson(text, finishReason), model };
@@ -139,12 +293,39 @@ export class GeminiTranscriber implements Transcriber {
     throw last ?? new TranscriptParseError("transcript completion never ran");
   }
 
-  private async call(prompt: LanguageModelV4Prompt) {
-    const run = async (m: LanguageModelV4) => {
-      const r = await m.doGenerate({
-        prompt,
-        responseFormat: { type: "json", schema: SCHEMA as never },
-      });
+  private async call(
+    prompt: LanguageModelV4Prompt,
+    language: string | null | undefined,
+    extraOptions: Record<string, Record<string, unknown>>,
+  ) {
+    const bound = this.opts.callTimeoutMs ?? TRANSCRIBE_CALL_TIMEOUT_MS;
+    // Only the final attempt of the last group in the chain waits the long bound; the pro group
+    // keeps the short one, or a stall there would cost the long wait and then the fast group too.
+    const run = async (m: LanguageModelV4, lastInChain: boolean) => {
+      let r: LanguageModelV4GenerateResult;
+      try {
+        r = await m.doGenerate({
+          prompt,
+          responseFormat: { type: "json", schema: SCHEMA as never },
+          providerOptions: {
+            ...PROVIDER_OPTIONS,
+            fallback: {
+              ...FALL_BACK_ON_REFUSAL.fallback,
+              ...attemptTimeout(
+                bound,
+                lastInChain
+                  ? (this.opts.finalCallTimeoutMs ?? TRANSCRIBE_FINAL_CALL_TIMEOUT_MS)
+                  : bound,
+              ).fallback,
+            },
+            ...speechHint(this.models, language),
+            ...extraOptions,
+          },
+        });
+      } catch (err) {
+        if (err instanceof ModelRefusalError) throw new TranscriptRefusedError(err.finishReason);
+        throw err;
+      }
       const text = r.content
         .filter((c): c is { type: "text"; text: string } => c.type === "text")
         .map((c) => c.text)
@@ -157,14 +338,14 @@ export class GeminiTranscriber implements Transcriber {
       };
     };
     try {
-      return await run(this.models.model("multi_modal_pro"));
+      return await run(this.models.model("multi_modal_pro"), false);
     } catch (err) {
       if (!isRetryable(err)) throw err;
       this.logger.warn(
         { err: (err as Error).message },
         "transcription falls back to multi_modal_fast",
       );
-      return run(this.models.model("multi_modal_fast"));
+      return run(this.models.model("multi_modal_fast"), true);
     }
   }
 }

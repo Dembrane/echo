@@ -53,9 +53,15 @@ import {
 	ResultsList,
 	useResultActions,
 } from "@/components/results";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { aiBudgetDetails } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { testId } from "@/lib/testUtils";
-import { useRecipeParameters } from "./useRecipeParameters";
+import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
 const activeStatuses = new Set(["queued", "running", "waiting_for_inputs"]);
@@ -424,17 +430,20 @@ function RecipeCard({
 	onShowResults: () => void;
 }) {
 	const request = useRequestAnalysisRun(projectId);
+	const { workspaceId: routeWorkspaceId } = useParams<{
+		workspaceId?: string;
+	}>();
+	const { workspaceId: contextWorkspaceId } = useWorkspace();
+	const wallWorkspaceId = routeWorkspaceId ?? contextWorkspaceId;
+	// A used-up AI budget opens the AI wall; the modal stays mounted, as at every other wall.
+	const aiWall = useAiBudgetWall();
+	const onRefused = (error: unknown) => {
+		aiWall.openFor(error);
+	};
+	const walled = aiBudgetDetails(request.error) !== null;
 	const isConversationScoped = recipe.scopeKeyPattern.includes("conversation:");
 	const [conversationId, setConversationId] = useState<string | null>(null);
-	const defaults = useMemo(
-		() =>
-			Object.fromEntries(
-				Object.entries(recipe.parametersSchema?.properties ?? {})
-					.filter(([, schema]) => schema.default !== undefined)
-					.map(([name, schema]) => [name, schema.default]),
-			),
-		[recipe.parametersSchema],
-	);
+	const defaults = useMemo(() => recipeDefaults(recipe, runs), [recipe, runs]);
 	const scopeKey =
 		isConversationScoped && conversationId
 			? `conversation:${conversationId}`
@@ -465,7 +474,7 @@ function RecipeCard({
 				retry_run_id: isFailed ? latestRun?.id : undefined,
 				scope_key: scopeKey,
 			},
-			{ onSuccess: markRequested },
+			{ onError: onRefused, onSuccess: markRequested },
 		);
 	const runFresh = () =>
 		request.mutate(
@@ -475,7 +484,7 @@ function RecipeCard({
 				recipe_id: recipe.id,
 				scope_key: scopeKey,
 			},
-			{ onSuccess: markRequested },
+			{ onError: onRefused, onSuccess: markRequested },
 		);
 	const selectedSource = sources.find((source) => source.id === conversationId);
 	const scopeLabel = isConversationScoped
@@ -585,7 +594,8 @@ function RecipeCard({
 						canEdit={canRun}
 					/>
 				)}
-				{request.isError && <ErrorNotice error={request.error} />}
+				{/* The wall answers a used-up month. */}
+				{request.isError && !walled && <ErrorNotice error={request.error} />}
 				<Group>
 					{canRun && (
 						<Button
@@ -630,6 +640,14 @@ function RecipeCard({
 					</Accordion>
 				)}
 			</Stack>
+			{wallWorkspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="analysis"
+					workspaceId={wallWorkspaceId}
+					projectId={projectId}
+				/>
+			)}
 		</Card>
 	);
 }
@@ -734,10 +752,10 @@ function RunDetail({
 	const outputObjects = run.output?.objects ?? 0;
 	const confirmStop = () =>
 		openConfirm({
-			title: t`Stop run?`,
 			danger: true,
 			labels: { confirm: t`Stop run` },
 			onConfirm: () => cancel.mutate(run.id),
+			title: t`Stop run?`,
 		});
 	return (
 		<Paper withBorder p="lg">
@@ -826,10 +844,7 @@ function RunsView({ projectId }: { projectId: string }) {
 				</Text>
 			)}
 			{runs.data?.runs.map((run) => (
-				<EntityListRow
-					key={run.id}
-					onActivate={() => setSelected(run.id)}
-				>
+				<EntityListRow key={run.id} onActivate={() => setSelected(run.id)}>
 					<Stack gap="xs">
 						<Group gap="sm">
 							<Text>{run.recipeId}</Text>

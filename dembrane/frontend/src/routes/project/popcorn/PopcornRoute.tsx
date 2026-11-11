@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { useParams } from "react-router";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AiBudgetNotice } from "@/components/popcorn/AiBudgetNotice";
 import {
 	liveBooking,
 	type PopcornDetail,
@@ -72,9 +73,11 @@ function statusLine(popcorn: PopcornDetail): string {
 // itself opens in its own tab, the presenter view.
 function PopcornSession({
 	projectId,
+	workspaceId,
 	popcorn,
 }: {
 	projectId: string;
+	workspaceId: string;
 	popcorn: PopcornDetail;
 }) {
 	const invalidate = useInvalidatePopcorn(projectId);
@@ -113,6 +116,11 @@ function PopcornSession({
 					</Text>
 				</Stack>
 				<PopcornActions projectId={projectId} popcorn={popcorn} />
+				<AiBudgetNotice
+					status={popcorn.ai_budget}
+					workspaceId={workspaceId}
+					projectId={projectId}
+				/>
 				<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 					<PopcornStatus popcorn={popcorn} />
 					<PopcornScreenSettings projectId={projectId} popcorn={popcorn} />
@@ -195,5 +203,11 @@ export const PopcornRoute = () => {
 			/>
 		);
 	}
-	return <PopcornSession projectId={projectId} popcorn={popcorn} />;
+	return (
+		<PopcornSession
+			projectId={projectId}
+			workspaceId={workspaceId ?? ""}
+			popcorn={popcorn}
+		/>
+	);
 };

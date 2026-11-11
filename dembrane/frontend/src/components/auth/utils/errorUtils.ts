@@ -29,6 +29,7 @@ export function describeAuthError(e: unknown): string {
 			return t`That code is not right or has expired. Request a new one.`;
 		case "TOO_MANY_ATTEMPTS":
 		case "HTTP_429":
+		case "rate_limit.exceeded":
 			return t`Too many tries. Wait a moment, then request a new code.`;
 		case "INVALID_TOKEN":
 			return t`This link is not valid or has expired. Request a new one.`;

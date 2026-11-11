@@ -5,9 +5,11 @@ import {
 } from "@tanstack/react-query";
 import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export interface ProjectAccessPreview {
 	display_name: string;
@@ -146,11 +148,15 @@ export const useCreateWorkspaceProject = () => {
 			return createWorkspaceProject(workspaceId, name, language);
 		},
 		onError: (error: Error) => {
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			// The project count drives the create buttons' cap look.
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 };

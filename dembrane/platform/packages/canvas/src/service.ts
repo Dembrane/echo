@@ -8,6 +8,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import { type AccessDeps, canvasProject, canvasReport } from "./access";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
@@ -24,6 +25,8 @@ export interface CanvasDeps extends AccessDeps {
   readonly completer: Completer;
   readonly limiter: RateLimiter;
   readonly now: () => Date;
+  /** Throws the 402 `ai_budget` when the project's free AI budget is used up. */
+  readonly requireAiBudget: (projectId: string, now: Date) => Promise<void>;
   /** Starts a tick now (the manual refresh), on the worker. */
   readonly startTick: (loopId: string, tickKind: string) => Promise<void>;
   /** Tells open canvas pages a new generation exists. */
@@ -341,6 +344,7 @@ async function loopOf(d: CanvasDeps, reportId: string): Promise<Row> {
 export async function refreshCanvas(d: CanvasDeps, who: Signed, canvasId: string) {
   const { report } = await canvasReport(d, who, canvasId, "project:update");
   const loop = await loopOf(d, String(report.id));
+  await d.requireAiBudget(String(report.project_id), d.now());
   if (!(await d.limiter.allow(REFRESH_LIMIT, canvasId)))
     throw new RateLimitedError("canvas.just_refreshed");
   await d.startTick(String(loop.id), "manual");
@@ -411,6 +415,7 @@ export async function previewCanvas(
   body: { project_id: string; brief: string; gather_spec: Json | null; tabs: Json[] | null },
 ) {
   await canvasProject(d, who, body.project_id, "project:update");
+  await d.requireAiBudget(body.project_id, d.now());
   if (!(await d.limiter.allow(PREVIEW_LIMIT, body.project_id)))
     throw new RateLimitedError("canvas.just_previewed");
   const bundle = await executeGatherSpec(d, {
@@ -425,15 +430,19 @@ export async function previewCanvas(
   const name = orStr(isRecord(bundle.project) ? bundle.project.name : null) || "Canvas";
   let state = freshCanvasState();
   if (body.tabs?.length) state.tabs = normalizeCanvasTabs(body.tabs);
+  // No canvas exists yet: the body's project pays.
+  const payer = { ref: "project", id: body.project_id } as const;
   if (gatherHasTranscript(bundle)) {
     let extraction: Json;
     try {
-      extraction = await extractLivingCanvasUpdate(d.completer, {
-        bundle,
-        state,
-        reportName: name,
-        brief: body.brief,
-      });
+      extraction = await withPayer(payer, () =>
+        extractLivingCanvasUpdate(d.completer, {
+          bundle,
+          state,
+          reportName: name,
+          brief: body.brief,
+        }),
+      );
     } catch (err) {
       throw new StatusError(502, "canvas.extraction_failed", {
         params: { reason: err instanceof Error ? err.message : String(err) },
@@ -442,13 +451,15 @@ export async function previewCanvas(
     const [next, detail] = applyModelExtraction(state, bundle, extraction);
     state = next;
     try {
-      state.host_guide = await generateHostGuide(d.completer, {
-        reportName: name,
-        brief: body.brief,
-        state,
-        recent: detail as unknown as Json,
-        now: d.now(),
-      });
+      state.host_guide = await withPayer(payer, () =>
+        generateHostGuide(d.completer, {
+          reportName: name,
+          brief: body.brief,
+          state,
+          recent: detail as unknown as Json,
+          now: d.now(),
+        }),
+      );
     } catch {
       // The Open questions tab is optional in a preview.
     }

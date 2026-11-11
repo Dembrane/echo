@@ -13,11 +13,17 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@dembrane/allowance": "workspace:*",
+    "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/llm": "workspace:*",
-    "@dembrane/observability": "workspace:*"
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
+    "@dembrane/config": "workspace:*",
     "postgres": "^3.4.9"
   }
 }

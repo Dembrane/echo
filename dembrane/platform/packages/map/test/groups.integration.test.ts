@@ -8,7 +8,7 @@ import {
 } from "@dembrane/analysis";
 import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
-import { FakeCompleter } from "@dembrane/llm";
+import { FakeCompleter, lastPayer, takeUnscopedFakeCalls } from "@dembrane/llm";
 import postgres from "postgres";
 import { runGroup } from "../src/groups";
 import * as service from "../src/service";
@@ -95,6 +95,7 @@ run("map groups", () => {
     const d: service.GroupDeps = {
       store,
       rt,
+      db: database.db,
       dispatchGroup: async (job) => dispatched.push(job),
       onGroupChanged,
     };
@@ -117,7 +118,7 @@ run("map groups", () => {
     const broken = new FakeCompleter();
     expect(
       await runGroup(
-        { store, rt, completer: broken, onGroupChanged },
+        { store, rt, db: database.db, completer: broken, onGroupChanged },
         dispatched[0] as service.GroupJob,
       ),
     ).toBe("failed");
@@ -130,11 +131,14 @@ run("map groups", () => {
     expect(dispatched[1] as service.GroupJob).toEqual({ groupId: String(first.id), attempt: 2 });
     expect(woken).toEqual([project, project, project]);
     const completer = new FakeCompleter().on("Arguments in cluster", "  Ferry timetables  ");
-    const worker = { store, rt, completer, onGroupChanged };
+    const worker = { store, rt, db: database.db, completer, onGroupChanged };
     expect(await runGroup(worker, dispatched[0] as service.GroupJob)).toBe("stale");
     expect(woken).toHaveLength(3);
     // The title lands: the Map page and the room are both told.
+    takeUnscopedFakeCalls();
     expect(await runGroup(worker, dispatched[1] as service.GroupJob)).toBe("ready");
+    // The job names only its group; the title is billed to the group's project.
+    expect(lastPayer()).toEqual({ ref: "project", id: project });
     expect(published.at(-1)).toEqual({ type: "group", group_id: first.id });
     expect(woken).toEqual([project, project, project, project]);
     const user = String(completer.calls[0]?.user);
@@ -146,13 +150,18 @@ run("map groups", () => {
     expect(rest).toHaveLength(0);
     expect(listed).toMatchObject({ id: first.id, status: "ready", title: "Ferry timetables" });
     // Done is done: a run delivered twice writes nothing.
-    expect(await runGroup({ store, rt, completer }, dispatched[1] as service.GroupJob)).toBe(
-      "stale",
-    );
+    expect(
+      await runGroup({ store, rt, db: database.db, completer }, dispatched[1] as service.GroupJob),
+    ).toBe("stale");
   });
 
   test("what could never be titled is refused before anything is stored", async () => {
-    const d: service.GroupDeps = { store, rt, dispatchGroup: async () => undefined };
+    const d: service.GroupDeps = {
+      store,
+      rt,
+      db: database.db,
+      dispatchGroup: async () => undefined,
+    };
     const before = (await store.listGroups(project)).length;
     await expect(service.requestGroup(d, target, ["r1", "r2"], "host")).rejects.toThrow(
       "a title needs at least 3 objects",

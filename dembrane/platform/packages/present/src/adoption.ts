@@ -43,7 +43,7 @@ export function presentAdoption(o: AdoptionDeps): Adoption {
     limiter: new RateLimiter(new PostgresRateCounter(o.db)),
     logger: o.logger,
   });
-  const map = analysisMapStore(o.rt, new MapStore(clientOf(o.db)), o.ceilings);
+  const map = analysisMapStore(o.rt, new MapStore(clientOf(o.db)), o.ceilings, o.db);
   return {
     adopt: (report, projectId, newest) => adoptResults(d, map, report, projectId, !newest),
     requestMap: (projectId, actorId) => map.requestGeneration(projectId, actorId),

@@ -22,8 +22,10 @@ import {
 	selectAllContext,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import type { ListQuery } from "@/lib/listQuery";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
+import type { FinalTranscriptData } from "../sentences";
 
 type ConversationBffListParams = {
 	search_text?: string;
@@ -111,10 +113,26 @@ type AddChatContextMutationContext = {
 	previousChatContext?: TProjectChatContext;
 };
 
+// A refetch reloads every loaded page, so stop once the parts can no longer change.
+export const transcriptRefetchInterval = (
+	isFinished: boolean,
+	pages:
+		| { chunks: Pick<ConversationChunk, "error" | "transcript">[] }[]
+		| undefined,
+	interval: number | false,
+): number | false => {
+	if (!isFinished) return interval;
+	const isTranscribing = (pages ?? []).some((page) =>
+		page.chunks.some((chunk) => !chunk.transcript?.trim() && !chunk.error),
+	);
+	return isTranscribing ? interval : false;
+};
+
 export const useInfiniteConversationChunks = (
 	conversationId: string,
 	options?: {
 		initialLimit?: number;
+		isFinished?: boolean;
 		refetchInterval?: number | false;
 	},
 ) => {
@@ -123,7 +141,10 @@ export const useInfiniteConversationChunks = (
 		refetchInterval: 30000,
 	};
 
-	const { initialLimit, refetchInterval } = { ...defaultOptions, ...options };
+	const { initialLimit, isFinished, refetchInterval } = {
+		...defaultOptions,
+		...options,
+	};
 
 	return useInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
@@ -147,13 +168,45 @@ export const useInfiniteConversationChunks = (
 			};
 		},
 		queryKey: ["conversations", conversationId, "chunks", "infinite"],
-		refetchInterval,
+		refetchInterval: (query) =>
+			isFinished === undefined
+				? refetchInterval
+				: transcriptRefetchInterval(
+						isFinished,
+						query.state.data?.pages,
+						refetchInterval,
+					),
 	});
 };
 
-export const useUpdateConversationByIdMutation = () => {
+/**
+ * The transcript made from the whole recording once the conversation is finished, with its
+ * timed sentences and the merged audio. Until it exists the dashboard shows the live text,
+ * so a finished conversation is asked again every half minute.
+ */
+export const useConversationFinalTranscript = (
+	conversationId: string,
+	isFinished: boolean,
+) =>
+	useQuery({
+		queryFn: () =>
+			bff.get<FinalTranscriptData>(
+				`/conversations/${conversationId}/final-transcript`,
+			),
+		queryKey: ["conversations", conversationId, "final-transcript"],
+		refetchInterval: (query) =>
+			isFinished && !query.state.data?.available ? 30000 : false,
+		// The audio link is signed for hours; a refetch hands out a fresh one.
+		staleTime: 5 * 60 * 1000,
+	});
+
+export const useUpdateConversationByIdMutation = (
+	opts: { onError?: (error: unknown) => void } = {},
+) => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		// Set, it replaces the app-wide error toast.
+		...(opts.onError && { onError: opts.onError }),
 		mutationFn: ({
 			id,
 			payload,
@@ -619,6 +672,8 @@ export const useRetranscribeConversationMutation = () => {
 				attachVerifiedArtifacts,
 			),
 		onError: (error) => {
+			// The modal opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") return;
 			toast.error(t`Failed to retranscribe conversation. Please try again.`);
 			console.error("Retranscribe error:", error);
 		},

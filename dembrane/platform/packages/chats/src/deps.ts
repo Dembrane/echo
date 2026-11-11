@@ -4,6 +4,7 @@ import type { Models } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import type { ChatReads } from "./conversations";
+import type { FreeChats } from "./free";
 import type { ChatsStorage } from "./storage";
 
 /** What the chat services use; built once by the routes, faked in tests. */
@@ -11,6 +12,9 @@ export interface ChatDeps {
   readonly store: ChatsStorage;
   readonly reads: ChatReads;
   readonly access: Access;
+  readonly freeChats: FreeChats;
+  /** Throws the 402 `ai_budget` when the project's free account has used its AI budget. */
+  readonly requireAiBudget: (projectId: string, now: Date, tier?: string | null) => Promise<void>;
   /** Language models by group; tests pass fakes. */
   readonly models: Pick<Models, "model">;
   readonly limiter: Pick<RateLimiter, "check">;
@@ -20,7 +24,9 @@ export interface ChatDeps {
   readonly newId: () => string;
   /** How long a reply may stay silent before the dashboard is told the system is busy. */
   readonly highLoadDelayMs: number;
-  /** Per-process cache of suggestions for fresh chats (Redis in the Python API). */
+  /** Overrides the suggestions time limit; tests use it to keep a stalled model quick. */
+  readonly suggestionTimeoutMs?: number;
+  /** Per-process cache of suggestions per chat state (Redis in the Python API). */
   readonly suggestionCache: Map<string, { at: number; value: Suggestion[] }>;
 }
 

@@ -85,8 +85,6 @@ Click a tile for the "Conversation" dialog. It holds:
 
 - Audio you uploaded in the dashboard, and retranscribed copies.
 - The words being said. A tile shows state and audio level, not transcript text.
-- On a free workspace that has used its hour, tiles are locked and open the upgrade dialog.
-  See [recording](./recording.md).
 
 ## Related
 

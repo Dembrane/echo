@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatComposerShell } from "@/components/chat/ChatComposer";
 import { useVoiceRecorder } from "@/components/voice/useVoiceRecorder";
 import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
+import { voiceErrorMessage } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import {
 	formatElapsed,
@@ -43,11 +44,12 @@ import type { VoiceAttachment } from "./submitConfiguration";
 
 type VoiceOutcome = "transcribed" | "blocked" | "failed" | "cancelled";
 
-/** The mic said no. These step the button aside rather than failing a send. */
+/** The mic or the AI budget said no. These step the button aside rather than failing a send. */
 const BLOCKED_KINDS = new Set<VoiceErrorKind>([
 	"permission",
 	"unsupported",
 	"device",
+	"free_limit",
 ]);
 
 export const PricingTextInput = ({
@@ -62,6 +64,7 @@ export const PricingTextInput = ({
 	questionKey,
 	testIdPrefix,
 	value,
+	workspaceId,
 }: {
 	ariaLabelledBy?: string;
 	minRows?: number;
@@ -77,13 +80,14 @@ export const PricingTextInput = ({
 		seconds: number,
 	) => void;
 	placeholder?: string;
-	/** The project the transcription is billed to, where the mount has one.
-	 * Without it the call names the intake purpose instead, which the endpoint
-	 * accepts unmetered, so the record button renders either way. */
+	/** The project that pays, where the mount has one; without it the call names
+	 * the intake purpose (and the workspace, if any), so the button renders either way. */
 	projectId?: string;
 	questionKey: string;
 	testIdPrefix: string;
 	value: string;
+	/** Pays for a project-less transcription when the form opens inside a workspace. */
+	workspaceId?: string;
 }) => {
 	const [isTranscribing, setIsTranscribing] = useState(false);
 	const [errorKind, setErrorKind] = useState<VoiceErrorKind | null>(null);
@@ -142,6 +146,7 @@ export const PricingTextInput = ({
 								filename: "voice-note.webm",
 								purpose: "pricing_intake",
 								signal: controller.signal,
+								workspaceId,
 							},
 				);
 				if (unmountedRef.current || controller.signal.aborted) return;
@@ -176,7 +181,14 @@ export const PricingTextInput = ({
 				if (!unmountedRef.current) setIsTranscribing(false);
 			}
 		},
-		[onAudioRetained, onChange, onVoiceAttempt, projectId, questionKey],
+		[
+			onAudioRetained,
+			onChange,
+			onVoiceAttempt,
+			projectId,
+			questionKey,
+			workspaceId,
+		],
 	);
 
 	const recorder = useVoiceRecorder({
@@ -297,10 +309,14 @@ export const PricingTextInput = ({
 
 			{isBlocked && (
 				<Text size="sm" {...testId(`${testIdPrefix}-voice-blocked`)}>
-					<Trans>
-						The microphone is blocked in your browser, so recording is off.
-						Typing works.
-					</Trans>
+					{errorKind === "free_limit" ? (
+						voiceErrorMessage(errorKind)
+					) : (
+						<Trans>
+							The microphone is blocked in your browser, so recording is off.
+							Typing works.
+						</Trans>
+					)}
 				</Text>
 			)}
 

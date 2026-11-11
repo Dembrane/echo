@@ -57,6 +57,7 @@ function memStore() {
     },
     unforwardedBookings: async () =>
       [...rows.values()].filter((r) => r.booking_uid && !r.booking_notified_at),
+    unforwardedEnquiries: async () => [],
     recentEnquiries: async (since) =>
       [...rows.values()].filter(
         (r) => !r.is_internal && r.email && r.updated_at && new Date(r.updated_at) > since,
@@ -93,6 +94,24 @@ test("one row per session, a stable reference, submitted never goes back", async
   expect(second.reference).toBe(first.reference);
   expect(rows.size).toBe(1);
   expect([...rows.values()][0]?.status).toBe("submitted");
+});
+
+test("submitted_at is set once, when the row first becomes submitted", async () => {
+  const { store, rows } = memStore();
+  let now = new Date("2026-11-04T09:00:00.000Z");
+  const d = {
+    store,
+    storage: new FilesystemStorage(root, "http://t"),
+    logger,
+    clock: () => now,
+  };
+  await upsertConfiguration(d, base, [], id);
+  expect([...rows.values()][0]?.submitted_at ?? null).toBeNull();
+  now = new Date("2026-11-04T09:05:00.000Z");
+  await upsertConfiguration(d, { ...base, status: "submitted" }, [], id);
+  now = new Date("2026-11-04T09:09:00.000Z");
+  await upsertConfiguration(d, { ...base, status: "submitted" }, [], id);
+  expect([...rows.values()][0]?.submitted_at).toBe("2026-11-04T09:05:00.000Z");
 });
 
 test("another user's session is refused", async () => {
@@ -207,6 +226,52 @@ test("summary reads like the old one", () => {
   expect(configWithBooking({ a: 1 }, { config: { booking: {} } }, null)).toEqual({ a: 1 });
 });
 
+test("a website plan reads as the plan it priced, not as the app's questions", () => {
+  const link = "https://www.dembrane.com/pricing-calculator/plan?people=40&needs=org&step=4";
+  expect(
+    buildAnswersSummary(
+      {
+        use_case: ["year"],
+        shape: "year",
+        flow: "plan",
+        people: 40,
+        needs: ["org", "new_need"],
+        suggested: "steward",
+        plan: "steward",
+        yearly: 12400,
+      },
+      { shape: "year", flow: "plan", total: 3100, title: "Pro: Steward", link },
+    ),
+  ).toBe(
+    `Pro: Steward | People: 40 | Due now: €3,100 | Per year: €12,400 | Needs: single sign-on, own contract or DPIA, new_need | Plan: ${link}`,
+  );
+  expect(
+    buildAnswersSummary(
+      { use_case: ["event"], shape: "event", flow: "event", events: 2, total: 4250.5, pending: 1 },
+      { flow: "event", total: 4250.5, title: "2 events · Workshop", link: "javascript:alert(1)" },
+    ),
+  ).toBe("2 events · Workshop | Total: €4,250.50 | Still to confirm: 1");
+  // A website row whose offer is not there yet still never falls back to "Use case: year".
+  expect(buildAnswersSummary({ use_case: ["year"], shape: "year", flow: "plan" })).toBe("");
+});
+
+test("the app route says whether the website can find the row it saved", async () => {
+  const save = (a: Hono<Env>, s: string) =>
+    a.request("/api/v2/pricing-configurations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...base, config_session_id: s }),
+    });
+  const member = { appUserId: null, directusUserId: "u1", isStaff: false };
+  const withSite = await save(siteApp("tok", member).a, "h1");
+  expect(withSite.status).toBe(200);
+  expect(await withSite.json()).toMatchObject({ handover: true });
+  // EU production has no site token: the website writes elsewhere and would not find it.
+  const noSite = await save(siteApp(null, member).a, "h2");
+  expect(noSite.status).toBe(200);
+  expect(await noSite.json()).toMatchObject({ handover: false });
+});
+
 function siteApp(token: string | null, principal: Signed | null = null) {
   const { store, rows } = memStore();
   const staffAudit = new MemoryStaffAudit();
@@ -267,6 +332,70 @@ test("the site route: closed without a token, 401 on a wrong one, a WEB- row on 
       { type: "string_type", loc: ["email"], msg: "Input should be a valid string", input: 5 },
     ],
   });
+});
+
+test("a handover from the app links the website row to the account that saved it", async () => {
+  const post = (a: Hono<Env>, body: unknown) =>
+    a.request("/api/v2/pricing-configurations/site", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-site-token": "tok" },
+      body: JSON.stringify(body),
+    });
+  const { a, rows } = siteApp("tok");
+  const appRow = (id: string, over: Partial<PricingRow>) =>
+    rows.set(id, {
+      id,
+      reference: `DEM-${id}`,
+      config_session_id: `h-${id}`,
+      mount: "app",
+      user_id: "u1",
+      email: "member@example.org",
+      wall_key: "report_cap",
+      workspace_id: "w1",
+      org_id: "o1",
+      project_id: null,
+      status: "in_progress",
+      config: {},
+      created_at: new Date(Date.now() - 60_000).toISOString(),
+      ...over,
+    } as PricingRow);
+  appRow("A", {});
+  appRow("OLD", { created_at: new Date(Date.now() - 8 * 86_400_000).toISOString() });
+  appRow("SITE", { mount: "site" });
+  const site = (s: string) =>
+    [...rows.values()].find((r) => r.config_session_id === s) as PricingRow;
+
+  expect((await post(a, { ...base, config_session_id: "w1", handover: "h-A" })).status).toBe(200);
+  let row = site("w1");
+  expect(row.reference?.startsWith("WEB-")).toBe(true);
+  expect([row.email, row.user_id, row.wall_key, row.workspace_id, row.org_id]).toEqual([
+    "member@example.org",
+    null,
+    "report_cap",
+    "w1",
+    "o1",
+  ]);
+  expect(row.config).toEqual({ from_app: { reference: "DEM-A" } });
+
+  // A typed address wins; the link survives a write that no longer carries the handover.
+  await post(a, { ...base, config_session_id: "w1", handover: "h-A", email: "Me@Example.org" });
+  expect(site("w1").email).toBe("me@example.org");
+  await post(a, { ...base, config_session_id: "w1", config: { total: 1 } });
+  row = site("w1");
+  expect(row.email).toBe("me@example.org");
+  expect(row.config).toEqual({ total: 1, from_app: { reference: "DEM-A" } });
+
+  // Expired, unknown, or not an app row: the write goes through, unlinked.
+  for (const [s, h] of [
+    ["w2", "h-OLD"],
+    ["w3", "nope"],
+    ["w4", "h-SITE"],
+  ]) {
+    expect((await post(a, { ...base, config_session_id: s, handover: h })).status).toBe(200);
+    expect([site(s as string).email, site(s as string).config]).toEqual([null, {}]);
+  }
+  // The handover id is the app row's own session: the site cannot write to it.
+  expect((await post(a, { ...base, config_session_id: "h-A" })).status).toBe(403);
 });
 
 test("the staff enquiry list: staff only, audited, external rows that moved in the window", async () => {

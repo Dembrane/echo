@@ -10,6 +10,7 @@ public enum APIError: Error, Sendable, Equatable {
 public protocol DembraneAPIClientProtocol: Sendable {
     func me() async throws -> Me
     func deleteAccount() async throws
+    func completeOnboarding(orgName: String) async throws
     func workspaces() async throws -> [Workspace]
     func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage
     func portalSettings(projectId: String) async throws -> PortalSettings
@@ -33,9 +34,8 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func replaceConversationTags(conversationId: String, tagIds: [String]) async throws
 }
 
-/// Real client. Cookie-based Directus session is carried by the injected
-/// URLSession's `HTTPCookieStorage`. Response envelopes are decoded leniently;
-/// they'll be tightened in M1 when wired against the live server.
+/// Real client. Every call carries the session token as `Authorization: Bearer`
+/// from `tokenProvider`. Response envelopes are decoded leniently.
 public actor LiveAPIClient: DembraneAPIClientProtocol {
     private let endpoints: DembraneEndpoints
     private let session: URLSession
@@ -166,6 +166,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         try await send(endpoints.deleteAccount(), method: "DELETE")
     }
 
+    public func completeOnboarding(orgName: String) async throws {
+        try await sendJSON(endpoints.completeOnboarding(), method: "POST", body: ["org_name": orgName])
+    }
+
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
@@ -246,6 +250,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public init() {}
     public func me() async throws -> Me { .preview }
     public func deleteAccount() async throws {}
+    public func completeOnboarding(orgName: String) async throws {}
     public func workspaces() async throws -> [Workspace] { [.preview] }
     public func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage {
         WorkspaceUsage(overCapActive: false, uploadsLocked: false, upgradeCtaTier: nil)

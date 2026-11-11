@@ -21,6 +21,7 @@ import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
+import { useResendCooldown } from "@/components/auth/useResendCooldown";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
@@ -32,6 +33,7 @@ import {
 	resolveNextPath,
 } from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { promptFor } from "@/features/accounts/help/tasksPromptState";
@@ -41,8 +43,9 @@ import {
 } from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
+	type OtherDevice,
 	otherSessions,
-	replaceOtherSessions,
+	replaceOtherDevice,
 	sendSignInCode,
 	signOut,
 } from "@/lib/auth";
@@ -115,18 +118,19 @@ export const LoginRoute = () => {
 	const [codeSent, setCodeSent] = useState(false);
 	const [code, setCode] = useState("");
 	const [codeSending, setCodeSending] = useState(false);
+	const resendCooldown = useResendCooldown();
 	const [formParent] = useAutoAnimate();
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
 	const posthog = usePostHog();
 	const queryClient = useQueryClient();
-	// Set when the sign-in was right but the account is signed in on another browser: the
-	// person chooses here whether to replace that session.
+	// A third device needs an explicit choice of which active device to sign out.
 	const [elsewhere, setElsewhere] = useState<{
 		email: string;
-		since: string | null;
+		devices: OtherDevice[];
 	} | null>(null);
 	const [replacing, setReplacing] = useState(false);
+	const [replacementError, setReplacementError] = useState("");
 
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
@@ -231,31 +235,38 @@ export const LoginRoute = () => {
 		navigate("/o");
 	};
 
-	// Every sign-in passes here. One browser per account: when another is signed in, ask
-	// before going on.
+	// Every sign-in passes here. When both device slots are occupied, ask before going on.
 	const afterCredentials = async (email: string) => {
 		const state = await otherSessions();
 		if (state.held) {
 			// The same curtain as any sign-in; it opens onto the choice instead of the app.
 			await runTransition({ message: t`Welcome back` });
-			setElsewhere({ email, since: state.since });
+			setReplacementError("");
+			setElsewhere({ devices: state.devices, email });
 			return;
 		}
 		await afterSignIn(email);
 	};
 
-	const logInAnyway = async () => {
+	const logInOnThisDevice = async (sessionId: string) => {
 		if (!elsewhere || replacing) return;
 		setReplacing(true);
+		setReplacementError("");
 		try {
-			await replaceOtherSessions();
+			await replaceOtherDevice(sessionId);
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 			// /v2/me answered 401 while the sign-in was held.
 			await queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			await afterSignIn(elsewhere.email, false);
-		} catch {
-			setElsewhere(null);
-			setError(t`Something went wrong`);
+		} catch (error) {
+			const state = await otherSessions().catch(() => null);
+			if (state?.held) setElsewhere({ ...elsewhere, devices: state.devices });
+			const code = authErrorCode(error);
+			setReplacementError(
+				code === "HTTP_409" || code === "CONFLICT"
+					? t`Your active devices changed. Choose a device again.`
+					: t`Something went wrong`,
+			);
 		} finally {
 			setReplacing(false);
 		}
@@ -336,12 +347,16 @@ export const LoginRoute = () => {
 	const onSubmit = handleSubmit((formData) => submitLogin(formData));
 
 	const requestCode = async () => {
+		if (codeSending || (codeSent && resendCooldown.wait > 0)) return;
+		const resend = codeSent;
 		setError("");
 		setCodeSending(true);
 		try {
 			await sendSignInCode(codeEmail.trim());
 			setCodeSent(true);
 			setCode("");
+			resendCooldown.start();
+			if (resend) toast.success(t`We sent a new code to ${codeEmail}.`);
 		} catch (e) {
 			setError(describeAuthError(e));
 		} finally {
@@ -386,9 +401,10 @@ export const LoginRoute = () => {
 		<div className="h-full w-full">
 			{elsewhere && (
 				<SignedInElsewhere
-					since={elsewhere.since}
+					devices={elsewhere.devices}
 					loading={replacing}
-					onConfirm={logInAnyway}
+					error={replacementError}
+					onConfirm={logInOnThisDevice}
 					onCancel={stayLoggedOut}
 				/>
 			)}
@@ -577,8 +593,19 @@ export const LoginRoute = () => {
 					{codeMode ? (
 						<Stack gap="xs" align="center">
 							{codeSent && (
-								<Button variant="subtle" color="gray" onClick={requestCode}>
-									<Trans>Send a new code</Trans>
+								<Button
+									variant="subtle"
+									color="gray"
+									loading={codeSending}
+									disabled={resendCooldown.wait > 0}
+									onClick={requestCode}
+									{...testId("auth-login-code-resend")}
+								>
+									{resendCooldown.wait > 0 ? (
+										<Trans>Send a new code in {resendCooldown.wait}s</Trans>
+									) : (
+										<Trans>Send a new code</Trans>
+									)}
 								</Button>
 							)}
 							<Button

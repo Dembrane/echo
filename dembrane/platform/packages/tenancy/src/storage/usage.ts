@@ -2,7 +2,7 @@ import { schema } from "@dembrane/db";
 import { and, asc, eq, gte, inArray, isNull, lt, type SQL, sql } from "drizzle-orm";
 import type { Conn } from "../db";
 
-const { project, conversation, project_chat, project_chat_message, project_report } = schema;
+const { project, conversation } = schema;
 
 /**
  * Not a sample copy (packages/samples): every count and sum of usage, and every free-tier
@@ -160,70 +160,6 @@ export async function hoursByProject(db: Conn, projectIds: readonly string[]) {
     .where(and(inArray(conversation.project_id, [...projectIds]), isNull(conversation.deleted_at)))
     .groupBy(conversation.project_id);
   return new Map(rows.map((r) => [r.pid, Number(r.sum ?? 0) || 0]));
-}
-
-// ── free tier counters ──────────────────────────────────────────────────
-
-/** Chats with at least one user message: an opened but unused chat does not spend the allowance. */
-export async function countUsedChats(db: Conn, projectIds: readonly string[]) {
-  if (!projectIds.length) return 0;
-  const [row] = await db
-    .select({ n: sql<number>`count(distinct ${project_chat_message.project_chat_id})::int` })
-    .from(project_chat_message)
-    .innerJoin(project_chat, eq(project_chat.id, project_chat_message.project_chat_id))
-    .where(
-      and(
-        inArray(project_chat.project_id, [...projectIds]),
-        isNull(project_chat.deleted_at),
-        eq(project_chat_message.message_from, "user"),
-      ),
-    );
-  return row?.n ?? 0;
-}
-
-export async function oldestLiveChat(db: Conn, projectIds: readonly string[]) {
-  if (!projectIds.length) return null;
-  const [row] = await db
-    .select({ id: project_chat.id })
-    .from(project_chat)
-    .where(and(inArray(project_chat.project_id, [...projectIds]), isNull(project_chat.deleted_at)))
-    .orderBy(asc(project_chat.date_created))
-    .limit(1);
-  return row?.id ?? null;
-}
-
-/** Reports only: a canvas is a project_report row too and must not spend the report allowance. */
-export async function countReports(db: Conn, projectIds: readonly string[]) {
-  if (!projectIds.length) return 0;
-  const [row] = await db
-    .select({ n: sql<number>`count(${project_report.id})::int` })
-    .from(project_report)
-    .where(
-      and(
-        inArray(project_report.project_id, [...projectIds]),
-        isNull(project_report.deleted_at),
-        eq(project_report.kind, "report"),
-      ),
-    );
-  return row?.n ?? 0;
-}
-
-export async function oldestReport(db: Conn, projectIds: readonly string[]) {
-  if (!projectIds.length) return null;
-  const [row] = await db
-    .select({ id: project_report.id })
-    .from(project_report)
-    .where(
-      and(
-        inArray(project_report.project_id, [...projectIds]),
-        isNull(project_report.deleted_at),
-        eq(project_report.kind, "report"),
-      ),
-    )
-    .orderBy(asc(project_report.date_created))
-    .limit(1);
-  // bigserial: the old API returned it as a JSON number.
-  return row ? Number(row.id) : null;
 }
 
 /** Conversations stamped over the free cap, cleared on downgrade so earlier content stays readable. */

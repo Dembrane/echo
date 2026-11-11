@@ -7,7 +7,7 @@ import { Access, DrizzleAccessStore } from "@dembrane/access";
 import { AudioUrls, ParticipantTokens } from "@dembrane/conversations";
 import { PlatformError } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
-import type { Models } from "@dembrane/llm";
+import { fakeModels } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import { FilesystemStorage } from "@dembrane/storage";
 import { Hono } from "hono";
@@ -42,32 +42,6 @@ const quiet = createLogger(
   new Writable({ write: (_c, _e, cb) => cb() }),
 );
 
-/** A model that records each prompt and answers from a script. */
-function fakeModels(answers: string[], prompts: unknown[]): Models {
-  const model = {
-    specificationVersion: "v4",
-    provider: "fake",
-    modelId: "fake-model",
-    supportedUrls: {},
-    async doGenerate(o: { prompt: unknown }) {
-      prompts.push(o.prompt);
-      return {
-        content: [{ type: "text", text: answers.shift() ?? "answer" }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage: {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 1, text: 1, reasoning: 0 },
-        },
-        warnings: [],
-      };
-    },
-    async doStream() {
-      throw new Error("not used");
-    },
-  };
-  return { model: () => model as never, embedding: () => ({}) as never };
-}
-
 run("verify generation against the seed", () => {
   setDefaultTimeout(20_000);
   let database: ReturnType<typeof createDb>;
@@ -92,7 +66,12 @@ run("verify generation against the seed", () => {
       access: new Access(new DrizzleAccessStore(database.db)),
       audio,
       audioUrls: new AudioUrls("http://s3.test", "bucket"),
-      models: fakeModels(answers, prompts),
+      models: fakeModels({
+        text: (prompt) => {
+          prompts.push(prompt);
+          return answers.shift() ?? "answer";
+        },
+      }),
       tokens,
       logger: quiet,
       now: () => new Date("2026-09-27T12:00:00Z"),

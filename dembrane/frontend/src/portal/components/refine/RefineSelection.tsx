@@ -4,6 +4,7 @@ import { useLocalStorage } from "@mantine/hooks";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { AiUnavailableText } from "@/portal/components/AiUnavailable";
 import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
 
@@ -17,13 +18,17 @@ export const RefineSelection = () => {
 		key: `refine_disabled_${conversationId}`,
 	});
 
+	const aiUnavailable = projectQuery.data?.is_ai_available === false;
+	const verifyLocked = aiUnavailable || cooldown.verify.isActive;
+	const echoLocked = aiUnavailable || cooldown.echo.isActive;
+
 	const handleVerifyClick = () => {
-		if (cooldown.verify.isActive) return;
+		if (verifyLocked) return;
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
 	const handleEchoClick = () => {
-		if (cooldown.echo.isActive) return;
+		if (echoLocked) return;
 		cooldown.startEchoCooldown();
 		// Disable refine button while echo is generating
 		setIsRefineDisabled(true);
@@ -51,10 +56,10 @@ export const RefineSelection = () => {
 				<UnstyledButton
 					onClick={handleVerifyClick}
 					className={`${flexClass} app-do block w-full p-6`}
-					aria-disabled={cooldown.verify.isActive || undefined}
+					aria-disabled={verifyLocked || undefined}
 					style={{
-						cursor: cooldown.verify.isActive ? "not-allowed" : "pointer",
-						opacity: cooldown.verify.isActive ? 0.6 : 1,
+						cursor: verifyLocked ? "not-allowed" : "pointer",
+						opacity: verifyLocked ? 0.6 : 1,
 					}}
 					{...testId("portal-echo-verify-card")}
 				>
@@ -69,7 +74,9 @@ export const RefineSelection = () => {
 							</Trans>
 						</Text>
 
-						{cooldown.verify.isActive && (
+						{aiUnavailable && <AiUnavailableText />}
+
+						{!aiUnavailable && cooldown.verify.isActive && (
 							<Stack gap="xs" w="100%">
 								<Text size="sm" c="dimmed">
 									<Trans id="participant.refine.cooling.down">
@@ -92,10 +99,10 @@ export const RefineSelection = () => {
 				<UnstyledButton
 					onClick={handleEchoClick}
 					className={`${flexClass} app-do block w-full p-6`}
-					aria-disabled={cooldown.echo.isActive || undefined}
+					aria-disabled={echoLocked || undefined}
 					style={{
-						cursor: cooldown.echo.isActive ? "not-allowed" : "pointer",
-						opacity: cooldown.echo.isActive ? 0.6 : 1,
+						cursor: echoLocked ? "not-allowed" : "pointer",
+						opacity: echoLocked ? 0.6 : 1,
 					}}
 					{...testId("portal-echo-explore-card")}
 				>
@@ -110,7 +117,9 @@ export const RefineSelection = () => {
 							</Trans>
 						</Text>
 
-						{cooldown.echo.isActive && (
+						{aiUnavailable && <AiUnavailableText />}
+
+						{!aiUnavailable && cooldown.echo.isActive && (
 							<Stack gap="xs" w="100%">
 								<Text size="sm" c="dimmed">
 									<Trans id="participant.refine.cooling.down">

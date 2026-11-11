@@ -229,6 +229,19 @@ export function projectsStorage(db: Db) {
       return row ?? null;
     },
 
+    /** A project's tags in their shown order, locked until the transaction ends. Call inside one. */
+    async lockTags(projectId: string) {
+      const rows = await db
+        .select({ id: project_tag.id, sort: project_tag.sort })
+        .from(project_tag)
+        .where(eq(project_tag.project_id, projectId))
+        .orderBy(asc(project_tag.id))
+        .for("update");
+      return rows.sort(
+        (a, b) => (a.sort ?? Infinity) - (b.sort ?? Infinity) || a.id.localeCompare(b.id),
+      );
+    },
+
     async insertTags(rows: (typeof project_tag.$inferInsert)[]) {
       if (rows.length) await db.insert(project_tag).values(rows);
     },
@@ -346,6 +359,7 @@ export function projectsStorage(db: Db) {
           project_id: project_report.project_id,
           show_portal_link: project_report.show_portal_link,
           date_created: project_report.date_created,
+          error_code: project_report.error_code,
           error_message: project_report.error_message,
           content: project_report.content,
         })
@@ -395,23 +409,6 @@ export function projectsStorage(db: Db) {
         )
         .limit(1);
       return Boolean(row);
-    },
-
-    /** The free tier's report count: a sample copy's reports are not the workspace's own. */
-    async countWorkspaceReports(workspaceId: string) {
-      const [row] = await db
-        .select({ n: count(project_report.id) })
-        .from(project_report)
-        .innerJoin(project, eq(project.id, project_report.project_id))
-        .where(
-          and(
-            eq(project.workspace_id, workspaceId),
-            eq(project.is_sample, false),
-            isNull(project_report.deleted_at),
-            eq(project_report.kind, "report"),
-          ),
-        );
-      return row?.n ?? 0;
     },
 
     /** A sample copy's live reports, for its own free-tier report. */

@@ -1,3 +1,4 @@
+import { isFreeLimit } from "@dembrane/allowance";
 import {
   type AnalysisRuntime,
   AnalysisStoreError,
@@ -14,6 +15,7 @@ import {
   type Snapshot,
 } from "@dembrane/analysis";
 import { NotFoundError, UnavailableError, ValidationError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import {
   assessmentState,
   factCheckStates,
@@ -47,18 +49,23 @@ export interface MapStore {
   graph(snapshot: Snapshot, budgets: ResolvedBudgets): Promise<GraphAndChecks>;
   /** A legacy result's graph with its fact-check states; null when the row is gone. */
   legacyGraph(resultId: string, budgets: ResolvedBudgets): Promise<GraphAndChecks | null>;
-  /** Starts a map generation for the project, as the host's Generate does. */
-  requestGeneration(projectId: string, actorId: string | null): Promise<void>;
+  /** Starts a map generation for the project, as the host's Generate does; false when the AI budget is used up. */
+  requestGeneration(projectId: string, actorId: string | null): Promise<boolean>;
   /** The project's groups as stored, newest first: the host map's History. */
   groups(projectId: string): Promise<Row[]>;
   /** The deployment's budget ceilings (ANALYSIS_NODE_LIMIT_CEILING and the edge one). */
   readonly ceilings: Ceilings;
 }
 
-export function analysisMapStore(rt: AnalysisRuntime, rows: MapRows, ceilings: Ceilings): MapStore {
+export function analysisMapStore(
+  rt: AnalysisRuntime,
+  rows: MapRows,
+  ceilings: Ceilings,
+  db: Db,
+): MapStore {
   const store = rt.store;
   const reads = new MapViewReads(store);
-  const deps = { store: rows, rt };
+  const deps = { store: rows, rt, db };
   const query = (budgets: ResolvedBudgets) => ({ types: null, scope: null, budgets });
   return {
     ceilings,
@@ -94,7 +101,14 @@ export function analysisMapStore(rt: AnalysisRuntime, rows: MapRows, ceilings: C
       };
     },
     async requestGeneration(projectId, actorId) {
-      await requestGeneration(deps, projectId, actorId);
+      try {
+        await requestGeneration(deps, projectId, actorId);
+        return true;
+      } catch (err) {
+        // The month's AI budget is used up: the room keeps the map it has.
+        if (!isFreeLimit(err, "ai_budget")) throw err;
+        return false;
+      }
     },
     groups: (projectId) => rows.listGroups(projectId),
   };

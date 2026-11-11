@@ -333,19 +333,72 @@ export const store = {
       .orderBy(desc(doc.createdAt), desc(doc.id));
   },
 
-  /** What the deal stage is read from, for many organisations in two reads. */
+  /**
+   * Signed offers invoiced in parts, with the subjects of the requests their organisation
+   * already made, for the tick that asks for each part on its day. Offers whose every part
+   * was asked for are left out by the caller; there are few, one per deal.
+   */
+  async offersInParts(c: Conn) {
+    const docs = await c
+      .select()
+      .from(doc)
+      .where(
+        and(
+          eq(doc.kind, "offer"),
+          eq(doc.status, "signed"),
+          sql`(${doc.content}->'invoice_plan') is not null`,
+        ),
+      );
+    if (!docs.length)
+      return { docs, asked: new Set<string>(), acceptedOn: new Map<string, string>() };
+    const rows = await c
+      .select({ id: event.subjectId })
+      .from(event)
+      .where(
+        and(
+          inArray(event.orgId, [...new Set(docs.map((x) => x.orgId))]),
+          eq(event.type, "invoice.requested"),
+        ),
+      );
+    // Accepted outside dembrane: the parts count from the day the customer accepted.
+    const outside = await c
+      .select({ documentId: signature.documentId, acceptedOn: signature.acceptedOn })
+      .from(signature)
+      .where(
+        and(
+          inArray(
+            signature.documentId,
+            docs.map((x) => x.id),
+          ),
+          eq(signature.method, "outside"),
+        ),
+      );
+    return {
+      docs,
+      asked: new Set(rows.flatMap((r) => (r.id ? [r.id] : []))),
+      acceptedOn: new Map(
+        outside.flatMap((r) => (r.acceptedOn ? [[r.documentId, r.acceptedOn] as const] : [])),
+      ),
+    };
+  },
+
+  /** What the deal stage and its dates are read from, for many organisations in three reads. */
   async stageFacts(c: Conn, orgIds: readonly string[]) {
-    if (!orgIds.length) return { documents: [], billing: [] };
-    const [documents, billing] = await Promise.all([
+    if (!orgIds.length) return { documents: [], billing: [], billingSaved: [] };
+    const [documents, billing, billingSaved] = await Promise.all([
       c
         .select({
+          id: doc.id,
+          supersedesId: doc.supersedesId,
           orgId: doc.orgId,
           kind: doc.kind,
           status: doc.status,
           createdAt: doc.createdAt,
+          sentAt: doc.sentAt,
           signedAt: doc.signedAt,
           dpaTextId: doc.dpaTextId,
           invoiceStatus: doc.invoiceStatus,
+          billsOther: sql<boolean>`(${doc.content}->'bill_to') is not null or (${doc.content}->'no_charge') is not null`,
         })
         .from(doc)
         .where(
@@ -358,8 +411,14 @@ export const store = {
           and(inArray(billing_account.org_id, [...orgIds]), isNull(billing_account.deleted_at)),
         )
         .orderBy(asc(billing_account.created_at)),
+      // When the details were last saved: the billing row also changes with the plan.
+      c
+        .select({ orgId: event.orgId, at: sql<Date>`max(${event.createdAt})` })
+        .from(event)
+        .where(and(inArray(event.orgId, [...orgIds]), eq(event.type, "billing_details.updated")))
+        .groupBy(event.orgId),
     ]);
-    return { documents, billing };
+    return { documents, billing, billingSaved };
   },
 
   async document(c: Conn, orgId: string, id: string): Promise<DocumentRow | null> {
@@ -409,17 +468,35 @@ export const store = {
     if (rows.length) await c.insert(field).values(rows);
   },
 
+  /** The customer's signature of each signed document of an organisation. */
   async signatures(c: Conn, orgId: string): Promise<SignatureRow[]> {
-    return c.select().from(signature).where(eq(signature.orgId, orgId));
+    return c
+      .select()
+      .from(signature)
+      .where(and(eq(signature.orgId, orgId), eq(signature.slot, "customer")));
   },
 
+  /**
+   * The customer's signature of a document: the first, and on a document that asks for one
+   * signature the only one. Its signer, values and reference are what the document's
+   * acceptance says.
+   */
   async signatureOf(c: Conn, documentId: string): Promise<SignatureRow | null> {
     const [row] = await c
       .select()
       .from(signature)
-      .where(eq(signature.documentId, documentId))
+      .where(and(eq(signature.documentId, documentId), eq(signature.slot, "customer")))
       .limit(1);
     return row ?? null;
+  },
+
+  /** Every signature of a document, in the order they were made. */
+  async signaturesOf(c: Conn, documentId: string): Promise<SignatureRow[]> {
+    return c
+      .select()
+      .from(signature)
+      .where(eq(signature.documentId, documentId))
+      .orderBy(asc(signature.signedAt), asc(signature.id));
   },
 
   async insertSignature(c: Conn, row: typeof signature.$inferInsert) {
@@ -537,6 +614,29 @@ export const store = {
       .where(eq(event.orgId, orgId))
       .orderBy(desc(event.createdAt), desc(event.id))
       .limit(limit);
+  },
+
+  /** One document's timeline, oldest first: what the signature record's trail is made of. */
+  async documentEvents(c: Conn, orgId: string, docId: string): Promise<EventRow[]> {
+    return c
+      .select()
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.subjectId, docId)))
+      .orderBy(asc(event.createdAt), asc(event.id));
+  },
+
+  /** Display names by sign-in user id, for the people a timeline names; a deleted user is absent. */
+  async userNames(c: Conn, ids: readonly string[]): Promise<Map<string, string>> {
+    if (!ids.length) return new Map();
+    const rows = await c
+      .select({
+        id: auth_user.id,
+        name: sql<string | null>`coalesce(${app_user.display_name}, ${auth_user.name})`,
+      })
+      .from(auth_user)
+      .leftJoin(app_user, eq(app_user.directus_user_id, auth_user.id))
+      .where(inArray(auth_user.id, [...ids]));
+    return new Map(rows.flatMap((r) => (r.name?.trim() ? [[r.id, r.name.trim()] as const] : [])));
   },
 
   /** When each document's named signer was last reminded, by document id. */
@@ -799,7 +899,14 @@ export const store = {
    */
   async accountList(
     c: Conn,
-    opts: { stage: string | null; q: string | null; limit: number; offset: number },
+    opts: {
+      stage: string | null;
+      q: string | null;
+      limit: number;
+      offset: number;
+      /** Only organisations with an account stage or an offer: the ones a deal stage fits. */
+      accountsOnly?: boolean;
+    },
   ) {
     const like = opts.q ? `%${opts.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%` : null;
     return c
@@ -818,6 +925,12 @@ export const store = {
       .where(
         and(
           isNull(org.deleted_at),
+          opts.accountsOnly
+            ? or(
+                isNotNull(org.account_stage),
+                sql`exists (select 1 from account_document d where d.org_id = ${org.id} and d.kind = 'offer')`,
+              )
+            : undefined,
           opts.stage === "none"
             ? isNull(org.account_stage)
             : opts.stage

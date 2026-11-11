@@ -7,6 +7,8 @@ import { deliverSamMessage } from "@dembrane/webhooks";
 import { eq, sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import type { AccountsDeps } from "../src/deps";
+import { addMonths } from "../src/invoice-plan";
+import { runInvoicePartsTick } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, pngB64, silent, type World, world } from "./helpers";
@@ -56,12 +58,13 @@ run("an offer draft, and the invoice request after the signature", () => {
       (await call(w, "POST", `${S(org)}/documents/${docId}/send`, "staff", body)).data,
     );
 
-  /** Signs as the organisation's admin, filling every field. */
+  /** Signs as the organisation's admin, filling every field but the optional reference. */
   async function sign(
     docId: string,
     as: keyof World["people"] = "admin",
     org = w.orgId,
     dpaAuthorised = true,
+    reference?: string,
   ) {
     const detail = K.DocumentDetail.parse(
       (await call(w, "GET", `${C(org)}/documents/${docId}`, as)).data,
@@ -70,9 +73,12 @@ run("an offer draft, and the invoice request after the signature", () => {
     for (const f of detail.fields) {
       if (f.kind === "name") values[f.id] = "Anna de Vries";
       else if (f.kind === "role") values[f.id] = "Wethouder";
-      else if (f.kind === "date") values[f.id] = "28-09-2026";
+      else if (f.kind === "date")
+        values[f.id] = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
       else if (f.kind === "checkbox") values[f.id] = true;
-      else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
+      else if (f.kind === "text" && f.key === "po_number") {
+        if (reference !== undefined) values[f.id] = reference;
+      } else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
     }
     const confirmation_text = (
       (dpaAuthorised
@@ -391,7 +397,7 @@ run("an offer draft, and the invoice request after the signature", () => {
           country_code: "NL",
         },
       },
-      invoice: { vat_treatment: "standard", po_number: "PO-77" },
+      invoice: { vat_treatment: "standard", po_number: "PO-77", bill_to: false },
       links: {
         account: `https://dash.test/admin/accounts/${org}`,
         document: `https://dash.test/admin/accounts/${org}/documents/${docId}`,
@@ -401,6 +407,8 @@ run("an offer draft, and the invoice request after the signature", () => {
     });
     const invoice = message.invoice as { items: { description: string; quantity: number }[] };
     expect(invoice.items.map((x) => x.quantity)).toEqual([12]);
+    // Invoiced at once: no part.
+    expect(invoice).not.toHaveProperty("part");
     expect((message.document as { lines: unknown[] }).lines).toHaveLength(1);
 
     // Saving the details again asks nothing new.
@@ -850,5 +858,1161 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect((await sign(theirs?.id as string, "outsider", org)).status).toBe(200);
     expect(requestedFor(org)).toHaveLength(1);
     expect(await cardWaits(org)).toEqual([]);
+  });
+
+  test("with the customer's own processing terms the offer is all they sign: no DPA, no who-signs question, and the invoice waits for the billing details only", async () => {
+    const org = await freshOrg("Gemeente Eigen BV");
+    const own = "'GIBIT 2025 standaard' voor verwerking";
+    const doc = await draft(org, {
+      reference: "OFFER-OWN",
+      external_ref: null,
+      processing_terms: own,
+    });
+    expect(doc.content?.processing_terms).toBe(own);
+    // A change that leaves the line out keeps it; null drops it.
+    const S1 = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", S1, "staff", offer({ reference: "OFFER-OWN", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.processing_terms).toBe(own);
+    expect(kept.body).toContain(own);
+    await send(doc.id, org);
+    const docs = await store.documents(w.db, org);
+    expect(docs.filter((d) => d.kind === "dpa")).toHaveLength(0);
+    const codes = (await store.tasks(w.db, org)).map((t) => t.code);
+    expect(codes).toContain("sign_offer");
+    expect(codes).not.toContain("who_signs");
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["billing_details"] }]);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+
+    const other = await freshOrg("Gemeente Zonder BV");
+    const dropped = await draft(other, { reference: "OFFER-OWN2", processing_terms: own });
+    const cleared = K.DocumentDetail.parse(
+      (
+        await call(w, "PUT", `${S(other)}/offers/${dropped.id}`, "staff", {
+          ...offer({ reference: "OFFER-OWN2" }),
+          processing_terms: null,
+        })
+      ).data,
+    );
+    expect(cleared.content?.processing_terms).toBeUndefined();
+  });
+
+  test("a staff change keeps a title of its own and the currency when they are not given", async () => {
+    const doc = await draft(w.orgId, {
+      reference: "OFFER-KEEP",
+      title: "Pilot for Testdorp",
+      currency: "USD",
+    });
+    expect(doc.title).toBe("Pilot for Testdorp");
+    const path = `${S()}/offers/${doc.id}`;
+    // offer() names no currency, so the change leaves it out.
+    const noCurrency = offer({ reference: null, person_name: "Bo" });
+    const kept = K.DocumentDetail.parse((await call(w, "PUT", path, "staff", noCurrency)).data);
+    expect(kept.title).toBe("Pilot for Testdorp");
+    expect(kept.currency).toBe("USD");
+    expect(kept.content?.currency).toBe("USD");
+    expect(kept.content?.person_name).toBe("Bo");
+    // Given, they change; a generated title follows the new words.
+    const plain = await draft(w.orgId, { reference: "OFFER-GEN" });
+    expect(plain.title).toBe("Yearly license offer OFFER-GEN");
+    const moved = K.DocumentDetail.parse(
+      (
+        await call(w, "PUT", `${S()}/offers/${plain.id}`, "staff", {
+          ...offer({ reference: null, language: "nl" }),
+          currency: "GBP",
+        })
+      ).data,
+    );
+    expect(moved.title).toBe("Offerte jaarlicentie OFFER-GEN");
+    expect(moved.currency).toBe("GBP");
+  });
+
+  test("revising a sent offer: the new version replaces it under the same reference and title", async () => {
+    const first = await draft(w.orgId, {
+      template: "custom",
+      reference: "OFFER-REV",
+      title: "Pilot for Testdorp",
+      vat_treatment: "reverse_charge",
+      items: [
+        {
+          description: "Licence",
+          quantity: 3,
+          unit: "months",
+          unit_price_cents: 40000,
+          vat_rate_bps: 0,
+        },
+      ],
+      amendments: [{ title: "Start", body: "The pilot starts on the first of the month." }],
+    });
+    await send(first.id);
+    const revised = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ template: "custom", reference: "OFFER-REV", external_ref: null, send: false }),
+          supersedes_id: first.id,
+          vat_treatment: "reverse_charge",
+          items: [
+            {
+              description: "Licence",
+              quantity: 3,
+              unit: "months",
+              unit_price_cents: 30000,
+              vat_rate_bps: 0,
+            },
+          ],
+          amendments: [{ title: "Start", body: "The pilot starts on the first of the month." }],
+        })
+      ).data,
+    ).document;
+    expect(revised.version).toBe(2);
+    expect(revised.reference).toBe("OFFER-REV");
+    expect(revised.title).toBe("Pilot for Testdorp");
+    expect(revised.content?.vat_treatment).toBe("reverse_charge");
+    const row = await store.document(w.db, w.orgId, revised.id);
+    expect(row?.supersedesId).toBe(first.id);
+    expect(row?.externalRef).toBe("deal-900");
+    // While the revision is a draft the customer keeps the sent offer and its task.
+    const openFor = async (docId: string) =>
+      (await store.tasks(w.db, w.orgId)).filter(
+        (t) => t.documentId === docId && !["done", "withdrawn"].includes(t.status),
+      );
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("sent");
+    expect((await openFor(first.id)).map((t) => t.code)).toContain("sign_offer");
+    // The deal still reads as sent: the draft waits beside the offer, not in its place.
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.organisation.deal_stage).toBe("offer_sent");
+    expect(card.organisation.milestones.offer_sent).not.toBeNull();
+    // A second revision of the same offer may be drafted, but only one of them is sent.
+    const other = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ template: "custom", reference: "OFFER-REV", send: false }),
+          supersedes_id: first.id,
+          vat_treatment: "reverse_charge",
+          items: [
+            { description: "Licence", quantity: 3, unit_price_cents: 20000, vat_rate_bps: 0 },
+          ],
+        })
+      ).data,
+    ).document;
+    // Sending the revision replaces it.
+    expect((await send(revised.id)).status).toBe("sent");
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("void");
+    expect(await openFor(first.id)).toEqual([]);
+    // The other revision of that offer is refused now, and nothing changes.
+    const twice = await call(w, "POST", `${S()}/documents/${other.id}/send`, "staff", {});
+    expect(twice.status).toBe(409);
+    expect(JSON.stringify(twice.data)).toContain("already replaced");
+    expect((await store.document(w.db, w.orgId, other.id))?.status).toBe("draft");
+    expect((await store.document(w.db, w.orgId, revised.id))?.status).toBe("sent");
+    // Pushed and sent in one go, the old offer is replaced at once, as before.
+    const third = K.PushOfferResponse.parse(
+      (
+        await call(w, "POST", `${S()}/offers`, "staff", {
+          ...offer({ reference: "OFFER-REV" }),
+          supersedes_id: revised.id,
+        })
+      ).data,
+    ).document;
+    expect(third.status).toBe("sent");
+    expect(third.version).toBe(3);
+    expect((await store.document(w.db, w.orgId, revised.id))?.status).toBe("void");
+  });
+
+  test("a revision is not sent when the offer it replaces was signed meanwhile", async () => {
+    const first = await draft(w.orgId, { reference: "OFFER-SIGNED" });
+    await send(first.id);
+    const revision = await draft(w.orgId, { reference: "OFFER-SIGNED", supersedes_id: first.id });
+    expect((await sign(first.id)).status).toBe(200);
+    const refused = await call(w, "POST", `${S()}/documents/${revision.id}/send`, "staff", {});
+    expect(refused.status).toBe(409);
+    expect((await store.document(w.db, w.orgId, revision.id))?.status).toBe("draft");
+    expect((await store.document(w.db, w.orgId, first.id))?.status).toBe("signed");
+    // Nor can a signed offer get a new draft revision.
+    const late = await call(w, "POST", `${S()}/offers`, "staff", {
+      ...offer({ reference: "OFFER-SIGNED", send: false }),
+      supersedes_id: first.id,
+    });
+    expect(late.status).toBe(409);
+  });
+
+  test("staff make a new organisation with its contact, and it takes an offer", async () => {
+    const body = {
+      organisation_name: "Voorbeeld Holding (sample)",
+      contact_email: "Jan@Voorbeeld.example",
+      contact_name: "Jan Jansen",
+      language: "en",
+    };
+    for (const who of ["admin", "member", "outsider"] as const)
+      expect((await call(w, "POST", "/api/v2/admin/accounts", who, body)).status).toBe(403);
+    expect(
+      (await call(w, "POST", "/api/v2/admin/accounts", "staff", { ...body, contact_email: "x" }))
+        .status,
+    ).toBe(422);
+    const r = await call(w, "POST", "/api/v2/admin/accounts", "staff", body);
+    expect(r.status).toBe(201);
+    const made = K.CreateAccountResponse.parse(r.data);
+    expect(made.created).toBe(true);
+    const card = K.AccountCard.parse((await call(w, "GET", S(made.org_id), "staff")).data);
+    expect(card.organisation.name).toBe("Voorbeeld Holding (sample)");
+    expect(card.organisation.account_stage).toBe("prospect");
+    expect(card.members.map((m) => [m.email, m.role])).toEqual([
+      ["jan@voorbeeld.example", "admin"],
+    ]);
+    const doc = await draft(made.org_id, { reference: "OFFER-NEW" });
+    expect(doc.status).toBe("draft");
+  });
+
+  test("an offer carries the customer's reference: printed, offered to the signer, and on its invoice before the billing PO", async () => {
+    const org = w.otherOrgId;
+    const requested = () => inbox("echo_account_invoice_requested_v1");
+    const lastInvoice = () =>
+      (requested().at(-1) as { invoice: { po_number: string | null } }).invoice;
+    const signedValue = async (docId: string) => {
+      const fields = await store.fields(w.db, docId);
+      const sig = await store.signatureOf(w.db, docId);
+      const id = fields.find((f) => f.key === "po_number")?.id as string;
+      return (sig?.fieldValues as Record<string, unknown> | undefined)?.[id];
+    };
+
+    // Set by staff, printed on the offer, and offered to the signer to confirm.
+    const a = await draft(org, { reference: "OFFER-PO1", customer_reference: "PO-4500-01" });
+    expect(a.content?.customer_reference).toBe("PO-4500-01");
+    expect(a.body).toContain("Your reference: PO-4500-01");
+    expect(a.fields.find((f) => f.key === "po_number")?.required).toBe(false);
+    // A change that leaves it out keeps it; null drops it; a value sets it again.
+    const path = `${S(org)}/offers/${a.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: null, person_name: "Bo" }))).data,
+    );
+    expect(kept.content?.customer_reference).toBe("PO-4500-01");
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: null, customer_reference: null })))
+        .data,
+    );
+    expect(dropped.content?.customer_reference).toBeUndefined();
+    expect(dropped.body).not.toContain("Your reference: ");
+    await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: null, customer_reference: "PO-4500-01" }),
+    );
+    await send(a.id, org);
+    const seen = K.DocumentDetail.parse(
+      (await call(w, "GET", `${C(org)}/documents/${a.id}`, "outsider")).data,
+    );
+    expect(seen.prefill.po_number).toBe("PO-4500-01");
+
+    // Confirmed at signing: frozen with the signature and on the invoice request.
+    const before = requested().length;
+    expect((await sign(a.id, "outsider", org, true, "PO-4500-01")).status).toBe(200);
+    expect(requested()).toHaveLength(before + 1);
+    expect(lastInvoice().po_number).toBe("PO-4500-01");
+    expect(await signedValue(a.id)).toBe("PO-4500-01");
+
+    // A second offer for the same organisation keeps its own reference, and the signer's
+    // change wins over the one staff typed.
+    const b = await draft(org, { reference: "OFFER-PO2", customer_reference: "PO-4500-02" });
+    await send(b.id, org);
+    expect((await sign(b.id, "outsider", org, true, "PO-4500-02/1")).status).toBe(200);
+    expect(lastInvoice().po_number).toBe("PO-4500-02/1");
+    expect(await signedValue(b.id)).toBe("PO-4500-02/1");
+    const docs = await store.documents(w.db, org);
+    const refOf = (r: string) =>
+      (docs.find((d) => d.reference === r)?.content as { customer_reference?: string } | undefined)
+        ?.customer_reference;
+    expect([refOf("OFFER-PO1"), refOf("OFFER-PO2")]).toEqual(["PO-4500-01", "PO-4500-02"]);
+
+    // A signer who fills one in where staff gave none: theirs goes on the invoice.
+    const c = await draft(org, { reference: "OFFER-PO3" });
+    await send(c.id, org);
+    const blank = K.DocumentDetail.parse(
+      (await call(w, "GET", `${C(org)}/documents/${c.id}`, "outsider")).data,
+    );
+    expect(blank.prefill.po_number).toBeNull();
+    expect((await sign(c.id, "outsider", org, true, "ORDER-77")).status).toBe(200);
+    expect(lastInvoice().po_number).toBe("ORDER-77");
+
+    // With none on the offer and none at signing, the organisation's billing PO stands in.
+    const onFile = (await store.billing(w.db, org))?.po_number;
+    expect(onFile).toBeTruthy();
+    const e = await draft(org, { reference: "OFFER-PO4" });
+    await send(e.id, org);
+    expect((await sign(e.id, "outsider", org)).status).toBe(200);
+    expect(lastInvoice().po_number).toBe(onFile as string);
+  });
+
+  test("optional and included lines are shown but neither stored totals nor the invoice count them", async () => {
+    const org = w.otherOrgId;
+    const requested = () => inbox("echo_account_invoice_requested_v1");
+    const items = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 2100 },
+      {
+        description: "Onboarding",
+        quantity: 1,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included",
+      },
+      {
+        description: "Extra workshop",
+        quantity: 1,
+        unit_price_cents: 95000,
+        vat_rate_bps: 2100,
+        kind: "optional",
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-OPT1", template: "custom", items });
+    expect([doc.subtotal_cents, doc.vat_cents, doc.total_cents]).toEqual([103200, 21672, 124872]);
+    expect(doc.content?.items.map((i) => i.kind ?? "charged")).toEqual([
+      "charged",
+      "included",
+      "optional",
+    ]);
+    expect(doc.body).toContain("| Onboarding | 1 |  | Included |");
+    expect(doc.body).toContain("## Optional");
+    const row = await store.document(w.db, org, doc.id);
+    expect([row?.subtotalCents, row?.totalCents]).toEqual([103200, 124872]);
+
+    // Signed, the invoice asks for the charged line only.
+    await send(doc.id, org);
+    const before = requested().length;
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(requested()).toHaveLength(before + 1);
+    const message = requested().at(-1) as {
+      document: { total_cents: number };
+      invoice: { items: { description: string }[] };
+    };
+    expect(message.document.total_cents).toBe(124872);
+    expect(message.invoice.items.map((i) => i.description)).toEqual(["Licence"]);
+
+    // Options alone ask for nothing, and an included line carries no price.
+    const onlyOptions = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-OPT2", items: [items[2]] }),
+    );
+    expect(onlyOptions.status).toBe(422);
+    expect(JSON.stringify(onlyOptions.data)).toContain("more than zero");
+    const pricedIncluded = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({
+        send: false,
+        reference: "OFFER-OPT3",
+        items: [items[0], { ...items[1], unit_price_cents: 5000 }],
+      }),
+    );
+    expect(pricedIncluded.status).toBe(422);
+    expect(JSON.stringify(pricedIncluded.data)).toContain("included at no charge");
+  });
+
+  test("an offer invoiced to another party: printed, carried by the request in place of the customer's details, which it does not wait for", async () => {
+    const org = await freshOrg("Gemeente Derde BV");
+    const party = {
+      name: "Voorbeeld Evenementen BV",
+      address: "Kade 4",
+      postal_code: "3011 AA",
+      city: "Rotterdam",
+      country_code: "nl",
+      vat_id: "nl 1234.56789.b01",
+      email: "facturen@voorbeeld.example",
+      reference: "PRJ-2026-14",
+    };
+    const doc = await draft(org, { reference: "OFFER-BT1", bill_to: party });
+    expect(doc.content?.bill_to).toEqual({
+      ...party,
+      country_code: "NL",
+      vat_id: "NL123456789B01",
+    });
+    expect(doc.body).toContain(
+      "## Invoiced to\nVoorbeeld Evenementen BV\nKade 4\n3011 AA Rotterdam",
+    );
+    expect(doc.body).toContain("VAT NL123456789B01");
+    expect(doc.body).toContain("Reference: PRJ-2026-14");
+
+    // A change that leaves it out keeps it; null drops it and a value sets it again.
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.bill_to?.name).toBe("Voorbeeld Evenementen BV");
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", bill_to: null }))).data,
+    );
+    expect(dropped.content?.bill_to).toBeUndefined();
+    expect(dropped.body).not.toContain("Invoiced to");
+    await call(w, "PUT", path, "staff", offer({ reference: "OFFER-BT1", bill_to: party }));
+
+    // Signed with its DPA, and the customer never saved billing details: the request goes.
+    // Nobody asks the customer for billing details: the offer says who pays.
+    await send(doc.id, org);
+    const kinds = async () => (await store.tasks(w.db, org)).map((t) => t.kind);
+    expect(await kinds()).not.toContain("billing_details");
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await kinds()).not.toContain("billing_details");
+    expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["dpa"] }]);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(await store.billing(w.db, org).then((b) => b?.billing_legal_name ?? null)).toBeNull();
+    expect(requestedFor(org)).toHaveLength(1);
+    expect(requestedFor(org)[0]).toMatchObject({
+      org: { id: org, name: "Gemeente Derde BV" },
+      document: { id: doc.id, reference: "OFFER-BT1" },
+      billing: {
+        legal_name: "Voorbeeld Evenementen BV",
+        vat_id: "NL123456789B01",
+        no_vat_number: false,
+        billing_email: "facturen@voorbeeld.example",
+        po_number: "PRJ-2026-14",
+        invoice_delivery: "email",
+        address: {
+          line1: "Kade 4",
+          postal_code: "3011 AA",
+          city: "Rotterdam",
+          country: "Netherlands",
+          country_code: "NL",
+        },
+      },
+      invoice: { po_number: "PRJ-2026-14", bill_to: true },
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data);
+    expect(card.invoice_waits).toEqual([]);
+    expect(card.organisation.deal_stage).toBe("offer_accepted");
+
+    // The customer's next offer, which they pay themselves, asks for their details again.
+    const own = await draft(org, { reference: "OFFER-BT2" });
+    await send(own.id, org);
+    const task = (await store.tasks(w.db, org)).find((t) => t.kind === "billing_details");
+    expect(task?.status).toBe("locked");
+    expect((await sign(own.id, "outsider", org)).status).toBe(200);
+    expect((await store.taskById(w.db, task?.id as string))?.status).toBe("open");
+  });
+
+  test("a customer's billing details task waiting from the start stays locked when another party pays", async () => {
+    const org = await freshOrg("Gemeente Wacht BV");
+    expect((await call(w, "POST", `${S(org)}/enable`, "staff", { stage: "customer" })).status).toBe(
+      200,
+    );
+    const doc = await draft(org, {
+      reference: "OFFER-BT3",
+      bill_to: {
+        name: "Voorbeeld Sponsor",
+        address: "Laan 2",
+        city: "Utrecht",
+        country_code: "NL",
+        email: "factuur@sponsor.example",
+      },
+    });
+    await send(doc.id, org);
+    const before = (await store.tasks(w.db, org)).filter((t) => t.kind === "billing_details");
+    expect(before.map((t) => t.status)).toEqual(["locked"]);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const after = (await store.tasks(w.db, org)).filter((t) => t.kind === "billing_details");
+    expect(after.map((t) => t.status)).toEqual(before.map(() => "locked"));
+    // Its page does not say it waits for the offer another party pays for.
+    const page = K.AccountPage.parse((await call(w, "GET", C(org), "outsider")).data);
+    for (const t of page.tasks.filter((x) => x.kind === "billing_details"))
+      expect(t.locked_until_document_id ?? null).not.toBe(doc.id);
+  });
+
+  test("the VAT choice is judged on the party invoiced, and one that contradicts its country is refused", async () => {
+    const org = await freshOrg("Gemeente Btw BV");
+    const zero = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 0 },
+    ];
+    const party = (over: Record<string, unknown>) => ({
+      name: "Voorbeeld Partner",
+      address: "Rue 1",
+      postal_code: "1000",
+      city: "Brussel",
+      country_code: "BE",
+      vat_id: "BE0123456789",
+      email: "factuur@partner.example",
+      ...over,
+    });
+    const attempt = async (n: number, vat_treatment: string, over: Record<string, unknown>) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({
+          send: false,
+          reference: `OFFER-BTV${n}`,
+          vat_treatment,
+          ...(vat_treatment === "standard" ? {} : { items: zero }),
+          bill_to: party(over),
+        }),
+      );
+      return r.status === 201 ? "ok" : `${r.status} ${(r.data as { detail: string }).detail}`;
+    };
+    expect(await attempt(1, "standard", { country_code: "NL", vat_id: null })).toBe("ok");
+    expect(await attempt(2, "reverse_charge", { country_code: "NL", vat_id: null })).toBe(
+      "422 Voorbeeld Partner is in the Netherlands: choose Dutch VAT",
+    );
+    expect(await attempt(3, "standard", {})).toBe(
+      "422 Voorbeeld Partner is a business elsewhere in the EU: choose reverse charge",
+    );
+    expect(await attempt(4, "reverse_charge", {})).toBe("ok");
+    expect(await attempt(5, "reverse_charge", { vat_id: null })).toBe(
+      "422 Reverse charge needs the VAT number of Voorbeeld Partner",
+    );
+    expect(await attempt(6, "standard", { vat_id: null })).toBe("ok");
+    expect(await attempt(7, "outside_eu", { country_code: "DE", vat_id: null })).toBe(
+      "422 Voorbeeld Partner is in the EU: outside the EU does not apply",
+    );
+    expect(await attempt(8, "reverse_charge", { country_code: "US", vat_id: "12-3456789" })).toBe(
+      "422 Voorbeeld Partner is outside the EU: reverse charge does not apply",
+    );
+    expect(await attempt(9, "outside_eu", { country_code: "US", vat_id: null })).toBe("ok");
+    expect(await attempt(10, "reverse_charge", { vat_id: "BE12" })).toBe(
+      "422 BE12 does not look like a VAT number from Belgium",
+    );
+    expect(await attempt(11, "standard", { country_code: "XX" })).toBe(
+      "422 Choose the country of the organisation that is invoiced",
+    );
+
+    // A change of the VAT choice alone is judged again on the party the draft keeps.
+    const ok = await draft(org, { reference: "OFFER-BTV12", bill_to: party({ vat_id: null }) });
+    const changed = await call(
+      w,
+      "PUT",
+      `${S(org)}/offers/${ok.id}`,
+      "staff",
+      offer({ reference: "OFFER-BTV12", vat_treatment: "reverse_charge", items: zero }),
+    );
+    expect(changed.status).toBe(422);
+    expect((changed.data as { detail: string }).detail).toBe(
+      "Reverse charge needs the VAT number of Voorbeeld Partner",
+    );
+  });
+
+  test("on a subscription only the seat line counts seats: other lines print their quantity alone", async () => {
+    const org = await freshOrg("Gemeente Stoel BV");
+    const doc = await draft(org, {
+      reference: "OFFER-SEAT",
+      items: [
+        {
+          description: "Changemaker seat",
+          quantity: 3,
+          unit_price_cents: 8600,
+          vat_rate_bps: 2100,
+        },
+        {
+          description: "Onboarding",
+          quantity: 1,
+          unit_price_cents: 0,
+          vat_rate_bps: 2100,
+          kind: "included",
+        },
+        { description: "Training", quantity: 1, unit_price_cents: 67500, vat_rate_bps: 2100 },
+        {
+          description: "Extra hours",
+          quantity: 8,
+          unit: "hours",
+          unit_price_cents: 12500,
+          vat_rate_bps: 2100,
+        },
+      ],
+    });
+    expect(doc.content?.items.map((i) => i.unit ?? null)).toEqual(["seats", null, null, "hours"]);
+    expect(doc.body).toContain("| Changemaker seat | 3 seats |");
+    expect(doc.body).toContain("| Onboarding | 1 |  | Included |");
+    expect(doc.body).toContain("| Training | 1 |");
+    expect(doc.body).not.toContain("1 seats");
+    // One seat reads as one.
+    const one = await draft(org, {
+      reference: "OFFER-SEAT1",
+      items: [
+        {
+          description: "Changemaker seat",
+          quantity: 1,
+          unit_price_cents: 8600,
+          vat_rate_bps: 2100,
+        },
+      ],
+    });
+    expect(one.body).toContain("| Changemaker seat | 1 seat |");
+  });
+
+  /** The hourly tick that asks for each part on its day, as the worker runs it. */
+  const tick = () =>
+    runInvoicePartsTick({
+      db: w.db,
+      jobs: w.deps.jobs,
+      now: () => w.clock.now,
+      logger: silent,
+      settings: w.deps.settings,
+    });
+  /** A new organisation with billing details on file, so only the parts' days decide. */
+  const billedOrg = async (name: string) => {
+    const org = await freshOrg(name);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    return org;
+  };
+  /** Sends and signs an offer and its DPA. */
+  const signAll = async (docId: string, org: string) => {
+    await send(docId, org);
+    expect((await sign(docId, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find(
+      (d) => d.kind === "dpa" && d.status !== "signed",
+    );
+    if (dpa) expect((await sign(dpa.id, "outsider", org)).status).toBe(200);
+  };
+  type PartRequest = {
+    document: { id: string; subtotal_cents: number };
+    invoice: {
+      po_number: string | null;
+      part: {
+        number: number;
+        of: number;
+        label: string;
+        due_on: string;
+        subtotal_cents: number;
+        vat_cents: number;
+        total_cents: number;
+      };
+      items: {
+        description: string;
+        bullets: string[];
+        quantity: number;
+        unit_price_cents: number;
+        net_cents: number;
+        vat_rate_bps: number;
+      }[];
+    };
+  };
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const later = (days: number) => new Date(w.clock.now.getTime() + days * 86_400_000);
+
+  test("an offer in three monthly parts: printed, the first asked on signing, each next on its day, once, adding up to the cent", async () => {
+    const start = w.clock.now;
+    try {
+      const org = await billedOrg("Gemeente Maand BV");
+      const doc = await draft(org, {
+        reference: "OFFER-P3",
+        customer_reference: "PO-3-PARTS",
+        items: [
+          { description: "Licence", quantity: 1, unit_price_cents: 100000, vat_rate_bps: 2100 },
+        ],
+        invoice_plan: { kind: "monthly", parts: 3 },
+      });
+      expect(doc.content?.invoice_plan).toEqual({ kind: "monthly", parts: 3 });
+      expect(doc.body).toContain("## How we invoice");
+      expect(doc.body).toContain("| 1 of 3 | On signing | €333.33 |");
+      expect(doc.body).toContain("| 2 of 3 | 1st of the next month | €333.33 |");
+      expect(doc.body).toContain("| 3 of 3 | 1st of the month, 2 months on | €333.34 |");
+
+      await signAll(doc.id, org);
+      const parts = () => requestedFor(org) as unknown as PartRequest[];
+      expect(parts()).toHaveLength(1);
+      const first = parts()[0] as PartRequest;
+      expect(first.invoice.part).toEqual({
+        number: 1,
+        of: 3,
+        label: "1 of 3",
+        due_on: day(start),
+        subtotal_cents: 33333,
+        vat_cents: 7000,
+        total_cents: 40333,
+      });
+      expect(first.invoice.po_number).toBe("PO-3-PARTS");
+      expect(first.invoice.items).toEqual([
+        {
+          description: "Part 1 of 3: Yearly license offer OFFER-P3",
+          bullets: ["1 x Licence"],
+          quantity: 1,
+          unit_price_cents: 33333,
+          net_cents: 33333,
+          vat_rate_bps: 2100,
+        },
+      ]);
+      expect(first.document.subtotal_cents).toBe(100000);
+
+      // Nothing else is due today: a tick, a second tick and another billing save ask nothing.
+      expect(await tick()).toEqual([]);
+      expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+      expect(parts()).toHaveLength(1);
+
+      // The second part falls on the 1st of the next calendar month: the day before, nothing;
+      // on the day, the second part, once.
+      const firstOf = (m: number) => `${addMonths(day(start), m).slice(0, 8)}01`;
+      const second = firstOf(1);
+      w.clock.now = new Date(`${second}T09:00:00.000Z`);
+      w.clock.now = later(-1);
+      expect(await tick()).toEqual([]);
+      w.clock.now = new Date(`${second}T09:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      expect(parts().map((p) => p.invoice.part.label)).toEqual(["1 of 3", "2 of 3"]);
+      expect(parts()[1]?.invoice.part.due_on).toBe(second);
+
+      // A worker down for weeks catches up with what fell due, each part once.
+      w.clock.now = new Date(`${addMonths(day(start), 3)}T09:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      const all = parts().map((p) => p.invoice.part);
+      expect(all.map((p) => p.label)).toEqual(["1 of 3", "2 of 3", "3 of 3"]);
+      expect(all.map((p) => p.due_on)).toEqual([day(start), firstOf(1), firstOf(2)]);
+      expect(all.reduce((s, p) => s + p.subtotal_cents, 0)).toBe(100000);
+      expect(all.reduce((s, p) => s + p.total_cents, 0)).toBe(doc.total_cents as number);
+      expect(
+        (await store.events(w.db, org)).filter((e) => e.type === "invoice.requested"),
+      ).toHaveLength(3);
+    } finally {
+      w.clock.now = start;
+    }
+  });
+
+  test("instalments fall on signing and on their dates, and a part waits for the billing details like a whole offer", async () => {
+    const start = w.clock.now;
+    try {
+      const org = await freshOrg("Gemeente Termijn BV");
+      const date = day(later(20));
+      const doc = await draft(org, {
+        reference: "OFFER-I2",
+        language: "nl",
+        items: [
+          {
+            description: "Begeleiding",
+            quantity: 1,
+            unit_price_cents: 1150000,
+            vat_rate_bps: 2100,
+          },
+        ],
+        invoice_plan: {
+          kind: "instalments",
+          parts: [
+            { on: "signing", share_bps: 8000 },
+            { on: date, share_bps: 2000 },
+          ],
+        },
+      });
+      expect(doc.body).toContain("## Zo factureren we");
+      expect(doc.body).toContain("| 1 van 2 | Bij ondertekening | € 9.200,00 |");
+      const [y, m, dd] = date.split("-").map(Number) as [number, number, number];
+      const month = new Intl.DateTimeFormat("nl-NL", { month: "long", timeZone: "UTC" }).format(
+        new Date(Date.UTC(y, m - 1, 1)),
+      );
+      expect(doc.body).toContain(`| 2 van 2 | ${dd} ${month} ${y} | € 2.300,00 |`);
+
+      // Signed before the billing details: the first part waits for them, the second for its day.
+      await signAll(doc.id, org);
+      const parts = () => requestedFor(org) as unknown as PartRequest[];
+      expect(parts()).toHaveLength(0);
+      expect(await cardWaits(org)).toEqual([
+        { document_id: doc.id, waits_for: ["billing_details"] },
+      ]);
+      expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+      expect(parts().map((p) => p.invoice.part.label)).toEqual(["1 van 2"]);
+      expect(parts()[0]?.invoice.items[0]?.description).toBe(
+        "Deel 1 van 2: Offerte jaarlicentie OFFER-I2",
+      );
+
+      w.clock.now = new Date(`${date}T05:00:00.000Z`);
+      expect(await tick()).toEqual([org]);
+      expect(await tick()).toEqual([]);
+      const second = parts()[1]?.invoice.part;
+      expect(second).toMatchObject({ number: 2, of: 2, due_on: date, subtotal_cents: 230000 });
+      expect(parts()[0]?.invoice.part.subtotal_cents).toBe(920000);
+      expect(await cardWaits(org)).toEqual([]);
+    } finally {
+      w.clock.now = start;
+    }
+  });
+
+  test("a plan whose parts do not add up, out of order, or over lines of mixed VAT is refused", async () => {
+    const org = await freshOrg("Gemeente Plan BV");
+    const attempt = async (
+      n: number,
+      invoice_plan: unknown,
+      over: Record<string, unknown> = {},
+    ) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: `OFFER-PL${n}`, invoice_plan, ...over }),
+      );
+      return r.status === 201 ? "ok" : `${r.status} ${(r.data as { detail: unknown }).detail}`;
+    };
+    const parts = (...xs: [string, number][]) => ({
+      kind: "instalments",
+      parts: xs.map(([on, share_bps]) => ({ on, share_bps })),
+    });
+    expect(await attempt(1, parts(["signing", 5000], ["2026-12-01", 4500]))).toBe(
+      "422 The parts add up to 95%; they must add up to 100%",
+    );
+    expect(await attempt(2, parts(["2026-12-01", 5000], ["signing", 5000]))).toBe(
+      "422 Part 2: only the first part falls on signing, and the dates follow each other",
+    );
+    expect(await attempt(3, parts(["2027-01-01", 5000], ["2026-12-01", 5000]))).toBe(
+      "422 Part 2: only the first part falls on signing, and the dates follow each other",
+    );
+    expect(
+      await attempt(
+        4,
+        { kind: "monthly", parts: 2 },
+        {
+          items: [
+            { description: "Licence", quantity: 1, unit_price_cents: 100000, vat_rate_bps: 2100 },
+            { description: "Book", quantity: 1, unit_price_cents: 2000, vat_rate_bps: 900 },
+          ],
+        },
+      ),
+    ).toBe("422 An offer invoiced in parts needs one VAT rate on its charged lines");
+    expect(
+      await attempt(5, parts(["signing", 3333], ["2026-12-01", 3333], ["2027-01-01", 3334])),
+    ).toBe("ok");
+    // A change that leaves the plan out keeps it; null invoices at once again.
+    const doc = await draft(org, {
+      reference: "OFFER-PL6",
+      invoice_plan: { kind: "monthly", parts: 12 },
+    });
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-PL6", person_name: "Bo" })))
+        .data,
+    );
+    expect(kept.content?.invoice_plan).toEqual({ kind: "monthly", parts: 12 });
+    const dropped = K.DocumentDetail.parse(
+      (await call(w, "PUT", path, "staff", offer({ reference: "OFFER-PL6", invoice_plan: null })))
+        .data,
+    );
+    expect(dropped.content?.invoice_plan).toBeUndefined();
+    expect(dropped.body).not.toContain("How we invoice");
+  });
+  test("sections, half quantities and included lines: subtotals per section, the total exact, the invoice line by line", async () => {
+    const org = await freshOrg("Gemeente Secties BV");
+    const items = [
+      {
+        section: "Stewardship",
+        description: "Hosting",
+        quantity: 4,
+        unit: "months",
+        unit_price_cents: 25000,
+        vat_rate_bps: 2100,
+      },
+      {
+        section: "Stewardship",
+        description: "External workspaces",
+        quantity: 2,
+        unit_price_cents: 0,
+        vat_rate_bps: 2100,
+        kind: "included",
+      },
+      {
+        section: "Co-development",
+        description: "Session",
+        quantity: 0.5,
+        unit_price_cents: 49900,
+        vat_rate_bps: 2100,
+      },
+      {
+        section: "Co-development",
+        description: "Facilitation",
+        quantity: 1.5,
+        unit: "days",
+        unit_price_cents: 33333,
+        vat_rate_bps: 2100,
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-SEC1", template: "custom", items });
+    // 4 x 250.00 + 0.5 x 499.00 (249.50) + 1.5 x 333.33 (499.995, up to 500.00) = 1,749.50.
+    expect(doc.lines?.map((l) => l.net_cents)).toEqual([100000, 0, 24950, 50000]);
+    expect([doc.subtotal_cents, doc.vat_cents, doc.total_cents]).toEqual([174950, 36740, 211690]);
+    expect(doc.content?.items.map((i) => i.section)).toEqual([
+      "Stewardship",
+      "Stewardship",
+      "Co-development",
+      "Co-development",
+    ]);
+    expect(doc.body).toContain("| **Co-development** |  |  |  |");
+    expect(doc.body).toContain("| Subtotal Stewardship |  |  | €1,000.00 |");
+    expect(doc.body).toContain("| Subtotal Co-development |  |  | €749.50 |");
+    expect(doc.body).toContain("| Facilitation | 1.5 days | €333.33 | €500.00 |");
+
+    await send(doc.id, org);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+    const message = requestedFor(org)[0] as {
+      document: { total_cents: number };
+      invoice: {
+        items: { description: string; quantity: number; net_cents: number; section: string }[];
+      };
+    };
+    expect(message.document.total_cents).toBe(211690);
+    // The charged lines, each with the amount the offer rounded and its section.
+    expect(
+      message.invoice.items.map((i) => [i.section, i.description, i.quantity, i.net_cents]),
+    ).toEqual([
+      ["Stewardship", "Hosting", 4, 100000],
+      ["Co-development", "Session", 0.5, 24950],
+      ["Co-development", "Facilitation", 1.5, 50000],
+    ]);
+
+    // Sections all or none, together; quantities in hundredths at most.
+    const refused = async (over: Record<string, unknown>, says: string) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-SEC2", ...over }),
+      );
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain(says);
+    };
+    await refused({ items: [items[0], { ...items[2], section: undefined }] }, "has no section");
+    await refused({ items: [items[0], items[2], items[1]] }, "must sit together");
+    await refused({ items: [{ ...items[0], quantity: 1.234 }] }, "two decimals");
+  });
+
+  test("an offer of no charge is sent and signed, asks for no billing details and is never invoiced", async () => {
+    const org = await freshOrg("Stichting Gratis Pilot");
+    const pilot = [
+      { description: "Pilot, three months", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 },
+    ];
+    // A zero offer is refused unless staff say it is of no charge.
+    const plain = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-NC0", items: pilot }),
+    );
+    expect(plain.status).toBe(422);
+    const scholarship = [
+      { description: "Pilot", quantity: 1, unit_price_cents: 41500, vat_rate_bps: 2100 },
+      { description: "Scholarship", quantity: 1, unit_price_cents: -41500, vat_rate_bps: 2100 },
+    ];
+    const zeroed = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-NC0", items: scholarship }),
+    );
+    expect(JSON.stringify(zeroed.data)).toContain("choose No charge");
+    // Of no charge, a price left in is refused, and so is a plan or a paying party.
+    for (const over of [
+      { items: [{ ...pilot[0], unit_price_cents: 100 }] },
+      { invoice_plan: { kind: "monthly", parts: 3 } },
+    ]) {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-NC0", items: pilot, no_charge: true, ...over }),
+      );
+      expect(r.status).toBe(422);
+    }
+
+    const doc = await draft(org, { reference: "OFFER-NC1", items: scholarship, no_charge: true });
+    expect(doc.content?.no_charge).toBe(true);
+    expect(doc.total_cents).toBe(0);
+    expect(doc.body).toContain("No charge: nothing is invoiced for this offer.");
+    // A change that leaves it out keeps it; false turns it off, and the zero is refused.
+    const path = `${S(org)}/offers/${doc.id}`;
+    const kept = await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: "OFFER-NC1", items: pilot, person_name: "Bo" }),
+    );
+    expect(K.DocumentDetail.parse(kept.data).content?.no_charge).toBe(true);
+    const off = await call(
+      w,
+      "PUT",
+      path,
+      "staff",
+      offer({ reference: "OFFER-NC1", items: pilot, no_charge: false }),
+    );
+    expect(off.status).toBe(422);
+
+    await send(doc.id, org);
+    const kinds = async () => (await store.tasks(w.db, org)).map((t) => t.kind);
+    expect(await kinds()).not.toContain("billing_details");
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(await kinds()).not.toContain("billing_details");
+    expect(requestedFor(org)).toEqual([]);
+    const card = K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data);
+    expect(card.invoice_waits).toEqual([]);
+    expect(card.organisation.deal_stage).toBe("offer_accepted");
+    expect((await store.documents(w.db, org)).find((d) => d.id === doc.id)?.status).toBe("signed");
+  });
+  test("two scenarios, one ticked at signing: the signed copy, the totals and the invoice follow the choice", async () => {
+    const org = await freshOrg("Stichting Scenario");
+    const scenario = (description: string, cents: number, option: string) => ({
+      description,
+      quantity: 1,
+      unit_price_cents: cents,
+      vat_rate_bps: 2100,
+      kind: "optional",
+      option,
+    });
+    const items = [
+      scenario("Three workshops", 150000, "Scenario 1"),
+      scenario("Report", 100000, "Scenario 1"),
+      scenario("One workshop", 89500, "Scenario 2"),
+    ];
+    // One to pick needs two options; an option is an optional line.
+    const refused = async (over: Record<string, unknown>, says: string) => {
+      const r = await call(
+        w,
+        "POST",
+        `${S(org)}/offers`,
+        "staff",
+        offer({ send: false, reference: "OFFER-SC0", template: "custom", ...over }),
+      );
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain(says);
+    };
+    await refused({ items: [items[0]], choose: "one" }, "at least two options");
+    await refused(
+      { items: [{ ...items[0], kind: undefined }, items[2]], choose: "one" },
+      "has an option name",
+    );
+    await refused(
+      { items, choose: "one", invoice_plan: { kind: "monthly", parts: 2 } },
+      "invoice plan",
+    );
+
+    const doc = await draft(org, {
+      reference: "OFFER-SC1",
+      template: "custom",
+      items,
+      choose: "one",
+    });
+    expect(doc.content?.choose).toBe("one");
+    expect(doc.total_cents).toBe(0);
+    expect(doc.body).toContain("Total with Scenario 1 (incl. VAT): €3,025.00");
+    expect(doc.fields.filter((f) => f.kind === "checkbox").map((f) => f.key)).toEqual([
+      "option:1",
+      "option:2",
+    ]);
+    const sentDoc = await send(doc.id, org);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+
+    /** Signs, ticking the options named. */
+    const signWith = async (ticked: string[]) => {
+      const detail = K.DocumentDetail.parse(
+        (await call(w, "GET", `${C(org)}/documents/${doc.id}`, "outsider")).data,
+      );
+      const values: Record<string, string | boolean> = {};
+      for (const f of detail.fields) {
+        if (f.kind === "name") values[f.id] = "Anna de Vries";
+        else if (f.kind === "role") values[f.id] = "Wethouder";
+        else if (f.kind === "date")
+          values[f.id] = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
+        else if (f.kind === "checkbox") values[f.id] = ticked.includes(f.label);
+        else if (f.kind === "text" && f.key !== "po_number")
+          values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
+      }
+      return call(w, "POST", `${C(org)}/documents/${doc.id}/sign`, "outsider", {
+        sha256: detail.sha256,
+        values,
+        signature: { png_base64: pngB64(), method: "drawn" },
+        initials: null,
+        dpa_authorised: true,
+        confirmation_text: (detail.confirmation?.dpa_authorised ?? "")
+          .replace("{name}", "Anna de Vries")
+          .replace("{role}", "Wethouder")
+          .replace("{organisation}", "Testdorp"),
+      });
+    };
+    for (const ticked of [[], ["Scenario 1", "Scenario 2"]]) {
+      const r = await signWith(ticked);
+      expect(r.status).toBe(422);
+      expect(JSON.stringify(r.data)).toContain("exactly one");
+    }
+    expect((await signWith(["Scenario 2"])).status).toBe(200);
+
+    // The document now asks for what was chosen; what was offered is still what was hashed.
+    const signed = K.DocumentDetail.parse(
+      (await call(w, "GET", `${S(org)}/documents/${doc.id}`, "staff")).data,
+    );
+    expect(signed.sha256).toBe(sentDoc.sha256);
+    expect([signed.subtotal_cents, signed.vat_cents, signed.total_cents]).toEqual([
+      89500, 18795, 108295,
+    ]);
+    expect(signed.lines?.map((l) => [l.description, l.kind ?? "charged", l.chosen])).toEqual([
+      ["Three workshops", "optional", false],
+      ["Report", "optional", false],
+      ["One workshop", "charged", true],
+    ]);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+    const message = requestedFor(org)[0] as {
+      document: { total_cents: number };
+      invoice: {
+        items: { description: string }[];
+        options: { label: string; chosen: boolean; net_cents: number }[];
+      };
+    };
+    expect(message.document.total_cents).toBe(108295);
+    expect(message.invoice.items.map((i) => i.description)).toEqual(["One workshop"]);
+    expect(message.invoice.options).toEqual([
+      { label: "Scenario 1", chosen: false, net_cents: 250000 },
+      { label: "Scenario 2", chosen: true, net_cents: 89500 },
+    ]);
+    // The ticks are the record of the choice, kept with the signature.
+    const record = await store.signatureOf(w.db, doc.id);
+    const checkbox = (await store.fields(w.db, doc.id)).filter((f) => f.kind === "checkbox");
+    expect(
+      checkbox.map((f) => (record?.fieldValues as Record<string, boolean> | undefined)?.[f.id]),
+    ).toEqual([false, true]);
+  });
+
+  test("an add-on the customer may tick: charged when ticked, left out when not", async () => {
+    const org = await freshOrg("Gemeente Optie");
+    const items = [
+      { description: "Event day", quantity: 1, unit_price_cents: 500000, vat_rate_bps: 2100 },
+      {
+        description: "On-call support",
+        quantity: 2,
+        unit_price_cents: 180000,
+        vat_rate_bps: 2100,
+        kind: "optional",
+        option: "On-call support",
+      },
+    ];
+    const doc = await draft(org, { reference: "OFFER-AO1", template: "custom", items });
+    expect(doc.content?.choose).toBe("any");
+    expect(doc.total_cents).toBe(605000);
+    await send(doc.id, org);
+    // The usual signing ticks every box: the add-on is chosen.
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    const signed = await store.document(w.db, org, doc.id);
+    expect([signed?.subtotalCents, signed?.totalCents]).toEqual([860000, 1040600]);
+    // Once signed, the totals are as fixed as the rest of what was sent.
+    await expect(
+      w.db
+        .update(schema.account_document)
+        .set({ totalCents: 1 })
+        .where(eq(schema.account_document.id, doc.id))
+        .then(() => "updated"),
+    ).rejects.toThrow();
   });
 });

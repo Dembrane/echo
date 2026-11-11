@@ -1,5 +1,11 @@
 import type { Notifier } from "@dembrane/billing";
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  withoutTrailingSlashes,
+} from "@dembrane/core";
 import { directusTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import { escapeHtml } from "@dembrane/mail";
@@ -184,7 +190,7 @@ export async function requestTraining(
     d.logger.error({ err, orgId }, "training request staff inbox notify failed");
   }
   try {
-    const base = d.dashboardUrl.replace(/\/+$/, "");
+    const base = withoutTrailingSlashes(d.dashboardUrl);
     const reviewUrl = base ? `${base}/admin/training` : "/admin/training";
     const text = [
       `${requesterName} requested a ${product.name} training for ${orgName}.`,

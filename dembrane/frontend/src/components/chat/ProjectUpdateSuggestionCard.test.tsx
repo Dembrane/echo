@@ -2,8 +2,16 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { loadErrorMessages } from "@/lib/errors/present";
+import { ApiRequestError } from "@/lib/errors/read";
 import {
 	type ProjectUpdateSuggestion,
 	ProjectUpdateSuggestionCard,
@@ -11,12 +19,20 @@ import {
 
 // The card only needs the project read to decide "already applied"; leaving it
 // undefined keeps it in the pending state, which is what we are testing.
+const { mutateAsync, useUpdateProjectByIdMutation } = vi.hoisted(() => {
+	const mutateAsync = vi.fn();
+	return {
+		mutateAsync,
+		useUpdateProjectByIdMutation: vi.fn(() => ({
+			isPending: false,
+			mutateAsync,
+		})),
+	};
+});
+
 vi.mock("@/components/project/hooks", () => ({
 	useProjectById: () => ({ data: undefined, refetch: vi.fn() }),
-	useUpdateProjectByIdMutation: () => ({
-		isPending: false,
-		mutateAsync: vi.fn(),
-	}),
+	useUpdateProjectByIdMutation,
 }));
 
 vi.mock("@/components/common/Toaster", () => ({
@@ -45,6 +61,7 @@ beforeAll(() => {
 
 afterEach(() => {
 	cleanup();
+	mutateAsync.mockReset();
 });
 
 const renderCard = (
@@ -307,5 +324,109 @@ describe("ProjectUpdateSuggestionCard", () => {
 		expect(onSendNote.mock.calls[0][0]).toContain(
 			"Keep the shopkeepers out of it.",
 		);
+	});
+
+	describe("when the server answers the apply", () => {
+		// Lazy on the first error, ~12s under a full run: far past findBy's 1s.
+		beforeAll(() => loadErrorMessages(i18n), 30_000);
+
+		const legalBasisSuggestion: ProjectUpdateSuggestion = {
+			changes: [
+				{
+					current: "consent",
+					field: "legal_basis",
+					proposed: "Participants agree by joining the session.",
+					reason: "Spells out the consent wording.",
+				},
+			],
+			projectId: "project-1",
+			summary: "",
+		};
+
+		it("says why a refused change was not saved", async () => {
+			mutateAsync.mockRejectedValueOnce(
+				new ApiRequestError(422, {
+					action: "fix_input",
+					code: "validation.invalid_input",
+					detail: [{ loc: ["body", "legal_basis"], msg: "Input should be" }],
+					params: {
+						fields: [
+							{
+								code: "field.invalid_choice",
+								field: "legal_basis",
+								params: {},
+							},
+						],
+					},
+				}),
+			);
+			renderCard(legalBasisSuggestion);
+			expect(screen.queryByTestId("suggestion-refusal")).toBeNull();
+			fireEvent.click(screen.getByTestId("suggestion-apply-button"));
+
+			const refusal = await screen.findByTestId("suggestion-refusal");
+			expect(refusal.textContent).toContain("Nothing was saved");
+			expect(refusal.textContent).toContain(
+				"Legal basis: Pick one of the options.",
+			);
+			// The server's own sentence never reaches the host.
+			expect(refusal.textContent).not.toContain("Input should be");
+		});
+
+		it("keeps the global error toast quiet, since the card shows the reason", () => {
+			renderCard(legalBasisSuggestion);
+			expect(useUpdateProjectByIdMutation).toHaveBeenCalledWith({
+				errorToast: false,
+			});
+		});
+
+		it("uses the shared message when the refusal is not about a field", async () => {
+			mutateAsync.mockRejectedValueOnce(
+				new ApiRequestError(403, {
+					action: "contact_admin",
+					code: "access.forbidden",
+					detail: "Not allowed",
+					params: {},
+				}),
+			);
+			renderCard(legalBasisSuggestion);
+			fireEvent.click(screen.getByTestId("suggestion-apply-button"));
+
+			const refusal = await screen.findByTestId("suggestion-refusal");
+			expect(refusal.textContent).toContain("You do not have permission");
+			expect(refusal.textContent).not.toContain("Not allowed");
+		});
+
+		it("clears the reason when the host tries again", async () => {
+			mutateAsync
+				.mockRejectedValueOnce(
+					new ApiRequestError(403, {
+						action: "contact_admin",
+						code: "access.forbidden",
+						detail: "Not allowed",
+						params: {},
+					}),
+				)
+				.mockResolvedValueOnce({});
+			renderCard(legalBasisSuggestion);
+			fireEvent.click(screen.getByTestId("suggestion-apply-button"));
+			await screen.findByTestId("suggestion-refusal");
+			fireEvent.click(screen.getByTestId("suggestion-apply-button"));
+			await waitFor(() =>
+				expect(screen.queryByTestId("suggestion-refusal")).toBeNull(),
+			);
+		});
+
+		it("shows no reason for an accepted change", async () => {
+			mutateAsync.mockResolvedValueOnce({});
+			renderCard(legalBasisSuggestion);
+			fireEvent.click(screen.getByTestId("suggestion-apply-button"));
+			await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+			expect(mutateAsync).toHaveBeenCalledWith({
+				id: "project-1",
+				payload: { legal_basis: "Participants agree by joining the session." },
+			});
+			expect(screen.queryByTestId("suggestion-refusal")).toBeNull();
+		});
 	});
 });

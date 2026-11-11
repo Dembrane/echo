@@ -63,6 +63,25 @@ export function tickStore(sql: Sql) {
       return r as Row;
     },
 
+    /** Pre-budget free runs still running since before `before`, on loops with no tick alive. */
+    async stuckRuns(before: string, limit: number): Promise<Row[]> {
+      return sql`select r.* from agent_loop_run r
+        where r.status = 'running' and r.started_at < ${before} and r.free_period_start is not null
+          and not exists (select 1 from platform_rate_limit k
+            where k.key in ('popcorn:alive:' || r.loop_id, 'popcorn:run:' || r.loop_id)
+              and k.reset_at > now())
+        order by r.started_at limit ${limit}`;
+    },
+
+    /** Ends a stuck pre-budget free run once; false when it finished or holds no stamp. */
+    async closeStuckRun(id: string, before: string, detail: string, now: string): Promise<boolean> {
+      const rows =
+        await sql`update agent_loop_run set status = 'error', detail = ${detail}, finished_at = ${now}
+        where id = ${id} and status = 'running' and started_at < ${before}
+          and free_period_start is not null returning id`;
+      return rows.length > 0;
+    },
+
     async insertVersion(v: {
       reportId: string;
       configId: string | null;

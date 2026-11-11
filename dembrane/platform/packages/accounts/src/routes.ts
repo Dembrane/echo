@@ -2,11 +2,14 @@ import { UnavailableError, ValidationError } from "@dembrane/core";
 import { type Ctx, clientIp, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
+import { addAnnex, removeAnnex } from "./annex";
 import * as K from "./contract";
+import { countersign } from "./countersign";
 import {
   accountPage,
   answerWhoSigns,
   customerFile,
+  customerLegalText,
   customerReply,
   declineDocument,
   documentDetail,
@@ -37,6 +40,8 @@ import {
 import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
+import { changeOfferTemplate, listOfferTemplates, resetOfferTemplate } from "./offer-template";
+import { acceptOutside, staffEvidence } from "./outside";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
@@ -164,6 +169,21 @@ export function accountsRoutes(d: AccountsDeps) {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "file");
     return pdfResponse(c, r.bytes, r.doc.title);
   });
+  app.get(R.legalText.path, async (c) => {
+    const page = await customerLegalText(
+      d,
+      requireUser(c),
+      p(c, "orgId"),
+      p(c, "docId"),
+      p(c, "kind"),
+    );
+    return c.body(page, 200, {
+      "content-type": "text/html; charset=utf-8",
+      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
+      "x-content-type-options": "nosniff",
+      "cache-control": "private, no-store",
+    });
+  });
   app.get(R.signedPdf.path, async (c) => {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "signed");
     return pdfResponse(c, r.bytes, `${r.doc.title} (signed)`);
@@ -224,6 +244,20 @@ export function accountsRoutes(d: AccountsDeps) {
     return who;
   };
 
+  // Offer templates first: their paths would otherwise match /:orgId.
+  app.get(R.listOfferTemplates.path, async (c) => {
+    await staff(c, "accounts.offer_template.list", false);
+    return c.json(await listOfferTemplates(d));
+  });
+  app.put(R.changeOfferTemplate.path, async (c) => {
+    const who = await staff(c, "accounts.offer_template.change", false);
+    const b = await body(c, K.OfferTemplateChange);
+    return c.json(await changeOfferTemplate(d, who, p(c, "template"), p(c, "language"), b));
+  });
+  app.post(R.resetOfferTemplate.path, async (c) => {
+    await staff(c, "accounts.offer_template.reset", false);
+    return c.json(await resetOfferTemplate(d, p(c, "template"), p(c, "language")));
+  });
   // Demos first: their paths would otherwise match /:orgId.
   const requireDemoSettings = () => {
     if (!d.settings.demo) throw new UnavailableError("demo.not_configured");
@@ -339,6 +373,49 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = await staff(c, "accounts.document.void");
     const b = await body(c, K.VoidRequest);
     return c.json(await voidDocument(d, who, p(c, "orgId"), p(c, "docId"), b.reason));
+  });
+  app.post(R.acceptOutside.path, async (c) => {
+    const who = await staff(c, "accounts.document.accept_outside");
+    const b = await body(c, K.AcceptOutsideRequest);
+    const bytes = new Uint8Array(Buffer.from(b.evidence_base64, "base64"));
+    return c.json(
+      await acceptOutside(d, who, p(c, "orgId"), p(c, "docId"), {
+        via: b.via,
+        name: b.name,
+        role: b.role,
+        email: b.email,
+        accepted_on: b.accepted_on,
+        customer_reference: b.customer_reference,
+        chosen_options: b.chosen_options ?? null,
+        evidence: { name: b.evidence_name, bytes },
+      }),
+    );
+  });
+  app.post(R.addAnnex.path, async (c) => {
+    const who = await staff(c, "accounts.offer.annex_add");
+    const b = await body(c, K.AddAnnexRequest);
+    const bytes = new Uint8Array(Buffer.from(b.pdf_base64, "base64"));
+    return c.json(await addAnnex(d, who, p(c, "orgId"), p(c, "docId"), { name: b.name, bytes }));
+  });
+  app.post(R.removeAnnex.path, async (c) => {
+    const who = await staff(c, "accounts.offer.annex_remove");
+    const number = Number(p(c, "number"));
+    return c.json(await removeAnnex(d, who, p(c, "orgId"), p(c, "docId"), number));
+  });
+  app.post(R.countersign.path, async (c) => {
+    const who = await staff(c, "accounts.document.countersign");
+    const b = await body(c, K.CountersignRequest);
+    return c.json(await countersign(d, who, p(c, "orgId"), p(c, "docId"), b, requestMeta(c)));
+  });
+  app.get(R.staffEvidence.path, async (c) => {
+    await staff(c, "accounts.document.evidence");
+    const r = await staffEvidence(d, p(c, "orgId"), p(c, "docId"));
+    return c.body(r.bytes as unknown as ArrayBuffer, 200, {
+      "content-type": r.type,
+      "content-disposition": `attachment; filename="${r.name.replace(/[^A-Za-z0-9._ -]+/g, "_")}"`,
+      "x-content-type-options": "nosniff",
+      "cache-control": "private, no-store",
+    });
   });
   app.post(R.sendMessage.path, async (c) => {
     const who = await staff(c, "accounts.message.send");

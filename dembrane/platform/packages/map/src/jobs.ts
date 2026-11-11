@@ -38,7 +38,13 @@ export function mapWorker(deps: MapWorkerDeps) {
       // A group is one short title call; hosts make them by the dozen.
       await queue.workflow(mapGroup, { concurrency: 8 }, async (job) => {
         const outcome = await groupWorkflow(
-          { store, rt, completer: deps.completer, onGroupChanged: deps.onGroupChanged },
+          {
+            store,
+            rt,
+            db: deps.db,
+            completer: deps.completer,
+            onGroupChanged: deps.onGroupChanged,
+          },
           job,
         );
         deps.logger.info(

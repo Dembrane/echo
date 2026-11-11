@@ -1,4 +1,4 @@
-import { newId } from "@dembrane/core";
+import { newId, withoutTrailingSlashes } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { parseTime } from "@dembrane/legacy-shape";
@@ -241,7 +241,7 @@ export async function filePendingNotifications(
         };
         if (a.workspace_id) payload.workspace_id = a.workspace_id;
         if (e.opened_by_project_id) payload.project_id = e.opened_by_project_id;
-        const base = p.dashboardUrl.replace(/\/+$/, "");
+        const base = withoutTrailingSlashes(p.dashboardUrl);
         if (a.workspace_id && e.opened_by_project_id && base)
           payload.origin_link = `${base}/en-US/w/${a.workspace_id}/projects/${e.opened_by_project_id}`;
         let status: number;

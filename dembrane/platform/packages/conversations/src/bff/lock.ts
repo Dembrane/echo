@@ -1,38 +1,20 @@
 import type { Row } from "../storage";
 
-/** Paid tiers bill hours instead of capping them (tier_capacity.OVERAGE_TIERS). */
-const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-/** Free's lifetime hour cap; other capped tiers have no capacity entry and never lock live. */
-const FREE_INCLUDED_HOURS = 1;
-
-export function tierAllowsOverage(tier: string): boolean {
-  return OVERAGE_TIERS.has(tier);
-}
-
-/** is_conversation_locked: the finish-time stamp plus a tier that is still hour-capped. */
-export function stampLocked(conv: Row, tier: string | null): boolean {
-  if (!conv.is_over_cap) return false;
-  if (tier === null) return false;
-  return !tierAllowsOverage(tier);
-}
-
-/**
- * workspace_over_cap_active: whether a free workspace is past its lifetime hours right
- * now, which also locks conversations still recording. Paid and legacy tiers never cap.
- */
+/** workspace_over_cap_active: the lifetime hour lock is retired, so never active. */
 export async function overCapActive(
-  workspaceId: string | null,
-  tier: string | null,
-  seconds: (workspaceId: string) => Promise<number>,
+  _workspaceId: string | null,
+  _tier: string | null,
+  _seconds: (workspaceId: string) => Promise<number>,
 ): Promise<boolean> {
-  if (!workspaceId || tier === null || tierAllowsOverage(tier) || tier !== "free") return false;
-  return (await seconds(workspaceId)) / 3600 >= FREE_INCLUDED_HOURS;
+  return false;
 }
 
-/** (locked, lock_reason) for one conversation, shared by list, detail and chunk reads. */
-export function conversationLock(conv: Row, tier: string | null, active: boolean) {
-  if (stampLocked(conv, tier)) return { locked: true, reason: "hours_cap" as const };
-  if (active && !conv.is_finished) return { locked: true, reason: "hours_cap" as const };
+/** (locked, lock_reason) for one conversation; the retired hour lock never applies. */
+export function conversationLock(
+  _conv: Row,
+  _tier: string | null,
+  _active: boolean,
+): { locked: boolean; reason: "hours_cap" | null } {
   return { locked: false, reason: null };
 }
 

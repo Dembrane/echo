@@ -67,7 +67,10 @@ export const ReportIssueModal = ({
 					MAX_MESSAGE_CHARS,
 				),
 			),
-		...(projectId ? { projectId } : { purpose: "issue_report" as const }),
+		// The workspace pays, never the project: a viewer lacks project:update, and issue
+		// reports are never budget-checked.
+		purpose: "issue_report",
+		workspaceId,
 	});
 	const isVoiceActive = voice.status !== "idle";
 	const atMessageLimit = message.length >= MAX_MESSAGE_CHARS;

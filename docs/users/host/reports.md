@@ -94,9 +94,11 @@ is on in the [portal editor](./portal-editor.md).
 | Publish, cancel a schedule | "Admin", "Member" |
 | Delete | "Admin" |
 
-Reports need no paid plan. The free plan includes one report per workspace. After that you see
-"Report limit reached" and "See upgrade options". See
-[tiers, billing and usage](./tiers-billing-and-usage.md).
+Reports need no paid plan. On the free plan a report uses your account's monthly AI
+allowance. From 80% the report form shows how much is used. When it is used up, "Generate
+now" or scheduling opens the upgrade popup with the date AI comes back, and a scheduled
+report that is due does not run: it shows "This month's AI budget is used up.". A report
+that has started always finishes. See [tiers, billing and usage](./tiers-billing-and-usage.md).
 
 ## Related
 

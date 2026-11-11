@@ -3,6 +3,7 @@ import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
+	Anchor,
 	Box,
 	Button,
 	Checkbox,
@@ -29,22 +30,31 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useV2Me } from "@/hooks/useV2Me";
 import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
-import { accountKeys, useDocument, usePdfData, usePdfHref } from "../api/hooks";
+import {
+	accountKeys,
+	useDocument,
+	useLegalHref,
+	usePdfData,
+	usePdfHref,
+} from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
 import { FitLabel, fitting } from "../FitLabel";
-import { formatDateTime } from "../format";
+import { formatDateTime, formatMoney } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
+	documentDate,
 	fillConfirmation,
 	type Images,
+	inputDate,
 	isFilled,
+	localIsoDate,
 	nextStop,
 	orderFields,
 	previousField,
@@ -62,7 +72,7 @@ import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
  * on a phone as well.
  */
 export const SignRoute = () => (
-	<AccountsI18n>
+	<AccountsI18n signing>
 		<SignScreen />
 	</AccountsI18n>
 );
@@ -143,6 +153,7 @@ function Header({
 function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const viewed = useRef(false);
 	const queryClient = useQueryClient();
+	const { data: me } = useV2Me();
 	useEffect(() => {
 		// Marks the offer as viewed for the staff timeline, once per visit.
 		if (viewed.current || doc.status !== "sent") return;
@@ -172,9 +183,57 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			</>
 		);
 	}
+	// A document that asks for more than one signature: once the viewer's is in, or none
+	// is left for the customer, they wait for the others.
+	const signedByMe = doc.signatures.some(
+		(s) => me?.email && s.email.toLowerCase() === me.email.toLowerCase(),
+	);
+	if (doc.awaiting_signatures.length && (signedByMe || !doc.fields.length))
+		return <PartlySigned doc={doc} orgId={orgId} />;
 	if (doc.access === "member" && doc.signer)
 		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/** Signed by some, waiting for the rest: who signed, and whose signature comes next. */
+function PartlySigned({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+	const { i18n } = useLingui();
+	const next = doc.awaiting_signatures.includes("dembrane")
+		? t`dembrane signs next.`
+		: t`Someone else from your organisation signs next.`;
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="xs" pt="10vh" px="md">
+				<Stack align="center" gap="md" ta="center" data-testid="sign-partly">
+					<Title order={3}>
+						<Trans>Your signature is in</Trans>
+					</Title>
+					{doc.signatures.map((s) => {
+						const when = formatDateTime(s.signed_at, i18n.locale);
+						const name = s.name;
+						return (
+							<Text key={`${s.slot}-${s.email}`} c="dimmed">
+								<Trans>
+									{name} signed on {when}.
+								</Trans>
+							</Text>
+						);
+					})}
+					<Text>{next}</Text>
+					{doc.access !== "signer" && (
+						<Button
+							component={I18nLink}
+							to={`/o/${orgId}/account`}
+							variant="default"
+						>
+							<Trans>Back to account</Trans>
+						</Button>
+					)}
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /**
@@ -267,8 +326,9 @@ function MaybeWaiting({
 const HEADER_HEIGHT = 50;
 
 /**
- * The signer's own values to start from: today's date, and the organisation and address
- * when we know them. Their name follows once their profile has loaded.
+ * The signer's own values to start from: today's date, the organisation and address when
+ * we know them, and the reference the offer carries, to confirm or change. Their name
+ * follows once their profile has loaded.
  */
 const initialValues = (doc: DocumentDetailT): Values => {
 	const initial: Values = {};
@@ -282,6 +342,8 @@ const initialValues = (doc: DocumentDetailT): Values => {
 			initial[f.id] = doc.prefill.organisation;
 		if (f.kind === "text" && f.key === "address" && doc.prefill.address)
 			initial[f.id] = doc.prefill.address;
+		if (f.kind === "text" && f.key === "po_number" && doc.prefill.po_number)
+			initial[f.id] = doc.prefill.po_number;
 	}
 	return initial;
 };
@@ -301,7 +363,24 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	// Only for showing the file when the browser cannot draw it; there is no download
 	// before signing, only of the signed copy.
 	const fileHref = usePdfHref(pdf.data ? doc.file_url : null);
-	const fields = useMemo(() => orderFields(doc.fields), [doc.fields]);
+	const allFields = useMemo(() => orderFields(doc.fields), [doc.fields]);
+	// Exactly one option to pick: their tick boxes are one step, a choice between them.
+	const pickOne = doc.content?.choose === "one";
+	const optionFields = useMemo(
+		() => allFields.filter(isOptionField),
+		[allFields],
+	);
+	const fields = useMemo(() => {
+		const first = optionFields[0];
+		if (!pickOne || !first) return allFields;
+		return allFields.flatMap((f) =>
+			!isOptionField(f)
+				? [f]
+				: f.id === first.id
+					? [{ ...f, id: PICK_STEP, label: t`Your choice`, required: true }]
+					: [],
+		);
+	}, [allFields, optionFields, pickOne]);
 
 	const [values, setValues] = useState<Values>(() => initialValues(doc));
 	const [signature, setSignature] = useState<CapturedImage | null>(null);
@@ -399,7 +478,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 						: null,
 					sha256: doc.sha256,
 					signature: { method: sig.method, png_base64: sig.png_base64 },
-					values: requestValues(fields, values),
+					values: requestValues(allFields, values),
 				},
 				params: { docId: doc.id, orgId },
 			});
@@ -412,7 +491,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	};
 
 	const overlay = (box: PageBox) =>
-		fields
+		allFields
 			.filter((f) => f.page === box.page)
 			.map((f) => (
 				<FieldBox
@@ -429,7 +508,13 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 								? (initials ?? signature)
 								: null
 					}
-					onClick={() => goTo(f)}
+					onClick={() =>
+						goTo(
+							pickOne && isOptionField(f)
+								? (fields.find((x) => x.id === PICK_STEP) ?? null)
+								: f,
+						)
+					}
 				/>
 			));
 
@@ -480,9 +565,24 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 					value={values[field.id]}
 					onValue={(v) => setValues((old) => ({ ...old, [field.id]: v }))}
 					filled={isFilled(field, values, images)}
+					options={field.id === PICK_STEP ? optionFields : null}
+					values={values}
+					onPick={(id) =>
+						setValues((old) => ({
+							...old,
+							[PICK_STEP]: true,
+							...Object.fromEntries(
+								optionFields.map((f) => [f.id, f.id === id]),
+							),
+						}))
+					}
 					signature={signature}
 					initials={initials}
 					nameForSignature={nameValue}
+					dateRange={{
+						max: localIsoDate(),
+						min: doc.sent_at ? localIsoDate(new Date(doc.sent_at)) : undefined,
+					}}
 					// Adopting a signature is the step's decision, so it also moves on.
 					onSignature={(img) => {
 						setSignature(img);
@@ -516,6 +616,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			{finishing && (
 				<FinishStep
 					doc={doc}
+					choice={choiceLine(doc, optionFields, values, i18n.locale)}
 					complete={complete}
 					asksDpa={asksDpa}
 					dpa={dpa}
@@ -611,6 +712,36 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	);
 }
 
+/** The step that stands for the tick boxes of an offer whose signer picks exactly one. */
+const PICK_STEP = "pick-one-option";
+
+const isOptionField = (f: DocumentFieldT) =>
+	f.kind === "checkbox" && Boolean(f.key?.startsWith("option:"));
+
+/**
+ * What the signer chose and what the offer then comes to, for the last step: the offer's
+ * total with the chosen options' lines added. Null for an offer without options.
+ */
+function choiceLine(
+	doc: DocumentDetailT,
+	optionFields: readonly DocumentFieldT[],
+	values: Values,
+	locale: string,
+): string | null {
+	if (!optionFields.length || doc.total_cents == null || !doc.currency)
+		return null;
+	const chosen = optionFields
+		.filter((f) => values[f.id] === true)
+		.map((f) => f.label);
+	const extra = (doc.lines ?? [])
+		.filter((l) => l.option && chosen.includes(l.option))
+		.reduce((sum, l) => sum + l.total_cents, 0);
+	const total = formatMoney(doc.total_cents + extra, doc.currency, locale);
+	if (!chosen.length) return t`No options chosen. Total ${total} incl. VAT.`;
+	const names = chosen.join(", ");
+	return t`You chose ${names}. Total ${total} incl. VAT.`;
+}
+
 /** Back on the left, the one primary action on the right, always on one row. */
 function ActionRow({
 	onBack,
@@ -687,18 +818,28 @@ function FieldPanel({
 	signature,
 	initials,
 	nameForSignature,
+	dateRange,
 	onSignature,
 	onInitials,
 	onBack,
 	onNext,
+	options = null,
+	values = {},
+	onPick = () => {},
 }: {
 	field: DocumentFieldT;
 	value: string | boolean | undefined;
 	onValue: (v: string | boolean) => void;
 	filled: boolean;
+	/** The options to pick exactly one of, on the step that stands for their tick boxes. */
+	options?: readonly DocumentFieldT[] | null;
+	values?: Values;
+	onPick?: (fieldId: string) => void;
 	signature: CapturedImage | null;
 	initials: CapturedImage | null;
 	nameForSignature: string;
+	/** The days a date field accepts: from the day the document was sent to today. */
+	dateRange: { min: string | undefined; max: string };
 	onSignature: (img: CapturedImage | null) => void;
 	onInitials: (img: CapturedImage | null) => void;
 	onBack: () => void;
@@ -798,6 +939,31 @@ function FieldPanel({
 		);
 	}
 
+	if (options) {
+		const picked = options.find((o) => values[o.id] === true)?.id ?? null;
+		return (
+			<Stack gap="sm">
+				<Radio.Group
+					value={picked}
+					onChange={(v) => {
+						onPick(v);
+						setTried(false);
+					}}
+					label={t`Choose one`}
+					error={tried && !picked ? t`Choose one to continue.` : undefined}
+					data-testid="sign-choice"
+				>
+					<Stack gap={6} mt={6}>
+						{options.map((o) => (
+							<Radio key={o.id} value={o.id} label={o.label} />
+						))}
+					</Stack>
+				</Radio.Group>
+				{row}
+			</Stack>
+		);
+	}
+
 	if (field.kind === "checkbox") {
 		return (
 			<Stack gap="sm">
@@ -817,6 +983,7 @@ function FieldPanel({
 		);
 	}
 
+	const isDate = field.kind === "date";
 	return (
 		<Stack gap="sm">
 			<TextInput
@@ -825,16 +992,22 @@ function FieldPanel({
 				label={label}
 				size="md"
 				autoFocus
-				value={typeof value === "string" ? value : ""}
+				// A date is picked, not typed; the document keeps it as day-month-year.
+				type={isDate ? "date" : undefined}
+				min={isDate ? dateRange.min : undefined}
+				max={isDate ? dateRange.max : undefined}
+				value={
+					typeof value === "string" ? (isDate ? inputDate(value) : value) : ""
+				}
 				onChange={(e) => {
-					onValue(e.currentTarget.value);
+					const v = e.currentTarget.value;
+					onValue(isDate ? documentDate(v) : v);
 					setTried(false);
 				}}
 				onKeyDown={(e) => {
 					if (e.key === "Enter") advance();
 				}}
 				error={tried && missing ? ask.empty : undefined}
-				placeholder={field.kind === "date" ? "dd-mm-yyyy" : undefined}
 				autoComplete={
 					field.kind === "name"
 						? "name"
@@ -858,6 +1031,7 @@ function FieldPanel({
  */
 function FinishStep({
 	doc,
+	choice,
 	complete,
 	asksDpa,
 	dpa,
@@ -870,6 +1044,8 @@ function FinishStep({
 	onSign,
 }: {
 	doc: DocumentDetailT;
+	/** What the signer chose and the total it comes to; null without options. */
+	choice: string | null;
 	complete: boolean;
 	asksDpa: boolean;
 	dpa: "yes" | "no" | null;
@@ -893,6 +1069,12 @@ function FinishStep({
 					<Trans>Some required fields are still empty.</Trans>
 				</Text>
 			)}
+			{choice && (
+				<Text size="sm" data-testid="sign-choice-summary">
+					{choice}
+				</Text>
+			)}
+			<LegalDocuments doc={doc} />
 			{asksDpa && (
 				<Radio.Group
 					value={dpa}
@@ -975,6 +1157,50 @@ function FinishStep({
 				}
 			/>
 		</Stack>
+	);
+}
+
+/** What the agreement includes, as each text stood when the document was sent. */
+const legalName = (kind: string) =>
+	kind === "terms"
+		? t`General terms and conditions`
+		: kind === "sla"
+			? t`Service level agreement`
+			: t`Data processing agreement`;
+
+/**
+ * The legal documents the agreement is made of, each opening the version this document
+ * pinned (the pages above are drawn on a canvas, so the links inside them do nothing). The
+ * DPA is its own document: its text is the page being signed.
+ */
+export function LegalDocuments({ doc }: { doc: DocumentDetailT }) {
+	const pins = doc.legal.filter((l) => l.text_url);
+	if (doc.kind === "dpa" || pins.length === 0) return null;
+	return (
+		<Stack gap={4} data-testid="sign-documents">
+			<Text size="sm">
+				<Trans>Documents that form the agreement</Trans>
+			</Text>
+			{pins.map((pin) => (
+				<LegalLink key={pin.kind} pin={pin} />
+			))}
+		</Stack>
+	);
+}
+
+function LegalLink({ pin }: { pin: DocumentDetailT["legal"][number] }) {
+	const href = useLegalHref(pin);
+	const name = legalName(pin.kind);
+	return (
+		<Anchor
+			href={href ?? undefined}
+			target="_blank"
+			rel="noreferrer"
+			size="sm"
+			data-testid={`sign-document-${pin.kind}`}
+		>
+			{name} ({pin.version})
+		</Anchor>
 	);
 }
 

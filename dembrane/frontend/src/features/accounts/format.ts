@@ -60,7 +60,8 @@ export const documentStatusLabel = (doc: DocumentSummaryT): string => {
 		declined: t`Declined`,
 		draft: t`Draft`,
 		sent: doc.requires_signature ? t`To sign` : t`Sent`,
-		signed: t`Signed`,
+		signed:
+			doc.accepted_outside && doc.kind === "offer" ? t`Accepted` : t`Signed`,
 		viewed: doc.requires_signature ? t`To sign` : t`Viewed`,
 		void: t`Withdrawn`,
 	}[doc.status];
@@ -113,9 +114,10 @@ export const dealStageLabel = (stage: string): string =>
 		parked: t`Parked`,
 	})[stage] ?? stage;
 
+/** Whether the organisation is a customer: access and churn, beside the deal stage. */
 export const stageLabel = (stage: string | null): string =>
 	stage === "prospect"
-		? t`Prospect`
+		? t`Not yet a customer`
 		: stage === "customer"
 			? t`Customer`
 			: stage === "churned"

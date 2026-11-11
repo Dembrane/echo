@@ -1849,8 +1849,27 @@
       item?.translation_policy || "",
       item?.translation_ref?.source_key || "",
       item?.translation_ref?.revision ?? "",
+      // Deck quote ids are minted per bundle and can renumber while the
+      // phrases stay put: a file whose ids moved is a changed file.
+      item?.quoteId || "",
+      item?.source?.text || "",
     ]),
   ]);
+
+  // The quote registry the popcorn files cite, read from the same bundle as
+  // those files. Read on the slower slide load instead, a renumbered registry
+  // could meet the files it was not minted with, and a phrase would show
+  // another conversation's quote.
+  async function pollQuotes() {
+    if (state.dropped.has("quotes")) return;
+    const data = await fetchJson("data/quotes.json");
+    if (!data) return;
+    const slide = SLIDES.find((s) => s.id === "quotes");
+    const raw = JSON.stringify(data);
+    if (slide && slide._raw === raw) return;
+    if (slide) slide._raw = raw;
+    state.slides.set("quotes", data);
+  }
 
   // Fetch every transcript concurrently. Serial requests make the last table
   // pay for every earlier table's round trip, which is incompatible with a
@@ -1886,7 +1905,7 @@
         }
       });
     });
-    await Promise.all(jobs);
+    await Promise.all([...jobs, pollQuotes()]);
     renderProgress();
     // Anything that changed a file redraws the list and the phrases on stage:
     // the second pass changes quotes, kinds and marks without changing the

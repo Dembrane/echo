@@ -46,6 +46,7 @@ run("BFF project list", () => {
       await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${id}, ${name}, ${ws}, true)`;
     }
     d = {
+      db: database.db,
       store: projectsStorage(database.db),
       access: new Access(new DrizzleAccessStore(database.db)),
       jobs: { enqueue: async () => "job" },

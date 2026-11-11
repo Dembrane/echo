@@ -53,6 +53,10 @@ import {
 } from "@/components/canvas/hooks";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
@@ -396,6 +400,7 @@ export const CanvasRoute = () => {
 	);
 	const invalidateCanvasQueries = useInvalidateCanvasQueries(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
+	const aiWall = useAiBudgetWall();
 	const lifecycleMutation = useCanvasLifecycleMutation(canvasId ?? "");
 	const [selectedGenerationId, setSelectedGenerationId] = useState<
 		string | null
@@ -682,7 +687,9 @@ export const CanvasRoute = () => {
 									leftSection={<ArrowsClockwiseIcon size={16} />}
 									disabled={refreshDisabled}
 									onClick={() => {
-										refreshMutation.mutate();
+										refreshMutation.mutate(undefined, {
+											onError: (error) => aiWall.openFor(error),
+										});
 										setMenuOpened(false);
 									}}
 									{...testId("canvas-refresh-button")}
@@ -729,6 +736,14 @@ export const CanvasRoute = () => {
 					isShowingMore={generationsQuery.isFetching}
 				/>
 			</Stack>
+			{workspaceId && (
+				<AiBudgetWall
+					{...aiWall.props}
+					action="canvas"
+					workspaceId={workspaceId}
+					projectId={projectId ?? undefined}
+				/>
+			)}
 		</PageContainer>
 	);
 };

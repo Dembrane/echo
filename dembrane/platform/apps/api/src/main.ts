@@ -18,10 +18,24 @@ import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
 import { localeOfEmail } from "@dembrane/i18n";
-import { createModels } from "@dembrane/llm";
-import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
+import {
+  checkProfileModels,
+  createModels,
+  type LlmSettings,
+  modelsConfigOf,
+  profileGaps,
+  profileOf,
+} from "@dembrane/llm";
+import { type Mailer, MemoryMailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
-import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
+import {
+  configuredModels,
+  httpText,
+  modelCallRecorder,
+  modelCallTable,
+  priceBook,
+  priceStartup,
+} from "@dembrane/metering";
 import { Notifier } from "@dembrane/notifications";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { popcornApiJobs } from "@dembrane/popcorn";
@@ -33,7 +47,7 @@ import { samplesApiJobs } from "@dembrane/samples/jobs";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
-import { httpDeliver, webhookJobs } from "@dembrane/webhooks";
+import { httpDeliver, samInboxAll, webhookJobs } from "@dembrane/webhooks";
 import { buildApp } from "./app";
 import { API_ASSETS } from "./assets";
 import { principalLookup } from "./principals";
@@ -64,16 +78,9 @@ const databaseUrl = withDatabase(config.database.url, config.database.name);
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 
 // Auth emails go out inside the request: the person is waiting for the code or the link.
-const mailer: Mailer = config.mail.sendgridApiKey
-  ? new SendGridMailer({
-      apiKey: config.mail.sendgridApiKey,
-      fromEmail: config.mail.fromEmail,
-      fromName: config.mail.fromName,
-      region: config.mail.sendgridRegion,
-    })
-  : new MemoryMailer();
-if (!config.mail.sendgridApiKey)
-  logger.warn("no SENDGRID_API_KEY: emails are kept in memory, not sent");
+const sender = mailerFromSettings(config.mail);
+const mailer: Mailer = sender ?? new MemoryMailer();
+if (!sender) logger.warn(`no ${missingMailKey(config.mail)}: emails are kept in memory, not sent`);
 
 const auth = createAuth({
   db: database.db,
@@ -248,27 +255,73 @@ void (async () => {
   }
 })();
 
-// Every model call is metered: one log line at once and one model_call row per batch.
-const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
-const models = createModels(
-  {
-    vertexProject: config.llm.vertexProject,
-    vertexLocation: config.llm.vertexLocation,
-    groups: {
-      text_fast: config.llm.textFast,
-      multi_modal_fast: config.llm.multiModalFast,
-      multi_modal_pro: config.llm.multiModalPro,
-    },
-    embeddingModel: config.llm.embeddingModel,
-    embeddingLocation: config.llm.embeddingLocation,
-    embeddingDimensions: config.llm.embeddingDimensions,
-  },
-  {
-    observe: metering.observe,
-    onObserverFault: (err) =>
-      logger.warn({ err }, "model call metering failed; later faults are silent"),
-  },
+// AI prices held in memory and reloaded every few minutes; every model call is priced from them.
+const prices = priceBook(database.db, logger);
+// AI cost alerts go to sam's inbox where it takes everything (production, staging), else only the log.
+const costAlerts = samInboxAll(config.samInbox, enqueuer);
+// Every model call is metered: one log line at once, one model_call row and its spend per batch.
+const metering = modelCallRecorder({
+  sink: modelCallTable(database.db),
+  logger,
+  service,
+  prices,
+  alerts: costAlerts,
+});
+// The transcription profile the worker runs: the API transcribes typed text and short audio
+// with the same live model, and refuses to start when the deployment lacks what it needs.
+const profile = (() => {
+  try {
+    const p = profileOf(config.llm);
+    const gap = profileGaps(p, config.llm);
+    if (gap) throw new Error(gap);
+    return p;
+  } catch (err) {
+    logger.fatal({ signal: "api.boot_failed" }, (err as Error).message);
+    logger.flush();
+    process.exit(1);
+  }
+})();
+void checkProfileModels(profile, config.llm, (line) =>
+  logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
 );
+// One structured line per request to a speech model, as the worker logs them.
+const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
+const modelHooks = {
+  onSpeechRequest: logSpeech,
+  observe: metering.observe,
+  onObserverFault: (err: unknown) =>
+    logger.warn({ err }, "model call metering failed; later faults are silent"),
+};
+const models = createModels(modelsConfigOf(config.llm, profile), modelHooks);
+// Serving waits for the prices to load (one read); a first sync and the missing-price check
+// run in the background.
+await priceStartup(
+  {
+    db: database.db,
+    fetchText: httpText,
+    logger,
+    alerts: costAlerts,
+    modelsDevUrl: config.metering.modelsDevUrl,
+    ecbUrl: config.metering.ecbRatesUrl,
+    now: () => new Date(),
+  },
+  prices,
+  configuredModels(config.llm, profile),
+);
+const liveSettings: LlmSettings = {
+  ...config.llm,
+  provider: profile.live.provider === "whisper" ? "openai-compatible" : "vertex",
+  ...(profile.live.provider === "gemini" && {
+    multiModalPro: [
+      profile.live.model,
+      ...config.llm.multiModalPro.filter((m) => m !== profile.live.model),
+    ],
+  }),
+};
+const liveModels =
+  liveSettings.provider === config.llm.provider && profile.live.provider === "whisper"
+    ? models
+    : createModels(modelsConfigOf(liveSettings, profile), modelHooks);
 
 const app = buildApp({
   config,
@@ -304,7 +357,7 @@ const app = buildApp({
   siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
   audio,
   media,
-  transcriber: new GeminiTranscriber(models, logger),
+  transcriber: new GeminiTranscriber(liveModels, logger),
   hub,
 });
 
@@ -324,8 +377,9 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "shutting down");
   await server.stop();
+  // Held rows and spend land before the pool closes.
+  await metering.flush().catch((err) => logger.warn({ err }, "metering flush at shutdown failed"));
   await Promise.allSettled([
-    metering.flush(),
     queue.stop(),
     hub.stop(),
     listener.end(),

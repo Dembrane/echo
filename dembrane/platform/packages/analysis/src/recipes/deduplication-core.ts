@@ -23,10 +23,17 @@ export const EPISTEMIC_KINDS = ["argument", "claim"];
 export const VALENCES = ["positive", "negative", "neutral"];
 export const VERDICTS = ["equivalent", "not_equivalent", "uncertain"];
 
-/** Calibrated candidate thresholds per embedding model; an unknown model finds identical statements only. */
+/**
+ * Calibrated candidate thresholds per embedding model; an unknown model finds identical
+ * statements only. qwen3-embedding-8b (768 values) was set where it proposes no more
+ * non-duplicates than gemini-embedding-001 at 0.92 on the same labelled pairs, and catches
+ * about twice the duplicates; the verify step still decides every merge. It scores Dutch and
+ * cross-language duplicates lower, so those are found less often.
+ */
 export const CANDIDATE_SIMILARITY_BY_MODEL: Record<string, number> = {
   "text-embedding-004": 0.8,
   "gemini-embedding-001": 0.92,
+  "qwen3-embedding-8b": 0.89,
 };
 
 export const DEFAULT_MAX_GROUP_SIZE = 8;

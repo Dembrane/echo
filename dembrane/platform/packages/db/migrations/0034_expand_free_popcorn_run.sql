@@ -1,0 +1,1 @@
+ALTER TABLE "agent_loop_run" ADD COLUMN IF NOT EXISTS "free_period_start" timestamp with time zone;

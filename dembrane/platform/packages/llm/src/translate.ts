@@ -74,10 +74,15 @@ class Slots {
   }
 }
 
+/** `s.replace(/\s*```$/, "")` without the regex, which is quadratic on long whitespace. */
+export function withoutClosingFence(s: string): string {
+  return s.endsWith("```") ? s.slice(0, -3).trimEnd() : s;
+}
+
 function jsonObject(text: string): Record<string, unknown> {
   let cleaned = text.trim();
   if (cleaned.startsWith("```"))
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    cleaned = withoutClosingFence(cleaned.replace(/^```(?:json)?\s*/i, ""));
   const parsed: unknown = JSON.parse(cleaned);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
     throw new Error("the translation answer was not a JSON object");

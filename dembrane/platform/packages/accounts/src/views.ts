@@ -77,7 +77,17 @@ export function documentSummary(
         }
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
-    signed_pdf_url: sig ? `${base}/documents/${doc.id}/signed.pdf` : null,
+    // Once every signature it asks for is in: before that the document is still sent.
+    signed_pdf_url:
+      sig && doc.status !== "sent" && doc.status !== "viewed"
+        ? `${base}/documents/${doc.id}/signed.pdf`
+        : null,
+    accepted_outside: sig?.outsideVia
+      ? {
+          via: sig.outsideVia as "order_letter" | "email" | "paper" | "own_document",
+          accepted_on: sig.acceptedOn as string,
+        }
+      : null,
     ...(doc.kind === "invoice" && {
       invoice: {
         number: doc.reference,
@@ -145,19 +155,21 @@ export function confirmationText(doc: DocumentRow, f: ConfirmationFields): strin
 export const sameText = (a: string, b: string) =>
   a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
 
-export function legalView(kind: string, row: LegalRow | null) {
+export function legalView(kind: string, row: LegalRow | null, textUrl: string | null = null) {
   return row
     ? {
         kind,
         version: row.version,
         effective_on: row.effectiveOn,
         url: row.sourceUrl,
+        text_url: textUrl,
         sha256: row.sha256,
       }
     : null;
 }
 
-export function signatureView(s: SignatureRow) {
+/** A signature as read back; `evidenceUrl` only for staff, where the evidence is served. */
+export function signatureView(s: SignatureRow, evidenceUrl?: string) {
   return {
     id: s.id,
     name: s.typedName,
@@ -169,9 +181,19 @@ export function signatureView(s: SignatureRow) {
     dpa_authorised: s.dpaAuthorised,
     signed_at: iso(s.signedAt),
     sha256: s.sha256,
-    method: s.method as "drawn" | "typed" | "uploaded",
+    method: s.method as "drawn" | "typed" | "uploaded" | "outside",
     image_sha256: s.imageSha256,
     values: (s.fieldValues ?? {}) as Record<string, string | boolean>,
+    outside: s.outsideVia
+      ? {
+          via: s.outsideVia as "order_letter" | "email" | "paper" | "own_document",
+          accepted_on: s.acceptedOn as string,
+          customer_reference: s.customerReference,
+          evidence_name: s.evidenceName as string,
+          evidence_sha256: s.evidenceSha256 as string,
+          evidence_url: evidenceUrl ?? null,
+        }
+      : null,
   };
 }
 
@@ -186,7 +208,7 @@ export function fieldView(f: FieldRow) {
     kind: f.kind as "signature" | "initials" | "name" | "role" | "date" | "text" | "checkbox",
     label: f.label,
     required: f.required,
-    signer_role: "signer" as const,
+    signer_role: (f.signerRole ?? "signer") as "signer" | "second" | "dembrane",
     key: f.key,
     sort: f.sort,
   };
@@ -194,14 +216,20 @@ export function fieldView(f: FieldRow) {
 
 /**
  * What a locked task waits for: its own document, or, for the billing details task that
- * opens on the first signed offer, the newest offer waiting for a signature.
+ * opens on the first signed offer, the newest offer waiting for a signature that the
+ * customer pays for themselves (one another party pays for does not open it).
  */
 function lockedUntil(t: TaskRow, docs: readonly DocumentRow[]) {
   if (t.status !== "locked") return null;
   if (t.unlockOnDocumentId) return docs.find((x) => x.id === t.unlockOnDocumentId) ?? null;
   return (
     docs
-      .filter((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status))
+      .filter(
+        (x) =>
+          x.kind === "offer" &&
+          ["sent", "viewed"].includes(x.status) &&
+          !(x.content as { bill_to?: unknown } | null)?.bill_to,
+      )
       .sort((a, b) => (b.sentAt?.getTime() ?? 0) - (a.sentAt?.getTime() ?? 0))[0] ?? null
   );
 }
@@ -278,12 +306,18 @@ export function billingView(b: BillingRow | null) {
   };
 }
 
-export function eventView(e: EventRow) {
+/**
+ * `names` is the staff members' display names by user id: the staff card shows who acted so
+ * the team knows whom to ask. A customer or system row, or a user since deleted, has none.
+ */
+export function eventView(e: EventRow, names: ReadonlyMap<string, string> = new Map()) {
   return {
     id: e.id,
     type: e.type,
     actor: e.actorKind,
     actor_user_id: e.actorUserId,
+    actor_name:
+      e.actorKind === "staff" && e.actorUserId ? (names.get(e.actorUserId) ?? null) : null,
     subject_type: e.subjectType,
     subject_id: e.subjectId,
     detail: e.detail,

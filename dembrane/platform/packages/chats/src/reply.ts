@@ -6,12 +6,6 @@ import { chatContext } from "./context";
 import type { ChatDeps } from "./deps";
 import { generateTitle } from "./llm";
 import { systemMessagesForChat } from "./prompt";
-import {
-  FREE_TIER_MAX_CHAT_USER_TURNS,
-  FREE_TIER_MAX_SAMPLE_USER_TURNS,
-  freeTierLimit,
-  isFreeTier,
-} from "./tiers";
 
 export interface ReplyBody {
   messages: { role: "user" | "assistant" | "dembrane"; content: string }[];
@@ -59,24 +53,20 @@ export async function reply(
   if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
   const projectId = chatProjectId(chat);
   if (!projectId) throw new Error("Chat is missing a project reference");
-  // A sample copy's chats skip the per-chat cap and share the sample's own allowance.
-  if (isFreeTier(await d.reads.projectTier(projectId))) {
-    const spent = access.project.isSample
-      ? (await d.store.countProjectUserTurns(projectId)) >= FREE_TIER_MAX_SAMPLE_USER_TURNS
-      : (await d.store.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS;
-    if (spent) throw freeTierLimit("chat_turns");
-  }
 
   const last = body.messages[body.messages.length - 1];
   if (!last) throw new Error("list index out of range");
   const messageId = d.newId();
-  await d.store.createMessage({
-    id: messageId,
+  const turn = {
+    projectId,
     chatId,
-    from: "user",
+    messageId,
     text: last.content,
     now: d.now(),
-  });
+    templateKey: body.template_key,
+  };
+  // chatFor read the chat as live and in this project.
+  const admitted = await d.freeChats.admitTurn(turn, { chatChecked: true, tier: access.tier });
 
   let formatted: { role: "system" | "user" | "assistant"; content: string }[];
   try {
@@ -85,18 +75,15 @@ export async function reply(
       chatContext(d, who, chat),
       chat.name ? Promise.resolve(null) : generateTitle(d.models, last.content, language),
     ]);
-    await Promise.all([
-      title ? d.store.setChatName(chatId, title, d.now()) : null,
-      body.template_key !== null
-        ? d.store.updateMessage(messageId, { template_key: body.template_key }, d.now())
-        : null,
-    ]);
+    if (title) await d.store.setChatName(chatId, title, d.now());
+    // Blank turns are dropped: Vertex refuses a prompt with an empty message in it.
     let convo = history
       .filter((m) => m.message_from === "user" || m.message_from === "assistant")
       .map((m) => ({
         role: m.message_from as "user" | "assistant",
         content: (m.text as string | null) ?? "",
-      }));
+      }))
+      .filter((m) => m.content.trim() !== "");
     const n = convo.length;
     if (
       n >= 2 &&
@@ -114,7 +101,7 @@ export async function reply(
     );
     formatted = [...system.map((content) => ({ role: "system" as const, content })), ...convo];
   } catch (err) {
-    await d.store.deleteMessage(messageId);
+    await d.freeChats.undoTurn(turn, admitted);
     throw err;
   }
 
@@ -132,6 +119,7 @@ export async function reply(
     async start(controller) {
       const send = (s: string) => controller.enqueue(enc.encode(s));
       let first = false;
+      let noAnswer = false;
       const timer =
         protocol === "data"
           ? setTimeout(() => {
@@ -154,6 +142,11 @@ export async function reply(
           first = true;
           send(protocol === "text" ? part.text : `0:${asciiJson(part.text)}\n`);
         }
+        // A reply with no text (a safety stop, say) would be saved as an empty answer.
+        if (!first) {
+          noAnswer = true;
+          throw new Error(`model returned no text (finish: ${await res.finishReason})`);
+        }
         await d.capture(distinctId, "server_chat_response_received", {
           chat_id: chatId,
           project_id: projectId,
@@ -165,16 +158,19 @@ export async function reply(
         await d.capture(distinctId, "server_chat_error", {
           chat_id: chatId,
           project_id: projectId,
-          error_code: "STREAM_ERROR",
+          error_code: noAnswer ? "NO_ANSWER" : "STREAM_ERROR",
           message: String((err as Error)?.message ?? err).slice(0, 300),
           mode: "context",
         });
-        await d.store.deleteMessage(messageId).catch(() => {});
+        await d.freeChats.undoTurn(turn, admitted).catch(() => {});
         first = true;
+        // The dashboard turns chat.no_answer into "try rewording it".
         send(
           protocol === "text"
             ? "Error: An error occurred while processing the chat response."
-            : '3:"An error occurred while processing the chat response."\n',
+            : noAnswer
+              ? '3:"chat.no_answer"\n'
+              : '3:"An error occurred while processing the chat response."\n',
         );
       } finally {
         clearTimeout(timer);

@@ -6,14 +6,13 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import type { LanguageModelV4 } from "@ai-sdk/provider";
 import { LocalMedia, type Media } from "@dembrane/audio";
 import { createDb, migrate } from "@dembrane/db";
-import type { Models } from "@dembrane/llm";
+import { fakeModels as sharedFakeModels } from "@dembrane/llm";
 import { createLogger, initTracing, type Logger } from "@dembrane/observability";
 import { installQueueSchema, Queue } from "@dembrane/queue";
 import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
-import { FakeTranscriber } from "@dembrane/transcription";
+import { FakeTranscriber, requestLimits } from "@dembrane/transcription";
 import postgres from "postgres";
 import { AudioUrls } from "../src/audio-urls";
 import type { PipelineDeps } from "../src/pipeline/steps";
@@ -53,12 +52,12 @@ export const PROJECT = "f7000000-0000-4000-8000-000000000001";
 export async function seed(
   sql: postgres.Sql,
   conversationId: string,
-  opts: { anonymise?: boolean } = {},
+  opts: { anonymise?: boolean; source?: string } = {},
 ) {
   await sql`insert into project (id, name, language, is_conversation_allowed, anonymize_transcripts)
     values (${PROJECT}, 'Pipeline', 'en', true, false) on conflict do nothing`;
   await sql`insert into conversation (id, project_id, participant_name, source, is_anonymized, created_at, updated_at)
-    values (${conversationId}, ${PROJECT}, 'Tester', 'PORTAL_AUDIO', ${opts.anonymise ?? false}, now() - interval '1 hour', now())`;
+    values (${conversationId}, ${PROJECT}, 'Tester', ${opts.source ?? "PORTAL_AUDIO"}, ${opts.anonymise ?? false}, now() - interval '1 hour', now())`;
 }
 
 /** A bucket on disk that answers presigned URLs over HTTP, like S3 does. */
@@ -96,37 +95,9 @@ export async function tone(path: string, seconds: number, codec: string[] = ["-c
   return Bun.file(path);
 }
 
-/** A model that answers every call with the same text, and counts the calls. */
+/** Models that answer every call with the same text. */
 export function fakeModels(text = "A short summary.") {
-  const calls: string[] = [];
-  const model: LanguageModelV4 = {
-    specificationVersion: "v4",
-    provider: "fake",
-    modelId: "fake",
-    supportedUrls: {},
-    async doGenerate() {
-      calls.push("generate");
-      return {
-        content: [{ type: "text", text }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage: {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 1, text: 1, reasoning: 0 },
-        },
-        warnings: [],
-      } as never;
-    },
-    async doStream() {
-      throw new Error("not used");
-    },
-  };
-  const models: Models = {
-    model: () => model,
-    embedding: () => {
-      throw new Error("not used");
-    },
-  };
-  return { models, calls };
+  return { models: sharedFakeModels({ text }) };
 }
 
 export interface Harness {
@@ -144,7 +115,9 @@ export async function startWorker(
   opts: {
     media?: Media;
     transcriber?: FakeTranscriber;
-    maxChunkBytes?: number;
+    /** Lowers the request limits so small files are cut. */
+    requestLimits?: { maxBytes?: number; maxSeconds?: number };
+    final?: PipelineDeps["final"];
     executorId?: string;
     bucketRoot?: string;
   } = {},
@@ -168,7 +141,10 @@ export async function startWorker(
     logger: quiet,
     now: () => new Date(),
     webhooks: { enabled: false, dashboardUrl: "http://dashboard.test" },
-    ...(opts.maxChunkBytes && { maxChunkBytes: opts.maxChunkBytes }),
+    ...(opts.requestLimits && {
+      requestLimits: { ...requestLimits("whisper"), ...opts.requestLimits },
+    }),
+    ...(opts.final && { final: opts.final }),
   };
   const worker = conversationWorker(deps, { retry: FAST });
   await queue.start(worker.jobs);

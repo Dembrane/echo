@@ -430,7 +430,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const who = requireUser(c);
     const { report, project } = await popcornReport(ad, who, id(c));
     const manifest = dict((await loadSettingsFor(d.store, report)).presentation);
-    const available = await availableBindings(d, d.map, report, String(project.id));
+    const available = await availableBindings(d, d.map, String(project.id));
     const current = dict(manifest.result_bindings);
     const blocks = Array.isArray(manifest.blocks) ? manifest.blocks : [];
     return c.json({

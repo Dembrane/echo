@@ -32,8 +32,10 @@ import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AiBudgetNotice } from "@/components/popcorn/AiBudgetNotice";
 import { readAfterFinish } from "@/components/popcorn/finishedRead";
 import {
+	type LiveHours,
 	liveBooking,
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
@@ -81,14 +83,20 @@ import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
 import { PresentButton } from "@/components/sharing/PresentButton";
 import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
 import { StatusLine } from "@/components/sharing/StatusLine";
+import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
 import { API_BASE_URL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
+import { MapFreeNotice, presentsMap } from "./MapFreeNotice";
 import { PresentResultsPanel } from "./PresentResultsPanel";
 import classes from "./PresentRoute.module.css";
 
@@ -491,6 +499,16 @@ function Session({
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
 	const booking = liveBooking(presentation.loop);
+	// A free account's AI budget is used up: presenting shows the AI wall instead of going live.
+	const usedUp = !!presentation.ai_budget?.exhausted;
+	const aiWall = useAiBudgetWall();
+	const allowance = useFreeAllowance(usedUp ? workspaceId : null);
+	const goLive = (vars: { hours: LiveHours; readyBy?: Date }) =>
+		live.mutate(vars, {
+			onError: (error) => {
+				aiWall.openFor(error);
+			},
+		});
 	const readAfter = readAfterFinish(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
@@ -693,13 +711,16 @@ function Session({
 								booking={booking}
 								opening={opening}
 								pending={live.isPending || stop.isPending}
+								analysisDisabled={usedUp}
 								onPresent={(hours) => {
 									// The room screen opens in the click, or it is blocked.
 									open();
-									if (!isLive && !booking) live.mutate({ hours });
+									if (isLive || booking) return;
+									if (usedUp) aiWall.open(allowance.data?.resets_at ?? null);
+									else goLive({ hours });
 								}}
-								onGoLive={(hours) => live.mutate({ hours })}
-								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
+								onGoLive={(hours) => goLive({ hours })}
+								onReadyBy={(hours, readyBy) => goLive({ hours, readyBy })}
 								onStop={() => stop.mutate()}
 							/>
 						) : (
@@ -762,6 +783,31 @@ function Session({
 						)}
 					</Group>
 				</Group>
+				{canEdit && (
+					<AiBudgetNotice
+						status={presentation.ai_budget}
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+					/>
+				)}
+				{canEdit && (
+					<MapFreeNotice
+						mapOn={presentsMap(
+							presentation.settings,
+							draft.query.data?.presentation.settings,
+						)}
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+					/>
+				)}
+				{canEdit && (
+					<AiBudgetWall
+						{...aiWall.props}
+						action="popcorn"
+						workspaceId={workspaceId ?? ""}
+						projectId={projectId}
+					/>
+				)}
 				{/* Read where Show them was pressed. */}
 				{canEdit && (
 					<ErrorNotice

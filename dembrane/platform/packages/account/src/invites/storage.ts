@@ -1,6 +1,7 @@
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
+import { lockOrgCreate } from "@dembrane/tenancy";
 import { and, asc, desc, eq, gt, inArray, isNull, ne, type SQL, sql } from "drizzle-orm";
 
 const {
@@ -23,6 +24,7 @@ export type WorkspaceInvite = typeof workspace_invite.$inferSelect;
 export type OrgInvite = typeof org_invite.$inferSelect;
 export type WorkspaceRow = typeof workspace.$inferSelect;
 export type AppUser = typeof app_user.$inferSelect;
+type Conn = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 type MembershipTable = typeof org_membership | typeof workspace_membership;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,7 +45,7 @@ function isUniqueViolation(err: unknown): boolean {
  * had no sort, and callers depend on "the first row", so queries without an explicit sort
  * order by id.
  */
-export function inviteStorage(db: Db) {
+export function inviteStorage(db: Conn) {
   const pendingFilter = (
     t: typeof workspace_invite | typeof org_invite,
     email: string,
@@ -649,6 +651,18 @@ export function inviteStorage(db: Db) {
 
 export type InviteStorage = ReturnType<typeof inviteStorage>;
 
+/** Runs `fn` in one transaction under tenancy's per-user org-create lock. */
+export function withOrgCreateLock<T>(
+  db: Db,
+  appUserId: string,
+  fn: (store: InviteStorage) => Promise<T>,
+): Promise<T> {
+  return db.transaction(async (tx) => {
+    await lockOrgCreate(tx, appUserId);
+    return fn(inviteStorage(tx));
+  });
+}
+
 /** When an invite was accepted, declined or revoked; null while it is still open. */
 const settledAt = (p: {
   accepted_at?: string | null | undefined;
@@ -656,7 +670,7 @@ const settledAt = (p: {
 }) => p.accepted_at ?? p.deleted_at ?? null;
 
 /** The invitee's unread "invited you" notices for one invite's workspace or org. */
-function openInviteNotices(db: Db, email: string, scope: SQL) {
+function openInviteNotices(db: Conn, email: string, scope: SQL) {
   const invitee = db
     .select({ id: app_user.id })
     .from(app_user)
@@ -671,7 +685,7 @@ function openInviteNotices(db: Db, email: string, scope: SQL) {
 }
 
 /** A settled invite's "invited you" notices leave the invitee's inbox. */
-async function settleInviteNotices(db: Db, email: string, scope: SQL, at: string) {
+async function settleInviteNotices(db: Conn, email: string, scope: SQL, at: string) {
   await db
     .update(notification)
     .set({ read_at: at, updated_at: at })
@@ -679,7 +693,7 @@ async function settleInviteNotices(db: Db, email: string, scope: SQL, at: string
 }
 
 /** An extended invite's notices stay in the inbox as long as the invite does. */
-async function extendInviteNotices(db: Db, email: string, scope: SQL, expiresAt: string) {
+async function extendInviteNotices(db: Conn, email: string, scope: SQL, expiresAt: string) {
   await db
     .update(notification)
     .set({ expires_at: expiresAt, updated_at: new Date().toISOString() })

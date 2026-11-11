@@ -1,4 +1,5 @@
 import { DBOS, type StepConfig } from "@dbos-inc/dbos-sdk";
+import { correlation, type Payer, withCorrelation, withPayer } from "@dembrane/observability";
 
 /**
  * A durable multi-step flow: each step's result is checkpointed in Postgres, and after a
@@ -9,8 +10,22 @@ import { DBOS, type StepConfig } from "@dbos-inc/dbos-sdk";
 export function workflow<Args extends unknown[], R>(
   name: string,
   fn: (...args: Args) => Promise<R>,
+  opts: { payer?: (...args: Args) => Payer | null } = {},
 ) {
-  return DBOS.registerWorkflow(fn, { name });
+  // Set on every start, recovery included, so the payer never depends on the starter.
+  const paid = (...args: Args) => {
+    const p = opts.payer?.(...args) ?? null;
+    return p ? withPayer(p, () => fn(...args)) : fn(...args);
+  };
+  // A workflow the DBOS queue starts has no caller context: its model calls are metered
+  // under the workflow's name.
+  const run = (...args: Args) =>
+    correlation()
+      ? paid(...args)
+      : withCorrelation({ requestId: DBOS.workflowID ?? name, operation: name }, () =>
+          paid(...args),
+        );
+  return DBOS.registerWorkflow(run, { name });
 }
 
 export function step<R>(

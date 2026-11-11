@@ -32,6 +32,16 @@ export const FACTCHECK_SCHEMA = {
 
 const collapse = (s: string) => s.split(/\s+/).filter(Boolean).join(" ");
 
+/** `s.replace(/^["'“”]+|["'“”]+$/g, "")` as a loop: the regex is quadratic on a run of quotes. */
+export function stripQuotes(s: string): string {
+  const quotes = `"'“”`;
+  let a = 0;
+  let b = s.length;
+  while (a < b && quotes.includes(s[a] as string)) a++;
+  while (b > a && quotes.includes(s[b - 1] as string)) b--;
+  return s.slice(a, b);
+}
+
 function projectBlock(name: string, context: string): string[] {
   const lines: string[] = [];
   if (name.trim()) lines.push(`Name: ${name.trim()}`);
@@ -63,7 +73,7 @@ export async function titleSelection(
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-  const first = (lines[0] ?? "").trim().replace(/^["'“”]+|["'“”]+$/g, "");
+  const first = stripQuotes((lines[0] ?? "").trim());
   const title = collapse(first);
   if (!title) throw new Error("the title answer was empty");
   return title;

@@ -9,8 +9,10 @@ import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export type AnalysisRecipe = {
 	id: string;
@@ -176,6 +178,7 @@ export const analysisKeys = {
 		type?: string,
 		membership = "active",
 		offset = 0,
+		snapshotId?: string | null,
 	) =>
 		[
 			...analysisKeys.all,
@@ -184,6 +187,8 @@ export const analysisKeys = {
 			type ?? "all",
 			membership,
 			offset,
+			// Last, so a save that invalidates a kind reaches every snapshot of it.
+			...(snapshotId ? [snapshotId] : []),
 		] as const,
 	recipes: () => [...analysisKeys.all, "recipes"] as const,
 	run: (runId: string) => [...analysisKeys.all, "run", runId] as const,
@@ -305,7 +310,20 @@ export type ResultsList = {
  */
 export function useResultsList(
 	projectId: string,
-	{ membership = "active", type }: { membership?: string; type?: string } = {},
+	{
+		membership = "active",
+		type,
+		snapshots,
+	}: {
+		membership?: string;
+		type?: string;
+		/**
+		 * The analysis snapshot to read each kind from. Present passes the ones its
+		 * preview is drawn from, so the list holds what the room is shown; a kind
+		 * left out reads the map view's.
+		 */
+		snapshots?: Partial<Record<string, string>>;
+	} = {},
 ): ResultsList {
 	const [pages, setPages] = useState<Record<string, number>>({});
 	const types = type ? [type] : RESULT_TYPES;
@@ -324,6 +342,11 @@ export function useResultsList(
 						offset: page * RESULTS_PAGE,
 						sort: "attention",
 						type: kind,
+						// Each row at its current revision, so an edit shows and the next one names it.
+						...(snapshots?.[kind] && {
+							latest: true,
+							snapshot_id: snapshots[kind],
+						}),
 					},
 				),
 			queryKey: analysisKeys.objects(
@@ -331,6 +354,7 @@ export function useResultsList(
 				kind,
 				membership,
 				page * RESULTS_PAGE,
+				snapshots?.[kind],
 			),
 		})),
 	});
@@ -544,7 +568,14 @@ export function useRequestAnalysisRun(projectId: string) {
 				...body,
 				idempotency_key: crypto.randomUUID(),
 			}),
-		onError: () => toast.error(t`Could not start this run. Try again.`),
+		onError: (error) => {
+			// The page opens the AI wall for a used-up budget.
+			if (isFreeTierLimitError(error) === "ai_budget") {
+				void invalidateFreeAllowance(queryClient);
+				return;
+			}
+			toast.error(t`Could not start this run. Try again.`);
+		},
 		onSuccess: (_data, body) => {
 			// Ids and kinds only: no scope key, no parameters, no participant text.
 			posthog.capture("analysis_run_requested", {
@@ -555,6 +586,8 @@ export function useRequestAnalysisRun(projectId: string) {
 			void queryClient.invalidateQueries({
 				queryKey: analysisKeys.runs(projectId),
 			});
+			// The run spends AI.
+			void invalidateFreeAllowance(queryClient);
 		},
 	});
 }

@@ -47,6 +47,7 @@ run("projects against the seed", () => {
     database = createDb({ url: `${base}/projects_test`, poolMax: 4 });
     sql = postgres(`${base}/projects_test`, { max: 1, onnotice: () => {} });
     d = {
+      db: database.db,
       store: projectsStorage(database.db),
       access: new Access(new DrizzleAccessStore(database.db)),
       jobs: {

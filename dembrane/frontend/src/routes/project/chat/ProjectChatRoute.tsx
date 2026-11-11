@@ -2,14 +2,6 @@ import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	ChatCircleText as ChatCircleTextIcon,
-	ArrowClockwiseIcon,
-	LockIcon,
-	PaperPlaneRightIcon,
-	SquareIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
-import {
 	Alert,
 	Badge,
 	Box,
@@ -24,7 +16,16 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import {
+	ArrowClockwiseIcon,
+	ChatCircleText as ChatCircleTextIcon,
+	LockIcon,
+	PaperPlaneRightIcon,
+	SquareIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
@@ -42,10 +43,7 @@ import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
 import { formatMessage } from "@/components/chat/chatUtils";
-import {
-	ChatTurnLimitCard,
-	ChatUpgradeModal,
-} from "@/components/chat/FreeTierChatGate";
+import { ChatTurnLimitCard } from "@/components/chat/FreeTierChatGate";
 import {
 	useAddChatMessageMutation,
 	useChatHistory,
@@ -73,41 +71,36 @@ import {
 } from "@/components/feedback/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import {
+	AiBudgetWall,
+	useAiBudgetWall,
+} from "@/components/workspace/AiBudgetWall";
+import { SampleCapWall } from "@/components/workspace/SampleCapWall";
+import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
 	ENABLE_AGENTIC_CHAT,
 } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import {
-	FREE_TIER_MAX_CHAT_USER_TURNS,
-	isFreeTierLimitError,
-} from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
+import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
-
-// useChat hands back a failed response as an Error whose message is the body.
-const isTurnLimitResponse = (error: Error | undefined) => {
-	try {
-		return (
-			isFreeTierLimitError(JSON.parse(error?.message ?? "")) === "chat_turns"
-		);
-	} catch {
-		return false;
-	}
-};
+import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
 	const posthog = usePostHog();
+	const queryClient = useQueryClient();
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	// Bumped once a reply is saved, so ChatTemplatesMenuConnected refetches suggestions.
+	const [assistantResponseTick, setAssistantResponseTick] = useState(0);
 
 	const addChatMessageMutation = useAddChatMessageMutation();
 	const lockConversationsMutation = useLockConversationsMutation();
@@ -183,8 +176,16 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					project_chat_id: chatId,
 					text: message.content,
 				},
-				{ onSuccess: swapToPersistedId(message.id) },
+				{ onSuccess: onReplySaved(message.id) },
 			);
+
+			// The reply spent a turn: refresh the chat's meter and the allowance.
+			// Suggestions wait for the saved reply (onReplySaved), else they read the old one.
+			void queryClient.invalidateQueries({
+				predicate: (q) => q.queryKey[2] !== "suggestions",
+				queryKey: ["chats", chatId],
+			});
+			void invalidateFreeAllowance(queryClient);
 
 			// scroll to the last message
 			lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -211,6 +212,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		);
 	};
 
+	const onReplySaved = (streamedId: string) => (created: unknown) => {
+		swapToPersistedId(streamedId)(created);
+		setAssistantResponseTick((n) => n + 1);
+	};
+
 	const customHandleStop = () => {
 		stop();
 
@@ -228,7 +234,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		};
 
 		addChatMessageMutation.mutate(body as Partial<ProjectChatMessage>, {
-			onSuccess: swapToPersistedId(incompleteMessage.id),
+			onSuccess: onReplySaved(incompleteMessage.id),
 		});
 	};
 
@@ -289,6 +295,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	]);
 
 	return {
+		assistantResponseTick,
 		contextToBeAdded,
 		error,
 		handleInputChange,
@@ -405,19 +412,19 @@ export const ProjectChatRoute = () => {
 	// modal below (workspace-scoped conversation list).
 	const projectForWorkspace = useProjectById({
 		projectId: projectId ?? "",
-		query: { fields: ["id", "workspace_id", "is_sample"] },
+		query: { fields: ["id", "workspace_id"] },
 	});
 	const projectRow = projectForWorkspace.data as
-		| { workspace_id?: string | null; is_sample?: boolean | null }
+		| { workspace_id?: string | null }
 		| undefined;
 	const projectWorkspaceId = projectRow?.workspace_id ?? null;
-	const isSample = projectRow?.is_sample === true;
 
 	// Language for suggestions
 	const { language } = useLanguage();
 	const prefetchSuggestions = usePrefetchSuggestions();
 
 	const {
+		assistantResponseTick,
 		isInitializing,
 		isLoading,
 		isSubmitting,
@@ -493,25 +500,23 @@ export const ProjectChatRoute = () => {
 		setInput,
 	]);
 
-	// Free tier: max 3 user turns per chat. The 4th routes to upgrade. A sample
-	// project's chats share their own allowance, which only the server counts, so
-	// there the limit shows once a reply comes back refused.
-	const { freeTier } = useWorkspaceUsage(routeWorkspaceId);
-	const [chatUpgradeOpened, chatUpgradeHandlers] = useDisclosure(false);
-	const userTurnCount = useMemo(
-		() => (messages ?? []).filter((m) => m.role === "user").length,
-		[messages],
-	);
-	const sampleTurnsSpent = isSample && isTurnLimitResponse(error);
-	const atTurnLimit = Boolean(
-		freeTier?.active &&
-			(isSample
-				? sampleTurnsSpent
-				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
-	);
+	// Free tier: a sample project's refused turn, or a used-up AI budget.
+	const aiWall = useAiBudgetWall();
+	const [sampleWallOpened, sampleWall] = useDisclosure(false);
+	const atTurnLimit = turnRefusalOf(error);
+	const aiRefusal = aiBudgetRefusalOf(error);
+	const queryClient = useQueryClient();
+	// A reply refused for the AI budget: show the wall at once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: opens once per refused reply
+	useEffect(() => {
+		if (!aiRefusal) return;
+		aiWall.open(aiRefusal.resetsAt);
+		void invalidateFreeAllowance(queryClient);
+	}, [error]);
 	const guardedSubmit = () => {
 		if (atTurnLimit) {
-			chatUpgradeHandlers.open();
+			// The sample cap has its own wall: nothing about the AI budget is used up.
+			sampleWall.open();
 			return;
 		}
 		handleSubmit();
@@ -605,24 +610,6 @@ export const ProjectChatRoute = () => {
 		}
 	}, [normalizedInput, templateKey, setTemplateKey]);
 
-	// Bump this whenever the assistant finishes responding, so
-	// ChatTemplatesMenuConnected knows to refetch suggestions.
-	const [assistantResponseTick, setAssistantResponseTick] = useState(0);
-	const prevIsLoadingRef = useRef(isLoading);
-	const lastMessageRole = messages?.[messages.length - 1]?.role;
-
-	useEffect(() => {
-		// Detect transition from loading to not loading with assistant message
-		if (
-			prevIsLoadingRef.current &&
-			!isLoading &&
-			lastMessageRole === "assistant"
-		) {
-			setAssistantResponseTick((n) => n + 1);
-		}
-		prevIsLoadingRef.current = isLoading;
-	}, [isLoading, lastMessageRole]);
-
 	if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading) {
 		return (
 			<div className="flex h-full items-center justify-center">
@@ -676,7 +663,7 @@ export const ProjectChatRoute = () => {
 						// Only prefetch suggestions for overview mode
 						// Deep dive mode will fetch suggestions when conversations are added
 						if (chatId && mode === "overview") {
-							prefetchSuggestions(chatId, language, 5000);
+							prefetchSuggestions(chatId, language, 3000);
 						}
 						chatContextQuery.refetch();
 					}}
@@ -842,7 +829,7 @@ export const ProjectChatRoute = () => {
 							</div>
 						)}
 
-					{error && !sampleTurnsSpent && (
+					{error && !atTurnLimit && !aiRefusal && (
 						<Alert
 							icon={<WarningCircleIcon size={20} />}
 							title={t`Error`}
@@ -850,7 +837,13 @@ export const ProjectChatRoute = () => {
 							{...testId("chat-error-alert")}
 						>
 							<Text>
-								<Trans>An error occurred.</Trans>
+								{isNoAnswer(error) ? (
+									<Trans>
+										The AI couldn't answer this question. Try rewording it.
+									</Trans>
+								) : (
+									<Trans>An error occurred.</Trans>
+								)}
 							</Text>
 							<Button
 								onClick={() => reload()}
@@ -901,8 +894,8 @@ export const ProjectChatRoute = () => {
 							icon={<WarningCircleIcon size={20} />}
 							p="xs"
 							styles={{
-								wrapper: { alignItems: "center" },
 								title: { marginBottom: 0 },
+								wrapper: { alignItems: "center" },
 							}}
 							title={
 								<Group gap="xl" wrap="nowrap" align="center">
@@ -933,7 +926,10 @@ export const ProjectChatRoute = () => {
 					)}
 					{atTurnLimit && (
 						<Box className="mb-2">
-							<ChatTurnLimitCard onUpgrade={chatUpgradeHandlers.open} />
+							<ChatTurnLimitCard
+								onUpgrade={sampleWall.open}
+								questions={turnCapOf(error)}
+							/>
 						</Box>
 					)}
 					<form
@@ -1074,11 +1070,24 @@ export const ProjectChatRoute = () => {
 					/>
 				)}
 			</Modal>
-			<ChatUpgradeModal
-				opened={chatUpgradeOpened}
-				onClose={chatUpgradeHandlers.close}
-				reason="chat_turns"
-			/>
+			{(routeWorkspaceId ?? projectWorkspaceId) && (
+				<>
+					<AiBudgetWall
+						{...aiWall.props}
+						action="chat"
+						workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
+						projectId={projectId}
+					/>
+					<SampleCapWall
+						cap="chat"
+						questions={turnCapOf(error)}
+						opened={sampleWallOpened}
+						onClose={sampleWall.close}
+						workspaceId={routeWorkspaceId ?? projectWorkspaceId ?? ""}
+						projectId={projectId}
+					/>
+				</>
+			)}
 		</Stack>
 	);
 };

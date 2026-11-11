@@ -83,6 +83,7 @@ function demoStore(): Store {
 	const invoice: DocumentDetailT = {
 		...(clone(invoiceSummary) as DocumentSummaryT),
 		access: "member",
+		awaiting_signatures: [],
 		body: null,
 		confirmation: null,
 		content: null,
@@ -92,9 +93,10 @@ function demoStore(): Store {
 		legal: [],
 		lines: null,
 		page_count: 1,
-		prefill: { address: null, organisation: null },
+		prefill: { address: null, organisation: null, po_number: null },
 		sha256: null,
 		signature: null,
+		signatures: [],
 		signing_note: null,
 		staff_url: null,
 	};
@@ -177,6 +179,7 @@ function otherStores(): Store[] {
 		timeline: [
 			{
 				actor: "staff",
+				actor_name: null,
 				actor_user_id: null,
 				created_at: created,
 				detail: { stage },
@@ -470,20 +473,61 @@ type OfferItems = NonNullable<DocumentDetailT["content"]>["items"];
 function priced(raw: unknown) {
 	const items = raw as OfferItems;
 	const lines = items.map((it) => {
-		const net = it.quantity * it.unit_price_cents;
+		// A quantity may be 1.5: counted in hundredths, rounded to the cent half up.
+		const net = Math.round(
+			(Math.round(it.quantity * 100) * it.unit_price_cents) / 100,
+		);
 		const vat = Math.round((net * it.vat_rate_bps) / 10_000);
 		return { ...it, net_cents: net, total_cents: net + vat, vat_cents: vat };
 	});
+	// Optional and included lines are shown, never counted.
+	const counted = lines.filter((l) => !l.kind);
 	return {
 		items,
 		lines,
-		subtotal: lines.reduce((a, l) => a + l.net_cents, 0),
-		vat: lines.reduce((a, l) => a + l.vat_cents, 0),
+		subtotal: counted.reduce((a, l) => a + l.net_cents, 0),
+		vat: counted.reduce((a, l) => a + l.vat_cents, 0),
+	};
+}
+
+type OfferContentT = NonNullable<DocumentDetailT["content"]>;
+
+/** The VAT treatment, amendments, processing terms, reference, payer and invoice plan an offer request carries. */
+function offerTerms(body: Record<string, unknown>): Partial<OfferContentT> {
+	const amendments = (body.amendments ?? []) as OfferContentT["amendments"];
+	return {
+		vat_treatment:
+			(body.vat_treatment as OfferContentT["vat_treatment"]) ?? "standard",
+		...(amendments?.length && { amendments }),
+		...(typeof body.processing_terms === "string" &&
+			body.processing_terms && { processing_terms: body.processing_terms }),
+		...(typeof body.customer_reference === "string" &&
+			body.customer_reference && {
+				customer_reference: body.customer_reference,
+			}),
+		...(body.bill_to && typeof body.bill_to === "object"
+			? { bill_to: body.bill_to as OfferContentT["bill_to"] }
+			: {}),
+		...(body.invoice_plan && typeof body.invoice_plan === "object"
+			? { invoice_plan: body.invoice_plan as OfferContentT["invoice_plan"] }
+			: {}),
+		...(body.no_charge === true && { no_charge: true as const }),
+		...(body.dembrane_signs_offer === true && {
+			dembrane_signs_offer: true as const,
+		}),
+		...(body.dembrane_signer && typeof body.dembrane_signer === "object"
+			? {
+					dembrane_signer:
+						body.dembrane_signer as OfferContentT["dembrane_signer"],
+				}
+			: {}),
 	};
 }
 
 /** The locked billing details step that comes with a sent offer, named after it. */
 function billingStepFor(s: Store, d: DocumentDetailT) {
+	// Another party pays, or nobody does: nobody asks the customer for billing details.
+	if (d.content?.bill_to || d.content?.no_charge) return;
 	const billing = s.tasks.find(
 		(x) => x.kind === "billing_details" && x.status === "locked",
 	);
@@ -529,6 +573,7 @@ const event = (
 ) => {
 	s.timeline.unshift({
 		actor,
+		actor_name: actor === "staff" ? "Pauline" : null,
 		actor_user_id: null,
 		created_at: now(),
 		detail,
@@ -557,11 +602,31 @@ function dealStageOf(s: Store): Out<typeof AccountListItem>["deal_stage"] {
 		: "invoice_sent";
 }
 
+/** The dates behind the demo's stage, as the backend reads them from the same facts. */
+function milestonesOf(s: Store): Out<typeof AccountListItem>["milestones"] {
+	const offer = s.docs.find((d) => d.kind === "offer" && d.status !== "void");
+	const signed = offer?.status === "signed" ? offer.signed_at : null;
+	const dpas = s.docs.filter((d) => d.kind === "dpa" && d.status !== "void");
+	const invoice = s.docs.find((d) => d.kind === "invoice" && d.invoice);
+	return {
+		billing_details: s.billing.billing_email ? s.created_at : null,
+		documents_signed:
+			signed && dpas.every((d) => d.status === "signed")
+				? ([signed, ...dpas.map((d) => d.signed_at)].sort().at(-1) ?? null)
+				: null,
+		invoice_sent: signed && invoice ? (invoice.sent_at ?? null) : null,
+		offer_drafted: offer ? (offer.sent_at ?? s.created_at) : null,
+		offer_sent: offer && offer.status !== "draft" ? offer.sent_at : null,
+		signed,
+	};
+}
+
 function listItem(s: Store): Out<typeof AccountListItem> {
 	return {
 		created_at: s.created_at,
 		deal_stage: dealStageOf(s),
 		id: s.id,
+		milestones: milestonesOf(s),
 		name: s.name,
 		open_tasks: s.tasks.filter(
 			(t) => t.status === "open" || t.status === "changes_requested",
@@ -583,6 +648,7 @@ function card(s: Store) {
 	return {
 		account_manager: null,
 		billing: s.billing,
+		dembrane_signer: clone(fx.accountCard.dembrane_signer),
 		demo: s.demo,
 		documents: s.docs.map((d) => summary(withUrls(d, base, "staff"))),
 		// The fixture account asks for no invoice, so nothing waits.
@@ -594,6 +660,7 @@ function card(s: Store) {
 			created_at: s.created_at,
 			deal_stage: dealStageOf(s),
 			id: s.id,
+			milestones: milestonesOf(s),
 			name: s.name,
 		},
 		pending_invites: [],
@@ -1218,7 +1285,7 @@ export async function handle(
 				const signedAt = now();
 				d.status = "signed";
 				d.signed_at = signedAt;
-				d.signature = {
+				const signature = {
 					address: pick("text", "address"),
 					dpa_authorised: dpaAuthorised,
 					email: "robin@example-town.example",
@@ -1229,12 +1296,14 @@ export async function handle(
 					method: sig.method,
 					name: pick("name") ?? "",
 					organisation: pick("text", "organisation") ?? s.name,
+					outside: null,
 					role: pick("role") ?? "",
 					sha256: d.sha256 ?? "",
 					signed_at: signedAt,
 					values,
 					vat_number: pick("text", "vat_number"),
 				};
+				d.signature = signature;
 				s.signatures[d.id] = {
 					confirmation: String(body.confirmation_text),
 					png: sig.png_base64,
@@ -1272,7 +1341,7 @@ export async function handle(
 					separateDpaFor(s, d, signedAt);
 				return {
 					confirmation_text: body.confirmation_text,
-					signature_id: d.signature.id,
+					signature_id: signature.id,
 					signed_at: signedAt,
 				};
 			}
@@ -1560,8 +1629,10 @@ export async function handle(
 				const q = String(query?.q ?? "")
 					.trim()
 					.toLowerCase();
+				const deal = query?.deal_stage;
 				const rows = all
 					.filter((x) => stage === undefined || x.stage === stage)
+					.filter((x) => !deal || dealStageOf(x) === deal)
 					.filter(
 						(x) =>
 							!q ||
@@ -1612,7 +1683,10 @@ export async function handle(
 					person_name: (body.person_name as string | null) ?? null,
 					reference,
 					template: body.template as "subscription" | "event",
+					...offerTerms(body),
 				};
+				// Absent keeps the draft's currency, as the API does.
+				d.currency = (body.currency as string | undefined) ?? d.currency;
 				d.language = language;
 				d.reference = reference;
 				d.lines = lines;
@@ -1652,7 +1726,8 @@ export async function handle(
 				const title =
 					(body.title as string | null) ?? `${body.offer_name} x dembrane`;
 				const sha = randomHex();
-				if (body.supersedes_id) {
+				// A draft revision leaves the sent offer with the customer until it is sent.
+				if (body.supersedes_id && body.send !== false) {
 					const old = s.docs.find((x) => x.id === body.supersedes_id);
 					if (old && old.status !== "signed") {
 						old.status = "void";
@@ -1682,6 +1757,7 @@ export async function handle(
 						person_name: (body.person_name as string | null) ?? null,
 						reference,
 						template: body.template as "subscription" | "event",
+						...offerTerms(body),
 					},
 					currency: (body.currency as string) ?? "EUR",
 					fields: offerFields(language),
@@ -1749,7 +1825,9 @@ export async function handle(
 				const sendNow =
 					body.send !== false && (!requires || (fields?.length ?? 0) > 0);
 				const d: DocumentDetailT = {
+					accepted_outside: null,
 					access: "staff",
+					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
 					confirmation: null,
 					content: null,
@@ -1766,12 +1844,13 @@ export async function handle(
 					legal: [],
 					lines: null,
 					page_count: bytes ? await pageCountOf(bytes) : 1,
-					prefill: { address: null, organisation: null },
+					prefill: { address: null, organisation: null, po_number: null },
 					reference: (body.reference as string | null) ?? null,
 					requires_signature: requires,
 					sent_at: sendNow ? now() : null,
 					sha256: bytes ? await sha256Hex(bytes) : randomHex(),
 					signature: null,
+					signatures: [],
 					signed_at: null,
 					signed_pdf_url: null,
 					signer: null,

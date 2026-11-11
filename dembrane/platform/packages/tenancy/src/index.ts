@@ -8,3 +8,4 @@ export {
   tenancyWorker,
 } from "./jobs";
 export { tenancyRoutes } from "./routes";
+export { lockOrgCreate } from "./storage/orgs";

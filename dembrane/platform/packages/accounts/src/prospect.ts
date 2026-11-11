@@ -1,4 +1,4 @@
-import { NotFoundError, newId, ValidationError } from "@dembrane/core";
+import { NotFoundError, newId, ValidationError, withoutTrailingSlashes } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
@@ -29,7 +29,7 @@ export interface CreateAccountResult {
 
 /** Where "Continue in dembrane" leads: the sign-in, then the organisation's account page. */
 export function continueUrl(dashboardUrl: string, orgId: string): string {
-  const base = dashboardUrl.replace(/\/+$/, "");
+  const base = withoutTrailingSlashes(dashboardUrl);
   return `${base}/login?next=${encodeURIComponent(`/o/${orgId}/account`)}`;
 }
 

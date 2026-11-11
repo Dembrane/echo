@@ -10,6 +10,7 @@ import postgres from "postgres";
 import * as K from "../src/contract";
 import { runRemindersTick, runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
+import { auditTrail } from "../src/signing";
 import { store } from "../src/storage";
 import { billingComplete } from "../src/tasks";
 import { admin, call, dropDatabase, png, pngB64, type World, world } from "./helpers";
@@ -69,7 +70,8 @@ run("accounts routes against Postgres", () => {
       else if (f.kind === "role") values[f.id] = "Wethouder";
       else if (f.kind === "date") values[f.id] = "28-09-2026";
       else if (f.kind === "checkbox") values[f.id] = true;
-      else if (f.kind === "text")
+      // The reference is optional and left empty here; offer-draft tests fill it.
+      else if (f.kind === "text" && f.key !== "po_number")
         values[f.id] =
           f.key === "organisation"
             ? "Gemeente Testdorp"
@@ -215,6 +217,7 @@ run("accounts routes against Postgres", () => {
       "text",
       "text",
       "role",
+      "text",
       "date",
       "signature",
     ]);
@@ -341,6 +344,21 @@ run("accounts routes against Postgres", () => {
     const bytes = pdf.data as unknown as Uint8Array;
     expect(sha(bytes)).toBe(sig?.signedPdfSha256 as string);
     expect((await PDFDocument.load(bytes)).getPageCount()).toBe((doc?.pageCount as number) + 1);
+    // The record's trail: staff sent it, the customer opened it, then this signature.
+    const signedAt = new Date(sig?.signedAt ?? 0).toISOString();
+    const trail = await auditTrail(
+      w.deps,
+      doc as NonNullable<typeof doc>,
+      "billing@example.test",
+      signedAt,
+    );
+    expect(trail[0]?.what).toMatch(/^Sent by .+, dembrane$/);
+    expect(trail.filter((t) => t.what.startsWith("First opened by "))).toHaveLength(1);
+    expect(trail.at(-1)).toEqual({
+      at: signedAt,
+      what: "Signed by billing@example.test",
+    });
+    expect(trail.map((t) => t.at)).toEqual([...trail.map((t) => t.at)].sort());
     const image = await w.files.get(sig?.imageKey as string);
     expect(sha(new Uint8Array(await (image as Blob).arrayBuffer()))).toBe(
       sig?.imageSha256 as string,
@@ -1091,6 +1109,7 @@ run("accounts routes against Postgres", () => {
     ).toEqual({
       organisation: "Gemeente Testdorp",
       address: "Dorpsstraat 1, 1234 AB Testdorp, Nederland",
+      po_number: null,
     });
   });
 
@@ -1644,6 +1663,39 @@ run("accounts routes against Postgres", () => {
       .select({ n: sql<number>`count(*)::int` })
       .from(schema.account_signature);
     expect(rows[0]?.n).toBeGreaterThanOrEqual(4);
+  });
+
+  test("the staff card names the staff member behind a staff row, and no one else", async () => {
+    const base = { orgId: w.orgId, type: "account.updated", createdAt: w.clock.now };
+    const rows = {
+      staff: newId(),
+      gone: newId(),
+      customer: newId(),
+    };
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.staff,
+      actorKind: "staff",
+      actorUserId: w.people.staff.directusUserId,
+    });
+    // A staff user since deleted, and a customer row that carries a real user id.
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.gone,
+      actorKind: "staff",
+      actorUserId: newId(),
+    });
+    await store.insertEvent(w.db, {
+      ...base,
+      id: rows.customer,
+      actorKind: "customer",
+      actorUserId: w.people.admin.directusUserId,
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    const nameOf = (id: string) => card.timeline.find((e) => e.id === id)?.actor_name;
+    expect(nameOf(rows.staff)).toBe("staff");
+    expect(nameOf(rows.gone)).toBeNull();
+    expect(nameOf(rows.customer)).toBeNull();
   });
 
   test("reminding the named signer sends the same link again and keeps the wait", async () => {

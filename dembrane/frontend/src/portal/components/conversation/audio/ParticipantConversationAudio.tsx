@@ -29,9 +29,12 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
+import type { RecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
+import { NotTakingRecordings } from "../../NotTakingRecordings";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
+import { recordingClosed } from "../../start/recordingCap";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
 import { useParticipantConversation } from "../useParticipantConversation";
@@ -39,6 +42,7 @@ import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
 import { usePendingUploads } from "./hooks/usePendingUploads";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
+import { useRecordingLimit } from "./hooks/useRecordingLimit";
 import {
 	captureInterruptionError,
 	captureRecordingInterrupted,
@@ -56,15 +60,21 @@ import {
 	displayTime,
 	initialRecordingSession,
 	isConfirmOpen,
+	isFinishing,
 	isHeld,
 	pausedAt,
 	recordingSessionReducer,
+	type WrapUpReason,
 } from "./recordingSession";
 import { S3CheckModal } from "./S3CheckModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
+import { WrapUpModal } from "./WrapUpModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
+
+const wrapUpReasonOf = (r: RecordingRefusal): WrapUpReason =>
+	r === "audio_conversation" ? "conversation" : "account";
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -92,7 +102,22 @@ export const ParticipantConversationAudio = () => {
 		newConversationLink,
 		projectQuery,
 	} = useParticipantConversation(projectId, conversationId);
-	const uploadChunkMutation = useUploadConversationChunk();
+	// Set after the recorder exists; upload callbacks reach it through this ref.
+	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
+	// Whether this page kept any chunk; a budget refusal before one means nothing was saved.
+	const keptChunkRef = useRef(false);
+	const [refusedUnsaved, setRefusedUnsaved] = useState(false);
+	const uploadChunkMutation = useUploadConversationChunk({
+		onChunkAccepted: () => {
+			keptChunkRef.current = true;
+		},
+		onRecordingStop: (r, accepted) => {
+			if (accepted) keptChunkRef.current = true;
+			else if (r === "ai_budget" && !keptChunkRef.current)
+				setRefusedUnsaved(true);
+			wrapUpRef.current?.(wrapUpReasonOf(r));
+		},
+	});
 	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploads = usePendingUploads();
 
@@ -131,7 +156,7 @@ export const ParticipantConversationAudio = () => {
 		recordingSessionReducer,
 		initialRecordingSession,
 	);
-	const isStopping = session.phase === "finishing";
+	const isStopping = isFinishing(session);
 	const stoppedRecordingTime = pausedAt(session);
 	const conversationDeletedDuringRecording = session.phase === "deleted";
 	const [
@@ -199,6 +224,12 @@ export const ParticipantConversationAudio = () => {
 		errored,
 		permissionError,
 	} = audioRecorder;
+
+	// Sticky: a stop resets recordingTime, and a limit stop may leave no chunk.
+	const [startedHere, setStartedHere] = useState(false);
+	useEffect(() => {
+		if (isRecording || isStarting) setStartedHere(true);
+	}, [isRecording, isStarting]);
 
 	// What colour the meter runs in. A run that was interrupted is the recording
 	// itself failing, so it outranks a connection that has merely gone quiet.
@@ -321,6 +352,8 @@ export const ParticipantConversationAudio = () => {
 	const shouldVerifyOnFinish =
 		!!projectQuery.data?.is_verify_on_finish_enabled &&
 		!!projectQuery.data?.is_verify_enabled &&
+		// Verify needs AI; at a used-up budget it would open on "Not available right now".
+		projectQuery.data?.is_ai_available !== false &&
 		!hasApprovedArtefacts &&
 		effectiveRecordingTime >= REFINE_BUTTON_THRESHOLD_SECONDS;
 
@@ -333,6 +366,33 @@ export const ParticipantConversationAudio = () => {
 			wakeLock.release();
 		}
 	};
+
+	// A limit stopped the recording: keep what was recorded, offer only Finish.
+	const wrappedUpRef = useRef(false);
+	const wrapUp = (reason: WrapUpReason) => {
+		if (wrappedUpRef.current || isStopping) return;
+		wrappedUpRef.current = true;
+		const at = isRecording
+			? recordingTime
+			: (stoppedRecordingTime ?? recordingTime);
+		if (isRecording) stopRecording();
+		wakeLock.release();
+		dispatch({ at, reason, type: "wrapUp" });
+		posthog.capture("portal_recording_wrapped_up", {
+			conversation_id: conversationId,
+			project_id: projectId,
+			reason,
+			recording_time_seconds: at,
+		});
+	};
+	wrapUpRef.current = wrapUp;
+
+	useRecordingLimit({
+		isRecording,
+		limitSeconds: projectQuery.data?.conversation_limit_seconds ?? null,
+		onLimit: () => wrapUp("conversation"),
+		recordingTime,
+	});
 
 	const handleConfirmFinish = async () => {
 		dispatch({ type: "finishStarted" });
@@ -361,6 +421,7 @@ export const ParticipantConversationAudio = () => {
 	const handleResumeRecording = async () => {
 		// The pause holds until the recorder has started, so the timer doesn't
 		// flash back to zero in between.
+		if (session.phase === "wrappedUp") return;
 		const started = await startRecording(stoppedRecordingTime ?? 0);
 		if (!started) return;
 		dispatch({ type: "recordingStarted" });
@@ -397,7 +458,7 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleStartRecording = async () => {
-		if (s3Status !== "passed") {
+		if (s3Status !== "passed" || session.phase === "wrappedUp") {
 			return;
 		}
 
@@ -438,7 +499,11 @@ export const ParticipantConversationAudio = () => {
 		return () => observer.disconnect();
 	}, [footer]);
 
-	if (loadState === "loading") {
+	const takingRecordings = projectQuery.data?.is_taking_recordings;
+	if (
+		loadState === "loading" ||
+		(takingRecordings === false && chunks.isLoading)
+	) {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
@@ -451,6 +516,20 @@ export const ParticipantConversationAudio = () => {
 			/>
 		);
 	}
+
+	if (
+		recordingClosed({
+			chunkCount: chunks.data?.length,
+			recordingStarted:
+				startedHere || isRecording || isStarting || recordingTime > 0,
+			takingRecordings,
+		})
+	) {
+		return <NotTakingRecordings />;
+	}
+
+	// The wrap-up's "everything you recorded is saved" would be false here.
+	if (refusedUnsaved) return <NotTakingRecordings />;
 
 	// Recording, or paused partway: behind the stop or interruption modal, or
 	// resuming. The timer and the meter show for all of it.
@@ -493,6 +572,13 @@ export const ParticipantConversationAudio = () => {
 				showVerifyOnFinish={shouldVerifyOnFinish}
 				handleSkipVerification={handleConfirmFinish}
 				handleVerify={handleVerify}
+			/>
+
+			<WrapUpModal
+				opened={session.phase === "wrappedUp"}
+				reason={session.phase === "wrappedUp" ? session.reason : "account"}
+				onFinish={handleConfirmFinish}
+				isFinishing={isStopping}
 			/>
 
 			<RefineInfoModal

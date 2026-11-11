@@ -407,7 +407,7 @@ export const TemplatesModal = ({
 	const modalProps = {
 		classNames: {
 			body: "flex-1 flex flex-col overflow-hidden",
-			content: "h-[600px] flex flex-col overflow-hidden",
+			content: "h-[680px] flex flex-col overflow-hidden",
 		},
 		onClose,
 		onExitTransitionEnd: resetState,
@@ -443,7 +443,7 @@ export const TemplatesModal = ({
 		return (
 			<>
 				<Modal {...modalProps}>
-					<div className="flex h-full flex-col">
+					<div className="flex h-full flex-col min-h-0">
 						<Button
 							variant="subtle"
 							color="gray"
@@ -455,7 +455,7 @@ export const TemplatesModal = ({
 						>
 							<Trans>Back</Trans>
 						</Button>
-						<Stack gap="md" className="flex-1">
+						<Stack gap="md" className="min-h-0 flex-1">
 							<TextInput
 								label={t`Template name`}
 								withAsterisk
@@ -470,9 +470,18 @@ export const TemplatesModal = ({
 								value={formContent}
 								onChange={(e) => setFormContent(e.currentTarget.value)}
 								placeholder={t`What should ECHO analyse or generate from the conversations?`}
-								minRows={6}
-								maxRows={14}
-								autosize
+								// Fills the free height and scrolls inside, so the form never moves
+								resize="none"
+								styles={{
+									root: {
+										flex: 1,
+										minHeight: 160,
+										display: "flex",
+										flexDirection: "column",
+									},
+									wrapper: { flex: 1 },
+									input: { height: "100%" },
+								}}
 							/>
 							{view === "create" && canCreateWorkspaceTemplate && (
 								<Switch
@@ -492,28 +501,27 @@ export const TemplatesModal = ({
 									</Trans>
 								</Text>
 							)}
-							<Group justify="flex-start" gap="sm">
-								<Button
-									variant="filled"
-									onClick={
-										view === "create" ? handleSaveCreate : handleSaveEdit
-									}
-									loading={view === "create" ? isCreating : isUpdating}
-									disabled={!formTitle.trim() || !formContent.trim()}
-								>
-									<Trans>Save template</Trans>
-								</Button>
-								{view === "edit" && editingId && (
-									<Button
-										variant="subtle"
-										color="red"
-										onClick={() => setDeletingTemplateId(editingId)}
-									>
-										<Trans>Delete</Trans>
-									</Button>
-								)}
-							</Group>
 						</Stack>
+						<Divider my="sm" />
+						<Group justify="flex-start" gap="sm">
+							<Button
+								variant="filled"
+								onClick={view === "create" ? handleSaveCreate : handleSaveEdit}
+								loading={view === "create" ? isCreating : isUpdating}
+								disabled={!formTitle.trim() || !formContent.trim()}
+							>
+								<Trans>Save template</Trans>
+							</Button>
+							{view === "edit" && editingId && (
+								<Button
+									variant="subtle"
+									color="red"
+									onClick={() => setDeletingTemplateId(editingId)}
+								>
+									<Trans>Delete</Trans>
+								</Button>
+							)}
+						</Group>
 					</div>
 				</Modal>
 				{deleteConfirmationModal}

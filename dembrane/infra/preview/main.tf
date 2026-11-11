@@ -39,7 +39,8 @@ module "platform" {
   # Only PR previews run here; each creates its own database.
   standing_deployment = false
   # Sign-up and sign-in codes work on every PR preview. The key is echo-next's, added by hand.
-  pending_secrets = ["SENDGRID_API_KEY"]
+  # LLM_API_KEY is the Scaleway key for the speech-to-text model the final transcript compares.
+  pending_secrets = ["SENDGRID_API_KEY", "LLM_API_KEY"]
 }
 
 # The PR preview seed (apps/migrate/src/preview-seed.ts) signs in sameer+admin@dembrane.com

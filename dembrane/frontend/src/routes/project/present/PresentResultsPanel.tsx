@@ -55,7 +55,18 @@ export function PresentResultsPanel({
 }) {
 	const { workspaceId } = useParams<{ workspaceId?: string }>();
 	const [params, setParams] = useSearchParams();
-	const results = useResultsList(projectId);
+	// Each kind from the snapshot the preview above is drawn from: the list holds
+	// what the room is shown, and a pinned slide's list is its pin.
+	const drawnFrom = presentation.result_snapshots;
+	const snapshots = useMemo(
+		() => ({
+			popcorn: drawnFrom?.popcorn,
+			stakeholder: drawnFrom?.stakeholders,
+			tension: drawnFrom?.tensions,
+		}),
+		[drawnFrom?.popcorn, drawnFrom?.stakeholders, drawnFrom?.tensions],
+	);
+	const results = useResultsList(projectId, { snapshots });
 	// What is new is new since the host last opened this list; leaving it marks
 	// it seen.
 	useResultsVisit(projectId);

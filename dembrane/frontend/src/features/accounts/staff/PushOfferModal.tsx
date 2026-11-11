@@ -2,42 +2,79 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Button,
+	Checkbox,
 	Divider,
 	Group,
 	Modal,
+	NumberInput,
+	Paper,
 	SegmentedControl,
+	Select,
 	SimpleGrid,
 	Stack,
 	Text,
+	Textarea,
 	TextInput,
 } from "@mantine/core";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
-import { useAccountsMutation } from "../api/hooks";
+import { useAccountCard, useAccountsMutation } from "../api/hooks";
 import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
+import { BillToFields, billToBody, billToForm } from "./BillToFields";
+import { InvoicePlanFields, planBody, planForm } from "./InvoicePlanFields";
 import {
-	cents,
 	emptyLine,
 	type Line,
 	LinesEditor,
+	lineCents,
 	toItems,
+	toLines,
 } from "./LinesEditor";
 
-type Content = NonNullable<DocumentDetailT["content"]>;
+type VatTreatment = "standard" | "reverse_charge" | "outside_eu";
 
-const toLines = (content: Content): Line[] =>
-	content.items.map((item) => ({
-		bullets: item.bullets.join("\n"),
-		description: item.description,
-		id: crypto.randomUUID(),
-		quantity: item.quantity,
-		unitPrice: item.unit_price_cents / 100,
-		vatPercent: item.vat_rate_bps / 100,
-	}));
+/** The currencies offered first; the API takes any ISO code, and a draft keeps its own. */
+const CURRENCIES = [
+	"EUR",
+	"USD",
+	"GBP",
+	"CHF",
+	"SEK",
+	"NOK",
+	"DKK",
+	"PLN",
+	"CZK",
+];
+
+/** Who signs for dembrane as the form holds it: empty strings where nothing is set. */
+interface Signer {
+	email: string;
+	name: string;
+	role: string;
+}
+
+const signerForm = (
+	s: { email: string; name: string; role: string | null } | null | undefined,
+): Signer => ({
+	email: s?.email ?? "",
+	name: s?.name ?? "",
+	role: s?.role ?? "",
+});
+
+/** The most amendments one offer carries (contract: PushOfferRequest.amendments). */
+const MAX_AMENDMENTS = 10;
+
+interface Amendment {
+	id: string;
+	title: string;
+	body: string;
+}
 
 /**
  * Staff: an offer from lines, a template and a language. The backend lays it out as the
@@ -45,7 +82,8 @@ const toLines = (content: Content): Line[] =>
  *
  * "Send offer" opens "Review and sign the offer" for the customer at once. "Save draft"
  * keeps it for staff only and leads to the page where it is read, changed and sent. With
- * `draft` the dialog changes that draft in place.
+ * `draft` the dialog changes that draft in place. With `revise` it starts from a sent
+ * offer and pushes a new version under the same reference that replaces it.
  */
 export function PushOfferModal({
 	opened,
@@ -53,6 +91,7 @@ export function PushOfferModal({
 	orgId,
 	orgName,
 	draft = null,
+	revise = null,
 	onDraft,
 }: {
 	opened: boolean;
@@ -61,23 +100,32 @@ export function PushOfferModal({
 	orgName: string;
 	/** A draft offer to change; absent for a new offer. */
 	draft?: DocumentDetailT | null;
-	/** Called with the document id after a new draft is saved. */
+	/** A sent offer to replace with a new version. */
+	revise?: DocumentDetailT | null;
+	/** Called with the document id after a new draft is saved, and after any revision. */
 	onDraft?: (docId: string) => void;
 }) {
 	return (
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={draft ? t`Change the draft` : t`Push an offer`}
+			title={
+				draft
+					? t`Change the draft`
+					: revise
+						? t`Revise the offer`
+						: t`Push an offer`
+			}
 			size="xl"
 		>
 			{/* The dialog's content mounts when it opens, so each opening starts from the draft as it is. */}
 			<OfferForm
-				key={draft?.id ?? "new"}
+				key={draft?.id ?? revise?.id ?? "new"}
 				onClose={onClose}
 				orgId={orgId}
 				orgName={orgName}
 				draft={draft}
+				revise={revise}
 				onDraft={onDraft}
 			/>
 		</Modal>
@@ -89,50 +137,162 @@ function OfferForm({
 	orgId,
 	orgName,
 	draft,
+	revise,
 	onDraft,
 }: {
 	onClose: () => void;
 	orgId: string;
 	orgName: string;
 	draft: DocumentDetailT | null;
+	revise: DocumentDetailT | null;
 	onDraft?: (docId: string) => void;
 }) {
 	const { i18n } = useLingui();
-	const from = draft?.content ?? null;
+	const from = (draft ?? revise)?.content ?? null;
 	const [template, setTemplate] = useState<"subscription" | "event" | "custom">(
 		from?.template ?? "subscription",
 	);
 	const [language, setLanguage] = useState<"en" | "nl">(from?.language ?? "nl");
+	// Empty means the template's intro; a draft shows its own.
+	const firstIntro = from?.text?.intro ?? "";
+	const [intro, setIntro] = useState(firstIntro);
+	const [validDays, setValidDays] = useState<number>(from?.valid_days ?? 14);
 	const [offerName, setOfferName] = useState(from?.offer_name ?? orgName);
 	const [personName, setPersonName] = useState(from?.person_name ?? "");
 	const [attention, setAttention] = useState(from?.attention ?? "");
 	const [lines, setLines] = useState<Line[]>(
-		from ? toLines(from) : [emptyLine()],
+		from ? toLines(from.items) : [emptyLine()],
 	);
+	const [currency, setCurrency] = useState(from?.currency ?? "EUR");
+	const [vatTreatment, setVatTreatment] = useState<VatTreatment>(
+		from?.vat_treatment ?? "standard",
+	);
+	const [termsOpen, setTermsOpen] = useState(Boolean(from?.processing_terms));
+	const [processingTerms, setProcessingTerms] = useState(
+		from?.processing_terms ?? "",
+	);
+	const [customerReference, setCustomerReference] = useState(
+		from?.customer_reference ?? "",
+	);
+	const [billsOther, setBillsOther] = useState(Boolean(from?.bill_to));
+	const [billTo, setBillTo] = useState(() => billToForm(from?.bill_to));
+	const [plan, setPlan] = useState(() =>
+		planForm(from?.invoice_plan, from?.no_charge === true),
+	);
+	const noCharge = plan.kind === "none";
+	const [choose, setChoose] = useState<"any" | "one">(from?.choose ?? "any");
+	const savedSecond = from?.second_signer ?? null;
+	const [second, setSecond] = useState<"none" | "customer" | "dembrane">(
+		savedSecond?.kind ?? "none",
+	);
+	const [secondName, setSecondName] = useState(savedSecond?.name ?? "");
+	const [secondEmail, setSecondEmail] = useState(savedSecond?.email ?? "");
+	const [secondRole, setSecondRole] = useState(
+		savedSecond?.kind === "dembrane" ? (savedSecond.role ?? "") : "",
+	);
+	// Who signs for dembrane: the offer's own, else the default the account card gives once
+	// it loads. Typing makes it the offer's own.
+	const card = useAccountCard(orgId);
+	const [signerEdit, setSignerEdit] = useState<Signer | null>(
+		from?.dembrane_signer ? signerForm(from.dembrane_signer) : null,
+	);
+	const signer = signerEdit ?? signerForm(card.data?.dembrane_signer);
+	const setSigner = (patch: Partial<Signer>) =>
+		setSignerEdit({ ...signer, ...patch });
+	const signs = Boolean(signer.name.trim() && signer.email.trim());
+	// dembrane always signs the DPA; the offer only when ticked, so a new offer starts
+	// without it.
+	const [signsOffer, setSignsOffer] = useState(
+		from?.dembrane_signs_offer === true,
+	);
+	const [amendments, setAmendments] = useState<Amendment[]>(
+		(from?.amendments ?? []).map((a) => ({ ...a, id: crypto.randomUUID() })),
+	);
+	/** A new version keeps the sent offer's words, with the intro as it reads above. */
+	const revisedText = () => {
+		const same = template === from?.template && language === from?.language;
+		const { intro: _intro, ...rest } = (same && from?.text) || {};
+		const words = { ...rest, ...(intro.trim() && { intro: intro.trim() }) };
+		return Object.keys(words).length ? words : null;
+	};
+	const setAmendment = (i: number, patch: Partial<Amendment>) =>
+		setAmendments((as) => as.map((a, j) => (j === i ? { ...a, ...patch } : a)));
+	// Reverse charge and outside the EU take 0% lines; the rates typed stay for a switch back.
+	const vatFixed = vatTreatment !== "standard";
+	const priced = vatFixed ? lines.map((l) => ({ ...l, vatPercent: 0 })) : lines;
 	const push = useAccountsMutation("pushOffer", { orgId });
 	const update = useAccountsMutation("updateOffer", { orgId });
 	const error = push.error ?? update.error;
 	const fields = error instanceof AccountsApiError ? error.fields : {};
 
-	const net = lines.reduce((a, l) => a + l.quantity * cents(l.unitPrice), 0);
-	const vat = lines.reduce(
-		(a, l) =>
-			a + Math.round((l.quantity * cents(l.unitPrice) * l.vatPercent) / 100),
+	const hasOptions = lines.some(
+		(l) => l.kind === "optional" && l.option.trim(),
+	);
+	const net = priced.reduce((a, l) => a + lineCents(l), 0);
+	const vat = priced.reduce(
+		(a, l) => a + Math.round((lineCents(l) * l.vatPercent) / 100),
 		0,
 	);
 
+	const introChanged = intro.trim() !== firstIntro.trim();
 	const body = {
-		attention: template === "event" ? attention : null,
-		currency: "EUR",
-		items: toItems(lines),
+		// Shown for event offers only; any other keeps what the draft had.
+		attention: template === "event" ? attention : (from?.attention ?? null),
+		bill_to: noCharge ? null : billToBody(billsOther, billTo),
+		currency,
+		customer_reference: customerReference.trim() || null,
+		dembrane_signer: signs
+			? {
+					email: signer.email.trim(),
+					name: signer.name.trim(),
+					role: signer.role.trim() || null,
+				}
+			: null,
+		dembrane_signs_offer: signsOffer,
+		invoice_plan: planBody(plan),
+		items: toItems(priced),
 		language,
+		no_charge: noCharge,
+		second_signer:
+			second === "customer"
+				? {
+						email: secondEmail.trim() || null,
+						kind: "customer" as const,
+						name: secondName.trim() || null,
+					}
+				: second === "dembrane"
+					? {
+							email: secondEmail.trim(),
+							kind: "dembrane" as const,
+							name: secondName.trim(),
+							role: secondRole.trim() || null,
+						}
+					: null,
+		...(hasOptions && { choose }),
 		offer_name: offerName,
 		person_name: personName,
+		processing_terms: processingTerms.trim() || null,
 		template,
-		// Amendments and VAT treatment come from sam; editing a draft here keeps them.
-		...(template === "custom" &&
-			from?.amendments && { amendments: from.amendments }),
-		...(from?.vat_treatment && { vat_treatment: from.vat_treatment }),
+		vat_treatment: vatTreatment,
+		...(template === "custom" && {
+			amendments: amendments.map((a) => ({
+				body: a.body.trim(),
+				title: a.title.trim(),
+			})),
+		}),
+		...(template === "subscription" &&
+			from?.billing_unit && { billing_unit: from.billing_unit }),
+		// Only a changed intro is sent; the draft keeps the rest of its words.
+		...(!revise &&
+			introChanged && {
+				text: intro.trim() ? { intro: intro.trim() } : null,
+			}),
+		...(revise && {
+			reference: revise.reference,
+			supersedes_id: revise.id,
+			text: revisedText(),
+		}),
+		valid_days: validDays,
 	};
 
 	const submit = (send: boolean) => {
@@ -158,6 +318,8 @@ function OfferForm({
 							: t`Draft saved`,
 					);
 					setLines([emptyLine()]);
+					// A revision leads to the new version, whose page has no dialog open.
+					if (revise && onDraft) return onDraft(res.document.id);
 					onClose();
 					if (!send) onDraft?.(res.document.id);
 				},
@@ -213,6 +375,51 @@ function OfferForm({
 					onChange={(e) => setPersonName(e.currentTarget.value)}
 					data-testid="offer-person"
 				/>
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>VAT</Trans>
+					</Text>
+					<SegmentedControl
+						value={vatTreatment}
+						onChange={(v) => setVatTreatment(v as VatTreatment)}
+						data={[
+							{ label: t`Dutch VAT`, value: "standard" },
+							{ label: t`Reverse charge`, value: "reverse_charge" },
+							{ label: t`Outside the EU`, value: "outside_eu" },
+						]}
+						data-testid="offer-vat-treatment"
+					/>
+				</Stack>
+				<Select
+					label={t`Currency`}
+					value={currency}
+					onChange={(v) => v && setCurrency(v)}
+					data={
+						CURRENCIES.includes(currency)
+							? CURRENCIES
+							: [currency, ...CURRENCIES]
+					}
+					allowDeselect={false}
+					searchable
+					data-testid="offer-currency"
+				/>
+				<NumberInput
+					label={t`Valid for (days)`}
+					min={1}
+					max={365}
+					value={validDays}
+					onChange={(v) => setValidDays(Number(v) || 14)}
+					data-testid="offer-valid-days"
+				/>
+				<TextInput
+					label={t`Customer reference`}
+					description={t`PO, order or project number`}
+					value={customerReference}
+					onChange={(e) => setCustomerReference(e.currentTarget.value)}
+					error={fields.customer_reference}
+					maxLength={64}
+					data-testid="offer-customer-reference"
+				/>
 				{template === "event" && (
 					<TextInput
 						label={t`For the attention of`}
@@ -223,22 +430,279 @@ function OfferForm({
 				)}
 			</SimpleGrid>
 
+			<Textarea
+				label={t`Intro`}
+				description={t`Empty: the template's. A blank line starts a paragraph.`}
+				autosize
+				minRows={2}
+				value={intro}
+				onChange={(e) => setIntro(e.currentTarget.value)}
+				error={fields["text.intro"]}
+				data-testid="offer-intro"
+			/>
+
 			<Divider label={t`Lines`} labelPosition="left" />
-			<LinesEditor lines={lines} onChange={setLines} errors={fields} />
+			<LinesEditor
+				lines={lines}
+				onChange={setLines}
+				errors={fields}
+				currency={currency}
+				discounts
+				sections
+				choices
+				vatFixed={vatFixed}
+			/>
+			{hasOptions && (
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>At signing, they tick</Trans>
+					</Text>
+					<SegmentedControl
+						style={{ alignSelf: "flex-start" }}
+						value={choose}
+						onChange={(v) => setChoose(v as typeof choose)}
+						data={[
+							{ label: t`Any options`, value: "any" },
+							{ label: t`Exactly one`, value: "one" },
+						]}
+						data-testid="offer-choose"
+					/>
+				</Stack>
+			)}
+
+			<Divider label={t`Invoicing`} labelPosition="left" />
+			<InvoicePlanFields
+				value={plan}
+				onChange={setPlan}
+				net={net}
+				currency={currency}
+				errors={fields}
+			/>
+			{!noCharge && (
+				<BillToFields
+					on={billsOther}
+					onToggle={setBillsOther}
+					value={billTo}
+					onChange={setBillTo}
+					errors={fields}
+				/>
+			)}
+
+			<Divider label={t`Signatures`} labelPosition="left" />
+			<Stack gap="xs" data-testid="offer-dembrane-signer">
+				<Text size="sm">
+					<Trans>Signed for dembrane by</Trans>
+				</Text>
+				<SimpleGrid cols={{ base: 1, sm: 3 }}>
+					<TextInput
+						label={t`Name`}
+						value={signer.name}
+						onChange={(e) => setSigner({ name: e.currentTarget.value })}
+						error={fields["dembrane_signer.name"]}
+						data-testid="dembrane-signer-name"
+					/>
+					<TextInput
+						label={t`Email`}
+						description={t`Their @dembrane.com address`}
+						// Under the input, so the three inputs line up.
+						inputWrapperOrder={["label", "input", "description", "error"]}
+						value={signer.email}
+						onChange={(e) => setSigner({ email: e.currentTarget.value })}
+						error={fields["dembrane_signer.email"]}
+						data-testid="dembrane-signer-email"
+					/>
+					<TextInput
+						label={t`Role`}
+						placeholder={t`Optional`}
+						value={signer.role}
+						onChange={(e) => setSigner({ role: e.currentTarget.value })}
+						data-testid="dembrane-signer-role"
+					/>
+				</SimpleGrid>
+				<Checkbox
+					label={t`Sign the offer when sent`}
+					description={t`The DPA is always signed`}
+					checked={signsOffer}
+					onChange={(e) => {
+						setSignsOffer(e.currentTarget.checked);
+						// Signing the offer makes a second signature of ours redundant.
+						if (e.currentTarget.checked && second === "dembrane")
+							setSecond("none");
+					}}
+					data-testid="dembrane-signs-offer"
+				/>
+			</Stack>
+			<Stack gap="xs" data-testid="offer-second-signer">
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>Second signature</Trans>
+					</Text>
+					<SegmentedControl
+						style={{ alignSelf: "flex-start" }}
+						value={second}
+						onChange={(v) => setSecond(v as typeof second)}
+						data={[
+							{ label: t`None`, value: "none" },
+							{ label: t`Another signer of theirs`, value: "customer" },
+							// dembrane signing the offer above makes a later one of ours redundant.
+							...(signsOffer && second !== "dembrane"
+								? []
+								: [{ label: t`dembrane signs too`, value: "dembrane" }]),
+						]}
+						data-testid="second-signer-kind"
+					/>
+				</Stack>
+				{second !== "none" && (
+					<SimpleGrid cols={{ base: 1, sm: second === "dembrane" ? 3 : 2 }}>
+						<TextInput
+							label={t`Name`}
+							placeholder={second === "customer" ? t`Optional` : undefined}
+							value={secondName}
+							onChange={(e) => setSecondName(e.currentTarget.value)}
+							error={fields["second_signer.name"]}
+							data-testid="second-signer-name"
+						/>
+						<TextInput
+							label={t`Email`}
+							description={
+								second === "customer"
+									? t`Empty: any other signer`
+									: t`Their @dembrane.com address`
+							}
+							value={secondEmail}
+							onChange={(e) => setSecondEmail(e.currentTarget.value)}
+							error={fields["second_signer.email"]}
+							data-testid="second-signer-email"
+						/>
+						{second === "dembrane" && (
+							<TextInput
+								label={t`Role`}
+								placeholder={t`Optional`}
+								value={secondRole}
+								onChange={(e) => setSecondRole(e.currentTarget.value)}
+								data-testid="second-signer-role"
+							/>
+						)}
+					</SimpleGrid>
+				)}
+			</Stack>
+
+			<Divider label={t`Terms`} labelPosition="left" />
+			{termsOpen || processingTerms ? (
+				<TextInput
+					label={t`Their data processing terms`}
+					description={t`Optional, replaces our DPA`}
+					value={processingTerms}
+					onChange={(e) => setProcessingTerms(e.currentTarget.value)}
+					error={fields.processing_terms}
+					maxLength={500}
+					data-testid="offer-processing-terms"
+				/>
+			) : (
+				<Button
+					variant="subtle"
+					size="xs"
+					style={{ alignSelf: "flex-start" }}
+					onClick={() => setTermsOpen(true)}
+					data-testid="add-processing-terms"
+				>
+					<Trans>Add their DPA</Trans>
+				</Button>
+			)}
+			{template === "custom" && (
+				<Stack gap="xs" data-testid="offer-amendments">
+					<Stack gap={0}>
+						<Text size="sm">
+							<Trans>Changes to our terms</Trans>
+						</Text>
+						<Text size="xs" c="dimmed">
+							<Trans>These win over our standard terms</Trans>
+						</Text>
+					</Stack>
+					{amendments.map((a, i) => (
+						<Paper
+							key={a.id}
+							withBorder
+							p="sm"
+							radius="md"
+							data-testid="offer-amendment"
+						>
+							<Stack gap="xs">
+								<Group align="flex-end" gap="xs" wrap="nowrap">
+									<TextInput
+										label={t`What it changes`}
+										placeholder={t`Liability cap`}
+										style={{ flex: 1 }}
+										value={a.title}
+										maxLength={120}
+										onChange={(e) =>
+											setAmendment(i, { title: e.currentTarget.value })
+										}
+										error={fields[`amendments.${i}.title`]}
+										data-testid="amendment-title"
+									/>
+									<ActionIcon
+										variant="subtle"
+										color="gray"
+										aria-label={t`Remove change`}
+										onClick={() =>
+											setAmendments((as) => as.filter((_, j) => j !== i))
+										}
+										mb={4}
+									>
+										<TrashIcon size={16} />
+									</ActionIcon>
+								</Group>
+								<Textarea
+									label={t`The term`}
+									autosize
+									minRows={2}
+									value={a.body}
+									maxLength={4000}
+									onChange={(e) =>
+										setAmendment(i, { body: e.currentTarget.value })
+									}
+									error={fields[`amendments.${i}.body`]}
+									data-testid="amendment-body"
+								/>
+							</Stack>
+						</Paper>
+					))}
+					{amendments.length < MAX_AMENDMENTS && (
+						<Button
+							variant="subtle"
+							size="xs"
+							style={{ alignSelf: "flex-start" }}
+							onClick={() =>
+								setAmendments((as) => [
+									...as,
+									{ body: "", id: crypto.randomUUID(), title: "" },
+								])
+							}
+							data-testid="add-amendment"
+						>
+							<Trans>Add a change</Trans>
+						</Button>
+					)}
+				</Stack>
+			)}
 
 			<Group justify="space-between" align="flex-end">
 				<Stack gap={0}>
 					<Text size="sm">
 						<Trans>
-							{formatMoney(net, "EUR", i18n.locale)} excl. VAT,{" "}
-							{formatMoney(net + vat, "EUR", i18n.locale)} incl.
+							{formatMoney(net, currency, i18n.locale)} excl. VAT,{" "}
+							{formatMoney(net + vat, currency, i18n.locale)} incl.
 						</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>
-							Valid 14 days. The terms, SLA and DPA versions in force today are
-							pinned.
-						</Trans>
+						{revise ? (
+							<Trans>Sending replaces the sent version.</Trans>
+						) : (
+							<Trans>
+								The terms, SLA and DPA versions in force today are pinned.
+							</Trans>
+						)}
 					</Text>
 				</Stack>
 				<Group gap="xs">

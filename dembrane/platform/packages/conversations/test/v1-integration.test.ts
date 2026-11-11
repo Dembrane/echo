@@ -3,10 +3,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import type { LanguageModelV4, LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import { PaymentRequiredError } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
-import type { Models } from "@dembrane/llm";
+import { fakeModels, type Models } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import { FilesystemStorage } from "@dembrane/storage";
 import postgres from "postgres";
@@ -44,48 +43,13 @@ const quiet = createLogger(
   new Writable({ write: (_c, _e, cb) => cb() }),
 );
 
-const usage = {
-  inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-  outputTokens: { total: 1, text: 1, reasoning: 0 },
-};
-
-/** A model that answers from a queue of texts and records every prompt. */
-function scripted(answers: string[], prompts: unknown[]): LanguageModelV4 {
-  return {
-    specificationVersion: "v4",
-    provider: "fake",
-    modelId: "fake",
-    supportedUrls: {},
-    async doGenerate(o) {
-      prompts.push(o.prompt);
-      return {
-        content: [{ type: "text", text: answers.shift() ?? "" }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage,
-        warnings: [],
-      } as never;
-    },
-    async doStream(o) {
-      prompts.push(o.prompt);
-      const parts: LanguageModelV4StreamPart[] = [
-        { type: "stream-start", warnings: [] },
-        { type: "text-start", id: "t" },
-        ...(answers.shift() ?? "")
-          .split("|")
-          .map((delta) => ({ type: "text-delta" as const, id: "t", delta })),
-        { type: "text-end", id: "t" },
-        { type: "finish", finishReason: { unified: "stop", raw: "stop" }, usage },
-      ];
-      return {
-        stream: new ReadableStream({
-          start(c) {
-            for (const p of parts) c.enqueue(p);
-            c.close();
-          },
-        }),
-      } as never;
-    },
+/** Models that answer from a queue of texts, a stream split at "|", and record every prompt. */
+function scripted(answers: string[], prompts: unknown[]): Models {
+  const next = (prompt: unknown) => {
+    prompts.push(prompt);
+    return answers.shift() ?? "";
   };
+  return fakeModels({ text: next, stream: (prompt) => next(prompt).split("|") });
 }
 
 run("v1 conversation services against the seed", () => {
@@ -108,11 +72,9 @@ run("v1 conversation services against the seed", () => {
   });
 
   function deps(answers: string[], prompts: unknown[] = []): ReplyDeps {
-    const m = scripted(answers, prompts);
-    const models = { model: () => m, embedding: () => ({}) } as unknown as Models;
     return {
       db: database.db,
-      models,
+      models: scripted(answers, prompts),
       audio: new FilesystemStorage(mkdtempSync(join(tmpdir(), "echo-v1-")), "http://local.test"),
       audioUrls: new AudioUrls("http://local.test", "local"),
       logger: quiet,
@@ -146,9 +108,13 @@ run("v1 conversation services against the seed", () => {
     expect(JSON.stringify(prompts[0])).toContain("project context: name: City listening 2026");
   });
 
-  test("a locked conversation is refused with the 402 the dashboard reads", async () => {
+  test("a conversation stamped by the retired hour lock is summarised, not refused", async () => {
     await sql`update conversation set is_over_cap = true where id = ${c3}`;
-    await expect(summarizeAndStore(deps([]), c3)).rejects.toBeInstanceOf(PaymentRequiredError);
+    const err = await summarizeAndStore(deps(["S.", "T", "{}"]), c3).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).not.toBeInstanceOf(PaymentRequiredError);
   });
 
   test("the token count is stored only while the conversation reads as transcribed", async () => {

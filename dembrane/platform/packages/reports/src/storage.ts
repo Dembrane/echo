@@ -51,6 +51,52 @@ function queries(sql: Sql) {
       ) as Promise<Row[]>;
     },
 
+    /** Free (or legacy stamped) drafts untouched since `before` move to error; returns their ids. */
+    async failStuckDrafts(before: string, now: string, code: string, message: string) {
+      // Free is the workspace's own account tier, as allowance decides it.
+      const rows = await sql`update project_report r
+        set status = 'error', error_code = ${code}, error_message = ${message}, date_updated = ${now}
+        from project p
+        where p.id = r.project_id and p.is_sample is not true
+          and r.kind = 'report' and r.status = 'draft' and r.deleted_at is null
+          and (r.free_period_start is not null or exists (
+            select 1 from workspace w join billing_account own on own.id = w.billing_account_id
+            where w.id = p.workspace_id and own.tier = 'free'))
+          and coalesce(r.date_updated, r.date_created) < ${before}
+        returning r.id::int`;
+      return rows.map((r) => r.id as number).sort((a, b) => a - b);
+    },
+
+    /** Starts a run, timed from now; false when the report moved on since it was read. */
+    async startRun(id: number, now: string) {
+      const rows = await sql`update project_report set status = 'draft', date_updated = ${now}
+        where id = ${id} and status in ('scheduled', 'draft') returning id`;
+      return rows.length > 0;
+    },
+
+    /** The scheduler's flip to draft; false when the report is no longer scheduled. */
+    async flipScheduled(id: number, now: string) {
+      const rows = await sql`update project_report set status = 'draft', date_updated = ${now}
+        where id = ${id} and status = 'scheduled' and deleted_at is null returning id`;
+      return rows.length > 0;
+    },
+
+    /** Ends a run in error; false when the report is no longer draft or scheduled. */
+    async failRun(id: number, code: string, message: string, now: string) {
+      const rows = await sql`update project_report
+        set status = 'error', error_code = ${code}, error_message = ${message}, date_updated = ${now}
+        where id = ${id} and status in ('draft', 'scheduled') returning id`;
+      return rows.length > 0;
+    },
+
+    /** Saves a draft's content; false when it is no longer a draft (cancelled, deleted, swept). */
+    async archiveDraft(id: number, content: string, now: string) {
+      const rows = await sql`update project_report
+        set content = ${content}, status = 'archived', date_created = ${now}, date_updated = ${now}
+        where id = ${id} and status = 'draft' returning id`;
+      return rows.length > 0;
+    },
+
     async updateReport(id: number, fields: Row) {
       const keys = Object.keys(fields);
       await sql.unsafe(
@@ -106,6 +152,9 @@ function queries(sql: Sql) {
 
     /** Directus get_items(conversation_chunk) with limit 1500 and sort timestamp, joined by newlines. */
     async transcript(conversationId: string): Promise<string> {
+      const [record] = await sql`
+        select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+      if (record) return String(record.text);
       const rows = await sql`select transcript from conversation_chunk
         where conversation_id = ${conversationId} order by timestamp nulls last, id limit 1500`;
       return rows

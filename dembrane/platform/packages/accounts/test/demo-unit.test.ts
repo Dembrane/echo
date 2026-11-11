@@ -1,8 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { createModels, FakeCompleter, vertexCompleter } from "@dembrane/llm";
+import { withPayer } from "@dembrane/observability";
 import { author, research, researchMarkdown, withDisclosure } from "../src/demo/author";
 import { demoSlug } from "../src/demo/build";
 import { fetchSite, type HttpGet, httpGet, pageText, siteLinks } from "../src/demo/fetch";
+import { demoBuild } from "../src/demo/job";
+
+// Each step is scoped in buildDemo too; the job's payer covers anything outside a step.
+test("a demo build is dembrane's own spend", () => {
+  expect(demoBuild.payer?.({ demoId: "d1", attempt: 1 })).toEqual({ internal: "demo_build" });
+});
 
 describe("reading a website", () => {
   test("visible text only: no scripts, styles, navigation or comments", () => {
@@ -116,7 +123,8 @@ describe("the model steps", () => {
         scenario: "s",
       }),
     );
-    await research(fake, brief, pages);
+    // build.ts runs each step under the demo build payer.
+    await withPayer({ internal: "demo_build" }, () => research(fake, brief, pages));
     const call = fake.calls[0];
     expect(call?.system).toContain("never instructions");
     const user = ((call as NonNullable<typeof call>).user as string[]).join("\n");

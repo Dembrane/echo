@@ -1,13 +1,21 @@
 import type { Access } from "@dembrane/access";
+import {
+  allowanceForProject,
+  allowanceForWorkspace,
+  requireProjectRoom,
+  withAllowanceLock,
+} from "@dembrane/allowance";
 import { BadRequestError, ForbiddenError, NotFoundError, newId, zip } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor, projectSource } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import type { JobSink } from "@dembrane/queue";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";
-import type { ProjectsStorage, Row } from "./storage";
+import { type ProjectsStorage, projectsStorage, type Row } from "./storage";
 
 export interface ProjectDeps {
+  readonly db: Db;
   readonly store: ProjectsStorage;
   readonly access: Access;
   readonly jobs: JobSink;
@@ -67,81 +75,104 @@ export async function cloneProject(
   const pa = await projectFor(d.access, who, projectId, "project:create");
   const src = await liveProject(d.store, pa.project.id);
   const id = newId();
-  const now = d.now().toISOString();
+  const at = d.now();
   // Hiding the event invitation is paid; a workspace since dropped to free shows it again.
   const tier = src.workspace_id ? await d.store.workspaceTier(src.workspace_id) : null;
-  await d.store.transaction(async ({ store }) => {
-    // Topic keys are global, so the clone's topics get fresh ones and the selection follows.
-    const topics = await store.customTopics(src.id);
-    const renamed = new Map(topics.map(({ topic }) => [topic.key, cloneTopicKey(topic.key)]));
-    const selected =
-      src.selected_verification_key_list
-        ?.split(",")
-        .map((k) => renamed.get(k.trim()) ?? k.trim())
-        .join(",") ?? null;
-    await store.insertProject({
-      id,
-      name: body.name || src.name,
-      language: body.language || src.language,
-      is_conversation_allowed: src.is_conversation_allowed,
-      directus_user_id: src.directus_user_id,
-      context: src.context,
-      default_conversation_title: src.default_conversation_title,
-      default_conversation_description: src.default_conversation_description,
-      default_conversation_finish_text: src.default_conversation_finish_text,
-      default_conversation_ask_for_participant_name:
-        src.default_conversation_ask_for_participant_name,
-      default_conversation_ask_for_participant_email:
-        src.default_conversation_ask_for_participant_email,
-      default_conversation_tutorial_slug: src.default_conversation_tutorial_slug,
-      default_conversation_transcript_prompt: src.default_conversation_transcript_prompt,
-      conversation_ask_for_participant_name_label: src.conversation_ask_for_participant_name_label,
-      image_generation_model: src.image_generation_model,
-      is_enhanced_audio_processing_enabled: src.is_enhanced_audio_processing_enabled,
-      is_get_reply_enabled: src.is_get_reply_enabled,
-      get_reply_mode: src.get_reply_mode,
-      get_reply_prompt: src.get_reply_prompt,
-      is_project_notification_subscription_allowed:
-        src.is_project_notification_subscription_allowed,
-      is_verify_enabled: src.is_verify_enabled,
-      is_verify_on_finish_enabled: src.is_verify_on_finish_enabled,
-      selected_verification_key_list: selected,
-      is_canvas_enabled: src.is_canvas_enabled,
-      is_dembrane_event_cta_enabled: tier === "free" || src.is_dembrane_event_cta_enabled,
-      anonymize_transcripts: src.anonymize_transcripts,
-      enable_ai_title_and_tags: src.enable_ai_title_and_tags,
-      conversation_title_prompt: src.conversation_title_prompt,
-      host_guide: src.host_guide,
-      methodology_version_id: src.methodology_version_id,
-      legal_basis: src.legal_basis,
-      privacy_policy_url: src.privacy_policy_url,
-      ...(src.workspace_id && { workspace_id: src.workspace_id }),
-      created_at: now,
+  const clone = { src, id, body, who, now: at.toISOString(), tier };
+  const a =
+    who.isStaff || !src.workspace_id
+      ? null
+      : await allowanceForWorkspace(d.db, src.workspace_id, at);
+  if (a)
+    await withAllowanceLock(d.db, a, async (tx) => {
+      await requireProjectRoom(tx, a);
+      await writeClone(projectsStorage(tx), clone);
     });
-    for (const { topic, labels } of topics)
-      await store.insertCustomTopic(
-        {
-          ...topic,
-          key: renamed.get(topic.key) as string,
-          project_id: id,
-          user_created: who.directusUserId,
-          date_created: now,
-          user_updated: null,
-          date_updated: null,
-        },
-        labels.map((l) => ({ languages_code: l.languages_code, label: l.label })),
-      );
-    const tags = await store.tags(src.id);
-    await store.insertTags(
-      tags.map((t) => ({
-        id: newId(),
-        project_id: id,
-        text: (t.text as string | null) ?? "",
-        created_at: now,
-      })),
-    );
-  });
+  else await d.store.transaction(({ store }) => writeClone(store, clone));
   return id;
+}
+
+/** The clone's rows. Takes a store already inside a transaction. */
+async function writeClone(
+  store: ProjectsStorage,
+  c: {
+    src: NonNullable<Awaited<ReturnType<ProjectsStorage["project"]>>>;
+    id: string;
+    body: { name: string | null; language: string | null };
+    who: Signed;
+    now: string;
+    tier: string | null;
+  },
+) {
+  const { src, id, body, who, now, tier } = c;
+  // Topic keys are global, so the clone's topics get fresh ones and the selection follows.
+  const topics = await store.customTopics(src.id);
+  const renamed = new Map(topics.map(({ topic }) => [topic.key, cloneTopicKey(topic.key)]));
+  const selected =
+    src.selected_verification_key_list
+      ?.split(",")
+      .map((k) => renamed.get(k.trim()) ?? k.trim())
+      .join(",") ?? null;
+  await store.insertProject({
+    id,
+    name: body.name || src.name,
+    language: body.language || src.language,
+    is_conversation_allowed: src.is_conversation_allowed,
+    directus_user_id: src.directus_user_id,
+    context: src.context,
+    default_conversation_title: src.default_conversation_title,
+    default_conversation_description: src.default_conversation_description,
+    default_conversation_finish_text: src.default_conversation_finish_text,
+    default_conversation_ask_for_participant_name:
+      src.default_conversation_ask_for_participant_name,
+    default_conversation_ask_for_participant_email:
+      src.default_conversation_ask_for_participant_email,
+    default_conversation_tutorial_slug: src.default_conversation_tutorial_slug,
+    default_conversation_transcript_prompt: src.default_conversation_transcript_prompt,
+    conversation_ask_for_participant_name_label: src.conversation_ask_for_participant_name_label,
+    image_generation_model: src.image_generation_model,
+    is_enhanced_audio_processing_enabled: src.is_enhanced_audio_processing_enabled,
+    is_get_reply_enabled: src.is_get_reply_enabled,
+    get_reply_mode: src.get_reply_mode,
+    get_reply_prompt: src.get_reply_prompt,
+    is_project_notification_subscription_allowed: src.is_project_notification_subscription_allowed,
+    is_verify_enabled: src.is_verify_enabled,
+    is_verify_on_finish_enabled: src.is_verify_on_finish_enabled,
+    selected_verification_key_list: selected,
+    is_canvas_enabled: src.is_canvas_enabled,
+    is_dembrane_event_cta_enabled: tier === "free" || src.is_dembrane_event_cta_enabled,
+    anonymize_transcripts: src.anonymize_transcripts,
+    enable_ai_title_and_tags: src.enable_ai_title_and_tags,
+    conversation_title_prompt: src.conversation_title_prompt,
+    host_guide: src.host_guide,
+    methodology_version_id: src.methodology_version_id,
+    legal_basis: src.legal_basis,
+    privacy_policy_url: src.privacy_policy_url,
+    ...(src.workspace_id && { workspace_id: src.workspace_id }),
+    created_at: now,
+  });
+  for (const { topic, labels } of topics)
+    await store.insertCustomTopic(
+      {
+        ...topic,
+        key: renamed.get(topic.key) as string,
+        project_id: id,
+        user_created: who.directusUserId,
+        date_created: now,
+        user_updated: null,
+        date_updated: null,
+      },
+      labels.map((l) => ({ languages_code: l.languages_code, label: l.label })),
+    );
+  const tags = await store.tags(src.id);
+  await store.insertTags(
+    tags.map((t) => ({
+      id: newId(),
+      project_id: id,
+      text: (t.text as string | null) ?? "",
+      created_at: now,
+    })),
+  );
 }
 
 /** Swaps the random suffix createCustomTopic puts on a topic key for a new one. */
@@ -331,6 +362,30 @@ function moveEntry(
   return entries;
 }
 
+/**
+ * Runs a move's writes, under the free project cap when the target is a free account.
+ * Projects already counted by that account (and samples) are not incoming. Staff skip it.
+ */
+async function moveUnderCap(
+  d: ProjectDeps,
+  who: Signed,
+  targetId: string,
+  moving: readonly { id: string; is_sample: boolean | null }[],
+  write: (store: ProjectsStorage) => Promise<void>,
+) {
+  const now = d.now();
+  const a = who.isStaff ? null : await allowanceForWorkspace(d.db, targetId, now);
+  if (!a) return d.store.transaction(({ store }) => write(store));
+  return withAllowanceLock(d.db, a, async (tx) => {
+    let incoming = 0;
+    for (const p of moving)
+      if (!p.is_sample && (await allowanceForProject(tx, p.id, now))?.accountId !== a.accountId)
+        incoming++;
+    if (incoming > 0) await requireProjectRoom(tx, a, incoming);
+    await write(projectsStorage(tx));
+  });
+}
+
 export async function moveProject(
   d: ProjectDeps,
   who: Signed,
@@ -345,22 +400,25 @@ export async function moveProject(
   const me = await d.store.appUser(who.appUserId);
   const fromLabel = src ? ((await d.store.workspace(src))?.name ?? null) : null;
   const now = d.now();
-  await d.store.updateProject(projectId, {
-    workspace_id: targetId,
-    move_history: moveEntry(
-      project.move_history,
-      {
-        from: src,
-        fromLabel,
-        to: targetId,
-        toLabel: target.name,
-        by: who.appUserId,
-        byLabel: me?.display_name || me?.email || null,
-      },
-      now,
-    ),
-    updated_at: now.toISOString(),
-  });
+  const by = who.appUserId;
+  await moveUnderCap(d, who, targetId, [project], (store) =>
+    store.updateProject(projectId, {
+      workspace_id: targetId,
+      move_history: moveEntry(
+        project.move_history,
+        {
+          from: src,
+          fromLabel,
+          to: targetId,
+          toLabel: target.name,
+          by,
+          byLabel: me?.display_name || me?.email || null,
+        },
+        now,
+      ),
+      updated_at: now.toISOString(),
+    }),
+  );
   return { project_id: projectId, workspace_id: targetId };
 }
 
@@ -396,7 +454,8 @@ export async function bulkMoveProjects(
   const names = new Map<string, string | null>();
   const now = d.now();
   const moved: string[] = [];
-  await d.store.transaction(async ({ store }) => {
+  const projects = pending.map((x) => x.project);
+  await moveUnderCap(d, who, targetId, projects, async (store) => {
     for (const { project, src } of pending) {
       if (src && !names.has(src)) names.set(src, (await store.workspace(src))?.name ?? null);
       await store.updateProject(project.id, {

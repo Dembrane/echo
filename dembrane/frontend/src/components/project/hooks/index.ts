@@ -8,6 +8,7 @@ import {
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	addChatContext,
@@ -157,6 +158,8 @@ export const useCloneProjectByIdMutation = () => {
 			}),
 		onError: (error) => {
 			console.error(error);
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: (newProjectId, variables) => {
@@ -169,6 +172,7 @@ export const useCloneProjectByIdMutation = () => {
 					queryKey: ["projects", newProjectId],
 				});
 			}
+			void invalidateFreeAllowance(queryClient);
 			toast.success("Project cloned successfully");
 		},
 	});
@@ -200,6 +204,8 @@ export const useMoveProjectMutation = () => {
 			};
 		},
 		onError: (error: Error) => {
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: (_data, variables) => {
@@ -210,6 +216,7 @@ export const useMoveProjectMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-projects"],
 			});
+			void invalidateFreeAllowance(queryClient);
 			toast.success(t`Project moved`);
 		},
 	});
@@ -241,11 +248,14 @@ export const useBulkMoveProjectsMutation = () => {
 			return (await res.json()) as { moved: string[]; count: number };
 		},
 		onError: (error: Error) => {
+			// The screen opens the upgrade wall for the project cap.
+			if (isFreeTierLimitError(error) === "projects") return;
 			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			void invalidateFreeAllowance(queryClient);
 			toast.success(t`Projects moved`);
 		},
 	});
@@ -300,36 +310,24 @@ export const useCreateProjectTagMutation = () => {
 	});
 };
 
-export const useUpdateProjectTagByIdMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async ({
-			id,
-			payload,
-		}: {
-			id: string;
-			project_id: string;
-			payload: Partial<ProjectTag>;
-		}) => {
-			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/${id}`, {
+// Saves the whole tag order in one request: every tag moves or none does. The
+// caller refetches, since it decides when the screen goes back to the server.
+export const useReorderProjectTagsMutation = () =>
+	useMutation({
+		mutationFn: async (payload: { project_id: string; tag_ids: string[] }) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/reorder`, {
 				body: JSON.stringify(payload),
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
-				method: "PATCH",
+				method: "POST",
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
 				throw new ApiRequestError(res.status, data);
 			}
-			return (await res.json()) as ProjectTag;
-		},
-		onSuccess: (_values, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["projects", variables.project_id],
-			});
+			return (await res.json()) as ProjectTag[];
 		},
 	});
-};
 
 export const useDeleteTagByIdMutation = () => {
 	const queryClient = useQueryClient();
@@ -471,9 +469,11 @@ export const useAttachChatConversationsMutation = () => {
 	});
 };
 
-export const useUpdateProjectByIdMutation = () => {
+// errorToast: false for screens that show the error inline instead.
+export const useUpdateProjectByIdMutation = ({ errorToast = true } = {}) => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		meta: { errorToast },
 		mutationFn: async ({
 			id,
 			payload,
@@ -746,6 +746,7 @@ import {
 	type WebhookUpdatePayload,
 } from "@/lib/api";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 export const useProjectWebhooks = (projectId: string | undefined) => {
 	return useQuery({

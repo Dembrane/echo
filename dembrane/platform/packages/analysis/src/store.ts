@@ -128,6 +128,12 @@ export function parseVector(text: string): number[] {
   return inner ? inner.split(",").map(Number) : [];
 }
 
+/** A retry bound to its run; `requeued` only when this call queued the failed run again. */
+export interface Requeue {
+  readonly run: Run;
+  readonly requeued: boolean;
+}
+
 export interface StoreOptions {
   readonly leaseSeconds?: number;
   /** Tests only: called at named points inside publication transactions to prove rollback. */
@@ -667,7 +673,7 @@ export class AnalysisStore {
    * the failed run queued again with its saved steps and pinned inputs (lease cleared);
    * else the run as it stands. An equivalent run in flight refuses with RetryConflict.
    */
-  async requeueRun(runId: string, idempotencyKey: string | null): Promise<Run | null> {
+  async requeueRun(runId: string, idempotencyKey: string | null): Promise<Requeue | null> {
     if (!isUuid(runId)) return null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -682,7 +688,7 @@ export class AnalysisStore {
                 WHERE k.project_id = $1 AND k.idempotency_key = $2`,
               [target.projectId, idempotencyKey],
             );
-            if (mapped) return runOf(mapped);
+            if (mapped) return { run: runOf(mapped), requeued: false };
           }
           await q(tx, "SELECT id FROM analysis_scope WHERE id = $1 FOR UPDATE", [target.scopeId]);
           const locked = await one(tx, "SELECT * FROM analysis_run WHERE id = $1 FOR UPDATE", [
@@ -690,6 +696,7 @@ export class AnalysisStore {
           ]);
           if (!locked) throw new AnalysisStoreError("the run vanished under its lock");
           let run = runOf(locked);
+          let requeued = false;
           if (run.status === "failed") {
             const active = await one(
               tx,
@@ -712,6 +719,7 @@ export class AnalysisStore {
             );
             if (!row) throw new AnalysisStoreError("the requeue returned nothing");
             run = runOf(row);
+            requeued = true;
           }
           if (idempotencyKey) {
             const inserted = await one(
@@ -726,7 +734,7 @@ export class AnalysisStore {
             // Rolls this transaction back, requeue included.
             if (!inserted) throw new KeyTaken();
           }
-          return run;
+          return { run, requeued };
         });
       } catch (err) {
         if (err instanceof KeyTaken || err instanceof UniqueViolation) continue;
