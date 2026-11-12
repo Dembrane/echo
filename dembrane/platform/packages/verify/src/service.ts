@@ -510,7 +510,7 @@ export function topicPromptOf(
 
 /**
  * A Verify draft: the prompt generationInput builds, then the model call. The live draft
- * (generateArtifact) and the portal editor's "Try it" (try-it.ts) both write theirs here,
+ * (generateArtifact) and the portal editor's "Try it" (try-it/service.ts) both write theirs here,
  * so a host sees what participants would get.
  */
 export function writeDraft(

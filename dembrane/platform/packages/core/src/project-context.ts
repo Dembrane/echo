@@ -37,10 +37,6 @@ export function contextForPrompt(
   return cutAtBoundary(raw, budget);
 }
 
-/** Whether a stored context is longer than a prompt reads. */
-export const contextIsCut = (raw: unknown, budget: number = PROJECT_CONTEXT_BUDGET) =>
-  typeof raw === "string" && raw.length > budget;
-
 /** `text` cut to at most `budget` characters at the best boundary inside it. */
 export function cutAtBoundary(text: string, budget: number): string {
   if (text.length <= budget) return text;

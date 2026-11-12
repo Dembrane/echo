@@ -11,7 +11,6 @@ import { PROPOSABLE_FIELDS } from "./settings";
  * after the answer (rules.ts, settings.ts) are the real defence; the fences only help.
  */
 
-export const SETUP_PROMPT_VERSION = "project-setup-suggestions-v1";
 const GROUP = "text_fast" as const;
 const TIMEOUT_MS = 20_000;
 const MAX_TOKENS = 2048;

@@ -13,7 +13,6 @@ import { MAX_KEY_TERMS } from "./rules";
  * checks after the answer (digest-rules.ts) are the real defence; the fences only help.
  */
 
-export const DIGEST_PROMPT_VERSION = "project-setup-digest-v1";
 const GROUP = "text_fast" as const;
 const CONDENSE_TIMEOUT_MS = 30_000;
 const DIGEST_TIMEOUT_MS = 40_000;

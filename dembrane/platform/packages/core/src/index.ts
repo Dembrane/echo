@@ -5,7 +5,6 @@ export * from "./errors";
 export { isUuid, newId } from "./ids";
 export {
   contextForPrompt,
-  contextIsCut,
   cutAtBoundary,
   PROJECT_CONTEXT_BUDGET,
 } from "./project-context";
