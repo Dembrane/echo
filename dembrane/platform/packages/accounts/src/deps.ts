@@ -3,6 +3,7 @@ import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import type { ObjectStorage } from "@dembrane/storage";
+import type { GmailReader } from "./gmail";
 import type { AccountsJobs } from "./sink";
 
 /** A Drizzle transaction handle; storage functions accept it or the pool. */
@@ -78,6 +79,11 @@ export interface AccountsDeps {
   readonly settings: AccountsSettings;
   /** GETs a legal page; a fake in tests. */
   readonly fetchText: (url: string) => Promise<string>;
+  /**
+   * dembrane's mailboxes, read-only, for the account card's email (ACCOUNTS_GMAIL_* set).
+   * Absent: the email section says it is not configured here.
+   */
+  readonly gmail?: GmailReader | null;
 }
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

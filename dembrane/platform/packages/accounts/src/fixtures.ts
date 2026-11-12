@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type {
   AccountCard,
+  AccountEmail,
   AccountList,
   AccountPage,
   CreateAccountResponse,
@@ -919,4 +920,60 @@ export const demoPublished: Out<typeof DemoStatus> = {
   },
   invited_at: "2026-09-28T10:00:00.000Z",
   published_at: "2026-09-28T10:00:00.000Z",
+};
+
+/**
+ * The card's email: one conversation seen in both mailboxes, rendered as a chat with the
+ * quoted history cut, and a mailbox that answered this time.
+ */
+export const accountEmail: Out<typeof AccountEmail> = {
+  organisation: { id: ORG, name: "Example Town Council (sample)" },
+  matched: { domains: ["example-town.example"], addresses: [] },
+  mailboxes: [
+    { mailbox: "jorim@dembrane.com", ok: true },
+    { mailbox: "evelien@dembrane.com", ok: true },
+  ],
+  threads: [
+    {
+      id: "6c1f0a9e2b7d4c13",
+      subject: "Pilot in March",
+      last_message_at: "2026-09-29T14:05:00.000Z",
+      participants: [
+        { name: "Anna de Vries", email: "anna@example-town.example", side: "organisation" },
+        { name: "Eve", email: "evelien@dembrane.com", side: "dembrane" },
+        { name: null, email: "jorim@dembrane.com", side: "dembrane" },
+      ],
+      gmail: [
+        {
+          mailbox: "evelien@dembrane.com",
+          url: "https://mail.google.com/mail/u/evelien%40dembrane.com/#all/18f2a3b4c5d6e7f8",
+        },
+        {
+          mailbox: "jorim@dembrane.com",
+          url: "https://mail.google.com/mail/u/jorim%40dembrane.com/#all/18f2a3b4c5d6e7f9",
+        },
+      ],
+      messages: [
+        {
+          id: "<CA+anna-1@mail.example-town.example>",
+          from: { name: "Anna de Vries", email: "anna@example-town.example", side: "organisation" },
+          to: ["evelien@dembrane.com", "jorim@dembrane.com"],
+          cc: [],
+          sent_at: "2026-09-29T09:12:00.000Z",
+          text: "Could we start the pilot in March? The council meets on the 12th.",
+          mailboxes: ["evelien@dembrane.com", "jorim@dembrane.com"],
+        },
+        {
+          id: "<CA+eve-1@mail.gmail.com>",
+          from: { name: "Eve", email: "evelien@dembrane.com", side: "dembrane" },
+          to: ["anna@example-town.example"],
+          cc: ["jorim@dembrane.com"],
+          sent_at: "2026-09-29T14:05:00.000Z",
+          text: "March works. I'll send the offer this week.",
+          mailboxes: ["evelien@dembrane.com", "jorim@dembrane.com"],
+        },
+      ],
+    },
+  ],
+  fetched_at: "2026-09-29T15:00:00.000Z",
 };

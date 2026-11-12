@@ -2,6 +2,7 @@ import { UnavailableError, ValidationError } from "@dembrane/core";
 import { type Ctx, clientIp, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
+import { accountEmail } from "./account-email";
 import { addAnnex, removeAnnex } from "./annex";
 import * as K from "./contract";
 import { countersign } from "./countersign";
@@ -311,6 +312,11 @@ export function accountsRoutes(d: AccountsDeps) {
   app.get(R.accountCard.path, async (c) => {
     await staff(c, "accounts.card");
     return c.json(await accountCard(d, p(c, "orgId")));
+  });
+  app.get(R.accountEmail.path, async (c) => {
+    await staff(c, "accounts.email.read");
+    const q = parse(K.AccountEmailQuery, c.req.query());
+    return c.json(await accountEmail(d, p(c, "orgId"), { refresh: q.refresh }));
   });
   app.patch(R.updateAccount.path, async (c) => {
     const who = await staff(c, "accounts.update");

@@ -21,6 +21,7 @@ export const accountKeys = {
 	card: (orgId: string) => ["accounts", "staff", "card", orgId] as const,
 	doc: (orgId: string, docId: string, staff: boolean) =>
 		["accounts", "doc", orgId, docId, staff ? "staff" : "member"] as const,
+	email: (orgId: string) => ["accounts", "staff", "email", orgId] as const,
 	fields: (orgId: string, docId: string) =>
 		["accounts", "fields", orgId, docId] as const,
 	list: (stage: string | null) =>
@@ -70,6 +71,30 @@ export const useAccountCard = (orgId: string | undefined) =>
 		queryFn: () => call("accountCard", { params: { orgId: orgId as string } }),
 		queryKey: accountKeys.card(orgId ?? ""),
 	});
+
+/**
+ * The organisation's email, read live from dembrane's mailboxes. Not refetched on focus:
+ * each read searches Gmail; the refresh button asks past the server's few minutes of cache.
+ */
+export const useAccountEmail = (orgId: string | undefined) => {
+	const qc = useQueryClient();
+	const q = useQuery({
+		enabled: Boolean(orgId),
+		queryFn: () => call("accountEmail", { params: { orgId: orgId as string } }),
+		queryKey: accountKeys.email(orgId ?? ""),
+		refetchOnWindowFocus: false,
+		retry: false,
+		staleTime: 5 * 60_000,
+	});
+	const refresh = async () => {
+		const fresh = await call("accountEmail", {
+			params: { orgId: orgId as string },
+			query: { refresh: "true" },
+		});
+		qc.setQueryData(accountKeys.email(orgId ?? ""), fresh);
+	};
+	return { ...q, refresh };
+};
 
 /**
  * A mutation over one route. Everything under ["accounts"] is refreshed after it: the

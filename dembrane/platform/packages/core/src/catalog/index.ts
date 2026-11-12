@@ -1,5 +1,6 @@
 import { access } from "./access";
 import { account } from "./account";
+import { account_email } from "./account_email";
 import { agent } from "./agent";
 import { agent_access } from "./agent_access";
 import { analysis } from "./analysis";
@@ -90,6 +91,7 @@ export const ERROR_CATALOG = {
   ...task,
   ...offer,
   ...demo,
+  ...account_email,
   ...staff,
   ...privacy,
   ...question,

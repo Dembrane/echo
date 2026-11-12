@@ -1650,6 +1650,8 @@ export async function handle(
 				return fx.createAccountResponse;
 			case "accountCard":
 				return card(s);
+			case "accountEmail":
+				return clone(fx.accountEmail);
 			case "updateAccount":
 				if (body.invoice_delivery !== undefined) {
 					s.billing.invoice_delivery =
