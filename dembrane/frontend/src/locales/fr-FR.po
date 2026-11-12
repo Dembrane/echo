@@ -1813,9 +1813,6 @@ msgstr "Les administrateurs ont accès à tous les espaces de travail de cette o
 msgid "Advanced"
 msgstr "Avancé"
 
-#~ msgid "Advanced (tips and best practices)"
-#~ msgstr "Avancé (astuces et bonnes pratiques)"
-
 #~ msgid "Advanced (Tips and best practices)"
 #~ msgstr "Avancé (Astuces et conseils)"
 
@@ -2408,9 +2405,6 @@ msgstr "Êtes-vous sûr de vouloir supprimer ce chat ? Cette action est irréver
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action ne peut pas être annulée."
 
-#~ msgid "Are you sure you want to delete this custom topic? This cannot be undone."
-#~ msgstr "Êtes-vous sûr de vouloir supprimer ce sujet personnalisé ? Cette action ne peut pas être annulée."
-
 #: src/components/project/ProjectDangerZone.tsx:178
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible."
@@ -2615,9 +2609,6 @@ msgstr "Mémoire de l'assistant"
 msgid "At least 8 characters"
 msgstr "Au moins 8 caractères"
 
-#~ msgid "At least one topic must be selected to enable Verify"
-#~ msgstr "Sélectionne au moins un sujet pour activer la vérification"
-
 #: src/components/billing/BillingManager.tsx:1307
 msgid "At the end of this period"
 msgstr "À la fin de cette période"
@@ -2722,9 +2713,6 @@ msgstr "Code d'authentification"
 msgid "Auto fact-check new claims"
 msgstr "Vérifier automatiquement les nouvelles affirmations"
 
-#~ msgid "Auto-generate titles"
-#~ msgstr "Générer automatiquement les titres"
-
 #~ msgid "Auto-generate Titles"
 #~ msgstr "Générer automatiquement les titres"
 
@@ -2752,9 +2740,6 @@ msgstr "Les résumés automatiques, la fusion des conversations et les durées f
 msgid "Automatic titles and draft tags"
 msgstr "Titres automatiques et tags en brouillon"
 
-#~ msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
-#~ msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque conversation après la synthèse. Le titre décrit ce qui a été discuté, pas qui a participé. Le nom original du participant est conservé séparément, s'il a fourni un nom."
-
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:790
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Enregistrer automatiquement les transcriptions dans votre CRM ou base de données"
@@ -2766,9 +2751,6 @@ msgstr "Sélectionnez automatiquement les conversations pertinentes pour votre q
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:887
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Envoyer automatiquement les données de conversation à vos autres outils et services lorsque des événements se produisent."
-
-#~ msgid "Automation"
-#~ msgstr "Automatisation"
 
 #: src/components/workspace/FeatureGate.tsx:162
 msgid "Available on a paid plan"
@@ -2878,9 +2860,6 @@ msgstr "Retour à vos espaces de travail"
 #: src/routes/admin/AdminSettingsRoute.tsx:1340
 msgid "Base"
 msgstr "Base"
-
-#~ msgid "Basic (essential tutorial slides)"
-#~ msgstr "Basique (diapositives essentielles du tutoriel)"
 
 #~ msgid "Basic (Essential tutorial slides)"
 #~ msgstr "Basique (Diapositives tutorielles essentielles)"
@@ -3020,9 +2999,6 @@ msgstr "Réservez une formation certifiée pour continuer à utiliser dembrane d
 #: src/components/results/ResultsList.tsx:281
 msgid "Both"
 msgstr "Les deux"
-
-#~ msgid "Brainstorm ideas"
-#~ msgstr "Brainstorming d'idées"
 
 #~ msgid "Brainstorm Ideas"
 #~ msgstr "Idées de brainstorming"
@@ -4847,9 +4823,6 @@ msgstr "Logo personnalisé"
 #~ msgid "Custom Logo"
 #~ msgstr "Logo personnalisé"
 
-#~ msgid "Custom title prompt"
-#~ msgstr "Prompt de titre personnalisé"
-
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1710
 msgid "Custom workspace logo shown to participants."
 msgstr "Logo personnalisé de l'espace de travail affiché aux participants."
@@ -4857,9 +4830,6 @@ msgstr "Logo personnalisé de l'espace de travail affiché aux participants."
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1641
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Logo personnalisé de l'espace de travail affiché aux participants. Format recommandé : 3:1 (ex. horizontal 600×200 px)."
-
-#~ msgid "Czech (only ECHO features, transcription and summaries)"
-#~ msgstr "Tchèque (fonctionnalités ECHO uniquement, transcription et résumés)"
 
 #~ msgid "Czech (only ECHO features, Transcription and Summaries)"
 #~ msgstr "Tchèque (fonctionnalités ECHO uniquement, transcription et résumés)"
@@ -4895,21 +4865,6 @@ msgstr "Mode sombre"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:772
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "URL du tableau de bord (lien direct vers l'aperçu de la conversation)"
-
-#~ msgid "dashboard.dembrane.concrete.beta"
-#~ msgstr "Bêta"
-
-#~ msgid "dashboard.dembrane.feature.verify.description"
-#~ msgstr "Activez cette fonctionnalité pour permettre aux participants de vérifier et d'approuver les \"résultats\" de leurs contributions. Cela aide à cristalliser les idées clés, les préoccupations ou les résumés. Après la conversation, vous pouvez filtrer les discussions avec des résultats vérifiés et les examiner dans l'aperçu."
-
-#~ msgid "dashboard.dembrane.feature.verify.topic.select"
-#~ msgstr "Sélectionnez les sujets que les participants peuvent utiliser pour \"Vérifier\"."
-
-#~ msgid "dashboard.dembrane.verify.beta"
-#~ msgstr "Bêta"
-
-#~ msgid "dashboard.explore.mode.question"
-#~ msgstr "Une question"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:570
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:163
@@ -4999,9 +4954,6 @@ msgstr "Deep Dive"
 msgid "Default"
 msgstr "Par défaut"
 
-#~ msgid "Default - no tutorial (only privacy statements)"
-#~ msgstr "Par défaut - pas de tutoriel (uniquement les déclarations de confidentialité)"
-
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Par défaut - Pas de tutoriel (Seulement les déclarations de confidentialité)"
 
@@ -5061,9 +5013,6 @@ msgstr "Supprimer la conversation"
 #~ msgid "Delete Conversation"
 #~ msgstr "Supprimer la conversation"
 
-#~ msgid "Delete custom topic"
-#~ msgstr "Supprimer le sujet personnalisé"
-
 #: src/components/project/ProjectDangerZone.tsx:111
 #: src/components/project/ProjectDangerZone.tsx:176
 #: src/components/project/ProjectDangerZone.tsx:189
@@ -5099,9 +5048,6 @@ msgstr "Supprimer cet espace de travail"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1238
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Supprimer cet espace de travail. Les membres perdront immédiatement l'accès et toutes les conversations et données seront définitivement effacées."
-
-#~ msgid "Delete topic"
-#~ msgstr "Supprimer le sujet"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:607
 msgid "Delete webhook"
@@ -5536,9 +5482,6 @@ msgstr "Dupliquer"
 msgid "Duration"
 msgstr "Durée"
 
-#~ msgid "Dutch"
-#~ msgstr "Néerlandais"
-
 #: src/components/release/releaseHistory.ts:751
 msgid "Dutch documentation is updated."
 msgstr "La documentation en néerlandais est à jour."
@@ -5554,9 +5497,6 @@ msgstr "Facture électronique"
 #: src/components/report/ReportFocusSelector.tsx:136
 msgid "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 msgstr "p. ex. \"Focus sur les thèmes de durabilité\" ou \"Que pensent les participants de la nouvelle politique ?\""
-
-#~ msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
-#~ msgstr "par exemple : \"Utiliser des phrases adjectivales courtes comme 'Espaces verts urbains' ou 'Emploi des jeunes'. Éviter les titres génériques.\""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1553
 msgid "e.g. Client Alpha"
@@ -5715,9 +5655,6 @@ msgstr "Modifier le contenu du rapport en utilisant l'éditeur de texte enrichi 
 #~ msgid "Edit the wording, check the evidence, or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#~ msgid "Edit topic"
-#~ msgstr "Modifier le sujet"
-
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:248
 msgid "Edit webhook"
 msgstr "Modifier le webhook"
@@ -5848,31 +5785,16 @@ msgstr "Activer 2FA"
 #~ msgid "Enable a visualization from the panel settings menu"
 #~ msgstr "Activez une visualisation depuis le menu des paramètres du panneau"
 
-#~ msgid "Enable Explore"
-#~ msgstr "Activer Explorer"
-
 #: src/routes/project/HostGuidePage.tsx:1745
 msgid "Enable participation"
 msgstr "Activer la participation"
 
-#~ msgid "Enable report notifications"
-#~ msgstr "Activer les notifications de rapports"
-
 #~ msgid "Enable Report Notifications"
 #~ msgstr "Activer les notifications de rapports"
-
-#~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-#~ msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses alimentées par l'IA pendant leur conversation. Les participants peuvent cliquer sur \"Explorer\" après avoir enregistré leurs pensées pour recevoir un retour contextuel, encourageant une réflexion plus profonde et un engagement accru. Une période de récupération s'applique entre les demandes."
-
-#~ msgid "Enable transcript anonymization"
-#~ msgstr "Activer l'anonymisation des transcriptions"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:328
 msgid "Enable two-factor authentication"
 msgstr "Activer l'authentification à deux facteurs"
-
-#~ msgid "Enable Verify"
-#~ msgstr "Activer la vérification"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:927
@@ -5887,9 +5809,6 @@ msgstr "Terminé"
 #: src/components/billing/BillingManager.tsx:1248
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Prend fin le {endDate}, puis passe au forfait Free"
-
-#~ msgid "English"
-#~ msgstr "Anglais"
 
 #: src/routes/project/present/PresentRoute.tsx:280
 msgid "English fallback"
@@ -6165,9 +6084,6 @@ msgstr "Explorer"
 #: src/components/project/PortalSettingsOverview.tsx:126
 msgid "Explore"
 msgstr "Explorer"
-
-#~ msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
-#~ msgstr "Explorer peut tenir compte de ce que d'autres groupes de ce projet ont dit. Désactivé : il ne regarde que cette conversation."
 
 #: src/components/release/releaseHistory.ts:670
 msgid "Explore recurring themes in the Library"
@@ -6833,9 +6749,6 @@ msgstr "Les limites du forfait Free et les options de mise à niveau sont plus c
 msgid "Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports."
 msgstr "Free, lecture seule. Voit les projets, conversations et rapports. Ne peut pas discuter ni générer de rapports."
 
-#~ msgid "French"
-#~ msgstr "Français"
-
 #: src/components/chat/InsightNoteCard.tsx:17
 msgid "friction"
 msgstr "friction"
@@ -6997,9 +6910,6 @@ msgstr "Génération du résumé. Patiente un peu..."
 #: src/routes/project/report/ProjectReportRoute.tsx:259
 msgid "Generating your report..."
 msgstr "Génération de votre rapport en cours..."
-
-#~ msgid "German"
-#~ msgstr "Allemand"
 
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:71
@@ -7169,9 +7079,6 @@ msgstr "Grouper par"
 #~ msgid "Groups"
 #~ msgstr "Groupes"
 
-#~ msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
-#~ msgstr "Guide pour comprendre comment les titres sont générés. Les titres décrivent le sujet de la conversation, pas le participant."
-
 #: src/components/release/releaseHistory.ts:310
 msgid "Guide report writing with your own instructions."
 msgstr "Guidez la rédaction du rapport avec vos propres consignes."
@@ -7268,9 +7175,6 @@ msgstr "Masquer de cette présentation"
 #: src/components/map/MapPage.tsx:799
 msgid "Hide missing arguments"
 msgstr "Masquer les arguments manquants"
-
-#~ msgid "Hide preview"
-#~ msgstr "Masquer l'aperçu"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:321
 msgid "Hide projects"
@@ -7895,9 +7799,6 @@ msgstr "Elle a peut-être été supprimée."
 msgid "It will send you back to {0}."
 msgstr "Vous serez redirigé(e) vers {0}."
 
-#~ msgid "Italian (only ECHO features, transcription and summaries)"
-#~ msgstr "Italien (fonctionnalités ECHO uniquement, transcription et résumés)"
-
 #~ msgid "Italian (only ECHO features, Transcription and Summaries)"
 #~ msgstr "Italien (uniquement les fonctionnalités ECHO, Transcription et Résumés)"
 
@@ -8096,9 +7997,6 @@ msgstr "Continuer à modifier"
 #: src/components/members/PendingInvitesSection.tsx:229
 msgid "Keep it"
 msgstr "Le conserver"
-
-#~ msgid "Keep it to {NAME_LABEL_MAX} characters."
-#~ msgstr "{NAME_LABEL_MAX} caractères au maximum."
 
 #: src/components/training/TrainingRowActions.tsx:352
 msgid "Keep license"
@@ -8504,9 +8402,6 @@ msgstr "Flux des participants en direct"
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr "Entonnoir des participants en direct : scanné, configuration, page d'enregistrement, en direct et terminé"
 
-#~ msgid "Live preview"
-#~ msgstr "Aperçu en direct"
-
 #~ msgid "Live Preview"
 #~ msgstr "Vue en direct"
 
@@ -8641,9 +8536,6 @@ msgstr "Chargement de cette discussion..."
 #: src/components/conversation/CopyConversationTranscript.tsx:42
 msgid "Loading transcript..."
 msgstr "Chargement de la transcription..."
-
-#~ msgid "Loading verify topics…"
-#~ msgstr "Chargement des sujets de vérification…"
 
 #: src/components/invite/WorkspaceSelectList.tsx:67
 msgid "Loading workspaces…"
@@ -10054,9 +9946,6 @@ msgstr "Aucun fichier audio valide n'a été sélectionné. Veuillez sélectionn
 msgid "No verification topics are configured for this project."
 msgstr "Aucun sujet de vérification n'est configuré pour ce projet."
 
-#~ msgid "No verify topics available."
-#~ msgstr "Aucun sujet de vérification disponible."
-
 #: src/routes/project/library/LibraryRoute.tsx:35
 #: src/routes/project/library/LibraryRoute.tsx:37
 msgid "No version yet"
@@ -10293,9 +10182,6 @@ msgstr "Rien d'enregistré pour l'instant. L'assistant ajoute des notes ici au f
 msgid "Nothing to suggest from this. Names, places and abbreviations help most."
 msgstr "Rien à suggérer à partir de ceci. Les noms, les lieux et les sigles aident le plus."
 
-#~ msgid "Notify participants when a report is published."
-#~ msgstr "Notifier les participants lorsqu'un rapport est publié."
-
 #~ msgid "Objects"
 #~ msgstr ""
 
@@ -10507,9 +10393,6 @@ msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la bas
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:767
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier ces paramètres. Contactez un administrateur si un changement est nécessaire."
-
-#~ msgid "Only workspace admins can manage project automation."
-#~ msgstr "Seuls les administrateurs de l'espace de travail peuvent gérer l'automatisation du projet."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:397
 msgid "Only you can see this workspace."
@@ -10729,12 +10612,6 @@ msgstr "Optionnel"
 msgid "Optional (falls back to English)"
 msgstr "Optionnel (retour à l'anglais)"
 
-#~ msgid "Optional field on the start page"
-#~ msgstr "Champ optionnel sur la page de démarrage"
-
-#~ msgid "Optional field on the thank you page"
-#~ msgstr "Champ optionnel sur la page de remerciements"
-
 #: src/components/project/setup-suggestions/SessionBrief/SessionBrief.tsx:134
 msgid "Optional. An invitation or project page; dembrane reads it once."
 msgstr "Facultatif. Une invitation ou une page de projet ; dembrane la lit une fois."
@@ -10948,18 +10825,12 @@ msgstr "Organisation propriétaire"
 #~ msgid "Page {0}"
 #~ msgstr ""
 
-#~ msgid "Page content"
-#~ msgstr "Contenu de la page"
-
 #~ msgid "Page Content"
 #~ msgstr "Contenu de la page"
 
 #: src/components/error/ErrorPageContent.tsx:21
 msgid "Page not found"
 msgstr "Page non trouvée"
-
-#~ msgid "Page title"
-#~ msgstr "Titre de la page"
 
 #~ msgid "Page Title"
 #~ msgstr "Titre de la page"
@@ -11091,9 +10962,6 @@ msgstr "Les participants peuvent partager le portail depuis l'en-tête ou la pag
 #: src/components/release/releaseHistory.ts:511
 msgid "Participants can verify outcomes and refine replies."
 msgstr "Les participants peuvent vérifier les résultats et affiner les réponses."
-
-#~ msgid "Participants read this above the box, for example \"Table name or number\". Leave it empty for the default."
-#~ msgstr "Les participants lisent ceci au-dessus du champ, par exemple « Nom ou numéro de la table ». Laisse vide pour le texte par défaut."
 
 #: src/components/release/releaseHistory.ts:402
 msgid "Participants receive a reminder to verify before ending a conversation."
@@ -11576,9 +11444,6 @@ msgstr "Populaire"
 #~ msgid "Portal"
 #~ msgstr "Portail"
 
-#~ msgid "Portal content"
-#~ msgstr "Contenu du portail"
-
 #~ msgid "Portal Content"
 #~ msgstr "Contenu du Portail"
 
@@ -11617,9 +11482,6 @@ msgstr "Portail ouvert aux nouvelles conversations"
 #~ msgid "Portal Overview"
 #~ msgstr "Aperçu du portail"
 
-#~ msgid "Portal preview"
-#~ msgstr "Aperçu du portail"
-
 #: src/components/release/releaseHistory.ts:770
 msgid "Portal previews and supporting images display correctly."
 msgstr "Les aperçus du portail et les images d'illustration s'affichent correctement."
@@ -11635,12 +11497,6 @@ msgstr "Titre du portail"
 #: src/components/common/settingChange.tsx:27
 msgid "Portal tutorial"
 msgstr "Tutoriel du portail"
-
-#~ msgid "portal.anonymization.disable.confirm"
-#~ msgstr "Désactiver"
-
-#~ msgid "portal.anonymization.disable.warning"
-#~ msgstr "La désactivation de l'anonymisation pendant les enregistrements en cours peut avoir des conséquences inattendues. Les conversations actives seront également affectées en cours d'enregistrement. Veuillez utiliser cette option avec prudence."
 
 #: src/components/map/attributes.ts:345
 #: src/components/map/panels/shared.tsx:36
@@ -12589,9 +12445,6 @@ msgstr "Recharger la page"
 msgid "Reload page"
 msgstr "Recharger la page"
 
-#~ msgid "Remind users to verify before finishing"
-#~ msgstr "Rappeler aux utilisateurs de vérifier avant de finir"
-
 #: src/components/workspace/SupportAccessSection.tsx:62
 msgid "Reminder sent: support access still on"
 msgstr "Rappel envoyé : accès d'assistance toujours activé"
@@ -12756,9 +12609,6 @@ msgstr "Consignes de réponse"
 msgid "Reply mode"
 msgstr "Mode de réponse"
 
-#~ msgid "Reply prompt"
-#~ msgstr "Prompt de réponse"
-
 #~ msgid "Reply Prompt"
 #~ msgstr "Prompt de réponse"
 
@@ -12837,9 +12687,6 @@ msgstr "Limite de rapports atteinte"
 #: src/components/report/reportError.ts:21
 msgid "Report not generated"
 msgstr "Rapport non généré"
-
-#~ msgid "Report notifications"
-#~ msgstr "Notifications de rapports"
 
 #~ msgid "Report Notifications"
 #~ msgstr "Notifications de rapports"
@@ -12979,9 +12826,6 @@ msgstr "Accès au microphone en cours..."
 #: src/components/project/CustomTopicModal.tsx:149
 msgid "Required"
 msgstr "Requis"
-
-#~ msgid "Requires \"Ask for email?\" to be enabled"
-#~ msgstr "Nécessite que « Demander l'e-mail ? » soit activé"
 
 #~ msgid "Requires \"Ask for Email?\" to be enabled"
 #~ msgstr "Requiert \"Demander l'email ?\" pour être activé"
@@ -13873,9 +13717,6 @@ msgstr "Sélectionner tous les éléments visibles ({remainingCount})"
 msgid "Select at least one event"
 msgstr "Sélectionner au moins un événement"
 
-#~ msgid "Select at least one other topic before deleting this one"
-#~ msgstr "Sélectionner au moins un autre sujet avant de supprimer celui-ci"
-
 #: src/components/dropzone/UploadConversationDropzone.tsx:647
 msgid "Select audio files"
 msgstr "Sélectionner des fichiers audio"
@@ -13926,18 +13767,9 @@ msgstr "Sélectionner un projet"
 msgid "Select tags"
 msgstr "Sélectionner les étiquettes"
 
-#~ msgid "Select the instructions that will be shown to participants when they start a conversation"
-#~ msgstr "Sélectionnez les instructions qui seront affichées aux participants lorsqu'ils commencent une conversation"
-
-#~ msgid "Select the type of feedback or engagement you want to encourage."
-#~ msgstr "Sélectionnez le type de retour ou de participation que vous souhaitez encourager."
-
 #: src/components/results/curate/CurateTable.tsx:200
 msgid "Select this finding"
 msgstr "Sélectionner ce constat"
-
-#~ msgid "Select tutorial"
-#~ msgstr "Sélectionner le tutoriel"
 
 #: src/components/report/ReportFocusSelector.tsx:113
 msgid "Select up to 2 focus areas for your report"
@@ -14423,9 +14255,6 @@ msgstr "Afficher uniquement les modifications"
 msgid "Show popcorn in up to three extra languages at once."
 msgstr "Affichez le popcorn dans jusqu'à trois langues supplémentaires à la fois."
 
-#~ msgid "Show preview"
-#~ msgstr "Afficher l'aperçu"
-
 #: src/components/workspace/OrganisationUsageRollup.tsx:321
 msgid "Show projects"
 msgstr "Afficher les projets"
@@ -14457,9 +14286,6 @@ msgstr "Afficher le texte complet"
 #: src/components/sharing/HostGuideSettings.tsx:74
 msgid "Show the host guide"
 msgstr "Afficher le guide de l’hôte"
-
-#~ msgid "Show the invitation"
-#~ msgstr "Afficher l'invitation"
 
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:358
 msgid "Show the path to this page"
@@ -14778,9 +14604,6 @@ msgstr "Sources"
 #: src/components/release/releaseHistory.ts:721
 msgid "Sources and references no longer appear empty in the affected cases."
 msgstr "Les sources et les références n'apparaissent plus vides dans les cas concernés."
-
-#~ msgid "Spanish"
-#~ msgstr "Espagnol"
 
 #: src/components/release/releaseHistory.ts:110
 msgid "Speak a question and review the text before sending it."
@@ -15268,9 +15091,6 @@ msgstr "Passer au texte"
 msgid "participant.link.switch.text"
 msgstr "Passer à la saisie de texte"
 
-#~ msgid "Switching it off comes with a paid plan."
-#~ msgstr "La désactiver fait partie d'un forfait payant."
-
 #: src/components/billing/BillingManager.tsx:513
 msgid "Switching to another tool"
 msgstr "Je passe à un autre outil"
@@ -15457,9 +15277,6 @@ msgstr "Des contributions écrites et des formulaires de suivi."
 #: src/portal/routes/ParticipantPostConversation.tsx:135
 msgid "Thank you for participating!"
 msgstr "Merci pour votre participation !"
-
-#~ msgid "Thank you page content"
-#~ msgstr "Contenu de la page de remerciement"
 
 #~ msgid "Thank You Page Content"
 #~ msgstr "Contenu de la page Merci"
@@ -15926,9 +15743,6 @@ msgstr "Le résumé est en cours de régénération. Attends qu’il soit dispon
 #~ msgid "The templates did not load. You can still start blank and set it up yourself."
 #~ msgstr "Les modèles ne se sont pas chargés. Vous pouvez quand même commencer à vide et tout régler vous-même."
 
-#~ msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
-#~ msgstr "La page de remerciement se termine par une carte invitant les participants à organiser leur propre événement avec dembrane."
-
 #: src/components/map/panels/HistoryPanel.tsx:69
 msgid "The title could not be generated."
 msgstr "Impossible de générer le titre."
@@ -16212,9 +16026,6 @@ msgstr "Ce lien d'invitation n'est pas valide pour ce compte"
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "Cette invitation concerne {0} contextes de facturation, chacun facturé séparément :"
 
-#~ msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
-#~ msgstr "Cette est une vue en direct du portail du participant. Vous devrez actualiser la page pour voir les dernières modifications."
-
 #: src/routes/settings/UserSettingsRoute.tsx:93
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "Voici la carte de l'ensemble des organisations et des espaces de travail dont vous faites partie."
@@ -16260,9 +16071,6 @@ msgstr "C'est urgent"
 #: src/components/project/ProjectAccessGuard.tsx:107
 msgid "This isn't available to you"
 msgstr "Vous n'avez pas accès à cet élément"
-
-#~ msgid "This language will be used for the participant portal."
-#~ msgstr "Cette langue sera utilisée pour le portail participant."
 
 #~ msgid "This language will be used for the Participant's Portal."
 #~ msgstr "Cette langue sera utilisée pour le Portail du participant."
@@ -16362,12 +16170,6 @@ msgstr "Cette organisation n'existe plus"
 msgid "This page is about {orgName} only. To get your MCP URL, or to manage other organisations, go to <0>Connect your agent</0>."
 msgstr "Cette page concerne uniquement {orgName}. Pour obtenir votre URL MCP ou gérer d'autres organisations, rendez-vous sur <0>Connecter votre agent</0>."
 
-#~ msgid "This page is shown after the participant has completed the conversation."
-#~ msgstr "Cette page est affichée après que le participant ait terminé la conversation."
-
-#~ msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
-#~ msgstr "Cette page est affichée aux participants lorsqu'ils commencent une conversation après avoir réussi à suivre le tutoriel."
-
 #: src/components/error/ErrorBoundary.tsx:47
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle souvent le problème. Si cela continue, revenez à l'accueil."
@@ -16435,9 +16237,6 @@ msgstr "Ce projet n'accepte pas de réponses pour le moment."
 #: src/components/project/ProjectLegalBasisSection.tsx:287
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "Ce projet suivra alors le réglage hérité : {0} ({1})."
-
-#~ msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
-#~ msgstr "Cette prompt guide comment l'IA répond aux participants. Personnalisez-la pour former le type de feedback ou d'engagement que vous souhaitez encourager."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:673
 msgid "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
@@ -16511,9 +16310,6 @@ msgstr "Cela définit la langue affichée aux participants dans le portail, y co
 #: src/components/results/curate/StakeholdersTab.tsx:83
 msgid "This stakeholder's role"
 msgstr "Le rôle de cette partie prenante"
-
-#~ msgid "This title is shown to participants when they start a conversation"
-#~ msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une conversation"
 
 #: src/components/auth/utils/errorUtils.ts:37
 msgid "This took too long. Try again."
@@ -17083,9 +16879,6 @@ msgstr "Transforme les conversations en diapositives en direct. Lance une sessio
 msgid "Turn off"
 msgstr "Désactiver"
 
-#~ msgid "Turn off anonymization?"
-#~ msgstr "Désactiver l'anonymisation ?"
-
 #: src/components/agent-access/OrgAgentAccessSwitch.tsx:73
 msgid "Turn off MCP access?"
 msgstr "Désactiver l'accès MCP ?"
@@ -17156,9 +16949,6 @@ msgstr "Tapez votre réponse ici"
 #: src/components/conversation/StatePill.tsx:27
 msgid "Typing"
 msgstr "Écrit…"
-
-#~ msgid "Ukrainian (only ECHO features, transcription and summaries)"
-#~ msgstr "Ukrainien (fonctionnalités ECHO uniquement, transcription et résumés)"
 
 #~ msgid "Ukrainian (only ECHO features, Transcription and Summaries)"
 #~ msgstr "Ukrainien (uniquement les fonctionnalités ECHO, Transcription et Résumés)"
@@ -17814,9 +17604,6 @@ msgstr "Vérifier l'e-mail"
 msgid "Verify outcomes and refine replies"
 msgstr "Vérifiez les résultats et affinez les réponses"
 
-#~ msgid "Verify topics"
-#~ msgstr "Vérifier les sujets"
-
 #~ msgid "Verify Topics"
 #~ msgstr "Sujets de vérification"
 
@@ -18148,9 +17935,6 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Les webhooks sont des messages automatisés envoyés d'une application à une autre lorsqu'un événement se produit. Pensez à eux comme à un \"système de notification\" pour vos autres outils."
 
-#~ msgid "Webhooks are not enabled for this environment."
-#~ msgstr "Les webhooks ne sont pas activés pour cet environnement."
-
 #: src/components/workspace/gateWalls.ts:172
 msgid "Webhooks come with a paid plan"
 msgstr "Les webhooks sont inclus dans les forfaits payants"
@@ -18368,12 +18152,6 @@ msgstr "Quand sont déclenchés les webhooks ?"
 #: src/components/pricing/questions.ts:166
 msgid "When do you need dembrane?"
 msgstr "Quand avez-vous besoin de dembrane ?"
-
-#~ msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
-#~ msgstr "Lorsqu'il est activé, tous les nouveaux transcriptions auront des informations personnelles (noms, emails, numéros de téléphone, adresses) remplacées par des placeholders. Les conversations anonymisées désactivent également la lecture de l'audio, le téléchargement de l'audio et la rétranscrire pour protéger la confidentialité des participants. Cela ne peut pas être annulé pour les conversations déjà traitées."
-
-#~ msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
-#~ msgstr "Lorsque vous terminez la conversation, les participants qui n'ont pas encore vérifié seront invités à vérifier ou à sauter"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1993
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
