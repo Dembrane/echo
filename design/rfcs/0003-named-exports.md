@@ -2,7 +2,7 @@
 status: approved
 ---
 
-# 0002 Named exports
+# 0003 Named exports
 
 ## Rule
 

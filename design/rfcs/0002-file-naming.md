@@ -2,7 +2,7 @@
 status: approved
 ---
 
-# 0001 File naming
+# 0002 File naming
 
 ## Rule
 
