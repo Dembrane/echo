@@ -99,8 +99,8 @@ run("portal editor try it", () => {
     await sql`insert into billing_account (id, org_id, tier) values (${billing}, ${org}, 'innovator')`;
     await sql`insert into workspace (id, name, org_id, billing_account_id) values (${ws}, 'W', ${org}, ${billing})`;
     await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${newId()}, ${ws}, ${person.app}, ${role})`;
-    await sql`insert into project (id, name, language, workspace_id, context, default_conversation_transcript_prompt, is_verify_enabled, is_get_reply_enabled)
-      values (${project}, 'Park', 'en', ${ws}, 'Evenings on the park by the library.', 'Lindepark', false, false)`;
+    await sql`insert into project (id, name, language, workspace_id, is_conversation_allowed, context, default_conversation_transcript_prompt, is_verify_enabled, is_get_reply_enabled)
+      values (${project}, 'Park', 'en', ${ws}, true, 'Evenings on the park by the library.', 'Lindepark', false, false)`;
     return { person, project };
   }
 
