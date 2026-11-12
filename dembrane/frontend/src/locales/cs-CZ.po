@@ -2328,8 +2328,6 @@ msgid "Analyse now"
 msgstr "Analyzovat hned"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
-#: src/routes/admin/aiCostBreakdown.ts:46
-#: src/routes/admin/aiCostBreakdown.ts:102
 msgid "Analysis"
 msgstr "Analýza"
 
@@ -2342,8 +2340,8 @@ msgstr "Analýza | dembrane"
 #~ msgstr "Analysis Language"
 
 #: src/routes/admin/aiCostBreakdown.ts:98
-msgid "Analysis runs"
-msgstr "Běhy analýzy"
+#~ msgid "Analysis runs"
+#~ msgstr "Běhy analýzy"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 #: src/routes/project/report/ProjectReportRoute.tsx:1089
@@ -2774,8 +2772,6 @@ msgid "Assign"
 msgstr "Přiřadit"
 
 #: src/routes/settings/UserSettingsRoute.tsx:119
-#: src/routes/admin/aiCostBreakdown.ts:47
-#: src/routes/admin/aiCostBreakdown.ts:78
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 msgid "Assistant"
 msgstr "Asistent"
@@ -2790,8 +2786,8 @@ msgid "Assistant memory"
 msgstr "Paměť asistenta"
 
 #: src/routes/admin/aiCostBreakdown.ts:71
-msgid "Assistant turns"
-msgstr "Odpovědi asistenta"
+#~ msgid "Assistant turns"
+#~ msgstr "Odpovědi asistenta"
 
 #: src/components/auth/PasswordRequirements.tsx:55
 msgid "At least 8 characters"
@@ -3455,8 +3451,6 @@ msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 #: src/routes/project/canvas/CanvasRoute.tsx:415
 #: src/routes/project/canvas/CanvasRoute.tsx:526
 #: src/routes/project/canvas/CanvasRoute.tsx:542
-#: src/routes/admin/aiCostBreakdown.ts:48
-#: src/routes/admin/aiCostBreakdown.ts:106
 msgid "Canvas"
 msgstr "Canvas"
 
@@ -3473,8 +3467,8 @@ msgid "Canvas settings"
 msgstr "Nastavení plátna"
 
 #: src/routes/admin/aiCostBreakdown.ts:105
-msgid "Canvas ticks"
-msgstr "Kroky na plátně"
+#~ msgid "Canvas ticks"
+#~ msgstr "Kroky na plátně"
 
 #: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
@@ -3634,8 +3628,6 @@ msgstr "Účtováno na vrub účtů"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:691
 #: src/routes/project/chat/ProjectChatRoute.tsx:697
-#: src/routes/admin/aiCostBreakdown.ts:49
-#: src/routes/admin/aiCostBreakdown.ts:68
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:258
 #: src/features/sidebar/hooks/useSearchHits.ts:259
@@ -4442,8 +4434,8 @@ msgid "Conversation status includes upload progress."
 msgstr "Stav rozhovoru nyní zobrazuje průběh nahrávání."
 
 #: src/routes/admin/aiCostBreakdown.ts:122
-msgid "Conversation summaries"
-msgstr "Shrnutí rozhovorů"
+#~ msgid "Conversation summaries"
+#~ msgstr "Shrnutí rozhovorů"
 
 #: src/components/release/releaseHistory.ts:185
 msgid "Conversation summaries no longer hang in the affected processing cases."
@@ -6478,15 +6470,14 @@ msgstr "Expires"
 msgid "Expiring soon"
 msgstr "Brzy vyprší"
 
-#: src/routes/admin/aiCostBreakdown.ts:112
-#: src/components/project/ProjectPortalEditor.tsx:749
-#: src/components/project/PortalSettingsOverview.tsx:126
-msgid "Explore"
-msgstr "Explore"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:111
 msgid "participant.echo.explore"
+msgstr "Explore"
+
+#: src/components/project/ProjectPortalEditor.tsx:749
+#: src/components/project/PortalSettingsOverview.tsx:126
+msgid "Explore"
 msgstr "Explore"
 
 #: src/components/release/releaseHistory.ts:670
@@ -6579,8 +6570,8 @@ msgstr "Další účastníci"
 #~ msgstr "Ověřit fakta tohoto tvrzení"
 
 #: src/routes/admin/aiCostBreakdown.ts:88
-msgid "Fact checks"
-msgstr "Ověření faktů"
+#~ msgid "Fact checks"
+#~ msgstr "Ověření faktů"
 
 #: src/components/results/curate/ArgumentsTab.tsx:282
 msgid "Fact-check"
@@ -6919,12 +6910,12 @@ msgstr "Filtrovat podle jména nebo ID"
 #~ msgstr "Finální"
 
 #: src/routes/admin/aiCostBreakdown.ts:118
-msgid "Final transcript"
-msgstr "Finální přepis"
+#~ msgid "Final transcript"
+#~ msgstr "Finální přepis"
 
 #: src/routes/admin/aiCostBreakdown.ts:117
-msgid "Finalize and summary"
-msgstr "Dokončení a shrnutí"
+#~ msgid "Finalize and summary"
+#~ msgstr "Dokončení a shrnutí"
 
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
@@ -6979,7 +6970,6 @@ msgstr "Dokončit rozhovor"
 msgid "Finished"
 msgstr "Finished"
 
-#: src/routes/admin/aiCostBreakdown.ts:116
 #: src/components/conversation/StatePill.tsx:29
 msgid "Finishing"
 msgstr "Dokončuje se"
@@ -7030,8 +7020,8 @@ msgid "Follow source citations from chat answers."
 msgstr "Odkazujte se na citace zdrojů z odpovědí v chatu."
 
 #: src/routes/admin/aiCostBreakdown.ts:76
-msgid "Follow-up messages"
-msgstr "Následné zprávy"
+#~ msgid "Follow-up messages"
+#~ msgstr "Následné zprávy"
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:228
 msgid "Follow-up text"
@@ -7522,8 +7512,8 @@ msgid "Group by"
 msgstr "Seskupit podle"
 
 #: src/routes/admin/aiCostBreakdown.ts:87
-msgid "Groups"
-msgstr "Skupiny"
+#~ msgid "Groups"
+#~ msgstr "Skupiny"
 
 #: src/components/project/ProjectPortalEditor.tsx:1516
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
@@ -9242,8 +9232,6 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr "Právě bylo spuštěno generování mnoha map. Zkuste to za chvíli znovu."
 
 #: src/routes/project/present/blockLabel.ts:6
-#: src/routes/admin/aiCostBreakdown.ts:50
-#: src/routes/admin/aiCostBreakdown.ts:89
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
 #: src/components/map/MapPage.tsx:677
 #: src/components/map/panels/MapSettingsMenu.tsx:405
@@ -9875,8 +9863,8 @@ msgstr "U nových projektů se už dembrane nepřidává jako výchozí termín 
 #~ msgstr "New Report"
 
 #: src/routes/admin/aiCostBreakdown.ts:72
-msgid "New runs"
-msgstr "Nové běhy"
+#~ msgid "New runs"
+#~ msgstr "Nové běhy"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:642
 msgid "New tier"
@@ -11248,7 +11236,6 @@ msgstr "Původní"
 msgid "Original language"
 msgstr "Původní jazyk"
 
-#: src/routes/admin/aiCostBreakdown.ts:51
 #: src/components/feedback/reasons.ts:27
 #: src/components/billing/BillingManager.tsx:515
 msgid "Other"
@@ -11867,7 +11854,6 @@ msgstr "Špatná odpověď"
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:95
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:406
-#: src/routes/admin/aiCostBreakdown.ts:96
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:141
 #: src/components/results/ResultsList.tsx:44
 #: src/components/results/curate/CurateTabs.tsx:11
@@ -11927,12 +11913,12 @@ msgid "Popcorn shows a room its own words while it is still talking: live slides
 msgstr "Popcorn ukazuje publiku jeho vlastní slova, zatímco ještě mluví: živé snímky z rozhovorů v tomto projektu pro velkou obrazovku. Funkce je v rané fázi a můžete ji v nastavení projektu kdykoli vypnout."
 
 #: src/routes/admin/aiCostBreakdown.ts:92
-msgid "Popcorn ticks"
-msgstr "Kroky Popcornu"
+#~ msgid "Popcorn ticks"
+#~ msgstr "Kroky Popcornu"
 
 #: src/routes/admin/aiCostBreakdown.ts:91
-msgid "Popcorn translation"
-msgstr "Překlad Popcornu"
+#~ msgid "Popcorn translation"
+#~ msgstr "Překlad Popcornu"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:72
 #~ msgid "Popcorn window"
@@ -11943,8 +11929,8 @@ msgid "Popular"
 msgstr "Popular"
 
 #: src/routes/admin/aiCostBreakdown.ts:52
-msgid "Portal"
-msgstr "Portál"
+#~ msgid "Portal"
+#~ msgstr "Portál"
 
 #: src/components/project/ProjectPortalEditor.tsx:1187
 msgid "Portal content"
@@ -12756,8 +12742,6 @@ msgstr "Record another conversation"
 msgid "Record in every project"
 msgstr "Nahrávejte v každém projektu"
 
-#: src/routes/admin/aiCostBreakdown.ts:53
-#: src/routes/admin/aiCostBreakdown.ts:137
 #: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
 #: src/components/conversation/FunnelCanvas.tsx:352
@@ -13125,8 +13109,8 @@ msgid "Replay"
 msgstr "Přehrát znovu"
 
 #: src/routes/admin/aiCostBreakdown.ts:63
-msgid "Replies"
-msgstr "Odpovědi"
+#~ msgid "Replies"
+#~ msgstr "Odpovědi"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Replies to participants"
@@ -13196,8 +13180,8 @@ msgid "Report generated"
 msgstr "Zpráva vygenerována"
 
 #: src/routes/admin/aiCostBreakdown.ts:80
-msgid "Report generation"
-msgstr "Generování zpráv"
+#~ msgid "Report generation"
+#~ msgstr "Generování zpráv"
 
 #: src/components/report/reportError.ts:19
 msgid "Report generation cancelled"
@@ -13276,8 +13260,6 @@ msgid "Report updated · {0}"
 msgstr "Zpráva aktualizována · {0}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:886
-#: src/routes/admin/aiCostBreakdown.ts:54
-#: src/routes/admin/aiCostBreakdown.ts:84
 msgid "Reports"
 msgstr "Reports"
 
@@ -13572,7 +13554,6 @@ msgstr "staženo pro tým dembrane"
 msgid "Retracting a note for the dembrane team"
 msgstr "Stahování poznámky pro tým dembrane"
 
-#: src/routes/admin/aiCostBreakdown.ts:132
 #: src/components/conversation/RetranscribeConversation.tsx:255
 msgid "Retranscribe"
 msgstr "Retranscribe"
@@ -15602,8 +15583,8 @@ msgid "Suggesting tag changes"
 msgstr "Navrhují se změny štítků"
 
 #: src/routes/admin/aiCostBreakdown.ts:64
-msgid "Suggestions"
-msgstr "Návrhy"
+#~ msgid "Suggestions"
+#~ msgstr "Návrhy"
 
 #: src/components/release/releaseHistory.ts:762
 msgid "Summaries adapt to the complexity of the conversation."
@@ -17186,8 +17167,8 @@ msgid "Title or participant"
 msgstr "Title or participant"
 
 #: src/routes/admin/aiCostBreakdown.ts:127
-msgid "Titles and tags"
-msgstr "Názvy a štítky"
+#~ msgid "Titles and tags"
+#~ msgstr "Názvy a štítky"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:277
 msgid "to"
@@ -17413,8 +17394,8 @@ msgid "Transcript retrieval and conversation summaries finish before dependent w
 msgstr "Načítání přepisů a shrnutí rozhovorů se dokončí dříve, než pokračují navazující úkoly."
 
 #: src/routes/admin/aiCostBreakdown.ts:115
-msgid "Transcription"
-msgstr "Přepis"
+#~ msgid "Transcription"
+#~ msgstr "Přepis"
 
 #: src/features/processes/copy.ts:11
 msgid "Transcription done"
@@ -17765,8 +17746,8 @@ msgid "Unknown time"
 msgstr "Neznámý čas"
 
 #: src/routes/admin/aiCostBreakdown.ts:150
-msgid "Unlabelled"
-msgstr "Bez označení"
+#~ msgid "Unlabelled"
+#~ msgstr "Bez označení"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:138
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:556
@@ -18321,11 +18302,6 @@ msgstr "verified artifacts"
 msgid "Verified artifacts"
 msgstr "Verified artifacts"
 
-#: src/routes/admin/aiCostBreakdown.ts:108
-#: src/components/project/PortalSettingsOverview.tsx:129
-msgid "Verify"
-msgstr "Verify"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:68
 msgid "participant.echo.verify"
@@ -18339,6 +18315,10 @@ msgstr "Verify"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:906
 msgid "dashboard.dembrane.verify.title"
+msgstr "Verify"
+
+#: src/components/project/PortalSettingsOverview.tsx:129
+msgid "Verify"
 msgstr "Verify"
 
 #: src/routes/auth/Login.tsx:582
@@ -18469,8 +18449,8 @@ msgstr "Změny hlasu se projeví při příští přípravě nebo aktualizaci v�
 
 #: src/routes/admin/aiCostBreakdown.ts:55
 #: src/routes/admin/aiCostBreakdown.ts:140
-msgid "Voice input"
-msgstr "Hlasový vstup"
+#~ msgid "Voice input"
+#~ msgstr "Hlasový vstup"
 
 #: src/components/voice/VoiceInputError.tsx:43
 #: src/components/chat/AgenticChatPanel.tsx:2294

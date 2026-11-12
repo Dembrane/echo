@@ -2323,8 +2323,6 @@ msgid "Analyse now"
 msgstr "Analyse now"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
-#: src/routes/admin/aiCostBreakdown.ts:46
-#: src/routes/admin/aiCostBreakdown.ts:102
 msgid "Analysis"
 msgstr "Analysis"
 
@@ -2337,8 +2335,8 @@ msgstr "Analysis | dembrane"
 #~ msgstr "Analysis Language"
 
 #: src/routes/admin/aiCostBreakdown.ts:98
-msgid "Analysis runs"
-msgstr "Analysis runs"
+#~ msgid "Analysis runs"
+#~ msgstr "Analysis runs"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 #: src/routes/project/report/ProjectReportRoute.tsx:1089
@@ -2769,8 +2767,6 @@ msgid "Assign"
 msgstr "Assign"
 
 #: src/routes/settings/UserSettingsRoute.tsx:119
-#: src/routes/admin/aiCostBreakdown.ts:47
-#: src/routes/admin/aiCostBreakdown.ts:78
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 msgid "Assistant"
 msgstr "Assistant"
@@ -2785,8 +2781,8 @@ msgid "Assistant memory"
 msgstr "Assistant memory"
 
 #: src/routes/admin/aiCostBreakdown.ts:71
-msgid "Assistant turns"
-msgstr "Assistant turns"
+#~ msgid "Assistant turns"
+#~ msgstr "Assistant turns"
 
 #: src/components/auth/PasswordRequirements.tsx:55
 msgid "At least 8 characters"
@@ -3450,8 +3446,6 @@ msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 #: src/routes/project/canvas/CanvasRoute.tsx:415
 #: src/routes/project/canvas/CanvasRoute.tsx:526
 #: src/routes/project/canvas/CanvasRoute.tsx:542
-#: src/routes/admin/aiCostBreakdown.ts:48
-#: src/routes/admin/aiCostBreakdown.ts:106
 msgid "Canvas"
 msgstr "Canvas"
 
@@ -3468,8 +3462,8 @@ msgid "Canvas settings"
 msgstr "Canvas settings"
 
 #: src/routes/admin/aiCostBreakdown.ts:105
-msgid "Canvas ticks"
-msgstr "Canvas ticks"
+#~ msgid "Canvas ticks"
+#~ msgstr "Canvas ticks"
 
 #: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
@@ -3629,8 +3623,6 @@ msgstr "Charged to accounts"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:691
 #: src/routes/project/chat/ProjectChatRoute.tsx:697
-#: src/routes/admin/aiCostBreakdown.ts:49
-#: src/routes/admin/aiCostBreakdown.ts:68
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:258
 #: src/features/sidebar/hooks/useSearchHits.ts:259
@@ -4437,8 +4429,8 @@ msgid "Conversation status includes upload progress."
 msgstr "Conversation status includes upload progress."
 
 #: src/routes/admin/aiCostBreakdown.ts:122
-msgid "Conversation summaries"
-msgstr "Conversation summaries"
+#~ msgid "Conversation summaries"
+#~ msgstr "Conversation summaries"
 
 #: src/components/release/releaseHistory.ts:185
 msgid "Conversation summaries no longer hang in the affected processing cases."
@@ -6473,15 +6465,14 @@ msgstr "Expires"
 msgid "Expiring soon"
 msgstr "Expiring soon"
 
-#: src/routes/admin/aiCostBreakdown.ts:112
-#: src/components/project/ProjectPortalEditor.tsx:749
-#: src/components/project/PortalSettingsOverview.tsx:126
-msgid "Explore"
-msgstr "Explore"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:111
 msgid "participant.echo.explore"
+msgstr "Explore"
+
+#: src/components/project/ProjectPortalEditor.tsx:749
+#: src/components/project/PortalSettingsOverview.tsx:126
+msgid "Explore"
 msgstr "Explore"
 
 #: src/components/release/releaseHistory.ts:670
@@ -6574,8 +6565,8 @@ msgstr "Extra participants"
 #~ msgstr "Fact check this claim"
 
 #: src/routes/admin/aiCostBreakdown.ts:88
-msgid "Fact checks"
-msgstr "Fact checks"
+#~ msgid "Fact checks"
+#~ msgstr "Fact checks"
 
 #: src/components/results/curate/ArgumentsTab.tsx:282
 msgid "Fact-check"
@@ -6914,12 +6905,12 @@ msgstr "Filter by name or id"
 #~ msgstr "Final"
 
 #: src/routes/admin/aiCostBreakdown.ts:118
-msgid "Final transcript"
-msgstr "Final transcript"
+#~ msgid "Final transcript"
+#~ msgstr "Final transcript"
 
 #: src/routes/admin/aiCostBreakdown.ts:117
-msgid "Finalize and summary"
-msgstr "Finalize and summary"
+#~ msgid "Finalize and summary"
+#~ msgstr "Finalize and summary"
 
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
@@ -6974,7 +6965,6 @@ msgstr "Finish conversation"
 msgid "Finished"
 msgstr "Finished"
 
-#: src/routes/admin/aiCostBreakdown.ts:116
 #: src/components/conversation/StatePill.tsx:29
 msgid "Finishing"
 msgstr "Finishing"
@@ -7025,8 +7015,8 @@ msgid "Follow source citations from chat answers."
 msgstr "Follow source citations from chat answers."
 
 #: src/routes/admin/aiCostBreakdown.ts:76
-msgid "Follow-up messages"
-msgstr "Follow-up messages"
+#~ msgid "Follow-up messages"
+#~ msgstr "Follow-up messages"
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:228
 msgid "Follow-up text"
@@ -7517,8 +7507,8 @@ msgid "Group by"
 msgstr "Group by"
 
 #: src/routes/admin/aiCostBreakdown.ts:87
-msgid "Groups"
-msgstr "Groups"
+#~ msgid "Groups"
+#~ msgstr "Groups"
 
 #: src/components/project/ProjectPortalEditor.tsx:1516
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
@@ -9237,8 +9227,6 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/routes/project/present/blockLabel.ts:6
-#: src/routes/admin/aiCostBreakdown.ts:50
-#: src/routes/admin/aiCostBreakdown.ts:89
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
 #: src/components/map/MapPage.tsx:677
 #: src/components/map/panels/MapSettingsMenu.tsx:405
@@ -9870,8 +9858,8 @@ msgstr "New projects no longer add dembrane as a default transcription term."
 #~ msgstr "New Report"
 
 #: src/routes/admin/aiCostBreakdown.ts:72
-msgid "New runs"
-msgstr "New runs"
+#~ msgid "New runs"
+#~ msgstr "New runs"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:642
 msgid "New tier"
@@ -11243,7 +11231,6 @@ msgstr "Original"
 msgid "Original language"
 msgstr "Original language"
 
-#: src/routes/admin/aiCostBreakdown.ts:51
 #: src/components/feedback/reasons.ts:27
 #: src/components/billing/BillingManager.tsx:515
 msgid "Other"
@@ -11862,7 +11849,6 @@ msgstr "Poor response"
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:95
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:406
-#: src/routes/admin/aiCostBreakdown.ts:96
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:141
 #: src/components/results/ResultsList.tsx:44
 #: src/components/results/curate/CurateTabs.tsx:11
@@ -11922,12 +11908,12 @@ msgid "Popcorn shows a room its own words while it is still talking: live slides
 msgstr "Popcorn shows a room its own words while it is still talking: live slides from this project's conversations, for a big screen. It is early, and you can turn it off again in the project settings."
 
 #: src/routes/admin/aiCostBreakdown.ts:92
-msgid "Popcorn ticks"
-msgstr "Popcorn ticks"
+#~ msgid "Popcorn ticks"
+#~ msgstr "Popcorn ticks"
 
 #: src/routes/admin/aiCostBreakdown.ts:91
-msgid "Popcorn translation"
-msgstr "Popcorn translation"
+#~ msgid "Popcorn translation"
+#~ msgstr "Popcorn translation"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:72
 #~ msgid "Popcorn window"
@@ -11938,8 +11924,8 @@ msgid "Popular"
 msgstr "Popular"
 
 #: src/routes/admin/aiCostBreakdown.ts:52
-msgid "Portal"
-msgstr "Portal"
+#~ msgid "Portal"
+#~ msgstr "Portal"
 
 #: src/components/project/ProjectPortalEditor.tsx:1187
 msgid "Portal content"
@@ -12751,8 +12737,6 @@ msgstr "Record another conversation"
 msgid "Record in every project"
 msgstr "Record in every project"
 
-#: src/routes/admin/aiCostBreakdown.ts:53
-#: src/routes/admin/aiCostBreakdown.ts:137
 #: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
 #: src/components/conversation/FunnelCanvas.tsx:352
@@ -13120,8 +13104,8 @@ msgid "Replay"
 msgstr "Replay"
 
 #: src/routes/admin/aiCostBreakdown.ts:63
-msgid "Replies"
-msgstr "Replies"
+#~ msgid "Replies"
+#~ msgstr "Replies"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Replies to participants"
@@ -13191,8 +13175,8 @@ msgid "Report generated"
 msgstr "Report generated"
 
 #: src/routes/admin/aiCostBreakdown.ts:80
-msgid "Report generation"
-msgstr "Report generation"
+#~ msgid "Report generation"
+#~ msgstr "Report generation"
 
 #: src/components/report/reportError.ts:19
 msgid "Report generation cancelled"
@@ -13271,8 +13255,6 @@ msgid "Report updated · {0}"
 msgstr "Report updated · {0}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:886
-#: src/routes/admin/aiCostBreakdown.ts:54
-#: src/routes/admin/aiCostBreakdown.ts:84
 msgid "Reports"
 msgstr "Reports"
 
@@ -13567,7 +13549,6 @@ msgstr "retracted for the dembrane team"
 msgid "Retracting a note for the dembrane team"
 msgstr "Retracting a note for the dembrane team"
 
-#: src/routes/admin/aiCostBreakdown.ts:132
 #: src/components/conversation/RetranscribeConversation.tsx:255
 msgid "Retranscribe"
 msgstr "Retranscribe"
@@ -15597,8 +15578,8 @@ msgid "Suggesting tag changes"
 msgstr "Suggesting tag changes"
 
 #: src/routes/admin/aiCostBreakdown.ts:64
-msgid "Suggestions"
-msgstr "Suggestions"
+#~ msgid "Suggestions"
+#~ msgstr "Suggestions"
 
 #: src/components/release/releaseHistory.ts:762
 msgid "Summaries adapt to the complexity of the conversation."
@@ -17181,8 +17162,8 @@ msgid "Title or participant"
 msgstr "Title or participant"
 
 #: src/routes/admin/aiCostBreakdown.ts:127
-msgid "Titles and tags"
-msgstr "Titles and tags"
+#~ msgid "Titles and tags"
+#~ msgstr "Titles and tags"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:277
 msgid "to"
@@ -17408,8 +17389,8 @@ msgid "Transcript retrieval and conversation summaries finish before dependent w
 msgstr "Transcript retrieval and conversation summaries finish before dependent work continues."
 
 #: src/routes/admin/aiCostBreakdown.ts:115
-msgid "Transcription"
-msgstr "Transcription"
+#~ msgid "Transcription"
+#~ msgstr "Transcription"
 
 #: src/features/processes/copy.ts:11
 msgid "Transcription done"
@@ -17760,8 +17741,8 @@ msgid "Unknown time"
 msgstr "Unknown time"
 
 #: src/routes/admin/aiCostBreakdown.ts:150
-msgid "Unlabelled"
-msgstr "Unlabelled"
+#~ msgid "Unlabelled"
+#~ msgstr "Unlabelled"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:138
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:556
@@ -18316,11 +18297,6 @@ msgstr "verified artifacts"
 msgid "Verified artifacts"
 msgstr "Verified artifacts"
 
-#: src/routes/admin/aiCostBreakdown.ts:108
-#: src/components/project/PortalSettingsOverview.tsx:129
-msgid "Verify"
-msgstr "Verify"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:68
 msgid "participant.echo.verify"
@@ -18334,6 +18310,10 @@ msgstr "Verify"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:906
 msgid "dashboard.dembrane.verify.title"
+msgstr "Verify"
+
+#: src/components/project/PortalSettingsOverview.tsx:129
+msgid "Verify"
 msgstr "Verify"
 
 #: src/routes/auth/Login.tsx:582
@@ -18464,8 +18444,8 @@ msgstr "Voice changes apply the next time you prepare or update Popcorn results.
 
 #: src/routes/admin/aiCostBreakdown.ts:55
 #: src/routes/admin/aiCostBreakdown.ts:140
-msgid "Voice input"
-msgstr "Voice input"
+#~ msgid "Voice input"
+#~ msgstr "Voice input"
 
 #: src/components/voice/VoiceInputError.tsx:43
 #: src/components/chat/AgenticChatPanel.tsx:2294

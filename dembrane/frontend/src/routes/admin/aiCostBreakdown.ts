@@ -41,115 +41,6 @@ export type FeatureGroup =
 	| "voice"
 	| "other";
 
-export const featureGroupLabel = (group: FeatureGroup): string =>
-	({
-		analysis: t`Analysis`,
-		assistant: t`Assistant`,
-		canvas: t`Canvas`,
-		chat: t`Chat`,
-		map: t`Map`,
-		other: t`Other`,
-		portal: t`Portal`,
-		recording: t`Recording`,
-		reports: t`Reports`,
-		voice: t`Voice input`,
-	})[group];
-
-type Rule = [RegExp, FeatureGroup, () => string];
-
-// Route operations are "METHOD /route" (correlation middleware); jobs and workflows use their name.
-// First match wins: specific operations before their group's catch-all.
-const RULES: Rule[] = [
-	[/^POST \/api\/chats\/:chat_id$/, "chat", () => t`Replies`],
-	[/^\w+ \/api\/chats\/:chat_id\/suggestions$/, "chat", () => t`Suggestions`],
-	[
-		/^\w+ \/api\/(chats|v2\/bff\/(chats|chat-messages))(\/|$)/,
-		"chat",
-		() => t`Chat`,
-	],
-
-	[/^agentic\.turn(\.|$)/, "assistant", () => t`Assistant turns`],
-	[/^POST \/api\/agentic\/runs$/, "assistant", () => t`New runs`],
-	[
-		/^POST \/api\/agentic\/runs\/:run_id\/messages$/,
-		"assistant",
-		() => t`Follow-up messages`,
-	],
-	[/^(agentic\.|\w+ \/api\/agentic\/)/, "assistant", () => t`Assistant`],
-
-	[/^reports\.generate$/, "reports", () => t`Report generation`],
-	[
-		/^(reports\.|\w+ \/api\/(projects\/:project_id\/(reports|create-report)|v2\/bff\/reports))/,
-		"reports",
-		() => t`Reports`,
-	],
-
-	[/^map\.group$/, "map", () => t`Groups`],
-	[/^map\.fact_check$/, "map", () => t`Fact checks`],
-	[/^(map\.|\w+ \/api\/v2\/bff\/map(\/|$))/, "map", () => t`Map`],
-
-	[/^popcorn\.tick\.translation$/, "analysis", () => t`Popcorn translation`],
-	[/^popcorn\.tick\./, "analysis", () => t`Popcorn ticks`],
-	[
-		/^(popcorn\.|\w+ \/api\/v2\/(bff\/)?popcorn(\/|$))/,
-		"analysis",
-		() => t`Popcorn`,
-	],
-	[/^analysis\.run$/, "analysis", () => t`Analysis runs`],
-	[
-		/^(analysis\.|\w+ \/api\/v2\/bff\/analysis(\/|$))/,
-		"analysis",
-		() => t`Analysis`,
-	],
-
-	[/^canvas\.tick$/, "canvas", () => t`Canvas ticks`],
-	[/^(canvas\.|\w+ \/api\/v2\/bff\/canvases(\/|$))/, "canvas", () => t`Canvas`],
-
-	[/^(verify(\.|$)|\w+ \/api\/verify\/)/, "portal", () => t`Verify`],
-	[
-		/^POST \/api\/conversations\/:conversation_id\/get-reply$/,
-		"portal",
-		() => t`Explore`,
-	],
-
-	[/^conversations\.chunk$/, "recording", () => t`Transcription`],
-	[/^conversations\.finish$/, "recording", () => t`Finishing`],
-	[/^conversations\.finalize$/, "recording", () => t`Finalize and summary`],
-	[/^conversations\.final-transcript$/, "recording", () => t`Final transcript`],
-	[
-		/^(conversations\.summarize|POST \/api\/conversations\/:conversation_id\/summarize)$/,
-		"recording",
-		() => t`Conversation summaries`,
-	],
-	[
-		/^POST \/api\/conversations\/:conversation_id\/generate-title$/,
-		"recording",
-		() => t`Titles and tags`,
-	],
-	[
-		/^POST \/api\/conversations\/:conversation_id\/retranscribe$/,
-		"recording",
-		() => t`Retranscribe`,
-	],
-	[
-		/^(conversations\.|\w+ \/api\/(conversations|participant)\/)/,
-		"recording",
-		() => t`Recording`,
-	],
-
-	[/^POST \/api\/stateless\/transcribe$/, "voice", () => t`Voice input`],
-];
-
-/** The feature group and plain name of a recorded operation; unknown ones keep their raw key. */
-export function classifyOperation(operation: string): {
-	group: FeatureGroup;
-	label: string;
-} {
-	for (const [pattern, group, label] of RULES)
-		if (pattern.test(operation)) return { group, label: label() };
-	return { group: "other", label: operation || t`Unlabelled` };
-}
-
 export interface OperationCost {
 	operation: string;
 	label: string;
@@ -169,18 +60,24 @@ export interface GroupCost {
 
 /** An account's operations rolled into feature groups; shares of the account's total. */
 export function groupFeatures(
-	features: { operation: string; cost_micro_eur: number; calls?: number }[],
+	features: {
+		operation: string;
+		group: FeatureGroup;
+		group_label: string;
+		label: string;
+		cost_micro_eur: number;
+		calls?: number;
+	}[],
 ): GroupCost[] {
 	const total = features.reduce((s, f) => s + f.cost_micro_eur, 0);
 	const share = (cost: number) => (total > 0 ? cost / total : 0);
 	const groups = new Map<FeatureGroup, GroupCost>();
 	for (const f of features) {
-		const { group, label } = classifyOperation(f.operation);
-		const g = groups.get(group) ?? {
+		const g = groups.get(f.group) ?? {
 			calls: 0,
 			cost_micro_eur: 0,
-			group,
-			label: featureGroupLabel(group),
+			group: f.group,
+			label: f.group_label,
 			operations: [],
 			share: 0,
 		};
@@ -190,11 +87,11 @@ export function groupFeatures(
 		g.operations.push({
 			calls,
 			cost_micro_eur: f.cost_micro_eur,
-			label,
+			label: f.label,
 			operation: f.operation,
 			share: share(f.cost_micro_eur),
 		});
-		groups.set(group, g);
+		groups.set(f.group, g);
 	}
 	const byCost = (
 		a: { cost_micro_eur: number },

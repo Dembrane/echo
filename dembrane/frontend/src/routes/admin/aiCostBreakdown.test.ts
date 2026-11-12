@@ -1,7 +1,6 @@
 import { i18n } from "@lingui/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
-	classifyOperation,
 	formatAiCost,
 	formatShare,
 	groupFeatures,
@@ -50,111 +49,39 @@ describe("formatShare", () => {
 	});
 });
 
-describe("classifyOperation", () => {
-	const cases: [string, string, string][] = [
-		// Chat
-		["POST /api/chats/:chat_id", "chat", "Replies"],
-		["GET /api/chats/:chat_id/suggestions", "chat", "Suggestions"],
-		["POST /api/chats/:chat_id/suggestions", "chat", "Suggestions"],
-		["POST /api/chats/:chat_id/add-context", "chat", "Chat"],
-		["POST /api/v2/bff/chats", "chat", "Chat"],
-		// Assistant
-		["agentic.turn.run", "assistant", "Assistant turns"],
-		["agentic.turn", "assistant", "Assistant turns"],
-		["POST /api/agentic/runs", "assistant", "New runs"],
-		[
-			"POST /api/agentic/runs/:run_id/messages",
-			"assistant",
-			"Follow-up messages",
-		],
-		// Reports
-		["reports.generate", "reports", "Report generation"],
-		["POST /api/projects/:project_id/create-report", "reports", "Reports"],
-		// Map
-		["map.group", "map", "Groups"],
-		["map.fact_check", "map", "Fact checks"],
-		["POST /api/v2/bff/map/:project_id/generate", "map", "Map"],
-		// Analysis
-		["popcorn.tick.manual", "analysis", "Popcorn ticks"],
-		["popcorn.tick.scheduled", "analysis", "Popcorn ticks"],
-		["popcorn.tick.translation", "analysis", "Popcorn translation"],
-		["POST /api/v2/bff/popcorn/loops", "analysis", "Popcorn"],
-		["analysis.run", "analysis", "Analysis runs"],
-		["POST /api/v2/bff/analysis/runs", "analysis", "Analysis"],
-		// Canvas
-		["canvas.tick", "canvas", "Canvas ticks"],
-		["POST /api/v2/bff/canvases/:id/preview", "canvas", "Canvas"],
-		// Portal
-		["POST /api/verify/generate", "portal", "Verify"],
-		["POST /api/conversations/:conversation_id/get-reply", "portal", "Explore"],
-		// Recording
-		["conversations.chunk", "recording", "Transcription"],
-		["conversations.finish", "recording", "Finishing"],
-		["conversations.finalize", "recording", "Finalize and summary"],
-		["conversations.final-transcript", "recording", "Final transcript"],
-		["conversations.summarize", "recording", "Conversation summaries"],
-		[
-			"POST /api/conversations/:conversation_id/summarize",
-			"recording",
-			"Conversation summaries",
-		],
-		[
-			"POST /api/conversations/:conversation_id/generate-title",
-			"recording",
-			"Titles and tags",
-		],
-		[
-			"POST /api/conversations/:conversation_id/retranscribe",
-			"recording",
-			"Retranscribe",
-		],
-		[
-			"POST /api/participant/conversations/:conversation_id/upload-text",
-			"recording",
-			"Recording",
-		],
-		// Voice input
-		["POST /api/stateless/transcribe", "voice", "Voice input"],
-	];
-
-	it.each(cases)("%s is %s: %s", (operation, group, label) => {
-		expect(classifyOperation(operation)).toEqual({ group, label });
-	});
-
-	it("puts anything unknown in Other under its raw key", () => {
-		expect(classifyOperation("samples.seed-best-practices")).toEqual({
-			group: "other",
-			label: "samples.seed-best-practices",
-		});
-		expect(classifyOperation("GET /api/v2/me")).toEqual({
-			group: "other",
-			label: "GET /api/v2/me",
-		});
-		expect(classifyOperation("")).toEqual({
-			group: "other",
-			label: "Unlabelled",
-		});
-	});
-
-	it("matches a route by its path, not a lookalike", () => {
-		expect(classifyOperation("POST /api/chatsx").group).toBe("other");
-		expect(classifyOperation("mapping.thing").group).toBe("other");
-	});
-});
-
 describe("groupFeatures", () => {
 	it("groups operations by feature, with shares, most expensive first", () => {
 		const groups = groupFeatures([
-			{ calls: 10, cost_micro_eur: 600_000, operation: "conversations.chunk" },
+			{
+				calls: 10,
+				cost_micro_eur: 600_000,
+				group: "recording",
+				group_label: "Recording",
+				label: "Transcription",
+				operation: "conversations.chunk",
+			},
 			{
 				calls: 3,
 				cost_micro_eur: 100_000,
+				group: "chat",
+				group_label: "Chat",
+				label: "Replies",
 				operation: "POST /api/chats/:chat_id",
 			},
-			{ calls: 2, cost_micro_eur: 50_000, operation: "conversations.finalize" },
+			{
+				calls: 2,
+				cost_micro_eur: 50_000,
+				group: "recording",
+				group_label: "Recording",
+				label: "Finalize and summary",
+				operation: "conversations.finalize",
+			},
 			{
 				calls: 5,
 				cost_micro_eur: 250_000,
+				group: "chat",
+				group_label: "Chat",
+				label: "Suggestions",
 				operation: "GET /api/chats/:chat_id/suggestions",
 			},
 		]);
@@ -173,8 +100,33 @@ describe("groupFeatures", () => {
 		expect(groups[1]?.operations[0]?.share).toBeCloseTo(0.25);
 	});
 
+	it("shows the names the API sent, without classifying", () => {
+		const [g] = groupFeatures([
+			{
+				cost_micro_eur: 10,
+				group: "map",
+				group_label: "Kaart",
+				label: "Groepen",
+				operation: "GET /api/chats/:chat_id/suggestions",
+			},
+		]);
+		expect([g?.group, g?.label, g?.operations[0]?.label]).toEqual([
+			"map",
+			"Kaart",
+			"Groepen",
+		]);
+	});
+
 	it("keeps calls optional and a zero total at zero shares", () => {
-		const groups = groupFeatures([{ cost_micro_eur: 0, operation: "" }]);
+		const groups = groupFeatures([
+			{
+				cost_micro_eur: 0,
+				group: "other",
+				group_label: "Other",
+				label: "Unlabelled",
+				operation: "",
+			},
+		]);
 		expect(groups).toEqual([
 			{
 				calls: 0,
