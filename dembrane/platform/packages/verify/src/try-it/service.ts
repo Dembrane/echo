@@ -1,4 +1,4 @@
-import { requireAiBudget } from "@dembrane/allowance";
+import { requireAiRequest } from "@dembrane/allowance";
 import { type ReplyProject, sampleReply } from "@dembrane/conversations";
 import { BadRequestError, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
@@ -117,8 +117,8 @@ export async function tryPortalSettings(
 ): Promise<TryItResponse> {
   await requireUpdate(ctx, who, projectId);
   const project = await projectOr404(ctx, projectId);
-  await ctx.d.limiter.checkUser(TRY_IT_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudget(ctx.d.db, projectId, ctx.d.now());
+  const payer = { ref: "project", id: projectId } as const;
+  await requireAiRequest(ctx.d, { limit: TRY_IT_LIMIT, userId: who.directusUserId, payer });
 
   const sample = transcriptOf({ kind: body.source }, body.language);
   const run = async (): Promise<{ key: string; text: string }> => {
@@ -153,7 +153,7 @@ export async function tryPortalSettings(
 
   let result: { key: string; text: string };
   try {
-    result = await withPayer({ ref: "project", id: projectId }, run);
+    result = await withPayer(payer, run);
     if (!result.text.trim()) throw new Error("empty result");
   } catch (err) {
     if (err instanceof BadRequestError) throw err;

@@ -1,5 +1,5 @@
 import type { Access } from "@dembrane/access";
-import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
+import { type requireAiBudgetForWorkspace, requireAiRequest } from "@dembrane/allowance";
 import { UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
 import { type Completer, modelErrorShape } from "@dembrane/llm";
@@ -90,8 +90,11 @@ export async function suggestProjectSetup(
     "Not allowed",
   );
   const template = projectTemplate(body.template_key);
-  await d.limiter.checkUser(SUGGESTIONS_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudgetForWorkspace(d.db, workspaceId, d.now());
+  await requireAiRequest(d, {
+    limit: SUGGESTIONS_LIMIT,
+    userId: who.directusUserId,
+    payer: { ref: "workspace", id: workspaceId },
+  });
 
   const existing = parseKeyTerms(body.existing_key_terms);
   const notes: SuggestionNote[] = [];

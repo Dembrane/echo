@@ -1,4 +1,4 @@
-import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
+import { requireAiRequest } from "@dembrane/allowance";
 import { BadRequestError, contextForPrompt, cutAtBoundary, UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
 import { modelErrorShape } from "@dembrane/llm";
@@ -117,9 +117,9 @@ export async function digestProjectSetup(
         params: { field: `sources[${i}].${field}` },
       });
   });
-  await d.limiter.checkUser(DIGEST_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudgetForWorkspace(d.db, workspaceId, d.now());
-  return withPayer({ ref: "workspace", id: workspaceId } as const, () => digestMaterial(d, body));
+  const payer = { ref: "workspace", id: workspaceId } as const;
+  await requireAiRequest(d, { limit: DIGEST_LIMIT, userId: who.directusUserId, payer });
+  return withPayer(payer, () => digestMaterial(d, body));
 }
 
 /**

@@ -49,9 +49,9 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **access** (in 25, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, webhooks, billing, projects and 21 more. Uses db, core.
 - **queue** (in 21, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by metering, webhooks, billing, projects and 17 more. Uses db, observability.
 - **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by webhooks, billing, projects, analysis and 15 more. Uses http, core.
+- **ratelimit** (in 18, out 2): Rate limits counted in Postgres or memory. Used by allowance, projects, analysis, conversations and 14 more. Uses db, core.
 - **llm** (in 17, out 1): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, metering, projects and 13 more. Uses observability.
-- **ratelimit** (in 17, out 2): Rate limits counted in Postgres or memory. Used by projects, analysis, conversations, account and 13 more. Uses db, core.
-- **allowance** (in 15, out 3): The free tier: who is free, the limits, and what each account has used this month. Used by metering, billing, projects, analysis and 11 more. Uses db, core, observability.
+- **allowance** (in 15, out 4): The free tier: who is free, the limits, and what each account has used this month. Used by metering, billing, projects, analysis and 11 more. Uses ratelimit, db, core, observability.
 - **config** (in 11, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, samples, account, popcorn and 7 more. Uses nothing.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by projects, analysis, conversations, popcorn and 6 more. Uses core, observability.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, tenancy, accounts and 5 more. Uses nothing.
