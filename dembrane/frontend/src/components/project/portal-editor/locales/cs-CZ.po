@@ -176,7 +176,7 @@ msgstr "Smazat téma"
 msgid "dembrane event invitation"
 msgstr "pozvánka na akci dembrane"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:33
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:32
 msgid "Draft to approve"
 msgstr "Koncept ke schválení"
 
@@ -231,7 +231,7 @@ msgstr "Error loading project"
 msgid "Example"
 msgstr "Příklad"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:150
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:149
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Příklad: vymyšlený rozhovor, aby byl vidět tvar. Skutečné odpovědi vznikají z toho, co účastníci řeknou."
 
@@ -244,7 +244,7 @@ msgstr "Explore"
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Explore může zahrnout, co řekly jiné skupiny v tomto projektu. Vypnuto: dívá se jen na tento rozhovor."
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:29
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:28
 msgid "Explore reply"
 msgstr "Odpověď Explore"
 
@@ -310,7 +310,7 @@ msgstr "Právní základ"
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:158
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:157
 msgid "Made by dembrane from a sample conversation, with your settings."
 msgstr "Vytvořeno dembrane z ukázkového rozhovoru, s vaším nastavením."
 
@@ -319,7 +319,7 @@ msgstr "Vytvořeno dembrane z ukázkového rozhovoru, s vaším nastavením."
 msgid "Mode"
 msgstr "Mode"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:25
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:24
 msgid "Name and tags"
 msgstr "Jméno a štítky"
 
@@ -421,11 +421,11 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Účastníci to čtou nad polem, například „Název nebo číslo stolu“. Nech prázdné pro výchozí text."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:185
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:184
 msgid "Portal preview: {0}"
 msgstr "Náhled portálu: {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:130
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:129
 #: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:366
 msgid "Preview"
 msgstr "Náhled"
@@ -434,7 +434,7 @@ msgstr "Náhled"
 msgid "Privacy"
 msgstr "Soukromí"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:23
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:22
 msgid "Privacy card"
 msgstr "Karta soukromí"
 
@@ -442,7 +442,7 @@ msgstr "Karta soukromí"
 msgid "Project brief"
 msgstr "Zadání projektu"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:27
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:26
 msgid "Recording screen"
 msgstr "Obrazovka nahrávání"
 
@@ -472,7 +472,7 @@ msgstr "Vyžaduje zapnutou možnost „Požádat o e-mail?“"
 msgid "Running your settings on a sample conversation…"
 msgstr "Zkoušíme vaše nastavení na ukázkovém rozhovoru…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:134
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:133
 msgid "Screen"
 msgstr "Obrazovka"
 
@@ -523,7 +523,7 @@ msgstr "Zobrazeno"
 msgid "Spanish"
 msgstr "Spanish"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:19
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:18
 msgid "Start screen"
 msgstr "Úvodní obrazovka"
 
@@ -538,7 +538,7 @@ msgstr "Tags"
 #~ msgid "Thank you for participating!"
 #~ msgstr "Thank you for participating!"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:35
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:34
 msgid "Thank you page"
 msgstr "Děkovná stránka"
 
@@ -610,7 +610,7 @@ msgid "portal.anonymization.disable.warning"
 msgstr "Turning off anonymization while recordings are ongoing may have unintended consequences. Active conversations will also be affected mid-recording. Please use this with caution."
 
 #: src/components/project/portal-editor/sections/welcome.tsx:169
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:21
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:20
 msgid "Tutorial cards"
 msgstr "Karty návodu"
 
@@ -626,7 +626,7 @@ msgstr "Verify"
 
 #: src/components/project/portal-editor/sections/verify.tsx:189
 #: src/components/project/portal-editor/sections/verify.tsx:441
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:31
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:30
 msgid "Verify topics"
 msgstr "Ověřit témata"
 
@@ -642,7 +642,7 @@ msgstr "Webhooks are not enabled for this environment."
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:144
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Co účastníci uvidí, i s vašimi změnami, ještě než se uloží."
 

@@ -176,7 +176,7 @@ msgstr "Supprimer le sujet"
 msgid "dembrane event invitation"
 msgstr "invitation événement dembrane"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:33
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:32
 msgid "Draft to approve"
 msgstr "Brouillon à approuver"
 
@@ -231,7 +231,7 @@ msgstr "Erreur lors du chargement du projet"
 msgid "Example"
 msgstr "Exemple"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:150
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:149
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Exemple : une conversation inventée, pour montrer la forme. Les vraies réponses viennent de ce que disent les participants."
 
@@ -244,7 +244,7 @@ msgstr "Explorer"
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Explorer peut tenir compte de ce que d'autres groupes de ce projet ont dit. Désactivé : il ne regarde que cette conversation."
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:29
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:28
 msgid "Explore reply"
 msgstr "Réponse d'Explorer"
 
@@ -310,7 +310,7 @@ msgstr "Base juridique"
 msgid "Loading verify topics…"
 msgstr "Chargement des sujets de vérification…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:158
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:157
 msgid "Made by dembrane from a sample conversation, with your settings."
 msgstr "Fait par dembrane à partir d'une conversation d'exemple, avec vos réglages."
 
@@ -319,7 +319,7 @@ msgstr "Fait par dembrane à partir d'une conversation d'exemple, avec vos régl
 msgid "Mode"
 msgstr "Mode"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:25
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:24
 msgid "Name and tags"
 msgstr "Nom et étiquettes"
 
@@ -421,11 +421,11 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Les participants lisent ceci au-dessus du champ, par exemple « Nom ou numéro de la table ». Laisse vide pour le texte par défaut."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:185
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:184
 msgid "Portal preview: {0}"
 msgstr "Aperçu du portail : {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:130
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:129
 #: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:366
 msgid "Preview"
 msgstr "Aperçu"
@@ -434,7 +434,7 @@ msgstr "Aperçu"
 msgid "Privacy"
 msgstr "Confidentialité"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:23
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:22
 msgid "Privacy card"
 msgstr "Carte de confidentialité"
 
@@ -442,7 +442,7 @@ msgstr "Carte de confidentialité"
 msgid "Project brief"
 msgstr "Brief du projet"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:27
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:26
 msgid "Recording screen"
 msgstr "Écran d'enregistrement"
 
@@ -472,7 +472,7 @@ msgstr "Nécessite que « Demander l'e-mail ? » soit activé"
 msgid "Running your settings on a sample conversation…"
 msgstr "Vos réglages s'appliquent à une conversation d'exemple…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:134
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:133
 msgid "Screen"
 msgstr "Écran"
 
@@ -523,7 +523,7 @@ msgstr "Affichée"
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:19
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:18
 msgid "Start screen"
 msgstr "Écran d'accueil"
 
@@ -538,7 +538,7 @@ msgstr "Étiquettes"
 #~ msgid "Thank you for participating!"
 #~ msgstr "Merci pour votre participation !"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:35
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:34
 msgid "Thank you page"
 msgstr "Page de remerciement"
 
@@ -610,7 +610,7 @@ msgid "portal.anonymization.disable.warning"
 msgstr "La désactivation de l'anonymisation pendant les enregistrements en cours peut avoir des conséquences inattendues. Les conversations actives seront également affectées en cours d'enregistrement. Veuillez utiliser cette option avec prudence."
 
 #: src/components/project/portal-editor/sections/welcome.tsx:169
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:21
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:20
 msgid "Tutorial cards"
 msgstr "Cartes du tutoriel"
 
@@ -626,7 +626,7 @@ msgstr "Vérifier"
 
 #: src/components/project/portal-editor/sections/verify.tsx:189
 #: src/components/project/portal-editor/sections/verify.tsx:441
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:31
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:30
 msgid "Verify topics"
 msgstr "Vérifier les sujets"
 
@@ -642,7 +642,7 @@ msgstr "Les webhooks ne sont pas activés pour cet environnement."
 msgid "Welcome"
 msgstr "Bienvenue"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:144
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Ce que voient les participants, avec vos changements, avant même qu'ils soient enregistrés."
 

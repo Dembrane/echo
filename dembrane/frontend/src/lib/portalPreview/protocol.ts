@@ -12,11 +12,6 @@
 export const PREVIEW_MESSAGE = "dembrane:portal-preview";
 export const PREVIEW_READY = "dembrane:portal-preview-ready";
 export const PREVIEW_VERSION = 2;
-/**
- * The name of the dashboard's preview frame. The portal starts its preview mode for any page
- * loaded under this name inside a frame, so a page the frame were sent to stays locked down.
- */
-export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
 
 /** The participant screens the preview can show. */
 export const PREVIEW_SCREENS = [

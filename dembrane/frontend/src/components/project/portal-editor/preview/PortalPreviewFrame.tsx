@@ -2,11 +2,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, NativeSelect, Stack, Text, Title } from "@mantine/core";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { PARTICIPANT_BASE_URL } from "@/config";
+import { PARTICIPANT_BASE_URL, PREVIEW_FRAME_NAME } from "@/config";
 import {
 	isReadyMessage,
 	originOf,
-	PREVIEW_FRAME_NAME,
 	type PreviewMessage,
 	type PreviewScreen,
 } from "@/lib/portalPreview/protocol";

@@ -176,7 +176,7 @@ msgstr "Видалити тему"
 msgid "dembrane event invitation"
 msgstr "запрошення на подію dembrane"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:33
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:32
 msgid "Draft to approve"
 msgstr "Чернетка для схвалення"
 
@@ -231,7 +231,7 @@ msgstr "Error loading project"
 msgid "Example"
 msgstr "Приклад"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:150
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:149
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Приклад: вигадана розмова, щоб показати форму. Справжні відповіді будуються з того, що кажуть учасники."
 
@@ -244,7 +244,7 @@ msgstr "Explore"
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Explore може враховувати, що сказали інші групи в цьому проєкті. Вимкнено: лише ця розмова."
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:29
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:28
 msgid "Explore reply"
 msgstr "Відповідь Explore"
 
@@ -310,7 +310,7 @@ msgstr "Правова підстава"
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:158
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:157
 msgid "Made by dembrane from a sample conversation, with your settings."
 msgstr "Зроблено dembrane з прикладу розмови, з вашими налаштуваннями."
 
@@ -319,7 +319,7 @@ msgstr "Зроблено dembrane з прикладу розмови, з ваш�
 msgid "Mode"
 msgstr "Mode"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:25
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:24
 msgid "Name and tags"
 msgstr "Ім'я та теги"
 
@@ -421,11 +421,11 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Учасники бачать це над полем, наприклад «Назва або номер столу». Залиш порожнім для типового тексту."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:185
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:184
 msgid "Portal preview: {0}"
 msgstr "Попередній перегляд порталу: {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:130
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:129
 #: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:366
 msgid "Preview"
 msgstr "Попередній перегляд"
@@ -434,7 +434,7 @@ msgstr "Попередній перегляд"
 msgid "Privacy"
 msgstr "Конфіденційність"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:23
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:22
 msgid "Privacy card"
 msgstr "Картка конфіденційності"
 
@@ -442,7 +442,7 @@ msgstr "Картка конфіденційності"
 msgid "Project brief"
 msgstr "Короткий опис проєкту"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:27
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:26
 msgid "Recording screen"
 msgstr "Екран запису"
 
@@ -472,7 +472,7 @@ msgstr "Потрібно ввімкнути «Запитувати електр�
 msgid "Running your settings on a sample conversation…"
 msgstr "Запускаємо ваші налаштування на прикладі розмови…"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:134
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:133
 msgid "Screen"
 msgstr "Екран"
 
@@ -523,7 +523,7 @@ msgstr "Показано"
 msgid "Spanish"
 msgstr "Spanish"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:19
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:18
 msgid "Start screen"
 msgstr "Стартовий екран"
 
@@ -538,7 +538,7 @@ msgstr "Tags"
 #~ msgid "Thank you for participating!"
 #~ msgstr "Thank you for participating!"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:35
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:34
 msgid "Thank you page"
 msgstr "Сторінка подяки"
 
@@ -610,7 +610,7 @@ msgid "portal.anonymization.disable.warning"
 msgstr "Turning off anonymization while recordings are ongoing may have unintended consequences. Active conversations will also be affected mid-recording. Please use this with caution."
 
 #: src/components/project/portal-editor/sections/welcome.tsx:169
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:21
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:20
 msgid "Tutorial cards"
 msgstr "Картки інструкції"
 
@@ -626,7 +626,7 @@ msgstr "Verify"
 
 #: src/components/project/portal-editor/sections/verify.tsx:189
 #: src/components/project/portal-editor/sections/verify.tsx:441
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:31
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:30
 msgid "Verify topics"
 msgstr "Перевірити теми"
 
@@ -642,7 +642,7 @@ msgstr "Вебхуки не ввімкнено для цього середов�
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:144
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Що бачать учасники, з вашими змінами, ще до збереження."
 

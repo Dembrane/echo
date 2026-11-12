@@ -11,8 +11,6 @@
 // stray hosts can never capture into prod analytics or mutate prod data.
 // ---------------------------------------------------------------------------
 
-import { PREVIEW_FRAME_NAME } from "./lib/portalPreview/protocol";
-
 export type AppEnvironment = "production" | "staging" | "testing" | "local";
 
 // Deployments on the platform's web server (dembrane/platform/apps/web) inject these
@@ -115,6 +113,13 @@ export const USE_PARTICIPANT_ROUTER = RUNTIME
 			globalThis.window?.location.hostname.startsWith("portal.") ||
 				globalThis.window?.location.port === "5174",
 		);
+
+/**
+ * The name of the dashboard's portal preview frame (ECHO-1062). The portal starts its
+ * preview mode for any page loaded under this name inside a frame, so a page the frame were
+ * sent to stays locked down. index.html names it too, to skip Tally's embed there.
+ */
+export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
 
 /**
  * The portal drawn inside the dashboard's portal editor (ECHO-1060): the portal's own
