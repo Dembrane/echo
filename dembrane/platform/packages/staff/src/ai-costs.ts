@@ -1,5 +1,6 @@
 import { AI_SPEND_KEY, isFreeTier, monthStart, periodStart } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
+import { classifyOperation, type FeatureGroup } from "@dembrane/metering";
 import { sql } from "drizzle-orm";
 
 export interface AiCostAccount {
@@ -16,7 +17,14 @@ export interface AiCostAccount {
   override_until: string | null;
   // The account is soft-deleted (deleted_at set).
   deleted: boolean;
-  by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+  by_feature: {
+    operation: string;
+    group: FeatureGroup;
+    group_label: string;
+    label: string;
+    cost_micro_eur: number;
+    calls: number;
+  }[];
   by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
 }
 
@@ -208,6 +216,7 @@ export async function aiCosts(
       deleted: info.deleted === true,
       by_feature: desc(a.features, (operation, s) => ({
         operation,
+        ...classifyOperation(operation),
         cost_micro_eur: s.cost,
         calls: s.calls,
       })),
