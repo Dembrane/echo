@@ -1,8 +1,12 @@
-# RFC: The participant portal's flow as a static plan
+# RFC 0002: The participant portal's flow as a static plan
 
-Status: draft (not filed as an issue)
-Builds on: `refactor/portal-cleanup` (#1259); `SPEC-design-system.md` and ADRs 0001–0004 on `feat/design-system`
-Related: `patcon/dembrane-prototypes` → `examples/dembrane/2026-10-23-dembrane-theme`
+| | |
+|---|---|
+| **Status** | Draft |
+| **Author** | Patrick Connolly |
+| **Created** | 2026-11-12 |
+| **Builds on** | `refactor/portal-cleanup` (#1259); [RFC 0001](0001-dembrane-ui.md) (`@dembrane/ui`), its [spec](../specs/design-system.md) and [ADRs 0001–0004](../decisions/README.md) |
+| **Related** | `patcon/dembrane-prototypes` → `examples/dembrane/2026-10-23-dembrane-theme` |
 
 ## Summary
 

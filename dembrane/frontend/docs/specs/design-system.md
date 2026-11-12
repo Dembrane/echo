@@ -1,6 +1,7 @@
 # Spec: `@dembrane/ui`, the design system and component catalog
 
 Status: **reviewed. The open questions were settled in an interview on 2026-11-10.**
+Proposed by [RFC 0001](../rfcs/0001-dembrane-ui.md). The decisions behind it are [ADRs 0001–0004](../decisions/README.md).
 Modelled on [Kumo](https://kumo-ui.com/) (`@cloudflare/kumo`), but keeping
 Mantine as the engine.
 
@@ -59,10 +60,10 @@ component APIs.
 | Portal | Portal components live in the package. The portal is the first target for generated UI. |
 | Styling inside the package | **Follows the theme layer:** Mantine theme overrides (as in `theme.tsx`), `--app-*` variables (`rules.css`, from the roles in `colors.ts`), and CSS modules where an override isn't enough. No Tailwind inside the package. |
 | Name | `@dembrane/ui` |
-| Commit the spec? | Undecided until the first ADRs are written. The draft and this revision are committed on `feat/design-system` for review. |
+| Commit the spec? | Yes, in `dembrane/frontend/docs/specs/`, beside `rfcs/` and `decisions/` (settled 2026-11-12). |
 
 The reasoning for the first four decisions is in
-`dembrane/frontend/docs/decisions/0001`–`0004`.
+[`docs/decisions/0001`–`0004`](../decisions/README.md).
 
 ## Background: how the frontend is styled today
 
@@ -368,6 +369,5 @@ dembrane/frontend/
 
 ## Open questions
 
-- Where this spec should live long term (repo root, `packages/ui/`, or
-  beside the ADRs), and whether it stays committed. That gets decided after
-  the first ADRs.
+- None. (Where this spec lives was settled on 2026-11-12: in
+  `dembrane/frontend/docs/specs/`, beside `rfcs/` and `decisions/`, and committed.)

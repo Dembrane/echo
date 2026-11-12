@@ -11,7 +11,7 @@ superseded.
 | [0003](0003-the-package-is-styled-through-the-theme-layer.md) | The package is styled through the theme layer | Proposed |
 | [0004](0004-the-package-lives-in-the-workspace-with-no-build-step.md) | The package lives in the workspace with no build step | Proposed |
 
-0001–0004 come from `SPEC-design-system.md` (the `@dembrane/ui` design system).
+0001–0004 come from the [`@dembrane/ui` spec](../specs/design-system.md), which [RFC 0001](../rfcs/0001-dembrane-ui.md) proposes.
 
 The frontend's older comments cite `ADR-0003` ("external as a first-class workspace
 role"). That is a different series, `echo/docs/adr/`, deleted on 2026-09-28; read it with
