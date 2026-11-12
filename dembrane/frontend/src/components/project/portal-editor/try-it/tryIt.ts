@@ -1,5 +1,4 @@
-import { API_BASE_URL } from "@/config";
-import { ApiRequestError } from "@/lib/errors/read";
+import { postJson } from "@/lib/apiJson";
 import type { PreviewResult } from "@/lib/portalPreview/protocol";
 import type { PortalFormValues } from "../portalForm";
 
@@ -37,27 +36,12 @@ export interface TryResponse {
 	language: string;
 }
 
-export async function requestTry(
+export const requestTry = (
 	projectId: string,
 	body: TryRequestBody,
 	signal?: AbortSignal,
-): Promise<TryResponse> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/projects/${projectId}/portal-editor/try`,
-		{
-			body: JSON.stringify(body),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-			signal,
-		},
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new ApiRequestError(res.status, data);
-	}
-	return res.json();
-}
+): Promise<TryResponse> =>
+	postJson(`/v2/projects/${projectId}/portal-editor/try`, body, signal);
 
 /**
  * The request for a page's settings now, or null when there is nothing to try (Verify with

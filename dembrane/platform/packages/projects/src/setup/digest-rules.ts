@@ -1,3 +1,4 @@
+import { cutAtBoundary } from "@dembrane/core";
 import { BUILT_IN_TOPICS, NAME_LABEL_MAX, type ProjectTemplate } from "../project-templates";
 import {
   type DigestAnswer,
@@ -5,7 +6,7 @@ import {
   PROVENANCE_FIELDS,
   type ProvenanceField,
 } from "./digest-model";
-import { checkTermIn, collapse, MAX_KEY_TERMS, type NamedSource, oneLine, termKey } from "./rules";
+import { checkTermIn, collapse, keepTerms, type NamedSource, oneLine, termKey } from "./rules";
 
 /**
  * The rules a digest answer passes in code (ECHO-1055), after the model, so the prompt is
@@ -77,16 +78,14 @@ const comparable = (s: string) =>
 /** Dashes a model writes into prose (the house style has none), made commas. */
 const noDashes = (s: string) => s.replace(/\s*[—–]\s*/g, ", ");
 
-/** One line of plain text, at most `max` characters, cut at a word. */
+/** One line of plain text, at most `max` characters, cut at a sentence end or a word (cutAtBoundary). */
 export function capLine(text: string, max: number): string {
   const line = collapse(noDashes(text));
   if (line.length <= max) return line;
-  const cut = line.slice(0, max);
-  const space = cut.lastIndexOf(" ");
-  return (space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:]+$/, "");
+  return cutAtBoundary(line, max).replace(/[\s,;:]+$/, "");
 }
 
-/** Text with its lines kept, at most `max` characters, cut at a line or a sentence. */
+/** Text with its lines kept, at most `max` characters, cut at a paragraph, line or sentence (cutAtBoundary). */
 export function capText(text: string, max: number): string {
   const tidy = noDashes(text)
     .replace(/\r\n?/g, "\n")
@@ -95,13 +94,7 @@ export function capText(text: string, max: number): string {
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  if (tidy.length <= max) return tidy;
-  const head = tidy.slice(0, max);
-  const line = head.lastIndexOf("\n");
-  if (line > max * 0.6) return head.slice(0, line).trim();
-  const sentence = Math.max(head.lastIndexOf(". "), head.lastIndexOf("? "), head.lastIndexOf("! "));
-  if (sentence > max * 0.6) return head.slice(0, sentence + 1).trim();
-  return capLine(head, max);
+  return cutAtBoundary(tidy, max);
 }
 
 // ── Personal data in the context ─────────────────────────────────────
@@ -317,23 +310,17 @@ export function cleanDigest(i: CleanInput): DigestResult & { personal_data_remov
   const listed = (k: string) => (LISTED_TEMPLATE_KEYS as readonly string[]).includes(k);
 
   // Key terms: the suggestions' rules against every source, then a snippet from its line.
-  const seen = new Set(i.existingTerms.map(termKey).filter(Boolean));
-  const room = Math.max(0, MAX_KEY_TERMS - seen.size);
-  const terms: DigestTerm[] = [];
-  for (const c of a.key_terms) {
-    const checked = checkTermIn(c.term, i.sources, i.language);
-    if (!checked.ok) continue;
-    const key = termKey(checked.term);
-    if (seen.has(key) || terms.length >= room) continue;
-    seen.add(key);
-    const text = i.sources.find((s) => s.name === checked.source)?.text ?? "";
-    terms.push({
+  const { terms } = keepTerms(
+    a.key_terms,
+    i.existingTerms,
+    (c) => checkTermIn(c.term, i.sources, i.language),
+    (c, checked): DigestTerm => ({
       term: checked.term,
       reason: oneLine(c.reason, DIGEST_LIMITS.reason),
       source: checked.source,
-      snippet: lineWith(checked.term, text),
-    });
-  }
+      snippet: lineWith(checked.term, i.sources.find((s) => s.name === checked.source)?.text ?? ""),
+    }),
+  );
 
   const templateKey = listed(a.template_key) ? a.template_key : null;
   const template = templateKey ? i.templateOf(templateKey) : null;

@@ -3,17 +3,35 @@ import {
 	ChatCircleDotsIcon,
 	FlagCheckeredIcon,
 	HandWavingIcon,
+	type Icon,
 	SealCheckIcon,
 	ShieldCheckIcon,
 	UserCircleIcon,
 } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import { useParams } from "react-router";
+import {
+	SECTION_KEYS,
+	type SectionKey,
+} from "@/components/project/portal-editor/sectionKeys";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 
+const PAGES: Record<SectionKey, { label: ReactNode; icon: Icon }> = {
+	about: { icon: UserCircleIcon, label: <Trans>About</Trans> },
+	explore: { icon: ChatCircleDotsIcon, label: <Trans>Explore</Trans> },
+	finish: { icon: FlagCheckeredIcon, label: <Trans>Finish</Trans> },
+	privacy: { icon: ShieldCheckIcon, label: <Trans>Privacy</Trans> },
+	verify: {
+		icon: SealCheckIcon,
+		label: <Trans id="dashboard.dembrane.verify.title">Verify</Trans>,
+	},
+	welcome: { icon: HandWavingIcon, label: <Trans>Welcome</Trans> },
+};
+
 /**
  * The portal editor's own menu (ECHO-1060), pushed from the project like Manage: one page
- * per part of the portal, in the order a participant meets them.
+ * per part of the portal, in the order a participant meets them (SECTION_KEYS).
  */
 export const ProjectPortalView = () => {
 	const { workspaceId, projectId } = useParams<{
@@ -34,36 +52,14 @@ export const ProjectPortalView = () => {
 				label={<Trans>Portal editor</Trans>}
 				center
 			/>
-			<NavItem
-				to={`${base}/welcome`}
-				label={<Trans>Welcome</Trans>}
-				icon={HandWavingIcon}
-			/>
-			<NavItem
-				to={`${base}/privacy`}
-				label={<Trans>Privacy</Trans>}
-				icon={ShieldCheckIcon}
-			/>
-			<NavItem
-				to={`${base}/about`}
-				label={<Trans>About</Trans>}
-				icon={UserCircleIcon}
-			/>
-			<NavItem
-				to={`${base}/explore`}
-				label={<Trans>Explore</Trans>}
-				icon={ChatCircleDotsIcon}
-			/>
-			<NavItem
-				to={`${base}/verify`}
-				label={<Trans id="dashboard.dembrane.verify.title">Verify</Trans>}
-				icon={SealCheckIcon}
-			/>
-			<NavItem
-				to={`${base}/finish`}
-				label={<Trans>Finish</Trans>}
-				icon={FlagCheckeredIcon}
-			/>
+			{SECTION_KEYS.map((section) => (
+				<NavItem
+					key={section}
+					to={`${base}/${section}`}
+					label={PAGES[section].label}
+					icon={PAGES[section].icon}
+				/>
+			))}
 		</nav>
 	);
 };

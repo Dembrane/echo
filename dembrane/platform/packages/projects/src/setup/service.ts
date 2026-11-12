@@ -1,8 +1,8 @@
 import type { Access } from "@dembrane/access";
-import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
+import { type requireAiBudgetForWorkspace, requireAiRequest } from "@dembrane/allowance";
 import { UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
-import type { Completer } from "@dembrane/llm";
+import { type Completer, modelErrorShape } from "@dembrane/llm";
 import { type Logger, withPayer } from "@dembrane/observability";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { projectTemplate } from "../project-templates";
@@ -90,8 +90,11 @@ export async function suggestProjectSetup(
     "Not allowed",
   );
   const template = projectTemplate(body.template_key);
-  await d.limiter.checkUser(SUGGESTIONS_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudgetForWorkspace(d.db, workspaceId, d.now());
+  await requireAiRequest(d, {
+    limit: SUGGESTIONS_LIMIT,
+    userId: who.directusUserId,
+    payer: { ref: "workspace", id: workspaceId },
+  });
 
   const existing = parseKeyTerms(body.existing_key_terms);
   const notes: SuggestionNote[] = [];
@@ -127,7 +130,10 @@ export async function suggestProjectSetup(
       if (d.webSearch && (name || description)) {
         // A failed look-up never costs the host their suggestions.
         background = await researchTopic(d.completer, { name, description }).catch((err) => {
-          d.logger.warn({ err, signal: "project_setup.search_failed" }, "setup search failed");
+          d.logger.warn(
+            { error: modelErrorShape(err), signal: "project_setup.search_failed" },
+            "setup search failed",
+          );
           return "";
         });
       }
@@ -145,7 +151,10 @@ export async function suggestProjectSetup(
       });
     });
   } catch (err) {
-    d.logger.warn({ err, signal: "project_setup.model_failed" }, "setup suggestions failed");
+    d.logger.warn(
+      { error: modelErrorShape(err), signal: "project_setup.model_failed" },
+      "setup suggestions failed",
+    );
     throw new UnavailableError("project.setup_suggestions_unavailable");
   }
   if (!answer) throw new UnavailableError("project.setup_suggestions_unavailable");

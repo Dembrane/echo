@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { replyPrompt, sampleReply } from "@dembrane/conversations";
+import { LOCALES } from "@dembrane/i18n";
 import { fakeModels } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { generationInput } from "../src/service";
@@ -45,6 +46,12 @@ describe("the sample conversation", () => {
     expect(sampleConversation("uk").language).toBe("uk");
     expect(sampleConversation("pt").language).toBe("en");
     expect(sampleConversation(null).language).toBe("en");
+  });
+
+  test("there is a sample for every locale resolveLocale returns", () => {
+    expect<string[]>([...SAMPLE_LANGUAGES].sort()).toEqual(
+      LOCALES.map((l) => l.slice(0, 2)).sort(),
+    );
   });
 });
 

@@ -1,12 +1,13 @@
-import { requireAiBudget } from "@dembrane/allowance";
+import { requireAiRequest } from "@dembrane/allowance";
 import { type ReplyProject, sampleReply } from "@dembrane/conversations";
 import { BadRequestError, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { modelErrorShape } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
+import { EXPLORE_MODES } from "@dembrane/projects";
 import type { Limit } from "@dembrane/ratelimit";
 import {
   type Ctx,
-  modelErrorShape,
   projectOr404,
   requireUpdate,
   topicPromptOf,
@@ -40,8 +41,6 @@ export const TRY_IT_LIMIT: Limit = {
 
 /** The most of a result the dashboard gets; a reply or a draft is far shorter. */
 export const TRY_IT_MAX_CHARS = 8_000;
-
-export const EXPLORE_MODES = ["summarize", "brainstorm", "custom"] as const;
 
 /** What a try runs on. Only the built-in sample today. */
 export type TrySource = { readonly kind: "sample" };
@@ -117,8 +116,8 @@ export async function tryPortalSettings(
 ): Promise<TryItResponse> {
   await requireUpdate(ctx, who, projectId);
   const project = await projectOr404(ctx, projectId);
-  await ctx.d.limiter.checkUser(TRY_IT_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudget(ctx.d.db, projectId, ctx.d.now());
+  const payer = { ref: "project", id: projectId } as const;
+  await requireAiRequest(ctx.d, { limit: TRY_IT_LIMIT, userId: who.directusUserId, payer });
 
   const sample = transcriptOf({ kind: body.source }, body.language);
   const run = async (): Promise<{ key: string; text: string }> => {
@@ -153,7 +152,7 @@ export async function tryPortalSettings(
 
   let result: { key: string; text: string };
   try {
-    result = await withPayer({ ref: "project", id: projectId }, run);
+    result = await withPayer(payer, run);
     if (!result.text.trim()) throw new Error("empty result");
   } catch (err) {
     if (err instanceof BadRequestError) throw err;

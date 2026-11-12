@@ -1,3 +1,4 @@
+import { resolveLocale } from "@dembrane/i18n";
 import cs from "./samples/cs.txt" with { type: "text" };
 import de from "./samples/de.txt" with { type: "text" };
 import en from "./samples/en.txt" with { type: "text" };
@@ -23,7 +24,6 @@ export function sampleConversation(language: string | null | undefined): {
   language: SampleLanguage;
   transcript: string;
 } {
-  const code = (language ?? "").slice(0, 2).toLowerCase();
-  const lang = (SAMPLE_LANGUAGES as string[]).includes(code) ? (code as SampleLanguage) : "en";
+  const lang = resolveLocale(language).slice(0, 2) as SampleLanguage;
   return { language: lang, transcript: SAMPLES[lang].trim() };
 }

@@ -16,13 +16,14 @@ import {
 interface TemplateFiltersProps {
 	value: TemplateFilter;
 	onChange: (next: TemplateFilter, changed: "verb" | "setup") => void;
-	/** Every card is shown (no filter, "Show all" pressed). */
-	showAll: boolean;
-	onShowAll: (showAll: boolean) => void;
 	/** How many cards the current view shows, said politely to a screen reader. */
 	count: number;
-	/** False where every card already shows (all formats): no "Show all", only the count. */
-	withShowAll?: boolean;
+	/**
+	 * The "Show all" toggle, where the view starts with the most used cards (the picker):
+	 * `on` when every card is shown. Left out where every card already shows (all formats):
+	 * then only the count.
+	 */
+	showAll?: { on: boolean; onChange: (on: boolean) => void };
 }
 
 const FilterButton = ({
@@ -70,10 +71,8 @@ const FilterButton = ({
 export const TemplateFilters = ({
 	value,
 	onChange,
-	showAll,
-	onShowAll,
 	count,
-	withShowAll = true,
+	showAll,
 }: TemplateFiltersProps) => {
 	const verbsId = useId();
 	const setupId = useId();
@@ -134,11 +133,11 @@ export const TemplateFilters = ({
 				</Stack>
 			</Group>
 			<Group gap="sm" align="center" wrap="nowrap">
-				{withShowAll && (
+				{showAll && (
 					<FilterButton
 						label={t`Show all`}
-						pressed={showAll && !filtering}
-						onClick={() => onShowAll(!(showAll && !filtering))}
+						pressed={showAll.on && !filtering}
+						onClick={() => showAll.onChange(!(showAll.on && !filtering))}
 						testId="template-filter-show-all"
 					/>
 				)}
@@ -149,7 +148,7 @@ export const TemplateFilters = ({
 					aria-live="polite"
 					data-testid="template-filter-count"
 				>
-					{filtering || showAll || !withShowAll ? (
+					{filtering || !showAll || showAll.on ? (
 						<Plural value={count} one="# template" other="# templates" />
 					) : (
 						<Trans>Most used. Filter to find more.</Trans>

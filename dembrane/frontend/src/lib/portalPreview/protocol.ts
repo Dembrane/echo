@@ -9,6 +9,11 @@
  * which renders no raw HTML).
  */
 
+import {
+	PROJECT_LANGUAGE_CODES,
+	type ProjectLanguageCode,
+} from "@/components/project/projectLanguage";
+
 export const PREVIEW_MESSAGE = "dembrane:portal-preview";
 export const PREVIEW_READY = "dembrane:portal-preview-ready";
 export const PREVIEW_VERSION = 2;
@@ -44,16 +49,11 @@ export const PREVIEW_HIGHLIGHTS = [
 ] as const;
 export type PreviewHighlight = (typeof PREVIEW_HIGHLIGHTS)[number];
 
-export const PREVIEW_LANGUAGES = [
-	"en",
-	"nl",
-	"de",
-	"fr",
-	"es",
-	"it",
-	"uk",
-	"cs",
-] as const;
+/** The project languages, each of which the preview can show. */
+export const PREVIEW_LANGUAGES = PROJECT_LANGUAGE_CODES;
+
+/** The tutorial cards a portal can show before recording; "none" shows none. */
+export const TUTORIAL_SLUGS = ["none", "basic", "advanced"] as const;
 
 export const LEGAL_BASES = [
 	"client-managed",
@@ -63,11 +63,11 @@ export const LEGAL_BASES = [
 
 /** What a participant screen reads from the project, and nothing more. */
 export interface PreviewProject {
-	language: (typeof PREVIEW_LANGUAGES)[number];
+	language: ProjectLanguageCode;
 	default_conversation_title: string;
 	default_conversation_description: string;
 	default_conversation_finish_text: string;
-	default_conversation_tutorial_slug: "none" | "basic" | "advanced";
+	default_conversation_tutorial_slug: (typeof TUTORIAL_SLUGS)[number];
 	default_conversation_ask_for_participant_name: boolean;
 	conversation_ask_for_participant_name_label: string;
 	default_conversation_ask_for_participant_email: boolean;
@@ -143,28 +143,19 @@ const oneOf = <T extends string>(v: unknown, values: readonly T[]): T | null =>
 		? (v as T)
 		: null;
 
-/** The URL when it is an http(s) address the preview may show as a link, else null. */
-export const webUrl = (v: string | null | undefined): string | null => {
-	if (!v || v.length > LIMITS.url) return null;
-	try {
-		const url = new URL(v);
-		return url.protocol === "https:" || url.protocol === "http:" ? v : null;
-	} catch {
-		return null;
-	}
-};
-
-const httpsUrl = (v: unknown): string | null | undefined => {
-	if (v === null) return null;
+/**
+ * The value when it is an http or https address within the URL cap, the only links the
+ * preview shows; null for anything else. Both ends use it: the dashboard on what it sends,
+ * the portal on what it receives.
+ */
+export const webUrl = (v: unknown): string | null => {
 	const s = text(v, LIMITS.url);
-	if (s === null) return undefined;
+	if (!s) return null;
 	try {
 		const url = new URL(s);
-		return url.protocol === "https:" || url.protocol === "http:"
-			? s
-			: undefined;
+		return url.protocol === "https:" || url.protocol === "http:" ? s : null;
 	} catch {
-		return undefined;
+		return null;
 	}
 };
 
@@ -182,11 +173,7 @@ const BOOLEAN_FIELDS = [
 function parseProject(v: unknown): PreviewProject | null {
 	if (!isRecord(v)) return null;
 	const language = oneOf(v.language, PREVIEW_LANGUAGES);
-	const tutorial = oneOf(v.default_conversation_tutorial_slug, [
-		"none",
-		"basic",
-		"advanced",
-	] as const);
+	const tutorial = oneOf(v.default_conversation_tutorial_slug, TUTORIAL_SLUGS);
 	const legal = oneOf(v.legal_basis, LEGAL_BASES);
 	const title = text(v.default_conversation_title, LIMITS.title);
 	const description = text(v.default_conversation_description, LIMITS.longText);
@@ -195,7 +182,8 @@ function parseProject(v: unknown): PreviewProject | null {
 		v.conversation_ask_for_participant_name_label,
 		LIMITS.label,
 	);
-	const policy = httpsUrl(v.privacy_policy_url);
+	const policy =
+		v.privacy_policy_url === null ? null : webUrl(v.privacy_policy_url);
 	const organiser =
 		v.organiser_name === null ? null : text(v.organiser_name, LIMITS.title);
 	if (
@@ -206,7 +194,7 @@ function parseProject(v: unknown): PreviewProject | null {
 		description === null ||
 		finish === null ||
 		nameLabel === null ||
-		policy === undefined ||
+		(v.privacy_policy_url !== null && policy === null) ||
 		(v.organiser_name !== null && organiser === null)
 	)
 		return null;

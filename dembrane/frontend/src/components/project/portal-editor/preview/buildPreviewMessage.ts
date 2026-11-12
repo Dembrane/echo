@@ -1,4 +1,5 @@
 import type { VerificationTopicsResponse } from "@/lib/api";
+import { localeForLanguage } from "@/lib/locale";
 import {
 	LEGAL_BASES,
 	LIMITS,
@@ -10,21 +11,11 @@ import {
 	type PreviewProject,
 	type PreviewResult,
 	type PreviewScreen,
+	TUTORIAL_SLUGS,
 	webUrl,
 } from "@/lib/portalPreview/protocol";
 import type { PortalFormValues } from "../portalForm";
 import { exampleResult } from "./examples";
-
-export const LOCALE_FOR_LANGUAGE: Record<string, string> = {
-	cs: "cs-CZ",
-	de: "de-DE",
-	en: "en-US",
-	es: "es-ES",
-	fr: "fr-FR",
-	it: "it-IT",
-	nl: "nl-NL",
-	uk: "uk-UA",
-};
 
 export interface PreviewLegal {
 	legal_basis: string | null | undefined;
@@ -71,8 +62,8 @@ export function buildPreviewMessage({
 	)
 		? (values.language as PreviewProject["language"])
 		: "en";
-	const locale = LOCALE_FOR_LANGUAGE[language];
-	const tutorial = (["none", "basic", "advanced"] as const).find(
+	const locale = localeForLanguage(language);
+	const tutorial = TUTORIAL_SLUGS.find(
 		(s) => s === values.default_conversation_tutorial_slug,
 	);
 	const basis = (LEGAL_BASES as readonly string[]).includes(

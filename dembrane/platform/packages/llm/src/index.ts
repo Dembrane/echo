@@ -60,6 +60,7 @@ export {
   errorLabel,
   type ModelCall,
   type ModelCallObserver,
+  modelErrorShape,
   observeSafely,
   resetObserverFaults,
   takeObserverFaults,

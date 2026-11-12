@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Box, Group, NativeSelect, Stack, Text, Title } from "@mantine/core";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { PARTICIPANT_BASE_URL, PREVIEW_FRAME_NAME } from "@/config";
+import { localeForLanguage } from "@/lib/locale";
 import {
 	isReadyMessage,
 	originOf,
@@ -10,7 +11,6 @@ import {
 	type PreviewScreen,
 } from "@/lib/portalPreview/protocol";
 import { testId } from "@/lib/testUtils";
-import { LOCALE_FOR_LANGUAGE } from "./buildPreviewMessage";
 
 export const screenLabel = (screen: PreviewScreen): string => {
 	switch (screen) {
@@ -85,7 +85,7 @@ export const PortalPreviewFrame = ({
 	const frame = useRef<HTMLIFrameElement>(null);
 	const [ready, setReady] = useState(false);
 	const portalOrigin = originOf(portalUrl);
-	const locale = LOCALE_FOR_LANGUAGE[message.project.language] ?? "en-US";
+	const locale = localeForLanguage(message.project.language);
 	const src = portalOrigin
 		? `${portalUrl.replace(/\/$/, "")}/${locale}/${encodeURIComponent(projectId)}/preview`
 		: null;

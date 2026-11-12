@@ -6,7 +6,8 @@
   "dembrane": {
     "layer": "namespace",
     "allow": {
-      "conversations": "A portal feature: reuses conversations' participant token and dependencies."
+      "conversations": "A portal feature: reuses conversations' participant token and dependencies.",
+      "projects": "Reads projects' template registry: the Explore modes Try it allows, and who a draft speaks to."
     }
   },
   "exports": {
@@ -23,6 +24,7 @@
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/i18n": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
     "@dembrane/observability": "workspace:*",

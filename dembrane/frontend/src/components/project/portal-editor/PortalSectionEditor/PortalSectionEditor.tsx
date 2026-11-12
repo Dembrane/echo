@@ -11,7 +11,14 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	type ComponentType,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { useProjectLegalQuery } from "@/components/project/ProjectLegalBasisSection";
 import { ENABLE_PARTICIPANT_EMAIL } from "@/config";
@@ -44,13 +51,32 @@ import { previewResultOf, type TrySection, tryRequest } from "../try-it/tryIt";
 import { useTryIt } from "../try-it/useTryIt";
 import { usePortalPageForm } from "../usePortalPageForm";
 
-const OPTIONS: Record<SectionKey, (props: SectionProps) => SectionContent> = {
-	about: useAboutOptions,
-	explore: useExploreOptions,
-	finish: useFinishOptions,
-	privacy: usePrivacyOptions,
-	verify: useVerifyOptions,
-	welcome: useWelcomeOptions,
+interface SectionOptionsProps {
+	props: SectionProps;
+	children: (content: SectionContent) => ReactNode;
+}
+
+/**
+ * A page's options hook as a component of its own: each page's hook runs in its own
+ * component, so moving to another page mounts another component and never calls a
+ * different hook in the same place.
+ */
+const sectionOptions = (
+	useOptions: (props: SectionProps) => SectionContent,
+) => {
+	const SectionOptions = ({ props, children }: SectionOptionsProps) => (
+		<>{children(useOptions(props))}</>
+	);
+	return SectionOptions;
+};
+
+const OPTIONS: Record<SectionKey, ComponentType<SectionOptionsProps>> = {
+	about: sectionOptions(useAboutOptions),
+	explore: sectionOptions(useExploreOptions),
+	finish: sectionOptions(useFinishOptions),
+	privacy: sectionOptions(usePrivacyOptions),
+	verify: sectionOptions(useVerifyOptions),
+	welcome: sectionOptions(useWelcomeOptions),
 };
 
 interface PortalSectionEditorProps {
@@ -107,8 +133,7 @@ export const PortalSectionEditor = ({
 		readOnly,
 		verificationTopics,
 	};
-	// One hook per page; the page is keyed by section, so the order never changes.
-	const content = OPTIONS[section](props);
+	const Options = OPTIONS[section];
 	const defs = applicableOptions(section, page.values, flags);
 	const open = resolveOption(section, option, page.values, flags);
 	const base = `/w/${project.workspace_id}/projects/${project.id}/portal`;
@@ -285,93 +310,99 @@ export const PortalSectionEditor = ({
 	);
 
 	return (
-		<>
-			<div
-				className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(420px,1fr)_auto] lg:items-start"
-				{...testId(`portal-editor-page-${section}`)}
-			>
-				<Stack gap="xl" className="min-w-0 max-w-[720px]">
-					<Stack gap="xs">
-						<Group gap="sm">
-							<Title order={2}>{sectionTitle(section)}</Title>
-							{!readOnly && (
-								<SaveStatus
-									formErrors={page.form.formState.errors}
-									savedAt={page.autoSave.lastSavedAt}
-									isPendingSave={page.autoSave.isPendingSave}
-									isSaving={page.autoSave.isSaving}
-									isError={page.autoSave.isError}
-								/>
-							)}
-						</Group>
-						<Text size="sm">{sectionDescription(section)}</Text>
-					</Stack>
-					{/* Read-only: the fieldset disables native controls, inert blocks the custom ones. */}
-					<fieldset
-						disabled={readOnly}
-						inert={readOnly}
-						className="m-0 min-w-0 border-0 p-0"
-						{...testId("portal-editor-form")}
+		<Options props={props}>
+			{(content) => (
+				<>
+					<div
+						className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(420px,1fr)_auto] lg:items-start"
+						{...testId(`portal-editor-page-${section}`)}
 					>
-						<OptionStepper
-							options={defs.map((def) => ({
-								beta: content.options[def.key]?.beta,
-								body: content.options[def.key]?.body,
-								key: def.key,
-								summary: content.options[def.key]?.summary,
-								title: content.options[def.key]?.title ?? def.key,
-							}))}
-							openKey={open?.key ?? null}
-							onOpen={onOpen}
-							nextLabel={after ? t`Next: ${sectionTitle(after)}` : undefined}
-							onNextPage={
-								after ? () => navigate(`${base}/${after}`) : undefined
-							}
-						/>
-					</fieldset>
-				</Stack>
-
-				{wide ? (
-					<Box
-						className="sticky top-5 flex flex-col"
-						// The view under the 57px breadcrumb bar, less the sticky gap above and
-						// below: the whole phone stays in sight while the options scroll.
-						mah="calc(100dvh - 57px - 2 * var(--mantine-spacing-lg))"
-						{...testId("portal-preview-side")}
-					>
-						{frame}
-					</Box>
-				) : (
-					<Stack gap="sm">
-						<Box>
-							<Button
-								variant="outline"
-								leftSection={<DeviceMobileIcon size={20} />}
-								aria-expanded={previewOpen}
-								onClick={() => {
-									if (!previewOpen)
-										track("portal_editor_preview_used", {
-											action: "opened",
-											project_id: project.id,
-											screen,
-											section,
-										});
-									preview.toggle();
-								}}
-								{...testId("portal-preview-toggle")}
+						<Stack gap="xl" className="min-w-0 max-w-[720px]">
+							<Stack gap="xs">
+								<Group gap="sm">
+									<Title order={2}>{sectionTitle(section)}</Title>
+									{!readOnly && (
+										<SaveStatus
+											formErrors={page.form.formState.errors}
+											savedAt={page.autoSave.lastSavedAt}
+											isPendingSave={page.autoSave.isPendingSave}
+											isSaving={page.autoSave.isSaving}
+											isError={page.autoSave.isError}
+										/>
+									)}
+								</Group>
+								<Text size="sm">{sectionDescription(section)}</Text>
+							</Stack>
+							{/* Read-only: the fieldset disables native controls, inert blocks the custom ones. */}
+							<fieldset
+								disabled={readOnly}
+								inert={readOnly}
+								className="m-0 min-w-0 border-0 p-0"
+								{...testId("portal-editor-form")}
 							>
-								{previewOpen ? (
-									<Trans>Hide preview</Trans>
-								) : (
-									<Trans>Preview</Trans>
-								)}
-							</Button>
-						</Box>
-						<Collapse in={previewOpen}>{previewOpen && frame}</Collapse>
-					</Stack>
-				)}
-			</div>
-			{content.extra}
-		</>
+								<OptionStepper
+									options={defs.map((def) => ({
+										beta: content.options[def.key]?.beta,
+										body: content.options[def.key]?.body,
+										key: def.key,
+										summary: content.options[def.key]?.summary,
+										title: content.options[def.key]?.title ?? def.key,
+									}))}
+									openKey={open?.key ?? null}
+									onOpen={onOpen}
+									nextLabel={
+										after ? t`Next: ${sectionTitle(after)}` : undefined
+									}
+									onNextPage={
+										after ? () => navigate(`${base}/${after}`) : undefined
+									}
+								/>
+							</fieldset>
+						</Stack>
+
+						{wide ? (
+							<Box
+								className="sticky top-5 flex flex-col"
+								// The view under the 57px breadcrumb bar, less the sticky gap above and
+								// below: the whole phone stays in sight while the options scroll.
+								mah="calc(100dvh - 57px - 2 * var(--mantine-spacing-lg))"
+								{...testId("portal-preview-side")}
+							>
+								{frame}
+							</Box>
+						) : (
+							<Stack gap="sm">
+								<Box>
+									<Button
+										variant="outline"
+										leftSection={<DeviceMobileIcon size={20} />}
+										aria-expanded={previewOpen}
+										onClick={() => {
+											if (!previewOpen)
+												track("portal_editor_preview_used", {
+													action: "opened",
+													project_id: project.id,
+													screen,
+													section,
+												});
+											preview.toggle();
+										}}
+										{...testId("portal-preview-toggle")}
+									>
+										{previewOpen ? (
+											<Trans>Hide preview</Trans>
+										) : (
+											<Trans>Preview</Trans>
+										)}
+									</Button>
+								</Box>
+								<Collapse in={previewOpen}>{previewOpen && frame}</Collapse>
+							</Stack>
+						)}
+					</div>
+					{content.extra}
+				</>
+			)}
+		</Options>
 	);
 };

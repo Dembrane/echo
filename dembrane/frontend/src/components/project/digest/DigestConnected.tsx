@@ -68,8 +68,12 @@ export const DigestConnected = ({
 	const [fallback, setFallback] = useState<DigestFallback | null>(null);
 	const active =
 		digest.phase === "files" || digest.phase === "material" || result !== null;
+	// The latest callback, kept in an effect (as useVoiceTranscription does), so a parent's
+	// new function never re-announces an unchanged state.
 	const onActive = useRef(onActiveChange);
-	onActive.current = onActiveChange;
+	useEffect(() => {
+		onActive.current = onActiveChange;
+	}, [onActiveChange]);
 	useEffect(() => onActive.current(active), [active]);
 
 	const start = async (m: DigestMaterial) => {

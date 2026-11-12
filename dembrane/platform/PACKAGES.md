@@ -16,16 +16,16 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 **Namespaces**
 
 - **webhooks** (in 7, out 7): A project's outbound webhooks: settings, signed delivery, retries. Used by projects, conversations, accounts, reports and 3 more. Uses only the common ones.
-- **billing** (in 6, out 10): Plans, seats, Mollie payments, invoices and overage. Used by account, tenancy, staff, training and 2 more. Uses i18n, mail.
-- **projects** (in 5, out 12): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, tenancy, agentic, reports and 1 more. Uses webhooks, realtime, llm.
+- **projects** (in 6, out 13): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, tenancy, agentic, reports and 2 more. Uses webhooks, i18n, realtime, llm.
+- **billing** (in 6, out 10): Plans, seats, Mollie payments, invoices and overage. Used by account, tenancy, staff, training and 2 more. Uses mail, i18n.
 - **analysis** (in 5, out 11): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, llm.
 - **notifications** (in 5, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api and 1 more. Uses only the common ones.
 - **samples** (in 5, out 5): Sample data: the best-practices sample every workspace gets its own copy of, and the Millbrook (sample) workspace in the Acme Civic (sample) org that every PR preview carries. Used by account, tenancy, api, migrate and 1 more. Uses config, llm.
 - **conversations** (in 5, out 18): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 4 more.
 - **account** (in 4, out 16): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, reports, api, worker. Uses tenancy, notifications, samples, billing, auth and 4 more.
 - **popcorn** (in 4, out 14): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, config, llm.
-- **tenancy** (in 3, out 14): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by account, api, worker. Uses projects, samples, billing, i18n, mail and 1 more.
-- **accounts** (in 3, out 15): Customer accounts as sales runs them: offers, contracts, signing, demos, check-ins. Used by api, migrate, worker. Uses account, popcorn, webhooks, i18n, mail and 3 more.
+- **tenancy** (in 3, out 14): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by account, api, worker. Uses samples, billing, projects, mail, i18n and 1 more.
+- **accounts** (in 3, out 15): Customer accounts as sales runs them: offers, contracts, signing, demos, check-ins. Used by api, migrate, worker. Uses account, popcorn, webhooks, mail, i18n and 3 more.
 - **map** (in 3, out 12): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, llm.
 - **chats** (in 2, out 10): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics, llm.
 - **agentic** (in 2, out 16): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, conversations, notifications, projects, analytics and 3 more.
@@ -34,9 +34,9 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **present** (in 2, out 12): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime.
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 13): Report generation and the report timeline. Used by api, worker. Uses account, notifications, projects, webhooks, llm.
-- **verify** (in 2, out 11): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
+- **verify** (in 2, out 13): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, projects, prompts, i18n, llm.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.
-- **staff** (in 1, out 13): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, metering, i18n, mail, storage.
+- **staff** (in 1, out 13): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, metering, mail, i18n, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
 - **training** (in 1, out 8): Training as its own product: catalog, rosters, licences, staff provisioning. Used by api. Uses billing, mail.
 
@@ -45,19 +45,19 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **core** (in 35, out 0): Errors, ids, the operation context and asset paths every package shares. Used by db, http, access, legacy-shape and 31 more. Uses nothing.
 - **observability** (in 35, out 0): Structured logging and tracing. Used by http, queue, llm, allowance and 31 more. Uses nothing.
 - **db** (in 34, out 1): The Drizzle schema for every table, migrations and the database connection. Used by access, queue, ratelimit, allowance and 30 more. Uses core.
-- **http** (in 26, out 3): What every route shares: the signed-in caller, body validation, project and workspace guards. Used by legacy-shape, webhooks, billing, projects and 22 more. Uses access, core, observability.
-- **access** (in 25, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, webhooks, billing, projects and 21 more. Uses db, core.
-- **queue** (in 21, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by metering, webhooks, billing, projects and 17 more. Uses db, observability.
-- **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by webhooks, billing, projects, analysis and 15 more. Uses http, core.
+- **http** (in 26, out 3): What every route shares: the signed-in caller, body validation, project and workspace guards. Used by legacy-shape, webhooks, projects, billing and 22 more. Uses access, core, observability.
+- **access** (in 25, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, webhooks, projects, billing and 21 more. Uses db, core.
+- **queue** (in 21, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by metering, webhooks, projects, billing and 17 more. Uses db, observability.
+- **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by webhooks, projects, billing, analysis and 15 more. Uses http, core.
+- **ratelimit** (in 18, out 2): Rate limits counted in Postgres or memory. Used by allowance, projects, analysis, conversations and 14 more. Uses db, core.
 - **llm** (in 17, out 1): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, metering, projects and 13 more. Uses observability.
-- **ratelimit** (in 17, out 2): Rate limits counted in Postgres or memory. Used by projects, analysis, conversations, account and 13 more. Uses db, core.
-- **allowance** (in 15, out 3): The free tier: who is free, the limits, and what each account has used this month. Used by metering, billing, projects, analysis and 11 more. Uses db, core, observability.
+- **allowance** (in 15, out 4): The free tier: who is free, the limits, and what each account has used this month. Used by metering, projects, billing, analysis and 11 more. Uses ratelimit, db, core, observability.
 - **config** (in 11, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, samples, account, popcorn and 7 more. Uses nothing.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by projects, analysis, conversations, popcorn and 6 more. Uses core, observability.
+- **i18n** (in 9, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by projects, billing, account, tenancy and 5 more. Uses config, llm, db, core.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, tenancy, accounts and 5 more. Uses nothing.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, tenancy, accounts and 4 more. Uses nothing.
 - **analytics** (in 7, out 1): Product analytics capture (PostHog). Used by conversations, popcorn, chats, agentic and 3 more. Uses observability.
-- **i18n** (in 7, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by billing, account, tenancy, accounts and 3 more. Uses config, llm, db, core.
 - **audio** (in 4, out 0): ffmpeg and ffprobe wrappers, audio formats, and the client for the media app. Used by conversations, api, media, worker. Uses nothing.
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **transcription** (in 3, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api, worker. Uses prompts, llm, observability.
@@ -97,5 +97,6 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - tenancy uses samples: A new org or workspace queues its copy of the best-practices sample.
 - training uses billing: Licence changes notify org admins through billing's own Notifier.
 - verify uses conversations: A portal feature: reuses conversations' participant token and dependencies.
+- verify uses projects: Reads projects' template registry: the Explore modes Try it allows, and who a draft speaks to.
 
 <!-- package-map:end -->

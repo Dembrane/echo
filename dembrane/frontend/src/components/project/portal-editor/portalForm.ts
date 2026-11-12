@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { projectLanguageForForm } from "../projectLanguage";
+import { TUTORIAL_SLUGS } from "@/lib/portalPreview/protocol";
+import {
+	PROJECT_LANGUAGE_CODES,
+	type ProjectLanguageCode,
+	projectLanguageForForm,
+} from "../projectLanguage";
+import type { SectionKey } from "./sectionKeys";
 
 /** The longest name box label the API takes (platform project-templates NAME_LABEL_MAX). */
 export const NAME_LABEL_MAX = 80;
@@ -28,32 +34,16 @@ export const PortalFormSchema = z.object({
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
 	is_verify_on_finish_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk", "cs"]),
+	language: z.enum(
+		PROJECT_LANGUAGE_CODES as [ProjectLanguageCode, ...ProjectLanguageCode[]],
+	),
 	verification_topics: z.array(z.string()),
 });
 
 export type PortalFormValues = z.infer<typeof PortalFormSchema>;
 export type PortalField = keyof PortalFormValues;
 
-export type SectionKey =
-	| "welcome"
-	| "privacy"
-	| "about"
-	| "explore"
-	| "verify"
-	| "finish";
-
-export const SECTION_KEYS: readonly SectionKey[] = [
-	"welcome",
-	"privacy",
-	"about",
-	"explore",
-	"verify",
-	"finish",
-];
-
-export const isSectionKey = (value: string | undefined): value is SectionKey =>
-	!!value && (SECTION_KEYS as readonly string[]).includes(value);
+export { isSectionKey, SECTION_KEYS, type SectionKey } from "./sectionKeys";
 
 /** The values each page saves. Legal basis and tags save themselves, as before. */
 export const SECTION_FIELDS: Record<SectionKey, readonly PortalField[]> = {
@@ -88,8 +78,6 @@ export const SECTION_FIELDS: Record<SectionKey, readonly PortalField[]> = {
 		"default_conversation_tutorial_slug",
 	],
 };
-
-export const TUTORIAL_SLUGS = ["none", "basic", "advanced"] as const;
 
 export const normalizeTopicList = (topics: string[]): string[] =>
 	Array.from(

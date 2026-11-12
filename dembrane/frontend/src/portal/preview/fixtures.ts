@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { AxiosAdapter, InternalAxiosRequestConfig } from "axios";
 import { api, apiNoAuth } from "@/lib/api";
+import { localeForLanguage } from "@/lib/locale";
 import type {
 	PreviewMessage,
 	PreviewScreen,
@@ -10,26 +11,13 @@ import type {
 export const PREVIEW_CONVERSATION_ID = "preview";
 export const PREVIEW_ARTIFACT_ID = "preview-draft";
 
-const LOCALES: Record<string, string> = {
-	cs: "cs-CZ",
-	de: "de-DE",
-	en: "en-US",
-	es: "es-ES",
-	fr: "fr-FR",
-	it: "it-IT",
-	nl: "nl-NL",
-	uk: "uk-UA",
-};
-
-export const previewLocale = (language: string) => LOCALES[language] ?? "en-US";
-
 /** Where a screen opens inside the preview's own router. */
 export function previewEntry(
 	screen: PreviewScreen,
 	language: string,
 	projectId: string,
 ): string {
-	const base = `/${previewLocale(language)}/${projectId}`;
+	const base = `/${localeForLanguage(language)}/${projectId}`;
 	const conversation = `${base}/conversation/${PREVIEW_CONVERSATION_ID}`;
 	switch (screen) {
 		case "landing":
@@ -63,7 +51,7 @@ export function seedPreview(
 	message: PreviewMessage,
 ): void {
 	const { project, topics, verify } = message;
-	const locale = previewLocale(project.language);
+	const locale = localeForLanguage(project.language);
 	const participantProject = {
 		...project,
 		conversation_limit_seconds: null,

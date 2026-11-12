@@ -11,8 +11,9 @@ import { PortalPreviewApp } from "./PortalPreviewApp";
 
 /**
  * Starts the portal's preview mode (ECHO-1060), in place of the participant router. main.tsx
- * loads this file only for the portal's …/:projectId/preview address inside a frame, so it
- * stays out of the portal's first load. Everything that could reach the world is taken
+ * loads this file only when config's IS_PORTAL_PREVIEW holds (a page in a frame at the
+ * portal's …/:projectId/preview address, or any page in the dashboard's preview frame, by
+ * its name), so it stays out of the portal's first load. Everything that could reach the world is taken
  * away before the first render.
  */
 export function renderPreview(root: HTMLElement): void {

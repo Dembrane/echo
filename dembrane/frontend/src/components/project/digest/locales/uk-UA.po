@@ -17,7 +17,7 @@ msgstr ""
 msgid "Accept and continue"
 msgstr "Прийняти й далі"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:249
+#: src/components/project/digest/DigestReview/DigestReview.tsx:240
 msgid "Accept the rest"
 msgstr "Прийняти решту"
 
@@ -33,11 +33,11 @@ msgstr "Додати з файлу"
 msgid "Added what the session is about to the project context. Check it above."
 msgstr "Про що сесія, тепер є в контексті проєкту. Перевір це вище."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:543
+#: src/components/project/digest/DigestReview/DigestReview.tsx:534
 msgid "All templates"
 msgstr "Усі шаблони"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:509
+#: src/components/project/digest/DigestReview/DigestReview.tsx:500
 msgid "Also fits:"
 msgstr "Також підходить:"
 
@@ -45,7 +45,7 @@ msgstr "Також підходить:"
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Запрошення або сторінка проєкту. dembrane прочитає її один раз."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:239
+#: src/components/project/digest/DigestReview/DigestReview.tsx:230
 msgid "Back"
 msgstr "Назад"
 
@@ -73,7 +73,7 @@ msgstr "Змінити: {part}"
 #~ msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
 #~ msgstr "Перевір кожну частину, зміни те, що не так, і вимкни те, що не потрібно. Нічого не зберігається, доки ти не створиш проєкт."
 
-#: src/components/project/digest/DigestConnected.tsx:222
+#: src/components/project/digest/DigestConnected.tsx:226
 msgid "Choose a format below to continue."
 msgstr "Обери формат нижче, щоб продовжити."
 
@@ -81,11 +81,11 @@ msgstr "Обери формат нижче, щоб продовжити."
 #~ msgid "Choose a template below to continue."
 #~ msgstr "Обери шаблон нижче, щоб продовжити."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:498
+#: src/components/project/digest/DigestReview/DigestReview.tsx:489
 msgid "Choose the template that fits the session."
 msgstr "Обери шаблон, що підходить до сесії."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:342
+#: src/components/project/digest/DigestReview/DigestReview.tsx:333
 msgid "Contact details and lists of names were left out of the context."
 msgstr "Контактні дані та списки імен не потрапили в контекст."
 
@@ -97,7 +97,7 @@ msgstr "Створити проєкт"
 msgid "dembrane couldn't read anything to add from this."
 msgstr "dembrane не змогла знайти тут нічого, що можна додати."
 
-#: src/components/project/digest/DigestConnected.tsx:214
+#: src/components/project/digest/DigestConnected.tsx:218
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane не змогла налаштувати проєкт за цим матеріалом."
 
@@ -109,7 +109,7 @@ msgstr "Перетягни файли сюди або обери їх"
 msgid "Drop files or choose them"
 msgstr "Перетягни файли або обери їх"
 
-#: src/components/project/digest/DigestConnected.tsx:191
+#: src/components/project/digest/DigestConnected.tsx:195
 msgid "Drop it to set up the project from it"
 msgstr "Відпусти, щоб налаштувати проєкт за цим"
 
@@ -117,8 +117,8 @@ msgstr "Відпусти, щоб налаштувати проєкт за цим
 msgid "Edit"
 msgstr "Редагувати"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:191
-#: src/components/project/digest/DigestReview/DigestReview.tsx:628
+#: src/components/project/digest/DigestReview/DigestReview.tsx:182
+#: src/components/project/digest/DigestReview/DigestReview.tsx:619
 msgid "Explore question"
 msgstr "Питання Explore"
 
@@ -133,16 +133,16 @@ msgstr "З {0}"
 
 #. placeholder {0}: term.source
 #. placeholder {1}: term.snippet
-#: src/components/project/digest/DigestReview/DigestReview.tsx:180
+#: src/components/project/digest/DigestReview/DigestReview.tsx:171
 msgid "From {0}: “{1}”"
 msgstr "З {0}: «{1}»"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:403
+#: src/components/project/digest/DigestReview/DigestReview.tsx:394
 msgid "Give the project a name to create it."
 msgstr "Дай проєкту назву, щоб створити його."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:192
-#: src/components/project/digest/DigestReview/DigestReview.tsx:416
+#: src/components/project/digest/DigestReview/DigestReview.tsx:183
+#: src/components/project/digest/DigestReview/DigestReview.tsx:407
 msgid "Goal"
 msgstr "Ціль"
 
@@ -159,11 +159,11 @@ msgstr "Маєш порядок денний, запрошення чи сцен
 msgid "Here is what dembrane understood"
 msgstr "Ось що зрозуміла dembrane"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:193
+#: src/components/project/digest/DigestReview/DigestReview.tsx:184
 msgid "Host script additions"
 msgstr "Доповнення до сценарію ведучого"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:194
+#: src/components/project/digest/DigestReview/DigestReview.tsx:185
 msgid "Key terms"
 msgstr "Ключові терміни"
 
@@ -175,16 +175,16 @@ msgstr "Більше ніж 10 МБ. Спробуй коротшу версію 
 msgid "Link to a page about it"
 msgstr "Посилання на сторінку про це"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:195
+#: src/components/project/digest/DigestReview/DigestReview.tsx:186
 msgid "Name"
 msgstr "Назва"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:196
-#: src/components/project/digest/DigestReview/DigestReview.tsx:613
+#: src/components/project/digest/DigestReview/DigestReview.tsx:187
+#: src/components/project/digest/DigestReview/DigestReview.tsx:604
 msgid "Name box"
 msgstr "Поле назви"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:446
+#: src/components/project/digest/DigestReview/DigestReview.tsx:437
 msgid "Names and words transcription should spell right. Each one is in your material."
 msgstr "Імена та слова, які транскрипція має писати правильно. Кожне є у твоєму матеріалі."
 
@@ -197,23 +197,23 @@ msgid "Not read: together the files are longer than 200,000 characters."
 msgstr "Не прочитано: разом файли довші за 200 000 символів."
 
 #: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
-#: src/components/project/digest/DigestReview/DigestReview.tsx:370
+#: src/components/project/digest/DigestReview/DigestReview.tsx:361
 msgid "Nothing yet"
 msgstr "Поки нічого"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:312
+#: src/components/project/digest/DigestReview/DigestReview.tsx:303
 msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
 msgstr "По одній частині: прийми, зміни або пропусти. Нічого не зберігається, доки ти не створиш проєкт."
 
-#: src/components/project/digest/DigestConnected.tsx:227
+#: src/components/project/digest/DigestConnected.tsx:231
 msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
 msgstr "Вміщується лише початок: dembrane читає перші 4000 символів контексту."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:542
+#: src/components/project/digest/DigestReview/DigestReview.tsx:533
 msgid "Or choose another"
 msgstr "Або обери інший"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:563
+#: src/components/project/digest/DigestReview/DigestReview.tsx:554
 msgid "Participants tap the round they are in before they record."
 msgstr "Учасники торкаються свого раунду перед записом."
 
@@ -238,12 +238,12 @@ msgstr "PDF, Word, PowerPoint або текст. До {MAX_FILES} файлів �
 msgid "Pictures aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Зображення не читаються. Працюють PDF, Word, PowerPoint і текстові файли."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:190
-#: src/components/project/digest/DigestReview/DigestReview.tsx:433
+#: src/components/project/digest/DigestReview/DigestReview.tsx:181
+#: src/components/project/digest/DigestReview/DigestReview.tsx:424
 msgid "Project context"
 msgstr "Контекст проєкту"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:395
+#: src/components/project/digest/DigestReview/DigestReview.tsx:386
 msgid "Project name"
 msgstr "Назва проєкту"
 
@@ -252,7 +252,7 @@ msgid "read"
 msgstr "прочитано"
 
 #. placeholder {0}: result.sources.map((s) => s.name).join(", ")
-#: src/components/project/digest/DigestReview/DigestReview.tsx:322
+#: src/components/project/digest/DigestReview/DigestReview.tsx:313
 msgid "Read from: {0}"
 msgstr "Прочитано з: {0}"
 
@@ -276,8 +276,8 @@ msgstr "Читаємо твій матеріал"
 msgid "Ready to create"
 msgstr "Готово до створення"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:197
-#: src/components/project/digest/DigestReview/DigestReview.tsx:568
+#: src/components/project/digest/DigestReview/DigestReview.tsx:188
+#: src/components/project/digest/DigestReview/DigestReview.tsx:559
 msgid "Rounds as tags"
 msgstr "Раунди як теги"
 
@@ -297,25 +297,25 @@ msgstr "Пропущено"
 msgid "Spreadsheets aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Таблиці не читаються. Працюють PDF, Word, PowerPoint і текстові файли."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:226
-#: src/components/project/digest/DigestReview/DigestReview.tsx:259
+#: src/components/project/digest/DigestReview/DigestReview.tsx:217
+#: src/components/project/digest/DigestReview/DigestReview.tsx:250
 msgid "Start over"
 msgstr "Почати знову"
 
 #. placeholder {0}: i + 1
-#: src/components/project/digest/DigestReview/DigestReview.tsx:649
+#: src/components/project/digest/DigestReview/DigestReview.tsx:640
 msgid "Step {0}"
 msgstr "Крок {0}"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:641
+#: src/components/project/digest/DigestReview/DigestReview.tsx:632
 msgid "Steps for this session, added after the template's host script."
 msgstr "Кроки для цієї сесії, додані після сценарію ведучого з шаблону."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:198
+#: src/components/project/digest/DigestReview/DigestReview.tsx:189
 msgid "Template"
 msgstr "Шаблон"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:353
+#: src/components/project/digest/DigestReview/DigestReview.tsx:344
 msgid "The link could not be read, so this comes from your files and text."
 msgstr "Посилання не вдалося прочитати, тож це взято з твоїх файлів і тексту."
 
@@ -375,11 +375,11 @@ msgstr "Для довгих документів це займає до пів �
 #~ msgid "Use this name box label"
 #~ msgstr "Використати цей підпис поля назви"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:199
+#: src/components/project/digest/DigestReview/DigestReview.tsx:190
 msgid "Verify"
 msgstr "Verify"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:585
+#: src/components/project/digest/DigestReview/DigestReview.tsx:576
 msgid "Verify options"
 msgstr "Параметри Verify"
 
@@ -387,28 +387,28 @@ msgstr "Параметри Verify"
 msgid "waiting"
 msgstr "очікує"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:581
+#: src/components/project/digest/DigestReview/DigestReview.tsx:572
 msgid "What participants check together at the end of their conversation."
 msgstr "Що учасники разом перевіряють наприкінці розмови."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:609
+#: src/components/project/digest/DigestReview/DigestReview.tsx:600
 msgid "What the portal asks each group to type before recording."
 msgstr "Що портал просить кожну групу ввести перед записом."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:412
+#: src/components/project/digest/DigestReview/DigestReview.tsx:403
 msgid "What you want to learn or decide. Saved as the project's first goal."
 msgstr "Що ти хочеш дізнатися чи вирішити. Зберігається як перша ціль проєкту."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:429
+#: src/components/project/digest/DigestReview/DigestReview.tsx:420
 msgid "What, who, where and the questions. dembrane reads it to keep answers and summaries on your question."
 msgstr "Що, хто, де і питання. dembrane читає це, щоб відповіді й підсумки стосувалися твого питання."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:624
+#: src/components/project/digest/DigestReview/DigestReview.tsx:615
 msgid "When a group presses Explore, dembrane asks one open question built from your questions. It never gives its own opinion."
 msgstr "Коли група натискає Explore, dembrane ставить одне відкрите питання на основі твоїх питань. Власної думки вона не висловлює."
 
 #. placeholder {0}: result.template.reason
-#: src/components/project/digest/DigestReview/DigestReview.tsx:492
+#: src/components/project/digest/DigestReview/DigestReview.tsx:483
 msgid "Why this one: {0}"
 msgstr "Чому цей: {0}"
 
@@ -416,7 +416,7 @@ msgstr "Чому цей: {0}"
 msgid "You skipped this part. Accept it to use it after all."
 msgstr "Цю частину пропущено. Прийми її, щоб усе ж використати."
 
-#: src/components/project/digest/DigestConnected.tsx:209
+#: src/components/project/digest/DigestConnected.tsx:213
 msgid "You've set up several projects from material in the last hour. Try again later."
 msgstr "За останню годину ти вже налаштував кілька проєктів із матеріалів. Спробуй пізніше."
 
@@ -424,11 +424,11 @@ msgstr "За останню годину ти вже налаштував кіл
 msgid "Your files"
 msgstr "Твої файли"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:330
+#: src/components/project/digest/DigestReview/DigestReview.tsx:321
 msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
 msgstr "Твій матеріал був довгим, тож dembrane прочитала початок і стислу версію. Перевір, чи нічого важливого не бракує."
 
-#: src/components/project/digest/DigestConnected.tsx:217
+#: src/components/project/digest/DigestConnected.tsx:221
 msgid "Your text is in the project context: choose a format below to continue."
 msgstr "Твій текст у контексті проєкту: обери формат нижче, щоб продовжити."
 
@@ -436,6 +436,6 @@ msgstr "Твій текст у контексті проєкту: обери ф�
 #~ msgid "Your text is in the project context: choose a template below to continue."
 #~ msgstr "Твій текст у контексті проєкту: обери шаблон нижче, щоб продовжити."
 
-#: src/components/project/digest/DigestConnected.tsx:204
+#: src/components/project/digest/DigestConnected.tsx:208
 msgid "Your workspace's AI budget for this month is used up, so dembrane can't read this now."
 msgstr "Бюджет на ШІ твого робочого простору на цей місяць вичерпано, тож dembrane зараз не може це прочитати."

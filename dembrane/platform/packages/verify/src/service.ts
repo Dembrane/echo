@@ -14,8 +14,9 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
-import { speechHint } from "@dembrane/llm";
+import { modelErrorShape, speechHint } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
+import { PROJECT_TEMPLATES } from "@dembrane/projects";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { DEFAULT_TOPIC_KEY, defaultTopicPrompt } from "./defaults";
@@ -350,18 +351,6 @@ async function audioParts(ctx: Ctx, chunks: Chunk[]) {
   return out;
 }
 
-/** What a failed model call may put in a log line: no message, no request, no prompt. */
-export function modelErrorShape(err: unknown): { name: string; status: number | null } {
-  const e = err as { name?: unknown; statusCode?: unknown; status?: unknown } | null;
-  const status =
-    typeof e?.statusCode === "number"
-      ? e.statusCode
-      : typeof e?.status === "number"
-        ? e.status
-        : null;
-  return { name: typeof e?.name === "string" ? e.name : "Error", status };
-}
-
 async function complete(
   ctx: Ctx,
   system: string,
@@ -413,15 +402,25 @@ export function keyTermList(raw: string | null | undefined): string {
   return out.join(", ");
 }
 
+/** Templates no longer offered (ECHO-1053) keep the wording their projects always had. */
+const RETIRED_AUDIENCE: Readonly<Record<string, "table" | "single">> = {
+  event: "table",
+  conversation: "single",
+};
+
 /**
- * Who the draft speaks to. An event's tables read it as a table; a one-device conversation
- * (an interview, a meeting) as "you"; anything else gets the neutral wording, because the
- * code cannot tell how many people spoke.
+ * Who the draft speaks to, from the project's template. A template the picker offers as a
+ * card says how it is recorded: many groups at once read the draft as a table, one phone
+ * or file (an interview, a meeting) as "you". A retired template keeps its old wording
+ * (RETIRED_AUDIENCE). Anything else (no template, upload, blank, series) gets the neutral
+ * wording, because the code cannot tell how many people spoke.
  */
 export function audienceOf(templateKey: string | null | undefined): "table" | "single" | "neutral" {
-  if (templateKey === "event") return "table";
-  if (templateKey === "conversation") return "single";
-  return "neutral";
+  const template = PROJECT_TEMPLATES.find((t) => t.key === templateKey);
+  if (!template) return "neutral";
+  if (template.card.offer === "card")
+    return template.card.setup === "many_groups" ? "table" : "single";
+  return RETIRED_AUDIENCE[template.key] ?? "neutral";
 }
 
 /** The wrapper's language: Dutch has its own approved text; every other language reads English. */
@@ -511,7 +510,7 @@ export function topicPromptOf(
 
 /**
  * A Verify draft: the prompt generationInput builds, then the model call. The live draft
- * (generateArtifact) and the portal editor's "Try it" (try-it.ts) both write theirs here,
+ * (generateArtifact) and the portal editor's "Try it" (try-it/service.ts) both write theirs here,
  * so a host sees what participants would get.
  */
 export function writeDraft(

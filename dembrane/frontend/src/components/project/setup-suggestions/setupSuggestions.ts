@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/config";
-import { ApiRequestError } from "@/lib/errors/read";
+import { postJson, type RequestFailure, requestFailure } from "@/lib/apiJson";
 
 /**
  * Setup suggestions (ECHO-1043): what dembrane proposes from what a host says about a
@@ -55,46 +54,11 @@ export interface SuggestionRequest {
 /** Where the block sits, for analytics. */
 export type SuggestionSurface = "wizard" | "portal_editor";
 
-/** Why a request failed, as analytics records it. Never the text, the URL or the terms. */
-export type FailureCause =
-	| "budget"
-	| "unavailable"
-	| "rate_limited"
-	| "invalid"
-	| "forbidden"
-	| "network"
-	| "error";
-
-export function failureCause(error: unknown): FailureCause {
-	if (!(error instanceof ApiRequestError))
-		return error instanceof TypeError ? "network" : "error";
-	if (error.status === 402) return "budget";
-	if (error.status === 503) return "unavailable";
-	if (error.status === 429) return "rate_limited";
-	if (error.status === 422) return "invalid";
-	if (error.status === 403 || error.status === 404) return "forbidden";
-	return "error";
-}
-
-export async function requestSetupSuggestions(
+export const requestSetupSuggestions = (
 	workspaceId: string,
 	body: SuggestionRequest,
-): Promise<SetupSuggestions> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/project-setup/suggestions`,
-		{
-			body: JSON.stringify(body),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-		},
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new ApiRequestError(res.status, data);
-	}
-	return res.json();
-}
+): Promise<SetupSuggestions> =>
+	postJson(`/v2/workspaces/${workspaceId}/project-setup/suggestions`, body);
 
 /** The request, without the global error toast: the block shows its own quiet line. */
 export const useSetupSuggestionsMutation = (workspaceId: string | null) =>

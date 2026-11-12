@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics/events";
+import { requestFailure } from "@/lib/apiJson";
 import type { BriefStatus } from "./SessionBrief/SessionBrief";
 import {
 	addTerms,
-	failureCause,
 	hasTerm,
 	removeTerm,
 	type SetupSuggestions,
@@ -44,7 +44,7 @@ export function useSuggestionBlock(o: {
 			onError: (error) => {
 				setFailed(true);
 				track("project_setup_ai_failed", {
-					cause: failureCause(error),
+					cause: requestFailure(error),
 					surface: o.surface,
 				});
 			},

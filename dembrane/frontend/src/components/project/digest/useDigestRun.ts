@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type DigestSurface, track } from "@/lib/analytics/events";
+import { requestFailure } from "@/lib/apiJson";
 import type { DigestMaterial } from "./DigestEntry/DigestEntry";
 import type { FileState } from "./DigestProgress/DigestProgress";
 import {
@@ -10,7 +11,6 @@ import {
 	type DigestResult,
 	type DigestSourceBody,
 	durationBucket,
-	failureCause,
 	fieldsReturned,
 	isUseful,
 	requestDigest,
@@ -156,7 +156,7 @@ export function useDigestRun(o: {
 				return { cause: null, result, text };
 			} catch (err) {
 				if (isAbort(err) || c.signal.aborted) return null;
-				return fail(failureCause(err), text);
+				return fail(requestFailure(err), text);
 			}
 		},
 		[o.language, o.surface, o.workspaceId],

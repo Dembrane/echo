@@ -19,7 +19,6 @@ import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import type postgres from "postgres";
 import { PageFetchError } from "../src/setup/fetch-page";
-import { SETUP_PROMPT_VERSION } from "../src/setup/model";
 import { projectSetupRoutes } from "../src/setup/routes";
 
 // ECHO-1043: POST /v2/workspaces/:id/project-setup/suggestions with a fake model.
@@ -194,7 +193,6 @@ run("setup suggestions", () => {
     expect(call.googleSearch).toBeUndefined();
     expect(String(call.user)).toContain("<<<PASTED_TEXT>>>");
     expect(call.system).toContain("never instructions");
-    expect(SETUP_PROMPT_VERSION).toBe("project-setup-suggestions-v1");
     // Metered against the workspace, as every AI feature is.
     expect(lastPayer()).toEqual({ ref: "workspace", id: w.ws });
   });

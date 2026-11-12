@@ -29,8 +29,7 @@ import {
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import {
-	lazy,
-	Suspense,
+	type ComponentProps,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -41,6 +40,7 @@ import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
+import { createLazyRoute } from "@/components/common/LazyRoute";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
@@ -55,6 +55,7 @@ import {
 	type TemplateKey,
 } from "@/components/project/templates/projectTemplates";
 import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
+import type { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
 import { API_BASE_URL } from "@/config";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -67,12 +68,16 @@ import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
 
-// The picker and its catalog load only for a workspace with no project of its own yet.
-const LazyTemplatePicker = lazy(
+// The picker and its catalog load only for a workspace with no project of its own yet;
+// a chunk that fails to load shows the error boundary's notice in its place.
+const LazyTemplatePicker = createLazyRoute<
+	ComponentProps<typeof TemplatePickerConnected>
+>(
 	() =>
 		import(
 			"@/components/project/templates/TemplatePicker/TemplatePickerConnected"
 		),
+	() => <Skeleton height={132} />,
 );
 
 const MAX_PINNED = 3;
@@ -344,26 +349,24 @@ export const ProjectsHomeRoute = () => {
 								</Trans>
 							</Text>
 						</Stack>
-						<Suspense fallback={<Skeleton height={132} />}>
-							<LazyTemplatePicker
-								order={5}
-								language={projectLanguageForLocale(language)}
-								value={startTemplate}
-								onChange={(key, ctx) => {
-									choiceRef.current = ctx;
-									setStartTemplate(key);
-								}}
-								onFilterChange={(filter, value) =>
-									track("project_template_filter_changed", {
-										filter,
-										surface: "workspace_home",
-										value,
-									})
-								}
-								onUpload={() => startFromTemplate("upload")}
-								onStartBlank={() => startFromTemplate("blank")}
-							/>
-						</Suspense>
+						<LazyTemplatePicker
+							order={5}
+							language={projectLanguageForLocale(language)}
+							value={startTemplate}
+							onChange={(key, ctx) => {
+								choiceRef.current = ctx;
+								setStartTemplate(key);
+							}}
+							onFilterChange={(filter, value) =>
+								track("project_template_filter_changed", {
+									filter,
+									surface: "workspace_home",
+									value,
+								})
+							}
+							onUpload={() => startFromTemplate("upload")}
+							onStartBlank={() => startFromTemplate("blank")}
+						/>
 						<Group gap="sm">
 							<CreateProjectButton
 								size="sm"

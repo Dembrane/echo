@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { contextForPrompt, contextIsCut, cutAtBoundary, PROJECT_CONTEXT_BUDGET } from "../src";
+import { contextForPrompt, cutAtBoundary, PROJECT_CONTEXT_BUDGET } from "../src";
 
 // ECHO-1055: every prompt reads the project context through one budget.
 
@@ -14,7 +14,6 @@ describe("contextForPrompt", () => {
       "x".repeat(PROJECT_CONTEXT_BUDGET),
     ];
     for (const s of samples) expect(contextForPrompt(s)).toBe(s);
-    expect(contextIsCut("x".repeat(PROJECT_CONTEXT_BUDGET))).toBe(false);
   });
 
   test("no context is null", () => {
@@ -31,7 +30,6 @@ describe("contextForPrompt", () => {
     expect(out.length).toBeGreaterThan(PROJECT_CONTEXT_BUDGET * 0.6);
     expect(text.startsWith(out)).toBe(true);
     expect(out.endsWith(line)).toBe(true);
-    expect(contextIsCut(text)).toBe(true);
   });
 
   test("without line breaks it cuts after a sentence", () => {

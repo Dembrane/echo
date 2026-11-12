@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { securityHeaders } from "../src/headers";
 import { withoutTally } from "../src/server";
 
@@ -39,4 +41,16 @@ test("analytics off drops PostHog and Tally from the CSP, and storage origins co
 test("the Tally script is removed from the page when analytics is off", () => {
   const html = `<head>\n    <script src="https://tally.so/widgets/embed.js"></script>\n    <title>x</title>\n</head>`;
   expect(withoutTally(html)).toBe("<head>\n    <title>x</title>\n</head>");
+});
+
+test("the frontend's own index.html loses every Tally line", () => {
+  // withoutTally finds the embed by its text, so the real page is what it must match.
+  const page = readFileSync(
+    path.resolve(import.meta.dir, "../../../../frontend/index.html"),
+    "utf8",
+  );
+  expect(page).toContain("tally.so");
+  const stripped = withoutTally(page);
+  expect(stripped).not.toContain("tally.so");
+  expect(stripped).toContain("<title>dembrane</title>");
 });

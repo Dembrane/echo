@@ -1,6 +1,7 @@
-import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
-import { BadRequestError, UnavailableError } from "@dembrane/core";
+import { requireAiRequest } from "@dembrane/allowance";
+import { BadRequestError, contextForPrompt, cutAtBoundary, UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
+import { modelErrorShape } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import type { Limit } from "@dembrane/ratelimit";
 import { projectTemplate } from "../project-templates";
@@ -91,14 +92,6 @@ function uniqueName(raw: string, taken: Set<string>): string {
   return name;
 }
 
-/** The text a source's start keeps when it has to be cut, at a line where it can. */
-function headOf(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const line = cut.lastIndexOf("\n");
-  return line > max * 0.6 ? cut.slice(0, line) : cut;
-}
-
 export async function digestProjectSetup(
   d: ProjectSetupDeps,
   who: Signed,
@@ -124,9 +117,9 @@ export async function digestProjectSetup(
         params: { field: `sources[${i}].${field}` },
       });
   });
-  await d.limiter.checkUser(DIGEST_LIMIT, who.directusUserId ?? who.appUserId ?? "");
-  await requireAiBudgetForWorkspace(d.db, workspaceId, d.now());
-  return withPayer({ ref: "workspace", id: workspaceId } as const, () => digestMaterial(d, body));
+  const payer = { ref: "workspace", id: workspaceId } as const;
+  await requireAiRequest(d, { limit: DIGEST_LIMIT, userId: who.directusUserId, payer });
+  return withPayer(payer, () => digestMaterial(d, body));
 }
 
 /**
@@ -171,7 +164,7 @@ export async function digestMaterial(
     }
     if (text.length > room) {
       notes.add("material_cut");
-      text = headOf(text, room);
+      text = cutAtBoundary(text, room);
     }
     total += text.length;
     originals.push({ name: uniqueName(s.name || s.url || s.kind, taken), kind: s.kind, text });
@@ -199,15 +192,15 @@ export async function digestMaterial(
           if (o.text.length <= DIGEST_BOUNDS.condenseFrom)
             return { name: o.name, kind: o.kind, text: o.text, condensed: false };
           if (o.text.length > DIGEST_BOUNDS.condenseInput) notes.add("material_cut");
-          const input = headOf(o.text, DIGEST_BOUNDS.condenseInput);
+          const input = cutAtBoundary(o.text, DIGEST_BOUNDS.condenseInput);
           const text = await condenseSource(d.completer, { name: o.name, text: input }).catch(
             (err) => {
               d.logger.warn(
-                { err, signal: "project_setup.digest_condense_failed" },
+                { error: modelErrorShape(err), signal: "project_setup.digest_condense_failed" },
                 "condense failed",
               );
               notes.add("material_cut");
-              return headOf(o.text, CONDENSED_MAX_CHARS);
+              return cutAtBoundary(o.text, CONDENSED_MAX_CHARS);
             },
           );
           return { name: o.name, kind: o.kind, text, condensed: true };
@@ -221,7 +214,7 @@ export async function digestMaterial(
       const fitted = new Map<string, DigestSource>();
       ordered.forEach((s, i) => {
         const share = Math.floor(budget / (ordered.length - i));
-        const text = s.text.length > share ? headOf(s.text, share) : s.text;
+        const text = s.text.length > share ? cutAtBoundary(s.text, share) : s.text;
         if (text.length < s.text.length) notes.add("material_cut");
         budget -= text.length;
         fitted.set(s.name, { ...s, text });
@@ -232,14 +225,17 @@ export async function digestMaterial(
         language: body.language,
         existing: {
           ...(existingName && { name: existingName }),
-          ...(existingContext && { context: headOf(existingContext, 4_000) }),
+          ...(existingContext && { context: contextForPrompt(existingContext) ?? "" }),
           keyTerms: existingTerms,
         },
       });
       return { answer: result, modelSources: condensed };
     })());
   } catch (err) {
-    d.logger.warn({ err, signal: "project_setup.digest_failed" }, "the digest failed");
+    d.logger.warn(
+      { error: modelErrorShape(err), signal: "project_setup.digest_failed" },
+      "the digest failed",
+    );
     throw new UnavailableError("project.setup_suggestions_unavailable");
   }
   if (!answer) throw new UnavailableError("project.setup_suggestions_unavailable");

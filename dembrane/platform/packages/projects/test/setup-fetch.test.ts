@@ -144,3 +144,27 @@ describe("the linked page", () => {
 test("visibleText drops an unclosed script to the end of the page", () => {
   expect(visibleText("<p>Hi</p><script>evil(", "text/html")).toBe("Hi");
 });
+
+test("visibleText keeps the block structure and drops hidden elements and comments", () => {
+  expect(
+    visibleText(
+      "<HEAD><title>T</title></HEAD><p>One<!-- x --></p><svg><text>no</text></svg ><div>Two &amp; three</div>",
+      "text/html",
+    ),
+  ).toBe("One\nTwo & three");
+  // An element left open stays as text, minus its tag; a comment left open goes with its tag.
+  expect(visibleText("<object data=x>kept<!-- open > after", "text/html")).toBe("kept after");
+});
+
+describe("visibleText on hostile bodies is linear", () => {
+  // ECHO-1043 review: lazy patterns were quadratic here (320 KB of "<!--" took seconds), and
+  // the scan is synchronous, so the read's timeout could not stop it. A megabyte is the cap.
+  for (const shape of ["<!--", "<object x", "<script", "<", "</script <script"]) {
+    test(`a megabyte of ${JSON.stringify(shape)}`, () => {
+      const body = shape.repeat(Math.ceil(1_000_000 / shape.length));
+      const started = performance.now();
+      visibleText(body, "text/html");
+      expect(performance.now() - started).toBeLessThan(500);
+    });
+  }
+});

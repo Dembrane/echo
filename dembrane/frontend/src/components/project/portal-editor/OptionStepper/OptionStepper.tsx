@@ -17,8 +17,8 @@ import {
 	useId,
 	useRef,
 } from "react";
+import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
 import { ShownTitleContext } from "@/components/form/FormLabel";
-import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
 import { testId } from "@/lib/testUtils";
 
 const RULE = "var(--app-stroke) solid var(--app-rule-color)";

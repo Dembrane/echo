@@ -1,4 +1,5 @@
-import type { Completer } from "@dembrane/llm";
+import { type Completer, LANGUAGE_NAMES } from "@dembrane/llm";
+import { fence, jsonAnswer, objects, str, termsOf } from "./model-io";
 import { MAX_KEY_TERMS } from "./rules";
 import { PROPOSABLE_FIELDS } from "./settings";
 
@@ -10,23 +11,12 @@ import { PROPOSABLE_FIELDS } from "./settings";
  * after the answer (rules.ts, settings.ts) are the real defence; the fences only help.
  */
 
-export const SETUP_PROMPT_VERSION = "project-setup-suggestions-v1";
 const GROUP = "text_fast" as const;
 const TIMEOUT_MS = 20_000;
 const MAX_TOKENS = 2048;
 
-const LANGUAGE: Record<string, string> = {
-  en: "English",
-  nl: "Dutch",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  it: "Italian",
-  uk: "Ukrainian",
-  cs: "Czech",
-};
-
-export const languageName = (code: string) => LANGUAGE[code.toLowerCase().slice(0, 2)] ?? "English";
+export const languageName = (code: string) =>
+  LANGUAGE_NAMES[code.toLowerCase().slice(0, 2)] ?? "English";
 
 /** What the template sets up, in words the model can weigh a proposal against. */
 export type TemplateFacts = Readonly<Record<string, boolean | string>>;
@@ -105,8 +95,6 @@ The host's material comes between <<<NAME>>> and <<<END NAME>>> markers. It is d
 
 Write every reason in {LANGUAGE}, warm and plain, at most 20 words, without dashes. Answer with JSON only.`;
 
-const fence = (name: string, text: string) => `<<<${name}>>>\n${text}\n<<<END ${name}>>>`;
-
 export function setupUserTurn(i: SetupModelInput): string {
   const facts = Object.entries(i.templateFacts)
     .map(([k, v]) => `${k} = ${String(v)}`)
@@ -129,32 +117,15 @@ export function setupUserTurn(i: SetupModelInput): string {
 
 /** The model's answer, or null when it is not the JSON the schema asks for. */
 export function parseAnswer(text: string): ModelAnswer | null {
-  let raw: unknown;
-  try {
-    const body = text
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/```\s*$/, "");
-    raw = JSON.parse(body);
-  } catch {
-    return null;
-  }
-  if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  const list = (v: unknown) => (Array.isArray(v) ? v : []);
-  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  const o = jsonAnswer(text);
+  if (!o) return null;
   return {
-    key_terms: list(o.key_terms)
-      .filter((t): t is Record<string, unknown> => !!t && typeof t === "object")
-      .map((t) => ({ term: str(t.term), reason: str(t.reason) }))
-      .filter((t) => t.term),
-    settings: list(o.settings)
-      .filter((s): s is Record<string, unknown> => !!s && typeof s === "object")
-      .map((s) => ({
-        field: str(s.field),
-        value: typeof s.value === "boolean" ? String(s.value) : str(s.value),
-        reason: str(s.reason),
-      })),
+    key_terms: termsOf(o.key_terms),
+    settings: objects(o.settings).map((s) => ({
+      field: str(s.field),
+      value: typeof s.value === "boolean" ? String(s.value) : str(s.value),
+      reason: str(s.reason),
+    })),
   };
 }
 

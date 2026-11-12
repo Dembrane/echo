@@ -2,7 +2,8 @@ import type {
 	PreviewHighlight,
 	PreviewScreen,
 } from "@/lib/portalPreview/protocol";
-import type { PortalFormValues, SectionKey } from "./portalForm";
+import type { PortalFormValues } from "./portalForm";
+import { SECTION_KEYS, type SectionKey } from "./sectionKeys";
 
 /** What decides whether an option applies, beyond the page's own values. */
 export interface OptionFlags {
@@ -169,14 +170,5 @@ export const resolveOption = (
 };
 
 /** The page after this one, or null after Finish. */
-export const nextSection = (section: SectionKey): SectionKey | null => {
-	const order: SectionKey[] = [
-		"welcome",
-		"privacy",
-		"about",
-		"explore",
-		"verify",
-		"finish",
-	];
-	return order[order.indexOf(section) + 1] ?? null;
-};
+export const nextSection = (section: SectionKey): SectionKey | null =>
+	SECTION_KEYS[SECTION_KEYS.indexOf(section) + 1] ?? null;

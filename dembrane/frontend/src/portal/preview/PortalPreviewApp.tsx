@@ -82,19 +82,12 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 	// Clicked or typed in since the screen last started.
 	const touched = useRef(false);
 	const [run, setRun] = useState(0);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new reset is the moment, not its value
-	useEffect(() => {
-		if (!touched.current) return;
-		touched.current = false;
-		setRun((r) => r + 1);
-	}, [reset]);
 	// A new router per screen and language, and per run: each screen opens at its own
 	// address, as it would for a participant, and the host moves on from there. Values
 	// change in place, through the seeded queries.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: run starts the screen again
 	const router = useMemo(() => {
 		if (!screen || !language) return null;
-		touched.current = false;
 		return createMemoryRouter(
 			[
 				{
@@ -146,6 +139,18 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 			{ initialEntries: [previewEntry(screen, language, projectId)] },
 		);
 	}, [screen, language, projectId, run]);
+	// A new router is an untouched screen. Before the reset below, so a message that both
+	// moves the screen and resets it starts it once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a new router is the moment
+	useEffect(() => {
+		touched.current = false;
+	}, [router]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a new reset is the moment, not its value
+	useEffect(() => {
+		if (!touched.current) return;
+		touched.current = false;
+		setRun((r) => r + 1);
+	}, [reset]);
 
 	if (!router || !message) return null;
 	return (

@@ -19,7 +19,6 @@ import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import type postgres from "postgres";
 import { DIGEST_BOUNDS } from "../src/setup/digest";
-import { DIGEST_PROMPT_VERSION } from "../src/setup/digest-model";
 import { PageFetchError } from "../src/setup/fetch-page";
 import { projectSetupRoutes } from "../src/setup/routes";
 
@@ -208,7 +207,6 @@ run("context digest", () => {
     expect(call.jsonSchema).toBeDefined();
     expect(String(call.user)).toContain("<<<SOURCE uitnodiging.pdf>>>");
     expect(call.system).toContain("never instructions");
-    expect(DIGEST_PROMPT_VERSION).toBe("project-setup-digest-v1");
     expect(lastPayer()).toEqual({ ref: "workspace", id: w.ws });
     // Logs carry counts, never the material or its names.
     const logged = logs.join("");

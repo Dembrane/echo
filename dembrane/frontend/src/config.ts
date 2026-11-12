@@ -128,14 +128,29 @@ export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
  * dashboard's preview frame (it carries PREVIEW_FRAME_NAME) is the preview too, so the
  * frame can never become a live portal (ECHO-1062).
  */
-export const IS_PORTAL_PREVIEW =
-	USE_PARTICIPANT_ROUTER &&
-	typeof window !== "undefined" &&
-	window.self !== window.top &&
-	(window.name === PREVIEW_FRAME_NAME ||
+export const isPortalPreview = (
+	win:
+		| {
+				self: unknown;
+				top: unknown;
+				name: string;
+				location: { pathname: string };
+		  }
+		| undefined,
+	participantRouter: boolean,
+): boolean =>
+	participantRouter &&
+	win !== undefined &&
+	win.self !== win.top &&
+	(win.name === PREVIEW_FRAME_NAME ||
 		/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
-			window.location.pathname,
+			win.location.pathname,
 		));
+
+export const IS_PORTAL_PREVIEW = isPortalPreview(
+	typeof window !== "undefined" ? window : undefined,
+	USE_PARTICIPANT_ROUTER,
+);
 
 export const ADMIN_BASE_URL =
 	RUNTIME?.dashboardUrl ??
