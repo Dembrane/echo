@@ -1,0 +1,10 @@
+rfc: 0001-file-naming
+active: true
+max_open_prs: 1
+max_changed_lines: 200     # excludes this file and Biome lock-in entries
+max_files_touched: 15      # includes importers updated by a rename
+runs: 0
+baseline: 61
+remaining: 61
+history: []                # violations fixed per run, newest last
+est_runs_left: null        # ceil(remaining / median of last 5 history entries)
