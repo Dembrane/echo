@@ -4,7 +4,6 @@ import {
   type DigestAnswer,
   digestUserTurn,
   LISTED_TEMPLATE_KEYS,
-  neutraliseFences,
   parseDigestAnswer,
 } from "../src/setup/digest-model";
 import {
@@ -18,6 +17,7 @@ import {
   occursIn,
   scrubPersonalData,
 } from "../src/setup/digest-rules";
+import { neutraliseFences } from "../src/setup/model-io";
 import { NEVER_PROPOSED } from "../src/setup/settings";
 
 // ECHO-1055: the digest's answer against the rules in code, without a model.
