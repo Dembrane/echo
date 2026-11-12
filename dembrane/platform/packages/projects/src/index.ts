@@ -10,6 +10,7 @@ export { REPORT_PROGRESS_CHANNEL } from "./progress";
 export {
   applyOverrides,
   applyProjectTemplate,
+  EXPLORE_MODES,
   listProjectTemplates,
   PRESET_FIELD_NAMES,
   PROJECT_TEMPLATE_KEYS,

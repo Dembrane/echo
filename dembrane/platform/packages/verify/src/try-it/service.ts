@@ -4,6 +4,7 @@ import { BadRequestError, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { modelErrorShape } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
+import { EXPLORE_MODES } from "@dembrane/projects";
 import type { Limit } from "@dembrane/ratelimit";
 import {
   type Ctx,
@@ -40,8 +41,6 @@ export const TRY_IT_LIMIT: Limit = {
 
 /** The most of a result the dashboard gets; a reply or a draft is far shorter. */
 export const TRY_IT_MAX_CHARS = 8_000;
-
-export const EXPLORE_MODES = ["summarize", "brainstorm", "custom"] as const;
 
 /** What a try runs on. Only the built-in sample today. */
 export type TrySource = { readonly kind: "sample" };
