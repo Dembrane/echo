@@ -1,6 +1,7 @@
 import { newId, ValidationError } from "@dembrane/core";
 import { v } from "@dembrane/http";
 import { z } from "zod";
+import { invalidBodyField } from "./body-issues";
 import {
   BUILT_IN_TOPICS,
   hostGuideItem,
@@ -57,25 +58,7 @@ export function parseDigestApply(
   if (raw === null || raw === undefined) return null;
   const parsed = DigestApply.safeParse(raw);
   if (!parsed.success) {
-    throw invalid(
-      parsed.error.issues.flatMap((i) =>
-        i.code === "unrecognized_keys"
-          ? i.keys.map((k) => ({
-              type: "extra_forbidden",
-              loc: ["body", "digest", k],
-              msg: "Extra inputs are not permitted",
-              input: (raw as Record<string, unknown>)[k],
-            }))
-          : [
-              {
-                type: i.path.length ? "value_error" : "dict_type",
-                loc: ["body", "digest", ...i.path.map(String)],
-                msg: i.message,
-                input: i.path.length ? (raw as Record<string, unknown>)[String(i.path[0])] : raw,
-              },
-            ],
-      ),
-    );
+    throw invalidBodyField("digest", raw, parsed.error);
   }
   const d = parsed.data;
   const trimmed = (s: string | undefined) => s?.trim() || undefined;

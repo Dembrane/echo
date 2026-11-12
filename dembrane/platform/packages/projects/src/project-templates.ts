@@ -1,7 +1,7 @@
 import { newId, ValidationError } from "@dembrane/core";
 import type { schema } from "@dembrane/db";
-import { v } from "@dembrane/http";
 import { z } from "zod";
+import { invalidBodyField } from "./body-issues";
 import type { PROJECT_UPDATE_FIELDS } from "./projects";
 import type { ProjectsStorage } from "./storage";
 
@@ -1811,27 +1811,7 @@ export function parseOverrides(raw: unknown): PresetOverrides | null {
   if (raw === null || raw === undefined) return null;
   const parsed = PresetFields.safeParse(raw);
   if (parsed.success) return parsed.data;
-  const issues: v.Issue[] = parsed.error.issues.flatMap((i) =>
-    i.code === "unrecognized_keys"
-      ? i.keys.map((k) => ({
-          type: "extra_forbidden",
-          loc: ["body", "overrides", k],
-          msg: "Extra inputs are not permitted",
-          input: (raw as Record<string, unknown>)[k],
-        }))
-      : [
-          {
-            type: i.path.length ? "value_error" : "dict_type",
-            loc: ["body", "overrides", ...i.path.map(String)],
-            msg: i.message,
-            input: i.path.length ? (raw as Record<string, unknown>)[String(i.path[0])] : raw,
-          },
-        ],
-  );
-  throw new ValidationError("validation.invalid_input", {
-    details: issues,
-    params: { fields: v.fieldProblems(issues) },
-  });
+  throw invalidBodyField("overrides", raw, parsed.error);
 }
 
 /** Overrides on a project that starts bare (no template_key): the same columns, no preset. */
