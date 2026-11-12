@@ -1,5 +1,5 @@
 import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
-import { BadRequestError, UnavailableError } from "@dembrane/core";
+import { BadRequestError, contextForPrompt, cutAtBoundary, UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
 import { withPayer } from "@dembrane/observability";
 import type { Limit } from "@dembrane/ratelimit";
@@ -91,14 +91,6 @@ function uniqueName(raw: string, taken: Set<string>): string {
   return name;
 }
 
-/** The text a source's start keeps when it has to be cut, at a line where it can. */
-function headOf(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const line = cut.lastIndexOf("\n");
-  return line > max * 0.6 ? cut.slice(0, line) : cut;
-}
-
 export async function digestProjectSetup(
   d: ProjectSetupDeps,
   who: Signed,
@@ -171,7 +163,7 @@ export async function digestMaterial(
     }
     if (text.length > room) {
       notes.add("material_cut");
-      text = headOf(text, room);
+      text = cutAtBoundary(text, room);
     }
     total += text.length;
     originals.push({ name: uniqueName(s.name || s.url || s.kind, taken), kind: s.kind, text });
@@ -199,7 +191,7 @@ export async function digestMaterial(
           if (o.text.length <= DIGEST_BOUNDS.condenseFrom)
             return { name: o.name, kind: o.kind, text: o.text, condensed: false };
           if (o.text.length > DIGEST_BOUNDS.condenseInput) notes.add("material_cut");
-          const input = headOf(o.text, DIGEST_BOUNDS.condenseInput);
+          const input = cutAtBoundary(o.text, DIGEST_BOUNDS.condenseInput);
           const text = await condenseSource(d.completer, { name: o.name, text: input }).catch(
             (err) => {
               d.logger.warn(
@@ -207,7 +199,7 @@ export async function digestMaterial(
                 "condense failed",
               );
               notes.add("material_cut");
-              return headOf(o.text, CONDENSED_MAX_CHARS);
+              return cutAtBoundary(o.text, CONDENSED_MAX_CHARS);
             },
           );
           return { name: o.name, kind: o.kind, text, condensed: true };
@@ -221,7 +213,7 @@ export async function digestMaterial(
       const fitted = new Map<string, DigestSource>();
       ordered.forEach((s, i) => {
         const share = Math.floor(budget / (ordered.length - i));
-        const text = s.text.length > share ? headOf(s.text, share) : s.text;
+        const text = s.text.length > share ? cutAtBoundary(s.text, share) : s.text;
         if (text.length < s.text.length) notes.add("material_cut");
         budget -= text.length;
         fitted.set(s.name, { ...s, text });
@@ -232,7 +224,7 @@ export async function digestMaterial(
         language: body.language,
         existing: {
           ...(existingName && { name: existingName }),
-          ...(existingContext && { context: headOf(existingContext, 4_000) }),
+          ...(existingContext && { context: contextForPrompt(existingContext) ?? "" }),
           keyTerms: existingTerms,
         },
       });

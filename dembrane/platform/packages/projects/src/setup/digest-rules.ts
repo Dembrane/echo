@@ -1,3 +1,4 @@
+import { cutAtBoundary } from "@dembrane/core";
 import { BUILT_IN_TOPICS, NAME_LABEL_MAX, type ProjectTemplate } from "../project-templates";
 import {
   type DigestAnswer,
@@ -77,16 +78,14 @@ const comparable = (s: string) =>
 /** Dashes a model writes into prose (the house style has none), made commas. */
 const noDashes = (s: string) => s.replace(/\s*[—–]\s*/g, ", ");
 
-/** One line of plain text, at most `max` characters, cut at a word. */
+/** One line of plain text, at most `max` characters, cut at a sentence end or a word (cutAtBoundary). */
 export function capLine(text: string, max: number): string {
   const line = collapse(noDashes(text));
   if (line.length <= max) return line;
-  const cut = line.slice(0, max);
-  const space = cut.lastIndexOf(" ");
-  return (space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:]+$/, "");
+  return cutAtBoundary(line, max).replace(/[\s,;:]+$/, "");
 }
 
-/** Text with its lines kept, at most `max` characters, cut at a line or a sentence. */
+/** Text with its lines kept, at most `max` characters, cut at a paragraph, line or sentence (cutAtBoundary). */
 export function capText(text: string, max: number): string {
   const tidy = noDashes(text)
     .replace(/\r\n?/g, "\n")
@@ -95,13 +94,7 @@ export function capText(text: string, max: number): string {
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  if (tidy.length <= max) return tidy;
-  const head = tidy.slice(0, max);
-  const line = head.lastIndexOf("\n");
-  if (line > max * 0.6) return head.slice(0, line).trim();
-  const sentence = Math.max(head.lastIndexOf(". "), head.lastIndexOf("? "), head.lastIndexOf("! "));
-  if (sentence > max * 0.6) return head.slice(0, sentence + 1).trim();
-  return capLine(head, max);
+  return cutAtBoundary(tidy, max);
 }
 
 // ── Personal data in the context ─────────────────────────────────────
