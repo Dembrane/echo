@@ -9,6 +9,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -605,10 +606,15 @@ describe("portal editor pages: Try it", () => {
 	});
 
 	it("says when the hour's tries are used up", async () => {
-		answer(429, { code: "rate_limit.exceeded" });
+		answer(429, {
+			action: "wait",
+			code: "rate_limit.exceeded",
+			detail: "Too many requests. Try again later.",
+			params: {},
+		});
 		renderPage("explore", "mode", { is_get_reply_enabled: true });
 		await press();
-		expect(status()).toBe("limit");
+		await waitFor(() => expect(status()).toBe("limit"));
 		expect(
 			screen.getByTestId("portal-try-button").hasAttribute("disabled"),
 		).toBe(true);
@@ -618,10 +624,20 @@ describe("portal editor pages: Try it", () => {
 	});
 
 	it("says when a try failed, and tries again", async () => {
-		const fetch = answer(502, { code: "portal.try_failed" });
+		const fetch = answer(502, {
+			action: "retry",
+			code: "portal.try_failed",
+			detail: "The try did not work.",
+			params: {},
+		});
 		renderPage("explore", "mode", { is_get_reply_enabled: true });
 		await press();
-		expect(status()).toBe("failed");
+		await waitFor(() => expect(status()).toBe("failed"));
+		await waitFor(() =>
+			expect(screen.getByTestId("portal-try-status").textContent).toBe(
+				"The try did not work. Try again.",
+			),
+		);
 		expect(screen.getByTestId("portal-try-button").textContent).toBe(
 			"Try again",
 		);

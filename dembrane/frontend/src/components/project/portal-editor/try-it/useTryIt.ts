@@ -91,8 +91,9 @@ export function useTryIt({
 			finished("result");
 		} catch (error) {
 			if (c.signal.aborted) return;
-			// The failed line shows the error's own message once the table has loaded.
-			void loadErrorMessages(i18n);
+			// The failed line shows the error's own message: load the table first.
+			await loadErrorMessages(i18n).catch(() => undefined);
+			if (c.signal.aborted) return;
 			const cause = failureCause(error);
 			const status = cause === "rate_limited" ? "limit" : "failed";
 			setState((s) => ({ ...s, error, status }));

@@ -353,14 +353,36 @@ for (const size of sizes)
 				);
 				await shot(page, name("explore-stale"), phone);
 
-				reply = { json: { code: "portal.try_failed" }, status: 502 };
+				// The bodies the API sends: code, action, detail and params.
+				reply = {
+					json: {
+						action: "retry",
+						code: "portal.try_failed",
+						detail: "The try did not work.",
+						params: {},
+					},
+					status: 502,
+				};
 				await page.getByTestId("portal-try-button").click();
 				await expect(tryState).toHaveAttribute("data-status", "failed", {
 					timeout: 15_000,
 				});
+				await expect(page.getByTestId("portal-try-status")).toHaveText(
+					nl
+						? "Het proberen is niet gelukt. Probeer het opnieuw."
+						: "The try did not work. Try again.",
+				);
 				await shot(page, name("explore-failed"), phone);
 
-				reply = { json: { code: "rate_limit.exceeded" }, status: 429 };
+				reply = {
+					json: {
+						action: "wait",
+						code: "rate_limit.exceeded",
+						detail: "Too many requests. Try again later.",
+						params: {},
+					},
+					status: 429,
+				};
 				await page.getByTestId("portal-try-button").click();
 				await expect(tryState).toHaveAttribute("data-status", "limit", {
 					timeout: 15_000,
