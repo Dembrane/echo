@@ -77,7 +77,8 @@ share the link.
 
 | Setting | Where |
 |---|---|
-| Name, "Project context", "Project goal", "Methodology", "Experimental" | "Manage" in the project sidebar, then "General" |
+| Name, "Project context", "Project goal", "Key terms", "Methodology" | "Brief" in the project sidebar |
+| "Experimental", moving, cloning and deleting | "Manage" in the project sidebar, then "Advanced" |
 | Who can see the project | "Manage", then "Access" |
 | Language, key terms, tags and everything participants see | "Portal editor" in the project sidebar |
 
@@ -94,7 +95,7 @@ has one switch, "Living canvas and popcorn" (Beta). See [canvases](../../feature
   the three-dot menu on the project list.
 - Pin: a workspace has at most 3 pinned projects. Pins are shared, so everyone in the
   workspace sees the same ones at the top of the list.
-- Clone: "Manage", "General", "Actions", "Clone project". The copy gets the settings and the
+- Clone: "Manage", "Advanced", "Actions", "Clone project". The copy gets the settings and the
   tags. Reports, chats and conversations are not included. Use it for a series of sessions
   with the same setup.
 - Move: "Move to another workspace" under "General". You have to be an admin of both

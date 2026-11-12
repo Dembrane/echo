@@ -80,7 +80,7 @@ const NAVIGATION_TARGETS: Record<NavigationPageKey, NavigationTarget> = {
 		label: t`project overview`,
 	},
 	"portal-editor": {
-		buildPath: (context) => `${projectPath(context)}/portal-editor`,
+		buildPath: (context) => `${projectPath(context)}/portal/welcome`,
 		buttonLabel: t`Go to portal editor`,
 		label: t`portal editor`,
 	},
@@ -90,7 +90,7 @@ const NAVIGATION_TARGETS: Record<NavigationPageKey, NavigationTarget> = {
 		label: t`report`,
 	},
 	settings: {
-		buildPath: (context) => `${projectPath(context)}/overview`,
+		buildPath: (context) => `${projectPath(context)}/brief`,
 		buttonLabel: t`Go to settings`,
 		label: t`project settings`,
 	},

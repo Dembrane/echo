@@ -104,6 +104,6 @@ describe("SuggestKeyTermsConnected without a project context", () => {
 		).toBe(true);
 		expect(
 			screen.getByTestId("setup-suggestions-context-link").getAttribute("href"),
-		).toContain("/w/w1/projects/p1/overview#project-context");
+		).toContain("/w/w1/projects/p1/brief#project-context");
 	});
 });

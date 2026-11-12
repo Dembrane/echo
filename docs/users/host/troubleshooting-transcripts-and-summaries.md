@@ -20,10 +20,10 @@ point, or there is no text at all. Find yours below.
 You cannot edit the text of a transcript. Instead you give dembrane better information and
 let it transcribe again.
 
-1. Add key terms. Open "Portal editor", "Advanced settings", "Key terms", or press "Set key
+1. Add key terms. Open "Brief", "Key terms", or press "Set key
    terms" on "Overview". Add the names of people, places and organisations and the jargon
    that came out wrong. Press Enter after each one.
-2. Check the language. "Language" under "Basic settings" in the portal editor is a hint for
+2. Check the language. "Language" on the portal editor's "Welcome" page is a hint for
    transcription. dembrane writes down what is spoken, and the hint helps where the audio
    leaves room for doubt.
 3. Retranscribe. Open the conversation and click the circular arrow next to the "Transcript"
@@ -68,7 +68,7 @@ a participant approved. It writes in the project's language.
 
 1. Get the transcript right first (section 1). A summary cannot be better than the text
    under it.
-2. Sharpen the "Project context". Open "Manage", "General", or press "Set project context"
+2. Sharpen the "Project context". Open "Brief", or press "Set project context"
    on "Overview". Say what the project is about and what you want to learn.
 3. Open the conversation and press "Regenerate summary" next to "Summary", then
    "Regenerate". The new summary replaces the current one, which is lost.

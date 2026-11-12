@@ -50,8 +50,8 @@ export const PREVIEW_PR: { number: number; url: string } | null =
 export const REGION: "eu" | undefined = RUNTIME?.region;
 
 const ENV_HOSTNAMES: Record<"production" | "staging" | "testing", string[]> = {
-	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
+	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	testing: [
 		"dashboard.echo-testing.dembrane.com",
 		"portal.echo-testing.dembrane.com",
@@ -113,6 +113,19 @@ export const USE_PARTICIPANT_ROUTER = RUNTIME
 			globalThis.window?.location.hostname.startsWith("portal.") ||
 				globalThis.window?.location.port === "5174",
 		);
+
+/**
+ * The portal drawn inside the dashboard's portal editor (ECHO-1060): the portal's own
+ * …/:projectId/preview address, inside a frame. Opened any other way it is not a preview
+ * (the participant router sends that address to the start screen).
+ */
+export const IS_PORTAL_PREVIEW =
+	USE_PARTICIPANT_ROUTER &&
+	typeof window !== "undefined" &&
+	window.self !== window.top &&
+	/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
+		window.location.pathname,
+	);
 
 export const ADMIN_BASE_URL =
 	RUNTIME?.dashboardUrl ??

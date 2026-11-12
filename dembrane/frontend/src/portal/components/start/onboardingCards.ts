@@ -1200,13 +1200,19 @@ const getPrivacyCard = (
 	privacyPolicyUrl?: string | null,
 	organiserName?: string | null,
 ): LanguageCards[string][number] | null => {
-	if (legalBasis === "client-managed") {
-		return getClientManagedPrivacyCard(lang);
-	}
-	if (legalBasis === "dembrane-events") {
-		return getDembraneEventsPrivacyCard(lang);
-	}
-	return getConsentPrivacyCard(lang, privacyPolicyUrl, organiserName);
+	const card =
+		legalBasis === "client-managed"
+			? getClientManagedPrivacyCard(lang)
+			: legalBasis === "dembrane-events"
+				? getDembraneEventsPrivacyCard(lang)
+				: getConsentPrivacyCard(lang, privacyPolicyUrl, organiserName);
+	// Marked so the portal preview (ECHO-1060) can open on it.
+	return card
+		? {
+				...card,
+				slides: card.slides.map((slide) => ({ ...slide, type: "privacy" })),
+			}
+		: null;
 };
 
 const getClientManagedPrivacyCard = (

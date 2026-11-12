@@ -84,6 +84,9 @@ export const flows: Record<string, Flow> = {
 	"/:projectId/conversation/:conversationId/verify/approve": {
 		params: { conversationId: "$conversation", projectId: "$project" },
 	},
+	// Opened outside the dashboard's frame it only sends you to the start screen; inside it
+	// is the portal editor's preview, checked with the portal editor's pages (ECHO-1060).
+	"/:projectId/preview": REDIRECT,
 	"/:projectId/report": { params: { projectId: "$project" } },
 	"/:projectId/start": { params: { projectId: "$project" } },
 	"/:projectId/unsubscribe": { params: { projectId: "$project" } },
@@ -180,6 +183,15 @@ export const flows: Record<string, Flow> = {
 		params: project,
 		variants: [...EMPTY],
 	},
+	"/w/:workspaceId/projects/:projectId/advanced": {
+		params: project,
+		roles: ["owner", "member"],
+		states: [
+			{ clicks: ["project-actions-clone-button"], name: "clone" },
+			{ clicks: ["project-actions-delete-button"], name: "delete" },
+		],
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/analysis": {
 		params: project,
 		variants: [...EMPTY],
@@ -189,6 +201,11 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/analysis/recipes/:recipeId": {
 		params: { ...project, recipeId: "$recipe" },
+	},
+	"/w/:workspaceId/projects/:projectId/brief": {
+		params: project,
+		roles: ["owner", "member"],
+		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/canvases/:canvasId": {
 		params: { ...project, canvasId: "$canvas" },
@@ -253,10 +270,7 @@ export const flows: Record<string, Flow> = {
 		params: project,
 		variants: [...EMPTY],
 	},
-	"/w/:workspaceId/projects/:projectId/integrations": {
-		params: project,
-		variants: [...EMPTY],
-	},
+	"/w/:workspaceId/projects/:projectId/integrations": REDIRECT,
 	"/w/:workspaceId/projects/:projectId/library": {
 		params: project,
 		variants: [...EMPTY],
@@ -270,21 +284,20 @@ export const flows: Record<string, Flow> = {
 		params: project,
 		variants: [...EMPTY],
 	},
-	"/w/:workspaceId/projects/:projectId/overview": {
-		params: project,
+	"/w/:workspaceId/projects/:projectId/overview": REDIRECT,
+	"/w/:workspaceId/projects/:projectId/portal": REDIRECT,
+	"/w/:workspaceId/projects/:projectId/portal-editor": REDIRECT,
+	// One visit per page, on its first option. Its switches save as they change, on demo
+	// data the other sessions share, so only the preview (on a phone behind a button),
+	// which changes nothing, is opened (ECHO-1060).
+	"/w/:workspaceId/projects/:projectId/portal/:section/:option?": {
+		params: {
+			...project,
+			option: "",
+			section: ["welcome", "privacy", "about", "explore", "verify", "finish"],
+		},
 		roles: ["owner", "member"],
-		states: [
-			{ clicks: ["project-actions-clone-button"], name: "clone" },
-			{ clicks: ["project-actions-delete-button"], name: "delete" },
-		],
-		variants: [...EMPTY],
-	},
-	// Its switches save as they change, on demo data the other sessions share,
-	// so only the preview, which changes nothing, is opened.
-	"/w/:workspaceId/projects/:projectId/portal-editor": {
-		params: project,
-		roles: ["owner", "member"],
-		states: [{ clicks: ["portal-editor-preview-toggle"], name: "preview" }],
+		states: [{ clicks: ["portal-preview-toggle"], name: "preview" }],
 		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/present": {

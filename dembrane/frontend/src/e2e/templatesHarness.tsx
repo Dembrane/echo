@@ -10,8 +10,7 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { ParticipantInitiateForm } from "@/portal/components/start/ParticipantInitiateForm";
-import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { PortalSectionEditor } from "@/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor";
 import { useTemplatesCatalog } from "@/components/project/templates/i18n";
 import {
 	CARD_KEYS,
@@ -20,16 +19,17 @@ import {
 	templateGreatFor,
 	templateName,
 } from "@/components/project/templates/projectTemplates";
-import { TemplateCard } from "@/components/project/templates/TemplateCard/TemplateCard";
 import {
 	TEMPLATE_SUMMARIES,
 	TEMPLATE_SUMMARIES_NL,
 } from "@/components/project/templates/projectTemplates.fixture";
+import { TemplateCard } from "@/components/project/templates/TemplateCard/TemplateCard";
 import { AppPreferencesProvider } from "@/hooks/useAppPreferences";
 import {
 	WorkspaceContext,
 	type WorkspaceContextValue,
 } from "@/hooks/useWorkspace";
+import { ParticipantInitiateForm } from "@/portal/components/start/ParticipantInitiateForm";
 import { CreateProjectRoute } from "@/routes/project/CreateProjectRoute";
 import { HostGuidePage } from "@/routes/project/HostGuidePage";
 import { ProjectsHomeRoute } from "@/routes/project/ProjectsHome";
@@ -93,7 +93,11 @@ const Editor = () => {
 	const nl = window.location.search.includes("nl-NL");
 	return (
 		<div style={{ padding: 24 }}>
-			<ProjectPortalEditor
+			<PortalSectionEditor
+				section="about"
+				option="name-label"
+				readOnly={false}
+				tags={[]}
 				project={
 					{
 						conversation_ask_for_participant_name_label: nl
@@ -120,6 +124,7 @@ const Editor = () => {
 							: "Lindenwijk resident evening",
 						tags: [],
 						updated_at: "2026-11-10T09:00:00Z",
+						workspace_id: "w1",
 					} as never
 				}
 				verificationTopics={{

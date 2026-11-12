@@ -45,6 +45,7 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
 	access: "Access",
+	brief: "Brief",
 	canvases: "Library",
 	chats: "Ask",
 	conversation: "Conversation",
@@ -63,6 +64,16 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	report: "Report",
 	upload: "Upload",
 	usage: "Usage",
+};
+
+// The portal editor's pages (ECHO-1060).
+const PORTAL_PAGE_LABELS: Record<string, string> = {
+	about: "About",
+	explore: "Explore",
+	finish: "Finish",
+	privacy: "Privacy",
+	verify: "Verify",
+	welcome: "Welcome",
 };
 
 const USER_SETTINGS_LABELS: Record<string, string> = {
@@ -284,7 +295,25 @@ export const AppBreadcrumbs = () => {
 				if (section === "access") out.push({ label: "Access" });
 				else if (section === "usage") out.push({ label: "Usage" });
 				else if (section === "export") out.push({ label: "Export" });
-				else if (section === "overview") out.push({ label: "General" });
+				else if (section === "advanced") out.push({ label: "Advanced" });
+				return out;
+			}
+			case "project-portal": {
+				if (workspace) {
+					pushWorkspaceCrumbs(workspace);
+				}
+				if (projectQuery.data?.name) {
+					out.push({
+						href: `/w/${params.workspaceId}/projects/${params.projectId}/home`,
+						label: projectQuery.data.name,
+					});
+				}
+				out.push({
+					href: `/w/${params.workspaceId}/projects/${params.projectId}/portal/welcome`,
+					label: "Portal editor",
+				});
+				const page = params.section ? PORTAL_PAGE_LABELS[params.section] : null;
+				if (page) out.push({ label: page });
 				return out;
 			}
 		}

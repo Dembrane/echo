@@ -32,7 +32,7 @@ includes everything a lower one has.
 | An "Invite only" or "Private" workspace | Innovator or higher |
 | A public page for a presentation | Innovator or higher |
 | Your own workspace logo | Changemaker or higher |
-| "Automation" (webhooks) | Changemaker or higher |
+| Webhooks ("Manage", "Advanced") | Changemaker or higher |
 | The room screen without the "made with dembrane" mark | Changemaker or higher |
 
 No plan caps the number of seats, and paid plans have no cap on recording hours.

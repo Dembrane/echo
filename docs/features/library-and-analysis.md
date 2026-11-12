@@ -26,7 +26,7 @@ Three things in this area do:
 - The public page of a presentation needs the Innovator plan or higher.
 - Taking the "made with dembrane" mark off the room screen needs the Changemaker plan or
   higher.
-- "Automation" (Beta), the project's webhooks, needs the Changemaker plan or higher.
+- Webhooks (Beta, in "Manage", "Advanced") needs the Changemaker plan or higher.
 
 See [tiers & billing](./tiers-and-billing.md).
 
