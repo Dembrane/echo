@@ -130,7 +130,7 @@ export function checkTerm(
   candidate: string,
   sources: TermSources,
   language: string,
-): { ok: true; term: string; source: TermSource } | { ok: false; why: DropReason } {
+): TermCheck<TermSource> {
   const ordered = (["description", "text", "url"] as const).flatMap((source) => {
     const text = sources[source];
     return text ? [{ name: source, text }] : [];
@@ -154,7 +154,7 @@ export function checkTermIn(
   candidate: string,
   sources: readonly NamedSource[],
   language: string,
-): { ok: true; term: string; source: string } | { ok: false; why: DropReason } {
+): TermCheck<string> {
   const term = tidy(candidate);
   if (term.length < 2) return { ok: false, why: "empty" };
   if (term.length > MAX_TERM_CHARS) return { ok: false, why: "too_long" };
@@ -210,21 +210,27 @@ export function oneLine(reason: string, max = MAX_REASON_CHARS): string {
   return line.length <= max ? line : `${line.slice(0, max - 1).trimEnd()}…`;
 }
 
+/** A candidate term as checked against the material: its spelling there and where, or why not. */
+export type TermCheck<S> = { ok: true; term: string; source: S } | { ok: false; why: DropReason };
+
 /**
- * The model's candidates, cleaned: each must pass `checkTerm`, none may repeat another or a
- * term the project already has, and together with the existing ones there are at most
- * MAX_KEY_TERMS. The model's order is kept (it is asked for the most important first).
+ * The model's candidates, kept in its order (it is asked for the most important first):
+ * each must pass `check`, none may repeat another or a term the project already has, and
+ * together with the existing ones there are at most MAX_KEY_TERMS. `keep` makes the kept
+ * entry; suggestions and the digest each add their own fields.
  */
-export function cleanKeyTerms(
-  candidates: readonly { term: string; reason: string }[],
-  o: { sources: TermSources; existing: readonly string[]; language: string },
-): { terms: ProposedTerm[]; dropped: { term: string; why: DropReason }[] } {
-  const seen = new Set(o.existing.map(termKey).filter(Boolean));
+export function keepTerms<C extends { term: string }, S, T>(
+  candidates: readonly C[],
+  existing: readonly string[],
+  check: (c: C) => TermCheck<S>,
+  keep: (c: C, checked: { term: string; source: S }) => T,
+): { terms: T[]; dropped: { term: string; why: DropReason }[] } {
+  const seen = new Set(existing.map(termKey).filter(Boolean));
   const room = Math.max(0, MAX_KEY_TERMS - seen.size);
-  const terms: ProposedTerm[] = [];
+  const terms: T[] = [];
   const dropped: { term: string; why: DropReason }[] = [];
   for (const c of candidates) {
-    const checked = checkTerm(c.term, o.sources, o.language);
+    const checked = check(c);
     if (!checked.ok) {
       dropped.push({ term: c.term, why: checked.why });
       continue;
@@ -239,9 +245,22 @@ export function cleanKeyTerms(
       continue;
     }
     seen.add(key);
-    terms.push({ term: checked.term, reason: oneLine(c.reason), source: checked.source });
+    terms.push(keep(c, checked));
   }
   return { terms, dropped };
+}
+
+/** The suggestions' candidates, cleaned by `keepTerms` against the host's three sources. */
+export function cleanKeyTerms(
+  candidates: readonly { term: string; reason: string }[],
+  o: { sources: TermSources; existing: readonly string[]; language: string },
+): { terms: ProposedTerm[]; dropped: { term: string; why: DropReason }[] } {
+  return keepTerms(
+    candidates,
+    o.existing,
+    (c) => checkTerm(c.term, o.sources, o.language),
+    (c, checked) => ({ term: checked.term, reason: oneLine(c.reason), source: checked.source }),
+  );
 }
 
 /** The host's existing key terms from the stored comma-separated value or a list. */

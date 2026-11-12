@@ -5,7 +5,7 @@ import {
   PROVENANCE_FIELDS,
   type ProvenanceField,
 } from "./digest-model";
-import { checkTermIn, collapse, MAX_KEY_TERMS, type NamedSource, oneLine, termKey } from "./rules";
+import { checkTermIn, collapse, keepTerms, type NamedSource, oneLine, termKey } from "./rules";
 
 /**
  * The rules a digest answer passes in code (ECHO-1055), after the model, so the prompt is
@@ -317,23 +317,17 @@ export function cleanDigest(i: CleanInput): DigestResult & { personal_data_remov
   const listed = (k: string) => (LISTED_TEMPLATE_KEYS as readonly string[]).includes(k);
 
   // Key terms: the suggestions' rules against every source, then a snippet from its line.
-  const seen = new Set(i.existingTerms.map(termKey).filter(Boolean));
-  const room = Math.max(0, MAX_KEY_TERMS - seen.size);
-  const terms: DigestTerm[] = [];
-  for (const c of a.key_terms) {
-    const checked = checkTermIn(c.term, i.sources, i.language);
-    if (!checked.ok) continue;
-    const key = termKey(checked.term);
-    if (seen.has(key) || terms.length >= room) continue;
-    seen.add(key);
-    const text = i.sources.find((s) => s.name === checked.source)?.text ?? "";
-    terms.push({
+  const { terms } = keepTerms(
+    a.key_terms,
+    i.existingTerms,
+    (c) => checkTermIn(c.term, i.sources, i.language),
+    (c, checked): DigestTerm => ({
       term: checked.term,
       reason: oneLine(c.reason, DIGEST_LIMITS.reason),
       source: checked.source,
-      snippet: lineWith(checked.term, text),
-    });
-  }
+      snippet: lineWith(checked.term, i.sources.find((s) => s.name === checked.source)?.text ?? ""),
+    }),
+  );
 
   const templateKey = listed(a.template_key) ? a.template_key : null;
   const template = templateKey ? i.templateOf(templateKey) : null;
