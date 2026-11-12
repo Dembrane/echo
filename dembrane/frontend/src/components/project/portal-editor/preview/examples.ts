@@ -1,3 +1,7 @@
+import {
+	PROJECT_LANGUAGE_CODES,
+	type ProjectLanguageCode,
+} from "@/components/project/projectLanguage";
 import type { PreviewResult } from "@/lib/portalPreview/protocol";
 
 /**
@@ -16,15 +20,7 @@ import type { PreviewResult } from "@/lib/portalPreview/protocol";
  * a preview result is made, and PreviewResult.source says which it is.
  */
 
-export type ExampleLanguage =
-	| "en"
-	| "nl"
-	| "de"
-	| "fr"
-	| "es"
-	| "it"
-	| "uk"
-	| "cs";
+export type ExampleLanguage = ProjectLanguageCode;
 
 type Texts = Record<ExampleLanguage, string>;
 
@@ -351,9 +347,7 @@ const EXPLORE: Record<string, Texts> = {
 };
 
 const lang = (language: string): ExampleLanguage =>
-	(["en", "nl", "de", "fr", "es", "it", "uk", "cs"] as const).find(
-		(l) => l === language,
-	) ?? "en";
+	PROJECT_LANGUAGE_CODES.find((l) => l === language) ?? "en";
 
 /** The topics and modes with a hand-written example. */
 export const EXAMPLE_TOPIC_KEYS = Object.keys(VERIFY_BODY);

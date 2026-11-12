@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { projectLanguageForForm } from "../projectLanguage";
+import {
+	PROJECT_LANGUAGE_CODES,
+	type ProjectLanguageCode,
+	projectLanguageForForm,
+} from "../projectLanguage";
 
 /** The longest name box label the API takes (platform project-templates NAME_LABEL_MAX). */
 export const NAME_LABEL_MAX = 80;
@@ -28,7 +32,9 @@ export const PortalFormSchema = z.object({
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
 	is_verify_on_finish_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk", "cs"]),
+	language: z.enum(
+		PROJECT_LANGUAGE_CODES as [ProjectLanguageCode, ...ProjectLanguageCode[]],
+	),
 	verification_topics: z.array(z.string()),
 });
 

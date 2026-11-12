@@ -9,6 +9,11 @@
  * which renders no raw HTML).
  */
 
+import {
+	PROJECT_LANGUAGE_CODES,
+	type ProjectLanguageCode,
+} from "@/components/project/projectLanguage";
+
 export const PREVIEW_MESSAGE = "dembrane:portal-preview";
 export const PREVIEW_READY = "dembrane:portal-preview-ready";
 export const PREVIEW_VERSION = 2;
@@ -44,16 +49,8 @@ export const PREVIEW_HIGHLIGHTS = [
 ] as const;
 export type PreviewHighlight = (typeof PREVIEW_HIGHLIGHTS)[number];
 
-export const PREVIEW_LANGUAGES = [
-	"en",
-	"nl",
-	"de",
-	"fr",
-	"es",
-	"it",
-	"uk",
-	"cs",
-] as const;
+/** The project languages, each of which the preview can show. */
+export const PREVIEW_LANGUAGES = PROJECT_LANGUAGE_CODES;
 
 export const LEGAL_BASES = [
 	"client-managed",
@@ -63,7 +60,7 @@ export const LEGAL_BASES = [
 
 /** What a participant screen reads from the project, and nothing more. */
 export interface PreviewProject {
-	language: (typeof PREVIEW_LANGUAGES)[number];
+	language: ProjectLanguageCode;
 	default_conversation_title: string;
 	default_conversation_description: string;
 	default_conversation_finish_text: string;
