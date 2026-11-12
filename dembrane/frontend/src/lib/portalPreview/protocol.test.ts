@@ -116,6 +116,24 @@ describe("parsePreviewMessage", () => {
 		expect(webUrl("https://example.org/p")).toBe("https://example.org/p");
 		expect(webUrl("javascript:alert(1)")).toBeNull();
 		expect(webUrl("https://")).toBeNull();
+		expect(webUrl("http://example.org/p")).toBe("http://example.org/p");
+		expect(webUrl(42)).toBeNull();
+		expect(webUrl(`https://example.org/${"x".repeat(2_000)}`)).toBeNull();
+	});
+
+	it("keeps a policy link that is http or https or none, and refuses any other", () => {
+		const built = message();
+		const withPolicy = (privacy_policy_url: unknown) =>
+			parsePreviewMessage({
+				...built,
+				project: { ...built.project, privacy_policy_url },
+			});
+		expect(withPolicy("http://example.org/p")?.project.privacy_policy_url).toBe(
+			"http://example.org/p",
+		);
+		expect(withPolicy(null)?.project.privacy_policy_url).toBeNull();
+		expect(withPolicy("")).toBeNull();
+		expect(withPolicy("javascript:alert(1)")).toBeNull();
 	});
 });
 

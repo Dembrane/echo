@@ -143,28 +143,19 @@ const oneOf = <T extends string>(v: unknown, values: readonly T[]): T | null =>
 		? (v as T)
 		: null;
 
-/** The URL when it is an http(s) address the preview may show as a link, else null. */
-export const webUrl = (v: string | null | undefined): string | null => {
-	if (!v || v.length > LIMITS.url) return null;
-	try {
-		const url = new URL(v);
-		return url.protocol === "https:" || url.protocol === "http:" ? v : null;
-	} catch {
-		return null;
-	}
-};
-
-const httpsUrl = (v: unknown): string | null | undefined => {
-	if (v === null) return null;
+/**
+ * The value when it is an http or https address within the URL cap, the only links the
+ * preview shows; null for anything else. Both ends use it: the dashboard on what it sends,
+ * the portal on what it receives.
+ */
+export const webUrl = (v: unknown): string | null => {
 	const s = text(v, LIMITS.url);
-	if (s === null) return undefined;
+	if (!s) return null;
 	try {
 		const url = new URL(s);
-		return url.protocol === "https:" || url.protocol === "http:"
-			? s
-			: undefined;
+		return url.protocol === "https:" || url.protocol === "http:" ? s : null;
 	} catch {
-		return undefined;
+		return null;
 	}
 };
 
@@ -191,7 +182,8 @@ function parseProject(v: unknown): PreviewProject | null {
 		v.conversation_ask_for_participant_name_label,
 		LIMITS.label,
 	);
-	const policy = httpsUrl(v.privacy_policy_url);
+	const policy =
+		v.privacy_policy_url === null ? null : webUrl(v.privacy_policy_url);
 	const organiser =
 		v.organiser_name === null ? null : text(v.organiser_name, LIMITS.title);
 	if (
@@ -202,7 +194,7 @@ function parseProject(v: unknown): PreviewProject | null {
 		description === null ||
 		finish === null ||
 		nameLabel === null ||
-		policy === undefined ||
+		(v.privacy_policy_url !== null && policy === null) ||
 		(v.organiser_name !== null && organiser === null)
 	)
 		return null;
