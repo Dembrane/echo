@@ -39,6 +39,7 @@ export type FeatureGroup =
 	| "portal"
 	| "recording"
 	| "voice"
+	| "samples"
 	| "other";
 
 export interface OperationCost {

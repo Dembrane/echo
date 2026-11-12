@@ -46,6 +46,10 @@ describe("classifyOperation", () => {
     ["POST /api/participant/conversations/:conversation_id/upload-text", "recording", "Recording"],
     // Voice input
     ["POST /api/stateless/transcribe", "voice", "Voice input"],
+    // Samples and demos
+    ["accounts.demo-build", "samples", "Demo builds"],
+    ["samples.seed-best-practices", "samples", "Sample projects"],
+    ["samples.backfill-best-practices", "samples", "Sample projects"],
   ];
 
   test.each(cases)("%s is %s: %s", (operation, group, label) => {
@@ -53,9 +57,9 @@ describe("classifyOperation", () => {
   });
 
   test("puts anything unknown in Other under its raw key", () => {
-    expect(classifyOperation("samples.seed-best-practices")).toMatchObject({
+    expect(classifyOperation("something.unknown")).toMatchObject({
       group: "other",
-      label: "samples.seed-best-practices",
+      label: "something.unknown",
     });
     expect(classifyOperation("GET /api/v2/me")).toMatchObject({
       group: "other",
@@ -66,6 +70,10 @@ describe("classifyOperation", () => {
   test("matches a route by its path, not a lookalike", () => {
     expect(classifyOperation("POST /api/chatsx").group).toBe("other");
     expect(classifyOperation("mapping.thing").group).toBe("other");
+    expect(classifyOperation("accounts.demo-builder")).toMatchObject({
+      group: "other",
+      label: "accounts.demo-builder",
+    });
   });
 
   test("names the group in plain English", () => {
@@ -74,6 +82,7 @@ describe("classifyOperation", () => {
       group_label: "Voice input",
       label: "Voice input",
     });
+    expect(classifyOperation("accounts.demo-build").group_label).toBe("Samples and demos");
     expect(classifyOperation("POST /api/verify/:id/generate")).toMatchObject({
       group: "portal",
       group_label: "Portal",
@@ -97,6 +106,6 @@ describe("classifyOperation", () => {
       group: "chat",
       label: "Replies",
     });
-    expect(FEATURE_RULES).toHaveLength(30);
+    expect(FEATURE_RULES).toHaveLength(32);
   });
 });

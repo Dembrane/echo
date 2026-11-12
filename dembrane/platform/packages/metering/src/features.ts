@@ -8,6 +8,7 @@ export type FeatureGroup =
   | "portal"
   | "recording"
   | "voice"
+  | "samples"
   | "other";
 
 export interface FeatureRule {
@@ -27,6 +28,7 @@ export const FEATURE_GROUP_LABELS: Readonly<Record<FeatureGroup, string>> = {
   portal: "Portal",
   recording: "Recording",
   reports: "Reports",
+  samples: "Samples and demos",
   voice: "Voice input",
 };
 
@@ -132,6 +134,8 @@ export const FEATURE_RULES: readonly FeatureRule[] = [
     group: "voice",
     label: "Voice input",
   },
+  { pattern: String.raw`^accounts\.demo-build$`, group: "samples", label: "Demo builds" },
+  { pattern: String.raw`^samples\.`, group: "samples", label: "Sample projects" },
 ];
 
 const COMPILED = FEATURE_RULES.map((r) => ({ re: new RegExp(r.pattern), rule: r }));
