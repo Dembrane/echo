@@ -82,7 +82,7 @@ msgstr "Automatically generate a short topic-based title for each conversation a
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Автоматизація, ранні функції, перенесення або видалення цього проєкту."
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:190
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:195
 msgid "Back"
 msgstr "Back"
 
@@ -220,7 +220,7 @@ msgstr "Error loading project"
 msgid "Example"
 msgstr "Приклад"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:118
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:126
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Приклад: вигадана розмова, щоб показати форму. Справжні відповіді будуються з того, що кажуть учасники."
 
@@ -308,7 +308,7 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Ім'я та теги"
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:180
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:185
 msgid "Next"
 msgstr "Next"
 
@@ -402,11 +402,11 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Учасники бачать це над полем, наприклад «Назва або номер столу». Залиш порожнім для типового тексту."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:151
 msgid "Portal preview: {0}"
 msgstr "Попередній перегляд порталу: {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:98
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:106
 #: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:273
 msgid "Preview"
 msgstr "Попередній перегляд"
@@ -445,7 +445,7 @@ msgstr "Сповіщення про звіти"
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Потрібно ввімкнути «Запитувати електронну пошту?»"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:102
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:110
 msgid "Screen"
 msgstr "Екран"
 
@@ -595,7 +595,7 @@ msgstr "Вебхуки не ввімкнено для цього середов�
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:112
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:120
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Що бачать учасники, з вашими змінами, ще до збереження."
 

@@ -82,7 +82,7 @@ msgstr "Generar automáticamente un título corto basado en temas para cada conv
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatización, funciones en prueba, y mover o eliminar este proyecto."
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:190
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:195
 msgid "Back"
 msgstr "Atrás"
 
@@ -220,7 +220,7 @@ msgstr "Error al cargar el proyecto"
 msgid "Example"
 msgstr "Ejemplo"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:118
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:126
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Ejemplo: una conversación inventada, para mostrar la forma. Las respuestas reales salen de lo que dicen los participantes."
 
@@ -308,7 +308,7 @@ msgstr "Modo"
 msgid "Name and tags"
 msgstr "Nombre y etiquetas"
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:180
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:185
 msgid "Next"
 msgstr "Siguiente"
 
@@ -402,11 +402,11 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Los participantes lo leen encima del campo, por ejemplo «Nombre o número de la mesa». Déjalo vacío para el texto por defecto."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:151
 msgid "Portal preview: {0}"
 msgstr "Vista previa del portal: {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:98
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:106
 #: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:273
 msgid "Preview"
 msgstr "Vista previa"
@@ -445,7 +445,7 @@ msgstr "Notificaciones de informes"
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Requiere que «¿Pedir el correo electrónico?» esté activado"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:102
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:110
 msgid "Screen"
 msgstr "Pantalla"
 
@@ -595,7 +595,7 @@ msgstr "Los webhooks no están habilitados para este entorno."
 msgid "Welcome"
 msgstr "Bienvenido"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:112
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:120
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Lo que ven los participantes, con tus cambios, antes de que se guarden."
 
