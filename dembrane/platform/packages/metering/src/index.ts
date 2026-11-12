@@ -18,6 +18,7 @@ export {
   httpText,
   postCostAlert,
 } from "./alerts";
+export { syncFeatureRules } from "./feature-rules";
 export {
   classifyOperation,
   FEATURE_GROUP_LABELS,
