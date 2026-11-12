@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:153
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:152
 msgid "{count, plural, one {# template} other {# templates}}"
 msgstr "{count, plural, one {# шаблон} few {# шаблони} many {# шаблонів} other {# шаблону}}"
 
@@ -278,7 +278,7 @@ msgstr "Складні моменти"
 msgid "Host script"
 msgstr "Сценарій ведучого"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:116
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:115
 msgid "How is it recorded?"
 msgstr "Як відбувається запис?"
 
@@ -306,8 +306,7 @@ msgstr "Інтерв'ю"
 msgid "Kitchen-table conversation"
 msgstr "Розмова за кухонним столом"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:96
-#: src/components/project/templates/AllFormats/AllFormats.tsx:78
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:67
 msgid "Loading templates"
 msgstr "Завантаження шаблонів"
 
@@ -323,7 +322,7 @@ msgstr "Багато груп одночасно"
 msgid "More formats"
 msgstr "Більше форматів"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:155
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:154
 msgid "Most used. Filter to find more."
 msgstr "Найпопулярніші. Фільтруй, щоб знайти більше."
 
@@ -335,8 +334,7 @@ msgstr "Поле імені"
 #~ msgid "Names the hard points"
 #~ msgstr "Називає складні моменти"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:126
-#: src/components/project/templates/AllFormats/AllFormats.tsx:104
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:82
 msgid "No template fits both. Clear a filter, or start blank."
 msgstr "Жоден шаблон не підходить під обидва. Зніми фільтр або почни з нуля."
 
@@ -399,8 +397,7 @@ msgstr "Або почни з формату"
 msgid "Parallel sessions"
 msgstr "Паралельні сесії"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:88
-#: src/components/project/templates/AllFormats/AllFormats.tsx:70
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:59
 msgid "Pick the closest fit and dembrane sets the project up for it, with a host script for the room. You can change every setting later."
 msgstr "Вибери найближчий варіант, і dembrane налаштує проєкт під нього, зі сценарієм для зали. Будь-яке налаштування можна змінити пізніше."
 
@@ -460,7 +457,7 @@ msgstr "Переглянути всі формати"
 msgid "Session name"
 msgstr "Назва сесії"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:139
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:138
 msgid "Show all"
 msgstr "Показати всі"
 
@@ -504,8 +501,7 @@ msgstr "Основне"
 #~ msgid "The group checks the summary together"
 #~ msgstr "Група разом перевіряє підсумок"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:103
-#: src/components/project/templates/AllFormats/AllFormats.tsx:84
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:72
 msgid "The templates did not load. You can still start blank and set it up yourself."
 msgstr "Шаблони не завантажилися. Ви все одно можете почати з нуля й налаштувати все самі."
 
@@ -545,12 +541,11 @@ msgstr "Завантажити записи"
 msgid "Verify"
 msgstr "Verify"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:85
-#: src/components/project/templates/AllFormats/AllFormats.tsx:67
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:56
 msgid "What are you going to do?"
 msgstr "Що ви плануєте робити?"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:94
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:93
 msgid "What do you need to do?"
 msgstr "Що тобі потрібно зробити?"
 

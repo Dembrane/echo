@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:153
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:152
 msgid "{count, plural, one {# template} other {# templates}}"
 msgstr "{count, plural, one {# plantilla} other {# plantillas}}"
 
@@ -278,7 +278,7 @@ msgstr "Puntos difíciles"
 msgid "Host script"
 msgstr "Guion de moderación"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:116
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:115
 msgid "How is it recorded?"
 msgstr "¿Cómo se graba?"
 
@@ -306,8 +306,7 @@ msgstr "Entrevistas"
 msgid "Kitchen-table conversation"
 msgstr "Conversación en la cocina"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:96
-#: src/components/project/templates/AllFormats/AllFormats.tsx:78
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:67
 msgid "Loading templates"
 msgstr "Cargando plantillas"
 
@@ -323,7 +322,7 @@ msgstr "Muchos grupos a la vez"
 msgid "More formats"
 msgstr "Más formatos"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:155
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:154
 msgid "Most used. Filter to find more."
 msgstr "Los más usados. Filtra para encontrar más."
 
@@ -335,8 +334,7 @@ msgstr "Campo del nombre"
 #~ msgid "Names the hard points"
 #~ msgstr "Nombra los puntos difíciles"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:126
-#: src/components/project/templates/AllFormats/AllFormats.tsx:104
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:82
 msgid "No template fits both. Clear a filter, or start blank."
 msgstr "Ninguna plantilla encaja con ambos. Quita un filtro o empieza en blanco."
 
@@ -399,8 +397,7 @@ msgstr "O empieza con un formato"
 msgid "Parallel sessions"
 msgstr "Sesiones paralelas"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:88
-#: src/components/project/templates/AllFormats/AllFormats.tsx:70
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:59
 msgid "Pick the closest fit and dembrane sets the project up for it, with a host script for the room. You can change every setting later."
 msgstr "Elige lo que mejor encaje y dembrane prepara el proyecto, con un guion para la sala. Puedes cambiar cada ajuste más tarde."
 
@@ -460,7 +457,7 @@ msgstr "Ver todos los formatos"
 msgid "Session name"
 msgstr "Nombre de la sesión"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:139
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:138
 msgid "Show all"
 msgstr "Mostrar todo"
 
@@ -504,8 +501,7 @@ msgstr "Lo esencial"
 #~ msgid "The group checks the summary together"
 #~ msgstr "El grupo revisa el resumen en conjunto"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:103
-#: src/components/project/templates/AllFormats/AllFormats.tsx:84
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:72
 msgid "The templates did not load. You can still start blank and set it up yourself."
 msgstr "Las plantillas no se han cargado. Aun así puedes empezar en blanco y configurarlo tú."
 
@@ -545,12 +541,11 @@ msgstr "Subir grabaciones"
 msgid "Verify"
 msgstr "Verify"
 
-#: src/components/project/templates/TemplatePicker/TemplatePicker.tsx:85
-#: src/components/project/templates/AllFormats/AllFormats.tsx:67
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:56
 msgid "What are you going to do?"
 msgstr "¿Qué vas a hacer?"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:94
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:93
 msgid "What do you need to do?"
 msgstr "¿Qué necesitas hacer?"
 

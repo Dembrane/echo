@@ -1,15 +1,10 @@
-import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
-import { Anchor, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
-import { UploadSimpleIcon } from "@phosphor-icons/react";
+import { Skeleton } from "@mantine/core";
 import { useId, useState } from "react";
 import { SelectableCardGrid } from "@/components/common/SelectableCardGrid/SelectableCardGrid";
 import {
 	type CardKey,
 	cardTags,
 	isCardKey,
-	linkLabel,
-	linkLine,
 	NO_FILTER,
 	type TemplateFilter,
 	type TemplateKey,
@@ -19,6 +14,7 @@ import {
 	visibleCards,
 } from "../projectTemplates";
 import { TemplateCard } from "../TemplateCard/TemplateCard";
+import { TemplateChooser } from "../TemplateChooser/TemplateChooser";
 import { TemplateFilters } from "../TemplateFilters/TemplateFilters";
 
 /** What the picker knew when a card was chosen, for analytics: never free text. */
@@ -79,129 +75,68 @@ export const TemplatePicker = ({
 	const cards = templates ? visibleCards(templates, filter, showAll) : [];
 
 	return (
-		<Stack gap="md" data-testid="template-picker" data-tour="template-picker">
-			<Stack gap="xs">
-				<Title order={order} id={headingId}>
-					<Trans>What are you going to do?</Trans>
-				</Title>
-				<Text size="sm" className="app-muted">
-					<Trans>
-						Pick the closest fit and dembrane sets the project up for it, with a
-						host script for the room. You can change every setting later.
-					</Trans>
-				</Text>
-			</Stack>
-
-			{!templates && !failed ? (
-				<Stack gap="sm" aria-busy="true" aria-label={t`Loading templates`}>
-					{[0, 1, 2].map((i) => (
-						<Skeleton key={i} height={132} />
-					))}
-				</Stack>
-			) : failed ? (
-				<Text size="sm" data-testid="template-picker-failed">
-					<Trans>
-						The templates did not load. You can still start blank and set it up
-						yourself.
-					</Trans>
-				</Text>
-			) : (
-				<>
-					<TemplateFilters
-						value={filter}
-						showAll={showAll}
-						count={cards.length}
-						onChange={(next, changed) => {
-							setFilter(next);
-							onFilterChange?.(changed, next[changed] ?? "none");
-						}}
-						onShowAll={(next) => {
+		<TemplateChooser
+			templates={templates}
+			failed={failed}
+			order={order}
+			headingId={headingId}
+			skeleton={[0, 1, 2].map((i) => <Skeleton key={i} height={132} />)}
+			filters={
+				<TemplateFilters
+					value={filter}
+					count={cards.length}
+					onChange={(next, changed) => {
+						setFilter(next);
+						onFilterChange?.(changed, next[changed] ?? "none");
+					}}
+					showAll={{
+						on: showAll,
+						onChange: (next) => {
 							setFilter(NO_FILTER);
 							setShowAll(next);
 							onFilterChange?.("show_all", next ? "on" : "off");
-						}}
-					/>
-					{cards.length === 0 ? (
-						<Text size="sm" data-testid="template-picker-none">
-							<Trans>
-								No template fits both. Clear a filter, or start blank.
-							</Trans>
-						</Text>
-					) : (
-						<SelectableCardGrid
-							labelId={headingId}
-							name="project-template"
-							value={value}
-							onChange={(key) => {
-								const tpl = cards.find((c) => c.key === key);
-								if (!tpl || !isCardKey(key)) return;
-								onChange(key, {
-									featured: tpl.card.featured,
-									filtersActive: activeFilters(filter, showAll),
-									setup: tpl.card.setup,
-									verbs: tpl.card.verbs,
-								});
-							}}
-							testId="template-picker-grid"
-							options={cards.map((tpl) => {
-								const key = tpl.key as CardKey;
-								return {
-									render: () => (
-										<TemplateCard
-											template={key}
-											name={templateName(key)}
-											greatFor={templateGreatFor(key)}
-											tags={cardTags(tpl)}
-										/>
-									),
-									testId: `template-card-${key}`,
-									value: key,
-								};
-							})}
-						/>
-					)}
-				</>
-			)}
-
-			{(onUpload || onStartBlank) && (
-				<Stack gap="xs" data-testid="template-picker-links">
-					{onUpload && !failed && (
-						<Group gap="xs" align="baseline" wrap="wrap">
-							<Anchor
-								component="button"
-								type="button"
-								size="sm"
-								onClick={onUpload}
-								data-testid="template-picker-upload"
-							>
-								<Group gap="xs" component="span" wrap="nowrap">
-									<UploadSimpleIcon size={16} aria-hidden />
-									{linkLabel("upload")}
-								</Group>
-							</Anchor>
-							<Text size="xs" className="app-muted">
-								{linkLine("upload")}
-							</Text>
-						</Group>
-					)}
-					{onStartBlank && (
-						<Group gap="xs" align="baseline" wrap="wrap">
-							<Anchor
-								component="button"
-								type="button"
-								size="sm"
-								onClick={onStartBlank}
-								data-testid="template-picker-start-blank"
-							>
-								{linkLabel("blank")}
-							</Anchor>
-							<Text size="xs" className="app-muted">
-								{linkLine("blank")}
-							</Text>
-						</Group>
-					)}
-				</Stack>
-			)}
-		</Stack>
+						},
+					}}
+				/>
+			}
+			empty={cards.length === 0}
+			onUpload={onUpload}
+			onStartBlank={onStartBlank}
+			gap="md"
+			testId="template-picker"
+			tour="template-picker"
+		>
+			<SelectableCardGrid
+				labelId={headingId}
+				name="project-template"
+				value={value}
+				onChange={(key) => {
+					const tpl = cards.find((c) => c.key === key);
+					if (!tpl || !isCardKey(key)) return;
+					onChange(key, {
+						featured: tpl.card.featured,
+						filtersActive: activeFilters(filter, showAll),
+						setup: tpl.card.setup,
+						verbs: tpl.card.verbs,
+					});
+				}}
+				testId="template-picker-grid"
+				options={cards.map((tpl) => {
+					const key = tpl.key as CardKey;
+					return {
+						render: () => (
+							<TemplateCard
+								template={key}
+								name={templateName(key)}
+								greatFor={templateGreatFor(key)}
+								tags={cardTags(tpl)}
+							/>
+						),
+						testId: `template-card-${key}`,
+						value: key,
+					};
+				})}
+			/>
+		</TemplateChooser>
 	);
 };
