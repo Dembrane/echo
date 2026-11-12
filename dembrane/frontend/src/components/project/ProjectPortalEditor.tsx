@@ -49,11 +49,11 @@ import type {
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
+import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
 import { CustomTopicModal } from "./CustomTopicModal";
 import {
 	useCreateCustomTopicMutation,

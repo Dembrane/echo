@@ -185,12 +185,12 @@ msgstr "· selhalo"
 #~ msgstr " Unsubscribe from Notifications"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:825
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:20
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" available soon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:839
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:34
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explore\" available soon"
 
@@ -199,7 +199,7 @@ msgid "\"made with dembrane\" stays on the screen."
 msgstr "Nápis „made with dembrane“ zůstane na obrazovce."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:832
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:27
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
@@ -1153,7 +1153,7 @@ msgstr "{used} z {limit}"
 msgid "{validated} validated"
 msgstr "{validated} ověřeno"
 
-#: src/components/participant/UserChunkMessage.tsx:108
+#: src/portal/components/conversation/UserChunkMessage.tsx:108
 msgid "*Transcription in progress.*"
 msgstr "*Transcription in progress.*"
 
@@ -1631,11 +1631,11 @@ msgstr "Active filters"
 msgid "Activity"
 msgstr "Aktivita"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:201
 #: src/routes/organisation/OrganisationRoute.tsx:2081
 #: src/routes/organisation/OrganisationRoute.tsx:2088
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
+#: src/portal/routes/ParticipantPostConversation.tsx:201
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1392
 msgid "Add"
@@ -1684,7 +1684,7 @@ msgstr "Před uložením přidejte cíl projektu."
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Add additional context (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:302
+#: src/portal/components/start/ParticipantInitiateForm.tsx:302
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
@@ -1857,7 +1857,7 @@ msgstr "Přidáno lidí: {granted}"
 msgid "Added by a host"
 msgstr "Přidal hostitel"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:210
+#: src/portal/routes/ParticipantPostConversation.tsx:210
 msgid "Added emails"
 msgstr "Added emails"
 
@@ -2286,7 +2286,7 @@ msgstr "E-mailové upozornění bude odesláno {participantCount, plural, one {#
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Účastníkům bude odesláno e-mailové upozornění. Chcete pokračovat?"
 
-#: src/routes/participant/ParticipantStart.tsx:84
+#: src/portal/routes/ParticipantStart.tsx:84
 msgid "An error occurred while loading the portal. Please contact the support team."
 msgstr "Při načítání portálu došlo k chybě. Kontaktujte prosím tým podpory."
 
@@ -2315,7 +2315,7 @@ msgstr "Objekt mimo toto zobrazení"
 msgid "An optional second screen after the disclosure."
 msgstr "Volitelná druhá obrazovka po informování účastníků."
 
-#: src/components/error/ErrorPage.tsx:73
+#: src/components/error/ErrorPageContent.tsx:33
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "An unexpected error occurred. Reloading or returning home usually helps."
 
@@ -2536,14 +2536,14 @@ msgstr "Approaching a limit this month"
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Blížíte se k limitu: {0} / 32 000 znaků"
 
+#. js-lingui-explicit-id
+#: src/portal/components/verify/VerifyArtefact.tsx:432
+msgid "participant.concrete.action.button.approve"
+msgstr "Approve"
+
 #: src/components/workspace/SupportAccessSection.tsx:219
 #: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
-msgstr "Approve"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:417
-msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
 #: src/components/workspace/SupportAccessSection.tsx:286
@@ -2597,7 +2597,7 @@ msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Are you sure you want to delete this template? This cannot be undone."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:163
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:163
 msgid "participant.modal.finish.message.text.mode"
 msgstr "Are you sure you want to finish the conversation?"
 
@@ -2814,7 +2814,7 @@ msgid "Attach verified artifacts"
 msgstr "Připojit ověřené artefakty"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1005
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:44
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
@@ -2998,13 +2998,13 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:437
-#: src/components/layout/ParticipantHeader.tsx:94
+#: src/portal/layout/ParticipantHeader.tsx:94
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:435
 msgid "participant.button.back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:48
+#: src/portal/components/verify/VerifyArtefactError.tsx:48
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Zpět"
 
@@ -3366,24 +3366,24 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:189
-msgid "participant.button.finish.cancel.text.mode"
-msgstr "Zrušit"
-
-#. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:449
-msgid "participant.mic.settings.modal.second.confirm.cancel"
+#: src/portal/layout/ParticipantHeader.tsx:105
+msgid "participant.concrete.instructions.button.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:395
+#: src/portal/components/verify/VerifyArtefact.tsx:410
 msgid "participant.concrete.action.button.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/layout/ParticipantHeader.tsx:105
-msgid "participant.concrete.instructions.button.cancel"
+#: src/portal/components/settings/MicrophoneCheck.tsx:447
+msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Cancel"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:189
+msgid "participant.button.finish.cancel.text.mode"
+msgstr "Zrušit"
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:321
@@ -3723,13 +3723,13 @@ msgstr "Chaty nastavené na češtinu odpovídají česky místo anglicky."
 msgid "Check failed"
 msgstr "Kontrola se nezdařila"
 
-#: src/components/voice/VoiceInputError.tsx:101
-msgid "Check microphone access"
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/PermissionErrorModal.tsx:70
+msgid "participant.button.check.microphone.access"
 msgstr "Check microphone access"
 
-#. js-lingui-explicit-id
-#: src/components/participant/PermissionErrorModal.tsx:70
-msgid "participant.button.check.microphone.access"
+#: src/components/voice/VoiceInputError.tsx:101
+msgid "Check microphone access"
 msgstr "Check microphone access"
 
 #: src/components/feedback/ReportIssueModal.tsx:157
@@ -3984,7 +3984,7 @@ msgstr "Clone project"
 #~ msgid "Clone Project"
 #~ msgstr "Clone Project"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:319
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:808
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4177,14 +4177,14 @@ msgstr "Nastavit portál"
 msgid "Configure settings for each legal basis."
 msgstr "Upravte nastavení pro každý právní základ."
 
+#. js-lingui-explicit-id
+#: src/portal/components/settings/MicrophoneCheck.tsx:436
+msgid "participant.mic.settings.modal.second.confirm.button"
+msgstr "Confirm"
+
 #: src/lib/openConfirm.tsx:47
 #: src/components/common/ConfirmModal.tsx:55
 msgid "Confirm"
-msgstr "Confirm"
-
-#. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:438
-msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/components/invite/InviteModal.tsx:785
@@ -4245,7 +4245,7 @@ msgstr "Připojení agenti"
 #~ msgstr "Connecting to report services..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:886
+#: src/portal/components/conversation/audio/S3CheckModal.tsx:26
 msgid "participant.modal.s3check.title"
 msgstr "Connection issue"
 
@@ -4331,29 +4331,29 @@ msgid "Continue"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:424
-msgid "participant.button.next"
-msgstr "Pokračovat"
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:339
-msgid "participant.ready.to.begin.button.text"
-msgstr "Continue"
-
-#. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:418
-msgid "participant.button.continue"
-msgstr "Continue"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:307
+#: src/portal/components/verify/VerifySelection.tsx:299
 msgid "participant.verify.selection.button.next"
 msgstr "Pokračovat"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:109
+#: src/portal/components/verify/VerifyInstructions.tsx:109
 msgid "participant.verify.instructions.button.next"
 msgstr "Pokračovat"
+
+#. js-lingui-explicit-id
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:422
+msgid "participant.button.next"
+msgstr "Pokračovat"
+
+#. js-lingui-explicit-id
+#: src/portal/components/start/ParticipantInitiateForm.tsx:339
+msgid "participant.ready.to.begin.button.text"
+msgstr "Continue"
+
+#. js-lingui-explicit-id
+#: src/portal/components/settings/MicrophoneCheck.tsx:416
+msgid "participant.button.continue"
+msgstr "Continue"
 
 #: src/components/workspace/FeatureGate.tsx:425
 msgid "Continue on dembrane.com"
@@ -4404,7 +4404,7 @@ msgid "Conversation durations and project cloning are more reliable."
 msgstr "Délky rozhovorů a klonování projektů jsou spolehlivější."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:30
+#: src/portal/components/conversation/ConversationErrorView.tsx:30
 msgid "participant.conversation.ended"
 msgstr "Rozhovor skončil"
 
@@ -4503,19 +4503,19 @@ msgstr "Rozhovory: {0}"
 #. js-lingui-explicit-id
 #. placeholder {0}: cooldown.verify.formattedTime
 #. placeholder {0}: cooldown.echo.formattedTime
-#: src/components/participant/refine/RefineSelection.tsx:82
-#: src/components/participant/refine/RefineSelection.tsx:125
+#: src/portal/components/refine/RefineSelection.tsx:82
+#: src/portal/components/refine/RefineSelection.tsx:125
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1041
+#: src/portal/components/ParticipantShareModal.tsx:111
+#: src/portal/components/start/InAppBrowserNotice.tsx:66
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:247
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
-#: src/components/participant/ParticipantShareModal.tsx:111
-#: src/components/participant/ParticipantConversationText.tsx:247
-#: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:59
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -4539,7 +4539,7 @@ msgstr "Copied from original conversation"
 msgid "copy"
 msgstr "copy"
 
-#: src/components/participant/ParticipantConversationText.tsx:247
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:247
 #: src/components/conversation/ConversationEdit.tsx:59
 #: src/components/common/CopyRichTextIconButton.tsx:37
 #: src/components/common/CopyIconButton.tsx:8
@@ -4565,9 +4565,9 @@ msgstr "Kopírovat kód pro vložení"
 msgid "Copy invite link"
 msgstr "Kopírovat odkaz na pozvánku"
 
+#: src/portal/components/ParticipantShareModal.tsx:111
+#: src/portal/components/start/InAppBrowserNotice.tsx:66
 #: src/components/sharing/Share.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:111
-#: src/components/participant/InAppBrowserNotice.tsx:66
 msgid "Copy link"
 msgstr "Kopírovat odkaz"
 
@@ -5303,13 +5303,13 @@ msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1264
+#: src/portal/components/conversation/UserChunkMessage.tsx:100
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1645
 #: src/components/project/ProjectDangerZone.tsx:179
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:591
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:625
-#: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
 #: src/components/conversation/ConversationDangerZone.tsx:103
@@ -5415,7 +5415,7 @@ msgstr "Smazáno"
 msgid "Deleted · {0}"
 msgstr "Deleted · {0}"
 
-#: src/components/participant/UserChunkMessage.tsx:69
+#: src/portal/components/conversation/UserChunkMessage.tsx:69
 msgid "Deleted successfully"
 msgstr "Deleted successfully"
 
@@ -5436,7 +5436,7 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane – výchozí"
 
-#: src/components/participant/DembraneEventCta.tsx:61
+#: src/portal/components/finish/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
 
@@ -5672,7 +5672,7 @@ msgstr "Do I need this?"
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Plánujete dembrane používat ve zdravotnictví, školství, náboru, správě kritické infrastruktury, vymáhání práva nebo justici?"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:176
+#: src/portal/routes/ParticipantPostConversation.tsx:176
 msgid "Do you want to stay in the loop?"
 msgstr "Do you want to stay in the loop?"
 
@@ -5910,14 +5910,14 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Předběžné funkce, které si můžete v tomto projektu vyzkoušet dříve, než budou připravené pro všechny."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1203
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:801
 msgid "participant.button.echo"
 msgstr "ECHO"
 
+#: src/portal/components/verify/VerifyArtefact.tsx:463
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:586
-#: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:663
@@ -6063,8 +6063,8 @@ msgstr "Část editoru"
 #: src/routes/auth/Login.tsx:436
 #: src/routes/auth/Login.tsx:540
 #: src/routes/auth/Login.tsx:544
+#: src/portal/components/ParticipantShareModal.tsx:135
 #: src/components/settings/AccountSettingsCard.tsx:182
-#: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -6100,7 +6100,7 @@ msgstr "Email verification | dembrane"
 msgid "error.action.contact_admin"
 msgstr "Napište svému správci"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:185
+#: src/portal/routes/ParticipantPostConversation.tsx:185
 msgid "email@work.com"
 msgstr "email@work.com"
 
@@ -6414,7 +6414,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Všichni na seznamu jsou proškoleni."
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:391
+#: src/portal/components/settings/MicrophoneCheck.tsx:389
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
@@ -6485,7 +6485,7 @@ msgid "Explore"
 msgstr "Explore"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:111
+#: src/portal/components/refine/RefineSelection.tsx:111
 msgid "participant.echo.explore"
 msgstr "Explore"
 
@@ -6668,7 +6668,7 @@ msgstr "Failed to copy transcript. Please try again."
 #~ msgid "Failed to delete project"
 #~ msgstr "Failed to delete project"
 
-#: src/components/participant/UserChunkMessage.tsx:46
+#: src/portal/components/conversation/UserChunkMessage.tsx:46
 msgid "Failed to delete response"
 msgstr "Failed to delete response"
 
@@ -6676,12 +6676,12 @@ msgstr "Failed to delete response"
 #~ msgid "Failed to delete tag"
 #~ msgstr "Failed to delete tag"
 
-#: src/components/participant/ParticipantConversationText.tsx:126
-#: src/components/participant/ParticipantConversationAudio.tsx:607
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:126
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:418
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
-#: src/components/participant/verify/VerifySelection.tsx:163
+#: src/portal/components/verify/VerifySelection.tsx:155
 msgid "Failed to generate {label}. Please try again."
 msgstr "Failed to generate {label}. Please try again."
 
@@ -6722,7 +6722,7 @@ msgstr "Failed to mark announcement as unread"
 #~ msgid "Failed to move projects"
 #~ msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:717
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:474
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Failed to reconnect. Please try reloading the page."
 
@@ -6730,7 +6730,7 @@ msgstr "Failed to reconnect. Please try reloading the page."
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:256
+#: src/portal/components/verify/VerifyArtefact.tsx:269
 msgid "Failed to reload. Please try again."
 msgstr "Failed to reload. Please try again."
 
@@ -6762,7 +6762,7 @@ msgstr "Failed to retranscribe conversation. Please try again."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Failed to revise outcome. Please try again."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:249
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:253
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
@@ -6818,7 +6818,7 @@ msgstr "Odpuzování vzdálených párů: {0}"
 #~ msgstr "Odpuzování vzdálených párů: {0}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:845
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:40
 msgid "participant.modal.echo.info.title"
 msgstr "Feature available soon"
 
@@ -6943,32 +6943,32 @@ msgid "Find your place in chat"
 msgstr "Najdi své místo v chatu"
 
 #. js-lingui-explicit-id
-#: src/components/participant/WrapUpModal.tsx:49
-msgid "participant.modal.wrap_up.finish"
-msgstr "Dokončit"
-
-#. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:158
-msgid "participant.button.stop.finish"
-msgstr "Finish"
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:176
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:176
 msgid "participant.button.finish.confirm.text.mode"
 msgstr "Dokončit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:299
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:299
 msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1172
+#: src/portal/components/conversation/audio/WrapUpModal.tsx:49
+msgid "participant.modal.wrap_up.finish"
+msgstr "Dokončit"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:158
+msgid "participant.button.stop.finish"
+msgstr "Finish"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:762
 msgid "participant.button.finish"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:153
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:153
 msgid "participant.modal.finish.title.text.mode"
 msgstr "Dokončit rozhovor"
 
@@ -6988,7 +6988,7 @@ msgstr "Dokončuje se"
 msgid "First name"
 msgstr "First name"
 
-#: src/theme.tsx:326
+#: src/theme.tsx:328
 msgid "First page"
 msgstr "První stránka"
 
@@ -7370,13 +7370,13 @@ msgstr "German"
 msgid "Get a reply during a conversation"
 msgstr "Získej odpověď během rozhovoru"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:817
-msgid "Get an immediate reply from dembrane to help you deepen the conversation."
+#. js-lingui-explicit-id
+#: src/portal/components/refine/RefineSelection.tsx:114
+msgid "participant.refine.go.deeper.description"
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:114
-msgid "participant.refine.go.deeper.description"
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:52
+msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:704
@@ -7599,7 +7599,7 @@ msgstr "Skryto před členy organizace. Správci organizace mohou prostor stále
 msgid "hidden from this presentation"
 msgstr "skryto z této prezentace"
 
-#: src/components/participant/verify/VerifySelection.tsx:129
+#: src/portal/components/verify/VerifySelection.tsx:121
 msgid "Hidden gem"
 msgstr "Hidden gem"
 
@@ -7808,7 +7808,7 @@ msgid "I need strict privacy guarantees"
 msgstr "Požaduji přísné záruky ochrany soukromí"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:975
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:94
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
@@ -7855,7 +7855,7 @@ msgid "If what you've spotted involves data visible to the wrong people, someone
 msgstr "Pokud jste narazili na data viditelná pro nepovolané osoby, na někoho s přístupem, který by mít neměl, nebo na možnou bezpečnostní zranitelnost, použijte prosím náš <0>formulář pro hlášení bezpečnostních problémů</0>. Dostane se k jinému týmu rychlejší cestou. V naléhavých případech napište na <1>privacy@dembrane.com</1>"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:44
+#: src/portal/components/verify/VerifyInstructions.tsx:44
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
 
@@ -8080,7 +8080,7 @@ msgstr "Invalid email"
 msgid "Invalid invite link"
 msgstr "Invalid invite link"
 
-#: src/components/participant/hooks/index.ts:333
+#: src/portal/hooks/index.ts:333
 msgid "Invalid PIN or email. Please try again."
 msgstr "Neplatný PIN nebo e-mail. Zkuste to prosím znovu."
 
@@ -8247,12 +8247,12 @@ msgstr "Žádá o oprávnění"
 #~ msgstr "Je přihlášen na dvou dalších zařízeních. Z bezpečnostních důvodů může být účet přihlášen nejvýše na dvou zařízeních současně."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:41
+#: src/portal/components/conversation/ConversationErrorView.tsx:41
 msgid "participant.conversation.error.deleted"
 msgstr "It looks like the conversation was deleted while you were recording. We've stopped the recording to prevent any issues. You can start a new one anytime."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:24
+#: src/portal/components/verify/VerifyArtefactError.tsx:24
 msgid "participant.outcome.error.description"
 msgstr "It looks like we couldn't load this outcome. This might be a temporary issue. You can try reloading or go back to select a different topic."
 
@@ -8363,9 +8363,9 @@ msgstr "Připojte se k naší komunitě na Slacku"
 msgid "Join this organisation to discover workspaces and collaborate with your team."
 msgstr "Join this organisation to discover workspaces and collaborate with your team."
 
-#: src/components/participant/ParticipantShareModal.tsx:57
-#: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:130
+#: src/portal/components/ParticipantShareModal.tsx:57
+#: src/portal/components/ParticipantShareModal.tsx:67
+#: src/portal/components/ParticipantShareModal.tsx:130
 msgid "Join this portal session"
 msgstr "Připojit se k této relaci portálu"
 
@@ -8591,7 +8591,7 @@ msgstr "Last month"
 msgid "Last name"
 msgstr "Last name"
 
-#: src/theme.tsx:327
+#: src/theme.tsx:329
 msgid "Last page"
 msgstr "Poslední stránka"
 
@@ -8834,7 +8834,7 @@ msgstr "Live"
 #~ msgstr "Live agent execution mode"
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:336
 msgid "participant.live.audio.level"
 msgstr "Live audio level:"
 
@@ -8932,7 +8932,7 @@ msgid "Loading actions..."
 msgstr "Loading actions..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactLoading.tsx:13
+#: src/portal/components/verify/VerifyArtefactLoading.tsx:13
 msgid "participant.concrete.loading.artefact"
 msgstr "Loading artefact"
 
@@ -8968,7 +8968,7 @@ msgstr "Načítání členů"
 msgid "Loading methodology"
 msgstr "Načítání metodologie"
 
-#: src/components/participant/MicrophoneTest.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:322
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
@@ -9469,7 +9469,7 @@ msgstr "Metodika uložena"
 msgid "Methodology updated"
 msgstr "Metodika aktualizována"
 
-#: src/components/participant/PermissionErrorModal.tsx:25
+#: src/portal/components/conversation/audio/PermissionErrorModal.tsx:25
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
@@ -9526,7 +9526,7 @@ msgstr "Měsíční bezplatný limit"
 msgid "more"
 msgstr "more"
 
-#: src/components/participant/ParticipantShareModal.tsx:144
+#: src/portal/components/ParticipantShareModal.tsx:144
 msgid "More"
 msgstr "Další"
 
@@ -9912,7 +9912,7 @@ msgstr "Další změna za <0>{remainingSeconds} s</0>"
 msgid "Next invoice"
 msgstr "Další faktura"
 
-#: src/theme.tsx:328
+#: src/theme.tsx:330
 msgid "Next page"
 msgstr "Další stránka"
 
@@ -10007,7 +10007,7 @@ msgid "No canvases yet. Ask in chat when you want a live view of the conversatio
 msgstr "Zatím žádná plátna. Až budete chtít živý přehled rozhovorů, požádejte v chatu. První plátno zůstane tady."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:270
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:268
 msgid "participant.onboarding.no.card"
 msgstr "Pro aktuální jazyk a sekci není k dispozici žádná karta."
 
@@ -10184,7 +10184,7 @@ msgstr "Nebyl k dispozici žádný mikrofon. Zkontrolujte, zda je připojený a 
 msgid "No name"
 msgstr "No name"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:194
+#: src/portal/components/verify/VerifyArtefact.tsx:207
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "No new feedback detected yet. Please continue your discussion and try again soon."
 
@@ -10434,7 +10434,7 @@ msgstr "No usage yet this cycle."
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 
-#: src/components/participant/verify/VerifySelection.tsx:270
+#: src/portal/components/verify/VerifySelection.tsx:262
 msgid "No verification topics are configured for this project."
 msgstr "No verification topics are configured for this project."
 
@@ -10523,7 +10523,7 @@ msgstr "Nehodnoceno"
 #~ msgstr "Not available"
 
 #. js-lingui-explicit-id
-#: src/components/participant/AiUnavailable.tsx:21
+#: src/portal/components/AiUnavailable.tsx:21
 msgid "participant.ai_unavailable"
 msgstr "Právě teď není k dispozici"
 
@@ -10777,12 +10777,12 @@ msgid "On the free plan, uploads go to {name}."
 msgstr "V tarifu Free se nahrávky ukládají do projektu {name}."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:35
+#: src/portal/components/verify/VerifyInstructions.tsx:35
 msgid "participant.verify.instructions.revise.artefact"
 msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:26
+#: src/portal/components/verify/VerifyInstructions.tsx:26
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
@@ -10897,7 +10897,7 @@ msgid "Only you can see this workspace."
 msgstr "Tento pracovní prostor vidíte pouze vy."
 
 #. js-lingui-explicit-id
-#: src/components/participant/PermissionErrorModal.tsx:42
+#: src/portal/components/conversation/audio/PermissionErrorModal.tsx:42
 msgid "participant.alert.microphone.access.failure"
 msgstr "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 
@@ -11041,11 +11041,11 @@ msgstr "Open the original invitation email and click the link from there, or ask
 msgid "Open the troubleshooting guide"
 msgstr "Otevřít průvodce řešením potíží"
 
-#: src/components/participant/InAppBrowserNotice.tsx:53
+#: src/portal/components/start/InAppBrowserNotice.tsx:53
 msgid "Open this page in {browserName} from the app's menu, or copy the link."
 msgstr "Otevřete tuto stránku v prohlížeči {browserName} přes nabídku aplikace, nebo zkopírujte odkaz."
 
-#: src/components/participant/InAppBrowserNotice.tsx:54
+#: src/portal/components/start/InAppBrowserNotice.tsx:54
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Otevřete tuto stránku ve svém prohlížeči přes nabídku aplikace, nebo zkopírujte odkaz."
 
@@ -11060,7 +11060,7 @@ msgid "Open transcript"
 msgstr "Otevřít přepis"
 
 #. js-lingui-explicit-id
-#: src/components/participant/PermissionErrorModal.tsx:59
+#: src/portal/components/conversation/audio/PermissionErrorModal.tsx:59
 msgid "participant.button.open.troubleshooting.guide"
 msgstr "Open troubleshooting guide"
 
@@ -11262,19 +11262,19 @@ msgstr "Jiné, a to"
 msgid "Our first major release"
 msgstr "Naše první hlavní vydání"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:143
+#: src/portal/components/verify/VerifyArtefact.tsx:156
 msgid "Outcome approved successfully!"
 msgstr "Outcome approved successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:254
+#: src/portal/components/verify/VerifyArtefact.tsx:267
 msgid "Outcome reloaded successfully!"
 msgstr "Outcome reloaded successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:185
+#: src/portal/components/verify/VerifyArtefact.tsx:198
 msgid "Outcome revised successfully!"
 msgstr "Outcome revised successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:224
+#: src/portal/components/verify/VerifyArtefact.tsx:237
 msgid "Outcome updated!"
 msgstr "Outcome updated!"
 
@@ -11344,7 +11344,7 @@ msgstr "Obsah stránky"
 #~ msgid "Page Content"
 #~ msgstr "Page Content"
 
-#: src/components/error/ErrorPage.tsx:61
+#: src/components/error/ErrorPageContent.tsx:21
 msgid "Page not found"
 msgstr "Page not found"
 
@@ -11376,9 +11376,9 @@ msgstr "Placený tarif"
 msgid "partially completed"
 msgstr "částečně dokončeno"
 
+#: src/portal/components/start/ParticipantInitiateForm.tsx:136
+#: src/portal/components/start/ParticipantInitiateForm.tsx:197
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:136
-#: src/components/participant/ParticipantInitiateForm.tsx:197
 msgid "Participant"
 msgstr "Participant"
 
@@ -11504,7 +11504,7 @@ msgstr "Passwords do not match"
 msgid "Pause physics"
 msgstr "Pozastavit fyziku"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:342
+#: src/portal/components/verify/VerifyArtefact.tsx:355
 msgid "Pause reading"
 msgstr "Pause reading"
 
@@ -11760,11 +11760,11 @@ msgstr "Přehrávání a celá obrazovka"
 #~ msgstr "Chcete-li pokračovat, přijměte smluvní podmínky."
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:352
+#: src/portal/components/settings/MicrophoneCheck.tsx:365
 msgid "participant.alert.microphone.access"
 msgstr "Please allow microphone access to start the test."
 
-#: src/routes/participant/ParticipantReport.tsx:94
+#: src/portal/routes/ParticipantReport.tsx:94
 msgid "Please check back later or contact the project owner for more information."
 msgstr "Please check back later or contact the project owner for more information."
 
@@ -11776,7 +11776,7 @@ msgstr "Please check your inputs for errors."
 msgid "Please enable participation to enable sharing"
 msgstr "Please enable participation to enable sharing"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:94
+#: src/portal/routes/ParticipantPostConversation.tsx:94
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
@@ -11806,7 +11806,7 @@ msgstr "Please log in to continue."
 #~ "(black screen = not recording).\n"
 #~ "This transcript will be anonymized and your host will not be able to listen to your recording."
 
-#: src/components/participant/ParticipantBody.tsx:166
+#: src/portal/components/conversation/ConversationMessages.tsx:163
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11816,7 +11816,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(zamčená obrazovka = nenahrává se)"
 
-#: src/components/participant/ParticipantBody.tsx:162
+#: src/portal/components/conversation/ConversationMessages.tsx:159
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11828,11 +11828,11 @@ msgstr ""
 "(zamčená obrazovka = nenahrává se).\n"
 "This transcript will be anonymized and your host will not be able to listen to your recording."
 
-#: src/components/participant/ParticipantBody.tsx:160
+#: src/portal/components/conversation/ConversationMessages.tsx:157
 msgid "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon."
 msgstr "Napište prosím svou odpověď do pole níže. Můžete ji také nahrát kliknutím na ikonu mikrofonu."
 
-#: src/components/participant/ParticipantBody.tsx:158
+#: src/portal/components/conversation/ConversationMessages.tsx:155
 msgid ""
 "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.\n"
 "This transcript will be anonymized."
@@ -12131,7 +12131,7 @@ msgstr "Preview: The quick brown fox jumps over the lazy dog."
 msgid "Previous"
 msgstr "Předchozí"
 
-#: src/theme.tsx:329
+#: src/theme.tsx:331
 msgid "Previous page"
 msgstr "Předchozí stránka"
 
@@ -12535,7 +12535,7 @@ msgstr "Znovu aktivovat tarif"
 msgid "Read after {name} finished"
 msgstr "Přečteno po dokončení: {name}"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:342
+#: src/portal/components/verify/VerifyArtefact.tsx:355
 msgid "Read aloud"
 msgstr "Read aloud"
 
@@ -12665,7 +12665,7 @@ msgstr "Připraveno v"
 #~ msgstr "Připraveno v {readyTime}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:330
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:328
 msgid "participant.ready.to.begin"
 msgstr "Připraveni začít?"
 
@@ -12720,12 +12720,12 @@ msgid "Recommended apps"
 msgstr "Recommended apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:917
+#: src/portal/components/conversation/audio/S3CheckModal.tsx:57
 msgid "participant.button.s3check.reconnect"
 msgstr "Reconnect"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1032
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:71
 msgid "participant.button.interruption.reconnect"
 msgstr "Reconnect"
 
@@ -12734,7 +12734,7 @@ msgid "Reconnecting"
 msgstr "Znovu se připojuje"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1146
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:736
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -12744,7 +12744,7 @@ msgstr "Record"
 msgid "Record a voice message"
 msgstr "Nahrát hlasovou zprávu"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:163
+#: src/portal/routes/ParticipantPostConversation.tsx:163
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
@@ -12789,12 +12789,12 @@ msgid "Recording duration stays accurate after pausing and resuming."
 msgstr "Délka nahrávky zůstává přesná i po pozastavení a obnovení."
 
 #. js-lingui-explicit-id
-#: src/components/participant/WrapUpModal.tsx:36
+#: src/portal/components/conversation/audio/WrapUpModal.tsx:36
 msgid "participant.modal.wrap_up.account"
 msgstr "Nahrávání se prozatím zastavilo. Vše, co jste nahráli, je uloženo."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:993
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:32
 msgid "participant.modal.interruption.title"
 msgstr "Recording interrupted"
 
@@ -12811,7 +12811,7 @@ msgid "Recording page"
 msgstr "Stránka nahrávání"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:76
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:76
 msgid "participant.modal.pause.title"
 msgstr "Nahrávání pozastaveno"
 
@@ -12920,7 +12920,7 @@ msgstr "Regenerate summary"
 #~ msgstr "Regenerate Summary"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:322
+#: src/portal/components/verify/VerifyArtefact.tsx:335
 msgid "participant.regenerating.outcome"
 msgstr "Regenerating the outcome"
 
@@ -12961,22 +12961,22 @@ msgstr "Video k vydání: {0}"
 msgid "Relevant"
 msgstr "Relevantní"
 
-#: src/features/sidebar/AppSidebar.tsx:119
-#: src/components/layout/BaseLayout.tsx:33
-#: src/components/error/ErrorPage.tsx:102
-#: src/components/error/ErrorBoundary.tsx:54
-msgid "Reload page"
-msgstr "Reload page"
+#. js-lingui-explicit-id
+#: src/portal/components/verify/VerifyArtefactError.tsx:38
+msgid "participant.concrete.artefact.action.button.reload"
+msgstr "Znovu načíst stránku"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:21
+#: src/portal/components/conversation/ConversationErrorView.tsx:21
 msgid "participant.button.reload"
 msgstr "Znovu načíst stránku"
 
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:38
-msgid "participant.concrete.artefact.action.button.reload"
-msgstr "Znovu načíst stránku"
+#: src/features/sidebar/AppSidebar.tsx:119
+#: src/components/layout/BaseLayout.tsx:33
+#: src/components/error/ErrorPageContent.tsx:53
+#: src/components/error/ErrorBoundary.tsx:54
+msgid "Reload page"
+msgstr "Reload page"
 
 #: src/components/project/ProjectPortalEditor.tsx:1104
 msgid "Remind users to verify before finishing"
@@ -13028,7 +13028,7 @@ msgstr "Odebrat přístup"
 msgid "Remove avatar"
 msgstr "Remove avatar"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:216
+#: src/portal/routes/ParticipantPostConversation.tsx:216
 msgid "Remove email"
 msgstr "Odebrat e-mail"
 
@@ -13378,7 +13378,7 @@ msgid "Requester"
 msgstr "Requester"
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:376
+#: src/portal/components/settings/MicrophoneCheck.tsx:377
 msgid "participant.alert.microphone.access.loading"
 msgstr "Requesting microphone access to detect available devices..."
 
@@ -13539,7 +13539,7 @@ msgid "Results show in the language people spoke. Choose a language to translate
 msgstr "Výsledky se zobrazují v jazyce, kterým lidé mluvili. Zvolte jazyk pro překlad všech popcornů, citací, témat a zúčastněných stran pro tuto prezentaci; originály zůstanou zachovány."
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:145
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:145
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
@@ -13615,7 +13615,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 #~ msgid "Retry Upload"
 #~ msgstr "Retry Upload"
 
-#: src/components/error/ErrorPage.tsx:111
+#: src/components/error/ErrorPageContent.tsx:61
 #: src/components/error/ErrorBoundary.tsx:62
 msgid "Return home"
 msgstr "Return home"
@@ -13674,7 +13674,7 @@ msgid "Review, edit, and open every conversation in this project."
 msgstr "Review, edit, and open every conversation in this project."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:439
+#: src/portal/components/verify/VerifyArtefact.tsx:454
 msgid "participant.concrete.action.button.revise"
 msgstr "Revise"
 
@@ -13852,7 +13852,7 @@ msgid "Save"
 msgstr "Save"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:385
+#: src/portal/components/verify/VerifyArtefact.tsx:400
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
@@ -13947,7 +13947,7 @@ msgstr "Scan the QR code or copy the secret into your app."
 msgid "Scan to join this project"
 msgstr "Naskenujte pro připojení k tomuto projektu"
 
-#: src/components/participant/ParticipantShareModal.tsx:86
+#: src/portal/components/ParticipantShareModal.tsx:86
 msgid "Scan to start a new portal session"
 msgstr "Naskenujte a zahajte novou relaci portálu"
 
@@ -14266,7 +14266,7 @@ msgstr "Vybrat {title}"
 msgid "Select a conversation to continue"
 msgstr "Vyberte rozhovor pro pokračování"
 
-#: src/components/participant/MicrophoneTest.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:323
 msgid "Select a microphone"
 msgstr "Select a microphone"
 
@@ -14408,7 +14408,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Vyberte, kdo se zúčastnil. Každý získá roční licenci k používání dembrane ve vysoce rizikových prostředích."
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:315
 msgid "participant.select.microphone"
 msgstr "Select your microphone:"
 
@@ -14430,7 +14430,7 @@ msgstr "Vybrané soubory ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:311
 msgid "participant.selected.microphone"
 msgstr "Selected microphone:"
 
@@ -14531,7 +14531,7 @@ msgstr "Samostatný (klient)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Separate with commas, spaces, or new lines."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:290
+#: src/portal/components/start/ParticipantInitiateForm.tsx:290
 msgid "Session name"
 msgstr "Název setkání"
 
@@ -14616,6 +14616,8 @@ msgstr "Příprava"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
 #: src/routes/project/ProjectsHome.tsx:250
+#: src/portal/layout/ParticipantHeader.tsx:125
+#: src/portal/layout/ParticipantHeader.tsx:126
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:108
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -14624,13 +14626,11 @@ msgstr "Příprava"
 #: src/components/present/RoomMapRail.tsx:137
 #: src/components/map/panels/MapSettingsMenu.tsx:385
 #: src/components/map/panels/MapSettingsMenu.tsx:393
-#: src/components/layout/ParticipantHeader.tsx:125
-#: src/components/layout/ParticipantHeader.tsx:126
 msgid "Settings"
 msgstr "Nastavení"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantSettingsModal.tsx:21
+#: src/portal/components/settings/ParticipantSettingsModal.tsx:21
 msgid "participant.settings.modal.title"
 msgstr "Settings"
 
@@ -14674,8 +14674,8 @@ msgstr "Sdílejte zvací odkazy namísto pozvánek e-mailem."
 #~ msgid "Share options"
 #~ msgstr "Možnosti sdílení"
 
-#: src/components/layout/ParticipantHeader.tsx:117
-#: src/components/layout/ParticipantHeader.tsx:118
+#: src/portal/layout/ParticipantHeader.tsx:117
+#: src/portal/layout/ParticipantHeader.tsx:118
 msgid "Share portal"
 msgstr "Sdílet portál"
 
@@ -14708,7 +14708,7 @@ msgstr "Sdílet s celým pracovním prostorem"
 msgid "Share with workspace"
 msgstr "Sdílet s pracovním prostorem"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:179
+#: src/portal/routes/ParticipantPostConversation.tsx:179
 msgid "Share your details here"
 msgstr "Share your details here"
 
@@ -14894,7 +14894,7 @@ msgstr "Zobrazit náhled"
 msgid "Show projects"
 msgstr "Show projects"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:154
+#: src/portal/routes/ParticipantPostConversation.tsx:154
 msgid "Show QR code"
 msgstr "Zobrazit QR kód"
 
@@ -15039,7 +15039,7 @@ msgid "Skip"
 msgstr "Skip"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:119
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:119
 msgid "participant.button.verify_prompt.skip"
 msgstr "Skip"
 
@@ -15112,7 +15112,7 @@ msgid "error.fallback.fix_input"
 msgstr "Něco ve formuláři je potřeba opravit. Zkontrolujte ho a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:896
+#: src/portal/components/conversation/audio/S3CheckModal.tsx:36
 msgid "participant.modal.s3check.message"
 msgstr "Something is blocking your connection. Your audio will not be saved unless this is resolved."
 
@@ -15121,14 +15121,14 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/auth/Login.tsx:342
 #: src/components/report/reportError.ts:22
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/error/ErrorPage.tsx:63
+#: src/components/error/ErrorPageContent.tsx:23
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:350
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:34
+#: src/portal/components/conversation/ConversationErrorView.tsx:34
 msgid "participant.conversation.error"
 msgstr "Something went wrong"
 
@@ -15167,7 +15167,7 @@ msgstr "Došlo k chybě, kterou musíme opravit. Kontaktujte podporu a my vám p
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Při přepisu došlo k chybě. Zkuste to znovu."
 
-#: src/components/participant/ParticipantBody.tsx:131
+#: src/portal/components/conversation/ConversationMessages.tsx:128
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
@@ -15176,11 +15176,11 @@ msgid "Something went wrong. Please open the link from your email again, or <0>s
 msgstr "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:23
+#: src/portal/components/conversation/audio/EchoErrorAlert.tsx:23
 msgid "participant.explore.generic.error.message"
 msgstr "Something went wrong. Please try again by pressing the <0>Explore</0> button, or contact support if the issue continues."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:160
+#: src/portal/components/verify/VerifyArtefact.tsx:173
 msgid "Something went wrong. Please try again."
 msgstr "Something went wrong. Please try again."
 
@@ -15194,7 +15194,7 @@ msgid "Something went wrong. Try again, and contact support if it keeps happenin
 msgstr "Něco se pokazilo. Zkuste to znovu, a pokud problém přetrvává, kontaktujte podporu."
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:18
+#: src/portal/components/conversation/audio/EchoErrorAlert.tsx:18
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
@@ -15360,7 +15360,7 @@ msgid "Start in assistant chat"
 msgstr "Začít v chatu s asistentem"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:62
+#: src/portal/components/conversation/ConversationErrorView.tsx:62
 msgid "participant.button.start.new.conversation"
 msgstr "Zahájit nový rozhovor"
 
@@ -15467,7 +15467,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1224
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:822
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -15540,12 +15540,12 @@ msgstr "Strategic Planning"
 msgid "Strong password"
 msgstr "Silné heslo"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:249
+#: src/portal/routes/ParticipantPostConversation.tsx:249
 msgid "Submit"
 msgstr "Submit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:276
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:276
 msgid "participant.button.submit.text.mode"
 msgstr "Submit"
 
@@ -15694,7 +15694,7 @@ msgstr "Podporuje pól A"
 msgid "Supports pole B"
 msgstr "Podporuje pól B"
 
-#: src/components/participant/ParticipantConversationText.tsx:284
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:284
 msgid "Switch to audio"
 msgstr "Přepnout na zvuk"
 
@@ -15707,12 +15707,12 @@ msgstr "Přepnout na samoobsluhu"
 msgid "Switch to self-serve billing"
 msgstr "Přepnout na samoobslužnou fakturaci"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:1153
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:743
 msgid "Switch to text"
 msgstr "Přepnout na text"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:170
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
 msgid "participant.link.switch.text"
 msgstr "Switch to text input"
 
@@ -15760,8 +15760,8 @@ msgstr "Štítek {0}"
 msgid "Tag deleted"
 msgstr "Tag deleted"
 
+#: src/portal/components/start/ParticipantInitiateForm.tsx:301
 #: src/components/project/ProjectTagsInput.tsx:281
-#: src/components/participant/ParticipantInitiateForm.tsx:301
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
 #: src/components/conversation/ConversationsMiniList.tsx:189
@@ -15793,17 +15793,17 @@ msgstr "Take me to {resolvedWorkspaceName}"
 msgid "Take part"
 msgstr "Zapojte se"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:811
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:46
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:814
-msgid "Take some time to create an outcome that makes your contribution concrete."
+#. js-lingui-explicit-id
+#: src/portal/components/refine/RefineSelection.tsx:71
+msgid "participant.refine.make.concrete.description"
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:71
-msgid "participant.refine.make.concrete.description"
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:49
+msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
 #: src/components/release/releaseHistory.ts:44
@@ -15907,7 +15907,7 @@ msgstr "Text"
 msgid "Text contributions and follow-up forms."
 msgstr "Textové příspěvky a navazující formuláře."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:135
+#: src/portal/routes/ParticipantPostConversation.tsx:135
 msgid "Thank you for participating!"
 msgstr "Thank you for participating!"
 
@@ -15919,7 +15919,7 @@ msgstr "Obsah děkovací stránky"
 #~ msgid "Thank You Page Content"
 #~ msgstr "Thank You Page Content"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:258
+#: src/portal/routes/ParticipantPostConversation.tsx:258
 msgid "Thank you!"
 msgstr "Thank you!"
 
@@ -15972,7 +15972,7 @@ msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "To bylo příliš krátké na přepis. Podržte nahrávání o něco déle."
 
 #. js-lingui-explicit-id
-#: src/components/participant/WrapUpModal.tsx:25
+#: src/portal/components/conversation/audio/WrapUpModal.tsx:25
 msgid "participant.modal.wrap_up.title"
 msgstr "A je to"
 
@@ -16030,7 +16030,7 @@ msgstr "The code didn't work, please try again."
 #~ msgstr "Spojení bylo přerušeno. Zkoušíme to automaticky znovu."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ConversationErrorView.tsx:47
+#: src/portal/components/conversation/ConversationErrorView.tsx:47
 msgid "participant.conversation.error.loading"
 msgstr "The conversation could not be loaded. Please try again or contact support."
 
@@ -16540,7 +16540,7 @@ msgstr "Budou přidáni jako členové. Další můžete přidat později."
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
 msgstr "Například: Hovor s vaším DPO nebo CISO, bezpečnostní prověrka či DPIA na míru."
 
-#: src/components/participant/ParticipantEchoMessages.tsx:49
+#: src/portal/components/conversation/audio/ParticipantEchoMessages.tsx:49
 msgid "Thinking..."
 msgstr "Thinking..."
 
@@ -16581,7 +16581,7 @@ msgid "This browser cannot record audio. Chrome, Edge and Safari can."
 msgstr "Tento prohlížeč neumí nahrávat zvuk. Chrome, Edge a Safari ano."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:902
+#: src/portal/components/conversation/audio/S3CheckModal.tsx:42
 msgid "participant.modal.s3check.suggestions"
 msgstr "This can happen when a VPN or firewall is blocking the connection. Try disabling your VPN, switching to a different network (e.g. mobile hotspot), or contact your IT department for help."
 
@@ -16606,7 +16606,7 @@ msgid "This claim has not been fact-checked."
 msgstr "Toto tvrzení nebylo ověřeno."
 
 #. js-lingui-explicit-id
-#: src/components/participant/WrapUpModal.tsx:31
+#: src/portal/components/conversation/audio/WrapUpModal.tsx:31
 msgid "participant.modal.wrap_up.conversation"
 msgstr "Tento rozhovor dosáhl maximální délky. Vše, co jste nahráli, je uloženo."
 
@@ -16640,12 +16640,12 @@ msgstr "Toto nasazení zobrazuje až {applied} hran."
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Toto nasazení zobrazuje až {applied} uzlů."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:90
+#: src/portal/routes/ParticipantPostConversation.tsx:90
 msgid "This email is already in the list."
 msgstr "This email is already in the list."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:964
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:83
 msgid "participant.modal.refine.info.available.in"
 msgstr "This feature will be available in {remainingTime} seconds."
 
@@ -16880,7 +16880,7 @@ msgstr "this person"
 #~ msgid "This phrase is a question"
 #~ msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:151
+#: src/portal/components/ParticipantShareModal.tsx:151
 msgid "This portal is not accepting new sessions right now."
 msgstr "Tento portál nyní nepřijímá nové relace."
 
@@ -16918,12 +16918,12 @@ msgid "This project is visible to everyone in the workspace."
 msgstr "This project is visible to everyone in the workspace."
 
 #. js-lingui-explicit-id
-#: src/components/participant/NotTakingRecordings.tsx:19
+#: src/portal/components/NotTakingRecordings.tsx:19
 msgid "participant.not_taking_recordings"
 msgstr "Tento projekt právě nepřijímá nahrávky."
 
 #. js-lingui-explicit-id
-#: src/components/participant/NotTakingRecordings.tsx:15
+#: src/portal/components/NotTakingRecordings.tsx:15
 msgid "participant.not_taking_responses"
 msgstr "Tento projekt momentálně nepřijímá odpovědi."
 
@@ -16958,7 +16958,7 @@ msgstr "Tímto se odebere roční licence pro uživatele {0}. Již se nebude po�
 msgid "This replaces every popcorn, tension and stakeholder on the screen and reads all conversations again. Earlier runs are saved in the history."
 msgstr "Tímto se nahradí každý Popcorn, napětí i zúčastněná strana na obrazovce a znovu se načtou všechny rozhovory. Dřívější běhy jsou uloženy v historii."
 
-#: src/routes/participant/ParticipantReport.tsx:90
+#: src/portal/routes/ParticipantReport.tsx:90
 msgid "This report is not yet available."
 msgstr "Tato zpráva zatím není k dispozici."
 
@@ -17047,12 +17047,12 @@ msgid "add.tag.filter.modal.info"
 msgstr "This will filter the conversation list to show conversations with this tag."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:327
+#: src/portal/components/verify/VerifyArtefact.tsx:340
 msgid "participant.concrete.regenerating.artefact.description"
 msgstr "This will just take a few moments"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactLoading.tsx:18
+#: src/portal/components/verify/VerifyArtefactLoading.tsx:18
 msgid "participant.concrete.loading.artefact.description"
 msgstr "This will just take a moment"
 
@@ -17151,7 +17151,7 @@ msgstr "Timestamp"
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
-#: src/components/participant/ParticipantBody.tsx:123
+#: src/portal/components/conversation/ConversationMessages.tsx:120
 msgid "Tip"
 msgstr "Tip"
 
@@ -17674,7 +17674,7 @@ msgstr "Type <0>{0}</0> to confirm."
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
-#: src/components/participant/ParticipantConversationText.tsx:259
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:259
 msgid "Type your response here"
 msgstr "Type your response here"
 
@@ -17695,11 +17695,11 @@ msgstr "Ukrajinština (pouze funkce ECHO, přepis a shrnutí)"
 #~ msgstr "Unable to load audit logs."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:19
+#: src/portal/components/verify/VerifyArtefactError.tsx:19
 msgid "participant.outcome.error.title"
 msgstr "Výsledek se nepodařilo načíst"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:96
+#: src/portal/components/verify/VerifyArtefact.tsx:109
 msgid "Unable to load the generated outcome. Please try again."
 msgstr "Unable to load the generated outcome. Please try again."
 
@@ -17802,11 +17802,11 @@ msgstr "Unread"
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:74
+#: src/portal/routes/ProjectUnsubscribe.tsx:74
 msgid "Unsubscribe"
 msgstr "Unsubscribe"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:50
+#: src/portal/routes/ProjectUnsubscribe.tsx:50
 msgid "Unsubscribe from notifications"
 msgstr "Odhlásit odběr upozornění"
 
@@ -18077,12 +18077,12 @@ msgstr "Nahrávání zvukových souborů"
 #~ msgstr "Uploading Audio Files..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:129
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:129
 msgid "participant.modal.uploading"
 msgstr "Uploading audio..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1016
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:55
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
@@ -18278,12 +18278,12 @@ msgid "Verification prompts allow 10,000 characters, and verified outcomes have 
 msgstr "Výzvy k ověření umožňují až 10 000 znaků a ověřené výstupy mají tlačítko pro kopírování."
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:72
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:72
 msgid "participant.modal.verify_prompt.title"
 msgstr "Verification reminder"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudioContent.tsx:169
+#: src/portal/components/conversation/audio/ParticipantConversationAudioContent.tsx:167
 msgid "participant.banner.verification_required"
 msgstr "Verification required"
 
@@ -18327,18 +18327,18 @@ msgid "Verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:906
-msgid "dashboard.dembrane.verify.title"
+#: src/portal/components/refine/RefineSelection.tsx:68
+msgid "participant.echo.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:104
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:104
 msgid "participant.button.verify_prompt.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:68
-msgid "participant.echo.verify"
+#: src/components/project/ProjectPortalEditor.tsx:906
+msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
 #: src/routes/auth/Login.tsx:582
@@ -18407,7 +18407,7 @@ msgstr "Zobrazit postupy"
 msgid "View results"
 msgstr "Zobrazit výsledky"
 
-#: src/components/participant/ParticipantBody.tsx:223
+#: src/portal/components/conversation/ConversationMessages.tsx:220
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -18530,7 +18530,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Podívej se na video s úvodem do organizací, pracovních prostorů a projektů."
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:401
+#: src/portal/components/settings/MicrophoneCheck.tsx:398
 msgid "participant.alert.microphone.access.issue"
 msgstr "We cannot hear you. Please try changing your microphone or get a little closer to the device."
 
@@ -18555,7 +18555,7 @@ msgstr "Nepodařilo se strhnout platbu z vaší platební metody"
 #~ msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
 #~ msgstr "We couldn’t enable two-factor authentication. Double-check your code and try again."
 
-#: src/components/error/ErrorPage.tsx:69
+#: src/components/error/ErrorPageContent.tsx:29
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "We couldn't find the page you were looking for. It may have moved."
 
@@ -18600,7 +18600,7 @@ msgid "We couldn't update your payment method. Your old one is still active. Ple
 msgstr "Vaši platební metodu se nepodařilo aktualizovat. Původní zůstává aktivní. Zkuste to prosím znovu."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:853
+#: src/portal/components/conversation/audio/RefineInfoModal.tsx:77
 msgid "participant.modal.echo.info.reason"
 msgstr "We need a bit more context to help you use ECHO effectively. Please continue recording so we can provide better suggestions."
 
@@ -18636,7 +18636,7 @@ msgstr "Nastavíme projekt, budeme vám v den akce po boku a pomůžeme s násle
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "Platbu se stále nepodařilo strhnout. Aktualizujte platební metodu a zkuste to znovu."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:269
+#: src/portal/routes/ParticipantPostConversation.tsx:269
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 
@@ -18649,7 +18649,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "Rádi bychom se dozvěděli, jak dembrane používáte, abychom vám mohli lépe pomoct. Na našem webu to zabere asi dvě minuty a na konci si s námi můžete, pokud chcete, domluvit krátký hovor."
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:300
 msgid "participant.test.microphone.description"
 msgstr "We'll test your microphone to ensure the best experience for everyone in the session."
 
@@ -18710,7 +18710,7 @@ msgstr "Webhooky jsou součástí placeného tarifu."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:129
 #: src/routes/auth/Login.tsx:414
-#: src/components/participant/ParticipantBody.tsx:115
+#: src/portal/components/conversation/ConversationMessages.tsx:113
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -18774,7 +18774,7 @@ msgid "What do you want to use dembrane for?"
 msgstr "K čemu chcete dembrane používat?"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:261
+#: src/portal/components/verify/VerifySelection.tsx:253
 msgid "participant.verify.selection.title"
 msgstr "What do you want to verify?"
 
@@ -18858,7 +18858,7 @@ msgstr "Co je nového"
 msgid "What's the main reason?"
 msgstr "Jaký je hlavní důvod?"
 
-#: src/components/participant/ParticipantShareModal.tsx:125
+#: src/portal/components/ParticipantShareModal.tsx:125
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -19236,7 +19236,7 @@ msgstr "You"
 msgid "You already have access to this workspace."
 msgstr "K tomuto pracovnímu prostoru již máte přístup."
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:78
+#: src/portal/routes/ProjectUnsubscribe.tsx:78
 msgid "You are already unsubscribed or your link is invalid."
 msgstr "You are already unsubscribed or your link is invalid."
 
@@ -19387,7 +19387,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "You have already added all the conversations related to this"
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:426
+#: src/portal/components/settings/MicrophoneCheck.tsx:424
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "You have changed the mic. Doing this will save your audio till this point and restart your recording."
 
@@ -19395,7 +19395,7 @@ msgstr "You have changed the mic. Doing this will save your audio till this poin
 msgid "You have no recording left this month."
 msgstr "Na tento měsíc vám už nezbývá žádný čas nahrávání."
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:59
+#: src/portal/routes/ProjectUnsubscribe.tsx:59
 msgid "You have successfully unsubscribed."
 msgstr "You have successfully unsubscribed."
 
@@ -19464,7 +19464,7 @@ msgid "You haven't joined any workspace in this organisation yet."
 msgstr "You haven't joined any workspace in this organisation yet."
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:87
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:87
 msgid "participant.modal.verify_prompt.description"
 msgstr "You haven't verified any outcomes yet. Would you like to verify before finishing?"
 
@@ -19480,7 +19480,7 @@ msgstr "You must login with the same provider you used to sign up. If you face a
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
-#: src/components/participant/ParticipantBody.tsx:122
+#: src/portal/components/conversation/ConversationMessages.tsx:119
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -19518,7 +19518,7 @@ msgid "You'll lose access to this workspace. Projects you created stay; your rol
 msgstr "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:18
+#: src/portal/components/verify/VerifyInstructions.tsx:18
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "You'll soon get {objectLabel} to verify."
 
@@ -19671,7 +19671,7 @@ msgid "Your answer is ready"
 msgstr "Vaše odpověď je hotová"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:53
+#: src/portal/components/verify/VerifyInstructions.tsx:53
 msgid "participant.verify.instructions.approval.helps"
 msgstr "Your approval helps us understand what you really think!"
 
@@ -19775,7 +19775,7 @@ msgstr "Your latest report generation was cancelled. Showing your most recent co
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Your logo is still active but can't be changed on this tier."
 
-#: src/components/participant/InAppBrowserNotice.tsx:50
+#: src/portal/components/start/InAppBrowserNotice.tsx:50
 msgid "Your microphone may not work inside {appName}."
 msgstr "Váš mikrofon nemusí v aplikaci {appName} fungovat."
 
@@ -19873,11 +19873,11 @@ msgstr "Vaše nahrávka, {0}"
 #~ msgid "Your request is in."
 #~ msgstr "Vaše žádost byla přijata."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:139
+#: src/portal/routes/ParticipantPostConversation.tsx:139
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také sdílet QR kód, aby mohli přispět i ostatní, nebo nahrát další rozhovor."
 
-#: src/components/participant/ParticipantBody.tsx:232
+#: src/portal/components/conversation/ConversationMessages.tsx:229
 msgid "Your responses"
 msgstr "Your responses"
 

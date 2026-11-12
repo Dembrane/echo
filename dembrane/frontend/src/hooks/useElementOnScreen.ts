@@ -4,7 +4,10 @@ export const useElementOnScreen = (
 	options: IntersectionObserverInit,
 ): [React.RefObject<HTMLDivElement | null>, boolean] => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [isVisible, setIsVisible] = useState(false);
+	// On screen until the observer says otherwise: its first report lands a
+	// frame after mount, and starting off screen flashed the portal's
+	// scroll-to-bottom arrow on every page load.
+	const [isVisible, setIsVisible] = useState(true);
 
 	const callbackFunction = (entries: IntersectionObserverEntry[]) => {
 		const [entry] = entries;
