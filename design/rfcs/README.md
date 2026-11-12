@@ -2,10 +2,10 @@
 
 How RFCs and ratchet runs work is set out in [0001](0001-ratchet-agents.md).
 
-## Run a ratchet pass
+## Run an rfc-ratchet pass
 
-- Claude Code: `/ratchet 0002`
-- Anywhere else: `Read .agents/skills/ratchet/SKILL.md and follow it for RFC 0002.`
+- Claude Code: `/rfc-ratchet 0002`
+- Anywhere else: `Read .agents/skills/rfc-ratchet/SKILL.md and follow it for RFC 0002.`
 
 | RFC | Target |
 |---|---|

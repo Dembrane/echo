@@ -1,20 +1,20 @@
 ---
-name: ratchet
-description: Run one ratchet pass for an approved RFC. Usage - /ratchet <rfc id>, e.g. /ratchet 0002
+name: rfc-ratchet
+description: Run one rfc-ratchet pass for an approved RFC. Usage - /rfc-ratchet <rfc id>, e.g. /rfc-ratchet 0002
 disable-model-invocation: true
 ---
 
-A ratchet run moves the repo one slice closer to an approved RFC and ends with at most one PR. The RFC is `design/rfcs/<id>-*.md`; the run state is `.agents/ratchet/<id>-*.yml`. A violation is one line of the RFC's Measure output.
+An rfc-ratchet run moves the repo one slice closer to an approved RFC and ends with at most one PR. The RFC is `design/rfcs/<id>-*.md`; the run state is `.agents/rfc-ratchet/<id>-*.yml`. A violation is one line of the RFC's Measure output.
 
 ## Steps
 
-1. **Load.** Read the RFC and the state file. Done when you can state the RFC's target, its Measure command, and the state's caps. Report and stop when the RFC `status` is not `approved` or the state has `active: false`.
+1. **Load.** Read the RFC and the state file. Done when you can state the RFC's target, its Measure command, and the state's caps. Report and stop when the RFC `status` is not `approved`, its `ratchet` is not `true`, or the state has `active: false`.
 
-2. **Gate.** List open PRs, then keep those whose title starts with `[ratchet:<id>]`:
-   `gh pr list --state open --limit 200 --json number,title,url --jq '.[] | select(.title | startswith("[ratchet:<id>]"))'`
+2. **Gate.** List open PRs, then keep those whose title starts with `[rfc-ratchet:<id>]`:
+   `gh pr list --state open --limit 200 --json number,title,url --jq '.[] | select(.title | startswith("[rfc-ratchet:<id>]"))'`
    Done when you hold the count. At or above `max_open_prs`, print the PR URLs and stop without changes.
 
-3. **Branch** `ratchet/<id>-run-<runs+1>` from current `origin/main`.
+3. **Branch** `rfc-ratchet/<id>-run-<runs+1>` from current `origin/main`.
 
 4. **Measure.** Run the Measure command and set `remaining` to its line count. At 0, set `active: false`, report the target met, and stop.
 
@@ -26,6 +26,6 @@ A ratchet run moves the repo one slice closer to an approved RFC and ends with a
 
 8. **Record.** In the state file: `runs` + 1, `remaining`, the slice size appended to `history`, `est_runs_left`.
 
-9. **Open the PR.** Title `[ratchet:<id>] <slice>`. Body holds `ratchet-rfc: <id>`, count before and after, `runs`, `est_runs_left`, and "Deferred" items. Done when `git diff --shortstat` (state file and lock-in entries excluded) is within both caps; shrink the slice and redo from step 5 otherwise.
+9. **Open the PR.** Title `[rfc-ratchet:<id>] <slice>`. Body holds `rfc-ratchet: <id>`, count before and after, `runs`, `est_runs_left`, and "Deferred" items. Done when `git diff --shortstat` (state file and lock-in entries excluded) is within both caps; shrink the slice and redo from step 5 otherwise.
 
 10. **Reconsider.** When `est_runs_left` has risen for 3 runs in a row, or only Deferred violations remain, open an issue titled `RFC <id>: reconsider target` with the history and the Deferred list. A human edits the RFC.
