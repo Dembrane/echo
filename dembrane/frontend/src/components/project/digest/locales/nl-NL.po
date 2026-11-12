@@ -73,7 +73,7 @@ msgstr "Wijzig: {part}"
 #~ msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
 #~ msgstr "Kijk elk onderdeel na, pas aan wat niet klopt en zet uit wat je niet wilt. Er wordt niets opgeslagen tot je het project aanmaakt."
 
-#: src/components/project/digest/DigestConnected.tsx:222
+#: src/components/project/digest/DigestConnected.tsx:226
 msgid "Choose a format below to continue."
 msgstr "Kies hieronder een werkvorm om verder te gaan."
 
@@ -97,7 +97,7 @@ msgstr "Project aanmaken"
 msgid "dembrane couldn't read anything to add from this."
 msgstr "dembrane kon hier niets uit halen om toe te voegen."
 
-#: src/components/project/digest/DigestConnected.tsx:214
+#: src/components/project/digest/DigestConnected.tsx:218
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane kon het project hiermee niet inrichten."
 
@@ -109,7 +109,7 @@ msgstr "Sleep bestanden hierheen, of kies ze"
 msgid "Drop files or choose them"
 msgstr "Sleep bestanden of kies ze"
 
-#: src/components/project/digest/DigestConnected.tsx:191
+#: src/components/project/digest/DigestConnected.tsx:195
 msgid "Drop it to set up the project from it"
 msgstr "Laat los om het project hiermee in te richten"
 
@@ -205,7 +205,7 @@ msgstr "Nog niets"
 msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
 msgstr "Eén onderdeel tegelijk: neem het over, pas het aan of sla het over. Er wordt niets opgeslagen tot je het project maakt."
 
-#: src/components/project/digest/DigestConnected.tsx:227
+#: src/components/project/digest/DigestConnected.tsx:231
 msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
 msgstr "Alleen het begin past: dembrane leest de eerste 4.000 tekens van de context."
 
@@ -416,7 +416,7 @@ msgstr "Waarom dit sjabloon: {0}"
 msgid "You skipped this part. Accept it to use it after all."
 msgstr "Je hebt dit overgeslagen. Neem het over om het toch te gebruiken."
 
-#: src/components/project/digest/DigestConnected.tsx:209
+#: src/components/project/digest/DigestConnected.tsx:213
 msgid "You've set up several projects from material in the last hour. Try again later."
 msgstr "Je hebt het afgelopen uur al een paar projecten met materiaal ingericht. Probeer het later opnieuw."
 
@@ -428,7 +428,7 @@ msgstr "Je bestanden"
 msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
 msgstr "Je materiaal was lang, dus dembrane las het begin en een ingekorte versie. Kijk of er niets belangrijks ontbreekt."
 
-#: src/components/project/digest/DigestConnected.tsx:217
+#: src/components/project/digest/DigestConnected.tsx:221
 msgid "Your text is in the project context: choose a format below to continue."
 msgstr "Je tekst staat in de projectcontext: kies hieronder een werkvorm om verder te gaan."
 
@@ -436,6 +436,6 @@ msgstr "Je tekst staat in de projectcontext: kies hieronder een werkvorm om verd
 #~ msgid "Your text is in the project context: choose a template below to continue."
 #~ msgstr "Je tekst staat in de projectcontext: kies hieronder een sjabloon om verder te gaan."
 
-#: src/components/project/digest/DigestConnected.tsx:204
+#: src/components/project/digest/DigestConnected.tsx:208
 msgid "Your workspace's AI budget for this month is used up, so dembrane can't read this now."
 msgstr "Het AI-budget van je werkruimte voor deze maand is op, dus dembrane kan dit nu niet lezen."

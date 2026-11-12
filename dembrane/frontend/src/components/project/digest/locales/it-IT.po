@@ -73,7 +73,7 @@ msgstr "Cambia: {part}"
 #~ msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
 #~ msgstr "Controlla ogni parte, cambia ciò che non va e disattiva ciò che non vuoi. Non viene salvato nulla finché non crei il progetto."
 
-#: src/components/project/digest/DigestConnected.tsx:222
+#: src/components/project/digest/DigestConnected.tsx:226
 msgid "Choose a format below to continue."
 msgstr "Scegli un formato qui sotto per continuare."
 
@@ -97,7 +97,7 @@ msgstr "Crea progetto"
 msgid "dembrane couldn't read anything to add from this."
 msgstr "dembrane non è riuscito a ricavarne nulla da aggiungere."
 
-#: src/components/project/digest/DigestConnected.tsx:214
+#: src/components/project/digest/DigestConnected.tsx:218
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane non è riuscito a impostare il progetto da questo materiale."
 
@@ -109,7 +109,7 @@ msgstr "Trascina qui i file o sceglili"
 msgid "Drop files or choose them"
 msgstr "Trascina i file o sceglili"
 
-#: src/components/project/digest/DigestConnected.tsx:191
+#: src/components/project/digest/DigestConnected.tsx:195
 msgid "Drop it to set up the project from it"
 msgstr "Rilascia per impostare il progetto da qui"
 
@@ -205,7 +205,7 @@ msgstr "Ancora niente"
 msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
 msgstr "Una parte alla volta: accettala, modificala o saltala. Non salviamo niente finché non crei il progetto."
 
-#: src/components/project/digest/DigestConnected.tsx:227
+#: src/components/project/digest/DigestConnected.tsx:231
 msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
 msgstr "Ci sta solo l'inizio: dembrane legge i primi 4.000 caratteri del contesto."
 
@@ -416,7 +416,7 @@ msgstr "Perché questo: {0}"
 msgid "You skipped this part. Accept it to use it after all."
 msgstr "Hai saltato questa parte. Accettala per usarla comunque."
 
-#: src/components/project/digest/DigestConnected.tsx:209
+#: src/components/project/digest/DigestConnected.tsx:213
 msgid "You've set up several projects from material in the last hour. Try again later."
 msgstr "Nell'ultima ora hai già impostato diversi progetti da materiale. Riprova più tardi."
 
@@ -428,7 +428,7 @@ msgstr "I tuoi file"
 msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
 msgstr "Il tuo materiale era lungo, quindi dembrane ne ha letto l'inizio e una versione condensata. Controlla che non manchi nulla di importante."
 
-#: src/components/project/digest/DigestConnected.tsx:217
+#: src/components/project/digest/DigestConnected.tsx:221
 msgid "Your text is in the project context: choose a format below to continue."
 msgstr "Il tuo testo è nel contesto del progetto: scegli un formato qui sotto per continuare."
 
@@ -436,6 +436,6 @@ msgstr "Il tuo testo è nel contesto del progetto: scegli un formato qui sotto p
 #~ msgid "Your text is in the project context: choose a template below to continue."
 #~ msgstr "Il tuo testo è nel contesto del progetto: scegli un modello qui sotto per continuare."
 
-#: src/components/project/digest/DigestConnected.tsx:204
+#: src/components/project/digest/DigestConnected.tsx:208
 msgid "Your workspace's AI budget for this month is used up, so dembrane can't read this now."
 msgstr "Il budget IA del tuo spazio di lavoro per questo mese è esaurito, quindi dembrane non può leggerlo ora."
