@@ -14814,6 +14814,10 @@ msgstr "Zůstává aktuální do zítřejších {0}"
 #~ msgid "Step {0} of {STEP_COUNT}"
 #~ msgstr "Krok {0} z {STEP_COUNT}"
 
+#: src/components/common/FlowProgress/FlowProgress.tsx:21
+msgid "Step {shown} of {total}"
+msgstr "Krok {shown} z {total}"
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 msgid "Steps and logs"
 msgstr "Kroky a záznamy"

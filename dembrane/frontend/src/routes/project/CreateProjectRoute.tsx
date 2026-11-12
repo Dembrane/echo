@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
+import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import type { DigestFallback } from "@/components/project/digest/DigestConnected";
@@ -37,7 +38,6 @@ import {
 	hasTerm,
 	type SetupSuggestions,
 } from "@/components/project/setup-suggestions/setupSuggestions";
-import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
 import { useTemplatesCatalog } from "@/components/project/templates/i18n";
 import {
 	LazyAllFormats,

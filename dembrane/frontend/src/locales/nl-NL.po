@@ -14811,6 +14811,10 @@ msgstr "Blijft actueel tot morgen {0}"
 #~ msgid "Step {0} of {STEP_COUNT}"
 #~ msgstr "Stap {0} van {STEP_COUNT}"
 
+#: src/components/common/FlowProgress/FlowProgress.tsx:21
+msgid "Step {shown} of {total}"
+msgstr "Stap {shown} van {total}"
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 msgid "Steps and logs"
 msgstr "Stappen en logs"

@@ -14814,6 +14814,10 @@ msgstr "Se mantiene al día hasta mañana a las {0}"
 #~ msgid "Step {0} of {STEP_COUNT}"
 #~ msgstr "Paso {0} de {STEP_COUNT}"
 
+#: src/components/common/FlowProgress/FlowProgress.tsx:21
+msgid "Step {shown} of {total}"
+msgstr "Paso {shown} de {total}"
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 msgid "Steps and logs"
 msgstr "Pasos y registros"

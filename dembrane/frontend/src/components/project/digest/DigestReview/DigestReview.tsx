@@ -14,8 +14,8 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { type ReactNode, useEffect, useState } from "react";
+import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
 import { SuggestedTerms } from "@/components/project/setup-suggestions/SuggestedTerms/SuggestedTerms";
-import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
 import {
 	CARD_KEYS,
 	cardTags,
