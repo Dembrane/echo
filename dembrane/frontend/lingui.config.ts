@@ -10,6 +10,9 @@ const config: LinguiConfig = {
 				"<rootDir>/src/lib/errors/messages/**",
 				"<rootDir>/src/components/project/templates/**",
 				"<rootDir>/src/components/project/digest/**",
+				"<rootDir>/src/components/project/portal-editor/**",
+				"<rootDir>/src/components/project/brief/**",
+				"<rootDir>/src/components/project/advanced/**",
 			],
 			include: ["src"],
 			path: "<rootDir>/src/locales/{locale}",
@@ -32,6 +35,17 @@ const config: LinguiConfig = {
 			// messages, loaded when the drop zone first shows (src/components/project/digest/i18n.ts).
 			include: ["<rootDir>/src/components/project/digest"],
 			path: "<rootDir>/src/components/project/digest/locales/{locale}",
+		},
+		{
+			// The project settings screens' own catalog (ECHO-1060): the portal editor's pages
+			// and preview, Brief and Manage's Advanced tab, loaded when one of them opens
+			// (src/components/project/portal-editor/i18n.ts).
+			include: [
+				"<rootDir>/src/components/project/portal-editor",
+				"<rootDir>/src/components/project/brief",
+				"<rootDir>/src/components/project/advanced",
+			],
+			path: "<rootDir>/src/components/project/portal-editor/locales/{locale}",
 		},
 		{
 			// The friendly message for every error code, loaded with the first error a

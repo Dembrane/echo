@@ -119,14 +119,14 @@ export const ProjectHomeRoute = () => {
 			icon: <TextAaIcon size={20} />,
 			label: <Trans>Set key terms</Trans>,
 			testId: "project-home-set-key-terms",
-			to: `portal-editor#${KEY_TERMS_HASH}`,
+			to: `brief#${KEY_TERMS_HASH}`,
 			tour: "project-home-key-terms",
 		},
 		canEditProject && {
 			icon: <TargetIcon size={20} />,
 			label: <Trans>Set project context</Trans>,
 			testId: "project-home-set-project-context",
-			to: `overview#${PROJECT_CONTEXT_HASH}`,
+			to: `brief#${PROJECT_CONTEXT_HASH}`,
 			tour: "project-home-project-context",
 		},
 	].filter(Boolean) as {

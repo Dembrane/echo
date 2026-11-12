@@ -22,6 +22,7 @@ import { HelpView } from "./views/HelpView";
 import { OrgHomeView } from "./views/org/OrgHomeView";
 import { OrgSettingsView } from "./views/org/OrgSettingsView";
 import { ProjectHomeView } from "./views/project/ProjectHomeView";
+import { ProjectPortalView } from "./views/project/ProjectPortalView";
 import { ProjectSettingsView } from "./views/project/ProjectSettingsView";
 import { UserHomeView } from "./views/user/UserHomeView";
 import { UserSettingsView } from "./views/user/UserSettingsView";
@@ -53,6 +54,8 @@ export const AppSidebar = () => {
 				return <ProjectHomeView />;
 			case "project-settings":
 				return <ProjectSettingsView />;
+			case "project-portal":
+				return <ProjectPortalView />;
 			case "admin-home":
 				return <AdminHomeView />;
 		}

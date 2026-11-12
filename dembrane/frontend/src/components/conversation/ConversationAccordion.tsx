@@ -1463,7 +1463,7 @@ export const ConversationAccordion = ({
 								No conversations found. Start a conversation using the
 								participation invite link from the{" "}
 								<I18nLink
-									to={`/w/${conversationWorkspaceId}/projects/${projectId}/overview`}
+									to={`/w/${conversationWorkspaceId}/projects/${projectId}/home`}
 								>
 									<Anchor
 										onClick={(e) => {

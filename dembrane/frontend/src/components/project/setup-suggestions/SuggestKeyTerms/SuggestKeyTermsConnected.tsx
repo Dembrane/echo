@@ -55,7 +55,7 @@ export const SuggestKeyTermsConnected = ({
 	};
 
 	const context = project.context?.trim() ?? "";
-	const contextLink = `/w/${project.workspace_id}/projects/${project.id}/overview#${PROJECT_CONTEXT_HASH}`;
+	const contextLink = `/w/${project.workspace_id}/projects/${project.id}/brief#${PROJECT_CONTEXT_HASH}`;
 
 	return (
 		<SessionBrief

@@ -10,17 +10,17 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { RefineButtonLabel } from "@/portal/components/refine/RefineButtonLabel";
-import { RefineSelection } from "@/portal/components/refine/RefineSelection";
-import { refineMode } from "@/portal/components/refine/refineMode";
-import { StopRecordingConfirmationModal } from "@/portal/components/conversation/audio/StopRecordingConfirmationModal";
-import { VerifySelection } from "@/portal/components/verify/VerifySelection";
-import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { PortalSectionEditor } from "@/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor";
 import { AppPreferencesProvider } from "@/hooks/useAppPreferences";
 import {
 	WorkspaceContext,
 	type WorkspaceContextValue,
 } from "@/hooks/useWorkspace";
+import { StopRecordingConfirmationModal } from "@/portal/components/conversation/audio/StopRecordingConfirmationModal";
+import { RefineButtonLabel } from "@/portal/components/refine/RefineButtonLabel";
+import { RefineSelection } from "@/portal/components/refine/RefineSelection";
+import { refineMode } from "@/portal/components/refine/refineMode";
+import { VerifySelection } from "@/portal/components/verify/VerifySelection";
 import { cssVariablesResolver, theme } from "@/theme";
 
 // The participant's Verify and Explore states and the portal editor's Verify and Explore
@@ -183,9 +183,14 @@ const editorProject = {
 	updated_at: "2026-11-10T09:00:00Z",
 };
 
+// ECHO-1060: the editor's Explore and Verify pages; ?section= picks one, ?option= its option.
 const Editor = () => (
-	<ProjectPortalEditor
-		project={editorProject as never}
+	<PortalSectionEditor
+		section={params.get("section") === "explore" ? "explore" : "verify"}
+		option={params.get("option") ?? undefined}
+		readOnly={false}
+		tags={[]}
+		project={{ ...editorProject, workspace_id: "w1" } as never}
 		verificationTopics={{
 			available_topics: [...allTopics, custom],
 			selected_topics: ["agreements", "actions"],

@@ -43,7 +43,11 @@ export type DigestReviewStep =
 export type TemplateSurface = "create" | "workspace_home";
 /** A picker filter (ECHO-1053): a verb, the setup, or "Show all". */
 export type TemplateFilterName = "verb" | "setup" | "show_all";
-export type KeyTermsSurface = "wizard" | "portal_editor" | "assistant";
+export type KeyTermsSurface =
+	| "wizard"
+	| "portal_editor"
+	| "brief"
+	| "assistant";
 export type SetupSuggestionSurface = "wizard" | "portal_editor";
 /** Where the digest's drop zone sits: the template picker or the name step. */
 export type DigestSurface = "picker" | "name_step";
@@ -108,6 +112,21 @@ export interface AnalyticsEvents {
 	portal_link_shared: { project_id: string; method: PortalShareMethod };
 	project_settings_saved: { project_id: string; fields_changed: string[] };
 	portal_settings_saved: { project_id: string; fields_changed: string[] };
+	// The portal editor's pages (ECHO-1060): which page opened, which option the host moved
+	// to and how (a row, Next, Back), and the preview's use. Keys only, never values.
+	portal_editor_section_viewed: { project_id: string; section: string };
+	portal_editor_option_stepped: {
+		project_id: string;
+		section: string;
+		option: string;
+		via: "row" | "next" | "back";
+	};
+	portal_editor_preview_used: {
+		project_id: string;
+		section: string;
+		screen: string;
+		action: "opened" | "screen_changed";
+	};
 
 	// Reading conversations.
 	transcript_viewed: { project_id: string; conversation_id: string };

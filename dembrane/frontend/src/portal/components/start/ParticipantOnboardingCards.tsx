@@ -49,8 +49,14 @@ const ParticipantOnboardingCards = ({
 	project,
 	onFunnelStage,
 	notice,
+	initialSlide = "first",
 }: {
 	project: ParticipantProject;
+	/**
+	 * The card to open on: the first, the privacy card (the one before the start form) or
+	 * the start form. The portal preview (ECHO-1060) shows each; participants start first.
+	 */
+	initialSlide?: "first" | "privacy" | "last";
 	/** Shown under the logo; the cards shrink around it so their button stays on screen. */
 	notice?: React.ReactNode;
 	/** Reports this participant's funnel stage up to the visitor beacon owned
@@ -231,6 +237,18 @@ const ParticipantOnboardingCards = ({
 
 	// Flatten the slides into a single array
 	const allSlides = languageCards.flatMap((section) => section.slides);
+
+	// The preview opens on another card; it remounts the deck to change it.
+	const [openedAt] = useState(initialSlide);
+	const [placed, setPlaced] = useState(openedAt === "first");
+	const privacyIndex = allSlides.findIndex((slide) => slide.type === "privacy");
+	useEffect(() => {
+		if (placed) return;
+		setCurrentSlideIndex(
+			openedAt === "last" ? allSlides.length - 1 : Math.max(0, privacyIndex),
+		);
+		setPlaced(true);
+	}, [placed, openedAt, allSlides.length, privacyIndex]);
 
 	const currentCard = allSlides[currentSlideIndex];
 

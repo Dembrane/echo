@@ -530,7 +530,7 @@ function OnboardingAction({
 		case "explore_demo":
 			return workspace && task.params?.project_id
 				? link(
-						`/w/${workspace}/projects/${task.params.project_id}/overview`,
+						`/w/${workspace}/projects/${task.params.project_id}/home`,
 						<Trans>Open the demo</Trans>,
 					)
 				: null;

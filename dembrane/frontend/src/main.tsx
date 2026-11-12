@@ -8,6 +8,7 @@ import { PostHogProvider } from "@posthog/react";
 import posthog from "posthog-js";
 import {
 	ANALYTICS_ENABLED,
+	IS_PORTAL_PREVIEW,
 	POSTHOG_CAPTURE,
 	POSTHOG_HOST,
 	POSTHOG_TOKEN,
@@ -19,7 +20,8 @@ import { errorFilter } from "./lib/errorFilter";
 import { loadMainRouter, participantRouter } from "./Router";
 
 // With analytics switched off PostHog is never initialised: no request, script or cookie.
-if (ANALYTICS_ENABLED)
+// The portal preview (ECHO-1060) never counts as a visit, so it never starts it either.
+if (ANALYTICS_ENABLED && !IS_PORTAL_PREVIEW)
 	posthog.init(POSTHOG_TOKEN, {
 		api_host: POSTHOG_HOST,
 		// Drops known browser noise and caps repeated exceptions; the portal and
@@ -79,7 +81,10 @@ const render = (router: AppRouter) =>
 		</React.StrictMode>,
 	);
 
-if (USE_PARTICIPANT_ROUTER) {
+if (IS_PORTAL_PREVIEW) {
+	// The dashboard's portal editor preview (ECHO-1060): its own small app, loaded only here.
+	void import("./portal/preview/entry").then((m) => m.renderPreview(root));
+} else if (USE_PARTICIPANT_ROUTER) {
 	render(participantRouter);
 } else {
 	void loadMainRouter().then(render);
