@@ -43,9 +43,9 @@ src/portal/features/plan/
   hooks/
     usePlanSection.ts    released items, the current item, answers in memory, actions bound to the engine
   components/
-    PlanSection.tsx      renders one section: `deck` (one item at a time, with Back and Next, as today) or `stack` (every block at once)
-    registry.tsx         catalog names → components
-    cards/               app-local catalog components until @dembrane/ui has them (each with `@movesTo @dembrane/ui`)
+    PlanSection.tsx      renders one section through json-render with `portalCatalog` (from `@dembrane/ui/catalog`): `deck` (one item at a time, with Back and Next, as today) or `stack` (every block at once)
+    cards/               until @dembrane/ui exists: app-local copies of the card components, their Zod schemas,
+                         and portalCatalog plus its registry, each with `@movesTo @dembrane/ui` (RFC 0001)
   index.ts               the public surface: planFromProject, PlanSection, the types. The only file other portal code imports.
 ```
 
@@ -130,6 +130,8 @@ If the package isn't ready, these live in `src/portal/features/plan/components/c
 
 ## Alternatives considered
 
+- **A small renderer of our own instead of json-render.** Rejected on 2026-11-12: it would be thrown away once json-render arrives. [RFC 0001](0001-dembrane-ui.md) brings in json-render, and Zod schemas for the card components, so cards render through its `portalCatalog`.
+
 - **(B) A plan plus a log kept only in the browser.** Postponed, not rejected. It adds resuming during onboarding, a debug log drawer, and tests written as event sequences. Nobody has asked for those yet, and they'd make this step bigger. The appendix describes it so it can be added without rework.
 - **(C) A log stored on the server, with agent and host sources.** This is where things are heading, but it's a backend project: a table, endpoints, permissions for anonymous participants, real-time delivery and an agent runner. It gets its own RFC.
 - **Storing the plan on the project now.** That needs a backend schema, an editor and a migration of the flags. Building the plan from the flags gives the same shape with none of that.
@@ -159,7 +161,6 @@ If the package isn't ready, these live in `src/portal/features/plan/components/c
 
 ## Open questions
 
-- **json-render or a small renderer of our own.** The prototype uses `@json-render/core`/`react`. Adding it is an "ask first" dependency under the design spec, and it counts against the portal's first-load budget.
 - **Translations.** This RFC builds the plan for one locale at runtime, from today's per-language texts and Lingui strings, so plans hold plain strings. Plans written by a host or a model will need per-language strings or one plan per language. That's decided when plans stop being built from flags.
 - **Which screen is built from the catalog first:** `/finish` (simpler, all at once) or `/start` (the deck, consent, the commit)?
 - **Card scope:** should `prompt` items accept a custom `card` now, or only default cards per type until plans are written by someone other than `planFromProject`?

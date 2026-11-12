@@ -362,7 +362,9 @@ dembrane/frontend/
 
 - Zod or JSON schemas for component props, a component registry, a JSON-spec
   renderer, and LLM generation itself. These are the next project, and this
-  one keeps them cheap.
+  one keeps them cheap. **One exception** ([RFC 0001](../rfcs/0001-dembrane-ui.md),
+  2026-11-12): the components the portal's plan renders get Zod schemas and a
+  json-render catalog (`portalCatalog`) in phase 4.
 - Tailwind 4 and Mantine 8 upgrades.
 - Visual regression tooling.
 - Publishing to npm, and a `dist/` build.
