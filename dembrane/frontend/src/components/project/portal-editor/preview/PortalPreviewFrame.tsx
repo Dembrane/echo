@@ -6,6 +6,7 @@ import { PARTICIPANT_BASE_URL } from "@/config";
 import {
 	isReadyMessage,
 	originOf,
+	PREVIEW_FRAME_NAME,
 	type PreviewMessage,
 	type PreviewScreen,
 } from "@/lib/portalPreview/protocol";
@@ -41,8 +42,6 @@ interface PortalPreviewFrameProps {
 	/** The screens this page can show, for the picker. */
 	screens: readonly PreviewScreen[];
 	onScreen: (screen: PreviewScreen) => void;
-	/** Shown beside the phone, as on the Privacy page's anonymisation example. */
-	aside?: ReactNode;
 	/** Shown above the phone: the Explore and Verify pages' "Try it" (ECHO-1061). */
 	action?: ReactNode;
 	/** Where the frame loads the portal from; the configured portal by default. */
@@ -53,23 +52,34 @@ interface PortalPreviewFrameProps {
  * A phone showing the participant screen a page changes, with the host's values as they
  * are now (ECHO-1060). The portal draws it in a frame of its own (its preview mode), told
  * what to show by postMessage: sent only to the portal's origin, and answered only when
- * the answer comes from that frame and that origin.
+ * the answer comes from that frame and that origin. The host can click through it: type in
+ * its fields and press Continue (ECHO-1062); the portal answers its own requests from
+ * made-up data inside the frame, so nothing leaves it.
  *
- * The sandbox allows two things: scripts, and keeping the portal's own origin
- * (allow-same-origin). The origin is needed on both sides: without it the frame's origin is
- * "null", so this page would refuse its ready message and could not address it, and the
- * portal's code could not read its own storage (language, preferences). It is the portal's
- * origin, not the dashboard's, so the frame still cannot reach this page. Everything else
- * stays refused by the sandbox: forms, pop-ups, top navigation, modals. Devices are refused
- * by the frame's permissions policy (no allow attribute, so a cross-origin frame gets no
- * microphone or camera) and by the portal's own lockDown. Props in, callbacks out.
+ * The frame's attributes, each for a reason:
+ * - sandbox "allow-scripts": the portal is a script.
+ * - sandbox "allow-same-origin": the frame keeps the portal's own origin. Without it the
+ *   origin is "null", so this page would refuse its ready message and could not address
+ *   it, and the portal's code could not read its own storage (language, preferences). It
+ *   is the portal's origin, not the dashboard's, so the frame still cannot reach this page.
+ * - sandbox "allow-forms": without it the browser blocks a form's submit event, so the
+ *   start form's Continue would do nothing. The portal's preview mode cancels every
+ *   submission's default (lockDown), so a form never sends anything.
+ * Everything else stays refused by the sandbox: pop-ups, top navigation, modals, downloads.
+ * - no "allow" attribute: a cross-origin frame then gets no microphone, camera or screen
+ *   (the permissions policy), and lockDown refuses them too.
+ * - name: the portal treats any page loaded under this name as the preview, so even a page
+ *   the frame were sent to stays locked down.
+ * - referrerPolicy "no-referrer": the portal is not told the dashboard's address.
+ *
+ * The phone takes the height it is given, up to a phone's, so the whole of it fits in view
+ * beside the options. Props in, callbacks out.
  */
 export const PortalPreviewFrame = ({
 	projectId,
 	message,
 	screens,
 	onScreen,
-	aside,
 	action,
 	portalUrl = PARTICIPANT_BASE_URL,
 }: PortalPreviewFrameProps) => {
@@ -100,10 +110,21 @@ export const PortalPreviewFrame = ({
 		frame.current?.contentWindow?.postMessage(message, portalOrigin);
 	}, [ready, message, portalOrigin]);
 
-	const source = message.result?.source;
+	// The note under the title names where the open screen's result comes from.
+	const source =
+		message.screen === "explore"
+			? message.explore?.source
+			: message.screen === "verify-summary"
+				? message.verify?.source
+				: undefined;
 
 	return (
-		<Stack gap="sm" {...testId("portal-preview")}>
+		<Stack
+			gap="sm"
+			mih={0}
+			style={{ flex: "1 1 auto" }}
+			{...testId("portal-preview")}
+		>
 			<Group justify="space-between" align="end" wrap="wrap" gap="sm">
 				<Title order={4}>
 					<Trans>Preview</Trans>
@@ -140,35 +161,36 @@ export const PortalPreviewFrame = ({
 				</Text>
 			)}
 			{action}
-			<Stack gap="md">
-				<Box
-					w={360}
-					maw="100%"
-					h={680}
-					style={{
-						background: "var(--app-surface)",
-						border: "var(--app-stroke) solid var(--app-rule-color)",
-						overflow: "hidden",
-					}}
-					data-screen={message.screen}
-					data-ready={ready || undefined}
-					{...testId("portal-preview-phone")}
-				>
-					{src && (
-						<iframe
-							ref={frame}
-							key={src}
-							src={src}
-							title={t`Portal preview: ${screenLabel(message.screen)}`}
-							sandbox="allow-scripts allow-same-origin"
-							referrerPolicy="no-referrer"
-							className="block h-full w-full border-0"
-							{...testId("portal-preview-frame")}
-						/>
-					)}
-				</Box>
-				{aside}
-			</Stack>
+			<Box
+				w={360}
+				maw="100%"
+				mih={400}
+				mah={680}
+				style={{
+					background: "var(--app-surface)",
+					border: "var(--app-stroke) solid var(--app-rule-color)",
+					display: "flex",
+					flex: "1 1 680px",
+					overflow: "hidden",
+				}}
+				data-screen={message.screen}
+				data-ready={ready || undefined}
+				{...testId("portal-preview-phone")}
+			>
+				{src && (
+					<iframe
+						ref={frame}
+						key={src}
+						src={src}
+						title={t`Portal preview: ${screenLabel(message.screen)}`}
+						name={PREVIEW_FRAME_NAME}
+						sandbox="allow-scripts allow-same-origin allow-forms"
+						referrerPolicy="no-referrer"
+						className="block min-h-0 w-full flex-1 border-0"
+						{...testId("portal-preview-frame")}
+					/>
+				)}
+			</Box>
 		</Stack>
 	);
 };

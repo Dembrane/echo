@@ -18,7 +18,9 @@ import { isSectionKey, PORTAL_PROJECT_FIELDS } from "./portalForm";
 /**
  * The portal editor (ECHO-1060), one page per part of the portal at
  * …/portal/:section/:option. Loads the project's portal fields once (each page reads its
- * own from the same query) and the Verify topics on the Verify page only.
+ * own from the same query) and the Verify topics: the Verify page waits for them, the others
+ * pass them to the preview when they come, so its Verify screens can be clicked through from
+ * any page (ECHO-1062).
  */
 export const PortalEditorRoute = () => {
 	const { projectId, section, option } = useParams();
@@ -35,9 +37,7 @@ export const PortalEditorRoute = () => {
 	);
 	const projectQuery = useProjectById({ projectId: projectId ?? "", query });
 	const wantsTopics = section === "verify";
-	const topicsQuery = useVerificationTopicsQuery(
-		wantsTopics ? projectId : undefined,
-	);
+	const topicsQuery = useVerificationTopicsQuery(projectId);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: a stable project per id and save, as the one-page editor kept it
 	const project = useMemo(

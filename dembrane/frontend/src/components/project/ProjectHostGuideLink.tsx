@@ -7,7 +7,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 type ProjectHostGuideLinkProps = {
 	projectId?: string;
 	// Match the buttons beside it: outline in the project home's action row,
-	// subtle next to the portal editor's preview toggle.
+	// subtle elsewhere.
 	variant?: ButtonVariant;
 };
 

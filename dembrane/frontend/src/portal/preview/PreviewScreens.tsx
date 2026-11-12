@@ -3,13 +3,16 @@ import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Stack } from "@mantine/core";
 import { ArticleNyTimesIcon, MicrophoneIcon } from "@phosphor-icons/react";
 import { createContext, useContext, useEffect, useRef } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import type { PreviewResult } from "@/lib/portalPreview/protocol";
 import { testId } from "@/lib/testUtils";
 import { ParticipantEchoMessages } from "../components/conversation/audio/ParticipantEchoMessages";
 import { ConversationMessages } from "../components/conversation/ConversationMessages";
 import { RefineButtonLabel } from "../components/refine/RefineButtonLabel";
+import { RefineSelection } from "../components/refine/RefineSelection";
 import { refineMode } from "../components/refine/refineMode";
+import { useRefineActions } from "../components/refine/useRefineActions";
 import ParticipantOnboardingCards from "../components/start/ParticipantOnboardingCards";
 import { VerifyArtefact } from "../components/verify/VerifyArtefact";
 import { VerifySelection } from "../components/verify/VerifySelection";
@@ -18,11 +21,8 @@ import { ParticipantPostConversation } from "../routes/ParticipantPostConversati
 import { PREVIEW_CONVERSATION_ID } from "./fixtures";
 import { scrollParent } from "./PreviewHighlight";
 
-/**
- * The result the Explore screen shows: the dashboard's hand-written example today, a real
- * model result once ECHO-1061 sends one in the same message field.
- */
-export const PreviewResultContext = createContext<PreviewResult | null>(null);
+/** The Explore reply the recording screen shows: the dashboard's example or a tried result. */
+export const ExploreReplyContext = createContext<PreviewResult | null>(null);
 
 const useProject = () => {
 	const { projectId } = useParams();
@@ -54,16 +54,27 @@ export const OnboardingScreen = ({
 /**
  * The recording screen before the first press of Record: its real conversation column,
  * and the bar under it as it stands then. The bar is drawn here, not by the recorder,
- * which would ask for the microphone and start its liveness ping.
+ * which would ask for the microphone and start its liveness ping: Record records nothing.
+ * Its Verify or Explore button goes where the live one goes (ECHO-1062), through the same
+ * actions; with ?echo=1 the screen shows an Explore reply, as the live one does.
  */
-export const RecordingScreen = ({
-	children,
-}: {
-	children?: React.ReactNode;
-}) => {
+export const RecordingScreen = () => {
 	const { project, projectId } = useProject();
+	const { conversationId } = useParams();
+	const [searchParams] = useSearchParams();
+	const refine = useRefineActions({
+		aiUnavailable: project?.is_ai_available === false,
+		conversationId,
+		projectId,
+	});
+	const navigate = useI18nNavigate();
 	if (!project || !projectId) return null;
 	const mode = refineMode(project);
+	const onRefine = () => {
+		if (mode === "verify" && refine.goVerify()) return;
+		if (mode === "explore" && refine.goExplore()) return;
+		navigate(`/${projectId}/conversation/${conversationId}/refine`);
+	};
 	return (
 		<Box className="flex h-full flex-col">
 			<Box className="relative flex-grow p-4">
@@ -73,7 +84,7 @@ export const RecordingScreen = ({
 					conversationId={PREVIEW_CONVERSATION_ID}
 					isAnonymized={project.anonymize_transcripts ?? false}
 				/>
-				{children}
+				{searchParams.get("echo") === "1" && <ExploreReply />}
 			</Box>
 			<Stack
 				bg="var(--app-background)"
@@ -95,7 +106,12 @@ export const RecordingScreen = ({
 						<ArticleNyTimesIcon size={20} />
 					</Button>
 					{mode && (
-						<Button size="lg" data-mode={mode}>
+						<Button
+							size="lg"
+							data-mode={mode}
+							onClick={onRefine}
+							{...testId("portal-preview-refine-button")}
+						>
 							<RefineButtonLabel mode={mode} />
 						</Button>
 					)}
@@ -105,9 +121,9 @@ export const RecordingScreen = ({
 	);
 };
 
-/** The recording screen with an Explore reply under the conversation. */
-export const ExploreScreen = () => {
-	const text = useContext(PreviewResultContext)?.text ?? "";
+/** An Explore reply under the conversation: the dashboard's example or a tried result. */
+const ExploreReply = () => {
+	const text = useContext(ExploreReplyContext)?.text ?? "";
 	const end = useRef<HTMLDivElement>(null);
 	// The reply comes in under the conversation; show it, as the live screen scrolls to it.
 	useEffect(() => {
@@ -116,7 +132,7 @@ export const ExploreScreen = () => {
 		if (box) box.scrollTop = box.scrollHeight;
 	}, []);
 	return (
-		<RecordingScreen>
+		<>
 			<ParticipantEchoMessages
 				echoMessages={[
 					{ content: "", id: "1", role: "user" },
@@ -127,9 +143,16 @@ export const ExploreScreen = () => {
 				error={undefined}
 			/>
 			<div ref={end} />
-		</RecordingScreen>
+		</>
 	);
 };
+
+/** The choice between Verify and Explore, when both are on. */
+export const RefineScreen = () => (
+	<Box className="h-full px-4">
+		<RefineSelection />
+	</Box>
+);
 
 export const VerifyTopicsScreen = () => (
 	<Box className="h-full px-4">

@@ -65,7 +65,10 @@ describe("parsePreviewMessage", () => {
 			null,
 			"hello",
 			{ ...good, type: "something-else" },
-			{ ...good, version: 2 },
+			{ ...good, version: 1 },
+			{ ...good, reset: -1 },
+			{ ...good, reset: 1.5 },
+			{ ...good, reset: "1" },
 			{ ...good, screen: "admin" },
 			{ ...good, highlight: "everything" },
 			{ ...good, project: { ...good.project, language: "xx" } },
@@ -86,7 +89,8 @@ describe("parsePreviewMessage", () => {
 			},
 			{ ...good, project: { ...good.project, tags: "t1" } },
 			{ ...good, topics: [{ key: "", label: "x" }] },
-			{ ...good, result: { key: "k", source: "server", text: "x" } },
+			{ ...good, explore: { key: "k", source: "server", text: "x" } },
+			{ ...good, verify: "x" },
 		];
 		for (const data of bad) expect(parsePreviewMessage(data)).toBeNull();
 	});
@@ -116,7 +120,7 @@ describe("parsePreviewMessage", () => {
 });
 
 describe("buildPreviewMessage", () => {
-	it("shows the example for the open screen, and lets a real result through", () => {
+	it("carries the examples, and lets a real result through", () => {
 		const explore = buildPreviewMessage({
 			highlight: null,
 			legal: null,
@@ -125,8 +129,8 @@ describe("buildPreviewMessage", () => {
 			topics: undefined,
 			values: { ...values, get_reply_mode: "brainstorm", language: "en" },
 		});
-		expect(explore.result?.source).toBe("example");
-		expect(explore.result?.text).toContain("What if");
+		expect(explore.explore?.source).toBe("example");
+		expect(explore.explore?.text).toContain("What if");
 		const verify = buildPreviewMessage({
 			highlight: null,
 			legal: null,
@@ -136,29 +140,33 @@ describe("buildPreviewMessage", () => {
 			values: { ...values, language: "nl" },
 		});
 		expect(
-			verify.result?.text.startsWith("Concept om samen te verbeteren."),
+			verify.verify?.text.startsWith("Concept om samen te verbeteren."),
 		).toBe(true);
 		expect(
-			verify.result?.text.endsWith(
+			verify.verify?.text.endsWith(
 				"Klopt dit? Wat ontbreekt of is te stellig?",
 			),
 		).toBe(true);
 		const real = buildPreviewMessage({
 			highlight: null,
 			legal: null,
-			result: { key: "summarize", source: "model", text: "A real reply" },
 			screen: "explore",
 			tags: [],
 			topics: undefined,
+			tried: {
+				kind: "explore",
+				result: { key: "summarize", source: "model", text: "A real reply" },
+			},
 			values,
 		});
-		expect(real.result).toEqual({
+		expect(real.explore).toEqual({
 			key: "summarize",
 			source: "model",
 			text: "A real reply",
 		});
-		// Other screens carry no result.
-		expect(message().result).toBeNull();
+		// Every screen carries both, so the host can click through to either (ECHO-1062).
+		expect(message().explore?.source).toBe("example");
+		expect(message().verify?.source).toBe("example");
 	});
 
 	it("falls back to the client-managed basis and drops a policy link that is not a web address", () => {

@@ -1,9 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Badge,
 	Checkbox,
-	Group,
 	Stack,
 	Switch,
 	Text,
@@ -116,13 +114,9 @@ export const useAboutOptions = ({
 				title: t`Ask for name?`,
 			},
 			"auto-titles": {
+				beta: true,
 				body: (
 					<Stack gap="md">
-						<Group gap="xs">
-							<Badge color="mauve" c="graphite" size="sm">
-								<Trans>Beta</Trans>
-							</Badge>
-						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
 								Automatically generate a short topic-based title for each

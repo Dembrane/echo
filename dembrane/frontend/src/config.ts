@@ -11,6 +11,8 @@
 // stray hosts can never capture into prod analytics or mutate prod data.
 // ---------------------------------------------------------------------------
 
+import { PREVIEW_FRAME_NAME } from "./lib/portalPreview/protocol";
+
 export type AppEnvironment = "production" | "staging" | "testing" | "local";
 
 // Deployments on the platform's web server (dembrane/platform/apps/web) inject these
@@ -117,15 +119,18 @@ export const USE_PARTICIPANT_ROUTER = RUNTIME
 /**
  * The portal drawn inside the dashboard's portal editor (ECHO-1060): the portal's own
  * …/:projectId/preview address, inside a frame. Opened any other way it is not a preview
- * (the participant router sends that address to the start screen).
+ * (the participant router sends that address to the start screen). Any page loaded in the
+ * dashboard's preview frame (it carries PREVIEW_FRAME_NAME) is the preview too, so the
+ * frame can never become a live portal (ECHO-1062).
  */
 export const IS_PORTAL_PREVIEW =
 	USE_PARTICIPANT_ROUTER &&
 	typeof window !== "undefined" &&
 	window.self !== window.top &&
-	/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
-		window.location.pathname,
-	);
+	(window.name === PREVIEW_FRAME_NAME ||
+		/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
+			window.location.pathname,
+		));
 
 export const ADMIN_BASE_URL =
 	RUNTIME?.dashboardUrl ??

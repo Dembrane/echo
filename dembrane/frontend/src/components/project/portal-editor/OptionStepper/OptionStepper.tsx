@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Badge,
 	Button,
 	Group,
 	Stack,
@@ -21,6 +22,8 @@ import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowPr
 import { testId } from "@/lib/testUtils";
 
 const RULE = "var(--app-stroke) solid var(--app-rule-color)";
+/** Rows stacked at gap 0 draw the line they share once (as styles/joined.css does). */
+const STEP_BACK = "calc(-1 * var(--app-stroke))";
 
 export interface StepperOption {
 	key: string;
@@ -29,6 +32,8 @@ export interface StepperOption {
 	summary: ReactNode;
 	/** The option's field, shown while it is open. */
 	body: ReactNode;
+	/** An early feature: "Beta" beside its name. */
+	beta?: boolean;
 }
 
 export type StepVia = "row" | "next" | "back";
@@ -52,6 +57,10 @@ interface OptionStepperProps {
  * row. The open option's title names its field: a field label with the same words is not
  * shown again under it (FormLabel reads ShownTitleContext), but is still read out. Props
  * in, callbacks out.
+ *
+ * A closed row is a box you press: its name in the first half, its value in the second
+ * (cut to one line, never over the name). The open option is one unfolded box (ECHO-1062):
+ * its name across the whole row, then its field and its buttons, with no line between.
  */
 export const OptionStepper = ({
 	options,
@@ -114,8 +123,8 @@ export const OptionStepper = ({
 						<li
 							key={option.key}
 							style={{
-								borderBottom: RULE,
-								borderTop: i === 0 ? RULE : undefined,
+								border: isOpen ? RULE : undefined,
+								marginTop: i > 0 ? STEP_BACK : undefined,
 							}}
 							data-open={isOpen || undefined}
 							{...testId(`${testIdPrefix}-${option.key}`)}
@@ -132,33 +141,52 @@ export const OptionStepper = ({
 										if (!isOpen) onOpen(option.key, "row");
 									}}
 									onKeyDown={(e) => onRowKey(e, i)}
-									className="app-do block w-full"
-									px="xs"
+									// Closed, the row is the box; open, the item around it is.
+									className={isOpen ? "block w-full" : "app-do block w-full"}
+									px="sm"
 									py="sm"
+									style={isOpen ? { cursor: "default" } : undefined}
 									{...testId(`${testIdPrefix}-${option.key}-row`)}
 								>
-									<Group gap="sm" wrap="nowrap" align="baseline">
-										<Caret size={16} aria-hidden style={{ flexShrink: 0 }} />
-										<Text
+									<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
+										<Caret size={16} aria-hidden />
+										<Group
 											component="span"
-											w={{ base: 112, sm: 168 }}
-											style={{ flexShrink: 0 }}
+											gap="xs"
+											wrap="nowrap"
+											align="center"
+											className={isOpen ? "col-span-2" : undefined}
 										>
-											{option.title}
-										</Text>
+											<Text
+												component="span"
+												style={{ minWidth: 0, overflowWrap: "break-word" }}
+											>
+												{option.title}
+											</Text>
+											{option.beta && (
+												<Badge
+													color="mauve"
+													c="graphite"
+													size="sm"
+													style={{ flexShrink: 0 }}
+													{...testId(`${testIdPrefix}-${option.key}-beta`)}
+												>
+													<Trans>Beta</Trans>
+												</Badge>
+											)}
+										</Group>
 										{!isOpen && (
 											<Text
 												component="span"
 												size="sm"
 												className="app-muted"
 												truncate="end"
-												style={{ flex: 1, minWidth: 0 }}
 												{...testId(`${testIdPrefix}-${option.key}-summary`)}
 											>
 												{option.summary}
 											</Text>
 										)}
-									</Group>
+									</span>
 								</UnstyledButton>
 							</Title>
 							{isOpen && (
@@ -167,7 +195,7 @@ export const OptionStepper = ({
 									aria-labelledby={headerId}
 									{...testId(`${testIdPrefix}-${option.key}-body`)}
 								>
-									<Stack gap="lg" px="xs" pb="md" pt="xs">
+									<Stack gap="lg" px="sm" pt="md" pb="lg">
 										<ShownTitleContext.Provider value={option.title}>
 											{option.body}
 										</ShownTitleContext.Provider>

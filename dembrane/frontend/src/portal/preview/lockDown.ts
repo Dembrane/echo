@@ -8,9 +8,11 @@ import posthog from "posthog-js";
  * document, so nothing here touches a participant's portal.
  *
  * Requests fail at once (fetch, XMLHttpRequest, beacons, sockets, event streams), the
- * microphone, camera and screen are refused, and analytics capture nothing. The screens are
- * also inert, and their data is seeded, so a request is never needed; this is the floor
- * under that.
+ * microphone, camera and screen are refused, and analytics capture nothing. The host can
+ * click through the screens (ECHO-1062), so a form never submits and a plain link never
+ * leaves (the screens' own buttons and router links still work), and what the screens
+ * store (a cooldown, a preference) stays in this page's memory. The screens' data is
+ * seeded and their requests answered from it (fixtures.ts); this is the floor under that.
  */
 export function lockDown(win: Window & typeof globalThis = window): void {
 	const refused = () => new TypeError("The portal preview sends nothing.");
@@ -57,6 +59,28 @@ export function lockDown(win: Window & typeof globalThis = window): void {
 		}
 	}
 
+	// A form's submission and a plain link's navigation are cancelled after the page's own
+	// handlers ran (the submit listener first, so nothing outruns it; the click listener
+	// last, so a router link has already done its work).
+	win.addEventListener?.("submit", (e) => e.preventDefault(), true);
+	win.addEventListener?.("click", (e) => {
+		const target = e.target as Element | null;
+		if (target?.closest?.("a[href]")) e.preventDefault();
+	});
+	if (win.HTMLFormElement)
+		win.HTMLFormElement.prototype.submit = () => undefined;
+
+	for (const name of ["localStorage", "sessionStorage"] as const) {
+		try {
+			Object.defineProperty(win, name, {
+				configurable: true,
+				value: memoryStorage(win[name]),
+			});
+		} catch {
+			// Storage unreachable here: then there is nothing to write to either.
+		}
+	}
+
 	// Not opt_out_capturing: that is stored for the portal's origin and would follow the
 	// host into a real portal later. Capturing nothing in this document is enough.
 	try {
@@ -65,4 +89,31 @@ export function lockDown(win: Window & typeof globalThis = window): void {
 	} catch {
 		// Analytics not loaded in this build.
 	}
+}
+
+/** A Storage that starts as a copy of `from` and keeps every write in memory. */
+export function memoryStorage(from: Storage | undefined): Storage {
+	const items = new Map<string, string>();
+	try {
+		for (let i = 0; from && i < from.length; i++) {
+			const key = from.key(i);
+			if (key !== null) items.set(key, from.getItem(key) ?? "");
+		}
+	} catch {
+		// Not readable: start empty.
+	}
+	return {
+		clear: () => items.clear(),
+		getItem: (key) => items.get(String(key)) ?? null,
+		key: (index) => [...items.keys()][index] ?? null,
+		get length() {
+			return items.size;
+		},
+		removeItem: (key) => {
+			items.delete(String(key));
+		},
+		setItem: (key, value) => {
+			items.set(String(key), String(value));
+		},
+	};
 }

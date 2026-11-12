@@ -424,6 +424,152 @@ for (const size of sizes)
 				expect(sent).toEqual([]);
 			});
 
+			// ECHO-1062: the host types in the phone and presses Continue through the screens:
+			// the start cards, the form, the recording screen, Verify's topic, draft and
+			// approval. Nothing leaves the frame, no device is asked for, and opening another
+			// option brings the phone back to that option's screen.
+			test("the phone is clickable and sends nothing", async ({ page }) => {
+				test.setTimeout(300_000);
+				await answerApi(page, nl);
+				// Counts any ask for a device, in every frame. Fixed before the portal's
+				// lockDown runs, so lockDown cannot replace it: a call would be counted.
+				await page.addInitScript(() => {
+					const asks: string[] = [];
+					(window as unknown as { __deviceAsks: string[] }).__deviceAsks = asks;
+					const media = navigator.mediaDevices;
+					if (!media) return;
+					for (const name of ["getUserMedia", "getDisplayMedia"]) {
+						Object.defineProperty(media, name, {
+							configurable: false,
+							value: () => {
+								asks.push(name);
+								return Promise.reject(
+									new DOMException("no", "NotAllowedError"),
+								);
+							},
+							writable: false,
+						});
+					}
+				});
+				// The dev server's element picker (react-grab, dev only) floats over the
+				// phone's buttons; it is not part of the portal.
+				await page.addInitScript(() => {
+					document.addEventListener("DOMContentLoaded", () => {
+						const style = document.createElement("style");
+						style.textContent = "[data-react-grab]{display:none!important}";
+						document.head.append(style);
+					});
+				});
+				// The dev server's element picker checks its version and loads its font (dev
+				// builds only); everything else the frame asks for counts.
+				const devOnly = [
+					"https://www.react-grab.com/",
+					"https://fonts.googleapis.com/css2?family=Geist",
+				];
+				const sent: string[] = [];
+				page.on("request", (req) => {
+					if (req.frame() === page.mainFrame()) return;
+					if (devOnly.some((url) => req.url().startsWith(url))) return;
+					if (
+						!req.url().startsWith("http://localhost:5174/") ||
+						req.url().startsWith("http://localhost:5174/api") ||
+						req.method() !== "GET"
+					)
+						sent.push(`${req.method()} ${req.url()}`);
+				});
+				const phoneFrame = page.frameLocator(
+					'[data-testid="portal-preview-frame"]',
+				);
+				const name = (state: string) => `${size.name}-${lang}-click-${state}`;
+				const phoneShot = async (state: string) => {
+					await page.waitForTimeout(600);
+					if (shots)
+						await page
+							.getByTestId("portal-preview-phone")
+							.screenshot({ path: `${shots}/${name(state)}.png` });
+				};
+
+				await page.goto(
+					`/e2e/portal-editor-harness.html?path=/${lang}/w/w1/projects/p1/portal/welcome/tutorial`,
+				);
+				await expect(
+					page.getByTestId("portal-option-tutorial-body"),
+				).toBeVisible({
+					timeout: 30_000,
+				});
+				if (phone) await page.getByTestId("portal-preview-toggle").click();
+				await previewReady(page);
+
+				// The start cards, to the form: Continue, ticking consent where asked.
+				const form = phoneFrame.getByTestId("portal-initiate-form");
+				for (let i = 0; i < 8 && !(await form.isVisible()); i++) {
+					const consent = phoneFrame.getByTestId("portal-onboarding-checkbox");
+					if (await consent.isVisible()) await consent.check();
+					await phoneFrame.getByTestId("portal-onboarding-next-button").click();
+				}
+				await expect(form).toBeVisible();
+				await phoneFrame
+					.getByTestId("portal-initiate-name-input")
+					.fill(nl ? "Tafel 3" : "Table 3");
+				await phoneShot("form");
+				await phoneFrame.getByTestId("portal-initiate-next-button").click();
+				await expect(
+					phoneFrame.getByTestId("portal-preview-recording-bar"),
+				).toBeVisible({ timeout: 15_000 });
+				await phoneShot("recording");
+
+				// Record records nothing and asks for no microphone.
+				await phoneFrame
+					.getByTestId("portal-preview-recording-bar")
+					.getByRole("button")
+					.first()
+					.click();
+
+				// Verify and Explore are both on: the choice, then Verify's topics.
+				await phoneFrame.getByTestId("portal-preview-refine-button").click();
+				await phoneFrame.getByTestId("portal-echo-verify-card").click();
+				await phoneFrame.getByTestId("portal-verify-topic-agreements").click();
+				await phoneShot("verify-topics");
+				await phoneFrame
+					.getByTestId("portal-verify-selection-next-button")
+					.click();
+				await phoneFrame
+					.getByTestId("portal-verify-instructions-next-button")
+					.click();
+				await expect(
+					phoneFrame.getByTestId("portal-verify-artefact-content"),
+				).toBeVisible({ timeout: 15_000 });
+				await phoneShot("verify-draft");
+				await phoneFrame
+					.getByTestId("portal-verify-artefact-approve-button")
+					.click();
+				await expect(
+					phoneFrame.getByTestId("portal-preview-recording-bar"),
+				).toBeVisible({ timeout: 15_000 });
+
+				// Opening another option brings the phone back to that option's screen, the
+				// start cards, even though the host had clicked on to recording.
+				await page.getByTestId("portal-option-title-row").click();
+				await expect(
+					phoneFrame.getByTestId("portal-preview-recording-bar"),
+				).toBeVisible();
+				await page.getByTestId("portal-option-tutorial-row").click();
+				await expect(
+					phoneFrame.getByTestId("portal-onboarding-slide-0"),
+				).toBeVisible({ timeout: 15_000 });
+				await phoneShot("back-to-option");
+				await shot(page, name("page"), phone);
+
+				const asks = await page
+					.frame({ name: "dembrane-portal-preview" })
+					?.evaluate(
+						() =>
+							(window as unknown as { __deviceAsks?: string[] }).__deviceAsks,
+					);
+				expect(asks).toEqual([]);
+				expect(sent).toEqual([]);
+			});
+
 			test("Brief and Advanced", async ({ page }) => {
 				await answerApi(page, nl);
 				await page.goto(

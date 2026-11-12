@@ -1,18 +1,18 @@
 import { Trans } from "@lingui/react/macro";
-import { Stack, Text, Title } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
 
 const RULE = "var(--app-stroke) solid var(--app-rule-color)";
 
 /**
  * What anonymising does to a transcript, on a made-up excerpt (ECHO-1060): before and
- * after, labelled as an example. Shown beside the preview while the option is open.
+ * after, labelled as an example. Part of the Anonymise option, under its switch (ECHO-1062).
  */
 export const AnonymiseExample = () => (
-	<Stack gap="sm" maw={320} {...testId("portal-preview-anonymise-example")}>
-		<Title order={5}>
+	<Stack gap="sm" maw={520} {...testId("portal-anonymise-example")}>
+		<Text size="sm">
 			<Trans>Example</Trans>
-		</Title>
+		</Text>
 		<Stack gap={4} py="xs" style={{ borderTop: RULE }}>
 			<Text size="sm" className="app-muted">
 				<Trans>Before</Trans>

@@ -69,9 +69,6 @@ vi.mock("@/components/project/hooks", () => ({
 vi.mock("@/components/project/ProjectTagsInput", () => ({
 	ProjectTagsInput: () => <div data-testid="tags-input" />,
 }));
-vi.mock("@/components/project/ProjectHostGuideLink", () => ({
-	ProjectHostGuideLink: () => null,
-}));
 vi.mock("@/components/project/ProjectLegalBasisSection", () => ({
 	ProjectLegalBasisSection: () => <div data-testid="legal-basis" />,
 	useProjectLegalQuery: () => ({ data: undefined }),
@@ -257,6 +254,18 @@ describe("portal editor pages: permissions and saving", () => {
 		},
 	);
 
+	// ECHO-1062: opening or editing an option brings the phone back to its screen.
+	it("counts each open and edit, so the phone returns to the option's screen", () => {
+		renderPage("welcome", "title");
+		const opened = (lastMessage.current as PreviewMessage).reset;
+		fireEvent.change(screen.getByTestId("portal-editor-page-title-input"), {
+			target: { value: "The square" },
+		});
+		const edited = lastMessage.current as PreviewMessage;
+		expect(edited.reset).toBeGreaterThan(opened);
+		expect(edited.screen).toBe("recording");
+	});
+
 	it("the preview gets an unsaved value at once", () => {
 		vi.useFakeTimers();
 		renderPage("welcome", "title");
@@ -354,7 +363,26 @@ describe("portal editor pages: Verify and Explore", () => {
 		).toBe("Our own check");
 	});
 
-	it("shows the key terms read-only, with a way to Brief", () => {
+	it("has no host guide on its pages", () => {
+		renderPage("welcome", "title");
+		expect(screen.queryByText("Host guide")).toBeNull();
+	});
+
+	it("shows the anonymise example inside its option, with Beta beside the name", () => {
+		renderPage("privacy", "anonymise");
+		const body = screen.getByTestId("portal-option-anonymise-body");
+		expect(body.contains(screen.getByTestId("portal-anonymise-example"))).toBe(
+			true,
+		);
+		expect(
+			screen
+				.getByTestId("portal-option-anonymise-row")
+				.contains(screen.getByTestId("portal-option-anonymise-beta")),
+		).toBe(true);
+		expect(body.textContent).not.toContain("Beta");
+	});
+
+	it("shows the key terms read-only, with a way to the project brief", () => {
 		renderPage("verify", "key-terms", { is_verify_enabled: true });
 		expect(
 			screen.getByTestId("portal-editor-verify-key-terms").textContent,
@@ -522,7 +550,7 @@ describe("portal editor pages: Try it", () => {
 	it("runs Explore's unsaved settings and shows the real reply in the preview", async () => {
 		const fetch = answer(200, result("explore", "brainstorm"));
 		renderPage("explore", "mode", { is_get_reply_enabled: true });
-		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+		expect((lastMessage.current as PreviewMessage).explore?.source).toBe(
 			"example",
 		);
 		fireEvent.click(screen.getByTestId("portal-editor-reply-mode-brainstorm"));
@@ -539,7 +567,7 @@ describe("portal editor pages: Try it", () => {
 		});
 		const message = lastMessage.current as PreviewMessage;
 		expect(message.screen).toBe("explore");
-		expect(message.result).toEqual({
+		expect(message.explore).toEqual({
 			key: "brainstorm",
 			source: "model",
 			text: "What would make the evening feel safe?",
@@ -567,7 +595,7 @@ describe("portal editor pages: Try it", () => {
 		expect(screen.getByTestId("portal-try-status").textContent).toBe(
 			"Your settings changed. The preview shows the result of the earlier ones.",
 		);
-		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+		expect((lastMessage.current as PreviewMessage).explore?.source).toBe(
 			"model",
 		);
 		expect(screen.getByTestId("portal-try-button").textContent).toBe(
@@ -618,7 +646,7 @@ describe("portal editor pages: Try it", () => {
 		expect(
 			screen.getByTestId("portal-try-button").hasAttribute("disabled"),
 		).toBe(true);
-		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+		expect((lastMessage.current as PreviewMessage).explore?.source).toBe(
 			"example",
 		);
 	});

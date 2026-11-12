@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router";
 import { ADMIN_BASE_URL } from "@/config";
 import {
@@ -9,26 +9,32 @@ import {
 	parsePreviewMessage,
 } from "@/lib/portalPreview/protocol";
 import { ParticipantLayout } from "../layout/ParticipantLayout";
-import { previewEntry, seedPreview } from "./fixtures";
+import { answerRequests, previewEntry, seedPreview } from "./fixtures";
 import { PreviewHighlight } from "./PreviewHighlight";
 import {
-	ExploreScreen,
+	ExploreReplyContext,
 	FinishScreen,
 	OnboardingScreen,
-	PreviewResultContext,
 	RecordingScreen,
+	RefineScreen,
 	VerifySummaryScreen,
 	VerifyTopicsScreen,
 } from "./PreviewScreens";
 
 /**
  * The portal's preview mode (ECHO-1060): the real participant screens, drawn with the
- * values the dashboard's portal editor sends, inside its preview frame.
+ * values the dashboard's portal editor sends, inside its preview frame, at their own
+ * addresses in a router of its own.
  *
  * It listens to its parent only, and only to the dashboard's origin; it reads only
- * messages parsePreviewMessage accepts. It fetches nothing: every screen reads fixtures
- * seeded into a query client of its own. lockDown (see entry.tsx) has already taken away
- * requests, devices and analytics, and the screens are inert.
+ * messages parsePreviewMessage accepts. The host can click through the screens (ECHO-1062):
+ * every screen reads fixtures seeded into a query client of its own, and the portal's own
+ * requests (starting a conversation, a Verify draft, approving it) are answered from those
+ * fixtures inside the frame (answerRequests), so nothing is sent. lockDown (see entry.tsx)
+ * has already taken away real requests, devices, storage writes and analytics.
+ *
+ * A new reset from the dashboard starts the screen again, but only when the host clicked
+ * inside the phone since the last one: typing in the editor changes the values in place.
  */
 export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 	const [message, setMessage] = useState<PreviewMessage | null>(null);
@@ -50,6 +56,11 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 		[],
 	);
 
+	useEffect(
+		() => answerRequests(queryClient, projectId),
+		[queryClient, projectId],
+	);
+
 	useEffect(() => {
 		const dashboard = originOf(ADMIN_BASE_URL);
 		if (!dashboard) return;
@@ -67,10 +78,23 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 
 	const language = message?.project.language;
 	const screen = message?.screen;
-	// A new router per screen and language: each screen opens at its own address, as it
-	// would for a participant. Values change in place, through the seeded queries.
+	const reset = message?.reset;
+	// Clicked or typed in since the screen last started.
+	const touched = useRef(false);
+	const [run, setRun] = useState(0);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a new reset is the moment, not its value
+	useEffect(() => {
+		if (!touched.current) return;
+		touched.current = false;
+		setRun((r) => r + 1);
+	}, [reset]);
+	// A new router per screen and language, and per run: each screen opens at its own
+	// address, as it would for a participant, and the host moves on from there. Values
+	// change in place, through the seeded queries.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: run starts the screen again
 	const router = useMemo(() => {
 		if (!screen || !language) return null;
+		touched.current = false;
 		return createMemoryRouter(
 			[
 				{
@@ -90,18 +114,18 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 									path: "start/form",
 								},
 								{
+									// The recording screen, with an Explore reply when asked for
+									// one (?echo=1), as on the live portal.
 									element: <RecordingScreen />,
 									path: "conversation/:conversationId",
 								},
 								{
-									element: <ExploreScreen />,
-									path: "conversation/:conversationId/explore",
+									element: <RefineScreen />,
+									path: "conversation/:conversationId/refine",
 								},
 								{
-									// No conversation in the address: the picker then starts no
-									// draft on its own when only one topic is chosen.
 									element: <VerifyTopicsScreen />,
-									path: "choose/verify",
+									path: "conversation/:conversationId/verify",
 								},
 								{
 									element: <VerifySummaryScreen />,
@@ -121,23 +145,35 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 			],
 			{ initialEntries: [previewEntry(screen, language, projectId)] },
 		);
-	}, [screen, language, projectId]);
+	}, [screen, language, projectId, run]);
 
 	if (!router || !message) return null;
 	return (
 		<QueryClientProvider client={queryClient}>
 			<div
-				inert
 				className="h-dvh overflow-hidden"
 				data-preview-screen={message.screen}
 				data-testid="portal-preview-root"
+				onPointerDownCapture={() => {
+					touched.current = true;
+				}}
+				onKeyDownCapture={() => {
+					touched.current = true;
+				}}
 			>
-				<PreviewResultContext.Provider value={message.result}>
+				<ExploreReplyContext.Provider value={message.explore}>
 					{/* Keyed: a router provider reads its router's state once. */}
-					<RouterProvider key={`${screen}-${language}`} router={router} />
-				</PreviewResultContext.Provider>
+					<RouterProvider
+						key={`${screen}-${language}-${run}`}
+						router={router}
+					/>
+				</ExploreReplyContext.Provider>
 			</div>
-			<PreviewHighlight target={message.highlight} screen={message.screen} />
+			<PreviewHighlight
+				key={run}
+				target={message.highlight}
+				screen={message.screen}
+			/>
 		</QueryClientProvider>
 	);
 };

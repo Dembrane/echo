@@ -11,7 +11,12 @@
 
 export const PREVIEW_MESSAGE = "dembrane:portal-preview";
 export const PREVIEW_READY = "dembrane:portal-preview-ready";
-export const PREVIEW_VERSION = 1;
+export const PREVIEW_VERSION = 2;
+/**
+ * The name of the dashboard's preview frame. The portal starts its preview mode for any page
+ * loaded under this name inside a frame, so a page the frame were sent to stays locked down.
+ */
+export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
 
 /** The participant screens the preview can show. */
 export const PREVIEW_SCREENS = [
@@ -90,8 +95,8 @@ export interface PreviewTopic {
 }
 
 /**
- * A result shown in place of a model's: a hand-written example today. ECHO-1061 sends a
- * real model result through the same field with source "model".
+ * A result shown in place of a model's: a hand-written example, or a real model result
+ * from "Try it" (ECHO-1061) with source "model".
  */
 export interface PreviewResult {
 	source: "example" | "model";
@@ -107,8 +112,19 @@ export interface PreviewMessage {
 	project: PreviewProject;
 	/** The Verify topics participants can choose, in order. */
 	topics: PreviewTopic[];
-	result: PreviewResult | null;
+	/**
+	 * The Explore reply and the Verify draft the screens show, whichever screen is open, so
+	 * the host can click through to either (ECHO-1062).
+	 */
+	explore: PreviewResult | null;
+	verify: PreviewResult | null;
 	highlight: PreviewHighlight | null;
+	/**
+	 * Counts the host's moves in the editor (opening or editing an option, picking a screen,
+	 * trying a setting, ECHO-1062). A new count starts the screen again, so the phone returns
+	 * to it after the host clicked onward inside it.
+	 */
+	reset: number;
 }
 
 export const LIMITS = {
@@ -260,18 +276,24 @@ export function parsePreviewMessage(data: unknown): PreviewMessage | null {
 	const screen = oneOf(data.screen, PREVIEW_SCREENS);
 	const project = parseProject(data.project);
 	const topics = parseTopics(data.topics);
-	const result = parseResult(data.result);
+	const explore = parseResult(data.explore);
+	const verify = parseResult(data.verify);
 	const highlight =
 		data.highlight === null ? null : oneOf(data.highlight, PREVIEW_HIGHLIGHTS);
-	if (!screen || !project || !topics || result === undefined) return null;
+	if (!screen || !project || !topics) return null;
+	if (explore === undefined || verify === undefined) return null;
 	if (data.highlight !== null && highlight === null) return null;
+	if (!Number.isSafeInteger(data.reset) || (data.reset as number) < 0)
+		return null;
 	return {
+		explore,
 		highlight,
 		project,
-		result,
+		reset: data.reset as number,
 		screen,
 		topics,
 		type: PREVIEW_MESSAGE,
+		verify,
 		version: PREVIEW_VERSION,
 	};
 }

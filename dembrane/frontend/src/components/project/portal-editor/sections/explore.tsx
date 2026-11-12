@@ -1,9 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Badge,
 	Box,
-	Group,
 	SegmentedControl,
 	Stack,
 	Switch,
@@ -32,13 +30,9 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 	return {
 		options: {
 			enabled: {
+				beta: true,
 				body: (
 					<Stack gap="md">
-						<Group gap="xs">
-							<Badge color="mauve" c="graphite" size="sm">
-								<Trans id="dashboard.dembrane.concrete.beta">Beta</Trans>
-							</Badge>
-						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
 								Enable this feature to allow participants to request AI-powered

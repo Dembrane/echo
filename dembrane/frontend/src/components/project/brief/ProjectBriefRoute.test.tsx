@@ -173,6 +173,14 @@ const renderAt = (element: ReactNode) =>
 // ECHO-1060: General's settings moved to Brief and Manage, Advanced, with the same
 // permissions.
 describe("Brief and Advanced role gating", () => {
+	// ECHO-1062: the privacy settings are one link away.
+	it("links to the portal editor's Privacy page", () => {
+		renderAt(<ProjectBriefRoute />);
+		expect(
+			screen.getByTestId("project-brief-privacy-link").getAttribute("href"),
+		).toContain("/w/w1/projects/p1/portal/privacy");
+	});
+
 	it("observer sees values but cannot edit or open the goal editor", () => {
 		role.current = "observer";
 		renderAt(<ProjectBriefRoute />);
