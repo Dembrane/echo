@@ -16,6 +16,7 @@ import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
 import { modelErrorShape, speechHint } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
+import { PROJECT_TEMPLATES } from "@dembrane/projects";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { DEFAULT_TOPIC_KEY, defaultTopicPrompt } from "./defaults";
@@ -401,15 +402,25 @@ export function keyTermList(raw: string | null | undefined): string {
   return out.join(", ");
 }
 
+/** Templates no longer offered (ECHO-1053) keep the wording their projects always had. */
+const RETIRED_AUDIENCE: Readonly<Record<string, "table" | "single">> = {
+  event: "table",
+  conversation: "single",
+};
+
 /**
- * Who the draft speaks to. An event's tables read it as a table; a one-device conversation
- * (an interview, a meeting) as "you"; anything else gets the neutral wording, because the
- * code cannot tell how many people spoke.
+ * Who the draft speaks to, from the project's template. A template the picker offers as a
+ * card says how it is recorded: many groups at once read the draft as a table, one phone
+ * or file (an interview, a meeting) as "you". A retired template keeps its old wording
+ * (RETIRED_AUDIENCE). Anything else (no template, upload, blank, series) gets the neutral
+ * wording, because the code cannot tell how many people spoke.
  */
 export function audienceOf(templateKey: string | null | undefined): "table" | "single" | "neutral" {
-  if (templateKey === "event") return "table";
-  if (templateKey === "conversation") return "single";
-  return "neutral";
+  const template = PROJECT_TEMPLATES.find((t) => t.key === templateKey);
+  if (!template) return "neutral";
+  if (template.card.offer === "card")
+    return template.card.setup === "many_groups" ? "table" : "single";
+  return RETIRED_AUDIENCE[template.key] ?? "neutral";
 }
 
 /** The wrapper's language: Dutch has its own approved text; every other language reads English. */

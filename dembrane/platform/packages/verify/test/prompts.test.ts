@@ -70,6 +70,16 @@ test("without context or key terms there is no empty reference block", () => {
   expect(system).not.toContain("<reference_material>");
 });
 
+test("current templates speak to whom their setup records", () => {
+  // ECHO-1053 retired event and conversation; the cards say how they are recorded.
+  expect(audienceOf("world_cafe")).toBe("table");
+  expect(audienceOf("resident_evening")).toBe("table");
+  expect(audienceOf("interviews")).toBe("single");
+  expect(audienceOf("focus_group")).toBe("single");
+  for (const key of ["upload", "blank", "series", "no_such_template"])
+    expect([key, audienceOf(key)]).toEqual([key, "neutral"]);
+});
+
 test("the first line follows who the draft is for", () => {
   expect(audienceOf("event")).toBe("table");
   expect(audienceOf("conversation")).toBe("single");

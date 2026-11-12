@@ -97,6 +97,6 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - tenancy uses samples: A new org or workspace queues its copy of the best-practices sample.
 - training uses billing: Licence changes notify org admins through billing's own Notifier.
 - verify uses conversations: A portal feature: reuses conversations' participant token and dependencies.
-- verify uses projects: Try it holds a draft Explore mode to the modes projects' templates allow.
+- verify uses projects: Reads projects' template registry: the Explore modes Try it allows, and who a draft speaks to.
 
 <!-- package-map:end -->
