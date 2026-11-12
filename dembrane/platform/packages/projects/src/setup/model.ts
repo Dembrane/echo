@@ -1,4 +1,4 @@
-import type { Completer } from "@dembrane/llm";
+import { type Completer, LANGUAGE_NAMES, withoutClosingFence } from "@dembrane/llm";
 import { MAX_KEY_TERMS } from "./rules";
 import { PROPOSABLE_FIELDS } from "./settings";
 
@@ -15,18 +15,8 @@ const GROUP = "text_fast" as const;
 const TIMEOUT_MS = 20_000;
 const MAX_TOKENS = 2048;
 
-const LANGUAGE: Record<string, string> = {
-  en: "English",
-  nl: "Dutch",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  it: "Italian",
-  uk: "Ukrainian",
-  cs: "Czech",
-};
-
-export const languageName = (code: string) => LANGUAGE[code.toLowerCase().slice(0, 2)] ?? "English";
+export const languageName = (code: string) =>
+  LANGUAGE_NAMES[code.toLowerCase().slice(0, 2)] ?? "English";
 
 /** What the template sets up, in words the model can weigh a proposal against. */
 export type TemplateFacts = Readonly<Record<string, boolean | string>>;
@@ -131,10 +121,7 @@ export function setupUserTurn(i: SetupModelInput): string {
 export function parseAnswer(text: string): ModelAnswer | null {
   let raw: unknown;
   try {
-    const body = text
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/```\s*$/, "");
+    const body = withoutClosingFence(text.trim().replace(/^```(?:json)?\s*/i, ""));
     raw = JSON.parse(body);
   } catch {
     return null;

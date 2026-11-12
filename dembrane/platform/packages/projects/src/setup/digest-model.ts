@@ -1,4 +1,4 @@
-import type { Completer } from "@dembrane/llm";
+import { type Completer, withoutClosingFence } from "@dembrane/llm";
 import { BUILT_IN_TOPICS, PROJECT_TEMPLATES } from "../project-templates";
 import { languageName } from "./model";
 import { MAX_KEY_TERMS } from "./rules";
@@ -246,12 +246,7 @@ const objects = (v: unknown) =>
 export function parseDigestAnswer(text: string): DigestAnswer | null {
   let raw: unknown;
   try {
-    raw = JSON.parse(
-      text
-        .trim()
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/```\s*$/, ""),
-    );
+    raw = JSON.parse(withoutClosingFence(text.trim().replace(/^```(?:json)?\s*/i, "")));
   } catch {
     return null;
   }
