@@ -51,11 +51,12 @@ import type {
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
+import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { TopicIcon, topicDescription } from "../participant/verify/topics";
+import { TopicIcon, topicDescription } from "@/portal/components/verify/topics";
 import { CustomTopicModal } from "./CustomTopicModal";
 import {
 	useCreateCustomTopicMutation,

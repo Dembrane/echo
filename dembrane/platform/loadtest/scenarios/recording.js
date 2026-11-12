@@ -1,5 +1,5 @@
 // Participants recording at once, each doing what the portal does
-// (frontend/src/components/participant): load the project, initiate a conversation, open
+// (frontend/src/portal): load the project, initiate a conversation, open
 // the health stream, ping every 3 s, and every 30 s (useChunkedAudioRecorder's timeslice)
 // ask for an upload URL, POST a real 30 s chunk to the bucket and confirm it. The
 // conversation and its chunks are refetched every 60 s as the portal's queries do. After
