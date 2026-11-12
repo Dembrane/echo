@@ -114,21 +114,115 @@ function decodeEntities(s: string): string {
   });
 }
 
+// Markup is removed by forward scans with indexOf, never by lazy or unbounded regular
+// expressions: those are quadratic on a hostile body (a megabyte of "<!--" or "<script"
+// with nothing to close it), and the scan is synchronous, so the read's timeout cannot stop it.
+
+const HIDDEN = ["script", "style", "noscript", "svg", "template", "iframe", "object", "head"];
+const UNCLOSED = ["script", "style"];
+
+/** ASCII-only lower case: keeps every index of `s`, as `toLowerCase` does not for all text. */
+function asciiLower(s: string): string {
+  return s.replace(/[A-Z]+/g, (m) => m.toLowerCase());
+}
+
+function isWordChar(c: string | undefined): boolean {
+  return c !== undefined && /\w/.test(c);
+}
+
+/** Whether `lower` opens `<name` at `at`, with the name ending there (as `\b` would). */
+function opensAt(lower: string, at: number, name: string): boolean {
+  return lower.startsWith(name, at + 1) && !isWordChar(lower[at + 1 + name.length]);
+}
+
+/** Every `<!-- ... -->` replaced by a space; an unclosed one is left for the tag pass. */
+function stripComments(s: string): string {
+  let out = "";
+  let from = 0;
+  for (;;) {
+    const open = s.indexOf("<!--", from);
+    if (open < 0) break;
+    const close = s.indexOf("-->", open + 4);
+    if (close < 0) break;
+    out += `${s.slice(from, open)} `;
+    from = close + 3;
+  }
+  return out + s.slice(from);
+}
+
+/** Where `</name\s*>` ends at or after `from`, or -1. */
+function closingEnd(lower: string, name: string, from: number): number {
+  for (
+    let at = lower.indexOf(`</${name}`, from);
+    at >= 0;
+    at = lower.indexOf(`</${name}`, at + 1)
+  ) {
+    let i = at + 2 + name.length;
+    while (i < lower.length && /\s/.test(lower[i] as string)) i++;
+    if (lower[i] === ">") return i + 1;
+  }
+  return -1;
+}
+
+/**
+ * Every hidden element with its content replaced by a space, closed by the first matching
+ * end tag; one with no end tag is left. Once a name has no end tag after some point it has
+ * none after any later point either, so each name is searched to the end at most once.
+ */
+function stripHidden(s: string): string {
+  const lower = asciiLower(s);
+  const unclosed = new Set<string>();
+  let out = "";
+  let from = 0;
+  for (let lt = lower.indexOf("<"); lt >= 0; lt = lower.indexOf("<", lt + 1)) {
+    if (lt < from) continue;
+    const name = HIDDEN.find((n) => !unclosed.has(n) && opensAt(lower, lt, n));
+    if (!name) continue;
+    const end = closingEnd(lower, name, lt + 1 + name.length);
+    if (end < 0) {
+      unclosed.add(name);
+      continue;
+    }
+    out += `${s.slice(from, lt)} `;
+    from = end;
+    lt = end - 1;
+  }
+  return out + s.slice(from);
+}
+
+/** The page up to the first script or style left open, which runs to the end. */
+function cutUnclosed(s: string): string {
+  const lower = asciiLower(s);
+  for (let lt = lower.indexOf("<"); lt >= 0; lt = lower.indexOf("<", lt + 1))
+    if (UNCLOSED.some((n) => opensAt(lower, lt, n))) return `${s.slice(0, lt)} `;
+  return s;
+}
+
+/** Every remaining `<...>` replaced by a space; a `<` with no `>` after it is kept as text. */
+function stripTags(s: string): string {
+  let out = "";
+  let from = 0;
+  for (;;) {
+    const lt = s.indexOf("<", from);
+    if (lt < 0) break;
+    const gt = s.indexOf(">", lt + 1);
+    if (gt < 0) break;
+    out += `${s.slice(from, lt)} `;
+    from = gt + 1;
+  }
+  return out + s.slice(from);
+}
+
 /** Visible text of a page: no scripts, styles, comments or markup, one line per block. */
 export function visibleText(body: string, contentType: string): string {
   const html = /html/i.test(contentType);
   const text = html
     ? decodeEntities(
-        body
-          .replace(/<!--[\s\S]*?-->/g, " ")
-          .replace(
-            /<(script|style|noscript|svg|template|iframe|object|head)\b[\s\S]*?<\/\1\s*>/gi,
-            " ",
-          )
-          .replace(/<(script|style)\b[\s\S]*$/gi, " ")
-          .replace(/<\/(p|div|li|h[1-6]|section|article|tr|td|th|dd|dt|header|footer)>/gi, "\n")
-          .replace(/<br\s*\/?>/gi, "\n")
-          .replace(/<[^>]*>/g, " "),
+        stripTags(
+          cutUnclosed(stripHidden(stripComments(body)))
+            .replace(/<\/(p|div|li|h[1-6]|section|article|tr|td|th|dd|dt|header|footer)>/gi, "\n")
+            .replace(/<br\s*\/?>/gi, "\n"),
+        ),
       )
     : body;
   return text
