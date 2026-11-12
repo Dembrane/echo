@@ -47,6 +47,7 @@ type Costs = {
     budget_micro_eur: number | null;
     custom_budget: boolean;
     percent_used: number | null;
+    budget_spent_micro_eur: number | null;
     unlimited: boolean;
     override_until: string | null;
     deleted: boolean;
@@ -575,6 +576,7 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: null,
           custom_budget: false,
           percent_used: null,
+          budget_spent_micro_eur: null,
           unlimited: false,
           override_until: null,
           deleted: false,
@@ -601,6 +603,7 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 5_000_000,
           custom_budget: false,
           percent_used: 30,
+          budget_spent_micro_eur: 1_500_000,
           unlimited: false,
           override_until: null,
           deleted: false,
@@ -638,6 +641,7 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 1_000_000,
           custom_budget: true,
           percent_used: 20,
+          budget_spent_micro_eur: 200_000,
           unlimited: false,
           override_until: "2026-12-01T00:00:00.000Z",
           deleted: false,
@@ -664,6 +668,7 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: null,
           custom_budget: false,
           percent_used: null,
+          budget_spent_micro_eur: null,
           unlimited: true,
           override_until: null,
           deleted: false,
@@ -758,6 +763,7 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 5_000_000,
           custom_budget: false,
           percent_used: 18,
+          budget_spent_micro_eur: 900_000,
           unlimited: false,
           override_until: null,
           deleted: false,
