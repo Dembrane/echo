@@ -27,10 +27,8 @@ import { Markdown } from "@/components/common/Markdown";
 import { testId } from "@/lib/testUtils";
 import { DembraneEventCta } from "@/portal/components/finish/DembraneEventCta";
 import { ParticipantShareModal } from "@/portal/components/ParticipantShareModal";
-import {
-	useParticipantProjectById,
-	useSubmitNotificationParticipant,
-} from "@/portal/hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
+import { useSubmitNotificationParticipant } from "@/portal/routes/useSubmitNotificationParticipant";
 
 export const ParticipantPostConversation = () => {
 	const { projectId, conversationId } = useParams();

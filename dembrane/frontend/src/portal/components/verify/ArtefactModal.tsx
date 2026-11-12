@@ -1,7 +1,7 @@
 import { LoadingOverlay, Modal } from "@mantine/core";
+import { Markdown } from "@/components/common/Markdown";
 import type { VerificationArtifact } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
-import { Markdown } from "../../../components/common/Markdown";
 
 type ArtefactModalProps = {
 	opened: boolean;

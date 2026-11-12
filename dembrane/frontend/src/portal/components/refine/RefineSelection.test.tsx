@@ -12,7 +12,7 @@ const state = vi.hoisted(() => ({
 	project: {} as Record<string, unknown>,
 }));
 
-vi.mock("@/portal/hooks", () => ({
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: { id: "p-1", ...state.project },
 		isLoading: false,
