@@ -1,5 +1,6 @@
 import { newId, ValidationError } from "@dembrane/core";
 import type { schema } from "@dembrane/db";
+import { resolveLocale } from "@dembrane/i18n";
 import { z } from "zod";
 import { invalidBodyField } from "./body-issues";
 import type { PROJECT_UPDATE_FIELDS } from "./projects";
@@ -38,7 +39,7 @@ import type { ProjectsStorage } from "./storage";
  * English ones, as the portal does).
  */
 
-/** The project languages the portal, transcription and summaries support. */
+/** The project languages the portal, transcription and summaries support: i18n's LOCALES, by language. */
 export const TEMPLATE_LANGUAGES = ["en", "nl", "de", "fr", "es", "it", "uk", "cs"] as const;
 type TemplateLanguage = (typeof TEMPLATE_LANGUAGES)[number];
 
@@ -1634,15 +1635,12 @@ export function projectTemplate(key: string): ProjectTemplate {
   return found;
 }
 
-const languageOf = (language: string | null | undefined): TemplateLanguage | null => {
-  const code = (language ?? "").toLowerCase().slice(0, 2);
-  return (TEMPLATE_LANGUAGES as readonly string[]).includes(code)
-    ? (code as TemplateLanguage)
-    : null;
-};
+/** A stored project language as a template language: i18n's resolveLocale, English for any other. */
+const languageOf = (language: string | null | undefined): TemplateLanguage =>
+  resolveLocale(language).slice(0, 2) as TemplateLanguage;
 
 const pick = (text: Localized, language: string | null | undefined): string =>
-  text[languageOf(language) ?? "en"];
+  text[languageOf(language)];
 
 /**
  * The portal's button names in each language (the participant catalogs' Verify, Explore,
@@ -1701,7 +1699,7 @@ const BUTTON_WORDS: Record<TemplateLanguage, readonly string[]> = {
 
 /** One step or tip as the host guide page stores it: the text, and the words it colours. */
 export const hostGuideItem = (text: string, language: string | null | undefined) =>
-  guideItem(text, languageOf(language) ?? "en");
+  guideItem(text, languageOf(language));
 
 const guideItem = (text: string, language: TemplateLanguage) => ({
   content: text,
@@ -1716,7 +1714,7 @@ const guideItem = (text: string, language: TemplateLanguage) => ({
 export function templateHostGuide(t: ProjectTemplate, language: string | null | undefined) {
   const g = t.preset.host_guide;
   if (!g) return null;
-  const lang = languageOf(language) ?? "en";
+  const lang = languageOf(language);
   const stored = (language ?? "en").toLowerCase().slice(0, 2) || "en";
   return {
     language: stored,

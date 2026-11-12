@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { ValidationError } from "@dembrane/core";
+import { LOCALES } from "@dembrane/i18n";
 import {
   BUILT_IN_TOPICS,
   listProjectTemplates,
@@ -301,4 +302,11 @@ test("every host script names the buttons the portal shows for its settings", ()
   // Both kinds of script exist, so the walk checks something.
   expect(seen.both).toBeGreaterThan(0);
   expect(seen.one).toBeGreaterThan(0);
+});
+
+test("the template languages are i18n's locales, by language", () => {
+  // languageOf reads a stored language through resolveLocale, so the two lists must agree.
+  expect<string[]>([...TEMPLATE_LANGUAGES].sort()).toEqual(
+    LOCALES.map((l) => l.slice(0, 2)).sort(),
+  );
 });
