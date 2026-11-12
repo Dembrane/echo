@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./App";
+import { App, type AppRouter } from "./App";
 import "./index.css";
 import "./lib/tamper";
 
@@ -16,6 +16,7 @@ import {
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
 import { errorFilter } from "./lib/errorFilter";
+import { loadMainRouter, participantRouter } from "./Router";
 
 // With analytics switched off PostHog is never initialised: no request, script or cookie.
 if (ANALYTICS_ENABLED)
@@ -69,10 +70,17 @@ if (root === null) {
 	throw new Error("Root element not found");
 }
 
-ReactDOM.createRoot(root).render(
-	<React.StrictMode>
-		<PostHogProvider client={posthog}>
-			<App />
-		</PostHogProvider>
-	</React.StrictMode>,
-);
+const render = (router: AppRouter) =>
+	ReactDOM.createRoot(root).render(
+		<React.StrictMode>
+			<PostHogProvider client={posthog}>
+				<App router={router} />
+			</PostHogProvider>
+		</React.StrictMode>,
+	);
+
+if (USE_PARTICIPANT_ROUTER) {
+	render(participantRouter);
+} else {
+	void loadMainRouter().then(render);
+}
