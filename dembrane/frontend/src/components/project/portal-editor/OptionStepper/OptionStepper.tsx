@@ -150,31 +150,27 @@ export const OptionStepper = ({
 								>
 									<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
 										<Caret size={16} aria-hidden />
-										<Group
+										{/* The badge follows the name's last word, on its line. */}
+										<Text
 											component="span"
-											gap="xs"
-											wrap="nowrap"
-											align="center"
 											className={isOpen ? "col-span-2" : undefined}
+											style={{ minWidth: 0, overflowWrap: "break-word" }}
 										>
-											<Text
-												component="span"
-												style={{ minWidth: 0, overflowWrap: "break-word" }}
-											>
-												{option.title}
-											</Text>
+											{option.title}
 											{option.beta && (
 												<Badge
+													component="span"
 													color="mauve"
 													c="graphite"
 													size="sm"
-													style={{ flexShrink: 0 }}
+													ml="xs"
+													style={{ verticalAlign: "middle" }}
 													{...testId(`${testIdPrefix}-${option.key}-beta`)}
 												>
 													<Trans>Beta</Trans>
 												</Badge>
 											)}
-										</Group>
+										</Text>
 										{!isOpen && (
 											<Text
 												component="span"
