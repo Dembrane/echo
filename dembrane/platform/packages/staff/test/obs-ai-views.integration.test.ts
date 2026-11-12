@@ -393,6 +393,54 @@ run("obs.ai_spend and obs.ai_call_quality", () => {
     ]);
   });
 
+  test("the views give the same rows in a session time zone that skips midnight, or sits far east or west", async () => {
+    const org = randomUUID();
+    const tzAccount = randomUUID();
+    await sql`insert into org (id, name) values (${org}, 'tz')`;
+    await sql`insert into billing_account (id, tier, org_id) values (${tzAccount}, 'free', ${org})`;
+    // Unrolled UTC days around Santiago's September 2026 DST start.
+    for (const day of ["04", "05", "06", "07", "08"])
+      await modelCall({
+        at: `2026-09-${day}T12:00:00Z`,
+        account: tzAccount,
+        operation: "conversations.chunk",
+        model: "flash",
+        provider: "vertex",
+        cost: 5,
+      });
+    const reserved = await sql.reserve();
+    const snapshot = async () => ({
+      days: (await reserved`select d::text as d from obs.ai_unrolled_days() d order by 1`).map(
+        (r) => r.d,
+      ),
+      base: (
+        await reserved`select day::text as day, billing_account_id, payer, operation, model, provider,
+          calls::text, cost_micro_eur::text from obs.ai_spend_base
+          order by day, billing_account_id, payer, operation, model, provider`
+      ).map((r) => ({ ...r })),
+      accounts: (
+        await reserved`select billing_account_id, budget_micro_eur::text, percent_used,
+          period_spend_micro_eur::text, extract(epoch from period_start)::text as period_start from obs.ai_accounts order by billing_account_id`
+      ).map((r) => ({ ...r })),
+    });
+    try {
+      await reserved`set time zone 'UTC'`;
+      const utc = await snapshot();
+      expect(utc.days).toContain("2026-09-08");
+      expect(utc.days).toContain("2026-10-25");
+      for (const zone of ["America/Santiago", "Pacific/Kiritimati", "Pacific/Pago_Pago"]) {
+        await reserved.unsafe(`set time zone '${zone}'`);
+        expect(await snapshot()).toEqual(utc);
+      }
+    } finally {
+      await reserved`set time zone 'UTC'`;
+      reserved.release();
+      await sql`delete from model_call where billing_account_id = ${tzAccount}`;
+      await sql`delete from billing_account where id = ${tzAccount}`;
+      await sql`delete from org where id = ${org}`;
+    }
+  });
+
   test("ai_call_quality counts price_missing and usage_estimated per day and model", async () => {
     const rows =
       await sql`select day::text as day, model, calls::int as calls, price_missing_calls::int as pm, usage_estimated_calls::int as ue

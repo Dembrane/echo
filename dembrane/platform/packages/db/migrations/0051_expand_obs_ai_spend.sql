@@ -1,10 +1,10 @@
 -- obs.ai_unrolled_days(), obs.ai_spend_base (cost per UTC day, account, operation, model, provider), obs.ai_spend (the same with feature names), obs.ai_call_quality (price and usage flags) and obs.ai_call_gaps (calls with no payer or no operation). Safe to run twice.
--- Security definer like obs.ai_feature, and a row estimate, so plans stay small (a bare generate_series counts as 1000 days).
+-- Security definer like obs.ai_feature, and a row estimate, so plans stay small (a bare generate_series counts as 1000 days). Integer day arithmetic keeps it independent of the session time zone.
 CREATE OR REPLACE FUNCTION obs.ai_unrolled_days() RETURNS SETOF date
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp ROWS 3 AS $$
-	SELECT g.day::date FROM (SELECT min(started_at), max(started_at) FROM public.model_call) b(first_at, last_at)
-	CROSS JOIN generate_series((b.first_at AT TIME ZONE 'UTC')::date, (b.last_at AT TIME ZONE 'UTC')::date, interval '1 day') g(day)
-	WHERE NOT EXISTS (SELECT 1 FROM public.ai_spend_daily s WHERE s.day = g.day::date)
+	SELECT (b.first_day + g.n)::date FROM (SELECT (min(started_at) AT TIME ZONE 'UTC')::date, (max(started_at) AT TIME ZONE 'UTC')::date FROM public.model_call) b(first_day, last_day)
+	CROSS JOIN generate_series(0, b.last_day - b.first_day) g(n)
+	WHERE NOT EXISTS (SELECT 1 FROM public.ai_spend_daily s WHERE s.day = b.first_day + g.n)
 $$;
 --> statement-breakpoint
 comment on function obs.ai_unrolled_days() is 'UTC days with model calls and no ai_spend_daily rows yet; their cost is read from model_call.';
@@ -67,7 +67,7 @@ create or replace view obs.ai_call_gaps as
 select (started_at at time zone 'UTC')::date as day, payer, service, coalesce(operation, '') as operation,
 	model_group, kind, model, count(*) as calls, coalesce(sum(cost_micro_eur), 0)::bigint as cost_micro_eur
 from public.model_call
-where started_at >= now() - interval '30 days'
+where started_at >= (now() at time zone 'UTC' - interval '30 days') at time zone 'UTC'
 	and (payer = 'unattributed' or coalesce(operation, '') = '')
 group by 1, 2, 3, 4, 5, 6, 7;
 --> statement-breakpoint
