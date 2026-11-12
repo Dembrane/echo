@@ -127,6 +127,24 @@ export interface AnalyticsEvents {
 		screen: string;
 		action: "opened" | "screen_changed";
 	};
+	// "Try it" on the Explore and Verify pages (ECHO-1061): the Explore mode or Verify topic
+	// key, what it ran on, and how it ended. Never the prompt, the transcript or the result.
+	portal_editor_try_started: {
+		project_id: string;
+		section: "explore" | "verify";
+		key: string;
+		source: "sample";
+	};
+	portal_editor_try_finished: {
+		project_id: string;
+		section: "explore" | "verify";
+		key: string;
+		source: "sample";
+		outcome: "result" | "limit" | "failed";
+		/** Why it failed (failureCause), null after a result. */
+		cause: string | null;
+		duration_ms_bucket: string;
+	};
 
 	// Reading conversations.
 	transcript_viewed: { project_id: string; conversation_id: string };

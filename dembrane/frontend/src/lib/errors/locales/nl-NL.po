@@ -724,6 +724,11 @@ msgid "error.offer.zero_total"
 msgstr "Het totaal is nul. Kies voor een gratis offerte Kosteloos onder Zo factureren we."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "Het proberen is niet gelukt. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "De upload is niet voltooid. Probeer het opnieuw."

@@ -121,6 +121,10 @@ msgstr "Короткий опис"
 msgid "Change the key terms in Brief"
 msgstr "Змінити ключові терміни в Брифі"
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:52
+msgid "Choose a topic first."
+msgstr "Спершу виберіть тему."
+
 #: src/components/project/portal-editor/sections/explore.tsx:142
 #: src/components/project/portal-editor/sections/explore.tsx:162
 msgid "Cross-pollination"
@@ -220,7 +224,7 @@ msgstr "Error loading project"
 msgid "Example"
 msgstr "Приклад"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:126
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:129
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Приклад: вигадана розмова, щоб показати форму. Справжні відповіді будуються з того, що кажуть учасники."
 
@@ -257,7 +261,7 @@ msgstr "Guide how titles are generated. Titles describe the topic of the convers
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:271
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:335
 msgid "Hide preview"
 msgstr "Сховати попередній перегляд"
 
@@ -299,6 +303,10 @@ msgstr "Правова підстава"
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:137
+msgid "Made by dembrane from a sample conversation, with your settings."
+msgstr "Зроблено dembrane з прикладу розмови, з вашими налаштуваннями."
+
 #: src/components/project/portal-editor/sections/explore.tsx:82
 #: src/components/project/portal-editor/sections/explore.tsx:131
 msgid "Mode"
@@ -313,7 +321,7 @@ msgid "Next"
 msgstr "Next"
 
 #. placeholder {0}: sectionTitle(after)
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:239
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:303
 msgid "Next: {0}"
 msgstr "Далі: {0}"
 
@@ -375,6 +383,10 @@ msgstr "Увімкнено"
 msgid "dashboard.explore.mode.question"
 msgstr "Одне запитання"
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:100
+msgid "One sample cannot show what Explore takes from other conversations."
+msgstr "Один приклад не може показати, що Explore бере з інших розмов."
+
 #: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
 msgid "Only workspace admins can manage project automation."
 msgstr "Лише адміністратори робочого простору можуть керувати автоматизацією проєктів."
@@ -402,12 +414,12 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Учасники бачать це над полем, наприклад «Назва або номер столу». Залиш порожнім для типового тексту."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:151
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:162
 msgid "Portal preview: {0}"
 msgstr "Попередній перегляд порталу: {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:106
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:273
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:109
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:337
 msgid "Preview"
 msgstr "Попередній перегляд"
 
@@ -445,9 +457,21 @@ msgstr "Сповіщення про звіти"
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Потрібно ввімкнути «Запитувати електронну пошту?»"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:110
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:46
+msgid "Running your settings on a sample conversation…"
+msgstr "Запускаємо ваші налаштування на прикладі розмови…"
+
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:113
 msgid "Screen"
 msgstr "Екран"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:69
+msgid "See the draft your settings give, on a short sample conversation."
+msgstr "Подивіться чернетку, яку дають ваші налаштування, на короткому прикладі розмови."
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:63
+msgid "See the question your settings give, on a short sample conversation."
+msgstr "Подивіться запитання, яке дають ваші налаштування, на короткому прикладі розмови."
 
 #: src/components/project/portal-editor/sections/verify.tsx:304
 msgid "Select at least one other topic before deleting this one"
@@ -520,6 +544,10 @@ msgstr "Чернетки, які перевіряють учасники, пиш
 msgid "The portal's language, what participants read first and the tutorial cards."
 msgstr "Мова порталу, те, що учасники читають першим, і картки інструкції."
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:60
+msgid "The preview shows the result for your settings."
+msgstr "Попередній перегляд показує результат ваших налаштувань."
+
 #: src/components/project/portal-editor/sections/finish.tsx:66
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "Сторінка подяки завершується карткою, яка запрошує учасників провести власну подію з dembrane."
@@ -547,6 +575,14 @@ msgstr "This prompt guides how the AI responds to participants. Customize it to 
 #: src/components/project/portal-editor/sections/welcome.tsx:128
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:86
+msgid "Try again"
+msgstr "Спробувати ще раз"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:86
+msgid "Try it"
+msgstr "Спробувати"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sections/privacy.tsx:40
@@ -595,7 +631,7 @@ msgstr "Вебхуки не ввімкнено для цього середов�
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:120
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:123
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Що бачать учасники, з вашими змінами, ще до збереження."
 
@@ -624,6 +660,14 @@ msgstr "When finishing the conversation, participants who haven't verified yet w
 msgid "Who is responsible for the data, and whether transcripts are anonymised."
 msgstr "Хто відповідає за дані та чи анонімізуються транскрипти."
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:49
+msgid "You have used every try for this hour. Try again later."
+msgstr "Ви використали всі спроби на цю годину. Спробуйте пізніше."
+
 #: src/components/project/portal-editor/sections/verify.tsx:340
 msgid "Your own topics"
 msgstr "Власні теми"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:55
+msgid "Your settings changed. The preview shows the result of the earlier ones."
+msgstr "Ваші налаштування змінилися. Попередній перегляд показує результат попередніх."

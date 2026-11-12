@@ -724,6 +724,11 @@ msgid "error.offer.zero_total"
 msgstr "Die Summe ist null. Wähle für ein kostenloses Angebot Kostenlos unter So stellen wir in Rechnung."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "Das hat nicht geklappt. Versuch es noch einmal."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "Der Upload wurde nicht abgeschlossen. Versuche es erneut."

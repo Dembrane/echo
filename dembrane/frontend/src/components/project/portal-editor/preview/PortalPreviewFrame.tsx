@@ -43,6 +43,8 @@ interface PortalPreviewFrameProps {
 	onScreen: (screen: PreviewScreen) => void;
 	/** Shown beside the phone, as on the Privacy page's anonymisation example. */
 	aside?: ReactNode;
+	/** Shown above the phone: the Explore and Verify pages' "Try it" (ECHO-1061). */
+	action?: ReactNode;
 	/** Where the frame loads the portal from; the configured portal by default. */
 	portalUrl?: string;
 }
@@ -68,6 +70,7 @@ export const PortalPreviewFrame = ({
 	screens,
 	onScreen,
 	aside,
+	action,
 	portalUrl = PARTICIPANT_BASE_URL,
 }: PortalPreviewFrameProps) => {
 	const frame = useRef<HTMLIFrameElement>(null);
@@ -97,7 +100,7 @@ export const PortalPreviewFrame = ({
 		frame.current?.contentWindow?.postMessage(message, portalOrigin);
 	}, [ready, message, portalOrigin]);
 
-	const isExample = message.result?.source === "example";
+	const source = message.result?.source;
 
 	return (
 		<Stack gap="sm" {...testId("portal-preview")}>
@@ -121,7 +124,7 @@ export const PortalPreviewFrame = ({
 					What participants see, with your changes, before they are saved.
 				</Trans>
 			</Text>
-			{isExample && (
+			{source === "example" && (
 				<Text size="sm" maw={360} {...testId("portal-preview-example-note")}>
 					<Trans>
 						Example: a made-up conversation, to show the shape. Real replies are
@@ -129,6 +132,14 @@ export const PortalPreviewFrame = ({
 					</Trans>
 				</Text>
 			)}
+			{source === "model" && (
+				<Text size="sm" maw={360} {...testId("portal-preview-sample-note")}>
+					<Trans>
+						Made by dembrane from a sample conversation, with your settings.
+					</Trans>
+				</Text>
+			)}
+			{action}
 			<Stack gap="md">
 				<Box
 					w={360}
