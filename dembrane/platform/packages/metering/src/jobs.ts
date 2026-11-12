@@ -10,6 +10,7 @@ import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { type CostAlertSink, type FetchText, httpText, postCostAlert } from "./alerts";
+import { syncFeatureRules } from "./feature-rules";
 import type { PriceBook } from "./prices/store";
 import { syncPrices } from "./prices/sync";
 
@@ -48,6 +49,12 @@ export function meteringRegistration(d: MeteringJobDeps): {
   return {
     jobs: [priceSync, spendRollup],
     async register(queue) {
+      // The table only feeds dashboards: a failed sync never stops the jobs.
+      try {
+        d.logger.info({ rules: await syncFeatureRules(d.db) }, "AI feature rules synced");
+      } catch (err) {
+        d.logger.error({ err }, "AI feature rules could not be synced");
+      }
       await queue.work(priceSync, { concurrency: 1 }, async () => {
         await syncPrices({
           db: d.db,
