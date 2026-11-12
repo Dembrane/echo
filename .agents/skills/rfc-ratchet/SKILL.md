@@ -1,6 +1,6 @@
 ---
 name: rfc-ratchet
-description: Run one rfc-ratchet pass for an approved RFC. Usage - /rfc-ratchet <rfc id>, e.g. /rfc-ratchet 0002
+description: Run one rfc-ratchet pass for an approved RFC. Usage - /rfc-ratchet <rfc id>, e.g. /rfc-ratchet 0002 (/skill:rfc-ratchet in T3 Code)
 disable-model-invocation: true
 ---
 
