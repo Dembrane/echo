@@ -90,7 +90,7 @@ run("host milestones", () => {
     await sql`insert into conversation (id, project_id, participant_name, source, created_at, updated_at)
       values (${newId()}, ${old}, 'P', 'PORTAL_AUDIO', now() - interval '30 days', now())`;
     const migration = await Bun.file(
-      new URL("../../db/migrations/0050_expand_host_milestone.sql", import.meta.url),
+      new URL("../../db/migrations/0053_expand_host_milestone.sql", import.meta.url),
     ).text();
     for (const statement of migration.split("--> statement-breakpoint"))
       await sql.unsafe(statement);
