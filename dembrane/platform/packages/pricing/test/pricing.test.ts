@@ -226,6 +226,52 @@ test("summary reads like the old one", () => {
   expect(configWithBooking({ a: 1 }, { config: { booking: {} } }, null)).toEqual({ a: 1 });
 });
 
+test("a website plan reads as the plan it priced, not as the app's questions", () => {
+  const link = "https://www.dembrane.com/pricing-calculator/plan?people=40&needs=org&step=4";
+  expect(
+    buildAnswersSummary(
+      {
+        use_case: ["year"],
+        shape: "year",
+        flow: "plan",
+        people: 40,
+        needs: ["org", "new_need"],
+        suggested: "steward",
+        plan: "steward",
+        yearly: 12400,
+      },
+      { shape: "year", flow: "plan", total: 3100, title: "Pro: Steward", link },
+    ),
+  ).toBe(
+    `Pro: Steward | People: 40 | Due now: €3,100 | Per year: €12,400 | Needs: single sign-on, own contract or DPIA, new_need | Plan: ${link}`,
+  );
+  expect(
+    buildAnswersSummary(
+      { use_case: ["event"], shape: "event", flow: "event", events: 2, total: 4250.5, pending: 1 },
+      { flow: "event", total: 4250.5, title: "2 events · Workshop", link: "javascript:alert(1)" },
+    ),
+  ).toBe("2 events · Workshop | Total: €4,250.50 | Still to confirm: 1");
+  // A website row whose offer is not there yet still never falls back to "Use case: year".
+  expect(buildAnswersSummary({ use_case: ["year"], shape: "year", flow: "plan" })).toBe("");
+});
+
+test("the app route says whether the website can find the row it saved", async () => {
+  const save = (a: Hono<Env>, s: string) =>
+    a.request("/api/v2/pricing-configurations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...base, config_session_id: s }),
+    });
+  const member = { appUserId: null, directusUserId: "u1", isStaff: false };
+  const withSite = await save(siteApp("tok", member).a, "h1");
+  expect(withSite.status).toBe(200);
+  expect(await withSite.json()).toMatchObject({ handover: true });
+  // EU production has no site token: the website writes elsewhere and would not find it.
+  const noSite = await save(siteApp(null, member).a, "h2");
+  expect(noSite.status).toBe(200);
+  expect(await noSite.json()).toMatchObject({ handover: false });
+});
+
 function siteApp(token: string | null, principal: Signed | null = null) {
   const { store, rows } = memStore();
   const staffAudit = new MemoryStaffAudit();

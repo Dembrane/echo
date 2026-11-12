@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 import { ensureOk } from "@/lib/errors/read";
+import type { FeatureGroup } from "@/routes/admin/aiCostBreakdown";
 
 // A staff AI budget override; all empty means the free default applies.
 export interface AiBudgetOverride {
@@ -23,7 +24,15 @@ export interface AiCostAccount {
 	override_until: string | null;
 	// Soft-deleted since; the row still shows its cost.
 	deleted: boolean;
-	by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+	by_feature: {
+		operation: string;
+		// Absent from an API older than this frontend.
+		group?: FeatureGroup;
+		group_label?: string;
+		label?: string;
+		cost_micro_eur: number;
+		calls: number;
+	}[];
 	by_model: {
 		model: string;
 		provider: string;

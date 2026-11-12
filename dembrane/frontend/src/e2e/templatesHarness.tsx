@@ -9,7 +9,7 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { ParticipantInitiateForm } from "@/components/participant/ParticipantInitiateForm";
+import { ParticipantInitiateForm } from "@/portal/components/start/ParticipantInitiateForm";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import {
 	TEMPLATE_SUMMARIES,
