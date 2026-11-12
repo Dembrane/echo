@@ -25,7 +25,7 @@ import {
 	useGenerateVerificationArtefactMutation,
 	useVerificationTopics,
 } from "./hooks";
-import { TopicIcon, topicDescription } from "./topics";
+import { TopicIcon, topicDescription } from "@/components/verify/topics";
 import { VerifyInstructions } from "./VerifyInstructions";
 
 type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk" | "cs";

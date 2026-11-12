@@ -133,11 +133,12 @@ vi.mock("./hooks/useS3ConnectivityCheck", () => ({
 	useS3ConnectivityCheck: () => ({ retry: () => {}, s3Status: "passed" }),
 }));
 
+// One reportPing for every render, as the real hook's useCallback gives: a new one each
+// render would restart the beacon whenever the screen re-renders (the refine cooldown
+// re-renders it every second).
+const health = { connectionHealthy: true, reportPing: () => {} };
 vi.mock("./hooks/usePingConnectionHealth", () => ({
-	usePingConnectionHealth: () => ({
-		connectionHealthy: true,
-		reportPing: () => {},
-	}),
+	usePingConnectionHealth: () => health,
 }));
 
 vi.mock("./ParticipantRecordingWaveform", () => ({
@@ -531,7 +532,10 @@ describe("refine (ECHO) button", () => {
 		expect(navigate).not.toHaveBeenCalled();
 	});
 
+	// With Explore alone on, the button goes straight to Explore (ECHO-1052), so the
+	// choice screen needs both features on.
 	it("opens refine after 60 seconds", async () => {
+		project = { id: "p1", is_get_reply_enabled: true, is_verify_enabled: true };
 		renderAudio();
 		await startRecording();
 		act(() => recorder.setRecordingTime(61));

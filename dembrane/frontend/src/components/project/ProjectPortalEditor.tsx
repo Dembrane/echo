@@ -56,7 +56,7 @@ import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { TopicIcon, topicDescription } from "@/portal/components/verify/topics";
+import { TopicIcon, topicDescription } from "../verify/topics";
 import { CustomTopicModal } from "./CustomTopicModal";
 import {
 	useCreateCustomTopicMutation,

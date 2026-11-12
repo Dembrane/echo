@@ -74,7 +74,12 @@
 	},
 	"overrides": [
 		{
-			"includes": ["src/**", "!src/portal/**", "!src/Router.tsx"],
+			"includes": [
+				"src/**",
+				"!src/portal/**",
+				"!src/Router.tsx",
+				"!src/e2e/**"
+			],
 			"linter": {
 				"rules": {
 					"style": {
