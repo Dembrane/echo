@@ -724,6 +724,11 @@ msgid "error.offer.zero_total"
 msgstr "Підсумок нульовий. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "Спроба не вдалася. Спробуйте ще раз."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "Завантаження не завершилося. Спробуйте ще раз."

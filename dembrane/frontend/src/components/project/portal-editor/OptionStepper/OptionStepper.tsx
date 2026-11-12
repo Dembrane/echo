@@ -16,6 +16,7 @@ import {
 	useId,
 	useRef,
 } from "react";
+import { ShownTitleContext } from "@/components/form/FormLabel";
 import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
 import { testId } from "@/lib/testUtils";
 
@@ -48,7 +49,9 @@ interface OptionStepperProps {
  * current value in a line, the open one showing its field with Back and Next under it, and
  * a thin progress line, as in the create flow. Clicking a row opens it; the arrow keys move
  * between rows, Home and End jump, Enter or Space opens, and opening moves focus to the
- * row. Props in, callbacks out.
+ * row. The open option's title names its field: a field label with the same words is not
+ * shown again under it (FormLabel reads ShownTitleContext), but is still read out. Props
+ * in, callbacks out.
  */
 export const OptionStepper = ({
 	options,
@@ -165,7 +168,9 @@ export const OptionStepper = ({
 									{...testId(`${testIdPrefix}-${option.key}-body`)}
 								>
 									<Stack gap="lg" px="xs" pb="md" pt="xs">
-										{option.body}
+										<ShownTitleContext.Provider value={option.title}>
+											{option.body}
+										</ShownTitleContext.Provider>
 										<Group gap="sm">
 											{(!isLast || onNextPage) && (
 												<Button

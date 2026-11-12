@@ -34,7 +34,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **present** (in 2, out 12): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime.
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 13): Report generation and the report timeline. Used by api, worker. Uses account, notifications, projects, webhooks, llm.
-- **verify** (in 2, out 9): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
+- **verify** (in 2, out 11): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.
 - **staff** (in 1, out 13): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, metering, i18n, mail, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
@@ -50,8 +50,8 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **queue** (in 21, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by metering, webhooks, billing, projects and 17 more. Uses db, observability.
 - **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by webhooks, billing, projects, analysis and 15 more. Uses http, core.
 - **llm** (in 17, out 1): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, metering, projects and 13 more. Uses observability.
-- **ratelimit** (in 16, out 2): Rate limits counted in Postgres or memory. Used by projects, analysis, conversations, account and 12 more. Uses db, core.
-- **allowance** (in 14, out 3): The free tier: who is free, the limits, and what each account has used this month. Used by metering, billing, projects, analysis and 10 more. Uses db, core, observability.
+- **ratelimit** (in 17, out 2): Rate limits counted in Postgres or memory. Used by projects, analysis, conversations, account and 13 more. Uses db, core.
+- **allowance** (in 15, out 3): The free tier: who is free, the limits, and what each account has used this month. Used by metering, billing, projects, analysis and 11 more. Uses db, core, observability.
 - **config** (in 11, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, samples, account, popcorn and 7 more. Uses nothing.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by projects, analysis, conversations, popcorn and 6 more. Uses core, observability.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, tenancy, accounts and 5 more. Uses nothing.

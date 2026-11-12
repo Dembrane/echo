@@ -6,4 +6,8 @@ export const portal = {
 		id: "error.portal.ai_unavailable",
 		message: "Not available right now.",
 	}),
+	"portal.try_failed": msg({
+		id: "error.portal.try_failed",
+		message: "The try did not work. Try again.",
+	}),
 } satisfies Messages<"portal">;

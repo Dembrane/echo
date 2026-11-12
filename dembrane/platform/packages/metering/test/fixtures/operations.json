@@ -20,6 +20,7 @@
   "POST /api/v2/bff/chats",
   "POST /api/v2/bff/map/:project_id/generate",
   "POST /api/v2/bff/popcorn/loops",
+  "POST /api/v2/projects/:project_id/portal-editor/try",
   "POST /api/verify/:id/generate",
   "POST /api/verify/generate",
   "PUT /api/verify/artifact/:artifact_id",

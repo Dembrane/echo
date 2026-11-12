@@ -82,7 +82,7 @@ msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque 
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatisation, fonctions en avant-première, et déplacer ou supprimer ce projet."
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:190
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:195
 msgid "Back"
 msgstr "Retour"
 
@@ -120,6 +120,10 @@ msgstr "Brief"
 #: src/components/project/portal-editor/sections/verify.tsx:404
 msgid "Change the key terms in Brief"
 msgstr "Modifier les termes clés dans le Briefing"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:52
+msgid "Choose a topic first."
+msgstr "Choisissez d'abord un sujet."
 
 #: src/components/project/portal-editor/sections/explore.tsx:142
 #: src/components/project/portal-editor/sections/explore.tsx:162
@@ -220,7 +224,7 @@ msgstr "Erreur lors du chargement du projet"
 msgid "Example"
 msgstr "Exemple"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:118
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:129
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Exemple : une conversation inventée, pour montrer la forme. Les vraies réponses viennent de ce que disent les participants."
 
@@ -257,7 +261,7 @@ msgstr "Guide pour comprendre comment les titres sont générés. Les titres dé
 msgid "Hidden"
 msgstr "Masqué"
 
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:271
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:335
 msgid "Hide preview"
 msgstr "Masquer l'aperçu"
 
@@ -299,6 +303,10 @@ msgstr "Base juridique"
 msgid "Loading verify topics…"
 msgstr "Chargement des sujets de vérification…"
 
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:137
+msgid "Made by dembrane from a sample conversation, with your settings."
+msgstr "Fait par dembrane à partir d'une conversation d'exemple, avec vos réglages."
+
 #: src/components/project/portal-editor/sections/explore.tsx:82
 #: src/components/project/portal-editor/sections/explore.tsx:131
 msgid "Mode"
@@ -308,12 +316,12 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Nom et étiquettes"
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:180
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:185
 msgid "Next"
 msgstr "Suivant"
 
 #. placeholder {0}: sectionTitle(after)
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:239
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:303
 msgid "Next: {0}"
 msgstr "Suivant : {0}"
 
@@ -375,6 +383,10 @@ msgstr "Activé"
 msgid "dashboard.explore.mode.question"
 msgstr "Une question"
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:100
+msgid "One sample cannot show what Explore takes from other conversations."
+msgstr "Un seul exemple ne peut pas montrer ce qu'Explorer reprend d'autres conversations."
+
 #: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
 msgid "Only workspace admins can manage project automation."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent gérer l'automatisation du projet."
@@ -402,12 +414,12 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Les participants lisent ceci au-dessus du champ, par exemple « Nom ou numéro de la table ». Laisse vide pour le texte par défaut."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:162
 msgid "Portal preview: {0}"
 msgstr "Aperçu du portail : {0}"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:98
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:273
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:109
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:337
 msgid "Preview"
 msgstr "Aperçu"
 
@@ -445,9 +457,21 @@ msgstr "Notifications de rapports"
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Nécessite que « Demander l'e-mail ? » soit activé"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:102
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:46
+msgid "Running your settings on a sample conversation…"
+msgstr "Vos réglages s'appliquent à une conversation d'exemple…"
+
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:113
 msgid "Screen"
 msgstr "Écran"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:69
+msgid "See the draft your settings give, on a short sample conversation."
+msgstr "Voyez le brouillon que donnent vos réglages, sur une courte conversation d'exemple."
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:63
+msgid "See the question your settings give, on a short sample conversation."
+msgstr "Voyez la question que donnent vos réglages, sur une courte conversation d'exemple."
 
 #: src/components/project/portal-editor/sections/verify.tsx:304
 msgid "Select at least one other topic before deleting this one"
@@ -520,6 +544,10 @@ msgstr "Les brouillons que vérifient les participants écrivent les noms et les
 msgid "The portal's language, what participants read first and the tutorial cards."
 msgstr "La langue du portail, ce que les participants lisent d'abord et les cartes du tutoriel."
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:60
+msgid "The preview shows the result for your settings."
+msgstr "L'aperçu montre le résultat de vos réglages."
+
 #: src/components/project/portal-editor/sections/finish.tsx:66
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "La page de remerciement se termine par une carte invitant les participants à organiser leur propre événement avec dembrane."
@@ -547,6 +575,14 @@ msgstr "Cette prompt guide comment l'IA répond aux participants. Personnalisez-
 #: src/components/project/portal-editor/sections/welcome.tsx:128
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une conversation"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:86
+msgid "Try again"
+msgstr "Réessayer"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:86
+msgid "Try it"
+msgstr "Essayer"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sections/privacy.tsx:40
@@ -595,7 +631,7 @@ msgstr "Les webhooks ne sont pas activés pour cet environnement."
 msgid "Welcome"
 msgstr "Bienvenue"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:112
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:123
 msgid "What participants see, with your changes, before they are saved."
 msgstr "Ce que voient les participants, avec vos changements, avant même qu'ils soient enregistrés."
 
@@ -624,6 +660,14 @@ msgstr "Lorsque vous terminez la conversation, les participants qui n'ont pas en
 msgid "Who is responsible for the data, and whether transcripts are anonymised."
 msgstr "Qui est responsable des données, et si les transcriptions sont anonymisées."
 
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:49
+msgid "You have used every try for this hour. Try again later."
+msgstr "Vous avez utilisé tous les essais de cette heure. Réessayez plus tard."
+
 #: src/components/project/portal-editor/sections/verify.tsx:340
 msgid "Your own topics"
 msgstr "Vos propres sujets"
+
+#: src/components/project/portal-editor/try-it/TryItAction.tsx:55
+msgid "Your settings changed. The preview shows the result of the earlier ones."
+msgstr "Vos réglages ont changé. L'aperçu montre le résultat des précédents."

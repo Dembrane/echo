@@ -724,6 +724,11 @@ msgid "error.offer.zero_total"
 msgstr "Le total est de zéro. Pour une offre gratuite, choisissez Gratuit sous Notre facturation."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "L'essai n'a pas marché. Réessayez."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "L'importation ne s'est pas terminée. Réessayez."

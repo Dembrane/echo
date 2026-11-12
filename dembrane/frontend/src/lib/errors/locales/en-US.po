@@ -724,6 +724,11 @@ msgid "error.offer.zero_total"
 msgstr "The total is zero. For a free offer, choose No charge under How we invoice."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "The try did not work. Try again."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "The upload did not finish. Try again."

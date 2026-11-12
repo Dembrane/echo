@@ -23,7 +23,7 @@ import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
 
 export type VerifyDeps = Pick<
   ConversationsDeps,
-  "db" | "access" | "audio" | "audioUrls" | "models" | "tokens" | "logger" | "now"
+  "db" | "access" | "audio" | "audioUrls" | "models" | "tokens" | "limiter" | "logger" | "now"
 >;
 
 export interface TopicView {
@@ -35,7 +35,7 @@ export interface TopicView {
   translations: Record<string, { label: string }>;
 }
 
-interface Ctx {
+export interface Ctx {
   readonly d: VerifyDeps;
   readonly store: VerifyStorage;
 }
@@ -49,7 +49,7 @@ const iso = (v: string | null | undefined) => isoTimestamp(v ?? null);
 // ── topics ────────────────────────────────────────────────────────────
 
 /** Defaults by (sort, key), then the project's own topics oldest first. */
-async function topicsFor(ctx: Ctx, projectId: string): Promise<TopicView[]> {
+export async function topicsFor(ctx: Ctx, projectId: string): Promise<TopicView[]> {
   const rows = await ctx.store.topics(projectId);
   const views = rows.map(({ topic, translations }) => {
     const map: Record<string, { label: string }> = {};
@@ -92,7 +92,7 @@ export function selected(raw: string | null, topics: readonly { key: string }[])
   return topics.map((t) => t.key).filter(Boolean);
 }
 
-async function projectOr404(ctx: Ctx, projectId: string) {
+export async function projectOr404(ctx: Ctx, projectId: string) {
   const project = await ctx.store.project(projectId);
   if (!project) throw new NotFoundError("project.not_found");
   return project;
@@ -116,7 +116,7 @@ export function getTopics(ctx: Ctx, projectId: string) {
  * (and PUT /topics nobody at all, H-1); the intent is project:update (M-1). Refusals
  * keep the old text. Staff act through their own workspace role (H-14).
  */
-async function requireUpdate(ctx: Ctx, who: Signed, projectId: string) {
+export async function requireUpdate(ctx: Ctx, who: Signed, projectId: string) {
   if (!who.appUserId)
     throw new ForbiddenError("project.no_access", { message: "Not authorized for this project" });
   const policy: Policy = "project:update";
@@ -499,6 +499,36 @@ export function revisionSystem(i: {
   });
 }
 
+/** The prompt a topic asks the model: a built-in topic's approved text, a host's own as written. */
+export function topicPromptOf(
+  topic: Pick<TopicView, "key" | "prompt" | "is_custom">,
+  language: string | null,
+): string {
+  const prompt = topic.prompt ?? "";
+  if (topic.is_custom) return prompt;
+  return defaultTopicPrompt(topic.key, prompt, language) ?? prompt;
+}
+
+/**
+ * A Verify draft: the prompt generationInput builds, then the model call. The live draft
+ * (generateArtifact) and the portal editor's "Try it" (try-it.ts) both write theirs here,
+ * so a host sees what participants would get.
+ */
+export function writeDraft(
+  ctx: Ctx,
+  input: Parameters<typeof generationInput>[0],
+  audio: readonly (TextPart | FilePart)[] = [],
+): Promise<string> {
+  const { system, text } = generationInput(input);
+  return complete(
+    ctx,
+    system,
+    [{ type: "text", text }, ...audio],
+    "Failed to generate verification artifact",
+    input.project.language || "en",
+  );
+}
+
 export async function generateArtifact(
   ctx: Ctx,
   body: { topic_list: string[]; conversation_id: string },
@@ -525,24 +555,19 @@ export async function generateArtifact(
     });
   }
   const audio = audioChunks(chunks, lastTime);
-  const { system, text: userText } = generationInput({
-    project,
-    conversationId: conv.id,
-    topicPrompt: target.is_custom
-      ? target.prompt
-      : (defaultTopicPrompt(target.key, target.prompt, project.language) ?? target.prompt),
-    artifacts,
-    transcript: transcriptText(chunks),
-    audio: audio.map((c) => ({ id: c.id, timestamp: c.timestamp })),
-  });
   // The body names the conversation, so the payer middleware cannot.
   const text = await withPayer({ ref: "conversation", id: conv.id }, async () =>
-    complete(
+    writeDraft(
       ctx,
-      system,
-      [{ type: "text", text: userText }, ...(await audioParts(ctx, audio))],
-      "Failed to generate verification artifact",
-      project.language || "en",
+      {
+        project,
+        conversationId: conv.id,
+        topicPrompt: topicPromptOf(target, project.language),
+        artifacts,
+        transcript: transcriptText(chunks),
+        audio: audio.map((c) => ({ id: c.id, timestamp: c.timestamp })),
+      },
+      await audioParts(ctx, audio),
     ),
   );
   const created = await ctx.store.createArtifact({

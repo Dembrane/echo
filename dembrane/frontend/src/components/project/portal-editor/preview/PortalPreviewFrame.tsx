@@ -43,6 +43,8 @@ interface PortalPreviewFrameProps {
 	onScreen: (screen: PreviewScreen) => void;
 	/** Shown beside the phone, as on the Privacy page's anonymisation example. */
 	aside?: ReactNode;
+	/** Shown above the phone: the Explore and Verify pages' "Try it" (ECHO-1061). */
+	action?: ReactNode;
 	/** Where the frame loads the portal from; the configured portal by default. */
 	portalUrl?: string;
 }
@@ -51,8 +53,16 @@ interface PortalPreviewFrameProps {
  * A phone showing the participant screen a page changes, with the host's values as they
  * are now (ECHO-1060). The portal draws it in a frame of its own (its preview mode), told
  * what to show by postMessage: sent only to the portal's origin, and answered only when
- * the answer comes from that frame and that origin. The frame may run scripts and nothing
- * else (no forms, pop-ups, top navigation or devices). Props in, callbacks out.
+ * the answer comes from that frame and that origin.
+ *
+ * The sandbox allows two things: scripts, and keeping the portal's own origin
+ * (allow-same-origin). The origin is needed on both sides: without it the frame's origin is
+ * "null", so this page would refuse its ready message and could not address it, and the
+ * portal's code could not read its own storage (language, preferences). It is the portal's
+ * origin, not the dashboard's, so the frame still cannot reach this page. Everything else
+ * stays refused by the sandbox: forms, pop-ups, top navigation, modals. Devices are refused
+ * by the frame's permissions policy (no allow attribute, so a cross-origin frame gets no
+ * microphone or camera) and by the portal's own lockDown. Props in, callbacks out.
  */
 export const PortalPreviewFrame = ({
 	projectId,
@@ -60,6 +70,7 @@ export const PortalPreviewFrame = ({
 	screens,
 	onScreen,
 	aside,
+	action,
 	portalUrl = PARTICIPANT_BASE_URL,
 }: PortalPreviewFrameProps) => {
 	const frame = useRef<HTMLIFrameElement>(null);
@@ -89,7 +100,7 @@ export const PortalPreviewFrame = ({
 		frame.current?.contentWindow?.postMessage(message, portalOrigin);
 	}, [ready, message, portalOrigin]);
 
-	const isExample = message.result?.source === "example";
+	const source = message.result?.source;
 
 	return (
 		<Stack gap="sm" {...testId("portal-preview")}>
@@ -113,7 +124,7 @@ export const PortalPreviewFrame = ({
 					What participants see, with your changes, before they are saved.
 				</Trans>
 			</Text>
-			{isExample && (
+			{source === "example" && (
 				<Text size="sm" maw={360} {...testId("portal-preview-example-note")}>
 					<Trans>
 						Example: a made-up conversation, to show the shape. Real replies are
@@ -121,6 +132,14 @@ export const PortalPreviewFrame = ({
 					</Trans>
 				</Text>
 			)}
+			{source === "model" && (
+				<Text size="sm" maw={360} {...testId("portal-preview-sample-note")}>
+					<Trans>
+						Made by dembrane from a sample conversation, with your settings.
+					</Trans>
+				</Text>
+			)}
+			{action}
 			<Stack gap="md">
 				<Box
 					w={360}

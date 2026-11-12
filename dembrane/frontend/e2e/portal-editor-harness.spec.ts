@@ -245,17 +245,183 @@ for (const size of sizes)
 								.locator(`[data-preview-screen="${screen}"]`),
 						).toBeAttached({ timeout: 15_000 });
 						await page.waitForTimeout(1200);
-						await page
-							.getByTestId("portal-preview-phone")
-							.screenshot(
-								shots
-									? {
-											path: `${shots}/${size.name}-${lang}-screen-${screen}.png`,
-										}
-									: {},
-							);
+						await page.getByTestId("portal-preview-phone").screenshot(
+							shots
+								? {
+										path: `${shots}/${size.name}-${lang}-screen-${screen}.png`,
+									}
+								: {},
+						);
 					}
 				}
+			});
+
+			// ECHO-1061: "Try it" on Explore and Verify against a mocked endpoint: idle,
+			// running, the result in the phone, a result from earlier settings, the hour's
+			// limit, a failure and its retry, and none of it for an observer.
+			test("Try it on Explore and Verify", async ({ page }) => {
+				test.setTimeout(300_000);
+				await answerApi(page, nl);
+				let reply: { status: number; json: unknown } = {
+					json: {},
+					status: 200,
+				};
+				const tries: unknown[] = [];
+				await page.route(
+					"http://localhost:5173/api/v2/projects/p1/portal-editor/try",
+					async (route) => {
+						const body = route.request().postDataJSON() as {
+							kind: string;
+							topic_key?: string;
+							get_reply_mode?: string;
+						};
+						tries.push(body);
+						// Long enough to see the running state.
+						await new Promise((r) => setTimeout(r, 1500));
+						if (reply.status !== 200)
+							return route.fulfill({ json: reply.json, status: reply.status });
+						return route.fulfill({
+							json: {
+								key:
+									body.kind === "explore"
+										? body.get_reply_mode
+										: body.topic_key,
+								kind: body.kind,
+								language: nl ? "nl" : "en",
+								source: "sample",
+								text:
+									body.kind === "explore"
+										? nl
+											? "Wat zou de avond in het park voor jullie veiliger maken?"
+											: "What would make the park feel safer for you in the evening?"
+										: nl
+											? "Concept om samen te verbeteren.\n- Eerst schaduw boven de zandbak.\n- Een waterkraantje.\nKlopt dit? Wat ontbreekt of is te stellig?"
+											: "Draft to correct together.\n- Shade over the sandpit first.\n- A water tap.\nIs this right? What is missing or too strong?",
+							},
+						});
+					},
+				);
+				const sent: string[] = [];
+				page.on("request", (req) => {
+					if (req.frame() === page.mainFrame()) return;
+					if (
+						req.url().startsWith("http://localhost:5174/api") ||
+						req.method() !== "GET"
+					)
+						sent.push(`${req.method()} ${req.url()}`);
+				});
+				const tryState = page.getByTestId("portal-try");
+				const phoneFrame = page.frameLocator(
+					'[data-testid="portal-preview-frame"]',
+				);
+				const open = async (section: string, option: string) => {
+					await page.goto(
+						`/e2e/portal-editor-harness.html?path=/${lang}/w/w1/projects/p1/portal/${section}/${option}`,
+					);
+					await expect(
+						page.getByTestId(`portal-option-${option}-body`),
+					).toBeVisible({ timeout: 30_000 });
+					if (phone) await page.getByTestId("portal-preview-toggle").click();
+					await previewReady(page);
+				};
+				const name = (state: string) => `${size.name}-${lang}-try-${state}`;
+
+				await open("explore", "mode");
+				await expect(tryState).toHaveAttribute("data-status", "idle");
+				await shot(page, name("explore-idle"), phone);
+
+				await page.getByTestId("portal-try-button").click();
+				await expect(tryState).toHaveAttribute("data-status", "running");
+				await shot(page, name("explore-running"), phone);
+				await expect(tryState).toHaveAttribute("data-status", "result", {
+					timeout: 15_000,
+				});
+				await expect(
+					phoneFrame.getByText(nl ? "veiliger maken" : "feel safer", {
+						exact: false,
+					}),
+				).toBeVisible({ timeout: 15_000 });
+				await expect(
+					page.getByTestId("portal-preview-sample-note"),
+				).toBeVisible();
+				await page.waitForTimeout(800);
+				await shot(page, name("explore-result"), phone);
+
+				await page.getByTestId("portal-editor-reply-mode-brainstorm").click();
+				await expect(page.getByTestId("portal-try-status")).toContainText(
+					nl ? "vorige" : "earlier",
+				);
+				await shot(page, name("explore-stale"), phone);
+
+				// The bodies the API sends: code, action, detail and params.
+				reply = {
+					json: {
+						action: "retry",
+						code: "portal.try_failed",
+						detail: "The try did not work.",
+						params: {},
+					},
+					status: 502,
+				};
+				await page.getByTestId("portal-try-button").click();
+				await expect(tryState).toHaveAttribute("data-status", "failed", {
+					timeout: 15_000,
+				});
+				await expect(page.getByTestId("portal-try-status")).toHaveText(
+					nl
+						? "Het proberen is niet gelukt. Probeer het opnieuw."
+						: "The try did not work. Try again.",
+				);
+				await shot(page, name("explore-failed"), phone);
+
+				reply = {
+					json: {
+						action: "wait",
+						code: "rate_limit.exceeded",
+						detail: "Too many requests. Try again later.",
+						params: {},
+					},
+					status: 429,
+				};
+				await page.getByTestId("portal-try-button").click();
+				await expect(tryState).toHaveAttribute("data-status", "limit", {
+					timeout: 15_000,
+				});
+				await expect(page.getByTestId("portal-try-button")).toBeDisabled();
+				await shot(page, name("explore-limit"), phone);
+
+				reply = { json: {}, status: 200 };
+				await open("verify", "topics");
+				await page.getByTestId("portal-try-button").click();
+				await expect(tryState).toHaveAttribute("data-status", "result", {
+					timeout: 15_000,
+				});
+				await expect(page.getByTestId("portal-preview-phone")).toHaveAttribute(
+					"data-screen",
+					"verify-summary",
+				);
+				await expect(
+					phoneFrame.getByText(nl ? "zandbak" : "sandpit", { exact: false }),
+				).toBeVisible({ timeout: 15_000 });
+				await page.waitForTimeout(800);
+				await shot(page, name("verify-result"), phone);
+				expect(tries).toContainEqual(
+					expect.objectContaining({ kind: "verify", topic_key: "actions" }),
+				);
+
+				// An observer reads the page without the action.
+				await page.goto(
+					`/e2e/portal-editor-harness.html?role=observer&path=/${lang}/w/w1/projects/p1/portal/explore/mode`,
+				);
+				await expect(page.getByTestId("portal-option-mode-body")).toBeVisible({
+					timeout: 30_000,
+				});
+				if (phone) await page.getByTestId("portal-preview-toggle").click();
+				await previewReady(page);
+				await expect(page.getByTestId("portal-try")).toHaveCount(0);
+
+				// The frame still sends nothing: the dashboard made every try.
+				expect(sent).toEqual([]);
 			});
 
 			test("Brief and Advanced", async ({ page }) => {

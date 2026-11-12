@@ -24,8 +24,9 @@ import { cssVariablesResolver, theme } from "@/theme";
 
 // ECHO-1060: Brief, the portal editor's six pages with their live preview, and Manage's
 // Advanced tab, outside the signed-in shell, for screenshots and the rendered grammar audit.
-// ?path= picks the page, ?role= the workspace role; the spec answers the API. The preview
-// frame loads the participant dev server (pnpm participant:dev, port 5174).
+// ?path= picks the page, ?role= the workspace role; the spec answers the API, "Try it"
+// (ECHO-1061) included. The preview frame loads the participant dev server
+// (pnpm participant:dev, port 5174).
 const params = new URLSearchParams(window.location.search);
 const role = params.get("role") ?? "owner";
 const queryClient = new QueryClient({

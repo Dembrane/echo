@@ -9,6 +9,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -76,9 +77,19 @@ vi.mock("@/components/project/ProjectLegalBasisSection", () => ({
 	useProjectLegalQuery: () => ({ data: undefined }),
 }));
 vi.mock("../preview/PortalPreviewFrame", () => ({
-	PortalPreviewFrame: ({ message }: { message: PreviewMessage }) => {
+	PortalPreviewFrame: ({
+		message,
+		action,
+	}: {
+		message: PreviewMessage;
+		action?: React.ReactNode;
+	}) => {
 		lastMessage.current = message;
-		return <div data-testid="preview" data-screen={message.screen} />;
+		return (
+			<div data-testid="preview" data-screen={message.screen}>
+				{action}
+			</div>
+		);
 	},
 }));
 // The rich editor is not a native control, so it carries its own readOnly.
@@ -105,6 +116,7 @@ i18n.activate("en-US");
 
 afterEach(() => {
 	cleanup();
+	vi.unstubAllGlobals();
 	vi.useRealTimers();
 	role.current = "owner";
 	emailFlag.on = false;
@@ -475,5 +487,173 @@ describe("portal editor pages: name box label", () => {
 				}),
 			}),
 		);
+	});
+});
+
+// ECHO-1061: "Try it" runs the page's settings on the sample conversation, through the
+// dashboard's own request, and the frame shows the result in place of the example.
+describe("portal editor pages: Try it", () => {
+	const answer = (status: number, body: unknown) => {
+		const fetch = vi.fn(async () =>
+			Promise.resolve(
+				new Response(JSON.stringify(body), {
+					headers: { "content-type": "application/json" },
+					status,
+				}),
+			),
+		);
+		vi.stubGlobal("fetch", fetch);
+		return fetch;
+	};
+	const result = (kind: string, key: string) => ({
+		key,
+		kind,
+		language: "en",
+		source: "sample",
+		text: "What would make the evening feel safe?",
+	});
+	const press = async () => {
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("portal-try-button"));
+		});
+	};
+	const status = () => screen.getByTestId("portal-try").dataset.status;
+
+	it("runs Explore's unsaved settings and shows the real reply in the preview", async () => {
+		const fetch = answer(200, result("explore", "brainstorm"));
+		renderPage("explore", "mode", { is_get_reply_enabled: true });
+		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+			"example",
+		);
+		fireEvent.click(screen.getByTestId("portal-editor-reply-mode-brainstorm"));
+		await press();
+
+		const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+		expect(url).toContain("/v2/projects/p1/portal-editor/try");
+		expect(JSON.parse(init.body as string)).toEqual({
+			get_reply_mode: "brainstorm",
+			get_reply_prompt: null,
+			kind: "explore",
+			language: "en",
+			source: "sample",
+		});
+		const message = lastMessage.current as PreviewMessage;
+		expect(message.screen).toBe("explore");
+		expect(message.result).toEqual({
+			key: "brainstorm",
+			source: "model",
+			text: "What would make the evening feel safe?",
+		});
+		expect(status()).toBe("result");
+		expect(updateMutateAsync).not.toHaveBeenCalled();
+
+		// Events name the mode and the outcome, never the text.
+		const events = tracked.filter(([e]) => e.startsWith("portal_editor_try"));
+		expect(events.map(([e, p]) => [e, p.key, p.outcome])).toEqual([
+			["portal_editor_try_started", "brainstorm", undefined],
+			["portal_editor_try_finished", "brainstorm", "result"],
+		]);
+		expect(JSON.stringify(events)).not.toContain("evening");
+	});
+
+	it("marks a result from earlier settings, and keeps showing it", async () => {
+		answer(200, result("explore", "summarize"));
+		renderPage("explore", "mode", { is_get_reply_enabled: true });
+		await press();
+		expect(screen.getByTestId("portal-try-status").textContent).toBe(
+			"The preview shows the result for your settings.",
+		);
+		fireEvent.click(screen.getByTestId("portal-editor-reply-mode-brainstorm"));
+		expect(screen.getByTestId("portal-try-status").textContent).toBe(
+			"Your settings changed. The preview shows the result of the earlier ones.",
+		);
+		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+			"model",
+		);
+		expect(screen.getByTestId("portal-try-button").textContent).toBe(
+			"Try again",
+		);
+	});
+
+	it("tries Verify's first chosen topic, naming a host's own topic only as custom", async () => {
+		const fetch = answer(200, result("verify", "our-check"));
+		renderPage(
+			"verify",
+			"topics",
+			{ is_verify_enabled: true },
+			{
+				available_topics: [
+					topic("our-check", "Our own check", true),
+					topic("agreements", "Table check"),
+				],
+				selected_topics: ["our-check", "agreements"],
+			},
+		);
+		await press();
+		const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+		expect(JSON.parse(init.body as string)).toMatchObject({
+			kind: "verify",
+			topic_key: "our-check",
+		});
+		expect((lastMessage.current as PreviewMessage).screen).toBe(
+			"verify-summary",
+		);
+		expect(
+			tracked
+				.filter(([e]) => e.startsWith("portal_editor_try"))
+				.map(([, p]) => p.key),
+		).toEqual(["custom", "custom"]);
+	});
+
+	it("says when the hour's tries are used up", async () => {
+		answer(429, {
+			action: "wait",
+			code: "rate_limit.exceeded",
+			detail: "Too many requests. Try again later.",
+			params: {},
+		});
+		renderPage("explore", "mode", { is_get_reply_enabled: true });
+		await press();
+		await waitFor(() => expect(status()).toBe("limit"));
+		expect(
+			screen.getByTestId("portal-try-button").hasAttribute("disabled"),
+		).toBe(true);
+		expect((lastMessage.current as PreviewMessage).result?.source).toBe(
+			"example",
+		);
+	});
+
+	it("says when a try failed, and tries again", async () => {
+		const fetch = answer(502, {
+			action: "retry",
+			code: "portal.try_failed",
+			detail: "The try did not work.",
+			params: {},
+		});
+		renderPage("explore", "mode", { is_get_reply_enabled: true });
+		await press();
+		await waitFor(() => expect(status()).toBe("failed"));
+		await waitFor(() =>
+			expect(screen.getByTestId("portal-try-status").textContent).toBe(
+				"The try did not work. Try again.",
+			),
+		);
+		expect(screen.getByTestId("portal-try-button").textContent).toBe(
+			"Try again",
+		);
+		answer(200, result("explore", "summarize"));
+		await press();
+		expect(status()).toBe("result");
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+
+	it("is not there for observers, or on other pages", () => {
+		role.current = "observer";
+		renderPage("explore", "mode", { is_get_reply_enabled: true });
+		expect(screen.queryByTestId("portal-try")).toBeNull();
+		cleanup();
+		role.current = "owner";
+		renderPage("welcome", "title");
+		expect(screen.queryByTestId("portal-try")).toBeNull();
 	});
 });

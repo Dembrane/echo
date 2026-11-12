@@ -822,6 +822,7 @@
       "name": "@dembrane/verify",
       "dependencies": {
         "@dembrane/access": "workspace:*",
+        "@dembrane/allowance": "workspace:*",
         "@dembrane/conversations": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
@@ -831,12 +832,12 @@
         "@dembrane/observability": "workspace:*",
         "@dembrane/projects": "workspace:*",
         "@dembrane/prompts": "workspace:*",
+        "@dembrane/ratelimit": "workspace:*",
         "ai": "^7.0.118",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
       },
       "devDependencies": {
-        "@dembrane/allowance": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",

@@ -41,6 +41,9 @@ import { usePrivacyOptions } from "../sections/privacy";
 import type { SectionContent, SectionProps } from "../sections/types";
 import { useVerifyOptions } from "../sections/verify";
 import { useWelcomeOptions } from "../sections/welcome";
+import { TryItAction } from "../try-it/TryItAction";
+import { previewResultOf, type TrySection, tryRequest } from "../try-it/tryIt";
+import { useTryIt } from "../try-it/useTryIt";
 import { usePortalPageForm } from "../usePortalPageForm";
 
 const OPTIONS: Record<SectionKey, (props: SectionProps) => SectionContent> = {
@@ -152,6 +155,50 @@ export const PortalSectionEditor = ({
 		return list;
 	}, [section, open]);
 
+	// "Try it" on Explore and Verify (ECHO-1061): the real result replaces the example.
+	const trySection: TrySection | null =
+		section === "explore" || section === "verify" ? section : null;
+	const { language, get_reply_mode, get_reply_prompt, verification_topics } =
+		page.values;
+	const tryBody = useMemo(
+		() =>
+			trySection
+				? tryRequest(trySection, {
+						get_reply_mode,
+						get_reply_prompt,
+						language,
+						verification_topics,
+					})
+				: null,
+		[
+			trySection,
+			language,
+			get_reply_mode,
+			get_reply_prompt,
+			verification_topics,
+		],
+	);
+	const tryTopic = verificationTopics?.available_topics.find(
+		(topic) => topic.key === tryBody?.topic_key,
+	);
+	const tryIt = useTryIt({
+		eventKey:
+			trySection === "explore"
+				? get_reply_mode
+				: tryTopic?.is_custom
+					? "custom"
+					: (tryBody?.topic_key ?? ""),
+		projectId: project.id,
+		request: tryBody,
+		section: trySection ?? "explore",
+	});
+	const tried = tryIt.result;
+	// A new result is shown on the screen it belongs to.
+	useEffect(() => {
+		if (tried)
+			setPickedScreen(tried.kind === "explore" ? "explore" : "verify-summary");
+	}, [tried]);
+
 	const legal = useProjectLegalQuery(project.id);
 	const message = useMemo(
 		() =>
@@ -165,6 +212,7 @@ export const PortalSectionEditor = ({
 								legal.data._legal.effective?.privacy_policy_url,
 						}
 					: null,
+				result: tried ? previewResultOf(tried) : null,
 				screen,
 				tags: tags.map((tag) => ({
 					id: tag.id,
@@ -173,7 +221,7 @@ export const PortalSectionEditor = ({
 				topics: verificationTopics,
 				values: page.values,
 			}),
-		[page.values, legal.data, screen, open, tags, verificationTopics],
+		[page.values, legal.data, screen, open, tags, verificationTopics, tried],
 	);
 
 	const frame = (
@@ -190,6 +238,22 @@ export const PortalSectionEditor = ({
 					section,
 				});
 			}}
+			action={
+				trySection && !readOnly ? (
+					<TryItAction
+						section={trySection}
+						status={tryIt.status}
+						hasResult={!!tried}
+						stale={tryIt.stale}
+						error={tryIt.error}
+						unavailable={!tryBody}
+						crossPollination={
+							page.values.is_get_reply_cross_pollination_enabled
+						}
+						onTry={tryIt.run}
+					/>
+				) : undefined
+			}
 			aside={
 				section === "privacy" && open?.key === "anonymise" ? (
 					<AnonymiseExample />

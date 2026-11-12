@@ -1,6 +1,6 @@
 import { contextForPrompt } from "@dembrane/core";
 import { isoTimestamp } from "@dembrane/legacy-shape";
-import { speechHint } from "@dembrane/llm";
+import { type Models, speechHint } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
@@ -239,25 +239,63 @@ export async function* generateReply(
     }
   }
 
+  let answer = "";
+  for await (const text of replyText(d.models, language, content)) {
+    answer += text;
+    yield text;
+  }
+  await store.storeReply(conversationId, answer.trim(), d.now());
+}
+
+/**
+ * The Explore model call itself: the prompt and any audio to multi_modal_pro, the answer's
+ * text as it streams. The live reply and the portal editor's "Try it" (sampleReply) both
+ * call it, so a host sees what participants would get.
+ */
+export async function* replyText(
+  models: Models,
+  language: string,
+  content: (TextPart | FilePart)[],
+): AsyncGenerator<string> {
   const result = streamText({
-    model: d.models.model("multi_modal_pro"),
+    model: models.model("multi_modal_pro"),
     messages: [{ role: "user", content }],
     maxRetries: 0,
     providerOptions: {
       google: { thinkingConfig: { thinkingBudget: 2048 } },
-      ...speechHint(d.models, language),
+      ...speechHint(models, language),
     },
   });
-  let answer = "";
+  let any = false;
   for await (const part of result.fullStream) {
     if (part.type === "text-delta" && part.text) {
-      answer += part.text;
+      any = true;
       yield part.text;
     } else if (part.type === "error") throw part.error;
-    else if (part.type === "finish" && part.finishReason === "content-filter" && !answer)
+    else if (part.type === "finish" && part.finishReason === "content-filter" && !any)
       throw new ContentPolicyError("content policy violation");
   }
-  await store.storeReply(conversationId, answer.trim(), d.now());
+}
+
+/**
+ * Explore on a transcript that is no conversation (ECHO-1061): the portal editor's sample,
+ * with the host's draft settings in `project`. The same prompt and model call as the live
+ * reply, with no other conversations (one sample has none) and nothing stored.
+ */
+export async function sampleReply(
+  models: Models,
+  i: { project: ReplyProject; language: string; transcript: string },
+): Promise<string> {
+  const prompt = replyPrompt({
+    project: i.project,
+    language: i.language,
+    current: { name: CURRENT_CONVERSATION_NAME, tags: [], transcript: i.transcript },
+    others: "",
+  });
+  let answer = "";
+  for await (const text of replyText(models, i.language, [{ type: "text", text: prompt }]))
+    answer += text;
+  return answer.trim();
 }
 
 /** How long the portal waits in silence before it is told the system is busy. */

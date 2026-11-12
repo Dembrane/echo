@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, TextInput } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { FormLabel } from "@/components/form/FormLabel";
 import { OptionStepper, type StepperOption } from "./OptionStepper";
 
 i18n.load("en-US", {});
@@ -120,5 +121,36 @@ describe("OptionStepper", () => {
 		);
 		fireEvent.keyDown(document.activeElement as Element, { key: "Home" });
 		expect(document.activeElement).toBe(first);
+	});
+
+	it("shows the open option's name once, keeping the field's name, dirty mark and error", () => {
+		const labelled = (label: string): StepperOption => ({
+			body: (
+				<TextInput
+					label={<FormLabel label={label} isDirty error="Too long" />}
+					error="Too long"
+				/>
+			),
+			key: "named",
+			summary: "",
+			title: "Page title",
+		});
+		renderStepper("named", { options: [labelled("Page title")] });
+		const body = screen.getByTestId("portal-option-named-body");
+		// Read out as the input's name, drawn only in the row above it.
+		const input = screen.getByRole("textbox", { name: "Page title" });
+		expect(body.contains(input)).toBe(true);
+		const label = body.querySelector("label");
+		expect(label?.textContent).toBe("Page title");
+		expect(label?.querySelector("p")).toBeNull();
+		expect(body.querySelector('[role="presentation"]')).toBeTruthy();
+		expect(body.textContent).toContain("Too long");
+		cleanup();
+		// A label with other words than the title is shown as before.
+		renderStepper("named", { options: [labelled("Enable it")] });
+		const shown = screen
+			.getByTestId("portal-option-named-body")
+			.querySelector("label p");
+		expect(shown?.textContent).toBe("Enable it");
 	});
 });

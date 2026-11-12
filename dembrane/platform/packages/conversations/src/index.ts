@@ -43,8 +43,11 @@ export {
   transaction,
 } from "./storage";
 export {
+  ContentPolicyError,
   CURRENT_CONVERSATION_NAME,
   formatConversation,
   OTHER_CONVERSATION_NAME,
+  type ReplyProject,
   replyPrompt,
+  sampleReply,
 } from "./v1/reply";
