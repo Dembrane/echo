@@ -1460,7 +1460,7 @@ msgstr "Action sur"
 msgid "Actions"
 msgstr "Actions"
 
-#: src/portal/components/verify/topics.tsx:59
+#: src/components/verify/topics.tsx:59
 msgid "Actions and proposals said out loud, and who was named."
 msgstr "Actions et propositions dites à voix haute, et qui a été nommé."
 
@@ -7513,7 +7513,7 @@ msgstr "ID"
 msgid "Ideas and how they connect"
 msgstr "Les idées et leurs liens"
 
-#: src/portal/components/verify/topics.tsx:61
+#: src/components/verify/topics.tsx:61
 msgid "Ideas mentioned only briefly that could matter."
 msgstr "Des idées évoquées brièvement qui pourraient compter."
 
@@ -9190,7 +9190,7 @@ msgstr "Mode"
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie n'est pas configuré dans cet environnement, aucune transaction réelle n'est donc affichée. Le lien vers le tableau de bord renvoie bien vers le bon environnement Mollie."
 
-#: src/portal/components/verify/topics.tsx:67
+#: src/components/verify/topics.tsx:67
 msgid "Moments where the group's view changed."
 msgstr "Les moments où le regard du groupe a changé."
 
@@ -11886,7 +11886,7 @@ msgstr "Les espaces de travail privés sont inclus dans les forfaits payants."
 msgid "Private. Add people to share it."
 msgstr "Privé. Ajoutez des personnes pour le partager."
 
-#: src/portal/components/verify/topics.tsx:63
+#: src/components/verify/topics.tsx:63
 msgid "Problems, risks or doubts the group named itself."
 msgstr "Problèmes, risques ou doutes que le groupe a lui-même nommés."
 
@@ -18390,11 +18390,11 @@ msgstr "Quels thèmes sont ressortis de l'ensemble des conversations de ce proje
 msgid "What themes came up?"
 msgstr "Quels thèmes sont ressortis ?"
 
-#: src/portal/components/verify/topics.tsx:55
+#: src/components/verify/topics.tsx:55
 msgid "What this group mostly agreed on, and what differed."
 msgstr "Ce sur quoi ce groupe était plutôt d'accord, et ce qui différait."
 
-#: src/portal/components/verify/topics.tsx:65
+#: src/components/verify/topics.tsx:65
 msgid "What this person or group told us, in their own words."
 msgstr "Ce que cette personne ou ce groupe nous a dit, avec ses propres mots."
 
@@ -18524,7 +18524,7 @@ msgstr "Lorsque le résumé est généré"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le résumé)"
 
-#: src/portal/components/verify/topics.tsx:57
+#: src/components/verify/topics.tsx:57
 msgid "Where views stayed different, each side in one line."
 msgstr "Là où les avis sont restés différents, chaque position en une ligne."
 

@@ -1460,7 +1460,7 @@ msgstr "Дата дії"
 msgid "Actions"
 msgstr "Actions"
 
-#: src/portal/components/verify/topics.tsx:59
+#: src/components/verify/topics.tsx:59
 msgid "Actions and proposals said out loud, and who was named."
 msgstr "Дії та пропозиції, сказані вголос, і хто був названий."
 
@@ -7513,7 +7513,7 @@ msgstr "ID"
 msgid "Ideas and how they connect"
 msgstr "Ідеї та зв'язки між ними"
 
-#: src/portal/components/verify/topics.tsx:61
+#: src/components/verify/topics.tsx:61
 msgid "Ideas mentioned only briefly that could matter."
 msgstr "Ідеї, згадані лише мимохідь, які можуть бути важливими."
 
@@ -9190,7 +9190,7 @@ msgstr "Mode"
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie не налаштовано в цьому середовищі, тому транзакції в реальному часі не відображаються. Посилання на панель керування все одно веде на потрібне середовище Mollie."
 
-#: src/portal/components/verify/topics.tsx:67
+#: src/components/verify/topics.tsx:67
 msgid "Moments where the group's view changed."
 msgstr "Моменти, коли погляд групи змінився."
 
@@ -11886,7 +11886,7 @@ msgstr "Приватні робочі простори доступні у пл�
 msgid "Private. Add people to share it."
 msgstr "Приватно. Додайте людей, щоб поділитися ним."
 
-#: src/portal/components/verify/topics.tsx:63
+#: src/components/verify/topics.tsx:63
 msgid "Problems, risks or doubts the group named itself."
 msgstr "Проблеми, ризики чи сумніви, які група назвала сама."
 
@@ -18393,11 +18393,11 @@ msgstr "Які теми лунали в розмовах цього проєкт
 msgid "What themes came up?"
 msgstr "Які теми лунали?"
 
-#: src/portal/components/verify/topics.tsx:55
+#: src/components/verify/topics.tsx:55
 msgid "What this group mostly agreed on, and what differed."
 msgstr "У чому ця група здебільшого погодилася, а що відрізнялося."
 
-#: src/portal/components/verify/topics.tsx:65
+#: src/components/verify/topics.tsx:65
 msgid "What this person or group told us, in their own words."
 msgstr "Що ця людина чи група нам розповіла, їхніми власними словами."
 
@@ -18527,7 +18527,7 @@ msgstr "Коли підсумок згенеровано"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
-#: src/portal/components/verify/topics.tsx:57
+#: src/components/verify/topics.tsx:57
 msgid "Where views stayed different, each side in one line."
 msgstr "Де погляди залишилися різними, кожна сторона одним рядком."
 
