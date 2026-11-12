@@ -108,12 +108,20 @@ export const PortalPreviewFrame = ({
 					/>
 				)}
 			</Group>
-			<Text size="sm" className="app-muted">
+			<Text size="sm" className="app-muted" maw={360}>
 				<Trans>
 					What participants see, with your changes, before they are saved.
 				</Trans>
 			</Text>
-			<Group align="flex-start" gap="md" wrap="wrap">
+			{isExample && (
+				<Text size="sm" maw={360} {...testId("portal-preview-example-note")}>
+					<Trans>
+						Example: a made-up conversation, to show the shape. Real replies are
+						built from what participants say.
+					</Trans>
+				</Text>
+			)}
+			<Stack gap="md">
 				<Box
 					w={360}
 					maw="100%"
@@ -141,19 +149,7 @@ export const PortalPreviewFrame = ({
 					)}
 				</Box>
 				{aside}
-			</Group>
-			{isExample && (
-				<Text
-					size="sm"
-					className="app-muted"
-					{...testId("portal-preview-example-note")}
-				>
-					<Trans>
-						Example: a made-up conversation, to show the shape. Real replies are
-						built from what participants say.
-					</Trans>
-				</Text>
-			)}
+			</Stack>
 		</Stack>
 	);
 };

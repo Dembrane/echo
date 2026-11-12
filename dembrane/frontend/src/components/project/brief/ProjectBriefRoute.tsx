@@ -10,6 +10,7 @@ import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
 import { useProjectById } from "@/components/project/hooks";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
+import { SettingsSectionLevel } from "@/components/project/ProjectSettingsSection";
 import { useSettingsCatalog } from "@/components/project/portal-editor/i18n";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
@@ -51,40 +52,45 @@ export const ProjectBriefRoute = () => {
 
 	return (
 		<PageContainer>
-			<Stack gap="xl" {...testId("project-brief")}>
-				<Stack gap="xs" px={{ base: "md", md: "lg" }}>
-					<Title order={2}>{ready ? t`Brief` : null}</Title>
-					{ready && (
-						<Text size="sm">
-							{t`What this project is about. dembrane reads it for transcripts, summaries, chats and reports.`}
-						</Text>
+			<SettingsSectionLevel.Provider value="card">
+				<Stack gap="xl" {...testId("project-brief")}>
+					<Stack gap="xs" px={{ base: "md", md: "lg" }}>
+						<Title order={2}>{ready ? t`Brief` : null}</Title>
+						{ready && (
+							<Text size="sm">
+								{t`What this project is about. dembrane reads it for transcripts, summaries, chats and reports.`}
+							</Text>
+						)}
+					</Stack>
+					{(projectQuery.isLoading || !ready) && <BeautifulLoading />}
+					{projectQuery.isError && (
+						<ErrorNotice
+							error={projectQuery.error}
+							title={t`Error loading project`}
+						/>
+					)}
+					{project && ready && projectId && (
+						<>
+							<ProjectBasicEdit project={project} readOnly={!canEdit} />
+							<Divider />
+							<ProjectGoalSection projectId={projectId} readOnly={!canEdit} />
+							<Divider />
+							<ProjectKeyTermsSection project={project} readOnly={!canEdit} />
+							<Divider />
+							<ProjectMethodologySection
+								project={project}
+								readOnly={!canEdit}
+							/>
+							{canSeeMemory && (
+								<>
+									<Divider />
+									<ProjectMemorySection projectId={projectId} />
+								</>
+							)}
+						</>
 					)}
 				</Stack>
-				{(projectQuery.isLoading || !ready) && <BeautifulLoading />}
-				{projectQuery.isError && (
-					<ErrorNotice
-						error={projectQuery.error}
-						title={t`Error loading project`}
-					/>
-				)}
-				{project && ready && projectId && (
-					<>
-						<ProjectBasicEdit project={project} readOnly={!canEdit} />
-						<Divider />
-						<ProjectGoalSection projectId={projectId} readOnly={!canEdit} />
-						<Divider />
-						<ProjectKeyTermsSection project={project} readOnly={!canEdit} />
-						<Divider />
-						<ProjectMethodologySection project={project} readOnly={!canEdit} />
-						{canSeeMemory && (
-							<>
-								<Divider />
-								<ProjectMemorySection projectId={projectId} />
-							</>
-						)}
-					</>
-				)}
-			</Stack>
+			</SettingsSectionLevel.Provider>
 		</PageContainer>
 	);
 };

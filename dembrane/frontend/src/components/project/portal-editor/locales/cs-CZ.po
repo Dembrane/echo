@@ -1,18 +1,18 @@
 #
 msgid ""
 msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-12 16:51+0100\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Language: cs-CZ\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Project-Id-Version: \n"
-"Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 "Plural-Forms: \n"
+"X-Generator: @lingui/cli\n"
 
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
@@ -26,11 +26,11 @@ msgstr "Krátký koncept, který účastníci zkontrolují a schválí, než sko
 msgid "About"
 msgstr "Údaje"
 
-#: src/components/project/portal-editor/sections/verify.tsx:333
+#: src/components/project/portal-editor/sections/verify.tsx:331
 msgid "Add topic"
 msgstr "Přidat téma"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:61
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
 msgid "Advanced"
 msgstr "Pokročilé"
 
@@ -46,7 +46,7 @@ msgstr "Potom"
 msgid "Anonymize transcripts"
 msgstr "Anonymizovat přepisy"
 
-#: src/components/project/portal-editor/sections/verify.tsx:264
+#: src/components/project/portal-editor/sections/verify.tsx:262
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Are you sure you want to delete this custom topic? This cannot be undone."
 
@@ -65,7 +65,7 @@ msgstr "Požádat o jméno?"
 msgid "Asked"
 msgstr "Ptáme se"
 
-#: src/components/project/portal-editor/sections/verify.tsx:216
+#: src/components/project/portal-editor/sections/verify.tsx:214
 msgid "At least one topic must be selected to enable Verify"
 msgstr "At least one topic must be selected to enable Verify"
 
@@ -78,7 +78,7 @@ msgstr "Auto-generate titles"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:64
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatizace, rané funkce a přesunutí nebo smazání tohoto projektu."
 
@@ -95,7 +95,7 @@ msgid "Before"
 msgstr "Předtím"
 
 #. js-lingui-explicit-id
-#: src/components/project/portal-editor/sections/verify.tsx:349
+#: src/components/project/portal-editor/sections/verify.tsx:347
 msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
@@ -105,28 +105,28 @@ msgid "Beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/portal-editor/sections/explore.tsx:36
+#: src/components/project/portal-editor/sections/explore.tsx:39
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
-#: src/components/project/portal-editor/sections/explore.tsx:20
+#: src/components/project/portal-editor/sections/explore.tsx:21
 msgid "Brainstorm ideas"
 msgstr "Brainstorming nápadů"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:56
+#: src/components/project/brief/ProjectBriefRoute.tsx:58
 msgid "Brief"
 msgstr "Zadání"
 
-#: src/components/project/portal-editor/sections/verify.tsx:406
+#: src/components/project/portal-editor/sections/verify.tsx:404
 msgid "Change the key terms in Brief"
 msgstr "Upravit klíčové pojmy v Briefingu"
 
-#: src/components/project/portal-editor/sections/explore.tsx:138
-#: src/components/project/portal-editor/sections/explore.tsx:158
+#: src/components/project/portal-editor/sections/explore.tsx:142
+#: src/components/project/portal-editor/sections/explore.tsx:162
 msgid "Cross-pollination"
 msgstr "Vzájemné opylení"
 
-#: src/components/project/portal-editor/sections/explore.tsx:22
+#: src/components/project/portal-editor/sections/explore.tsx:23
 msgid "Custom"
 msgstr "Custom"
 
@@ -139,6 +139,7 @@ msgstr "Custom title prompt"
 msgid "Czech (only ECHO features, transcription and summaries)"
 msgstr "Čeština (pouze funkce ECHO, přepis a shrnutí)"
 
+#: src/components/project/portal-editor/sections/finish.tsx:190
 #: src/components/project/portal-editor/sections/about.tsx:232
 msgid "Default"
 msgstr "Default"
@@ -147,15 +148,15 @@ msgstr "Default"
 msgid "Default - no tutorial (only privacy statements)"
 msgstr "Výchozí – bez tutoriálu (pouze prohlášení o ochraně soukromí)"
 
-#: src/components/project/portal-editor/sections/verify.tsx:265
+#: src/components/project/portal-editor/sections/verify.tsx:263
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/project/portal-editor/sections/verify.tsx:263
+#: src/components/project/portal-editor/sections/verify.tsx:261
 msgid "Delete custom topic"
 msgstr "Delete custom topic"
 
-#: src/components/project/portal-editor/sections/verify.tsx:313
+#: src/components/project/portal-editor/sections/verify.tsx:311
 msgid "Delete topic"
 msgstr "Smazat téma"
 
@@ -176,11 +177,11 @@ msgstr "Dutch"
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 
-#: src/components/project/portal-editor/sections/verify.tsx:299
+#: src/components/project/portal-editor/sections/verify.tsx:297
 msgid "Edit topic"
 msgstr "Upravit téma"
 
-#: src/components/project/portal-editor/sections/explore.tsx:55
+#: src/components/project/portal-editor/sections/explore.tsx:58
 msgid "Enable Explore"
 msgstr "Enable Explore"
 
@@ -188,12 +189,12 @@ msgstr "Enable Explore"
 msgid "Enable report notifications"
 msgstr "Zapnout upozornění na zprávy"
 
-#: src/components/project/portal-editor/sections/explore.tsx:40
+#: src/components/project/portal-editor/sections/explore.tsx:43
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #. js-lingui-explicit-id
-#: src/components/project/portal-editor/sections/verify.tsx:353
+#: src/components/project/portal-editor/sections/verify.tsx:351
 msgid "dashboard.dembrane.feature.verify.description"
 msgstr "Enable this feature to allow participants to verify and approve \"outcomes\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified outcomes and review them in the overview."
 
@@ -201,7 +202,7 @@ msgstr "Enable this feature to allow participants to verify and approve \"outcom
 msgid "Enable transcript anonymization"
 msgstr "Enable transcript anonymization"
 
-#: src/components/project/portal-editor/sections/verify.tsx:368
+#: src/components/project/portal-editor/sections/verify.tsx:366
 msgid "Enable Verify"
 msgstr "Enable Verify"
 
@@ -210,8 +211,8 @@ msgid "English"
 msgstr "English"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
-#: src/components/project/brief/ProjectBriefRoute.tsx:67
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:72
+#: src/components/project/brief/ProjectBriefRoute.tsx:69
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -219,16 +220,16 @@ msgstr "Error loading project"
 msgid "Example"
 msgstr "Příklad"
 
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:151
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:118
 msgid "Example: a made-up conversation, to show the shape. Real replies are built from what participants say."
 msgstr "Příklad: vymyšlený rozhovor, aby byl vidět tvar. Skutečné odpovědi vznikají z toho, co účastníci řeknou."
 
 #: src/components/project/portal-editor/sectionLabels.ts:13
-#: src/components/project/portal-editor/sections/explore.tsx:69
+#: src/components/project/portal-editor/sections/explore.tsx:72
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/portal-editor/sections/explore.tsx:149
+#: src/components/project/portal-editor/sections/explore.tsx:153
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Explore může zahrnout, co řekly jiné skupiny v tomto projektu. Vypnuto: dívá se jen na tento rozhovor."
 
@@ -280,7 +281,7 @@ msgstr "Italština (pouze funkce ECHO, přepis a shrnutí)"
 msgid "Keep it to {NAME_LABEL_MAX} characters."
 msgstr "Nejvýše {NAME_LABEL_MAX} znaků."
 
-#: src/components/project/portal-editor/sections/verify.tsx:412
+#: src/components/project/portal-editor/sections/verify.tsx:410
 #: src/components/project/brief/ProjectKeyTermsSection.tsx:81
 msgid "Key terms"
 msgstr "Klíčové výrazy"
@@ -294,12 +295,12 @@ msgstr "Language"
 msgid "Legal basis"
 msgstr "Právní základ"
 
-#: src/components/project/portal-editor/sections/verify.tsx:203
+#: src/components/project/portal-editor/sections/verify.tsx:201
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/project/portal-editor/sections/explore.tsx:79
-#: src/components/project/portal-editor/sections/explore.tsx:127
+#: src/components/project/portal-editor/sections/explore.tsx:82
+#: src/components/project/portal-editor/sections/explore.tsx:131
 msgid "Mode"
 msgstr "Mode"
 
@@ -316,21 +317,21 @@ msgstr "Next"
 msgid "Next: {0}"
 msgstr "Dále: {0}"
 
-#: src/components/project/portal-editor/sections/verify.tsx:397
-#: src/components/project/portal-editor/sections/verify.tsx:411
+#: src/components/project/portal-editor/sections/verify.tsx:395
+#: src/components/project/portal-editor/sections/verify.tsx:409
 msgid "No key terms yet."
 msgstr "Zatím žádné klíčové pojmy."
 
-#: src/components/project/portal-editor/sections/verify.tsx:279
+#: src/components/project/portal-editor/sections/verify.tsx:277
 msgid "No topics of your own yet. Add one to ask participants to check something the built-in topics do not cover."
 msgstr "Zatím žádná vlastní témata. Přidejte téma, aby účastníci zkontrolovali něco, co vestavěná témata nepokrývají."
 
-#: src/components/project/portal-editor/sections/verify.tsx:207
+#: src/components/project/portal-editor/sections/verify.tsx:205
 msgid "No verify topics available."
 msgstr "No verify topics available."
 
-#: src/components/project/portal-editor/sections/verify.tsx:341
-#: src/components/project/portal-editor/sections/verify.tsx:447
+#: src/components/project/portal-editor/sections/verify.tsx:339
+#: src/components/project/portal-editor/sections/verify.tsx:445
 msgid "None"
 msgstr "Žádné"
 
@@ -340,7 +341,7 @@ msgid "Not asked"
 msgstr "Neptáme se"
 
 #: src/components/project/portal-editor/sections/welcome.tsx:56
-#: src/components/project/portal-editor/sections/explore.tsx:191
+#: src/components/project/portal-editor/sections/explore.tsx:195
 #: src/components/project/portal-editor/sections/about.tsx:43
 msgid "Nothing yet"
 msgstr "Zatím nic"
@@ -349,32 +350,32 @@ msgstr "Zatím nic"
 msgid "Notify participants when a report is published."
 msgstr "Notify participants when a report is published."
 
-#: src/components/project/portal-editor/sections/verify.tsx:381
-#: src/components/project/portal-editor/sections/verify.tsx:438
+#: src/components/project/portal-editor/sections/verify.tsx:379
+#: src/components/project/portal-editor/sections/verify.tsx:436
 #: src/components/project/portal-editor/sections/privacy.tsx:98
 #: src/components/project/portal-editor/sections/finish.tsx:156
-#: src/components/project/portal-editor/sections/explore.tsx:68
-#: src/components/project/portal-editor/sections/explore.tsx:157
+#: src/components/project/portal-editor/sections/explore.tsx:71
+#: src/components/project/portal-editor/sections/explore.tsx:161
 #: src/components/project/portal-editor/sections/about.tsx:154
 msgid "Off"
 msgstr "Off"
 
-#: src/components/project/portal-editor/sections/verify.tsx:381
-#: src/components/project/portal-editor/sections/verify.tsx:438
+#: src/components/project/portal-editor/sections/verify.tsx:379
+#: src/components/project/portal-editor/sections/verify.tsx:436
 #: src/components/project/portal-editor/sections/privacy.tsx:98
 #: src/components/project/portal-editor/sections/finish.tsx:156
-#: src/components/project/portal-editor/sections/explore.tsx:68
-#: src/components/project/portal-editor/sections/explore.tsx:157
+#: src/components/project/portal-editor/sections/explore.tsx:71
+#: src/components/project/portal-editor/sections/explore.tsx:161
 #: src/components/project/portal-editor/sections/about.tsx:154
 msgid "On"
 msgstr "On"
 
 #. js-lingui-explicit-id
-#: src/components/project/portal-editor/sections/explore.tsx:23
+#: src/components/project/portal-editor/sections/explore.tsx:24
 msgid "dashboard.explore.mode.question"
 msgstr "Jedna otázka"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:84
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
 msgid "Only workspace admins can manage project automation."
 msgstr "Automatizaci projektů mohou spravovat pouze správci pracovního prostoru."
 
@@ -401,7 +402,7 @@ msgid "Participants read this above the box, for example \"Table name or number\
 msgstr "Účastníci to čtou nad polem, například „Název nebo číslo stolu“. Nech prázdné pro výchozí text."
 
 #. placeholder {0}: screenLabel(message.screen)
-#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:135
+#: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:143
 msgid "Portal preview: {0}"
 msgstr "Náhled portálu: {0}"
 
@@ -422,16 +423,16 @@ msgstr "Karta soukromí"
 msgid "Recording screen"
 msgstr "Obrazovka nahrávání"
 
-#: src/components/project/portal-editor/sections/verify.tsx:439
+#: src/components/project/portal-editor/sections/verify.tsx:437
 msgid "Remind at finish"
 msgstr "Připomenout na konci"
 
-#: src/components/project/portal-editor/sections/verify.tsx:423
+#: src/components/project/portal-editor/sections/verify.tsx:421
 msgid "Remind users to verify before finishing"
 msgstr "Remind users to verify before finishing"
 
-#: src/components/project/portal-editor/sections/explore.tsx:169
-#: src/components/project/portal-editor/sections/explore.tsx:192
+#: src/components/project/portal-editor/sections/explore.tsx:173
+#: src/components/project/portal-editor/sections/explore.tsx:196
 msgid "Reply prompt"
 msgstr "Prompt pro odpověď"
 
@@ -448,7 +449,7 @@ msgstr "Vyžaduje zapnutou možnost „Požádat o e-mail?“"
 msgid "Screen"
 msgstr "Obrazovka"
 
-#: src/components/project/portal-editor/sections/verify.tsx:306
+#: src/components/project/portal-editor/sections/verify.tsx:304
 msgid "Select at least one other topic before deleting this one"
 msgstr "Select at least one other topic before deleting this one"
 
@@ -456,7 +457,7 @@ msgstr "Select at least one other topic before deleting this one"
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Select the instructions that will be shown to participants when they start a conversation"
 
-#: src/components/project/portal-editor/sections/explore.tsx:84
+#: src/components/project/portal-editor/sections/explore.tsx:87
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
 
@@ -465,7 +466,7 @@ msgid "Select tutorial"
 msgstr "Select tutorial"
 
 #. js-lingui-explicit-id
-#: src/components/project/portal-editor/sections/verify.tsx:197
+#: src/components/project/portal-editor/sections/verify.tsx:195
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Select which topics participants can use for \"Verify\"."
 
@@ -499,20 +500,19 @@ msgstr "Vypnutí je součástí placeného plánu."
 msgid "Tags"
 msgstr "Tags"
 
-#: src/components/project/portal-editor/sections/finish.tsx:191
-msgid "Thank you for participating!"
-msgstr "Thank you for participating!"
+#~ msgid "Thank you for participating!"
+#~ msgstr "Thank you for participating!"
 
 #: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:34
 msgid "Thank you page"
 msgstr "Děkovná stránka"
 
 #: src/components/project/portal-editor/sections/finish.tsx:164
-#: src/components/project/portal-editor/sections/finish.tsx:192
+#: src/components/project/portal-editor/sections/finish.tsx:191
 msgid "Thank you page content"
 msgstr "Obsah děkovací stránky"
 
-#: src/components/project/portal-editor/sections/verify.tsx:388
+#: src/components/project/portal-editor/sections/verify.tsx:386
 msgid "The drafts participants check spell names and terms the way your key terms do."
 msgstr "Koncepty, které účastníci kontrolují, píšou jména a pojmy stejně jako vaše klíčové pojmy."
 
@@ -540,7 +540,7 @@ msgstr "This page is shown after the participant has completed the conversation.
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 
-#: src/components/project/portal-editor/sections/explore.tsx:176
+#: src/components/project/portal-editor/sections/explore.tsx:180
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
@@ -573,21 +573,21 @@ msgstr "Ukrajinština (pouze funkce ECHO, přepis a shrnutí)"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15
-#: src/components/project/portal-editor/sections/verify.tsx:382
+#: src/components/project/portal-editor/sections/verify.tsx:380
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
-#: src/components/project/portal-editor/sections/verify.tsx:192
-#: src/components/project/portal-editor/sections/verify.tsx:448
+#: src/components/project/portal-editor/sections/verify.tsx:190
+#: src/components/project/portal-editor/sections/verify.tsx:446
 #: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:30
 msgid "Verify topics"
 msgstr "Ověřit témata"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:96
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:79
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
@@ -608,7 +608,7 @@ msgstr "Na co se ptá pole pro jméno"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Na co se ptá úvodní obrazovka a jak rozhovory dostávají názvy."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:59
+#: src/components/project/brief/ProjectBriefRoute.tsx:61
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "O čem tento projekt je. dembrane to čte pro přepisy, shrnutí, chaty a zprávy."
 
@@ -616,7 +616,7 @@ msgstr "O čem tento projekt je. dembrane to čte pro přepisy, shrnutí, chaty 
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 
-#: src/components/project/portal-editor/sections/verify.tsx:430
+#: src/components/project/portal-editor/sections/verify.tsx:428
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
@@ -624,6 +624,6 @@ msgstr "When finishing the conversation, participants who haven't verified yet w
 msgid "Who is responsible for the data, and whether transcripts are anonymised."
 msgstr "Kdo odpovídá za data a zda se přepisy anonymizují."
 
-#: src/components/project/portal-editor/sections/verify.tsx:342
+#: src/components/project/portal-editor/sections/verify.tsx:340
 msgid "Your own topics"
 msgstr "Vlastní témata"

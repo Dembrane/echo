@@ -10,6 +10,7 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { testId } from "@/lib/testUtils";
@@ -26,6 +27,8 @@ export const exploreModeLabel = (mode: string) =>
 export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 	const { control, formState } = page.form;
 	const v = page.values;
+	// Three modes side by side do not fit a phone in every language: stacked there.
+	const narrow = useMediaQuery("(max-width: 36em)");
 	return {
 		options: {
 			enabled: {
@@ -89,6 +92,7 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 								<SegmentedControl
 									value={field.value}
 									onChange={field.onChange}
+									orientation={narrow ? "vertical" : "horizontal"}
 									style={{ alignSelf: "flex-start" }}
 									data={[
 										{

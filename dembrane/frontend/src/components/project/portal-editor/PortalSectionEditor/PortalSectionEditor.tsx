@@ -157,12 +157,12 @@ export const PortalSectionEditor = ({
 		() =>
 			buildPreviewMessage({
 				highlight: open?.screen === screen ? (open?.highlight ?? null) : null,
-				legal: legal.data
+				legal: legal.data?._legal
 					? {
-							legal_basis: legal.data._legal.effective.legal_basis,
+							legal_basis: legal.data._legal.effective?.legal_basis,
 							organiser_name: legal.data._legal.organiser_name,
 							privacy_policy_url:
-								legal.data._legal.effective.privacy_policy_url,
+								legal.data._legal.effective?.privacy_policy_url,
 						}
 					: null,
 				screen,
@@ -219,12 +219,12 @@ export const PortalSectionEditor = ({
 				<ProjectHostGuideLink projectId={project.id} />
 			</Group>
 
-			<div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+			<div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(420px,1fr)_auto] lg:items-start">
 				{/* Read-only: the fieldset disables native controls, inert blocks the custom ones. */}
 				<fieldset
 					disabled={readOnly}
 					inert={readOnly}
-					className="m-0 min-w-0 max-w-[720px] flex-1 border-0 p-0"
+					className="m-0 min-w-0 max-w-[720px] border-0 p-0"
 					{...testId("portal-editor-form")}
 				>
 					<OptionStepper

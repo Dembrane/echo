@@ -22,6 +22,18 @@ const TARGETS: Record<Highlight, string> = {
 
 const MARK = "data-preview-highlight";
 
+export const scrollParent = (el: HTMLElement): HTMLElement | null => {
+	for (let p = el.parentElement; p; p = p.parentElement) {
+		const { overflowY } = getComputedStyle(p);
+		if (
+			(overflowY === "auto" || overflowY === "scroll") &&
+			p.scrollHeight > p.clientHeight
+		)
+			return p;
+	}
+	return null;
+};
+
 /**
  * Outlines the part of the screen the open option changes and scrolls it into view
  * (ECHO-1060). The screens render as their data arrives, so it looks until it finds it.
@@ -50,16 +62,28 @@ export const PreviewHighlight = ({
 		).matches;
 		let tries = 0;
 		const timer = window.setInterval(() => {
-			const el = document.querySelector<HTMLElement>(selector);
+			const found = document.querySelector<HTMLElement>(selector);
+			// A field's outline goes round its label and box, which draw their own focus ring.
+			const el =
+				found?.closest<HTMLElement>(".mantine-InputWrapper-root") ?? found;
 			tries += 1;
 			if (el) {
 				el.setAttribute(MARK, target);
 				el.style.outline = "2px solid var(--app-action)";
 				el.style.outlineOffset = "4px";
-				el.scrollIntoView({
-					behavior: reduce ? "auto" : "smooth",
-					block: "center",
-				});
+				// Not scrollIntoView: that scrolls the dashboard around the frame too.
+				const box = scrollParent(el);
+				if (box) {
+					const top =
+						el.getBoundingClientRect().top -
+						box.getBoundingClientRect().top +
+						box.scrollTop -
+						box.clientHeight / 3;
+					box.scrollTo({
+						behavior: reduce ? "auto" : "smooth",
+						top: Math.max(0, top),
+					});
+				}
 				window.clearInterval(timer);
 			} else if (tries > 40) window.clearInterval(timer);
 		}, 100);

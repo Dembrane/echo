@@ -133,7 +133,8 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 				data-testid="portal-preview-root"
 			>
 				<PreviewResultContext.Provider value={message.result}>
-					<RouterProvider router={router} />
+					{/* Keyed: a router provider reads its router's state once. */}
+					<RouterProvider key={`${screen}-${language}`} router={router} />
 				</PreviewResultContext.Provider>
 			</div>
 			<PreviewHighlight target={message.highlight} screen={message.screen} />

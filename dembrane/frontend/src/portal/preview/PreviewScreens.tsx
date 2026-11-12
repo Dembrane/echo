@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Stack } from "@mantine/core";
 import { ArticleNyTimesIcon, MicrophoneIcon } from "@phosphor-icons/react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { useParams } from "react-router";
 import type { PreviewResult } from "@/lib/portalPreview/protocol";
 import { testId } from "@/lib/testUtils";
@@ -16,6 +16,7 @@ import { VerifySelection } from "../components/verify/VerifySelection";
 import { useParticipantProjectById } from "../hooks";
 import { ParticipantPostConversation } from "../routes/ParticipantPostConversation";
 import { PREVIEW_CONVERSATION_ID } from "./fixtures";
+import { scrollParent } from "./PreviewHighlight";
 
 /**
  * The result the Explore screen shows: the dashboard's hand-written example today, a real
@@ -107,6 +108,13 @@ export const RecordingScreen = ({
 /** The recording screen with an Explore reply under the conversation. */
 export const ExploreScreen = () => {
 	const text = useContext(PreviewResultContext)?.text ?? "";
+	const end = useRef<HTMLDivElement>(null);
+	// The reply comes in under the conversation; show it, as the live screen scrolls to it.
+	useEffect(() => {
+		const el = end.current;
+		const box = el ? scrollParent(el) : null;
+		if (box) box.scrollTop = box.scrollHeight;
+	}, []);
 	return (
 		<RecordingScreen>
 			<ParticipantEchoMessages
@@ -118,6 +126,7 @@ export const ExploreScreen = () => {
 				status="ready"
 				error={undefined}
 			/>
+			<div ref={end} />
 		</RecordingScreen>
 	);
 };

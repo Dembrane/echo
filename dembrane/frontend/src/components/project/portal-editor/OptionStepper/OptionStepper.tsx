@@ -117,7 +117,7 @@ export const OptionStepper = ({
 							data-open={isOpen || undefined}
 							{...testId(`${testIdPrefix}-${option.key}`)}
 						>
-							<Title order={3} size="h5" m={0}>
+							<Title order={5} m={0}>
 								<UnstyledButton
 									ref={(el) => {
 										headers.current[i] = el;
@@ -164,7 +164,7 @@ export const OptionStepper = ({
 									aria-labelledby={headerId}
 									{...testId(`${testIdPrefix}-${option.key}-body`)}
 								>
-									<Stack gap="md" px="xs" pb="md" pt="xs">
+									<Stack gap="lg" px="xs" pb="md" pt="xs">
 										{option.body}
 										<Group gap="sm">
 											{(!isLast || onNextPage) && (

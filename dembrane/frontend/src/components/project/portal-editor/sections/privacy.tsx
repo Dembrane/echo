@@ -22,7 +22,7 @@ export const usePrivacyOptions = ({
 	const { control, formState, setValue, getValues } = page.form;
 	const legal = useProjectLegalQuery(project.id);
 	const [modalOpened, modal] = useDisclosure(false);
-	const basis = legal.data?._legal.effective.legal_basis;
+	const basis = legal.data?._legal?.effective?.legal_basis;
 	return {
 		extra: (
 			<ConfirmModal

@@ -10,6 +10,7 @@ import { useProjectById } from "@/components/project/hooks";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExperimentalSection } from "@/components/project/ProjectExperimentalSection";
 import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
+import { SettingsSectionLevel } from "@/components/project/ProjectSettingsSection";
 import { useSettingsCatalog } from "@/components/project/portal-editor/i18n";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
@@ -56,71 +57,73 @@ export const ProjectAdvancedRoute = () => {
 
 	return (
 		<PageContainer>
-			<Stack gap="xl" {...testId("project-advanced")}>
-				<Stack gap="xs" px={{ base: "md", md: "lg" }}>
-					<Title order={2}>{ready ? t`Advanced` : null}</Title>
-					{ready && (
-						<Text size="sm">
-							{t`Automation, early features, and moving or deleting this project.`}
-						</Text>
+			<SettingsSectionLevel.Provider value="card">
+				<Stack gap="xl" {...testId("project-advanced")}>
+					<Stack gap="xs" px={{ base: "md", md: "lg" }}>
+						<Title order={2}>{ready ? t`Advanced` : null}</Title>
+						{ready && (
+							<Text size="sm">
+								{t`Automation, early features, and moving or deleting this project.`}
+							</Text>
+						)}
+					</Stack>
+					{(projectQuery.isLoading || !ready) && <BeautifulLoading />}
+					{projectQuery.isError && (
+						<ErrorNotice
+							error={projectQuery.error}
+							title={t`Error loading project`}
+						/>
+					)}
+					{ready && projectId && (
+						<Stack gap="xl" {...testId("project-advanced-webhooks")}>
+							{!ENABLE_WEBHOOKS && (
+								<Alert variant="outline">
+									<Trans>Webhooks are not enabled for this environment.</Trans>
+								</Alert>
+							)}
+							{ENABLE_WEBHOOKS && !isWorkspaceAdmin && (
+								<Alert variant="outline">
+									<Trans>
+										Only workspace admins can manage project automation.
+									</Trans>
+								</Alert>
+							)}
+							{ENABLE_WEBHOOKS &&
+								isWorkspaceAdmin &&
+								workspace &&
+								workspaceId && (
+									<FeatureGate
+										currentTier={workspace.tier as Tier}
+										requiredTier="changemaker"
+										featureName={t`Webhooks`}
+										canRequestUpgrade={isWorkspaceAdmin}
+										workspaceId={workspaceId}
+										wallKey="webhooks"
+									>
+										<WebhookSection projectId={projectId} />
+									</FeatureGate>
+								)}
+						</Stack>
+					)}
+					{ready && projectQuery.data && (
+						<>
+							{ENABLE_CANVAS && (
+								<>
+									<Divider />
+									<ProjectExperimentalSection
+										project={projectQuery.data}
+										readOnly={!canEdit}
+									/>
+								</>
+							)}
+							<Divider />
+							<ProjectMoveWorkspace project={projectQuery.data} />
+							<Divider />
+							<ProjectDangerZone project={projectQuery.data} />
+						</>
 					)}
 				</Stack>
-				{(projectQuery.isLoading || !ready) && <BeautifulLoading />}
-				{projectQuery.isError && (
-					<ErrorNotice
-						error={projectQuery.error}
-						title={t`Error loading project`}
-					/>
-				)}
-				{ready && projectId && (
-					<Stack gap="xl" {...testId("project-advanced-webhooks")}>
-						{!ENABLE_WEBHOOKS && (
-							<Alert variant="outline">
-								<Trans>Webhooks are not enabled for this environment.</Trans>
-							</Alert>
-						)}
-						{ENABLE_WEBHOOKS && !isWorkspaceAdmin && (
-							<Alert variant="outline">
-								<Trans>
-									Only workspace admins can manage project automation.
-								</Trans>
-							</Alert>
-						)}
-						{ENABLE_WEBHOOKS &&
-							isWorkspaceAdmin &&
-							workspace &&
-							workspaceId && (
-								<FeatureGate
-									currentTier={workspace.tier as Tier}
-									requiredTier="changemaker"
-									featureName={t`Webhooks`}
-									canRequestUpgrade={isWorkspaceAdmin}
-									workspaceId={workspaceId}
-									wallKey="webhooks"
-								>
-									<WebhookSection projectId={projectId} />
-								</FeatureGate>
-							)}
-					</Stack>
-				)}
-				{ready && projectQuery.data && (
-					<>
-						{ENABLE_CANVAS && (
-							<>
-								<Divider />
-								<ProjectExperimentalSection
-									project={projectQuery.data}
-									readOnly={!canEdit}
-								/>
-							</>
-						)}
-						<Divider />
-						<ProjectMoveWorkspace project={projectQuery.data} />
-						<Divider />
-						<ProjectDangerZone project={projectQuery.data} />
-					</>
-				)}
-			</Stack>
+			</SettingsSectionLevel.Provider>
 		</PageContainer>
 	);
 };

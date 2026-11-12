@@ -187,8 +187,7 @@ export const useFinishOptions = ({
 					</Stack>
 				),
 				summary:
-					plainLine(v.default_conversation_finish_text ?? "") ||
-					t`Thank you for participating!`,
+					plainLine(v.default_conversation_finish_text ?? "") || t`Default`,
 				title: t`Thank you page content`,
 			},
 		},

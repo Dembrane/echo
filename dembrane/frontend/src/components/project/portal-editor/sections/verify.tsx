@@ -17,7 +17,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
-import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -93,7 +92,6 @@ export const useVerifyOptions = ({
 }: SectionProps): SectionContent => {
 	const { control, formState, setValue, getValues } = page.form;
 	const v = page.values;
-	const { workspaceId } = useParams();
 	const rows = useTopicRows(verificationTopics, v.language);
 	const custom = rows.filter((r) => r.is_custom);
 	const selected = v.verification_topics ?? [];
@@ -180,7 +178,7 @@ export const useVerifyOptions = ({
 		.split(",")
 		.map((term) => term.trim())
 		.filter(Boolean);
-	const briefLink = `/w/${workspaceId}/projects/${project.id}/brief#${KEY_TERMS_HASH}`;
+	const briefLink = `/w/${project.workspace_id}/projects/${project.id}/brief#${KEY_TERMS_HASH}`;
 
 	const topicsList = (
 		<Controller
@@ -227,7 +225,7 @@ export const useVerifyOptions = ({
 										value={topic.key}
 										label={
 											<Group gap="xs" wrap="nowrap" component="span">
-												<TopicIcon topicKey={topic.key} size={18} />
+												<TopicIcon topicKey={topic.key} size={20} />
 												<span>{topic.label}</span>
 											</Group>
 										}
@@ -290,7 +288,7 @@ export const useVerifyOptions = ({
 									gap="sm"
 								>
 									<Group gap="xs" wrap="nowrap">
-										<TopicIcon topicKey={topic.key} size={18} />
+										<TopicIcon topicKey={topic.key} size={20} />
 										<Text size="sm">{topic.label}</Text>
 									</Group>
 									<Group gap={0} wrap="nowrap">
