@@ -40,10 +40,12 @@ interface Input {
 	screen: PreviewScreen;
 	highlight: PreviewHighlight | null;
 	/**
-	 * The result to show on the Explore and Verify summary screens. Absent: the hand-written
-	 * example for the mode or the first chosen topic. ECHO-1061 passes a real one here.
+	 * A real result from "Try it" (ECHO-1061), for the Explore reply or the Verify draft.
+	 * Otherwise each shows the hand-written example for the mode or the first chosen topic.
 	 */
-	result?: PreviewResult | null;
+	tried?: { kind: "explore" | "verify"; result: PreviewResult } | null;
+	/** Counts the host's moves; a new one starts the screen again (see PreviewMessage). */
+	reset?: number;
 }
 
 const cut = (s: string | null | undefined, max: number) =>
@@ -61,7 +63,8 @@ export function buildPreviewMessage({
 	topics,
 	screen,
 	highlight,
-	result,
+	tried,
+	reset = 0,
 }: Input): PreviewMessage {
 	const language = (PREVIEW_LANGUAGES as readonly string[]).includes(
 		values.language,
@@ -133,21 +136,25 @@ export function buildPreviewMessage({
 			),
 		}));
 
-	let shown: PreviewResult | null = null;
-	if (screen === "explore")
-		shown = result ?? exampleResult("explore", values.get_reply_mode, language);
-	else if (screen === "verify-summary")
-		shown =
-			result ??
-			exampleResult("verify", previewTopics[0]?.key ?? "heard", language);
+	// Both, whichever screen is open: the host can click through to either (ECHO-1062).
+	const explore =
+		tried?.kind === "explore"
+			? tried.result
+			: exampleResult("explore", values.get_reply_mode, language);
+	const verify =
+		tried?.kind === "verify"
+			? tried.result
+			: exampleResult("verify", previewTopics[0]?.key ?? "heard", language);
 
 	return {
+		explore,
 		highlight,
 		project,
-		result: shown,
+		reset,
 		screen,
 		topics: previewTopics,
 		type: PREVIEW_MESSAGE,
+		verify,
 		version: PREVIEW_VERSION,
 	};
 }

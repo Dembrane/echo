@@ -46,7 +46,13 @@ export const ProjectExperimentalSection = ({
 							<Text>
 								<Trans>Living canvas and popcorn</Trans>
 							</Text>
-							<Badge size="sm" variant="light" color="mauve">
+							{/* Never shrunk: on a phone the name wraps instead (ECHO-1062). */}
+							<Badge
+								size="sm"
+								variant="light"
+								color="mauve"
+								style={{ flexShrink: 0 }}
+							>
 								<Trans>Beta</Trans>
 							</Badge>
 						</Group>

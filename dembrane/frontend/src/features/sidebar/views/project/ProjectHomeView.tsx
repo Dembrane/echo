@@ -76,6 +76,13 @@ export const ProjectHomeView = () => {
 				label={<Trans>Overview</Trans>}
 				icon={AppWindowIcon}
 			/>
+			{/* The project's setup sits beside the work it shapes (ECHO-1062): what it is
+			    about under Overview, what participants see after Conversations. */}
+			<NavItem
+				to={`${base}/brief`}
+				label={<Trans>Project brief</Trans>}
+				icon={NotePencilIcon}
+			/>
 			{!isObserver && (
 				<NavItem
 					to={`${base}/chats/new`}
@@ -91,6 +98,13 @@ export const ProjectHomeView = () => {
 				process={{ status: processes.conversations, tool: "conversations" }}
 				icon={ChatCircleTextIcon}
 				badge={conversationsCountQuery.data || undefined}
+			/>
+			<NavItem
+				to={`${base}/portal/welcome`}
+				label={<Trans>Portal editor</Trans>}
+				icon={DeviceMobileIcon}
+				active={portalActive}
+				pushes
 			/>
 			<div className="mt-2 flex flex-col gap-0.5">
 				{ENABLE_MONITOR && (
@@ -150,21 +164,9 @@ export const ProjectHomeView = () => {
 					icon={FileTextIcon}
 				/>
 			</div>
-			{/* The project's setup (ECHO-1060): what it is about, what participants see,
-			    and who has access. Webhooks moved from Automation to Manage, Advanced. */}
+			{/* Who has access, usage, export and the rest (ECHO-1060). Webhooks moved from
+			    Automation to Manage, Advanced. */}
 			<div className="mt-2 flex flex-col gap-0.5">
-				<NavItem
-					to={`${base}/brief`}
-					label={<Trans>Brief</Trans>}
-					icon={NotePencilIcon}
-				/>
-				<NavItem
-					to={`${base}/portal/welcome`}
-					label={<Trans>Portal editor</Trans>}
-					icon={DeviceMobileIcon}
-					active={portalActive}
-					pushes
-				/>
 				<NavItem
 					to={`${base}/access`}
 					label={<Trans>Manage</Trans>}

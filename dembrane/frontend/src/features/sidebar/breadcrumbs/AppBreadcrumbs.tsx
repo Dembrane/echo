@@ -45,7 +45,7 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
 	access: "Access",
-	brief: "Brief",
+	brief: "Project brief",
 	canvases: "Library",
 	chats: "Ask",
 	conversation: "Conversation",

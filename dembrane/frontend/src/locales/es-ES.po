@@ -1180,7 +1180,7 @@ msgstr "Un anfitrión"
 #~ msgid "A live event"
 #~ msgstr "Un evento en directo"
 
-#: src/components/project/ProjectExperimentalSection.tsx:54
+#: src/components/project/ProjectExperimentalSection.tsx:60
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr "Una página en directo en tu Biblioteca y diapositivas en vivo para la sala, ambas creadas a partir de tus conversaciones mientras transcurre la sesión. Beta inicial: pueden cambiar o eliminarse."
 
@@ -2488,7 +2488,7 @@ msgstr "Los argumentos expresan posturas o preferencias y no se verifican los he
 msgid "Arranged with dembrane"
 msgstr "Acordado con dembrane"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:82
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 msgid "Ask"
 msgstr "Preguntar"
 
@@ -2896,13 +2896,13 @@ msgstr "Antes de terminar"
 #: src/routes/project/popcorn/PopcornRoute.tsx:111
 #: src/routes/project/library/LibraryRoute.tsx:98
 #: src/routes/project/chat/NewChatRoute.tsx:710
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:110
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:132
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:144
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:115
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:124
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:146
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:158
 #: src/components/report/UpdateReportModalButton.tsx:200
 #: src/components/report/CreateReportForm.tsx:241
-#: src/components/project/ProjectExperimentalSection.tsx:50
+#: src/components/project/ProjectExperimentalSection.tsx:56
 #: src/components/map/MapPage.tsx:680
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
@@ -3016,7 +3016,6 @@ msgstr "Desglose · {0} activos"
 msgid "Breakdown by tier"
 msgstr "Desglose por plan"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:158
 #: src/components/chat/CanvasSuggestionCard.tsx:99
 msgid "Brief"
 msgstr "Resumen"
@@ -4217,7 +4216,7 @@ msgstr "Conversación transcrita"
 msgid "conversations"
 msgstr "conversaciones"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:90
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:97
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
@@ -8233,7 +8232,7 @@ msgid "library"
 msgstr "biblioteca"
 
 #: src/routes/project/library/LibraryRoute.tsx:148
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:120
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:134
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -8706,7 +8705,7 @@ msgid "Make private"
 msgstr "Hacer privado"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:23
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:170
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:172
 #: src/components/training/StaffTrainingPanel.tsx:175
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
@@ -8778,7 +8777,7 @@ msgstr "Se acaban de iniciar muchos mapas. Inténtalo de nuevo en un momento."
 #~ msgstr "Muchas mesas o grupos hablando a la vez, cada uno con un teléfono."
 
 #: src/routes/project/present/blockLabel.ts:6
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:141
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:155
 #: src/components/map/MapPage.tsx:677
 #: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Map"
@@ -9047,7 +9046,7 @@ msgid "Moments where the group's view changed."
 msgstr "Momentos en los que cambió la visión del grupo."
 
 #: src/routes/project/ProjectMonitorRoute.tsx:83
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:99
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:113
 msgid "Monitor"
 msgstr "Monitorizar"
 
@@ -11382,7 +11381,7 @@ msgstr "Mala respuesta"
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:95
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:406
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:130
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:144
 #: src/components/results/ResultsList.tsx:44
 #: src/components/results/curate/CurateTabs.tsx:11
 #: src/components/popcorn/PopcornStart.tsx:55
@@ -11462,7 +11461,7 @@ msgid "portal editor"
 msgstr "editor del portal"
 
 #: src/features/sidebar/views/project/ProjectPortalView.tsx:34
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:163
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:104
 #: src/components/project/PortalSettingsOverview.tsx:161
 msgid "Portal editor"
 msgstr "Editor del portal"
@@ -11570,7 +11569,7 @@ msgstr "Preparando tu experiencia"
 #: src/routes/project/present/PresentRoute.tsx:658
 #: src/routes/project/present/PresentRoute.tsx:733
 #: src/routes/project/present/PresentRoute.tsx:994
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:107
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:121
 #: src/components/sharing/PresentButton.tsx:66
 msgid "Present"
 msgstr "Presentar"
@@ -11732,6 +11731,10 @@ msgstr "Acciones del proyecto"
 #: src/components/release/PilotHistory.tsx:29
 msgid "Project and conversation search, with branded QR codes."
 msgstr "Búsqueda de proyectos y conversaciones, con códigos QR personalizados."
+
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:83
+msgid "Project brief"
+msgstr "Resumen del proyecto"
 
 #: src/components/release/releaseHistory.ts:334
 msgid "Project cards show the project's language."
@@ -12209,7 +12212,7 @@ msgid "Reconnecting"
 msgstr "Reconectando"
 
 #. js-lingui-explicit-id
-#: src/portal/preview/PreviewScreens.tsx:92
+#: src/portal/preview/PreviewScreens.tsx:103
 #: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:748
 msgid "participant.button.record"
 msgstr "Grabar"
@@ -12624,7 +12627,7 @@ msgstr "informe"
 
 #: src/routes/project/ProjectHomeRoute.tsx:115
 #: src/routes/project/report/ProjectReportRoute.tsx:174
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:148
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:162
 #: src/components/report/ReportRenderer.tsx:65
 msgid "Report"
 msgstr "Informe"
@@ -15090,7 +15093,7 @@ msgstr "Cambiar a autoservicio"
 msgid "Switch to self-serve billing"
 msgstr "Cambiar a facturación de autoservicio"
 
-#: src/portal/preview/PreviewScreens.tsx:94
+#: src/portal/preview/PreviewScreens.tsx:105
 #: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:755
 msgid "Switch to text"
 msgstr "Cambiar a texto"

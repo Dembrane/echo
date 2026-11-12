@@ -11,9 +11,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SaveStatus } from "@/components/form/SaveStatus";
-import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { useProjectLegalQuery } from "@/components/project/ProjectLegalBasisSection";
 import { ENABLE_PARTICIPANT_EMAIL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -23,7 +22,6 @@ import type { PreviewScreen } from "@/lib/portalPreview/protocol";
 import { testId } from "@/lib/testUtils";
 import { OptionStepper, type StepVia } from "../OptionStepper/OptionStepper";
 import type { SectionKey } from "../portalForm";
-import { AnonymiseExample } from "../preview/AnonymiseExample";
 import { buildPreviewMessage } from "../preview/buildPreviewMessage";
 import { PortalPreviewFrame } from "../preview/PortalPreviewFrame";
 import { sectionDescription, sectionTitle } from "../sectionLabels";
@@ -67,9 +65,10 @@ interface PortalSectionEditorProps {
 }
 
 /**
- * One page of the portal editor (ECHO-1060): its options one at a time on the left, the
- * participant screen they change on the right (under the options on a phone, behind a
- * "Preview" button). The open option is in the address, so a reload opens it again.
+ * One page of the portal editor (ECHO-1060): its title and options one at a time on the
+ * left, the participant screen they change on the right, level with the title and kept in
+ * view while the options scroll (ECHO-1062); under the options on a phone, behind a
+ * "Preview" button. The open option is in the address, so a reload opens it again.
  */
 export const PortalSectionEditor = ({
 	project,
@@ -139,15 +138,23 @@ export const PortalSectionEditor = ({
 
 	const after = nextSection(section);
 
-	// The screen follows the open option until the host picks another one.
+	// The screen follows the open option until the host picks another one. Each time the
+	// host opens an option, edits one, picks a screen or tries a setting, the phone goes back
+	// to that screen, even after clicking onward inside it (ECHO-1062): "reset" counts those
+	// moments, and the portal starts the screen again on a new one.
 	const [pickedScreen, setPickedScreen] = useState<PreviewScreen | null>(null);
-	const lastOption = useRef(open?.key);
-	useEffect(() => {
-		if (lastOption.current !== open?.key) {
-			lastOption.current = open?.key;
-			setPickedScreen(null);
-		}
-	}, [open?.key]);
+	const [reset, setReset] = useState(0);
+	const showScreen = useCallback((s: PreviewScreen | null) => {
+		setPickedScreen(s);
+		setReset((v) => v + 1);
+	}, []);
+	// An edit is a change in what the page holds: a save that keeps the values is not one.
+	const edited = useMemo(
+		() => JSON.stringify([page.values, tags]),
+		[page.values, tags],
+	);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the open option and an edit are the moments, not their values
+	useEffect(() => showScreen(null), [open?.key, edited, showScreen]);
 	const screen = pickedScreen ?? open?.screen ?? SECTIONS[section].screens[0];
 	const screens = useMemo(() => {
 		const list = [...SECTIONS[section].screens];
@@ -196,8 +203,8 @@ export const PortalSectionEditor = ({
 	// A new result is shown on the screen it belongs to.
 	useEffect(() => {
 		if (tried)
-			setPickedScreen(tried.kind === "explore" ? "explore" : "verify-summary");
-	}, [tried]);
+			showScreen(tried.kind === "explore" ? "explore" : "verify-summary");
+	}, [tried, showScreen]);
 
 	const legal = useProjectLegalQuery(project.id);
 	const message = useMemo(
@@ -212,16 +219,36 @@ export const PortalSectionEditor = ({
 								legal.data._legal.effective?.privacy_policy_url,
 						}
 					: null,
-				result: tried ? previewResultOf(tried) : null,
+				reset,
 				screen,
 				tags: tags.map((tag) => ({
 					id: tag.id,
 					text: tag.text ?? "",
 				})),
 				topics: verificationTopics,
-				values: page.values,
+				tried: tried
+					? { kind: tried.kind, result: previewResultOf(tried) }
+					: null,
+				// Only the Verify page holds the chosen topics; the others show the saved ones.
+				values:
+					section === "verify"
+						? page.values
+						: {
+								...page.values,
+								verification_topics: verificationTopics?.selected_topics ?? [],
+							},
 			}),
-		[page.values, legal.data, screen, open, tags, verificationTopics, tried],
+		[
+			section,
+			page.values,
+			legal.data,
+			screen,
+			open,
+			tags,
+			verificationTopics,
+			tried,
+			reset,
+		],
 	);
 
 	const frame = (
@@ -230,7 +257,7 @@ export const PortalSectionEditor = ({
 			message={message}
 			screens={screens}
 			onScreen={(s) => {
-				setPickedScreen(s);
+				showScreen(s);
 				track("portal_editor_preview_used", {
 					action: "screen_changed",
 					project_id: project.id,
@@ -254,60 +281,62 @@ export const PortalSectionEditor = ({
 					/>
 				) : undefined
 			}
-			aside={
-				section === "privacy" && open?.key === "anonymise" ? (
-					<AnonymiseExample />
-				) : undefined
-			}
 		/>
 	);
 
 	return (
-		<Stack gap="xl" {...testId(`portal-editor-page-${section}`)}>
-			<Group justify="space-between" align="start" wrap="wrap" gap="sm">
-				<Stack gap="xs">
-					<Group gap="sm">
-						<Title order={2}>{sectionTitle(section)}</Title>
-						{!readOnly && (
-							<SaveStatus
-								formErrors={page.form.formState.errors}
-								savedAt={page.autoSave.lastSavedAt}
-								isPendingSave={page.autoSave.isPendingSave}
-								isSaving={page.autoSave.isSaving}
-								isError={page.autoSave.isError}
-							/>
-						)}
-					</Group>
-					<Text size="sm">{sectionDescription(section)}</Text>
+		<>
+			<div
+				className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(420px,1fr)_auto] lg:items-start"
+				{...testId(`portal-editor-page-${section}`)}
+			>
+				<Stack gap="xl" className="min-w-0 max-w-[720px]">
+					<Stack gap="xs">
+						<Group gap="sm">
+							<Title order={2}>{sectionTitle(section)}</Title>
+							{!readOnly && (
+								<SaveStatus
+									formErrors={page.form.formState.errors}
+									savedAt={page.autoSave.lastSavedAt}
+									isPendingSave={page.autoSave.isPendingSave}
+									isSaving={page.autoSave.isSaving}
+									isError={page.autoSave.isError}
+								/>
+							)}
+						</Group>
+						<Text size="sm">{sectionDescription(section)}</Text>
+					</Stack>
+					{/* Read-only: the fieldset disables native controls, inert blocks the custom ones. */}
+					<fieldset
+						disabled={readOnly}
+						inert={readOnly}
+						className="m-0 min-w-0 border-0 p-0"
+						{...testId("portal-editor-form")}
+					>
+						<OptionStepper
+							options={defs.map((def) => ({
+								beta: content.options[def.key]?.beta,
+								body: content.options[def.key]?.body,
+								key: def.key,
+								summary: content.options[def.key]?.summary,
+								title: content.options[def.key]?.title ?? def.key,
+							}))}
+							openKey={open?.key ?? null}
+							onOpen={onOpen}
+							nextLabel={after ? t`Next: ${sectionTitle(after)}` : undefined}
+							onNextPage={
+								after ? () => navigate(`${base}/${after}`) : undefined
+							}
+						/>
+					</fieldset>
 				</Stack>
-				<ProjectHostGuideLink projectId={project.id} />
-			</Group>
-
-			<div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(420px,1fr)_auto] lg:items-start">
-				{/* Read-only: the fieldset disables native controls, inert blocks the custom ones. */}
-				<fieldset
-					disabled={readOnly}
-					inert={readOnly}
-					className="m-0 min-w-0 max-w-[720px] border-0 p-0"
-					{...testId("portal-editor-form")}
-				>
-					<OptionStepper
-						options={defs.map((def) => ({
-							body: content.options[def.key]?.body,
-							key: def.key,
-							summary: content.options[def.key]?.summary,
-							title: content.options[def.key]?.title ?? def.key,
-						}))}
-						openKey={open?.key ?? null}
-						onOpen={onOpen}
-						nextLabel={after ? t`Next: ${sectionTitle(after)}` : undefined}
-						onNextPage={after ? () => navigate(`${base}/${after}`) : undefined}
-					/>
-				</fieldset>
 
 				{wide ? (
 					<Box
-						className="lg:sticky lg:top-4"
+						className="sticky top-5 flex flex-col"
+						// The view under the 57px breadcrumb bar, less the sticky gap above and
+						// below: the whole phone stays in sight while the options scroll.
+						mah="calc(100dvh - 57px - 2 * var(--mantine-spacing-lg))"
 						{...testId("portal-preview-side")}
 					>
 						{frame}
@@ -343,6 +372,6 @@ export const PortalSectionEditor = ({
 				)}
 			</div>
 			{content.extra}
-		</Stack>
+		</>
 	);
 };

@@ -1,8 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { Divider, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Box, Divider, Stack, Text, Title } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
+import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -18,12 +19,13 @@ import { testId } from "@/lib/testUtils";
 import { ProjectKeyTermsSection } from "./ProjectKeyTermsSection";
 
 /**
- * Brief (ECHO-1060): what the project is about, on one calm page. Name and context, goal,
- * key terms, the analysis methodology and memory, each section saving itself as it did on
- * the old General page and in the portal editor.
+ * Project brief (ECHO-1060): what the project is about, on one calm page. Name and context,
+ * goal, key terms, the analysis methodology and memory, each section saving itself as it
+ * did on the old General page and in the portal editor. A line under the title leads to the
+ * portal editor's Privacy page (ECHO-1062).
  */
 export const ProjectBriefRoute = () => {
-	const { projectId } = useParams();
+	const { workspaceId, projectId } = useParams();
 	const ready = useSettingsCatalog();
 	const query = useMemo(
 		() => ({
@@ -55,11 +57,23 @@ export const ProjectBriefRoute = () => {
 			<SettingsSectionLevel.Provider value="card">
 				<Stack gap="xl" {...testId("project-brief")}>
 					<Stack gap="xs" px={{ base: "md", md: "lg" }}>
-						<Title order={2}>{ready ? t`Brief` : null}</Title>
+						<Title order={2}>{ready ? t`Project brief` : null}</Title>
 						{ready && (
 							<Text size="sm">
 								{t`What this project is about. dembrane reads it for transcripts, summaries, chats and reports.`}
 							</Text>
+						)}
+						{ready && workspaceId && projectId && (
+							<Box>
+								<Anchor
+									component={I18nLink}
+									to={`/w/${workspaceId}/projects/${projectId}/portal/privacy`}
+									size="sm"
+									{...testId("project-brief-privacy-link")}
+								>
+									{t`Change the privacy settings in the portal editor`}
+								</Anchor>
+							</Box>
 						)}
 					</Stack>
 					{(projectQuery.isLoading || !ready) && <BeautifulLoading />}

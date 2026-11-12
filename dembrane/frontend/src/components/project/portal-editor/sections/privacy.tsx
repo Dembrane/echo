@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Group, Stack, Switch, Text } from "@mantine/core";
+import { Stack, Switch, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Controller } from "react-hook-form";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -12,6 +12,7 @@ import {
 import { LEGAL_BASIS_LABELS } from "@/components/settings/LegalBasisCard";
 import { testId } from "@/lib/testUtils";
 import type { PortalFormValues } from "../portalForm";
+import { AnonymiseExample } from "./AnonymiseExample";
 import { onOff, type SectionContent, type SectionProps } from "./types";
 
 /** Privacy: the legal basis (saved on its own, as before) and anonymised transcripts. */
@@ -53,13 +54,9 @@ export const usePrivacyOptions = ({
 		),
 		options: {
 			anonymise: {
+				beta: true,
 				body: (
 					<Stack gap="md">
-						<Group gap="xs">
-							<Badge color="mauve" c="graphite" size="sm">
-								<Trans>Beta</Trans>
-							</Badge>
-						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
 								When enabled, all new transcripts will have personal information
@@ -93,6 +90,7 @@ export const usePrivacyOptions = ({
 								/>
 							)}
 						/>
+						<AnonymiseExample />
 					</Stack>
 				),
 				summary: onOff(page.values.anonymize_transcripts, t`On`, t`Off`),

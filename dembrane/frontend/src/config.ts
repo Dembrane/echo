@@ -115,17 +115,27 @@ export const USE_PARTICIPANT_ROUTER = RUNTIME
 		);
 
 /**
+ * The name of the dashboard's portal preview frame (ECHO-1062). The portal starts its
+ * preview mode for any page loaded under this name inside a frame, so a page the frame were
+ * sent to stays locked down. index.html names it too, to skip Tally's embed there.
+ */
+export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
+
+/**
  * The portal drawn inside the dashboard's portal editor (ECHO-1060): the portal's own
  * …/:projectId/preview address, inside a frame. Opened any other way it is not a preview
- * (the participant router sends that address to the start screen).
+ * (the participant router sends that address to the start screen). Any page loaded in the
+ * dashboard's preview frame (it carries PREVIEW_FRAME_NAME) is the preview too, so the
+ * frame can never become a live portal (ECHO-1062).
  */
 export const IS_PORTAL_PREVIEW =
 	USE_PARTICIPANT_ROUTER &&
 	typeof window !== "undefined" &&
 	window.self !== window.top &&
-	/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
-		window.location.pathname,
-	);
+	(window.name === PREVIEW_FRAME_NAME ||
+		/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
+			window.location.pathname,
+		));
 
 export const ADMIN_BASE_URL =
 	RUNTIME?.dashboardUrl ??

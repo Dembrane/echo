@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Anchor,
-	Badge,
 	Box,
 	Button,
 	Checkbox,
@@ -82,7 +81,7 @@ export const useTopicRows = (
 
 /**
  * Verify: on or off, which topics participants can choose, the host's own topics,
- * the reminder at finish, and the key terms the drafts spell by (read here, set in Brief).
+ * the reminder at finish, and the key terms the drafts spell by (read here, set in the project brief).
  */
 export const useVerifyOptions = ({
 	project,
@@ -340,13 +339,9 @@ export const useVerifyOptions = ({
 				title: t`Your own topics`,
 			},
 			enabled: {
+				beta: true,
 				body: (
 					<Stack gap="md">
-						<Group gap="xs">
-							<Badge color="mauve" c="graphite" size="sm">
-								<Trans id="dashboard.dembrane.verify.beta">Beta</Trans>
-							</Badge>
-						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans id="dashboard.dembrane.feature.verify.description">
 								Enable this feature to allow participants to verify and approve
@@ -401,7 +396,7 @@ export const useVerifyOptions = ({
 								size="sm"
 								{...testId("portal-editor-verify-key-terms-link")}
 							>
-								<Trans>Change the key terms in Brief</Trans>
+								<Trans>Change the key terms in the project brief</Trans>
 							</Anchor>
 						</Box>
 					</Stack>

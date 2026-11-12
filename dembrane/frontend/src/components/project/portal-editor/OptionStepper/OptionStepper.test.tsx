@@ -153,4 +153,41 @@ describe("OptionStepper", () => {
 			.querySelector("label p");
 		expect(shown?.textContent).toBe("Enable it");
 	});
+
+	// ECHO-1062: the owner's walkthrough of the rows.
+	it("puts Beta beside the option's name, closed or open", () => {
+		const beta = options.map((o) =>
+			o.key === "text" ? { ...o, beta: true } : o,
+		);
+		renderStepper("text", { options: beta });
+		const row = screen.getByTestId("portal-option-text-row");
+		expect(row.contains(screen.getByTestId("portal-option-text-beta"))).toBe(
+			true,
+		);
+		expect(screen.queryByTestId("portal-option-title-beta")).toBeNull();
+		cleanup();
+		renderStepper("title", { options: beta });
+		expect(
+			screen
+				.getByTestId("portal-option-text-row")
+				.contains(screen.getByTestId("portal-option-text-beta")),
+		).toBe(true);
+	});
+
+	it("draws the open option as one box: no box on its row, none between row and field", () => {
+		renderStepper("text");
+		const open = screen.getByTestId("portal-option-text");
+		expect(open.getAttribute("data-open")).toBe("true");
+		expect(open.style.border).not.toBe("");
+		const openRow = screen.getByTestId("portal-option-text-row");
+		expect(openRow.classList.contains("app-do")).toBe(false);
+		// Closed rows are the boxes you press, and draw no box around them.
+		const closed = screen.getByTestId("portal-option-title");
+		expect(closed.style.border).toBe("");
+		expect(
+			screen
+				.getByTestId("portal-option-title-row")
+				.classList.contains("app-do"),
+		).toBe(true);
+	});
 });
