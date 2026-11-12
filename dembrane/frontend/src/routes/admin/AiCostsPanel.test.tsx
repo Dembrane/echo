@@ -46,15 +46,35 @@ const VIEW: AiCostView = {
 				{
 					calls: 4,
 					cost_micro_eur: 600_000,
+					group: "chat",
+					group_label: "Chat",
+					label: "Replies",
 					operation: "POST /api/chats/:chat_id",
 				},
-				{ calls: 9, cost_micro_eur: 500_000, operation: "conversations.chunk" },
+				{
+					calls: 9,
+					cost_micro_eur: 500_000,
+					group: "recording",
+					group_label: "Recording",
+					label: "Transcription",
+					operation: "conversations.chunk",
+				},
 				{
 					calls: 6,
 					cost_micro_eur: 400_000,
+					group: "chat",
+					group_label: "Chat",
+					label: "Suggestions",
 					operation: "GET /api/chats/:chat_id/suggestions",
 				},
-				{ calls: 1, cost_micro_eur: 3_500, operation: "nightly.mystery" },
+				{
+					calls: 1,
+					cost_micro_eur: 3_500,
+					group: "other",
+					group_label: "Other",
+					label: "nightly.mystery",
+					operation: "nightly.mystery",
+				},
 			],
 			by_model: [
 				{
@@ -77,7 +97,14 @@ const VIEW: AiCostView = {
 		account("paid-acc", {
 			budget_micro_eur: null,
 			by_feature: [
-				{ calls: 2, cost_micro_eur: 2_000_000, operation: "reports.generate" },
+				{
+					calls: 2,
+					cost_micro_eur: 2_000_000,
+					group: "reports",
+					group_label: "Reports",
+					label: "Report generation",
+					operation: "reports.generate",
+				},
 			],
 			cost_micro_eur: 2_000_000,
 			name: "Paid Co",
