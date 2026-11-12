@@ -137,6 +137,8 @@ run("obs views", () => {
       "day_assistant",
       "minute_model_calls",
       "day_ai_spend",
+      "ai_spend",
+      "ai_call_quality",
     ])
       expect(Array.isArray(await db.client.unsafe(`select * from obs.${view} limit 1`))).toBe(true);
     const [live] = await db.client.unsafe("select * from obs.live_now");
@@ -181,6 +183,8 @@ run("obs views", () => {
       expect(counted[0]?.n).toBe(2);
       expect(await outcome("select one from obs.later_view")).toBe("allowed");
       expect(await outcome("select * from obs.day_ai_spend")).toBe("allowed");
+      expect(await outcome("select * from obs.ai_spend")).toBe("allowed");
+      expect(await outcome("select * from obs.ai_call_quality")).toBe("allowed");
       expect(await outcome("select * from public.ai_spend_daily")).toMatch(/permission denied/);
       expect(await outcome("select * from public.model_call")).toMatch(/permission denied/);
       expect(await outcome("select * from public.conversation")).toMatch(/permission denied/);
