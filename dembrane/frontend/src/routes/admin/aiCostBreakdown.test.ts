@@ -1,10 +1,12 @@
 import { i18n } from "@lingui/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	exactAiCost,
 	formatAiCost,
 	formatShare,
 	groupFeatures,
 	providerName,
+	sharePercents,
 } from "./aiCostBreakdown";
 
 beforeAll(() => {
@@ -13,39 +15,51 @@ beforeAll(() => {
 });
 
 describe("formatAiCost", () => {
-	it("shows two decimals from one euro up", () => {
-		expect(formatAiCost(1_000_000)).toBe("€1.00");
-		expect(formatAiCost(5_000_000)).toBe("€5.00");
-		expect(formatAiCost(1_234_567_890)).toBe("€1,234.57");
+	it("shows four decimals, cut off and never rounded up", () => {
+		expect(formatAiCost(1_000_000)).toBe("€1.0000");
+		expect(formatAiCost(1_234_567_890)).toBe("€1,234.5678");
+		expect(formatAiCost(679_238)).toBe("€0.6792");
+		expect(formatAiCost(679_299)).toBe("€0.6792");
+		expect(formatAiCost(1_199)).toBe("€0.0011");
+		expect(formatAiCost(100)).toBe("€0.0001");
+		expect(formatAiCost(0)).toBe("€0.0000");
 	});
 
 	it("never shows a non-zero cost as zero", () => {
-		expect(formatAiCost(350_000)).toBe("€0.35");
-		expect(formatAiCost(500_000)).toBe("€0.50");
-		expect(formatAiCost(70_000)).toBe("€0.07");
-		expect(formatAiCost(4_000)).toBe("€0.004");
-		expect(formatAiCost(35_000)).toBe("€0.035");
-		expect(formatAiCost(3_500)).toBe("€0.0035");
-		expect(formatAiCost(1_129)).toBe("€0.0011");
-		expect(formatAiCost(100)).toBe("€0.0001");
-	});
-
-	it("calls dust below a hundredth of a cent dust", () => {
 		expect(formatAiCost(99)).toBe("< €0.0001");
 		expect(formatAiCost(1)).toBe("< €0.0001");
 	});
 
-	it("shows nothing spent as zero", () => {
-		expect(formatAiCost(0)).toBe("€0.00");
+	it("shows the stored micro-euros in full for the hover", () => {
+		expect(exactAiCost(679_299)).toBe("€0.679299");
+		expect(exactAiCost(1)).toBe("€0.000001");
+	});
+});
+
+describe("sharePercents", () => {
+	it("adds to 100 where plain rounding gave 101", () => {
+		// The staging account: 72 + 15 + 5 + 5 + 4 = 101 when each is rounded alone.
+		const costs = [489_238, 100_000, 32_000, 32_000, 26_000];
+		expect(costs.map((c) => Math.round((c * 100) / 679_238))).toEqual([
+			72, 15, 5, 5, 4,
+		]);
+		const percents = sharePercents(costs);
+		expect(percents.reduce((s, p) => s + p, 0)).toBe(100);
+		expect(percents).toEqual([72, 15, 5, 4, 4]);
+	});
+
+	it("is all zeros when nothing was spent", () => {
+		expect(sharePercents([0, 0])).toEqual([0, 0]);
+		expect(sharePercents([])).toEqual([]);
 	});
 });
 
 describe("formatShare", () => {
-	it("rounds, and never hides a small share as 0%", () => {
-		expect(formatShare(0.5)).toBe("50%");
-		expect(formatShare(1)).toBe("100%");
-		expect(formatShare(0.004)).toBe("<1%");
-		expect(formatShare(0)).toBe("0%");
+	it("never hides a non-zero cost as 0%", () => {
+		expect(formatShare(50, 10)).toBe("50%");
+		expect(formatShare(100, 10)).toBe("100%");
+		expect(formatShare(0, 10)).toBe("<1%");
+		expect(formatShare(0, 0)).toBe("0%");
 	});
 });
 
@@ -98,6 +112,11 @@ describe("groupFeatures", () => {
 			["POST /api/chats/:chat_id", "Replies"],
 		]);
 		expect(groups[1]?.operations[0]?.share).toBeCloseTo(0.25);
+		expect(groups.map((g) => g.percent)).toEqual([65, 35]);
+		// Operations add to 100 across the whole account.
+		expect(groups.flatMap((g) => g.operations.map((o) => o.percent))).toEqual([
+			60, 5, 25, 10,
+		]);
 	});
 
 	it("shows the names the API sent, without classifying", () => {
@@ -139,9 +158,11 @@ describe("groupFeatures", () => {
 						cost_micro_eur: 0,
 						label: "Unlabelled",
 						operation: "",
+						percent: 0,
 						share: 0,
 					},
 				],
+				percent: 0,
 				share: 0,
 			},
 		]);

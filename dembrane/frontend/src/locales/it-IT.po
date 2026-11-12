@@ -631,15 +631,15 @@ msgstr "Aggiunti: {addedCount}. Controlla la lista sotto."
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} persone erano già state invitate. Il progetto viene condiviso quando entrano."
 
-#: src/routes/admin/AiCostsPanel.tsx:65
+#: src/routes/admin/AiCostsPanel.tsx:77
 msgid "{amount} custom"
 msgstr "{amount} personalizzato"
 
-#: src/routes/admin/AiCostsPanel.tsx:64
+#: src/routes/admin/AiCostsPanel.tsx:76
 msgid "{amount} default"
 msgstr "{amount} predefinito"
 
-#: src/routes/admin/AiCostsPanel.tsx:65
+#: src/routes/admin/AiCostsPanel.tsx:77
 msgid "{amount} until {until}"
 msgstr "{amount} fino al {until}"
 
@@ -655,7 +655,7 @@ msgstr "{argumentCount, plural, one {# argomento} other {# argomenti}} da {conve
 msgid "{browser} on {platform}"
 msgstr "{browser} su {platform}"
 
-#: src/routes/admin/AiCostsPanel.tsx:124
+#: src/routes/admin/AiCostsPanel.tsx:154
 msgid "{calls, plural, one {# call} other {# calls}}"
 msgstr "{calls, plural, one {# chiamata} other {# chiamate}}"
 
@@ -717,6 +717,10 @@ msgstr "{count} di {max} termini chiave. Un progetto non ne contiene di più: ri
 #: src/routes/project/HostGuidePage.tsx:975
 msgid "{count} on record"
 msgstr "Registrate: {count}"
+
+#: src/routes/admin/AiCostsPanel.tsx:120
+msgid "{counted} counted"
+msgstr "{counted} conteggiati"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:107
 msgid "{currentCadence} min"
@@ -943,7 +947,7 @@ msgstr "{sentCount} inviti inviati."
 msgid "{settings, plural, one {# setting suggested.} other {# settings suggested.}}"
 msgstr "{settings, plural, one {# impostazione suggerita.} other {# impostazioni suggerite.}}"
 
-#: src/routes/admin/AiCostsPanel.tsx:635
+#: src/routes/admin/AiCostsPanel.tsx:708
 msgid "{share} of the total"
 msgstr "{share} del totale"
 
@@ -959,11 +963,11 @@ msgstr "{tag} (preselezionato)"
 msgid "{terms, plural, one {# key term suggested.} other {# key terms suggested.}}"
 msgstr "{terms, plural, one {# termine chiave suggerito.} other {# termini chiave suggeriti.}}"
 
-#: src/routes/admin/AiCostsPanel.tsx:54
+#: src/routes/admin/AiCostsPanel.tsx:66
 msgid "{tier}, organisation account"
 msgstr "{tier}, account dell'organizzazione"
 
-#: src/routes/admin/AiCostsPanel.tsx:55
+#: src/routes/admin/AiCostsPanel.tsx:67
 msgid "{tier}, workspace account"
 msgstr "{tier}, account dello spazio di lavoro"
 
@@ -1369,7 +1373,7 @@ msgstr "Richiesta di accesso revocata"
 msgid "Access requests"
 msgstr "Richieste di accesso"
 
-#: src/routes/admin/AiCostsPanel.tsx:669
+#: src/routes/admin/AiCostsPanel.tsx:742
 #: src/routes/admin/AdminSettingsRoute.tsx:482
 #: src/routes/admin/AdminSettingsRoute.tsx:1361
 #: src/routes/admin/AdminSettingsRoute.tsx:1573
@@ -1417,7 +1421,7 @@ msgstr "Account impostato sulla fatturazione gestita."
 msgid "Account set to managed."
 msgstr "Account impostato su gestito."
 
-#: src/routes/admin/AiCostsPanel.tsx:612
+#: src/routes/admin/AiCostsPanel.tsx:686
 msgid "Accounts and providers"
 msgstr "Account e provider"
 
@@ -1425,7 +1429,7 @@ msgstr "Account e provider"
 msgid "Accounts billed"
 msgstr "Account fatturati"
 
-#: src/routes/admin/AiCostsPanel.tsx:614
+#: src/routes/admin/AiCostsPanel.tsx:688
 msgid "Accounts with AI calls"
 msgstr "Account con chiamate AI"
 
@@ -1894,7 +1898,7 @@ msgstr "Budget IA salvato"
 msgid "AI budget used up"
 msgstr "Budget IA esaurito"
 
-#: src/routes/admin/AiCostsPanel.tsx:537
+#: src/routes/admin/AiCostsPanel.tsx:607
 msgid "AI costs"
 msgstr "Costi IA"
 
@@ -3001,7 +3005,7 @@ msgstr "Fatturato con il piano della tua organizzazione, insieme agli altri tuoi
 msgid "Billing"
 msgstr "Fatturazione"
 
-#: src/routes/admin/AiCostsPanel.tsx:616
+#: src/routes/admin/AiCostsPanel.tsx:690
 msgid "Billing accounts that made AI calls"
 msgstr "Account di fatturazione con chiamate IA"
 
@@ -3068,7 +3072,7 @@ msgstr "Brief"
 msgid "Bring your own LLM"
 msgstr "Usa il tuo LLM"
 
-#: src/routes/admin/AiCostsPanel.tsx:675
+#: src/routes/admin/AiCostsPanel.tsx:748
 msgid "Budget"
 msgstr "Budget"
 
@@ -3084,7 +3088,7 @@ msgstr "Build custom dashboards with real-time conversation data"
 msgid "by {by}"
 msgstr "da {by}"
 
-#: src/routes/admin/AiCostsPanel.tsx:644
+#: src/routes/admin/AiCostsPanel.tsx:717
 msgid "By account"
 msgstr "Per account"
 
@@ -3095,11 +3099,11 @@ msgstr "By deleting this project, you will delete all the data associated with i
 #~ msgid "By feature"
 #~ msgstr "Per funzionalità"
 
-#: src/routes/admin/AiCostsPanel.tsx:187
+#: src/routes/admin/AiCostsPanel.tsx:239
 msgid "By feature group"
 msgstr "Per gruppo di funzionalità"
 
-#: src/routes/admin/AiCostsPanel.tsx:195
+#: src/routes/admin/AiCostsPanel.tsx:247
 msgid "By model"
 msgstr "Per modello"
 
@@ -3116,7 +3120,7 @@ msgstr "Per tag"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:602
+#: src/routes/admin/AiCostsPanel.tsx:675
 msgid "Calls no account could be matched to"
 msgstr "Chiamate non associate ad alcun account"
 
@@ -3434,7 +3438,7 @@ msgstr "Distanza di carica (frazione di viewport): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Distanza di carica (frazione di viewport): {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:588
+#: src/routes/admin/AiCostsPanel.tsx:659
 msgid "Charged to accounts"
 msgstr "Addebitato agli account"
 
@@ -4394,7 +4398,7 @@ msgstr "Copia URL"
 msgid "Copying…"
 msgstr "Copia in corso…"
 
-#: src/routes/admin/AiCostsPanel.tsx:672
+#: src/routes/admin/AiCostsPanel.tsx:745
 msgid "Cost"
 msgstr "Costo"
 
@@ -4458,7 +4462,7 @@ msgstr "Impossibile caricare le metodologie."
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Impossibile caricare i pagamenti. Controlla l'autenticazione e i log del backend."
 
-#: src/routes/admin/AiCostsPanel.tsx:562
+#: src/routes/admin/AiCostsPanel.tsx:632
 msgid "Could not load the AI costs."
 msgstr "Impossibile caricare i costi dell'IA."
 
@@ -5135,7 +5139,7 @@ msgstr "Elimina spazio di lavoro"
 msgid "Delete…"
 msgstr "Elimina…"
 
-#: src/routes/admin/AiCostsPanel.tsx:344
+#: src/routes/admin/AiCostsPanel.tsx:407
 msgid "Deleted"
 msgstr "Eliminato"
 
@@ -5235,7 +5239,7 @@ msgstr "dembrane v3"
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot era il nostro progetto precedente. Grazie agli organizzatori, ai partecipanti e a chi ha contribuito a costruirlo."
 
-#: src/routes/admin/AiCostsPanel.tsx:608
+#: src/routes/admin/AiCostsPanel.tsx:682
 msgid "Demos, voice outside projects, dev tools"
 msgstr "Demo, voce fuori dai progetti, strumenti di sviluppo"
 
@@ -6080,7 +6084,7 @@ msgstr "Ogni 60 minuti"
 #~ msgid "Every AI call on every tier, priced in euros. Free accounts show their budget."
 #~ msgstr "Ogni chiamata IA su ogni piano, calcolata in euro. Gli account Free mostrano il loro budget."
 
-#: src/routes/admin/AiCostsPanel.tsx:540
+#: src/routes/admin/AiCostsPanel.tsx:610
 msgid "Every AI call on every tier, priced in euros. Free accounts show their budget. Click a row for its breakdown."
 msgstr "Tutte le chiamate IA per ogni livello, con prezzi in euro. Gli account Free mostrano il proprio budget. Fai clic su una riga per vedere il dettaglio."
 
@@ -6097,7 +6101,7 @@ msgstr "Tutti gli agenti collegati in {0} smettono subito di funzionare. I membr
 msgid "Every member's connection that names this organisation."
 msgstr "Tutti i collegamenti dei membri associati a questa organizzazione."
 
-#: src/routes/admin/AiCostsPanel.tsx:584
+#: src/routes/admin/AiCostsPanel.tsx:655
 msgid "Every priced AI call, all tiers"
 msgstr "Tutte le chiamate IA tariffate, tutti i livelli"
 
@@ -6831,11 +6835,11 @@ msgstr "Inquadramento"
 #~ msgid "Free"
 #~ msgstr "Free"
 
-#: src/routes/admin/AiCostsPanel.tsx:622
+#: src/routes/admin/AiCostsPanel.tsx:696
 msgid "Free accounts at 100% or more"
 msgstr "Account Free al 100% o più"
 
-#: src/routes/admin/AiCostsPanel.tsx:620
+#: src/routes/admin/AiCostsPanel.tsx:694
 msgid "Free accounts at or over budget"
 msgstr "Account Free al limite o oltre il budget"
 
@@ -7623,7 +7627,7 @@ msgstr "Posta in arrivo"
 #~ msgid "incl. {deleted} from deleted accounts"
 #~ msgstr "inclusi {deleted} da account eliminati"
 
-#: src/routes/admin/AiCostsPanel.tsx:592
+#: src/routes/admin/AiCostsPanel.tsx:664
 msgid "incl. {deleted} from removed accounts"
 msgstr "incl. {deleted} da account rimossi"
 
@@ -7705,7 +7709,7 @@ msgstr "Instructions for generating the verification outcome"
 #~ msgid "Integrations & Export"
 #~ msgstr ""
 
-#: src/routes/admin/AiCostsPanel.tsx:606
+#: src/routes/admin/AiCostsPanel.tsx:679
 msgid "Internal"
 msgstr "Interno"
 
@@ -8238,7 +8242,7 @@ msgstr "Ultimo audio"
 msgid "Last day on this budget"
 msgstr "Ultimo giorno con questo budget"
 
-#: src/routes/admin/AiCostsPanel.tsx:552
+#: src/routes/admin/AiCostsPanel.tsx:622
 #: src/routes/admin/AdminSettingsRoute.tsx:258
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
@@ -9601,15 +9605,15 @@ msgstr "No"
 msgid "No access"
 msgstr "Nessun accesso"
 
-#: src/routes/admin/AiCostsPanel.tsx:594
+#: src/routes/admin/AiCostsPanel.tsx:666
 msgid "No account was charged"
 msgstr "Nessun account è stato addebitato"
 
-#: src/routes/admin/AiCostsPanel.tsx:651
+#: src/routes/admin/AiCostsPanel.tsx:724
 msgid "No account was charged in {month}."
 msgstr "Nessun addebito registrato a {month}."
 
-#: src/routes/admin/AiCostsPanel.tsx:649
+#: src/routes/admin/AiCostsPanel.tsx:722
 msgid "No account was charged this month."
 msgstr "Nessun addebito registrato questo mese."
 
@@ -9633,11 +9637,11 @@ msgstr "Nessuna chiamata all'agente finora."
 msgid "No agents connected yet."
 msgstr "Nessun agente ancora connesso."
 
-#: src/routes/admin/AiCostsPanel.tsx:574
+#: src/routes/admin/AiCostsPanel.tsx:644
 msgid "No AI costs recorded for {month}."
 msgstr "Nessun costo AI registrato per {month}."
 
-#: src/routes/admin/AiCostsPanel.tsx:572
+#: src/routes/admin/AiCostsPanel.tsx:642
 msgid "No AI costs recorded this month."
 msgstr "Nessun costo IA registrato questo mese."
 
@@ -9797,12 +9801,12 @@ msgstr "Nessun obiettivo per ora. Definiscine uno qui o lascia che l'assistente 
 msgid "No invites went out. Check the list below."
 msgstr "Nessun invito inviato. Controlla la lista sotto."
 
-#: src/routes/admin/AiCostsPanel.tsx:61
+#: src/routes/admin/AiCostsPanel.tsx:73
 #: src/routes/admin/AiBudgetEditor.tsx:163
 msgid "No limit"
 msgstr "Nessun limite"
 
-#: src/routes/admin/AiCostsPanel.tsx:61
+#: src/routes/admin/AiCostsPanel.tsx:73
 msgid "No limit until {until}"
 msgstr "Nessun limite fino al {until}"
 
@@ -10058,7 +10062,7 @@ msgstr "Nessuna tensione ancora salvata."
 msgid "No tensions yet. They appear after the first analysis."
 msgstr "Ancora nessuna tensione. Appariranno dopo la prima analisi."
 
-#: src/routes/admin/AiCostsPanel.tsx:49
+#: src/routes/admin/AiCostsPanel.tsx:61
 msgid "No tier"
 msgstr "Nessun livello"
 
@@ -10587,7 +10591,7 @@ msgstr "Open"
 msgid "Open {label}"
 msgstr "Apri {label}"
 
-#: src/routes/admin/AiCostsPanel.tsx:314
+#: src/routes/admin/AiCostsPanel.tsx:377
 #: src/routes/admin/AdminSettingsRoute.tsx:1664
 msgid "Open account actions"
 msgstr "Apri azioni account"
@@ -11028,7 +11032,7 @@ msgstr "Titolo della pagina"
 msgid "Paid"
 msgstr "A pagamento"
 
-#: src/routes/admin/AiCostsPanel.tsx:62
+#: src/routes/admin/AiCostsPanel.tsx:74
 msgid "Paid plan"
 msgstr "Piano a pagamento"
 
@@ -12093,7 +12097,7 @@ msgstr "Ospitato con orgoglio nell'UE"
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Provide an overview of the main topics and recurring themes"
 
-#: src/routes/admin/AiCostsPanel.tsx:633
+#: src/routes/admin/AiCostsPanel.tsx:705
 msgid "Provider: {provider}"
 msgstr "Provider: {provider}"
 
@@ -14425,7 +14429,7 @@ msgstr "Mostra tutte le conversazioni"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/routes/admin/AiCostsPanel.tsx:286
+#: src/routes/admin/AiCostsPanel.tsx:349
 msgid "Show breakdown"
 msgstr "Mostra dettagli"
 
@@ -14874,7 +14878,7 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "La chat Dettagli specifici rispetta la selezione manuale delle conversazioni."
 
-#: src/routes/admin/AiCostsPanel.tsx:580
+#: src/routes/admin/AiCostsPanel.tsx:650
 msgid "Spend"
 msgstr "Spesa"
 
@@ -15504,7 +15508,7 @@ msgstr "Scheda Tensioni"
 msgid "Terms"
 msgstr "Termini"
 
-#: src/routes/admin/aiCostBreakdown.ts:27
+#: src/routes/admin/aiCostBreakdown.ts:40
 msgid "Test"
 msgstr "Test"
 
@@ -15600,7 +15604,7 @@ msgstr "Tutto fatto"
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "La [documentazione di aiuto](https://docs.dembrane.com/) è stata riscritta ed è aggiornata."
 
-#: src/routes/admin/AiCostsPanel.tsx:595
+#: src/routes/admin/AiCostsPanel.tsx:667
 msgid "The account rows below"
 msgstr "Le righe degli account qui sotto"
 
@@ -15635,6 +15639,10 @@ msgstr "L'assistente lo dimenticherà in tutte le chat future."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "L'assistente suggerisce di aggiornare {headlineFields}. Tocca a te decidere."
+
+#: src/routes/admin/AiCostsPanel.tsx:111
+msgid "The budget counted {exact} this period; the cost column covers every call this month."
+msgstr "Il budget ha conteggiato {exact} in questo periodo; la colonna dei costi comprende tutte le chiamate di questo mese."
 
 #~ msgid "The change could not be published."
 #~ msgstr ""
@@ -16368,7 +16376,7 @@ msgstr "Questa mappa contiene {count} argomenti. Mostrarla può richiedere molte
 msgid "This marks the training cancelled. You can reopen it later from the same menu."
 msgstr "Questo contrassegna il training come annullato. Potrai riaprirlo più tardi dallo stesso menu."
 
-#: src/routes/admin/AiCostsPanel.tsx:551
+#: src/routes/admin/AiCostsPanel.tsx:621
 #: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
@@ -16864,8 +16872,8 @@ msgstr "Strumento"
 msgid "Tools"
 msgstr "Strumenti"
 
-#: src/routes/admin/AiCostsPanel.tsx:463
-#: src/routes/admin/AiCostsPanel.tsx:681
+#: src/routes/admin/AiCostsPanel.tsx:530
+#: src/routes/admin/AiCostsPanel.tsx:754
 msgid "Top feature group"
 msgstr "Gruppo di funzionalità principale"
 
@@ -16903,7 +16911,7 @@ msgstr "total"
 msgid "Total"
 msgstr "Totale"
 
-#: src/routes/admin/AiCostsPanel.tsx:582
+#: src/routes/admin/AiCostsPanel.tsx:652
 msgid "Total cost"
 msgstr "Costo totale"
 
@@ -17289,7 +17297,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/routes/admin/AiCostsPanel.tsx:600
+#: src/routes/admin/AiCostsPanel.tsx:672
 msgid "Unattributed"
 msgstr "Non attribuito"
 
@@ -17313,7 +17321,7 @@ msgstr "Undo"
 msgid "Undo withdrawal"
 msgstr "Annulla il ritiro"
 
-#: src/routes/admin/aiCostBreakdown.ts:28
+#: src/routes/admin/aiCostBreakdown.ts:41
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
 #: src/components/project/ProjectListItem.tsx:97
@@ -17777,7 +17785,7 @@ msgstr "Usa l'ucraino per la chat e le risposte dei partecipanti."
 msgid "use your voice in chat"
 msgstr "usare la voce nella chat"
 
-#: src/routes/admin/AiCostsPanel.tsx:678
+#: src/routes/admin/AiCostsPanel.tsx:751
 msgid "Used"
 msgstr "Utilizzato"
 
