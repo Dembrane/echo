@@ -9,6 +9,7 @@ import { PlatformError } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
 import { fakeModels } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
 import { Hono } from "hono";
 import postgres from "postgres";
@@ -73,6 +74,7 @@ run("verify generation against the seed", () => {
         },
       }),
       tokens,
+      limiter: new RateLimiter(new MemoryRateCounter()),
       logger: quiet,
       now: () => new Date("2026-09-27T12:00:00Z"),
     });

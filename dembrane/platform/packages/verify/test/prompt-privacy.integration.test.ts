@@ -8,6 +8,7 @@ import { AudioUrls, ParticipantTokens } from "@dembrane/conversations";
 import { createDb, migrate } from "@dembrane/db";
 import { fakeModels } from "@dembrane/llm";
 import { createLogger, withPayer } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
 import postgres from "postgres";
 import { verifyRoutes } from "../src";
@@ -76,6 +77,7 @@ run("verify prompt privacy", () => {
       ),
       audioUrls: new AudioUrls("http://s3.test", "bucket"),
       tokens: new ParticipantTokens("s".repeat(48), false),
+      limiter: new RateLimiter(new MemoryRateCounter()),
       logger,
       now: () => new Date("2026-11-10T12:00:00Z"),
     };

@@ -97,6 +97,11 @@ export const FEATURE_RULES: readonly FeatureRule[] = [
     group: "portal",
     label: "Explore",
   },
+  {
+    pattern: String.raw`^POST \/api\/v2\/projects\/:project_id\/portal-editor\/try$`,
+    group: "portal",
+    label: "Try it in the portal editor",
+  },
   { pattern: String.raw`^conversations\.chunk$`, group: "recording", label: "Transcription" },
   { pattern: String.raw`^conversations\.finish$`, group: "recording", label: "Finishing" },
   {
