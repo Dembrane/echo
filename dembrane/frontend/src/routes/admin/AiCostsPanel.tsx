@@ -14,6 +14,7 @@ import {
 	Table,
 	Text,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import {
@@ -23,18 +24,29 @@ import {
 } from "@phosphor-icons/react";
 import { Fragment, type ReactNode, useMemo, useState } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import { type AiCostAccount, useAiCosts } from "@/hooks/useAiCosts";
 import {
+	type AiCostAccount,
+	formatMicroEur,
+	useAiCosts,
+} from "@/hooks/useAiCosts";
+import {
+	exactAiCost,
 	formatAiCost,
 	formatShare,
 	type GroupCost,
 	groupFeatures,
 	providerName,
+	sharePercents,
 } from "./aiCostBreakdown";
 
 const COLUMNS = 7;
 
 const nowrap = { whiteSpace: "nowrap" } as const;
+// A value with more behind it on hover.
+const hover = { cursor: "help", whiteSpace: "nowrap" } as const;
+
+// The phone layout.
+const NARROW = "(max-width: 48em)";
 
 // The stored end is the start of the day after; show the last covered day like the editor.
 const formatUntil = (iso: string, locale: string) =>
@@ -60,12 +72,13 @@ function budgetLine(a: AiCostAccount, locale: string): string {
 	const until = a.override_until ? formatUntil(a.override_until, locale) : null;
 	if (a.unlimited) return until ? t`No limit until ${until}` : t`No limit`;
 	if (a.budget_micro_eur === null) return t`Paid plan`;
-	const amount = formatAiCost(a.budget_micro_eur);
+	const amount = formatMicroEur(a.budget_micro_eur);
 	if (!a.custom_budget) return t`${amount} default`;
 	return until ? t`${amount} until ${until}` : t`${amount} custom`;
 }
 
-function UsedCell({ percent }: { percent: number | null }) {
+function UsedCell({ account: a }: { account: AiCostAccount }) {
+	const percent = a.percent_used;
 	if (percent === null)
 		return (
 			<Text size="xs" c="dimmed">
@@ -73,19 +86,42 @@ function UsedCell({ percent }: { percent: number | null }) {
 			</Text>
 		);
 	const color = percent >= 100 ? "red" : percent >= 80 ? "yellow" : "primary";
+	const spent = a.budget_spent_micro_eur ?? null;
+	const counted = formatAiCost(spent ?? 0);
+	const exact = exactAiCost(spent ?? 0);
 	return (
-		<Group gap="xs" wrap="nowrap">
-			<Progress
-				value={Math.min(100, percent)}
-				color={color}
-				size="sm"
-				w={72}
-				aria-hidden
-			/>
-			<Text size="xs" c={percent >= 100 ? "red" : undefined}>
-				{`${percent}%`}
-			</Text>
-		</Group>
+		<Stack gap={0}>
+			<Group gap="xs" wrap="nowrap">
+				<Progress
+					value={Math.min(100, percent)}
+					color={color}
+					size="sm"
+					w={72}
+					aria-hidden
+				/>
+				<Text size="xs" c={percent >= 100 ? "red" : undefined}>
+					{`${percent}%`}
+				</Text>
+			</Group>
+			{/* Only when the budget ledger and the month's cost differ. */}
+			{spent !== null && spent !== a.cost_micro_eur && (
+				<Tooltip
+					multiline
+					w={260}
+					label={t`The budget counted ${exact} this period; the cost column covers every call this month.`}
+				>
+					<Text
+						size="xs"
+						c="dimmed"
+						w="fit-content"
+						style={hover}
+						data-testid="ai-cost-counted"
+					>
+						<Trans>{counted} counted</Trans>
+					</Text>
+				</Tooltip>
+			)}
+		</Stack>
 	);
 }
 
@@ -96,6 +132,7 @@ function ShareLine({
 	calls,
 	cost,
 	share,
+	percent,
 	bar,
 	testId,
 }: {
@@ -104,31 +141,43 @@ function ShareLine({
 	calls?: number;
 	cost: number;
 	share: number;
+	percent: number;
 	bar?: "thick" | "thin";
 	testId?: string;
 }) {
 	const strong = bar === "thick";
 	const size = strong ? "sm" : "xs";
+	// On a phone the name wraps and the call count sits under it, so neither is cut off.
+	const narrow = useMediaQuery(NARROW) ?? false;
+	const callCount = calls !== undefined && (
+		<Text size="xs" c="dimmed" style={nowrap}>
+			<Plural value={calls} one="# call" other="# calls" />
+		</Text>
+	);
 	return (
 		<Stack gap={2} data-testid={testId}>
 			<Group justify="space-between" wrap="nowrap" gap="sm" align="flex-start">
 				<Stack gap={0} style={{ minWidth: 0 }}>
-					<Text size={size} fw={strong ? 600 : undefined} truncate title={name}>
+					<Text
+						size={size}
+						fw={strong ? 600 : undefined}
+						truncate={narrow ? undefined : true}
+						title={name}
+					>
 						{name}
 					</Text>
 					{secondary}
+					{narrow && callCount}
 				</Stack>
-				<Group gap="md" wrap="nowrap" style={{ flexShrink: 0 }}>
-					{calls !== undefined && (
-						<Text size="xs" c="dimmed" style={nowrap}>
-							<Plural value={calls} one="# call" other="# calls" />
+				<Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
+					{!narrow && callCount}
+					<Tooltip label={exactAiCost(cost)}>
+						<Text size={size} fw={strong ? 600 : undefined} style={hover}>
+							{formatAiCost(cost)}
 						</Text>
-					)}
-					<Text size={size} fw={strong ? 600 : undefined} style={nowrap}>
-						{formatAiCost(cost)}
-					</Text>
+					</Tooltip>
 					<Text size="xs" c="dimmed" w={36} ta="right">
-						{formatShare(share)}
+						{formatShare(percent, cost)}
 					</Text>
 				</Group>
 			</Group>
@@ -147,6 +196,7 @@ function GroupBlock({ group }: { group: GroupCost }) {
 				calls={group.calls}
 				cost={group.cost_micro_eur}
 				share={group.share}
+				percent={group.percent}
 				bar="thick"
 			/>
 			<Stack gap={6} pl="md">
@@ -170,6 +220,7 @@ function GroupBlock({ group }: { group: GroupCost }) {
 						}
 						cost={op.cost_micro_eur}
 						share={op.share}
+						percent={op.percent}
 					/>
 				))}
 			</Stack>
@@ -180,6 +231,7 @@ function GroupBlock({ group }: { group: GroupCost }) {
 function Breakdown({ account }: { account: AiCostAccount }) {
 	const groups = groupFeatures(account.by_feature);
 	const total = account.by_model.reduce((s, m) => s + m.cost_micro_eur, 0);
+	const percents = sharePercents(account.by_model.map((m) => m.cost_micro_eur));
 	return (
 		<SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl" px="md" py="sm">
 			<Stack gap="sm">
@@ -194,7 +246,7 @@ function Breakdown({ account }: { account: AiCostAccount }) {
 				<Text size="xs" fw={600} tt="uppercase" c="dimmed">
 					<Trans>By model</Trans>
 				</Text>
-				{account.by_model.map((m) => (
+				{account.by_model.map((m, i) => (
 					<ShareLine
 						key={`${m.model} ${m.provider}`}
 						testId={`ai-cost-model-${m.provider}-${m.model}`}
@@ -207,6 +259,7 @@ function Breakdown({ account }: { account: AiCostAccount }) {
 						calls={m.calls}
 						cost={m.cost_micro_eur}
 						share={total > 0 ? m.cost_micro_eur / total : 0}
+						percent={percents[i] ?? 0}
 						bar="thin"
 					/>
 				))}
@@ -220,20 +273,30 @@ function Stat({
 	value,
 	caption,
 	testId,
+	title,
 }: {
 	label: string;
 	value: string;
 	caption: string;
 	testId: string;
+	title?: string;
 }) {
 	return (
 		<Box p="sm" style={tileStyle}>
 			<Text size="xs" c="dimmed">
 				{label}
 			</Text>
-			<Text size="lg" fw={600} data-testid={testId}>
-				{value}
-			</Text>
+			<Tooltip label={title} disabled={!title} position="top-start">
+				<Text
+					size="lg"
+					fw={600}
+					data-testid={testId}
+					w="fit-content"
+					style={title ? hover : undefined}
+				>
+					{value}
+				</Text>
+			</Tooltip>
 			<Text size="xs" c="dimmed">
 				{caption}
 			</Text>
@@ -374,7 +437,7 @@ function TopGroup({ account: a }: { account: AiCostAccount }) {
 		<Text size="xs" style={nowrap} data-testid="ai-cost-top-group">
 			{top.label}{" "}
 			<Text span size="xs" c="dimmed">
-				{formatShare(top.share)}
+				{formatShare(top.percent, top.cost_micro_eur)}
 			</Text>
 		</Text>
 	);
@@ -398,15 +461,17 @@ function CostRow({ account: a, open, onToggle, onOpenAccount }: RowProps) {
 					<AccountName account={a} />
 				</Table.Td>
 				<Table.Td style={{ textAlign: "right" }}>
-					<Text size="xs" fw={500} style={nowrap}>
-						{formatAiCost(a.cost_micro_eur)}
-					</Text>
+					<Tooltip label={exactAiCost(a.cost_micro_eur)}>
+						<Text span size="xs" fw={500} style={hover}>
+							{formatAiCost(a.cost_micro_eur)}
+						</Text>
+					</Tooltip>
 				</Table.Td>
 				<Table.Td style={budgetGap}>
 					<BudgetText account={a} />
 				</Table.Td>
 				<Table.Td>
-					<UsedCell percent={a.percent_used} />
+					<UsedCell account={a} />
 				</Table.Td>
 				<Table.Td>
 					<TopGroup account={a} />
@@ -449,14 +514,16 @@ function CostCard({ account: a, open, onToggle, onOpenAccount }: RowProps) {
 					<Box style={{ flex: 1, minWidth: 0 }}>
 						<AccountName account={a} />
 					</Box>
-					<Text size="sm" fw={600} style={nowrap}>
-						{formatAiCost(a.cost_micro_eur)}
-					</Text>
+					<Tooltip label={exactAiCost(a.cost_micro_eur)}>
+						<Text size="sm" fw={600} style={hover}>
+							{formatAiCost(a.cost_micro_eur)}
+						</Text>
+					</Tooltip>
 					<ActionsButton id={id} onOpenAccount={onOpenAccount} />
 				</Group>
 				<Group justify="space-between" wrap="nowrap" gap="sm" pl={36}>
 					<BudgetText account={a} />
-					<UsedCell percent={a.percent_used} />
+					<UsedCell account={a} />
 				</Group>
 				<Group gap={6} wrap="nowrap" pl={36}>
 					<Text size="xs" c="dimmed">
@@ -487,7 +554,7 @@ export function AiCostsPanel({
 	const [offset, setOffset] = useState<0 | 1>(0);
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 	const { data, error, isLoading, refetch } = useAiCosts(offset);
-	const narrow = useMediaQuery("(max-width: 48em)") ?? false;
+	const narrow = useMediaQuery(NARROW) ?? false;
 
 	const accounts = useMemo(
 		() =>
@@ -515,9 +582,12 @@ export function AiCostsPanel({
 		(data?.deleted_accounts_micro_eur ?? 0);
 	const deleted = formatAiCost(data?.deleted_accounts_micro_eur ?? 0);
 	// A provider with only unpriced calls gets no tile.
-	const providers = (data?.by_provider ?? []).filter(
-		(p) => p.cost_micro_eur > 0,
+	const providerPercents = sharePercents(
+		(data?.by_provider ?? []).map((p) => p.cost_micro_eur),
 	);
+	const providers = (data?.by_provider ?? [])
+		.map((p, i) => ({ ...p, percent: providerPercents[i] ?? 0 }))
+		.filter((p) => p.cost_micro_eur > 0);
 	const overBudget = accounts.filter(
 		(a) => a.percent_used !== null && a.percent_used >= 100,
 	).length;
@@ -581,12 +651,14 @@ export function AiCostsPanel({
 									<Stat
 										label={t`Total cost`}
 										value={formatAiCost(total)}
+										title={exactAiCost(total)}
 										caption={t`Every priced AI call, all tiers`}
 										testId="ai-cost-total"
 									/>
 									<Stat
 										label={t`Charged to accounts`}
 										value={formatAiCost(charged)}
+										title={exactAiCost(charged)}
 										caption={
 											data.deleted_accounts_micro_eur > 0
 												? t`incl. ${deleted} from removed accounts`
@@ -599,12 +671,14 @@ export function AiCostsPanel({
 									<Stat
 										label={t`Unattributed`}
 										value={formatAiCost(data.unattributed_micro_eur)}
+										title={exactAiCost(data.unattributed_micro_eur)}
 										caption={t`Calls no account could be matched to`}
 										testId="ai-cost-unattributed"
 									/>
 									<Stat
 										label={t`Internal`}
 										value={formatAiCost(data.internal_micro_eur)}
+										title={exactAiCost(data.internal_micro_eur)}
 										caption={t`Demos, voice outside projects, dev tools`}
 										testId="ai-cost-internal"
 									/>
@@ -624,14 +698,13 @@ export function AiCostsPanel({
 									/>
 									{providers.map((p) => {
 										const provider = providerName(p.provider);
-										const share = formatShare(
-											total > 0 ? p.cost_micro_eur / total : 0,
-										);
+										const share = formatShare(p.percent, p.cost_micro_eur);
 										return (
 											<Stat
 												key={p.provider}
 												label={t`Provider: ${provider}`}
 												value={formatAiCost(p.cost_micro_eur)}
+												title={exactAiCost(p.cost_micro_eur)}
 												caption={t`${share} of the total`}
 												testId={`ai-cost-provider-${p.provider}`}
 											/>
