@@ -27,7 +27,7 @@ vi.mock("@/lib/api", () => ({
 
 let mutationError: unknown = null;
 
-vi.mock("@/portal/components/start/useInitiateConversationMutation", () => ({
+vi.mock("../../hooks", () => ({
 	useInitiateConversationMutation: () => ({
 		data: undefined,
 		error: mutationError,

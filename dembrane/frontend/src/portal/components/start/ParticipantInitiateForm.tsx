@@ -21,7 +21,7 @@ import { initiateConversation as requestConversation } from "@/lib/api";
 import { portalRecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
-import { useInitiateConversationMutation } from "@/portal/components/start/useInitiateConversationMutation";
+import { useInitiateConversationMutation } from "../../hooks";
 import { NotTakingRecordings } from "../NotTakingRecordings";
 import { resolvePortalMode } from "../recordingCap";
 

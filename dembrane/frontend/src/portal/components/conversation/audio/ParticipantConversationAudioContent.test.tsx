@@ -22,11 +22,9 @@ vi.mock("@ai-sdk/react", () => ({
 		status: state.echoError ? "error" : "ready",
 	}),
 }));
-vi.mock("@/portal/components/conversation/queries", () => ({
+vi.mock("../../../hooks", () => ({
 	useConversationQuery: () => ({ data: undefined }),
 	useConversationRepliesQuery: () => ({ data: [] }),
-}));
-vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: {
 			id: "p-1",

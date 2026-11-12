@@ -1,9 +1,18 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { t } from "@lingui/core/macro";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import posthog from "posthog-js";
+import { toast } from "@/components/common/Toaster";
 import {
 	confirmConversationChunkUpload,
+	getParticipantConversationById,
+	getParticipantConversationChunks,
+	getParticipantConversationReplies,
+	getParticipantProjectById,
+	initiateConversation,
+	submitNotificationParticipant,
 	uploadConversationChunk,
+	uploadConversationText,
 } from "@/lib/api";
 import {
 	portalRecordingRefusal,
@@ -209,5 +218,210 @@ export const useUploadConversationChunk = ({
 			}
 			return failureCount < 20;
 		},
+	});
+};
+
+export const useUploadConversationTextChunk = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: uploadConversationText,
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (_err, variables, context) => {
+			queryClient.setQueryData(
+				["conversations", variables.conversationId, "chunks"],
+				(context as { previousChunks?: ConversationChunk[] })?.previousChunks,
+			);
+		},
+		// When mutate is called:
+		onMutate: async (variables) => {
+			// Cancel any outgoing refetches
+			// (so they don't overwrite our optimistic update)
+			await queryClient.cancelQueries({
+				queryKey: ["conversations", variables.conversationId, "chunks"],
+			});
+
+			await queryClient.cancelQueries({
+				queryKey: [
+					"participant",
+					"conversation_chunks",
+					variables.conversationId,
+				],
+			});
+
+			// Snapshot the previous value
+			const previousChunks = queryClient.getQueryData([
+				"conversations",
+				variables.conversationId,
+				"chunks",
+			]);
+
+			// Optimistically update to the new value
+			queryClient.setQueryData(
+				["conversations", variables.conversationId, "chunks"],
+				(oldData: ConversationChunk[] | undefined) => {
+					return oldData
+						? [
+								...oldData,
+								{
+									conversation_id: variables.conversationId,
+									created_at: new Date().toISOString(),
+									id: `optimistic-${Date.now()}`,
+									timestamp: new Date().toISOString(),
+									transcript: undefined,
+									updated_at: new Date().toISOString(),
+								} as unknown as ConversationChunk,
+							]
+						: [];
+				},
+			);
+
+			queryClient.setQueryData(
+				["participant", "conversation_chunks", variables.conversationId],
+				(oldData: ConversationChunk[] | undefined) => {
+					return oldData
+						? [
+								...oldData,
+								{
+									conversation_id: variables.conversationId,
+									created_at: new Date().toISOString(),
+									id: `optimistic-${Date.now()}`,
+									timestamp: new Date().toISOString(),
+									transcript: undefined,
+									updated_at: new Date().toISOString(),
+								} as unknown as ConversationChunk,
+							]
+						: [];
+				},
+			);
+
+			// Return a context object with the snapshotted value
+			return { previousChunks };
+		},
+		// Always refetch after error or success:
+		onSettled: (_data, _error, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["conversations", variables.conversationId, "chunks"],
+			});
+
+			queryClient.invalidateQueries({
+				queryKey: [
+					"participant",
+					"conversation_chunks",
+					variables.conversationId,
+				],
+			});
+		},
+		// A refusal answers the same on every retry: show it at once.
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
+			if (status && NO_RETRY_STATUSES.includes(status as number)) {
+				return false;
+			}
+			return failureCount < 10;
+		},
+	});
+};
+
+export const useInitiateConversationMutation = () => {
+	return useMutation({
+		mutationFn: initiateConversation,
+		onError: (error) => {
+			// The form shows a refusal itself.
+			if (portalRecordingRefusal(error)) return;
+			toast.error(t`Invalid PIN or email. Please try again.`);
+		},
+	});
+};
+
+export const useSubmitNotificationParticipant = () => {
+	return useMutation({
+		mutationFn: async ({
+			emails,
+			projectId,
+			conversationId,
+		}: {
+			emails: string[];
+			projectId: string;
+			conversationId: string;
+		}) => {
+			return await submitNotificationParticipant(
+				emails,
+				projectId,
+				conversationId,
+			);
+		},
+		onError: (error) => {
+			console.error("Notification submission failed:", error);
+		},
+		retry: 2,
+	});
+};
+
+export const useParticipantProjectById = (projectId: string) => {
+	return useQuery({
+		queryFn: () => getParticipantProjectById(projectId),
+		queryKey: ["participantProject", projectId],
+	});
+};
+
+export const combineUserChunks = (
+	chunks: { type: "user_chunk"; timestamp: Date; data: TConversationChunk }[],
+) => {
+	return {
+		data: {
+			...chunks[0].data,
+			transcript: chunks.map((c) => c.data.transcript).join("..."),
+		},
+		timestamp: chunks[0].timestamp,
+		type: "user_chunk" as const,
+	};
+};
+
+export const useConversationRepliesQuery = (
+	projectId: string | undefined,
+	conversationId: string | undefined,
+) => {
+	return useQuery({
+		enabled: !!conversationId && !!projectId,
+		queryFn: () =>
+			getParticipantConversationReplies(projectId ?? "", conversationId ?? ""),
+		queryKey: ["participant", "conversation_replies", conversationId],
+		// refetchInterval: 15000,
+	});
+};
+
+export const useConversationQuery = (
+	projectId: string | undefined,
+	conversationId: string | undefined,
+) => {
+	return useQuery({
+		enabled: !!conversationId && !!projectId,
+		queryFn: () =>
+			getParticipantConversationById(projectId ?? "", conversationId ?? ""),
+		queryKey: ["participant", "conversation", projectId, conversationId],
+		refetchInterval: 60000,
+		retry: (failureCount, error: AxiosError) => {
+			const status = error?.response?.status;
+			// Don't retry if conversation is deleted
+			if (status && [404, 403, 410].includes(status as number)) {
+				return false;
+			}
+
+			return failureCount < 6;
+		},
+	});
+};
+
+export const useConversationChunksQuery = (
+	projectId: string | undefined,
+	conversationId: string | undefined,
+) => {
+	return useQuery({
+		queryFn: () =>
+			getParticipantConversationChunks(projectId ?? "", conversationId ?? ""),
+		queryKey: ["participant", "conversation_chunks", conversationId],
+		refetchInterval: 60000,
 	});
 };

@@ -12,32 +12,32 @@ import {
 import clsx from "clsx";
 import Cookies from "js-cookie";
 import posthog from "posthog-js";
-import {
-	type CSSProperties,
-	useEffect,
-	useReducer,
-	useRef,
-	useState,
-} from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
-import { I18nLink } from "@/components/common/i18nLink";
-import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
-import { toast } from "@/components/common/Toaster";
-import { useDocumentHidden } from "@/hooks/useDocumentHidden";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
+import { finishConversation } from "@/lib/api";
 import type { RecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
+import { I18nLink } from "../../../../components/common/i18nLink";
+import { ScrollToBottomButton } from "../../../../components/common/ScrollToBottom";
+import { toast } from "../../../../components/common/Toaster";
+import { useProjectSharingLink } from "../../../../components/project/ProjectQRCode";
+import { useDocumentHidden } from "../../../../hooks/useDocumentHidden";
+import {
+	useConversationChunksQuery,
+	useConversationQuery,
+	useParticipantProjectById,
+	useUploadConversationChunk,
+} from "../../../hooks";
 import { NotTakingRecordings } from "../../NotTakingRecordings";
 import { recordingClosed } from "../../recordingCap";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
-import { useParticipantConversation } from "../useParticipantConversation";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
 import { usePendingUploads } from "./hooks/usePendingUploads";
@@ -56,16 +56,6 @@ import { PermissionErrorModal } from "./PermissionErrorModal";
 import { deriveParticipantState } from "./participantState";
 import { RecordingInterruptedModal } from "./RecordingInterruptedModal";
 import { RefineInfoModal } from "./RefineInfoModal";
-import {
-	displayTime,
-	initialRecordingSession,
-	isConfirmOpen,
-	isFinishing,
-	isHeld,
-	pausedAt,
-	recordingSessionReducer,
-	type WrapUpReason,
-} from "./recordingSession";
 import { S3CheckModal } from "./S3CheckModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { WrapUpModal } from "./WrapUpModal";
@@ -73,13 +63,15 @@ import { WrapUpModal } from "./WrapUpModal";
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
 
+type WrapUpReason = "conversation" | "account";
+
 const wrapUpReasonOf = (r: RecordingRefusal): WrapUpReason =>
 	r === "audio_conversation" ? "conversation" : "account";
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
 	const location = useLocation();
-	const [isRefineDisabled] = useLocalStorage({
+	const [isRefineDisabled, _setIsRefineDisabled] = useLocalStorage({
 		defaultValue: false,
 		key: `refine_disabled_${conversationId}`,
 	});
@@ -94,14 +86,9 @@ export const ParticipantConversationAudio = () => {
 	const savedDeviceId = Cookies.get("micDeviceId");
 	const deviceId = savedDeviceId || "";
 
-	const {
-		chunksQuery: chunks,
-		conversationQuery,
-		finish,
-		loadState,
-		newConversationLink,
-		projectQuery,
-	} = useParticipantConversation(projectId, conversationId);
+	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const conversationQuery = useConversationQuery(projectId, conversationId);
+	const chunks = useConversationChunksQuery(projectId, conversationId);
 	// Set after the recorder exists; upload callbacks reach it through this ref.
 	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
 	// Whether this page kept any chunk; a budget refusal before one means nothing was saved.
@@ -152,13 +139,18 @@ export const ParticipantConversationAudio = () => {
 		threshold: 0.1,
 	});
 
-	const [session, dispatch] = useReducer(
-		recordingSessionReducer,
-		initialRecordingSession,
-	);
-	const isStopping = isFinishing(session);
-	const stoppedRecordingTime = pausedAt(session);
-	const conversationDeletedDuringRecording = session.phase === "deleted";
+	const [
+		conversationDeletedDuringRecording,
+		setConversationDeletedDuringRecording,
+	] = useState(false);
+
+	const [isFinishing, _setIsFinishing] = useState(false);
+	const [isStopping, setIsStopping] = useState(false);
+	const [wrapUpReason, setWrapUpReason] = useState<WrapUpReason | null>(null);
+	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<
+		number | null
+	>(null);
+	const [opened, { open, close }] = useDisclosure(false);
 	const [
 		refineInfoModalOpened,
 		{ open: openRefineInfoModal, close: closeRefineInfoModal },
@@ -175,15 +167,22 @@ export const ParticipantConversationAudio = () => {
 		{ close: closeForcedSettings, open: openForcedSettings },
 	] = useDisclosure(false);
 
-	const interruptedAt = session.phase === "interrupted" ? session.at : null;
+	const [interruptionModalOpened, { open: openInterruptionModal }] =
+		useDisclosure(false);
+	const [isReconnecting, setIsReconnecting] = useState(false);
+	const interruptionRecordingTimeRef = useRef<number>(0);
 
 	const { s3Status, retry: handleS3Reconnect } = useS3ConnectivityCheck(
 		conversationId,
-		{ queriesLoading: loadState === "loading" },
+		{ queriesLoading: conversationQuery.isLoading || projectQuery.isLoading },
 	);
 
 	// Navigation and language
 	const navigate = useI18nNavigate();
+	const newConversationLink = useProjectSharingLink(
+		projectQuery.data,
+		"portal",
+	);
 	const wakeLock = useRecordingWakeLock();
 
 	// Ref to store callback that will be set after audioRecorder is created
@@ -198,13 +197,13 @@ export const ParticipantConversationAudio = () => {
 	// Set up the interruption callback after audioRecorder is available
 	onRecordingInterruptedRef.current = () => {
 		// Capture the recording time before stopping.
-		const at = audioRecorder.recordingTime;
+		interruptionRecordingTimeRef.current = audioRecorder.recordingTime;
 
 		captureRecordingInterrupted({
 			chunkHistory: audioRecorder.getChunkHistory(),
 			conversationId,
 			projectId,
-			recordingTime: at,
+			recordingTime: interruptionRecordingTimeRef.current,
 		});
 
 		// Stop recording and release wake lock.
@@ -212,7 +211,7 @@ export const ParticipantConversationAudio = () => {
 		wakeLock.release();
 
 		// Show the interruption modal.
-		dispatch({ at, type: "interrupted" });
+		openInterruptionModal();
 	};
 
 	const {
@@ -225,15 +224,15 @@ export const ParticipantConversationAudio = () => {
 		permissionError,
 	} = audioRecorder;
 
+	// What colour the meter runs in. A run that was interrupted is the recording
+	// itself failing, so it outranks a connection that has merely gone quiet.
+	// The meter escalates to `problem` on its own when no sound arrives at all.
 	// Sticky: a stop resets recordingTime, and a limit stop may leave no chunk.
 	const [startedHere, setStartedHere] = useState(false);
 	useEffect(() => {
 		if (isRecording || isStarting) setStartedHere(true);
 	}, [isRecording, isStarting]);
 
-	// What colour the meter runs in. A run that was interrupted is the recording
-	// itself failing, so it outranks a connection that has merely gone quiet.
-	// The meter escalates to `problem` on its own when no sound arrives at all.
 	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
 		? "problem"
 		: !isOnline || !connectionHealthy
@@ -316,7 +315,7 @@ export const ParticipantConversationAudio = () => {
 					conversation_id: conversationId,
 					project_id: projectId,
 				});
-				dispatch({ type: "conversationDeleted" });
+				setConversationDeletedDuringRecording(true);
 			} else {
 				console.warn(
 					"Error fetching conversation during recording - continuing",
@@ -335,9 +334,7 @@ export const ParticipantConversationAudio = () => {
 		projectId,
 	]);
 
-	// Auto-close refine info modal when threshold is reached. An effect, not a
-	// derived `opened`: the recorder's time drops to 0 on stop, which would
-	// bring the modal back.
+	// Auto-close refine info modal when threshold is reached
 	useEffect(() => {
 		if (
 			refineInfoModalOpened &&
@@ -360,10 +357,11 @@ export const ParticipantConversationAudio = () => {
 	// Handlers
 	const handleStopRecording = () => {
 		if (isRecording) {
-			dispatch({ at: recordingTime, type: "stop" }); // Capture time before stopping
+			setStoppedRecordingTime(recordingTime); // Capture time before stopping
 			stopRecording(); // Actually stop to trigger final chunk upload immediately
 			// Release wakelock and disable auto-reacquire when stopping
 			wakeLock.release();
+			open();
 		}
 	};
 
@@ -372,17 +370,22 @@ export const ParticipantConversationAudio = () => {
 	const wrapUp = (reason: WrapUpReason) => {
 		if (wrappedUpRef.current || isStopping) return;
 		wrappedUpRef.current = true;
-		const at = isRecording
-			? recordingTime
-			: (stoppedRecordingTime ?? recordingTime);
-		if (isRecording) stopRecording();
+		if (isRecording) {
+			setStoppedRecordingTime(recordingTime);
+			stopRecording();
+		} else if (stoppedRecordingTime === null) {
+			setStoppedRecordingTime(recordingTime);
+		}
 		wakeLock.release();
-		dispatch({ at, reason, type: "wrapUp" });
+		close();
+		setWrapUpReason(reason);
 		posthog.capture("portal_recording_wrapped_up", {
 			conversation_id: conversationId,
 			project_id: projectId,
 			reason,
-			recording_time_seconds: at,
+			recording_time_seconds: isRecording
+				? recordingTime
+				: stoppedRecordingTime,
 		});
 	};
 	wrapUpRef.current = wrapUp;
@@ -395,7 +398,7 @@ export const ParticipantConversationAudio = () => {
 	});
 
 	const handleConfirmFinish = async () => {
-		dispatch({ type: "finishStarted" });
+		setIsStopping(true);
 		try {
 			stopRecording();
 			// Release wakelock when finishing
@@ -403,41 +406,57 @@ export const ParticipantConversationAudio = () => {
 
 			await waitForPendingUploads("finish");
 
-			await finish();
-			dispatch({ type: "finishSucceeded" });
+			await finishConversation(conversationId ?? "");
+			posthog.capture("conversation_finished", {
+				conversation_id: conversationId,
+				project_id: projectId,
+			});
+			close();
 			navigate(finishUrl);
 		} catch (error) {
 			console.error("Error finishing conversation:", error);
 			toast.error(t`Failed to finish conversation. Please try again.`);
-			dispatch({ type: "finishFailed" });
+			setIsStopping(false);
 		}
 	};
 
+	const handleSkipVerification = async () => {
+		close();
+		await handleConfirmFinish();
+	};
+
 	const handleSwitchToText = () => {
-		dispatch({ type: "switchToText" });
+		setStoppedRecordingTime(null);
+		close();
 		navigate(textModeUrl);
 	};
 
 	const handleResumeRecording = async () => {
-		// The pause holds until the recorder has started, so the timer doesn't
-		// flash back to zero in between.
-		if (session.phase === "wrappedUp") return;
-		const started = await startRecording(stoppedRecordingTime ?? 0);
+		if (wrapUpReason !== null) return;
+		const timeToResume = stoppedRecordingTime ?? 0;
+		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
+		const started = await startRecording(timeToResume);
 		if (!started) return;
-		dispatch({ type: "recordingStarted" });
 		// Obtain wakelock on user interaction
 		wakeLock.hold();
 	};
 
 	const handleVerify = () => {
-		dispatch({ type: "resume" });
+		close();
 		handleResumeRecording();
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
+	// Clear stoppedRecordingTime when recording actually starts (avoids UI flash)
+	useEffect(() => {
+		if (isRecording && stoppedRecordingTime !== null) {
+			setStoppedRecordingTime(null);
+		}
+	}, [isRecording, stoppedRecordingTime]);
+
 	// Handler for reconnect button - waits for uploads, reports error, then reloads
 	const handleReconnect = async () => {
-		dispatch({ type: "reconnectStarted" });
+		setIsReconnecting(true);
 		try {
 			await waitForPendingUploads("reconnect");
 
@@ -446,19 +465,19 @@ export const ParticipantConversationAudio = () => {
 					chunkHistory: audioRecorder.getChunkHistory(),
 					conversationId,
 					projectId,
-					recordingTime: interruptedAt ?? 0,
+					recordingTime: interruptionRecordingTimeRef.current,
 				});
 			}
 
 			window.location.reload();
 		} catch (_error) {
 			toast.error(t`Failed to reconnect. Please try reloading the page.`);
-			dispatch({ type: "reconnectFailed" });
+			setIsReconnecting(false);
 		}
 	};
 
 	const handleStartRecording = async () => {
-		if (s3Status !== "passed" || session.phase === "wrappedUp") {
+		if (s3Status !== "passed" || wrapUpReason !== null) {
 			return;
 		}
 
@@ -501,14 +520,19 @@ export const ParticipantConversationAudio = () => {
 
 	const takingRecordings = projectQuery.data?.is_taking_recordings;
 	if (
-		loadState === "loading" ||
+		conversationQuery.isLoading ||
+		projectQuery.isLoading ||
 		(takingRecordings === false && chunks.isLoading)
 	) {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load
-	if (loadState === "failed" || conversationDeletedDuringRecording) {
+	if (
+		conversationQuery.isError ||
+		!conversationQuery.data ||
+		conversationDeletedDuringRecording
+	) {
 		return (
 			<ConversationErrorView
 				conversationDeletedDuringRecording={conversationDeletedDuringRecording}
@@ -533,7 +557,11 @@ export const ParticipantConversationAudio = () => {
 
 	// Recording, or paused partway: behind the stop or interruption modal, or
 	// resuming. The timer and the meter show for all of it.
-	const inRecording = isRecording || isHeld(session);
+	const inRecording =
+		isRecording ||
+		opened ||
+		interruptionModalOpened ||
+		stoppedRecordingTime !== null;
 
 	const refineProgress = Math.min(
 		(effectiveRecordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,
@@ -562,21 +590,21 @@ export const ParticipantConversationAudio = () => {
 			/>
 
 			<StopRecordingConfirmationModal
-				opened={isConfirmOpen(session)}
-				close={() => dispatch({ type: "resume" })}
+				opened={opened}
+				close={close}
 				isStopping={isStopping}
 				isUploading={uploadChunkMutation.isPending}
 				handleConfirmFinish={handleConfirmFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
 				showVerifyOnFinish={shouldVerifyOnFinish}
-				handleSkipVerification={handleConfirmFinish}
+				handleSkipVerification={handleSkipVerification}
 				handleVerify={handleVerify}
 			/>
 
 			<WrapUpModal
-				opened={session.phase === "wrappedUp"}
-				reason={session.phase === "wrappedUp" ? session.reason : "account"}
+				opened={wrapUpReason !== null}
+				reason={wrapUpReason ?? "account"}
 				onFinish={handleConfirmFinish}
 				isFinishing={isStopping}
 			/>
@@ -590,9 +618,9 @@ export const ParticipantConversationAudio = () => {
 			/>
 
 			<RecordingInterruptedModal
-				opened={session.phase === "interrupted"}
+				opened={interruptionModalOpened}
 				isUploading={uploadChunkMutation.isPending}
-				isReconnecting={session.phase === "interrupted" && session.reconnecting}
+				isReconnecting={isReconnecting}
 				onReconnect={handleReconnect}
 			/>
 
@@ -646,7 +674,9 @@ export const ParticipantConversationAudio = () => {
 									{/* One slot for either icon, and even digits, so the
 									    time holds still as they swap and as it counts. */}
 									<span className="flex h-5 w-5 items-center justify-center">
-										{isHeld(session) ? (
+										{opened ||
+										interruptionModalOpened ||
+										stoppedRecordingTime !== null ? (
 											<PauseIcon size={20} />
 										) : (
 											<div
@@ -657,21 +687,25 @@ export const ParticipantConversationAudio = () => {
 									</span>
 									<Text size="lg" className="tabular-nums">
 										{(() => {
-											const time = displayTime(session, recordingTime);
+											const displayTime = interruptionModalOpened
+												? interruptionRecordingTimeRef.current
+												: stoppedRecordingTime !== null
+													? stoppedRecordingTime
+													: recordingTime;
 											return (
 												<>
-													{Math.floor(time / 3600) > 0 && (
+													{Math.floor(displayTime / 3600) > 0 && (
 														<>
-															{Math.floor(time / 3600)
+															{Math.floor(displayTime / 3600)
 																.toString()
 																.padStart(2, "0")}
 															:
 														</>
 													)}
-													{Math.floor((time % 3600) / 60)
+													{Math.floor((displayTime % 3600) / 60)
 														.toString()
 														.padStart(2, "0")}
-													:{(time % 60).toString().padStart(2, "0")}
+													:{(displayTime % 60).toString().padStart(2, "0")}
 												</>
 											);
 										})()}
@@ -680,51 +714,56 @@ export const ParticipantConversationAudio = () => {
 							</div>
 						)}
 
-						{!isRecording && !isHeld(session) && (
-							<Group className="w-full" wrap="nowrap">
-								<Button
-									size="lg"
-									variant="filled"
-									leftSection={<MicrophoneIcon size={20} />}
-									onClick={handleStartRecording}
-									loading={
-										isStarting ||
-										s3Status === "checking" ||
-										s3Status === "pending"
-									}
-									disabled={s3Status !== "passed"}
-									className="flex-grow"
-									{...testId("portal-audio-record-button")}
-								>
-									<Trans id="participant.button.record">Record</Trans>
-								</Button>
-
-								<I18nLink to={textModeUrl}>
+						{!isRecording &&
+							!opened &&
+							!interruptionModalOpened &&
+							stoppedRecordingTime === null && (
+								<Group className="w-full" wrap="nowrap">
 									<Button
 										size="lg"
-										px="lg"
-										aria-label={t`Switch to text`}
-										{...testId("portal-audio-switch-to-text-button")}
-									>
-										<ArticleNyTimesIcon size={20} />
-									</Button>
-								</I18nLink>
-
-								{!isStopping && chunks?.data && chunks.data.length > 0 && (
-									<Button
-										size="lg"
-										onClick={() => dispatch({ type: "confirmFinish" })}
-										leftSection={
-											<CheckIcon size={20} className="hidden sm:block" />
+										variant="filled"
+										leftSection={<MicrophoneIcon size={20} />}
+										onClick={handleStartRecording}
+										loading={
+											isStarting ||
+											s3Status === "checking" ||
+											s3Status === "pending"
 										}
-										className="w-auto"
-										{...testId("portal-audio-finish-button")}
+										disabled={s3Status !== "passed"}
+										className="flex-grow"
+										{...testId("portal-audio-record-button")}
 									>
-										<Trans id="participant.button.finish">Finish</Trans>
+										<Trans id="participant.button.record">Record</Trans>
 									</Button>
-								)}
-							</Group>
-						)}
+
+									<I18nLink to={textModeUrl}>
+										<Button
+											size="lg"
+											px="lg"
+											aria-label={t`Switch to text`}
+											{...testId("portal-audio-switch-to-text-button")}
+										>
+											<ArticleNyTimesIcon size={20} />
+										</Button>
+									</I18nLink>
+
+									{!isStopping && chunks?.data && chunks.data.length > 0 && (
+										<Button
+											size="lg"
+											onClick={open}
+											leftSection={
+												<CheckIcon size={20} className="hidden sm:block" />
+											}
+											className="w-auto"
+											loading={isFinishing}
+											disabled={isFinishing}
+											{...testId("portal-audio-finish-button")}
+										>
+											<Trans id="participant.button.finish">Finish</Trans>
+										</Button>
+									)}
+								</Group>
+							)}
 
 						{/* ECHO and Stop stay put while paused, behind a modal, and ECHO
 						    over the refine and verify screens too, so the bar doesn't

@@ -16,8 +16,8 @@ import { useLoadNotification } from "@/hooks/useLoadNotification";
 import {
 	useConversationQuery,
 	useConversationRepliesQuery,
-} from "@/portal/components/conversation/queries";
-import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
+	useParticipantProjectById,
+} from "../../../hooks";
 import { AiUnavailableText } from "../../AiUnavailable";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";

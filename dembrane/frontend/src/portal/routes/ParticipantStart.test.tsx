@@ -21,7 +21,7 @@ vi.mock("@/portal/components/start/ParticipantOnboardingCards", () => ({
 const project = vi.hoisted(() => ({
 	current: { id: "p-1", is_ai_available: true, is_taking_recordings: false },
 }));
-vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
+vi.mock("@/portal/hooks", () => ({
 	useParticipantProjectById: () => ({
 		data: project.current,
 		error: null,

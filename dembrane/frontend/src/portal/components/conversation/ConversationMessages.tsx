@@ -6,15 +6,16 @@ import { Button, Modal, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
-import { TipBanner } from "@/components/common/TipBanner";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
 import {
 	combineUserChunks,
 	useConversationChunksQuery,
 	useConversationRepliesQuery,
-} from "@/portal/components/conversation/queries";
-import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
+	useParticipantProjectById,
+} from "@/portal/hooks";
+
+import { TipBanner } from "../../../components/common/TipBanner";
 import { EchoReplyMessage } from "./EchoReplyMessage";
 import SystemMessage from "./SystemMessage";
 import UserChunkMessage from "./UserChunkMessage";

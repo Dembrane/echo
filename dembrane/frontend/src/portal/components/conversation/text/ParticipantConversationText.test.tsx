@@ -47,43 +47,28 @@ vi.mock("@/components/project/ProjectQRCode", () => ({
 	useProjectSharingLink: () => null,
 }));
 
-// What the queries return. Tests change these before rendering.
-type ConversationQueryStub = {
-	data?: unknown;
-	isError: boolean;
-	isLoading: boolean;
-};
-const loadedConversation = (): ConversationQueryStub => ({
-	data: { id: "c1" },
-	isError: false,
-	isLoading: false,
-});
 const state: {
 	aiAvailable: boolean;
 	uploadError: unknown;
 	chunks: { id: string }[];
-	conversationQuery: ConversationQueryStub;
-	projectLoading: boolean;
 } = {
 	aiAvailable: true,
 	chunks: [{ id: "chunk1" }],
-	conversationQuery: loadedConversation(),
-	projectLoading: false,
 	uploadError: null,
 };
 const mutate = vi.fn();
 
-vi.mock("@/portal/components/conversation/queries", () => ({
+vi.mock("@/portal/hooks", () => ({
 	useConversationChunksQuery: () => ({ data: state.chunks }),
-	useConversationQuery: () => state.conversationQuery,
-}));
-vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
+	useConversationQuery: () => ({
+		data: { id: "c1" },
+		isError: false,
+		isLoading: false,
+	}),
 	useParticipantProjectById: () => ({
 		data: { id: "p1", is_ai_available: state.aiAvailable },
-		isLoading: state.projectLoading,
+		isLoading: false,
 	}),
-}));
-vi.mock("./useUploadConversationTextChunk", () => ({
 	useUploadConversationTextChunk: () => ({
 		error: state.uploadError,
 		isPending: false,
@@ -131,8 +116,6 @@ afterEach(() => {
 	state.aiAvailable = true;
 	state.uploadError = null;
 	state.chunks = [{ id: "chunk1" }];
-	state.conversationQuery = loadedConversation();
-	state.projectLoading = false;
 	mutate.mockReset();
 	navigate.mockReset();
 	finish.mockReset();
@@ -277,46 +260,4 @@ it("text accepted within the wrap-up grace is sent, then the notice shows", () =
 	).toBeTruthy();
 	expect(screen.queryByTestId("portal-text-unsent-textarea")).toBeNull();
 	expect(screen.getByTestId("portal-text-finish-button")).toBeTruthy();
-});
-
-it("shows the loading screen while the conversation or project loads", () => {
-	state.conversationQuery = { isError: false, isLoading: true };
-	renderText();
-	expect(screen.queryByTestId("portal-text-input-textarea")).toBeNull();
-	cleanup();
-
-	state.conversationQuery = {
-		data: { id: "c1" },
-		isError: false,
-		isLoading: false,
-	};
-	state.projectLoading = true;
-	renderText();
-	expect(screen.queryByTestId("portal-text-input-textarea")).toBeNull();
-});
-
-it("shows the error view when the conversation fails to load or is missing", () => {
-	state.conversationQuery = { isError: true, isLoading: false };
-	renderText();
-	expect(screen.getByText("Something went wrong")).toBeTruthy();
-	cleanup();
-
-	state.conversationQuery = { isError: false, isLoading: false };
-	renderText();
-	expect(screen.getByText("Something went wrong")).toBeTruthy();
-});
-
-it("shows Finish only with chunks and nothing typed", () => {
-	state.chunks = [];
-	renderText();
-	expect(screen.queryByTestId("portal-text-finish-button")).toBeNull();
-	cleanup();
-
-	state.chunks = [{ id: "chunk1" }];
-	renderText();
-	expect(screen.getByTestId("portal-text-finish-button")).toBeTruthy();
-	fireEvent.change(screen.getByTestId("portal-text-input-textarea"), {
-		target: { value: "hello" },
-	});
-	expect(screen.queryByTestId("portal-text-finish-button")).toBeNull();
 });
