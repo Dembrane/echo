@@ -10,4 +10,4 @@ How RFCs and ratchet runs work is set out in [0001](0001-ratchet-agents.md).
 | RFC | Target |
 |---|---|
 | [0001](0001-ratchet-agents.md) | Approved RFCs are ratcheted toward by agents, one small PR per run |
-| [0002](0002-code-conventions.md) | File naming and named exports |
+| [0002](0002-naming-and-exports.md) | File naming and named exports |

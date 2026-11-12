@@ -2,7 +2,7 @@
 status: proposed
 ---
 
-# 0002 Code conventions
+# 0002 Naming and exports
 
 Two rules, adapted from [intent-ui's engineering-standards](https://github.com/Brayden/intent-ui/blob/main/skills/engineering-standards/SKILL.md). A violation of either is one line of Measure.
 
