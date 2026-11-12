@@ -11,6 +11,7 @@ import {
 	type PreviewProject,
 	type PreviewResult,
 	type PreviewScreen,
+	TUTORIAL_SLUGS,
 	webUrl,
 } from "@/lib/portalPreview/protocol";
 import type { PortalFormValues } from "../portalForm";
@@ -62,7 +63,7 @@ export function buildPreviewMessage({
 		? (values.language as PreviewProject["language"])
 		: "en";
 	const locale = localeForLanguage(language);
-	const tutorial = (["none", "basic", "advanced"] as const).find(
+	const tutorial = TUTORIAL_SLUGS.find(
 		(s) => s === values.default_conversation_tutorial_slug,
 	);
 	const basis = (LEGAL_BASES as readonly string[]).includes(

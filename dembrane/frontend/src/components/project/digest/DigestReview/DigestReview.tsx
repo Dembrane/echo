@@ -26,6 +26,7 @@ import {
 	topicLabel,
 } from "@/components/project/templates/projectTemplates";
 import { TemplateCard } from "@/components/project/templates/TemplateCard/TemplateCard";
+import { BUILT_IN_TOPIC_KEYS } from "@/components/verify/topics";
 import type { DigestReviewStep } from "@/lib/analytics/events";
 import { testId } from "@/lib/testUtils";
 import type { DigestResult } from "../digest";
@@ -41,16 +42,6 @@ import {
 } from "../review";
 import { ReviewSection } from "./ReviewSection";
 import { ReviewSummary, type SummaryLine } from "./ReviewSummary";
-
-const TOPICS = [
-	"agreements",
-	"disagreements",
-	"actions",
-	"gems",
-	"truths",
-	"heard",
-	"moments",
-] as const;
 
 const RULE = "var(--app-stroke) solid var(--app-rule-color)";
 
@@ -588,7 +579,7 @@ export const DigestReview = ({
 					{...testId("project-digest-verify")}
 				>
 					<Group gap="md" wrap="wrap" mt={4}>
-						{TOPICS.map((k) => (
+						{BUILT_IN_TOPIC_KEYS.map((k) => (
 							<Checkbox
 								key={k}
 								value={k}

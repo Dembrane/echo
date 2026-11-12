@@ -17,7 +17,7 @@ msgstr ""
 msgid "Accept and continue"
 msgstr "Aceptar y seguir"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:249
+#: src/components/project/digest/DigestReview/DigestReview.tsx:240
 msgid "Accept the rest"
 msgstr "Aceptar el resto"
 
@@ -33,11 +33,11 @@ msgstr "Añadir desde un archivo"
 msgid "Added what the session is about to the project context. Check it above."
 msgstr "Lo que trata la sesión está ahora en el contexto del proyecto. Revísalo arriba."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:543
+#: src/components/project/digest/DigestReview/DigestReview.tsx:534
 msgid "All templates"
 msgstr "Todas las plantillas"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:509
+#: src/components/project/digest/DigestReview/DigestReview.tsx:500
 msgid "Also fits:"
 msgstr "También encaja:"
 
@@ -45,7 +45,7 @@ msgstr "También encaja:"
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Una invitación o una página del proyecto. dembrane la lee una vez."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:239
+#: src/components/project/digest/DigestReview/DigestReview.tsx:230
 msgid "Back"
 msgstr "Atrás"
 
@@ -81,11 +81,11 @@ msgstr "Elige un formato abajo para continuar."
 #~ msgid "Choose a template below to continue."
 #~ msgstr "Elige una plantilla abajo para continuar."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:498
+#: src/components/project/digest/DigestReview/DigestReview.tsx:489
 msgid "Choose the template that fits the session."
 msgstr "Elige la plantilla que encaja con la sesión."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:342
+#: src/components/project/digest/DigestReview/DigestReview.tsx:333
 msgid "Contact details and lists of names were left out of the context."
 msgstr "Los datos de contacto y las listas de nombres se han dejado fuera del contexto."
 
@@ -117,8 +117,8 @@ msgstr "Suéltalo para configurar el proyecto con esto"
 msgid "Edit"
 msgstr "Editar"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:191
-#: src/components/project/digest/DigestReview/DigestReview.tsx:628
+#: src/components/project/digest/DigestReview/DigestReview.tsx:182
+#: src/components/project/digest/DigestReview/DigestReview.tsx:619
 msgid "Explore question"
 msgstr "Pregunta de Explorar"
 
@@ -133,16 +133,16 @@ msgstr "De {0}"
 
 #. placeholder {0}: term.source
 #. placeholder {1}: term.snippet
-#: src/components/project/digest/DigestReview/DigestReview.tsx:180
+#: src/components/project/digest/DigestReview/DigestReview.tsx:171
 msgid "From {0}: “{1}”"
 msgstr "De {0}: «{1}»"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:403
+#: src/components/project/digest/DigestReview/DigestReview.tsx:394
 msgid "Give the project a name to create it."
 msgstr "Ponle un nombre al proyecto para crearlo."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:192
-#: src/components/project/digest/DigestReview/DigestReview.tsx:416
+#: src/components/project/digest/DigestReview/DigestReview.tsx:183
+#: src/components/project/digest/DigestReview/DigestReview.tsx:407
 msgid "Goal"
 msgstr "Objetivo"
 
@@ -159,11 +159,11 @@ msgstr "¿Tienes una agenda, una invitación o un guion del evento? Suéltalo aq
 msgid "Here is what dembrane understood"
 msgstr "Esto es lo que dembrane ha entendido"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:193
+#: src/components/project/digest/DigestReview/DigestReview.tsx:184
 msgid "Host script additions"
 msgstr "Añadidos al guion del anfitrión"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:194
+#: src/components/project/digest/DigestReview/DigestReview.tsx:185
 msgid "Key terms"
 msgstr "Términos clave"
 
@@ -175,16 +175,16 @@ msgstr "Más de 10 MB. Prueba una versión más corta o pega la parte que import
 msgid "Link to a page about it"
 msgstr "Enlace a una página sobre ello"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:195
+#: src/components/project/digest/DigestReview/DigestReview.tsx:186
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:196
-#: src/components/project/digest/DigestReview/DigestReview.tsx:613
+#: src/components/project/digest/DigestReview/DigestReview.tsx:187
+#: src/components/project/digest/DigestReview/DigestReview.tsx:604
 msgid "Name box"
 msgstr "Casilla del nombre"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:446
+#: src/components/project/digest/DigestReview/DigestReview.tsx:437
 msgid "Names and words transcription should spell right. Each one is in your material."
 msgstr "Nombres y palabras que la transcripción debe escribir bien. Cada uno está en tu material."
 
@@ -197,11 +197,11 @@ msgid "Not read: together the files are longer than 200,000 characters."
 msgstr "No leído: juntos, los archivos superan los 200.000 caracteres."
 
 #: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
-#: src/components/project/digest/DigestReview/DigestReview.tsx:370
+#: src/components/project/digest/DigestReview/DigestReview.tsx:361
 msgid "Nothing yet"
 msgstr "Nada todavía"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:312
+#: src/components/project/digest/DigestReview/DigestReview.tsx:303
 msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
 msgstr "Una parte cada vez: acéptala, edítala o sáltala. No se guarda nada hasta que crees el proyecto."
 
@@ -209,11 +209,11 @@ msgstr "Una parte cada vez: acéptala, edítala o sáltala. No se guarda nada ha
 msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
 msgstr "Solo cabe el principio: dembrane lee los primeros 4.000 caracteres del contexto."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:542
+#: src/components/project/digest/DigestReview/DigestReview.tsx:533
 msgid "Or choose another"
 msgstr "O elige otra"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:563
+#: src/components/project/digest/DigestReview/DigestReview.tsx:554
 msgid "Participants tap the round they are in before they record."
 msgstr "Los participantes tocan su ronda antes de grabar."
 
@@ -238,12 +238,12 @@ msgstr "PDF, Word, PowerPoint o texto. Hasta {MAX_FILES} archivos de 10 MB."
 msgid "Pictures aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Las imágenes no se leen. Funcionan PDF, Word, PowerPoint y archivos de texto."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:190
-#: src/components/project/digest/DigestReview/DigestReview.tsx:433
+#: src/components/project/digest/DigestReview/DigestReview.tsx:181
+#: src/components/project/digest/DigestReview/DigestReview.tsx:424
 msgid "Project context"
 msgstr "Contexto del proyecto"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:395
+#: src/components/project/digest/DigestReview/DigestReview.tsx:386
 msgid "Project name"
 msgstr "Nombre del proyecto"
 
@@ -252,7 +252,7 @@ msgid "read"
 msgstr "leído"
 
 #. placeholder {0}: result.sources.map((s) => s.name).join(", ")
-#: src/components/project/digest/DigestReview/DigestReview.tsx:322
+#: src/components/project/digest/DigestReview/DigestReview.tsx:313
 msgid "Read from: {0}"
 msgstr "Leído de: {0}"
 
@@ -276,8 +276,8 @@ msgstr "Leyendo tu material"
 msgid "Ready to create"
 msgstr "Listo para crear"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:197
-#: src/components/project/digest/DigestReview/DigestReview.tsx:568
+#: src/components/project/digest/DigestReview/DigestReview.tsx:188
+#: src/components/project/digest/DigestReview/DigestReview.tsx:559
 msgid "Rounds as tags"
 msgstr "Rondas como etiquetas"
 
@@ -297,25 +297,25 @@ msgstr "Omitido"
 msgid "Spreadsheets aren't read. PDF, Word, PowerPoint and text files work."
 msgstr "Las hojas de cálculo no se leen. Funcionan PDF, Word, PowerPoint y archivos de texto."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:226
-#: src/components/project/digest/DigestReview/DigestReview.tsx:259
+#: src/components/project/digest/DigestReview/DigestReview.tsx:217
+#: src/components/project/digest/DigestReview/DigestReview.tsx:250
 msgid "Start over"
 msgstr "Empezar de nuevo"
 
 #. placeholder {0}: i + 1
-#: src/components/project/digest/DigestReview/DigestReview.tsx:649
+#: src/components/project/digest/DigestReview/DigestReview.tsx:640
 msgid "Step {0}"
 msgstr "Paso {0}"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:641
+#: src/components/project/digest/DigestReview/DigestReview.tsx:632
 msgid "Steps for this session, added after the template's host script."
 msgstr "Pasos para esta sesión, añadidos después del guion del anfitrión de la plantilla."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:198
+#: src/components/project/digest/DigestReview/DigestReview.tsx:189
 msgid "Template"
 msgstr "Plantilla"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:353
+#: src/components/project/digest/DigestReview/DigestReview.tsx:344
 msgid "The link could not be read, so this comes from your files and text."
 msgstr "No se ha podido leer el enlace, así que esto sale de tus archivos y tu texto."
 
@@ -375,11 +375,11 @@ msgstr "Con documentos largos tarda hasta medio minuto."
 #~ msgid "Use this name box label"
 #~ msgstr "Usar esta etiqueta para la casilla del nombre"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:199
+#: src/components/project/digest/DigestReview/DigestReview.tsx:190
 msgid "Verify"
 msgstr "Verify"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:585
+#: src/components/project/digest/DigestReview/DigestReview.tsx:576
 msgid "Verify options"
 msgstr "Opciones de Verify"
 
@@ -387,28 +387,28 @@ msgstr "Opciones de Verify"
 msgid "waiting"
 msgstr "en espera"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:581
+#: src/components/project/digest/DigestReview/DigestReview.tsx:572
 msgid "What participants check together at the end of their conversation."
 msgstr "Lo que los participantes revisan juntos al final de su conversación."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:609
+#: src/components/project/digest/DigestReview/DigestReview.tsx:600
 msgid "What the portal asks each group to type before recording."
 msgstr "Lo que el portal pide a cada grupo que escriba antes de grabar."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:412
+#: src/components/project/digest/DigestReview/DigestReview.tsx:403
 msgid "What you want to learn or decide. Saved as the project's first goal."
 msgstr "Lo que quieres aprender o decidir. Se guarda como el primer objetivo del proyecto."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:429
+#: src/components/project/digest/DigestReview/DigestReview.tsx:420
 msgid "What, who, where and the questions. dembrane reads it to keep answers and summaries on your question."
 msgstr "Qué, quién, dónde y las preguntas. dembrane lo lee para que las respuestas y los resúmenes se centren en tu pregunta."
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:624
+#: src/components/project/digest/DigestReview/DigestReview.tsx:615
 msgid "When a group presses Explore, dembrane asks one open question built from your questions. It never gives its own opinion."
 msgstr "Cuando un grupo pulsa Explorar, dembrane hace una pregunta abierta basada en tus preguntas. Nunca da su propia opinión."
 
 #. placeholder {0}: result.template.reason
-#: src/components/project/digest/DigestReview/DigestReview.tsx:492
+#: src/components/project/digest/DigestReview/DigestReview.tsx:483
 msgid "Why this one: {0}"
 msgstr "Por qué esta: {0}"
 
@@ -424,7 +424,7 @@ msgstr "Ya has configurado varios proyectos con material en la última hora. Vue
 msgid "Your files"
 msgstr "Tus archivos"
 
-#: src/components/project/digest/DigestReview/DigestReview.tsx:330
+#: src/components/project/digest/DigestReview/DigestReview.tsx:321
 msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
 msgstr "Tu material era largo, así que dembrane leyó el principio y una versión resumida. Comprueba que no falte nada importante."
 

@@ -8,6 +8,10 @@ import { useChat } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import {
+	isSectionKey,
+	type SectionKey,
+} from "@/components/project/portal-editor/sectionKeys";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
 
@@ -66,8 +70,8 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	usage: "Usage",
 };
 
-// The portal editor's pages (ECHO-1060).
-const PORTAL_PAGE_LABELS: Record<string, string> = {
+// The portal editor's pages (ECHO-1060), one label for each of SECTION_KEYS.
+const PORTAL_PAGE_LABELS: Record<SectionKey, string> = {
 	about: "About",
 	explore: "Explore",
 	finish: "Finish",
@@ -312,8 +316,8 @@ export const AppBreadcrumbs = () => {
 					href: `/w/${params.workspaceId}/projects/${params.projectId}/portal/welcome`,
 					label: "Portal editor",
 				});
-				const page = params.section ? PORTAL_PAGE_LABELS[params.section] : null;
-				if (page) out.push({ label: page });
+				if (isSectionKey(params.section))
+					out.push({ label: PORTAL_PAGE_LABELS[params.section] });
 				return out;
 			}
 		}

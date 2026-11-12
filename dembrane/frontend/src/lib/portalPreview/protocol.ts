@@ -52,6 +52,9 @@ export type PreviewHighlight = (typeof PREVIEW_HIGHLIGHTS)[number];
 /** The project languages, each of which the preview can show. */
 export const PREVIEW_LANGUAGES = PROJECT_LANGUAGE_CODES;
 
+/** The tutorial cards a portal can show before recording; "none" shows none. */
+export const TUTORIAL_SLUGS = ["none", "basic", "advanced"] as const;
+
 export const LEGAL_BASES = [
 	"client-managed",
 	"consent",
@@ -64,7 +67,7 @@ export interface PreviewProject {
 	default_conversation_title: string;
 	default_conversation_description: string;
 	default_conversation_finish_text: string;
-	default_conversation_tutorial_slug: "none" | "basic" | "advanced";
+	default_conversation_tutorial_slug: (typeof TUTORIAL_SLUGS)[number];
 	default_conversation_ask_for_participant_name: boolean;
 	conversation_ask_for_participant_name_label: string;
 	default_conversation_ask_for_participant_email: boolean;
@@ -179,11 +182,7 @@ const BOOLEAN_FIELDS = [
 function parseProject(v: unknown): PreviewProject | null {
 	if (!isRecord(v)) return null;
 	const language = oneOf(v.language, PREVIEW_LANGUAGES);
-	const tutorial = oneOf(v.default_conversation_tutorial_slug, [
-		"none",
-		"basic",
-		"advanced",
-	] as const);
+	const tutorial = oneOf(v.default_conversation_tutorial_slug, TUTORIAL_SLUGS);
 	const legal = oneOf(v.legal_basis, LEGAL_BASES);
 	const title = text(v.default_conversation_title, LIMITS.title);
 	const description = text(v.default_conversation_description, LIMITS.longText);

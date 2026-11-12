@@ -1292,7 +1292,7 @@ msgstr "Un refuso"
 msgid "a workspace"
 msgstr "uno spazio di lavoro"
 
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:49
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:21
 msgid "About"
 msgstr "Informazioni"
 
@@ -4680,7 +4680,7 @@ msgstr "Crea password"
 #: src/routes/project/CreateProjectRoute.tsx:728
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:205
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:209
 #: src/components/project/CreateProjectButton.tsx:32
 msgid "Create project"
 msgstr "Crea progetto"
@@ -6083,7 +6083,7 @@ msgstr "Explore"
 msgid "participant.button.refine.explore"
 msgstr "Explore"
 
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:54
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:22
 #: src/components/project/PortalSettingsOverview.tsx:126
 msgid "Explore"
 msgstr "Explore"
@@ -6534,7 +6534,7 @@ msgstr "Finish"
 msgid "participant.button.finish"
 msgstr "Finish"
 
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:64
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:23
 msgid "Finish"
 msgstr "Fine"
 
@@ -11458,7 +11458,7 @@ msgstr "Descrizione del portale"
 msgid "portal editor"
 msgstr "editor del portale"
 
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:34
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:52
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:104
 #: src/components/project/PortalSettingsOverview.tsx:161
 msgid "Portal editor"
@@ -11633,7 +11633,7 @@ msgstr "Pagina precedente"
 #~ msgid "Print report"
 #~ msgstr "Print report"
 
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:44
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:24
 #: src/components/layout/Footer.tsx:32
 msgid "Privacy"
 msgstr "Privacy"
@@ -12414,7 +12414,7 @@ msgid "Relationships"
 msgstr "Relazioni"
 
 #: src/routes/ReleaseNotesRoute.tsx:21
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:158
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:162
 msgid "Release notes"
 msgstr "Note di rilascio"
 
@@ -14294,7 +14294,7 @@ msgstr "Mostra il testo completo"
 msgid "Show the host guide"
 msgstr "Mostra la guida per l’host"
 
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:358
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:362
 msgid "Show the path to this page"
 msgstr "Mostra il percorso verso questa pagina"
 
@@ -17599,7 +17599,7 @@ msgid "participant.button.verify_prompt.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:59
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:27
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
@@ -17961,7 +17961,7 @@ msgstr "I webhook sono inclusi in un piano a pagamento."
 #: src/routes/onboarding/OnboardingRoute.tsx:131
 #: src/routes/auth/Login.tsx:414
 #: src/portal/components/conversation/ConversationMessages.tsx:113
-#: src/features/sidebar/views/project/ProjectPortalView.tsx:39
+#: src/features/sidebar/views/project/ProjectPortalView.tsx:29
 msgid "Welcome"
 msgstr "Welcome"
 
