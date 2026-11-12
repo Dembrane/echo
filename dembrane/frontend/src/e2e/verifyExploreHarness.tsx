@@ -10,11 +10,11 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { RefineButtonLabel } from "@/components/participant/refine/RefineButtonLabel";
-import { RefineSelection } from "@/components/participant/refine/RefineSelection";
-import { refineMode } from "@/components/participant/refine/refineMode";
-import { StopRecordingConfirmationModal } from "@/components/participant/StopRecordingConfirmationModal";
-import { VerifySelection } from "@/components/participant/verify/VerifySelection";
+import { RefineButtonLabel } from "@/portal/components/refine/RefineButtonLabel";
+import { RefineSelection } from "@/portal/components/refine/RefineSelection";
+import { refineMode } from "@/portal/components/refine/refineMode";
+import { StopRecordingConfirmationModal } from "@/portal/components/conversation/audio/StopRecordingConfirmationModal";
+import { VerifySelection } from "@/portal/components/verify/VerifySelection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { AppPreferencesProvider } from "@/hooks/useAppPreferences";
 import {
