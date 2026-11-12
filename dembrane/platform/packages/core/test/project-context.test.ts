@@ -98,6 +98,11 @@ const ALLOWED: readonly { file: string; includes: string; why: string }[] = [
     why: "the privacy export carries the stored text whole",
   },
   { file: "core/src/project-context.ts", includes: "project.context", why: "the helper's doc" },
+  {
+    file: "verify/src/try-it/service.ts",
+    includes: "context: project.context",
+    why: "hands the stored text to replyPrompt, which budgets it with contextForPrompt",
+  },
 ];
 
 const PATTERN = /\b(?:project|p|row|prepared|proj)\??\.context\b/;
