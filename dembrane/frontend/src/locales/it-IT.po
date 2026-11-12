@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# dal vivo} other {# dal vivo}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:302
+#: src/routes/project/ProjectsHome.tsx:307
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# posto pagato} other {# posti pagati}} per questo peri
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:511
+#: src/routes/project/ProjectsHome.tsx:514
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# selezionato} other {# selezionati}}"
@@ -1216,7 +1216,7 @@ msgstr "Un portale per i partecipanti per registrare conversazioni."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Per il trattamento basato sul consenso serve un link all'informativa sulla privacy. Deve iniziare con http:// o https:// e avere al massimo 255 caratteri."
 
-#: src/routes/project/ProjectsHome.tsx:394
+#: src/routes/project/ProjectsHome.tsx:397
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Un progetto racchiude tutto ciò che riguarda un argomento. Condividi il link con i partecipanti, raccogli le voci e lascia che dembrane le trasformi in insight."
 
@@ -1966,7 +1966,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "Tutti i tipi"
 
-#: src/routes/project/ProjectsHome.tsx:438
+#: src/routes/project/ProjectsHome.tsx:441
 msgid "All projects"
 msgstr "Tutti i progetti"
 
@@ -3088,7 +3088,7 @@ msgstr "Chiamate non associate ad alcun account"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/ProjectsHome.tsx:540
+#: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:493
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1819
@@ -3649,7 +3649,7 @@ msgid "Clear filters"
 msgstr "Cancella filtri"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:461
+#: src/routes/project/ProjectsHome.tsx:464
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -8211,8 +8211,8 @@ msgstr "Troviamo quello che fa per te"
 #~ msgid "Let's go!"
 #~ msgstr "Andiamo!"
 
-#: src/routes/project/ProjectsHome.tsx:337
-#: src/routes/project/ProjectsHome.tsx:384
+#: src/routes/project/ProjectsHome.tsx:342
+#: src/routes/project/ProjectsHome.tsx:387
 msgid "Let's hear your first conversation."
 msgstr "Ascoltiamo la tua prima conversazione."
 
@@ -9141,7 +9141,7 @@ msgstr "Cronologia spostamenti"
 msgid "Move project"
 msgstr "Sposta progetto"
 
-#: src/routes/project/ProjectsHome.tsx:530
+#: src/routes/project/ProjectsHome.tsx:533
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Sposta progetti"
@@ -9802,7 +9802,7 @@ msgstr "Nessuna attività del progetto in questo periodo."
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:480
+#: src/routes/project/ProjectsHome.tsx:483
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10147,7 +10147,7 @@ msgstr "Note salvate dall'assistente su questo spazio di lavoro durante le chat.
 msgid "Nothing from dembrane right now."
 msgstr "Nessuna novità da dembrane al momento."
 
-#: src/routes/project/ProjectsHome.tsx:382
+#: src/routes/project/ProjectsHome.tsx:385
 msgid "Nothing here for you yet."
 msgstr "Non c'è ancora nulla qui per te."
 
@@ -11232,7 +11232,7 @@ msgstr "Fissa fino a tre progetti in cima alla tua lista progetti."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Fissa i modelli più usati direttamente nella chat."
 
-#: src/routes/project/ProjectsHome.tsx:415
+#: src/routes/project/ProjectsHome.tsx:418
 msgid "Pinned"
 msgstr "Fissati"
 
@@ -11854,7 +11854,7 @@ msgstr "progetti"
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:81
+#: src/routes/project/ProjectsHome.tsx:86
 msgid "Projects | dembrane"
 msgstr "Projects | dembrane"
 
@@ -11867,7 +11867,7 @@ msgstr "Progetti nell'organizzazione · {0}"
 msgid "Projects moved"
 msgstr "Progetti spostati"
 
-#: src/routes/project/ProjectsHome.tsx:389
+#: src/routes/project/ProjectsHome.tsx:392
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "I progetti compariranno qui quando qualcuno dell'organizzazione ne condividerà uno con te."
 
@@ -13503,7 +13503,7 @@ msgstr "Cerca persone o inserisci un'email"
 msgid "Search project or workspace"
 msgstr "Cerca progetto o spazio di lavoro"
 
-#: src/routes/project/ProjectsHome.tsx:468
+#: src/routes/project/ProjectsHome.tsx:471
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -13652,7 +13652,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Visualizza utilizzo e fatture. Nessun accesso ai progetti o ai contenuti."
 
-#: src/routes/project/ProjectsHome.tsx:552
+#: src/routes/project/ProjectsHome.tsx:555
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Seleziona"
@@ -13693,7 +13693,7 @@ msgstr "Seleziona prima una parola"
 msgid "Select a workspace"
 msgstr "Seleziona uno spazio di lavoro"
 
-#: src/routes/project/ProjectsHome.tsx:517
+#: src/routes/project/ProjectsHome.tsx:520
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -13993,7 +13993,7 @@ msgid "Setting up"
 msgstr "Configurazione in corso"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:297
+#: src/routes/project/ProjectsHome.tsx:302
 #: src/portal/layout/ParticipantHeader.tsx:125
 #: src/portal/layout/ParticipantHeader.tsx:126
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
@@ -17053,7 +17053,7 @@ msgstr "Webhook senza nome"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:202
+#: src/routes/project/ProjectsHome.tsx:207
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -19102,7 +19102,7 @@ msgstr "I tuoi portali continuano a funzionare e nulla di ciò che dicono i part
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Il contesto del progetto è lungo, quindi i suggerimenti ne leggono i primi 20.000 caratteri. Il testo completo viene salvato."
 
-#: src/routes/project/ProjectsHome.tsx:340
+#: src/routes/project/ProjectsHome.tsx:345
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Qui compariranno i tuoi progetti. Un progetto raccoglie tutto su un argomento: il link su cui i partecipanti registrano, le loro conversazioni e ciò che dembrane ne ricava."
 

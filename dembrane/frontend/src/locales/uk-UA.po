@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# наживо} few {# наживо} many {# нажив
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:302
+#: src/routes/project/ProjectsHome.tsx:307
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# місце оплачене} few {# місця опл
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:511
+#: src/routes/project/ProjectsHome.tsx:514
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# вибрано} few {# вибрано} many {# вибрано} other {# вибрано}}"
@@ -1216,7 +1216,7 @@ msgstr "Портал учасників для запису розмов."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Для обробки на основі згоди потрібне посилання на політику конфіденційності. Воно має починатися з http:// або https:// і містити не більше 255 символів."
 
-#: src/routes/project/ProjectsHome.tsx:394
+#: src/routes/project/ProjectsHome.tsx:397
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Проєкт містить усе, що стосується однієї теми. Поділіться посиланням з учасниками, зберіть думки, а dembrane перетворить їх на інсайти."
 
@@ -1966,7 +1966,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "Усі види"
 
-#: src/routes/project/ProjectsHome.tsx:438
+#: src/routes/project/ProjectsHome.tsx:441
 msgid "All projects"
 msgstr "Усі проєкти"
 
@@ -3088,7 +3088,7 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/ProjectsHome.tsx:540
+#: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:493
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1819
@@ -3649,7 +3649,7 @@ msgid "Clear filters"
 msgstr "Скинути фільтри"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:461
+#: src/routes/project/ProjectsHome.tsx:464
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -8211,8 +8211,8 @@ msgstr "Знайдімо те, що вам підходить"
 #~ msgid "Let's go!"
 #~ msgstr "Почнімо!"
 
-#: src/routes/project/ProjectsHome.tsx:337
-#: src/routes/project/ProjectsHome.tsx:384
+#: src/routes/project/ProjectsHome.tsx:342
+#: src/routes/project/ProjectsHome.tsx:387
 msgid "Let's hear your first conversation."
 msgstr "Послухаймо вашу першу розмову."
 
@@ -9141,7 +9141,7 @@ msgstr "Історія переміщень"
 msgid "Move project"
 msgstr "Перемістити проєкт"
 
-#: src/routes/project/ProjectsHome.tsx:530
+#: src/routes/project/ProjectsHome.tsx:533
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Перемістити проєкти"
@@ -9802,7 +9802,7 @@ msgstr "Немає активності в проєкті за цей періо
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:480
+#: src/routes/project/ProjectsHome.tsx:483
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10147,7 +10147,7 @@ msgstr "Нотатки про цей робочий простір, збереж
 msgid "Nothing from dembrane right now."
 msgstr "Зараз від dembrane нічого немає."
 
-#: src/routes/project/ProjectsHome.tsx:382
+#: src/routes/project/ProjectsHome.tsx:385
 msgid "Nothing here for you yet."
 msgstr "Тут для вас поки нічого немає."
 
@@ -11232,7 +11232,7 @@ msgstr "Закріплюйте до трьох проєктів угорі сп�
 msgid "Pin your most-used templates directly in chat."
 msgstr "Закріплюйте найуживаніші шаблони просто в чаті."
 
-#: src/routes/project/ProjectsHome.tsx:415
+#: src/routes/project/ProjectsHome.tsx:418
 msgid "Pinned"
 msgstr "Закріплені"
 
@@ -11854,7 +11854,7 @@ msgstr "проєкти"
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:81
+#: src/routes/project/ProjectsHome.tsx:86
 msgid "Projects | dembrane"
 msgstr "Projects | dembrane"
 
@@ -11867,7 +11867,7 @@ msgstr "Проєкти організації · {0}"
 msgid "Projects moved"
 msgstr "Проєкти переміщено"
 
-#: src/routes/project/ProjectsHome.tsx:389
+#: src/routes/project/ProjectsHome.tsx:392
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Проєкти з'являться тут, щойно хтось в організації поділиться з вами одним із них."
 
@@ -13503,7 +13503,7 @@ msgstr "Шукайте людей або введіть email"
 msgid "Search project or workspace"
 msgstr "Пошук проєкту або робочого простору"
 
-#: src/routes/project/ProjectsHome.tsx:468
+#: src/routes/project/ProjectsHome.tsx:471
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -13652,7 +13652,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Бачить використання та рахунки. Не має доступу до проєктів чи вмісту."
 
-#: src/routes/project/ProjectsHome.tsx:552
+#: src/routes/project/ProjectsHome.tsx:555
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Вибрати"
@@ -13693,7 +13693,7 @@ msgstr "Спершу виберіть слово"
 msgid "Select a workspace"
 msgstr "Виберіть робочий простір"
 
-#: src/routes/project/ProjectsHome.tsx:517
+#: src/routes/project/ProjectsHome.tsx:520
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -13993,7 +13993,7 @@ msgid "Setting up"
 msgstr "Налаштування"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:297
+#: src/routes/project/ProjectsHome.tsx:302
 #: src/portal/layout/ParticipantHeader.tsx:125
 #: src/portal/layout/ParticipantHeader.tsx:126
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
@@ -17053,7 +17053,7 @@ msgstr "Вебхук без назви"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:202
+#: src/routes/project/ProjectsHome.tsx:207
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -19102,7 +19102,7 @@ msgstr "Ваші портали продовжують працювати, і н
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Контекст вашого проєкту довгий, тому пропозиції читають перші 20 000 символів. Увесь текст збережено."
 
-#: src/routes/project/ProjectsHome.tsx:340
+#: src/routes/project/ProjectsHome.tsx:345
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Тут з’являться ваші проєкти. Проєкт містить усе для однієї теми: посилання, за яким учасники записують, їхні розмови та те, що з них робить dembrane."
 
