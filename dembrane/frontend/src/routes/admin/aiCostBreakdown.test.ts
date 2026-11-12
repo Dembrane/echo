@@ -148,6 +148,22 @@ describe("groupFeatures", () => {
 	});
 });
 
+describe("groupFeatures with an older API", () => {
+	it("puts entries without names under Other, labelled by operation", () => {
+		const groups = groupFeatures([
+			{ calls: 2, cost_micro_eur: 300, operation: "conversations.chunk" },
+			{ calls: 1, cost_micro_eur: 100, operation: "" },
+		]);
+		expect(groups.map((g) => [g.group, g.label, g.calls])).toEqual([
+			["other", "Other", 3],
+		]);
+		expect(groups[0]?.operations.map((o) => [o.operation, o.label])).toEqual([
+			["conversations.chunk", "conversations.chunk"],
+			["", "Unlabelled"],
+		]);
+	});
+});
+
 describe("providerName", () => {
 	it("names the providers staff check invoices against", () => {
 		expect(providerName("vertex")).toBe("Google Vertex");

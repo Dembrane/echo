@@ -18,6 +18,8 @@ const run = admin ? describe : describe.skip;
 const dbName = `staff_obs_ai_views_${process.pid}`;
 const NOW = new Date("2026-10-25T12:00:00Z");
 const MONTH_START = "2026-10-01";
+// The redaction obs.ai_accounts applies to names.
+const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 
 run("obs.ai_spend and obs.ai_call_quality", () => {
   setDefaultTimeout(60_000);
@@ -161,6 +163,30 @@ run("obs.ai_spend and obs.ai_call_quality", () => {
       provider: "vertex",
       cost: 60,
     });
+    // September: a day with calls and no rollup, before a later rolled day.
+    await modelCall({
+      at: "2026-09-20T08:00:00Z",
+      account,
+      operation: "conversations.chunk",
+      model: "flash",
+      provider: "vertex",
+      cost: 30,
+    });
+    await modelCall({
+      at: "2026-09-20T23:59:59.999Z",
+      account,
+      operation: "POST /api/chats/:chat_id",
+      model: "pro",
+      provider: "openai",
+      cost: 20,
+    });
+    await daily({
+      day: "2026-09-25",
+      operation: "POST /api/chats/:chat_id",
+      model: "flash",
+      cost: 70,
+      calls: 1,
+    });
     await syncFeatureRules(database.db);
   });
 
@@ -184,12 +210,19 @@ run("obs.ai_spend and obs.ai_call_quality", () => {
     for (const a of view.accounts)
       for (const f of a.by_feature) {
         const [r] =
-          await sql`select sum(cost_micro_eur)::bigint as cost, sum(calls)::bigint as calls, min(feature_group) as g, min(feature) as f
+          await sql`select sum(cost_micro_eur)::bigint as cost, sum(calls)::bigint as calls, min(feature_group) as g, min(group_label) as gl, min(feature) as f
           from obs.ai_spend where billing_account_id = ${a.billing_account_id} and operation = ${f.operation} and day >= ${MONTH_START}`;
-        expect({ cost: Number(r?.cost), calls: Number(r?.calls), g: r?.g, f: r?.f }).toEqual({
+        expect({
+          cost: Number(r?.cost),
+          calls: Number(r?.calls),
+          g: r?.g,
+          gl: r?.gl,
+          f: r?.f,
+        }).toEqual({
           cost: f.cost_micro_eur,
           calls: f.calls,
           g: f.group,
+          gl: f.group_label,
           f: f.label,
         });
       }
@@ -199,13 +232,14 @@ run("obs.ai_spend and obs.ai_call_quality", () => {
         f.cost_micro_eur,
         f.calls,
         f.group,
+        f.group_label,
         f.label,
       ]),
     ).toEqual([
-      ["conversations.chunk", 1200, 3, expect.any(String), expect.any(String)],
-      ["POST /api/chats/:chat_id", 600, 2, expect.any(String), expect.any(String)],
-      ["", 325, 2, "other", "Unlabelled"],
-      ["brand.new", 50, 1, "other", "brand.new"],
+      ["conversations.chunk", 1200, 3, "recording", "Recording", "Transcription"],
+      ["POST /api/chats/:chat_id", 600, 2, "chat", "Chat", "Replies"],
+      ["", 325, 2, "other", "Other", "Unlabelled"],
+      ["brand.new", 50, 1, "other", "Other", "brand.new"],
     ]);
   });
 
@@ -232,18 +266,131 @@ run("obs.ai_spend and obs.ai_call_quality", () => {
     expect(await total("day = '2026-10-15'")).toBe(800);
     expect(await total("day = '2026-10-10'")).toBe(1000);
     expect(await total("day = '2026-10-25'")).toBe(475);
-    expect(await total()).toBe(2275);
+    expect(await total("day >= '2026-10-01'")).toBe(2275);
+    expect(await total()).toBe(2395);
+  });
+
+  test("a day with calls and no rollup before a later rolled day is read from model_call, as the staff API does", async () => {
+    expect(await total("day = '2026-09-20'")).toBe(50);
+    expect(await total("day = '2026-09-25'")).toBe(70);
+    const view = await aiCosts(database.db, NOW, 1, 5_000_000);
+    expect(view.period_start).toBe("2026-09-01T00:00:00.000Z");
+    expect(view.accounts).toHaveLength(1);
+    const ops = view.accounts[0]?.by_feature.map((f) => [f.operation, f.cost_micro_eur, f.calls]);
+    expect(ops).toEqual([
+      ["POST /api/chats/:chat_id", 90, 2],
+      ["conversations.chunk", 30, 1],
+    ]);
+    const rows =
+      await sql`select operation, sum(cost_micro_eur)::bigint as cost, sum(calls)::bigint as calls
+      from obs.ai_spend where day >= '2026-09-01' and day < '2026-10-01' group by operation order by cost desc`;
+    expect(rows.map((r) => [r.operation, Number(r.cost), Number(r.calls)])).toEqual(ops ?? []);
+    const byProvider =
+      await sql`select provider, sum(cost_micro_eur)::bigint as cost from obs.ai_spend_base
+      where day >= '2026-09-01' and day < '2026-10-01' group by provider order by cost desc`;
+    expect(
+      byProvider.map((r) => ({ provider: r.provider, cost_micro_eur: Number(r.cost) })),
+    ).toEqual(view.by_provider);
+  });
+
+  test("ai_spend_base has the rows of ai_spend, and ai_spend is those rows named by ai_feature", async () => {
+    const cols = sql.unsafe(
+      "day, billing_account_id, payer, operation, model, provider, calls, input_tokens, output_tokens, cost_micro_eur",
+    );
+    const [counts] = await sql`select (select count(*) from obs.ai_spend)::int as named,
+      (select count(*) from obs.ai_spend_base)::int as base,
+      (select count(*) from (select ${cols} from obs.ai_spend except all select ${cols} from obs.ai_spend_base) x)::int as only_named,
+      (select count(*) from (select ${cols} from obs.ai_spend_base except all select ${cols} from obs.ai_spend) x)::int as only_base`;
+    expect(counts).toEqual({ named: 12, base: 12, only_named: 0, only_base: 0 });
+    const [names] = await sql`select count(*)::int as n from (
+        select ${cols}, feature_group, group_label, feature from obs.ai_spend
+        except all
+        select b.day, b.billing_account_id, b.payer, b.operation, b.model, b.provider, b.calls,
+          b.input_tokens, b.output_tokens, b.cost_micro_eur, f.feature_group, f.group_label, f.feature
+        from obs.ai_spend_base b cross join lateral obs.ai_feature(b.operation) f) x`;
+    expect(names?.n).toBe(0);
+  });
+
+  test("ai_spend_base gives exactly the rows of the plain definition (rolled days from ai_spend_daily, every other day from model_call)", async () => {
+    const plain = sql.unsafe(`
+      with rolled as (select distinct day from ai_spend_daily), spend as (
+        select s.day, s.billing_account_id, s.payer, s.operation, s.model,
+          coalesce((select min(p.provider) from ai_price p where p.model = s.model
+            having count(distinct p.provider) = 1), 'unknown') as provider,
+          s.calls::bigint as calls, s.input_tokens, s.output_tokens, s.cost_micro_eur
+        from ai_spend_daily s
+        union all
+        select (m.started_at at time zone 'UTC')::date, m.billing_account_id, m.payer,
+          coalesce(m.operation, ''), m.model, coalesce(m.provider, 'unknown'), count(*),
+          coalesce(sum(m.input_tokens), 0), coalesce(sum(m.output_tokens), 0), coalesce(sum(m.cost_micro_eur), 0)
+        from model_call m where (m.started_at at time zone 'UTC')::date not in (select day from rolled)
+        group by 1, 2, 3, 4, 5, 6)
+      select day, billing_account_id, payer, operation, model, provider, sum(calls)::bigint as calls,
+        sum(input_tokens)::bigint as input_tokens, sum(output_tokens)::bigint as output_tokens,
+        sum(cost_micro_eur)::bigint as cost_micro_eur
+      from spend group by 1, 2, 3, 4, 5, 6`);
+    const [d] = await sql`select
+      (select count(*) from (select * from obs.ai_spend_base except all select * from (${plain}) p) x)::int as only_view,
+      (select count(*) from (select * from (${plain}) p except all select * from obs.ai_spend_base) x)::int as only_plain`;
+    expect(d).toEqual({ only_view: 0, only_plain: 0 });
   });
 
   test("with the rules table emptied total cost is unchanged and every row is other", async () => {
     await sql`delete from ai_feature_rule`;
     try {
-      expect(await total()).toBe(2275);
+      expect(await total()).toBe(2395);
       const groups = await sql`select distinct feature_group from obs.ai_spend`;
       expect(groups.map((r) => r.feature_group)).toEqual(["other"]);
     } finally {
       await syncFeatureRules(database.db);
     }
+  });
+
+  test("ai_call_gaps lists unattributed calls and calls with no operation, and nothing else", async () => {
+    const rolledBack = new Error("rolled back");
+    let rows: Record<string, unknown>[] = [];
+    // In a transaction rolled back after, so the totals above stay as seeded.
+    await sql
+      .begin(async (tx) => {
+        const call = (service: string, operation: string | null, payer: string, cost: number) =>
+          tx`insert into model_call (started_at, service, operation, model_group, model, kind,
+              status, attempt, ms, billing_account_id, payer, cost_micro_eur)
+            values (now() - interval '1 hour', ${service}, ${operation}, ${`${service}-group`}, 'flash',
+              ${`${service}-kind`}, 'ok', 1, 10, ${payer === "account" ? account : null}, ${payer}, ${cost})`;
+        await call("api", "POST /api/chats/:chat_id", "unattributed", 11);
+        await call("worker", null, "account", 22);
+        await call("normal", "conversations.chunk", "account", 33);
+        rows =
+          await tx`select payer, service, operation, model_group, kind, model, calls::int as calls,
+            cost_micro_eur::int as cost
+          from obs.ai_call_gaps where day >= (now() at time zone 'UTC')::date - 1 order by service`;
+        throw rolledBack;
+      })
+      .catch((err) => {
+        if (err !== rolledBack) throw err;
+      });
+    expect(rows.map((r) => ({ ...r }))).toEqual([
+      {
+        payer: "unattributed",
+        service: "api",
+        operation: "POST /api/chats/:chat_id",
+        model_group: "api-group",
+        kind: "api-kind",
+        model: "flash",
+        calls: 1,
+        cost: 11,
+      },
+      {
+        payer: "account",
+        service: "worker",
+        operation: "",
+        model_group: "worker-group",
+        kind: "worker-kind",
+        model: "flash",
+        calls: 1,
+        cost: 22,
+      },
+    ]);
   });
 
   test("ai_call_quality counts price_missing and usage_estimated per day and model", async () => {
@@ -303,17 +450,26 @@ run("obs.ai_accounts", () => {
         spend?: boolean;
         used?: number;
         usedPeriod?: Date;
+        // Named after its workspace, or only by its label.
+        scope?: "workspace" | "label";
       },
     ) {
       const id = randomUUID();
       ids[key] = id;
       const orgId = randomUUID();
       await sql`insert into org (id, name) values (${orgId}, ${o.org ?? key})`;
-      await sql`insert into billing_account (id, tier, org_id, ai_budget_micro_eur, ai_budget_unlimited,
+      await sql`insert into billing_account (id, tier, org_id, label, ai_budget_micro_eur, ai_budget_unlimited,
           ai_budget_until, downgraded_at, deleted_at)
-        values (${id}, ${o.tier ?? "free"}, ${orgId}, ${o.amount ?? null}, ${o.unlimited ?? false},
+        values (${id}, ${o.tier ?? "free"}, ${o.scope ? null : orgId},
+          ${o.scope === "label" ? `${key} label` : null}, ${o.amount ?? null}, ${o.unlimited ?? false},
           ${o.until ?? null}, ${o.downgradedAt?.toISOString() ?? null},
           ${o.deleted ? past : null})`;
+      if (o.scope === "workspace") {
+        const ws = randomUUID();
+        await sql`insert into workspace (id, name, org_id, billing_account_id)
+          values (${ws}, ${`${key} workspace`}, ${orgId}, ${id})`;
+        await sql`update billing_account set workspace_id = ${ws} where id = ${id}`;
+      }
       if (o.spend !== false)
         await sql`insert into ai_spend_daily (day, billing_account_id, payer, operation, model,
             calls, input_tokens, output_tokens, cost_micro_eur)
@@ -338,6 +494,8 @@ run("obs.ai_accounts", () => {
     await account("emailed", { org: "jane@example.com team", used: 10 });
     await account("deleted", { deleted: true, used: 3_000_000 });
     await account("quiet", { amount: 3_000_000, spend: false });
+    await account("workspaced", { scope: "workspace", used: 400_000 });
+    await account("labelled", { scope: "label", used: 800_000 });
   });
 
   afterAll(async () => {
@@ -367,6 +525,7 @@ run("obs.ai_accounts", () => {
         tier: row?.tier,
         scope: row?.account_scope,
         until: (row?.override_until as Date | null)?.toISOString() ?? null,
+        name: row?.name,
       }).toEqual({
         budget: a.budget_micro_eur,
         custom: a.custom_budget,
@@ -376,8 +535,41 @@ run("obs.ai_accounts", () => {
         tier: a.tier,
         scope: a.account_scope,
         until: a.override_until,
+        name: a.name.replace(EMAIL, "[email withheld]"),
       });
     }
+  });
+
+  test("a workspace account and a label-only account are named and scoped as the staff API has them", async () => {
+    const view = await aiCosts(database.db, new Date(), 0, await limitDefault());
+    const staff = (k: string) => view.accounts.find((a) => a.billing_account_id === ids[k]);
+    const ws = await read(ids.workspaced as string);
+    const label = await read(ids.labelled as string);
+    expect([ws?.name, ws?.account_scope, ws?.percent_used]).toEqual([
+      "workspaced workspace",
+      "workspace",
+      10,
+    ]);
+    expect([label?.name, label?.account_scope, label?.percent_used]).toEqual([
+      "labelled label",
+      null,
+      20,
+    ]);
+    for (const [k, row] of [
+      ["workspaced", ws],
+      ["labelled", label],
+    ] as const)
+      expect([
+        row?.name,
+        row?.account_scope,
+        row?.percent_used,
+        Number(row?.budget_micro_eur),
+      ]).toEqual([
+        staff(k)?.name,
+        staff(k)?.account_scope,
+        staff(k)?.percent_used,
+        staff(k)?.budget_micro_eur,
+      ]);
   });
 
   test("the seeded cases come out as expected", async () => {

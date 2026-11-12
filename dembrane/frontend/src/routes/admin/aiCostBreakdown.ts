@@ -62,9 +62,10 @@ export interface GroupCost {
 export function groupFeatures(
 	features: {
 		operation: string;
-		group: FeatureGroup;
-		group_label: string;
-		label: string;
+		// Absent from an API older than this frontend.
+		group?: FeatureGroup;
+		group_label?: string;
+		label?: string;
 		cost_micro_eur: number;
 		calls?: number;
 	}[],
@@ -73,11 +74,12 @@ export function groupFeatures(
 	const share = (cost: number) => (total > 0 ? cost / total : 0);
 	const groups = new Map<FeatureGroup, GroupCost>();
 	for (const f of features) {
-		const g = groups.get(f.group) ?? {
+		const group = f.group ?? "other";
+		const g = groups.get(group) ?? {
 			calls: 0,
 			cost_micro_eur: 0,
-			group: f.group,
-			label: f.group_label,
+			group,
+			label: f.group_label ?? "Other",
 			operations: [],
 			share: 0,
 		};
@@ -87,11 +89,11 @@ export function groupFeatures(
 		g.operations.push({
 			calls,
 			cost_micro_eur: f.cost_micro_eur,
-			label: f.label,
+			label: f.label ?? (f.operation || "Unlabelled"),
 			operation: f.operation,
 			share: share(f.cost_micro_eur),
 		});
-		groups.set(f.group, g);
+		groups.set(group, g);
 	}
 	const byCost = (
 		a: { cost_micro_eur: number },

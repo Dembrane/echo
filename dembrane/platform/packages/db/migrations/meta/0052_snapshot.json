@@ -16618,6 +16618,21 @@
         }
       },
       "indexes": {
+        "ai_spend_daily_billing_account_idx": {
+          "name": "ai_spend_daily_billing_account_idx",
+          "columns": [
+            {
+              "expression": "billing_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
         "ai_spend_daily_key": {
           "name": "ai_spend_daily_key",
           "columns": [

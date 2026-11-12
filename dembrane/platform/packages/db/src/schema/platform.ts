@@ -182,6 +182,7 @@ export const ai_spend_daily = pgTable(
       t.operation,
       t.model,
     ),
+    index("ai_spend_daily_billing_account_idx").on(t.billing_account_id),
   ],
 );
 

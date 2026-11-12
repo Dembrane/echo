@@ -26,9 +26,10 @@ export interface AiCostAccount {
 	deleted: boolean;
 	by_feature: {
 		operation: string;
-		group: FeatureGroup;
-		group_label: string;
-		label: string;
+		// Absent from an API older than this frontend.
+		group?: FeatureGroup;
+		group_label?: string;
+		label?: string;
 		cost_micro_eur: number;
 		calls: number;
 	}[];
