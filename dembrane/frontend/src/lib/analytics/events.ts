@@ -141,7 +141,7 @@ export interface AnalyticsEvents {
 		key: string;
 		source: "sample";
 		outcome: "result" | "limit" | "failed";
-		/** Why it failed (failureCause), null after a result. */
+		/** Why it failed (requestFailure in lib/apiJson), null after a result. */
 		cause: string | null;
 		duration_ms_bucket: string;
 	};

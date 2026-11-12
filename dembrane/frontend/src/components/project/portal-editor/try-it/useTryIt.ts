@@ -1,10 +1,8 @@
 import { i18n } from "@lingui/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-	durationBucket,
-	failureCause,
-} from "@/components/project/digest/digest";
+import { durationBucket } from "@/components/project/digest/digest";
 import { track } from "@/lib/analytics/events";
+import { requestFailure } from "@/lib/apiJson";
 import { loadErrorMessages } from "@/lib/errors/present";
 import {
 	requestTry,
@@ -94,7 +92,7 @@ export function useTryIt({
 			// The failed line shows the error's own message: load the table first.
 			await loadErrorMessages(i18n).catch(() => undefined);
 			if (c.signal.aborted) return;
-			const cause = failureCause(error);
+			const cause = requestFailure(error);
 			const status = cause === "rate_limited" ? "limit" : "failed";
 			setState((s) => ({ ...s, error, status }));
 			finished(status, cause);

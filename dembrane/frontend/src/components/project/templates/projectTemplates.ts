@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/config";
-import { ApiRequestError } from "@/lib/errors/read";
+import { apiJson } from "@/lib/apiJson";
 
 /**
  * The templates a new project can start from (ECHO-1053: by purpose). The server holds the
@@ -92,15 +91,9 @@ export interface TemplateSummary {
 async function fetchProjectTemplates(
 	language: string,
 ): Promise<TemplateSummary[]> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/project-templates?language=${encodeURIComponent(language)}`,
-		{ credentials: "include" },
+	const body = await apiJson<{ templates: TemplateSummary[] }>(
+		`/v2/project-templates?language=${encodeURIComponent(language)}`,
 	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new ApiRequestError(res.status, data);
-	}
-	const body = (await res.json()) as { templates: TemplateSummary[] };
 	return body.templates;
 }
 

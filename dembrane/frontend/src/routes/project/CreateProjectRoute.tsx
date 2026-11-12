@@ -37,26 +37,22 @@ import {
 	hasTerm,
 	type SetupSuggestions,
 } from "@/components/project/setup-suggestions/setupSuggestions";
+import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
 import { useTemplatesCatalog } from "@/components/project/templates/i18n";
+import {
+	LazyAllFormats,
+	LazyTemplateRow,
+} from "@/components/project/templates/lazy";
 import {
 	isTemplateKey,
 	type TemplateKey,
 	templateName,
 	useProjectTemplates,
 } from "@/components/project/templates/projectTemplates";
-import { FlowProgress } from "@/components/project/templates/FlowProgress/FlowProgress";
-import {
-	LazyAllFormats,
-	LazyTemplateRow,
-} from "@/components/project/templates/lazy";
 import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
 import { TemplateSetupSummary } from "@/components/project/templates/TemplateSetupSummary/TemplateSetupSummary";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import {
-	AGENTIC_CHAT_IS_DEFAULT,
-	API_BASE_URL,
-	ENABLE_AGENTIC_CHAT,
-} from "@/config";
+import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useProjectCapStatus } from "@/hooks/useProjectCap";
@@ -67,7 +63,7 @@ import {
 	type ProjectCreateStep,
 	track,
 } from "@/lib/analytics/events";
-import { ApiRequestError } from "@/lib/errors/read";
+import { apiJson } from "@/lib/apiJson";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { isAdminRole, isOutsiderRole } from "@/lib/roles";
@@ -86,22 +82,11 @@ const CREATE_STEPS: Record<Screen, ProjectCreateStep> = {
 	start: "template",
 };
 
-async function setVisibility(projectId: string, visibility: Access) {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/projects/${projectId}/visibility`,
-		{
-			body: JSON.stringify({ visibility }),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "PATCH",
-		},
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new ApiRequestError(res.status, data);
-	}
-	return res.json();
-}
+const setVisibility = (projectId: string, visibility: Access) =>
+	apiJson(`/v2/projects/${projectId}/visibility`, {
+		body: { visibility },
+		method: "PATCH",
+	});
 
 /**
  * Creating a project, one thing at a time (ECHO-1058). The template's preset is applied by

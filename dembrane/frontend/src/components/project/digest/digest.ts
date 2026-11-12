@@ -1,5 +1,4 @@
-import { API_BASE_URL } from "@/config";
-import { ApiRequestError } from "@/lib/errors/read";
+import { postJson, type RequestFailure } from "@/lib/apiJson";
 
 /**
  * The context digest (ECHO-1055): a host drops an agenda, invitation, slides or a brief
@@ -77,27 +76,12 @@ export interface DigestResult {
 	max_key_terms: number;
 }
 
-export async function requestDigest(
+export const requestDigest = (
 	workspaceId: string,
 	body: DigestRequestBody,
 	signal?: AbortSignal,
-): Promise<DigestResult> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/project-setup/digest`,
-		{
-			body: JSON.stringify(body),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-			signal,
-		},
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new ApiRequestError(res.status, data);
-	}
-	return res.json();
-}
+): Promise<DigestResult> =>
+	postJson(`/v2/workspaces/${workspaceId}/project-setup/digest`, body, signal);
 
 /** The parts of a result with content: none means the digest found nothing to use. */
 export function fieldsReturned(r: DigestResult): string[] {
@@ -127,24 +111,8 @@ export const charsBucket = (n: number) =>
 export const durationBucket = (ms: number) =>
 	ms < 5_000 ? "<5s" : ms < 15_000 ? "5-15s" : ms < 30_000 ? "15-30s" : "30s+";
 
+/** Why a digest failed: a request failure (lib/apiJson), or nothing to use in what came back. */
 export type DigestFailure =
-	| "budget"
-	| "rate_limited"
-	| "unavailable"
-	| "invalid"
-	| "forbidden"
-	| "network"
+	| RequestFailure
 	| "nothing_found"
-	| "no_readable_files"
-	| "error";
-
-export function failureCause(error: unknown): DigestFailure {
-	if (!(error instanceof ApiRequestError))
-		return error instanceof TypeError ? "network" : "error";
-	if (error.status === 402) return "budget";
-	if (error.status === 429) return "rate_limited";
-	if (error.status === 503) return "unavailable";
-	if (error.status === 400 || error.status === 422) return "invalid";
-	if (error.status === 403 || error.status === 404) return "forbidden";
-	return "error";
-}
+	| "no_readable_files";
