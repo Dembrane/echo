@@ -182,8 +182,18 @@ export const ai_spend_daily = pgTable(
       t.operation,
       t.model,
     ),
+    index("ai_spend_daily_billing_account_idx").on(t.billing_account_id),
   ],
 );
+
+/** The backend's AI feature rules in order, filled at worker start; obs.ai_feature() reads them. */
+export const ai_feature_rule = pgTable("ai_feature_rule", {
+  position: integer("position").primaryKey(),
+  pattern: text("pattern").notNull(),
+  feature_group: text("feature_group").notNull(),
+  group_label: text("group_label").notNull(),
+  feature: text("feature").notNull(),
+});
 
 /** One limit per tier and key; staff edit them, so each row keeps who changed it last. */
 export const tier_limit = pgTable(

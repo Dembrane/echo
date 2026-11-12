@@ -36,7 +36,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **reports** (in 2, out 13): Report generation and the report timeline. Used by api, worker. Uses account, notifications, projects, webhooks, llm.
 - **verify** (in 2, out 9): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.
-- **staff** (in 1, out 12): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, i18n, mail, storage.
+- **staff** (in 1, out 13): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, metering, i18n, mail, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
 - **training** (in 1, out 8): Training as its own product: catalog, rosters, licences, staff provisioning. Used by api. Uses billing, mail.
 
@@ -62,7 +62,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **transcription** (in 3, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api, worker. Uses prompts, llm, observability.
 - **auth** (in 3, out 2): Sign-in and sessions (Better Auth) and the identity sync from Directus. Used by account, api, migrate. Uses db, core.
-- **metering** (in 2, out 6): What each model call cost: one log line and one model_call row per call, which the obs views aggregate. Used by api, worker. Uses allowance, llm, queue, db, core and 1 more.
+- **metering** (in 3, out 6): What each model call cost: one log line and one model_call row per call, which the obs views aggregate. Used by staff, api, worker. Uses allowance, llm, queue, db, core and 1 more.
 
 **Allowed imports between namespaces**
 
