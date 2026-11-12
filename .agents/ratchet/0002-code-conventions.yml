@@ -1,10 +1,10 @@
-rfc: 0003-named-exports
+rfc: 0002-code-conventions
 active: true
 max_open_prs: 1
 max_changed_lines: 200     # excludes this file and Biome lock-in entries
-max_files_touched: 15      # includes importers updated by a conversion
+max_files_touched: 15      # includes importers updated by a rename or conversion
 runs: 0
-baseline: 15
-remaining: 15
+baseline: 76
+remaining: 76
 history: []                # violations fixed per run, newest last
 est_runs_left: null        # ceil(remaining / median of last 5 history entries)

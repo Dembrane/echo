@@ -1,5 +1,5 @@
 ---
-status: approved
+status: proposed
 ---
 
 # 0001 Ratchet agents
