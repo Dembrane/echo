@@ -1,5 +1,6 @@
 import { AI_SPEND_KEY, isFreeTier, monthStart, periodStart } from "@dembrane/allowance";
 import type { Db } from "@dembrane/db";
+import { classifyOperation, type FeatureGroup } from "@dembrane/metering";
 import { sql } from "drizzle-orm";
 
 export interface AiCostAccount {
@@ -12,11 +13,20 @@ export interface AiCostAccount {
   // The budget in force is the staff override, not the free default.
   custom_budget: boolean;
   percent_used: number | null;
+  // What the budget ledger counted this period; null when no budget applies.
+  budget_spent_micro_eur: number | null;
   unlimited: boolean;
   override_until: string | null;
   // The account is soft-deleted (deleted_at set).
   deleted: boolean;
-  by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+  by_feature: {
+    operation: string;
+    group: FeatureGroup;
+    group_label: string;
+    label: string;
+    cost_micro_eur: number;
+    calls: number;
+  }[];
   by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
 }
 
@@ -187,11 +197,13 @@ export async function aiCosts(
       isFreeTier(info.tier) && !(info.downgraded_at && new Date(info.downgraded_at) >= to);
     let budget: number | null = null;
     let percent: number | null = null;
+    let budgetSpent: number | null = null;
     if (free && !unlimited) {
       budget = active && info.amount !== null ? Number(info.amount) : defaultBudget;
       const start = periodStart(at, info.tier, info.downgraded_at).toISOString();
       const used = spent.get(`${info.id} ${start}`) ?? 0;
       percent = budget <= 0 ? 100 : Math.floor((used * 100) / budget);
+      budgetSpent = used;
     }
     const hasOverride = info.unlimited || info.amount !== null;
     return {
@@ -203,11 +215,13 @@ export async function aiCosts(
       budget_micro_eur: budget,
       custom_budget: budget !== null && active && info.amount !== null,
       percent_used: percent,
+      budget_spent_micro_eur: budgetSpent,
       unlimited,
       override_until: hasOverride ? info.until : null,
       deleted: info.deleted === true,
       by_feature: desc(a.features, (operation, s) => ({
         operation,
+        ...classifyOperation(operation),
         cost_micro_eur: s.cost,
         calls: s.calls,
       })),

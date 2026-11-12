@@ -780,15 +780,15 @@ msgstr "Додано: {addedCount}. Перегляньте список нижч
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} людей вже запрошено. Доступ до проєкту відкриється, щойно вони приєднаються."
 
-#: src/routes/admin/AiCostsPanel.tsx:65
+#: src/routes/admin/AiCostsPanel.tsx:77
 msgid "{amount} custom"
 msgstr "{amount} користувацький"
 
-#: src/routes/admin/AiCostsPanel.tsx:64
+#: src/routes/admin/AiCostsPanel.tsx:76
 msgid "{amount} default"
 msgstr "{amount} за замовчуванням"
 
-#: src/routes/admin/AiCostsPanel.tsx:65
+#: src/routes/admin/AiCostsPanel.tsx:77
 msgid "{amount} until {until}"
 msgstr "{amount} до {until}"
 
@@ -804,7 +804,7 @@ msgstr "{argumentCount, plural, one {# аргумент} few {# аргумент
 msgid "{browser} on {platform}"
 msgstr "{browser} на {platform}"
 
-#: src/routes/admin/AiCostsPanel.tsx:124
+#: src/routes/admin/AiCostsPanel.tsx:154
 msgid "{calls, plural, one {# call} other {# calls}}"
 msgstr "{calls, plural, one {# виклик} few {# виклики} many {# викликів} other {# виклику}}"
 
@@ -861,6 +861,10 @@ msgstr "Записів в історії: {count}"
 #: src/routes/project/HostGuidePage.tsx:975
 msgid "{count} on record"
 msgstr "Записано: {count}"
+
+#: src/routes/admin/AiCostsPanel.tsx:120
+msgid "{counted} counted"
+msgstr "{counted} зараховано"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:107
 msgid "{currentCadence} min"
@@ -1092,7 +1096,7 @@ msgstr "Надіслано запрошень: {sent}. Доступ до про�
 msgid "{sentCount} invites sent."
 msgstr "Надіслано запрошень: {sentCount}."
 
-#: src/routes/admin/AiCostsPanel.tsx:635
+#: src/routes/admin/AiCostsPanel.tsx:708
 msgid "{share} of the total"
 msgstr "{share} від загального"
 
@@ -1104,11 +1108,11 @@ msgstr "{stored} хв"
 msgid "{tag} (preselected)"
 msgstr "{tag} (попередньо вибрано)"
 
-#: src/routes/admin/AiCostsPanel.tsx:54
+#: src/routes/admin/AiCostsPanel.tsx:66
 msgid "{tier}, organisation account"
 msgstr "{tier}, акаунт організації"
 
-#: src/routes/admin/AiCostsPanel.tsx:55
+#: src/routes/admin/AiCostsPanel.tsx:67
 msgid "{tier}, workspace account"
 msgstr "{tier}, акаунт робочого простору"
 
@@ -1517,7 +1521,7 @@ msgstr "Запит на доступ скасовано"
 msgid "Access requests"
 msgstr "Запити на доступ"
 
-#: src/routes/admin/AiCostsPanel.tsx:669
+#: src/routes/admin/AiCostsPanel.tsx:742
 #: src/routes/admin/AdminSettingsRoute.tsx:482
 #: src/routes/admin/AdminSettingsRoute.tsx:1361
 #: src/routes/admin/AdminSettingsRoute.tsx:1573
@@ -1565,7 +1569,7 @@ msgstr "Для акаунта встановлено керовану оплат
 msgid "Account set to managed."
 msgstr "Акаунт переведено в керовані."
 
-#: src/routes/admin/AiCostsPanel.tsx:612
+#: src/routes/admin/AiCostsPanel.tsx:686
 msgid "Accounts and providers"
 msgstr "Акаунти та провайдери"
 
@@ -1573,7 +1577,7 @@ msgstr "Акаунти та провайдери"
 msgid "Accounts billed"
 msgstr "Акаунти з виставленням рахунків"
 
-#: src/routes/admin/AiCostsPanel.tsx:614
+#: src/routes/admin/AiCostsPanel.tsx:688
 msgid "Accounts with AI calls"
 msgstr "Акаунти із запитами до ШІ"
 
@@ -2049,7 +2053,7 @@ msgstr "Бюджет на ШІ збережено"
 msgid "AI budget used up"
 msgstr "Бюджет ШІ вичерпано"
 
-#: src/routes/admin/AiCostsPanel.tsx:537
+#: src/routes/admin/AiCostsPanel.tsx:607
 msgid "AI costs"
 msgstr "Витрати на ШІ"
 
@@ -2328,8 +2332,6 @@ msgid "Analyse now"
 msgstr "Аналізувати зараз"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
-#: src/routes/admin/aiCostBreakdown.ts:46
-#: src/routes/admin/aiCostBreakdown.ts:102
 msgid "Analysis"
 msgstr "Аналіз"
 
@@ -2342,8 +2344,8 @@ msgstr "Аналіз | dembrane"
 #~ msgstr "Analysis Language"
 
 #: src/routes/admin/aiCostBreakdown.ts:98
-msgid "Analysis runs"
-msgstr "Запуски аналізу"
+#~ msgid "Analysis runs"
+#~ msgstr "Запуски аналізу"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 #: src/routes/project/report/ProjectReportRoute.tsx:1089
@@ -2774,8 +2776,6 @@ msgid "Assign"
 msgstr "Призначити"
 
 #: src/routes/settings/UserSettingsRoute.tsx:119
-#: src/routes/admin/aiCostBreakdown.ts:47
-#: src/routes/admin/aiCostBreakdown.ts:78
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 msgid "Assistant"
 msgstr "Асистент"
@@ -2790,8 +2790,8 @@ msgid "Assistant memory"
 msgstr "Пам'ять асистента"
 
 #: src/routes/admin/aiCostBreakdown.ts:71
-msgid "Assistant turns"
-msgstr "Репліки асистента"
+#~ msgid "Assistant turns"
+#~ msgstr "Репліки асистента"
 
 #: src/components/auth/PasswordRequirements.tsx:55
 msgid "At least 8 characters"
@@ -3184,7 +3184,7 @@ msgstr "Оплачується за тарифом вашої організац
 msgid "Billing"
 msgstr "Оплата"
 
-#: src/routes/admin/AiCostsPanel.tsx:616
+#: src/routes/admin/AiCostsPanel.tsx:690
 msgid "Billing accounts that made AI calls"
 msgstr "Платіжні акаунти з викликами ШІ"
 
@@ -3249,7 +3249,7 @@ msgstr "Короткий опис"
 msgid "Bring your own LLM"
 msgstr "Використовуйте власну LLM"
 
-#: src/routes/admin/AiCostsPanel.tsx:675
+#: src/routes/admin/AiCostsPanel.tsx:748
 msgid "Budget"
 msgstr "Бюджет"
 
@@ -3265,7 +3265,7 @@ msgstr "Build custom dashboards with real-time conversation data"
 msgid "by {by}"
 msgstr "автор: {by}"
 
-#: src/routes/admin/AiCostsPanel.tsx:644
+#: src/routes/admin/AiCostsPanel.tsx:717
 msgid "By account"
 msgstr "За акаунтом"
 
@@ -3277,11 +3277,11 @@ msgstr "By deleting this project, you will delete all the data associated with i
 #~ msgid "By feature"
 #~ msgstr "За функціями"
 
-#: src/routes/admin/AiCostsPanel.tsx:187
+#: src/routes/admin/AiCostsPanel.tsx:239
 msgid "By feature group"
 msgstr "За групою функцій"
 
-#: src/routes/admin/AiCostsPanel.tsx:195
+#: src/routes/admin/AiCostsPanel.tsx:247
 msgid "By model"
 msgstr "За моделями"
 
@@ -3298,7 +3298,7 @@ msgstr "За тегом"
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:602
+#: src/routes/admin/AiCostsPanel.tsx:675
 msgid "Calls no account could be matched to"
 msgstr "Запити, яким не вдалося підібрати акаунт"
 
@@ -3455,8 +3455,6 @@ msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 #: src/routes/project/canvas/CanvasRoute.tsx:415
 #: src/routes/project/canvas/CanvasRoute.tsx:526
 #: src/routes/project/canvas/CanvasRoute.tsx:542
-#: src/routes/admin/aiCostBreakdown.ts:48
-#: src/routes/admin/aiCostBreakdown.ts:106
 msgid "Canvas"
 msgstr "Полотно"
 
@@ -3473,8 +3471,8 @@ msgid "Canvas settings"
 msgstr "Налаштування полотна"
 
 #: src/routes/admin/aiCostBreakdown.ts:105
-msgid "Canvas ticks"
-msgstr "Тіки полотна"
+#~ msgid "Canvas ticks"
+#~ msgstr "Тіки полотна"
 
 #: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
@@ -3628,14 +3626,12 @@ msgstr "Дистанція заряду (частка області перег�
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Дистанція заряду (частка області перегляду): {0}"
 
-#: src/routes/admin/AiCostsPanel.tsx:588
+#: src/routes/admin/AiCostsPanel.tsx:659
 msgid "Charged to accounts"
 msgstr "Списано з акаунтів"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:691
 #: src/routes/project/chat/ProjectChatRoute.tsx:697
-#: src/routes/admin/aiCostBreakdown.ts:49
-#: src/routes/admin/aiCostBreakdown.ts:68
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:258
 #: src/features/sidebar/hooks/useSearchHits.ts:259
@@ -4442,8 +4438,8 @@ msgid "Conversation status includes upload progress."
 msgstr "Статус розмови показує поступ завантаження."
 
 #: src/routes/admin/aiCostBreakdown.ts:122
-msgid "Conversation summaries"
-msgstr "Підсумки розмов"
+#~ msgid "Conversation summaries"
+#~ msgstr "Підсумки розмов"
 
 #: src/components/release/releaseHistory.ts:185
 msgid "Conversation summaries no longer hang in the affected processing cases."
@@ -4614,7 +4610,7 @@ msgstr "Копіювати URL-адресу"
 msgid "Copying…"
 msgstr "Копіювання…"
 
-#: src/routes/admin/AiCostsPanel.tsx:672
+#: src/routes/admin/AiCostsPanel.tsx:745
 msgid "Cost"
 msgstr "Вартість"
 
@@ -4684,7 +4680,7 @@ msgstr "Не вдалося завантажити методології."
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Не вдалося завантажити платежі. Перевірте авторизацію та логи сервера."
 
-#: src/routes/admin/AiCostsPanel.tsx:562
+#: src/routes/admin/AiCostsPanel.tsx:632
 msgid "Could not load the AI costs."
 msgstr "Не вдалося завантажити витрати на ШІ."
 
@@ -5405,7 +5401,7 @@ msgstr "Видалити робочий простір"
 msgid "Delete…"
 msgstr "Видалити…"
 
-#: src/routes/admin/AiCostsPanel.tsx:344
+#: src/routes/admin/AiCostsPanel.tsx:407
 msgid "Deleted"
 msgstr "Видалено"
 
@@ -5502,7 +5498,7 @@ msgstr "dembrane v3"
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot був нашим попереднім проєктом. Дякуємо організаторам, учасникам і всім, хто допомагав його створювати."
 
-#: src/routes/admin/AiCostsPanel.tsx:608
+#: src/routes/admin/AiCostsPanel.tsx:682
 msgid "Demos, voice outside projects, dev tools"
 msgstr "Демо, голос поза проєктами, інструменти розробника"
 
@@ -6369,7 +6365,7 @@ msgstr "Кожні 60 хвилин"
 #~ msgid "Every AI call on every tier, priced in euros. Free accounts show their budget."
 #~ msgstr "Кожен виклик ШІ на кожному рівні, у євро. Для акаунтів Free показується їхній бюджет."
 
-#: src/routes/admin/AiCostsPanel.tsx:540
+#: src/routes/admin/AiCostsPanel.tsx:610
 msgid "Every AI call on every tier, priced in euros. Free accounts show their budget. Click a row for its breakdown."
 msgstr "Кожен виклик ШІ на всіх рівнях, у євро. Для акаунтів Free показано бюджет. Натисніть на рядок для деталей."
 
@@ -6386,7 +6382,7 @@ msgstr "Усі підключені агенти в {0} негайно прип�
 msgid "Every member's connection that names this organisation."
 msgstr "Усі підключення учасників, які вказують на цю організацію."
 
-#: src/routes/admin/AiCostsPanel.tsx:584
+#: src/routes/admin/AiCostsPanel.tsx:655
 msgid "Every priced AI call, all tiers"
 msgstr "Усі платні виклики ШІ, усі рівні"
 
@@ -6478,15 +6474,14 @@ msgstr "Спливає"
 msgid "Expiring soon"
 msgstr "Скоро завершується"
 
-#: src/routes/admin/aiCostBreakdown.ts:112
-#: src/components/project/ProjectPortalEditor.tsx:749
-#: src/components/project/PortalSettingsOverview.tsx:126
-msgid "Explore"
-msgstr "Explore"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:111
 msgid "participant.echo.explore"
+msgstr "Explore"
+
+#: src/components/project/ProjectPortalEditor.tsx:749
+#: src/components/project/PortalSettingsOverview.tsx:126
+msgid "Explore"
 msgstr "Explore"
 
 #: src/components/release/releaseHistory.ts:670
@@ -6579,8 +6574,8 @@ msgstr "Додаткові учасники"
 #~ msgstr "Перевірити це твердження"
 
 #: src/routes/admin/aiCostBreakdown.ts:88
-msgid "Fact checks"
-msgstr "Перевірки фактів"
+#~ msgid "Fact checks"
+#~ msgstr "Перевірки фактів"
 
 #: src/components/results/curate/ArgumentsTab.tsx:282
 msgid "Fact-check"
@@ -6919,12 +6914,12 @@ msgstr "Фільтрувати за назвою або ID"
 #~ msgstr "Остаточна"
 
 #: src/routes/admin/aiCostBreakdown.ts:118
-msgid "Final transcript"
-msgstr "Остаточна транскрипція"
+#~ msgid "Final transcript"
+#~ msgstr "Остаточна транскрипція"
 
 #: src/routes/admin/aiCostBreakdown.ts:117
-msgid "Finalize and summary"
-msgstr "Завершення та підсумок"
+#~ msgid "Finalize and summary"
+#~ msgstr "Завершення та підсумок"
 
 #: src/components/chat/ChatModeSelector.tsx:55
 msgid "Find contradictions and suggest follow-up questions"
@@ -6979,7 +6974,6 @@ msgstr "Завершити розмову"
 msgid "Finished"
 msgstr "Finished"
 
-#: src/routes/admin/aiCostBreakdown.ts:116
 #: src/components/conversation/StatePill.tsx:29
 msgid "Finishing"
 msgstr "Завершення"
@@ -7030,8 +7024,8 @@ msgid "Follow source citations from chat answers."
 msgstr "Переходьте за посиланнями на джерела з відповідей чату."
 
 #: src/routes/admin/aiCostBreakdown.ts:76
-msgid "Follow-up messages"
-msgstr "Подальші повідомлення"
+#~ msgid "Follow-up messages"
+#~ msgstr "Подальші повідомлення"
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:228
 msgid "Follow-up text"
@@ -7154,11 +7148,11 @@ msgstr "Фреймінг"
 #~ msgid "Free"
 #~ msgstr "Free"
 
-#: src/routes/admin/AiCostsPanel.tsx:622
+#: src/routes/admin/AiCostsPanel.tsx:696
 msgid "Free accounts at 100% or more"
 msgstr "Акаунти Free на 100% або більше"
 
-#: src/routes/admin/AiCostsPanel.tsx:620
+#: src/routes/admin/AiCostsPanel.tsx:694
 msgid "Free accounts at or over budget"
 msgstr "Акаунти Free, що вичерпали або перевищили бюджет"
 
@@ -7522,8 +7516,8 @@ msgid "Group by"
 msgstr "Групувати за"
 
 #: src/routes/admin/aiCostBreakdown.ts:87
-msgid "Groups"
-msgstr "Групи"
+#~ msgid "Groups"
+#~ msgstr "Групи"
 
 #: src/components/project/ProjectPortalEditor.tsx:1516
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
@@ -7951,7 +7945,7 @@ msgstr "Вхідні"
 #~ msgid "incl. {deleted} from deleted accounts"
 #~ msgstr "вкл. {deleted} з видалених акаунтів"
 
-#: src/routes/admin/AiCostsPanel.tsx:592
+#: src/routes/admin/AiCostsPanel.tsx:664
 msgid "incl. {deleted} from removed accounts"
 msgstr "вкл. {deleted} з видалених акаунтів"
 
@@ -8040,7 +8034,7 @@ msgstr "Instructions for generating the verification outcome"
 #~ msgid "Integrations & Export"
 #~ msgstr ""
 
-#: src/routes/admin/AiCostsPanel.tsx:606
+#: src/routes/admin/AiCostsPanel.tsx:679
 msgid "Internal"
 msgstr "Внутрішні"
 
@@ -8581,7 +8575,7 @@ msgstr "Останнє аудіо"
 msgid "Last day on this budget"
 msgstr "Останній день з цим бюджетом"
 
-#: src/routes/admin/AiCostsPanel.tsx:552
+#: src/routes/admin/AiCostsPanel.tsx:622
 #: src/routes/admin/AdminSettingsRoute.tsx:258
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
@@ -9242,8 +9236,6 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr "Щойно було запущено багато карт. Спробуйте ще раз за мить."
 
 #: src/routes/project/present/blockLabel.ts:6
-#: src/routes/admin/aiCostBreakdown.ts:50
-#: src/routes/admin/aiCostBreakdown.ts:89
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
 #: src/components/map/MapPage.tsx:677
 #: src/components/map/panels/MapSettingsMenu.tsx:405
@@ -9875,8 +9867,8 @@ msgstr "У нових проєктах dembrane більше не додаєть
 #~ msgstr "New Report"
 
 #: src/routes/admin/aiCostBreakdown.ts:72
-msgid "New runs"
-msgstr "Нові запуски"
+#~ msgid "New runs"
+#~ msgstr "Нові запуски"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:642
 msgid "New tier"
@@ -9933,15 +9925,15 @@ msgstr "Ні"
 msgid "No access"
 msgstr "Немає доступу"
 
-#: src/routes/admin/AiCostsPanel.tsx:594
+#: src/routes/admin/AiCostsPanel.tsx:666
 msgid "No account was charged"
 msgstr "Кошти з рахунку не списувалися"
 
-#: src/routes/admin/AiCostsPanel.tsx:651
+#: src/routes/admin/AiCostsPanel.tsx:724
 msgid "No account was charged in {month}."
 msgstr "Жодного акаунта не було списано в {month}."
 
-#: src/routes/admin/AiCostsPanel.tsx:649
+#: src/routes/admin/AiCostsPanel.tsx:722
 msgid "No account was charged this month."
 msgstr "Цього місяця з жодного акаунта не стягувалася плата."
 
@@ -9965,11 +9957,11 @@ msgstr "Викликів агента ще не було."
 msgid "No agents connected yet."
 msgstr "Жодного агента ще не підключено."
 
-#: src/routes/admin/AiCostsPanel.tsx:574
+#: src/routes/admin/AiCostsPanel.tsx:644
 msgid "No AI costs recorded for {month}."
 msgstr "Немає витрат на ШІ за {month}."
 
-#: src/routes/admin/AiCostsPanel.tsx:572
+#: src/routes/admin/AiCostsPanel.tsx:642
 msgid "No AI costs recorded this month."
 msgstr "Цього місяця витрат на ШІ не зафіксовано."
 
@@ -10131,12 +10123,12 @@ msgstr "Цілі ще немає. Задайте її тут або поспіл
 msgid "No invites went out. Check the list below."
 msgstr "Запрошення не надіслано. Перевірте список нижче."
 
-#: src/routes/admin/AiCostsPanel.tsx:61
+#: src/routes/admin/AiCostsPanel.tsx:73
 #: src/routes/admin/AiBudgetEditor.tsx:163
 msgid "No limit"
 msgstr "Без ліміту"
 
-#: src/routes/admin/AiCostsPanel.tsx:61
+#: src/routes/admin/AiCostsPanel.tsx:73
 msgid "No limit until {until}"
 msgstr "Без ліміту до {until}"
 
@@ -10398,7 +10390,7 @@ msgstr "Протиріч ще не збережено."
 msgid "No tensions yet. They appear after the first analysis."
 msgstr "Напружень ще немає. Вони з'являться після першого аналізу."
 
-#: src/routes/admin/AiCostsPanel.tsx:49
+#: src/routes/admin/AiCostsPanel.tsx:61
 msgid "No tier"
 msgstr "Без рівня"
 
@@ -10914,7 +10906,7 @@ msgstr "Open"
 msgid "Open {label}"
 msgstr "Відкрити {label}"
 
-#: src/routes/admin/AiCostsPanel.tsx:314
+#: src/routes/admin/AiCostsPanel.tsx:377
 #: src/routes/admin/AdminSettingsRoute.tsx:1664
 msgid "Open account actions"
 msgstr "Відкрити дії з акаунтом"
@@ -11248,7 +11240,6 @@ msgstr "Оригінал"
 msgid "Original language"
 msgstr "Оригінальна мова"
 
-#: src/routes/admin/aiCostBreakdown.ts:51
 #: src/components/feedback/reasons.ts:27
 #: src/components/billing/BillingManager.tsx:515
 msgid "Other"
@@ -11362,7 +11353,7 @@ msgstr "Заголовок сторінки"
 msgid "Paid"
 msgstr "Оплачено"
 
-#: src/routes/admin/AiCostsPanel.tsx:62
+#: src/routes/admin/AiCostsPanel.tsx:74
 msgid "Paid plan"
 msgstr "Платний тариф"
 
@@ -11867,7 +11858,6 @@ msgstr "Погана відповідь"
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:95
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:406
-#: src/routes/admin/aiCostBreakdown.ts:96
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:141
 #: src/components/results/ResultsList.tsx:44
 #: src/components/results/curate/CurateTabs.tsx:11
@@ -11927,12 +11917,12 @@ msgid "Popcorn shows a room its own words while it is still talking: live slides
 msgstr "Popcorn показує аудиторії її власні слова безпосередньо під час розмови: інтерактивні слайди з розмов цього проєкту для великого екрана. Функція ще вдосконалюється, її можна будь-коли вимкнути в налаштуваннях проєкту."
 
 #: src/routes/admin/aiCostBreakdown.ts:92
-msgid "Popcorn ticks"
-msgstr "Тіки Popcorn"
+#~ msgid "Popcorn ticks"
+#~ msgstr "Тіки Popcorn"
 
 #: src/routes/admin/aiCostBreakdown.ts:91
-msgid "Popcorn translation"
-msgstr "Переклад Popcorn"
+#~ msgid "Popcorn translation"
+#~ msgstr "Переклад Popcorn"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:72
 #~ msgid "Popcorn window"
@@ -11943,8 +11933,8 @@ msgid "Popular"
 msgstr "Популярний"
 
 #: src/routes/admin/aiCostBreakdown.ts:52
-msgid "Portal"
-msgstr "Портал"
+#~ msgid "Portal"
+#~ msgstr "Портал"
 
 #: src/components/project/ProjectPortalEditor.tsx:1187
 msgid "Portal content"
@@ -12413,7 +12403,7 @@ msgstr "З гордістю розміщено в ЄС"
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Provide an overview of the main topics and recurring themes"
 
-#: src/routes/admin/AiCostsPanel.tsx:633
+#: src/routes/admin/AiCostsPanel.tsx:705
 msgid "Provider: {provider}"
 msgstr "Провайдер: {provider}"
 
@@ -12756,8 +12746,6 @@ msgstr "Record another conversation"
 msgid "Record in every project"
 msgstr "Записуйте в кожному проєкті"
 
-#: src/routes/admin/aiCostBreakdown.ts:53
-#: src/routes/admin/aiCostBreakdown.ts:137
 #: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
 #: src/components/conversation/FunnelCanvas.tsx:352
@@ -13125,8 +13113,8 @@ msgid "Replay"
 msgstr "Запис"
 
 #: src/routes/admin/aiCostBreakdown.ts:63
-msgid "Replies"
-msgstr "Відповіді"
+#~ msgid "Replies"
+#~ msgstr "Відповіді"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Replies to participants"
@@ -13196,8 +13184,8 @@ msgid "Report generated"
 msgstr "Звіт згенеровано"
 
 #: src/routes/admin/aiCostBreakdown.ts:80
-msgid "Report generation"
-msgstr "Генерація звітів"
+#~ msgid "Report generation"
+#~ msgstr "Генерація звітів"
 
 #: src/components/report/reportError.ts:19
 msgid "Report generation cancelled"
@@ -13276,8 +13264,6 @@ msgid "Report updated · {0}"
 msgstr "Звіт оновлено · {0}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:886
-#: src/routes/admin/aiCostBreakdown.ts:54
-#: src/routes/admin/aiCostBreakdown.ts:84
 msgid "Reports"
 msgstr "Reports"
 
@@ -13572,7 +13558,6 @@ msgstr "відкликано для команди dembrane"
 msgid "Retracting a note for the dembrane team"
 msgstr "Відкликання нотатки для команди dembrane"
 
-#: src/routes/admin/aiCostBreakdown.ts:132
 #: src/components/conversation/RetranscribeConversation.tsx:255
 msgid "Retranscribe"
 msgstr "Retranscribe"
@@ -14816,7 +14801,7 @@ msgstr "Показати всі розмови"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/routes/admin/AiCostsPanel.tsx:286
+#: src/routes/admin/AiCostsPanel.tsx:349
 msgid "Show breakdown"
 msgstr "Показати деталізацію"
 
@@ -15271,7 +15256,7 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Чат конкретних деталей враховує ручний вибір розмов."
 
-#: src/routes/admin/AiCostsPanel.tsx:580
+#: src/routes/admin/AiCostsPanel.tsx:650
 msgid "Spend"
 msgstr "Витрати"
 
@@ -15602,8 +15587,8 @@ msgid "Suggesting tag changes"
 msgstr "Пропонуємо зміни тегів"
 
 #: src/routes/admin/aiCostBreakdown.ts:64
-msgid "Suggestions"
-msgstr "Пропозиції"
+#~ msgid "Suggestions"
+#~ msgstr "Пропозиції"
 
 #: src/components/release/releaseHistory.ts:762
 msgid "Summaries adapt to the complexity of the conversation."
@@ -15879,7 +15864,7 @@ msgstr "Вкладка «Розбіжності»"
 msgid "Terms"
 msgstr "Умови"
 
-#: src/routes/admin/aiCostBreakdown.ts:27
+#: src/routes/admin/aiCostBreakdown.ts:40
 msgid "Test"
 msgstr "Тест"
 
@@ -15980,7 +15965,7 @@ msgstr "На цьому все"
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "[Довідку](https://docs.dembrane.com/) переписано й оновлено."
 
-#: src/routes/admin/AiCostsPanel.tsx:595
+#: src/routes/admin/AiCostsPanel.tsx:667
 msgid "The account rows below"
 msgstr "Рядки акаунтів нижче"
 
@@ -16015,6 +16000,10 @@ msgstr "Асистент забуде це для всіх майбутніх ч
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:602
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "Асистент пропонує оновити {headlineFields}. Очікуємо на ваше рішення."
+
+#: src/routes/admin/AiCostsPanel.tsx:111
+msgid "The budget counted {exact} this period; the cost column covers every call this month."
+msgstr "У бюджет за цей період зараховано {exact}; стовпець витрат охоплює всі виклики цього місяця."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 #~ msgid "The change could not be published."
@@ -16782,7 +16771,7 @@ msgstr "Ця мапа містить {count} аргументів. Її відо
 msgid "This marks the training cancelled. You can reopen it later from the same menu."
 msgstr "Це позначає тренінг як скасований. Ви зможете відновити його пізніше з цього ж меню."
 
-#: src/routes/admin/AiCostsPanel.tsx:551
+#: src/routes/admin/AiCostsPanel.tsx:621
 #: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
@@ -17187,8 +17176,8 @@ msgid "Title or participant"
 msgstr "Назва або учасник"
 
 #: src/routes/admin/aiCostBreakdown.ts:127
-msgid "Titles and tags"
-msgstr "Заголовки й теги"
+#~ msgid "Titles and tags"
+#~ msgstr "Заголовки й теги"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:277
 msgid "to"
@@ -17271,8 +17260,8 @@ msgstr "Інструмент"
 msgid "Tools"
 msgstr "Інструменти"
 
-#: src/routes/admin/AiCostsPanel.tsx:463
-#: src/routes/admin/AiCostsPanel.tsx:681
+#: src/routes/admin/AiCostsPanel.tsx:530
+#: src/routes/admin/AiCostsPanel.tsx:754
 msgid "Top feature group"
 msgstr "Найпопулярніша група функцій"
 
@@ -17312,7 +17301,7 @@ msgstr "total"
 msgid "Total"
 msgstr "Усього"
 
-#: src/routes/admin/AiCostsPanel.tsx:582
+#: src/routes/admin/AiCostsPanel.tsx:652
 msgid "Total cost"
 msgstr "Загальна вартість"
 
@@ -17414,8 +17403,8 @@ msgid "Transcript retrieval and conversation summaries finish before dependent w
 msgstr "Отримання стенограми та підсумки розмов завершуються перед початком наступних дій."
 
 #: src/routes/admin/aiCostBreakdown.ts:115
-msgid "Transcription"
-msgstr "Транскрипція"
+#~ msgid "Transcription"
+#~ msgstr "Транскрипція"
 
 #: src/features/processes/copy.ts:11
 msgid "Transcription done"
@@ -17708,7 +17697,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/routes/admin/AiCostsPanel.tsx:600
+#: src/routes/admin/AiCostsPanel.tsx:672
 msgid "Unattributed"
 msgstr "Без прив'язки"
 
@@ -17732,7 +17721,7 @@ msgstr "Undo"
 msgid "Undo withdrawal"
 msgstr "Скасувати відкликання"
 
-#: src/routes/admin/aiCostBreakdown.ts:28
+#: src/routes/admin/aiCostBreakdown.ts:41
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
 #: src/components/project/ProjectListItem.tsx:97
@@ -17766,8 +17755,8 @@ msgid "Unknown time"
 msgstr "Невідомий час"
 
 #: src/routes/admin/aiCostBreakdown.ts:150
-msgid "Unlabelled"
-msgstr "Без мітки"
+#~ msgid "Unlabelled"
+#~ msgstr "Без мітки"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:138
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:556
@@ -18205,7 +18194,7 @@ msgstr "Використовуйте українську мову для чат
 msgid "use your voice in chat"
 msgstr "використовувати голос у чаті"
 
-#: src/routes/admin/AiCostsPanel.tsx:678
+#: src/routes/admin/AiCostsPanel.tsx:751
 msgid "Used"
 msgstr "Використано"
 
@@ -18322,11 +18311,6 @@ msgstr "verified artifacts"
 msgid "Verified artifacts"
 msgstr "Перевірені артефакти"
 
-#: src/routes/admin/aiCostBreakdown.ts:108
-#: src/components/project/PortalSettingsOverview.tsx:129
-msgid "Verify"
-msgstr "Verify"
-
 #. js-lingui-explicit-id
 #: src/portal/components/refine/RefineSelection.tsx:68
 msgid "participant.echo.verify"
@@ -18340,6 +18324,10 @@ msgstr "Verify"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:906
 msgid "dashboard.dembrane.verify.title"
+msgstr "Verify"
+
+#: src/components/project/PortalSettingsOverview.tsx:129
+msgid "Verify"
 msgstr "Verify"
 
 #: src/routes/auth/Login.tsx:582
@@ -18470,8 +18458,8 @@ msgstr "Зміни тональності застосуються наступ�
 
 #: src/routes/admin/aiCostBreakdown.ts:55
 #: src/routes/admin/aiCostBreakdown.ts:140
-msgid "Voice input"
-msgstr "Голосове введення"
+#~ msgid "Voice input"
+#~ msgstr "Голосове введення"
 
 #: src/components/voice/VoiceInputError.tsx:43
 #: src/components/chat/AgenticChatPanel.tsx:2294

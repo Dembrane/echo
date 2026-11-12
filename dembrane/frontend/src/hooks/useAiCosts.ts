@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 import { ensureOk } from "@/lib/errors/read";
+import type { FeatureGroup } from "@/routes/admin/aiCostBreakdown";
 
 // A staff AI budget override; all empty means the free default applies.
 export interface AiBudgetOverride {
@@ -19,11 +20,21 @@ export interface AiCostAccount {
 	// The budget in force is a staff override, not the free default.
 	custom_budget: boolean;
 	percent_used: number | null;
+	// What the budget ledger counted this period; null without a budget, absent from an older API.
+	budget_spent_micro_eur?: number | null;
 	unlimited: boolean;
 	override_until: string | null;
 	// Soft-deleted since; the row still shows its cost.
 	deleted: boolean;
-	by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+	by_feature: {
+		operation: string;
+		// Absent from an API older than this frontend.
+		group?: FeatureGroup;
+		group_label?: string;
+		label?: string;
+		cost_micro_eur: number;
+		calls: number;
+	}[];
 	by_model: {
 		model: string;
 		provider: string;
@@ -72,11 +83,14 @@ export const eurosToMicro = (euros: number): number =>
 export const microToEuros = (micro: number): number =>
 	Math.round(micro / 10_000) / 100;
 
-export const formatMicroEur = (micro: number): string =>
-	`€${microToEuros(micro).toLocaleString("en-US", {
-		maximumFractionDigits: 2,
-		minimumFractionDigits: 2,
-	})}`;
+// The one euro formatter for micro-euro amounts: fixed decimals, rounded on whole micro-euros.
+export const formatMicroEur = (micro: number, digits = 2): string => {
+	const step = 10 ** (6 - digits);
+	return `€${((Math.round(micro / step) * step) / MICRO_PER_EUR).toLocaleString(
+		"en-US",
+		{ maximumFractionDigits: digits, minimumFractionDigits: digits },
+	)}`;
+};
 
 // NumberInput hands back a string for values like "0.00".
 export const numberFromInput = (draft: string | number): number =>

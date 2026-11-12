@@ -42,19 +42,41 @@ const account = (
 const VIEW: AiCostView = {
 	accounts: [
 		account("free-acc", {
+			// The ledger agrees with the cost: nothing extra is shown.
+			budget_spent_micro_eur: 1_503_500,
 			by_feature: [
 				{
 					calls: 4,
 					cost_micro_eur: 600_000,
+					group: "chat",
+					group_label: "Chat",
+					label: "Replies",
 					operation: "POST /api/chats/:chat_id",
 				},
-				{ calls: 9, cost_micro_eur: 500_000, operation: "conversations.chunk" },
+				{
+					calls: 9,
+					cost_micro_eur: 500_000,
+					group: "recording",
+					group_label: "Recording",
+					label: "Transcription",
+					operation: "conversations.chunk",
+				},
 				{
 					calls: 6,
 					cost_micro_eur: 400_000,
+					group: "chat",
+					group_label: "Chat",
+					label: "Suggestions",
 					operation: "GET /api/chats/:chat_id/suggestions",
 				},
-				{ calls: 1, cost_micro_eur: 3_500, operation: "nightly.mystery" },
+				{
+					calls: 1,
+					cost_micro_eur: 3_500,
+					group: "other",
+					group_label: "Other",
+					label: "nightly.mystery",
+					operation: "nightly.mystery",
+				},
 			],
 			by_model: [
 				{
@@ -77,7 +99,14 @@ const VIEW: AiCostView = {
 		account("paid-acc", {
 			budget_micro_eur: null,
 			by_feature: [
-				{ calls: 2, cost_micro_eur: 2_000_000, operation: "reports.generate" },
+				{
+					calls: 2,
+					cost_micro_eur: 2_000_000,
+					group: "reports",
+					group_label: "Reports",
+					label: "Report generation",
+					operation: "reports.generate",
+				},
 			],
 			cost_micro_eur: 2_000_000,
 			name: "Paid Co",
@@ -94,6 +123,8 @@ const VIEW: AiCostView = {
 		}),
 		account("custom-acc", {
 			budget_micro_eur: 20_000_000,
+			// The ledger counted less than the month's cost.
+			budget_spent_micro_eur: 900_000,
 			cost_micro_eur: 1_000_000,
 			custom_budget: true,
 			name: "Custom Org",
@@ -204,7 +235,7 @@ it("shows each account's cost, budget, use and top feature group", async () => {
 	const free = within(row("free-acc"));
 	expect(free.getByText("Free Org")).toBeTruthy();
 	expect(free.getByText("Free, organisation account")).toBeTruthy();
-	expect(free.getByText("€1.50")).toBeTruthy();
+	expect(free.getByText("€1.5035")).toBeTruthy();
 	expect(free.getByText("€5.00 default")).toBeTruthy();
 	expect(free.getByText("30%")).toBeTruthy();
 	// Replies and suggestions are both chat: 1.0 of 1.5035.
@@ -233,23 +264,69 @@ it("shows each account's cost, budget, use and top feature group", async () => {
 	expect(over.getByText("€0.0041")).toBeTruthy();
 });
 
+it("shows four decimals and the exact stored cost on hover", async () => {
+	show();
+	await screen.findByTestId("ai-cost-row-free-acc");
+	expect(screen.queryByText("€1.503500")).toBeNull();
+	fireEvent.mouseEnter(within(row("free-acc")).getByText("€1.5035"));
+	expect(await screen.findByText("€1.503500")).toBeTruthy();
+	fireEvent.mouseEnter(screen.getByTestId("ai-cost-total"));
+	expect(await screen.findByText("€4.670000")).toBeTruthy();
+	fireEvent.mouseEnter(
+		within(row("custom-acc")).getByTestId("ai-cost-counted"),
+	);
+	expect(await screen.findByText(/The budget counted €0\.900000/)).toBeTruthy();
+});
+
+it("says what the budget counted only when it differs from the cost", async () => {
+	show();
+	await screen.findByTestId("ai-cost-row-free-acc");
+	expect(
+		within(row("custom-acc")).getByTestId("ai-cost-counted").textContent,
+	).toBe("€0.9000 counted");
+	expect(within(row("free-acc")).queryByTestId("ai-cost-counted")).toBeNull();
+	// An older API sends no ledger amount.
+	expect(within(row("over-acc")).queryByTestId("ai-cost-counted")).toBeNull();
+});
+
+it("breakdown shares add to 100 for groups, operations and models", async () => {
+	show();
+	await screen.findByTestId("ai-cost-row-free-acc");
+	fireEvent.click(within(row("free-acc")).getByText("Free Org"));
+	const detail = await screen.findByTestId("ai-cost-detail-free-acc");
+	const groups = within(detail).getAllByTestId(/^ai-cost-group-/);
+	const percents = (el: HTMLElement) =>
+		[...el.querySelectorAll("p")]
+			.map((p) => p.textContent ?? "")
+			.filter((x) => /^(<1|\d+)%$/.test(x))
+			.map((x) => (x === "<1%" ? 0 : Number.parseInt(x, 10)));
+	// First percent of a group block is the group's own, the rest its operations.
+	const all = groups.map((g) => percents(g));
+	expect(all.map((p) => p[0])).toEqual([67, 33, 0]);
+	expect(all.flatMap((p) => p.slice(1)).reduce((s, p) => s + p, 0)).toBe(100);
+	const models = within(detail).getAllByTestId(/^ai-cost-model-/);
+	expect(models.flatMap((m) => percents(m))).toEqual([80, 20]);
+});
+
 it("sums the month in captioned tiles", async () => {
 	show();
 	await screen.findByTestId("ai-cost-row-free-acc");
 	const summary = within(screen.getByTestId("ai-cost-summary"));
-	expect(summary.getByTestId("ai-cost-total").textContent).toBe("€4.67");
+	expect(summary.getByTestId("ai-cost-total").textContent).toBe("€4.6700");
 	expect(summary.getByTestId("ai-cost-accounts").textContent).toBe("5");
 	expect(summary.getByTestId("ai-cost-over-budget").textContent).toBe("1");
-	expect(summary.getByTestId("ai-cost-unattributed").textContent).toBe("€0.07");
+	expect(summary.getByTestId("ai-cost-unattributed").textContent).toBe(
+		"€0.0700",
+	);
 	expect(summary.getByTestId("ai-cost-provider-vertex").textContent).toBe(
-		"€4.10",
+		"€4.1000",
 	);
 	expect(summary.getByTestId("ai-cost-provider-anthropic").textContent).toBe(
-		"€0.57",
+		"€0.5700",
 	);
-	expect(summary.getByTestId("ai-cost-internal").textContent).toBe("€0.069");
-	expect(summary.getByTestId("ai-cost-charged").textContent).toBe("€4.53");
-	expect(summary.getByText("incl. €0.02 from removed accounts")).toBeTruthy();
+	expect(summary.getByTestId("ai-cost-internal").textContent).toBe("€0.0689");
+	expect(summary.getByTestId("ai-cost-charged").textContent).toBe("€4.5311");
+	expect(summary.getByText("incl. €0.0200 from removed accounts")).toBeTruthy();
 	expect(summary.getByText("Spend")).toBeTruthy();
 	expect(summary.getByText("Accounts and providers")).toBeTruthy();
 	expect(summary.getByText("88% of the total")).toBeTruthy();
@@ -339,14 +416,14 @@ it("breaks an account down by feature group and by model", async () => {
 	]);
 	const chat = within(groups[0] as HTMLElement);
 	expect(chat.getByText("Chat")).toBeTruthy();
-	expect(chat.getByText("€1.00")).toBeTruthy();
+	expect(chat.getByText("€1.0000")).toBeTruthy();
 	expect(chat.getByText("67%")).toBeTruthy();
 	expect(chat.getByText("10 calls")).toBeTruthy();
 	// Plain names, with the raw operation kept for tracing.
 	expect(chat.getByText("Replies")).toBeTruthy();
 	expect(chat.getByText("POST /api/chats/:chat_id")).toBeTruthy();
 	expect(chat.getByText("Suggestions")).toBeTruthy();
-	expect(chat.getByText("€0.60")).toBeTruthy();
+	expect(chat.getByText("€0.6000")).toBeTruthy();
 	const recording = within(groups[1] as HTMLElement);
 	expect(recording.getByText("Transcription")).toBeTruthy();
 	expect(recording.getByText("conversations.chunk")).toBeTruthy();
@@ -367,7 +444,7 @@ it("breaks an account down by feature group and by model", async () => {
 	const gemini = within(models[0] as HTMLElement);
 	expect(gemini.getByText("gemini-flash")).toBeTruthy();
 	expect(gemini.getByText("Google Vertex")).toBeTruthy();
-	expect(gemini.getByText("€1.20")).toBeTruthy();
+	expect(gemini.getByText("€1.2000")).toBeTruthy();
 	expect(gemini.getByText("80%")).toBeTruthy();
 	expect(gemini.getByText("15 calls")).toBeTruthy();
 	expect(within(models[1] as HTMLElement).getByText("anthropic")).toBeTruthy();
@@ -431,8 +508,8 @@ it("with spend but no account charged, keeps the tiles and says no account was c
 	show();
 	await screen.findByText("No account was charged this month.");
 	expect(screen.queryByText("No AI costs recorded this month.")).toBeNull();
-	expect(screen.getByTestId("ai-cost-total").textContent).toBe("€0.11");
-	expect(screen.getByTestId("ai-cost-charged").textContent).toBe("€0.00");
+	expect(screen.getByTestId("ai-cost-total").textContent).toBe("€0.1100");
+	expect(screen.getByTestId("ai-cost-charged").textContent).toBe("€0.0000");
 	// The caption must not point at rows that are not there.
 	expect(screen.queryByText("The account rows below")).toBeNull();
 	expect(screen.getByText("No account was charged")).toBeTruthy();
@@ -459,7 +536,7 @@ it("on a phone shows one card per account, with the same actions", async () => {
 		const free = within(await screen.findByTestId("ai-cost-row-free-acc"));
 		expect(screen.queryByRole("table")).toBeNull();
 		expect(free.getByText("Top feature group")).toBeTruthy();
-		expect(free.getByText("€1.50")).toBeTruthy();
+		expect(free.getByText("€1.5035")).toBeTruthy();
 		expect(free.getByText("€5.00 default")).toBeTruthy();
 		expect(free.getByTestId("ai-cost-top-group").textContent).toBe("Chat 67%");
 		expect(free.getByTitle("Free Org")).toBeTruthy();
