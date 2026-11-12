@@ -1,6 +1,6 @@
 import { contextForPrompt } from "@dembrane/core";
 import { isoTimestamp } from "@dembrane/legacy-shape";
-import { type Models, speechHint } from "@dembrane/llm";
+import { type Models, modelErrorShape, speechHint } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
@@ -330,17 +330,7 @@ export async function* replyProtocol(d: ReplyDeps, conversationId: string, langu
       yield `0:${pythonJson(text)}\n`;
   } catch (err) {
     // Not the error itself: the model SDK's errors carry the request body (the transcript).
-    const e = err as { name?: unknown; statusCode?: unknown } | null;
-    d.logger.error(
-      {
-        error: {
-          name: typeof e?.name === "string" ? e.name : "Error",
-          status: typeof e?.statusCode === "number" ? e.statusCode : null,
-        },
-        conversationId,
-      },
-      "error generating reply",
-    );
+    d.logger.error({ error: modelErrorShape(err), conversationId }, "error generating reply");
     yield `3:${pythonJson(err instanceof ContentPolicyError ? "CONTENT_POLICY_VIOLATION" : "Something went wrong.")}\n`;
   }
 }

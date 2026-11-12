@@ -12,6 +12,7 @@ import {
   CompatLanguageModel,
   FallbackModel,
   type ModelCall,
+  modelErrorShape,
   resetObserverFaults,
   takeObserverFaults,
 } from "../src";
@@ -804,5 +805,18 @@ describe("a stream reports in the scope it was created in", () => {
     await reader.read();
     await reader.cancel();
     expect(seen).toEqual([scope]);
+  });
+});
+
+describe("modelErrorShape", () => {
+  test("keeps the name and status, never the message or the request", () => {
+    const err = Object.assign(new Error("the transcript: Anna said ..."), {
+      name: "AI_APICallError",
+      statusCode: 429,
+      requestBodyValues: { prompt: "Anna said ..." },
+    });
+    expect(modelErrorShape(err)).toEqual({ name: "AI_APICallError", status: 429 });
+    expect(modelErrorShape({ status: 503 })).toEqual({ name: "Error", status: 503 });
+    expect(modelErrorShape(null)).toEqual({ name: "Error", status: null });
   });
 });

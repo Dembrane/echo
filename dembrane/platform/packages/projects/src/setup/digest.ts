@@ -1,6 +1,7 @@
 import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
 import { BadRequestError, contextForPrompt, cutAtBoundary, UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
+import { modelErrorShape } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import type { Limit } from "@dembrane/ratelimit";
 import { projectTemplate } from "../project-templates";
@@ -195,7 +196,7 @@ export async function digestMaterial(
           const text = await condenseSource(d.completer, { name: o.name, text: input }).catch(
             (err) => {
               d.logger.warn(
-                { err, signal: "project_setup.digest_condense_failed" },
+                { error: modelErrorShape(err), signal: "project_setup.digest_condense_failed" },
                 "condense failed",
               );
               notes.add("material_cut");
@@ -231,7 +232,10 @@ export async function digestMaterial(
       return { answer: result, modelSources: condensed };
     })());
   } catch (err) {
-    d.logger.warn({ err, signal: "project_setup.digest_failed" }, "the digest failed");
+    d.logger.warn(
+      { error: modelErrorShape(err), signal: "project_setup.digest_failed" },
+      "the digest failed",
+    );
     throw new UnavailableError("project.setup_suggestions_unavailable");
   }
   if (!answer) throw new UnavailableError("project.setup_suggestions_unavailable");

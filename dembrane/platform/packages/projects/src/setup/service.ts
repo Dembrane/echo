@@ -2,7 +2,7 @@ import type { Access } from "@dembrane/access";
 import { requireAiBudgetForWorkspace } from "@dembrane/allowance";
 import { UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
-import type { Completer } from "@dembrane/llm";
+import { type Completer, modelErrorShape } from "@dembrane/llm";
 import { type Logger, withPayer } from "@dembrane/observability";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { projectTemplate } from "../project-templates";
@@ -127,7 +127,10 @@ export async function suggestProjectSetup(
       if (d.webSearch && (name || description)) {
         // A failed look-up never costs the host their suggestions.
         background = await researchTopic(d.completer, { name, description }).catch((err) => {
-          d.logger.warn({ err, signal: "project_setup.search_failed" }, "setup search failed");
+          d.logger.warn(
+            { error: modelErrorShape(err), signal: "project_setup.search_failed" },
+            "setup search failed",
+          );
           return "";
         });
       }
@@ -145,7 +148,10 @@ export async function suggestProjectSetup(
       });
     });
   } catch (err) {
-    d.logger.warn({ err, signal: "project_setup.model_failed" }, "setup suggestions failed");
+    d.logger.warn(
+      { error: modelErrorShape(err), signal: "project_setup.model_failed" },
+      "setup suggestions failed",
+    );
     throw new UnavailableError("project.setup_suggestions_unavailable");
   }
   if (!answer) throw new UnavailableError("project.setup_suggestions_unavailable");

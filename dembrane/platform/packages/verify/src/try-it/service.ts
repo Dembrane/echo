@@ -2,11 +2,11 @@ import { requireAiBudget } from "@dembrane/allowance";
 import { type ReplyProject, sampleReply } from "@dembrane/conversations";
 import { BadRequestError, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { modelErrorShape } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import type { Limit } from "@dembrane/ratelimit";
 import {
   type Ctx,
-  modelErrorShape,
   projectOr404,
   requireUpdate,
   topicPromptOf,

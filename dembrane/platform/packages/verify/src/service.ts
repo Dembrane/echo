@@ -14,7 +14,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
-import { speechHint } from "@dembrane/llm";
+import { modelErrorShape, speechHint } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
@@ -348,18 +348,6 @@ async function audioParts(ctx: Ctx, chunks: Chunk[]) {
     }
   }
   return out;
-}
-
-/** What a failed model call may put in a log line: no message, no request, no prompt. */
-export function modelErrorShape(err: unknown): { name: string; status: number | null } {
-  const e = err as { name?: unknown; statusCode?: unknown; status?: unknown } | null;
-  const status =
-    typeof e?.statusCode === "number"
-      ? e.statusCode
-      : typeof e?.status === "number"
-        ? e.status
-        : null;
-  return { name: typeof e?.name === "string" ? e.name : "Error", status };
 }
 
 async function complete(
