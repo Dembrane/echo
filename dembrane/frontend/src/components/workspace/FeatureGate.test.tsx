@@ -2,7 +2,13 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
@@ -80,7 +86,7 @@ beforeEach(() => {
 	sessionStorage.clear();
 	capture.mockClear();
 	saveHandover.mockReset();
-	saveHandover.mockResolvedValue({ reference: "DEM-TEST" });
+	saveHandover.mockResolvedValue({ handover: true, reference: "DEM-TEST" });
 });
 
 afterEach(() => {
@@ -320,13 +326,35 @@ it("says what they hit and offers the website, without sending them anywhere", (
 		"Everything you've made here stays as it is.",
 	);
 	expect(onClose).not.toHaveBeenCalled();
-	expect(saveHandover).not.toHaveBeenCalled();
 });
 
-it("continues in a new tab with the trigger and a handover id, and saves that id for the account", () => {
+const handoverOf = (link: HTMLAnchorElement) =>
+	new URL(link.href).searchParams.get("handover");
+
+it("saves a row for the account on opening, and links it once the server says the website can find it", async () => {
 	const onClose = vi.fn();
+	let answer: (value: unknown) => void = () => {};
+	saveHandover.mockReturnValue(
+		new Promise((resolve) => {
+			answer = resolve;
+		}),
+	);
 	renderModal({ onClose, wallKey: "custom_logo" });
 
+	expect(saveHandover).toHaveBeenCalledTimes(1);
+	const saved = saveHandover.mock.calls[0]?.[0];
+	expect(saved).toEqual({
+		config_session_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+		locale: "en",
+		org_id: "org-1",
+		project_id: undefined,
+		wall_key: "custom_logo",
+		workspace_id: "workspace-1",
+	});
+	// Until the server answers, the link carries no id: the website asks for an email.
+	expect(handoverOf(continueLink())).toBeNull();
+
+	await act(async () => answer({ handover: true, reference: "DEM-TEST" }));
 	const link = continueLink();
 	expect(link.getAttribute("target")).toBe("_blank");
 	const url = new URL(link.href);
@@ -335,31 +363,45 @@ it("continues in a new tab with the trigger and a handover id, and saves that id
 	);
 	expect(url.searchParams.get("from")).toBe("app");
 	expect(url.searchParams.get("trigger")).toBe("custom_logo");
-	expect(url.searchParams.get("back")).toBe(window.location.origin);
-	const handover = url.searchParams.get("handover") ?? "";
-	expect(handover).toMatch(/^[0-9a-f-]{36}$/);
+	expect(url.searchParams.get("back")).toBe(window.location.href);
+	expect(url.searchParams.get("handover")).toBe(saved.config_session_id);
 	// Nothing about the person travels in the address.
 	expect(link.href).not.toContain("example.com");
 	expect(link.href).not.toContain("workspace-1");
 
 	fireEvent.click(link);
-	expect(saveHandover).toHaveBeenCalledWith({
-		config_session_id: handover,
-		locale: "en",
-		org_id: "org-1",
-		project_id: undefined,
-		wall_key: "custom_logo",
-		workspace_id: "workspace-1",
-	});
+	expect(saveHandover).toHaveBeenCalledTimes(1);
 	expect(onClose).toHaveBeenCalledTimes(1);
 	expect(
 		capture.mock.calls.find(
 			(c) => c[0] === "pricing_config_handover_continued",
 		)?.[1],
-	).toMatchObject({ config_session_id: handover, wall_key: "custom_logo" });
+	).toMatchObject({
+		config_session_id: saved.config_session_id,
+		linked: true,
+		wall_key: "custom_logo",
+	});
 });
 
-it("opens the tab with the same id it saves, though closing re-renders in the same click", () => {
+it("leaves the id out where the website cannot find the row, so it asks for an email (EU)", async () => {
+	saveHandover.mockResolvedValue({ handover: false, reference: "DEM-EU" });
+	renderModal({ wallKey: "project_cap" });
+	await act(async () => {});
+
+	expect(saveHandover).toHaveBeenCalledTimes(1);
+	const url = new URL(continueLink().href);
+	expect(url.searchParams.get("from")).toBe("app");
+	expect(url.searchParams.get("trigger")).toBe("project_cap");
+	expect(url.searchParams.has("handover")).toBe(false);
+	fireEvent.click(continueLink());
+	expect(
+		capture.mock.calls.find(
+			(c) => c[0] === "pricing_config_handover_continued",
+		)?.[1],
+	).toMatchObject({ linked: false });
+});
+
+it("opens the tab with the same id it saved, though closing re-renders in the same click", async () => {
 	function Harness() {
 		const [opened, setOpened] = useState(true);
 		return (
@@ -375,6 +417,7 @@ it("opens the tab with the same id it saves, though closing re-renders in the sa
 		);
 	}
 	wrap(<Harness />);
+	await act(async () => {});
 	const link = continueLink();
 	let followed = "";
 	// The browser follows the link after the click handlers ran: read it then.
@@ -385,10 +428,25 @@ it("opens the tab with the same id it saves, though closing re-renders in the sa
 	fireEvent.click(link);
 	const saved = saveHandover.mock.calls[0]?.[0]?.config_session_id;
 	expect(saved).toBeTruthy();
-	expect(new URL(followed || link.href).searchParams.get("handover")).toBe(
-		saved,
+	expect(new URL(followed).searchParams.get("handover")).toBe(saved);
+	expect(handoverOf(link)).toBe(saved);
+});
+
+it("gives the website the page the person was on, so Back to dembrane lands there", () => {
+	const before = window.location.href;
+	window.history.pushState(
+		{},
+		"",
+		"/en-US/w/ws-9/projects/p-1/overview?tab=chat",
 	);
-	expect(new URL(link.href).searchParams.get("handover")).toBe(saved);
+	try {
+		renderModal({ wallKey: "project_cap" });
+		expect(new URL(continueLink().href).searchParams.get("back")).toBe(
+			`${window.location.origin}/en-US/w/ws-9/projects/p-1/overview?tab=chat`,
+		);
+	} finally {
+		window.history.pushState({}, "", before);
+	}
 });
 
 it("sends Dutch speakers to the Dutch calculator", () => {
@@ -399,13 +457,14 @@ it("sends Dutch speakers to the Dutch calculator", () => {
 	expect(new URL(continueLink().href).pathname).toBe("/nl/pricing-calculator");
 });
 
-it("lets the person stay with Maybe later, and saves nothing", () => {
+it("lets the person stay with Maybe later, and writes nothing more", async () => {
 	const onClose = vi.fn();
 	renderModal({ onClose, wallKey: "org_cap" });
+	await act(async () => {});
 
 	fireEvent.click(screen.getByTestId("upgrade-modal-later"));
 	expect(onClose).toHaveBeenCalledTimes(1);
-	expect(saveHandover).not.toHaveBeenCalled();
+	expect(saveHandover).toHaveBeenCalledTimes(1);
 	expect(
 		capture.mock.calls.some(
 			(c) => c[0] === "pricing_config_handover_dismissed",
@@ -455,10 +514,12 @@ it("tells the person at the transcription cap that nothing recorded is lost", ()
 	);
 });
 
-it("keeps the save from blocking the way forward", async () => {
+it("keeps a failed save from blocking the way forward, and sends no id it cannot vouch for", async () => {
 	saveHandover.mockRejectedValue(new Error("offline"));
 	const onClose = vi.fn();
 	renderModal({ onClose, wallKey: "upload_cap" });
+	await act(async () => {});
+	expect(handoverOf(continueLink())).toBeNull();
 	fireEvent.click(continueLink());
 	expect(onClose).toHaveBeenCalledTimes(1);
 });
