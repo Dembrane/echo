@@ -76,7 +76,7 @@ run("the assistant's view of email settings", () => {
     const s = await settings(await project(false), false);
     expect("default_conversation_ask_for_participant_email" in s).toBe(false);
     expect("is_project_notification_subscription_allowed" in s).toBe(false);
-    expect(s).toHaveProperty("is_get_reply_cross_pollination_enabled", false);
+    expect(s).toHaveProperty("is_get_reply_cross_pollination_enabled", true);
   });
 
   test("flag off: an email setting a project has on stays visible, to switch off", async () => {

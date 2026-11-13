@@ -2,7 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { act, cleanup, render } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PREVIEW_READY } from "@/lib/portalPreview/protocol";
 import { portalDefaults } from "../portalForm";
@@ -89,5 +89,20 @@ describe("PortalPreviewFrame", () => {
 		ready(PORTAL, inner);
 		expect(post).toHaveBeenCalledTimes(1);
 		expect(post).toHaveBeenCalledWith(message, PORTAL);
+	});
+
+	it("holds only the title, its i, the picker and the phone; the explanation is the i's", () => {
+		renderFrame();
+		const panel = screen.getByTestId("portal-preview");
+		const info = screen.getByRole("button", { name: "About the preview" });
+		expect(panel.contains(info)).toBe(true);
+		// The words are not on the panel, but they describe the i for a screen reader.
+		expect(panel.textContent).not.toContain("What participants see");
+		const description = document.getElementById(
+			info.getAttribute("aria-describedby") ?? "",
+		);
+		expect(description?.textContent).toBe(
+			"What participants see, with your changes, before they are saved.",
+		);
 	});
 });

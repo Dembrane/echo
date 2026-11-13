@@ -121,7 +121,8 @@ test("a resident evening: one topic, the table check; Explore; rounds; the table
     is_get_reply_enabled: true,
     get_reply_mode: "summarize",
   });
-  expect(cols.is_get_reply_cross_pollination_enabled).toBeUndefined();
+  // The others' tables stay out: off by choice, since on is the default (ECHO-1052).
+  expect(cols.is_get_reply_cross_pollination_enabled).toBe(false);
   expect(templateTags(projectTemplate("resident_evening"), "nl")).toEqual(["Ronde 1", "Ronde 2"]);
 });
 
@@ -130,8 +131,14 @@ test("cross-pollination only where hearing other groups is the point, never for 
     .map((t) => t.key)
     .sort();
   expect(on).toEqual(["conference", "ideation", "world_cafe"]);
-  for (const k of ["interviews", "kitchen_table", "citizens_assembly"])
+  for (const k of ["interviews", "kitchen_table", "citizens_assembly"]) {
     expect([k, projectTemplate(k).preset.fields.is_get_reply_enabled ?? false]).toEqual([k, false]);
+    // On is the column's default, so a sensitive template says off, should Explore come on.
+    expect([k, projectTemplate(k).preset.fields.is_get_reply_cross_pollination_enabled]).toEqual([
+      k,
+      false,
+    ]);
+  }
 });
 
 test("the host guide is stored the way the host guide page reads it, in the project's language", () => {

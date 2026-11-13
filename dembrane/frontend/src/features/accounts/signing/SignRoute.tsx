@@ -984,7 +984,7 @@ function ActionRow({
 	primary: ReactNode;
 }) {
 	return (
-		<Group justify="space-between" wrap="nowrap" gap="sm">
+		<Group data-steps justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
 				<Button
 					onClick={onBack}

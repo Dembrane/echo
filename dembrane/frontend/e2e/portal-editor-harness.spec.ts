@@ -49,7 +49,7 @@ const project = (nl: boolean) => ({
 	get_reply_prompt: "",
 	id: "p1",
 	is_dembrane_event_cta_enabled: true,
-	is_get_reply_cross_pollination_enabled: false,
+	is_get_reply_cross_pollination_enabled: true,
 	is_get_reply_enabled: true,
 	is_project_notification_subscription_allowed: true,
 	is_verify_enabled: true,
@@ -341,6 +341,8 @@ for (const size of sizes)
 						exact: false,
 					}),
 				).toBeVisible({ timeout: 15_000 });
+				// Where the result comes from sits in the "i" beside the title.
+				await page.getByTestId("portal-preview-info").hover();
 				await expect(
 					page.getByTestId("portal-preview-sample-note"),
 				).toBeVisible();

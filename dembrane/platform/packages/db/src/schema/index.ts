@@ -2748,7 +2748,7 @@ export const project = pgTable(
     is_enhanced_audio_processing_enabled: boolean().default(false),
     is_get_reply_enabled: boolean().default(false),
     /** Explore may read the project's other conversations, without names (ECHO-1052). */
-    is_get_reply_cross_pollination_enabled: boolean().default(false).notNull(),
+    is_get_reply_cross_pollination_enabled: boolean().default(true).notNull(),
     is_project_notification_subscription_allowed: boolean().default(false),
     is_verify_enabled: boolean().default(false),
     is_verify_on_finish_enabled: boolean().default(false),

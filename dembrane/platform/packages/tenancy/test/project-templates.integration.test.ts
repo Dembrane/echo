@@ -164,7 +164,7 @@ run("project templates", () => {
             (f.get_reply_prompt as string | undefined) ?? null,
           );
           expect(r.is_get_reply_cross_pollination_enabled).toBe(
-            (f.is_get_reply_cross_pollination_enabled as boolean | undefined) ?? false,
+            (f.is_get_reply_cross_pollination_enabled as boolean | undefined) ?? true,
           );
           expect(r.conversation_ask_for_participant_name_label ?? null).toBe(
             t.preset.name_label ? t.preset.name_label[language as "en" | "nl"] : null,

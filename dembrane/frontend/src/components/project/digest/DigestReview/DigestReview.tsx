@@ -198,8 +198,10 @@ export const DigestReview = ({
 		/>
 	);
 
+	// A row of steps: Back (or Start over) on the left (rules.css).
 	const footer = (
 		<Group
+			data-steps
 			gap="sm"
 			justify="space-between"
 			pt="md"

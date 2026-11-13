@@ -1,7 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, NativeSelect, Stack, Text, Title } from "@mantine/core";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { InfoTip } from "@/components/common/InfoTip";
 import { PARTICIPANT_BASE_URL, PREVIEW_FRAME_NAME } from "@/config";
 import { localeForLanguage } from "@/lib/locale";
 import {
@@ -41,8 +42,6 @@ interface PortalPreviewFrameProps {
 	/** The screens this page can show, for the picker. */
 	screens: readonly PreviewScreen[];
 	onScreen: (screen: PreviewScreen) => void;
-	/** Shown above the phone: the Explore and Verify pages' "Try it" (ECHO-1061). */
-	action?: ReactNode;
 	/** Where the frame loads the portal from; the configured portal by default. */
 	portalUrl?: string;
 }
@@ -71,15 +70,16 @@ interface PortalPreviewFrameProps {
  *   the frame were sent to stays locked down.
  * - referrerPolicy "no-referrer": the portal is not told the dashboard's address.
  *
- * The phone takes the height it is given, up to a phone's, so the whole of it fits in view
- * beside the options. Props in, callbacks out.
+ * The panel is the title, its "i", the screen picker and the phone, nothing else: what the
+ * preview is and where a result comes from sit in the "i", so the phone gets the height. The
+ * phone takes the height it is given, up to a phone's, so the whole of it fits in view beside
+ * the options. Props in, callbacks out.
  */
 export const PortalPreviewFrame = ({
 	projectId,
 	message,
 	screens,
 	onScreen,
-	action,
 	portalUrl = PARTICIPANT_BASE_URL,
 }: PortalPreviewFrameProps) => {
 	const frame = useRef<HTMLIFrameElement>(null);
@@ -109,7 +109,7 @@ export const PortalPreviewFrame = ({
 		frame.current?.contentWindow?.postMessage(message, portalOrigin);
 	}, [ready, message, portalOrigin]);
 
-	// The note under the title names where the open screen's result comes from.
+	// The "i" also names where the open screen's result comes from.
 	const source =
 		message.screen === "explore"
 			? message.explore?.source
@@ -124,10 +124,46 @@ export const PortalPreviewFrame = ({
 			style={{ flex: "1 1 auto" }}
 			{...testId("portal-preview")}
 		>
-			<Group justify="space-between" align="end" wrap="wrap" gap="sm">
-				<Title order={4}>
-					<Trans>Preview</Trans>
-				</Title>
+			<Group justify="space-between" align="center" wrap="wrap" gap="sm">
+				<Group gap={4} wrap="nowrap">
+					<Title order={4}>
+						<Trans>Preview</Trans>
+					</Title>
+					<InfoTip label={t`About the preview`} testId="portal-preview-info">
+						<Stack gap="xs" component="span">
+							<Text component="span" inherit>
+								<Trans>
+									What participants see, with your changes, before they are
+									saved.
+								</Trans>
+							</Text>
+							{source === "example" && (
+								<Text
+									component="span"
+									inherit
+									{...testId("portal-preview-example-note")}
+								>
+									<Trans>
+										Example: a made-up conversation, to show the shape. Real
+										replies are built from what participants say.
+									</Trans>
+								</Text>
+							)}
+							{source === "model" && (
+								<Text
+									component="span"
+									inherit
+									{...testId("portal-preview-sample-note")}
+								>
+									<Trans>
+										Made by dembrane from a sample conversation, with your
+										settings.
+									</Trans>
+								</Text>
+							)}
+						</Stack>
+					</InfoTip>
+				</Group>
 				{screens.length > 1 && (
 					<NativeSelect
 						aria-label={t`Screen`}
@@ -139,27 +175,6 @@ export const PortalPreviewFrame = ({
 					/>
 				)}
 			</Group>
-			<Text size="sm" className="app-muted" maw={360}>
-				<Trans>
-					What participants see, with your changes, before they are saved.
-				</Trans>
-			</Text>
-			{source === "example" && (
-				<Text size="sm" maw={360} {...testId("portal-preview-example-note")}>
-					<Trans>
-						Example: a made-up conversation, to show the shape. Real replies are
-						built from what participants say.
-					</Trans>
-				</Text>
-			)}
-			{source === "model" && (
-				<Text size="sm" maw={360} {...testId("portal-preview-sample-note")}>
-					<Trans>
-						Made by dembrane from a sample conversation, with your settings.
-					</Trans>
-				</Text>
-			)}
-			{action}
 			<Box
 				w={360}
 				maw="100%"

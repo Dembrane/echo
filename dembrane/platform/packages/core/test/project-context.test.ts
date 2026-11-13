@@ -97,6 +97,13 @@ const ALLOWED: readonly { file: string; includes: string; why: string }[] = [
   },
   { file: "core/src/project-context.ts", includes: "project.context", why: "the helper's doc" },
   {
+    // Not a prompt: get_project and update_project hand the stored text to an outside agent,
+    // which may write it back. Cut to the prompt budget, a write-back would lose the rest.
+    file: "agent-access/src/tools.ts",
+    includes: "context: s(row.context)",
+    why: "data returned to an agent, not a prompt; returned whole so a write-back keeps it",
+  },
+  {
     file: "verify/src/try-it/service.ts",
     includes: "context: project.context",
     why: "hands the stored text to replyPrompt, which budgets it with contextForPrompt",
@@ -144,7 +151,6 @@ test("the call sites that build prompts use the helper", () => {
   const sites = [
     "agentic/src/runs/context.ts",
     "agentic/src/runs/service.ts",
-    "agent-access/src/tools.ts",
     "canvas/src/gather.ts",
     "canvas/src/ticks.ts",
     "chats/src/prompt.ts",

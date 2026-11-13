@@ -12,9 +12,9 @@ import { replyProtocol } from "../src/v1/reply";
 import { admin, freshDatabase, quiet } from "./pipeline-harness";
 
 /**
- * ECHO-1052, Explore's cross-pollination: off (every project, new or existing, until a
- * host turns it on), the model reads this conversation only; on, it reads the project's
- * other conversations too, as "another group", never by name. No participant's name or
+ * ECHO-1052, Explore's cross-pollination: on (every project, new or existing, until a
+ * host turns it off), the model reads the project's other conversations too, as "another
+ * group", never by name; off, it reads this conversation only. No participant's name or
  * email reaches the model either way. Captured from the model call itself.
  */
 const run = admin ? describe : describe.skip;
@@ -86,10 +86,20 @@ run("Explore cross-pollination", () => {
       expect(payload).not.toContain(s);
   };
 
-  test("off by default: only this conversation, plus context and key terms", async () => {
+  test("on by default: other conversations come in as another group, without names", async () => {
     const [row] =
       await sql`select is_get_reply_cross_pollination_enabled as on from project where id = ${project}`;
-    expect(row?.on).toBe(false);
+    expect(row?.on).toBe(true);
+    const payload = await reply();
+    expect(payload).toContain(SAID_HERE);
+    expect(payload).toContain(SAID_THERE);
+    expect(payload).toContain("<name>another group</name>");
+    expect(payload).toContain("<name>this conversation</name>");
+    noPeople(payload);
+  });
+
+  test("off: only this conversation, plus context and key terms", async () => {
+    await sql`update project set is_get_reply_cross_pollination_enabled = false where id = ${project}`;
     const payload = await reply();
     expect(payload).toContain(SAID_HERE);
     expect(payload).not.toContain(SAID_THERE);
@@ -97,16 +107,8 @@ run("Explore cross-pollination", () => {
     expect(payload).toContain("How people in the north of town get around.");
     expect(payload).toContain("Key terms (for names and spelling only): Noorderkade");
     noPeople(payload);
-  });
-
-  test("on: other conversations come in as another group, without names", async () => {
+    // The tests below ran with it on before the default turned: keep that.
     await sql`update project set is_get_reply_cross_pollination_enabled = true where id = ${project}`;
-    const payload = await reply();
-    expect(payload).toContain(SAID_HERE);
-    expect(payload).toContain(SAID_THERE);
-    expect(payload).toContain("<name>another group</name>");
-    expect(payload).toContain("<name>this conversation</name>");
-    noPeople(payload);
   });
 
   test("the default mode asks one question and drops the 1-3 sentences and we/our lines", async () => {

@@ -195,7 +195,21 @@ export const OptionStepper = ({
 										<ShownTitleContext.Provider value={option.title}>
 											{option.body}
 										</ShownTitleContext.Provider>
-										<Group gap="sm">
+										{/* A row of steps: Back on the left, Next on the right (rules.css),
+										    where it stays on the first option too. */}
+										<Group data-steps justify="space-between" gap="sm">
+											{i > 0 ? (
+												<Button
+													variant="subtle"
+													size="sm"
+													onClick={() => onOpen(options[i - 1].key, "back")}
+													{...testId(`${testIdPrefix}-back`)}
+												>
+													<Trans>Back</Trans>
+												</Button>
+											) : (
+												<span />
+											)}
 											{(!isLast || onNextPage) && (
 												<Button
 													variant="filled"
@@ -207,16 +221,6 @@ export const OptionStepper = ({
 													{...testId(`${testIdPrefix}-next`)}
 												>
 													{isLast && nextLabel ? nextLabel : t`Next`}
-												</Button>
-											)}
-											{i > 0 && (
-												<Button
-													variant="subtle"
-													size="sm"
-													onClick={() => onOpen(options[i - 1].key, "back")}
-													{...testId(`${testIdPrefix}-back`)}
-												>
-													<Trans>Back</Trans>
 												</Button>
 											)}
 										</Group>

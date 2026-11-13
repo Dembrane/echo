@@ -1,7 +1,9 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Box, Button, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { PlayIcon } from "@phosphor-icons/react";
+import { InfoTip } from "@/components/common/InfoTip";
 import { presentErrorNow } from "@/lib/errors/present";
 import { testId } from "@/lib/testUtils";
 import type { TrySection } from "./tryIt";
@@ -24,8 +26,10 @@ interface TryItActionProps {
 }
 
 /**
- * "Try it" beside the preview (ECHO-1061): one button and a line on where things stand.
- * The phone shows the result; this says what it is made from. Props in, callbacks out.
+ * "Try it" on the Explore and Verify pages (ECHO-1061), under the page's options: one
+ * button, an "i" that says what a try shows, and a line only when there is something to
+ * do about it (wait, the hourly limit, settings changed since, an error). The phone in the
+ * preview shows the result. Props in, callbacks out.
  */
 export const TryItAction = ({
 	section,
@@ -41,7 +45,7 @@ export const TryItAction = ({
 	const running = status === "running";
 	const again = hasResult || status === "failed";
 
-	let line: React.ReactNode;
+	let line: React.ReactNode = null;
 	if (running)
 		line = <Trans>Running your settings on a sample conversation…</Trans>;
 	else if (status === "limit")
@@ -56,24 +60,10 @@ export const TryItAction = ({
 				Your settings changed. The preview shows the result of the earlier ones.
 			</Trans>
 		);
-	else if (hasResult)
-		line = <Trans>The preview shows the result for your settings.</Trans>;
-	else if (section === "explore")
-		line = (
-			<Trans>
-				See the question your settings give, on a short sample conversation.
-			</Trans>
-		);
-	else
-		line = (
-			<Trans>
-				See the draft your settings give, on a short sample conversation.
-			</Trans>
-		);
 
 	return (
 		<Stack gap="xs" maw={360} {...testId("portal-try")} data-status={status}>
-			<Box>
+			<Group gap={4} wrap="nowrap">
 				<Button
 					variant="outline"
 					size="sm"
@@ -85,7 +75,35 @@ export const TryItAction = ({
 				>
 					{again ? <Trans>Try again</Trans> : <Trans>Try it</Trans>}
 				</Button>
-			</Box>
+				<InfoTip label={t`About Try it`} testId="portal-try-info">
+					<Stack gap="xs" component="span">
+						<Text component="span" inherit>
+							{hasResult ? (
+								<Trans>The preview shows the result for your settings.</Trans>
+							) : section === "explore" ? (
+								<Trans>
+									See the question your settings give, on a short sample
+									conversation.
+								</Trans>
+							) : (
+								<Trans>
+									See the draft your settings give, on a short sample
+									conversation.
+								</Trans>
+							)}
+						</Text>
+						{section === "explore" && crossPollination && (
+							<Text component="span" inherit {...testId("portal-try-others")}>
+								<Trans>
+									One sample cannot show what Explore takes from other
+									conversations.
+								</Trans>
+							</Text>
+						)}
+					</Stack>
+				</InfoTip>
+			</Group>
+			{/* Always there, so a screen reader hears each new line; empty when all is well. */}
 			<Text
 				size="sm"
 				role="status"
@@ -95,13 +113,6 @@ export const TryItAction = ({
 			>
 				{line}
 			</Text>
-			{section === "explore" && crossPollination && (
-				<Text size="sm" className="app-muted" {...testId("portal-try-others")}>
-					<Trans>
-						One sample cannot show what Explore takes from other conversations.
-					</Trans>
-				</Text>
-			)}
 		</Stack>
 	);
 };

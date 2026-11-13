@@ -291,7 +291,17 @@ export const RegisterRoute = () => {
 									})}
 									{...testId("auth-register-confirm-password-input")}
 								/>
-								<Group gap="md" wrap="nowrap">
+								{/* A row of steps: Back on the left, the pill on the right (rules.css). */}
+								<Group data-steps gap="md" wrap="nowrap">
+									<Button
+										variant="subtle"
+										color="gray"
+										size="md"
+										onClick={() => setStep(0)}
+										className="shrink-0"
+									>
+										<Trans>Back</Trans>
+									</Button>
 									<Button
 										variant="filled"
 										fullWidth
@@ -301,15 +311,6 @@ export const RegisterRoute = () => {
 										{...testId("auth-register-submit-button")}
 									>
 										<Trans>Create account</Trans>
-									</Button>
-									<Button
-										variant="subtle"
-										color="gray"
-										size="md"
-										onClick={() => setStep(0)}
-										className="shrink-0"
-									>
-										<Trans>Back</Trans>
 									</Button>
 								</Group>
 							</>

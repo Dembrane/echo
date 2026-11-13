@@ -26,7 +26,18 @@ export const VerifyArtefactError = ({
 					issue. You can try reloading or go back to select a different topic.
 				</Trans>
 			</Text>
-			<Group gap="sm">
+			{/* A row of steps: Back on the left, the pill on the right (rules.css). */}
+			<Group data-steps gap="sm">
+				<Button
+					size="md"
+					leftSection={<ArrowLeftIcon size={20} />}
+					onClick={onGoBack}
+					disabled={isReloading}
+				>
+					<Trans id="participant.concrete.artefact.action.button.go.back">
+						Back
+					</Trans>
+				</Button>
 				<Button
 					variant="filled"
 					size="md"
@@ -37,16 +48,6 @@ export const VerifyArtefactError = ({
 				>
 					<Trans id="participant.concrete.artefact.action.button.reload">
 						Reload page
-					</Trans>
-				</Button>
-				<Button
-					size="md"
-					leftSection={<ArrowLeftIcon size={20} />}
-					onClick={onGoBack}
-					disabled={isReloading}
-				>
-					<Trans id="participant.concrete.artefact.action.button.go.back">
-						Back
 					</Trans>
 				</Button>
 			</Group>

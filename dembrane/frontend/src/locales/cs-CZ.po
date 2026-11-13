@@ -1137,7 +1137,7 @@ msgstr "Modrý pruh v horní části každé záložky s vaším textem a odkaze
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "Přehlednější a přístupnější dashboard a portál."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:490
+#: src/routes/onboarding/OnboardingRoute.tsx:491
 msgid "A couple of quick questions and you're in."
 msgstr "Pár rychlých otázek a jste uvnitř."
 
@@ -1958,7 +1958,7 @@ msgstr "Všechny rozhovory"
 msgid "all eligible project conversations"
 msgstr "všechny způsobilé rozhovory projektu"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:957
+#: src/components/dropzone/UploadConversationDropzone.tsx:959
 msgid "All files were uploaded successfully."
 msgstr "All files were uploaded successfully."
 
@@ -2038,7 +2038,7 @@ msgstr "Povolit přístup k MCP v {0}"
 #~ msgid "Allow participants using the link to start new conversations"
 #~ msgstr "Allow participants using the link to start new conversations"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:487
+#: src/routes/onboarding/OnboardingRoute.tsx:488
 msgid "Almost ready"
 msgstr "Téměř hotovo"
 
@@ -2055,7 +2055,7 @@ msgid "Already added to this chat"
 msgstr "Already added to this chat"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:324
-#: src/routes/auth/Register.tsx:379
+#: src/routes/auth/Register.tsx:380
 msgid "Already have an account? Log in"
 msgstr "Already have an account? Log in"
 
@@ -2778,29 +2778,29 @@ msgid "Away"
 msgstr "Pryč"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/CreateProjectRoute.tsx:509
-#: src/routes/project/CreateProjectRoute.tsx:737
+#: src/routes/project/CreateProjectRoute.tsx:728
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:685
 #: src/routes/organisation/OrganisationRoute.tsx:708
-#: src/routes/onboarding/OnboardingRoute.tsx:477
-#: src/routes/auth/Register.tsx:312
+#: src/routes/onboarding/OnboardingRoute.tsx:478
+#: src/routes/auth/Register.tsx:303
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:323
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:361
-#: src/components/dropzone/UploadConversationDropzone.tsx:980
+#: src/components/dropzone/UploadConversationDropzone.tsx:974
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
 #: src/portal/layout/ParticipantHeader.tsx:94
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:453
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:438
 msgid "participant.button.back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:48
+#: src/portal/components/verify/VerifyArtefactError.tsx:37
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Zpět"
 
@@ -3087,7 +3087,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1180
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:478
 #: src/routes/project/report/ProjectReportRoute.tsx:281
@@ -3118,14 +3118,14 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/components/project/BulkMoveProjectsModal.tsx:134
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:478
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:632
-#: src/components/organisation/CreateOrganisationModal.tsx:248
+#: src/components/organisation/CreateOrganisationModal.tsx:241
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
 #: src/components/map/panels/SpotlightPanel.tsx:363
 #: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:853
-#: src/components/dropzone/UploadConversationDropzone.tsx:990
+#: src/components/dropzone/UploadConversationDropzone.tsx:843
+#: src/components/dropzone/UploadConversationDropzone.tsx:984
 #: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
@@ -3512,7 +3512,7 @@ msgstr "Zkontrolovat, co jsme spolu zachytili? Zabere to asi minutu."
 msgid "Check what we captured together."
 msgstr "Zkontrolujte, co jsme spolu zachytili."
 
-#: src/routes/auth/Register.tsx:321
+#: src/routes/auth/Register.tsx:322
 #: src/routes/auth/CheckYourEmail.tsx:21
 msgid "Check your email"
 msgstr "Check your email"
@@ -3755,7 +3755,7 @@ msgstr "Clone project"
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
 #: src/components/map/panels/DetailsSheet.tsx:800
-#: src/components/dropzone/UploadConversationDropzone.tsx:990
+#: src/components/dropzone/UploadConversationDropzone.tsx:984
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:155
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3812,7 +3812,7 @@ msgid "Collapse sidebar"
 msgstr "Sbalit postranní panel"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:372
-#: src/components/organisation/CreateOrganisationModal.tsx:256
+#: src/components/organisation/CreateOrganisationModal.tsx:257
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Colleagues you invite can explore conversations, share insights, and build reports with you."
 
@@ -3915,7 +3915,7 @@ msgstr "Bezplatná zkušební verze. Výnos 0 €."
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Bezplatná zkušební verze. Vyprší {0}. Výnos 0 €."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:909
+#: src/components/dropzone/UploadConversationDropzone.tsx:911
 msgid "Complete"
 msgstr "Complete"
 
@@ -4068,11 +4068,11 @@ msgstr "Context added:"
 msgid "Contextual suggestions"
 msgstr "Contextual suggestions"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:763
-#: src/routes/onboarding/OnboardingRoute.tsx:561
-#: src/routes/onboarding/OnboardingRoute.tsx:702
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:773
+#: src/routes/onboarding/OnboardingRoute.tsx:572
+#: src/routes/onboarding/OnboardingRoute.tsx:704
 #: src/routes/auth/Register.tsx:251
-#: src/components/organisation/CreateOrganisationModal.tsx:240
+#: src/components/organisation/CreateOrganisationModal.tsx:249
 #: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1468
@@ -4091,7 +4091,7 @@ msgid "participant.verify.instructions.button.next"
 msgstr "Pokračovat"
 
 #. js-lingui-explicit-id
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:440
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:456
 msgid "participant.button.next"
 msgstr "Pokračovat"
 
@@ -4630,7 +4630,7 @@ msgstr "vytvořit zprávu"
 msgid "Create a research brief from recent conversations"
 msgstr "Create a research brief from recent conversations"
 
-#: src/routes/auth/Register.tsx:303
+#: src/routes/auth/Register.tsx:313
 msgid "Create account"
 msgstr "Create account"
 
@@ -4678,7 +4678,7 @@ msgid "Create password"
 msgstr "Create password"
 
 #: src/routes/project/CreateProjectRoute.tsx:434
-#: src/routes/project/CreateProjectRoute.tsx:728
+#: src/routes/project/CreateProjectRoute.tsx:738
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:209
@@ -4717,7 +4717,7 @@ msgstr "Vytvořit nastavení hlasu"
 #~ msgstr "Create Webhook"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:425
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:776
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:786
 #: src/routes/organisation/OrganisationRoute.tsx:1477
 msgid "Create workspace"
 msgstr "Create workspace"
@@ -5246,7 +5246,7 @@ msgstr "Didn't expect this? You can safely ignore this page."
 msgid "Didn't get it? Check spam or junk first. The message comes from dembrane.com."
 msgstr "Didn't get it? Check spam or junk first. The message comes from dembrane.com."
 
-#: src/routes/auth/Register.tsx:334
+#: src/routes/auth/Register.tsx:335
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 
@@ -5338,7 +5338,7 @@ msgstr "Destiluje se hlavní myšlenka…"
 msgid "Do I need this?"
 msgstr "Do I need this?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:497
+#: src/routes/onboarding/OnboardingRoute.tsx:498
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Plánujete dembrane používat ve zdravotnictví, školství, náboru, správě kritické infrastruktury, vymáhání práva nebo justici?"
 
@@ -5369,7 +5369,7 @@ msgstr "Neaktualizuje se automaticky."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Neaktualizuje se automaticky. Aktualizováno {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:561
+#: src/routes/onboarding/OnboardingRoute.tsx:572
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
@@ -5899,7 +5899,7 @@ msgstr "Zadané údaje"
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/canvas/CanvasRoute.tsx:341
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
-#: src/components/dropzone/UploadConversationDropzone.tsx:941
+#: src/components/dropzone/UploadConversationDropzone.tsx:943
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:440
 #: src/components/chat/AgenticChatPanel.tsx:1870
@@ -6207,7 +6207,7 @@ msgstr "Na tento objekt se faktický stav nevztahuje."
 #: src/routes/admin/AdminSettingsRoute.tsx:2773
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
-#: src/components/dropzone/UploadConversationDropzone.tsx:911
+#: src/components/dropzone/UploadConversationDropzone.tsx:913
 #: src/components/billing/BillingManager.tsx:229
 msgid "Failed"
 msgstr "Failed"
@@ -6932,7 +6932,7 @@ msgstr "Získej odpověď během rozhovoru"
 #~ msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 #~ msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:732
+#: src/routes/onboarding/OnboardingRoute.tsx:734
 #: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Get started"
 msgstr "Get started"
@@ -7106,7 +7106,7 @@ msgstr "Guided"
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:519
+#: src/routes/onboarding/OnboardingRoute.tsx:520
 msgid "Have you completed a training?"
 msgstr "Absolvovali jste školení?"
 
@@ -7419,7 +7419,7 @@ msgstr "If you're not sure, you probably don't need it yet. Webhooks are an adva
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 
-#: src/routes/auth/Register.tsx:401
+#: src/routes/auth/Register.tsx:402
 msgid "If you're trying to join an existing organisation, you should not create a new one. Some reasons that you may accidentally end up here are:"
 msgstr "Pokud se snažíte připojit k existující organizaci, nevytvářejte novou. Sem jste se mohli omylem dostat například z těchto důvodů:"
 
@@ -9234,7 +9234,7 @@ msgstr "Name it after the topic, engagement, or question you're exploring."
 msgid "Name updated"
 msgstr "Name updated"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:678
+#: src/routes/onboarding/OnboardingRoute.tsx:680
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 
@@ -9443,8 +9443,8 @@ msgstr "Další stránka"
 #~ msgid "Next: pick a time"
 #~ msgstr "Dále: vyberte čas"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:510
-#: src/routes/onboarding/OnboardingRoute.tsx:524
+#: src/routes/onboarding/OnboardingRoute.tsx:511
+#: src/routes/onboarding/OnboardingRoute.tsx:525
 msgid "No"
 msgstr "Ne"
 
@@ -10630,7 +10630,7 @@ msgstr "Optional. What this workspace is for."
 msgid "Options"
 msgstr "Options"
 
-#: src/routes/auth/Register.tsx:366
+#: src/routes/auth/Register.tsx:367
 #: src/routes/auth/Login.tsx:753
 msgid "or"
 msgstr "or"
@@ -10694,7 +10694,7 @@ msgid "Organisation members load faster."
 msgstr "Členové organizace se načítají rychleji."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1117
-#: src/routes/onboarding/OnboardingRoute.tsx:716
+#: src/routes/onboarding/OnboardingRoute.tsx:718
 #: src/components/organisation/CreateOrganisationModal.tsx:225
 msgid "Organisation name"
 msgstr "Organisation name"
@@ -12033,11 +12033,11 @@ msgstr "číst rozhovory, přepisy, projekty a nastavení, která vidíte"
 #~ msgid "Read every 2 minutes for"
 #~ msgstr "Číst každé 2 minuty po dobu"
 
-#: src/routes/auth/Register.tsx:393
+#: src/routes/auth/Register.tsx:394
 msgid "Read less"
 msgstr "Read less"
 
-#: src/routes/auth/Register.tsx:395
+#: src/routes/auth/Register.tsx:396
 msgid "Read more"
 msgstr "Číst dál"
 
@@ -12438,7 +12438,7 @@ msgid "Relevant"
 msgstr "Relevantní"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:38
+#: src/portal/components/verify/VerifyArtefactError.tsx:49
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Znovu načíst stránku"
 
@@ -13859,8 +13859,8 @@ msgstr "Odeslat zpětnou vazbu"
 msgid "Send invite"
 msgstr "Send invite"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:396
-#: src/components/organisation/CreateOrganisationModal.tsx:273
+#: src/routes/onboarding/OnboardingRoute.tsx:405
+#: src/components/organisation/CreateOrganisationModal.tsx:283
 msgid "Send invites"
 msgstr "Send invites"
 
@@ -13973,7 +13973,7 @@ msgstr "Set up workspace"
 msgid "Set up your first organisation"
 msgstr "Set up your first organisation"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:630
+#: src/routes/onboarding/OnboardingRoute.tsx:632
 #: src/features/sidebar/views/user/UserHomeView.tsx:130
 msgid "Set up your organisation"
 msgstr "Set up your organisation"
@@ -14400,9 +14400,9 @@ msgstr "Přihlašovací odkazy před otevřením organizace nebo projektu zkontr
 msgid "Six weekends across seven months"
 msgstr "Šest víkendů v průběhu sedmi měsíců"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:404
-#: src/routes/onboarding/OnboardingRoute.tsx:570
-#: src/components/organisation/CreateOrganisationModal.tsx:281
+#: src/routes/onboarding/OnboardingRoute.tsx:393
+#: src/routes/onboarding/OnboardingRoute.tsx:562
+#: src/components/organisation/CreateOrganisationModal.tsx:275
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
 msgstr "Skip"
@@ -14929,7 +14929,7 @@ msgstr "Odesláno textem"
 msgid "Subscribe to report notifications."
 msgstr "Přihlaste se k odběru upozornění na zprávy."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:954
+#: src/components/dropzone/UploadConversationDropzone.tsx:956
 msgid "Success"
 msgstr "Success"
 
@@ -16864,7 +16864,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/components/map/MapPage.tsx:151
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:970
+#: src/components/dropzone/UploadConversationDropzone.tsx:994
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1216
 msgid "Try again"
@@ -16897,7 +16897,7 @@ msgstr "Vyzkoušet"
 msgid "Trying again…"
 msgstr "Zkouší se znovu…"
 
-#: src/routes/auth/Register.tsx:384
+#: src/routes/auth/Register.tsx:385
 msgid "Trying to join an existing organisation?"
 msgstr "Snažíte se připojit k existující organizaci?"
 
@@ -17332,7 +17332,7 @@ msgstr "Upload conversations"
 msgid "Upload failed. Please try again."
 msgstr "Upload failed. Please try again."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:844
+#: src/components/dropzone/UploadConversationDropzone.tsx:854
 msgid "Upload files"
 msgstr "Nahrát soubory"
 
@@ -17930,7 +17930,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:672
+#: src/routes/onboarding/OnboardingRoute.tsx:674
 msgid "We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "Přidali jsme organizace, abyste mohli organizovat projekty a sdílet je s kolegy. Vše, co jste měli dříve, tu stále je. Potřebujeme jen název vaší organizace."
 
@@ -17938,7 +17938,7 @@ msgstr "Přidali jsme organizace, abyste mohli organizovat projekty a sdílet je
 #~ msgstr "We've added organisations so you can organize projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 
 #. placeholder {0}: submittedEmail ?? emailWatch
-#: src/routes/auth/Register.tsx:324
+#: src/routes/auth/Register.tsx:325
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 msgstr "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 
@@ -17987,11 +17987,11 @@ msgstr "Welcome"
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:626
+#: src/routes/onboarding/OnboardingRoute.tsx:628
 msgid "Welcome back, {displayName}"
 msgstr "Welcome back, {displayName}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:623
+#: src/routes/onboarding/OnboardingRoute.tsx:625
 #: src/routes/auth/Login.tsx:166
 msgid "Welcome to dembrane"
 msgstr "Welcome to dembrane"
@@ -18008,8 +18008,8 @@ msgstr "Welcome to dembrane!"
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:621
-#: src/routes/onboarding/OnboardingRoute.tsx:628
+#: src/routes/onboarding/OnboardingRoute.tsx:623
+#: src/routes/onboarding/OnboardingRoute.tsx:630
 msgid "Welcome, {displayName}"
 msgstr "Welcome, {displayName}"
 
@@ -18034,7 +18034,7 @@ msgstr "What data is sent?"
 msgid "What did you change?"
 msgstr "Co jsi změnil?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:533
+#: src/routes/onboarding/OnboardingRoute.tsx:534
 msgid "What do you plan to use dembrane for?"
 msgstr "K čemu plánujete dembrane používat?"
 
@@ -18277,7 +18277,7 @@ msgstr "will be included in your report"
 msgid "wish"
 msgstr "přání"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:545
+#: src/routes/onboarding/OnboardingRoute.tsx:546
 msgid "With external clients"
 msgstr "S externími klienty"
 
@@ -18326,7 +18326,7 @@ msgstr "Staženo z analýzy"
 msgid "Withdrawn from the analysis."
 msgstr "Staženo z analýzy."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:540
+#: src/routes/onboarding/OnboardingRoute.tsx:541
 msgid "Within my organisation"
 msgstr "V rámci mé organizace"
 
@@ -18481,7 +18481,7 @@ msgstr "Napsal hostitel"
 msgid "Written by a host, {day}"
 msgstr "Napsal/a hostitel, {day}"
 
-#: src/routes/auth/Register.tsx:356
+#: src/routes/auth/Register.tsx:357
 msgid "Wrong address? Change email"
 msgstr "Wrong address? Change email"
 
@@ -18493,8 +18493,8 @@ msgstr "Nesprávný jazyk nebo tón"
 msgid "Wrong sources"
 msgstr "Nesprávné zdroje"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:509
-#: src/routes/onboarding/OnboardingRoute.tsx:523
+#: src/routes/onboarding/OnboardingRoute.tsx:510
+#: src/routes/onboarding/OnboardingRoute.tsx:524
 msgid "Yes"
 msgstr "Ano"
 
@@ -18540,7 +18540,7 @@ msgstr "Využíváte tarif Free. Zatím není třeba spravovat žádné platby."
 msgid "You are the data owner"
 msgstr "Jste vlastníkem dat"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:715
+#: src/routes/onboarding/OnboardingRoute.tsx:717
 #: src/components/organisation/CreateOrganisationModal.tsx:226
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
@@ -18747,7 +18747,7 @@ msgstr "You left the workspace"
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
-#: src/routes/auth/Register.tsx:414
+#: src/routes/auth/Register.tsx:415
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
@@ -18772,7 +18772,7 @@ msgstr "Budete přidáni jako správce do {0, plural, one {# soukromého pracovn
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Budete přidáni jako správce do {singleName}. Hned poté se objeví ve vašem bočním panelu."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:737
+#: src/routes/onboarding/OnboardingRoute.tsx:739
 msgid "You'll find all your projects waiting for you."
 msgstr "You'll find all your projects waiting for you."
 
@@ -18827,7 +18827,7 @@ msgstr "You're in"
 msgid "You’re live, so changes wait until you show them."
 msgstr "Jste živě, takže změny čekají, dokud je nezobrazíte."
 
-#: src/routes/auth/Register.tsx:409
+#: src/routes/auth/Register.tsx:410
 msgid "You're logging in with the wrong email address"
 msgstr "You're logging in with the wrong email address"
 
@@ -18855,22 +18855,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "You're the only admin. Promote someone else before changing your role."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:643
+#: src/routes/onboarding/OnboardingRoute.tsx:645
 msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
 msgstr "Máte pozvánku ke spolupráci s {0} organizacemi. Jakmile budete pokračovat, přesuneme vás tam."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:637
+#: src/routes/onboarding/OnboardingRoute.tsx:639
 msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
 msgstr "Máte pozvánku ke spolupráci s <0>{0}</0>. Za chvilku vás tam přesuneme."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:661
+#: src/routes/onboarding/OnboardingRoute.tsx:663
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "You've been invited to join {0} organisations. We'll take you in once you continue."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:655
+#: src/routes/onboarding/OnboardingRoute.tsx:657
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 
@@ -19059,11 +19059,11 @@ msgstr "Přikládáme vaše jméno, e-mail a aktuální stránku, abychom se vá
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Vaše organizace má ve výchozím nastavení tarif Free. Jeden tarif pokrývá každý pracovní prostor, po přechodu na placený se účtuje za místo."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:666
+#: src/routes/onboarding/OnboardingRoute.tsx:668
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Your organisation is waiting for you. Click continue to join."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:718
+#: src/routes/onboarding/OnboardingRoute.tsx:720
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Your organisation or company"
 msgstr "Your organisation or company"
@@ -19164,7 +19164,7 @@ msgstr "Vaše relace vypršela. Chcete-li pokračovat, znovu se přihlaste."
 #~ msgid "Your view has been created. Please wait as we process and analyse the data."
 #~ msgstr "Your view has been created. Please wait as we process and analyse the data."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:649
+#: src/routes/onboarding/OnboardingRoute.tsx:651
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Váš pracovní prostor na vás čeká. Klikněte na pokračovat a pusťte se do spolupráce."
 

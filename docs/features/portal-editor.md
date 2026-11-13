@@ -90,7 +90,8 @@ How it is set:
 conversation. Switch on "Enable Explore", then choose a "Mode": "One question",
 "Brainstorm ideas" or "Custom". "Custom" adds a "Reply prompt" where you describe the kind
 of reply you want. "Cross-pollination" lets Explore bring in what other groups in the
-project said.
+project said. It is on by default; switch it off to keep each reply to the participant's own
+conversation.
 
 ## "Verify"
 
