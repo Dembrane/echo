@@ -831,7 +831,17 @@ export const UploadConversationDropzone = (
 								</Alert>
 							)}
 
-							<Group justify="flex-start" mt="md">
+							{/* The first of the upload's steps: the way out on the left, the pill
+							    on the right (rules.css). */}
+							<Group data-steps justify="space-between" mt="md">
+								<Button
+									variant="subtle"
+									color="gray"
+									onClick={close}
+									{...testId("conversation-upload-cancel-button")}
+								>
+									{t`Cancel`}
+								</Button>
 								{selectedFiles.length > 0 && (
 									<Button
 										variant="filled"
@@ -844,14 +854,6 @@ export const UploadConversationDropzone = (
 										{t`Upload files`}
 									</Button>
 								)}
-								<Button
-									variant="subtle"
-									color="gray"
-									onClick={close}
-									{...testId("conversation-upload-cancel-button")}
-								>
-									{t`Cancel`}
-								</Button>
 							</Group>
 						</>
 					)}
@@ -958,8 +960,30 @@ export const UploadConversationDropzone = (
 								</Alert>
 							)}
 
-							{/* Action buttons */}
-							<Group justify="flex-start" mt="md">
+							{/* Action buttons: a row of steps, so the ways back and out on
+							    the left and Try again on the right (rules.css). */}
+							<Group data-steps justify="space-between" mt="md">
+								<Group gap="sm">
+									{!uploader.isSuccess && !uploader.isPending && (
+										<Button
+											onClick={() => {
+												setUploadStarted(false);
+											}}
+											{...testId("conversation-upload-back-button")}
+										>
+											{t`Back`}
+										</Button>
+									)}
+									<Button
+										variant="subtle"
+										color="gray"
+										onClick={close}
+										disabled={uploader.isPending}
+										{...testId("conversation-upload-close-button")}
+									>
+										{uploader.isSuccess ? t`Close` : t`Cancel`}
+									</Button>
+								</Group>
 								{!uploader.isSuccess && uploader.isError && canRetry && (
 									<Button
 										variant="filled"
@@ -970,25 +994,6 @@ export const UploadConversationDropzone = (
 										{t`Try again`}
 									</Button>
 								)}
-								{!uploader.isSuccess && !uploader.isPending && (
-									<Button
-										onClick={() => {
-											setUploadStarted(false);
-										}}
-										{...testId("conversation-upload-back-button")}
-									>
-										{t`Back`}
-									</Button>
-								)}
-								<Button
-									variant="subtle"
-									color="gray"
-									onClick={close}
-									disabled={uploader.isPending}
-									{...testId("conversation-upload-close-button")}
-								>
-									{uploader.isSuccess ? t`Close` : t`Cancel`}
-								</Button>
 							</Group>
 						</>
 					)}

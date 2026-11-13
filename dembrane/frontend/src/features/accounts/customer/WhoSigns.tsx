@@ -392,14 +392,10 @@ export function WhoSigns({
 	);
 }
 
-/** Back on the left and the step's action on the right; dialogs otherwise left-align. */
+/** A row of steps: Back on the left and the step's action on the right (rules.css). */
 function ActionRow({ children }: { children: ReactNode }) {
 	return (
-		<Group
-			justify="space-between"
-			wrap="nowrap"
-			style={{ justifyContent: "space-between" }}
-		>
+		<Group data-steps justify="space-between" wrap="nowrap">
 			{children}
 		</Group>
 	);

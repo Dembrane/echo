@@ -716,7 +716,17 @@ export const CreateProjectRoute = () => {
 							</Collapse>
 						</Stack>
 
-						<Group gap="sm" mt="sm">
+						{/* A row of steps: Back on the left, the pill on the right (rules.css). */}
+						<Group data-steps justify="space-between" gap="sm" mt="sm">
+							<Button
+								variant="subtle"
+								color="gray"
+								size="sm"
+								onClick={() => setScreen(chosenOn)}
+								data-testid="create-project-name-back"
+							>
+								<Trans>Back</Trans>
+							</Button>
 							<Button
 								variant="filled"
 								size="sm"
@@ -726,15 +736,6 @@ export const CreateProjectRoute = () => {
 								data-testid="create-project-submit"
 							>
 								<Trans>Create project</Trans>
-							</Button>
-							<Button
-								variant="subtle"
-								color="gray"
-								size="sm"
-								onClick={() => setScreen(chosenOn)}
-								data-testid="create-project-name-back"
-							>
-								<Trans>Back</Trans>
 							</Button>
 						</Group>
 					</Stack>
