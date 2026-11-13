@@ -1,6 +1,6 @@
 import { type ProjectAccess, resolveProject, resolveWorkspace } from "@dembrane/access";
 import { conversationForBff, enrich } from "@dembrane/conversations";
-import { BadRequestError, contextForPrompt, ForbiddenError, NotFoundError } from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
 import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
 import { enqueueSamMessage } from "@dembrane/webhooks";
@@ -87,8 +87,10 @@ async function projectOut(d: ToolDeps, row: Row, orgId: string | null) {
     organisation_id: orgId,
     organisation_name: organisationName,
     language: s(row.language),
-    // An outside agent's prompt reads it too: the same budget as dembrane's own prompts.
-    context: contextForPrompt(s(row.context)),
+    // The stored text whole, not the prompt budget (contextForPrompt): an agent that reads
+    // it may write it back through update_project, and a cut copy would drop the rest. The
+    // answer cap (mcp.ts fit) only shortens lists, so this field always goes out whole.
+    context: s(row.context),
     is_conversation_allowed: row.is_conversation_allowed ?? null,
     created_at: s(row.created_at),
     updated_at: s(row.updated_at),
