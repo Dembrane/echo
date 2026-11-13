@@ -515,7 +515,12 @@ const PURPOSE_TEMPLATES = [
       featured: true,
     },
     preset: {
-      fields: { ...MANY_GROUPS, ...EXPLORE_ONE_QUESTION },
+      // Off by choice: on is the default (ECHO-1052).
+      fields: {
+        ...MANY_GROUPS,
+        ...EXPLORE_ONE_QUESTION,
+        is_get_reply_cross_pollination_enabled: false,
+      },
       name_label: TABLE,
       tags: [ROUND(1), ROUND(2)],
       verification_topics: ["agreements"],
@@ -672,7 +677,8 @@ const PURPOSE_TEMPLATES = [
       featured: true,
     },
     preset: {
-      fields: { ...ONE_RECORDING },
+      // Off by choice, should a host switch Explore on: on is the default (ECHO-1052).
+      fields: { ...ONE_RECORDING, is_get_reply_cross_pollination_enabled: false },
       name_label: INTERVIEW_CODE,
       verification_topics: ["heard"],
       host_guide: {
@@ -737,7 +743,12 @@ const PURPOSE_TEMPLATES = [
       sectors: ["public"],
     },
     preset: {
-      fields: { ...ONE_RECORDING, default_conversation_ask_for_participant_name: false },
+      // Off by choice, should a host switch Explore on: on is the default (ECHO-1052).
+      fields: {
+        ...ONE_RECORDING,
+        default_conversation_ask_for_participant_name: false,
+        is_get_reply_cross_pollination_enabled: false,
+      },
       verification_topics: ["heard", "actions"],
       host_guide: {
         title: L(
@@ -1068,7 +1079,8 @@ const PURPOSE_TEMPLATES = [
       sectors: ["public", "consulting"],
     },
     preset: {
-      fields: { ...MANY_GROUPS, ...EXPLORE_WHAT_IF },
+      // Off by choice: on is the default (ECHO-1052).
+      fields: { ...MANY_GROUPS, ...EXPLORE_WHAT_IF, is_get_reply_cross_pollination_enabled: false },
       name_label: GROUP_OR_SCENARIO,
       tags: [ROUND(1), ROUND(2)],
       verification_topics: ["truths", "moments"],
@@ -1435,7 +1447,8 @@ const PURPOSE_TEMPLATES = [
       sectors: ["public"],
     },
     preset: {
-      fields: { ...MANY_GROUPS },
+      // Off by choice, should a host switch Explore on: on is the default (ECHO-1052).
+      fields: { ...MANY_GROUPS, is_get_reply_cross_pollination_enabled: false },
       name_label: TABLE,
       tags: [ROUND(1), ROUND(2)],
       verification_topics: ["agreements", "disagreements"],
@@ -1854,7 +1867,8 @@ export function templateSummary(t: ProjectTemplate, language?: string | null) {
       verification_topics: t.preset.verification_topics,
       explore,
       explore_mode: explore ? (f.get_reply_mode ?? "summarize") : null,
-      cross_pollination: f.is_get_reply_cross_pollination_enabled ?? false,
+      // The column's default when a template does not say (ECHO-1052).
+      cross_pollination: f.is_get_reply_cross_pollination_enabled ?? true,
       auto_titles: f.enable_ai_title_and_tags ?? false,
       tag_count: t.preset.tags.length,
       tags: templateTags(t, language),

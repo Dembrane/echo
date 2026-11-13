@@ -116,7 +116,7 @@ export function portalDefaults(
 		is_dembrane_event_cta_enabled:
 			project.is_dembrane_event_cta_enabled ?? true,
 		is_get_reply_cross_pollination_enabled:
-			project.is_get_reply_cross_pollination_enabled ?? false,
+			project.is_get_reply_cross_pollination_enabled ?? true,
 		is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 		is_project_notification_subscription_allowed:
 			project.is_project_notification_subscription_allowed ?? false,

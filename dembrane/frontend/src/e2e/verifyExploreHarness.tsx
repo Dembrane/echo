@@ -172,7 +172,7 @@ const editorProject = {
 	get_reply_mode: "summarize",
 	get_reply_prompt: "",
 	id: "p1",
-	is_get_reply_cross_pollination_enabled: false,
+	is_get_reply_cross_pollination_enabled: true,
 	is_get_reply_enabled: true,
 	is_project_notification_subscription_allowed: false,
 	is_verify_enabled: true,

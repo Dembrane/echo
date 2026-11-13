@@ -195,15 +195,15 @@ run("participant email flag and cross-pollination", () => {
     expect(await stored(id)).toMatchObject({ email: true, notify: true });
   });
 
-  test("cross-pollination is off for a new project and the PATCH switches it", async () => {
+  test("cross-pollination is on for a new project and the PATCH switches it", async () => {
     const id = await project();
-    expect(await stored(id)).toMatchObject({ cross: false });
-    const on = await patch("off", id, { is_get_reply_cross_pollination_enabled: true });
-    expect(on.status).toBe(200);
     expect(await stored(id)).toMatchObject({ cross: true });
     const off = await patch("off", id, { is_get_reply_cross_pollination_enabled: false });
     expect(off.status).toBe(200);
     expect(await stored(id)).toMatchObject({ cross: false });
+    const on = await patch("off", id, { is_get_reply_cross_pollination_enabled: true });
+    expect(on.status).toBe(200);
+    expect(await stored(id)).toMatchObject({ cross: true });
   });
 
   // ECHO-1053: the name box label is a project setting the PATCH accepts, held to one line.

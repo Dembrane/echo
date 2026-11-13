@@ -121,8 +121,9 @@ how titles are written.
 Switch on "Enable Explore" and participants get a button labelled "ECHO" while they record.
 After 60 seconds of recording they can ask dembrane for a written reply that helps them go
 deeper. A language model writes it from what they said so far, your project context and
-summaries of the project's other conversations. Recording continues in the meantime. After a
-reply, Explore is unavailable for 2 minutes.
+summaries of the project's other conversations ("Cross-pollination", on by default: switch it
+off to keep each reply to the participant's own conversation). Recording continues in the
+meantime. After a reply, Explore is unavailable for 2 minutes.
 
 "Mode" sets the kind of reply: "Default", "Brainstorm ideas" or "Custom". "Custom" adds a
 "Reply prompt" in which you describe the reply you want.

@@ -590,7 +590,7 @@ describe("portal editor pages: Try it", () => {
 		await press();
 		// What a try shows sits in the "i" beside the button; the line stays empty.
 		expect(screen.getByTestId("portal-try-status").textContent).toBe("");
-		expect(screen.getByTestId("portal-try-info-tip").textContent).toBe(
+		expect(screen.getByTestId("portal-try-info-tip").textContent).toContain(
 			"The preview shows the result for your settings.",
 		);
 		fireEvent.click(screen.getByTestId("portal-editor-reply-mode-brainstorm"));

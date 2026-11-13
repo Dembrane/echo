@@ -49,7 +49,7 @@ const project = (nl: boolean) => ({
 	get_reply_prompt: "",
 	id: "p1",
 	is_dembrane_event_cta_enabled: true,
-	is_get_reply_cross_pollination_enabled: false,
+	is_get_reply_cross_pollination_enabled: true,
 	is_get_reply_enabled: true,
 	is_project_notification_subscription_allowed: true,
 	is_verify_enabled: true,
