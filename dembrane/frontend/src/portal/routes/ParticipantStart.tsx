@@ -59,9 +59,10 @@ export const ParticipantStartRoute = () => {
 	useEffect(() => {
 		if (!isLoadingProject) {
 			setLoadingFinished(true);
-			// Funnel entry, fired once per mount. Skip when embedded (the host's
-			// portal-editor preview loads this in an iframe) so previews don't
-			// inflate participant landings. utm_source rides along from the URL.
+			// Funnel entry, fired once per mount. Skip when embedded, so a page that
+			// frames the portal does not inflate participant landings (the portal
+			// editor's preview never gets here: it starts no analytics, main.tsx).
+			// utm_source rides along from the URL.
 			if (
 				!landedCaptured.current &&
 				typeof window !== "undefined" &&

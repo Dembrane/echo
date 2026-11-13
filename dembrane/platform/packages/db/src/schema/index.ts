@@ -2747,6 +2747,8 @@ export const project = pgTable(
     is_conversation_allowed: boolean().notNull(),
     is_enhanced_audio_processing_enabled: boolean().default(false),
     is_get_reply_enabled: boolean().default(false),
+    /** Explore may read the project's other conversations, without names (ECHO-1052). */
+    is_get_reply_cross_pollination_enabled: boolean().default(true).notNull(),
     is_project_notification_subscription_allowed: boolean().default(false),
     is_verify_enabled: boolean().default(false),
     is_verify_on_finish_enabled: boolean().default(false),
@@ -2772,6 +2774,12 @@ export const project = pgTable(
     is_sample: boolean().default(false).notNull(),
     /** The fixture a sample copy was last seeded from, so a newer fixture updates it once. */
     sample_version: varchar({ length: 64 }),
+    /**
+     * The template the project was created from (packages/projects project-templates.ts)
+     * and its version; null for projects made before templates, clones and the old API.
+     */
+    template_key: varchar({ length: 64 }),
+    template_version: integer(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

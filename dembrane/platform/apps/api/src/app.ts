@@ -50,7 +50,7 @@ import {
 } from "@dembrane/popcorn";
 import { analysisMapStore, presentRoutes, publicAudienceMap } from "@dembrane/present";
 import { environmentName, pricingRoutes } from "@dembrane/pricing";
-import { projectRoutes } from "@dembrane/projects";
+import { projectRoutes, projectSetupRoutes } from "@dembrane/projects";
 import { sharedHub } from "@dembrane/realtime";
 import { reportRoutes } from "@dembrane/reports";
 import { privacyRoutes, staffRoutes } from "@dembrane/staff";
@@ -74,6 +74,15 @@ import { systemRoutes } from "./routes/system";
 const EMAIL_CODE_LIMIT = { name: "email_code", capacity: 1, windowSeconds: 60 };
 
 /** Pure composition: no I/O at build time, so tests call app.request() with fake deps. */
+/**
+ * Whether setup suggestions may look the host's organisation up with search: off unless
+ * PROJECT_SETUP_WEB_SEARCH is on, and never where the provider cannot ground (not vertex,
+ * or LLM_SEARCH_GROUNDING off). On, the project name and the start of the description go
+ * to the search provider.
+ */
+export const projectSetupWebSearch = (config: Deps["config"]): boolean =>
+  config.projects.setupWebSearch && searchGroundingOn(config.llm);
+
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
@@ -96,8 +105,9 @@ export function buildApp(deps: Deps) {
     cors({
       origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
       credentials: true,
-      // The portal reads its participant token from initiate's response.
-      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
+      // The portal reads its participant token from initiate's response. The login page
+      // reads how long a rate-limited sign-in must wait: Better Auth sends X-Retry-After.
+      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER, "X-Retry-After", "Retry-After"],
     }),
   );
   // One emailed code per address a minute, checked here: Better Auth replaces the stored code
@@ -174,6 +184,7 @@ export function buildApp(deps: Deps) {
       ...deps,
       onProjectOpened: onboarding.projectOpened,
       onProjectCreated: onboarding.projectCreated,
+      participantEmail: deps.config.projects.participantEmail,
     }),
   );
   app.route(
@@ -217,6 +228,20 @@ export function buildApp(deps: Deps) {
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
       // The room shows the project's groups and follows its popcorn session's channel.
       onGroupChanged: popcornProjectNudge(deps.db, deps.logger),
+    }),
+  );
+  // Setup suggestions while creating a project (ECHO-1043). Web search only where the
+  // provider grounds with it, and only when PROJECT_SETUP_WEB_SEARCH turns it on.
+  app.route(
+    "/",
+    projectSetupRoutes({
+      db: deps.db,
+      access: deps.access,
+      completer,
+      limiter: deps.limiter,
+      logger: deps.logger,
+      allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
+      webSearch: projectSetupWebSearch(deps.config),
     }),
   );
   app.route(
@@ -280,6 +305,7 @@ export function buildApp(deps: Deps) {
       },
     },
     now: () => new Date(),
+    capture: posthogCapture(deps.config.http.dashboardUrl, deps.logger),
   };
   app.route("/", conversationRoutes(conversations));
   app.route("/", verifyRoutes(conversations));
@@ -303,7 +329,10 @@ export function buildApp(deps: Deps) {
     }
   const capture = posthogCapture(deps.config.http.dashboardUrl, deps.logger);
   app.route("/", chatRoutes({ ...deps, capture }));
-  app.route("/", agenticRoutes({ ...deps, capture }));
+  app.route(
+    "/",
+    agenticRoutes({ ...deps, capture, participantEmail: deps.config.projects.participantEmail }),
+  );
   const sql = clientOf(deps.db);
   // Popcorn and Present read the deck and the map from the analysis store, and a deck
   // snapshot they assemble is dispatched through the analysis outbox like any other.

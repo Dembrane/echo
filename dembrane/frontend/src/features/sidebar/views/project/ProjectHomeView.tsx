@@ -9,20 +9,15 @@ import {
 	FileTextIcon,
 	GearIcon,
 	GraphIcon,
+	NotePencilIcon,
 	PlayIcon,
 	PopcornIcon,
-	RobotIcon,
 } from "@phosphor-icons/react";
 import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
-import {
-	ENABLE_CANVAS,
-	ENABLE_MONITOR,
-	ENABLE_PRESENT,
-	ENABLE_WEBHOOKS,
-} from "@/config";
+import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "@/config";
 import { useToolStatuses } from "@/features/processes/store";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
@@ -64,8 +59,7 @@ export const ProjectHomeView = () => {
 		!popcornActive &&
 		(pathname.includes(`/projects/${projectId}/library`) ||
 			pathname.includes(`/projects/${projectId}/canvases/`));
-	const isWorkspaceAdmin =
-		workspace?.role === "admin" || workspace?.role === "owner";
+	const portalActive = pathname.includes(`/projects/${projectId}/portal/`);
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -81,6 +75,13 @@ export const ProjectHomeView = () => {
 				to={`${base}/home`}
 				label={<Trans>Overview</Trans>}
 				icon={AppWindowIcon}
+			/>
+			{/* The project's setup sits beside the work it shapes (ECHO-1062): what it is
+			    about under Overview, what participants see after Conversations. */}
+			<NavItem
+				to={`${base}/brief`}
+				label={<Trans>Project brief</Trans>}
+				icon={NotePencilIcon}
 			/>
 			{!isObserver && (
 				<NavItem
@@ -98,12 +99,14 @@ export const ProjectHomeView = () => {
 				icon={ChatCircleTextIcon}
 				badge={conversationsCountQuery.data || undefined}
 			/>
+			<NavItem
+				to={`${base}/portal/welcome`}
+				label={<Trans>Portal editor</Trans>}
+				icon={DeviceMobileIcon}
+				active={portalActive}
+				pushes
+			/>
 			<div className="mt-2 flex flex-col gap-0.5">
-				<NavItem
-					to={`${base}/portal-editor`}
-					label={<Trans>Portal editor</Trans>}
-					icon={DeviceMobileIcon}
-				/>
 				{ENABLE_MONITOR && (
 					<NavItem
 						to={`${base}/monitor`}
@@ -160,21 +163,17 @@ export const ProjectHomeView = () => {
 					process={{ status: processes.report, tool: "report" }}
 					icon={FileTextIcon}
 				/>
-				{ENABLE_WEBHOOKS && isWorkspaceAdmin && (
-					<NavItem
-						to={`${base}/integrations`}
-						label={<Trans>Automation</Trans>}
-						icon={RobotIcon}
-						badge={<Trans>Beta</Trans>}
-					/>
-				)}
 			</div>
-			<NavItem
-				to={`${base}/overview`}
-				label={<Trans>Manage</Trans>}
-				icon={GearIcon}
-				pushes
-			/>
+			{/* Who has access, usage, export and the rest (ECHO-1060). Webhooks moved from
+			    Automation to Manage, Advanced. */}
+			<div className="mt-2 flex flex-col gap-0.5">
+				<NavItem
+					to={`${base}/access`}
+					label={<Trans>Manage</Trans>}
+					icon={GearIcon}
+					pushes
+				/>
+			</div>
 		</nav>
 	);
 };

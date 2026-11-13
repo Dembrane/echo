@@ -63,6 +63,9 @@ import {
 	todayForDocument,
 	type Values,
 } from "./fieldStepper";
+import { DocumentLoadError } from "./DocumentLoadError";
+import { clearDraft, readDraft, writeDraft } from "./signingDraft";
+import { captureSigning, SIGNING_EVENTS } from "./signingEvents";
 import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 
 /**
@@ -82,7 +85,13 @@ const SignScreen = () => {
 		organisationId: string;
 		docId: string;
 	}>();
-	const { data: doc, isLoading, error } = useDocument(organisationId, docId);
+	const {
+		data: doc,
+		isLoading,
+		error,
+		isFetching,
+		refetch,
+	} = useDocument(organisationId, docId);
 	useDocumentTitle(doc ? `${doc.title} | dembrane` : t`Sign | dembrane`);
 
 	return (
@@ -93,18 +102,22 @@ const SignScreen = () => {
 				</Stack>
 			)}
 			{error && (
-				<Container size="xs" pt="15vh">
-					<Alert color="red">
-						{error instanceof AccountsApiError && error.status === 403 ? (
-							<Trans>
-								This document is not shared with you. Sign in with the email
-								address the link was sent to.
-							</Trans>
-						) : (
-							<Trans>This document could not be loaded.</Trans>
-						)}
-					</Alert>
-				</Container>
+				<DocumentLoadError
+					error={error}
+					orgId={organisationId ?? ""}
+					docId={docId ?? ""}
+					other={
+						<Container size="xs" pt="15vh">
+							<FileError
+								missing={false}
+								orgId={organisationId ?? ""}
+								retrying={isFetching}
+								onRetry={() => void refetch()}
+								access="signer"
+							/>
+						</Container>
+					}
+				/>
 			)}
 			{doc && organisationId && <Signing doc={doc} orgId={organisationId} />}
 		</Box>
@@ -396,6 +409,33 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const queryClient = useQueryClient();
+	const draft = useSigningDraft({
+		current,
+		doc,
+		fields: allFields,
+		finishing,
+		hasImage: Boolean(signature || initials),
+		owner: me?.directus_user_id ?? null,
+		pickOne,
+		restore: (d) => {
+			setValues((v) => ({ ...v, ...d.values }));
+			setVisited(new Set(d.visited));
+			if (d.finishing) setFinishing(true);
+			else if (d.current) setCurrent(d.current);
+			captureSigning(SIGNING_EVENTS.resumed, doc, {
+				step_index: d.finishing
+					? fields.length
+					: Math.max(
+							0,
+							fields.findIndex((f) => f.id === d.current),
+						),
+			});
+		},
+		values,
+		visited,
+	});
+	const step = stepOf(fields, current, finishing);
+	useSigningEvents(doc, draft.started, step);
 
 	// The signer's name is the one thing we know; fill it once so they only check it.
 	useEffect(() => {
@@ -482,6 +522,9 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				},
 				params: { docId: doc.id, orgId },
 			});
+			draft.signed();
+			signedDocs.add(doc.id);
+			captureSigning(SIGNING_EVENTS.signed, doc);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
 			setError((await presentError(e, i18n)).message);
@@ -550,7 +593,12 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 						variant="filled"
 						size="md"
 						fullWidth
-						onClick={next}
+						onClick={() => {
+							// Once per walk: back to the start and on again is not a new one.
+							if (!draft.started) captureSigning(SIGNING_EVENTS.started, doc);
+							draft.start();
+							next();
+						}}
 						data-testid="sign-start"
 					>
 						<Trans>Start</Trans>
@@ -715,6 +763,191 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 /** The step that stands for the tick boxes of an offer whose signer picks exactly one. */
 const PICK_STEP = "pick-one-option";
 
+/** Where the walk is, for the step events: its place and what kind of step it is. */
+const stepOf = (
+	fields: readonly DocumentFieldT[],
+	current: string | null,
+	finishing: boolean,
+): { index: number; kind: string } | null => {
+	if (finishing) return { index: fields.length, kind: "review" };
+	const index = fields.findIndex((f) => f.id === current);
+	const f = fields[index];
+	if (!f) return null;
+	return { index, kind: f.id === PICK_STEP ? "choice" : f.kind };
+};
+
+/**
+ * Keeps what the signer filled in for this browser session (never the drawn signature),
+ * puts it back after a reload, and warns before the page is left while something would be
+ * lost: a drawn signature, or any input when the browser does not keep it.
+ */
+function useSigningDraft({
+	doc,
+	owner,
+	fields,
+	pickOne,
+	values,
+	current,
+	finishing,
+	visited,
+	hasImage,
+	restore,
+}: {
+	doc: DocumentDetailT;
+	owner: string | null;
+	fields: readonly DocumentFieldT[];
+	pickOne: boolean;
+	values: Values;
+	current: string | null;
+	finishing: boolean;
+	visited: ReadonlySet<string>;
+	hasImage: boolean;
+	restore: (d: NonNullable<ReturnType<typeof readDraft>>) => void;
+}) {
+	const extraIds = useMemo(() => (pickOne ? [PICK_STEP] : []), [pickOne]);
+	const restored = useRef(false);
+	const [started, setStarted] = useState(false);
+	const [kept, setKept] = useState(true);
+	const done = useRef(false);
+	const restoreRef = useRef(restore);
+	restoreRef.current = restore;
+
+	useEffect(() => {
+		if (restored.current || !owner) return;
+		restored.current = true;
+		const d = readDraft(doc.id, {
+			extraIds,
+			fields,
+			owner,
+			sha256: doc.sha256,
+		});
+		if (!d) return;
+		setStarted(true);
+		restoreRef.current(d);
+	}, [doc.id, doc.sha256, extraIds, fields, owner]);
+
+	useEffect(() => {
+		if (!owner || !restored.current || done.current) return;
+		if (!started && current === null && !finishing) return;
+		setKept(
+			writeDraft(
+				doc.id,
+				{
+					current,
+					finishing,
+					owner,
+					sha256: doc.sha256,
+					values,
+					visited: [...visited],
+				},
+				fields,
+				extraIds,
+			),
+		);
+	}, [
+		current,
+		doc.id,
+		doc.sha256,
+		extraIds,
+		fields,
+		finishing,
+		owner,
+		started,
+		values,
+		visited,
+	]);
+
+	const unsaved =
+		(started || current !== null || finishing) && (hasImage || !kept);
+	useEffect(() => {
+		if (!unsaved) return;
+		const warn = (e: BeforeUnloadEvent) => {
+			if (done.current) return;
+			e.preventDefault();
+			// Older browsers show the prompt only when returnValue is set.
+			e.returnValue = "";
+		};
+		window.addEventListener("beforeunload", warn);
+		return () => window.removeEventListener("beforeunload", warn);
+	}, [unsaved]);
+
+	return {
+		signed: () => {
+			done.current = true;
+			clearDraft(doc.id);
+		},
+		start: () => setStarted(true),
+		started: started || current !== null || finishing,
+		unsaved,
+	};
+}
+
+/**
+ * The step events: each step once as it shows, and leaving before signing. Only the
+ * document's id and kind and the step's place and kind; nothing the signer typed.
+ */
+function useSigningEvents(
+	doc: DocumentDetailT,
+	started: boolean,
+	step: { index: number; kind: string } | null,
+) {
+	const ref = useMemo(
+		() => ({ id: doc.id, kind: doc.kind }),
+		[doc.id, doc.kind],
+	);
+	const last = useRef<{ index: number; kind: string } | null>(null);
+	const index = step?.index ?? null;
+	const kind = step?.kind ?? null;
+	useEffect(() => {
+		if (index === null || kind === null) return;
+		last.current = { index, kind };
+		captureSigning(SIGNING_EVENTS.stepViewed, ref, {
+			step_index: index,
+			step_kind: kind,
+		});
+	}, [index, kind, ref]);
+
+	// Left before signing: the page closed, reloaded or was navigated away from.
+	useEffect(() => {
+		if (!started) return;
+		// Mounted again straight after an unmount (React's development double mount, or
+		// the same walk coming back): that unmount was not a leave.
+		const pending = pendingLeave.get(ref.id);
+		if (pending !== undefined) {
+			clearTimeout(pending);
+			pendingLeave.delete(ref.id);
+		}
+		const leave = () => {
+			if (signedDocs.has(ref.id) || abandonedDocs.has(ref.id)) return;
+			abandonedDocs.add(ref.id);
+			captureSigning(SIGNING_EVENTS.abandoned, ref, {
+				step_index: last.current?.index ?? 0,
+			});
+		};
+		window.addEventListener("pagehide", leave);
+		return () => {
+			window.removeEventListener("pagehide", leave);
+			// Deferred, so a mount that follows at once can call it off.
+			pendingLeave.set(
+				ref.id,
+				setTimeout(() => {
+					pendingLeave.delete(ref.id);
+					leave();
+				}, 0),
+			);
+		};
+	}, [ref, started]);
+}
+
+/**
+ * Per page life, by document: signed here, so leaving the thank-you screen is not
+ * "abandoned"; already sent as abandoned, so it is sent once; and an unmount whose
+ * abandoned event waits to see whether the walk mounts again.
+ */
+const signedDocs = new Set<string>();
+const abandonedDocs = new Set<string>();
+const pendingLeave = new Map<string, ReturnType<typeof setTimeout>>();
+
 const isOptionField = (f: DocumentFieldT) =>
 	f.kind === "checkbox" && Boolean(f.key?.startsWith("option:"));
 
@@ -751,7 +984,7 @@ function ActionRow({
 	primary: ReactNode;
 }) {
 	return (
-		<Group justify="space-between" wrap="nowrap" gap="sm">
+		<Group data-steps justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
 				<Button
 					onClick={onBack}
@@ -1299,6 +1532,8 @@ function FieldBox({
 function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const href = usePdfHref(doc.signed_pdf_url);
+	// Signed here or elsewhere: nothing half-filled is kept for it.
+	useEffect(() => clearDraft(doc.id), [doc.id]);
 	return (
 		<>
 			<Header doc={doc} orgId={orgId} />

@@ -98,3 +98,38 @@ it.each([
 	fireEvent.click(verify);
 	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1/verify");
 });
+
+// ECHO-1052: the choice reads as two buttons, each named by its label and described by
+// one line of what happens.
+it("with both on, offers two named choices, each saying what happens", () => {
+	renderPage({});
+	expect(screen.getByText("What would help now?")).toBeTruthy();
+	const verify = screen.getByRole("button", { name: "Verify" });
+	const explore = screen.getByRole("button", { name: "Explore" });
+	expect(verify.getAttribute("aria-describedby")).toBeTruthy();
+	expect(
+		document.getElementById(verify.getAttribute("aria-describedby") ?? "")
+			?.textContent,
+	).toBe("Check what we captured together");
+	expect(
+		document.getElementById(explore.getAttribute("aria-describedby") ?? "")
+			?.textContent,
+	).toBe("Get a question to go deeper");
+	expect(verify.className).toContain("app-choice");
+
+	fireEvent.click(explore);
+	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1?echo=1");
+	expect(localStorage.getItem("cooldown_c-1_echo")).not.toBeNull();
+});
+
+it("with one on, shows only that choice and no question", () => {
+	renderPage({ is_get_reply_enabled: false });
+	expect(screen.queryByText("What would help now?")).toBeNull();
+	expect(screen.getByTestId("portal-echo-verify-card")).toBeTruthy();
+	expect(screen.queryByTestId("portal-echo-explore-card")).toBeNull();
+});
+
+it("with neither on, shows nothing", () => {
+	renderPage({ is_get_reply_enabled: false, is_verify_enabled: false });
+	expect(screen.queryByRole("button")).toBeNull();
+});

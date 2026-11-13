@@ -622,7 +622,7 @@ run("an offer draft, and the invoice request after the signature", () => {
       const mailer = new MemoryMailer();
       for (const job of offerEmails(pushed.id)) await emailHandler(mailer, silent)(job as never);
       expect(mailer.sent.map((m) => [m.to, m.subject])).toEqual([
-        ["admin@example.test", "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit"],
+        ["admin@example.test", "Dein Angebot von dembrane liegt zur Unterzeichnung bereit"],
         ["billing@example.test", "Je offerte van dembrane staat klaar om te ondertekenen"],
       ]);
       expect(mailer.sent[1]?.text).toContain(

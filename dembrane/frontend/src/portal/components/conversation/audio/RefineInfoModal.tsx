@@ -17,7 +17,7 @@ const RefineInfoTitle = ({
 }: Pick<RefineInfoModalProps, "showVerify" | "showEcho">) => {
 	if (showVerify && showEcho) {
 		return (
-			<Trans id="participant.modal.echo.info.title.generic">
+			<Trans id="participant.modal.refine.info.title.both">
 				"ECHO" available soon
 			</Trans>
 		);
@@ -43,13 +43,13 @@ const RefineInfoTitle = ({
 
 const refineInfoText = (showVerify: boolean, showEcho: boolean) => {
 	if (showVerify && showEcho) {
-		return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation.`;
+		return t`Check what we captured together, or get a question to go deeper.`;
 	}
 	if (showVerify) {
-		return t`Take some time to create an outcome that makes your contribution concrete.`;
+		return t`Check what we captured together.`;
 	}
 	if (showEcho) {
-		return t`Get an immediate reply from dembrane to help you deepen the conversation.`;
+		return t`Get a question to go deeper.`;
 	}
 	return "";
 };
@@ -74,9 +74,8 @@ export const RefineInfoModal = ({
 		<Stack gap="lg">
 			<Text>{refineInfoText(showVerify, showEcho)}</Text>
 			<Text c="dimmed" size="sm">
-				<Trans id="participant.modal.echo.info.reason">
-					We need a bit more context to help you use ECHO effectively. Please
-					continue recording so we can provide better suggestions.
+				<Trans id="participant.modal.refine.info.reason">
+					We need a bit more of your conversation first. Please keep recording.
 				</Trans>
 			</Text>
 			<Text c="dimmed" size="sm">

@@ -12,6 +12,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { TEMPLATE_SUMMARIES } from "@/components/project/templates/projectTemplates.fixture";
 import { CreateProjectRoute } from "./CreateProjectRoute";
 
 const role = vi.hoisted(() => ({ current: "owner" }));
@@ -19,6 +20,9 @@ const createMutate = vi.hoisted(() => vi.fn());
 const navigate = vi.hoisted(() => vi.fn());
 const tier = vi.hoisted(() => ({ current: "free" }));
 const me = vi.hoisted(() => ({ current: { is_staff: false } as unknown }));
+const updateMutate = vi.hoisted(() => vi.fn());
+const tracked = vi.hoisted(() => vi.fn());
+const locale = vi.hoisted(() => ({ current: "en-US" }));
 const allowance = vi.hoisted(() => ({
 	calls: [] as Array<string | null | undefined>,
 	data: undefined as unknown,
@@ -60,13 +64,66 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 		) : null,
 }));
 vi.mock("@/hooks/useLanguage", () => ({
-	useLanguage: () => ({ language: "en-US" }),
+	useLanguage: () => ({ language: locale.current }),
 }));
 vi.mock("@/hooks/useWorkspaceProjects", () => ({
 	useCreateWorkspaceProject: () => ({ mutateAsync: createMutate }),
 }));
 vi.mock("@/components/project/hooks", () => ({
-	useUpdateProjectByIdMutation: () => ({ mutateAsync: vi.fn() }),
+	useUpdateProjectByIdMutation: () => ({ mutateAsync: updateMutate }),
+}));
+vi.mock("@/components/project/templates/projectTemplates", async (orig) => ({
+	...(await orig<
+		typeof import("@/components/project/templates/projectTemplates")
+	>()),
+	useProjectTemplates: () => ({ data: TEMPLATE_SUMMARIES, isError: false }),
+}));
+// The picker's catalog loads on open; here its English source strings are enough.
+vi.mock("@/components/project/templates/i18n", () => ({
+	useTemplatesCatalog: () => true,
+}));
+// The digest's blocks are tested on their own; here a stand-in calls the route's callbacks.
+vi.mock("@/components/project/digest/lazy", () => ({
+	LazyDigest: (p: {
+		onActiveChange: (a: boolean) => void;
+		onFallback: (f: unknown) => void;
+		onCreate: (b: unknown) => Promise<boolean>;
+	}) => (
+		<div data-testid="digest-stub">
+			<button type="button" onClick={() => p.onActiveChange(true)}>
+				digest active
+			</button>
+			<button
+				type="button"
+				onClick={() =>
+					p.onFallback({
+						cause: "unavailable",
+						context: "Agenda text",
+						cut: false,
+					})
+				}
+			>
+				digest fallback
+			</button>
+			<button
+				type="button"
+				onClick={() =>
+					void p.onCreate({
+						digest: { goal: "Learn", key_terms: ["Klokgebouw"] },
+						name: "From material",
+						templateKey: "world_cafe",
+					})
+				}
+			>
+				digest create
+			</button>
+		</div>
+	),
+	LazyNameStepDigest: () => <div data-testid="name-step-digest-stub" />,
+}));
+vi.mock("@/lib/analytics/events", async (orig) => ({
+	...(await orig<typeof import("@/lib/analytics/events")>()),
+	track: tracked,
 }));
 
 i18n.load("en-US", {});
@@ -79,7 +136,12 @@ afterEach(() => {
 	me.current = { is_staff: false };
 	allowance.calls = [];
 	allowance.data = undefined;
+	locale.current = "en-US";
 	navigate.mockReset();
+	createMutate.mockReset();
+	updateMutate.mockReset();
+	tracked.mockReset();
+	vi.unstubAllGlobals();
 });
 
 const projectsMeter = (used: number, limit: number) => ({
@@ -102,11 +164,11 @@ beforeAll(() => {
 		}));
 });
 
-const tree = (client = new QueryClient()) => (
+const tree = (client = new QueryClient(), url = "/w/w1/projects/new") => (
 	<QueryClientProvider client={client}>
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
-				<MemoryRouter>
+				<MemoryRouter initialEntries={[url]}>
 					<CreateProjectRoute />
 				</MemoryRouter>
 			</MantineProvider>
@@ -114,18 +176,29 @@ const tree = (client = new QueryClient()) => (
 	</QueryClientProvider>
 );
 
-const renderCreate = () =>
-	render(
-		<QueryClientProvider client={new QueryClient()}>
-			<I18nProvider i18n={i18n}>
-				<MantineProvider>
-					<MemoryRouter>
-						<CreateProjectRoute />
-					</MemoryRouter>
-				</MantineProvider>
-			</I18nProvider>
-		</QueryClientProvider>,
-	);
+const renderCreate = (url?: string) => render(tree(new QueryClient(), url));
+
+/** The two choices: a card in the row (or a quiet link in all formats), then a name. */
+const chooseTemplate = async (key: string) => {
+	if (key === "blank" || key === "upload") {
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(
+			await screen.findByTestId(
+				key === "blank"
+					? "template-picker-start-blank"
+					: "template-picker-upload",
+			),
+		);
+		return;
+	}
+	fireEvent.click(await screen.findByTestId(`template-card-${key}`));
+};
+const nameIt = (name: string) =>
+	fireEvent.change(screen.getByLabelText("Project name"), {
+		target: { value: name },
+	});
+const create = () =>
+	fireEvent.click(screen.getByTestId("create-project-submit"));
 
 describe("CreateProjectRoute role gating", () => {
 	it.each([
@@ -134,10 +207,10 @@ describe("CreateProjectRoute role gating", () => {
 		["member", true],
 		["external", false],
 		["observer", false],
-	])("%s: wizard shown %s", (r, canCreate) => {
+	])("%s: wizard shown %s", async (r, canCreate) => {
 		role.current = r;
 		renderCreate();
-		expect(!!screen.queryByLabelText("Project name")).toBe(canCreate);
+		expect(!!screen.queryByTestId("create-project-start")).toBe(canCreate);
 		expect(!!screen.queryByTestId("create-project-not-allowed")).toBe(
 			!canCreate,
 		);
@@ -145,7 +218,7 @@ describe("CreateProjectRoute role gating", () => {
 });
 
 describe("CreateProjectRoute free project cap", () => {
-	it("opens the project wall on arrival when the free project cap is reached", () => {
+	it("opens the project wall on arrival when the free project cap is reached", async () => {
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
 		expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe(
@@ -153,14 +226,14 @@ describe("CreateProjectRoute free project cap", () => {
 		);
 	});
 
-	it("shows the wizard without a wall when under the cap", () => {
+	it("shows the wizard without a wall when under the cap", async () => {
 		allowance.data = projectsMeter(0, 1);
 		renderCreate();
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
-		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
 	});
 
-	it("does not fetch the allowance on a paid workspace", () => {
+	it("does not fetch the allowance on a paid workspace", async () => {
 		tier.current = "guardian";
 		allowance.data = projectsMeter(5, 1);
 		renderCreate();
@@ -168,7 +241,7 @@ describe("CreateProjectRoute free project cap", () => {
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
-	it("never shows the up-front wall to staff", () => {
+	it("never shows the up-front wall to staff", async () => {
 		me.current = { is_staff: true };
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
@@ -176,19 +249,19 @@ describe("CreateProjectRoute free project cap", () => {
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
-	it("closing the arrival wall returns to projects", () => {
+	it("closing the arrival wall returns to projects", async () => {
 		allowance.data = projectsMeter(1, 1);
 		renderCreate();
 		fireEvent.click(screen.getByTestId("upgrade-modal-close"));
 		expect(navigate).toHaveBeenCalledWith("/w/w1/home");
 	});
 
-	it("does not open the wall when the cap is reached after the wizard has started", () => {
+	it("does not open the wall when the cap is reached after the wizard has started", async () => {
 		const client = new QueryClient();
 		const view = render(tree(client));
-		fireEvent.change(screen.getByLabelText("Project name"), {
-			target: { value: "Town hall" },
-		});
+		fireEvent.click(
+			await screen.findByTestId("template-card-resident_evening"),
+		);
 		allowance.data = projectsMeter(1, 1);
 		view.rerender(tree(client));
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
@@ -199,16 +272,442 @@ describe("CreateProjectRoute free project cap", () => {
 		createMutate.mockResolvedValue({ id: "p-new" });
 		const client = new QueryClient();
 		const view = render(tree(client));
-		fireEvent.change(screen.getByLabelText("Project name"), {
-			target: { value: "Town hall" },
-		});
-		for (let i = 0; i < 3; i++)
-			fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-		fireEvent.click(screen.getByRole("button", { name: "Create project" }));
+		await chooseTemplate("working_group");
+		nameIt("Town hall");
+		create();
 		await waitFor(() => expect(navigate).toHaveBeenCalled());
 		// The create refreshes the allowance, which now reads at the cap.
 		allowance.data = projectsMeter(1, 1);
 		view.rerender(tree(client));
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	});
+});
+
+describe("CreateProjectRoute: a template, then a name", () => {
+	it("creates with two choices: the template goes to the server, nothing else is written", async () => {
+		createMutate.mockResolvedValue({ id: "p1" });
+		renderCreate();
+		await chooseTemplate("resident_evening");
+		expect(
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Table conversations");
+		nameIt("Town hall evening");
+		create();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p1/home"),
+		);
+		expect(createMutate).toHaveBeenCalledWith({
+			language: "en",
+			name: "Town hall evening",
+			templateKey: "resident_evening",
+		});
+		// The old wizard's PATCH would undo a preset; only typed fields are sent.
+		expect(updateMutate).not.toHaveBeenCalled();
+		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
+			featured: true,
+			filters_active: [],
+			list: "row",
+			setup: "many_groups",
+			surface: "create",
+			template_key: "resident_evening",
+			verbs: ["understand", "decide"],
+		});
+		expect(tracked).toHaveBeenCalledWith("project_created", {
+			project_id: "p1",
+			started_from: "picker",
+			template_key: "resident_evening",
+		});
+	});
+
+	it("moves on as soon as a card is pressed: no Continue, a thin progress line", async () => {
+		renderCreate();
+		expect(
+			screen.getByRole("progressbar", { name: "Step 1 of 2" }),
+		).toBeTruthy();
+		expect(screen.queryByText("Continue")).toBeNull();
+		fireEvent.click(await screen.findByTestId("template-card-focus_group"));
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(
+			screen.getByRole("progressbar", { name: "Step 2 of 2" }),
+		).toBeTruthy();
+	});
+
+	it("Back on the name returns to the screen the card was pressed on", async () => {
+		renderCreate();
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(await screen.findByTestId("template-card-futures"));
+		nameIt("Toekomst");
+		fireEvent.click(screen.getByTestId("create-project-name-back"));
+		expect(await screen.findByTestId("all-formats")).toBeTruthy();
+		fireEvent.click(screen.getByTestId("create-project-formats-back"));
+		expect(await screen.findByTestId("template-row")).toBeTruthy();
+	});
+
+	it("sends the filters a host used in all formats, and each filter change, without free text", async () => {
+		renderCreate();
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		fireEvent.click(await screen.findByTestId("template-filter-verb-decide"));
+		expect(tracked).toHaveBeenCalledWith("project_template_filter_changed", {
+			filter: "verb",
+			value: "decide",
+		});
+		fireEvent.click(screen.getByTestId("template-card-citizens_assembly"));
+		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
+			featured: false,
+			filters_active: ["verb:decide"],
+			list: "all_formats",
+			setup: "many_groups",
+			surface: "create",
+			template_key: "citizens_assembly",
+			verbs: ["decide"],
+		});
+	});
+
+	it("says what the template sets up on the name step, collapsed", async () => {
+		renderCreate();
+		await chooseTemplate("resident_evening");
+		const toggle = screen.getByTestId("template-setup-summary-toggle");
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+		fireEvent.click(toggle);
+		expect(
+			screen.getByTestId("template-setup-summary-script").textContent,
+		).toBe("Hosting a table at a resident evening");
+	});
+
+	it("notes a long project context quietly, and cuts nothing", async () => {
+		renderCreate();
+		await chooseTemplate("interviews");
+		const field = screen.getByLabelText("Project context");
+		fireEvent.change(field, { target: { value: "x".repeat(4000) } });
+		expect(screen.queryByTestId("project-context-long-note")).toBeNull();
+		fireEvent.change(field, { target: { value: "x".repeat(4001) } });
+		expect(screen.getByTestId("project-context-long-note")).toBeTruthy();
+		expect((field as HTMLTextAreaElement).value).toHaveLength(4001);
+	});
+
+	it("counts the new steps", async () => {
+		renderCreate();
+		await chooseTemplate("interviews");
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		const steps = tracked.mock.calls
+			.filter(([event]) => event === "project_create_step_viewed")
+			.map(([, props]) => props.step);
+		expect(steps).toEqual(["template", "name", "more_options"]);
+	});
+
+	it("counts all formats as a step of its own", async () => {
+		renderCreate();
+		fireEvent.click(await screen.findByTestId("template-row-see-all"));
+		await chooseTemplate("kitchen_table");
+		const steps = tracked.mock.calls
+			.filter(([event]) => event === "project_create_step_viewed")
+			.map(([, props]) => props.step);
+		expect(steps).toEqual(["template", "formats", "name"]);
+	});
+
+	it("starts blank from the quiet option", async () => {
+		createMutate.mockResolvedValue({ id: "p2" });
+		renderCreate();
+		await chooseTemplate("blank");
+		nameIt("Anything");
+		create();
+		await waitFor(() => expect(createMutate).toHaveBeenCalled());
+		expect(createMutate.mock.calls[0]?.[0].templateKey).toBe("blank");
+	});
+
+	it("lands on the upload page for existing recordings", async () => {
+		createMutate.mockResolvedValue({ id: "p3" });
+		renderCreate();
+		await chooseTemplate("upload");
+		nameIt("Archive");
+		create();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p3/upload"),
+		);
+	});
+
+	it("arrives on the name step with an old key linked, which still works", async () => {
+		renderCreate("/w/w1/projects/new?template=series");
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: A series of sessions");
+	});
+
+	it("ignores an unknown linked template and starts at the picker", async () => {
+		renderCreate("/w/w1/projects/new?template=festival");
+		expect(screen.queryByLabelText("Project name")).toBeNull();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
+	});
+
+	it.each([
+		["nl-NL", "nl"],
+		["de-DE", "de"],
+		["cs-CZ", "cs"],
+	])("creates a %s host's project in %s", async (ui, language) => {
+		locale.current = ui;
+		createMutate.mockResolvedValue({ id: "p4" });
+		renderCreate();
+		await chooseTemplate("kitchen_table");
+		nameIt("Gesprek");
+		create();
+		await waitFor(() => expect(createMutate).toHaveBeenCalled());
+		expect(createMutate.mock.calls[0]?.[0].language).toBe(language);
+	});
+});
+
+describe("CreateProjectRoute: More options keeps the old wizard's settings", () => {
+	it("is closed by default and holds key terms, access, the review", async () => {
+		renderCreate();
+		await chooseTemplate("working_group");
+		const toggle = screen.getByTestId("create-project-more-options-toggle");
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+		fireEvent.click(toggle);
+		expect(toggle.getAttribute("aria-expanded")).toBe("true");
+		const more = screen.getByTestId("create-project-more-options");
+		expect(
+			more.querySelector('[data-testid="create-project-key-terms-input"]'),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("radio", { name: /Open to the workspace/ }),
+		).toHaveProperty("checked", true);
+		expect(screen.getByTestId("create-project-review").textContent).toContain(
+			"Recurring meeting",
+		);
+	});
+
+	it("writes key terms and context, and makes the project private where the tier allows", async () => {
+		tier.current = "innovator";
+		const fetchMock = vi.fn().mockResolvedValue({
+			json: async () => ({}),
+			ok: true,
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		createMutate.mockResolvedValue({ id: "p5" });
+		renderCreate();
+		await chooseTemplate("working_group");
+		nameIt("Working group");
+		fireEvent.change(screen.getByLabelText(/Project context/), {
+			target: { value: "Monthly meetings" },
+		});
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		const terms = screen.getByTestId("create-project-key-terms-input");
+		fireEvent.change(terms, { target: { value: "Eindhoven, Strijp-S" } });
+		fireEvent.keyDown(terms, { key: "Enter" });
+		fireEvent.click(screen.getByRole("radio", { name: /^Private/ }));
+		create();
+		await waitFor(() => expect(navigate).toHaveBeenCalled());
+		expect(updateMutate).toHaveBeenCalledWith({
+			id: "p5",
+			payload: {
+				context: "Monthly meetings",
+				default_conversation_transcript_prompt: "Eindhoven, Strijp-S",
+			},
+		});
+		expect(fetchMock).toHaveBeenCalledWith(
+			expect.stringContaining("/v2/projects/p5/visibility"),
+			expect.objectContaining({ method: "PATCH" }),
+		);
+		expect(tracked).toHaveBeenCalledWith("key_terms_updated", {
+			count: 2,
+			project_id: "p5",
+			surface: "wizard",
+		});
+	});
+
+	it("keeps Private out of reach on a free workspace", async () => {
+		renderCreate();
+		await chooseTemplate("working_group");
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		expect(screen.getByRole("radio", { name: /^Private/ })).toHaveProperty(
+			"disabled",
+			true,
+		);
+	});
+});
+
+// ECHO-1043: "Tell dembrane about your session" in the name step.
+describe("CreateProjectRoute: setup suggestions", () => {
+	const suggestions = {
+		key_terms: [
+			{ reason: "De wijk.", source: "text", term: "Strijp-S" },
+			{ reason: "De corporatie.", source: "text", term: "Woonbedrijf" },
+		],
+		max_key_terms: 30,
+		notes: [],
+		settings: [
+			{
+				current: false,
+				field: "is_verify_enabled",
+				proposed: true,
+				reason: "Je wilt dat tafels afspraken bevestigen.",
+			},
+		],
+	};
+	const suggestionsFetch = (pending = false) =>
+		vi.fn(async (url: string) => {
+			if (String(url).includes("project-setup/suggestions")) {
+				if (pending) return new Promise<Response>(() => {});
+				return new Response(JSON.stringify(suggestions));
+			}
+			return new Response("{}");
+		});
+
+	it("sits under the project context, the one field, with its walkthrough anchor", async () => {
+		renderCreate();
+		await chooseTemplate("resident_evening");
+		const block = await screen.findByTestId("setup-suggestions");
+		expect(block.getAttribute("data-tour")).toBe("setup-suggestions");
+		// Name and context are the only text fields before More options.
+		expect(
+			screen
+				.getAllByRole("textbox")
+				.map(
+					(el) =>
+						el.getAttribute("aria-label") ??
+						(el as HTMLInputElement).labels?.[0]?.textContent,
+				),
+		).toEqual(["Project name", "Project context"]);
+		expect(
+			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
+		).toBe(true);
+	});
+
+	it("a long pasted agenda is saved whole as the context; suggestions read its first 20,000 characters", async () => {
+		const fetchMock = suggestionsFetch();
+		vi.stubGlobal("fetch", fetchMock);
+		createMutate.mockResolvedValue({ id: "p9" });
+		updateMutate.mockResolvedValue({});
+		renderCreate();
+		await chooseTemplate("round_table");
+		nameIt("Regiotafel");
+		const agenda = `Agenda ${"Evoluon Eindhoven, ".repeat(1_500)}`.trim();
+		expect(agenda.length).toBeGreaterThan(20_000);
+		fireEvent.change(screen.getByLabelText("Project context"), {
+			target: { value: agenda },
+		});
+		fireEvent.click(await screen.findByTestId("setup-suggestions-submit"));
+		await screen.findByTestId("setup-suggestions-results");
+		const call = fetchMock.mock.calls.find(([url]) =>
+			String(url).includes("project-setup/suggestions"),
+		) as unknown as [string, RequestInit];
+		expect(JSON.parse(String(call[1].body)).description).toHaveLength(20_000);
+		expect(screen.getByTestId("setup-suggestions-long-note")).toBeTruthy();
+		create();
+		await waitFor(() => expect(navigate).toHaveBeenCalled());
+		expect(updateMutate).toHaveBeenCalledWith({
+			id: "p9",
+			payload: { context: agenda },
+		});
+	});
+
+	it("never blocks Create: it stays enabled while suggestions load", async () => {
+		vi.stubGlobal("fetch", suggestionsFetch(true));
+		createMutate.mockResolvedValue({ id: "p7" });
+		renderCreate();
+		await chooseTemplate("resident_evening");
+		nameIt("Bewonersavond");
+		fireEvent.change(screen.getByLabelText("Project context"), {
+			target: { value: "Met Woonbedrijf in Strijp-S" },
+		});
+		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
+		await screen.findByText(/Reading what you wrote/);
+		expect(screen.getByTestId("create-project-submit")).toHaveProperty(
+			"disabled",
+			false,
+		);
+		create();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p7/home"),
+		);
+	});
+
+	it("accepted terms go into the key terms, ticked settings ride on the create as overrides", async () => {
+		vi.stubGlobal("fetch", suggestionsFetch());
+		createMutate.mockResolvedValue({ id: "p8" });
+		updateMutate.mockResolvedValue({});
+		renderCreate();
+		await chooseTemplate("blank");
+		nameIt("Bewonersavond");
+		fireEvent.change(screen.getByLabelText("Project context"), {
+			target: { value: "Met Woonbedrijf in Strijp-S" },
+		});
+		fireEvent.click(screen.getByTestId("setup-suggestions-submit"));
+		await screen.findByTestId("setup-suggestions-results");
+		fireEvent.click(screen.getByRole("button", { name: "Strijp-S" }));
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Participant verification" }),
+		);
+		// The key terms field shows the accepted term and stays editable.
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		expect(
+			screen.getByTestId("create-project-more-options").textContent,
+		).toContain("Strijp-S");
+		create();
+		await waitFor(() => expect(navigate).toHaveBeenCalled());
+		expect(createMutate).toHaveBeenCalledWith({
+			language: "en",
+			name: "Bewonersavond",
+			overrides: { is_verify_enabled: true },
+			templateKey: "blank",
+		});
+		expect(updateMutate).toHaveBeenCalledWith({
+			id: "p8",
+			payload: {
+				context: "Met Woonbedrijf in Strijp-S",
+				default_conversation_transcript_prompt: "Strijp-S",
+			},
+		});
+		expect(tracked).toHaveBeenCalledWith("project_setup_ai_accepted", {
+			settings_accepted: 1,
+			surface: "wizard",
+			terms_accepted: 1,
+		});
+	});
+
+	describe("the context digest (ECHO-1055)", () => {
+		it("sits above the row, which steps aside with the progress line while it is active", async () => {
+			renderCreate();
+			expect(screen.getByTestId("digest-stub")).toBeTruthy();
+			expect(await screen.findByTestId("template-row")).toBeTruthy();
+			fireEvent.click(screen.getByText("digest active"));
+			expect(screen.queryByTestId("template-row")).toBeNull();
+			expect(screen.queryByTestId("create-project-progress")).toBeNull();
+		});
+
+		it("creates from the review in one request, with the digest", async () => {
+			createMutate.mockResolvedValue({
+				id: "p7",
+				name: "x",
+				workspace_id: "w1",
+			});
+			renderCreate();
+			fireEvent.click(screen.getByText("digest create"));
+			await waitFor(() =>
+				expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p7/home"),
+			);
+			expect(createMutate).toHaveBeenCalledWith({
+				digest: { goal: "Learn", key_terms: ["Klokgebouw"] },
+				language: "en",
+				name: "From material",
+				templateKey: "world_cafe",
+			});
+			expect(updateMutate).not.toHaveBeenCalled();
+			expect(tracked).toHaveBeenCalledWith("project_created", {
+				project_id: "p7",
+				started_from: "digest",
+				template_key: "world_cafe",
+			});
+		});
+
+		it("a failed digest puts the text in the project context for the name step", async () => {
+			renderCreate();
+			fireEvent.click(screen.getByText("digest fallback"));
+			await chooseTemplate("interviews");
+			expect(
+				(screen.getByLabelText("Project context") as HTMLTextAreaElement).value,
+			).toBe("Agenda text");
+			expect(screen.getByTestId("name-step-digest-stub")).toBeTruthy();
+		});
 	});
 });

@@ -80,6 +80,16 @@ export const ProjectListQuery = {
 export const CreateProject = p.model({
   name: p.optional(p.str(), "New Project"),
   language: p.optional(p.str(), "en"),
+  // A key from @dembrane/projects' template registry; without one, the project starts bare
+  // as it always did (old clients, the iOS app before it sends one).
+  template_key: optStr({ max: 64 }),
+  // Settings the host accepted from the setup suggestions (ECHO-1043), written over the
+  // preset in the same transaction. Only preset fields; @dembrane/projects validates them.
+  overrides: p.optional(p.nullable(p.dict()), null),
+  // What the host kept from the context digest (ECHO-1055): context, key terms, tags, the
+  // name box label, Verify topics, an Explore prompt, host script steps and the goal.
+  // @dembrane/projects holds it to its allow-list.
+  digest: p.optional(p.nullable(p.dict()), null),
 });
 
 export const SupportEventsQuery = {

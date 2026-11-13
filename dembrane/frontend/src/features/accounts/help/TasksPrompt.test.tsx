@@ -24,9 +24,9 @@ import type { TasksSummaryT } from "../contract/contract.gen";
 import { TASKS_PROMPT_SEEN_KEY } from "./tasksPromptState";
 import { summarise } from "./tasksSummary";
 
-// The organisation menu's Tasks entry and the popup after sign-in read one summary, here a small
-// store the test sets like react-query would answer; What's new is stood in for by a
-// marker that shows whether it is being held back.
+// The organisation menu's Tasks entry and the banner read one summary, here a small store
+// the test sets like react-query would answer; What's new is stood in for by a marker that
+// shows whether it is being held back (the banner never holds it).
 const store = vi.hoisted(() => {
 	type State = {
 		data: import("../contract/contract.gen").TasksSummaryT;
@@ -47,6 +47,8 @@ const store = vi.hoisted(() => {
 	};
 });
 const navigate = vi.fn();
+const capture = vi.hoisted(() => vi.fn());
+vi.mock("posthog-js", () => ({ default: { capture } }));
 
 vi.mock("./tasksSummary", async (importOriginal) => {
 	const { useSyncExternalStore } = await import("react");
@@ -75,6 +77,7 @@ vi.mock("@/features/sidebar/hooks/useSidebarView", () => ({
 }));
 
 const { HelpBlock } = await import("@/features/sidebar/blocks/HelpBlock");
+const { default: SignPromptBannerConnected } = await import("./TasksPrompt");
 const { RailProvider } = await import("@/features/sidebar/shell/rail");
 const { OrgHomeView } = await import(
 	"@/features/sidebar/views/org/OrgHomeView"
@@ -85,6 +88,8 @@ const row = (over: Partial<TasksSummaryT[number]>): TasksSummaryT[number] => ({
 	logo_url: null,
 	name: "Gemeente Testdorp",
 	next_task_code: "explore_demo",
+	next_task_document_id: null,
+	next_task_document_kind: null,
 	next_task_params: {},
 	next_task_title: null,
 	org_id: "0199a1bd-0000-7000-8000-000000000001",
@@ -163,6 +168,7 @@ beforeEach(() => {
 	);
 	sessionStorage.clear();
 	navigate.mockReset();
+	capture.mockReset();
 	store.set({ data: [], status: "success" });
 });
 
@@ -233,35 +239,44 @@ describe("the organisation menu's Tasks and Documents", () => {
 	});
 });
 
-describe("the popup after sign-in", () => {
-	it("a plain signup sees no popup, and What's new is not held", async () => {
-		store.set({ data: [], status: "success" });
+describe("the banner for someone with tasks waiting", () => {
+	const renderBanner = (url = "/en-US/o") =>
+		render(
+			<I18nProvider i18n={i18n}>
+				<MantineProvider env="test">
+					<MemoryRouter initialEntries={[url]}>
+						<SignPromptBannerConnected />
+					</MemoryRouter>
+				</MantineProvider>
+			</I18nProvider>,
+		);
+	const banner = () => screen.queryByTestId("sign-prompt-banner");
+
+	it("never holds What's new back: a banner and a modal do not stack", () => {
+		store.set({ data: [row({})], status: "pending" });
 		renderSidebar();
-		await waitFor(() => expect(held()).toBe("false"));
+		expect(held()).toBe("false");
 		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 
-	it("comes first: What's new waits until it is closed with Later", async () => {
+	it("a plain signup sees no banner", () => {
+		store.set({ data: [], status: "success" });
+		renderBanner();
+		expect(banner()).toBeNull();
+	});
+
+	it("is a banner, not a dialog, and names the organisation and the next task", async () => {
 		store.set({ data: [], status: "pending" });
-		renderSidebar();
-		// Still deciding: What's new may not jump ahead.
-		expect(held()).toBe("true");
+		renderBanner();
+		expect(banner()).toBeNull();
 		store.set({ data: [row({})], status: "success" });
 		expect(
-			await screen.findByText("You have 4 things to do in Gemeente Testdorp"),
+			await screen.findByText(/You have 4 things to do in Gemeente Testdorp\./),
 		).toBeTruthy();
-		expect(
-			screen.getByText("Next: Check out the demo we made for you"),
-		).toBeTruthy();
-		expect(held()).toBe("true");
-		fireEvent.click(screen.getByRole("button", { name: "Later" }));
-		await waitFor(() => expect(held()).toBe("false"));
-		await waitFor(() =>
-			expect(
-				screen.queryByText("You have 4 things to do in Gemeente Testdorp"),
-			).toBeNull(),
+		expect(banner()?.textContent).toContain(
+			"Next: Check out the demo we made for you",
 		);
-		expect(navigate).not.toHaveBeenCalled();
+		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 
 	it("its one button leads to that organisation's tasks", async () => {
@@ -272,34 +287,62 @@ describe("the popup after sign-in", () => {
 			],
 			status: "success",
 		});
-		renderSidebar();
+		renderBanner();
 		expect(
-			await screen.findByText("You have 3 things to do in Groot BV"),
+			await screen.findByText(/You have 3 things to do in Groot BV/),
 		).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Go to your tasks" }));
 		expect(navigate).toHaveBeenCalledWith("/o/o-big/overview");
-		await waitFor(() => expect(held()).toBe("false"));
 	});
 
-	it("shows once per sign-in", async () => {
-		store.set({ data: [row({ tasks_waiting: 1 })], status: "success" });
-		const { unmount } = renderSidebar();
-		expect(
-			await screen.findByText("You have 1 thing to do in Gemeente Testdorp"),
-		).toBeTruthy();
+	it("closed, it stays away for the session and says which document it was about", async () => {
+		store.set({
+			data: [
+				row({
+					next_task_code: "sign_offer",
+					next_task_document_id: "doc-1",
+					next_task_document_kind: "offer",
+					tasks_waiting: 1,
+				}),
+			],
+			status: "success",
+		});
+		const { unmount } = renderBanner();
+		await waitFor(() => expect(banner()).toBeTruthy());
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		expect(banner()).toBeNull();
+		expect(capture).toHaveBeenCalledWith("sign_prompt_dismissed", {
+			document_id: "doc-1",
+			document_kind: "offer",
+		});
 		unmount();
-		renderSidebar();
-		await waitFor(() => expect(held()).toBe("false"));
-		expect(screen.queryByRole("dialog")).toBeNull();
+		// A reload in the same browser session: still closed.
+		renderBanner();
+		expect(banner()).toBeNull();
+		cleanup();
+		// The next browser session starts with empty session storage: it is back.
+		sessionStorage.clear();
+		renderBanner();
+		await waitFor(() => expect(banner()).toBeTruthy());
 	});
 
-	it.each(["overview", "tasks"])(
+	it("goes once nothing waits any more", async () => {
+		store.set({ data: [row({ tasks_waiting: 1 })], status: "success" });
+		renderBanner();
+		await waitFor(() => expect(banner()).toBeTruthy());
+		store.set({
+			data: [row({ tasks_done: 4, tasks_waiting: 0 })],
+			status: "success",
+		});
+		await waitFor(() => expect(banner()).toBeNull());
+	});
+
+	it.each(["overview", "tasks", "account"])(
 		"stays away on that organisation's %s page",
-		async (page) => {
+		(page) => {
 			store.set({ data: [row({})], status: "success" });
-			renderSidebar(`/en-US/o/${row({}).org_id}/${page}`);
-			await waitFor(() => expect(held()).toBe("false"));
-			expect(screen.queryByRole("dialog")).toBeNull();
+			renderBanner(`/en-US/o/${row({}).org_id}/${page}`);
+			expect(banner()).toBeNull();
 		},
 	);
 });

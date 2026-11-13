@@ -17,7 +17,12 @@
  *   None             context: tags, statuses
  *   Filled pill      the one primary action (button.module.css)
  * Everything is square except the pill. --app-rule-color lets states
- * recolour a rule (blue when active, red on error). */
+ * recolour a rule (blue when active, red on error).
+ *
+ * Order: the pill comes first in its row and the row sits at the left. A row
+ * of steps (a wizard, an onboarding, any sequence with Back) runs the way time
+ * does instead: Back on the left, the pill on the right (Jor, 30 Oct 2026).
+ * Such a row carries data-steps, which is what both checks look for. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
  * below is one of these; a theme (dark) redefines them and nothing else.
@@ -161,6 +166,23 @@
 :root .app-do:focus-visible {
   outline: 2px solid var(--app-action);
   outline-offset: 2px;
+}
+/* A choice a participant presses on a phone (ECHO-1052): the do box drawn in the control
+ * grey, as a secondary button's is, so it reads as pressable at a glance, and never shorter
+ * than a 44px touch target. Held down it takes the pressed grey; locked, the pollen line. */
+:root .app-choice:is(*, [data-with-border]) {
+  --app-rule-color: var(--app-control-rule);
+  min-height: 44px;
+}
+:root .app-choice:is(*, [data-with-border]):active {
+  background: var(--app-pressed);
+}
+:root .app-choice[data-selected]:is(*, [data-with-border]) {
+  border-color: var(--app-action);
+}
+:root .app-choice[aria-disabled="true"]:is(*, [data-with-border]) {
+  --app-rule-color: var(--app-disabled);
+  cursor: not-allowed;
 }
 
 /* Avatars are the one round thing besides the primary pill. */
@@ -722,6 +744,46 @@
   position: relative;
   z-index: 1;
 }
+/* A filter that is a toggle button (ECHO-1053, the template picker): the chip's sides and
+ * its checked tint, at a 44px touch height, joined in a row with single dividers. */
+:root .app-filter {
+  background: transparent;
+  border-color: var(--app-control-rule);
+  border-radius: 0;
+  border-style: solid;
+  border-width: 0 var(--app-stroke);
+  color: var(--app-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 320;
+  min-height: 44px;
+  padding: 0 14px;
+}
+:root .app-filter:hover {
+  background: var(--app-quiet);
+}
+:root .app-filter:active {
+  background: var(--app-pressed);
+}
+:root .app-filter[aria-pressed="true"] {
+  background: var(--app-action-tint);
+  border-color: var(--app-action);
+  position: relative;
+  z-index: 1;
+}
+:root .app-filter:focus-visible {
+  outline: 2px solid var(--app-action);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 2;
+}
+:root .app-filter-row {
+  gap: 0;
+}
+:root .app-filter-row > .app-filter + .app-filter {
+  margin-left: calc(-1 * var(--app-stroke));
+}
 
 /* Pressed (the :active state): the tab, row or chit you hold down previews
  * the selection: its stretch of the rule turns blue and its text graphite. */
@@ -744,10 +806,11 @@
   margin-inline-end: 12px;
 }
 
-/* Dialog actions align with the text they answer, at the left. */
+/* Dialog actions align with the text they answer, at the left. A row of
+ * steps (data-steps) keeps its own justify: Back left, the pill right. */
 :root
   .mantine-Modal-body
-  .mantine-Group-root:not(:has(> :not(.mantine-Button-root))) {
+  .mantine-Group-root:not([data-steps]):not(:has(> :not(.mantine-Button-root))) {
   justify-content: flex-start;
 }
 

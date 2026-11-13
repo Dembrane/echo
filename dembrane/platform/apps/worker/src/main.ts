@@ -72,6 +72,7 @@ const loaded = loadSections([
   "samples",
   "files",
   "metering",
+  "projects",
 ]);
 const config = loaded.values;
 const service = "echo-worker";

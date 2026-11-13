@@ -1,0 +1,566 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-10 17:19+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: es-ES\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:152
+msgid "{count, plural, one {# template} other {# templates}}"
+msgstr "{count, plural, one {# plantilla} other {# plantillas}}"
+
+#: src/components/project/templates/projectTemplates.ts:154
+msgid "A live event"
+msgstr "Un evento en directo"
+
+#: src/components/project/templates/projectTemplates.ts:152
+msgid "A series of sessions"
+msgstr "Una serie de sesiones"
+
+#: src/components/project/templates/projectTemplates.ts:218
+msgid "Align"
+msgstr "Alinear"
+
+#: src/components/project/templates/projectTemplates.ts:234
+msgid "Aligning and moving forward"
+msgstr "Alinearse y avanzar"
+
+#: src/components/project/templates/projectTemplates.ts:205
+msgid "Analyse audio files you already have."
+msgstr "Analiza archivos de audio que ya tienes."
+
+#: src/components/project/templates/projectTemplates.ts:357
+#~ msgid "Asks a question when the group gets stuck"
+#~ msgstr "Hace una pregunta cuando el grupo se atasca"
+
+#: src/components/project/templates/projectTemplates.ts:362
+#~ msgid "Asks for “{label}” first"
+#~ msgstr "Pide primero «{label}»"
+
+#: src/components/project/templates/projectTemplates.ts:158
+msgid "Blank project"
+msgstr "Proyecto en blanco"
+
+#: src/components/project/templates/projectTemplates.ts:134
+msgid "Brainstorm"
+msgstr "Lluvia de ideas"
+
+#: src/components/project/templates/projectTemplates.ts:144
+msgid "Calm conversation in rounds"
+msgstr "Conversación tranquila por turnos"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:102
+msgid "can bring in other groups"
+msgstr "puede traer otros grupos"
+
+#: src/components/project/templates/projectTemplates.ts:359
+#~ msgid "Can bring in what other groups said"
+#~ msgstr "Puede traer lo que dijeron otros grupos"
+
+#: src/components/project/templates/projectTemplates.ts:146
+msgid "Citizens' assembly"
+msgstr "Asamblea ciudadana"
+
+#: src/components/project/templates/projectTemplates.ts:190
+#~ msgid "Conference sessions"
+#~ msgstr "Sesiones de congreso"
+
+#: src/components/project/templates/projectTemplates.ts:220
+msgid "Decide"
+msgstr "Decidir"
+
+#: src/components/project/templates/projectTemplates.ts:236
+msgid "Deciding together"
+msgstr "Decidir juntos"
+
+#: src/components/project/templates/projectTemplates.ts:251
+msgid "Decisions and actions"
+msgstr "Decisiones y acciones"
+
+#: src/components/project/templates/projectTemplates.ts:249
+msgid "Differences"
+msgstr "Diferencias"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:116
+msgid "Each conversation gets a title"
+msgstr "Cada conversación recibe un título"
+
+#: src/components/project/templates/projectTemplates.ts:311
+#~ msgid "Each table checks its own summary"
+#~ msgstr "Cada mesa revisa su propio resumen"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:127
+msgid "Earlier formats"
+msgstr "Formatos anteriores"
+
+#: src/components/project/templates/projectTemplates.ts:316
+#~ msgid "Ends with decisions and actions"
+#~ msgstr "Termina con decisiones y acciones"
+
+#: src/components/project/templates/projectTemplates.ts:174
+#~ msgid "Evaluation"
+#~ msgstr "Evaluación"
+
+#: src/components/project/templates/projectTemplates.ts:142
+msgid "Everyone's ideas, fast"
+msgstr "Las ideas de todos, rápido"
+
+#: src/components/project/templates/projectTemplates.ts:216
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:96
+msgid "Explore"
+msgstr "Explorar"
+
+#: src/components/project/templates/projectTemplates.ts:232
+msgid "Exploring futures and possibilities"
+msgstr "Explorar futuros y posibilidades"
+
+#: src/components/project/templates/projectTemplates.ts:122
+msgid "Focus group"
+msgstr "Grupo focal"
+
+#: src/components/project/templates/projectTemplates.ts:178
+#~ msgid "Futures session"
+#~ msgstr "Sesión de futuros"
+
+#: src/components/project/templates/projectTemplates.ts:212
+msgid "Gather"
+msgstr "Reunir"
+
+#: src/components/project/templates/projectTemplates.ts:228
+msgid "Gathering expert knowledge"
+msgstr "Reunir conocimiento experto"
+
+#: src/components/project/templates/projectTemplates.ts:341
+#~ msgid "Gives each recording a title"
+#~ msgstr "Da un título a cada grabación"
+
+#: src/components/project/templates/projectTemplates.ts:188
+msgid "Great for an open agenda: participants propose sessions and move between them."
+msgstr "Ideal para una agenda abierta: las personas proponen sesiones y se mueven entre ellas."
+
+#: src/components/project/templates/projectTemplates.ts:228
+#~ msgid "Great for café rounds where people change tables and carry ideas along."
+#~ msgstr "Ideal para rondas de café en las que la gente cambia de mesa y lleva las ideas consigo."
+
+#: src/components/project/templates/projectTemplates.ts:186
+msgid "Great for café rounds: people change tables, a table host stays and carries ideas along."
+msgstr "Ideal para rondas de café: la gente cambia de mesa, un anfitrión se queda y lleva las ideas."
+
+#: src/components/project/templates/projectTemplates.ts:238
+#~ msgid "Great for capturing breakouts and sessions across a conference."
+#~ msgstr "Ideal para recoger los talleres y sesiones de un congreso."
+
+#: src/components/project/templates/projectTemplates.ts:236
+#~ msgid "Great for citizens' assemblies, deliberative panels, policy juries and participatory budgeting."
+#~ msgstr "Ideal para asambleas ciudadanas, paneles deliberativos, jurados ciudadanos y presupuestos participativos."
+
+#: src/components/project/templates/projectTemplates.ts:196
+msgid "Great for conferences and festivals: one recording per breakout or talk, side by side."
+msgstr "Ideal para congresos y festivales: una grabación por taller o charla, en paralelo."
+
+#: src/components/project/templates/projectTemplates.ts:194
+msgid "Great for deliberative panels, policy juries and participatory budgets: groups weigh options."
+msgstr "Ideal para paneles deliberativos, jurados ciudadanos y presupuestos participativos: los grupos sopesan opciones."
+
+#: src/components/project/templates/projectTemplates.ts:180
+msgid "Great for evaluating a project, pilot or event: one team looks back together."
+msgstr "Ideal para evaluar un proyecto, un piloto o un evento: un equipo mira atrás en conjunto."
+
+#: src/components/project/templates/projectTemplates.ts:172
+msgid "Great for field and expert interviews: one to one, one after another."
+msgstr "Ideal para entrevistas de campo y a expertos: uno a uno, una tras otra."
+
+#: src/components/project/templates/projectTemplates.ts:212
+#~ msgid "Great for focus groups, youth panels and small listening sessions."
+#~ msgstr "Ideal para grupos focales, paneles de jóvenes y pequeñas sesiones de escucha."
+
+#: src/components/project/templates/projectTemplates.ts:192
+msgid "Great for hard or charged topics: small circles where each person speaks in turn."
+msgstr "Ideal para temas difíciles o tensos: círculos pequeños donde cada persona habla por turnos."
+
+#: src/components/project/templates/projectTemplates.ts:232
+#~ msgid "Great for hearing everyone in a few minutes: alone, in pairs, then in fours."
+#~ msgstr "Ideal para oír a todos en pocos minutos: a solas, en parejas y luego de cuatro en cuatro."
+
+#: src/components/project/templates/projectTemplates.ts:190
+msgid "Great for hearing everyone in minutes: alone, in pairs, in fours, then all together."
+msgstr "Ideal para escuchar a todos en minutos: solos, en parejas, de a cuatro y luego todos juntos."
+
+#: src/components/project/templates/projectTemplates.ts:216
+#~ msgid "Great for home visits and sensitive conversations, one to one."
+#~ msgstr "Ideal para visitas a domicilio y conversaciones delicadas, cara a cara."
+
+#: src/components/project/templates/projectTemplates.ts:174
+msgid "Great for home visits and sensitive topics: one calm talk at someone's table."
+msgstr "Ideal para visitas a domicilio y temas delicados: una charla tranquila en la mesa de alguien."
+
+#: src/components/project/templates/projectTemplates.ts:224
+#~ msgid "Great for idea and innovation workshops where groups build on each other."
+#~ msgstr "Ideal para talleres de ideas e innovación en los que los grupos se apoyan unos en otros."
+
+#: src/components/project/templates/projectTemplates.ts:182
+msgid "Great for idea and innovation workshops: groups build on each other's ideas."
+msgstr "Ideal para talleres de ideas e innovación: los grupos se apoyan en las ideas de los demás."
+
+#: src/components/project/templates/projectTemplates.ts:222
+#~ msgid "Great for looking back after a project, a pilot or an event."
+#~ msgstr "Ideal para mirar atrás después de un proyecto, un piloto o un evento."
+
+#: src/components/project/templates/projectTemplates.ts:210
+#~ msgid "Great for one table of partners or experts with different interests."
+#~ msgstr "Ideal para una mesa de socios o expertos con intereses distintos."
+
+#: src/components/project/templates/projectTemplates.ts:214
+#~ msgid "Great for one-to-one, field and expert interviews, one after another."
+#~ msgstr "Ideal para entrevistas individuales, de campo y a expertos, una tras otra."
+
+#: src/components/project/templates/projectTemplates.ts:168
+msgid "Great for partners or experts with different interests: one table, one recording."
+msgstr "Ideal para socios o expertos con intereses distintos: una mesa, una grabación."
+
+#: src/components/project/templates/projectTemplates.ts:208
+#~ msgid "Great for resident and neighbourhood evenings, and public hearings with many tables."
+#~ msgstr "Ideal para reuniones vecinales y audiencias públicas con muchas mesas."
+
+#: src/components/project/templates/projectTemplates.ts:166
+msgid "Great for resident evenings and public hearings: many fixed tables at once."
+msgstr "Ideal para reuniones vecinales y audiencias públicas: muchas mesas fijas a la vez."
+
+#: src/components/project/templates/projectTemplates.ts:184
+msgid "Great for scenario planning and long-term visions: each group builds its own future."
+msgstr "Ideal para planificar escenarios y visiones a largo plazo: cada grupo construye su propio futuro."
+
+#: src/components/project/templates/projectTemplates.ts:226
+#~ msgid "Great for scenario planning, co-design and long-term visions."
+#~ msgstr "Ideal para planificar escenarios, codiseñar y crear visiones a largo plazo."
+
+#: src/components/project/templates/projectTemplates.ts:176
+msgid "Great for strategy days and offsites: groups find themes, then agree on actions."
+msgstr "Ideal para jornadas de estrategia y retiros: los grupos encuentran temas y luego acuerdan acciones."
+
+#: src/components/project/templates/projectTemplates.ts:218
+#~ msgid "Great for strategy days, offsites and away days, from 20 to 175 people."
+#~ msgstr "Ideal para jornadas de estrategia, retiros y offsites, de 20 a 175 personas."
+
+#: src/components/project/templates/projectTemplates.ts:234
+#~ msgid "Great for talking in turns about a hard or charged topic."
+#~ msgstr "Ideal para hablar por turnos de un tema difícil o delicado."
+
+#: src/components/project/templates/projectTemplates.ts:220
+#~ msgid "Great for team meetings and working groups that need minutes, meeting after meeting."
+#~ msgstr "Ideal para reuniones de equipo y grupos de trabajo que necesitan acta, reunión tras reunión."
+
+#: src/components/project/templates/projectTemplates.ts:178
+msgid "Great for teams and working groups: the same people, meeting after meeting, with minutes."
+msgstr "Ideal para equipos y grupos de trabajo: las mismas personas, reunión tras reunión, con acta."
+
+#: src/components/project/templates/projectTemplates.ts:230
+#~ msgid "Great for unconferences where participants set the agenda."
+#~ msgstr "Ideal para desconferencias en las que los participantes marcan la agenda."
+
+#: src/components/project/templates/projectTemplates.ts:170
+msgid "Great for youth panels and listening sessions: a moderator asks one small group."
+msgstr "Ideal para paneles juveniles y sesiones de escucha: una persona modera y pregunta a un grupo pequeño."
+
+#: src/components/project/templates/projectTemplates.ts:255
+msgid "Hard points"
+msgstr "Puntos difíciles"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:122
+msgid "Host script"
+msgstr "Guion de moderación"
+
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:115
+msgid "How is it recorded?"
+msgstr "¿Cómo se graba?"
+
+#: src/components/project/templates/projectTemplates.ts:253
+msgid "Ideas worth keeping"
+msgstr "Ideas que vale la pena guardar"
+
+#: src/components/project/templates/projectTemplates.ts:176
+#~ msgid "Ideation workshop"
+#~ msgstr "Taller de ideas"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:128
+msgid "in your host guide, ready to edit"
+msgstr "en tu guía de moderación, lista para editar"
+
+#: src/components/project/templates/projectTemplates.ts:124
+msgid "Interviews"
+msgstr "Entrevistas"
+
+#: src/components/project/templates/projectTemplates.ts:314
+#~ msgid "Keeps the differences on the record"
+#~ msgstr "Deja constancia de las diferencias"
+
+#: src/components/project/templates/projectTemplates.ts:126
+msgid "Kitchen-table conversation"
+msgstr "Conversación en la cocina"
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:67
+msgid "Loading templates"
+msgstr "Cargando plantillas"
+
+#: src/components/project/templates/projectTemplates.ts:241
+msgid "Many groups at once"
+msgstr "Muchos grupos a la vez"
+
+#: src/components/project/templates/projectTemplates.ts:324
+#~ msgid "Marks the turning points"
+#~ msgstr "Señala los puntos de inflexión"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:138
+msgid "More formats"
+msgstr "Más formatos"
+
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:154
+msgid "Most used. Filter to find more."
+msgstr "Los más usados. Filtra para encontrar más."
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:109
+msgid "Name box"
+msgstr "Campo del nombre"
+
+#: src/components/project/templates/projectTemplates.ts:320
+#~ msgid "Names the hard points"
+#~ msgstr "Nombra los puntos difíciles"
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:82
+msgid "No template fits both. Clear a filter, or start blank."
+msgstr "Ninguna plantilla encaja con ambos. Quita un filtro o empieza en blanco."
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:53
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:111
+msgid "None"
+msgstr "Ninguno"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:55
+msgid "None: nothing to fill in"
+msgstr "Ninguno: nada que rellenar"
+
+#: src/components/project/templates/projectTemplates.ts:206
+msgid "Nothing set up. Choose every setting yourself."
+msgstr "Nada configurado. Eliges tú cada ajuste."
+
+#: src/components/project/templates/projectTemplates.ts:363
+#~ msgid "Nothing to fill in before recording"
+#~ msgstr "Nada que rellenar antes de grabar"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:93
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:97
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:118
+msgid "Off"
+msgstr "Desactivado"
+
+#: src/components/project/templates/projectTemplates.ts:356
+#~ msgid "Offers \"What if\" questions when ideas run out"
+#~ msgstr "Ofrece preguntas «Y si» cuando se acaban las ideas"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:44
+msgid "On, \"What if\" questions"
+msgstr "Activado, preguntas «Y si»"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:47
+msgid "On, one question"
+msgstr "Activado, una pregunta"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:46
+msgid "On, your own question"
+msgstr "Activado, tu propia pregunta"
+
+#: src/components/project/templates/projectTemplates.ts:150
+msgid "One conversation"
+msgstr "Una conversación"
+
+#: src/components/project/templates/projectTemplates.ts:241
+msgid "One recording"
+msgstr "Una grabación"
+
+#: src/components/project/templates/projectTemplates.ts:341
+#~ msgid "Opens on the upload page"
+#~ msgstr "Se abre en la página de subida"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:114
+msgid "Or start from a format"
+msgstr "O empieza con un formato"
+
+#: src/components/project/templates/projectTemplates.ts:148
+msgid "Parallel sessions"
+msgstr "Sesiones paralelas"
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:59
+msgid "Pick the closest fit and dembrane sets the project up for it, with a host script for the room. You can change every setting later."
+msgstr "Elige lo que mejor encaje y dembrane prepara el proyecto, con un guion para la sala. Puedes cambiar cada ajuste más tarde."
+
+#: src/components/project/templates/projectTemplates.ts:322
+#~ msgid "Reads back what was heard"
+#~ msgstr "Devuelve lo que se dijo"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:104
+msgid "reads this conversation only"
+msgstr "solo lee esta conversación"
+
+#: src/components/project/templates/projectTemplates.ts:156
+msgid "Recordings you already have"
+msgstr "Grabaciones que ya tienes"
+
+#: src/components/project/templates/projectTemplates.ts:130
+msgid "Recurring meeting"
+msgstr "Reunión periódica"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:88
+msgid "reminded before finishing"
+msgstr "recordatorio antes de terminar"
+
+#: src/components/project/templates/projectTemplates.ts:160
+#~ msgid "Resident evening"
+#~ msgstr "Reunión vecinal"
+
+#: src/components/project/templates/projectTemplates.ts:132
+msgid "Retrospective"
+msgstr "Retrospectiva"
+
+#: src/components/project/templates/projectTemplates.ts:138
+msgid "Rotating tables"
+msgstr "Mesas rotativas"
+
+#: src/components/project/templates/projectTemplates.ts:120
+msgid "Round table"
+msgstr "Mesa redonda"
+
+#: src/components/project/templates/projectTemplates.ts:360
+#~ msgid "Rounds as tags"
+#~ msgstr "Rondas como etiquetas"
+
+#: src/components/project/templates/projectTemplates.ts:318
+#~ msgid "Saves the ideas worth keeping"
+#~ msgstr "Guarda las ideas que vale la pena conservar"
+
+#: src/components/project/templates/projectTemplates.ts:136
+msgid "Scenario session"
+msgstr "Sesión de escenarios"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:200
+msgid "See all formats"
+msgstr "Ver todos los formatos"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:56
+msgid "Session name"
+msgstr "Nombre de la sesión"
+
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:138
+msgid "Show all"
+msgstr "Mostrar todo"
+
+#: src/components/project/templates/projectTemplates.ts:162
+#~ msgid "Stakeholder round table"
+#~ msgstr "Mesa redonda"
+
+#: src/components/project/templates/projectTemplates.ts:202
+msgid "Start blank"
+msgstr "Empezar en blanco"
+
+#: src/components/project/templates/FlowProgress/FlowProgress.tsx:21
+#~ msgid "Step {shown} of {total}"
+#~ msgstr "Paso {shown} de {total}"
+
+#: src/components/project/templates/projectTemplates.ts:170
+#~ msgid "Strategy day"
+#~ msgstr "Jornada de estrategia"
+
+#: src/components/project/templates/projectTemplates.ts:128
+msgid "Strategy session"
+msgstr "Sesión de estrategia"
+
+#: src/components/project/templates/projectTemplates.ts:247
+msgid "Table check"
+msgstr "Revisión de mesa"
+
+#: src/components/project/templates/projectTemplates.ts:118
+msgid "Table conversations"
+msgstr "Conversaciones en mesas"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:110
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:52
+msgid "The essentials"
+msgstr "Lo esencial"
+
+#: src/components/project/templates/projectTemplates.ts:312
+#~ msgid "The group checks the summary together"
+#~ msgstr "El grupo revisa el resumen en conjunto"
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:72
+msgid "The templates did not load. You can still start blank and set it up yourself."
+msgstr "Las plantillas no se han cargado. Aun así puedes empezar en blanco y configurarlo tú."
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:50
+msgid "Tips and best practices"
+msgstr "Consejos y buenas prácticas"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:114
+msgid "Titles"
+msgstr "Títulos"
+
+#: src/components/project/templates/projectTemplates.ts:259
+msgid "Turning points"
+msgstr "Puntos de inflexión"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:113
+msgid "Tutorial"
+msgstr "Tutorial"
+
+#: src/components/project/templates/projectTemplates.ts:140
+msgid "Unconference"
+msgstr "Desconferencia"
+
+#: src/components/project/templates/projectTemplates.ts:214
+msgid "Understand"
+msgstr "Entender"
+
+#: src/components/project/templates/projectTemplates.ts:230
+msgid "Understanding what people think"
+msgstr "Entender lo que piensa la gente"
+
+#: src/components/project/templates/projectTemplates.ts:202
+msgid "Upload recordings"
+msgstr "Subir grabaciones"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:81
+msgid "Verify"
+msgstr "Verify"
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:56
+msgid "What are you going to do?"
+msgstr "¿Qué vas a hacer?"
+
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:93
+msgid "What do you need to do?"
+msgstr "¿Qué necesitas hacer?"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:72
+msgid "What this sets up"
+msgstr "Lo que esto prepara"
+
+#: src/components/project/templates/projectTemplates.ts:257
+msgid "What we heard"
+msgstr "Lo que escuchamos"
+
+#: src/components/project/templates/projectTemplates.ts:172
+#~ msgid "Working group"
+#~ msgstr "Grupo de trabajo"
+
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:133
+msgid "You can change every setting after creating."
+msgstr "Puedes cambiar cada ajuste después de crearlo."

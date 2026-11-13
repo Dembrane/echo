@@ -31,6 +31,19 @@ export const project = {
     detail: "pin_order must be 1, 2, or 3",
     description: "A pinned project's slot must be 1, 2 or 3.",
   },
+  "project.template_unknown": {
+    action: "fix_input",
+    detail: "Unknown project template: {template_key}",
+    params: ["known"],
+    description:
+      "A project create named a template_key that is not in the template registry (packages/projects project-templates.ts). known lists the keys there are.",
+  },
+  "project.setup_suggestions_unavailable": {
+    action: "retry",
+    detail: "Suggestions are not available right now",
+    description:
+      "The setup suggestions (POST /v2/workspaces/:id/project-setup/suggestions) could not reach the model or it gave no usable answer. The create flow shows a quiet line and the host carries on.",
+  },
   "project.no_conversations": {
     action: "none",
     detail: "No conversations found for this project",
@@ -86,6 +99,13 @@ export const project = {
     action: "upgrade",
     detail: "Private projects require innovator tier or above.",
     description: "Private projects need the Innovator plan or above.",
+  },
+  "project.participant_email_off": {
+    action: "none",
+    detail: "Asking participants for their email is not available right now",
+    params: ["field"],
+    description:
+      "ENABLE_PARTICIPANT_EMAIL is off: asking for an email and report notifications cannot be switched on. field names the setting.",
   },
   "project.event_invite_paid": {
     action: "upgrade",

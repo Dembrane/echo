@@ -21,17 +21,31 @@ import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
 import {
+	PortalEditorRedirect,
+	ProjectSettingsRedirect,
+} from "./routes/project/ProjectRedirects";
+import {
 	ProjectAccessRoute,
 	ProjectConversationsRoute,
 	ProjectExportRoute,
-	ProjectIntegrationsRoute,
-	ProjectPortalSettingsRoute,
-	ProjectSettingsRoute,
 	ProjectUploadRoute,
 	ProjectUsageRoute,
 } from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
+// A project's Brief, its portal editor and Manage's Advanced tab (ECHO-1060).
+const ProjectBriefRoute = createLazyNamedRoute(
+	() => import("./components/project/brief/ProjectBriefRoute"),
+	"ProjectBriefRoute",
+);
+const PortalEditorRoute = createLazyNamedRoute(
+	() => import("./components/project/portal-editor/PortalEditorRoute"),
+	"PortalEditorRoute",
+);
+const ProjectAdvancedRoute = createLazyNamedRoute(
+	() => import("./components/project/advanced/ProjectAdvancedRoute"),
+	"ProjectAdvancedRoute",
+);
 const ProjectConversationRoute = createLazyNamedRoute(
 	() => import("./routes/project/conversation/ProjectConversationRoute"),
 	"ProjectConversationRoute",
@@ -250,11 +264,33 @@ const projectRouteChildren = [
 								index: true,
 							},
 							{
-								element: <ProjectSettingsRoute />,
+								// Name, goal, context, key terms and memory (ECHO-1060).
+								element: <ProjectBriefRoute />,
+								path: "brief",
+							},
+							{
+								// The portal editor: one page per part of the portal, the
+								// open option in the address (ECHO-1060).
+								children: [
+									{
+										element: <Navigate to="welcome" replace />,
+										index: true,
+									},
+									{
+										element: <PortalEditorRoute />,
+										path: ":section/:option?",
+									},
+								],
+								path: "portal",
+							},
+							{
+								// General and the one-page portal editor retired with ECHO-1060:
+								// their settings live in Brief, the portal editor and Advanced.
+								element: <ProjectSettingsRedirect to="brief" />,
 								path: "overview",
 							},
 							{
-								element: <ProjectPortalSettingsRoute />,
+								element: <PortalEditorRedirect />,
 								path: "portal-editor",
 							},
 							{
@@ -267,6 +303,20 @@ const projectRouteChildren = [
 								// "Usage" tab — dedicated surface for per-project usage.
 								element: <ProjectUsageRoute />,
 								path: "usage",
+							},
+							{
+								element: <ProjectExportRoute />,
+								path: "export",
+							},
+							{
+								// Webhooks, the experimental switch, moving and deleting.
+								element: <ProjectAdvancedRoute />,
+								path: "advanced",
+							},
+							{
+								// Webhooks moved to Manage, Advanced (ECHO-1060).
+								element: <ProjectSettingsRedirect to="advanced" />,
+								path: "integrations",
 							},
 							{
 								// /sharing tab retired 2026-04-23 — bookmark redirect
@@ -377,14 +427,6 @@ const projectRouteChildren = [
 					{
 						element: <ProjectUploadRoute />,
 						path: "upload",
-					},
-					{
-						element: <ProjectExportRoute />,
-						path: "export",
-					},
-					{
-						element: <ProjectIntegrationsRoute />,
-						path: "integrations",
 					},
 					{
 						element: <DebugPage />,

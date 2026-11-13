@@ -15,6 +15,8 @@ export interface V2MeData {
 		is_partner?: boolean;
 	}>;
 	has_pending_invites: boolean;
+	// Came to dembrane through an invite (one existed before the account did).
+	is_invited?: boolean;
 	// Gates internal-only UI (workspace tier-set, future audit controls).
 	// Derived from Directus Administrator role / JWT admin_access claim.
 	is_staff: boolean;

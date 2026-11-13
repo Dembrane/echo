@@ -1,0 +1,19 @@
+/* One row of cards the host scrolls: swipe, trackpad, the arrow buttons or the keyboard.
+ * Nothing moves by itself. The next card peeks in at the edge to say there is more. */
+.row {
+	display: flex;
+	gap: var(--mantine-spacing-sm);
+	list-style: none;
+	margin: 0;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	padding: 4px 4px var(--mantine-spacing-sm);
+	scroll-padding-inline: 4px;
+	scroll-snap-type: x proximity;
+	scrollbar-width: thin;
+}
+.item {
+	display: flex;
+	flex: 0 0 min(264px, 78%);
+	scroll-snap-align: start;
+}

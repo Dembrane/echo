@@ -29,7 +29,7 @@ vi.mock("./hooks", () => ({
 		data: {
 			available_topics: state.topics.map((key) => ({
 				key,
-				translations: { "en-US": { label: key } },
+				translations: { "en-US": { label: `Label ${key}` } },
 			})),
 			selected_topics: state.topics,
 		},
@@ -136,4 +136,37 @@ it("still toasts other generation failures", async () => {
 	pickAndContinue();
 	await vi.waitFor(() => expect(state.toastError).toHaveBeenCalledTimes(1));
 	expect(screen.queryByText("Not available right now")).toBeNull();
+});
+
+// ECHO-1052: one topic starts at once; several are clear buttons, each with what it gives.
+it("starts generating the one selected topic at once, with no picker", async () => {
+	state.topics = ["agreements"];
+	state.mutateAsync.mockResolvedValue({ id: "a-1" });
+	renderPage();
+	await vi.waitFor(() =>
+		expect(state.mutateAsync).toHaveBeenCalledWith(
+			expect.objectContaining({ topicKey: "agreements" }),
+		),
+	);
+	expect(screen.queryByTestId("portal-verify-selection-container")).toBeNull();
+});
+
+it("shows several topics as buttons with their label and one line each", () => {
+	state.topics = ["agreements", "heard", "my-own-topic"];
+	renderPage();
+	const tableCheck = screen.getByTestId("portal-verify-topic-agreements");
+	expect(tableCheck.textContent).toContain("Label agreements");
+	expect(tableCheck.textContent).toContain(
+		"What this group mostly agreed on, and what differed.",
+	);
+	expect(screen.getByTestId("portal-verify-topic-heard").textContent).toContain(
+		"What this person or group told us, in their own words.",
+	);
+	// A host's own topic has its label and no invented description.
+	expect(
+		screen.getByTestId("portal-verify-topic-my-own-topic").textContent,
+	).toBe("Label my-own-topic");
+	fireEvent.click(tableCheck);
+	expect(tableCheck.getAttribute("aria-pressed")).toBe("true");
+	expect(state.mutateAsync).not.toHaveBeenCalled();
 });

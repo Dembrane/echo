@@ -14,6 +14,7 @@ import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
 const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
+	navigate: vi.fn(),
 	onChunkAccepted: undefined as (() => void) | undefined,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
 	onRecordingStop: undefined as
@@ -26,6 +27,9 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
+vi.mock("@/hooks/useI18nNavigate", () => ({
+	useI18nNavigate: () => state.navigate,
+}));
 vi.mock("@/lib/api", () => ({
 	finishConversation: vi.fn(),
 	pingConversation: vi.fn(async () => ({})),
@@ -156,6 +160,8 @@ afterEach(() => {
 	state.project = {};
 	state.recordingTime = 0;
 	state.stopRecording.mockReset();
+	state.navigate.mockReset();
+	localStorage.clear();
 });
 
 const page = () => (
@@ -302,3 +308,62 @@ it.each([
 		expect(screen.getByTestId("stop-modal").dataset.verify).toBe(offered);
 	},
 );
+
+// ECHO-1052: the button under the recorder is named after where it goes, and goes there.
+const recordingAMinute = (project: Record<string, unknown>) => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	state.recordingTime = 61;
+	state.project = project;
+	renderPage();
+	return screen.queryByTestId("portal-audio-echo-button");
+};
+
+it("with only Verify on, the button says Verify and goes straight to Verify", () => {
+	const button = recordingAMinute({
+		is_get_reply_enabled: false,
+		is_verify_enabled: true,
+	});
+	expect(button?.textContent).toBe("Verify");
+	expect(button?.getAttribute("data-mode")).toBe("verify");
+	act(() => button?.click());
+	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1/verify");
+});
+
+it("with only Explore on, the button says Explore and asks for a question at once", () => {
+	const button = recordingAMinute({
+		is_get_reply_enabled: true,
+		is_verify_enabled: false,
+	});
+	expect(button?.textContent).toBe("Explore");
+	act(() => button?.click());
+	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1?echo=1");
+	expect(localStorage.getItem("cooldown_c-1_echo")).not.toBeNull();
+});
+
+it("with both on, the button is named ECHO and offers the choice", () => {
+	const button = recordingAMinute({
+		is_get_reply_enabled: true,
+		is_verify_enabled: true,
+	});
+	expect(button?.textContent).toBe("ECHO");
+	act(() => button?.click());
+	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1/refine");
+});
+
+it("with neither on, there is no button", () => {
+	expect(
+		recordingAMinute({ is_get_reply_enabled: false, is_verify_enabled: false }),
+	).toBeNull();
+});
+
+it("a locked single feature opens the choice screen, which says why", () => {
+	const button = recordingAMinute({
+		is_ai_available: false,
+		is_get_reply_enabled: false,
+		is_verify_enabled: true,
+	});
+	act(() => button?.click());
+	expect(state.navigate).toHaveBeenCalledWith("/p-1/conversation/c-1/refine");
+});

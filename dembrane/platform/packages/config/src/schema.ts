@@ -438,6 +438,16 @@ export const schema = defineSchema({
         "Most edges a map view may draw. A host budget above it is refused, never clamped. Unset: no ceiling.",
     }),
   },
+  projects: {
+    participantEmail: key("ENABLE_PARTICIPANT_EMAIL", bool.default(false), {
+      description:
+        "Lets hosts ask participants for their email (on the thank-you page) and offer report notifications. Off: neither setting can be switched on, by the API, the assistant, a template or the setup suggestions; a project that already has one on keeps it, and its host can still switch it off. The dashboard hides the settings with the matching ENABLE_PARTICIPANT_EMAIL constant in frontend/src/config.ts.",
+    }),
+    setupWebSearch: key("PROJECT_SETUP_WEB_SEARCH", bool.default(false), {
+      description:
+        "Lets the project setup suggestions look up the organisation or topic a host names with Google Search grounding, before proposing key terms. Sends the project name and the start of the host's description to the search provider. Only takes effect where LLM_SEARCH_GROUNDING is on and LLM_PROVIDER is vertex.",
+    }),
+  },
   canvas: {
     enabled: key("ENABLE_CANVAS", bool.default(true), {
       description:

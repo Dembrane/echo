@@ -946,6 +946,10 @@ const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =
   ORG_ROLE_POLICIES[r].has("account:read"),
 );
 
+const DOCUMENT_KINDS = ["offer", "dpa", "invoice", "other"] as const;
+const isDocumentKind = (v: unknown): v is (typeof DOCUMENT_KINDS)[number] =>
+  typeof v === "string" && (DOCUMENT_KINDS as readonly string[]).includes(v);
+
 /**
  * Every organisation whose account the caller runs, with task counts and the next task:
  * the "Tasks 1/2" entry and the org picker. One indexed query; cheap on every page load.
@@ -959,5 +963,9 @@ export async function tasksSummary(d: AccountsDeps, who: Signed) {
     next_task_title: next_task?.code ? null : (next_task?.title ?? null),
     next_task_code: isTaskCode(next_task?.code) ? next_task.code : null,
     next_task_params: next_task?.code ? ((next_task.params ?? {}) as Record<string, string>) : null,
+    next_task_document_id: next_task?.document_id ?? null,
+    next_task_document_kind: isDocumentKind(next_task?.document_kind)
+      ? next_task.document_kind
+      : null,
   }));
 }

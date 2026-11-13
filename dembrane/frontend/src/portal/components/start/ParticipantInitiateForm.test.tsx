@@ -148,6 +148,31 @@ it("leaves the Continue button alone when the project asks for a name", () => {
 	expect(screen.getByTestId("portal-initiate-next-button")).toBeTruthy();
 });
 
+it("gives the default name label a neutral example, with no person's name", () => {
+	wrap(project({ default_conversation_ask_for_participant_name: true }));
+	const input = screen.getByTestId("portal-initiate-name-input");
+	expect(input.getAttribute("placeholder")).toBe("Group 1, Table 3, etc.");
+});
+
+it("leaves the example out when the host set the label", () => {
+	for (const label of [
+		"Table name or number",
+		"Meeting name or date",
+		"Interview code (no real names)",
+	]) {
+		wrap(
+			project({
+				conversation_ask_for_participant_name_label: label,
+				default_conversation_ask_for_participant_name: true,
+			}),
+		);
+		expect(screen.getByText(label)).toBeTruthy();
+		const input = screen.getByTestId("portal-initiate-name-input");
+		expect(input.getAttribute("placeholder")).toBeNull();
+		cleanup();
+	}
+});
+
 const refusal = {
 	response: {
 		data: {

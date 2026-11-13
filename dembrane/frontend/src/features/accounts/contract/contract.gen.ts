@@ -1370,6 +1370,9 @@ export const TasksSummary = z.array(
     next_task_title: z.string().nullable(),
     next_task_code: TaskCode.nullable(),
     next_task_params: z.record(z.string(), z.string()).nullable(),
+    /** The document that task is about, and its kind; null for a task without one. */
+    next_task_document_id: Uuid.nullable(),
+    next_task_document_kind: DocumentKind.nullable(),
   }),
 );
 

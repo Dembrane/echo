@@ -25,6 +25,7 @@ import {
 	useGenerateVerificationArtefactMutation,
 	useVerificationTopics,
 } from "./hooks";
+import { TopicIcon, topicDescription } from "@/components/verify/topics";
 import { VerifyInstructions } from "./VerifyInstructions";
 
 type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk" | "cs";
@@ -85,13 +86,8 @@ export const VerifySelection = () => {
 				translations["en-US"]?.label ??
 				topic.key;
 
-			const icon =
-				TOPIC_ICON_MAP[topic.key] ??
-				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
-				(topic.is_custom ? undefined : "•");
-
 			return {
-				icon,
+				description: topicDescription(topic.key),
 				key: topic.key,
 				label: localizedLabel,
 			};
@@ -255,8 +251,8 @@ export const VerifySelection = () => {
 					</Trans>
 				</Title>
 
-				{/* Options list */}
-				<Group gap="sm">
+				{/* Options list: one pressable box per topic, with what it gives back. */}
+				<Stack gap="sm">
 					{availableOptions.length === 0 && (
 						<Text size="sm" c="dimmed">
 							<Trans>
@@ -268,20 +264,25 @@ export const VerifySelection = () => {
 						<UnstyledButton
 							key={option.key}
 							onClick={() => setSelectedOption(option.key)}
-							className="app-do px-4 py-3"
+							className="app-do app-choice block w-full px-4 py-3"
 							data-selected={selectedOption === option.key || undefined}
 							aria-pressed={selectedOption === option.key}
 							{...testId(`portal-verify-topic-${option.key}`)}
 						>
-							<Group gap="sm" wrap="nowrap">
-								{option.icon ? (
-									<span className="text-xl">{option.icon}</span>
-								) : null}
-								<Text size="sm">{option.label}</Text>
+							<Group gap="md" wrap="nowrap" align="center">
+								<TopicIcon topicKey={option.key} size={24} />
+								<Stack gap="xs" className="min-w-0 flex-1">
+									<Text>{option.label}</Text>
+									{option.description && (
+										<Text size="sm" c="dimmed">
+											{option.description}
+										</Text>
+									)}
+								</Stack>
 							</Group>
 						</UnstyledButton>
 					))}
-				</Group>
+				</Stack>
 
 				{aiUnavailable && <AiUnavailableText />}
 			</Stack>

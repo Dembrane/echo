@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ChartLineIcon,
 	DownloadSimpleIcon,
-	GearIcon,
+	SlidersHorizontalIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
@@ -22,11 +22,6 @@ export const ProjectSettingsView = () => {
 		<nav className="flex flex-col gap-0.5 p-1.5">
 			<BackButton to={`${base}/home`} label={<Trans>Manage</Trans>} center />
 			<NavItem
-				to={`${base}/overview`}
-				label={<Trans>General</Trans>}
-				icon={GearIcon}
-			/>
-			<NavItem
 				to={`${base}/access`}
 				label={<Trans>Access</Trans>}
 				icon={UsersThreeIcon}
@@ -40,6 +35,12 @@ export const ProjectSettingsView = () => {
 				to={`${base}/export`}
 				label={<Trans>Export</Trans>}
 				icon={DownloadSimpleIcon}
+			/>
+			{/* Webhooks, the experimental switch, moving and deleting (ECHO-1060). */}
+			<NavItem
+				to={`${base}/advanced`}
+				label={<Trans>Advanced</Trans>}
+				icon={SlidersHorizontalIcon}
 			/>
 		</nav>
 	);

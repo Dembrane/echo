@@ -16,7 +16,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -26,9 +26,11 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { ApiRequestError } from "@/lib/errors/read";
 import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { isOutsiderRole } from "@/lib/roles";
+import { postOnboardingPath } from "./landing";
 
 async function completeOnboarding(orgName: string) {
 	const response = await fetch(`${API_BASE_URL}/v2/onboarding/complete`, {
@@ -138,12 +140,26 @@ export const OnboardingRoute = () => {
 				? 2
 				: 0;
 
-	// Everyone lands on the general home /o after onboarding (ISSUE-015 /
-	// Founder decision D3) — not a specific workspace. useCallback keeps the
-	// effect dep stable.
+	// The general home /o after onboarding (ISSUE-015 / Founder decision D3), except a new
+	// self-serve host, who goes straight to the template picker (ECHO-1042, landing.ts).
+	// workspaceId is only set when the organisation step ran in this visit, so a returning
+	// host still lands on /o. useCallback keeps the effect dep stable.
 	const goToHome = useCallback(() => {
-		navigate("/o");
-	}, [navigate]);
+		navigate(
+			postOnboardingPath({
+				createdWorkspaceId: workspaceId,
+				hasLegacyProjects: meV2?.has_legacy_projects === true,
+				isInvited: meV2?.is_invited === true,
+				startedWithInvites: startedWithInvites === true,
+			}),
+		);
+	}, [
+		navigate,
+		workspaceId,
+		meV2?.has_legacy_projects,
+		meV2?.is_invited,
+		startedWithInvites,
+	]);
 
 	// Advance to the questionnaire, or skip straight to /o when the user has
 	// already answered it.
@@ -160,6 +176,14 @@ export const OnboardingRoute = () => {
 	}, [alreadyAnswered, goToHome]);
 
 	useDocumentTitle(t`Set up your workspace | dembrane`);
+
+	// One view per step shown; going back to a step counts it again.
+	const lastViewedStep = useRef<string | null>(null);
+	useEffect(() => {
+		if (step === "loading" || lastViewedStep.current === step) return;
+		lastViewedStep.current = step;
+		track("onboarding_step_viewed", { step });
+	}, [step]);
 
 	useEffect(() => {
 		// Only run the "already onboarded → bounce" check while the page
@@ -199,6 +223,7 @@ export const OnboardingRoute = () => {
 			void notifyError(error);
 		},
 		onSuccess: (data) => {
+			track("onboarding_step_completed", { step: "org" });
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			// Onboarding's auto-accept loop can fire personal notifications
@@ -240,6 +265,7 @@ export const OnboardingRoute = () => {
 		const validEmails = inviteEmails.filter((e) => e.trim() && e.includes("@"));
 
 		if (validEmails.length === 0) {
+			track("onboarding_step_completed", { skipped: true, step: "invite" });
 			goToQuestionsOrHome();
 			return;
 		}
@@ -259,6 +285,7 @@ export const OnboardingRoute = () => {
 		if (sent > 0) {
 			toast.success(sent === 1 ? t`Invite sent` : t`${sent} invites sent`);
 		}
+		track("onboarding_step_completed", { skipped: sent === 0, step: "invite" });
 		goToQuestionsOrHome();
 	};
 
@@ -267,6 +294,7 @@ export const OnboardingRoute = () => {
 	// A skip persists too (skipped=true): the login gate re-nudges anyone with
 	// no onboarding_answer_json, so a skip that wrote nothing looped every login.
 	const submitAnswers = async (skip: boolean) => {
+		track("onboarding_step_completed", { skipped: skip, step: "questions" });
 		setSubmittingAnswers(true);
 		try {
 			await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
@@ -354,7 +382,16 @@ export const OnboardingRoute = () => {
 							autoFocusFirst
 						/>
 
-						<Group gap="sm">
+						{/* A row of steps: Skip on the left, the pill on the right (rules.css). */}
+						<Group data-steps gap="sm">
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								onClick={() => goToQuestionsOrHome()}
+							>
+								<Trans>Skip</Trans>
+							</Button>
 							<Button
 								variant="filled"
 								flex={1}
@@ -366,14 +403,6 @@ export const OnboardingRoute = () => {
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
-							</Button>
-							<Button
-								size="md"
-								variant="subtle"
-								color="gray"
-								onClick={() => goToQuestionsOrHome()}
-							>
-								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -521,7 +550,17 @@ export const OnboardingRoute = () => {
 							</Stack>
 						)}
 
-						<Group gap="sm">
+						{/* A row of steps: Skip on the left, the pill on the right (rules.css). */}
+						<Group data-steps gap="sm">
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								disabled={submittingAnswers}
+								onClick={() => submitAnswers(true)}
+							>
+								<Trans>Skip</Trans>
+							</Button>
 							<Button
 								variant="filled"
 								flex={1}
@@ -531,15 +570,6 @@ export const OnboardingRoute = () => {
 								onClick={goNext}
 							>
 								{isLastQ ? <Trans>Done</Trans> : <Trans>Continue</Trans>}
-							</Button>
-							<Button
-								size="md"
-								variant="subtle"
-								color="gray"
-								disabled={submittingAnswers}
-								onClick={() => submitAnswers(true)}
-							>
-								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>

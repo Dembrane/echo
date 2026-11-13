@@ -112,6 +112,14 @@ async function saveProjectLegal(
 	}
 }
 
+/** The project's legal basis as participants get it: effective value, source, organiser. */
+export const useProjectLegalQuery = (projectId: string) =>
+	useQuery({
+		enabled: !!projectId,
+		queryFn: () => fetchProjectLegal(projectId),
+		queryKey: ["projects", projectId, "legal"],
+	});
+
 /**
  * Portal-editor legal basis block: effective value + source, explicit
  * override flow (deliberately outside the auto-saving portal form).
@@ -133,11 +141,7 @@ export const ProjectLegalBasisSection = ({
 	const [removeModalOpen, { open: openRemoveModal, close: closeRemoveModal }] =
 		useDisclosure(false);
 
-	const legalQuery = useQuery({
-		enabled: !!projectId,
-		queryFn: () => fetchProjectLegal(projectId),
-		queryKey: ["projects", projectId, "legal"],
-	});
+	const legalQuery = useProjectLegalQuery(projectId);
 
 	const mutation = useMutation({
 		mutationFn: (payload: {

@@ -79,7 +79,7 @@ msgid "error.canvas.just_previewed"
 msgstr "A preview was just made. Wait a moment before trying again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:91
+#: src/lib/errors/messages/project.ts:95
 msgid "error.project.pin_order_invalid"
 msgstr "A project can be pinned in place 1, 2 or 3."
 
@@ -99,7 +99,7 @@ msgid "error.workspace.partner_agreement_required"
 msgstr "Accept the partner agreement to continue."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:100
+#: src/lib/errors/messages/project.ts:104
 msgid "error.project.privacy_policy_required"
 msgstr "Add a link to your privacy policy to use consent as the legal basis."
 
@@ -139,7 +139,12 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "As an organisation admin you can join this workspace directly, no request needed."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.participant_email_off"
+msgstr "Asking participants for their email is not available right now."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:142
 msgid "error.project.share_role_cannot_access"
 msgstr "Billing members cannot open projects. Give them another role first."
 
@@ -199,7 +204,7 @@ msgid "error.analysis.feature_disabled"
 msgstr "Editing results is not available here."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:95
+#: src/lib/errors/messages/project.ts:99
 msgid "error.project.privacy_policy_invalid_url"
 msgstr "Enter a privacy policy link that starts with http:// or https://."
 
@@ -229,7 +234,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Enter text for {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_needs_private"
 msgstr "Everyone in the workspace can already see this project. Make it private first to share it with individual people."
 
@@ -434,12 +439,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Only workspace admins can change the legal basis of this project."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:157
 msgid "error.project.visibility_admin_only"
 msgstr "Only workspace admins can change who sees this project."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_admin_only"
 msgstr "Only workspace admins can share projects."
 
@@ -509,7 +514,7 @@ msgid "error.memory.invalid_scope"
 msgstr "Pick who this memory is for from the list."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:110
+#: src/lib/errors/messages/project.ts:114
 msgid "error.project.private_requires_tier"
 msgstr "Private projects come with the Innovator plan and above. Upgrade to make this project private."
 
@@ -554,7 +559,7 @@ msgid "error.project.move_none_selected"
 msgstr "Select at least one project to move."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:147
 msgid "error.project.sharing_tier_required"
 msgstr "Sharing a private project with people needs the {tier} plan or higher."
 
@@ -614,6 +619,11 @@ msgid "error.internal.unexpected"
 msgstr "Something went wrong on our side. Try again in a moment."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Suggestions are not available right now. You can carry on without them."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "That code did not work. Enter the current code from your authenticator app."
@@ -632,6 +642,11 @@ msgstr "That date and time could not be read. Pick the time again."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "That password is not right. Check it and try again."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:152
+msgid "error.project.template_unknown"
+msgstr "That project template does not exist. Reload the page and pick one again."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
@@ -707,6 +722,11 @@ msgstr "The PDF of this invoice is not ready yet. Try again in a little while."
 #: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "The total is zero. For a free offer, choose No charge under How we invoice."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "The try did not work. Try again."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1009,7 +1029,7 @@ msgid "error.member.not_in_workspace"
 msgstr "This person is not a member of this workspace. Refresh the page to see the current list."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:137
 msgid "error.project.share_not_member"
 msgstr "This person is not in the workspace yet. Invite them to the workspace first."
 
@@ -1044,7 +1064,7 @@ msgid "error.present.draft_conflict"
 msgstr "This presentation was changed somewhere else. Reload to see the latest version, then make your change again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:105
+#: src/lib/errors/messages/project.ts:109
 msgid "error.project.privacy_policy_too_long"
 msgstr "This privacy policy link is too long. Use a link of at most 255 characters."
 
@@ -1064,7 +1084,7 @@ msgid "error.project.no_transcripts"
 msgstr "This project has no transcripts yet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_found"
 msgstr "This project is no longer shared with that person."
 

@@ -262,6 +262,9 @@ export const ParticipantInitiateForm = ({
 		onRefusedChange?.(Boolean(refused));
 	}, [refused, onRefusedChange]);
 
+	const customNameLabel =
+		project.conversation_ask_for_participant_name_label?.trim() || "";
+
 	return (
 		<form
 			onSubmit={handleSubmit(startConversation)}
@@ -285,11 +288,14 @@ export const ParticipantInitiateForm = ({
 						// autoFocus
 						required
 						size="md"
-						label={
-							project.conversation_ask_for_participant_name_label ??
-							t`Session name`
+						label={customNameLabel || t`Session name`}
+						// The example follows the label. A host's own label (a table, a
+						// meeting, an interview code) says what to type, so it gets none: an
+						// example of a person's name would invite one. The default label
+						// gets a neutral example.
+						placeholder={
+							customNameLabel ? undefined : t`Group 1, Table 3, etc.`
 						}
-						placeholder="Group 1, John Doe, etc."
 						{...register("name")}
 						error={errors.name?.message}
 						className="w-full"

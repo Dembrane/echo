@@ -14,6 +14,8 @@ export interface BindingDeps {
   readonly enableCanvas: boolean;
   readonly logger: Logger;
   readonly now?: () => Date;
+  /** ENABLE_PARTICIPANT_EMAIL. Unset means off. */
+  readonly participantEmail?: boolean;
 }
 
 const generationChannel = (reportId: string) => `canvas:generation:${reportId}`;
@@ -27,7 +29,13 @@ const generationChannel = (reportId: string) => `canvas:generation:${reportId}`;
  */
 export function bindAgentData(deps: BindingDeps, who: Signed, ctx: TurnContext): AgentData {
   const now = deps.now ?? (() => new Date());
-  const d: data.DataDeps = { db: deps.db, access: deps.access, logger: deps.logger, now };
+  const d: data.DataDeps = {
+    db: deps.db,
+    access: deps.access,
+    logger: deps.logger,
+    now,
+    participantEmail: deps.participantEmail ?? false,
+  };
   const store = canvasStorage(deps.db);
   const c: canvas.CanvasDeps = {
     store,

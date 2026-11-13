@@ -34,6 +34,11 @@ describe("classifyOperation", () => {
     // Portal
     ["POST /api/verify/generate", "portal", "Verify"],
     ["POST /api/conversations/:conversation_id/get-reply", "portal", "Explore"],
+    [
+      "POST /api/v2/projects/:project_id/portal-editor/try",
+      "portal",
+      "Try it in the portal editor",
+    ],
     // Recording
     ["conversations.chunk", "recording", "Transcription"],
     ["conversations.finish", "recording", "Finishing"],
@@ -106,6 +111,6 @@ describe("classifyOperation", () => {
       group: "chat",
       label: "Replies",
     });
-    expect(FEATURE_RULES).toHaveLength(32);
+    expect(FEATURE_RULES).toHaveLength(33);
   });
 });

@@ -1,3 +1,4 @@
+import { contextForPrompt } from "@dembrane/core";
 import { conversationTranscript } from "./context";
 import type { ChatDeps } from "./deps";
 import { pyFloat, renderPrompt } from "./prompts/render";
@@ -58,7 +59,8 @@ export async function systemMessagesForChat(
   const parts: string[] = [];
   if (project.name) parts.push(`name: ${project.name}`);
   if (project.language) parts.push(`language: ${project.language}`);
-  if (project.context) parts.push(`context: ${project.context}`);
+  const context = contextForPrompt(project.context);
+  if (context) parts.push(`context: ${context}`);
   if (project.default_conversation_transcript_prompt)
     parts.push(`hotwords (important terms): ${project.default_conversation_transcript_prompt}`);
   if (project.default_conversation_title)

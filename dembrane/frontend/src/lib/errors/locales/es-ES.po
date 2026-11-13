@@ -79,7 +79,7 @@ msgid "error.canvas.just_previewed"
 msgstr "Se acaba de generar una vista previa. Espera un momento antes de volver a intentarlo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:91
+#: src/lib/errors/messages/project.ts:95
 msgid "error.project.pin_order_invalid"
 msgstr "Un proyecto se puede fijar en la posición 1, 2 o 3."
 
@@ -99,7 +99,7 @@ msgid "error.workspace.partner_agreement_required"
 msgstr "Acepta el acuerdo de colaboración para continuar."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:100
+#: src/lib/errors/messages/project.ts:104
 msgid "error.project.privacy_policy_required"
 msgstr "Añade un enlace a tu política de privacidad para usar el consentimiento como base legal."
 
@@ -139,7 +139,12 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Como administrador de la organización puedes unirte directamente a este espacio de trabajo, sin necesidad de solicitarlo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.participant_email_off"
+msgstr "Pedir el correo electrónico a los participantes no está disponible en este momento."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:142
 msgid "error.project.share_role_cannot_access"
 msgstr "Los miembros de facturación no pueden abrir proyectos. Asígnales otro rol primero."
 
@@ -199,7 +204,7 @@ msgid "error.analysis.feature_disabled"
 msgstr "La edición de resultados no está disponible aquí."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:95
+#: src/lib/errors/messages/project.ts:99
 msgid "error.project.privacy_policy_invalid_url"
 msgstr "Introduce un enlace a la política de privacidad que empiece por http:// o https://."
 
@@ -229,7 +234,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Introduce un texto para {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_needs_private"
 msgstr "Todos los miembros del espacio de trabajo ya pueden ver este proyecto. Hazlo privado primero para compartirlo con personas concretas."
 
@@ -434,12 +439,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden cambiar la base legal de este proyecto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:157
 msgid "error.project.visibility_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden cambiar quién ve este proyecto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_admin_only"
 msgstr "Solo los administradores del espacio de trabajo pueden compartir proyectos."
 
@@ -509,7 +514,7 @@ msgid "error.memory.invalid_scope"
 msgstr "Elige de la lista para quién es este recuerdo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:110
+#: src/lib/errors/messages/project.ts:114
 msgid "error.project.private_requires_tier"
 msgstr "Los proyectos privados están incluidos en el plan Innovator y superiores. Actualiza tu plan para hacer este proyecto privado."
 
@@ -554,7 +559,7 @@ msgid "error.project.move_none_selected"
 msgstr "Selecciona al menos un proyecto para moverlo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:147
 msgid "error.project.sharing_tier_required"
 msgstr "Compartir un proyecto privado con otras personas requiere el plan {tier} o superior."
 
@@ -614,6 +619,11 @@ msgid "error.internal.unexpected"
 msgstr "Algo ha fallado por nuestra parte. Inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Las sugerencias no están disponibles ahora. Puedes seguir sin ellas."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Ese código no ha funcionado. Introduce el código actual de tu aplicación de autenticación."
@@ -632,6 +642,11 @@ msgstr "No se ha podido leer esa fecha y hora. Elige la hora de nuevo."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Esa contraseña no es correcta. Compruébala e inténtalo de nuevo."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:152
+msgid "error.project.template_unknown"
+msgstr "Esa plantilla de proyecto no existe. Vuelve a cargar la página y elige otra vez."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
@@ -707,6 +722,11 @@ msgstr "El PDF de esta factura aún no está listo. Inténtalo de nuevo en un mo
 #: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "El total es cero. Para una oferta gratuita, elige Sin coste en Cómo facturamos."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "La prueba no ha funcionado. Vuelve a probar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1009,7 +1029,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Esta persona no es miembro de este espacio de trabajo. Recarga la página para ver la lista actualizada."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:137
 msgid "error.project.share_not_member"
 msgstr "Esta persona todavía no está en el espacio de trabajo. Invítala primero al espacio de trabajo."
 
@@ -1044,7 +1064,7 @@ msgid "error.present.draft_conflict"
 msgstr "Esta presentación se modificó en otro lugar. Recarga para ver la última versión y vuelve a hacer el cambio."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:105
+#: src/lib/errors/messages/project.ts:109
 msgid "error.project.privacy_policy_too_long"
 msgstr "Este enlace a la política de privacidad es demasiado largo. Usa un enlace de 255 caracteres como máximo."
 
@@ -1064,7 +1084,7 @@ msgid "error.project.no_transcripts"
 msgstr "Este proyecto aún no tiene transcripciones."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_found"
 msgstr "Este proyecto ya no está compartido con esa persona."
 

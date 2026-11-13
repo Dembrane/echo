@@ -52,6 +52,13 @@ export const participantRoutes: RouteObject[] = [
 				path: "start",
 			},
 			{
+				// The portal editor's preview address (ECHO-1060). Inside the dashboard's frame
+				// main.tsx draws the preview instead of this router; opened any other way it is
+				// the start screen, and preview mode does nothing.
+				element: <Navigate to="../start" replace />,
+				path: "preview",
+			},
+			{
 				children: [
 					{
 						element: <ParticipantConversationAudioContent />,

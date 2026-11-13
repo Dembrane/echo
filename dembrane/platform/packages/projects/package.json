@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "dembrane": {
-    "layer": "namespace"
+    "layer": "namespace",
+    "allow": {
+      "webhooks": "Reads the page a host links to for setup suggestions with webhooks' private-address guard."
+    }
   },
   "exports": {
     ".": "./src/index.ts"
@@ -18,9 +21,14 @@
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/i18n": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "@dembrane/queue": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
     "@dembrane/realtime": "workspace:*",
+    "@dembrane/webhooks": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
     "postgres": "^3.4.9",

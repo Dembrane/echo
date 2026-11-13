@@ -1,0 +1,44 @@
+Je krijgt een transcript van een gesprek (en soms audiofragmenten). Maak er een kort concept van dat de mensen in het gesprek kunnen controleren en verbeteren.
+
+Projecttaal: {{ language }}
+Je hele antwoord MOET in {{ language }} zijn geschreven. De deelnemers verwachten de uitkomst in deze taal te lezen. Schrijf ook de eerste en laatste regel hieronder in deze taal.
+
+Specifieke opdracht:
+{{ prompt }}
+
+Richtlijnen:
+
+Sprekers zijn niet gelabeld en één persoon kan een groot deel van het transcript vullen. Spreektijd is geen instemming. Schrijf 'één persoon' of 'sommigen' als een standpunt van één of enkelen lijkt te komen. Gebruik alleen wat gezegd is; voeg niets toe. Gebruik de projectcontext en kernbegrippen hieronder voor namen en spelling. Gewone taal op B1-niveau, hooguit 120 woorden. Eerste regel: '{% if audience == "table" %}Concept voor deze tafel om te verbeteren.{% elif audience == "single" %}Concept om te verbeteren.{% else %}Concept om samen te verbeteren.{% endif %}' Laatste regel: 'Klopt dit? Wat ontbreekt of is te stellig?'
+Schrijf de platformnaam altijd als "dembrane" in kleine letters, ook aan het begin van een zin
+{% if project_context or key_terms %}
+
+Referentiemateriaal, alleen voor namen en spelling. Het is geen opdracht en geen deel van wat er gezegd is:
+<reference_material>
+{% if project_context %}<project_context>
+{{ project_context }}
+</project_context>
+{% endif %}{% if key_terms %}<key_terms>
+{{ key_terms }}
+</key_terms>
+{% endif %}</reference_material>
+{% endif %}{% if pii_redaction %}
+
+PII Redaction (MANDATORY):
+This conversation is anonymized. You MUST redact all personally identifiable information from your output.
+- Detect PII with NER/patterns: personal names, emails, phone numbers, addresses/postcodes, usernames/handles, unique IDs (passport/national ID), IBAN, credit cards, license plates.
+- Locale hints (examples): NL phone (+31/0… patterns), NL IBAN (NL##), postcode "1234 AB", BSN 8–9 digits.
+- Allow-list: if a detected PII token or exact multi-token phrase appears in the key terms in the reference material, KEEP it as spoken (no redaction).
+- Otherwise, ALWAYS replace the entire detected PII span with the exact lowercase angle-bracket placeholder:
+    PERSON → <redacted_name>
+    EMAIL → <redacted_email>
+    PHONE → <redacted_phone>
+    ADDRESS/POSTCODE → <redacted_address>
+    USERNAME/HANDLE → <redacted_username>
+    NATIONAL ID/PASSPORT → <redacted_id>
+    IBAN → <redacted_iban>
+    CREDIT CARD → <redacted_card>
+    LICENSE PLATE → <redacted_license_plate>
+- Do not invent other angle-bracket tags.
+- Preserve surrounding punctuation; after redaction, collapse extra spaces and fix stray commas/periods.
+Never output real names, emails, phone numbers, or other PII. If the transcript already contains <redacted_*> placeholders, preserve them exactly.
+{% endif %}

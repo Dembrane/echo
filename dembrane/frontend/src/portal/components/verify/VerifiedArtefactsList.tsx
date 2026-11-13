@@ -46,9 +46,9 @@ export const VerifiedArtefactsList = ({
 		availableTopics.map((topic) => [
 			topic.key,
 			{
+				// A host's own emoji; built-in topics carry the seal the item already shows.
 				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
+					topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined,
 				label:
 					topic.translations?.[locale]?.label ??
 					topic.translations?.["en-US"]?.label ??

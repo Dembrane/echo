@@ -79,7 +79,7 @@ msgid "error.canvas.just_previewed"
 msgstr "Náhled byl právě vytvořen. Než to zkusíte znovu, chvíli počkejte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:91
+#: src/lib/errors/messages/project.ts:95
 msgid "error.project.pin_order_invalid"
 msgstr "Projekt lze připnout na pozici 1, 2 nebo 3."
 
@@ -99,7 +99,7 @@ msgid "error.workspace.partner_agreement_required"
 msgstr "Chcete-li pokračovat, potvrďte partnerskou smlouvu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:100
+#: src/lib/errors/messages/project.ts:104
 msgid "error.project.privacy_policy_required"
 msgstr "Chcete-li jako právní základ použít souhlas, přidejte odkaz na své zásady ochrany osobních údajů."
 
@@ -139,7 +139,12 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Jako správce organizace se můžete k tomuto pracovnímu prostoru připojit přímo, bez žádosti."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.participant_email_off"
+msgstr "Žádat účastníky o e-mail teď není možné."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:142
 msgid "error.project.share_role_cannot_access"
 msgstr "Členové s rolí pro fakturaci nemohou otevírat projekty. Nejprve jim přiřaďte jinou roli."
 
@@ -199,7 +204,7 @@ msgid "error.analysis.feature_disabled"
 msgstr "Úprava výsledků zde není dostupná."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:95
+#: src/lib/errors/messages/project.ts:99
 msgid "error.project.privacy_policy_invalid_url"
 msgstr "Zadejte odkaz na zásady ochrany osobních údajů začínající na http:// nebo https://."
 
@@ -229,7 +234,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Zadejte text pro pole {label}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_needs_private"
 msgstr "Tento projekt už vidí všichni v pracovním prostoru. Chcete-li ho sdílet jen s konkrétními lidmi, nastavte ho nejprve jako soukromý."
 
@@ -434,12 +439,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Právní základ tohoto projektu mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:157
 msgid "error.project.visibility_admin_only"
 msgstr "To, kdo tento projekt uvidí, mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_admin_only"
 msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
@@ -509,7 +514,7 @@ msgid "error.memory.invalid_scope"
 msgstr "Vyberte ze seznamu, pro koho je tato vzpomínka určena."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:110
+#: src/lib/errors/messages/project.ts:114
 msgid "error.project.private_requires_tier"
 msgstr "Soukromé projekty jsou dostupné od tarifu Innovator výše. Pro přepnutí projektu na soukromý přejděte na vyšší tarif."
 
@@ -554,7 +559,7 @@ msgid "error.project.move_none_selected"
 msgstr "Vyberte alespoň jeden projekt k přesunutí."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:147
 msgid "error.project.sharing_tier_required"
 msgstr "Sdílení soukromého projektu s lidmi vyžaduje tarif {tier} nebo vyšší."
 
@@ -614,6 +619,11 @@ msgid "error.internal.unexpected"
 msgstr "Na naší straně došlo k chybě. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Návrhy teď nejsou k dispozici. Můžete pokračovat i bez nich."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Tento kód nefungoval. Zadejte aktuální kód z vaší ověřovací aplikace."
@@ -632,6 +642,11 @@ msgstr "Toto datum a čas se nepodařilo načíst. Zvolte čas znovu."
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Toto heslo není správné. Zkontrolujte ho a zkuste to znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:152
+msgid "error.project.template_unknown"
+msgstr "Tato šablona projektu neexistuje. Načtěte stránku znovu a vyberte si ji ještě jednou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
@@ -707,6 +722,11 @@ msgstr "PDF této faktury ještě není připraveno. Zkuste to za chvíli znovu.
 #: src/lib/errors/messages/offer.ts:91
 msgid "error.offer.zero_total"
 msgstr "Celkem je nula. Pro nabídku zdarma zvolte Zdarma v části Jak fakturujeme."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "Pokus se nepovedl. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1009,7 +1029,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Tato osoba není členem tohoto pracovního prostoru. Obnovte stránku a zobrazí se aktuální seznam."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:137
 msgid "error.project.share_not_member"
 msgstr "Tato osoba v pracovním prostoru ještě není. Nejprve ji do něj pozvěte."
 
@@ -1044,7 +1064,7 @@ msgid "error.present.draft_conflict"
 msgstr "Tato prezentace byla upravena jinde. Načtěte stránku znovu, abyste viděli nejnovější verzi, a pak úpravu zopakujte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:105
+#: src/lib/errors/messages/project.ts:109
 msgid "error.project.privacy_policy_too_long"
 msgstr "Tento odkaz na zásady ochrany soukromí je příliš dlouhý. Použijte odkaz o maximální délce 255 znaků."
 
@@ -1064,7 +1084,7 @@ msgid "error.project.no_transcripts"
 msgstr "Tento projekt zatím nemá žádné přepisy."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_found"
 msgstr "Tento projekt už s touto osobou není sdílen."
 

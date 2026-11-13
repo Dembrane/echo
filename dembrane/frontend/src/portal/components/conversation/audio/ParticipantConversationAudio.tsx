@@ -34,6 +34,9 @@ import { testId } from "@/lib/testUtils";
 import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
 import { NotTakingRecordings } from "../../NotTakingRecordings";
 import { recordingClosed } from "../../recordingCap";
+import { RefineButtonLabel } from "../../refine/RefineButtonLabel";
+import { refineMode } from "../../refine/refineMode";
+import { useRefineActions } from "../../refine/useRefineActions";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
@@ -474,13 +477,22 @@ export const ParticipantConversationAudio = () => {
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
+	const mode = refineMode(projectQuery.data);
+	const refine = useRefineActions({
+		aiUnavailable: projectQuery.data?.is_ai_available === false,
+		conversationId,
+		projectId,
+	});
 
+	// One feature on: straight to it. Both on, or the one on locked: the choice screen,
+	// which says why a locked one cannot open yet.
 	const handleRefineClick = () => {
 		if (effectiveRecordingTime < REFINE_BUTTON_THRESHOLD_SECONDS) {
 			openRefineInfoModal();
 			return;
 		}
-
+		if (mode === "verify" && refine.goVerify()) return;
+		if (mode === "explore" && refine.goExplore()) return;
 		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
@@ -749,6 +761,7 @@ export const ParticipantConversationAudio = () => {
 												? undefined
 												: "filled"
 										}
+										data-mode={mode ?? undefined}
 										{...testId("portal-audio-echo-button")}
 									>
 										{effectiveRecordingTime <
@@ -759,7 +772,7 @@ export const ParticipantConversationAudio = () => {
 											/>
 										)}
 										<span className="relative z-10">
-											<Trans id="participant.button.echo">ECHO</Trans>
+											<RefineButtonLabel mode={mode} />
 										</span>
 									</Button>
 								)}

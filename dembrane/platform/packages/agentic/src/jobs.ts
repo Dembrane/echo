@@ -57,6 +57,8 @@ export interface AgenticWorkerDeps {
   readonly bindData?: (who: Signed, ctx: TurnContext) => AgentData;
   readonly capture?: Capture;
   readonly now?: () => Date;
+  /** ENABLE_PARTICIPANT_EMAIL, for the assistant's view of a project's settings. */
+  readonly participantEmail?: boolean;
 }
 
 /** Jobs the API enqueues for this namespace. */
@@ -91,6 +93,7 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
             access,
             logger: deps.logger,
             enableCanvas: deps.config.canvas.enabled,
+            participantEmail: deps.participantEmail ?? false,
           },
           who,
           ctx,

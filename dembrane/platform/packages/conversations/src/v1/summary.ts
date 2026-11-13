@@ -1,4 +1,9 @@
-import { BadRequestError, NotFoundError, PaymentRequiredError } from "@dembrane/core";
+import {
+  BadRequestError,
+  contextForPrompt,
+  NotFoundError,
+  PaymentRequiredError,
+} from "@dembrane/core";
 import type { ConversationsDeps } from "../deps";
 import { isConversationLocked, resolveProjectTier } from "../tiers";
 import { generateConversationTagIds, generateConversationTitle, generateSummary } from "./llm";
@@ -23,7 +28,8 @@ export async function projectContext(store: V1Store, projectId: string): Promise
   if (!p) throw new NotFoundError("project.not_found");
   const parts: string[] = [];
   if (p.name) parts.push(`name: ${p.name}`);
-  if (p.context) parts.push(`context: ${p.context}`);
+  const context = contextForPrompt(p.context);
+  if (context) parts.push(`context: ${context}`);
   if (p.default_conversation_transcript_prompt)
     parts.push(`hotwords that the user set: ${p.default_conversation_transcript_prompt}`);
   if (p.default_conversation_title)

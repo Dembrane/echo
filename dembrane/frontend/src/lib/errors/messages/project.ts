@@ -88,6 +88,10 @@ export const project = {
 		id: "error.project.not_owner",
 		message: "Only the owner of this project can do this.",
 	}),
+	"project.participant_email_off": msg({
+		id: "error.project.participant_email_off",
+		message: "Asking participants for their email is not available right now.",
+	}),
 	"project.pin_order_invalid": msg({
 		id: "error.project.pin_order_invalid",
 		message: "A project can be pinned in place 1, 2 or 3.",
@@ -111,6 +115,11 @@ export const project = {
 		id: "error.project.private_requires_tier",
 		message:
 			"Private projects come with the Innovator plan and above. Upgrade to make this project private.",
+	}),
+	"project.setup_suggestions_unavailable": msg({
+		id: "error.project.setup_suggestions_unavailable",
+		message:
+			"Suggestions are not available right now. You can carry on without them.",
 	}),
 	"project.share_admin_only": msg({
 		id: "error.project.share_admin_only",
@@ -139,6 +148,11 @@ export const project = {
 		id: "error.project.sharing_tier_required",
 		message:
 			"Sharing a private project with people needs the {tier} plan or higher.",
+	}),
+	"project.template_unknown": msg({
+		id: "error.project.template_unknown",
+		message:
+			"That project template does not exist. Reload the page and pick one again.",
 	}),
 	"project.visibility_admin_only": msg({
 		id: "error.project.visibility_admin_only",

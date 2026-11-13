@@ -14,8 +14,9 @@ import {
   type VerifyDeps,
   verifyContext,
 } from "./service";
+import { tryPortalSettings } from "./try-it/service";
 
-const { model, required, optional, nullable, str, list, datetime, nested } = p;
+const { model, required, optional, nullable, str, list, datetime, nested, literal } = p;
 
 /** Dict[str, str]: every value a string, reported per key. */
 function strDict(): Type<Record<string, string>> {
@@ -47,6 +48,17 @@ const updateArtifactBody = model({
   useConversation: optional(nullable(useConversation), null),
   content: optional(nullable(str()), null),
   approvedAt: optional(nullable(str()), null),
+});
+
+// ECHO-1061: the portal editor's draft settings, saved or not. Context and key terms are
+// the project's own (Brief saves them), so they are read, not sent.
+const tryItBody = model({
+  kind: required(literal("explore", "verify")),
+  language: optional(str({ max: 16 }), "en"),
+  source: optional(literal("sample"), "sample" as const),
+  get_reply_mode: optional(nullable(str({ max: 32 })), null),
+  get_reply_prompt: optional(nullable(str({ max: 20_000 })), null),
+  topic_key: optional(nullable(str({ max: 80 })), null),
 });
 
 /**
@@ -122,6 +134,13 @@ export function verifyRoutes(d: VerifyDeps) {
   app.put("/api/verify/artifact/:artifact_id", async (c) => {
     const { body } = await p.validate(c.req, { body: updateArtifactBody });
     return c.json(await updateArtifact(ctx, c.req.param("artifact_id"), body.data, token(c)));
+  });
+
+  // The portal editor's "Try it" (ECHO-1061): Explore or Verify on the sample conversation.
+  app.post("/api/v2/projects/:project_id/portal-editor/try", async (c) => {
+    const who = requireUser(c);
+    const { body } = await p.validate(c.req, { body: tryItBody });
+    return c.json(await tryPortalSettings(ctx, who, c.req.param("project_id"), body.data));
   });
 
   return app;

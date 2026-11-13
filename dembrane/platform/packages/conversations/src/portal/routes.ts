@@ -3,9 +3,10 @@ import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
 import { textChunkCheck } from "../free-audio";
+import { afterResponse, conversationCreated, hostEventStore } from "../host-events";
 import { liveServices } from "../live/routes";
 import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
-import { conversationStore } from "../storage";
+import { conversationStore, UPLOAD_SOURCE } from "../storage";
 import {
   addChunk,
   initiate,
@@ -82,6 +83,20 @@ export function portalRoutes(d: ConversationsDeps) {
     // After the response, as the Python's background task: metering never slows a start.
     if (b.source !== "PORTAL_TEXT")
       setTimeout(() => void live.meter.meter(projectId, out.conversation.id, "open", d.now()), 0);
+    // For the project's creator: a dashboard upload, or a host signed in on the portal, is by a host.
+    const capture = d.capture;
+    if (capture)
+      afterResponse(d.logger, "server_conversation_created", () =>
+        conversationCreated(
+          { store: hostEventStore(d.db), capture, logger: d.logger, now: d.now },
+          {
+            conversationId: out.conversation.id,
+            projectId: out.conversation.project_id,
+            source: out.conversation.source,
+            byHost: b.source === UPLOAD_SOURCE || Boolean(c.get("principal")),
+          },
+        ),
+      );
     // Issued here and kept by the portal; the body stays what the portal already reads.
     c.header(PARTICIPANT_TOKEN_HEADER, out.token);
     return c.json(publicConversation(out.conversation));

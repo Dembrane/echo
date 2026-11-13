@@ -49,8 +49,14 @@ const ParticipantOnboardingCards = ({
 	project,
 	onFunnelStage,
 	notice,
+	initialSlide = "first",
 }: {
 	project: ParticipantProject;
+	/**
+	 * The card to open on: the first, the privacy card (the one before the start form) or
+	 * the start form. The portal preview (ECHO-1060) shows each; participants start first.
+	 */
+	initialSlide?: "first" | "privacy" | "last";
 	/** Shown under the logo; the cards shrink around it so their button stays on screen. */
 	notice?: React.ReactNode;
 	/** Reports this participant's funnel stage up to the visitor beacon owned
@@ -232,6 +238,18 @@ const ParticipantOnboardingCards = ({
 	// Flatten the slides into a single array
 	const allSlides = languageCards.flatMap((section) => section.slides);
 
+	// The preview opens on another card; it remounts the deck to change it.
+	const [openedAt] = useState(initialSlide);
+	const [placed, setPlaced] = useState(openedAt === "first");
+	const privacyIndex = allSlides.findIndex((slide) => slide.type === "privacy");
+	useEffect(() => {
+		if (placed) return;
+		setCurrentSlideIndex(
+			openedAt === "last" ? allSlides.length - 1 : Math.max(0, privacyIndex),
+		);
+		setPlaced(true);
+	}, [placed, openedAt, allSlides.length, privacyIndex]);
+
 	const currentCard = allSlides[currentSlideIndex];
 
 	// The funnel stage this visitor is at, reported to the host monitor.
@@ -403,7 +421,23 @@ const ParticipantOnboardingCards = ({
 							)}
 						</div>
 
-						<div className="mt-8 flex w-full items-center justify-start gap-4">
+						{/* A row of steps: Back on the left, Continue on the right (rules.css). */}
+						<div
+							data-steps
+							className="mt-8 flex w-full items-center justify-start gap-4"
+						>
+							{currentSlideIndex > 0 && !(refused && isLastSlide) && (
+								<Button
+									onClick={prevSlide}
+									variant="subtle"
+									color="gray"
+									size="lg"
+									className={!isLastSlide ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-back-button")}
+								>
+									<Trans id="participant.button.back">Back</Trans>
+								</Button>
+							)}
 							{!isLastSlide && (
 								<Button
 									onClick={nextSlide}
@@ -421,18 +455,6 @@ const ParticipantOnboardingCards = ({
 									) : (
 										<Trans id="participant.button.next">Continue</Trans>
 									)}
-								</Button>
-							)}
-							{currentSlideIndex > 0 && !(refused && isLastSlide) && (
-								<Button
-									onClick={prevSlide}
-									variant="subtle"
-									color="gray"
-									size="lg"
-									className={!isLastSlide ? "basis-1/2" : "w-full"}
-									{...testId("portal-onboarding-back-button")}
-								>
-									<Trans id="participant.button.back">Back</Trans>
 								</Button>
 							)}
 						</div>
