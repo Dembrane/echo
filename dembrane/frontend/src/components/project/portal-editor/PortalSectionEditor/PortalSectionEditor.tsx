@@ -290,24 +290,27 @@ export const PortalSectionEditor = ({
 					section,
 				});
 			}}
-			action={
-				trySection && !readOnly ? (
-					<TryItAction
-						section={trySection}
-						status={tryIt.status}
-						hasResult={!!tried}
-						stale={tryIt.stale}
-						error={tryIt.error}
-						unavailable={!tryBody}
-						crossPollination={
-							page.values.is_get_reply_cross_pollination_enabled
-						}
-						onTry={tryIt.run}
-					/>
-				) : undefined
-			}
 		/>
 	);
+
+	// Under the options on Explore and Verify (ECHO-1061): the result shows in the phone, so
+	// on a narrow screen a try opens the preview too.
+	const tryAction =
+		trySection && !readOnly ? (
+			<TryItAction
+				section={trySection}
+				status={tryIt.status}
+				hasResult={!!tried}
+				stale={tryIt.stale}
+				error={tryIt.error}
+				unavailable={!tryBody}
+				crossPollination={page.values.is_get_reply_cross_pollination_enabled}
+				onTry={() => {
+					if (!wide) preview.open();
+					tryIt.run();
+				}}
+			/>
+		) : null;
 
 	return (
 		<Options props={props}>
@@ -358,6 +361,7 @@ export const PortalSectionEditor = ({
 									}
 								/>
 							</fieldset>
+							{tryAction}
 						</Stack>
 
 						{wide ? (

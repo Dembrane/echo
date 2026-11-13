@@ -341,6 +341,8 @@ for (const size of sizes)
 						exact: false,
 					}),
 				).toBeVisible({ timeout: 15_000 });
+				// Where the result comes from sits in the "i" beside the title.
+				await page.getByTestId("portal-preview-info").hover();
 				await expect(
 					page.getByTestId("portal-preview-sample-note"),
 				).toBeVisible();

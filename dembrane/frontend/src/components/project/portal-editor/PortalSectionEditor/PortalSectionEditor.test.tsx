@@ -588,7 +588,9 @@ describe("portal editor pages: Try it", () => {
 		answer(200, result("explore", "summarize"));
 		renderPage("explore", "mode", { is_get_reply_enabled: true });
 		await press();
-		expect(screen.getByTestId("portal-try-status").textContent).toBe(
+		// What a try shows sits in the "i" beside the button; the line stays empty.
+		expect(screen.getByTestId("portal-try-status").textContent).toBe("");
+		expect(screen.getByTestId("portal-try-info-tip").textContent).toBe(
 			"The preview shows the result for your settings.",
 		);
 		fireEvent.click(screen.getByTestId("portal-editor-reply-mode-brainstorm"));
