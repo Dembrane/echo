@@ -17,7 +17,14 @@
  *   None             context: tags, statuses
  *   Filled pill      the one primary action (button.module.css)
  * Everything is square except the pill. --app-rule-color lets states
- * recolour a rule (blue when active, red on error). */
+ * recolour a rule (blue when active, red on error).
+ *
+ * Order: the pill comes first in its row and the row sits at the left. A row
+ * of steps (a wizard, an onboarding, any sequence with Back) runs the way time
+ * does instead: Back on the left, the pill on the right (Jor, 30 Oct 2026).
+ * Such a row carries data-steps, which is what both checks look for.
+ * TODO: the stepped flows still put the pill first; give each of their rows
+ * data-steps and move Back to the left of Continue. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
  * below is one of these; a theme (dark) redefines them and nothing else.
