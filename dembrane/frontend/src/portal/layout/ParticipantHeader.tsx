@@ -7,10 +7,10 @@ import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { Logo } from "../../components/common/Logo";
 import { ParticipantShareModal } from "../components/ParticipantShareModal";
 import { ParticipantSettingsModal } from "../components/settings/ParticipantSettingsModal";
-import { useParticipantProjectById } from "../hooks";
 
 export const ParticipantHeader = () => {
 	const [loadingFinished] = useSessionStorageState("loadingFinished", {

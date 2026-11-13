@@ -16,7 +16,7 @@ import { useRefineActions } from "../components/refine/useRefineActions";
 import ParticipantOnboardingCards from "../components/start/ParticipantOnboardingCards";
 import { VerifyArtefact } from "../components/verify/VerifyArtefact";
 import { VerifySelection } from "../components/verify/VerifySelection";
-import { useParticipantProjectById } from "../hooks";
+import { useParticipantProjectById } from "../hooks/useParticipantProjectById";
 import { ParticipantPostConversation } from "../routes/ParticipantPostConversation";
 import { PREVIEW_CONVERSATION_ID } from "./fixtures";
 import { scrollParent } from "./PreviewHighlight";

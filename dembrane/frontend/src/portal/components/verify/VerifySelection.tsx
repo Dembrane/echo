@@ -18,7 +18,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
-import { useParticipantProjectById } from "../../hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { AiUnavailableText, isAiUnavailableError } from "../AiUnavailable";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {

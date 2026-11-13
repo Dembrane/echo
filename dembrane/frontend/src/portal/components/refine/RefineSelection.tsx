@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Stack, Title } from "@mantine/core";
 import { ChatCircleDotsIcon, SealCheckIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { useParticipantProjectById } from "@/portal/hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { RefineChoice } from "./RefineChoice";
 import { refineMode } from "./refineMode";
 import { useRefineActions } from "./useRefineActions";

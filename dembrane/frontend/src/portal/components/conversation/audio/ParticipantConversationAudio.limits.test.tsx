@@ -35,7 +35,7 @@ vi.mock("@/lib/api", () => ({
 	pingConversation: vi.fn(async () => ({})),
 	pingConversationLeft: vi.fn(),
 }));
-vi.mock("../../../hooks", () => ({
+vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({
 		data: state.chunks,
 		isLoading: false,
@@ -46,10 +46,14 @@ vi.mock("../../../hooks", () => ({
 		isError: false,
 		isLoading: false,
 	}),
+}));
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: { id: "p-1", is_taking_recordings: state.taking, ...state.project },
 		isLoading: false,
 	}),
+}));
+vi.mock("./hooks/useUploadConversationChunk", () => ({
 	useUploadConversationChunk: (options: {
 		onChunkAccepted?: () => void;
 		onRecordingStop?: (r: string, accepted: boolean) => void;
