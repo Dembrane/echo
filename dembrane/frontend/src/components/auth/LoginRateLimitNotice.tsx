@@ -38,7 +38,6 @@ export const LoginRateLimitNotice = ({
 				</Text>
 				<Text
 					size="sm"
-					fw={500}
 					aria-live="polite"
 					{...testId("auth-login-rate-limit-wait")}
 				>
