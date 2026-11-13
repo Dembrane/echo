@@ -3,7 +3,7 @@ import { render, sendEmail, subjectOf } from "@dembrane/account";
 import { accountsApiJobs, codeSignInGate } from "@dembrane/accounts";
 import { analysisJobs } from "@dembrane/analysis";
 import { posthogCapture } from "@dembrane/analytics";
-import { HttpMedia, LocalMedia, mediaAuth } from "@dembrane/audio";
+import { HttpMedia, LocalMedia, mediaAuth, setFfmpegTimeout } from "@dembrane/audio";
 import { createAuth, identityAccount } from "@dembrane/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
 import { canvasApiJobs } from "@dembrane/canvas";
@@ -234,6 +234,8 @@ const media = config.media.url
         mediaAuth(config.media.auth, config.media.url)),
     })
   : new LocalMedia();
+// In-process ffmpeg (no MEDIA_URL) gets the same per-process cap as the media service.
+setFfmpegTimeout(config.media.ffmpegTimeoutSeconds * 1000);
 
 // One LISTEN connection per instance feeds every open live stream.
 const listener = connect(databaseUrl, { max: FIXED_CONNECTIONS.apiListener, onnotice: () => {} });

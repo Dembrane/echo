@@ -49,36 +49,48 @@ export interface Cancel {
 export interface Media {
   probe(source: MediaSource, opts?: Cancel): Promise<ProbeResult>;
   /** ffprobe straight on a URL, without a format hint (duration of an upload). */
-  probeUrl(url: string): Promise<ProbeResult>;
-  convert(req: {
-    source: MediaSource;
-    target: MediaTarget;
-    outputFormat: "mp3" | "ogg";
-  }): Promise<{ bytes: number; seconds?: number | null }>;
+  probeUrl(url: string, opts?: Cancel): Promise<ProbeResult>;
+  convert(
+    req: {
+      source: MediaSource;
+      target: MediaTarget;
+      outputFormat: "mp3" | "ogg";
+    },
+    opts?: Cancel,
+  ): Promise<{ bytes: number; seconds?: number | null }>;
   /** The decoded length of the first audio stream, for a file whose header cannot be trusted. */
   decodedSeconds(source: MediaSource, opts?: Cancel): Promise<{ seconds: number }>;
   /** Cuts the source into pieces of the given start and length, each to its own target. */
-  split(req: {
-    source: MediaSource;
-    pieces: readonly { start: number; duration: number; target: MediaTarget }[];
-  }): Promise<void>;
+  split(
+    req: {
+      source: MediaSource;
+      pieces: readonly { start: number; duration: number; target: MediaTarget }[];
+    },
+    opts?: Cancel,
+  ): Promise<void>;
   /** The pauses in a file, for cutting a long recording where nobody speaks. */
-  silences(req: {
-    source: MediaSource;
-    method?: "fixed" | "adaptive" | undefined;
-    noiseDb?: number | undefined;
-    alpha?: number | undefined;
-    minSeconds?: number | undefined;
-  }): Promise<{ duration: number } & Pauses>;
+  silences(
+    req: {
+      source: MediaSource;
+      method?: "fixed" | "adaptive" | undefined;
+      noiseDb?: number | undefined;
+      alpha?: number | undefined;
+      minSeconds?: number | undefined;
+    },
+    opts?: Cancel,
+  ): Promise<{ duration: number } & Pauses>;
   /**
    * Merges sources in order into one file: each is probed, converted when it is not
    * already in the output format, and skipped when it fails; all failing is an error.
    */
-  merge(req: {
-    sources: readonly MediaSource[];
-    target: MediaTarget;
-    outputFormat: "mp3" | "ogg";
-  }): Promise<MergeResult>;
+  merge(
+    req: {
+      sources: readonly MediaSource[];
+      target: MediaTarget;
+      outputFormat: "mp3" | "ogg";
+    },
+    opts?: Cancel,
+  ): Promise<MergeResult>;
 }
 
 /** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
@@ -106,7 +118,7 @@ async function download(url: string, path: string, signal?: AbortSignal): Promis
   if (Bun.file(path).size === 0) throw new AudioError("value", "Input file is empty");
 }
 
-async function upload(target: MediaTarget, path: string): Promise<number> {
+async function upload(target: MediaTarget, path: string, signal?: AbortSignal): Promise<number> {
   const file = Bun.file(path);
   let res: Response;
   try {
@@ -114,6 +126,7 @@ async function upload(target: MediaTarget, path: string): Promise<number> {
       method: "PUT",
       headers: { "content-type": target.contentType },
       body: file,
+      ...(signal && { signal }),
     });
   } catch (err) {
     throw new AudioError("transient", `upload failed: ${(err as Error).message}`);
@@ -142,23 +155,26 @@ export class LocalMedia implements Media {
     });
   }
 
-  probeUrl(url: string) {
-    return probeUrl(url);
+  probeUrl(url: string, opts?: Cancel) {
+    return probeUrl(url, undefined, opts?.signal);
   }
 
-  convert(req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" }) {
+  convert(
+    req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" },
+    opts?: Cancel,
+  ) {
     return inTemp(async (dir) => {
       const input = join(dir, `input.${req.source.format}`);
       const output = join(dir, `output.${req.outputFormat}`);
-      await download(req.source.url, input);
-      await convertFile(input, req.source.format, output, req.outputFormat);
+      await download(req.source.url, input, opts?.signal);
+      await convertFile(input, req.source.format, output, req.outputFormat, opts?.signal);
       let seconds: number | null;
       try {
-        seconds = durationOf(await probePlain(output));
+        seconds = durationOf(await probePlain(output, opts?.signal));
       } catch {
         seconds = null;
       }
-      return { bytes: await upload(req.target, output), seconds };
+      return { bytes: await upload(req.target, output, opts?.signal), seconds };
     });
   }
 
@@ -170,38 +186,48 @@ export class LocalMedia implements Media {
     });
   }
 
-  split(req: {
-    source: MediaSource;
-    pieces: readonly { start: number; duration: number; target: MediaTarget }[];
-  }) {
+  split(
+    req: {
+      source: MediaSource;
+      pieces: readonly { start: number; duration: number; target: MediaTarget }[];
+    },
+    opts?: Cancel,
+  ) {
     return inTemp(async (dir) => {
       const source = join(dir, `source.${req.source.format}`);
-      await download(req.source.url, source);
+      await download(req.source.url, source, opts?.signal);
       for (const [i, piece] of req.pieces.entries()) {
         const out = join(dir, `split_${i}.${req.source.format}`);
-        await cutFile(source, out, req.source.format, piece.start, piece.duration);
-        await upload(piece.target, out);
+        await cutFile(source, out, req.source.format, piece.start, piece.duration, opts?.signal);
+        await upload(piece.target, out, opts?.signal);
       }
     });
   }
 
-  silences(req: {
-    source: MediaSource;
-    method?: "fixed" | "adaptive" | undefined;
-    noiseDb?: number | undefined;
-    alpha?: number | undefined;
-    minSeconds?: number | undefined;
-  }) {
+  silences(
+    req: {
+      source: MediaSource;
+      method?: "fixed" | "adaptive" | undefined;
+      noiseDb?: number | undefined;
+      alpha?: number | undefined;
+      minSeconds?: number | undefined;
+    },
+    opts?: Cancel,
+  ) {
     return inTemp(async (dir) => {
       const p = join(dir, `input.${req.source.format}`);
-      await download(req.source.url, p);
-      const duration = durationOf(await probeFile(p, req.source.format)) ?? 0;
-      const found = await analysePauses(p, {
-        ...(req.method && { method: req.method }),
-        ...(req.noiseDb !== undefined && { noiseDb: req.noiseDb }),
-        ...(req.alpha !== undefined && { alpha: req.alpha }),
-        ...(req.minSeconds !== undefined && { minSeconds: req.minSeconds }),
-      });
+      await download(req.source.url, p, opts?.signal);
+      const duration = durationOf(await probeFile(p, req.source.format, opts?.signal)) ?? 0;
+      const found = await analysePauses(
+        p,
+        {
+          ...(req.method && { method: req.method }),
+          ...(req.noiseDb !== undefined && { noiseDb: req.noiseDb }),
+          ...(req.alpha !== undefined && { alpha: req.alpha }),
+          ...(req.minSeconds !== undefined && { minSeconds: req.minSeconds }),
+        },
+        opts?.signal,
+      );
       // JSON cannot carry Infinity, and a pause left open runs to the end of the file.
       return {
         duration,
@@ -211,12 +237,16 @@ export class LocalMedia implements Media {
     });
   }
 
-  merge(req: {
-    sources: readonly MediaSource[];
-    target: MediaTarget;
-    outputFormat: "mp3" | "ogg";
-  }) {
+  merge(
+    req: {
+      sources: readonly MediaSource[];
+      target: MediaTarget;
+      outputFormat: "mp3" | "ogg";
+    },
+    opts?: Cancel,
+  ) {
     return inTemp(async (dir): Promise<MergeResult> => {
+      const signal = opts?.signal;
       const ready: string[] = [];
       const skipped: { name: string; error: string }[] = [];
       let transient = false;
@@ -224,16 +254,18 @@ export class LocalMedia implements Media {
         const name = s.name ?? s.url;
         try {
           const input = join(dir, `in_${i}.${s.format}`);
-          await download(s.url, input);
-          const probe = await probeFile(input, s.format);
+          await download(s.url, input, signal);
+          const probe = await probeFile(input, s.format, signal);
           const formatName = String(probe.format?.format_name ?? "").toLowerCase();
           if (formatName.includes(req.outputFormat)) ready.push(input);
           else {
             const converted = join(dir, `chunk_${i}.${req.outputFormat}`);
-            await convertFile(input, s.format, converted, req.outputFormat);
+            await convertFile(input, s.format, converted, req.outputFormat, signal);
             ready.push(converted);
           }
         } catch (err) {
+          // The caller went away: stop, do not skip this chunk and carry on to the next.
+          if (signal?.aborted) throw err;
           skipped.push({ name, error: (err as Error).message });
           // Bad bytes surface as probe or convert errors; anything else is transport
           // (storage, network) and a retry can still succeed.
@@ -254,14 +286,14 @@ export class LocalMedia implements Media {
       const list = join(dir, "concat_list.txt");
       await Bun.write(list, ready.map((p) => `file '${p}'\n`).join(""));
       const merged = join(dir, `merged.${req.outputFormat}`);
-      await concatFiles(list, merged, req.outputFormat);
+      await concatFiles(list, merged, req.outputFormat, signal);
       let duration = -1;
       try {
-        duration = durationOf(await probePlain(merged)) ?? -1;
+        duration = durationOf(await probePlain(merged, signal)) ?? -1;
       } catch {
         duration = -1;
       }
-      await upload(req.target, merged);
+      await upload(req.target, merged, signal);
       return { duration, skipped };
     });
   }
@@ -285,36 +317,48 @@ export class HttpMedia implements Media {
   probe(source: MediaSource, opts?: Cancel) {
     return this.call<ProbeResult>("probe", { source }, opts?.signal);
   }
-  probeUrl(url: string) {
-    return this.call<ProbeResult>("probe-url", { url });
+  probeUrl(url: string, opts?: Cancel) {
+    return this.call<ProbeResult>("probe-url", { url }, opts?.signal);
   }
-  convert(req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" }) {
-    return this.call<{ bytes: number; seconds?: number | null }>("convert", req);
+  convert(
+    req: { source: MediaSource; target: MediaTarget; outputFormat: "mp3" | "ogg" },
+    opts?: Cancel,
+  ) {
+    return this.call<{ bytes: number; seconds?: number | null }>("convert", req, opts?.signal);
   }
   decodedSeconds(source: MediaSource, opts?: Cancel) {
     return this.call<{ seconds: number }>("decoded-seconds", { source }, opts?.signal);
   }
-  async split(req: {
-    source: MediaSource;
-    pieces: readonly { start: number; duration: number; target: MediaTarget }[];
-  }) {
-    await this.call("split", req);
+  async split(
+    req: {
+      source: MediaSource;
+      pieces: readonly { start: number; duration: number; target: MediaTarget }[];
+    },
+    opts?: Cancel,
+  ) {
+    await this.call("split", req, opts?.signal);
   }
-  silences(req: {
-    source: MediaSource;
-    method?: "fixed" | "adaptive" | undefined;
-    noiseDb?: number | undefined;
-    alpha?: number | undefined;
-    minSeconds?: number | undefined;
-  }) {
-    return this.call<{ duration: number } & Pauses>("silences", req);
+  silences(
+    req: {
+      source: MediaSource;
+      method?: "fixed" | "adaptive" | undefined;
+      noiseDb?: number | undefined;
+      alpha?: number | undefined;
+      minSeconds?: number | undefined;
+    },
+    opts?: Cancel,
+  ) {
+    return this.call<{ duration: number } & Pauses>("silences", req, opts?.signal);
   }
-  merge(req: {
-    sources: readonly MediaSource[];
-    target: MediaTarget;
-    outputFormat: "mp3" | "ogg";
-  }) {
-    return this.call<MergeResult>("merge", req);
+  merge(
+    req: {
+      sources: readonly MediaSource[];
+      target: MediaTarget;
+      outputFormat: "mp3" | "ogg";
+    },
+    opts?: Cancel,
+  ) {
+    return this.call<MergeResult>("merge", req, opts?.signal);
   }
 
   private async call<T>(op: string, body: unknown, signal?: AbortSignal): Promise<T> {

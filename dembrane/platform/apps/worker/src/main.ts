@@ -1,5 +1,5 @@
 import { queueJobs } from "@dembrane/accounts";
-import { HttpMedia, LocalMedia, mediaAuth } from "@dembrane/audio";
+import { HttpMedia, LocalMedia, mediaAuth, setFfmpegTimeout } from "@dembrane/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
 import { describe, FIXED_CONNECTIONS, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
@@ -247,6 +247,8 @@ const media = config.media.url
       ...(!local && mediaAuth(config.media.auth, config.media.url)),
     })
   : new LocalMedia();
+// In-process ffmpeg (no MEDIA_URL) gets the same per-process cap as the media service.
+setFfmpegTimeout(config.media.ffmpegTimeoutSeconds * 1000);
 
 const completer = vertexCompleter(models, completerConfigOf(config.llm));
 const embedder = vertexEmbedder(models, embedderConfigOf(config.llm));
