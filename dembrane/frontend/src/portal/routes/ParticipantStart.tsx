@@ -14,7 +14,7 @@ import { NotTakingRecordings } from "@/portal/components/NotTakingRecordings";
 import { resolvePortalMode } from "@/portal/components/recordingCap";
 import { InAppBrowserNotice } from "@/portal/components/start/InAppBrowserNotice";
 import ParticipantOnboardingCards from "@/portal/components/start/ParticipantOnboardingCards";
-import { useParticipantProjectById } from "@/portal/hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 
 type FunnelStageReport = {
 	stage: string;

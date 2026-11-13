@@ -14,7 +14,7 @@ const state = vi.hoisted(() => ({
 	topics: ["gems", "actions"],
 }));
 
-vi.mock("../../hooks", () => ({
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: { id: "p-1", language: "en", ...state.project },
 		isLoading: false,

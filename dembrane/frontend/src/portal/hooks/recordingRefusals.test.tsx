@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
 	useConfirmConversationChunkUpload,
-	useInitiateConversationMutation,
 	useUploadConversationChunk,
-	useUploadConversationTextChunk,
-} from "./index";
+} from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
+import { useUploadConversationTextChunk } from "@/portal/components/conversation/text/useUploadConversationTextChunk";
+import { useInitiateConversationMutation } from "@/portal/components/start/useInitiateConversationMutation";
 
 const confirm = vi.fn();
 const upload = vi.fn();

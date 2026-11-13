@@ -19,15 +19,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { lazy, memo, Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { Logo } from "@/components/common/Logo";
+import { Markdown } from "@/components/common/Markdown";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
-import { Logo } from "../../../components/common/Logo";
-import { Markdown } from "../../../components/common/Markdown";
-import { useParticipantProjectById } from "../../hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import {
 	useUpdateVerificationArtefact,
 	useVerificationArtefactById,
@@ -39,7 +39,7 @@ import { VerifyArtefactLoading } from "./VerifyArtefactLoading";
 // The editor (MDXEditor and Lexical, ~400 KB) only shows after "edit", so it
 // stays out of the portal's first load; opening this screen starts fetching it.
 const loadMarkdownWYSIWYG = () =>
-	import("../../../components/form/MarkdownWYSIWYG/MarkdownWYSIWYG");
+	import("@/components/form/MarkdownWYSIWYG/MarkdownWYSIWYG");
 const MemoizedMarkdownWYSIWYG = memo(
 	lazy(() =>
 		loadMarkdownWYSIWYG().then((m) => ({ default: m.MarkdownWYSIWYG })),

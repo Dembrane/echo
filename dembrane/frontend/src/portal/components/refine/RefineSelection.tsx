@@ -5,7 +5,7 @@ import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { AiUnavailableText } from "@/portal/components/AiUnavailable";
-import { useParticipantProjectById } from "@/portal/hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
 
 export const RefineSelection = () => {
