@@ -50,7 +50,7 @@ describe("what a template card says", () => {
 		expect(cardTags(byKey("interviews"))).toEqual([
 			"Understand",
 			"Gather",
-			"One recording",
+			"One recording at a time",
 		]);
 	});
 
