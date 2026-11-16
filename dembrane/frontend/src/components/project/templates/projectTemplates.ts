@@ -238,7 +238,7 @@ export const verbHint = (verb: Verb): string => {
 };
 
 export const setupLabel = (setup: Setup): string =>
-	setup === "one_recording" ? t`One recording` : t`Many groups at once`;
+	setup === "one_recording" ? t`One recording at a time` : t`Many groups at once`;
 
 /** A Verify topic's name, as the portal shows it. */
 export const topicLabel = (key: string): string => {
