@@ -10,7 +10,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail } from "@dembrane/i18n";
-import { customerOrg, type RoomAccess, roomOrg, runsAccount, staffOrg } from "./access";
+import { customerOrg, myRoomRow, type RoomAccess, roomOrg, runsAccount, staffOrg } from "./access";
 import {
   HintLabel,
   RoomLabel,
@@ -182,7 +182,7 @@ const asksLabels = (row: RoomPersonRow | null, appUserId: string | null) =>
 async function roomPage(
   d: AccountsDeps,
   org: OrgRow,
-  viewer: { who: Signed; access: RoomAccess } | null,
+  viewer: { who: Signed; access: RoomAccess; row: RoomPersonRow | null } | null,
 ): Promise<RoomPageT> {
   const [docs, sigs, hints] = await Promise.all([
     store.documents(d.db, org.id),
@@ -202,7 +202,7 @@ async function roomPage(
           app_user_id: viewer.who.appUserId as string,
           room: room ? "by_invite" : "by_role",
           may_dismiss_hints: !room,
-          labels_question: asksLabels(viewer.access.row, viewer.who.appUserId),
+          labels_question: asksLabels(viewer.row, viewer.who.appUserId),
         }
       : null,
   };
@@ -210,7 +210,7 @@ async function roomPage(
 
 export async function readRoom(d: AccountsDeps, who: Signed, orgId: string) {
   const access = await roomOrg(d, who, orgId);
-  return roomPage(d, access.org, { who, access });
+  return roomPage(d, access.org, { who, access, row: await myRoomRow(d, who, access) });
 }
 
 /** The staff side reads the room as an admin would, with no `me`. */
@@ -495,7 +495,9 @@ export async function answerRoomLabels(
   orgId: string,
   input: { labels: readonly RoomLabelT[]; other: string | null },
 ) {
-  const { org, row } = await roomOrg(d, who, orgId);
+  const access = await roomOrg(d, who, orgId);
+  const { org } = access;
+  const row = await myRoomRow(d, who, access);
   if (!row || !asksLabels(row, who.appUserId)) {
     if (row?.labelsAnsweredAt) throw new ConflictError("room.labels_already_answered");
     throw new ConflictError("room.no_labels_question");

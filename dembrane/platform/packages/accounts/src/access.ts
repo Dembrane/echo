@@ -33,20 +33,26 @@ export async function customerOrg(
   return org;
 }
 
+/** The caller's verified address, or null. */
+async function verifiedEmail(d: AccountsDeps, who: Signed): Promise<string | null> {
+  const identity = await store.identity(d.db, who.directusUserId);
+  return identity?.verified ? identity.email.toLowerCase() : null;
+}
+
 /**
  * The caller's room row: by their app user, or by their verified address while the row has
- * none (an invitation taken up from the dashboard's own invitation list).
+ * none (an invitation taken up from the dashboard's own invitation list). Pass the
+ * address when it is known already.
  */
-async function myRoomRow(d: AccountsDeps, who: Signed, orgId: string) {
+async function roomRowOf(d: AccountsDeps, who: Signed, orgId: string, email?: string | null) {
   if (!who.appUserId) return null;
-  const identity = await store.identity(d.db, who.directusUserId);
-  const email = identity?.verified ? identity.email : null;
-  return store.roomPersonOf(d.db, orgId, who.appUserId, email);
+  const address = email === undefined ? await verifiedEmail(d, who) : email;
+  return store.roomPersonOf(d.db, orgId, who.appUserId, address);
 }
 
 /** The caller's room row when it grants access; whether they are a member is the caller's check. */
-async function roomRow(d: AccountsDeps, who: Signed, orgId: string) {
-  const row = await myRoomRow(d, who, orgId);
+async function roomRow(d: AccountsDeps, who: Signed, orgId: string, email?: string | null) {
+  const row = await roomRowOf(d, who, orgId, email);
   return row?.accessGrantedAt ? row : null;
 }
 
@@ -54,9 +60,13 @@ export interface RoomAccess {
   readonly org: OrgRow;
   /** `account`: runs the account (owner, admin, Billing); `room`: a member brought in. */
   readonly via: "account" | "room";
-  /** The caller's room row: their access when `room`, their labels if any when `account`. */
+  /** The room row that grants access, when `room`; null when `account` (see myRoomRow). */
   readonly row: RoomPersonRow | null;
 }
+
+/** The caller's own room row: their access, or the labels someone set for them. */
+export const myRoomRow = (d: AccountsDeps, who: Signed, access: RoomAccess) =>
+  access.row ? Promise.resolve(access.row) : roomRowOf(d, who, access.org.id);
 
 /**
  * `account:room`: whoever runs the account, or a member with room access. A plain member
@@ -64,9 +74,7 @@ export interface RoomAccess {
  */
 export async function roomOrg(d: AccountsDeps, who: Signed, orgId: string): Promise<RoomAccess> {
   try {
-    const org = await customerOrg(d, who, orgId, "account:read");
-    const row = await myRoomRow(d, who, org.id);
-    return { org, via: "account", row };
+    return { org: await customerOrg(d, who, orgId, "account:read"), via: "account", row: null };
   } catch (err) {
     // Access.org refuses a member with 403 only after finding their active membership.
     if (!(err instanceof ForbiddenError)) throw err;
@@ -110,8 +118,7 @@ export async function documentFor(
   policy: "account:read" | "account:sign",
 ): Promise<DocumentAccess> {
   if (!isUuid(orgId) || !isUuid(docId)) throw new NotFoundError("document.not_found");
-  const identity = await store.identity(d.db, who.directusUserId);
-  const email = identity?.verified ? identity.email.toLowerCase() : null;
+  const email = await verifiedEmail(d, who);
   let org: OrgRow | null = null;
   let refused: Error | null = null;
   try {
@@ -136,7 +143,9 @@ export async function documentFor(
     if (refused instanceof ForbiddenError) {
       // Reading only: a room member never signs, declines or names a signer.
       const room =
-        policy === "account:read" && doc && inRoom(doc) ? await roomRow(d, who, orgId) : null;
+        policy === "account:read" && doc && inRoom(doc)
+          ? await roomRow(d, who, orgId, email)
+          : null;
       const orgRow = room ? await store.org(d.db, orgId) : null;
       if (orgRow && !orgRow.deleted_at && doc) return { org: orgRow, doc, via: "room", email };
       throw refused;
