@@ -42,8 +42,8 @@ import {
 
 /**
  * The customer's account, as one page reads it: tasks, documents, billing, questions. A
- * room member reads the offer and the DPA and the tasks about them: nothing about paying,
- * and no questions to dembrane.
+ * room member reads the offer and the DPA and the signing tasks about them, without any
+ * answer or review on them: nothing about paying, and no questions to dembrane.
  */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
   const { org, via } = await roomOrg(d, who, orgId);
@@ -57,8 +57,9 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
     store.lastReminders(d.db, org.id),
   ]);
   const docs = room ? allDocs.filter(inRoom) : allDocs;
+  // Staff may attach any task to the offer; a room member sees only the signing ones.
   const tasks = room
-    ? allTasks.filter((t) => t.documentId && docs.some((x) => x.id === t.documentId))
+    ? allTasks.filter((t) => t.kind === "sign" && docs.some((x) => x.id === t.documentId))
     : allTasks;
   const tickets = room ? [] : allTickets;
   const messages = await store.messages(
@@ -76,7 +77,10 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
     tasks: tasks
       .filter((t) => t.status !== "withdrawn")
       .sort((a, b) => taskOrder(a.status) - taskOrder(b.status))
-      .map((t) => taskView(t, docs)),
+      .map((t) => taskView(t, docs))
+      .map((t) =>
+        room ? { ...t, response_text: null, response_file_name: null, review_note: null } : t,
+      ),
     documents: docs
       .filter((x) => x.status !== "draft" && x.status !== "void")
       .map((x) =>
