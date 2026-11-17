@@ -179,6 +179,21 @@ run("the room, as reviewed", () => {
       note: "Wrong file",
     });
     expect(back.status).toBe(200);
+    // No route puts an answer on a signing task today, so one is written straight onto the
+    // rows: the room member's copy must stay empty even if a later route does.
+    await w.db
+      .update(schema.account_task)
+      .set({ responseText: "Signed by post", responseFileName: "scan.pdf", reviewNote: "Checked" })
+      .where(and(eq(schema.account_task.orgId, w.orgId), eq(schema.account_task.kind, "sign")));
+    const asAdmin = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
+    const answered = asAdmin.tasks.filter((t) => t.kind === "sign");
+    expect(answered.length).toBeGreaterThan(0);
+    for (const t of answered)
+      expect([t.response_text, t.response_file_name, t.review_note]).toEqual([
+        "Signed by post",
+        "scan.pdf",
+        "Checked",
+      ]);
     const page = K.AccountPage.parse((await call(w, "GET", C(), asKees)).data);
     expect(page.tasks.length).toBeGreaterThan(0);
     expect(page.tasks.some((t) => t.id === taskId)).toBe(false);
@@ -340,5 +355,30 @@ run("the room, as reviewed", () => {
     expect(
       w.jobs.of("account.send-email").filter((m) => m.to === "race@example.test"),
     ).toHaveLength(1);
+  });
+
+  test("two invitations at once of someone whose invitation lapsed make one new invitation", async () => {
+    expect((await add("admin", "lapsed@example.test", ["rollout"])).status).toBe(200);
+    await w.db
+      .update(schema.org_invite)
+      .set({ expires_at: "2020-01-01T00:00:00.000Z" })
+      .where(
+        and(
+          eq(schema.org_invite.org_id, w.orgId),
+          sql`lower(${schema.org_invite.email}) = 'lapsed@example.test'`,
+        ),
+      );
+    const [a, b] = await Promise.all([
+      add("admin", "lapsed@example.test", ["rollout"]),
+      add("billing", "lapsed@example.test", ["rollout"]),
+    ]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    const statuses = [a, b].map((r) => K.AddRoomPersonResponse.parse(r.data).status).sort();
+    expect(statuses).toEqual(["invited", "updated"]);
+    // The lapsed one and one new one.
+    expect(await orgInvites("lapsed@example.test")).toHaveLength(2);
+    expect(
+      w.jobs.of("account.send-email").filter((m) => m.to === "lapsed@example.test"),
+    ).toHaveLength(2);
   });
 });

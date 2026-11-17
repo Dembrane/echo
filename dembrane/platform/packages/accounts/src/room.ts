@@ -367,6 +367,18 @@ export async function addRoomPerson(
       !(await store.insertRoomPerson(tx, { id, orgId: org.id, email, createdAt: now, ...granted }))
     )
       return true;
+    // Inviting again someone whose row exists: of two at once, the second waits on the row,
+    // then finds the first has invited them and makes nothing.
+    if (row) {
+      const held = await store.holdRoomPerson(tx, row.id);
+      if (
+        !held ||
+        held.orgInviteId !== row.orgInviteId ||
+        held.accessGrantedAt?.getTime() !== row.accessGrantedAt?.getTime() ||
+        held.updatedAt.getTime() !== row.updatedAt.getTime()
+      )
+        return true;
+    }
     // Someone with an invitation waiting (named to sign, say) keeps that one: one per address.
     const made = member
       ? null

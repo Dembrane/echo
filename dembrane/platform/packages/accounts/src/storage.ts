@@ -779,6 +779,12 @@ export const store = {
     return row ?? null;
   },
 
+  /** The row, held until the transaction ends, so two changes to one person take turns. */
+  async holdRoomPerson(c: Conn, id: string): Promise<RoomPersonRow | null> {
+    const [row] = await c.select().from(roomPerson).where(eq(roomPerson.id, id)).for("update");
+    return row ?? null;
+  },
+
   /** False when the address is in the organisation's room already (unique per address). */
   async insertRoomPerson(c: Conn, row: typeof roomPerson.$inferInsert): Promise<boolean> {
     const made = await c
