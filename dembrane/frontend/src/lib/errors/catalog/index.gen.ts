@@ -34,6 +34,7 @@ import { question } from "./question.gen";
 import { rate_limit } from "./rate_limit.gen";
 import { report } from "./report.gen";
 import { request } from "./request.gen";
+import { room } from "./room.gen";
 import { staff } from "./staff.gen";
 import { tag } from "./tag.gen";
 import { task } from "./task.gen";
@@ -95,6 +96,7 @@ export const ERROR_CATALOG = {
   ...staff,
   ...privacy,
   ...question,
+  ...room,
 } as const;
 
 export type ErrorCatalog = typeof ERROR_CATALOG;
