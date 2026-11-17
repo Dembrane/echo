@@ -32,7 +32,6 @@ run("the room, as reviewed", () => {
   let w: World;
   const C = () => `/api/v2/orgs/${w.orgId}/account`;
   const S = () => `/api/v2/admin/accounts/${w.orgId}`;
-  const codeOf = (r: { data: unknown }) => (r.data as { code?: string }).code;
   const asKees = "kees" as Who;
   const asOwner = "owner" as Who;
   let offerId = "";
