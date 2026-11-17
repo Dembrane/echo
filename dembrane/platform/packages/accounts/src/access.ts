@@ -1,4 +1,4 @@
-import { type OrgPolicy, requireStaff } from "@dembrane/access";
+import { ORG_ROLE_POLICIES, type OrgPolicy, type OrgRole, requireStaff } from "@dembrane/access";
 import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { type AccountsDeps, isUuid } from "./deps";
@@ -10,6 +10,11 @@ import { type DocumentRow, type OrgRow, store } from "./storage";
  * permission for the admin side, and one narrow grant for a person named to sign a single
  * document without being a member.
  */
+
+/** The roles whose holders run an account, straight from the access policies. */
+export const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =>
+  ORG_ROLE_POLICIES[r].has("account:read"),
+);
 
 /** The live organisation, when the caller's org role holds the policy. */
 export async function customerOrg(

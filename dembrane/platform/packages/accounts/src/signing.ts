@@ -4,7 +4,7 @@ import { assertMaySign, documentFor } from "./access";
 import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
-import { joinOnSigning } from "./invite";
+import { joinByInvite } from "./invite";
 import { requestInvoices } from "./invoice";
 import type { FieldKind, OfferContent } from "./offer";
 import { chosenOptions, optionsOf, signedTotals } from "./options";
@@ -362,7 +362,7 @@ export async function signDocument(
         language,
       });
       if (access.via === "signer")
-        await joinOnSigning(
+        await joinByInvite(
           tx,
           org.id,
           { directusUserId: who.directusUserId, email: access.email as string },

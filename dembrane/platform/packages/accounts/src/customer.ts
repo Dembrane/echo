@@ -1,4 +1,3 @@
-import { ORG_ROLE_POLICIES, type OrgRole } from "@dembrane/access";
 import { sendEmail } from "@dembrane/account";
 import {
   ConflictError,
@@ -9,7 +8,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
-import { customerOrg, documentFor } from "./access";
+import { ACCOUNT_ROLES, customerOrg, documentFor } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
@@ -445,6 +444,19 @@ async function emailSigner(
 
 type Person = { name: string; email: string; role: string | null };
 
+/** The DPA an offer went out with: the one pinning the same DPA text, in one of `statuses`. */
+export function dpaOf(
+  docs: readonly DocumentRow[],
+  offer: DocumentRow,
+  statuses: readonly string[],
+): DocumentRow | null {
+  return (
+    docs.find(
+      (x) => x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && statuses.includes(x.status),
+    ) ?? null
+  );
+}
+
 /**
  * The answers to "who signs": who signs the offer (null: the person answering), whether the
  * same person signs the DPA, else who does (null: the person answering), and whether they
@@ -474,10 +486,7 @@ export async function answerWhoSigns(
     throw new ConflictError("document.not_awaiting_signature");
   const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
   // The DPA the offer went out with, while it still waits on a signature.
-  const dpa = (await store.documents(d.db, org.id)).find(
-    (x) =>
-      x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && ["sent", "viewed"].includes(x.status),
-  );
+  const dpa = dpaOf(await store.documents(d.db, org.id), offer, ["sent", "viewed"]);
   const me = await store.identity(d.db, who.directusUserId);
   const self = me?.name ? `${me.name} (${me.email})` : (me?.email ?? "the person answering");
   const person = (p: Person | null) =>
@@ -940,11 +949,6 @@ export async function recordTutorialOpened(d: AccountsDeps, who: Signed, orgId: 
   await completeOnboarding(d, org.id, "watch_tutorial");
   return { recorded: true as const };
 }
-
-/** The roles whose holders run an account, straight from the access policies. */
-const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =>
-  ORG_ROLE_POLICIES[r].has("account:read"),
-);
 
 const DOCUMENT_KINDS = ["offer", "dpa", "invoice", "other"] as const;
 const isDocumentKind = (v: unknown): v is (typeof DOCUMENT_KINDS)[number] =>

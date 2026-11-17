@@ -2,11 +2,20 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { type AccountsDeps, type Conn, isUuid } from "./deps";
 import { accountPageUrl } from "./jobs";
 import { ensureUser } from "./prospect";
 import { type DocumentRow, store } from "./storage";
+
+/**
+ * An invitation link's token: an HMAC of what the link is bound to, so it changes when
+ * any of that does. Every link token is made here; the input is the caller's, and must
+ * stay byte for byte what it was, or links already in mailboxes stop working.
+ */
+function linkToken(secret: string, input: string): string {
+  return createHmac("sha256", secret).update(input).digest("base64url").slice(0, 32);
+}
 
 /**
  * The link in a signer invitation. It carries a token bound to the document, the address
@@ -17,12 +26,10 @@ import { type DocumentRow, store } from "./storage";
  */
 export function signerInviteToken(secret: string, doc: DocumentRow): string | null {
   if (!doc.signerEmail || !doc.signerInvitedAt) return null;
-  return createHmac("sha256", secret)
-    .update(
-      `signer-invite:${doc.id}:${doc.signerEmail.toLowerCase()}:${doc.signerInvitedAt.toISOString()}`,
-    )
-    .digest("base64url")
-    .slice(0, 32);
+  return linkToken(
+    secret,
+    `signer-invite:${doc.id}:${doc.signerEmail.toLowerCase()}:${doc.signerInvitedAt.toISOString()}`,
+  );
 }
 
 export function signerInviteUrl(dashboardUrl: string, secret: string, doc: DocumentRow): string {
@@ -75,8 +82,7 @@ export async function signerInvite(d: AccountsDeps, orgId: string, docId: string
     .orderBy(desc(schema.account_event.createdAt))
     .limit(1);
   const inviter = named?.actor ? await store.identity(d.db, named.actor) : null;
-  const existing = await store.identityByEmail(d.db, email);
-  const appUser = existing ? await store.appUserByDirectusId(d.db, existing.id) : null;
+  const appUser = await store.appUserByEmail(d.db, email);
   return {
     organisation: { name: org.name },
     inviter: inviter ? { name: inviter.name || inviter.email } : null,
@@ -109,52 +115,53 @@ export async function acceptSignerInvite(
   const email = (doc.signerEmail as string).toLowerCase();
   if (!me?.verified || me.email.toLowerCase() !== email)
     throw new ForbiddenError("document.signer_only", { params: { signer_email: email } });
-  if (!(await store.appUserByDirectusId(d.db, who.directusUserId))) {
-    const first = body.first_name.trim();
-    const last = body.last_name?.trim() || null;
-    await d.db.transaction(async (tx) => {
-      await tx
-        .update(schema.directus_users)
-        .set({ first_name: first, last_name: last })
-        .where(eq(schema.directus_users.id, who.directusUserId));
-      await tx
-        .update(schema.auth_user)
-        .set({ name: [first, last].filter(Boolean).join(" "), updatedAt: d.now() })
-        .where(eq(schema.auth_user.id, who.directusUserId));
-    });
-  }
+  await nameNewcomer(d, who, body);
   return { org_id: doc.orgId, document_id: doc.id };
 }
 
 /**
- * Signing makes the invited person a member: the pending invitation naming them made when
- * they were named (role billing) is taken up in the same transaction, with the app user a
- * code sign-in does not make. Seats are not billed per person, so nothing else changes.
- * Without such an invitation (it was revoked, or they were already a member) nothing happens.
+ * Someone new, just past the code sign-in, keeps the name they confirmed on an invitation
+ * page; an existing account (one with an app user) keeps its own.
  */
-export async function joinOnSigning(
+export async function nameNewcomer(
+  d: AccountsDeps,
+  who: Signed,
+  name: { first_name: string; last_name: string | null },
+): Promise<void> {
+  if (await store.appUserByDirectusId(d.db, who.directusUserId)) return;
+  const first = name.first_name.trim();
+  const last = name.last_name?.trim() || null;
+  await d.db.transaction(async (tx) => {
+    await tx
+      .update(schema.directus_users)
+      .set({ first_name: first, last_name: last })
+      .where(eq(schema.directus_users.id, who.directusUserId));
+    await tx
+      .update(schema.auth_user)
+      .set({ name: [first, last].filter(Boolean).join(" "), updatedAt: d.now() })
+      .where(eq(schema.auth_user.id, who.directusUserId));
+  });
+}
+
+/**
+ * Takes up the pending invitation to the organisation for this person, in the caller's
+ * transaction, with the app user a code sign-in does not make: on signing (the invitation
+ * naming them made, role billing) and on accepting a room invitation (role member). Seats
+ * are not billed per person, so nothing else changes. Without such an invitation (it was
+ * revoked, or they were already a member) nothing happens and null is returned; else
+ * their app user id.
+ */
+export async function joinByInvite(
   tx: Conn,
   orgId: string,
-  signer: { directusUserId: string; email: string },
+  person: { directusUserId: string; email: string },
   now: Date,
-): Promise<void> {
-  const email = signer.email.toLowerCase();
+): Promise<string | null> {
+  const email = person.email.toLowerCase();
   const nowIso = now.toISOString();
-  const [invite] = await tx
-    .select({ id: schema.org_invite.id, role: schema.org_invite.role })
-    .from(schema.org_invite)
-    .where(
-      and(
-        eq(schema.org_invite.org_id, orgId),
-        sql`lower(${schema.org_invite.email}) = ${email}`,
-        isNull(schema.org_invite.accepted_at),
-        isNull(schema.org_invite.deleted_at),
-        gt(schema.org_invite.expires_at, nowIso),
-      ),
-    )
-    .limit(1);
-  if (!invite) return;
-  const identity = await store.identity(tx, signer.directusUserId);
+  const invite = await store.pendingOrgInvite(tx, orgId, email, now);
+  if (!invite) return null;
+  const identity = await store.identity(tx, person.directusUserId);
   const { appUserId } = await ensureUser(tx, {
     email,
     name: identity?.name || null,
@@ -181,4 +188,5 @@ export async function joinOnSigning(
     .update(schema.org_invite)
     .set({ accepted_at: nowIso })
     .where(eq(schema.org_invite.id, invite.id));
+  return appUserId;
 }

@@ -141,6 +141,12 @@ export const store = {
     return row ?? null;
   },
 
+  /** The app user of whoever has this address, if they have an account. */
+  async appUserByEmail(c: Conn, email: string) {
+    const identity = await store.identityByEmail(c, email);
+    return identity ? store.appUserByDirectusId(c, identity.id) : null;
+  },
+
   async appUser(c: Conn, id: string) {
     const [row] = await c.select().from(app_user).where(eq(app_user.id, id)).limit(1);
     return row ?? null;
@@ -206,8 +212,26 @@ export const store = {
     c: Conn,
     row: { id: string; orgId: string; email: string; invitedBy: string | null; now: Date },
   ): Promise<boolean> {
+    return (await store.inviteToOrg(c, { ...row, role: "billing" })) !== null;
+  },
+
+  /**
+   * A pending invitation to the organisation, valid as long as an offer stays open to sign
+   * (30 days). One per address: nothing is made for a member or for an address with an
+   * invitation waiting. Returns the id of the invitation made, else null.
+   */
+  async inviteToOrg(
+    c: Conn,
+    row: {
+      id: string;
+      orgId: string;
+      email: string;
+      role: "member" | "billing";
+      invitedBy: string | null;
+      now: Date;
+    },
+  ): Promise<string | null> {
     const e = row.email.trim().toLowerCase();
-    const at = row.now.toISOString();
     const [member] = await c
       .select({ id: org_membership.id })
       .from(org_membership)
@@ -221,31 +245,41 @@ export const store = {
         ),
       )
       .limit(1);
-    if (member) return false;
-    const [pending] = await c
-      .select({ id: org_invite.id })
-      .from(org_invite)
-      .where(
-        and(
-          eq(org_invite.org_id, row.orgId),
-          sql`lower(${org_invite.email}) = ${e}`,
-          isNull(org_invite.accepted_at),
-          isNull(org_invite.deleted_at),
-          gt(org_invite.expires_at, at),
-        ),
-      )
-      .limit(1);
-    if (pending) return false;
+    if (member) return null;
+    if (await store.pendingOrgInvite(c, row.orgId, e, row.now)) return null;
     await c.insert(org_invite).values({
       id: row.id,
       org_id: row.orgId,
       email: e,
-      role: "billing",
+      role: row.role,
       invited_by: row.invitedBy,
-      // As long as an offer stays open to sign.
       expires_at: new Date(row.now.getTime() + 30 * 86_400_000).toISOString(),
     });
-    return true;
+    return row.id;
+  },
+
+  /**
+   * The invitations to the organisation still waiting: not taken up, withdrawn or expired.
+   * With `email`, only that address's.
+   */
+  async pendingOrgInvites(c: Conn, orgId: string, now: Date, email?: string) {
+    return c
+      .select({ id: org_invite.id, role: org_invite.role, email: org_invite.email })
+      .from(org_invite)
+      .where(
+        and(
+          eq(org_invite.org_id, orgId),
+          email ? sql`lower(${org_invite.email}) = ${email.trim().toLowerCase()}` : undefined,
+          isNull(org_invite.accepted_at),
+          isNull(org_invite.deleted_at),
+          gt(org_invite.expires_at, now.toISOString()),
+        ),
+      );
+  },
+
+  async pendingOrgInvite(c: Conn, orgId: string, email: string, now: Date) {
+    const [row] = await store.pendingOrgInvites(c, orgId, now, email);
+    return row ?? null;
   },
 
   async usage(c: Conn, orgId: string) {
