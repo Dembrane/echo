@@ -779,8 +779,14 @@ export const store = {
     return row ?? null;
   },
 
-  async insertRoomPerson(c: Conn, row: typeof roomPerson.$inferInsert) {
-    await c.insert(roomPerson).values(row);
+  /** False when the address is in the organisation's room already (unique per address). */
+  async insertRoomPerson(c: Conn, row: typeof roomPerson.$inferInsert): Promise<boolean> {
+    const made = await c
+      .insert(roomPerson)
+      .values(row)
+      .onConflictDoNothing({ target: [roomPerson.orgId, roomPerson.email] })
+      .returning({ id: roomPerson.id });
+    return made.length > 0;
   },
 
   async updateRoomPerson(c: Conn, id: string, patch: Partial<typeof roomPerson.$inferInsert>) {

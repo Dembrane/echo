@@ -359,7 +359,14 @@ export async function addRoomPerson(
     labelsAnsweredAt: null,
     updatedAt: now,
   };
-  await d.db.transaction(async (tx) => {
+  const lost = await d.db.transaction(async (tx) => {
+    // The row first: of two adds of one address at once, the second waits on the unique
+    // (organisation, address), then finds it taken and makes nothing.
+    if (
+      !row &&
+      !(await store.insertRoomPerson(tx, { id, orgId: org.id, email, createdAt: now, ...granted }))
+    )
+      return true;
     // Someone with an invitation waiting (named to sign, say) keeps that one: one per address.
     const made = member
       ? null
@@ -371,9 +378,7 @@ export async function addRoomPerson(
           invitedBy: who.appUserId ?? null,
           now,
         });
-    const fields = { ...granted, orgInviteId: made };
-    if (row) await store.updateRoomPerson(tx, id, fields);
-    else await store.insertRoomPerson(tx, { id, orgId: org.id, email, createdAt: now, ...fields });
+    await store.updateRoomPerson(tx, id, { ...granted, orgInviteId: made });
     const fresh = (await store.roomPerson(tx, org.id, id)) as RoomPersonRow;
     const token = roomInviteToken(d.settings.inviteSecret, fresh) as string;
     await emailInvite(
@@ -393,7 +398,10 @@ export async function addRoomPerson(
       subject: { type: "room_person", id },
       detail: { labels, has_other: other !== null },
     });
+    return false;
   });
+  // The other add got there first: as for a second add, nothing is sent.
+  if (lost) return done("updated", false);
   await track(
     d,
     { email: me?.email, directusUserId: who.directusUserId },
