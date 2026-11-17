@@ -370,7 +370,11 @@ run("who does what in the data room", () => {
   test("owners, admins and Billing are in by their role: adding them only sets their labels", async () => {
     w.jobs.jobs.length = 0;
     const invitedBefore = events("server_room_person_invited").length;
-    const r = await add(asKees, "billing@example.test", ["contract_purchasing"]);
+    // Those who run the account set each other's labels; a room member who did not invite
+    // them does not.
+    const byKees = await add(asKees, "billing@example.test", ["go_ahead"]);
+    expect([byKees.status, codeOf(byKees)]).toEqual([403, "room.manage_forbidden"]);
+    const r = await add("admin", "billing@example.test", ["contract_purchasing"]);
     expect(r.status).toBe(200);
     const res = K.AddRoomPersonResponse.parse(r.data);
     expect([res.status, res.email_sent]).toEqual(["updated", false]);
