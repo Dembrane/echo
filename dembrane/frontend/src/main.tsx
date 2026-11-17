@@ -38,10 +38,10 @@ if (ANALYTICS_ENABLED && !IS_PORTAL_PREVIEW)
 		// over from the marketing site, stitching both into one person profile.
 		cross_subdomain_cookie: true,
 		defaults: "2026-01-30",
-		// The portal serves anonymous participants on a privacy-sensitive flow, so
-		// never record their sessions. We track the journey with explicit events
-		// instead. The dashboard (hosts) is unaffected.
-		disable_session_recording: USE_PARTICIPANT_ROUTER,
+		// Session replay stays off on the portal and the dashboard: our data
+		// processing terms limit PostHog to error tracking and explicit events.
+		// Error capture above is unaffected (forward-port of #1388).
+		disable_session_recording: true,
 		loaded: (ph) => {
 			// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
 			// The opt-out persists per-domain, so explicitly opt back in when the
