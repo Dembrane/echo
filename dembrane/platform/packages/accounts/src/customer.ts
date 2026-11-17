@@ -150,6 +150,10 @@ export async function documentDetail(
     store.billing(d.db, doc.orgId),
   ]);
   const toTheCustomer = via === "staff" && doc.status === "sent" && doc.requiresSignature;
+  // A room member sees who signed and when; the signer's address, VAT number and what
+  // they filled in stay with those who run the account (the signed PDF stays readable).
+  const readerSafe = (v: ReturnType<typeof signatureView>) =>
+    reader ? { ...v, address: null, vat_number: null, values: {} } : v;
   const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
@@ -212,11 +216,13 @@ export async function documentDetail(
     })),
     awaiting_signatures: doc.requiresSignature && doc.status !== "draft" ? awaiting : [],
     signature: sig
-      ? signatureView(
-          sig,
-          via === "staff" && sig.evidenceKey
-            ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
-            : undefined,
+      ? readerSafe(
+          signatureView(
+            sig,
+            via === "staff" && sig.evidenceKey
+              ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
+              : undefined,
+          ),
         )
       : null,
     prefill: reader
