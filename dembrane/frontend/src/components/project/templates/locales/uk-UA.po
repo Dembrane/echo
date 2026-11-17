@@ -25,11 +25,11 @@ msgstr "Живий захід"
 msgid "A series of sessions"
 msgstr "Серія сесій"
 
-#: src/components/project/templates/projectTemplates.ts:218
+#: src/components/project/templates/projectTemplates.ts:219
 msgid "Align"
 msgstr "Узгодити"
 
-#: src/components/project/templates/projectTemplates.ts:234
+#: src/components/project/templates/projectTemplates.ts:235
 msgid "Aligning and moving forward"
 msgstr "Узгодитися й рухатися далі"
 
@@ -73,19 +73,19 @@ msgstr "Громадянська асамблея"
 #~ msgid "Conference sessions"
 #~ msgstr "Сесії конференції"
 
-#: src/components/project/templates/projectTemplates.ts:220
+#: src/components/project/templates/projectTemplates.ts:221
 msgid "Decide"
 msgstr "Вирішити"
 
-#: src/components/project/templates/projectTemplates.ts:236
+#: src/components/project/templates/projectTemplates.ts:237
 msgid "Deciding together"
 msgstr "Вирішувати разом"
 
-#: src/components/project/templates/projectTemplates.ts:251
+#: src/components/project/templates/projectTemplates.ts:254
 msgid "Decisions and actions"
 msgstr "Рішення та дії"
 
-#: src/components/project/templates/projectTemplates.ts:249
+#: src/components/project/templates/projectTemplates.ts:252
 msgid "Differences"
 msgstr "Розбіжності"
 
@@ -113,12 +113,16 @@ msgstr "Попередні формати"
 msgid "Everyone's ideas, fast"
 msgstr "Ідеї кожного, швидко"
 
-#: src/components/project/templates/projectTemplates.ts:216
+#. js-lingui-explicit-id
+#: src/components/project/templates/projectTemplates.ts:217
+msgid "templates.verb.explore"
+msgstr "Дослідити"
+
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:96
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/templates/projectTemplates.ts:232
+#: src/components/project/templates/projectTemplates.ts:233
 msgid "Exploring futures and possibilities"
 msgstr "Досліджувати майбутнє й можливості"
 
@@ -134,7 +138,7 @@ msgstr "Фокус-група"
 msgid "Gather"
 msgstr "Зібрати"
 
-#: src/components/project/templates/projectTemplates.ts:228
+#: src/components/project/templates/projectTemplates.ts:229
 msgid "Gathering expert knowledge"
 msgstr "Збирати експертні знання"
 
@@ -270,7 +274,7 @@ msgstr "Для команд і робочих груп: ті самі люди, 
 msgid "Great for youth panels and listening sessions: a moderator asks one small group."
 msgstr "Для молодіжних панелей і сесій слухання: модератор питає одну невелику групу."
 
-#: src/components/project/templates/projectTemplates.ts:255
+#: src/components/project/templates/projectTemplates.ts:258
 msgid "Hard points"
 msgstr "Складні моменти"
 
@@ -282,7 +286,7 @@ msgstr "Сценарій ведучого"
 msgid "How is it recorded?"
 msgstr "Як відбувається запис?"
 
-#: src/components/project/templates/projectTemplates.ts:253
+#: src/components/project/templates/projectTemplates.ts:256
 msgid "Ideas worth keeping"
 msgstr "Ідеї, які варто зберегти"
 
@@ -310,7 +314,7 @@ msgstr "Розмова за кухонним столом"
 msgid "Loading templates"
 msgstr "Завантаження шаблонів"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:244
 msgid "Many groups at once"
 msgstr "Багато груп одночасно"
 
@@ -381,7 +385,7 @@ msgstr "Увімкнено, твоє власне питання"
 msgid "One conversation"
 msgstr "Одна розмова"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:243
 msgid "One recording at a time"
 msgstr "Один запис за раз"
 
@@ -481,7 +485,7 @@ msgstr "Почати з нуля"
 msgid "Strategy session"
 msgstr "Стратегічна сесія"
 
-#: src/components/project/templates/projectTemplates.ts:247
+#: src/components/project/templates/projectTemplates.ts:250
 msgid "Table check"
 msgstr "Перевірка столу"
 
@@ -513,7 +517,7 @@ msgstr "Поради й найкращі практики"
 msgid "Titles"
 msgstr "Назви"
 
-#: src/components/project/templates/projectTemplates.ts:259
+#: src/components/project/templates/projectTemplates.ts:262
 msgid "Turning points"
 msgstr "Переломні моменти"
 
@@ -529,7 +533,7 @@ msgstr "Анконференція"
 msgid "Understand"
 msgstr "Зрозуміти"
 
-#: src/components/project/templates/projectTemplates.ts:230
+#: src/components/project/templates/projectTemplates.ts:231
 msgid "Understanding what people think"
 msgstr "Розуміти, що думають люди"
 
@@ -553,7 +557,7 @@ msgstr "Що тобі потрібно зробити?"
 msgid "What this sets up"
 msgstr "Що це налаштовує"
 
-#: src/components/project/templates/projectTemplates.ts:257
+#: src/components/project/templates/projectTemplates.ts:260
 msgid "What we heard"
 msgstr "Що ми почули"
 

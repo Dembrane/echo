@@ -3,26 +3,26 @@ import { createLazyNamedRoute } from "@/components/common/LazyRoute";
 import { ParticipantConversationAudio } from "./components/conversation/audio/ParticipantConversationAudio";
 import { ParticipantConversationAudioContent } from "./components/conversation/audio/ParticipantConversationAudioContent";
 import { ParticipantConversationText } from "./components/conversation/text/ParticipantConversationText";
-import { laterScreens } from "./laterScreens";
+import { openLaterScreen } from "./laterScreens";
 import { ParticipantErrorPage } from "./layout/ParticipantErrorPage";
 import { ParticipantLayout } from "./layout/ParticipantLayout";
 import { ParticipantStartRoute } from "./routes/ParticipantStart";
 
 const RefineSelection = createLazyNamedRoute(
-	laterScreens.refine,
+	() => openLaterScreen("refine"),
 	"RefineSelection",
 );
-const Verify = createLazyNamedRoute(laterScreens.verify, "Verify");
+const Verify = createLazyNamedRoute(() => openLaterScreen("verify"), "Verify");
 const VerifySelection = createLazyNamedRoute(
-	laterScreens.verifySelection,
+	() => openLaterScreen("verifySelection"),
 	"VerifySelection",
 );
 const VerifyArtefact = createLazyNamedRoute(
-	laterScreens.verifyArtefact,
+	() => openLaterScreen("verifyArtefact"),
 	"VerifyArtefact",
 );
 const ParticipantPostConversation = createLazyNamedRoute(
-	laterScreens.finish,
+	() => openLaterScreen("finish"),
 	"ParticipantPostConversation",
 );
 const ParticipantReport = createLazyNamedRoute(

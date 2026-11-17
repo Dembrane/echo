@@ -157,7 +157,7 @@ describe("SessionBriefConnected", () => {
 		).toContain("The whole text is saved.");
 	});
 
-	it("with no context and no link, the action waits and says to describe the session", () => {
+	it("with no context, the action waits and says to describe the session", () => {
 		renderConnected("", "");
 		expect(
 			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
@@ -165,13 +165,8 @@ describe("SessionBriefConnected", () => {
 		expect(screen.getByTestId("setup-suggestions-hint").textContent).toContain(
 			"Describe your session in the project context",
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Add a link" }));
-		fireEvent.change(screen.getByLabelText(/Link to a page about it/), {
-			target: { value: "https://example.org/avond" },
-		});
-		expect(
-			screen.getByTestId("setup-suggestions-submit").hasAttribute("disabled"),
-		).toBe(false);
+		// The file and link drop below the context is the one "Add a link".
+		expect(screen.queryByRole("button", { name: "Add a link" })).toBeNull();
 	});
 
 	it.each([

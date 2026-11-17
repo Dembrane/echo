@@ -213,7 +213,8 @@ export const verbLabel = (verb: Verb): string => {
 		case "understand":
 			return t`Understand`;
 		case "explore":
-			return t`Explore`;
+			// Own id: "Explore" alone is the feature name, left untranslated in some locales.
+			return t({ id: "templates.verb.explore", message: "Explore" });
 		case "align":
 			return t`Align`;
 		case "decide":
@@ -238,7 +239,9 @@ export const verbHint = (verb: Verb): string => {
 };
 
 export const setupLabel = (setup: Setup): string =>
-	setup === "one_recording" ? t`One recording at a time` : t`Many groups at once`;
+	setup === "one_recording"
+		? t`One recording at a time`
+		: t`Many groups at once`;
 
 /** A Verify topic's name, as the portal shows it. */
 export const topicLabel = (key: string): string => {

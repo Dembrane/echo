@@ -63,6 +63,23 @@ async function sendInvite(workspaceId: string, email: string) {
 	return response.json();
 }
 
+// The workspace this visit created and the step reached, so a reload mid-flow keeps both.
+const VISIT_KEY = "onboarding_visit";
+type Visit = { workspaceId: string; step: "invite" | "questions" };
+const readVisit = (): Visit | null => {
+	try {
+		return JSON.parse(window.sessionStorage.getItem(VISIT_KEY) ?? "null");
+	} catch {
+		return null;
+	}
+};
+const writeVisit = (visit: Visit | null) => {
+	try {
+		if (visit) window.sessionStorage.setItem(VISIT_KEY, JSON.stringify(visit));
+		else window.sessionStorage.removeItem(VISIT_KEY);
+	} catch {}
+};
+
 export const OnboardingRoute = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
@@ -105,7 +122,9 @@ export const OnboardingRoute = () => {
 	const [step, setStep] = useState<"loading" | "org" | "invite" | "questions">(
 		"loading",
 	);
-	const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+	const [workspaceId, setWorkspaceId] = useState<string | null>(
+		() => readVisit()?.workspaceId ?? null,
+	);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [ready, setReady] = useState(false);
 	// ISSUE-012 questionnaire. Required but non-blocking — the user can skip
@@ -145,6 +164,7 @@ export const OnboardingRoute = () => {
 	// workspaceId is only set when the organisation step ran in this visit, so a returning
 	// host still lands on /o. useCallback keeps the effect dep stable.
 	const goToHome = useCallback(() => {
+		writeVisit(null);
 		navigate(
 			postOnboardingPath({
 				createdWorkspaceId: workspaceId,
@@ -168,12 +188,13 @@ export const OnboardingRoute = () => {
 			goToHome();
 			return;
 		}
+		if (workspaceId) writeVisit({ step: "questions", workspaceId });
 		setReady(false);
 		setTimeout(() => {
 			setStep("questions");
 			requestAnimationFrame(() => setReady(true));
 		}, 150);
-	}, [alreadyAnswered, goToHome]);
+	}, [alreadyAnswered, goToHome, workspaceId]);
 
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
@@ -203,7 +224,8 @@ export const OnboardingRoute = () => {
 			if (meV2?.onboarding_answer_json) {
 				goToHome();
 			} else {
-				setStep("questions");
+				const visit = readVisit();
+				setStep(visit?.step === "invite" ? "invite" : "questions");
 				requestAnimationFrame(() => setReady(true));
 			}
 			return;
@@ -242,6 +264,8 @@ export const OnboardingRoute = () => {
 			if (data.workspace_id) {
 				setWorkspaceId(data.workspace_id);
 				setWorkspace(data.workspace_id);
+				if (!hasInvites)
+					writeVisit({ step: "invite", workspaceId: data.workspace_id });
 			}
 
 			// Invited users skip the invite step — they don't have a organisation

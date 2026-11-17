@@ -1,5 +1,4 @@
 import { Trans } from "@lingui/react/macro";
-import { useState } from "react";
 import { MAX_SOURCE_CHARS, type SetupSuggestions } from "../setupSuggestions";
 import { useSuggestionBlock } from "../useSuggestionBlock";
 import { SessionBrief } from "./SessionBrief";
@@ -38,7 +37,6 @@ export const SessionBriefConnected = ({
 	onOverridesChange,
 	onResult,
 }: SessionBriefConnectedProps) => {
-	const [url, setUrl] = useState("");
 	const block = useSuggestionBlock({
 		keyTerms,
 		onKeyTermsChange,
@@ -51,20 +49,17 @@ export const SessionBriefConnected = ({
 		workspaceId,
 	});
 	const context = description.trim();
-	const canSuggest = Boolean(workspaceId) && Boolean(context || url.trim());
+	const canSuggest = Boolean(workspaceId) && Boolean(context);
 
 	return (
 		<SessionBrief
 			surface="wizard"
-			withLink
 			status={block.status}
-			url={url}
-			onUrlChange={setUrl}
 			canSuggest={canSuggest}
 			hint={
 				<Trans>
-					Describe your session in the project context, or add a link, and
-					dembrane suggests key terms.
+					Describe your session in the project context, or add a file or link
+					below, and dembrane suggests key terms.
 				</Trans>
 			}
 			readStartOnly={context.length > MAX_SOURCE_CHARS}
@@ -77,7 +72,8 @@ export const SessionBriefConnected = ({
 						.filter(Boolean),
 					language,
 					name: name.trim(),
-					source_url: url.trim() || null,
+					// Links go through "Add a link" below, which fills the context.
+					source_url: null,
 					template_key: templateKey,
 				})
 			}

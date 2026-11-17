@@ -44,9 +44,9 @@ import {
 	MagnifyingGlassIcon,
 	PencilSimpleIcon,
 	PlusIcon,
+	PushPinIcon,
 	TrashIcon,
 	XIcon,
-	PushPinIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -473,14 +473,14 @@ export const TemplatesModal = ({
 								// Fills the free height and scrolls inside, so the form never moves
 								resize="none"
 								styles={{
+									input: { height: "100%" },
 									root: {
-										flex: 1,
-										minHeight: 160,
 										display: "flex",
+										flex: 1,
 										flexDirection: "column",
+										minHeight: 160,
 									},
 									wrapper: { flex: 1 },
-									input: { height: "100%" },
 								}}
 							/>
 							{view === "create" && canCreateWorkspaceTemplate && (
@@ -827,7 +827,7 @@ export const TemplatesModal = ({
 							{/* Empty search state */}
 							{debouncedSearch && displayTemplates.length === 0 && (
 								<Text size="sm" c="dimmed">
-									<Trans>No templates match '{searchQuery}'</Trans>
+									<Trans>No templates match “{searchQuery}”</Trans>
 								</Text>
 							)}
 						</Stack>

@@ -252,7 +252,8 @@ export const ParticipantConversationText = () => {
 						{...testId("portal-text-input-textarea")}
 					/>
 				)}
-				<Group className="w-full">
+				{/* Same layout as the audio bar, so switching modes moves nothing. */}
+				<Group className="w-full" wrap="nowrap">
 					{!notTaking && (
 						<Button
 							size="lg"
@@ -283,7 +284,10 @@ export const ParticipantConversationText = () => {
 							<Button
 								size="lg"
 								onClick={openFinishModal}
-								leftSection={<CheckIcon size={20} />}
+								leftSection={
+									<CheckIcon size={20} className="hidden sm:block" />
+								}
+								className="w-auto"
 								{...testId("portal-text-finish-button")}
 							>
 								<Trans id="participant.button.finish.text.mode">Finish</Trans>
