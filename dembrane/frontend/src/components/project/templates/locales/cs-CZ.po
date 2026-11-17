@@ -25,11 +25,11 @@ msgstr "Živá akce"
 msgid "A series of sessions"
 msgstr "Série setkání"
 
-#: src/components/project/templates/projectTemplates.ts:218
+#: src/components/project/templates/projectTemplates.ts:219
 msgid "Align"
 msgstr "Sladit"
 
-#: src/components/project/templates/projectTemplates.ts:234
+#: src/components/project/templates/projectTemplates.ts:235
 msgid "Aligning and moving forward"
 msgstr "Sladit se a pohnout dál"
 
@@ -73,19 +73,19 @@ msgstr "Občanské shromáždění"
 #~ msgid "Conference sessions"
 #~ msgstr "Sekce konference"
 
-#: src/components/project/templates/projectTemplates.ts:220
+#: src/components/project/templates/projectTemplates.ts:221
 msgid "Decide"
 msgstr "Rozhodnout"
 
-#: src/components/project/templates/projectTemplates.ts:236
+#: src/components/project/templates/projectTemplates.ts:237
 msgid "Deciding together"
 msgstr "Rozhodovat společně"
 
-#: src/components/project/templates/projectTemplates.ts:251
+#: src/components/project/templates/projectTemplates.ts:254
 msgid "Decisions and actions"
 msgstr "Rozhodnutí a úkoly"
 
-#: src/components/project/templates/projectTemplates.ts:249
+#: src/components/project/templates/projectTemplates.ts:252
 msgid "Differences"
 msgstr "Rozdíly"
 
@@ -113,12 +113,16 @@ msgstr "Předchozí formáty"
 msgid "Everyone's ideas, fast"
 msgstr "Nápady všech, rychle"
 
-#: src/components/project/templates/projectTemplates.ts:216
+#. js-lingui-explicit-id
+#: src/components/project/templates/projectTemplates.ts:217
+msgid "templates.verb.explore"
+msgstr "Prozkoumat"
+
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:96
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/templates/projectTemplates.ts:232
+#: src/components/project/templates/projectTemplates.ts:233
 msgid "Exploring futures and possibilities"
 msgstr "Zkoumat budoucnosti a možnosti"
 
@@ -134,7 +138,7 @@ msgstr "Fokusní skupina"
 msgid "Gather"
 msgstr "Shromáždit"
 
-#: src/components/project/templates/projectTemplates.ts:228
+#: src/components/project/templates/projectTemplates.ts:229
 msgid "Gathering expert knowledge"
 msgstr "Shromažďovat odborné znalosti"
 
@@ -270,7 +274,7 @@ msgstr "Pro týmy a pracovní skupiny: stejní lidé, schůzka za schůzkou, se 
 msgid "Great for youth panels and listening sessions: a moderator asks one small group."
 msgstr "Pro panely mladých a setkání naslouchání: moderátor se ptá jedné malé skupiny."
 
-#: src/components/project/templates/projectTemplates.ts:255
+#: src/components/project/templates/projectTemplates.ts:258
 msgid "Hard points"
 msgstr "Těžké body"
 
@@ -282,7 +286,7 @@ msgstr "Scénář pro vedoucí"
 msgid "How is it recorded?"
 msgstr "Jak se nahrává?"
 
-#: src/components/project/templates/projectTemplates.ts:253
+#: src/components/project/templates/projectTemplates.ts:256
 msgid "Ideas worth keeping"
 msgstr "Nápady, které stojí za to"
 
@@ -310,7 +314,7 @@ msgstr "Rozhovor u kuchyňského stolu"
 msgid "Loading templates"
 msgstr "Načítání šablon"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:244
 msgid "Many groups at once"
 msgstr "Mnoho skupin najednou"
 
@@ -381,7 +385,7 @@ msgstr "Zapnuto, tvoje vlastní otázka"
 msgid "One conversation"
 msgstr "Jeden rozhovor"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:243
 msgid "One recording at a time"
 msgstr "Po jedné nahrávce"
 
@@ -481,7 +485,7 @@ msgstr "Začít od nuly"
 msgid "Strategy session"
 msgstr "Strategické setkání"
 
-#: src/components/project/templates/projectTemplates.ts:247
+#: src/components/project/templates/projectTemplates.ts:250
 msgid "Table check"
 msgstr "Kontrola stolu"
 
@@ -513,7 +517,7 @@ msgstr "Tipy a osvědčené postupy"
 msgid "Titles"
 msgstr "Názvy"
 
-#: src/components/project/templates/projectTemplates.ts:259
+#: src/components/project/templates/projectTemplates.ts:262
 msgid "Turning points"
 msgstr "Body zlomu"
 
@@ -529,7 +533,7 @@ msgstr "Nekonference"
 msgid "Understand"
 msgstr "Porozumět"
 
-#: src/components/project/templates/projectTemplates.ts:230
+#: src/components/project/templates/projectTemplates.ts:231
 msgid "Understanding what people think"
 msgstr "Porozumět, co si lidé myslí"
 
@@ -553,7 +557,7 @@ msgstr "Co potřebuješ udělat?"
 msgid "What this sets up"
 msgstr "Co se tím nastaví"
 
-#: src/components/project/templates/projectTemplates.ts:257
+#: src/components/project/templates/projectTemplates.ts:260
 msgid "What we heard"
 msgstr "Co jsme slyšeli"
 

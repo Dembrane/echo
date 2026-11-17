@@ -930,7 +930,7 @@ msgstr "{seats, plural, one {# Sitzplatz} other {# Sitzplätze}}"
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "{selectedCount} von {totalCount} Feldern ausgewählt. „Übernehmen“ wendet nur die ausgewählten an."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:286
+#: src/routes/onboarding/OnboardingRoute.tsx:310
 #: src/components/organisation/CreateOrganisationModal.tsx:159
 msgid "{sent} invites sent"
 msgstr "{sent} Einladungen gesendet"
@@ -1137,7 +1137,7 @@ msgstr "Ein blauer Balken am oberen Rand jedes Tabs mit deinem Text und einem Li
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "Ein übersichtlicheres, barrierefreieres Dashboard und Portal."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:491
+#: src/routes/onboarding/OnboardingRoute.tsx:515
 msgid "A couple of quick questions and you're in."
 msgstr "Nur ein paar kurze Fragen, und schon bist du startklar."
 
@@ -1300,8 +1300,8 @@ msgstr "Angaben"
 msgid "About the suggested project update: {hostNote}"
 msgstr "Zur vorgeschlagenen Projektaktualisierung: {hostNote}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:131
-#: src/routes/onboarding/OnboardingRoute.tsx:132
+#: src/routes/onboarding/OnboardingRoute.tsx:150
+#: src/routes/onboarding/OnboardingRoute.tsx:151
 msgid "About you"
 msgstr "Über dich"
 
@@ -2038,7 +2038,7 @@ msgstr "MCP-Zugriff in {0} erlauben"
 #~ msgid "Allow participants using the link to start new conversations"
 #~ msgstr "Teilnehmern erlauben, über den Link neue Gespräche zu beginnen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:488
+#: src/routes/onboarding/OnboardingRoute.tsx:512
 msgid "Almost ready"
 msgstr "Fast fertig"
 
@@ -2784,7 +2784,7 @@ msgstr "Abwesend"
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:685
 #: src/routes/organisation/OrganisationRoute.tsx:708
-#: src/routes/onboarding/OnboardingRoute.tsx:478
+#: src/routes/onboarding/OnboardingRoute.tsx:502
 #: src/routes/auth/Register.tsx:303
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:323
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:361
@@ -3811,7 +3811,7 @@ msgstr "Cluster"
 msgid "Collapse sidebar"
 msgstr "Seitenleiste einklappen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:372
+#: src/routes/onboarding/OnboardingRoute.tsx:396
 #: src/components/organisation/CreateOrganisationModal.tsx:257
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Eingeladene Kollegen können Gespräche erkunden, Erkenntnisse teilen und gemeinsam mit dir Berichte erstellen."
@@ -4069,8 +4069,8 @@ msgid "Contextual suggestions"
 msgstr "Kontextbezogene Vorschläge"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:773
-#: src/routes/onboarding/OnboardingRoute.tsx:572
-#: src/routes/onboarding/OnboardingRoute.tsx:704
+#: src/routes/onboarding/OnboardingRoute.tsx:596
+#: src/routes/onboarding/OnboardingRoute.tsx:728
 #: src/routes/auth/Register.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:249
 #: src/components/language/LanguagePicker.tsx:159
@@ -5186,9 +5186,13 @@ msgstr "Beschreibe die Sitzung zuerst im <0>Projektkontext</0>, dann schlägt de
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschreibe, was die Sprachmodell aus dem Gespräch extrahieren oder zusammenfassen soll..."
 
+#: src/components/project/setup-suggestions/SessionBrief/SessionBriefConnected.tsx:60
+msgid "Describe your session in the project context, or add a file or link below, and dembrane suggests key terms."
+msgstr "Beschreibe deine Sitzung im Projektkontext oder füge unten eine Datei oder einen Link hinzu, dann schlägt dembrane Schlüsselbegriffe vor."
+
 #: src/components/project/setup-suggestions/SessionBrief/SessionBriefConnected.tsx:65
-msgid "Describe your session in the project context, or add a link, and dembrane suggests key terms."
-msgstr "Beschreibe deine Sitzung im Projektkontext oder füge einen Link hinzu, dann schlägt dembrane Schlüsselbegriffe vor."
+#~ msgid "Describe your session in the project context, or add a link, and dembrane suggests key terms."
+#~ msgstr "Beschreibe deine Sitzung im Projektkontext oder füge einen Link hinzu, dann schlägt dembrane Schlüsselbegriffe vor."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1578
 #: src/routes/organisation/OrganisationRoute.tsx:1140
@@ -5338,7 +5342,7 @@ msgstr "Kernidee wird destilliert…"
 msgid "Do I need this?"
 msgstr "Benötige ich dies?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:498
+#: src/routes/onboarding/OnboardingRoute.tsx:522
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Planst du, dembrane im Gesundheitswesen, in der Bildung, Personalbeschaffung, bei kritischen Infrastrukturen, bei Strafverfolgung oder Justiz einzusetzen?"
 
@@ -5369,7 +5373,7 @@ msgstr "Aktualisiert sich nicht von selbst."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Aktualisiert sich nicht von selbst. Aktualisiert vor {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:572
+#: src/routes/onboarding/OnboardingRoute.tsx:596
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
@@ -6517,7 +6521,7 @@ msgid "participant.button.finish.confirm.text.mode"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:289
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:293
 msgid "participant.button.finish.text.mode"
 msgstr "Beenden"
 
@@ -6932,7 +6936,7 @@ msgstr "Während eines Gesprächs eine Antwort erhalten"
 #~ msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 #~ msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:734
+#: src/routes/onboarding/OnboardingRoute.tsx:758
 #: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Get started"
 msgstr "Loslegen"
@@ -7106,7 +7110,7 @@ msgstr "Angeleitet"
 msgid "Has verified artifacts"
 msgstr "Hat verifizierte Artefakte"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:520
+#: src/routes/onboarding/OnboardingRoute.tsx:544
 msgid "Have you completed a training?"
 msgstr "Hast du an einer Schulung teilgenommen?"
 
@@ -7626,7 +7630,7 @@ msgstr "Ungültige PIN oder E-Mail. Bitte versuche es erneut."
 msgid "Invitations waiting for you. Accept to get started."
 msgstr "Ausstehende Einladungen. Nimm an, um loszulegen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:132
+#: src/routes/onboarding/OnboardingRoute.tsx:151
 #: src/components/organisation/CreateOrganisationModal.tsx:206
 msgid "Invite"
 msgstr "Einladen"
@@ -7667,7 +7671,7 @@ msgstr "Einladung erneut gesendet"
 msgid "Invite revoked"
 msgstr "Einladung widerrufen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:286
+#: src/routes/onboarding/OnboardingRoute.tsx:310
 #: src/components/organisation/CreateOrganisationModal.tsx:159
 msgid "Invite sent"
 msgstr "Einladung gesendet"
@@ -7688,7 +7692,7 @@ msgstr "In einen Arbeitsbereich oder nur in die Organisation einladen."
 msgid "Invite to this workspace, or just the organisation."
 msgstr "In diesen Arbeitsbereich oder nur in die Organisation einladen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:369
+#: src/routes/onboarding/OnboardingRoute.tsx:393
 msgid "Invite your team"
 msgstr "Lade dein Team ein"
 
@@ -8119,7 +8123,7 @@ msgstr "Zuletzt gelesen {startedLabel}"
 #. placeholder {0}: formatDistance(new Date(savedAt), new Date(), { addSuffix: true })
 #: src/components/form/SaveStatus.tsx:62
 msgid "Last saved {0}"
-msgstr "Zuletzt gespeichert am {0}"
+msgstr "Zuletzt gespeichert {0}"
 
 #: src/components/report/ConversationStatusTable.tsx:59
 msgid "Last updated"
@@ -9234,7 +9238,7 @@ msgstr "Benenne es nach dem Thema, dem Vorhaben oder der Frage, die du untersuch
 msgid "Name updated"
 msgstr "Name aktualisiert"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:680
+#: src/routes/onboarding/OnboardingRoute.tsx:704
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Benenne deine Organisation, um loszulegen. Du kannst direkt danach Mitglieder einladen oder später über die Einstellungen anderen Organisationen beitreten."
 
@@ -9443,8 +9447,8 @@ msgstr "Nächste Seite"
 #~ msgid "Next: pick a time"
 #~ msgstr "Als Nächstes: Uhrzeit auswählen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:511
-#: src/routes/onboarding/OnboardingRoute.tsx:525
+#: src/routes/onboarding/OnboardingRoute.tsx:535
+#: src/routes/onboarding/OnboardingRoute.tsx:549
 msgid "No"
 msgstr "Nein"
 
@@ -9898,8 +9902,12 @@ msgid "No tags have been added to this project yet. Add a tag using the text inp
 msgstr "Diesem Projekt wurden noch keine Tags hinzugefügt. Füge ein Tag über die Texteingabe oben hinzu, um zu beginnen."
 
 #: src/components/chat/TemplatesModal.tsx:830
-msgid "No templates match '{searchQuery}'"
-msgstr "Keine Vorlagen für '{searchQuery}' gefunden"
+#~ msgid "No templates match '{searchQuery}'"
+#~ msgstr "Keine Vorlagen für '{searchQuery}' gefunden"
+
+#: src/components/chat/TemplatesModal.tsx:830
+msgid "No templates match “{searchQuery}”"
+msgstr "Keine Vorlagen für „{searchQuery}“ gefunden"
 
 #: src/components/map/attributes.ts:161
 msgid "No tensions saved yet."
@@ -10655,7 +10663,7 @@ msgstr "Nur Organisation"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:705
 #: src/routes/organisation/OrganisationExternalView.tsx:39
-#: src/routes/onboarding/OnboardingRoute.tsx:132
+#: src/routes/onboarding/OnboardingRoute.tsx:151
 #: src/features/sidebar/views/org/OrgHomeView.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:136
 #: src/components/training/StaffTrainingPanel.tsx:146
@@ -10694,7 +10702,7 @@ msgid "Organisation members load faster."
 msgstr "Organisationsmitglieder laden schneller."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1117
-#: src/routes/onboarding/OnboardingRoute.tsx:718
+#: src/routes/onboarding/OnboardingRoute.tsx:742
 #: src/components/organisation/CreateOrganisationModal.tsx:225
 msgid "Organisation name"
 msgstr "Name der Organisation"
@@ -12168,7 +12176,7 @@ msgstr "Grund: {0}"
 msgid "Recent payments across all accounts"
 msgstr "Letzte Zahlungen aller Konten"
 
-#: src/components/goal/ProjectGoalSection.tsx:43
+#: src/components/goal/ProjectGoalSection.tsx:40
 msgid "recently"
 msgstr "kürzlich"
 
@@ -13859,7 +13867,7 @@ msgstr "Feedback senden"
 msgid "Send invite"
 msgstr "Einladung senden"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:405
+#: src/routes/onboarding/OnboardingRoute.tsx:429
 #: src/components/organisation/CreateOrganisationModal.tsx:283
 msgid "Send invites"
 msgstr "Einladungen senden"
@@ -13932,6 +13940,10 @@ msgstr "Lege die Standard-Rechtsgrundlage eines Arbeitsbereichs fest und übersc
 msgid "set by {0} {relative}"
 msgstr "festgelegt von {0} {relative}"
 
+#: src/components/goal/ProjectGoalSection.tsx:44
+msgid "set by you {relative}"
+msgstr "festgelegt von dir {relative}"
+
 #: src/components/goal/ProjectGoalSection.tsx:178
 msgid "Set goal"
 msgstr "Ziel festlegen"
@@ -13973,12 +13985,12 @@ msgstr "Arbeitsbereich einrichten"
 msgid "Set up your first organisation"
 msgstr "Erste Organisation einrichten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:632
+#: src/routes/onboarding/OnboardingRoute.tsx:656
 #: src/features/sidebar/views/user/UserHomeView.tsx:130
 msgid "Set up your organisation"
 msgstr "Deine Organisation einrichten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:178
+#: src/routes/onboarding/OnboardingRoute.tsx:199
 msgid "Set up your workspace | dembrane"
 msgstr "Richte deinen Arbeitsbereich ein | dembrane"
 
@@ -13986,7 +13998,7 @@ msgstr "Richte deinen Arbeitsbereich ein | dembrane"
 msgid "Set who can see and join."
 msgstr "Lege fest, wer beitreten und Inhalte sehen darf."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:335
+#: src/routes/onboarding/OnboardingRoute.tsx:359
 msgid "Setting things up for you"
 msgstr "Wir richten alles für dich ein"
 
@@ -14400,8 +14412,8 @@ msgstr "Anmelde-Links prüfen deine Zugriffsberechtigung vor dem Öffnen einer O
 msgid "Six weekends across seven months"
 msgstr "Sechs Wochenenden über sieben Monate hinweg"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:393
-#: src/routes/onboarding/OnboardingRoute.tsx:562
+#: src/routes/onboarding/OnboardingRoute.tsx:417
+#: src/routes/onboarding/OnboardingRoute.tsx:586
 #: src/components/organisation/CreateOrganisationModal.tsx:275
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -14917,7 +14929,7 @@ msgid "Submit"
 msgstr "Absenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:266
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:267
 msgid "participant.button.submit.text.mode"
 msgstr "Absenden"
 
@@ -15084,7 +15096,7 @@ msgstr "Unterstützt Pol A"
 msgid "Supports pole B"
 msgstr "Unterstützt Pol B"
 
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:274
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:275
 msgid "Switch to audio"
 msgstr "Zu Audio wechseln"
 
@@ -17930,7 +17942,7 @@ msgstr "Wir testen dein Mikrofon, um sicherzustellen, dass jeder in der Sitzung 
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "Wir hören einige Stille. Versuchen Sie, lauter zu sprechen, damit Ihre Stimme deutlich klingt."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:674
+#: src/routes/onboarding/OnboardingRoute.tsx:698
 msgid "We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "Wir haben Organisationen eingeführt, damit du Projekte strukturieren und mit Kollegen teilen kannst. Alles, was du bisher hattest, ist weiterhin da. Wir benötigen nur noch einen Namen für deine Organisation."
 
@@ -17975,7 +17987,7 @@ msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten"
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:131
+#: src/routes/onboarding/OnboardingRoute.tsx:150
 #: src/routes/auth/Login.tsx:493
 #: src/portal/components/conversation/ConversationMessages.tsx:112
 #: src/features/sidebar/views/project/ProjectPortalView.tsx:29
@@ -17987,11 +17999,11 @@ msgstr "Willkommen"
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:628
+#: src/routes/onboarding/OnboardingRoute.tsx:652
 msgid "Welcome back, {displayName}"
 msgstr "Willkommen zurück, {displayName}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:625
+#: src/routes/onboarding/OnboardingRoute.tsx:649
 #: src/routes/auth/Login.tsx:166
 msgid "Welcome to dembrane"
 msgstr "Willkommen bei dembrane"
@@ -18008,8 +18020,8 @@ msgstr "Willkommen bei dembrane!"
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate start eine neue Chat im Modus „Genauer Kontext“."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:623
-#: src/routes/onboarding/OnboardingRoute.tsx:630
+#: src/routes/onboarding/OnboardingRoute.tsx:647
+#: src/routes/onboarding/OnboardingRoute.tsx:654
 msgid "Welcome, {displayName}"
 msgstr "Willkommen, {displayName}"
 
@@ -18034,7 +18046,7 @@ msgstr "Welche Daten werden gesendet?"
 msgid "What did you change?"
 msgstr "Was hast du geändert?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:534
+#: src/routes/onboarding/OnboardingRoute.tsx:558
 msgid "What do you plan to use dembrane for?"
 msgstr "Wofür planst du dembrane zu nutzen?"
 
@@ -18277,7 +18289,7 @@ msgstr "wird in deinem Bericht enthalten sein"
 msgid "wish"
 msgstr "Wunsch"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:546
+#: src/routes/onboarding/OnboardingRoute.tsx:570
 msgid "With external clients"
 msgstr "Mit externen Kunden"
 
@@ -18326,7 +18338,7 @@ msgstr "Aus der Analyse zurückgezogen"
 msgid "Withdrawn from the analysis."
 msgstr "Aus der Analyse zurückgezogen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:541
+#: src/routes/onboarding/OnboardingRoute.tsx:565
 msgid "Within my organisation"
 msgstr "Innerhalb meiner Organisation"
 
@@ -18493,14 +18505,14 @@ msgstr "Falsche Sprache oder Tonfall"
 msgid "Wrong sources"
 msgstr "Falsche Quellen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:510
-#: src/routes/onboarding/OnboardingRoute.tsx:524
+#: src/routes/onboarding/OnboardingRoute.tsx:534
+#: src/routes/onboarding/OnboardingRoute.tsx:548
 msgid "Yes"
 msgstr "Ja"
 
 #: src/components/goal/ProjectGoalSection.tsx:34
-msgid "you"
-msgstr "du"
+#~ msgid "you"
+#~ msgstr "du"
 
 #: src/components/chat/BaseMessage.tsx:34
 msgid "You"
@@ -18540,7 +18552,7 @@ msgstr "Du nutzt den Free-Tarif. Es gibt noch keine Zahlungen zu verwalten."
 msgid "You are the data owner"
 msgstr "Du bist Dateneigentümer"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:717
+#: src/routes/onboarding/OnboardingRoute.tsx:741
 #: src/components/organisation/CreateOrganisationModal.tsx:226
 msgid "You can change this anytime in settings."
 msgstr "Du kannst dies jederzeit in den Einstellungen ändern."
@@ -18772,7 +18784,7 @@ msgstr "Du wirst als Administrator zu {0} privaten Arbeitsbereichen hinzugefügt
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Du wirst als Administrator zu {singleName} hinzugefügt. Der Arbeitsbereich erscheint direkt danach in deiner Seitenleiste."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:739
+#: src/routes/onboarding/OnboardingRoute.tsx:763
 msgid "You'll find all your projects waiting for you."
 msgstr "Alle deine Projekte warten bereits auf dich."
 
@@ -18855,22 +18867,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Du bist der einzige Administrator. Befördere eine andere Person, bevor du deine Rolle änderst."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:645
+#: src/routes/onboarding/OnboardingRoute.tsx:669
 msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
 msgstr "Du wurdest eingeladen, mit {0} Organisationen zusammenzuarbeiten. Sobald du fortfährst, leiten wir dich weiter."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:639
+#: src/routes/onboarding/OnboardingRoute.tsx:663
 msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
 msgstr "Du wurdest eingeladen, mit <0>{0}</0> zusammenzuarbeiten. Wir leiten dich gleich weiter."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:663
+#: src/routes/onboarding/OnboardingRoute.tsx:687
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "Du wurdest eingeladen, {0} Organisationen beizutreten. Sobald du fortfährst, leiten wir dich weiter."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:657
+#: src/routes/onboarding/OnboardingRoute.tsx:681
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "Du wurdest eingeladen, <0>{0}</0> beizutreten. Wir leiten dich gleich weiter."
 
@@ -19059,11 +19071,11 @@ msgstr "Dein Name, deine E-Mail-Adresse und die aktuelle Seite werden mitgesende
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Deine Organisation nutzt standardmäßig den Free-Tarif. Ein Tarif deckt jeden Arbeitsbereich ab und wird nach dem Upgrade pro Platz abgerechnet."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:668
+#: src/routes/onboarding/OnboardingRoute.tsx:692
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Deine Organisation wartet auf dich. Klicke auf „Weiter“, um beizutreten."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:720
+#: src/routes/onboarding/OnboardingRoute.tsx:744
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Your organisation or company"
 msgstr "Deine Organisation oder dein Unternehmen"
@@ -19164,7 +19176,7 @@ msgstr "Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren."
 #~ msgid "Your view has been created. Please wait as we process and analyse the data."
 #~ msgstr "Ihre Ansicht wurde erstellt. Bitte warten Sie, während wir die Daten verarbeiten und analysieren."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:651
+#: src/routes/onboarding/OnboardingRoute.tsx:675
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Dein Arbeitsbereich wartet auf dich. Klicke auf „Weiter“, um zusammenzuarbeiten."
 

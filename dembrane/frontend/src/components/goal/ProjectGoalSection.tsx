@@ -29,9 +29,6 @@ const setByLabel = (setBy: string) => {
 			return t`interview`;
 		case "loop":
 			return t`loop`;
-		case "host-edit":
-		case "you":
-			return t`you`;
 		default:
 			return setBy;
 	}
@@ -42,6 +39,9 @@ const relativeSetLine = (revision: ProjectGoalRevision) => {
 	const relative = Number.isNaN(date.getTime())
 		? t`recently`
 		: formatDistanceToNow(date, { addSuffix: true });
+	// "you" gets its own sentence: slotted into "set by {0}" it takes the wrong case.
+	if (revision.set_by === "you" || revision.set_by === "host-edit")
+		return t`set by you ${relative}`;
 	return t`set by ${setByLabel(revision.set_by)} ${relative}`;
 };
 

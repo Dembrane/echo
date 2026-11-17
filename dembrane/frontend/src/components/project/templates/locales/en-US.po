@@ -25,11 +25,11 @@ msgstr "A live event"
 msgid "A series of sessions"
 msgstr "A series of sessions"
 
-#: src/components/project/templates/projectTemplates.ts:218
+#: src/components/project/templates/projectTemplates.ts:219
 msgid "Align"
 msgstr "Align"
 
-#: src/components/project/templates/projectTemplates.ts:234
+#: src/components/project/templates/projectTemplates.ts:235
 msgid "Aligning and moving forward"
 msgstr "Aligning and moving forward"
 
@@ -73,19 +73,19 @@ msgstr "Citizens' assembly"
 #~ msgid "Conference sessions"
 #~ msgstr "Conference sessions"
 
-#: src/components/project/templates/projectTemplates.ts:220
+#: src/components/project/templates/projectTemplates.ts:221
 msgid "Decide"
 msgstr "Decide"
 
-#: src/components/project/templates/projectTemplates.ts:236
+#: src/components/project/templates/projectTemplates.ts:237
 msgid "Deciding together"
 msgstr "Deciding together"
 
-#: src/components/project/templates/projectTemplates.ts:251
+#: src/components/project/templates/projectTemplates.ts:254
 msgid "Decisions and actions"
 msgstr "Decisions and actions"
 
-#: src/components/project/templates/projectTemplates.ts:249
+#: src/components/project/templates/projectTemplates.ts:252
 msgid "Differences"
 msgstr "Differences"
 
@@ -113,12 +113,16 @@ msgstr "Earlier formats"
 msgid "Everyone's ideas, fast"
 msgstr "Everyone's ideas, fast"
 
-#: src/components/project/templates/projectTemplates.ts:216
+#. js-lingui-explicit-id
+#: src/components/project/templates/projectTemplates.ts:217
+msgid "templates.verb.explore"
+msgstr "Explore"
+
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:96
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/templates/projectTemplates.ts:232
+#: src/components/project/templates/projectTemplates.ts:233
 msgid "Exploring futures and possibilities"
 msgstr "Exploring futures and possibilities"
 
@@ -134,7 +138,7 @@ msgstr "Focus group"
 msgid "Gather"
 msgstr "Gather"
 
-#: src/components/project/templates/projectTemplates.ts:228
+#: src/components/project/templates/projectTemplates.ts:229
 msgid "Gathering expert knowledge"
 msgstr "Gathering expert knowledge"
 
@@ -270,7 +274,7 @@ msgstr "Great for teams and working groups: the same people, meeting after meeti
 msgid "Great for youth panels and listening sessions: a moderator asks one small group."
 msgstr "Great for youth panels and listening sessions: a moderator asks one small group."
 
-#: src/components/project/templates/projectTemplates.ts:255
+#: src/components/project/templates/projectTemplates.ts:258
 msgid "Hard points"
 msgstr "Hard points"
 
@@ -282,7 +286,7 @@ msgstr "Host script"
 msgid "How is it recorded?"
 msgstr "How is it recorded?"
 
-#: src/components/project/templates/projectTemplates.ts:253
+#: src/components/project/templates/projectTemplates.ts:256
 msgid "Ideas worth keeping"
 msgstr "Ideas worth keeping"
 
@@ -310,7 +314,7 @@ msgstr "Kitchen-table conversation"
 msgid "Loading templates"
 msgstr "Loading templates"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:244
 msgid "Many groups at once"
 msgstr "Many groups at once"
 
@@ -381,7 +385,7 @@ msgstr "On, your own question"
 msgid "One conversation"
 msgstr "One conversation"
 
-#: src/components/project/templates/projectTemplates.ts:241
+#: src/components/project/templates/projectTemplates.ts:243
 msgid "One recording at a time"
 msgstr "One recording at a time"
 
@@ -481,7 +485,7 @@ msgstr "Start blank"
 msgid "Strategy session"
 msgstr "Strategy session"
 
-#: src/components/project/templates/projectTemplates.ts:247
+#: src/components/project/templates/projectTemplates.ts:250
 msgid "Table check"
 msgstr "Table check"
 
@@ -513,7 +517,7 @@ msgstr "Tips and best practices"
 msgid "Titles"
 msgstr "Titles"
 
-#: src/components/project/templates/projectTemplates.ts:259
+#: src/components/project/templates/projectTemplates.ts:262
 msgid "Turning points"
 msgstr "Turning points"
 
@@ -529,7 +533,7 @@ msgstr "Unconference"
 msgid "Understand"
 msgstr "Understand"
 
-#: src/components/project/templates/projectTemplates.ts:230
+#: src/components/project/templates/projectTemplates.ts:231
 msgid "Understanding what people think"
 msgstr "Understanding what people think"
 
@@ -553,7 +557,7 @@ msgstr "What do you need to do?"
 msgid "What this sets up"
 msgstr "What this sets up"
 
-#: src/components/project/templates/projectTemplates.ts:257
+#: src/components/project/templates/projectTemplates.ts:260
 msgid "What we heard"
 msgstr "What we heard"
 
