@@ -64,6 +64,13 @@ function memberOf(members: readonly Member[], row: RoomPersonRow): Member | null
   );
 }
 
+/**
+ * Who changes what someone in the room does, or takes them out: those who run the account
+ * (owners, admins, Billing), for anyone; a room member, only for the people they invited.
+ */
+const managesPerson = (access: RoomAccess, row: RoomPersonRow | null, who: Signed) =>
+  access.via === "account" || (row?.invitedBy != null && row.invitedBy === who.appUserId);
+
 /** PostHog, after the commit: under the person acting, never with anyone else's address. */
 async function track(
   d: AccountsDeps,
@@ -280,9 +287,9 @@ const roomJoinUrl = (dashboardUrl: string, orgId: string, token: string) =>
 
 /**
  * Adds a person, or changes what someone already in the room does, in this order:
- * - an owner, admin or Billing member: labels only, nothing sent (`updated`);
- * - someone in the room already, or invited and not yet accepted: labels change if the
- *   caller invited them or runs the account, else 403; nothing is sent (`updated`);
+ * - an owner, admin or Billing member, or someone in the room already or invited and not
+ *   yet accepted: labels only, nothing sent (`updated`), if the caller manages them
+ *   (managesPerson), else 403;
  * - a member: room access and labels at once, an email linking the account (`added`);
  * - anyone else: a pending invitation as a plain member, 30 days, and an email with the
  *   link to their invitation page (`invited`).
@@ -322,8 +329,7 @@ export async function addRoomPerson(
   const inByRole = member && runsAccount(member.role);
   const inRoomAlready = row?.accessGrantedAt && (member || pending);
   if (inByRole || inRoomAlready) {
-    const mayManage = access.via === "account" || row?.invitedBy === who.appUserId;
-    if (!inByRole && !mayManage) throw new ForbiddenError("room.manage_forbidden");
+    if (!managesPerson(access, row, who)) throw new ForbiddenError("room.manage_forbidden");
     if (row) await store.updateRoomPerson(d.db, row.id, { labels, other, updatedAt: now });
     else
       await store.insertRoomPerson(d.db, {
@@ -428,8 +434,7 @@ export async function removeRoomPerson(
   const member = memberOf(members, row);
   if (member && runsAccount(member.role)) throw new ConflictError("room.in_by_role");
   if (!row.accessGrantedAt) throw new NotFoundError("room.person_not_found");
-  if (access.via === "room" && row.invitedBy !== who.appUserId)
-    throw new ForbiddenError("room.remove_forbidden");
+  if (!managesPerson(access, row, who)) throw new ForbiddenError("room.remove_forbidden");
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.deleteRoomPerson(tx, row.id);
