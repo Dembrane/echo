@@ -395,6 +395,8 @@ function withUrls(
 		customer_email: toTheCustomer ? customerEmail(orgId, doc, links) : null,
 		customer_links: toTheCustomer ? links : null,
 		file_url: `${base}/documents/${doc.id}/file`,
+		// The fixtures' person runs the account (or is staff), so may always save the PDF.
+		may_download: true,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
 		staff_url:
@@ -1210,6 +1212,8 @@ export async function handle(
 			}
 			case "accountPage":
 				return {
+					// The fixtures' person runs the account, so sees all of it.
+					access: "account",
 					billing: s.billing,
 					documents: s.docs
 						.filter((d) => d.status !== "draft" && d.status !== "void")
@@ -1830,6 +1834,7 @@ export async function handle(
 				const d: DocumentDetailT = {
 					accepted_outside: null,
 					access: "staff",
+					may_download: true,
 					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
 					confirmation: null,
