@@ -1,5 +1,5 @@
 export { Access } from "./authorize";
-export { DrizzleAccessStore, stickyRemovedIds } from "./drizzle";
+export { DrizzleAccessStore, stickyRemovedIds, workspaceReach } from "./drizzle";
 export { MemoryAccessStore } from "./memory";
 export {
   ORG_POLICIES,
