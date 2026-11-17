@@ -725,18 +725,12 @@ export const store = {
 
   // ── the data room ─────────────────────────────────────────────────────
 
-  /** The room's rows, with the person's own name and the inviter's, when they have accounts. */
+  /** The room's rows, with the inviter's name. */
   async roomPeople(c: Conn, orgId: string) {
-    const person = alias(app_user, "room_person_user");
     const inviter = alias(app_user, "room_inviter_user");
     return c
-      .select({
-        row: roomPerson,
-        ownName: person.display_name,
-        inviterName: inviter.display_name,
-      })
+      .select({ row: roomPerson, inviterName: inviter.display_name })
       .from(roomPerson)
-      .leftJoin(person, eq(person.id, roomPerson.appUserId))
       .leftJoin(inviter, eq(inviter.id, roomPerson.invitedBy))
       .where(eq(roomPerson.orgId, orgId))
       .orderBy(asc(roomPerson.createdAt), asc(roomPerson.id));

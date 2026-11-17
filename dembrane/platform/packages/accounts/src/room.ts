@@ -163,9 +163,10 @@ async function roomPeople(
     if (!seen.has(r.row.id) && r.row.accessGrantedAt && waiting.has(r.row.email))
       people.push(
         view(r, {
-          appUserId: r.row.appUserId,
-          // Their own name once they have an account; until then the one typed.
-          name: r.ownName || r.row.name,
+          // Until they accept, nothing says whether the address has an account, or whose:
+          // no app user and the name the inviter typed.
+          appUserId: null,
+          name: r.row.name,
           email: r.row.email,
           role: null,
           room: "by_invite",
@@ -238,14 +239,12 @@ async function personOf(d: AccountsDeps, orgId: string, email: string): Promise<
  * transcripts. So in an organisation with one, only those who run the account may bring
  * in someone who is not a member yet; a room member is refused. Returns how many
  * workspaces the new person reaches once they accept. The one place to relax the rule.
+ * Counted for a new member whoever the address belongs to, so the answer never tells an
+ * address with an account from one without.
  */
-async function newcomerReach(
-  d: AccountsDeps,
-  access: RoomAccess,
-  appUserId: string | null,
-): Promise<number> {
+async function newcomerReach(d: AccountsDeps, access: RoomAccess): Promise<number> {
   const reached = (await store.orgWorkspaces(d.db, access.org.id)).filter(
-    (ws) => deriveWorkspaceRole(workspaceReach(ws), "member", appUserId ?? "") !== null,
+    (ws) => deriveWorkspaceRole(workspaceReach(ws), "member", "") !== null,
   ).length;
   if (reached > 0 && access.via === "room")
     throw new ForbiddenError("room.new_person_admins_only", { params: { workspaces: reached } });
@@ -348,7 +347,7 @@ export async function addRoomPerson(
   }
 
   const appUser = member ? null : await store.appUserByEmail(d.db, email);
-  const workspaces = member ? null : await newcomerReach(d, access, appUser?.id ?? null);
+  const workspaces = member ? null : await newcomerReach(d, access);
   const id = row?.id ?? newId();
   const granted = {
     appUserId: member?.appUserId ?? appUser?.id ?? null,
