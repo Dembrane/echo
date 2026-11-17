@@ -31,6 +31,7 @@ import {
   type SignatureRow,
   store,
 } from "./storage";
+import { iso } from "./views";
 
 /**
  * The data room: the colleagues an organisation brings in to decide on an offer with it.
@@ -43,7 +44,6 @@ import {
 /** Each addition may send an invitation, so ten an hour per organisation, as signer namings. */
 const ROOM_LIMIT = { name: "account_room", capacity: 10, windowSeconds: 3600 };
 
-const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 /** Labels in the order the contract lists them, each once. */
 const inOrder = (labels: readonly string[]): RoomLabelT[] =>
   RoomLabel.options.filter((l) => labels.includes(l));

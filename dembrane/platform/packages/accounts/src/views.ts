@@ -16,7 +16,8 @@ import { isTaskCode, type TaskCode } from "./task-text";
 
 /** Response shapes: snake_case JSON, ISO timestamps, integer cents. */
 
-const iso = (d: Date | string | null | undefined) =>
+/** A timestamp as the API writes it, or null. The one copy in this package. */
+export const iso = (d: Date | string | null | undefined) =>
   d ? (d instanceof Date ? d : new Date(d)).toISOString() : null;
 
 /** Bank transfer details: always on an invoice; the Mollie link only when there is one. */
