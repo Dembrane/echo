@@ -38,6 +38,8 @@ run("who does what in the data room", () => {
   const events = (name: string) => captured.filter((e) => e.event === name);
   let offerId = "";
   let dpaId = "";
+  // A member made in beforeAll; the world helper's people do not name them.
+  const asKees = "kees" as Who;
 
   const add = (
     as: Who,
@@ -338,7 +340,7 @@ run("who does what in the data room", () => {
       status: "member",
       room: "by_invite",
       org_role: "member",
-      app_user_id: w.people.kees.appUserId,
+      app_user_id: w.people[asKees].appUserId,
       // Their own name, not the one typed.
       name: "kees",
       labels: ["rollout"],
@@ -348,7 +350,7 @@ run("who does what in the data room", () => {
     expect(mail).toMatchObject({ template: "account_room_invite", language: "en-US" });
     // A member signs in as always: the link is the account itself.
     expect(roomUrlOf(mail)).toBe(`https://dash.test/o/${w.orgId}/account`);
-    expect(K.AccountPage.parse((await call(w, "GET", C(), "kees")).data).access).toBe("room");
+    expect(K.AccountPage.parse((await call(w, "GET", C(), asKees)).data).access).toBe("room");
     const ev = events("server_room_person_invited").at(-1);
     expect([ev?.distinctId, ev?.properties.existing_member]).toEqual([
       "billing@example.test",
@@ -356,7 +358,7 @@ run("who does what in the data room", () => {
     ]);
     // Confirming the labels as they are is an answer, and no correction.
     const corrections = events("server_room_labels_corrected").length;
-    const ok = await call(w, "POST", `${C()}/room/me/labels`, "kees", {
+    const ok = await call(w, "POST", `${C()}/room/me/labels`, asKees, {
       labels: ["rollout"],
       other: null,
     });
@@ -368,7 +370,7 @@ run("who does what in the data room", () => {
   test("owners, admins and Billing are in by their role: adding them only sets their labels", async () => {
     w.jobs.jobs.length = 0;
     const invitedBefore = events("server_room_person_invited").length;
-    const r = await add("kees", "billing@example.test", ["contract_purchasing"]);
+    const r = await add(asKees, "billing@example.test", ["contract_purchasing"]);
     expect(r.status).toBe(200);
     const res = K.AddRoomPersonResponse.parse(r.data);
     expect([res.status, res.email_sent]).toEqual(["updated", false]);
@@ -395,7 +397,7 @@ run("who does what in the data room", () => {
     expect(mailTo("dubbel@example.test")).toHaveLength(1);
     // What someone already in the room does is changed by them, their inviter, an admin or
     // Billing; not by any other colleague.
-    const byOther = await add("kees", "dubbel@example.test", ["go_ahead"]);
+    const byOther = await add(asKees, "dubbel@example.test", ["go_ahead"]);
     expect([byOther.status, codeOf(byOther)]).toEqual([403, "room.manage_forbidden"]);
     expect((await personIn("admin", "dubbel@example.test"))?.labels).toEqual([
       "rollout",
@@ -423,7 +425,7 @@ run("who does what in the data room", () => {
         422,
       ]);
     }
-    const self = await add("kees", "Kees@example.test", ["rollout"]);
+    const self = await add(asKees, "Kees@example.test", ["rollout"]);
     expect([self.status, codeOf(self)]).toEqual([400, "invite.self"]);
     expect(await invites()).toBe(count);
     expect(w.jobs.jobs).toEqual([]);
@@ -435,7 +437,7 @@ run("who does what in the data room", () => {
     const target = await personIn("admin", "weg@example.test");
     const path = `${C()}/room/people/${target?.id}/remove`;
     // Not by another colleague in the room, nor a member outside it.
-    const byKees = await call(w, "POST", path, "kees", {});
+    const byKees = await call(w, "POST", path, asKees, {});
     expect([byKees.status, codeOf(byKees)]).toEqual([403, "room.remove_forbidden"]);
     expect((await call(w, "POST", path, "member", {})).status).toBe(403);
     expect((await call(w, "POST", path, "outsider", {})).status).toBe(404);
@@ -463,11 +465,11 @@ run("who does what in the data room", () => {
 
   test("taken out after accepting, by their inviter: room access and labels go, the membership stays", async () => {
     // A colleague in the room invites someone, who accepts.
-    const { who: lisa, person } = await inviteAndAccept("kees", "lisa", "lisa@example.test", [
+    const { who: lisa, person } = await inviteAndAccept(asKees, "lisa", "lisa@example.test", [
       "staff_stakeholders",
     ]);
     expect((await call(w, "GET", C(), lisa)).status).toBe(200);
-    const r = await call(w, "POST", `${C()}/room/people/${person.id}/remove`, "kees", {});
+    const r = await call(w, "POST", `${C()}/room/people/${person.id}/remove`, asKees, {});
     expect(r.status).toBe(200);
     expect(K.RemoveRoomPersonResponse.parse(r.data).membership).toBe("kept");
     const appUserId = w.people[lisa].appUserId as string;
@@ -487,7 +489,7 @@ run("who does what in the data room", () => {
   });
 
   test("an admin or Billing member takes out someone who was a member before; the membership stays", async () => {
-    const invited = await add("kees", "tijn@example.test", ["rollout"]);
+    const invited = await add(asKees, "tijn@example.test", ["rollout"]);
     expect(invited.status).toBe(200);
     const tijn = K.AddRoomPersonResponse.parse(invited.data).person;
     const kees = await personIn("admin", "kees@example.test");
@@ -496,11 +498,11 @@ run("who does what in the data room", () => {
     expect(r.status).toBe(200);
     expect(K.RemoveRoomPersonResponse.parse(r.data).membership).toBe("kept");
     expect(
-      await store.orgMembership(w.db, w.orgId, w.people.kees.appUserId as string),
+      await store.orgMembership(w.db, w.orgId, w.people[asKees].appUserId as string),
     ).toMatchObject({ role: "member", deleted_at: null });
-    expect((await call(w, "GET", C(), "kees")).status).toBe(403);
+    expect((await call(w, "GET", C(), asKees)).status).toBe(403);
     // An inviter out of the room keeps no say over the people they brought in.
-    expect((await call(w, "POST", `${C()}/room/people/${tijn.id}/remove`, "kees", {})).status).toBe(
+    expect((await call(w, "POST", `${C()}/room/people/${tijn.id}/remove`, asKees, {})).status).toBe(
       403,
     );
     expect((await personIn("admin", "tijn@example.test"))?.status).toBe("invited");
@@ -508,7 +510,7 @@ run("who does what in the data room", () => {
     expect(
       K.AddRoomPersonResponse.parse((await add("admin", "kees@example.test")).data).status,
     ).toBe("added");
-    expect((await call(w, "GET", C(), "kees")).status).toBe(200);
+    expect((await call(w, "GET", C(), asKees)).status).toBe(200);
   });
 
   test("people in by their role cannot be taken out of the room", async () => {
@@ -555,7 +557,7 @@ run("who does what in the data room", () => {
       call(w, "POST", `${C()}/documents/${docId}/signer`, "admin", { ...who, role: null });
     expect((await name(offerId, { name: "kees", email: "kees@example.test" })).status).toBe(200);
     expect((await name(dpaId, { name: "Noor", email: "noor@example.test" })).status).toBe(200);
-    r = await room("kees");
+    r = await room(asKees);
     expect([r.signers.offer?.email, r.signers.offer?.document_id]).toEqual([
       "kees@example.test",
       offerId,
