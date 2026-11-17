@@ -1,4 +1,5 @@
 import type { Access, StaffAudit } from "@dembrane/access";
+import type { Capture } from "@dembrane/analytics";
 import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
@@ -78,6 +79,8 @@ export interface AccountsDeps {
   readonly settings: AccountsSettings;
   /** GETs a legal page; a fake in tests. */
   readonly fetchText: (url: string) => Promise<string>;
+  /** Product analytics (PostHog); absent, nothing is captured. */
+  readonly capture?: Capture;
 }
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

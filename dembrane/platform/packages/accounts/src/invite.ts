@@ -6,7 +6,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { type AccountsDeps, type Conn, isUuid } from "./deps";
 import { accountPageUrl } from "./jobs";
 import { ensureUser } from "./prospect";
-import { type DocumentRow, store } from "./storage";
+import { type DocumentRow, type RoomPersonRow, store } from "./storage";
 
 /**
  * An invitation link's token: an HMAC of what the link is bound to, so it changes when
@@ -32,13 +32,25 @@ export function signerInviteToken(secret: string, doc: DocumentRow): string | nu
   );
 }
 
+/**
+ * The link in a room invitation: bound to the room's row, the address and the moment
+ * access was granted. Taking the person out deletes the row, so the link stops.
+ */
+export function roomInviteToken(secret: string, row: RoomPersonRow): string | null {
+  if (!row.accessGrantedAt) return null;
+  return linkToken(
+    secret,
+    `room-invite:${row.id}:${row.email}:${row.accessGrantedAt.toISOString()}`,
+  );
+}
+
 export function signerInviteUrl(dashboardUrl: string, secret: string, doc: DocumentRow): string {
   const token = signerInviteToken(secret, doc);
   const page = `${accountPageUrl(dashboardUrl, doc.orgId)}/documents/${doc.id}/sign`;
   return token ? `${page}?invite=${token}` : page;
 }
 
-const sameToken = (a: string, b: string) => {
+export const sameToken = (a: string, b: string) => {
   const x = Buffer.from(a);
   const y = Buffer.from(b);
   return x.length === y.length && timingSafeEqual(x, y);

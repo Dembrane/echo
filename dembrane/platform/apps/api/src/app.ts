@@ -142,6 +142,7 @@ export function buildApp(deps: Deps) {
     limiter: deps.limiter,
     now: () => new Date(),
     fetchText: deps.fetchText ?? httpFetchText,
+    capture: posthogCapture(deps.config.http.dashboardUrl, deps.logger),
     settings: {
       dashboardUrl: deps.config.http.dashboardUrl,
       company: {

@@ -47,7 +47,13 @@ export function documentSummary(
   base: string,
   /** When the named signer was last reminded (account_event), if ever. */
   remindedAt: Date | null = null,
+  /** A room member reads it: no download until it is signed. */
+  readOnly = false,
 ) {
+  const signedPdfUrl =
+    sig && doc.status !== "sent" && doc.status !== "viewed"
+      ? `${base}/documents/${doc.id}/signed.pdf`
+      : null;
   return {
     id: doc.id,
     kind: doc.kind,
@@ -78,16 +84,14 @@ export function documentSummary(
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
     // Once every signature it asks for is in: before that the document is still sent.
-    signed_pdf_url:
-      sig && doc.status !== "sent" && doc.status !== "viewed"
-        ? `${base}/documents/${doc.id}/signed.pdf`
-        : null,
+    signed_pdf_url: signedPdfUrl,
     accepted_outside: sig?.outsideVia
       ? {
           via: sig.outsideVia as "order_letter" | "email" | "paper" | "own_document",
           accepted_on: sig.acceptedOn as string,
         }
       : null,
+    may_download: !readOnly || signedPdfUrl !== null,
     ...(doc.kind === "invoice" && {
       invoice: {
         number: doc.reference,

@@ -8,7 +8,7 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
-import { ACCOUNT_ROLES, customerOrg, documentFor } from "./access";
+import { ACCOUNT_ROLES, customerOrg, documentFor, inRoom, roomOrg } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
@@ -40,26 +40,38 @@ import {
   ticketView,
 } from "./views";
 
-/** The customer's account, as one page reads it: tasks, documents, billing, questions. */
+/**
+ * The customer's account, as one page reads it: tasks, documents, billing, questions. A
+ * room member reads the offer and the DPA and the tasks about them: nothing about paying,
+ * and no questions to dembrane.
+ */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
-  const org = await customerOrg(d, who, orgId, "account:read");
-  const [docs, sigs, tasks, tickets, billing, reminded] = await Promise.all([
+  const { org, via } = await roomOrg(d, who, orgId);
+  const room = via === "room";
+  const [allDocs, sigs, allTasks, allTickets, billing, reminded] = await Promise.all([
     store.documents(d.db, org.id),
     store.signatures(d.db, org.id),
     store.tasks(d.db, org.id),
-    store.tickets(d.db, org.id),
-    store.billing(d.db, org.id),
+    room ? [] : store.tickets(d.db, org.id),
+    room ? null : store.billing(d.db, org.id),
     store.lastReminders(d.db, org.id),
   ]);
+  const docs = room ? allDocs.filter(inRoom) : allDocs;
+  const tasks = room
+    ? allTasks.filter((t) => t.documentId && docs.some((x) => x.id === t.documentId))
+    : allTasks;
+  const tickets = room ? [] : allTickets;
   const messages = await store.messages(
     d.db,
     tickets.map((t) => t.id),
   );
-  const pricing = org.origin_pricing_configuration_id
-    ? await store.pricingById(d.db, org.origin_pricing_configuration_id)
-    : null;
+  const pricing =
+    !room && org.origin_pricing_configuration_id
+      ? await store.pricingById(d.db, org.origin_pricing_configuration_id)
+      : null;
   return {
     organisation: { id: org.id, name: org.name, account_stage: org.account_stage },
+    access: via,
     // Next steps first: what waits on the customer, then what waits on us, then the rest.
     tasks: tasks
       .filter((t) => t.status !== "withdrawn")
@@ -74,6 +86,7 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
           d.settings.company,
           customerBase(org.id),
           reminded.get(x.id) ?? null,
+          room,
         ),
       ),
     billing: billingView(billing),
@@ -97,7 +110,7 @@ export async function readDocument(d: AccountsDeps, who: Signed, orgId: string, 
 export async function documentDetail(
   d: AccountsDeps,
   doc: DocumentRow,
-  via: "member" | "signer" | "staff",
+  via: "member" | "signer" | "room" | "staff",
   /** The staff member asking; signs the email in `customer_email`. */
   viewer: Signed | null = null,
   /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
@@ -117,8 +130,11 @@ export async function documentDetail(
   const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
   const awaiting = doc.status === "signed" ? [] : awaitingSlots(content, all);
   const mine = customerSlot(awaiting);
-  const fields =
-    via === "staff" || slotsOf(content).length === 1
+  // A room member reads: nothing to fill in, nothing to confirm, no billing details.
+  const reader = via === "room";
+  const fields = reader
+    ? []
+    : via === "staff" || slotsOf(content).length === 1
       ? allFields
       : mine
         ? fieldsOf(allFields, mine)
@@ -146,6 +162,7 @@ export async function documentDetail(
       d.settings.company,
       via === "staff" ? staffBase(doc.orgId) : customerBase(doc.orgId),
       reminded.get(doc.id) ?? null,
+      reader,
     ),
     body: doc.body,
     content: (doc.content ?? null) as OfferContent | null,
@@ -172,15 +189,16 @@ export async function documentDetail(
       .filter((x) => x && (x.kind !== "sla" || !isEvent)),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
-    confirmation: doc.requiresSignature
-      ? {
-          dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
-          dpa_not_authorised:
-            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
-              ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
-              : null,
-        }
-      : null,
+    confirmation:
+      doc.requiresSignature && !reader
+        ? {
+            dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
+            dpa_not_authorised:
+              doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
+                ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
+                : null,
+          }
+        : null,
     signatures: all.map((x) => ({
       slot: x.slot as Slot,
       name: x.typedName,
@@ -197,7 +215,9 @@ export async function documentDetail(
             : undefined,
         )
       : null,
-    prefill: signingPrefill(org?.name ?? null, billing, doc),
+    prefill: reader
+      ? { organisation: null, address: null, po_number: null }
+      : signingPrefill(org?.name ?? null, billing, doc),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,

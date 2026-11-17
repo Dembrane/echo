@@ -1,7 +1,7 @@
 import { UnavailableError, ValidationError } from "@dembrane/core";
 import { type Ctx, clientIp, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
-import { staffCan } from "./access";
+import { assertPersonSends, staffCan } from "./access";
 import { addAnnex, removeAnnex } from "./annex";
 import * as K from "./contract";
 import { countersign } from "./countersign";
@@ -43,6 +43,16 @@ import { sendMessage } from "./messages";
 import { changeOfferTemplate, listOfferTemplates, resetOfferTemplate } from "./offer-template";
 import { acceptOutside, staffEvidence } from "./outside";
 import { createAccount } from "./prospect";
+import {
+  acceptRoomInvite,
+  addRoomPerson,
+  answerRoomLabels,
+  dismissRoomHint,
+  readRoom,
+  removeRoomPerson,
+  roomInvite,
+  staffRoom,
+} from "./room";
 import { signDocument } from "./signing";
 import {
   accountCard,
@@ -122,7 +132,8 @@ const p = (c: Ctx, name: string) => c.req.param(name) as string;
 
 /**
  * The routes of contract.ts (ROUTES): customer routes under /api/v2/orgs/:orgId/account
- * (org owners, admins and billing; a named signer reaches one document), staff and sam
+ * (org owners, admins and billing; a named signer reaches one document; a room member
+ * reads the offer and the DPA and the room), staff and sam
  * routes under /api/v2/admin/accounts (staff:accounts, audited before the body is read).
  * Bodies parse with the contract's schemas; access is decided in access.ts through the
  * service each route calls, never here.
@@ -232,6 +243,37 @@ export function accountsRoutes(d: AccountsDeps) {
     const b = await body(c, K.AcceptSignerInviteRequest);
     return c.json(await acceptSignerInvite(d, who, p(c, "orgId"), p(c, "docId"), b));
   });
+  // ── the data room ───────────────────────────────────────────────────
+  app.get(R.roomPage.path, async (c) => c.json(await readRoom(d, requireUser(c), p(c, "orgId"))));
+  app.post(R.addRoomPerson.path, async (c) => {
+    const who = requireUser(c);
+    // Before the body is read: a staff key never causes an email to a customer.
+    assertPersonSends(who);
+    const b = await body(c, K.AddRoomPersonRequest);
+    return c.json(await addRoomPerson(d, who, p(c, "orgId"), b));
+  });
+  app.post(R.removeRoomPerson.path, async (c) =>
+    c.json(await removeRoomPerson(d, requireUser(c), p(c, "orgId"), p(c, "personId"))),
+  );
+  app.post(R.answerRoomLabels.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.AnswerRoomLabelsRequest);
+    return c.json(await answerRoomLabels(d, who, p(c, "orgId"), b));
+  });
+  app.post(R.dismissRoomHint.path, async (c) => {
+    const who = requireUser(c);
+    const label = parse(K.HintLabel, p(c, "label"));
+    return c.json(await dismissRoomHint(d, who, p(c, "orgId"), label));
+  });
+  app.get(R.roomInvite.path, async (c) => {
+    const q = parse(K.RoomInviteQuery, { invite: c.req.query("invite") });
+    return c.json(await roomInvite(d, p(c, "orgId"), q.invite));
+  });
+  app.post(R.acceptRoomInvite.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.AcceptRoomInviteRequest);
+    return c.json(await acceptRoomInvite(d, who, p(c, "orgId"), b));
+  });
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
   app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 
@@ -307,6 +349,10 @@ export function accountsRoutes(d: AccountsDeps) {
     return c.json(
       await enableAccount(d, who, p(c, "orgId"), await body(c, K.EnableAccountRequest)),
     );
+  });
+  app.get(R.staffRoomPage.path, async (c) => {
+    await staff(c, "accounts.room.read");
+    return c.json(await staffRoom(d, p(c, "orgId")));
   });
   app.get(R.accountCard.path, async (c) => {
     await staff(c, "accounts.card");

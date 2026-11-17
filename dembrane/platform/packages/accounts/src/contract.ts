@@ -159,6 +159,12 @@ export const DocumentSummary = z.object({
   signed_pdf_url: z.string().nullable(),
   /** Accepted outside dembrane rather than signed here: how, and the day the customer accepted. */
   accepted_outside: z.object({ via: OutsideVia, accepted_on: IsoDate }).nullable(),
+  /**
+   * Whether the caller may save the PDF. False for a room member before the document is
+   * signed: they read it inline (a browser can still save what it shows; this says what
+   * the page offers). True for everyone else, and for a room member once it is signed.
+   */
+  may_download: z.boolean(),
   /** Invoices only. */
   invoice: InvoiceInfo.optional(),
 });
@@ -544,8 +550,12 @@ export const DocumentDetail = DocumentSummary.extend({
     address: z.string().nullable(),
     po_number: z.string().nullable(),
   }),
-  /** How the caller reaches it: as a member, as the named signer, or as staff. */
-  access: z.enum(["member", "signer", "staff"]),
+  /**
+   * How the caller reaches it: as a member who runs the account, as the named signer, as a
+   * room member (reads the offer and the DPA: no prefill, no fields, nothing to confirm),
+   * or as staff.
+   */
+  access: z.enum(["member", "signer", "room", "staff"]),
   /**
    * Staff only, else null: the dashboard page where staff read this document, and change
    * and send it while it is a draft. The link sam gives the deal owner.
@@ -716,6 +726,12 @@ export const TimelineEvent = z.object({
 /** GET /api/v2/orgs/:orgId/account: the whole page in one read. */
 export const AccountPage = z.object({
   organisation: OrganisationRef,
+  /**
+   * `account`: the caller runs the account (owner, admin, Billing) and sees all of it.
+   * `room`: a member brought into the data room, who sees the offer and the DPA and their
+   * tasks only; billing is empty and there are no questions.
+   */
+  access: z.enum(["account", "room"]),
   /** Next steps first: open, sent back, locked, waiting on us, done. */
   tasks: z.array(Task),
   documents: z.array(DocumentSummary),
@@ -1477,6 +1493,138 @@ export const EventName = z.enum([
   "account.ticket.opened",
 ]);
 
+// ── the data room: who does what ────────────────────────────────────────
+
+/**
+ * What someone does in the decision, as their colleagues say: gives the go-ahead, rolls it
+ * out, checks IT and security, checks privacy and AI rules, handles contract and
+ * purchasing, represents staff or stakeholders. No label is "kept informed"; `other` is
+ * anything else, in their own words.
+ */
+export const RoomLabel = z.enum([
+  "go_ahead",
+  "rollout",
+  "it_security",
+  "privacy_ai",
+  "contract_purchasing",
+  "staff_stakeholders",
+]);
+/** The labels whose absence can stop a deal: the room hints when nobody holds one. */
+export const HintLabel = z.enum(["go_ahead", "it_security", "privacy_ai", "contract_purchasing"]);
+const RoomLabels = z
+  .array(RoomLabel)
+  .max(RoomLabel.options.length)
+  .refine((l) => new Set(l).size === l.length, "Each label once");
+
+/**
+ * POST .../room/people: brings a colleague into the room, or changes what someone already
+ * in it does. Someone who is not a member gets an invitation as a plain member and an
+ * email; a member gets room access and an email; an owner, admin or Billing member is in
+ * by their role, so only their labels change and nothing is sent.
+ */
+export const AddRoomPersonRequest = z.object({
+  email: z.email().max(255),
+  name: text(200),
+  labels: RoomLabels,
+  other: optText(80),
+});
+
+/**
+ * One person the room knows. `id` is the room's own row, null for a member it knows
+ * nothing about yet. `room`: in by their role (owner, admin, Billing), by an invitation to
+ * the room, or not in it. `status`: `invited` until they take the invitation up. `signs`:
+ * the documents of `RoomPage.signers` they are named to sign.
+ */
+export const RoomPerson = z.object({
+  id: Uuid.nullable(),
+  app_user_id: Uuid.nullable(),
+  name: z.string(),
+  email: z.string(),
+  org_role: z.enum(["owner", "admin", "billing", "member"]).nullable(),
+  room: z.enum(["by_role", "by_invite", "none"]),
+  status: z.enum(["invited", "member"]),
+  labels: z.array(RoomLabel),
+  other: z.string().nullable(),
+  labels_answered_at: IsoTime.nullable(),
+  invited_by: z.object({ app_user_id: Uuid, name: z.string() }).nullable(),
+  invited_at: IsoTime.nullable(),
+  signs: z.array(z.enum(["offer", "dpa"])),
+});
+
+/** Who signs a document, as the signer model has it: the named signer, else who signed. */
+export const RoomSigner = z.object({
+  document_id: Uuid,
+  email: z.string(),
+  name: z.string().nullable(),
+});
+
+/**
+ * GET .../room. Those who run the account see every member, to bring them in; a room
+ * member sees the room's people only. `signers`: the newest sent, viewed or signed offer
+ * and its DPA; null while nobody is named and nobody signed (then whoever runs the account
+ * signs). `me` is null on the staff side. `labels_question`: someone else brought the
+ * caller in and they have not said yet whether the labels are right (asked once).
+ */
+export const RoomPage = z.object({
+  people: z.array(RoomPerson),
+  signers: z.object({ offer: RoomSigner.nullable(), dpa: RoomSigner.nullable() }),
+  dismissed_hints: z.array(HintLabel),
+  me: z
+    .object({
+      app_user_id: Uuid,
+      room: z.enum(["by_role", "by_invite"]),
+      may_dismiss_hints: z.boolean(),
+      labels_question: z.boolean(),
+    })
+    .nullable(),
+});
+
+/**
+ * `invited`: someone new, an invitation and an email; `added`: a member, room access and an
+ * email; `updated`: labels only, nothing sent. `workspaces_reached`: for `invited`, how many
+ * workspaces they reach as a member once they accept (those every member joins); else null.
+ */
+export const AddRoomPersonResponse = z.object({
+  status: z.enum(["invited", "added", "updated"]),
+  person: RoomPerson,
+  email_sent: z.boolean(),
+  workspaces_reached: z.number().int().nullable(),
+});
+
+/**
+ * Taking someone out: before they accepted, the invitation is withdrawn and its link stops
+ * (`withdrawn`); after, room access and labels go and the membership stays (`kept`).
+ */
+export const RemoveRoomPersonResponse = z.object({
+  status: z.literal("removed"),
+  membership: z.enum(["withdrawn", "kept"]),
+});
+
+/** POST .../room/me/labels: the once-asked answer about one's own labels. */
+export const AnswerRoomLabelsRequest = z.object({ labels: RoomLabels, other: optText(80) });
+
+export const DismissHintResponse = z.object({ dismissed_hints: z.array(HintLabel) });
+
+/** The token from the room invitation link (`?invite=`). */
+export const RoomInviteQuery = SignerInviteQuery;
+/**
+ * The room invitation page, before sign-in: who asked, the person as typed (split into the
+ * names the page fills in), the labels they were given. `status`: `open` while the
+ * invitation waits, `accepted` once taken up, `closed` when it expired.
+ */
+export const RoomInvite = z.object({
+  organisation: z.object({ name: z.string() }),
+  inviter: z.object({ name: z.string() }).nullable(),
+  person: z.object({ email: z.string(), first_name: z.string(), last_name: z.string() }),
+  labels: z.array(RoomLabel),
+  other: z.string().nullable(),
+  status: z.enum(["open", "accepted", "closed"]),
+  has_account: z.boolean(),
+});
+/** After the code sign-in, as for a signer: someone new confirms their name. */
+export const AcceptRoomInviteRequest = AcceptSignerInviteRequest;
+export const AcceptRoomInviteResponse = z.object({ org_id: Uuid });
+
 // ── the route table ─────────────────────────────────────────────────────
 
 export type Permission =
@@ -1485,6 +1633,7 @@ export type Permission =
   | "account:billing"
   | "account:tasks"
   | "account:support"
+  | "account:room"
   | "signed-in"
   | "invite-link"
   | "staff:accounts"
@@ -1496,11 +1645,14 @@ export interface RouteSpec {
   /**
    * Org account policy (org owners, admins, billing), `staff:accounts` (staff and sam's
    * staff key, audited), `signed-in`, or `invite-link` (no session; the link's token).
+   * `account:room` is those who run the account or a member with room access.
    * `+signer` routes also admit the person named to
    * sign that one document.
    */
   readonly permission: Permission;
   readonly signer?: true;
+  /** Also admits a member with room access: the offer and the DPA, read only. */
+  readonly room?: true;
   readonly query?: z.ZodType;
   readonly request?: z.ZodType;
   /** Absent: the response is a PDF. */
@@ -1512,12 +1664,19 @@ const C = "/api/v2/orgs/:orgId/account";
 const S = "/api/v2/admin/accounts";
 
 export const ROUTES = {
-  accountPage: { method: "GET", path: C, permission: "account:read", response: AccountPage },
+  accountPage: {
+    method: "GET",
+    path: C,
+    permission: "account:read",
+    room: true,
+    response: AccountPage,
+  },
   readDocument: {
     method: "GET",
     path: `${C}/documents/:docId`,
     permission: "account:read",
     signer: true,
+    room: true,
     response: DocumentDetail,
   },
   viewDocument: {
@@ -1525,6 +1684,7 @@ export const ROUTES = {
     path: `${C}/documents/:docId/view`,
     permission: "account:read",
     signer: true,
+    room: true,
     response: ViewResponse,
   },
   signDocument: {
@@ -1570,6 +1730,7 @@ export const ROUTES = {
     path: `${C}/documents/:docId/file`,
     permission: "account:read",
     signer: true,
+    room: true,
   },
   /**
    * The text of one of the legal documents the document incorporates, exactly as it was
@@ -1580,6 +1741,7 @@ export const ROUTES = {
     path: `${C}/documents/:docId/legal/:kind`,
     permission: "account:read",
     signer: true,
+    room: true,
   },
   /** The signed PDF (signed_pdf_url). */
   signedPdf: {
@@ -1587,6 +1749,7 @@ export const ROUTES = {
     path: `${C}/documents/:docId/signed.pdf`,
     permission: "account:read",
     signer: true,
+    room: true,
   },
   readBilling: {
     method: "GET",
@@ -1658,6 +1821,54 @@ export const ROUTES = {
     permission: "signed-in",
     request: AcceptSignerInviteRequest,
     response: AcceptSignerInviteResponse,
+  },
+  roomPage: {
+    method: "GET",
+    path: `${C}/room`,
+    permission: "account:room",
+    response: RoomPage,
+  },
+  addRoomPerson: {
+    method: "POST",
+    path: `${C}/room/people`,
+    permission: "account:room",
+    request: AddRoomPersonRequest,
+    response: AddRoomPersonResponse,
+  },
+  removeRoomPerson: {
+    method: "POST",
+    path: `${C}/room/people/:personId/remove`,
+    permission: "account:room",
+    response: RemoveRoomPersonResponse,
+  },
+  answerRoomLabels: {
+    method: "POST",
+    path: `${C}/room/me/labels`,
+    permission: "account:room",
+    request: AnswerRoomLabelsRequest,
+    response: RoomPerson,
+  },
+  /** For those who run the account; twice is the same as once. */
+  dismissRoomHint: {
+    method: "POST",
+    path: `${C}/room/hints/:label/dismiss`,
+    permission: "account:read",
+    response: DismissHintResponse,
+  },
+  /** No session: the token in the room invitation link is the access. */
+  roomInvite: {
+    method: "GET",
+    path: `${C}/room/invite`,
+    permission: "invite-link",
+    query: RoomInviteQuery,
+    response: RoomInvite,
+  },
+  acceptRoomInvite: {
+    method: "POST",
+    path: `${C}/room/invite/accept`,
+    permission: "signed-in",
+    request: AcceptRoomInviteRequest,
+    response: AcceptRoomInviteResponse,
   },
   signingRequests: {
     method: "GET",
@@ -1919,6 +2130,13 @@ export const ROUTES = {
     permission: "staff:accounts",
     response: DemoStatus,
   },
+  /** The room as staff read it, audited; `me` is null. */
+  staffRoomPage: {
+    method: "GET",
+    path: `${S}/:orgId/room`,
+    permission: "staff:accounts",
+    response: RoomPage,
+  },
   enableAccount: {
     method: "POST",
     path: `${S}/:orgId/enable`,
@@ -1949,4 +2167,7 @@ export type DocumentFieldT = z.output<typeof DocumentField>;
 export type SignRequestT = z.output<typeof SignRequest>;
 export type DemoStatusT = z.output<typeof DemoStatus>;
 export type TasksSummaryT = z.output<typeof TasksSummary>;
+export type RoomLabelT = z.output<typeof RoomLabel>;
+export type RoomPersonT = z.output<typeof RoomPerson>;
+export type RoomPageT = z.output<typeof RoomPage>;
 export type OnboardingResponseT = z.output<typeof OnboardingResponse>;

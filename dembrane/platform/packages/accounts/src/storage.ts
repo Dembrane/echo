@@ -1,5 +1,6 @@
 import { schema } from "@dembrane/db";
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { Conn } from "./deps";
 
 const {
@@ -18,6 +19,8 @@ const {
   account_ticket: ticket,
   account_ticket_message: message,
   account_event: event,
+  account_room_person: roomPerson,
+  account_room_hint: roomHint,
   legal_text,
   legal_text_source,
   workspace,
@@ -43,6 +46,7 @@ export type TicketRow = typeof ticket.$inferSelect;
 export type MessageRow = typeof message.$inferSelect;
 export type EventRow = typeof event.$inferSelect;
 export type LegalRow = typeof legal_text.$inferSelect;
+export type RoomPersonRow = typeof roomPerson.$inferSelect;
 
 /** Drizzle queries only; every method takes the organisation first where it has one. */
 export const store = {
@@ -280,6 +284,14 @@ export const store = {
   async pendingOrgInvite(c: Conn, orgId: string, email: string, now: Date) {
     const [row] = await store.pendingOrgInvites(c, orgId, now, email);
     return row ?? null;
+  },
+
+  /** Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop. */
+  async withdrawOrgInvite(c: Conn, id: string, now: Date) {
+    await c
+      .update(org_invite)
+      .set({ deleted_at: now.toISOString() })
+      .where(and(eq(org_invite.id, id), isNull(org_invite.accepted_at)));
   },
 
   async usage(c: Conn, orgId: string) {
@@ -709,6 +721,114 @@ export const store = {
       .from(event)
       .where(and(eq(event.orgId, orgId), eq(event.type, type)));
     return new Set(rows.flatMap((r) => (r.id ? [r.id] : [])));
+  },
+
+  // ── the data room ─────────────────────────────────────────────────────
+
+  /** The room's rows, with the person's own name and the inviter's, when they have accounts. */
+  async roomPeople(c: Conn, orgId: string) {
+    const person = alias(app_user, "room_person_user");
+    const inviter = alias(app_user, "room_inviter_user");
+    return c
+      .select({
+        row: roomPerson,
+        ownName: person.display_name,
+        inviterName: inviter.display_name,
+      })
+      .from(roomPerson)
+      .leftJoin(person, eq(person.id, roomPerson.appUserId))
+      .leftJoin(inviter, eq(inviter.id, roomPerson.invitedBy))
+      .where(eq(roomPerson.orgId, orgId))
+      .orderBy(asc(roomPerson.createdAt), asc(roomPerson.id));
+  },
+
+  async roomPerson(c: Conn, orgId: string, id: string): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(and(eq(roomPerson.orgId, orgId), eq(roomPerson.id, id)))
+      .limit(1);
+    return row ?? null;
+  },
+
+  async roomPersonByEmail(c: Conn, orgId: string, email: string): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(and(eq(roomPerson.orgId, orgId), eq(roomPerson.email, email.trim().toLowerCase())))
+      .limit(1);
+    return row ?? null;
+  },
+
+  /** A person's room row: by their app user, or by address on a row that has none yet. */
+  async roomPersonOf(
+    c: Conn,
+    orgId: string,
+    appUserId: string,
+    email: string | null,
+  ): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(
+        and(
+          eq(roomPerson.orgId, orgId),
+          or(
+            eq(roomPerson.appUserId, appUserId),
+            email
+              ? and(isNull(roomPerson.appUserId), eq(roomPerson.email, email.toLowerCase()))
+              : undefined,
+          ),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  },
+
+  async insertRoomPerson(c: Conn, row: typeof roomPerson.$inferInsert) {
+    await c.insert(roomPerson).values(row);
+  },
+
+  async updateRoomPerson(c: Conn, id: string, patch: Partial<typeof roomPerson.$inferInsert>) {
+    await c.update(roomPerson).set(patch).where(eq(roomPerson.id, id));
+  },
+
+  async deleteRoomPerson(c: Conn, id: string) {
+    await c.delete(roomPerson).where(eq(roomPerson.id, id));
+  },
+
+  /** The org's live workspaces, as far as who derives access to them goes. */
+  async orgWorkspaces(c: Conn, orgId: string) {
+    return c
+      .select({ visibility: workspace.visibility, settings: workspace.settings })
+      .from(workspace)
+      .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at)));
+  },
+
+  async dismissedHints(c: Conn, orgId: string): Promise<string[]> {
+    const rows = await c
+      .select({ label: roomHint.label })
+      .from(roomHint)
+      .where(eq(roomHint.orgId, orgId));
+    return rows.map((r) => r.label);
+  },
+
+  /** True when this dismissal is new; a repeat changes nothing. */
+  async dismissHint(
+    c: Conn,
+    row: { orgId: string; label: string; dismissedBy: string | null; now: Date },
+  ): Promise<boolean> {
+    const made = await c
+      .insert(roomHint)
+      .values({
+        orgId: row.orgId,
+        label: row.label,
+        dismissedBy: row.dismissedBy,
+        dismissedAt: row.now,
+      })
+      .onConflictDoNothing()
+      .returning({ label: roomHint.label });
+    return made.length > 0;
   },
 
   // ── legal texts ───────────────────────────────────────────────────────

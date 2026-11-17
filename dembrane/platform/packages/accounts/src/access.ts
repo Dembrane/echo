@@ -2,19 +2,22 @@ import { ORG_ROLE_POLICIES, type OrgPolicy, type OrgRole, requireStaff } from "@
 import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { type AccountsDeps, isUuid } from "./deps";
-import { type DocumentRow, type OrgRow, store } from "./storage";
+import { type DocumentRow, type OrgRow, type RoomPersonRow, store } from "./storage";
 
 /**
  * Every access decision of the accounts routes, in one place, on top of @dembrane/access:
  * org roles for the customer side (Access.org with an account policy), the named staff
- * permission for the admin side, and one narrow grant for a person named to sign a single
- * document without being a member.
+ * permission for the admin side, one narrow grant for a person named to sign a single
+ * document without being a member, and the data room: a member brought in reads the offer
+ * and the DPA. Room access counts only while they hold an active membership.
  */
 
 /** The roles whose holders run an account, straight from the access policies. */
 export const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =>
   ORG_ROLE_POLICIES[r].has("account:read"),
 );
+export const runsAccount = (role: string | null | undefined): boolean =>
+  (ACCOUNT_ROLES as readonly string[]).includes(role ?? "");
 
 /** The live organisation, when the caller's org role holds the policy. */
 export async function customerOrg(
@@ -30,11 +33,62 @@ export async function customerOrg(
   return org;
 }
 
+/**
+ * The caller's room row: by their app user, or by their verified address while the row has
+ * none (an invitation taken up from the dashboard's own invitation list).
+ */
+async function myRoomRow(d: AccountsDeps, who: Signed, orgId: string) {
+  if (!who.appUserId) return null;
+  const identity = await store.identity(d.db, who.directusUserId);
+  const email = identity?.verified ? identity.email : null;
+  return store.roomPersonOf(d.db, orgId, who.appUserId, email);
+}
+
+/** The caller's room row when it grants access; whether they are a member is the caller's check. */
+async function roomRow(d: AccountsDeps, who: Signed, orgId: string) {
+  const row = await myRoomRow(d, who, orgId);
+  return row?.accessGrantedAt ? row : null;
+}
+
+export interface RoomAccess {
+  readonly org: OrgRow;
+  /** `account`: runs the account (owner, admin, Billing); `room`: a member brought in. */
+  readonly via: "account" | "room";
+  /** The caller's room row: their access when `room`, their labels if any when `account`. */
+  readonly row: RoomPersonRow | null;
+}
+
+/**
+ * `account:room`: whoever runs the account, or a member with room access. A plain member
+ * without it is refused (403) and anyone else does not find the organisation (404).
+ */
+export async function roomOrg(d: AccountsDeps, who: Signed, orgId: string): Promise<RoomAccess> {
+  try {
+    const org = await customerOrg(d, who, orgId, "account:read");
+    const row = await myRoomRow(d, who, org.id);
+    return { org, via: "account", row };
+  } catch (err) {
+    // Access.org refuses a member with 403 only after finding their active membership.
+    if (!(err instanceof ForbiddenError)) throw err;
+    const row = await roomRow(d, who, orgId);
+    const org = row ? await store.org(d.db, orgId) : null;
+    if (!row || !org || org.deleted_at) throw err;
+    return { org, via: "room", row };
+  }
+}
+
+/** What a room member reads of the account: the offer and the DPA, never a draft. */
+export const inRoom = (doc: Pick<DocumentRow, "kind" | "status">): boolean =>
+  (doc.kind === "offer" || doc.kind === "dpa") && doc.status !== "draft";
+
 export interface DocumentAccess {
   readonly org: OrgRow;
   readonly doc: DocumentRow;
-  /** `member`: through the org role; `signer`: named on this one document. */
-  readonly via: "member" | "signer";
+  /**
+   * `member`: through the org role; `signer`: named on this one document; `room`: a member
+   * with room access, reading the offer or the DPA.
+   */
+  readonly via: "member" | "signer" | "room";
   /** The caller's verified address. */
   readonly email: string | null;
 }
@@ -43,8 +97,10 @@ const SIGNER_POLICIES: readonly OrgPolicy[] = ["account:read", "account:sign"];
 
 /**
  * A document through the org role, or, for someone named as its signer, that one document
- * while it waits for them (and after, to fetch the signed PDF). Nothing else of the
- * organisation is reachable that way. Drafts are never shown to the customer.
+ * while it waits for them (and after, to fetch the signed PDF), or, for a member with room
+ * access, the offer and the DPA to read. Nothing else of the organisation is reachable the
+ * last two ways. Tried in that order, so a room member who is named signs as the signer.
+ * Drafts are never shown to the customer.
  */
 export async function documentFor(
   d: AccountsDeps,
@@ -77,7 +133,14 @@ export async function documentFor(
     SIGNER_POLICIES.includes(policy) &&
     ["sent", "viewed", "signed"].includes(doc.status);
   if (!named || !doc) {
-    if (refused instanceof ForbiddenError) throw refused;
+    if (refused instanceof ForbiddenError) {
+      // Reading only: a room member never signs, declines or names a signer.
+      const room =
+        policy === "account:read" && doc && inRoom(doc) ? await roomRow(d, who, orgId) : null;
+      const orgRow = room ? await store.org(d.db, orgId) : null;
+      if (orgRow && !orgRow.deleted_at && doc) return { org: orgRow, doc, via: "room", email };
+      throw refused;
+    }
     throw new NotFoundError("document.not_found");
   }
   const orgRow = await store.org(d.db, orgId);
