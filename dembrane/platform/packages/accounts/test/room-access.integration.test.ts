@@ -54,10 +54,13 @@ run("data room access", () => {
     return key as Who;
   }
 
-  /** Fills and signs a document as `as`. */
-  async function sign(docId: string, as: Who, name: string) {
+  /**
+   * Fills and signs a document as `as`, from the document as `readAs` sees it: a room
+   * member sees no fields and nothing to confirm, so their attempt is built from an admin's.
+   */
+  async function sign(docId: string, as: Who, name: string, readAs: Who = as) {
     const detail = K.DocumentDetail.parse(
-      (await call(w, "GET", `${C()}/documents/${docId}`, as)).data,
+      (await call(w, "GET", `${C()}/documents/${docId}`, readAs)).data,
     );
     const values: Record<string, string | boolean> = {};
     for (const f of detail.fields) {
@@ -266,9 +269,12 @@ run("data room access", () => {
       expect(file.status).toBe(200);
       expect(file.headers.get("content-disposition")).toStartWith("inline");
       expect(file.headers.get("cache-control")).toBe("private, no-store");
-      expect((await call(w, "GET", `${C()}/documents/${id}/legal/terms`, colleague)).status).toBe(
-        200,
-      );
+      // The texts the document pins: an offer its terms, the DPA only the DPA text.
+      expect(d.legal.length).toBeGreaterThan(0);
+      for (const pin of d.legal)
+        expect(
+          (await call(w, "GET", `${C()}/documents/${id}/legal/${pin.kind}`, colleague)).status,
+        ).toBe(200);
       expect((await call(w, "POST", `${C()}/documents/${id}/view`, colleague, {})).status).toBe(
         200,
       );
@@ -303,7 +309,7 @@ run("data room access", () => {
       const r = await call(w, method, path, colleague, body);
       expect([path, r.status]).toEqual([path, 403]);
     }
-    const signing = await sign(offerId, colleague, "Col League");
+    const signing = await sign(offerId, colleague, "Col League", "admin");
     expect(signing.status).toBe(403);
     // Account emails (invoices, reminders) still go only to those who run the account.
     const to = (await accountRecipients(w.db, w.orgId)).map((r) => r.email);
