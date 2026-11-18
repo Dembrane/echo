@@ -358,7 +358,7 @@ describe("the fixture backend's room", () => {
 	describe("the invitation", () => {
 		it("opens before sign-in, is accepted once, and then says so", async () => {
 			const read = () =>
-				client.call("roomInvite", { params, query: { invite: "tok" } });
+				client.call("roomInvite", { params, query: { invite: "invite-token-0001" } });
 			expect(await read()).toMatchObject({
 				inviter: { name: "Robin Example" },
 				person: { email: "noor@example-town.example" },
@@ -366,7 +366,7 @@ describe("the fixture backend's room", () => {
 			});
 			expect(
 				await client.call("acceptRoomInvite", {
-					body: { first_name: "Noor", invite: "tok", last_name: "Example" },
+					body: { first_name: "Noor", invite: "invite-token-0001", last_name: "Example" },
 					params,
 				}),
 			).toEqual({ org_id: orgId });
@@ -382,7 +382,7 @@ describe("the fixture backend's room", () => {
 				params: { orgId, personId: personId("noor@example-town.example") },
 			});
 			await expect(
-				client.call("roomInvite", { params, query: { invite: "tok" } }),
+				client.call("roomInvite", { params, query: { invite: "invite-token-0001" } }),
 			).rejects.toMatchObject({ status: 404 });
 		});
 	});
