@@ -1746,28 +1746,21 @@ function OrganisationPersonCard({
 	// names) of workspaces they can't reach. Admins see the full matrix, and a
 	// member always sees their own self-row, scoped to their own workspaces.
 	const { workspaces: myWorkspaces } = useWorkspace();
-	const myWorkspaceIds = useMemo(
-		() => new Set(myWorkspaces.map((w) => w.id)),
-		[myWorkspaces],
-	);
+	const myWorkspaceIds = new Set(myWorkspaces.map((w) => w.id));
 	// Workspaces the VIEWER can invite others into (they're admin/owner there).
 	// Inviting requires existing workspace access — for any other workspace we
 	// surface a "join first" hint instead of a button that 403s server-side.
-	const myInvitableWorkspaceIds = useMemo(
-		() =>
-			new Set(
-				myWorkspaces
-					.filter((w) => w.role === "owner" || w.role === "admin")
-					.map((w) => w.id),
-			),
-		[myWorkspaces],
+	const myInvitableWorkspaceIds = new Set(
+		myWorkspaces
+			.filter((w) => w.role === "owner" || w.role === "admin")
+			.map((w) => w.id),
 	);
 	const canSeeWorkspaceBreakdown = isAdmin || isSelf;
 
 	// Workspace access summary — direct role wins; derivation fills in
 	// for admin/owner rows on non-private workspaces. Matches the old
 	// matrix rules so the upgrade doesn't hide access state.
-	const perWorkspace = useMemo(() => {
+	const perWorkspace = (() => {
 		const rows = workspaces.map((ws) => {
 			const directRole = member.direct_workspace_roles?.[ws.id];
 			const membershipId = member.direct_workspace_membership_ids?.[ws.id];
@@ -1792,19 +1785,12 @@ function OrganisationPersonCard({
 		// never render either).
 		if (isAdmin) return rows;
 		return rows.filter((r) => myWorkspaceIds.has(r.ws.id));
-	}, [
-		workspaces,
-		member.direct_workspace_roles,
-		member.direct_workspace_membership_ids,
-		member.role,
-		isAdmin,
-		myWorkspaceIds,
-	]);
+	})();
 
 	// Summary line: "Admin across all" when uniform, otherwise a short
 	// breakdown. Ignore workspaces they don't appear on at all.
 	const reached = perWorkspace.filter((w) => w.role !== null);
-	const summary = useMemo(() => {
+	const summary = (() => {
 		if (reached.length === 0) return t`No workspace access yet`;
 		const roleSet = new Set(reached.map((w) => w.role as string));
 		if (reached.length === perWorkspace.length && roleSet.size === 1) {
@@ -1819,7 +1805,7 @@ function OrganisationPersonCard({
 		return Array.from(counts.entries())
 			.map(([r, n]) => `${displayRole(r)} on ${n}`)
 			.join(" · ");
-	}, [reached, perWorkspace.length]);
+	})();
 
 	const handleOrganisationRoleChange = (next: string) => {
 		const person = member.display_name || member.email || t`this person`;
