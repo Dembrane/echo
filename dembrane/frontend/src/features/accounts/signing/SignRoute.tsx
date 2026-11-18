@@ -382,6 +382,8 @@ function MaybeWaiting({
 }) {
 	const { data: me, isLoading } = useV2Me();
 	const [reassigning, setReassigning] = useState(false);
+	// Read once when the page opens; "named 3 days ago" doesn't need to tick.
+	const [now] = useState(Date.now);
 	if (isLoading)
 		return (
 			<Stack align="center" pt="20vh">
@@ -398,7 +400,7 @@ function MaybeWaiting({
 	const days =
 		signer.named_at == null
 			? null
-			: Math.floor((Date.now() - Date.parse(signer.named_at)) / 864e5);
+			: Math.floor((now - Date.parse(signer.named_at)) / 864e5);
 	// Read along, not sign: the document under a band saying whose it is. Nothing here is
 	// the viewer's to finish, so there is no pill; Back is in the header.
 	return (
