@@ -88,11 +88,12 @@ run("tasks summary with room access", () => {
     expect(invoice.status).toBe(200);
     const invoiceId = K.DocumentDetail.parse(invoice.data).id;
     // Tasks a room member must not be counted: one on the invoice, one with no document,
-    // and the billing details one.
+    // and billing details, also when attached to the offer a room member reads.
     for (const body of [
       { title: "Pay the first invoice", kind: "generic", document_id: invoiceId },
       { title: "Send us your logo", kind: "generic" },
       { title: "Fill in the billing details", kind: "billing_details" },
+      { title: "Billing details for the offer", kind: "billing_details", document_id: offerId },
     ])
       expect((await call(w, "POST", `${S()}/tasks`, "staff", body)).status).toBe(201);
     await person("owner", "owner@example.test", "owner");
@@ -155,6 +156,71 @@ run("tasks summary with room access", () => {
       row?.next_task_document_id,
       row?.next_task_document_kind,
     ]).toEqual([null, null, null, null, null]);
+  });
+
+  test("billing details on the offer are not counted for a room member", async () => {
+    const tasks = await w.db
+      .select()
+      .from(schema.account_task)
+      .where(eq(schema.account_task.orgId, w.orgId));
+    const onOffer = tasks.filter((t) => t.documentId !== null && t.kind !== "billing_details");
+    expect(tasks.some((t) => t.kind === "billing_details" && t.documentId !== null)).toBe(true);
+    const offerDocs = (await store.documents(w.db, w.orgId))
+      .filter((x) => x.kind === "offer" || x.kind === "dpa")
+      .map((x) => x.id);
+    const read = onOffer.filter(
+      (t) => offerDocs.includes(t.documentId as string) && t.status !== "withdrawn",
+    );
+    expect((await mine(colleague))?.tasks_total).toBe(read.length);
+  });
+
+  /** Someone the admin labels without room access (as anyone in by role is): a labels-only row. */
+  const label = async (email: string, name: string) =>
+    expect(
+      (
+        await call(w, "POST", `${C()}/room/people`, "admin", {
+          email,
+          name,
+          labels: ["go_ahead"],
+          other: null,
+        })
+      ).status,
+    ).toBe(200);
+  const setRole = (who: Who, role: string) =>
+    w.db
+      .update(schema.org_membership)
+      .set({ role })
+      .where(
+        and(
+          eq(schema.org_membership.org_id, w.orgId),
+          eq(schema.org_membership.user_id, w.people[who].appUserId as string),
+        ),
+      );
+  const listed = async (as: Who) =>
+    (await summary(as)).filter((o) => o.org_id === w.orgId).map((o) => o.access);
+
+  test("an owner with a labels-only room row is listed once, as running the account", async () => {
+    const boss = await person("boss", "boss@example.test", "owner");
+    await label("boss@example.test", "Big Boss");
+    const row = await store.roomPersonByEmail(w.db, w.orgId, "boss@example.test");
+    expect(row?.accessGrantedAt ?? null).toBeNull();
+    expect(await listed(boss)).toEqual(["account"]);
+  });
+
+  test("a room member promoted to admin is listed once, as running the account", async () => {
+    const riser = await person("riser", "riser@example.test", "member");
+    await label("riser@example.test", "Ri Ser");
+    expect(await listed(riser)).toEqual(["room"]);
+    await setRole(riser, "admin");
+    expect(await listed(riser)).toEqual(["account"]);
+  });
+
+  test("an owner demoted to a plain member, with no room access, is not listed", async () => {
+    const faller = await person("faller", "faller@example.test", "owner");
+    await label("faller@example.test", "Fal Ler");
+    expect(await listed(faller)).toEqual(["account"]);
+    await setRole(faller, "member");
+    expect(await listed(faller)).toEqual([]);
   });
 
   test("a plain member and a named signer who is not a member are not listed", async () => {
