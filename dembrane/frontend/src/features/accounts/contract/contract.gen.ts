@@ -167,6 +167,13 @@ export const DocumentSummary = z.object({
    * the page offers). True for everyone else, and for a room member once it is signed.
    */
   may_download: z.boolean(),
+  /**
+   * Whether the caller may name someone to sign, or change who signs (Send to someone else,
+   * and naming another person in the answer to who signs): owners and admins. False for
+   * Billing, who sign themselves and remind the person already named; false for a room
+   * member, the named signer, and on the staff side.
+   */
+  may_name_signer: z.boolean(),
   /** Invoices only. */
   invoice: InvoiceInfo.optional(),
 });
@@ -772,6 +779,11 @@ export const SignResponse = z.object({
 export const DeclineRequest = z.object({ reason: optText(2000) });
 export const DeclineResponse = z.object({ status: z.literal("declined") });
 
+/**
+ * POST .../documents/:docId/signer: names someone to sign, or changes who signs. Owners and
+ * admins only (else 403 room.name_signer_admins_only), since someone who is not a member is
+ * invited in with the Billing role.
+ */
 export const NameSignerRequest = z.object({
   name: text(200),
   email: z.email().max(255),
@@ -812,7 +824,9 @@ export const AcceptSignerInviteResponse = z.object({ org_id: Uuid, document_id: 
  * Who signs an offer, asked once before it is signed. `offer_signer` null: the person
  * answering. `dpa_same`: whoever signs the offer also signs the DPA sent with it; else
  * `dpa_signer` does (null: the person answering). `dpia`: they want their own data
- * protection impact assessment, which sam follows up from the task's response.
+ * protection impact assessment, which sam follows up from the task's response. Naming
+ * anyone is for owners and admins: from Billing such an answer is refused whole (403
+ * room.name_signer_admins_only) and nothing of it is applied.
  */
 export const WhoSignsRequest = z.object({
   offer_signer: NameSignerRequest.nullable(),
