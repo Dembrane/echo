@@ -396,12 +396,12 @@ msgstr "Nur ein Eigentümer kann einen anderen Eigentümer entfernen."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
 msgid "error.room.name_signer_admins_only"
-msgstr ""
+msgstr "Nur Eigentümer oder Admins können wählen, wer unterschreibt. Du kannst selbst unterschreiben oder die schon benannte Person erinnern."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
-msgstr ""
+msgstr "Nur Eigentümer oder Admins können jemanden einladen, der noch kein Mitglied ist. Du kannst eine Kollegin oder einen Kollegen hinzufügen, die oder der schon Mitglied ist."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
@@ -436,12 +436,12 @@ msgstr "Dies kann nur der Eigentümer dieses Projekts tun."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:15
 msgid "error.room.manage_forbidden"
-msgstr ""
+msgstr "Nur wer die Person eingeladen hat, ein Admin oder die Abrechnung kann ändern, was sie tut."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
-msgstr ""
+msgstr "Nur wer die Person eingeladen hat, ein Admin oder die Abrechnung kann sie entfernen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
@@ -476,7 +476,7 @@ msgstr "Beim Unterzeichnen gewählte Optionen passen nicht zu monatlicher Abrech
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:6
 msgid "error.room.in_by_role"
-msgstr ""
+msgstr "Eigentümer, Admins und Abrechnung sind durch ihre Rolle dabei. Ändere stattdessen ihre Rolle auf der Seite Mitglieder."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -786,7 +786,7 @@ msgstr "Es gibt noch keine Zahlungsmethode zum Aktualisieren. Wähle zuerst eine
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
-msgstr ""
+msgstr "Hier gibt es nichts zu beantworten."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
@@ -1051,7 +1051,7 @@ msgstr "Diese Person ist extern in einem deiner Arbeitsbereiche. Entferne zuerst
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
-msgstr ""
+msgstr "Diese Person ist nicht mehr dabei."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1666,7 +1666,7 @@ msgstr "Schreibe etwas, das behalten werden soll."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:11
 msgid "error.room.labels_already_answered"
-msgstr ""
+msgstr "Du hast schon gesagt, was du hier tust."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -449,7 +449,7 @@ msgstr "Answer the question"
 #~ msgid "Answer: {0}"
 #~ msgstr "Answer: {0}"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:69
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:73
 msgid "Answer: {answer}"
 msgstr "Answer: {answer}"
 
@@ -931,8 +931,8 @@ msgstr "Customer status"
 #~ msgstr "Customers"
 
 #: src/features/accounts/signing/SignRoute.tsx:1494
-msgid "Data processing agreement"
-msgstr "Data processing agreement"
+#~ msgid "Data processing agreement"
+#~ msgstr "Data processing agreement"
 
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
@@ -1085,6 +1085,7 @@ msgstr "Download the invoice as PDF"
 
 #: src/features/accounts/format.ts:43
 #: src/features/accounts/staff/UploadPdfModal.tsx:139
+#: src/features/accounts/signing/SignRoute.tsx:1494
 msgid "DPA"
 msgstr "DPA"
 
@@ -1244,7 +1245,7 @@ msgstr "Fields | dembrane"
 msgid "Fields saved"
 msgstr "Fields saved"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:74
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:78
 msgid "File:"
 msgstr "File:"
 
@@ -1344,7 +1345,7 @@ msgstr "For the attention of"
 #~ msgid "From dembrane: {0}"
 #~ msgstr "From dembrane: {0}"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:84
 msgid "From dembrane: {note}"
 msgstr "From dembrane: {note}"
 
@@ -1429,8 +1430,12 @@ msgstr "How we invoice"
 #~ msgstr "I do"
 
 #: src/features/accounts/signing/SignRoute.tsx:1408
-msgid "If not, the data processing agreement becomes a separate document for someone who may."
-msgstr "If not, the data processing agreement becomes a separate document for someone who may."
+#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
+#~ msgstr "If not, the data processing agreement becomes a separate document for someone who may."
+
+#: src/features/accounts/signing/SignRoute.tsx:1408
+msgid "If not, the DPA becomes a separate document for someone who may."
+msgstr "If not, the DPA becomes a separate document for someone who may."
 
 #: src/features/accounts/customer/WhoSigns.tsx:421
 msgid "If you do, we get in touch to work on it with you."
@@ -2909,8 +2914,12 @@ msgid "Sign out and continue"
 msgstr "Sign out and continue"
 
 #: src/features/accounts/format.ts:167
-msgid "Sign the data processing agreement"
-msgstr "Sign the data processing agreement"
+#~ msgid "Sign the data processing agreement"
+#~ msgstr "Sign the data processing agreement"
+
+#: src/features/accounts/format.ts:167
+msgid "Sign the DPA"
+msgstr "Sign the DPA"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:523
 msgid "Sign the offer when sent"
@@ -3928,8 +3937,12 @@ msgstr "Who reads what"
 #~ msgstr "Who signs the data processing agreement?"
 
 #: src/features/accounts/format.ts:160
-msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-msgstr "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
+#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
+#~ msgstr "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
+
+#: src/features/accounts/format.ts:160
+msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
+msgstr "Who signs the offer and the DPA, and whether you need your own DPIA."
 
 #: src/features/accounts/customer/WhoSigns.tsx:273
 #~ msgid "Who signs the offer?"

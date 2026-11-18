@@ -110,7 +110,7 @@ msgstr "{days, plural, one {# den} few {# dny} many {# dne} other {# dní}}"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:464
 msgid "{domain} is not your own email domain. Check that the address is right."
-msgstr ""
+msgstr "{domain} není tvoje vlastní e-mailová doména. Zkontroluj, že je adresa správně."
 
 #: src/features/accounts/signing/SignRoute.tsx:671
 msgid "{done} of {total} filled"
@@ -118,31 +118,31 @@ msgstr "{done} z {total} vyplněno"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:478
 msgid "{first} also gets a link to sign the DPA."
-msgstr ""
+msgstr "{first} dostane také odkaz k podpisu DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:474
 msgid "{first} also gets a link to sign the offer and the DPA."
-msgstr ""
+msgstr "{first} dostane také odkaz k podpisu nabídky a DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:476
 msgid "{first} also gets a link to sign the offer."
-msgstr ""
+msgstr "{first} dostane také odkaz k podpisu nabídky."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:492
 msgid "{first} is already here. Only what {first} does changes."
-msgstr ""
+msgstr "{first} už tu je. Mění se jen to, co {first} dělá."
 
 #: src/features/accounts/customer/room/copy.ts:102
 msgid "{first} stays a member of your organisation, but can no longer read the offer and the DPA here."
-msgstr ""
+msgstr "{first} zůstává členem tvé organizace, ale nabídku a DPA tu už nepřečte."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:519
 msgid "{first} was already here. What {first} does is updated."
-msgstr ""
+msgstr "{first} už tu byl. To, co {first} dělá, je aktualizované."
 
 #: src/features/accounts/customer/room/copy.ts:101
 msgid "{first}'s invitation is withdrawn and the link we sent stops working."
-msgstr ""
+msgstr "Pozvánka pro {first} se ruší a odkaz, který jsme poslali, přestane fungovat."
 
 #: src/features/accounts/customer/WhoSigns.tsx:346
 #~ msgid "{holderName} (you)"
@@ -154,7 +154,7 @@ msgstr "{inviter} z {org} vás zve k podpisu"
 
 #: src/features/accounts/signing/SignGate.tsx:687
 msgid "{inviter} invited you to {org}"
-msgstr ""
+msgstr "{inviter} tě pozval do {org}"
 
 #: src/features/accounts/signing/SignRoute.tsx:1135
 msgid "{label} is empty."
@@ -170,15 +170,15 @@ msgstr "{months} × {0}: při podpisu, pak vždy 1."
 
 #: src/features/accounts/customer/room/RoomPictures.tsx:49
 msgid "{more} more"
-msgstr ""
+msgstr "dalších {more}"
 
 #: src/features/accounts/customer/room/RoomPictures.tsx:33
 msgid "{name} · invited, not joined yet"
-msgstr ""
+msgstr "{name} · pozván, zatím nepřipojen"
 
 #: src/features/accounts/customer/WhoSigns.tsx:485
 msgid "{name} (you)"
-msgstr ""
+msgstr "{name} (ty)"
 
 #: src/features/accounts/signing/SignRoute.tsx:320
 msgid "{name} signed on {when}."
@@ -186,7 +186,7 @@ msgstr "{name} podepsal(a) {when}."
 
 #: src/features/accounts/customer/room/confirm.tsx:49
 msgid "{oldName} no longer signs it, and the link we sent {oldFirst} stops working. {newName} gets a new link."
-msgstr ""
+msgstr "{oldName} už nepodepisuje a odkaz, který jsme poslali {oldFirst}, přestane fungovat. {newName} dostane nový odkaz."
 
 #: src/features/accounts/signing/SignGate.tsx:247
 msgid "{org} invited you to sign"
@@ -194,7 +194,7 @@ msgstr "{org} vás zve k podpisu"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:541
 msgid "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
-msgstr ""
+msgstr "{reach, plural, one {Až se {first} připojí, bude také v # pracovním prostoru, ve kterém je každý člen.} few {Až se {first} připojí, bude také v # pracovních prostorech, ve kterých je každý člen.} other {Až se {first} připojí, bude také v # pracovních prostorech, ve kterých je každý člen.}}"
 
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
@@ -202,19 +202,19 @@ msgstr ""
 
 #: src/features/accounts/customer/room/copy.ts:83
 msgid "{who} invited you as “{own}”."
-msgstr ""
+msgstr "{who} tě pozval jako „{own}“."
 
 #: src/features/accounts/customer/room/copy.ts:87
 msgid "{who} invited you to {what}, and as “{own}”."
-msgstr ""
+msgstr "{who} tě pozval, abys {what}, a jako „{own}“."
 
 #: src/features/accounts/customer/room/copy.ts:90
 msgid "{who} invited you to {what}."
-msgstr ""
+msgstr "{who} tě pozval, abys {what}."
 
 #: src/features/accounts/customer/room/copy.ts:79
 msgid "{who} invited you. What do you do in this decision?"
-msgstr ""
+msgstr "{who} tě pozval. Jakou roli máš v tomto rozhodnutí?"
 
 #: src/features/accounts/staff/OfferExtras.tsx:86
 msgid "1 page"
@@ -222,7 +222,7 @@ msgstr "1 strana"
 
 #: src/features/accounts/customer/NextSteps.tsx:273
 msgid "2 questions"
-msgstr ""
+msgstr "2 otázky"
 
 #: src/features/accounts/customer/NextSteps.tsx:272
 #~ msgid "3 questions"
@@ -334,11 +334,11 @@ msgstr "Akce"
 #: src/features/accounts/customer/room/PeopleList.tsx:93
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:274
 msgid "Add"
-msgstr ""
+msgstr "Přidat"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:89
 msgid "Add {first}"
-msgstr ""
+msgstr "Přidat: {first}"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:684
 msgid "Add a change"
@@ -382,7 +382,7 @@ msgstr "Přidat odrážky"
 #: src/features/accounts/customer/room/PeopleList.tsx:167
 #: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Add someone"
-msgstr ""
+msgstr "Přidat někoho"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:609
 msgid "Add their DPA"
@@ -406,7 +406,7 @@ msgstr "2. řádek adresy"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:140
 msgid "Admin"
-msgstr ""
+msgstr "Admin"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -423,7 +423,7 @@ msgstr "Částka"
 
 #: src/features/accounts/customer/room/copy.ts:56
 msgid "and"
-msgstr ""
+msgstr "a"
 
 #: src/features/accounts/staff/OfferExtras.tsx:109
 msgid "Annex name"
@@ -449,9 +449,9 @@ msgstr "Odpovězte na otázku"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:69
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:73
 msgid "Answer: {answer}"
-msgstr ""
+msgstr "Odpověď: {answer}"
 
 #: src/features/accounts/format.ts:100
 msgid "Answered"
@@ -476,7 +476,7 @@ msgstr "Položit otázku"
 
 #: src/features/accounts/signing/SignGate.tsx:738
 msgid "Ask the person who invited you to send a new one."
-msgstr ""
+msgstr "Požádej toho, kdo tě pozval, aby poslal novou."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:399
 msgid "Asks for"
@@ -531,7 +531,7 @@ msgstr "Do {due}"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:141
 msgid "Billing"
-msgstr ""
+msgstr "Billing"
 
 #: src/features/accounts/format.ts:172
 #: src/features/accounts/staff/AccountsPanel.tsx:164
@@ -645,23 +645,23 @@ msgstr "Upravit koncept"
 #: src/features/accounts/customer/room/PersonRow.tsx:117
 #: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Change what {first} does"
-msgstr ""
+msgstr "Změnit, co dělá {first}"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:279
 msgid "Change who signs"
-msgstr ""
+msgstr "Změnit, kdo podepisuje"
 
 #: src/features/accounts/customer/room/confirm.tsx:20
 msgid "Change who signs both documents?"
-msgstr ""
+msgstr "Změnit, kdo podepisuje oba dokumenty?"
 
 #: src/features/accounts/customer/room/confirm.tsx:22
 msgid "Change who signs the DPA?"
-msgstr ""
+msgstr "Změnit, kdo podepisuje DPA?"
 
 #: src/features/accounts/customer/room/confirm.tsx:23
 msgid "Change who signs the offer?"
-msgstr ""
+msgstr "Změnit, kdo podepisuje nabídku?"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -673,7 +673,7 @@ msgstr "Účtováno"
 
 #: src/features/accounts/customer/room/copy.ts:31
 msgid "check IT and security"
-msgstr ""
+msgstr "kontroloval IT a bezpečnost"
 
 #: src/features/accounts/format.ts:177
 msgid "Check out the demo we made for you"
@@ -681,7 +681,7 @@ msgstr "Prohlédněte si ukázku, kterou jsme pro vás připravili"
 
 #: src/features/accounts/customer/room/copy.ts:32
 msgid "check privacy and AI rules"
-msgstr ""
+msgstr "kontroloval soukromí a pravidla pro AI"
 
 #: src/features/accounts/customer/BillingForm.tsx:186
 msgid "Check this. It should look like {example}."
@@ -693,7 +693,7 @@ msgstr "Zkontrolujte připojení a zkuste to znovu."
 
 #: src/features/accounts/signing/SignGate.tsx:435
 msgid "Check your name, and we'll email you a code to come in. You don't need a password."
-msgstr ""
+msgstr "Zkontroluj své jméno a pošleme ti kód pro vstup. Heslo nepotřebuješ."
 
 #: src/features/accounts/signing/SignGate.tsx:430
 msgid "Check your name, and we'll email you a code to open the document. You don't need a password."
@@ -714,11 +714,11 @@ msgstr "Kontrolujeme adresář Peppol…"
 
 #: src/features/accounts/customer/room/copy.ts:17
 msgid "Checks IT and security"
-msgstr ""
+msgstr "Kontroluje IT a bezpečnost"
 
 #: src/features/accounts/customer/room/copy.ts:18
 msgid "Checks privacy and AI rules"
-msgstr ""
+msgstr "Kontroluje soukromí a pravidla pro AI"
 
 #: src/features/accounts/staff/BillToFields.tsx:133
 #: src/features/accounts/customer/BillingForm.tsx:351
@@ -758,7 +758,7 @@ msgstr "Vyberte jednu možnost."
 
 #: src/features/accounts/customer/WhoSigns.tsx:366
 msgid "Choose someone"
-msgstr ""
+msgstr "Vybrat někoho"
 
 #: src/features/accounts/customer/NextSteps.tsx:313
 msgid "Choose who signs"
@@ -766,11 +766,11 @@ msgstr "Vyberte, kdo podepisuje"
 
 #: src/features/accounts/customer/WhoSigns.tsx:130
 msgid "Choose who signs the DPA"
-msgstr ""
+msgstr "Vyber, kdo podepisuje DPA"
 
 #: src/features/accounts/customer/WhoSigns.tsx:129
 msgid "Choose who signs the offer"
-msgstr ""
+msgstr "Vyber, kdo podepisuje nabídku"
 
 #: src/features/accounts/format.ts:124
 msgid "Churned"
@@ -801,7 +801,7 @@ msgstr "Společný vývoj"
 
 #: src/features/accounts/signing/SignGate.tsx:506
 msgid "Come in"
-msgstr ""
+msgstr "Vstoupit"
 
 #: src/features/accounts/customer/NextSteps.tsx:133
 msgid "Coming up"
@@ -931,8 +931,8 @@ msgstr "Stav zákazníka"
 #~ msgstr "Zákazníci"
 
 #: src/features/accounts/signing/SignRoute.tsx:1494
-msgid "Data processing agreement"
-msgstr "Smlouva o zpracování údajů"
+#~ msgid "Data processing agreement"
+#~ msgstr "Smlouva o zpracování údajů"
 
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
@@ -1085,6 +1085,7 @@ msgstr "Stáhnout fakturu jako PDF"
 
 #: src/features/accounts/format.ts:43
 #: src/features/accounts/staff/UploadPdfModal.tsx:139
+#: src/features/accounts/signing/SignRoute.tsx:1494
 msgid "DPA"
 msgstr "DPA"
 
@@ -1211,7 +1212,7 @@ msgstr "Příklad události nebo zákazníka"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:133
 msgid "Everyone added here can read the offer and the DPA. Invoices and billing details stay with owners, admins and Billing."
-msgstr ""
+msgstr "Všichni, kdo jsou tu přidaní, mohou číst nabídku a DPA. Faktury a fakturační údaje zůstávají u vlastníků, adminů a Billingu."
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
 msgid "Evidence"
@@ -1244,9 +1245,9 @@ msgstr "Pole | dembrane"
 msgid "Fields saved"
 msgstr "Pole uložena"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:74
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:78
 msgid "File:"
-msgstr ""
+msgstr "Soubor:"
 
 #: src/features/accounts/customer/room/ReadOnlyTasks.tsx:69
 #~ msgid "File: "
@@ -1319,7 +1320,7 @@ msgstr "Vyplňte toto pole."
 #: src/features/accounts/customer/room/PeopleList.tsx:271
 #: src/features/accounts/customer/room/PeopleList.tsx:272
 msgid "Find someone"
-msgstr ""
+msgstr "Najít někoho"
 
 #: src/features/accounts/signing/SignGate.tsx:444
 msgid "First name"
@@ -1344,9 +1345,9 @@ msgstr "K rukám"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:84
 msgid "From dembrane: {note}"
-msgstr ""
+msgstr "Od dembrane: {note}"
 
 #: src/features/accounts/signing/SignRoute.tsx:1491
 msgid "General terms and conditions"
@@ -1365,11 +1366,11 @@ msgstr "Dát zpětnou vazbu"
 
 #: src/features/accounts/customer/room/copy.ts:30
 msgid "give the go-ahead"
-msgstr ""
+msgstr "dal souhlas"
 
 #: src/features/accounts/customer/room/copy.ts:16
 msgid "Gives the go-ahead"
-msgstr ""
+msgstr "Dává souhlas"
 
 #: src/features/accounts/signing/SignRoute.tsx:1733
 msgid "Go to the account page"
@@ -1391,11 +1392,11 @@ msgstr "Bude na faktuře"
 
 #: src/features/accounts/customer/room/copy.ts:29
 msgid "handle contract and purchasing"
-msgstr ""
+msgstr "řešil smlouvu a nákup"
 
 #: src/features/accounts/customer/room/copy.ts:15
 msgid "Handles contract and purchasing"
-msgstr ""
+msgstr "Řeší smlouvu a nákup"
 
 #~ msgid "Hide bank details"
 #~ msgstr "Skrýt bankovní údaje"
@@ -1429,8 +1430,12 @@ msgstr "Jak fakturujeme"
 #~ msgstr "Já"
 
 #: src/features/accounts/signing/SignRoute.tsx:1408
-msgid "If not, the data processing agreement becomes a separate document for someone who may."
-msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným dokumentem pro oprávněnou osobu."
+#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
+#~ msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným dokumentem pro oprávněnou osobu."
+
+#: src/features/accounts/signing/SignRoute.tsx:1408
+msgid "If not, the DPA becomes a separate document for someone who may."
+msgstr "Pokud ne, DPA se stane samostatným dokumentem pro někoho, kdo ho podepsat smí."
 
 #: src/features/accounts/customer/WhoSigns.tsx:421
 msgid "If you do, we get in touch to work on it with you."
@@ -1454,7 +1459,7 @@ msgstr "Probíhá (hovor domluven)"
 
 #: src/features/accounts/customer/room/LabelChoices.tsx:85
 msgid "In your own words"
-msgstr ""
+msgstr "Vlastními slovy"
 
 #. placeholder {0}: money(doc.vat_cents)
 #: src/features/accounts/customer/Pay.tsx:146
@@ -1481,7 +1486,7 @@ msgstr "V ceně"
 #: src/features/accounts/customer/NextSteps.tsx:402
 #: src/features/accounts/customer/NextSteps.tsx:496
 msgid "Includes the DPA"
-msgstr ""
+msgstr "Včetně DPA"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:65
 msgid "Initials"
@@ -1497,7 +1502,7 @@ msgstr "Úvod"
 
 #: src/features/accounts/signing/SignGate.tsx:660
 msgid "Invitation | dembrane"
-msgstr ""
+msgstr "Pozvánka | dembrane"
 
 #~ msgid "Invite"
 #~ msgstr "Pozvat"
@@ -1507,11 +1512,11 @@ msgstr ""
 
 #: src/features/accounts/customer/room/PersonRow.tsx:66
 msgid "invited"
-msgstr ""
+msgstr "pozván"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:148
 msgid "Invited"
-msgstr ""
+msgstr "Pozván"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -1547,11 +1552,11 @@ msgstr "Faktura čeká na fakturační údaje"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:906
 msgid "Invoice waits for the billing details and the DPA signature"
-msgstr "Faktura čeká na fakturační údaje a na podpis smlouvy o zpracování osobních údajů"
+msgstr "Faktura čeká na fakturační údaje a na podpis DPA"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:908
 msgid "Invoice waits for the DPA signature"
-msgstr "Faktura čeká na podpis smlouvy o zpracování osobních údajů"
+msgstr "Faktura čeká na podpis DPA"
 
 #: src/features/accounts/customer/BillingForm.tsx:476
 msgid "Invoices arrive in your accounting software"
@@ -1599,7 +1604,7 @@ msgstr "Fakturace"
 
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:66
 msgid "Is that right?"
-msgstr ""
+msgstr "Je to tak?"
 
 #: src/features/accounts/customer/WhoSigns.tsx:308
 #~ msgid "It is a separate document. Some organisations have it signed by someone else, such as their data protection officer."
@@ -1701,7 +1706,7 @@ msgstr "Přihlaste se a stáhněte si podepsanou kopii."
 
 #: src/features/accounts/signing/SignGate.tsx:673
 msgid "Log in to read the offer and the DPA."
-msgstr ""
+msgstr "Přihlas se a přečti si nabídku a DPA."
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:106
 msgid "Log in with another address"
@@ -1721,11 +1726,11 @@ msgstr "Můžete také odsouhlasit zpracování údajů za vaši organizaci?"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:142
 msgid "Member"
-msgstr ""
+msgstr "Member"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:103
 msgid "Members"
-msgstr ""
+msgstr "Members"
 
 #: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
@@ -1884,27 +1889,27 @@ msgstr "Ne, podepíše to někdo jiný"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:294
 msgid "Nobody by that name or email."
-msgstr ""
+msgstr "Nikdo s tímto jménem nebo e-mailem."
 
 #: src/features/accounts/customer/room/copy.ts:42
 msgid "Nobody checks IT and security yet."
-msgstr ""
+msgstr "Zatím nikdo nekontroluje IT a bezpečnost."
 
 #: src/features/accounts/customer/room/copy.ts:43
 msgid "Nobody checks privacy and AI rules yet."
-msgstr ""
+msgstr "Zatím nikdo nekontroluje soukromí a pravidla pro AI."
 
 #: src/features/accounts/customer/room/PeopleList.tsx:149
 msgid "Nobody else yet. Add the colleagues who decide on this offer with you."
-msgstr ""
+msgstr "Zatím nikdo další. Přidej kolegy, kteří o této nabídce rozhodují s tebou."
 
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
-msgstr ""
+msgstr "Zatím nikdo nedává souhlas."
 
 #: src/features/accounts/customer/room/copy.ts:40
 msgid "Nobody handles contract and purchasing yet."
-msgstr ""
+msgstr "Zatím nikdo neřeší smlouvu a nákup."
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:94
 msgid "Nobody on this account has an email address yet."
@@ -1912,7 +1917,7 @@ msgstr "Nikdo na tomto účtu zatím nemá e-mailovou adresu."
 
 #: src/features/accounts/customer/WhoSigns.tsx:353
 msgid "Nobody yet"
-msgstr ""
+msgstr "Zatím nikdo"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:545
 msgid "None"
@@ -1920,11 +1925,11 @@ msgstr "Žádný"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:68
 msgid "not added yet"
-msgstr ""
+msgstr "zatím nepřidán"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:150
 msgid "Not added yet"
-msgstr ""
+msgstr "Zatím nepřidán"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "Not booked"
@@ -1948,7 +1953,7 @@ msgstr "není aktivní, dokud nezveřejníte"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:176
 msgid "Not needed"
-msgstr ""
+msgstr "Není potřeba"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:395
 msgid "Not sent"
@@ -1964,7 +1969,7 @@ msgstr "Poznámka"
 
 #: src/features/accounts/customer/room/ReadOnlyTasks.tsx:36
 msgid "Nothing here yet."
-msgstr ""
+msgstr "Zatím tu nic není."
 
 #~ msgid "Nothing needs you right now. We are working on our part."
 #~ msgstr "Teď na vás nic nečeká. Pracujeme na své části."
@@ -1976,7 +1981,7 @@ msgstr "V tuto chvíli není co dělat."
 
 #: src/features/accounts/customer/room/SigningChoice.tsx:77
 msgid "Now: {now}"
-msgstr ""
+msgstr "Teď: {now}"
 
 #: src/features/accounts/staff/InvoicePlanFields.tsx:145
 msgid "Number of months"
@@ -2033,7 +2038,7 @@ msgstr "Při podpisu"
 
 #: src/features/accounts/customer/room/ReadOnlyTasks.tsx:30
 msgid "On the offer and the DPA"
-msgstr ""
+msgstr "K nabídce a DPA"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:940
 msgid "Onboarding tasks added"
@@ -2049,7 +2054,7 @@ msgstr "Jedno na řádek"
 
 #: src/features/accounts/customer/room/SigningChoice.tsx:50
 msgid "One person signs each document."
-msgstr ""
+msgstr "Každý dokument podepisuje jedna osoba."
 
 #: src/features/accounts/customer/Pay.tsx:157
 msgid "Online"
@@ -2113,7 +2118,7 @@ msgstr "Otevřít dokument"
 
 #: src/features/accounts/customer/room/Tags.tsx:63
 msgid "Open the DPA"
-msgstr ""
+msgstr "Otevřít DPA"
 
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:268
@@ -2122,7 +2127,7 @@ msgstr "Otevřít koncept ({0})"
 
 #: src/features/accounts/customer/room/Tags.tsx:63
 msgid "Open the offer"
-msgstr ""
+msgstr "Otevřít nabídku"
 
 #: src/features/accounts/pdf/PdfPages.tsx:155
 msgid "Open the PDF"
@@ -2215,15 +2220,15 @@ msgstr "Nepovinné. Úkol zůstane zašedlý, dokud nebude tento dokument podeps
 
 #: src/features/accounts/customer/room/LabelChoices.tsx:51
 msgid "Optional. With nothing chosen, they are kept informed."
-msgstr ""
+msgstr "Nepovinné. Když nic nevybereš, zůstane informovaný."
 
 #: src/features/accounts/customer/room/LabelChoices.tsx:58
 msgid "Optional. With nothing chosen, you are kept informed."
-msgstr ""
+msgstr "Nepovinné. Když nic nevybereš, zůstaneš informovaný."
 
 #: src/features/accounts/customer/room/PersonRow.tsx:108
 msgid "Options for {first}"
-msgstr ""
+msgstr "Možnosti pro {first}"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/BillToFields.tsx:89
@@ -2239,11 +2244,11 @@ msgstr "Název organizace"
 
 #: src/features/accounts/customer/room/LabelChoices.tsx:80
 msgid "Other"
-msgstr ""
+msgstr "Jiné"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:262
 msgid "Other members"
-msgstr ""
+msgstr "Ostatní členové"
 
 #: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
@@ -2263,7 +2268,7 @@ msgstr "Po splatnosti"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:143
 msgid "Owner"
-msgstr ""
+msgstr "Vlastník"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:339
 msgid "Page"
@@ -2468,14 +2473,14 @@ msgstr "Dotazy"
 
 #: src/features/accounts/customer/DocumentsTable.tsx:144
 msgid "Read"
-msgstr ""
+msgstr "Číst"
 
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Přečtěte si nabídku a podepište ji zde. Podepisuje za vaši organizaci někdo jiný? Uveďte ho v nabídce; obdrží vlastní odkaz."
 
 #: src/features/accounts/signing/SignGate.tsx:694
 msgid "Read the offer and the DPA with your team"
-msgstr ""
+msgstr "Čti nabídku a DPA se svým týmem"
 
 #. placeholder {0}: offerName || "..."
 #: src/features/accounts/staff/PushOfferModal.tsx:365
@@ -2484,7 +2489,7 @@ msgstr "Znění: „{0} x dembrane“"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:150
 msgid "Reads the offer and the DPA"
-msgstr ""
+msgstr "Čte nabídku a DPA"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:938
 msgid "Ready to invoice"
@@ -2536,11 +2541,11 @@ msgstr "Připomenuto"
 #: src/features/accounts/customer/room/confirm.tsx:75
 #: src/features/accounts/customer/room/PersonRow.tsx:126
 msgid "Remove {first}"
-msgstr ""
+msgstr "Odebrat: {first}"
 
 #: src/features/accounts/customer/room/confirm.tsx:77
 msgid "Remove {name}?"
-msgstr ""
+msgstr "Odebrat: {name}?"
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2578,11 +2583,11 @@ msgstr "Odpovědět a uzavřít"
 
 #: src/features/accounts/customer/room/copy.ts:34
 msgid "represent staff or stakeholders"
-msgstr ""
+msgstr "zastupoval zaměstnance nebo zúčastněné"
 
 #: src/features/accounts/customer/room/copy.ts:20
 msgid "Represents staff or stakeholders"
-msgstr ""
+msgstr "Zastupuje zaměstnance nebo zúčastněné"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:414
 msgid "Required"
@@ -2645,7 +2650,7 @@ msgstr "Role"
 
 #: src/features/accounts/customer/room/copy.ts:33
 msgid "run the rollout"
-msgstr ""
+msgstr "vedl zavedení"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
@@ -2840,7 +2845,7 @@ msgstr "Podíl (%)"
 #: src/features/accounts/customer/DocumentsTable.tsx:168
 #: src/features/accounts/customer/AccountRoute.tsx:145
 msgid "Share with a colleague"
-msgstr ""
+msgstr "Sdílet s kolegou"
 
 #. placeholder {0}: totalBps / 100
 #: src/features/accounts/staff/InvoicePlanFields.tsx:244
@@ -2854,7 +2859,7 @@ msgstr "Zobrazit vše"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:289
 msgid "Show all {count}"
-msgstr ""
+msgstr "Zobrazit všech {count}"
 
 #. placeholder {0}: done.length
 #: src/features/accounts/customer/NextSteps.tsx:148
@@ -2909,8 +2914,12 @@ msgid "Sign out and continue"
 msgstr "Odhlásit se a pokračovat"
 
 #: src/features/accounts/format.ts:167
-msgid "Sign the data processing agreement"
-msgstr "Podepsat smlouvu o zpracování osobních údajů"
+#~ msgid "Sign the data processing agreement"
+#~ msgstr "Podepsat smlouvu o zpracování osobních údajů"
+
+#: src/features/accounts/format.ts:167
+msgid "Sign the DPA"
+msgstr "Podepsat DPA"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:523
 msgid "Sign the offer when sent"
@@ -2990,7 +2999,7 @@ msgstr "Podepisující nahrazen"
 #: src/features/accounts/customer/room/SigningChoice.tsx:43
 #: src/features/accounts/customer/room/SigningChoice.tsx:47
 msgid "Signing"
-msgstr ""
+msgstr "Podpis"
 
 #~ msgid "Signing failed. Try again."
 #~ msgstr ""
@@ -3002,11 +3011,11 @@ msgstr "Podepisuje {0} tak, jak je zobrazeno."
 
 #: src/features/accounts/customer/room/copy.ts:49
 msgid "Signs the DPA"
-msgstr ""
+msgstr "Podepisuje DPA"
 
 #: src/features/accounts/customer/room/copy.ts:50
 msgid "Signs the offer"
-msgstr ""
+msgstr "Podepisuje nabídku"
 
 #. placeholder {0}: formatDate(a.created_at, i18n.locale)
 #: src/features/accounts/staff/AccountsPanel.tsx:189
@@ -3040,7 +3049,7 @@ msgstr "Dál podepisuje někdo jiný z vaší organizace."
 #: src/features/accounts/customer/WhoSigns.tsx:206
 #: src/features/accounts/customer/WhoSigns.tsx:397
 msgid "Someone new"
-msgstr ""
+msgstr "Někdo nový"
 
 #: src/features/accounts/format.ts:166
 msgid "Someone who may agree to data processing for your organisation signs it."
@@ -3090,7 +3099,7 @@ msgstr "Zůstat přihlášen jako {email}"
 
 #: src/features/accounts/customer/WhoSigns.tsx:329
 msgid "Step {count} of 2"
-msgstr ""
+msgstr "Krok {count} ze 2"
 
 #: src/features/accounts/customer/WhoSigns.tsx:263
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:161
@@ -3302,7 +3311,7 @@ msgstr "Pozvánka byla odeslána na"
 
 #: src/features/accounts/signing/SignGate.tsx:719
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
-msgstr ""
+msgstr "Pozvánka byla zrušena nebo ji nahradila novější. Požádej toho, kdo tě pozval, aby ji poslal znovu."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:360
 msgid "The name is empty."
@@ -3452,7 +3461,7 @@ msgstr "Pozvánku se nepodařilo načíst"
 
 #: src/features/accounts/signing/SignGate.tsx:735
 msgid "This invitation has closed"
-msgstr ""
+msgstr "Tato pozvánka vypršela"
 
 #: src/features/accounts/signing/SignGate.tsx:141
 msgid "This invitation is for {invitee}"
@@ -3762,11 +3771,11 @@ msgstr "Tento dokument jsme pro adresu, kterou používáte, nenašli. Možná b
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:489
 msgid "We email {first} a link to join your organisation. There, {first} reads the offer and the DPA."
-msgstr ""
+msgstr "Pošleme {first} odkaz pro připojení k tvé organizaci. Tam {first} čte nabídku a DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:491
 msgid "We email {first} a link. {first} can then read the offer and the DPA."
-msgstr ""
+msgstr "Pošleme {first} odkaz. Pak {first} může číst nabídku a DPA."
 
 #~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
 #~ msgstr ""
@@ -3786,27 +3795,27 @@ msgstr ""
 
 #: src/features/accounts/customer/WhoSigns.tsx:280
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
-msgstr ""
+msgstr "Poslali jsme {dpaName} ({dpaEmail}) odkaz k podpisu DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:515
 msgid "We emailed {name} at {email} a link to join. There, {first} can read the offer and the DPA."
-msgstr ""
+msgstr "Poslali jsme {name} ({email}) odkaz pro připojení. Tam {first} může číst nabídku a DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:523
 msgid "We emailed {name} at {email} a link to sign the DPA."
-msgstr ""
+msgstr "Poslali jsme {name} ({email}) odkaz k podpisu DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:521
 msgid "We emailed {name} at {email} a link to sign the offer and the DPA."
-msgstr ""
+msgstr "Poslali jsme {name} ({email}) odkaz k podpisu nabídky a DPA."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:524
 msgid "We emailed {name} at {email} a link to sign the offer."
-msgstr ""
+msgstr "Poslali jsme {name} ({email}) odkaz k podpisu nabídky."
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:517
 msgid "We emailed {name} at {email}. {first} can now read the offer and the DPA."
-msgstr ""
+msgstr "Napsali jsme {name} ({email}). {first} teď může číst nabídku a DPA."
 
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
@@ -3818,7 +3827,7 @@ msgstr "Odkaz jsme znovu poslali: {name}."
 
 #: src/features/accounts/customer/WhoSigns.tsx:265
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
-msgstr ""
+msgstr "Poslali jsme {offerName} ({offerEmail}) odkaz k podpisu nabídky a DPA."
 
 #: src/features/accounts/customer/WhoSigns.tsx:272
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer."
@@ -3877,11 +3886,11 @@ msgstr "Webové stránky"
 
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:75
 msgid "What do you do in this decision?"
-msgstr ""
+msgstr "Jakou roli máš v tomto rozhodnutí?"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:370
 msgid "What does {first} do?"
-msgstr ""
+msgstr "Co dělá {first}?"
 
 #: src/features/accounts/customer/AccountPickerRoute.tsx:47
 msgid "What each of your organisations still has to do for dembrane."
@@ -3917,19 +3926,23 @@ msgstr "Až e-mail odešlete, odpovězte \"sent\" ve vlákně nabídky na Slacku
 
 #: src/features/accounts/customer/room/PeopleList.tsx:126
 msgid "Who is involved"
-msgstr ""
+msgstr "Kdo je zapojený"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:137
 msgid "Who reads what"
-msgstr ""
+msgstr "Kdo co čte"
 
 #: src/features/accounts/customer/WhoSigns.tsx:304
 #~ msgid "Who signs the data processing agreement?"
 #~ msgstr "Kdo podepisuje smlouvu o zpracování osobních údajů?"
 
 #: src/features/accounts/format.ts:160
-msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-msgstr "Kdo podepisuje nabídku a smlouvu o zpracování osobních údajů a zda potřebujete vlastní DPIA."
+#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
+#~ msgstr "Kdo podepisuje nabídku a smlouvu o zpracování osobních údajů a zda potřebujete vlastní DPIA."
+
+#: src/features/accounts/format.ts:160
+msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
+msgstr "Kdo podepisuje nabídku a DPA a jestli potřebuješ vlastní DPIA."
 
 #: src/features/accounts/customer/WhoSigns.tsx:273
 #~ msgid "Who signs the offer?"
@@ -3941,7 +3954,7 @@ msgstr "Fakturační údaje: obchodní název, adresa, DIČ (VAT) nebo číslo K
 
 #: src/features/accounts/customer/room/copy.ts:19
 msgid "Will run the rollout"
-msgstr ""
+msgstr "Vede zavedení"
 
 #~ msgid "With dembrane"
 #~ msgstr "S dembrane"
@@ -3971,12 +3984,12 @@ msgstr "Ano, mám oprávnění"
 
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:114
 msgid "Yes, that is right"
-msgstr ""
+msgstr "Ano, je to tak"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:64
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:161
 msgid "you"
-msgstr ""
+msgstr "ty"
 
 #: src/features/accounts/customer/Questions.tsx:170
 msgid "You"
@@ -3984,11 +3997,11 @@ msgstr "Vy"
 
 #: src/features/accounts/signing/SignGate.tsx:670
 msgid "You accepted this invitation"
-msgstr ""
+msgstr "Tuto pozvánku jsi přijal"
 
 #: src/features/accounts/signing/SignGate.tsx:420
 msgid "You already have a dembrane account with {email}. We'll email you a code to come in."
-msgstr ""
+msgstr "Už máš účet dembrane s adresou {email}. Pošleme ti kód pro vstup."
 
 #: src/features/accounts/signing/SignGate.tsx:415
 msgid "You already have a dembrane account with {email}. We'll email you a code to open the document."
@@ -3999,7 +4012,7 @@ msgstr "S adresou {email} už účet dembrane máte. Pošleme vám e-mailem kód
 
 #: src/features/accounts/signing/SignGate.tsx:691
 msgid "You are invited to {org}"
-msgstr ""
+msgstr "Jsi pozván do {org}"
 
 #: src/features/accounts/signing/DocumentLoadError.tsx:76
 msgid "You are signed in as {email}, and this document is not shared with that address."
@@ -4011,11 +4024,11 @@ msgstr "Jste odhlášeni. Přihlaste se znovu a otevřete tento dokument."
 
 #: src/features/accounts/signing/SignRoute.tsx:260
 msgid "You can read this document. {signer} signs it."
-msgstr ""
+msgstr "Tento dokument si můžeš přečíst. Podepisuje ho {signer}."
 
 #: src/features/accounts/signing/SignRoute.tsx:262
 msgid "You can read this document. An owner, admin or Billing signs it."
-msgstr ""
+msgstr "Tento dokument si můžeš přečíst. Podepisuje ho vlastník, admin nebo Billing."
 
 #: src/features/accounts/customer/WhoSigns.tsx:287
 msgid "You can review and sign the offer now."
@@ -4027,23 +4040,23 @@ msgstr "Vybrali jste {names}. Celkem {total} vč. DPH."
 
 #: src/features/accounts/customer/room/copy.ts:84
 msgid "You were invited as “{own}”."
-msgstr ""
+msgstr "Byl jsi pozván jako „{own}“."
 
 #: src/features/accounts/customer/room/copy.ts:88
 msgid "You were invited to {what}, and as “{own}”."
-msgstr ""
+msgstr "Byl jsi pozván, abys {what}, a jako „{own}“."
 
 #: src/features/accounts/customer/room/copy.ts:91
 msgid "You were invited to {what}."
-msgstr ""
+msgstr "Byl jsi pozván, abys {what}."
 
 #: src/features/accounts/customer/room/copy.ts:80
 msgid "You were invited. What do you do in this decision?"
-msgstr ""
+msgstr "Byl jsi pozván. Jakou roli máš v tomto rozhodnutí?"
 
 #: src/features/accounts/customer/room/confirm.tsx:48
 msgid "You will not sign it. {newName} gets a link to sign instead."
-msgstr ""
+msgstr "Nepodepíšeš ty. {newName} místo tebe dostane odkaz k podpisu."
 
 #: src/features/accounts/signing/SignGate.tsx:529
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."

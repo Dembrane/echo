@@ -396,12 +396,12 @@ msgstr "Solo un proprietario può rimuovere un altro proprietario."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
 msgid "error.room.name_signer_admins_only"
-msgstr ""
+msgstr "Solo un proprietario o un amministratore può scegliere chi firma. Puoi firmare tu o ricordarlo alla persona già scelta."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
-msgstr ""
+msgstr "Solo un proprietario o un amministratore può invitare chi non è ancora membro. Puoi aggiungere un collega che è già membro."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
@@ -436,12 +436,12 @@ msgstr "Solo il proprietario di questo progetto può farlo."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:15
 msgid "error.room.manage_forbidden"
-msgstr ""
+msgstr "Solo chi l’ha invitato, un amministratore o la Fatturazione può cambiare quello che fa."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
-msgstr ""
+msgstr "Solo chi l’ha invitato, un amministratore o la Fatturazione può toglierlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
@@ -476,7 +476,7 @@ msgstr "Le opzioni scelte alla firma non vanno con fatturazione mensile, a rate 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:6
 msgid "error.room.in_by_role"
-msgstr ""
+msgstr "Proprietari, amministratori e Fatturazione ci sono per il loro ruolo. Cambia il loro ruolo nella pagina Membri."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -786,7 +786,7 @@ msgstr "Non c'è ancora nessun metodo di pagamento da aggiornare. Scegli prima u
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
-msgstr ""
+msgstr "Qui non c’è niente da rispondere."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
@@ -1051,7 +1051,7 @@ msgstr "Questa persona è un collaboratore esterno in uno dei tuoi spazi di lavo
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
-msgstr ""
+msgstr "Questa persona non c’è più."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1666,7 +1666,7 @@ msgstr "Scrivi qualcosa da conservare nella memoria."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:11
 msgid "error.room.labels_already_answered"
-msgstr ""
+msgstr "Hai già detto che cosa fai qui."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -1405,7 +1405,7 @@ function FinishStep({
 					value={dpa}
 					onChange={(v) => onDpa(v as "yes" | "no")}
 					label={t`May you also agree to data processing for your organisation?`}
-					description={t`If not, the data processing agreement becomes a separate document for someone who may.`}
+					description={t`If not, the DPA becomes a separate document for someone who may.`}
 					error={tried && unanswered ? t`Choose one to continue.` : undefined}
 				>
 					<Stack gap={6} mt={6}>
@@ -1491,7 +1491,7 @@ const legalName = (kind: string) =>
 		? t`General terms and conditions`
 		: kind === "sla"
 			? t`Service level agreement`
-			: t`Data processing agreement`;
+			: t`DPA`;
 
 /**
  * The legal documents the agreement is made of, each opening the version this document

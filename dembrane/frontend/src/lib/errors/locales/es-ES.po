@@ -396,12 +396,12 @@ msgstr "Solo un propietario puede eliminar a otro propietario."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
 msgid "error.room.name_signer_admins_only"
-msgstr ""
+msgstr "Solo un propietario o administrador puede elegir quién firma. Puedes firmar tú o recordárselo a la persona ya elegida."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
-msgstr ""
+msgstr "Solo un propietario o administrador puede invitar a alguien que aún no es miembro. Puedes añadir a un compañero que ya es miembro."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
@@ -436,12 +436,12 @@ msgstr "Solo el propietario de este proyecto puede hacer esto."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:15
 msgid "error.room.manage_forbidden"
-msgstr ""
+msgstr "Solo quien lo invitó, un administrador o Facturación pueden cambiar lo que hace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
-msgstr ""
+msgstr "Solo quien lo invitó, un administrador o Facturación pueden quitarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
@@ -476,7 +476,7 @@ msgstr "Las opciones elegidas al firmar no van con facturación mensual, a plazo
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:6
 msgid "error.room.in_by_role"
-msgstr ""
+msgstr "Los propietarios, administradores y Facturación están por su rol. Cambia su rol en la página Miembros."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -786,7 +786,7 @@ msgstr "Aún no hay ningún método de pago que actualizar. Elige un plan primer
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
-msgstr ""
+msgstr "Aquí no hay nada que responder."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
@@ -1051,7 +1051,7 @@ msgstr "Esta persona es externa en uno de tus espacios de trabajo. Quítale ese 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
-msgstr ""
+msgstr "Esta persona ya no está."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1666,7 +1666,7 @@ msgstr "Escribe algo para que la memoria lo guarde."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:11
 msgid "error.room.labels_already_answered"
-msgstr ""
+msgstr "Ya dijiste lo que haces aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

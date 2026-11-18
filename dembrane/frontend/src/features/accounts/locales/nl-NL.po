@@ -386,7 +386,7 @@ msgstr "Iemand toevoegen"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:609
 msgid "Add their DPA"
-msgstr "Hun verwerkersovereenkomst toevoegen"
+msgstr "Hun DPA toevoegen"
 
 #: src/features/accounts/signing/SignRoute.tsx:603
 msgid "Add your signature first."
@@ -449,7 +449,7 @@ msgstr "Beantwoord de vraag"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:69
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:73
 msgid "Answer: {answer}"
 msgstr "Antwoord: {answer}"
 
@@ -931,8 +931,8 @@ msgstr "Klantstatus"
 #~ msgstr "Klanten"
 
 #: src/features/accounts/signing/SignRoute.tsx:1494
-msgid "Data processing agreement"
-msgstr "Verwerkersovereenkomst"
+#~ msgid "Data processing agreement"
+#~ msgstr "Verwerkersovereenkomst"
 
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
@@ -1085,12 +1085,13 @@ msgstr "Download de factuur als pdf"
 
 #: src/features/accounts/format.ts:43
 #: src/features/accounts/staff/UploadPdfModal.tsx:139
+#: src/features/accounts/signing/SignRoute.tsx:1494
 msgid "DPA"
-msgstr "Verwerkersovereenkomst"
+msgstr "DPA"
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:134
 msgid "DPA recorded as signed"
-msgstr "Verwerkersovereenkomst vastgelegd als ondertekend"
+msgstr "DPA vastgelegd als ondertekend"
 
 #: src/features/accounts/format.ts:61
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
@@ -1244,7 +1245,7 @@ msgstr "Velden | dembrane"
 msgid "Fields saved"
 msgstr "Velden opgeslagen"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:74
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:78
 msgid "File:"
 msgstr "Bestand:"
 
@@ -1344,7 +1345,7 @@ msgstr "Ter attentie van"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:84
 msgid "From dembrane: {note}"
 msgstr "Van dembrane: {note}"
 
@@ -1429,8 +1430,12 @@ msgstr "Zo factureren we"
 #~ msgstr "Ik"
 
 #: src/features/accounts/signing/SignRoute.tsx:1408
-msgid "If not, the data processing agreement becomes a separate document for someone who may."
-msgstr "Zo niet, dan wordt de verwerkersovereenkomst een apart document voor iemand die dat wel mag."
+#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
+#~ msgstr "Zo niet, dan wordt de verwerkersovereenkomst een apart document voor iemand die dat wel mag."
+
+#: src/features/accounts/signing/SignRoute.tsx:1408
+msgid "If not, the DPA becomes a separate document for someone who may."
+msgstr "Zo niet, dan wordt de DPA een apart document voor iemand die dat mag."
 
 #: src/features/accounts/customer/WhoSigns.tsx:421
 msgid "If you do, we get in touch to work on it with you."
@@ -1547,11 +1552,11 @@ msgstr "Factuur wacht op de factuurgegevens"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:906
 msgid "Invoice waits for the billing details and the DPA signature"
-msgstr "Factuur wacht op de factuurgegevens en de ondertekende verwerkersovereenkomst"
+msgstr "Factuur wacht op de factuurgegevens en de ondertekende DPA"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:908
 msgid "Invoice waits for the DPA signature"
-msgstr "Factuur wacht op de ondertekende verwerkersovereenkomst"
+msgstr "Factuur wacht op de ondertekende DPA"
 
 #: src/features/accounts/customer/BillingForm.tsx:476
 msgid "Invoices arrive in your accounting software"
@@ -2199,7 +2204,7 @@ msgstr "Optioneel"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:594
 msgid "Optional, replaces our DPA"
-msgstr "Optioneel, vervangt onze verwerkersovereenkomst"
+msgstr "Optioneel, vervangt onze DPA"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:165
 msgid "Optional. A past event or customer to model the demo on."
@@ -2901,8 +2906,12 @@ msgid "Sign out and continue"
 msgstr "Uitloggen en doorgaan"
 
 #: src/features/accounts/format.ts:167
-msgid "Sign the data processing agreement"
-msgstr "Verwerkersovereenkomst ondertekenen"
+#~ msgid "Sign the data processing agreement"
+#~ msgstr "Verwerkersovereenkomst ondertekenen"
+
+#: src/features/accounts/format.ts:167
+msgid "Sign the DPA"
+msgstr "De DPA ondertekenen"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:523
 msgid "Sign the offer when sent"
@@ -3267,7 +3276,7 @@ msgstr "Het document kon niet worden geladen. Probeer het zo opnieuw."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:524
 msgid "The DPA is always signed"
-msgstr "De verwerkersovereenkomst wordt altijd getekend"
+msgstr "De DPA wordt altijd ondertekend"
 
 #: src/features/accounts/staff/DemoDraftRoute.tsx:95
 msgid "The draft is not ready yet."
@@ -3326,7 +3335,7 @@ msgstr "De bepaling"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:702
 msgid "The terms, SLA and DPA versions in force today are pinned."
-msgstr "De versies van de voorwaarden, SLA en verwerkersovereenkomst die vandaag gelden worden vastgelegd."
+msgstr "De versies van de voorwaarden, SLA en DPA die vandaag gelden worden vastgelegd."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:506
 #: src/features/accounts/staff/PushOfferModal.tsx:570
@@ -3355,11 +3364,11 @@ msgstr "Hun opdrachtbrief"
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:31
 msgid "Their own DPA"
-msgstr "Hun eigen verwerkersovereenkomst"
+msgstr "Hun eigen DPA"
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:40
 msgid "Their own DPA signed, {day}"
-msgstr "Eigen verwerkersovereenkomst ondertekend, {day}"
+msgstr "Eigen DPA ondertekend, {day}"
 
 #: src/features/accounts/staff/BillToFields.tsx:152
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:197
@@ -3920,8 +3929,12 @@ msgstr "Wie wat leest"
 #~ msgstr "Wie tekent de verwerkersovereenkomst?"
 
 #: src/features/accounts/format.ts:160
-msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-msgstr "Wie de offerte en de verwerkersovereenkomst tekent, en of jullie een eigen DPIA nodig hebben."
+#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
+#~ msgstr "Wie de offerte en de verwerkersovereenkomst tekent, en of jullie een eigen DPIA nodig hebben."
+
+#: src/features/accounts/format.ts:160
+msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
+msgstr "Wie de offerte en de DPA ondertekent, en of jullie een eigen DPIA nodig hebben."
 
 #: src/features/accounts/customer/WhoSigns.tsx:273
 #~ msgid "Who signs the offer?"

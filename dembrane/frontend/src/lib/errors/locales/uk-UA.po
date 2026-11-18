@@ -396,12 +396,12 @@ msgstr "Лише власник може видалити іншого влас�
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
 msgid "error.room.name_signer_admins_only"
-msgstr ""
+msgstr "Лише власник чи адміністратор може вибрати, хто підписує. Ти можеш підписати сам або нагадати вже вибраній людині."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
-msgstr ""
+msgstr "Лише власник чи адміністратор може запросити того, хто ще не є учасником. Ти можеш додати колегу, який уже є учасником."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
@@ -436,12 +436,12 @@ msgstr "Це може зробити лише власник цього проє
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:15
 msgid "error.room.manage_forbidden"
-msgstr ""
+msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть змінити, що вона робить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
-msgstr ""
+msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть її прибрати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
@@ -476,7 +476,7 @@ msgstr "Варіанти, вибрані під час підписання, н�
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:6
 msgid "error.room.in_by_role"
-msgstr ""
+msgstr "Власники, адміністратори й Оплата тут завдяки своїй ролі. Зміни їхню роль на сторінці Учасники."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -786,7 +786,7 @@ msgstr "Ще немає способу оплати для оновлення. �
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
-msgstr ""
+msgstr "Тут нема на що відповідати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
@@ -1051,7 +1051,7 @@ msgstr "Ця людина має роль зовнішнього користу�
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
-msgstr ""
+msgstr "Цієї людини тут більше немає."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1666,7 +1666,7 @@ msgstr "Напишіть щось, щоб зберегти у пам'яті."
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:11
 msgid "error.room.labels_already_answered"
-msgstr ""
+msgstr "Ти вже сказав, що робиш тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32
