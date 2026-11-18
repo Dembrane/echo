@@ -267,6 +267,14 @@ msgstr "Accounts could not be loaded."
 msgid "Actions"
 msgstr "Actions"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:93
+msgid "Add"
+msgstr "Add"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:89
+msgid "Add {first}"
+msgstr "Add {first}"
+
 #: src/features/accounts/staff/PushOfferModal.tsx:684
 msgid "Add a change"
 msgstr "Add a change"
@@ -303,6 +311,11 @@ msgstr "Add a section"
 msgid "Add bullets"
 msgstr "Add bullets"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:94
+#: src/features/accounts/customer/room/PeopleList.tsx:167
+msgid "Add someone"
+msgstr "Add someone"
+
 #: src/features/accounts/staff/PushOfferModal.tsx:609
 msgid "Add their DPA"
 msgstr "Add their DPA"
@@ -322,6 +335,10 @@ msgstr "Address"
 #: src/features/accounts/customer/BillingForm.tsx:395
 msgid "Address line 2"
 msgstr "Address line 2"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:140
+msgid "Admin"
+msgstr "Admin"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -432,6 +449,10 @@ msgstr "Before {due}"
 #~ msgid "Billed per"
 #~ msgstr "Billed per"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:141
+msgid "Billing"
+msgstr "Billing"
+
 #: src/features/accounts/format.ts:172
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:642
@@ -533,6 +554,10 @@ msgstr "Change"
 #: src/features/accounts/staff/PushOfferModal.tsx:114
 msgid "Change the draft"
 msgstr "Change the draft"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:117
+msgid "Change what {first} does"
+msgstr "Change what {first} does"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -1063,6 +1088,10 @@ msgstr "Event"
 msgid "Event or customer example"
 msgstr "Event or customer example"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:133
+msgid "Everyone added here can read the offer and the DPA. Invoices and billing details stay with owners, admins and Billing."
+msgstr "Everyone added here can read the offer and the DPA. Invoices and billing details stay with owners, admins and Billing."
+
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
 msgid "Evidence"
 msgstr "Evidence"
@@ -1157,6 +1186,11 @@ msgstr "Fill in your VAT number"
 #: src/features/accounts/customer/BillingForm.tsx:187
 msgid "Fill this in."
 msgstr "Fill this in."
+
+#: src/features/accounts/customer/room/PeopleList.tsx:271
+#: src/features/accounts/customer/room/PeopleList.tsx:272
+msgid "Find someone"
+msgstr "Find someone"
 
 #: src/features/accounts/signing/SignGate.tsx:383
 msgid "First name"
@@ -1319,6 +1353,14 @@ msgstr "Intro"
 
 #~ msgid "Invite a colleague"
 #~ msgstr "Invite a colleague"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:66
+msgid "invited"
+msgstr "invited"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:148
+msgid "Invited"
+msgstr "Invited"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -1518,6 +1560,14 @@ msgstr "Lost"
 msgid "May you also agree to data processing for your organisation?"
 msgstr "May you also agree to data processing for your organisation?"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:142
+msgid "Member"
+msgstr "Member"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:103
+msgid "Members"
+msgstr "Members"
+
 #: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
 msgstr "Message"
@@ -1673,6 +1723,10 @@ msgstr "No tasks."
 msgid "No, someone else signs it"
 msgstr "No, someone else signs it"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:294
+msgid "Nobody by that name or email."
+msgstr "Nobody by that name or email."
+
 #: src/features/accounts/customer/room/copy.ts:42
 msgid "Nobody checks IT and security yet."
 msgstr "Nobody checks IT and security yet."
@@ -1680,6 +1734,10 @@ msgstr "Nobody checks IT and security yet."
 #: src/features/accounts/customer/room/copy.ts:43
 msgid "Nobody checks privacy and AI rules yet."
 msgstr "Nobody checks privacy and AI rules yet."
+
+#: src/features/accounts/customer/room/PeopleList.tsx:149
+msgid "Nobody else yet. Add the colleagues who decide on this offer with you."
+msgstr "Nobody else yet. Add the colleagues who decide on this offer with you."
 
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
@@ -1696,6 +1754,14 @@ msgstr "Nobody on this account has an email address yet."
 #: src/features/accounts/staff/PushOfferModal.tsx:545
 msgid "None"
 msgstr "None"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:68
+msgid "not added yet"
+msgstr "not added yet"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Not added yet"
+msgstr "Not added yet"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "Not booked"
@@ -1716,6 +1782,10 @@ msgstr "Not in the total"
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "not live until you publish"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:176
+msgid "Not needed"
+msgstr "Not needed"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:395
 msgid "Not sent"
@@ -1862,10 +1932,18 @@ msgstr "Open the demo"
 msgid "Open the document"
 msgstr "Open the document"
 
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the DPA"
+msgstr "Open the DPA"
+
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:268
 msgid "Open the draft ({0})"
 msgstr "Open the draft ({0})"
+
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the offer"
+msgstr "Open the offer"
 
 #: src/features/accounts/pdf/PdfPages.tsx:155
 msgid "Open the PDF"
@@ -1957,6 +2035,10 @@ msgstr "Optional. It goes on the signature."
 msgid "Optional. The task stays greyed out until this document is signed."
 msgstr "Optional. The task stays greyed out until this document is signed."
 
+#: src/features/accounts/customer/room/PersonRow.tsx:108
+msgid "Options for {first}"
+msgstr "Options for {first}"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/BillToFields.tsx:89
 #: src/features/accounts/staff/AccountsPanel.tsx:141
@@ -1968,6 +2050,10 @@ msgstr "Organisation"
 #: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Organisation name"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:262
+msgid "Other members"
+msgstr "Other members"
 
 #: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
@@ -1984,6 +2070,10 @@ msgstr "Overdue"
 
 #~ msgid "Overdue since {due}"
 #~ msgstr "Overdue since {due}"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:143
+msgid "Owner"
+msgstr "Owner"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:339
 msgid "Page"
@@ -2194,6 +2284,10 @@ msgstr "Questions"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Reads \"{0} x dembrane\""
 
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Reads the offer and the DPA"
+msgstr "Reads the offer and the DPA"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:938
 msgid "Ready to invoice"
 msgstr "Ready to invoice"
@@ -2240,6 +2334,10 @@ msgstr "Remind {name}"
 #: src/features/accounts/customer/RemindSigner.tsx:65
 msgid "Reminded"
 msgstr "Reminded"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:126
+msgid "Remove {first}"
+msgstr "Remove {first}"
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2540,6 +2638,10 @@ msgstr "Shares add up to {0}%"
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Show all"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:289
+msgid "Show all {count}"
+msgstr "Show all {count}"
 
 #. placeholder {0}: done.length
 #: src/features/accounts/customer/NextSteps.tsx:147
@@ -3535,6 +3637,14 @@ msgstr "When"
 msgid "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
 msgstr "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
 
+#: src/features/accounts/customer/room/PeopleList.tsx:126
+msgid "Who is involved"
+msgstr "Who is involved"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:137
+msgid "Who reads what"
+msgstr "Who reads what"
+
 #: src/features/accounts/customer/WhoSigns.tsx:304
 msgid "Who signs the data processing agreement?"
 msgstr "Who signs the data processing agreement?"
@@ -3580,6 +3690,10 @@ msgstr "Yes"
 #: src/features/accounts/signing/SignRoute.tsx:1320
 msgid "Yes, I may"
 msgstr "Yes, I may"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:64
+msgid "you"
+msgstr "you"
 
 #: src/features/accounts/customer/Questions.tsx:170
 msgid "You"

@@ -1,0 +1,37 @@
+/* The tags of who does what. A label is context: the quiet tint, no border (rules.css).
+ * A signing marker opens its document, so it is outlined in the action blue with the pen,
+ * square like every tag (a secondary action, never filled: a filled blue would compete
+ * with the view's one primary pill). The selectors carry Mantine's class to outweigh the
+ * generic chit rules in rules.css. */
+
+/* A long label wraps inside its tag rather than running out of the row. */
+:root .tag:global(.mantine-Badge-root) {
+	height: auto;
+	line-height: 20px;
+	min-height: 24px;
+}
+:root .tag :global(.mantine-Badge-label) {
+	overflow: visible;
+	text-align: left;
+	white-space: normal;
+}
+/* The pen sits on the text's middle, 4 from the words. */
+:root .tag :global(.mantine-Badge-section) {
+	align-items: center;
+	display: flex;
+	height: 20px;
+	margin-inline-end: 4px;
+}
+
+:root :is(a, button, div).sign:global(.mantine-Badge-root)[data-sign] {
+	background: transparent;
+	border: var(--app-stroke) solid var(--app-action);
+	color: var(--app-action);
+}
+:root :is(a, button).sign:global(.mantine-Badge-root)[data-sign]:hover {
+	background: var(--app-action-tint);
+}
+:root :is(a, button).sign:global(.mantine-Badge-root)[data-sign]:focus-visible {
+	outline: 2px solid var(--app-action);
+	outline-offset: 2px;
+}

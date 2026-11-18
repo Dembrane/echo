@@ -194,6 +194,10 @@
 :root .mantine-Avatar-placeholder {
   font-weight: 320;
 }
+/* Someone invited who has not joined yet: their picture faded (PersonAvatar dimmed). */
+:root .mantine-Avatar-root[data-dimmed] {
+  opacity: 0.4;
+}
 
 /* Context: no border; a tag is its tint. */
 :root .mantine-Badge-root {

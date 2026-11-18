@@ -267,6 +267,14 @@ msgstr "Účty se nepodařilo načíst."
 msgid "Actions"
 msgstr "Akce"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:93
+msgid "Add"
+msgstr ""
+
+#: src/features/accounts/customer/room/PersonRow.tsx:89
+msgid "Add {first}"
+msgstr ""
+
 #: src/features/accounts/staff/PushOfferModal.tsx:684
 msgid "Add a change"
 msgstr "Přidat změnu"
@@ -303,6 +311,11 @@ msgstr "Přidat oddíl"
 msgid "Add bullets"
 msgstr "Přidat odrážky"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:94
+#: src/features/accounts/customer/room/PeopleList.tsx:167
+msgid "Add someone"
+msgstr ""
+
 #: src/features/accounts/staff/PushOfferModal.tsx:609
 msgid "Add their DPA"
 msgstr "Přidat jejich DPA"
@@ -322,6 +335,10 @@ msgstr "Adresa"
 #: src/features/accounts/customer/BillingForm.tsx:395
 msgid "Address line 2"
 msgstr "2. řádek adresy"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:140
+msgid "Admin"
+msgstr ""
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -432,6 +449,10 @@ msgstr "Do {due}"
 #~ msgid "Billed per"
 #~ msgstr "Fakturováno za"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:141
+msgid "Billing"
+msgstr ""
+
 #: src/features/accounts/format.ts:172
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:642
@@ -533,6 +554,10 @@ msgstr "Změnit"
 #: src/features/accounts/staff/PushOfferModal.tsx:114
 msgid "Change the draft"
 msgstr "Upravit koncept"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:117
+msgid "Change what {first} does"
+msgstr ""
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -1063,6 +1088,10 @@ msgstr "Událost"
 msgid "Event or customer example"
 msgstr "Příklad události nebo zákazníka"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:133
+msgid "Everyone added here can read the offer and the DPA. Invoices and billing details stay with owners, admins and Billing."
+msgstr ""
+
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
 msgid "Evidence"
 msgstr "Doklad"
@@ -1157,6 +1186,11 @@ msgstr "Vyplňte DIČ"
 #: src/features/accounts/customer/BillingForm.tsx:187
 msgid "Fill this in."
 msgstr "Vyplňte toto pole."
+
+#: src/features/accounts/customer/room/PeopleList.tsx:271
+#: src/features/accounts/customer/room/PeopleList.tsx:272
+msgid "Find someone"
+msgstr ""
 
 #: src/features/accounts/signing/SignGate.tsx:383
 msgid "First name"
@@ -1319,6 +1353,14 @@ msgstr "Úvod"
 
 #~ msgid "Invite a colleague"
 #~ msgstr "Pozvěte kolegu"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:66
+msgid "invited"
+msgstr ""
+
+#: src/features/accounts/customer/room/PersonRow.tsx:148
+msgid "Invited"
+msgstr ""
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -1518,6 +1560,14 @@ msgstr "Ztraceno"
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Můžete také odsouhlasit zpracování údajů za vaši organizaci?"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:142
+msgid "Member"
+msgstr ""
+
+#: src/features/accounts/customer/room/PeopleList.tsx:103
+msgid "Members"
+msgstr ""
+
 #: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
 msgstr "Zpráva"
@@ -1673,12 +1723,20 @@ msgstr "Žádné úkoly."
 msgid "No, someone else signs it"
 msgstr "Ne, podepíše to někdo jiný"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:294
+msgid "Nobody by that name or email."
+msgstr ""
+
 #: src/features/accounts/customer/room/copy.ts:42
 msgid "Nobody checks IT and security yet."
 msgstr ""
 
 #: src/features/accounts/customer/room/copy.ts:43
 msgid "Nobody checks privacy and AI rules yet."
+msgstr ""
+
+#: src/features/accounts/customer/room/PeopleList.tsx:149
+msgid "Nobody else yet. Add the colleagues who decide on this offer with you."
 msgstr ""
 
 #: src/features/accounts/customer/room/copy.ts:41
@@ -1696,6 +1754,14 @@ msgstr "Nikdo na tomto účtu zatím nemá e-mailovou adresu."
 #: src/features/accounts/staff/PushOfferModal.tsx:545
 msgid "None"
 msgstr "Žádný"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:68
+msgid "not added yet"
+msgstr ""
+
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Not added yet"
+msgstr ""
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "Not booked"
@@ -1716,6 +1782,10 @@ msgstr "Mimo součet"
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "není aktivní, dokud nezveřejníte"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:176
+msgid "Not needed"
+msgstr ""
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:395
 msgid "Not sent"
@@ -1862,10 +1932,18 @@ msgstr "Otevřít ukázku"
 msgid "Open the document"
 msgstr "Otevřít dokument"
 
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the DPA"
+msgstr ""
+
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:268
 msgid "Open the draft ({0})"
 msgstr "Otevřít koncept ({0})"
+
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the offer"
+msgstr ""
 
 #: src/features/accounts/pdf/PdfPages.tsx:155
 msgid "Open the PDF"
@@ -1957,6 +2035,10 @@ msgstr "Nepovinné. Uvede se u podpisu."
 msgid "Optional. The task stays greyed out until this document is signed."
 msgstr "Nepovinné. Úkol zůstane zašedlý, dokud nebude tento dokument podepsán."
 
+#: src/features/accounts/customer/room/PersonRow.tsx:108
+msgid "Options for {first}"
+msgstr ""
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/BillToFields.tsx:89
 #: src/features/accounts/staff/AccountsPanel.tsx:141
@@ -1968,6 +2050,10 @@ msgstr "Organizace"
 #: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Název organizace"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:262
+msgid "Other members"
+msgstr ""
 
 #: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
@@ -1984,6 +2070,10 @@ msgstr "Po splatnosti"
 
 #~ msgid "Overdue since {due}"
 #~ msgstr "Po splatnosti od {due}"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:143
+msgid "Owner"
+msgstr ""
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:339
 msgid "Page"
@@ -2194,6 +2284,10 @@ msgstr "Dotazy"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Znění: „{0} x dembrane“"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Reads the offer and the DPA"
+msgstr ""
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:938
 msgid "Ready to invoice"
 msgstr "Připraveno k fakturaci"
@@ -2240,6 +2334,10 @@ msgstr "Připomenout: {name}"
 #: src/features/accounts/customer/RemindSigner.tsx:65
 msgid "Reminded"
 msgstr "Připomenuto"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:126
+msgid "Remove {first}"
+msgstr ""
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2540,6 +2638,10 @@ msgstr "Podíly dávají dohromady {0}%"
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Zobrazit vše"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:289
+msgid "Show all {count}"
+msgstr ""
 
 #. placeholder {0}: done.length
 #: src/features/accounts/customer/NextSteps.tsx:147
@@ -3535,6 +3637,14 @@ msgstr "Kdy"
 msgid "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
 msgstr "Až e-mail odešlete, odpovězte \"sent\" ve vlákně nabídky na Slacku, aby sam nabídku označil jako odeslanou."
 
+#: src/features/accounts/customer/room/PeopleList.tsx:126
+msgid "Who is involved"
+msgstr ""
+
+#: src/features/accounts/customer/room/PeopleList.tsx:137
+msgid "Who reads what"
+msgstr ""
+
 #: src/features/accounts/customer/WhoSigns.tsx:304
 msgid "Who signs the data processing agreement?"
 msgstr "Kdo podepisuje smlouvu o zpracování osobních údajů?"
@@ -3580,6 +3690,10 @@ msgstr "Ano"
 #: src/features/accounts/signing/SignRoute.tsx:1320
 msgid "Yes, I may"
 msgstr "Ano, mám oprávnění"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:64
+msgid "you"
+msgstr ""
 
 #: src/features/accounts/customer/Questions.tsx:170
 msgid "You"

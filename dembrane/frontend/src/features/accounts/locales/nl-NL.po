@@ -267,6 +267,14 @@ msgstr "De accounts konden niet worden geladen."
 msgid "Actions"
 msgstr "Acties"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:93
+msgid "Add"
+msgstr "Toevoegen"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:89
+msgid "Add {first}"
+msgstr "{first} toevoegen"
+
 #: src/features/accounts/staff/PushOfferModal.tsx:684
 msgid "Add a change"
 msgstr "Wijziging toevoegen"
@@ -303,6 +311,11 @@ msgstr "Sectie toevoegen"
 msgid "Add bullets"
 msgstr "Opsommingstekens toevoegen"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:94
+#: src/features/accounts/customer/room/PeopleList.tsx:167
+msgid "Add someone"
+msgstr "Iemand toevoegen"
+
 #: src/features/accounts/staff/PushOfferModal.tsx:609
 msgid "Add their DPA"
 msgstr "Hun verwerkersovereenkomst toevoegen"
@@ -322,6 +335,10 @@ msgstr "Adres"
 #: src/features/accounts/customer/BillingForm.tsx:395
 msgid "Address line 2"
 msgstr "Adresregel 2"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:140
+msgid "Admin"
+msgstr "Beheerder"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -432,6 +449,10 @@ msgstr "Vóór {due}"
 #~ msgid "Billed per"
 #~ msgstr "Gefactureerd per"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:141
+msgid "Billing"
+msgstr "Facturering"
+
 #: src/features/accounts/format.ts:172
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:642
@@ -533,6 +554,10 @@ msgstr "Wijzigen"
 #: src/features/accounts/staff/PushOfferModal.tsx:114
 msgid "Change the draft"
 msgstr "Concept wijzigen"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:117
+msgid "Change what {first} does"
+msgstr "Aanpassen wat {first} doet"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -1063,6 +1088,10 @@ msgstr "Evenement"
 msgid "Event or customer example"
 msgstr "Voorbeeld van een evenement of klant"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:133
+msgid "Everyone added here can read the offer and the DPA. Invoices and billing details stay with owners, admins and Billing."
+msgstr "Iedereen die hier is toegevoegd, kan de offerte en de DPA lezen. Facturen en factuurgegevens blijven bij eigenaren, beheerders en Facturering."
+
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:235
 msgid "Evidence"
 msgstr "Bewijs"
@@ -1157,6 +1186,11 @@ msgstr "Vul je btw-nummer in"
 #: src/features/accounts/customer/BillingForm.tsx:187
 msgid "Fill this in."
 msgstr "Vul dit in."
+
+#: src/features/accounts/customer/room/PeopleList.tsx:271
+#: src/features/accounts/customer/room/PeopleList.tsx:272
+msgid "Find someone"
+msgstr "Zoek iemand"
 
 #: src/features/accounts/signing/SignGate.tsx:383
 msgid "First name"
@@ -1319,6 +1353,14 @@ msgstr "Inleiding"
 
 #~ msgid "Invite a colleague"
 #~ msgstr "Nodig een collega uit"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:66
+msgid "invited"
+msgstr "uitgenodigd"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:148
+msgid "Invited"
+msgstr "Uitgenodigd"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -1518,6 +1560,14 @@ msgstr "Verloren"
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Mag je ook verwerkingsafspraken maken voor je organisatie?"
 
+#: src/features/accounts/customer/room/PersonRow.tsx:142
+msgid "Member"
+msgstr "Lid"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:103
+msgid "Members"
+msgstr "Leden"
+
 #: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
 msgstr "Bericht"
@@ -1673,6 +1723,10 @@ msgstr "Geen taken."
 msgid "No, someone else signs it"
 msgstr "Nee, iemand anders tekent die"
 
+#: src/features/accounts/customer/room/PeopleList.tsx:294
+msgid "Nobody by that name or email."
+msgstr "Niemand met die naam of dat e-mailadres."
+
 #: src/features/accounts/customer/room/copy.ts:42
 msgid "Nobody checks IT and security yet."
 msgstr "Nog niemand checkt IT en beveiliging."
@@ -1680,6 +1734,10 @@ msgstr "Nog niemand checkt IT en beveiliging."
 #: src/features/accounts/customer/room/copy.ts:43
 msgid "Nobody checks privacy and AI rules yet."
 msgstr "Nog niemand checkt privacy en AI-regels."
+
+#: src/features/accounts/customer/room/PeopleList.tsx:149
+msgid "Nobody else yet. Add the colleagues who decide on this offer with you."
+msgstr "Nog niemand anders. Voeg de collega's toe die met je over deze offerte beslissen."
 
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
@@ -1696,6 +1754,14 @@ msgstr "Niemand op dit account heeft nog een e-mailadres."
 #: src/features/accounts/staff/PushOfferModal.tsx:545
 msgid "None"
 msgstr "Geen"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:68
+msgid "not added yet"
+msgstr "nog niet toegevoegd"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Not added yet"
+msgstr "Nog niet toegevoegd"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "Not booked"
@@ -1716,6 +1782,10 @@ msgstr "Niet in het totaal"
 #: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "pas live als je publiceert"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:176
+msgid "Not needed"
+msgstr "Niet nodig"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:395
 msgid "Not sent"
@@ -1862,10 +1932,18 @@ msgstr "Open de demo"
 msgid "Open the document"
 msgstr "Open het document"
 
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the DPA"
+msgstr "Open de DPA"
+
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:268
 msgid "Open the draft ({0})"
 msgstr "Open het concept ({0})"
+
+#: src/features/accounts/customer/room/Tags.tsx:63
+msgid "Open the offer"
+msgstr "Open de offerte"
 
 #: src/features/accounts/pdf/PdfPages.tsx:155
 msgid "Open the PDF"
@@ -1957,6 +2035,10 @@ msgstr "Optioneel. Komt bij de handtekening te staan."
 msgid "Optional. The task stays greyed out until this document is signed."
 msgstr "Optioneel. De taak blijft grijs tot dit document is ondertekend."
 
+#: src/features/accounts/customer/room/PersonRow.tsx:108
+msgid "Options for {first}"
+msgstr "Opties voor {first}"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/BillToFields.tsx:89
 #: src/features/accounts/staff/AccountsPanel.tsx:141
@@ -1968,6 +2050,10 @@ msgstr "Organisatie"
 #: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Naam organisatie"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:262
+msgid "Other members"
+msgstr "Andere leden"
 
 #: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
@@ -1984,6 +2070,10 @@ msgstr "Te laat"
 
 #~ msgid "Overdue since {due}"
 #~ msgstr "Te laat sinds {due}"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:143
+msgid "Owner"
+msgstr "Eigenaar"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:339
 msgid "Page"
@@ -2194,6 +2284,10 @@ msgstr "Vragen"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Wordt \"{0} x dembrane\""
 
+#: src/features/accounts/customer/room/PersonRow.tsx:150
+msgid "Reads the offer and the DPA"
+msgstr "Leest de offerte en de DPA"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:938
 msgid "Ready to invoice"
 msgstr "Klaar om te factureren"
@@ -2240,6 +2334,10 @@ msgstr "Herinner {name}"
 #: src/features/accounts/customer/RemindSigner.tsx:65
 msgid "Reminded"
 msgstr "Herinnerd"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:126
+msgid "Remove {first}"
+msgstr "{first} verwijderen"
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2540,6 +2638,10 @@ msgstr "De delen tellen op tot {0}%"
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Alles tonen"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:289
+msgid "Show all {count}"
+msgstr "Toon alle {count}"
 
 #. placeholder {0}: done.length
 #: src/features/accounts/customer/NextSteps.tsx:147
@@ -3527,6 +3629,14 @@ msgstr "Wanneer"
 msgid "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
 msgstr "Als je de e-mail hebt verstuurd, antwoord dan \"sent\" in de thread van de offerte in Slack, zodat sam de offerte als verstuurd markeert."
 
+#: src/features/accounts/customer/room/PeopleList.tsx:126
+msgid "Who is involved"
+msgstr "Wie zijn betrokken"
+
+#: src/features/accounts/customer/room/PeopleList.tsx:137
+msgid "Who reads what"
+msgstr "Wie wat leest"
+
 #: src/features/accounts/customer/WhoSigns.tsx:304
 msgid "Who signs the data processing agreement?"
 msgstr "Wie tekent de verwerkersovereenkomst?"
@@ -3572,6 +3682,10 @@ msgstr "Ja"
 #: src/features/accounts/signing/SignRoute.tsx:1320
 msgid "Yes, I may"
 msgstr "Ja, dat mag ik"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:64
+msgid "you"
+msgstr "jij"
 
 #: src/features/accounts/customer/Questions.tsx:170
 msgid "You"

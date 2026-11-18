@@ -134,9 +134,11 @@ describe("the decision lens", () => {
 			"robin@example-town.example",
 			"sam@example-town.example",
 		]);
+		// For those who run the account the fold also holds the members not added yet.
 		expect(rowNames(fold)).toEqual([
 			"bo@example-town.example",
 			"eva@example-town.example",
+			"kim@example-town.example",
 		]);
 		expect(
 			within(screen.getByTestId("other-members-toggle")).getByText(
@@ -145,14 +147,42 @@ describe("the decision lens", () => {
 		).toBeTruthy();
 	});
 
-	it("shows only the room's people, not members outside it", async () => {
-		await show(page());
+	it("shows those who run the account the members not added yet, marked so, with one action to add them", async () => {
+		const props = await show(page());
+		fireEvent.click(screen.getByTestId("other-members-toggle"));
+		const kim = within(screen.getByTestId("other-members"))
+			.getAllByTestId("room-person")
+			.find(
+				(r) => r.getAttribute("data-email") === "kim@example-town.example",
+			) as HTMLElement;
+		expect(within(kim).getByText("not added yet")).toBeTruthy();
+		expect(within(kim).queryByTestId("person-menu")).toBeNull();
+		fireEvent.click(within(kim).getByTestId("person-bring-in"));
+		expect(props.onAdd).toHaveBeenCalledWith({
+			person: { email: "kim@example-town.example", name: "Kim Example" },
+		});
+	});
+
+	it("shows a room member the room's people only, as the server sends them", async () => {
+		await show(
+			page({
+				me: {
+					app_user_id: ME,
+					labels_question: false,
+					may_dismiss_hints: false,
+					may_invite_new: false,
+					room: "by_invite",
+				},
+				people: people.filter((p) => p.room !== "none"),
+			}),
+		);
 		fireEvent.click(screen.getByTestId("other-members-toggle"));
 		expect(
 			rowNames(screen.getByTestId("people-list")).includes(
 				"kim@example-town.example",
 			),
 		).toBe(false);
+		expect(screen.queryByTestId("person-bring-in")).toBeNull();
 	});
 
 	it("tags labels by their words, signing as an outlined marker with the pen, and nobody as 'informed'", async () => {

@@ -1,0 +1,100 @@
+/* Inside one row of the ruled list (PageSection Row): the picture, who they are,
+ * what they do, and their menu. What they do has its own column, so the tags of every
+ * row share one left edge; the menu column is there on every row, menu or not, so no
+ * column moves when a row has none. */
+.person {
+	align-items: start;
+	column-gap: 16px;
+	display: grid;
+	grid-template-columns: 32px minmax(0, 2fr) minmax(0, 3fr) 32px;
+}
+
+.who {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+/* A sentence with nothing beside it takes both middle columns. */
+.wide {
+	grid-column: 2 / 4;
+	min-width: 0;
+}
+
+/* The tags sit on the name's line. */
+.tags {
+	min-width: 0;
+	padding-top: 0;
+}
+
+/* The picture's and the icon's column; a 20px icon centred in it. */
+.marker {
+	display: flex;
+	justify-content: center;
+	line-height: 0;
+	padding-top: 4px;
+}
+
+/* A phone: what they do folds under who they are; nothing else moves. */
+@media (max-width: 40em) {
+	.person {
+		grid-template-columns: 32px minmax(0, 1fr) 32px;
+		row-gap: 8px;
+	}
+	.tags {
+		grid-column: 2;
+		grid-row: 2;
+	}
+	.wide {
+		grid-column: 2;
+	}
+}
+
+/* "Other members": the accordion as a row of the list. Its header has the list's quiet
+ * rule under it while closed; open, the rule goes, so header and rows read as one, and
+ * the last row's rule closes it. No side padding: the rows keep the list's grid and the
+ * full width. The header's text starts on the names' edge (the chevron sits in the
+ * picture's column). Doubled classes outweigh rules.css's accordion rules. */
+:root .foldItem.foldItem {
+	border-bottom: 0;
+	border-top: 0;
+}
+:root .foldItem.foldItem:hover {
+	background: transparent;
+}
+:root .foldControl.foldControl {
+	border-bottom: var(--app-stroke) solid var(--app-quiet);
+	padding-inline: 0;
+}
+:root .foldControl.foldControl[data-active] {
+	border-bottom-color: transparent;
+}
+:root .foldControl.foldControl :global(.mantine-Accordion-chevron) {
+	justify-content: center;
+	margin-inline: 0 16px;
+	min-width: 32px;
+	width: 32px;
+}
+:root .foldContent.foldContent {
+	padding: 8px 0 16px;
+}
+
+/* The section title stays on one line; on a phone the button says less (FitLabel). */
+.title {
+	white-space: nowrap;
+}
+.info {
+	color: var(--app-muted);
+	display: inline-block;
+	margin-left: 8px;
+	vertical-align: -2px;
+}
+
+/* The search and "Show all" of a long fold. */
+.find {
+	margin-bottom: 8px;
+	max-width: 360px;
+}
+.more {
+	margin-top: 8px;
+	padding-block: 8px;
+}
