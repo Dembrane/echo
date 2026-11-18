@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Title } from "@mantine/core";
+import { Alert, Group, Loader, Stack, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router";
@@ -17,7 +17,9 @@ import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
 import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
+import { AddPersonModal } from "./room/AddPersonModal";
 import { ReadOnlyTasks } from "./room/ReadOnlyTasks";
+import { RoomCorner } from "./room/RoomCorner";
 import { RoomSection } from "./room/RoomSection";
 import { TalkToUs } from "./TalkToUs";
 
@@ -74,6 +76,13 @@ export function AccountOverviewRoom({ orgId }: { orgId: string }) {
 	return <RoomSection orgId={orgId} />;
 }
 
+/** The room's pictures, at the top corner of the organisation overview. */
+export function AccountOverviewCorner({ orgId }: { orgId: string }) {
+	const ready = useAccountsCatalog();
+	if (!ready) return null;
+	return <RoomCorner orgId={orgId} />;
+}
+
 /** "Talk to us", at the foot of the organisation overview. */
 export function AccountOverviewContact({ orgId }: { orgId: string }) {
 	const ready = useAccountsCatalog();
@@ -118,14 +127,24 @@ export const AccountDocumentsRoute = () => (
 
 function DocumentsBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 	const { data: me } = useV2Me();
+	const [sharing, setSharing] = useState(false);
 	return (
-		<DocumentsTable
-			orgId={orgId}
-			documents={data.documents}
-			title={null}
-			access={data.access}
-			myEmail={me?.email}
-		/>
+		<>
+			<DocumentsTable
+				orgId={orgId}
+				documents={data.documents}
+				title={null}
+				access={data.access}
+				myEmail={me?.email}
+				onShare={() => setSharing(true)}
+			/>
+			<AddPersonModal
+				orgId={orgId}
+				opened={sharing}
+				onClose={() => setSharing(false)}
+				title={t`Share with a colleague`}
+			/>
+		</>
 	);
 }
 
@@ -232,7 +251,10 @@ function AccountPage({
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<Title order={2}>{title}</Title>
+				<Group justify="space-between" align="center" gap="md">
+					<Title order={2}>{title}</Title>
+					{data && organisationId && <RoomCorner orgId={organisationId} />}
+				</Group>
 				{error || !data || !organisationId ? (
 					<Alert color={denied ? "gray" : "red"}>
 						{denied ? (

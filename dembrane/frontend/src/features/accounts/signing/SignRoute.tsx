@@ -22,7 +22,11 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle, useMediaQuery } from "@mantine/hooks";
-import { ArrowLeftIcon, CheckIcon } from "@phosphor-icons/react";
+import {
+	ArrowLeftIcon,
+	CheckIcon,
+	ShareNetworkIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -40,6 +44,7 @@ import {
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
+import { AddPersonModal } from "../customer/room/AddPersonModal";
 import { mayNameSigner } from "../customer/room/model";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
@@ -134,6 +139,10 @@ function Header({
 	orgId: string;
 	children?: React.ReactNode;
 }) {
+	const [sharing, setSharing] = useState(false);
+	// Those who run the account and room members share it; a named signer from outside
+	// has no room to bring anyone into.
+	const shares = doc.access === "member" || doc.access === "room";
 	return (
 		<Paper
 			radius={0}
@@ -158,8 +167,29 @@ function Header({
 					)}
 					<Text truncate>{doc.title}</Text>
 				</Group>
-				{children}
+				<Group gap="sm" wrap="nowrap">
+					{children}
+					{shares && (
+						<Button
+							variant="subtle"
+							leftSection={<ShareNetworkIcon size={16} aria-hidden />}
+							onClick={() => setSharing(true)}
+							data-testid="doc-share"
+						>
+							<Trans>Share with a colleague</Trans>
+						</Button>
+					)}
+				</Group>
 			</Group>
+			{/* Mounted only while open: the signing walk under it stays as it was. */}
+			{shares && sharing && (
+				<AddPersonModal
+					orgId={orgId}
+					opened={sharing}
+					onClose={() => setSharing(false)}
+					title={t`Share with a colleague`}
+				/>
+			)}
 		</Paper>
 	);
 }
@@ -230,8 +260,7 @@ function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 							<Trans>You can read this document. {signer} signs it.</Trans>
 						) : (
 							<Trans>
-								You can read this document. An owner, admin or Billing signs
-								it.
+								You can read this document. An owner, admin or Billing signs it.
 							</Trans>
 						)}
 					</Text>

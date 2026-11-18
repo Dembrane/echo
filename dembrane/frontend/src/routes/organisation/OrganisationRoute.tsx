@@ -76,6 +76,11 @@ const AccountOverviewWork = lazy(() =>
 		default: m.AccountOverviewWork,
 	})),
 );
+const AccountOverviewCorner = lazy(() =>
+	import("@/features/accounts/customer/AccountRoute").then((m) => ({
+		default: m.AccountOverviewCorner,
+	})),
+);
 const AccountOverviewRoom = lazy(() =>
 	import("@/features/accounts/customer/AccountRoute").then((m) => ({
 		default: m.AccountOverviewRoom,
@@ -768,6 +773,12 @@ export const OrganisationRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
+					{/* An organisation with an account: the room's people, top right. */}
+					{account && organisationId && (
+						<Suspense fallback={null}>
+							<AccountOverviewCorner orgId={organisationId} />
+						</Suspense>
+					)}
 				</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds organisation name
@@ -1365,7 +1376,8 @@ function OrganisationOverviewPanel({
 	// The overview gathers what is open and relevant from the org's own pages, and leaves
 	// out what has nothing to say: Members while you are alone, Workspaces while there are
 	// none. A manager of a self-serve org still sees Workspaces, to create the first one.
-	const showMembers = membersLoading || people.length > 1;
+	// With an account, the room's pictures at the top stand in for the Members bubbles.
+	const showMembers = !hasAccount && (membersLoading || people.length > 1);
 	const showWorkspaces =
 		workspacesLoading || myCards.length > 0 || (isManager && !hasAccount);
 
