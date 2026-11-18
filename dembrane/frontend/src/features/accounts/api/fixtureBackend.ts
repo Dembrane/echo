@@ -1151,6 +1151,7 @@ export async function handle(
 				const summarise = (id: string, name: string, x: Store) => {
 					const live = x.tasks.filter((t) => t.status !== "withdrawn");
 					return {
+						access: "account" as const,
 						account_stage: x.stage,
 						logo_url: null,
 						name,

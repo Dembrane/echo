@@ -894,6 +894,7 @@ export { signedDpaDetail as signedDocument };
 export const tasksSummary: Out<typeof TasksSummary> = [
   {
     org_id: ORG,
+    access: "account",
     name: "Example Town Council (sample)",
     logo_url: null,
     account_stage: "customer",
