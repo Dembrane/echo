@@ -43,7 +43,7 @@ export const RegisterRoute = () => {
 	// auto-accepts and the user gets a stray personal organisation).
 	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
 	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
-	const { register, handleSubmit, watch, control, getValues } = useForm<{
+	const { register, handleSubmit, control } = useForm<{
 		email: string;
 		password: string;
 		confirmPassword: string;
@@ -139,8 +139,9 @@ export const RegisterRoute = () => {
 		if (step === 1) return submitPassword(e);
 	};
 
-	const emailWatch = watch("email");
-	// useWatch, not watch(): React Compiler memoizes watch() so it never updates.
+	// useWatch, not watch() or getValues(): React Compiler memoizes those calls, so
+	// what they return during render goes stale.
+	const email = useWatch({ control, name: "email" }) ?? "";
 	const password = useWatch({ control, name: "password" }) ?? "";
 
 	return (
@@ -261,7 +262,7 @@ export const RegisterRoute = () => {
 									type="email"
 									name="username"
 									autoComplete="username"
-									value={getValues("email") ?? ""}
+									value={email}
 									readOnly
 									hidden
 									aria-hidden
@@ -325,7 +326,7 @@ export const RegisterRoute = () => {
 									<Trans>
 										We've sent a verification link to{" "}
 										<Text span c="dark">
-											{submittedEmail ?? emailWatch}
+											{submittedEmail ?? email}
 										</Text>
 										. Open the email and click the link to continue.
 									</Trans>
@@ -337,9 +338,7 @@ export const RegisterRoute = () => {
 											comes from dembrane.com.
 										</Trans>
 									</Text>
-									<ResendVerificationEmail
-										email={submittedEmail ?? emailWatch}
-									/>
+									<ResendVerificationEmail email={submittedEmail ?? email} />
 									<Anchor
 										component="button"
 										type="button"
