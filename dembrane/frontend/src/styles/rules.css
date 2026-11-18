@@ -22,6 +22,8 @@
  * Order: the pill comes first in its row and the row sits at the left. A row
  * of steps (a wizard, an onboarding, any sequence with Back) runs the way time
  * does instead: Back on the left, the pill on the right (Jor, 30 Oct 2026).
+ * Back is the tertiary, text-only button (variant="subtle"): the pill is the
+ * row's one weight (flow.steps-back-tertiary).
  * Such a row carries data-steps, which is what both checks look for. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
@@ -184,6 +186,12 @@
   --app-rule-color: var(--app-disabled);
   cursor: not-allowed;
 }
+/* A choice among many on a screen used at a desk as well (who does what, ECHO data room):
+ * the same box at the height of a chip, so six labels and Other fit a dialog. Still a
+ * 32px target; a phone gets the full-screen dialog with room to scroll. */
+:root .app-choice[data-density="compact"]:is(*, [data-with-border]) {
+  min-height: 32px;
+}
 
 /* Avatars are the one round thing besides the primary pill. */
 :root .mantine-Avatar-root {
@@ -193,6 +201,10 @@
 /* Initials are set in the one text weight, not Mantine's bold. */
 :root .mantine-Avatar-placeholder {
   font-weight: 320;
+}
+/* Someone invited who has not joined yet: their picture faded (PersonAvatar dimmed). */
+:root .mantine-Avatar-root[data-dimmed] {
+  opacity: 0.4;
 }
 
 /* Context: no border; a tag is its tint. */

@@ -1381,13 +1381,20 @@ export const StaffReplyRequest = z.object({
 
 /**
  * GET /api/v2/account/tasks-summary: for the "Tasks 1/2" entry, the org picker, and whether
- * an organisation shows "Account" in the sidebar. It lists only organisations with account
+ * an organisation shows "Account" in the sidebar. It lists organisations with account
  * content (a stage set, or any task or document) where the caller is an owner, admin or
- * billing member; a self-serve organisation with nothing in it is absent.
+ * billing member, and organisations where the caller is a member brought into the data
+ * room; a self-serve organisation with nothing in it is absent.
  */
 export const TasksSummary = z.array(
   z.object({
     org_id: Uuid,
+    /**
+     * `account`: the caller runs the account. `room`: a member brought into the room; the
+     * counts are those of the tasks on the offer and the DPA (billing details left out, as
+     * the account page shows them), nothing waits on them and there is no next task.
+     */
+    access: z.enum(["account", "room"]),
     name: z.string(),
     logo_url: z.string().nullable(),
     account_stage: AccountStage.nullable(),
@@ -1566,6 +1573,16 @@ export const RoomPerson = z.object({
   invited_by: z.object({ app_user_id: Uuid, name: z.string() }).nullable(),
   invited_at: IsoTime.nullable(),
   signs: z.array(z.enum(["offer", "dpa"])),
+  /**
+   * Whether the caller may take them out: someone in by invitation, for those who run the
+   * account or whoever invited them. False for anyone in by role, and on the staff side.
+   */
+  may_remove: z.boolean(),
+  /**
+   * Whether the caller may change what they do: anyone in the room but the caller, for those
+   * who run the account or whoever invited them. False on the staff side.
+   */
+  may_relabel: z.boolean(),
 });
 
 /** Who signs a document, as the signer model has it: the named signer, else who signed. */

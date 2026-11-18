@@ -394,6 +394,16 @@ msgid "error.member.owner_removes_owner"
 msgstr "Seul un propriétaire peut supprimer un autre propriétaire."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Seul un propriétaire ou un administrateur peut choisir qui signe. Tu peux signer toi-même ou relancer la personne déjà désignée."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.new_person_admins_only"
+msgstr "Seul un propriétaire ou un administrateur peut inviter quelqu’un qui n’est pas encore membre. Tu peux ajouter un collègue qui est déjà membre."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Seules les affirmations peuvent être vérifiées. Choisissez une affirmation et réessayez."
@@ -424,6 +434,16 @@ msgid "error.project.not_owner"
 msgstr "Seul le propriétaire de ce projet peut effectuer cette action."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr "Seuls la personne qui l’a invité, un administrateur ou la Facturation peuvent modifier ce qu’il fait."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:38
+msgid "error.room.remove_forbidden"
+msgstr "Seuls la personne qui l’a invité, un administrateur ou la Facturation peuvent le retirer."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Seule la personne ayant envoyé cette invitation ou un administrateur peut la retirer."
@@ -452,6 +472,11 @@ msgstr "Seuls les administrateurs de l'espace de travail peuvent partager des pr
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Les options choisies à la signature ne vont pas avec une facturation mensuelle, en plusieurs fois ou gratuite."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr "Les propriétaires, les administrateurs et la Facturation sont là grâce à leur rôle. Change plutôt leur rôle sur la page Membres."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +784,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Aucun moyen de paiement à mettre à jour pour l'instant. Choisissez d'abord un forfait."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+msgid "error.room.no_labels_question"
+msgstr "Il n’y a rien à répondre ici."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Ce compte dispose déjà d'un abonnement actif."
@@ -1017,6 +1047,11 @@ msgstr "Cette personne est déjà membre de votre organisation, elle ne peut don
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Cette personne a un statut externe sur l'un de vos espaces de travail. Retirez d'abord ce rôle, puis désignez-la comme administrateur ou propriétaire."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:34
+msgid "error.room.person_not_found"
+msgstr "Cette personne n’est plus là."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1662,11 @@ msgstr "Écrivez quelque chose pour cet aperçu."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Écrivez quelque chose à conserver en mémoire."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr "Tu as déjà dit ce que tu fais ici."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
@@ -29,8 +29,10 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { Protected } from "@/components/common/Protected";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { LEGAL_PRIVACY_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import {
 	type OtherDevice,
@@ -42,10 +44,11 @@ import {
 } from "@/lib/auth";
 import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { AccountsApiError, call, type ResponseOf } from "../api/client";
+import { DpaHint } from "../DpaHint";
 import { AccountsI18n } from "../i18n";
-import { LogInButton, signPath as signPathOf } from "./signInLink";
-import { clearAllDrafts } from "./signingDraft";
 import { SignRoute } from "./SignRoute";
+import { LogInButton, logInPath, signPath as signPathOf } from "./signInLink";
+import { clearAllDrafts } from "./signingDraft";
 
 type Invite = ResponseOf<"signerInvite">;
 
@@ -112,15 +115,19 @@ const useInvite = (token: string) => {
 function SignedInWithInvite({ token }: { token: string }) {
 	const invite = useInvite(token);
 	const me = useV2Me();
-	const queryClient = useQueryClient();
-	const [leaving, setLeaving] = useState(false);
 	// A link that no longer opens says nothing about who is signed in; the document's own
 	// access check decides.
 	if (invite.isError) return <SignRoute />;
 	if (!invite.data || !me.data) return <BeautifulLoading />;
 	const invitee = invite.data.signer.email.toLowerCase();
 	if (me.data.email.toLowerCase() === invitee) return <SignRoute />;
+	return <NotYou invitee={invitee} email={me.data.email} />;
+}
 
+/** Signed in under another address: a stop before anything opens or is accepted. */
+function NotYou({ invitee, email }: { invitee: string; email: string }) {
+	const queryClient = useQueryClient();
+	const [leaving, setLeaving] = useState(false);
 	const switchAccount = async () => {
 		setLeaving(true);
 		await signOut().catch(() => {});
@@ -137,8 +144,7 @@ function SignedInWithInvite({ token }: { token: string }) {
 				</Title>
 				<Text>
 					<Trans>
-						You're signed in as {me.data.email}. Sign out to open it as{" "}
-						{invitee}.
+						You're signed in as {email}. Sign out to open it as {invitee}.
 					</Trans>
 				</Text>
 				<Button
@@ -152,7 +158,7 @@ function SignedInWithInvite({ token }: { token: string }) {
 				</Button>
 				<Group justify="center">
 					<Anchor component={I18nLink} to="/o" size="sm">
-						<Trans>Stay signed in as {me.data.email}</Trans>
+						<Trans>Stay signed in as {email}</Trans>
 					</Anchor>
 				</Group>
 			</Stack>
@@ -221,15 +227,77 @@ function InvitePage({ token }: { token: string }) {
 				</Stack>
 			</Frame>
 		);
-	return <OpenInvite invite={invite.data} token={token} />;
+	return <SignerInvite invite={invite.data} token={token} />;
 }
 
-function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
+/** The signer's invitation, as the shared invitation flow shows it. */
+function SignerInvite({ invite, token }: { invite: Invite; token: string }) {
 	const { orgId, docId } = useRouteIds();
 	const queryClient = useQueryClient();
-	const email = invite.signer.email;
-	const [first, setFirst] = useState(invite.signer.first_name);
-	const [last, setLast] = useState(invite.signer.last_name);
+	const inviter = invite.inviter?.name;
+	const org = invite.organisation.name;
+	return (
+		<OpenInvite
+			person={invite.signer}
+			hasAccount={invite.has_account}
+			banner={
+				inviter ? (
+					<Trans>
+						{inviter} from {org} invited you to sign
+					</Trans>
+				) : (
+					<Trans>{org} invited you to sign</Trans>
+				)
+			}
+			title={invite.document.title}
+			reference={invite.document.reference}
+			signs
+			onAccept={async (names) => {
+				await call("acceptSignerInvite", {
+					body: { ...names, invite: token },
+					params: { docId, orgId },
+				});
+				resetPromptSeen();
+				clearAllDrafts();
+				emitAuthCacheBoundary();
+				// Reset, not clear: nothing of a previous session survives, and the gate's
+				// own session query refetches and opens the document.
+				await queryClient.resetQueries();
+			}}
+		/>
+	);
+}
+
+/**
+ * An invitation's page before sign-in, the same for a signer and for someone brought into
+ * the data room: who invited them, their names to confirm, a code to their inbox instead
+ * of a password, then `onAccept` with the confirmed names. Only signing says that the
+ * signature is electronic.
+ */
+function OpenInvite({
+	person,
+	hasAccount,
+	banner,
+	title,
+	reference,
+	signs,
+	onAccept,
+}: {
+	person: { email: string; first_name: string; last_name: string };
+	hasAccount: boolean;
+	banner: ReactNode;
+	title: ReactNode;
+	reference: string | null;
+	/** An invitation to sign: says how it signs, and opens "the document". */
+	signs: boolean;
+	onAccept: (names: {
+		first_name: string;
+		last_name: string | null;
+	}) => Promise<void>;
+}) {
+	const email = person.email;
+	const [first, setFirst] = useState(person.first_name);
+	const [last, setLast] = useState(person.last_name);
 	const [step, setStep] = useState<"details" | "code">("details");
 	const [code, setCode] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -241,7 +309,7 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 	const resendCooldown = useResendCooldown();
 
 	const sendCode = async () => {
-		if (!invite.has_account && !first.trim()) {
+		if (!hasAccount && !first.trim()) {
 			setError(t`Fill in your first name.`);
 			return;
 		}
@@ -262,23 +330,12 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 		}
 	};
 
-	// Signed in: keep the confirmed names, then let the gate open the document.
-	const enter = async () => {
-		await call("acceptSignerInvite", {
-			body: {
-				first_name: first.trim() || email,
-				invite: token,
-				last_name: last.trim() || null,
-			},
-			params: { docId, orgId },
+	// Signed in: keep the confirmed names, then go on (the document, or the room).
+	const enter = () =>
+		onAccept({
+			first_name: first.trim() || email,
+			last_name: last.trim() || null,
 		});
-		resetPromptSeen();
-		clearAllDrafts();
-		emitAuthCacheBoundary();
-		// Reset, not clear: nothing of a previous session survives, and the gate's own
-		// session query refetches and opens the document.
-		await queryClient.resetQueries();
-	};
 
 	const submitCode = async (value: string) => {
 		if (busy || value.length < 6) return;
@@ -305,8 +362,6 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 		}
 	};
 
-	const inviter = invite.inviter?.name;
-	const org = invite.organisation.name;
 	return (
 		<Frame>
 			{elsewhere && (
@@ -342,18 +397,12 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 			<Stack gap="lg" data-testid="invite-page">
 				<Stack gap={4}>
 					<Text c="dimmed" data-testid="invite-banner">
-						{inviter ? (
-							<Trans>
-								{inviter} from {org} invited you to sign
-							</Trans>
-						) : (
-							<Trans>{org} invited you to sign</Trans>
-						)}
+						{banner}
 					</Text>
-					<Title order={2}>{invite.document.title}</Title>
-					{invite.document.reference && (
+					<Title order={2}>{title}</Title>
+					{reference && (
 						<Text size="sm" c="dimmed">
-							{invite.document.reference}
+							{reference}
 						</Text>
 					)}
 				</Stack>
@@ -362,20 +411,34 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 
 				{step === "details" ? (
 					<Stack gap="md">
-						{invite.has_account ? (
+						{hasAccount ? (
 							<Text>
-								<Trans>
-									You already have a dembrane account with {email}. We'll email
-									you a code to open the document.
-								</Trans>
+								{signs ? (
+									<Trans>
+										You already have a dembrane account with {email}. We'll
+										email you a code to open the document.
+									</Trans>
+								) : (
+									<Trans>
+										You already have a dembrane account with {email}. We'll
+										email you a code to log in.
+									</Trans>
+								)}
 							</Text>
 						) : (
 							<>
 								<Text>
-									<Trans>
-										Check your name, and we'll email you a code to open the
-										document. You don't need a password.
-									</Trans>
+									{signs ? (
+										<Trans>
+											Check your name, and we'll email you a code to open the
+											document. You don't need a password.
+										</Trans>
+									) : (
+										<Trans>
+											Check your name, and we'll email you a code to log in. You
+											don't need a password.
+										</Trans>
+									)}
 								</Text>
 								<Group grow gap="sm" align="flex-start">
 									<TextInput
@@ -439,7 +502,7 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 							onClick={() => submitCode(code)}
 							data-testid="invite-open"
 						>
-							<Trans>Open the document</Trans>
+							{signs ? <Trans>Open the document</Trans> : <Trans>Log in</Trans>}
 						</Button>
 						<Group justify="center">
 							<Button
@@ -459,10 +522,14 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 				)}
 
 				<Text size="sm" c="dimmed" data-testid="invite-consent">
-					<Trans>
-						You'll sign electronically. Your electronic signature is as binding
-						as one made by hand.
-					</Trans>{" "}
+					{signs && (
+						<>
+							<Trans>
+								You'll sign electronically. Your electronic signature is as
+								binding as one made by hand.
+							</Trans>{" "}
+						</>
+					)}
 					<Anchor
 						href={LEGAL_PRIVACY_URL}
 						target="_blank"
@@ -495,5 +562,211 @@ function Frame({ children }: { children: ReactNode }) {
 				</Paper>
 			</Box>
 		</Box>
+	);
+}
+
+// ── the data room's invitation ─────────────────────────────────────────
+
+/**
+ * The page the room invitation email links to (/o/:orgId/account/join?invite=): who
+ * invited them to which organisation, their names, the same code sign-in as the signer's
+ * page, then accept once and land on the organisation's overview, in the room. An
+ * accepted invitation offers to log in; a closed or withdrawn one says so; someone signed
+ * in under another address is stopped before anything is accepted.
+ */
+export const RoomJoinGate = () => (
+	<AccountsI18n signing>
+		<RoomGate />
+	</AccountsI18n>
+);
+
+const ROOM_HOME = (orgId: string) => `/o/${orgId}/overview`;
+
+const useRoomInvite = (token: string) => {
+	const { orgId } = useRouteIds();
+	return useQuery({
+		queryFn: () =>
+			call("roomInvite", { params: { orgId }, query: { invite: token } }),
+		queryKey: ["accounts", "room-invite", orgId, token],
+		retry: false,
+	});
+};
+
+const RoomGate = () => {
+	const [searchParams] = useSearchParams();
+	const token = searchParams.get("invite") ?? "";
+	const { loading, isAuthenticated } = useAuthenticated(false);
+	// As the signer's gate: the loading screen only for the first answer, so a focus
+	// check while the code is being read does not unmount the page.
+	const answered = useRef(false);
+	if (!loading) answered.current = true;
+	if (loading && !answered.current) return <BeautifulLoading />;
+	return isAuthenticated ? (
+		<RoomSignedIn token={token} />
+	) : (
+		<RoomInvitePage token={token} />
+	);
+};
+
+/**
+ * Signed in already: accept once when it is theirs and open, then the room, read afresh
+ * so it shows at once. A refusal (withdrawn meanwhile, not for them) is said, not retried.
+ */
+function RoomSignedIn({ token }: { token: string }) {
+	const { orgId } = useRouteIds();
+	const invite = useRoomInvite(token);
+	const me = useV2Me();
+	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
+	const accepting = useRef(false);
+	const [failed, setFailed] = useState<unknown>(null);
+	const invitee = invite.data?.person.email.toLowerCase() ?? "";
+	const mine = Boolean(me.data) && me.data?.email.toLowerCase() === invitee;
+	const status = invite.data?.status;
+	useEffect(() => {
+		if (!mine || accepting.current) return;
+		if (status === "accepted") {
+			accepting.current = true;
+			navigate(ROOM_HOME(orgId));
+		} else if (status === "open") {
+			accepting.current = true;
+			call("acceptRoomInvite", {
+				body: {
+					first_name: invite.data?.person.first_name || invitee,
+					invite: token,
+					last_name: invite.data?.person.last_name || null,
+				},
+				params: { orgId },
+			})
+				.then(async () => {
+					await queryClient.resetQueries();
+					navigate(ROOM_HOME(orgId));
+				})
+				.catch(setFailed);
+		}
+	}, [mine, status, orgId, token, invitee, invite.data, navigate, queryClient]);
+	if (failed)
+		return (
+			<Frame>
+				<Stack gap="md" data-testid="invite-failed">
+					<ErrorNotice error={failed} />
+					<LogInLink next={ROOM_HOME(orgId)} />
+				</Stack>
+			</Frame>
+		);
+	if (invite.isError) return <RoomGone orgId={orgId} />;
+	if (!invite.data || !me.data) return <BeautifulLoading />;
+	if (!mine) return <NotYou invitee={invitee} email={me.data.email} />;
+	if (status === "closed") return <RoomClosed orgId={orgId} />;
+	return <BeautifulLoading />;
+}
+
+/** Before sign-in: the invitation, or what became of it. */
+function RoomInvitePage({ token }: { token: string }) {
+	const { orgId } = useRouteIds();
+	const invite = useRoomInvite(token);
+	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
+	useDocumentTitle(
+		invite.data
+			? `${invite.data.organisation.name} | dembrane`
+			: t`Invitation | dembrane`,
+	);
+	if (invite.isLoading) return <BeautifulLoading />;
+	if (!invite.data) return <RoomGone orgId={orgId} />;
+	if (invite.data.status === "closed") return <RoomClosed orgId={orgId} />;
+	if (invite.data.status === "accepted")
+		return (
+			<Frame>
+				<Stack gap="md" data-testid="invite-accepted">
+					<Title order={2}>
+						<Trans>You accepted this invitation</Trans>
+					</Title>
+					<Text>
+						<Trans>Log in to read the offer and the DPA.</Trans>
+					</Text>
+					<LogInButton next={ROOM_HOME(orgId)} />
+				</Stack>
+			</Frame>
+		);
+	const inviter = invite.data.inviter?.name;
+	const org = invite.data.organisation.name;
+	return (
+		<OpenInvite
+			person={invite.data.person}
+			hasAccount={invite.data.has_account}
+			banner={
+				inviter ? (
+					<Trans>
+						{inviter} invited you to {org}
+					</Trans>
+				) : (
+					<Trans>You are invited to {org}</Trans>
+				)
+			}
+			title={
+				<DpaHint>
+					<span>
+						<Trans>Read the offer and the DPA with your team</Trans>
+					</span>
+				</DpaHint>
+			}
+			reference={null}
+			signs={false}
+			onAccept={async (names) => {
+				await call("acceptRoomInvite", {
+					body: { ...names, invite: token },
+					params: { orgId },
+				});
+				resetPromptSeen();
+				emitAuthCacheBoundary();
+				await queryClient.resetQueries();
+				navigate(ROOM_HOME(orgId));
+			}}
+		/>
+	);
+}
+
+function RoomGone({ orgId }: { orgId: string }) {
+	return (
+		<Frame>
+			<Stack gap="md" data-testid="invite-gone">
+				<Title order={2}>
+					<Trans>This link no longer works</Trans>
+				</Title>
+				<Text>
+					<Trans>
+						The invitation was withdrawn, or a newer one replaced it. Ask the
+						person who invited you to send it again.
+					</Trans>
+				</Text>
+				<LogInLink next={ROOM_HOME(orgId)} />
+			</Stack>
+		</Frame>
+	);
+}
+
+function RoomClosed({ orgId }: { orgId: string }) {
+	return (
+		<Frame>
+			<Stack gap="md" data-testid="invite-closed">
+				<Title order={2}>
+					<Trans>This invitation has closed</Trans>
+				</Title>
+				<Text>
+					<Trans>Ask the person who invited you to send a new one.</Trans>
+				</Text>
+				<LogInLink next={ROOM_HOME(orgId)} />
+			</Stack>
+		</Frame>
+	);
+}
+
+/** On a page that ends here, logging in is a way on, not the page's action: a link. */
+function LogInLink({ next }: { next: string }) {
+	return (
+		<Anchor component={I18nLink} to={logInPath(next)} data-testid="sign-log-in">
+			<Trans>Log in</Trans>
+		</Anchor>
 	);
 }

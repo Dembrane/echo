@@ -66,7 +66,7 @@ export async function customerOrg(
 }
 
 /** The caller's verified address, or null. */
-async function verifiedEmail(d: AccountsDeps, who: Signed): Promise<string | null> {
+export async function verifiedEmail(d: AccountsDeps, who: Signed): Promise<string | null> {
   const identity = await store.identity(d.db, who.directusUserId);
   return identity?.verified ? identity.email.toLowerCase() : null;
 }

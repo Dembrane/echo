@@ -634,6 +634,34 @@ run("who does what in the data room", () => {
       expect([invite.email, invite.role]).toEqual([invite.email, "member"]);
   });
 
+  test("each person says whether the one looking may take them out or change what they do", async () => {
+    // Kees is in the room, brought in by the admin; he brings Ines in; Pim is a member outside.
+    expect((await add("admin", "kees@example.test")).status).toBe(200);
+    await person("ines", "ines@example.test", { role: "member" });
+    await person("pim", "pim@example.test", { role: "member" });
+    const added = K.AddRoomPersonResponse.parse((await add(asKees, "ines@example.test")).data);
+    expect([added.person.may_remove, added.person.may_relabel]).toEqual([true, true]);
+    const mayOf = async (as: Who, email: string) => {
+      const p = await personIn(as, email);
+      return [p?.may_remove, p?.may_relabel];
+    };
+    // Who runs the account: anyone in by invitation, both; in by role, labels only; not
+    // themselves, and nothing on a member outside the room.
+    expect(await mayOf("admin", "ines@example.test")).toEqual([true, true]);
+    expect(await mayOf("admin", "kees@example.test")).toEqual([true, true]);
+    expect(await mayOf("admin", "billing@example.test")).toEqual([false, true]);
+    expect(await mayOf("admin", "admin@example.test")).toEqual([false, false]);
+    expect(await mayOf("admin", "pim@example.test")).toEqual([false, false]);
+    expect(await mayOf("billing", "admin@example.test")).toEqual([false, true]);
+    // A room member: only the people they brought in, never themselves.
+    expect(await mayOf(asKees, "ines@example.test")).toEqual([true, true]);
+    expect(await mayOf(asKees, "kees@example.test")).toEqual([false, false]);
+    expect(await mayOf(asKees, "admin@example.test")).toEqual([false, false]);
+    // The staff side: nothing.
+    const staff = K.RoomPage.parse((await call(w, "GET", `${S()}/room`, "staff")).data);
+    expect(staff.people.some((p) => p.may_remove || p.may_relabel)).toBe(false);
+  });
+
   test("ten additions an hour per organisation", async () => {
     for (let i = 0; i < 10; i++)
       expect((await add("admin", `many${i}@example.test`)).status).toBe(200);

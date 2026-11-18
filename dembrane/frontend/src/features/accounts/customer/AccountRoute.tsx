@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Title } from "@mantine/core";
+import { Alert, Group, Loader, Stack, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router";
@@ -8,7 +8,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { AccountsApiError } from "../api/client";
-import { useAccountPage } from "../api/hooks";
+import { useAccountPage, useRoom } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
 import { AccountsI18n, useAccountsCatalog } from "../i18n";
 import { BillingForm } from "./BillingForm";
@@ -17,6 +17,11 @@ import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
 import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
+import { AddPersonModal } from "./room/AddPersonModal";
+import { mySigning } from "./room/model";
+import { ReadOnlyTasks } from "./room/ReadOnlyTasks";
+import { RoomCorner } from "./room/RoomCorner";
+import { RoomSection } from "./room/RoomSection";
 import { TalkToUs } from "./TalkToUs";
 
 /**
@@ -40,7 +45,8 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	const { data: me } = useV2Me();
 	const navigate = useI18nNavigate();
 	const [booking, setBooking] = useState(false);
-	if (!ready || !data) return null;
+	// A room member reads the tasks on Tasks; nothing here waits on them.
+	if (!ready || !data || data.access === "room") return null;
 	const today = localToday();
 	const plan = planAccount(data.tasks, data.documents, today, me?.email);
 	return (
@@ -64,12 +70,27 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	);
 }
 
+/** Who is involved, under what is open on the organisation overview. */
+export function AccountOverviewRoom({ orgId }: { orgId: string }) {
+	const ready = useAccountsCatalog();
+	if (!ready) return null;
+	return <RoomSection orgId={orgId} />;
+}
+
+/** The room's pictures, at the top corner of the organisation overview. */
+export function AccountOverviewCorner({ orgId }: { orgId: string }) {
+	const ready = useAccountsCatalog();
+	if (!ready) return null;
+	return <RoomCorner orgId={orgId} />;
+}
+
 /** "Talk to us", at the foot of the organisation overview. */
 export function AccountOverviewContact({ orgId }: { orgId: string }) {
 	const ready = useAccountsCatalog();
 	const { data } = useAccountPage(orgId);
 	const [booking, setBooking] = useState(false);
-	if (!ready || !data) return null;
+	// Questions and calls are for those who run the account.
+	if (!ready || !data || data.access === "room") return null;
 	return (
 		<>
 			<TalkToUs
@@ -100,14 +121,41 @@ export const AccountTasksRoute = () => (
 export const AccountDocumentsRoute = () => (
 	<AccountsI18n>
 		<AccountPage title={<Trans>Documents</Trans>} docTitle={t`Documents`}>
-			{(orgId, data) => (
-				<DocumentsTable orgId={orgId} documents={data.documents} title={null} />
-			)}
+			{(orgId, data) => <DocumentsBody orgId={orgId} data={data} />}
 		</AccountPage>
 	</AccountsI18n>
 );
 
+function DocumentsBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
+	const { data: room } = useRoom(orgId);
+	const [sharing, setSharing] = useState(false);
+	return (
+		<>
+			<DocumentsTable
+				orgId={orgId}
+				documents={data.documents}
+				title={null}
+				access={data.access}
+				signing={mySigning(room)}
+				onShare={() => setSharing(true)}
+			/>
+			<AddPersonModal
+				orgId={orgId}
+				opened={sharing}
+				onClose={() => setSharing(false)}
+				title={t`Share with a colleague`}
+			/>
+		</>
+	);
+}
+
 function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
+	if (data.access === "room")
+		return <ReadOnlyTasks tasks={data.tasks} documents={data.documents} />;
+	return <AccountTasks orgId={orgId} data={data} />;
+}
+
+function AccountTasks({ orgId, data }: { orgId: string; data: AccountPageT }) {
 	const billingRef = useRef<HTMLDivElement>(null);
 	const [booking, setBooking] = useState(false);
 	const { hash } = useLocation();
@@ -204,7 +252,16 @@ function AccountPage({
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<Title order={2}>{title}</Title>
+				{/* On a phone the room's pictures go under the title (app-stack-narrow). */}
+				<Group
+					justify="space-between"
+					align="center"
+					gap="md"
+					className="app-stack-narrow"
+				>
+					<Title order={2}>{title}</Title>
+					{data && organisationId && <RoomCorner orgId={organisationId} />}
+				</Group>
 				{error || !data || !organisationId ? (
 					<Alert color={denied ? "gray" : "red"}>
 						{denied ? (

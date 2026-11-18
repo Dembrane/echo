@@ -1,0 +1,10 @@
+/* Back keeps its width; the pill shortens its words first (FitLabel). */
+.back {
+	flex-shrink: 0;
+}
+.option {
+	min-width: 0;
+}
+.done {
+	flex-shrink: 0;
+}

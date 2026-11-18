@@ -229,7 +229,7 @@ export function SignatureCapture({
 	const row = (primary: ReactNode) => (
 		<Group data-steps justify="space-between" wrap="nowrap" gap="sm" mt={4}>
 			{onBack ? (
-				<Button onClick={onBack} data-testid="sign-back">
+				<Button variant="subtle" onClick={onBack} data-testid="sign-back">
 					<Trans>Back</Trans>
 				</Button>
 			) : (

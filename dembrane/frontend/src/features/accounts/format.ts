@@ -157,14 +157,14 @@ export const codedTaskText = (
 						? t`Tell us who signs yearly license offer ${number}`
 						: t`Tell us who signs the offer`;
 			return {
-				body: t`Who signs the offer and the data processing agreement, and whether you need your own DPIA.`,
+				body: t`Who signs the offer and the DPA, and whether you need your own DPIA.`,
 				title,
 			};
 		}
 		case "sign_dpa":
 			return {
 				body: t`Someone who may agree to data processing for your organisation signs it.`,
-				title: doc ? t`Sign ${doc}` : t`Sign the data processing agreement`,
+				title: doc ? t`Sign ${doc}` : t`Sign the DPA`,
 			};
 		case "billing_details":
 			return {

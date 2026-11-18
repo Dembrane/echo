@@ -1,0 +1,5 @@
+/* From 28px up, initials are set at the smallest text size, not Mantine's smaller
+ * default, so two letters read at a glance in a list. */
+.initials {
+	font-size: var(--app-font-size-xs);
+}

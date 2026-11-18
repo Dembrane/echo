@@ -13,6 +13,9 @@ invoice follows.
 Organisation admins and people with the organisation Billing role see all of this. Other
 members read: "Only the organisation's admins and billing contacts see this page."
 
+To read the offer with colleagues and say who signs, see
+[Sharing an offer with your team](./sharing-offers-with-your-team.md).
+
 ## Where things are
 
 Once dembrane has sent your organisation a task or a document, the organisation sidebar
@@ -52,7 +55,7 @@ offer from dembrane is ready to sign".
    and "Do you need your own data protection impact assessment (DPIA)?" The form adds: "To
    change these answers later, ask us a question."
 2. "Review and sign the offer".
-3. "Sign the data processing agreement". This is its own document, sent with the offer.
+3. "Sign the DPA". This is its own document, sent with the offer.
 4. "Fill in billing details". This one stays locked until an offer is signed: "Opens after
    you sign {title}". If your organisation already gave complete details, you are not asked
    again.

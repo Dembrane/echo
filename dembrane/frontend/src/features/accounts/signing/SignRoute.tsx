@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Alert,
 	Anchor,
 	Box,
@@ -19,10 +20,15 @@ import {
 	TextInput,
 	ThemeIcon,
 	Title,
+	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle, useMediaQuery } from "@mantine/hooks";
-import { ArrowLeftIcon, CheckIcon } from "@phosphor-icons/react";
+import {
+	ArrowLeftIcon,
+	CheckIcon,
+	ShareNetworkIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -36,16 +42,20 @@ import {
 	useLegalHref,
 	usePdfData,
 	usePdfHref,
+	useRoom,
 } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
+import { AddPersonModal } from "../customer/room/AddPersonModal";
+import { mayNameSigner } from "../customer/room/model";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
 import { FitLabel, fitting } from "../FitLabel";
 import { formatDateTime, formatMoney } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
+import { DocumentLoadError } from "./DocumentLoadError";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
@@ -63,10 +73,9 @@ import {
 	todayForDocument,
 	type Values,
 } from "./fieldStepper";
-import { DocumentLoadError } from "./DocumentLoadError";
+import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 import { clearDraft, readDraft, writeDraft } from "./signingDraft";
 import { captureSigning, SIGNING_EVENTS } from "./signingEvents";
-import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 
 /**
  * Signing: the document as it will be signed, its fields on the pages, and one panel
@@ -133,6 +142,12 @@ function Header({
 	orgId: string;
 	children?: React.ReactNode;
 }) {
+	const [sharing, setSharing] = useState(false);
+	// On a phone the share control is its icon, so the title keeps the room.
+	const phone = useMediaQuery("(max-width: 48em)") ?? false;
+	// Those who run the account and room members share it; a named signer from outside
+	// has no room to bring anyone into.
+	const shares = doc.access === "member" || doc.access === "room";
 	return (
 		<Paper
 			radius={0}
@@ -155,10 +170,45 @@ function Header({
 							</ThemeIcon>
 						</I18nLink>
 					)}
-					<Text truncate>{doc.title}</Text>
+					{/* Two lines before it shortens, so a phone shows the whole title. */}
+					<Text lineClamp={2}>{doc.title}</Text>
 				</Group>
-				{children}
+				<Group gap="sm" wrap="nowrap">
+					{children}
+					{shares &&
+						(phone ? (
+							<Tooltip label={t`Share with a colleague`}>
+								<ActionIcon
+									variant="subtle"
+									size="lg"
+									aria-label={t`Share with a colleague`}
+									onClick={() => setSharing(true)}
+									data-testid="doc-share"
+								>
+									<ShareNetworkIcon size={20} />
+								</ActionIcon>
+							</Tooltip>
+						) : (
+							<Button
+								variant="subtle"
+								leftSection={<ShareNetworkIcon size={16} aria-hidden />}
+								onClick={() => setSharing(true)}
+								data-testid="doc-share"
+							>
+								<Trans>Share with a colleague</Trans>
+							</Button>
+						))}
+				</Group>
 			</Group>
+			{/* Mounted only while open: the signing walk under it stays as it was. */}
+			{shares && sharing && (
+				<AddPersonModal
+					orgId={orgId}
+					opened={sharing}
+					onClose={() => setSharing(false)}
+					title={t`Share with a colleague`}
+				/>
+			)}
 		</Paper>
 	);
 }
@@ -177,6 +227,8 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	}, [doc.id, doc.status, orgId, queryClient]);
 
 	if (doc.status === "signed") return <Signed doc={doc} orgId={orgId} />;
+	// A room member reads: the pages and the texts it includes, nothing to fill in.
+	if (doc.access === "room") return <Reading doc={doc} orgId={orgId} />;
 	if (doc.status !== "sent" && doc.status !== "viewed") {
 		return (
 			<>
@@ -206,6 +258,71 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	if (doc.access === "member" && doc.signer)
 		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/**
+ * A room member reading the offer or the DPA: its pages and the legal texts it includes.
+ * Nothing to fill in or sign, and no download or print while the server says it may not
+ * be saved (may_download); who signs it is said above the pages: the person named on the
+ * document, else the room's signer of it.
+ */
+function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+	const pdf = usePdfData(doc.file_url);
+	const href = usePdfHref(doc.may_download ? doc.file_url : null);
+	const { data: room } = useRoom(orgId);
+	const kind = doc.kind === "offer" || doc.kind === "dpa" ? doc.kind : null;
+	const roomSigner = kind ? room?.signers[kind] : null;
+	const named =
+		doc.signer ??
+		(roomSigner?.document_id === doc.id ? roomSigner : null) ??
+		null;
+	const signer = named?.name || named?.email || "";
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="md" py="lg" px="md" data-testid="sign-reading">
+				<Stack gap="lg">
+					<Text c="dimmed">
+						{signer ? (
+							<Trans>You can read this document. {signer} signs it.</Trans>
+						) : (
+							<Trans>
+								You can read this document. Who signs it is not chosen yet.
+							</Trans>
+						)}
+					</Text>
+					{href && (
+						<Group>
+							<Button
+								{...secondary}
+								component="a"
+								href={href}
+								target="_blank"
+								rel="noreferrer"
+								data-testid="doc-pdf"
+							>
+								<Trans>Download PDF</Trans>
+							</Button>
+						</Group>
+					)}
+					{pdf.data ? (
+						<PdfPages data={pdf.data} />
+					) : pdf.isError ? (
+						<Text size="sm" c="dimmed">
+							<Trans>
+								The document could not be loaded. Try again in a moment.
+							</Trans>
+						</Text>
+					) : (
+						<Stack align="center" py="xl">
+							<Loader size="sm" />
+						</Stack>
+					)}
+					<LegalDocuments doc={doc} />
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /** Signed by some, waiting for the rest: who signed, and whose signature comes next. */
@@ -313,13 +430,15 @@ function MaybeWaiting({
 						{mayRemind(signer) && (
 							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
 						)}
-						<Button
-							{...secondary}
-							onClick={() => setReassigning(true)}
-							data-testid="sign-reassign"
-						>
-							<Trans>Send to someone else</Trans>
-						</Button>
+						{mayNameSigner(doc) && (
+							<Button
+								{...secondary}
+								onClick={() => setReassigning(true)}
+								data-testid="sign-reassign"
+							>
+								<Trans>Send to someone else</Trans>
+							</Button>
+						)}
 					</Group>
 					<DocumentPreview doc={doc} who={assignee} />
 				</Stack>
@@ -327,7 +446,6 @@ function MaybeWaiting({
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={doc.id}
-				current={signer}
 				opened={reassigning}
 				onClose={() => setReassigning(false)}
 			/>
@@ -987,6 +1105,7 @@ function ActionRow({
 		<Group data-steps justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
 				<Button
+					variant="subtle"
 					onClick={onBack}
 					data-testid="sign-back"
 					style={{ flexShrink: 0 }}
@@ -1313,7 +1432,7 @@ function FinishStep({
 					value={dpa}
 					onChange={(v) => onDpa(v as "yes" | "no")}
 					label={t`May you also agree to data processing for your organisation?`}
-					description={t`If not, the data processing agreement becomes a separate document for someone who may.`}
+					description={t`If not, the DPA becomes a separate document for someone who may.`}
 					error={tried && unanswered ? t`Choose one to continue.` : undefined}
 				>
 					<Stack gap={6} mt={6}>
@@ -1399,7 +1518,7 @@ const legalName = (kind: string) =>
 		? t`General terms and conditions`
 		: kind === "sla"
 			? t`Service level agreement`
-			: t`Data processing agreement`;
+			: t`DPA`;
 
 /**
  * The legal documents the agreement is made of, each opening the version this document

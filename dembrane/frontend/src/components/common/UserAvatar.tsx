@@ -1,6 +1,7 @@
 import { Avatar } from "@mantine/core";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { avatarUrl as avatarSrc } from "@/lib/avatar";
+import classes from "./UserAvatar.module.css";
 
 type UserAvatarProps = {
 	size?: number;
@@ -35,21 +36,55 @@ const deriveInitials = (
 
 export const UserAvatar = ({ size = 32 }: UserAvatarProps) => {
 	const { data: user } = useCurrentUser();
-
-	const avatarFileId = user?.avatar as string | null;
-	const avatarUrl = avatarSrc(avatarFileId, size * 2) ?? null;
-	const initials = deriveInitials(
-		user?.first_name as string | null | undefined,
-		(user as { last_name?: string | null } | undefined)?.last_name,
+	return (
+		<PersonAvatar
+			size={size}
+			person={{
+				avatar: user?.avatar as string | null,
+				first_name: user?.first_name as string | null | undefined,
+				last_name: (user as { last_name?: string | null } | undefined)
+					?.last_name,
+			}}
+		/>
 	);
+};
 
+/**
+ * Anyone's picture, not only the signed-in user's: their uploaded avatar, else their
+ * initials (from the name, else the email). Dimmed draws it faded, for someone invited
+ * who has not joined yet. From 28px up, initials are set at the smallest text size rather
+ * than Mantine's smaller default.
+ */
+export const PersonAvatar = ({
+	person,
+	size = 32,
+	dimmed = false,
+}: {
+	person: {
+		avatar?: string | null;
+		name?: string | null;
+		email?: string | null;
+		first_name?: string | null;
+		last_name?: string | null;
+	};
+	size?: number;
+	dimmed?: boolean;
+}) => {
+	const initials =
+		person.first_name || person.last_name
+			? deriveInitials(person.first_name, person.last_name)
+			: person.name?.trim()
+				? deriveInitials(person.name)
+				: deriveInitials(person.email);
 	return (
 		<Avatar
-			src={avatarUrl}
+			src={avatarSrc(person.avatar, size * 2) ?? null}
 			size={size}
 			radius="50%"
 			color="primary"
 			className="shrink-0"
+			classNames={size >= 28 ? { placeholder: classes.initials } : undefined}
+			data-dimmed={dimmed || undefined}
 		>
 			{initials}
 		</Avatar>

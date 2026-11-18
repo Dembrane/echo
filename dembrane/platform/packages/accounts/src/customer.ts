@@ -17,6 +17,7 @@ import {
   documentFor,
   inRoom,
   roomOrg,
+  verifiedEmail,
 } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
@@ -1007,13 +1008,32 @@ const isDocumentKind = (v: unknown): v is (typeof DOCUMENT_KINDS)[number] =>
 
 /**
  * Every organisation whose account the caller runs, with task counts and the next task:
- * the "Tasks 1/2" entry and the org picker. One indexed query; cheap on every page load.
+ * the "Tasks 1/2" entry and the org picker; then those where the caller is a member with
+ * room access, marked so, counting only what a room member reads and with nothing waiting
+ * on them. Two indexed queries; cheap on every page load.
  */
 export async function tasksSummary(d: AccountsDeps, who: Signed) {
   if (!who.appUserId) return [];
-  const rows = await store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES);
-  return rows.map(({ next_task, ...r }) => ({
+  const [rows, roomRows] = await Promise.all([
+    store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES),
+    verifiedEmail(d, who).then((email) =>
+      store.roomTasksSummary(d.db, who.appUserId as string, email, ACCOUNT_ROLES),
+    ),
+  ]);
+  const room = roomRows.map((r) => ({
     ...r,
+    access: "room" as const,
+    account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
+    tasks_waiting: 0,
+    next_task_title: null,
+    next_task_code: null,
+    next_task_params: null,
+    next_task_document_id: null,
+    next_task_document_kind: null,
+  }));
+  const account = rows.map(({ next_task, ...r }) => ({
+    ...r,
+    access: "account" as const,
     account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
     next_task_title: next_task?.code ? null : (next_task?.title ?? null),
     next_task_code: isTaskCode(next_task?.code) ? next_task.code : null,
@@ -1023,4 +1043,5 @@ export async function tasksSummary(d: AccountsDeps, who: Signed) {
       ? next_task.document_kind
       : null,
   }));
+  return [...account, ...room].sort((a, b) => a.name.localeCompare(b.name));
 }

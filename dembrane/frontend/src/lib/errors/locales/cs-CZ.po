@@ -394,6 +394,16 @@ msgid "error.member.owner_removes_owner"
 msgstr "Odebrat jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Kdo podepisuje, může vybrat jen vlastník nebo admin. Můžeš podepsat sám, nebo připomenout už vybrané osobě."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.new_person_admins_only"
+msgstr "Někoho, kdo ještě není členem, může pozvat jen vlastník nebo admin. Můžeš přidat kolegu, který už členem je."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Ověřovat lze pouze tvrzení. Vyberte tvrzení a zkuste to znovu."
@@ -424,6 +434,16 @@ msgid "error.project.not_owner"
 msgstr "Toto může provést pouze vlastník tohoto projektu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr "Změnit, co dělá, může jen ten, kdo ho pozval, admin nebo Billing."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:38
+msgid "error.room.remove_forbidden"
+msgstr "Odebrat ho může jen ten, kdo ho pozval, admin nebo Billing."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Tuto pozvánku může stáhnout pouze ten, kdo ji odeslal, nebo správce."
@@ -452,6 +472,11 @@ msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Možnosti volené při podpisu nejdou dohromady s měsíční, splátkovou ani bezplatnou fakturací."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr "Vlastníci, admini a Billing tu jsou díky své roli. Změň raději jejich roli na stránce Members."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +784,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Zatím nelze aktualizovat žádnou platební metodu. Nejprve si vyberte tarif."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+msgid "error.room.no_labels_question"
+msgstr "Tady není na co odpovídat."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Tento účet již má aktivní předplatné."
@@ -1017,6 +1047,11 @@ msgstr "Tato osoba už je členem vaší organizace, takže se nemůže připoji
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Tato osoba je externistou v jednom z vašich pracovních prostorů. Nejprve tuto roli odeberte a pak ji nastavte jako správce nebo vlastníka."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:34
+msgid "error.room.person_not_found"
+msgstr "Tato osoba už tu není."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1662,11 @@ msgstr "Napište k postřehu nějaký text."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Napište, co si má paměť uchovat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr "Už jsi řekl, co tu děláš."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

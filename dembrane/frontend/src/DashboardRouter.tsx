@@ -199,6 +199,10 @@ const AccountDocumentsRoute = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountRoute"),
 	"AccountDocumentsRoute",
 );
+const RoomJoinGate = createLazyNamedRoute(
+	() => import("./features/accounts/signing/SignGate"),
+	"RoomJoinGate",
+);
 const SignGate = createLazyNamedRoute(
 	() => import("./features/accounts/signing/SignGate"),
 	"SignGate",
@@ -671,6 +675,12 @@ export const mainRouter = createBrowserRouter([
 				// /login?next=..., which lands them back here.
 				element: <SignGate />,
 				path: "o/:organisationId/account/documents/:docId/sign",
+			},
+			{
+				// The data room's invitation: as the signing page, outside the dashboard
+				// chrome, with the same code sign-in; accepting lands on the overview.
+				element: <RoomJoinGate />,
+				path: "o/:organisationId/account/join",
 			},
 			{
 				// OAuth consent step for agent access. The backend redirects the

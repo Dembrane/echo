@@ -84,6 +84,7 @@ const { OrgHomeView } = await import(
 );
 
 const row = (over: Partial<TasksSummaryT[number]>): TasksSummaryT[number] => ({
+	access: "account",
 	account_stage: "prospect",
 	logo_url: null,
 	name: "Gemeente Testdorp",

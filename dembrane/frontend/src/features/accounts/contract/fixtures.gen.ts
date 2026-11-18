@@ -628,6 +628,8 @@ const ROOM_SAM = "0199a1b8-0000-7000-8000-000000000002";
 const ROOM_NOOR = "0199a1b8-0000-7000-8000-000000000003";
 const robinInvites = { app_user_id: CUSTOMER_APP_USER, name: "Robin Example" };
 
+// Each person as Robin, the admin, sees them: may_remove and may_relabel are the viewer's.
+
 /** The admin who runs the account, with the labels they gave themselves. */
 const roomRobin: Out<typeof RoomPerson> = {
   id: ROOM_ROBIN,
@@ -643,6 +645,8 @@ const roomRobin: Out<typeof RoomPerson> = {
   invited_by: robinInvites,
   invited_at: null,
   signs: [],
+  may_remove: false,
+  may_relabel: false,
 };
 /** A member Robin brought in, who has not said yet whether the labels are right. */
 const roomSam: Out<typeof RoomPerson> = {
@@ -659,6 +663,8 @@ const roomSam: Out<typeof RoomPerson> = {
   invited_by: robinInvites,
   invited_at: "2026-09-28T10:00:00.000Z",
   signs: [],
+  may_remove: true,
+  may_relabel: true,
 };
 /** Someone new, invited and named to sign the offer, who has not accepted yet. */
 const roomNoor: Out<typeof RoomPerson> = {
@@ -675,6 +681,8 @@ const roomNoor: Out<typeof RoomPerson> = {
   invited_by: robinInvites,
   invited_at: "2026-09-28T10:05:00.000Z",
   signs: ["offer"],
+  may_remove: true,
+  may_relabel: true,
 };
 /** A plain member outside the room: only those who run the account see them. */
 const roomOutside: Out<typeof RoomPerson> = {
@@ -691,6 +699,8 @@ const roomOutside: Out<typeof RoomPerson> = {
   invited_by: null,
   invited_at: null,
   signs: [],
+  may_remove: false,
+  may_relabel: false,
 };
 const roomSigners = {
   offer: { document_id: OFFER, email: "noor@example-town.example", name: "Noor Example" },
@@ -713,7 +723,12 @@ export const roomPage: Out<typeof RoomPage> = {
 
 /** GET .../room as Sam, brought in by Robin: the room's people only, asked about the labels. */
 export const roomPageAsColleague: Out<typeof RoomPage> = {
-  people: [roomRobin, roomSam, roomNoor],
+  // Sam manages nobody here: Robin brought Noor in, and nobody changes their own labels.
+  people: [roomRobin, roomSam, roomNoor].map((p) => ({
+    ...p,
+    may_remove: false,
+    may_relabel: false,
+  })),
   signers: roomSigners,
   dismissed_hints: ["privacy_ai"],
   me: {
@@ -894,6 +909,7 @@ export { signedDpaDetail as signedDocument };
 export const tasksSummary: Out<typeof TasksSummary> = [
   {
     org_id: ORG,
+    access: "account",
     name: "Example Town Council (sample)",
     logo_url: null,
     account_stage: "customer",

@@ -394,6 +394,16 @@ msgid "error.member.owner_removes_owner"
 msgstr "Alleen een eigenaar kan een andere eigenaar verwijderen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Alleen een eigenaar of beheerder kan kiezen wie ondertekent. Je kunt zelf ondertekenen, of de persoon herinneren die al is gekozen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.new_person_admins_only"
+msgstr "Alleen een eigenaar of beheerder kan iemand uitnodigen die nog geen lid is. Je kunt wel een collega toevoegen die al lid is."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Alleen beweringen kunnen worden gefactcheckt. Kies een bewering en probeer het opnieuw."
@@ -424,6 +434,16 @@ msgid "error.project.not_owner"
 msgstr "Alleen de eigenaar van dit project kan dit doen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan aanpassen wat diegene doet."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:38
+msgid "error.room.remove_forbidden"
+msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan diegene eruit halen."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Alleen degene die deze uitnodiging heeft verstuurd of een beheerder kan deze intrekken."
@@ -452,6 +472,11 @@ msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Opties die bij ondertekening gekozen worden, gaan niet samen met maandelijks, in termijnen of kosteloos factureren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr "Eigenaren, beheerders en Facturering zitten erin door hun rol. Pas hun rol aan op de pagina Leden."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +784,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Er is nog geen betaalmethode om bij te werken. Kies eerst een abonnement."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+msgid "error.room.no_labels_question"
+msgstr "Hier valt niets te beantwoorden."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Dit account heeft al een actief abonnement."
@@ -1017,6 +1047,11 @@ msgstr "Deze persoon is al lid van je organisatie en kan daarom niet als externe
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Deze persoon is een externe in een van je werkruimtes. Verwijder eerst die rol en maak diegene daarna beheerder of eigenaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:34
+msgid "error.room.person_not_found"
+msgstr "Deze persoon zit er niet meer in."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1662,11 @@ msgstr "Schrijf iets voor het inzicht."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Schrijf iets om als herinnering te bewaren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr "Je hebt al gezegd wat je hier doet."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

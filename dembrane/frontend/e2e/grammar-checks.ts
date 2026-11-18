@@ -430,6 +430,19 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 						btn,
 						"in a row of steps the filled button is not rightmost",
 					);
+				// Back, and anything else beside the pill, is the tertiary button.
+				for (const other of box.querySelectorAll(".mantine-Button-root"))
+					if (
+						other !== btn &&
+						!["filled", "subtle"].includes(
+							other.getAttribute("data-variant") ?? "",
+						)
+					)
+						fail(
+							"flow.steps-back-tertiary",
+							other,
+							"in a row of steps, Back is the tertiary button (variant subtle)",
+						);
 			} else if (kids.some((k) => k !== mine && pos(k) < pos(mine) - 1))
 				fail(
 					"flow.primary-first",

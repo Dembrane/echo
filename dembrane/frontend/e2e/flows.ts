@@ -142,6 +142,7 @@ export const flows: Record<string, Flow> = {
 	"/o/:organisationId/account/documents/:docId/sign": {
 		params: { docId: "$doc", organisationId: "$org" },
 	},
+	"/o/:organisationId/account/join": TOKEN("room invitation"),
 	"/o/:organisationId/documents": { params: { organisationId: "$org" } },
 	"/o/:organisationId/tasks": { params: { organisationId: "$org" } },
 	"/onboarding": {

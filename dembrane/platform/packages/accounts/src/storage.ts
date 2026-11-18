@@ -1,5 +1,18 @@
 import { schema } from "@dembrane/db";
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Conn } from "./deps";
 
@@ -928,6 +941,68 @@ export const store = {
         )
         .orderBy(asc(org.name))
     );
+  },
+
+  /**
+   * Every organisation where the person is a member (holding none of `roles`) brought into
+   * the data room, by their app user or by their verified address on a row that has none
+   * yet, with the counts of the tasks a room member reads: those on the offer and the DPA,
+   * never a draft, billing details left out (withdrawn tasks out of the total). One row per
+   * organisation; tasks are counted distinct, as a person can match two room rows (one by
+   * app user, one by address). No index of its own and no migration: it can start from the
+   * person's memberships (org_membership_user_id_index), and account_room_person is then
+   * read per organisation on its (organisation, app user) index and (organisation,
+   * address) unique key.
+   */
+  async roomTasksSummary(
+    c: Conn,
+    appUserId: string,
+    email: string | null,
+    roles: readonly string[],
+  ) {
+    return c
+      .select({
+        org_id: org.id,
+        name: org.name,
+        logo_url: org.logo_url,
+        account_stage: org.account_stage,
+        tasks_done: sql<number>`count(distinct ${task.id}) filter (where ${task.status} = 'done')::int`,
+        tasks_total: sql<number>`count(distinct ${task.id}) filter (where ${task.status} <> 'withdrawn')::int`,
+      })
+      .from(roomPerson)
+      .innerJoin(
+        org_membership,
+        and(
+          eq(org_membership.org_id, roomPerson.orgId),
+          eq(org_membership.user_id, appUserId),
+          isNull(org_membership.deleted_at),
+          notInArray(org_membership.role, [...roles]),
+        ),
+      )
+      .innerJoin(org, eq(org.id, roomPerson.orgId))
+      .leftJoin(
+        task,
+        and(
+          eq(task.orgId, org.id),
+          sql`${task.kind} <> 'billing_details'`,
+          sql`exists (select 1 from account_document d where d.id = ${task.documentId}
+            and d.kind in ('offer', 'dpa') and d.status <> 'draft')`,
+        ),
+      )
+      .where(
+        and(
+          isNotNull(roomPerson.accessGrantedAt),
+          isNull(org.deleted_at),
+          or(
+            eq(roomPerson.appUserId, appUserId),
+            email
+              ? and(isNull(roomPerson.appUserId), eq(roomPerson.email, email.toLowerCase()))
+              : undefined,
+          ),
+        ),
+      )
+      .groupBy(org.id)
+      .orderBy(asc(org.name));
   },
 
   // ── onboarding ────────────────────────────────────────────────────────

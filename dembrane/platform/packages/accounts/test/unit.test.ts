@@ -925,6 +925,36 @@ describe("delivery to sam and Slack", () => {
   });
 });
 
+describe("who signs, in the server's words", () => {
+  test("says DPA, never the agreement spelled out, and ondertekent in Dutch", () => {
+    const params = { document_title: "Offerte jaarlicentie DMB-DEMO-1" };
+    expect(taskTitle({ code: "who_signs", params, title: null }, "nl-NL")).toBe(
+      "Laat ons weten wie Offerte jaarlicentie DMB-DEMO-1 ondertekent",
+    );
+    expect(taskBody({ code: "who_signs", body: null }, "nl-NL")).toBe(
+      "Wie de offerte ondertekent, wie de DPA ondertekent, en of je een eigen DPIA nodig hebt.",
+    );
+    expect(taskBody({ code: "who_signs", body: null }, "en-US")).toBe(
+      "Who signs the offer, who signs the DPA, and whether you need a DPIA of your own.",
+    );
+    for (const language of LOCALES)
+      expect(taskBody({ code: "who_signs", body: null }, language)).toContain("DPA");
+  });
+
+  test("the sign-the-DPA task says DPA in every language", () => {
+    expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, "en-US")).toBe(
+      "Have the DPA signed",
+    );
+    expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, "nl-NL")).toBe(
+      "Laat de DPA ondertekenen",
+    );
+    for (const language of LOCALES) {
+      expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, language)).toContain("DPA");
+      expect(taskBody({ code: "sign_dpa", body: null }, language)).toContain("DPA");
+    }
+  });
+});
+
 describe("onboarding task words", () => {
   test("every onboarding code has a title and body in each language the server writes", () => {
     for (const code of ONBOARDING_CODES)
