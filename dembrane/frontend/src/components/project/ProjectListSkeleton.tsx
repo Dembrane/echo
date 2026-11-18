@@ -11,25 +11,20 @@ export function ProjectListSkeleton({
 	count = 6,
 	wrapper = true,
 }: ProjectListSkeletonProps) {
-	// biome-ignore lint/correctness/noNestedComponentDefinitions: needs to be fixed
-	const ListItems = () =>
-		Array.from({ length: count }).map((_, i) => (
-			// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
-			<Skeleton key={i} height={67} />
-		));
+	const items = Array.from({ length: count }).map((_, i) => (
+		<Skeleton key={i} height={67} />
+	));
 
 	// for pagination, render bare items (no layout wrapper)
 	if (!wrapper) {
-		return <ListItems />;
+		return items;
 	}
 
 	return (
 		<Stack gap="md">
 			{searchValue === "" && <Skeleton height={42} className="w-full" />}
 			<Box className="relative">
-				<Stack gap="sm">
-					<ListItems />
-				</Stack>
+				<Stack gap="sm">{items}</Stack>
 			</Box>
 		</Stack>
 	);
