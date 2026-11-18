@@ -1,4 +1,5 @@
 import type { DocumentRow } from "./storage";
+import { iso } from "./views";
 
 /**
  * Where an account's deal stands, under the names the team uses everywhere (Attio, sam's
@@ -104,8 +105,6 @@ export interface DealMilestones {
   readonly documents_signed: string | null;
   readonly invoice_sent: string | null;
 }
-
-const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : null);
 
 /**
  * The dates behind the stage, from the same facts, so the list and the card can show how far

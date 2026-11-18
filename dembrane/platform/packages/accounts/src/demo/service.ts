@@ -17,14 +17,13 @@ import type { AccountsDeps, Tx } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
 import { releaseHeldContacts } from "../prospect";
-import { staffBase } from "../views";
+import { iso, staffBase } from "../views";
 import { DEMO_STEPS, type DemoInput, freshSteps, type SeedOutput, type Steps } from "./build";
 import { demoBuild, demoWorkflowId } from "./job";
 
 type Row = typeof schema.account_demo.$inferSelect;
 
 const LOCALE = { en: "en-US", nl: "nl-NL" } as const;
-const iso = (d: Date | null) => (d ? d.toISOString() : null);
 
 export function demoView(d: Pick<AccountsDeps, "settings">, row: Row) {
   const input = row.input as DemoInput;

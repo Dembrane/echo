@@ -18,7 +18,7 @@ import {
 } from "drizzle-orm/pg-core";
 // Circular on purpose: org lives in the baseline file, and the foreign key callbacks run
 // only after both modules have loaded.
-import { org } from "./index";
+import { app_user, org, org_invite } from "./index";
 
 // Customer accounts: everything between dembrane and one customer
 // organisation. Echo owns these rows; sam reads and writes them through the staff API.
@@ -539,6 +539,95 @@ export const account_demo = pgTable(
     check(
       "account_demo_status_check",
       sql`${t.status} in ('queued', 'running', 'draft', 'failed', 'published')`,
+    ),
+  ],
+);
+
+/**
+ * The data room's people: one row per person the room knows something about, by address.
+ * `accessGrantedAt` set: they read the offer and the DPA, while they also hold an active
+ * org_membership, so leaving the organisation ends it with no write here. Null: only
+ * labels, for someone in by their role (owner, admin, billing). `orgInviteId`: the
+ * invitation this row made, if it made one, withdrawn when the row goes before acceptance.
+ */
+export const account_room_person = pgTable(
+  "account_room_person",
+  {
+    id: uuid("id").primaryKey(),
+    orgId: uuid("org_id").notNull(),
+    /** Lowercased. */
+    email: text("email").notNull(),
+    /** Set when the person has an account, else at acceptance. */
+    appUserId: uuid("app_user_id"),
+    /** As the inviter typed it; the person's own name wins once they have one. */
+    name: text("name").notNull(),
+    labels: text("labels").array().notNull().default(sql`'{}'::text[]`),
+    other: text("other"),
+    accessGrantedAt: timestamp("access_granted_at", { withTimezone: true }),
+    invitedBy: uuid("invited_by"),
+    orgInviteId: uuid("org_invite_id"),
+    labelsAnsweredAt: timestamp("labels_answered_at", { withTimezone: true }),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (t) => [
+    unique("account_room_person_org_id_email_unique").on(t.orgId, t.email),
+    index("account_room_person_org_id_app_user_id_index").on(t.orgId, t.appUserId),
+    foreignKey({
+      columns: [t.orgId],
+      foreignColumns: [org.id],
+      name: "account_room_person_org_id_foreign",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.appUserId],
+      foreignColumns: [app_user.id],
+      name: "account_room_person_app_user_id_foreign",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.invitedBy],
+      foreignColumns: [app_user.id],
+      name: "account_room_person_invited_by_foreign",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [t.orgInviteId],
+      foreignColumns: [org_invite.id],
+      name: "account_room_person_org_invite_id_foreign",
+    }).onDelete("set null"),
+    check(
+      "account_room_person_labels_check",
+      sql`${t.labels} <@ array['go_ahead', 'rollout', 'it_security', 'privacy_ai', 'contract_purchasing', 'staff_stakeholders']::text[]`,
+    ),
+    check(
+      "account_room_person_other_check",
+      sql`${t.other} is null or char_length(${t.other}) <= 80`,
+    ),
+  ],
+);
+
+/** A hint about a label nobody in the room holds yet, waved away for the organisation. */
+export const account_room_hint = pgTable(
+  "account_room_hint",
+  {
+    orgId: uuid("org_id").notNull(),
+    label: text("label").notNull(),
+    dismissedBy: uuid("dismissed_by"),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.orgId, t.label] }),
+    foreignKey({
+      columns: [t.orgId],
+      foreignColumns: [org.id],
+      name: "account_room_hint_org_id_foreign",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.dismissedBy],
+      foreignColumns: [app_user.id],
+      name: "account_room_hint_dismissed_by_foreign",
+    }).onDelete("set null"),
+    check(
+      "account_room_hint_label_check",
+      sql`${t.label} in ('go_ahead', 'it_security', 'privacy_ai', 'contract_purchasing')`,
     ),
   ],
 );

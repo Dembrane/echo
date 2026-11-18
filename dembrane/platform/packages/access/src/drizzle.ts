@@ -1,7 +1,7 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, eq, gt, isNull, or } from "drizzle-orm";
-import type { AccessStore } from "./store";
+import type { AccessStore, WorkspaceRow } from "./store";
 
 const {
   workspace,
@@ -31,20 +31,11 @@ export class DrizzleAccessStore implements AccessStore {
       .where(eq(workspace.id, id))
       .limit(1);
     if (!row) return null;
-    const settings = (row.settings ?? {}) as {
-      sticky_removed?: unknown;
-      inherit_organisation_members?: unknown;
-    };
     return {
       id: row.id,
       orgId: row.orgId,
-      visibility: (row.visibility ?? "open_to_organisation") as
-        | "open_to_organisation"
-        | "invite_only"
-        | "private",
+      ...workspaceReach(row),
       deleted: row.deletedAt !== null,
-      stickyRemoved: stickyRemovedIds(settings.sticky_removed),
-      inheritOrgMembers: settings.inherit_organisation_members === true,
       tier: row.tier ?? null,
     };
   }
@@ -141,6 +132,26 @@ export class DrizzleAccessStore implements AccessStore {
       .limit(1);
     return rows.length > 0;
   }
+}
+
+/**
+ * What a workspace row says about who derives access to it from the organisation: its
+ * visibility, the members removed for good, and whether plain members join. Read the same
+ * way wherever a rule must count exactly what access grants (deriveWorkspaceRole).
+ */
+export function workspaceReach(row: {
+  readonly visibility: string | null;
+  readonly settings: unknown;
+}): Pick<WorkspaceRow, "visibility" | "stickyRemoved" | "inheritOrgMembers"> {
+  const settings = (row.settings ?? {}) as {
+    sticky_removed?: unknown;
+    inherit_organisation_members?: unknown;
+  };
+  return {
+    visibility: (row.visibility ?? "open_to_organisation") as WorkspaceRow["visibility"],
+    stickyRemoved: stickyRemovedIds(settings.sticky_removed),
+    inheritOrgMembers: settings.inherit_organisation_members === true,
+  };
 }
 
 /**

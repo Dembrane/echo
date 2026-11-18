@@ -3,6 +3,7 @@ import type {
   AccountCard,
   AccountList,
   AccountPage,
+  AddRoomPersonResponse,
   CreateAccountResponse,
   DemoCreateRequest,
   DemoStatus,
@@ -12,6 +13,9 @@ import type {
   OnboardingResponse,
   PushOfferRequest,
   PushOfferResponse,
+  RoomInvite,
+  RoomPage,
+  RoomPerson,
   SigningRequests,
   SignRequest,
   SignResponse,
@@ -150,6 +154,7 @@ const offerSummary: Out<typeof DocumentSummary> = {
   file_url: `${C}/documents/${OFFER}/file`,
   signed_pdf_url: null,
   accepted_outside: null,
+  may_download: true,
 };
 
 export const offerDetail: Out<typeof DocumentDetail> = {
@@ -260,6 +265,7 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   file_url: `${C}/documents/${DPA}/file`,
   signed_pdf_url: `${C}/documents/${DPA}/signed.pdf`,
   accepted_outside: null,
+  may_download: true,
 };
 
 export const signedDpaDetail: Out<typeof DocumentDetail> = {
@@ -417,6 +423,7 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
   file_url: `${C}/documents/${INVOICE}/file`,
   signed_pdf_url: null,
   accepted_outside: null,
+  may_download: true,
   invoice: {
     number: "2026-0421",
     exact_id: "DEMO-EXACT-0001",
@@ -573,6 +580,7 @@ export const billingTaskDone: Out<typeof Task> = {
 /** GET /api/v2/orgs/:orgId/account */
 export const accountPage: Out<typeof AccountPage> = {
   organisation,
+  access: "account",
   tasks: [whoSignsTask, signTask, poTask, billingTask, logoTask],
   documents: [offerSummary, invoiceSummary, dpaSummary],
   billing: emptyBilling,
@@ -604,6 +612,131 @@ export const signResponse: Out<typeof SignResponse> = {
   signature_id: "0199a1b7-0000-7000-8000-000000000002",
   signed_at: "2026-09-28T10:02:11.000Z",
   confirmation_text: signRequest.confirmation_text,
+};
+
+// ── the data room ───────────────────────────────────────────────────────
+
+const COLLEAGUE_APP_USER = "0199a1b6-0000-7000-8000-000000000002";
+const MEMBER_APP_USER = "0199a1b6-0000-7000-8000-000000000003";
+const ROOM_ROBIN = "0199a1b8-0000-7000-8000-000000000001";
+const ROOM_SAM = "0199a1b8-0000-7000-8000-000000000002";
+const ROOM_NOOR = "0199a1b8-0000-7000-8000-000000000003";
+const robinInvites = { app_user_id: CUSTOMER_APP_USER, name: "Robin Example" };
+
+/** The admin who runs the account, with the labels they gave themselves. */
+const roomRobin: Out<typeof RoomPerson> = {
+  id: ROOM_ROBIN,
+  app_user_id: CUSTOMER_APP_USER,
+  name: "Robin Example",
+  email: "robin@example-town.example",
+  org_role: "admin",
+  room: "by_role",
+  status: "member",
+  labels: ["go_ahead", "contract_purchasing"],
+  other: null,
+  labels_answered_at: null,
+  invited_by: robinInvites,
+  invited_at: null,
+  signs: [],
+};
+/** A member Robin brought in, who has not said yet whether the labels are right. */
+const roomSam: Out<typeof RoomPerson> = {
+  id: ROOM_SAM,
+  app_user_id: COLLEAGUE_APP_USER,
+  name: "Sam Example",
+  email: "sam@example-town.example",
+  org_role: "member",
+  room: "by_invite",
+  status: "member",
+  labels: ["it_security"],
+  other: null,
+  labels_answered_at: null,
+  invited_by: robinInvites,
+  invited_at: "2026-09-28T10:00:00.000Z",
+  signs: [],
+};
+/** Someone new, invited and named to sign the offer, who has not accepted yet. */
+const roomNoor: Out<typeof RoomPerson> = {
+  id: ROOM_NOOR,
+  app_user_id: null,
+  name: "Noor Example",
+  email: "noor@example-town.example",
+  org_role: null,
+  room: "by_invite",
+  status: "invited",
+  labels: ["go_ahead"],
+  other: "Wethouder",
+  labels_answered_at: null,
+  invited_by: robinInvites,
+  invited_at: "2026-09-28T10:05:00.000Z",
+  signs: ["offer"],
+};
+/** A plain member outside the room: only those who run the account see them. */
+const roomOutside: Out<typeof RoomPerson> = {
+  id: null,
+  app_user_id: MEMBER_APP_USER,
+  name: "Kim Example",
+  email: "kim@example-town.example",
+  org_role: "member",
+  room: "none",
+  status: "member",
+  labels: [],
+  other: null,
+  labels_answered_at: null,
+  invited_by: null,
+  invited_at: null,
+  signs: [],
+};
+const roomSigners = {
+  offer: { document_id: OFFER, email: "noor@example-town.example", name: "Noor Example" },
+  dpa: { document_id: DPA, email: "privacy@example-town.example", name: "Alex Example" },
+};
+
+/** GET .../room as the admin: every member, a hint waved away. */
+export const roomPage: Out<typeof RoomPage> = {
+  people: [roomRobin, roomSam, roomNoor, roomOutside],
+  signers: roomSigners,
+  dismissed_hints: ["privacy_ai"],
+  me: {
+    app_user_id: CUSTOMER_APP_USER,
+    room: "by_role",
+    may_dismiss_hints: true,
+    may_invite_new: true,
+    labels_question: false,
+  },
+};
+
+/** GET .../room as Sam, brought in by Robin: the room's people only, asked about the labels. */
+export const roomPageAsColleague: Out<typeof RoomPage> = {
+  people: [roomRobin, roomSam, roomNoor],
+  signers: roomSigners,
+  dismissed_hints: ["privacy_ai"],
+  me: {
+    app_user_id: COLLEAGUE_APP_USER,
+    room: "by_invite",
+    may_dismiss_hints: false,
+    may_invite_new: false,
+    labels_question: true,
+  },
+};
+
+/** POST .../room/people for someone new, in an organisation with no workspace every member joins. */
+export const addRoomPersonResponse: Out<typeof AddRoomPersonResponse> = {
+  status: "invited",
+  person: roomNoor,
+  email_sent: true,
+  workspaces_reached: 0,
+};
+
+/** GET .../room/invite?invite=: Noor's invitation page before sign-in. */
+export const roomInvite: Out<typeof RoomInvite> = {
+  organisation: { name: "Example Town Council (sample)" },
+  inviter: { name: "Robin Example" },
+  person: { email: "noor@example-town.example", first_name: "Noor", last_name: "Example" },
+  labels: ["go_ahead"],
+  other: "Wethouder",
+  status: "open",
+  has_account: false,
 };
 
 export const signingRequests: Out<typeof SigningRequests> = [

@@ -32,6 +32,7 @@ import { question } from "./question";
 import { rate_limit } from "./rate_limit";
 import { report } from "./report";
 import { request } from "./request";
+import { room } from "./room";
 import { staff } from "./staff";
 import { tag } from "./tag";
 import { task } from "./task";
@@ -93,6 +94,7 @@ export const ERROR_CATALOG = {
   ...staff,
   ...privacy,
   ...question,
+  ...room,
 } as const;
 
 export type ErrorCatalog = typeof ERROR_CATALOG;

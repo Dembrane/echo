@@ -25,7 +25,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **account** (in 4, out 16): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, reports, api, worker. Uses tenancy, notifications, samples, billing, auth and 4 more.
 - **popcorn** (in 4, out 14): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, config, llm.
 - **tenancy** (in 3, out 14): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by account, api, worker. Uses samples, billing, projects, mail, i18n and 1 more.
-- **accounts** (in 3, out 15): Customer accounts as sales runs them: offers, contracts, signing, demos, check-ins. Used by api, migrate, worker. Uses account, popcorn, webhooks, mail, i18n and 3 more.
+- **accounts** (in 3, out 16): Customer accounts as sales runs them: offers, contracts, signing, demos, check-ins. Used by api, migrate, worker. Uses account, popcorn, webhooks, analytics, mail and 4 more.
 - **map** (in 3, out 12): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, llm.
 - **chats** (in 2, out 10): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics, llm.
 - **agentic** (in 2, out 16): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, conversations, notifications, projects, analytics and 3 more.
@@ -56,8 +56,8 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by projects, analysis, conversations, popcorn and 6 more. Uses core, observability.
 - **i18n** (in 9, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by projects, billing, account, tenancy and 5 more. Uses config, llm, db, core.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, tenancy, accounts and 5 more. Uses nothing.
+- **analytics** (in 8, out 1): Product analytics capture (PostHog). Used by conversations, popcorn, accounts, chats and 4 more. Uses observability.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, tenancy, accounts and 4 more. Uses nothing.
-- **analytics** (in 7, out 1): Product analytics capture (PostHog). Used by conversations, popcorn, chats, agentic and 3 more. Uses observability.
 - **audio** (in 4, out 0): ffmpeg and ffprobe wrappers, audio formats, and the client for the media app. Used by conversations, api, media, worker. Uses nothing.
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **transcription** (in 3, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api, worker. Uses prompts, llm, observability.
