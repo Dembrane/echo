@@ -1,4 +1,4 @@
-import { deriveWorkspaceRole, workspaceReach } from "@dembrane/access";
+import { deriveWorkspaceRole, ORG_MANAGERS, workspaceReach } from "@dembrane/access";
 import { sendEmail, subjectOf } from "@dembrane/account";
 import { hostDistinctId } from "@dembrane/analytics";
 import {
@@ -36,7 +36,8 @@ import { iso } from "./views";
 /**
  * The data room: the colleagues an organisation brings in to decide on an offer with it.
  * Who runs the account (owner, admin, Billing) is in by their role; a member brought in
- * reads the offer and the DPA (access.ts); someone new is invited as a plain member. Each
+ * reads the offer and the DPA (access.ts); someone new is invited as a plain member, by an
+ * owner or admin only. Each
  * person carries labels saying what they do in the decision. Nobody takes a seat: seats
  * come from direct workspace rows, and the room makes none.
  */
@@ -192,6 +193,7 @@ async function roomPage(
   const signers = roomSigners(docs, sigs);
   const all = await roomPeople(d, org.id, signers);
   const room = viewer?.access.via === "room";
+  const myRole = all.find((p) => viewer && p.app_user_id === viewer.who.appUserId)?.org_role;
   return {
     // A room member sees the room's people; who runs the account sees every member, to bring them in.
     people: room ? all.filter((p) => p.room !== "none") : all,
@@ -202,6 +204,7 @@ async function roomPage(
           app_user_id: viewer.who.appUserId as string,
           room: room ? "by_invite" : "by_role",
           may_dismiss_hints: !room,
+          may_invite_new: mayInviteNew(myRole),
           labels_question: asksLabels(viewer.row, viewer.who.appUserId),
         }
       : null,
@@ -233,22 +236,19 @@ async function personOf(d: AccountsDeps, orgId: string, email: string): Promise<
 
 // ── adding someone ──────────────────────────────────────────────────────
 
+/** Whether this org role brings in someone who is not a member yet: owner and admin, as on the Members page. */
+const mayInviteNew = (role: string | null | undefined) => ORG_MANAGERS.includes(role ?? "");
+
 /**
- * Decided for risk 1 of the data room design: a workspace every member joins
- * (inherit_organisation_members) gives a new plain member its projects, conversations and
- * transcripts. So in an organisation with one, only those who run the account may bring
- * in someone who is not a member yet; a room member is refused. Returns how many
- * workspaces the new person reaches once they accept. The one place to relax the rule.
- * Counted for a new member whoever the address belongs to, so the answer never tells an
- * address with an account from one without.
+ * How many workspaces someone new reaches as a plain member on accepting: those every
+ * member joins (inherit_organisation_members), with their projects and transcripts; the
+ * answer says so to the owner or admin inviting. Counted for a new member whoever the
+ * address belongs to, so the answer never tells an address with an account from one without.
  */
-async function newcomerReach(d: AccountsDeps, access: RoomAccess): Promise<number> {
-  const reached = (await store.orgWorkspaces(d.db, access.org.id)).filter(
+async function newcomerReach(d: AccountsDeps, orgId: string): Promise<number> {
+  return (await store.orgWorkspaces(d.db, orgId)).filter(
     (ws) => deriveWorkspaceRole(workspaceReach(ws), "member", "") !== null,
   ).length;
-  if (reached > 0 && access.via === "room")
-    throw new ForbiddenError("room.new_person_admins_only", { params: { workspaces: reached } });
-  return reached;
 }
 
 /** The invitation email: in their own language when they have an account, else the organisation's. */
@@ -290,8 +290,8 @@ const roomJoinUrl = (dashboardUrl: string, orgId: string, token: string) =>
  *   yet accepted: labels only, nothing sent (`updated`), if the caller manages them
  *   (managesPerson), else 403;
  * - a member: room access and labels at once, an email linking the account (`added`);
- * - anyone else: a pending invitation as a plain member, 30 days, and an email with the
- *   link to their invitation page (`invited`).
+ * - anyone else, by an owner or admin only (else 403): a pending invitation as a plain
+ *   member, 30 days, and an email with the link to their invitation page (`invited`).
  * The route refuses a staff key before it reads the body: it never emails a customer.
  */
 export async function addRoomPerson(
@@ -309,7 +309,8 @@ export async function addRoomPerson(
   const labels = inOrder(input.labels);
   const other = input.other;
   const now = d.now();
-  const member = (await store.members(d.db, org.id)).find((m) => m.email?.toLowerCase() === email);
+  const members = await store.members(d.db, org.id);
+  const member = members.find((m) => m.email?.toLowerCase() === email);
   const row = member
     ? await store.roomPersonOf(d.db, org.id, member.appUserId, email)
     : await store.roomPersonByEmail(d.db, org.id, email);
@@ -347,7 +348,9 @@ export async function addRoomPerson(
   }
 
   const appUser = member ? null : await store.appUserByEmail(d.db, email);
-  const workspaces = member ? null : await newcomerReach(d, access);
+  if (!member && !mayInviteNew(members.find((m) => m.appUserId === who.appUserId)?.role))
+    throw new ForbiddenError("room.new_person_admins_only");
+  const workspaces = member ? null : await newcomerReach(d, org.id);
   const id = row?.id ?? newId();
   const granted = {
     appUserId: member?.appUserId ?? appUser?.id ?? null,

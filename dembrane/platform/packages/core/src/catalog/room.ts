@@ -38,10 +38,8 @@ export const room = {
   },
   "room.new_person_admins_only": {
     action: "contact_admin",
-    detail:
-      "Only an owner, admin or Billing can bring someone new in here: as a member they would reach the workspaces open to everyone in the organisation",
-    params: ["workspaces"],
+    detail: "Only an owner or admin can bring in someone who is not a member yet",
     description:
-      "A room member tried to invite someone who is not a member, in an organisation with a workspace every member joins; `workspaces` is how many.",
+      "Someone other than an owner or admin (Billing, or a room member) tried to bring into the room an address that is not a member of the organisation, as on the Members page.",
   },
 } as const satisfies Codes<"room">;
