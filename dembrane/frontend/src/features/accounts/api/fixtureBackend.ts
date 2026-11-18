@@ -1835,6 +1835,7 @@ export async function handle(
 					accepted_outside: null,
 					access: "staff",
 					may_download: true,
+					may_name_signer: false,
 					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
 					confirmation: null,
