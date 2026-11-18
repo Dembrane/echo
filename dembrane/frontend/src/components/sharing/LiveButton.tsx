@@ -84,18 +84,29 @@ export function useLiveChoices({
 		{ label: t`24 hours`, value: 24 },
 	];
 
-	const readyBy = readyByFrom(time);
+	// Read when the menu opens, not during render: React Compiler would keep a
+	// render-time clock until the field changed, and a time that has passed since
+	// would still read as today.
+	const [now, setNow] = useState(() => new Date());
+	const openMenu = (next: boolean) => {
+		if (next) setNow(new Date());
+		setOpened(next);
+	};
+
+	const readyBy = readyByFrom(time, now);
 	const startsAt = readyBy
 		? new Date(readyBy.getTime() - READY_LEAD_MINUTES * 60_000)
 		: null;
 	const book = () => {
-		if (!readyBy) return;
-		onReadyBy(hours, readyBy);
+		// The clock as of the click: the menu may have sat open past the time.
+		const at = readyByFrom(time);
+		if (!at) return;
+		onReadyBy(hours, at);
 		setOpened(false);
 	};
 	const startTime = startsAt ? formatWhen(startsAt, i18n.locale) : "";
 	// Under 15 minutes away there is no early start left: it goes live at once.
-	const startsNow = !!startsAt && startsAt.getTime() <= Date.now();
+	const startsNow = !!startsAt && startsAt <= now;
 
 	const readyByField = (
 		// The menu's arrow keys stay out of the field.
@@ -157,7 +168,7 @@ export function useLiveChoices({
 		</>
 	);
 
-	return { hours, opened, readyByField, setOpened, stayLiveFor };
+	return { hours, opened, readyByField, setOpened: openMenu, stayLiveFor };
 }
 
 /**
