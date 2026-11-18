@@ -30,8 +30,11 @@ const loaded = new Set<string>(["en-US"]);
 /** Loads a language's catalog (once) and makes it the active one. */
 export async function activateLanguage(locale: string): Promise<void> {
 	if (!loaded.has(locale)) {
-		const loader = catalogs[`../locales/${locale}.ts`];
-		if (!loader) {
+		// Only a language the app ships is looked up, so a made-up name never reaches the lookup.
+		const loader = (SUPPORTED_LANGUAGES as readonly string[]).includes(locale)
+			? catalogs[`../locales/${locale}.ts`]
+			: undefined;
+		if (typeof loader !== "function") {
 			i18n.activate(defaultLanguage);
 			return;
 		}
