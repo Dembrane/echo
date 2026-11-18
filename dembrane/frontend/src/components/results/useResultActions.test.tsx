@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bff } from "@/lib/bff";
@@ -95,5 +95,37 @@ describe("what a host does to a finding", () => {
 		const actions = setUp();
 		expect(actions.current.holdBack).toBeNull();
 		expect(actions.current.isHeld("obj-1")).toBe(false);
+	});
+});
+
+describe("what a row can hold on to", () => {
+	it("keeps editWords and undoWords the same across renders, a save included", async () => {
+		const client = new QueryClient({
+			defaultOptions: { mutations: { retry: false } },
+		});
+		const { rerender, result } = renderHook(
+			() => useResultActions({ projectId: "project-1" }),
+			{
+				wrapper: ({ children }: { children: ReactNode }) => (
+					<QueryClientProvider client={client}>{children}</QueryClientProvider>
+				),
+			},
+		);
+		const { editWords, undoWords } = result.current;
+
+		rerender();
+		// A save moves the mutation's state, which re-renders the host.
+		await act(async () => {
+			await result.current.editWords({
+				changeKind: "clarity",
+				expectedRevisionId: "rev-1",
+				field: "phrase",
+				objectId: "obj-1",
+				words: "Safer crossings",
+			});
+		});
+
+		expect(result.current.editWords).toBe(editWords);
+		expect(result.current.undoWords).toBe(undoWords);
 	});
 });
