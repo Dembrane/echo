@@ -140,8 +140,8 @@ run("the room, as reviewed", () => {
   });
 
   test("someone invited shows no account of theirs before they accept", async () => {
-    const known = await add(asKees, "known@example.test");
-    const unknown = await add(asKees, "unknown@example.test");
+    const known = await add("admin", "known@example.test");
+    const unknown = await add("admin", "unknown@example.test");
     const [a, b] = [known, unknown].map((r) => K.AddRoomPersonResponse.parse(r.data));
     // The answer is the same whether the address has an account or not.
     for (const res of [a, b])
@@ -157,7 +157,7 @@ run("the room, as reviewed", () => {
     }
   });
 
-  test("a room member sees only signing tasks, without anyone's answers", async () => {
+  test("a room member sees every task on the offer and the DPA, answers included, and answers none", async () => {
     const upload = await call(w, "POST", `${S()}/tasks`, "staff", {
       title: "Send us the decision",
       kind: "upload",
@@ -179,28 +179,45 @@ run("the room, as reviewed", () => {
       note: "Wrong file",
     });
     expect(back.status).toBe(200);
-    // No route puts an answer on a signing task today, so one is written straight onto the
-    // rows: the room member's copy must stay empty even if a later route does.
-    await w.db
-      .update(schema.account_task)
-      .set({ responseText: "Signed by post", responseFileName: "scan.pdf", reviewNote: "Checked" })
-      .where(and(eq(schema.account_task.orgId, w.orgId), eq(schema.account_task.kind, "sign")));
+    // A task about paying, on no document: not the room's.
+    const pay = await call(w, "POST", `${S()}/tasks`, "staff", { title: "Pay", kind: "generic" });
+    expect(pay.status).toBe(201);
+    const payId = K.Task.parse(pay.data).id;
     const asAdmin = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
-    const answered = asAdmin.tasks.filter((t) => t.kind === "sign");
-    expect(answered.length).toBeGreaterThan(0);
-    for (const t of answered)
-      expect([t.response_text, t.response_file_name, t.review_note]).toEqual([
-        "Signed by post",
-        "scan.pdf",
-        "Checked",
-      ]);
+    expect(asAdmin.tasks.some((t) => t.kind === "billing_details")).toBe(true);
     const page = K.AccountPage.parse((await call(w, "GET", C(), asKees)).data);
-    expect(page.tasks.length).toBeGreaterThan(0);
-    expect(page.tasks.some((t) => t.id === taskId)).toBe(false);
-    for (const t of page.tasks) {
-      expect(t.kind).toBe("sign");
-      expect([t.response_text, t.response_file_name, t.review_note]).toEqual([null, null, null]);
-    }
+    const seen = page.tasks.find((t) => t.id === taskId);
+    expect([seen?.response_text, seen?.response_file_name, seen?.review_note]).toEqual([
+      "Besluit van het college",
+      "besluit.png",
+      "Wrong file",
+    ]);
+    // Every task on the offer and the DPA, of any kind, and nothing else.
+    const room = new Set([offerId, dpaId]);
+    const theirs = asAdmin.tasks.filter(
+      (t) => t.document_id && room.has(t.document_id) && t.kind !== "billing_details",
+    );
+    expect(page.tasks.map((t) => t.id).sort()).toEqual(theirs.map((t) => t.id).sort());
+    expect(page.tasks.some((t) => t.code === "who_signs")).toBe(
+      theirs.some((t) => t.code === "who_signs"),
+    );
+    expect(page.tasks.some((t) => t.id === payId || t.kind === "billing_details")).toBe(false);
+    // Reading is all: they answer no task. No route serves a task's file to the customer side.
+    const answer = await call(w, "POST", `${C()}/tasks/${taskId}/submit`, asKees, {
+      response_text: "Mine",
+    });
+    expect(answer.status).toBe(403);
+    expect((await call(w, "GET", `${C()}/tasks/${taskId}/file`, asKees)).status).toBe(404);
+  });
+
+  test("only owners and admins may invite someone new, as the room page tells them", async () => {
+    for (const [as, may] of [
+      [asOwner, true],
+      ["admin", true],
+      ["billing", false],
+      [asKees, false],
+    ] as const)
+      expect([as, (await room(as)).me?.may_invite_new]).toEqual([as, may]);
   });
 
   test("a room member sees who signed and when, not the signer's details", async () => {
@@ -266,6 +283,8 @@ run("the room, as reviewed", () => {
   });
 
   test("a room member changes what their own invitee does", async () => {
+    // A colleague who is a member already: a room member brings in no one new.
+    await person("own", "own@example.test", "member");
     expect((await add(asKees, "own@example.test", ["rollout"])).status).toBe(200);
     const again = await add(asKees, "own@example.test", ["rollout", "privacy_ai"]);
     expect(again.status).toBe(200);
@@ -340,8 +359,8 @@ run("the room, as reviewed", () => {
 
   test("two adds of one new address at once make one row and one invitation", async () => {
     const [a, b] = await Promise.all([
+      add(asOwner, "race@example.test", ["rollout"]),
       add("admin", "race@example.test", ["rollout"]),
-      add("billing", "race@example.test", ["rollout"]),
     ]);
     expect([a.status, b.status]).toEqual([200, 200]);
     const statuses = [a, b].map((r) => K.AddRoomPersonResponse.parse(r.data).status).sort();
@@ -369,8 +388,8 @@ run("the room, as reviewed", () => {
         ),
       );
     const [a, b] = await Promise.all([
+      add(asOwner, "lapsed@example.test", ["rollout"]),
       add("admin", "lapsed@example.test", ["rollout"]),
-      add("billing", "lapsed@example.test", ["rollout"]),
     ]);
     expect([a.status, b.status]).toEqual([200, 200]);
     const statuses = [a, b].map((r) => K.AddRoomPersonResponse.parse(r.data).status).sort();

@@ -16,11 +16,11 @@ import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
 
-// The room and the workspaces every member joins (risk 1 of the data room design). A
-// workspace with inherit_organisation_members gives every plain member its projects and
-// transcripts, so in an organisation with one only those who run the account bring in
-// someone who is not a member yet, and the answer says how many workspaces they will
-// reach. A colleague already a member is still anyone's to add, and nobody takes a seat.
+// Who brings someone new into the room: only owners and admins, as on the Members page,
+// in every organisation. A workspace with inherit_organisation_members gives every plain
+// member its projects and transcripts, so the answer says how many such workspaces the
+// new person will reach. A colleague already a member is still anyone's in the room to
+// add, and nobody takes a seat.
 // Needs a scratch Postgres (TEST_DATABASE_ADMIN_URL).
 const run = admin ? describe : describe.skip;
 const DB = `accounts_room_workspaces_${process.pid}`;
@@ -33,6 +33,7 @@ run("the room and the workspaces every member joins", () => {
   const C = () => `/api/v2/orgs/${w.orgId}/account`;
   const codeOf = (r: { data: unknown }) => (r.data as { code?: string }).code;
   const asKees = "kees" as Who;
+  const asOwner = "owner" as Who;
   let openToAll = "";
 
   const add = (as: Who, email: string, labels: string[] = []) =>
@@ -67,6 +68,26 @@ run("the room and the workspaces every member joins", () => {
     return id;
   }
 
+  /** A signed-in member of the organisation with this role. */
+  async function member(key: string, email: string, role: string) {
+    const u = await w.db.transaction((tx) =>
+      ensureUser(tx, { email, name: key, passwordHash: null, nowIso: w.clock.now.toISOString() }),
+    );
+    await w.db
+      .update(schema.auth_user)
+      .set({ emailVerified: true })
+      .where(eq(schema.auth_user.id, u.userId));
+    await w.db
+      .insert(schema.org_membership)
+      .values({ id: newId(), org_id: w.orgId, user_id: u.appUserId, role });
+    (w.people as Record<string, unknown>)[key] = {
+      appUserId: u.appUserId,
+      directusUserId: u.userId,
+      isStaff: false,
+      email,
+    };
+  }
+
   beforeAll(async () => {
     w = await world(DB, accountsRoutes);
     w.app.onError((err, c) =>
@@ -78,28 +99,9 @@ run("the room and the workspaces every member joins", () => {
     // organisation's admins but not to every member.
     await workspace("invite_only", { inherit_organisation_members: true });
     await workspace("open_to_organisation", {});
+    await member("owner", "owner@example.test", "owner");
     // Kees, a plain member, brought into the room by the admin.
-    const u = await w.db.transaction((tx) =>
-      ensureUser(tx, {
-        email: "kees@example.test",
-        name: "kees",
-        passwordHash: null,
-        nowIso: w.clock.now.toISOString(),
-      }),
-    );
-    await w.db
-      .update(schema.auth_user)
-      .set({ emailVerified: true })
-      .where(eq(schema.auth_user.id, u.userId));
-    await w.db
-      .insert(schema.org_membership)
-      .values({ id: newId(), org_id: w.orgId, user_id: u.appUserId, role: "member" });
-    (w.people as Record<string, unknown>).kees = {
-      appUserId: u.appUserId,
-      directusUserId: u.userId,
-      isStaff: false,
-      email: "kees@example.test",
-    };
+    await member("kees", "kees@example.test", "member");
     expect((await add("admin", "kees@example.test", ["rollout"])).status).toBe(200);
   });
   // Ten additions an hour per organisation: each test starts in a fresh hour.
@@ -111,37 +113,50 @@ run("the room and the workspaces every member joins", () => {
     await dropDatabase(DB);
   });
 
-  test("without a workspace every member joins, a room member invites someone new", async () => {
-    const r = await add(asKees, "eerst@example.test", ["it_security"]);
-    expect(r.status).toBe(200);
-    const res = K.AddRoomPersonResponse.parse(r.data);
-    expect([res.status, res.workspaces_reached]).toEqual(["invited", 0]);
+  test("without a workspace every member joins, only owners and admins invite someone new", async () => {
+    for (const [as, status] of [
+      [asOwner, 200],
+      ["admin", 200],
+      ["billing", 403],
+      [asKees, 403],
+    ] as const) {
+      const email = `eerst-${String(as)}@example.test`;
+      const r = await add(as, email, ["it_security"]);
+      expect([as, r.status]).toEqual([as, status]);
+      if (status === 403) {
+        expect([as, codeOf(r)]).toEqual([as, "room.new_person_admins_only"]);
+        expect(await orgInvites(email)).toEqual([]);
+        expect(mailsTo(email)).toEqual([]);
+      } else {
+        const res = K.AddRoomPersonResponse.parse(r.data);
+        expect([as, res.status, res.workspaces_reached]).toEqual([as, "invited", 0]);
+      }
+    }
   });
 
-  test("with one, a room member cannot invite someone new, and nothing is made", async () => {
-    openToAll = await workspace("open_to_organisation", { inherit_organisation_members: true });
-    const r = await add(asKees, "nieuw@example.test", ["go_ahead"]);
-    expect([r.status, codeOf(r)]).toEqual([403, "room.new_person_admins_only"]);
-    expect(await orgInvites("nieuw@example.test")).toEqual([]);
-    expect(mailsTo("nieuw@example.test")).toEqual([]);
-    const page = K.RoomPage.parse((await call(w, "GET", `${C()}/room`, "admin")).data);
-    expect(page.people.some((p) => p.email === "nieuw@example.test")).toBe(false);
-  });
-
-  test("a room member still brings in a colleague who is a member already", async () => {
-    const r = await add(asKees, "member@example.test", ["staff_stakeholders"]);
-    expect(r.status).toBe(200);
-    const res = K.AddRoomPersonResponse.parse(r.data);
-    expect([res.status, res.workspaces_reached]).toEqual(["added", null]);
-    // Re-adding someone they invited before the workspace existed only changes labels.
-    const again = await add(asKees, "eerst@example.test", ["it_security", "privacy_ai"]);
+  test("Billing and a room member still bring in a colleague who is a member already", async () => {
+    for (const [as, email] of [
+      [asKees, "member@example.test"],
+      ["billing", "billing-brings@example.test"],
+    ] as const) {
+      if (email !== "member@example.test") await member("brought", email, "member");
+      const r = await add(as, email, ["staff_stakeholders"]);
+      expect([as, r.status]).toEqual([as, 200]);
+      const res = K.AddRoomPersonResponse.parse(r.data);
+      expect([res.status, res.workspaces_reached]).toEqual(["added", null]);
+    }
+    // And change what the colleague they brought in does.
+    const again = await add(asKees, "member@example.test", ["staff_stakeholders", "rollout"]);
     expect(K.AddRoomPersonResponse.parse(again.data).status).toBe("updated");
   });
 
-  test("an admin or Billing invites someone new and is told how many workspaces they reach", async () => {
+  test("with a workspace every member joins, the answer says how many they will reach", async () => {
+    openToAll = await workspace("open_to_organisation", { inherit_organisation_members: true });
+    const refused = await add(asKees, "ander@example.test", ["go_ahead"]);
+    expect([refused.status, codeOf(refused)]).toEqual([403, "room.new_person_admins_only"]);
     for (const [as, email] of [
       ["admin", "nieuw@example.test"],
-      ["billing", "ander@example.test"],
+      [asOwner, "ander@example.test"],
     ] as const) {
       const r = await add(as, email, ["go_ahead"]);
       expect(r.status).toBe(200);

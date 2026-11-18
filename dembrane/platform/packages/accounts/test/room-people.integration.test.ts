@@ -468,12 +468,22 @@ run("who does what in the data room", () => {
   });
 
   test("taken out after accepting, by their inviter: room access and labels go, the membership stays", async () => {
-    // A colleague in the room invites someone, who accepts.
-    const { who: lisa, person } = await inviteAndAccept(asKees, "lisa", "lisa@example.test", [
+    // An admin invites someone new, who accepts, and takes them out again.
+    const { who: lisa, person } = await inviteAndAccept("admin", "lisa", "lisa@example.test", [
       "staff_stakeholders",
     ]);
     expect((await call(w, "GET", C(), lisa)).status).toBe(200);
-    const r = await call(w, "POST", `${C()}/room/people/${person.id}/remove`, asKees, {});
+    const out = await call(w, "POST", `${C()}/room/people/${person.id}/remove`, "admin", {});
+    expect(K.RemoveRoomPersonResponse.parse(out.data).membership).toBe("kept");
+    expect(events("server_room_person_removed").at(-1)?.properties).toMatchObject({
+      by: "admin",
+      accepted: true,
+    });
+    // A colleague in the room brings her back in, now a member, and takes her out.
+    const back = await add(asKees, "lisa@example.test", ["staff_stakeholders"]);
+    expect(K.AddRoomPersonResponse.parse(back.data).status).toBe("added");
+    const again = K.AddRoomPersonResponse.parse(back.data).person;
+    const r = await call(w, "POST", `${C()}/room/people/${again.id}/remove`, asKees, {});
     expect(r.status).toBe(200);
     expect(K.RemoveRoomPersonResponse.parse(r.data).membership).toBe("kept");
     const appUserId = w.people[lisa].appUserId as string;
@@ -493,6 +503,8 @@ run("who does what in the data room", () => {
   });
 
   test("an admin or Billing member takes out someone who was a member before; the membership stays", async () => {
+    // A member already, brought in by a colleague in the room.
+    await person("tijn", "tijn@example.test", { role: "member" });
     const invited = await add(asKees, "tijn@example.test", ["rollout"]);
     expect(invited.status).toBe(200);
     const tijn = K.AddRoomPersonResponse.parse(invited.data).person;
@@ -509,7 +521,7 @@ run("who does what in the data room", () => {
     expect((await call(w, "POST", `${C()}/room/people/${tijn.id}/remove`, asKees, {})).status).toBe(
       403,
     );
-    expect((await personIn("admin", "tijn@example.test"))?.status).toBe("invited");
+    expect((await personIn("admin", "tijn@example.test"))?.room).toBe("by_invite");
     // Brought back in, they read the room again.
     expect(
       K.AddRoomPersonResponse.parse((await add("admin", "kees@example.test")).data).status,
