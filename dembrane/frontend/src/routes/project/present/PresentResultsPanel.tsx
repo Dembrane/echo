@@ -72,7 +72,11 @@ export function PresentResultsPanel({
 	useResultsVisit(projectId);
 	// The way to the full picture of a finding, kept so the host can come back.
 	const analysisPath = `${workspaceId ? `/w/${workspaceId}` : ""}/projects/${projectId}/analysis?returnTo=present&section=results`;
-	const save = usePopcornSettingsMutation(projectId, presentation.id);
+	// mutate is stable across renders; the mutation object is not.
+	const { mutate: saveSettings } = usePopcornSettingsMutation(
+		projectId,
+		presentation.id,
+	);
 	const hidden = useMemo(
 		() => presentation.settings.presentation?.hidden_items ?? [],
 		[presentation.settings.presentation?.hidden_items],
@@ -107,7 +111,7 @@ export function PresentResultsPanel({
 			isHeld: (objectId) => pending[objectId] ?? hidden.includes(objectId),
 			setHeld: (objectId, held) => {
 				setDecided((old) => ({ ...old, [objectId]: held }));
-				save.mutate({
+				saveSettings({
 					presentation: {
 						hidden_items: held
 							? [...new Set([...hidden, objectId])]
@@ -122,7 +126,7 @@ export function PresentResultsPanel({
 					...old,
 					...Object.fromEntries(objectIds.map((id) => [id, held])),
 				}));
-				save.mutate({
+				saveSettings({
 					presentation: {
 						hidden_items: held
 							? [...new Set([...hidden, ...objectIds])]
@@ -131,7 +135,7 @@ export function PresentResultsPanel({
 				});
 			},
 		}),
-		[hidden, pending, save.mutate],
+		[hidden, pending, saveSettings],
 	);
 	const actions = useResultActions({ holdBack, projectId });
 
@@ -191,7 +195,7 @@ export function PresentResultsPanel({
 				onTurnOn={
 					results.canEdit
 						? (block) =>
-								save.mutate({ presentation: blocksPatch(blocks, block, true) })
+								saveSettings({ presentation: blocksPatch(blocks, block, true) })
 						: null
 				}
 				projectId={projectId}
