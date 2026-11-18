@@ -5,7 +5,7 @@ const Document = (props: React.SVGProps<SVGSVGElement>) => (
 		viewBox="0 0 12 14"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -26,7 +26,7 @@ const Alert = () => (
 		strokeWidth="2"
 		strokeLinecap="round"
 		strokeLinejoin="round"
-		role="graphics-symbol img"
+		aria-hidden="true"
 	>
 		<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
 		<line x1="12" y1="8" x2="12" y2="12" />
@@ -42,7 +42,7 @@ const Plus: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 		fill="none"
 		stroke="currentColor"
 		xmlns="http://www.w3.org/2000/svg"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path d="M9.25127 1.24994C9.25127 0.559616 8.69165 0 8.00133 0C7.31101 0 6.75139 0.559616 6.75139 1.24994V6.75042H1.24994C0.559616 6.75042 0 7.31003 0 8.00035C0 8.69068 0.559616 9.25029 1.24994 9.25029H6.75139V14.7501C6.75139 15.4404 7.31101 16 8.00133 16C8.69165 16 9.25127 15.4404 9.25127 14.7501V9.25029H14.7501C15.4404 9.25029 16 8.69068 16 8.00035C16 7.31003 15.4404 6.75042 14.7501 6.75042H9.25127V1.24994Z" />
@@ -68,7 +68,7 @@ const Octagon = ({
 			viewBox="0 0 16 14"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			role="graphics-symbol img"
+			aria-hidden="true"
 			{...props}
 		>
 			<path
@@ -92,7 +92,7 @@ const Diamond = ({
 			viewBox="0 0 16 16"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			role="graphics-symbol img"
+			aria-hidden="true"
 			{...props}
 		>
 			<path d="M0 8L8 0L16 8L8 16L0 8Z" fill={color || "currentColor"} />
@@ -121,7 +121,7 @@ const Calendar = (props: SVGProps<SVGSVGElement>) => (
 		width={12}
 		height={13}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -137,7 +137,7 @@ const Dots = (props: SVGProps<SVGSVGElement>) => (
 		width={12}
 		height={4}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -153,7 +153,7 @@ const Pencil = (props: SVGProps<SVGSVGElement>) => (
 		width={20}
 		height={20}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -169,7 +169,7 @@ const Gear = (props: SVGProps<SVGSVGElement>) => (
 		width={24}
 		height={24}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -185,7 +185,7 @@ const Stars = (props: SVGProps<SVGSVGElement>) => (
 		width={21}
 		height={21}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -201,7 +201,7 @@ const DocumentOutline = (props: SVGProps<SVGSVGElement>) => (
 		width={12}
 		height={14}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -218,7 +218,7 @@ const DocumentFilled = (props: SVGProps<SVGSVGElement>) => (
 		width={12}
 		height={14}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -234,7 +234,7 @@ const Phone = (props: SVGProps<SVGSVGElement>) => (
 		width={10}
 		height={18}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -250,7 +250,7 @@ const Signal = (props: SVGProps<SVGSVGElement>) => (
 		width={20}
 		height={16}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path d="M10 5.9a2 2 0 1 1 0 4 2 2 0 0 1 0-4m0 1.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1m3.17-2.69a.75.75 0 0 1 1.19-.912A6.72 6.72 0 0 1 15.75 7.9a6.73 6.73 0 0 1-1.5 4.245.753.753 0 0 1-1.243-.114.75.75 0 0 1 .076-.83 5.23 5.23 0 0 0 1.167-3.3 5.22 5.22 0 0 0-1.08-3.191m-6.338-.003a.75.75 0 0 0-1.19-.913A6.72 6.72 0 0 0 4.25 7.9c0 1.606.562 3.083 1.499 4.242a.748.748 0 0 0 1.255-.104.75.75 0 0 0-.089-.84A5.23 5.23 0 0 1 5.75 7.9c0-1.202.403-2.308 1.082-3.193" />
@@ -264,7 +264,7 @@ const LightBulb = (props: SVGProps<SVGSVGElement>) => (
 		width={22}
 		height={22}
 		fill="none"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<g fill="var(--app-text, #2D2D2C)" clipPath="url(#a)">
@@ -286,7 +286,7 @@ const View = (props: SVGProps<SVGSVGElement>) => (
 		viewBox="0 0 19 13"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path
@@ -305,7 +305,7 @@ const Sidebar = (props: SVGProps<SVGSVGElement>) => (
 		viewBox="0 0 20 20"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<g clip-path="url(#clip0_449_2732)">
@@ -333,7 +333,7 @@ const Aspect = (props: SVGProps<SVGSVGElement>) => (
 		viewBox="0 0 21 14"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
-		role="graphics-symbol img"
+		aria-hidden="true"
 		{...props}
 	>
 		<path

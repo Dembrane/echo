@@ -216,7 +216,9 @@ it("grants read only unless the write box is ticked", async () => {
 	const approveCall = fetchMock.mock.calls.find(([input]) =>
 		String(input).includes("/approve"),
 	);
-	const body = JSON.parse(String((approveCall?.[1] as RequestInit).body));
+	const body = JSON.parse(
+		String((approveCall?.[1] as RequestInit | undefined)?.body),
+	);
 	expect(body.scopes).toEqual(["read"]);
 });
 

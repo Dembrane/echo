@@ -247,7 +247,8 @@ it("does not erase a queued patch when the save before it fails", async () => {
 	});
 	await waitFor(() =>
 		expect(
-			(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
+			(cachedSettings(client)?.presentation as { blocks: string[] } | undefined)
+				?.blocks,
 		).toEqual(["popcorn", "tensions"]),
 	);
 	await act(async () => {
@@ -257,7 +258,8 @@ it("does not erase a queued patch when the save before it fails", async () => {
 
 	// The rollback of the first save must not put the second patch's block back.
 	expect(
-		(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
+		(cachedSettings(client)?.presentation as { blocks: string[] } | undefined)
+			?.blocks,
 	).toEqual(["popcorn", "tensions"]);
 	client.clear();
 });

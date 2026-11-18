@@ -315,12 +315,12 @@ export function ReportTimeline({
 
 				{/* Show first report as "Report Created" */}
 				<ReferenceLine
-					key={data.allReports[0]?.id}
-					x={new Date(data.allReports[0]?.createdAt!).getTime()}
+					key={data.allReports[0].id}
+					x={new Date(data.allReports[0].createdAt!).getTime()}
 					stroke={COLORS.reportCreated}
 					label={
 						<CustomReferenceLabel
-							value={t`Report created · ${formatDateForAxis(new Date(data.allReports[0]?.createdAt!).getTime())}`}
+							value={t`Report created · ${formatDateForAxis(new Date(data.allReports[0].createdAt!).getTime())}`}
 						/>
 					}
 				/>
