@@ -180,6 +180,7 @@ A Royal Blue outline with Royal Blue text can be used on anything pressable that
 
 ### Tertiary
 
+- Back in a row of steps (a wizard, an onboarding, any sequence with Back) is tertiary: Back on the left, the primary pill on the right
 - Default: Text only, Royal Blue, no border, standard corners
 - Hover: 10% Royal Blue opacity background
 - Click: 20% Royal Blue opacity background

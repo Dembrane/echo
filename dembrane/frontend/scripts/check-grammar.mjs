@@ -891,6 +891,49 @@ function scanSource(rel) {
 					);
 			}
 
+			// A row of steps (data-steps): Back is the tertiary, text-only button. Every button
+			// in the row that is not the filled pill is variant="subtle" (rules.css, the order
+			// note; STYLE_GUIDE Buttons, Tertiary). A button whose variant comes from a spread
+			// alone cannot be read here; the rendered check covers it.
+			if (
+				ts.isJsxOpeningElement(node) &&
+				/^(Group|Flex)$/.test(tag) &&
+				attrs.has("data-steps")
+			) {
+				const buttons = [];
+				const walk = (k) => {
+					if (ts.isJsxElement(k)) {
+						if (tagName(k.openingElement) === "Button")
+							buttons.push(k.openingElement);
+					} else if (ts.isJsxSelfClosingElement(k)) {
+						if (tagName(k) === "Button") buttons.push(k);
+					} else if (ts.isJsxExpression(k) && k.expression) walk(k.expression);
+					else if (ts.isParenthesizedExpression(k)) walk(k.expression);
+					else if (ts.isBinaryExpression(k)) walk(k.right);
+					else if (ts.isConditionalExpression(k)) {
+						walk(k.whenTrue);
+						walk(k.whenFalse);
+					} else if (ts.isJsxFragment(k)) for (const c of k.children) walk(c);
+				};
+				for (const k of node.parent.children) walk(k);
+				for (const b of buttons) {
+					let variant;
+					let spread = false;
+					for (const a of b.attributes.properties) {
+						if (ts.isJsxSpreadAttribute(a)) spread = true;
+						else if (a.name.getText(sf) === "variant") variant = attrValue(a);
+					}
+					if (variant === undefined && spread) continue;
+					if (variant !== "filled" && variant !== "subtle")
+						report(
+							"flow.steps-back-tertiary",
+							rel,
+							at(b),
+							`<Button${variant ? ` variant="${variant}"` : ""}> in a row of steps: Back is the tertiary button (variant="subtle"), the pill stays filled`,
+						);
+				}
+			}
+
 			// Rule 07: disabled={!flag} on a setting that depends on a switch.
 			{
 				const d = attrs.get("disabled");

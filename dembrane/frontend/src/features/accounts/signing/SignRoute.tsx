@@ -1079,6 +1079,7 @@ function ActionRow({
 		<Group data-steps justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
 				<Button
+					variant="subtle"
 					onClick={onBack}
 					data-testid="sign-back"
 					style={{ flexShrink: 0 }}
