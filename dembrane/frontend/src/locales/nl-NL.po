@@ -1129,11 +1129,15 @@ msgstr "6 tot 15."
 msgid "8 hours"
 msgstr "8 uur"
 
+#: src/components/release/releases.ts:131
+msgid "A banner tells you when this month's free hours are used up."
+msgstr "Een banner laat zien wanneer de gratis uren van deze maand op zijn."
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:253
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Een blauwe balk boven aan elk tabblad, met jouw tekst en een link terug naar de opening."
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:197
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "Een overzichtelijker, toegankelijker dashboard en portaal."
 
@@ -1194,6 +1198,10 @@ msgstr "Betrouwbaarder audio uploaden"
 #: src/components/release/releaseHistory.ts:179
 msgid "A new assistant and a live monitor"
 msgstr "Een nieuwe assistent en een live monitor"
+
+#: src/components/release/releases.ts:136
+msgid "A new free plan"
+msgstr "Een nieuw gratis abonnement"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:467
 msgid "A new report will be automatically generated and published at the scheduled time."
@@ -2014,7 +2022,7 @@ msgstr "Alle zichtbare gesprekken geselecteerd"
 msgid "All workspaces"
 msgstr "Alle werkruimtes"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:177
 msgid "All-new Present features: show live results on a big screen during your session."
 msgstr "Helemaal nieuwe functies in Presenteren: toon live resultaten op een groot scherm tijdens je sessie."
 
@@ -3417,7 +3425,7 @@ msgstr "Chat aangemaakt"
 msgid "Chat deleted"
 msgstr "Chat verwijderd"
 
-#: src/components/release/releases.ts:75
+#: src/components/release/releases.ts:204
 msgid "Chat is more reliable."
 msgstr "Chat werkt betrouwbaarder."
 
@@ -3436,6 +3444,10 @@ msgstr "Chatnaam"
 #: src/components/release/releaseHistory.ts:717
 msgid "Chat no longer sends duplicate messages accidentally."
 msgstr "Chat verstuurt niet meer per ongeluk dubbele berichten."
+
+#: src/components/release/releases.ts:90
+msgid "Chat suggestions no longer get stuck loading."
+msgstr "Chatsuggesties blijven niet meer hangen bij het laden."
 
 #: src/components/release/releaseHistory.ts:656
 msgid "Chat templates stay visible while you work."
@@ -3592,7 +3604,7 @@ msgstr "Kies de resultaten die je publiek kan ontdekken."
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Kies de tabbladen die je publiek kan ontdekken."
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:181
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Kies wat de zaal ziet: Popcorn, Spanningen, Map en Belanghebbenden."
 
@@ -5156,7 +5168,7 @@ msgstr "dembrane-medewerker is vertrokken"
 msgid "dembrane staff requested access"
 msgstr "dembrane-medewerker heeft toegang aangevraagd"
 
-#: src/components/release/releases.ts:85
+#: src/components/release/releases.ts:214
 msgid "dembrane v3"
 msgstr "dembrane v3"
 
@@ -5474,6 +5486,10 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
 
+#: src/components/release/releases.ts:52
+msgid "Drop in an agenda or invitation and dembrane configures the project for you."
+msgstr "Sleep een agenda of uitnodiging erin en dembrane richt het project voor je in."
+
 #: src/routes/admin/AdminSettingsRoute.tsx:838
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Gaat terug naar het gratis plan. Ze kunnen op elk moment een betaald plan nemen."
@@ -5565,6 +5581,18 @@ msgstr "Eerdere runs"
 #: src/components/project/ProjectExperimentalSection.tsx:27
 msgid "Early features you can try on this project before they are ready for everyone."
 msgstr "Nieuwe functies die je in dit project kunt proberen voordat ze klaar zijn voor iedereen."
+
+#: src/components/release/releases.ts:77
+msgid "Easier onboarding"
+msgstr "Makkelijker starten"
+
+#: src/components/release/releases.ts:147
+msgid "Easier playback"
+msgstr "Makkelijker afspelen"
+
+#: src/components/release/releases.ts:166
+msgid "Easier-to-read transcripts"
+msgstr "Beter leesbare transcripten"
 
 #: src/portal/components/verify/VerifyArtefact.tsx:463
 #: src/components/results/curate/RowTools.tsx:290
@@ -6091,11 +6119,15 @@ msgstr "Verkennen"
 msgid "Explore"
 msgstr "Verkennen"
 
+#: src/components/release/releases.ts:68
+msgid "Explore can draw on other groups in the project. Turn it off under Cross-pollination."
+msgstr "Verkennen kan putten uit andere groepen in het project. Zet het uit onder Kruisbestuiving."
+
 #: src/components/release/releaseHistory.ts:670
 msgid "Explore recurring themes in the Library"
 msgstr "Verken terugkerende thema’s in de Library"
 
-#: src/components/release/releases.ts:103
+#: src/components/release/releases.ts:232
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Verken verhalen en perspectieven met de chattemplate Narratives, in het Engels en Nederlands."
 
@@ -7459,6 +7491,11 @@ msgstr "Verbeterd"
 msgid "Improvements"
 msgstr "Verbeteringen"
 
+#: src/components/release/releases.ts:121
+#: src/components/release/releases.ts:171
+msgid "Improvements and bug fixes"
+msgstr "Verbeteringen en bugfixes"
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "Bezig"
@@ -7588,7 +7625,7 @@ msgstr "interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:121
+#: src/components/release/releases.ts:250
 msgid "Introducing Popcorn"
 msgstr "Nieuw: Popcorn"
 
@@ -8672,6 +8709,10 @@ msgstr "Logo bijgewerkt"
 #~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
 #~ msgstr "Lange context wordt bij elk antwoord gelezen, dus houd het bij de kern: de mensen, de plekken en de vraag."
 
+#: src/components/release/releases.ts:161
+msgid "Long uploads in any audio format are transcribed reliably instead of timing out."
+msgstr "Lange uploads in elk audioformaat worden betrouwbaar getranscribeerd in plaats van vast te lopen."
+
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
 msgstr "Langste eerst"
@@ -8894,7 +8935,7 @@ msgstr "MCP-toegang voor {0} staat uit"
 msgid "MCP access for {0} is on"
 msgstr "MCP-toegang voor {0} staat aan"
 
-#: src/components/release/releases.ts:95
+#: src/components/release/releases.ts:224
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Met MCP-verbindingen kan je agent projecten vinden, gesprekken doorzoeken, transcripties lezen en documentatie raadplegen, met organisatie-instellingen en expliciete toestemming."
 
@@ -9079,6 +9120,10 @@ msgstr "Meer opties"
 #: src/components/release/releaseHistory.ts:194
 msgid "More reliable conversation summaries"
 msgstr "Betrouwbaardere gesprekssamenvattingen"
+
+#: src/components/release/releases.ts:116
+msgid "More reliable uploads"
+msgstr "Betrouwbaardere uploads"
 
 #: src/components/pricing/questions.ts:176
 msgid "More than 1000."
@@ -10958,6 +11003,10 @@ msgstr "Verificatie van deelnemers"
 msgid "Participants"
 msgstr "Deelnemers"
 
+#: src/components/release/releases.ts:87
+msgid "Participants are told when their microphone drops, so they can fix it."
+msgstr "Deelnemers horen het wanneer hun microfoon wegvalt, zodat ze het kunnen oplossen."
+
 #~ msgid "Participants can ask for a question to go deeper (Explore)"
 #~ msgstr "Deelnemers kunnen een vraag krijgen om dieper te gaan (Verkennen)"
 
@@ -10965,7 +11014,7 @@ msgstr "Deelnemers"
 msgid "Participants can request a reply during a recording."
 msgstr "Deelnemers kunnen tijdens een opname om een antwoord vragen."
 
-#: src/components/release/releases.ts:99
+#: src/components/release/releases.ts:228
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Deelnemers kunnen de portal delen vanuit de header of de bedankpagina: via een QR-code, een kopieerbare link, WhatsApp, e-mail of het deelmenu van het apparaat."
 
@@ -12744,7 +12793,7 @@ msgstr "Rapporten"
 #~ msgid "Reports per month"
 #~ msgstr "Rapporten per maand"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:207
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Rapporten worden gepubliceerd, ingepland en gemeld zoals verwacht."
 
@@ -13441,6 +13490,10 @@ msgstr "Taal van het scherm"
 msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
+#: src/components/release/releases.ts:96
+msgid "Scrolling to the bottom of a transcript now reaches the very end."
+msgstr "Naar beneden scrollen in een transcript brengt je nu helemaal tot het einde."
+
 #: src/features/sidebar/blocks/SearchBlock.tsx:95
 #: src/features/sidebar/blocks/SearchBlock.tsx:106
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
@@ -13631,7 +13684,7 @@ msgstr "Bekijk audiokwaliteitsindicatoren voor ruis, stilte en overlappende spra
 msgid "error.action.upgrade"
 msgstr "Abonnementen bekijken"
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:185
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Bekijk de argumenten uit je gesprekken en de citaten erachter op de Map."
 
@@ -13987,6 +14040,10 @@ msgstr "Stel je eerste organisatie in"
 msgid "Set up your organisation"
 msgstr "Stel je organisatie in"
 
+#: src/components/release/releases.ts:56
+msgid "Set up your portal page by page, with a live preview of what participants see."
+msgstr "Richt je portaal pagina voor pagina in, met een live voorbeeld van wat deelnemers zien."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:199
 msgid "Set up your workspace | dembrane"
 msgstr "Stel je werkruimte in | dembrane"
@@ -14130,7 +14187,7 @@ msgstr "Gedeeld met {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Gedeeld met {0} en {overflow} anderen"
 
-#: src/components/release/releases.ts:111
+#: src/components/release/releases.ts:240
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Als je een privéproject deelt met iemand die nog geen lid is, kun je diegene nu uitnodigen in plaats van een foutmelding te krijgen. De toegang wordt verleend zodra diegene lid wordt van de werkruimte."
 
@@ -14269,7 +14326,7 @@ msgstr "Toon alleen gesprekken met een van de aangevinkte tags."
 msgid "Show only what changed"
 msgstr "Alleen wijzigingen tonen"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:189
 msgid "Show popcorn in up to three extra languages at once."
 msgstr "Toon popcorn in maximaal drie extra talen tegelijk."
 
@@ -14726,6 +14783,10 @@ msgstr "Begin opnieuw vanuit je agent. Het zal hier een nieuw verzoek openen."
 msgid "Start fresh"
 msgstr "Beginnen vanaf nul"
 
+#: src/components/release/releases.ts:48
+msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
+msgstr "Begin met een sjabloon, zoals een focusgroep of burgerberaad, al voor je ingericht."
+
 #: src/routes/project/CreateProjectRoute.tsx:700
 msgid "Start in assistant chat"
 msgstr "Starten in de assistentchat"
@@ -14747,6 +14808,10 @@ msgstr "Opnieuw beginnen"
 #: src/components/release/releaseHistory.ts:119
 msgid "Start recording without an extra ready-to-record confirmation."
 msgstr "Begin met opnemen zonder een extra bevestigingsstap."
+
+#: src/components/release/releases.ts:127
+msgid "Start using dembrane for free, with recording hours included every month."
+msgstr "Gebruik dembrane gratis, met elke maand opname-uren inbegrepen."
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:55
 msgid "Started recording"
@@ -14797,7 +14862,7 @@ msgstr "Status"
 msgid "Stay live for"
 msgstr "Blijft live gedurende"
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:193
 msgid "Stay signed in on two devices, such as your phone and laptop."
 msgstr "Blijf ingelogd op twee apparaten, zoals je telefoon en laptop."
 
@@ -15174,6 +15239,10 @@ msgstr "Tags"
 msgid "Tags are the vocabulary participants can pick from in the portal. Nothing changes until you apply."
 msgstr "Tags zijn de woorden waaruit deelnemers in de portal kunnen kiezen. Er verandert niets tot je ze toepast."
 
+#: src/components/release/releases.ts:92
+msgid "Tags stay where you drop them when you drag them into a new order."
+msgstr "Tags blijven staan waar je ze neerzet als je ze in een nieuwe volgorde sleept."
+
 #: src/components/release/releaseHistory.ts:528
 msgid "Tags update correctly for ongoing conversations."
 msgstr "Tags worden correct bijgewerkt voor lopende gesprekken."
@@ -15280,6 +15349,10 @@ msgstr "Test"
 msgid "Test and select your microphone before recording."
 msgstr "Test en selecteer je microfoon voordat je opneemt."
 
+#: src/components/release/releases.ts:60
+msgid "Test Explore and Verify on a sample conversation before participants use them."
+msgstr "Test Verkennen en Verifiëren op een voorbeeldgesprek voordat deelnemers ze gebruiken."
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2726
 msgid "test mode"
 msgstr "testmodus"
@@ -15360,9 +15433,13 @@ msgstr "Dat was te kort om te transcriberen. Houd de opname iets langer vast."
 msgid "participant.modal.wrap_up.title"
 msgstr "Dat was het"
 
-#: src/components/release/releases.ts:82
+#: src/components/release/releases.ts:211
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "De [helpdocumentatie](https://docs.dembrane.com/) is herschreven en up-to-date."
+
+#: src/components/release/releases.ts:142
+msgid "The 15-second skip buttons now sit together, so it is easier to replay a moment."
+msgstr "De knoppen om 15 seconden te verspringen staan nu samen, zodat je makkelijker terugluistert."
 
 #: src/routes/admin/AiCostsPanel.tsx:667
 msgid "The account rows below"
@@ -15384,7 +15461,7 @@ msgstr "De agent en het bedrijf erachter ontvangen de gespreksinhoud die jij toe
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "De AI kon deze vraag niet beantwoorden. Probeer hem anders te formuleren."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:201
 msgid "The app feels much faster overall."
 msgstr "De app voelt over het geheel veel sneller aan."
 
@@ -15399,6 +15476,10 @@ msgstr "De assistent vergeet dit in elke toekomstige chat."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "De assistent stelt voor om {headlineFields} bij te werken. Wacht op jou."
+
+#: src/components/release/releases.ts:157
+msgid "The audio player stays in view while you scroll, so you can listen and read along."
+msgstr "De audiospeler blijft in beeld terwijl je scrolt, zodat je kunt luisteren en meelezen."
 
 #: src/routes/admin/AiCostsPanel.tsx:111
 msgid "The budget counted {exact} this period; the cost column covers every call this month."
@@ -15425,7 +15506,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 msgid "The conversation list shows clearer totals."
 msgstr "De gesprekslijst toont duidelijkere totalen."
 
-#: src/components/release/releases.ts:107
+#: src/components/release/releases.ts:236
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "De standaard hostgids herinnert hosts er nu aan om de focusmodus in te schakelen, zodat meldingen tijdens het opnemen niet op het scherm verschijnen."
 
@@ -15535,6 +15616,10 @@ msgstr "Het Free-abonnement bevat één organisatie."
 
 #~ msgid "The free plan includes two chats a month, with 20 questions each."
 #~ msgstr "Het Free-abonnement bevat twee chats per maand, met elk 20 vragen."
+
+#: src/components/release/releases.ts:64
+msgid "The free plan now includes a monthly AI allowance for chat, reports and more."
+msgstr "Het gratis abonnement bevat nu een maandelijks AI-budget voor chat, rapporten en meer."
 
 #: src/components/goal/ProjectGoalSection.tsx:87
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
@@ -15753,13 +15838,17 @@ msgstr "het geselecteerde gesprek"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "Het gedeelde scherm toont je gepubliceerde presentatie. Publiceer wijzigingen om de inhoud en toegang bij te werken."
 
-#: src/components/release/releases.ts:115
+#: src/components/release/releases.ts:244
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "De zijbalk past beter op mobiele schermen en heeft verbeterde Franse navigatieteksten."
 
 #: src/components/release/releaseHistory.ts:131
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr "De zijbalk scrolt op lage schermen terwijl de kop en voettekst beschikbaar blijven."
+
+#: src/components/release/releases.ts:100
+msgid "The sign-up form tells you which fields are missing."
+msgstr "Het aanmeldformulier laat zien welke velden ontbreken."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:199
 msgid "The summary is being generated. Please wait for it to be available."
@@ -16759,6 +16848,10 @@ msgstr "Transcriptiefout"
 msgid "Transcription failed"
 msgstr "Transcriptie mislukt"
 
+#: src/components/release/releases.ts:153
+msgid "Transcripts are split into paragraphs, so long conversations are easier to read."
+msgstr "Transcripten zijn opgedeeld in alinea's, zodat lange gesprekken makkelijker te lezen zijn."
+
 #: src/components/workspace/gateWalls.ts:170
 msgid "Transcripts come with a paid plan"
 msgstr "Transcripten horen bij een betaald abonnement"
@@ -16911,7 +17004,7 @@ msgstr "Wil je je aansluiten bij een bestaande organisatie?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Wil je je aansluiten bij een bestaande organisatie?"
 
-#: src/components/release/releases.ts:91
+#: src/components/release/releases.ts:220
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Zet gesprekken om in live slides. Start een live sessie of een analyse op aanvraag, presenteer aan de groep en bekijk de bronnen achter inzichten."
 
@@ -17389,7 +17482,11 @@ msgstr "Opnames uploaden hoort bij een betaald abonnement"
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Opnames uploaden is beschikbaar met een betaald abonnement."
 
-#: src/components/release/releases.ts:76
+#: src/components/release/releases.ts:111
+msgid "Uploads no longer fail because of how a file is named."
+msgstr "Uploads mislukken niet meer door de naam van een bestand."
+
+#: src/components/release/releases.ts:205
 msgid "Uploads show clearly when they fail."
 msgstr "Uploads laten duidelijk zien wanneer ze mislukken."
 
@@ -17766,6 +17863,10 @@ msgstr "Stemwijzigingen worden toegepast wanneer je de Popcorn-resultaten voorbe
 #: src/components/release/releaseHistory.ts:143
 msgid "Voice input respects the free plan's recording limit."
 msgstr "Spraakinvoer houdt rekening met de opnamelimiet van het gratis abonnement."
+
+#: src/components/release/releases.ts:105
+msgid "Voice memos and smoother chat"
+msgstr "Spraakmemo's en soepelere chat"
 
 #~ msgid "Voiced directly"
 #~ msgstr ""
@@ -18223,6 +18324,10 @@ msgstr "Wanneer de samenvatting is gegenereerd"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvatting)"
 
+#: src/components/release/releases.ts:72
+msgid "When you upgrade, the pricing calculator on dembrane.com helps you pick a plan."
+msgstr "Bij het upgraden helpt de prijscalculator op dembrane.com je een abonnement te kiezen."
+
 #: src/components/verify/topics.tsx:57
 msgid "Where views stayed different, each side in one line."
 msgstr "Waar de meningen verschillend bleven, elke kant in één regel."
@@ -18571,6 +18676,10 @@ msgstr "Je kunt deze pagina sluiten. We laten het je weten als het klaar is."
 #: src/routes/project/report/ProjectReportRoute.tsx:262
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "Je kunt wegnavigeren en later terugkomen. Je rapport wordt op de achtergrond verder gegenereerd."
+
+#: src/components/release/releases.ts:83
+msgid "You can now upload Apple Voice Memos (.qta and .m4a files)."
+msgstr "Je kunt nu opnames uit Apple Dictafoon uploaden (.qta- en .m4a-bestanden)."
 
 #. placeholder {0}: MAX_FILES - selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:478

@@ -1129,11 +1129,15 @@ msgstr "6 to 15."
 msgid "8 hours"
 msgstr "8 hours"
 
+#: src/components/release/releases.ts:131
+msgid "A banner tells you when this month's free hours are used up."
+msgstr "A banner tells you when this month's free hours are used up."
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:253
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "A blue bar across the top of every tab, with your text and a link back to the opening."
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:197
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "A cleaner, more accessible dashboard and portal."
 
@@ -1194,6 +1198,10 @@ msgstr "A more reliable audio upload experience"
 #: src/components/release/releaseHistory.ts:179
 msgid "A new assistant and a live monitor"
 msgstr "A new assistant and a live monitor"
+
+#: src/components/release/releases.ts:136
+msgid "A new free plan"
+msgstr "A new free plan"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:467
 msgid "A new report will be automatically generated and published at the scheduled time."
@@ -2014,7 +2022,7 @@ msgstr "All visible conversations selected"
 msgid "All workspaces"
 msgstr "All workspaces"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:177
 msgid "All-new Present features: show live results on a big screen during your session."
 msgstr "All-new Present features: show live results on a big screen during your session."
 
@@ -3420,7 +3428,7 @@ msgstr "Chat created"
 msgid "Chat deleted"
 msgstr "Chat deleted"
 
-#: src/components/release/releases.ts:75
+#: src/components/release/releases.ts:204
 msgid "Chat is more reliable."
 msgstr "Chat is more reliable."
 
@@ -3439,6 +3447,10 @@ msgstr "Chat name"
 #: src/components/release/releaseHistory.ts:717
 msgid "Chat no longer sends duplicate messages accidentally."
 msgstr "Chat no longer sends duplicate messages accidentally."
+
+#: src/components/release/releases.ts:90
+msgid "Chat suggestions no longer get stuck loading."
+msgstr "Chat suggestions no longer get stuck loading."
 
 #: src/components/release/releaseHistory.ts:656
 msgid "Chat templates stay visible while you work."
@@ -3595,7 +3607,7 @@ msgstr "Choose the outcomes your audience can explore."
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Choose the tabs your audience can explore."
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:181
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 
@@ -5159,7 +5171,7 @@ msgstr "dembrane staff left"
 msgid "dembrane staff requested access"
 msgstr "dembrane staff requested access"
 
-#: src/components/release/releases.ts:85
+#: src/components/release/releases.ts:214
 msgid "dembrane v3"
 msgstr "dembrane v3"
 
@@ -5477,6 +5489,10 @@ msgstr "Drag audio files here or click to select files"
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
 
+#: src/components/release/releases.ts:52
+msgid "Drop in an agenda or invitation and dembrane configures the project for you."
+msgstr "Drop in an agenda or invitation and dembrane configures the project for you."
+
 #: src/routes/admin/AdminSettingsRoute.tsx:838
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Drops to the free tier. They can subscribe to a paid plan anytime."
@@ -5568,6 +5584,18 @@ msgstr "Earlier runs"
 #: src/components/project/ProjectExperimentalSection.tsx:27
 msgid "Early features you can try on this project before they are ready for everyone."
 msgstr "Early features you can try on this project before they are ready for everyone."
+
+#: src/components/release/releases.ts:77
+msgid "Easier onboarding"
+msgstr "Easier onboarding"
+
+#: src/components/release/releases.ts:147
+msgid "Easier playback"
+msgstr "Easier playback"
+
+#: src/components/release/releases.ts:166
+msgid "Easier-to-read transcripts"
+msgstr "Easier-to-read transcripts"
 
 #: src/portal/components/verify/VerifyArtefact.tsx:463
 #: src/components/results/curate/RowTools.tsx:290
@@ -6094,11 +6122,15 @@ msgstr "Explore"
 msgid "Explore"
 msgstr "Explore"
 
+#: src/components/release/releases.ts:68
+msgid "Explore can draw on other groups in the project. Turn it off under Cross-pollination."
+msgstr "Explore can draw on other groups in the project. Turn it off under Cross-pollination."
+
 #: src/components/release/releaseHistory.ts:670
 msgid "Explore recurring themes in the Library"
 msgstr "Explore recurring themes in the Library"
 
-#: src/components/release/releases.ts:103
+#: src/components/release/releases.ts:232
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 
@@ -7462,6 +7494,11 @@ msgstr "Improved"
 msgid "Improvements"
 msgstr "Improvements"
 
+#: src/components/release/releases.ts:121
+#: src/components/release/releases.ts:171
+msgid "Improvements and bug fixes"
+msgstr "Improvements and bug fixes"
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "In progress"
@@ -7591,7 +7628,7 @@ msgstr "interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:121
+#: src/components/release/releases.ts:250
 msgid "Introducing Popcorn"
 msgstr "Introducing Popcorn"
 
@@ -8675,6 +8712,10 @@ msgstr "Logo updated"
 #~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
 #~ msgstr "Long context is read on every answer, so keep the essentials: the people, the places and the question."
 
+#: src/components/release/releases.ts:161
+msgid "Long uploads in any audio format are transcribed reliably instead of timing out."
+msgstr "Long uploads in any audio format are transcribed reliably instead of timing out."
+
 #: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
 msgstr "Longest first"
@@ -8897,7 +8938,7 @@ msgstr "MCP access for {0} is off"
 msgid "MCP access for {0} is on"
 msgstr "MCP access for {0} is on"
 
-#: src/components/release/releases.ts:95
+#: src/components/release/releases.ts:224
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 
@@ -9082,6 +9123,10 @@ msgstr "More options"
 #: src/components/release/releaseHistory.ts:194
 msgid "More reliable conversation summaries"
 msgstr "More reliable conversation summaries"
+
+#: src/components/release/releases.ts:116
+msgid "More reliable uploads"
+msgstr "More reliable uploads"
 
 #: src/components/pricing/questions.ts:176
 msgid "More than 1000."
@@ -10961,6 +11006,10 @@ msgstr "Participant verification"
 msgid "Participants"
 msgstr "Participants"
 
+#: src/components/release/releases.ts:87
+msgid "Participants are told when their microphone drops, so they can fix it."
+msgstr "Participants are told when their microphone drops, so they can fix it."
+
 #~ msgid "Participants can ask for a question to go deeper (Explore)"
 #~ msgstr "Participants can ask for a question to go deeper (Explore)"
 
@@ -10968,7 +11017,7 @@ msgstr "Participants"
 msgid "Participants can request a reply during a recording."
 msgstr "Participants can request a reply during a recording."
 
-#: src/components/release/releases.ts:99
+#: src/components/release/releases.ts:228
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 
@@ -12747,7 +12796,7 @@ msgstr "Reports"
 #~ msgid "Reports per month"
 #~ msgstr "Reports per month"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:207
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Reports publish, schedule and notify as expected."
 
@@ -13444,6 +13493,10 @@ msgstr "Screen language"
 msgid "Scroll to bottom"
 msgstr "Scroll to bottom"
 
+#: src/components/release/releases.ts:96
+msgid "Scrolling to the bottom of a transcript now reaches the very end."
+msgstr "Scrolling to the bottom of a transcript now reaches the very end."
+
 #: src/features/sidebar/blocks/SearchBlock.tsx:95
 #: src/features/sidebar/blocks/SearchBlock.tsx:106
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
@@ -13634,7 +13687,7 @@ msgstr "See audio quality indicators for noise, silence and overlapping speech."
 msgid "error.action.upgrade"
 msgstr "See plans"
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:185
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "See the arguments from your conversations and the quotes behind them on the Map."
 
@@ -13990,6 +14043,10 @@ msgstr "Set up your first organisation"
 msgid "Set up your organisation"
 msgstr "Set up your organisation"
 
+#: src/components/release/releases.ts:56
+msgid "Set up your portal page by page, with a live preview of what participants see."
+msgstr "Set up your portal page by page, with a live preview of what participants see."
+
 #: src/routes/onboarding/OnboardingRoute.tsx:199
 msgid "Set up your workspace | dembrane"
 msgstr "Set up your workspace | dembrane"
@@ -14133,7 +14190,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:111
+#: src/components/release/releases.ts:240
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 
@@ -14272,7 +14329,7 @@ msgstr "Show only conversations with any of the ticked tags."
 msgid "Show only what changed"
 msgstr "Show only what changed"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:189
 msgid "Show popcorn in up to three extra languages at once."
 msgstr "Show popcorn in up to three extra languages at once."
 
@@ -14729,6 +14786,10 @@ msgstr "Start again from your agent. It will open a fresh request here."
 msgid "Start fresh"
 msgstr "Start fresh"
 
+#: src/components/release/releases.ts:48
+msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
+msgstr "Start from a template, like a focus group or citizens' assembly, already set up for you."
+
 #: src/routes/project/CreateProjectRoute.tsx:700
 msgid "Start in assistant chat"
 msgstr "Start in assistant chat"
@@ -14750,6 +14811,10 @@ msgstr "Start over"
 #: src/components/release/releaseHistory.ts:119
 msgid "Start recording without an extra ready-to-record confirmation."
 msgstr "Start recording without an extra ready-to-record confirmation."
+
+#: src/components/release/releases.ts:127
+msgid "Start using dembrane for free, with recording hours included every month."
+msgstr "Start using dembrane for free, with recording hours included every month."
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:55
 msgid "Started recording"
@@ -14800,7 +14865,7 @@ msgstr "Status"
 msgid "Stay live for"
 msgstr "Stay live for"
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:193
 msgid "Stay signed in on two devices, such as your phone and laptop."
 msgstr "Stay signed in on two devices, such as your phone and laptop."
 
@@ -15177,6 +15242,10 @@ msgstr "Tags"
 msgid "Tags are the vocabulary participants can pick from in the portal. Nothing changes until you apply."
 msgstr "Tags are the vocabulary participants can pick from in the portal. Nothing changes until you apply."
 
+#: src/components/release/releases.ts:92
+msgid "Tags stay where you drop them when you drag them into a new order."
+msgstr "Tags stay where you drop them when you drag them into a new order."
+
 #: src/components/release/releaseHistory.ts:528
 msgid "Tags update correctly for ongoing conversations."
 msgstr "Tags update correctly for ongoing conversations."
@@ -15283,6 +15352,10 @@ msgstr "Test"
 msgid "Test and select your microphone before recording."
 msgstr "Test and select your microphone before recording."
 
+#: src/components/release/releases.ts:60
+msgid "Test Explore and Verify on a sample conversation before participants use them."
+msgstr "Test Explore and Verify on a sample conversation before participants use them."
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2726
 msgid "test mode"
 msgstr "test mode"
@@ -15363,9 +15436,13 @@ msgstr "That was too short to transcribe. Hold the recording a little longer."
 msgid "participant.modal.wrap_up.title"
 msgstr "That's a wrap"
 
-#: src/components/release/releases.ts:82
+#: src/components/release/releases.ts:211
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
+
+#: src/components/release/releases.ts:142
+msgid "The 15-second skip buttons now sit together, so it is easier to replay a moment."
+msgstr "The 15-second skip buttons now sit together, so it is easier to replay a moment."
 
 #: src/routes/admin/AiCostsPanel.tsx:667
 msgid "The account rows below"
@@ -15387,7 +15464,7 @@ msgstr "The agent and the company running it will receive the conversation conte
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "The AI couldn't answer this question. Try rewording it."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:201
 msgid "The app feels much faster overall."
 msgstr "The app feels much faster overall."
 
@@ -15402,6 +15479,10 @@ msgstr "The assistant forgets it in every future chat."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "The assistant suggests updating {headlineFields}. Waiting on you."
+
+#: src/components/release/releases.ts:157
+msgid "The audio player stays in view while you scroll, so you can listen and read along."
+msgstr "The audio player stays in view while you scroll, so you can listen and read along."
 
 #: src/routes/admin/AiCostsPanel.tsx:111
 msgid "The budget counted {exact} this period; the cost column covers every call this month."
@@ -15428,7 +15509,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "The conversation list shows clearer totals."
 
-#: src/components/release/releases.ts:107
+#: src/components/release/releases.ts:236
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 
@@ -15538,6 +15619,10 @@ msgstr "The free plan includes one organisation."
 
 #~ msgid "The free plan includes two chats a month, with 20 questions each."
 #~ msgstr "The free plan includes two chats a month, with 20 questions each."
+
+#: src/components/release/releases.ts:64
+msgid "The free plan now includes a monthly AI allowance for chat, reports and more."
+msgstr "The free plan now includes a monthly AI allowance for chat, reports and more."
 
 #: src/components/goal/ProjectGoalSection.tsx:87
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
@@ -15756,13 +15841,17 @@ msgstr "the selected conversation"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "The shared screen shows your published presentation. Publish changes to update its content and access."
 
-#: src/components/release/releases.ts:115
+#: src/components/release/releases.ts:244
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 
 #: src/components/release/releaseHistory.ts:131
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr "The sidebar scrolls on short screens while keeping its header and footer available."
+
+#: src/components/release/releases.ts:100
+msgid "The sign-up form tells you which fields are missing."
+msgstr "The sign-up form tells you which fields are missing."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:199
 msgid "The summary is being generated. Please wait for it to be available."
@@ -16762,6 +16851,10 @@ msgstr "Transcription error"
 msgid "Transcription failed"
 msgstr "Transcription failed"
 
+#: src/components/release/releases.ts:153
+msgid "Transcripts are split into paragraphs, so long conversations are easier to read."
+msgstr "Transcripts are split into paragraphs, so long conversations are easier to read."
+
 #: src/components/workspace/gateWalls.ts:170
 msgid "Transcripts come with a paid plan"
 msgstr "Transcripts come with a paid plan"
@@ -16916,7 +17009,7 @@ msgstr "Trying to join an existing organisation?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Trying to join an existing organization?"
 
-#: src/components/release/releases.ts:91
+#: src/components/release/releases.ts:220
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 
@@ -17394,7 +17487,11 @@ msgstr "Uploading recordings comes with a paid plan"
 msgid "Uploading recordings comes with a paid plan."
 msgstr "Uploading recordings comes with a paid plan."
 
-#: src/components/release/releases.ts:76
+#: src/components/release/releases.ts:111
+msgid "Uploads no longer fail because of how a file is named."
+msgstr "Uploads no longer fail because of how a file is named."
+
+#: src/components/release/releases.ts:205
 msgid "Uploads show clearly when they fail."
 msgstr "Uploads show clearly when they fail."
 
@@ -17771,6 +17868,10 @@ msgstr "Voice changes apply the next time you prepare or update Popcorn results.
 #: src/components/release/releaseHistory.ts:143
 msgid "Voice input respects the free plan's recording limit."
 msgstr "Voice input respects the free plan's recording limit."
+
+#: src/components/release/releases.ts:105
+msgid "Voice memos and smoother chat"
+msgstr "Voice memos and smoother chat"
 
 #~ msgid "Voiced directly"
 #~ msgstr "Voiced directly"
@@ -18228,6 +18329,10 @@ msgstr "When the summary is generated"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
+#: src/components/release/releases.ts:72
+msgid "When you upgrade, the pricing calculator on dembrane.com helps you pick a plan."
+msgstr "When you upgrade, the pricing calculator on dembrane.com helps you pick a plan."
+
 #: src/components/verify/topics.tsx:57
 msgid "Where views stayed different, each side in one line."
 msgstr "Where views stayed different, each side in one line."
@@ -18576,6 +18681,10 @@ msgstr "You can close this page. We'll notify you when it's done."
 #: src/routes/project/report/ProjectReportRoute.tsx:262
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
+
+#: src/components/release/releases.ts:83
+msgid "You can now upload Apple Voice Memos (.qta and .m4a files)."
+msgstr "You can now upload Apple Voice Memos (.qta and .m4a files)."
 
 #. placeholder {0}: MAX_FILES - selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:478

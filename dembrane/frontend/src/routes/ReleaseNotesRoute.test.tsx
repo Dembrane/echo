@@ -47,7 +47,7 @@ it("keeps each walkthrough with its own release, captions on", () => {
 	).toBeTruthy();
 	expect(within(articles[0]).queryByText("Upcoming")).toBeNull();
 	expect(
-		within(articles[0]).getByRole("link", { name: "v3.3.0" }),
+		within(articles[0]).getByRole("link", { name: "v3.6.0" }),
 	).toBeTruthy();
 	expect(within(articles[0]).getByText("Latest release")).toBeTruthy();
 	expect(within(articles[1]).queryByText("Latest release")).toBeNull();
