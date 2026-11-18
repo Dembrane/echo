@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { usePdfHref } from "../api/hooks";
 import type { AccountPageT, DocumentSummaryT } from "../contract/contract.gen";
+import { DpaHint } from "../DpaHint";
 import {
 	documentKindLabel,
 	documentStatusLabel,
@@ -122,9 +123,16 @@ function DocumentRow({
 				<Stack gap="xs" className={classes.what}>
 					<Text className={classes.title}>{documentTitle(doc)}</Text>
 					<Text size="sm" c="dimmed">
-						{[documentKindLabel(doc.kind), date, amount]
-							.filter(Boolean)
-							.join(" · ")}
+						{doc.kind === "dpa" ? (
+							<DpaHint>
+								<span data-testid="doc-kind">
+									{documentKindLabel(doc.kind)}
+								</span>
+							</DpaHint>
+						) : (
+							documentKindLabel(doc.kind)
+						)}
+						{[date, amount].filter(Boolean).map((part) => ` · ${part}`)}
 						{" · "}
 						<Text span size="sm" c={tone}>
 							{status}

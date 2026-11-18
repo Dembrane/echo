@@ -3,6 +3,7 @@ import { Badge, Group, Tooltip } from "@mantine/core";
 import { SignatureIcon } from "@phosphor-icons/react";
 import { I18nLink } from "@/components/common/i18nLink";
 import type { RoomLabelT } from "../../contract/contract.gen";
+import { DpaHint, openDpaHint } from "../../DpaHint";
 import { labelText, signText } from "./copy";
 import { inLabelOrder, type SignKind } from "./model";
 import classes from "./Tags.module.css";
@@ -59,8 +60,11 @@ export function SignMarker({
 		leftSection: <SignatureIcon size={16} aria-hidden />,
 		variant: "outline" as const,
 	};
-	if (!href) return <Badge {...props}>{signText(kind)}</Badge>;
-	const hint = kind === "dpa" ? t`Open the DPA` : t`Open the offer`;
+	if (!href) {
+		const marker = <Badge {...props}>{signText(kind)}</Badge>;
+		return kind === "dpa" ? <DpaHint>{marker}</DpaHint> : marker;
+	}
+	const hint = kind === "dpa" ? openDpaHint() : t`Open the offer`;
 	return (
 		<Tooltip label={hint}>
 			<Badge

@@ -2,6 +2,7 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
 import type { DocumentSummaryT, TaskT } from "../../contract/contract.gen";
+import { DpaHint } from "../../DpaHint";
 import {
 	documentTitle,
 	formatDate,
@@ -27,7 +28,13 @@ export function ReadOnlyTasks({
 	const { i18n } = useLingui();
 	return (
 		<PageSection
-			title={<Trans>On the offer and the DPA</Trans>}
+			title={
+				<DpaHint>
+					<span>
+						<Trans>On the offer and the DPA</Trans>
+					</span>
+				</DpaHint>
+			}
 			count={tasks.length}
 		>
 			<div data-testid="room-tasks">

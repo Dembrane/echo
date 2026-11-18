@@ -104,6 +104,14 @@ describe("the documents, for those who run the account", () => {
 	});
 });
 
+describe("the DPA's kind label", () => {
+	it("is the one kind that carries the tooltip spelling DPA out", () => {
+		show({ documents: docs });
+		expect(within(row("dpa")).getByTestId("doc-kind").textContent).toBe("DPA");
+		expect(within(row("offer")).queryByTestId("doc-kind")).toBeNull();
+	});
+});
+
 describe("the share shortcut", () => {
 	it("sits on the offer and the DPA, which the room holds, and opens the add flow", () => {
 		const onShare = vi.fn();

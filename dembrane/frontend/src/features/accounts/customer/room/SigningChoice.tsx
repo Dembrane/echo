@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Group, Stack, Text, TextInput } from "@mantine/core";
 import { SignatureIcon } from "@phosphor-icons/react";
+import { DpaHint } from "../../DpaHint";
 import { signText } from "./copy";
 import { Choice } from "./LabelChoices";
 import type { SignKind } from "./model";
@@ -58,17 +59,26 @@ export function SigningChoice({
 						const pressed = fixed || chosen.includes(k);
 						const now = holders[k];
 						// Whom it replaces goes beside the choice, or under it if there is no room.
+						const choice = (
+							<Choice
+								pressed={pressed}
+								fixed={fixed}
+								onClick={() => onToggle(k)}
+								icon={<SignatureIcon size={16} aria-hidden />}
+								testId={`sign-${k}`}
+							>
+								{signText(k)}
+							</Choice>
+						);
 						return (
 							<Group key={k} gap="xs">
-								<Choice
-									pressed={pressed}
-									fixed={fixed}
-									onClick={() => onToggle(k)}
-									icon={<SignatureIcon size={16} aria-hidden />}
-									testId={`sign-${k}`}
-								>
-									{signText(k)}
-								</Choice>
+								{k === "dpa" ? (
+									<DpaHint>
+										<span>{choice}</span>
+									</DpaHint>
+								) : (
+									choice
+								)}
 								{now && pressed && !fixed && (
 									<Text size="xs" c="dimmed" data-testid={`sign-${k}-replaces`}>
 										{t`Replaces ${now}`}

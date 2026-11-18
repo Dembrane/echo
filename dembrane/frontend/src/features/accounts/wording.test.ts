@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 // The wording of the account area: "DPA", never the
-// words spelled out, in every language; "dembrane" lowercase; no em dashes; and the
+// words spelled out in its place, in every language (they appear only where a tooltip
+// says what "DPA" stands for); "dembrane" lowercase; no em dashes; and the
 // room's own code never speaks of viewers or of who has seen what.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -58,10 +59,13 @@ describe("the account area's words, in all eight languages", () => {
 	});
 
 	it.each(Object.entries(SPELLED_OUT))(
-		"%s says DPA, never the words spelled out",
+		"%s says DPA, and spells the words out only to explain it",
 		(file, spelled) => {
-			const hits = translations(file).filter((s) => spelled.test(s));
+			const all = translations(file);
+			const hits = all.filter((s) => spelled.test(s) && !s.includes("DPA"));
 			expect(hits).toEqual([]);
+			// The tooltip that explains the abbreviation is there, in this language.
+			expect(all.some((s) => /^DPA ?: /.test(s) && spelled.test(s))).toBe(true);
 		},
 	);
 

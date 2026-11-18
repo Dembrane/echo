@@ -44,6 +44,7 @@ import {
 } from "@/lib/auth";
 import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { AccountsApiError, call, type ResponseOf } from "../api/client";
+import { DpaHint } from "../DpaHint";
 import { AccountsI18n } from "../i18n";
 import { SignRoute } from "./SignRoute";
 import { LogInButton, logInPath, signPath as signPathOf } from "./signInLink";
@@ -703,7 +704,13 @@ function RoomInvitePage({ token }: { token: string }) {
 					<Trans>You are invited to {org}</Trans>
 				)
 			}
-			title={<Trans>Read the offer and the DPA with your team</Trans>}
+			title={
+				<DpaHint>
+					<span>
+						<Trans>Read the offer and the DPA with your team</Trans>
+					</span>
+				</DpaHint>
+			}
 			reference={null}
 			signs={false}
 			onAccept={async (names) => {
