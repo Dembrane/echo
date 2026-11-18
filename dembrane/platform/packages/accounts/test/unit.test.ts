@@ -940,6 +940,19 @@ describe("who signs, in the server's words", () => {
     for (const language of LOCALES)
       expect(taskBody({ code: "who_signs", body: null }, language)).toContain("DPA");
   });
+
+  test("the sign-the-DPA task says DPA in every language", () => {
+    expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, "en-US")).toBe(
+      "Have the DPA signed",
+    );
+    expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, "nl-NL")).toBe(
+      "Laat de DPA ondertekenen",
+    );
+    for (const language of LOCALES) {
+      expect(taskTitle({ code: "sign_dpa", params: {}, title: null }, language)).toContain("DPA");
+      expect(taskBody({ code: "sign_dpa", body: null }, language)).toContain("DPA");
+    }
+  });
 });
 
 describe("onboarding task words", () => {
