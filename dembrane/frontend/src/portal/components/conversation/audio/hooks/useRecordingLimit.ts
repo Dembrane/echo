@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useLatest } from "@/hooks/useLatest";
 
 /** Calls onLimit once when the recorded time (pauses excluded) reaches the limit. */
 export const useRecordingLimit = ({
@@ -13,8 +14,7 @@ export const useRecordingLimit = ({
 	onLimit: () => void;
 }): void => {
 	const firedRef = useRef(false);
-	const onLimitRef = useRef(onLimit);
-	onLimitRef.current = onLimit;
+	const onLimitRef = useLatest(onLimit);
 
 	useEffect(() => {
 		if (firedRef.current) return;
@@ -22,5 +22,5 @@ export const useRecordingLimit = ({
 		if (recordingTime < limitSeconds) return;
 		firedRef.current = true;
 		onLimitRef.current();
-	}, [isRecording, recordingTime, limitSeconds]);
+	}, [isRecording, recordingTime, limitSeconds, onLimitRef]);
 };
