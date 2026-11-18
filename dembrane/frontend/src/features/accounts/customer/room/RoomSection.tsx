@@ -5,6 +5,7 @@ import { useAccountsMutation, useRoom } from "../../api/hooks";
 import type { RoomPersonT } from "../../contract/contract.gen";
 import { AddPersonModal } from "./AddPersonModal";
 import { confirmRemove } from "./confirm";
+import { FirstVisitQuestion } from "./FirstVisitQuestion";
 import type { SignKind } from "./model";
 import { type AddPreset, PeopleList } from "./PeopleList";
 
@@ -23,13 +24,24 @@ export function RoomSection({ orgId }: { orgId: string }) {
 	const [changeOpen, setChangeOpen] = useState(false);
 	const remove = useAccountsMutation("removeRoomPerson", { orgId });
 	const dismiss = useAccountsMutation("dismissRoomHint", { orgId });
+	const answer = useAccountsMutation("answerRoomLabels", { orgId });
 	if (!page?.me) return null;
+	const me = page.me;
+	const mine = page.people.find((p) => p.app_user_id === me.app_user_id);
 	const signHref = (kind: SignKind) => {
 		const id = page.signers[kind]?.document_id;
 		return id ? `/o/${orgId}/account/documents/${id}/sign` : null;
 	};
 	return (
 		<Stack gap="md">
+			{me.labels_question && mine && (
+				<FirstVisitQuestion
+					inviter={mine.invited_by?.name ?? null}
+					labels={mine.labels}
+					other={mine.other}
+					onAnswer={(body) => answer.mutateAsync({ body })}
+				/>
+			)}
 			<PeopleList
 				lens="decision"
 				page={page}

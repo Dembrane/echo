@@ -588,6 +588,7 @@ msgstr "Hovor domluven"
 #: src/features/accounts/customer/WhoSigns.tsx:445
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:99
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:422
 msgid "Cancel"
 msgstr "Zrušit"
@@ -599,6 +600,7 @@ msgstr "Zrušeno"
 #: src/features/accounts/staff/DocumentRoute.tsx:214
 #: src/features/accounts/signing/SignRoute.tsx:1162
 #: src/features/accounts/customer/WhoSigns.tsx:364
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:121
 msgid "Change"
 msgstr "Změnit"
 
@@ -1016,8 +1018,8 @@ msgstr "Dokument stažen zpět"
 #: src/features/accounts/staff/AccountCardRoute.tsx:313
 #: src/features/accounts/staff/AccountCardRoute.tsx:643
 #: src/features/accounts/customer/DocumentsTable.tsx:25
-#: src/features/accounts/customer/AccountRoute.tsx:102
-#: src/features/accounts/customer/AccountRoute.tsx:102
+#: src/features/accounts/customer/AccountRoute.tsx:110
+#: src/features/accounts/customer/AccountRoute.tsx:110
 msgid "Documents"
 msgstr "Dokumenty"
 
@@ -1536,6 +1538,10 @@ msgstr "Faktury budou chodit přes Peppol"
 msgid "Invoicing"
 msgstr "Fakturace"
 
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:66
+msgid "Is that right?"
+msgstr ""
+
 #: src/features/accounts/customer/WhoSigns.tsx:308
 #~ msgid "It is a separate document. Some organisations have it signed by someone else, such as their data protection officer."
 #~ msgstr "Je to samostatný dokument. Některé organizace ho nechávají podepsat někým jiným, například pověřencem pro ochranu osobních údajů."
@@ -1896,7 +1902,7 @@ msgstr "Poznámka"
 #~ msgid "Nothing needs you right now. We are working on our part."
 #~ msgstr "Teď na vás nic nečeká. Pracujeme na své části."
 
-#: src/features/accounts/customer/AccountRoute.tsx:144
+#: src/features/accounts/customer/AccountRoute.tsx:152
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "V tuto chvíli není co dělat."
@@ -1993,7 +1999,7 @@ msgstr "Tento koncept vidí jen zaměstnanci. Při odeslání dostane datum toho
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Účet vidí pouze správci a fakturační kontakty organizace."
 
-#: src/features/accounts/customer/AccountRoute.tsx:211
+#: src/features/accounts/customer/AccountRoute.tsx:219
 msgid "Only the organisation's admins and billing contacts see this page."
 msgstr "Tuto stránku vidí jen správci a fakturační kontakty organizace."
 
@@ -2559,6 +2565,7 @@ msgid "run the rollout"
 msgstr ""
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:90
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:272
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:281
 msgid "Save"
@@ -3062,8 +3069,8 @@ msgstr "Úkol stažen"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:481
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
-#: src/features/accounts/customer/AccountRoute.tsx:93
-#: src/features/accounts/customer/AccountRoute.tsx:93
+#: src/features/accounts/customer/AccountRoute.tsx:101
+#: src/features/accounts/customer/AccountRoute.tsx:101
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Úkoly"
@@ -3361,7 +3368,7 @@ msgstr "Tento odkaz už nefunguje"
 #~ msgid "This organisation has no account yet"
 #~ msgstr "Tato organizace zatím nemá účet"
 
-#: src/features/accounts/customer/AccountRoute.tsx:216
+#: src/features/accounts/customer/AccountRoute.tsx:224
 msgid "This page could not be loaded. Try again in a moment."
 msgstr "Stránku se nepodařilo načíst. Zkuste to za chvíli znovu."
 
@@ -3765,6 +3772,10 @@ msgstr "Společně s vámi nastavíme, jak budete dostávat faktury. Naše odpov
 msgid "Website"
 msgstr "Webové stránky"
 
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:75
+msgid "What do you do in this decision?"
+msgstr ""
+
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:364
 msgid "What does {first} do?"
 msgstr ""
@@ -3854,6 +3865,10 @@ msgstr "Ano"
 #: src/features/accounts/signing/SignRoute.tsx:1323
 msgid "Yes, I may"
 msgstr "Ano, mám oprávnění"
+
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:113
+msgid "Yes, that is right"
+msgstr ""
 
 #: src/features/accounts/customer/room/PersonRow.tsx:64
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:161

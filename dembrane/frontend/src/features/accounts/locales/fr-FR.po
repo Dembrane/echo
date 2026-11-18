@@ -588,6 +588,7 @@ msgstr "Appel réservé"
 #: src/features/accounts/customer/WhoSigns.tsx:445
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:99
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:422
 msgid "Cancel"
 msgstr "Annuler"
@@ -599,6 +600,7 @@ msgstr "Annulé"
 #: src/features/accounts/staff/DocumentRoute.tsx:214
 #: src/features/accounts/signing/SignRoute.tsx:1162
 #: src/features/accounts/customer/WhoSigns.tsx:364
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:121
 msgid "Change"
 msgstr "Modifier"
 
@@ -1016,8 +1018,8 @@ msgstr "Document retiré"
 #: src/features/accounts/staff/AccountCardRoute.tsx:313
 #: src/features/accounts/staff/AccountCardRoute.tsx:643
 #: src/features/accounts/customer/DocumentsTable.tsx:25
-#: src/features/accounts/customer/AccountRoute.tsx:102
-#: src/features/accounts/customer/AccountRoute.tsx:102
+#: src/features/accounts/customer/AccountRoute.tsx:110
+#: src/features/accounts/customer/AccountRoute.tsx:110
 msgid "Documents"
 msgstr "Documents"
 
@@ -1536,6 +1538,10 @@ msgstr "Les factures arriveront via Peppol"
 msgid "Invoicing"
 msgstr "Facturation"
 
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:66
+msgid "Is that right?"
+msgstr ""
+
 #: src/features/accounts/customer/WhoSigns.tsx:308
 #~ msgid "It is a separate document. Some organisations have it signed by someone else, such as their data protection officer."
 #~ msgstr "C’est un document distinct. Certaines organisations le font signer par quelqu’un d’autre, comme leur délégué à la protection des données."
@@ -1896,7 +1902,7 @@ msgstr "Remarque"
 #~ msgid "Nothing needs you right now. We are working on our part."
 #~ msgstr "Rien ne vous attend pour le moment. Nous travaillons sur notre part."
 
-#: src/features/accounts/customer/AccountRoute.tsx:144
+#: src/features/accounts/customer/AccountRoute.tsx:152
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "Rien à faire pour le moment."
@@ -1993,7 +1999,7 @@ msgstr "Seul le personnel voit ce brouillon. À l'envoi, il prend la date du jou
 #~ msgid "Only the organisation's admins and billing contacts see the account."
 #~ msgstr "Seuls les administrateurs et les contacts de facturation de l'organisation voient le compte."
 
-#: src/features/accounts/customer/AccountRoute.tsx:211
+#: src/features/accounts/customer/AccountRoute.tsx:219
 msgid "Only the organisation's admins and billing contacts see this page."
 msgstr "Seuls les administrateurs et les contacts de facturation de l'organisation voient cette page."
 
@@ -2559,6 +2565,7 @@ msgid "run the rollout"
 msgstr ""
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:90
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:272
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:281
 msgid "Save"
@@ -3062,8 +3069,8 @@ msgstr "Tâche retirée"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:481
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:40
-#: src/features/accounts/customer/AccountRoute.tsx:93
-#: src/features/accounts/customer/AccountRoute.tsx:93
+#: src/features/accounts/customer/AccountRoute.tsx:101
+#: src/features/accounts/customer/AccountRoute.tsx:101
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Tâches"
@@ -3361,7 +3368,7 @@ msgstr "Ce lien ne fonctionne plus"
 #~ msgid "This organisation has no account yet"
 #~ msgstr "Cette organisation n'a pas encore de compte"
 
-#: src/features/accounts/customer/AccountRoute.tsx:216
+#: src/features/accounts/customer/AccountRoute.tsx:224
 msgid "This page could not be loaded. Try again in a moment."
 msgstr "Cette page n'a pas pu être chargée. Réessayez dans un instant."
 
@@ -3765,6 +3772,10 @@ msgstr "Nous verrons avec vous comment vous recevez les factures. Notre réponse
 msgid "Website"
 msgstr "Site web"
 
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:75
+msgid "What do you do in this decision?"
+msgstr ""
+
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:364
 msgid "What does {first} do?"
 msgstr ""
@@ -3854,6 +3865,10 @@ msgstr "Oui"
 #: src/features/accounts/signing/SignRoute.tsx:1323
 msgid "Yes, I may"
 msgstr "Oui, je le peux"
+
+#: src/features/accounts/customer/room/FirstVisitQuestion.tsx:113
+msgid "Yes, that is right"
+msgstr ""
 
 #: src/features/accounts/customer/room/PersonRow.tsx:64
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:161
