@@ -1,0 +1,6 @@
+/* A choice's words sit on the box's middle, at the compact height (rules.css). */
+.choice {
+	align-items: center;
+	display: inline-flex;
+	text-align: left;
+}

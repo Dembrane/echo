@@ -1,0 +1,25 @@
+/* Back keeps its width; the pill shortens its words first (FitLabel). */
+.back {
+	flex-shrink: 0;
+}
+.option {
+	min-width: 0;
+}
+.done {
+	flex-shrink: 0;
+}
+
+/* On a phone the dialog fills the screen (the Share dialog's pattern) and the row of
+ * steps stays at the bottom of the view, on the sheet's own parchment, so a long list
+ * of choices scrolls under it and Back and the pill are always in reach. */
+@media (max-width: 48em) {
+	.steps {
+		background: var(--app-background);
+		border-top: var(--app-stroke) solid var(--app-quiet);
+		bottom: 0;
+		margin-inline: calc(-1 * var(--mantine-spacing-md));
+		padding: 12px var(--mantine-spacing-md);
+		position: sticky;
+		z-index: 2;
+	}
+}

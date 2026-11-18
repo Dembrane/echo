@@ -100,13 +100,37 @@ msgstr "{days, plural, one {# day overdue} other {# days overdue}}"
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# day} other {# days}}"
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:433
+msgid "{domain} is not your own email domain. Check that the address is right."
+msgstr "{domain} is not your own email domain. Check that the address is right."
+
 #: src/features/accounts/signing/SignRoute.tsx:579
 msgid "{done} of {total} filled"
 msgstr "{done} of {total} filled"
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:447
+msgid "{first} also gets a link to sign the DPA."
+msgstr "{first} also gets a link to sign the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:443
+msgid "{first} also gets a link to sign the offer and the DPA."
+msgstr "{first} also gets a link to sign the offer and the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:445
+msgid "{first} also gets a link to sign the offer."
+msgstr "{first} also gets a link to sign the offer."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:461
+msgid "{first} is already here. Only what {first} does changes."
+msgstr "{first} is already here. Only what {first} does changes."
+
 #: src/features/accounts/customer/room/copy.ts:102
 msgid "{first} stays a member of your organisation, but can no longer read the offer and the DPA here."
 msgstr "{first} stays a member of your organisation, but can no longer read the offer and the DPA here."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:488
+msgid "{first} was already here. What {first} does is updated."
+msgstr "{first} was already here. What {first} does is updated."
 
 #: src/features/accounts/customer/room/copy.ts:101
 msgid "{first}'s invitation is withdrawn and the link we sent stops working."
@@ -132,9 +156,17 @@ msgstr "{months} × {0}: signing, then each 1st"
 msgid "{name} signed on {when}."
 msgstr "{name} signed on {when}."
 
+#: src/features/accounts/customer/room/confirm.tsx:49
+msgid "{oldName} no longer signs it, and the link we sent {oldFirst} stops working. {newName} gets a new link."
+msgstr "{oldName} no longer signs it, and the link we sent {oldFirst} stops working. {newName} gets a new link."
+
 #: src/features/accounts/signing/SignGate.tsx:350
 msgid "{org} invited you to sign"
 msgstr "{org} invited you to sign"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:510
+msgid "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
+msgstr "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
 
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
@@ -313,6 +345,7 @@ msgstr "Add bullets"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:94
 #: src/features/accounts/customer/room/PeopleList.tsx:167
+#: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Add someone"
 msgstr "Add someone"
 
@@ -421,6 +454,7 @@ msgstr "At signing, they tick"
 #: src/features/accounts/signing/SignRoute.tsx:994
 #: src/features/accounts/customer/WhoSigns.tsx:366
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:221
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:397
 msgid "Back"
 msgstr "Back"
 
@@ -539,6 +573,7 @@ msgstr "Call booked"
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:221
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:397
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -555,9 +590,30 @@ msgstr "Change"
 msgid "Change the draft"
 msgstr "Change the draft"
 
+#: src/features/accounts/customer/room/AddPersonModal.tsx:54
+#~ msgid "Change what {0} does"
+#~ msgstr "Change what {0} does"
+
 #: src/features/accounts/customer/room/PersonRow.tsx:117
+#: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Change what {first} does"
 msgstr "Change what {first} does"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:254
+msgid "Change who signs"
+msgstr "Change who signs"
+
+#: src/features/accounts/customer/room/confirm.tsx:20
+msgid "Change who signs both documents?"
+msgstr "Change who signs both documents?"
+
+#: src/features/accounts/customer/room/confirm.tsx:22
+msgid "Change who signs the DPA?"
+msgstr "Change who signs the DPA?"
+
+#: src/features/accounts/customer/room/confirm.tsx:23
+msgid "Change who signs the offer?"
+msgstr "Change who signs the offer?"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -951,6 +1007,7 @@ msgstr "Documents that form the agreement"
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:153
 #: src/features/accounts/customer/NextSteps.tsx:132
 #: src/features/accounts/customer/NextSteps.tsx:471
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:520
 msgid "Done"
 msgstr "Done"
 
@@ -1315,6 +1372,10 @@ msgstr "In instalments"
 msgid "In progress (call booked)"
 msgstr "In progress (call booked)"
 
+#: src/features/accounts/customer/room/LabelChoices.tsx:80
+msgid "In your own words"
+msgstr "In your own words"
+
 #. placeholder {0}: money(doc.vat_cents)
 #: src/features/accounts/customer/Pay.tsx:146
 msgid "incl. {0} VAT"
@@ -1638,6 +1699,8 @@ msgstr "New task"
 #: src/features/accounts/customer/WhoSigns.tsx:380
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:233
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:239
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:246
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:251
 msgid "Next"
 msgstr "Next"
 
@@ -1807,6 +1870,10 @@ msgstr "Note"
 msgid "Nothing to do right now."
 msgstr "Nothing to do right now."
 
+#: src/features/accounts/customer/room/SigningChoice.tsx:77
+msgid "Now: {now}"
+msgstr "Now: {now}"
+
 #: src/features/accounts/staff/InvoicePlanFields.tsx:145
 msgid "Number of months"
 msgstr "Number of months"
@@ -1871,6 +1938,10 @@ msgstr "Onboarding tasks withdrawn"
 #: src/features/accounts/staff/LinesEditor.tsx:274
 msgid "One per line"
 msgstr "One per line"
+
+#: src/features/accounts/customer/room/SigningChoice.tsx:50
+msgid "One person signs each document."
+msgstr "One person signs each document."
 
 #: src/features/accounts/customer/Pay.tsx:157
 msgid "Online"
@@ -2028,12 +2099,17 @@ msgstr "Optional. A past event or customer to model the demo on."
 
 #: src/features/accounts/customer/WhoSigns.tsx:446
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:202
+#: src/features/accounts/customer/room/SigningChoice.tsx:87
 msgid "Optional. It goes on the signature."
 msgstr "Optional. It goes on the signature."
 
 #: src/features/accounts/staff/TaskModals.tsx:71
 msgid "Optional. The task stays greyed out until this document is signed."
 msgstr "Optional. The task stays greyed out until this document is signed."
+
+#: src/features/accounts/customer/room/LabelChoices.tsx:51
+msgid "Optional. With nothing chosen, they are kept informed."
+msgstr "Optional. With nothing chosen, they are kept informed."
 
 #: src/features/accounts/customer/room/PersonRow.tsx:108
 msgid "Options for {first}"
@@ -2050,6 +2126,10 @@ msgstr "Organisation"
 #: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Organisation name"
+
+#: src/features/accounts/customer/room/LabelChoices.tsx:75
+msgid "Other"
+msgstr "Other"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:262
 msgid "Other members"
@@ -2335,9 +2415,14 @@ msgstr "Remind {name}"
 msgid "Reminded"
 msgstr "Reminded"
 
+#: src/features/accounts/customer/room/confirm.tsx:75
 #: src/features/accounts/customer/room/PersonRow.tsx:126
 msgid "Remove {first}"
 msgstr "Remove {first}"
+
+#: src/features/accounts/customer/room/confirm.tsx:77
+msgid "Remove {name}?"
+msgstr "Remove {name}?"
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2445,6 +2530,8 @@ msgid "run the rollout"
 msgstr "run the rollout"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:249
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:256
 msgid "Save"
 msgstr "Save"
 
@@ -2506,6 +2593,7 @@ msgstr "Select a field to set its kind, label and whether it is required. Drag t
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:244
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:671
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:258
 msgid "Send"
 msgstr "Send"
 
@@ -2571,6 +2659,7 @@ msgstr "Sending replaces the sent version."
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
 #: src/features/accounts/staff/AccountCardRoute.tsx:238
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:123
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:158
 msgid "Sent"
 msgstr "Sent"
 
@@ -2773,6 +2862,11 @@ msgstr "Signer reminded"
 #: src/features/accounts/staff/AccountCardRoute.tsx:933
 msgid "Signer replaced"
 msgstr "Signer replaced"
+
+#: src/features/accounts/customer/room/SigningChoice.tsx:43
+#: src/features/accounts/customer/room/SigningChoice.tsx:47
+msgid "Signing"
+msgstr "Signing"
 
 #~ msgid "Signing failed. Try again."
 #~ msgstr "Signing failed. Try again."
@@ -3056,6 +3150,7 @@ msgstr "The draft is ready. Check it, then publish."
 
 #: src/features/accounts/customer/WhoSigns.tsx:429
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:178
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:314
 msgid "The email address is empty."
 msgstr "The email address is empty."
 
@@ -3072,6 +3167,7 @@ msgstr "The invitation was sent to"
 
 #: src/features/accounts/customer/WhoSigns.tsx:440
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:194
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:329
 msgid "The name is empty."
 msgstr "The name is empty."
 
@@ -3114,16 +3210,19 @@ msgstr "Their data processing terms"
 
 #: src/features/accounts/customer/WhoSigns.tsx:419
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:166
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:270
 msgid "Their email address"
 msgstr "Their email address"
 
 #: src/features/accounts/customer/WhoSigns.tsx:445
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:201
+#: src/features/accounts/customer/room/SigningChoice.tsx:86
 msgid "Their job title"
 msgstr "Their job title"
 
 #: src/features/accounts/customer/WhoSigns.tsx:435
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:187
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:320
 msgid "Their name"
 msgstr "Their name"
 
@@ -3226,6 +3325,7 @@ msgstr "This invitation is for {invitee}"
 
 #: src/features/accounts/customer/WhoSigns.tsx:428
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:177
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:313
 msgid "This is not an email address."
 msgstr "This is not an email address."
 
@@ -3526,6 +3626,14 @@ msgstr "We could not find this document for {email}. It may have been sent to an
 msgid "We could not find this document for the address you use. It may have been sent to another address."
 msgstr "We could not find this document for the address you use. It may have been sent to another address."
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:458
+msgid "We email {first} a link to join your organisation. There, {first} reads the offer and the DPA."
+msgstr "We email {first} a link to join your organisation. There, {first} reads the offer and the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:460
+msgid "We email {first} a link. {first} can then read the offer and the DPA."
+msgstr "We email {first} a link. {first} can then read the offer and the DPA."
+
 #~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
 #~ msgstr "We emailed {0} at {1} a link to sign the data processing agreement."
 
@@ -3541,6 +3649,26 @@ msgstr "We could not find this document for the address you use. It may have bee
 #: src/features/accounts/customer/WhoSigns.tsx:213
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
 msgstr "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:484
+msgid "We emailed {name} at {email} a link to join. There, {first} can read the offer and the DPA."
+msgstr "We emailed {name} at {email} a link to join. There, {first} can read the offer and the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:492
+msgid "We emailed {name} at {email} a link to sign the DPA."
+msgstr "We emailed {name} at {email} a link to sign the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:490
+msgid "We emailed {name} at {email} a link to sign the offer and the DPA."
+msgstr "We emailed {name} at {email} a link to sign the offer and the DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:493
+msgid "We emailed {name} at {email} a link to sign the offer."
+msgstr "We emailed {name} at {email} a link to sign the offer."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:486
+msgid "We emailed {name} at {email}. {first} can now read the offer and the DPA."
+msgstr "We emailed {name} at {email}. {first} can now read the offer and the DPA."
 
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
@@ -3604,6 +3732,10 @@ msgstr "We will set up with you how you get invoices. Our answer appears under T
 #: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Website"
 msgstr "Website"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:339
+msgid "What does {first} do?"
+msgstr "What does {first} do?"
 
 #: src/features/accounts/customer/AccountPickerRoute.tsx:47
 msgid "What each of your organisations still has to do for dembrane."
@@ -3692,6 +3824,7 @@ msgid "Yes, I may"
 msgstr "Yes, I may"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:64
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:147
 msgid "you"
 msgstr "you"
 
@@ -3737,6 +3870,10 @@ msgstr "You were invited to {what}."
 #: src/features/accounts/customer/room/copy.ts:80
 msgid "You were invited. What do you do in this decision?"
 msgstr "You were invited. What do you do in this decision?"
+
+#: src/features/accounts/customer/room/confirm.tsx:48
+msgid "You will not sign it. {newName} gets a link to sign instead."
+msgstr "You will not sign it. {newName} gets a link to sign instead."
 
 #: src/features/accounts/signing/SignGate.tsx:462
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."

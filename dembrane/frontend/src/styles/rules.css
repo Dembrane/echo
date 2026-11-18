@@ -184,6 +184,12 @@
   --app-rule-color: var(--app-disabled);
   cursor: not-allowed;
 }
+/* A choice among many on a screen used at a desk as well (who does what, ECHO data room):
+ * the same box at the height of a chip, so six labels and Other fit a dialog. Still a
+ * 32px target; a phone gets the full-screen dialog with room to scroll. */
+:root .app-choice[data-density="compact"]:is(*, [data-with-border]) {
+  min-height: 32px;
+}
 
 /* Avatars are the one round thing besides the primary pill. */
 :root .mantine-Avatar-root {

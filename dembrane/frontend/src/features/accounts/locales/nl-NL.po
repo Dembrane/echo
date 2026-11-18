@@ -100,13 +100,37 @@ msgstr "{days, plural, one {# dag te laat} other {# dagen te laat}}"
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# dag} other {# dagen}}"
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:433
+msgid "{domain} is not your own email domain. Check that the address is right."
+msgstr "{domain} is niet je eigen e-maildomein. Check of het adres klopt."
+
 #: src/features/accounts/signing/SignRoute.tsx:579
 msgid "{done} of {total} filled"
 msgstr "{done} van {total} ingevuld"
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:447
+msgid "{first} also gets a link to sign the DPA."
+msgstr "{first} krijgt ook een link om de DPA te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:443
+msgid "{first} also gets a link to sign the offer and the DPA."
+msgstr "{first} krijgt ook een link om de offerte en de DPA te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:445
+msgid "{first} also gets a link to sign the offer."
+msgstr "{first} krijgt ook een link om de offerte te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:461
+msgid "{first} is already here. Only what {first} does changes."
+msgstr "{first} is er al. Alleen wat {first} doet, verandert."
+
 #: src/features/accounts/customer/room/copy.ts:102
 msgid "{first} stays a member of your organisation, but can no longer read the offer and the DPA here."
 msgstr "{first} blijft lid van je organisatie, maar kan de offerte en de DPA hier niet meer lezen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:488
+msgid "{first} was already here. What {first} does is updated."
+msgstr "{first} was er al. Wat {first} doet, is bijgewerkt."
 
 #: src/features/accounts/customer/room/copy.ts:101
 msgid "{first}'s invitation is withdrawn and the link we sent stops working."
@@ -132,9 +156,17 @@ msgstr "{months} × {0}: bij ondertekening, daarna elke 1e"
 msgid "{name} signed on {when}."
 msgstr "{name} ondertekende op {when}."
 
+#: src/features/accounts/customer/room/confirm.tsx:49
+msgid "{oldName} no longer signs it, and the link we sent {oldFirst} stops working. {newName} gets a new link."
+msgstr "{oldName} ondertekent dan niet meer, en de link die we {oldFirst} stuurden werkt niet meer. {newName} krijgt een nieuwe link."
+
 #: src/features/accounts/signing/SignGate.tsx:350
 msgid "{org} invited you to sign"
 msgstr "{org} vraagt je om te ondertekenen"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:510
+msgid "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
+msgstr "{reach, plural, one {Zodra {first} meedoet, zit diegene ook in # werkruimte waar elk lid in zit.} other {Zodra {first} meedoet, zit diegene ook in # werkruimtes waar elk lid in zit.}}"
 
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
@@ -313,6 +345,7 @@ msgstr "Opsommingstekens toevoegen"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:94
 #: src/features/accounts/customer/room/PeopleList.tsx:167
+#: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Add someone"
 msgstr "Iemand toevoegen"
 
@@ -421,6 +454,7 @@ msgstr "Bij ondertekening kruisen ze aan"
 #: src/features/accounts/signing/SignRoute.tsx:994
 #: src/features/accounts/customer/WhoSigns.tsx:366
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:221
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:397
 msgid "Back"
 msgstr "Terug"
 
@@ -539,6 +573,7 @@ msgstr "Gesprek gepland"
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:221
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:397
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -555,9 +590,30 @@ msgstr "Wijzigen"
 msgid "Change the draft"
 msgstr "Concept wijzigen"
 
+#: src/features/accounts/customer/room/AddPersonModal.tsx:54
+#~ msgid "Change what {0} does"
+#~ msgstr ""
+
 #: src/features/accounts/customer/room/PersonRow.tsx:117
+#: src/features/accounts/customer/room/AddPersonModal.tsx:55
 msgid "Change what {first} does"
 msgstr "Aanpassen wat {first} doet"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:254
+msgid "Change who signs"
+msgstr "Ondertekenaar wijzigen"
+
+#: src/features/accounts/customer/room/confirm.tsx:20
+msgid "Change who signs both documents?"
+msgstr "Wijzigen wie beide documenten ondertekent?"
+
+#: src/features/accounts/customer/room/confirm.tsx:22
+msgid "Change who signs the DPA?"
+msgstr "Wijzigen wie de DPA ondertekent?"
+
+#: src/features/accounts/customer/room/confirm.tsx:23
+msgid "Change who signs the offer?"
+msgstr "Wijzigen wie de offerte ondertekent?"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:616
 msgid "Changes to our terms"
@@ -951,6 +1007,7 @@ msgstr "Documenten die bij de overeenkomst horen"
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:153
 #: src/features/accounts/customer/NextSteps.tsx:132
 #: src/features/accounts/customer/NextSteps.tsx:471
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:520
 msgid "Done"
 msgstr "Klaar"
 
@@ -1315,6 +1372,10 @@ msgstr "In termijnen"
 msgid "In progress (call booked)"
 msgstr "Loopt (gesprek gepland)"
 
+#: src/features/accounts/customer/room/LabelChoices.tsx:80
+msgid "In your own words"
+msgstr "In je eigen woorden"
+
 #. placeholder {0}: money(doc.vat_cents)
 #: src/features/accounts/customer/Pay.tsx:146
 msgid "incl. {0} VAT"
@@ -1638,6 +1699,8 @@ msgstr "Nieuwe taak"
 #: src/features/accounts/customer/WhoSigns.tsx:380
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:233
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:239
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:246
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:251
 msgid "Next"
 msgstr "Volgende"
 
@@ -1807,6 +1870,10 @@ msgstr "Toelichting"
 msgid "Nothing to do right now."
 msgstr "Er is nu niets te doen."
 
+#: src/features/accounts/customer/room/SigningChoice.tsx:77
+msgid "Now: {now}"
+msgstr "Nu: {now}"
+
 #: src/features/accounts/staff/InvoicePlanFields.tsx:145
 msgid "Number of months"
 msgstr "Aantal maanden"
@@ -1871,6 +1938,10 @@ msgstr "Onboardingtaken ingetrokken"
 #: src/features/accounts/staff/LinesEditor.tsx:274
 msgid "One per line"
 msgstr "Een per regel"
+
+#: src/features/accounts/customer/room/SigningChoice.tsx:50
+msgid "One person signs each document."
+msgstr "Elk document ondertekent één persoon."
 
 #: src/features/accounts/customer/Pay.tsx:157
 msgid "Online"
@@ -2028,12 +2099,17 @@ msgstr "Optioneel. Een eerder evenement of een klant als voorbeeld voor de demo.
 
 #: src/features/accounts/customer/WhoSigns.tsx:446
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:202
+#: src/features/accounts/customer/room/SigningChoice.tsx:87
 msgid "Optional. It goes on the signature."
 msgstr "Optioneel. Komt bij de handtekening te staan."
 
 #: src/features/accounts/staff/TaskModals.tsx:71
 msgid "Optional. The task stays greyed out until this document is signed."
 msgstr "Optioneel. De taak blijft grijs tot dit document is ondertekend."
+
+#: src/features/accounts/customer/room/LabelChoices.tsx:51
+msgid "Optional. With nothing chosen, they are kept informed."
+msgstr "Optioneel. Kies je niets, dan blijft diegene op de hoogte."
 
 #: src/features/accounts/customer/room/PersonRow.tsx:108
 msgid "Options for {first}"
@@ -2050,6 +2126,10 @@ msgstr "Organisatie"
 #: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Naam organisatie"
+
+#: src/features/accounts/customer/room/LabelChoices.tsx:75
+msgid "Other"
+msgstr "Anders"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:262
 msgid "Other members"
@@ -2335,9 +2415,14 @@ msgstr "Herinner {name}"
 msgid "Reminded"
 msgstr "Herinnerd"
 
+#: src/features/accounts/customer/room/confirm.tsx:75
 #: src/features/accounts/customer/room/PersonRow.tsx:126
 msgid "Remove {first}"
 msgstr "{first} verwijderen"
+
+#: src/features/accounts/customer/room/confirm.tsx:77
+msgid "Remove {name}?"
+msgstr "{name} verwijderen?"
 
 #: src/features/accounts/staff/OfferExtras.tsx:94
 msgid "Remove annex"
@@ -2445,6 +2530,8 @@ msgid "run the rollout"
 msgstr "de invoering te leiden"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:249
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:256
 msgid "Save"
 msgstr "Opslaan"
 
@@ -2506,6 +2593,7 @@ msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te ve
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:244
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:671
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:258
 msgid "Send"
 msgstr "Versturen"
 
@@ -2571,6 +2659,7 @@ msgstr "Versturen vervangt de verstuurde versie."
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
 #: src/features/accounts/staff/AccountCardRoute.tsx:238
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:123
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:158
 msgid "Sent"
 msgstr "Verstuurd"
 
@@ -2765,6 +2854,11 @@ msgstr "Ondertekenaar herinnerd"
 #: src/features/accounts/staff/AccountCardRoute.tsx:933
 msgid "Signer replaced"
 msgstr "Ondertekenaar vervangen"
+
+#: src/features/accounts/customer/room/SigningChoice.tsx:43
+#: src/features/accounts/customer/room/SigningChoice.tsx:47
+msgid "Signing"
+msgstr "Ondertekenen"
 
 #~ msgid "Signing failed. Try again."
 #~ msgstr "Ondertekenen mislukt. Probeer het opnieuw."
@@ -3048,6 +3142,7 @@ msgstr "Het concept is klaar. Controleer het en publiceer."
 
 #: src/features/accounts/customer/WhoSigns.tsx:429
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:178
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:314
 msgid "The email address is empty."
 msgstr "Het e-mailadres is leeg."
 
@@ -3064,6 +3159,7 @@ msgstr "De uitnodiging is verstuurd naar"
 
 #: src/features/accounts/customer/WhoSigns.tsx:440
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:194
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:329
 msgid "The name is empty."
 msgstr "De naam is leeg."
 
@@ -3106,16 +3202,19 @@ msgstr "Hun voorwaarden voor gegevensverwerking"
 
 #: src/features/accounts/customer/WhoSigns.tsx:419
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:166
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:270
 msgid "Their email address"
 msgstr "Hun e-mailadres"
 
 #: src/features/accounts/customer/WhoSigns.tsx:445
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:201
+#: src/features/accounts/customer/room/SigningChoice.tsx:86
 msgid "Their job title"
 msgstr "Hun functie"
 
 #: src/features/accounts/customer/WhoSigns.tsx:435
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:187
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:320
 msgid "Their name"
 msgstr "Hun naam"
 
@@ -3218,6 +3317,7 @@ msgstr "Deze uitnodiging is voor {invitee}"
 
 #: src/features/accounts/customer/WhoSigns.tsx:428
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:177
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:313
 msgid "This is not an email address."
 msgstr "Dit is geen e-mailadres."
 
@@ -3518,6 +3618,14 @@ msgstr "We konden dit document niet vinden voor {email}. Misschien is het naar e
 msgid "We could not find this document for the address you use. It may have been sent to another address."
 msgstr "We konden dit document niet vinden voor het adres waarmee je bent ingelogd. Misschien is het naar een ander adres gestuurd."
 
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:458
+msgid "We email {first} a link to join your organisation. There, {first} reads the offer and the DPA."
+msgstr "We mailen {first} een link om lid te worden van je organisatie. Daar leest {first} de offerte en de DPA."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:460
+msgid "We email {first} a link. {first} can then read the offer and the DPA."
+msgstr "We mailen {first} een link. Daarna kan {first} de offerte en de DPA lezen."
+
 #~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
 #~ msgstr ""
 
@@ -3533,6 +3641,26 @@ msgstr "We konden dit document niet vinden voor het adres waarmee je bent ingelo
 #: src/features/accounts/customer/WhoSigns.tsx:213
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
 msgstr "We hebben {dpaName} op {dpaEmail} een link gemaild om de verwerkersovereenkomst te tekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:484
+msgid "We emailed {name} at {email} a link to join. There, {first} can read the offer and the DPA."
+msgstr "We hebben {name} op {email} een link gemaild om mee te doen. Daar kan {first} de offerte en de DPA lezen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:492
+msgid "We emailed {name} at {email} a link to sign the DPA."
+msgstr "We hebben {name} op {email} een link gemaild om de DPA te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:490
+msgid "We emailed {name} at {email} a link to sign the offer and the DPA."
+msgstr "We hebben {name} op {email} een link gemaild om de offerte en de DPA te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:493
+msgid "We emailed {name} at {email} a link to sign the offer."
+msgstr "We hebben {name} op {email} een link gemaild om de offerte te ondertekenen."
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:486
+msgid "We emailed {name} at {email}. {first} can now read the offer and the DPA."
+msgstr "We hebben {name} op {email} gemaild. {first} kan nu de offerte en de DPA lezen."
 
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
@@ -3596,6 +3724,10 @@ msgstr "We regelen samen met je hoe je facturen ontvangt. Ons antwoord verschijn
 #: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Website"
 msgstr "Website"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:339
+msgid "What does {first} do?"
+msgstr "Wat doet {first}?"
 
 #: src/features/accounts/customer/AccountPickerRoute.tsx:47
 msgid "What each of your organisations still has to do for dembrane."
@@ -3684,6 +3816,7 @@ msgid "Yes, I may"
 msgstr "Ja, dat mag ik"
 
 #: src/features/accounts/customer/room/PersonRow.tsx:64
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:147
 msgid "you"
 msgstr "jij"
 
@@ -3729,6 +3862,10 @@ msgstr "Je bent uitgenodigd om {what}."
 #: src/features/accounts/customer/room/copy.ts:80
 msgid "You were invited. What do you do in this decision?"
 msgstr "Je bent uitgenodigd. Wat doe je bij dit besluit?"
+
+#: src/features/accounts/customer/room/confirm.tsx:48
+msgid "You will not sign it. {newName} gets a link to sign instead."
+msgstr "Dan onderteken jij niet. {newName} krijgt een link om te ondertekenen."
 
 #: src/features/accounts/signing/SignGate.tsx:462
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."

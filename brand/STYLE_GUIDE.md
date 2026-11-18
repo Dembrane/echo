@@ -216,6 +216,11 @@ A Royal Blue outline with Royal Blue text can be used on anything pressable that
 - Validation errors inline, close to the field
 - Don't disable submit buttons while form is incomplete. Show errors on attempt
 
+### Choices
+
+- A choice you tap (a label, an answer) is a full box in the control grey; chosen, it is the blue box on the action tint. No check mark, so a choice keeps its width.
+- On a screen made for a phone, a choice is at least 44px tall. In a dialog also used at a desk where many sit together (what someone does in a decision), it takes the compact height of 32px (`data-density="compact"` in rules.css).
+
 ### Cards
 
 - Parchment background by default

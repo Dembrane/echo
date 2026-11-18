@@ -316,3 +316,138 @@ describe("send", () => {
 		expect(screen.queryByTestId("person-workspaces")).toBeNull();
 	});
 });
+
+// Correction B: signing is set in the same flow, under the labels, as the signing markers,
+// for those who may name a signer; a change of signer is confirmed inside the dialog.
+describe("signing, in the same flow", () => {
+	type OnName = (
+		kind: "offer" | "dpa",
+		documentId: string,
+		body: { email: string; name: string; role: string | null },
+	) => Promise<unknown>;
+	const OFFER = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
+	const DPA = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a3c";
+	const showSigning = async ({
+		me = admin,
+		offerSigner = null,
+		preset,
+	}: {
+		me?: Me;
+		offerSigner?: { email: string; name: string } | null;
+		preset?: { signs?: ("offer" | "dpa")[] };
+	} = {}) => {
+		const AddPersonSteps = await load();
+		const onSubmit = vi.fn<Submit>(async () => answer());
+		const onName = vi.fn<OnName>(async () => ({}));
+		render(
+			<I18nProvider i18n={i18n}>
+				<MantineProvider env="test">
+					<MemoryRouter>
+						<AddPersonSteps
+							me={me}
+							myEmail="robin@example-town.example"
+							people={[kim]}
+							preset={preset}
+							signing={{
+								docs: {
+									dpa: { documentId: DPA, signer: null },
+									offer: { documentId: OFFER, signer: offerSigner },
+								},
+								onName,
+							}}
+							onSubmit={onSubmit}
+							onCancel={vi.fn()}
+							onDone={vi.fn()}
+						/>
+					</MemoryRouter>
+				</MantineProvider>
+			</I18nProvider>,
+		);
+		return { onName, onSubmit };
+	};
+	const toWhat = () => {
+		type("person-name", "Anna Bakker");
+		type("person-email", "anna@example-town.example");
+		next();
+	};
+
+	it("shows Signs the offer and Signs the DPA as signing markers, apart from the labels", async () => {
+		await showSigning();
+		toWhat();
+		for (const kind of ["offer", "dpa"]) {
+			const choice = screen.getByTestId(`sign-${kind}`);
+			expect(choice.getAttribute("data-sign")).toBe(kind);
+			expect(choice.getAttribute("data-variant")).toBe("outline");
+			expect(choice.querySelector("svg")).not.toBeNull();
+			expect(choice.classList.contains("app-choice")).toBe(false);
+			expect(choice.hasAttribute("data-label")).toBe(false);
+		}
+		expect(screen.getByTestId("sign-offer").textContent).toContain(
+			"Signs the offer",
+		);
+		expect(screen.getByTestId("sign-dpa").textContent).toContain(
+			"Signs the DPA",
+		);
+	});
+
+	it("asks the optional job title only once a signing duty is chosen", async () => {
+		await showSigning();
+		toWhat();
+		expect(screen.queryByTestId("person-job")).toBeNull();
+		fireEvent.click(screen.getByTestId("sign-offer"));
+		expect(screen.getByTestId("sign-offer").hasAttribute("data-selected")).toBe(
+			true,
+		);
+		expect(screen.getByTestId("person-job")).toBeTruthy();
+	});
+
+	it("names the signer with the job title, then brings them in, never as a label", async () => {
+		const { onName, onSubmit } = await showSigning();
+		toWhat();
+		fireEvent.click(screen.getByTestId("sign-offer"));
+		type("person-job", "Wethouder");
+		next();
+		next();
+		await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+		expect(onName).toHaveBeenCalledWith("offer", OFFER, {
+			email: "anna@example-town.example",
+			name: "Anna Bakker",
+			role: "Wethouder",
+		});
+		expect(onSubmit.mock.calls[0]?.[0].labels).toEqual([]);
+	});
+
+	it("confirms inside the dialog before taking a document from someone who signs it now", async () => {
+		const { onName, onSubmit } = await showSigning({
+			offerSigner: { email: "noor@example-town.example", name: "Noor Example" },
+		});
+		toWhat();
+		expect(screen.getByText("Now: Noor Example")).toBeTruthy();
+		fireEvent.click(screen.getByTestId("sign-offer"));
+		next();
+		next();
+		expect(screen.getByTestId("new-signer-notice").textContent).toContain(
+			"Noor Example no longer signs it",
+		);
+		expect(onName).not.toHaveBeenCalled();
+		expect(onSubmit).not.toHaveBeenCalled();
+		next();
+		await vi.waitFor(() => expect(onName).toHaveBeenCalledTimes(1));
+	});
+
+	it("opens with the signing duty chosen when the flow starts from who signs", async () => {
+		await showSigning({ preset: { signs: ["dpa"] } });
+		toWhat();
+		expect(screen.getByTestId("sign-dpa").hasAttribute("data-selected")).toBe(
+			true,
+		);
+		expect(screen.getByTestId("person-job")).toBeTruthy();
+	});
+
+	it("shows no signing to someone who may not name a signer", async () => {
+		await showSigning({ me: colleague });
+		toWhat();
+		expect(screen.queryByTestId("sign-offer")).toBeNull();
+		expect(document.querySelector("[data-sign]")).toBeNull();
+	});
+});
