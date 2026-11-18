@@ -26,6 +26,8 @@ How dembrane is organised, who can do what, and what each plan includes.
   what needs a paid plan.
 - *[Offers & invoices](./offers-and-invoices.md)*: how your organisation gets an offer,
   signs it and receives its invoice.
+- *[Sharing an offer with your team](./sharing-offers-with-your-team.md)*: bring colleagues
+  in to read the offer and the DPA, and say who does what.
 - *[Invites & access](./invites-and-access.md)*: how people join an organisation or a
   workspace.
 - *[Visibility & discovery](./visibility-and-discovery.md)*: who can find and join a

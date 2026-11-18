@@ -23,6 +23,7 @@ works.
 - [Roles & permissions](./features/roles-and-permissions.md)
 - [Tiers & billing](./features/tiers-and-billing.md)
 - [Offers & invoices](./features/offers-and-invoices.md)
+- [Sharing an offer with your team](./features/sharing-offers-with-your-team.md)
 - [Invites & access](./features/invites-and-access.md)
 - [Visibility & discovery](./features/visibility-and-discovery.md)
 - [Account & security](./features/account-and-security.md)
