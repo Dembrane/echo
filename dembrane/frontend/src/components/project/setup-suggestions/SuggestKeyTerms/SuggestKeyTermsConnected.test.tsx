@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SUGGESTIONS } from "../setupSuggestions.fixture";
@@ -28,7 +28,9 @@ const Harness = ({
 	context?: string;
 }) => {
 	const [v, setV] = useState("Klokgebouw");
-	value = v;
+	useEffect(() => {
+		value = v;
+	});
 	return (
 		<SuggestKeyTermsConnected
 			project={{
