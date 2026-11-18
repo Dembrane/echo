@@ -24,11 +24,11 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 /**
- * Measured on fix/portal-recording-bar-from-example at 25fdd82c (2026-11-11), after merging
- * main's free-tier work (#1311, #1359): the portal's wrap-up, recording limit and
- * not-taking notice, which participants need on the recording screen.
+ * Measured in CI on feat/react-compiler-1.0 (2026-11-18). React Compiler 1.0 compiles more
+ * of the portal than the beta did, and its memoization adds +1,683 bytes across those
+ * components. The other +6,565 since the previous baseline (572,591, 2026-11-11) came from main.
  */
-const BASELINE_GZIP_BYTES = 572_591;
+const BASELINE_GZIP_BYTES = 580_839;
 /** Room for ordinary drift (a few strings, a small fix) before the check objects. */
 const MARGIN_BYTES = 8 * 1024;
 const START_ROUTE = "src/portal/routes/ParticipantStart.tsx";
