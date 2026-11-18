@@ -1521,7 +1521,8 @@ const RoomLabels = z
 /**
  * POST .../room/people: brings a colleague into the room, or changes what someone already
  * in it does. Someone who is not a member gets an invitation as a plain member and an
- * email; a member gets room access and an email; an owner, admin or Billing member is in
+ * email, from an owner or admin only (else 403 room.new_person_admins_only, as on the
+ * Members page); a member gets room access and an email; an owner, admin or Billing member is in
  * by their role, so only their labels change and nothing is sent.
  */
 export const AddRoomPersonRequest = z.object({
@@ -1576,6 +1577,8 @@ export const RoomPage = z.object({
       app_user_id: Uuid,
       room: z.enum(["by_role", "by_invite"]),
       may_dismiss_hints: z.boolean(),
+      /** Owners and admins bring in someone who is not a member yet; others bring in members. */
+      may_invite_new: z.boolean(),
       labels_question: z.boolean(),
     })
     .nullable(),

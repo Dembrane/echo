@@ -703,6 +703,7 @@ export const roomPage: Out<typeof RoomPage> = {
     app_user_id: CUSTOMER_APP_USER,
     room: "by_role",
     may_dismiss_hints: true,
+    may_invite_new: true,
     labels_question: false,
   },
 };
@@ -716,6 +717,7 @@ export const roomPageAsColleague: Out<typeof RoomPage> = {
     app_user_id: COLLEAGUE_APP_USER,
     room: "by_invite",
     may_dismiss_hints: false,
+    may_invite_new: false,
     labels_question: true,
   },
 };
