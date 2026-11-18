@@ -394,6 +394,11 @@ msgid "error.member.owner_removes_owner"
 msgstr "Solo un propietario puede eliminar a otro propietario."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.new_person_admins_only"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Solo se pueden verificar afirmaciones. Elige una afirmación e inténtalo de nuevo."
@@ -424,6 +429,16 @@ msgid "error.project.not_owner"
 msgstr "Solo el propietario de este proyecto puede hacer esto."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:33
+msgid "error.room.remove_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Solo la persona que envió esta invitación o un administrador puede cancelarla."
@@ -452,6 +467,11 @@ msgstr "Solo los administradores del espacio de trabajo pueden compartir proyect
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Las opciones elegidas al firmar no van con facturación mensual, a plazos o sin coste."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +779,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Aún no hay ningún método de pago que actualizar. Elige un plan primero."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.no_labels_question"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Esta cuenta ya tiene una suscripción activa."
@@ -1017,6 +1042,11 @@ msgstr "Esta persona ya es miembro de tu organización, por lo que no puede unir
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Esta persona es externa en uno de tus espacios de trabajo. Quítale ese rol primero y luego asígnale el de administrador o propietario."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:29
+msgid "error.room.person_not_found"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1657,11 @@ msgstr "Escribe algo para el insight."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Escribe algo para que la memoria lo guarde."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

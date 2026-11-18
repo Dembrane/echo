@@ -394,6 +394,11 @@ msgid "error.member.owner_removes_owner"
 msgstr "Nur ein Eigentümer kann einen anderen Eigentümer entfernen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.new_person_admins_only"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Nur Behauptungen können überprüft werden. Wähle eine Behauptung aus und versuche es erneut."
@@ -424,6 +429,16 @@ msgid "error.project.not_owner"
 msgstr "Dies kann nur der Eigentümer dieses Projekts tun."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:33
+msgid "error.room.remove_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Nur die Person, die diese Einladung gesendet hat, oder ein Administrator kann sie zurückziehen."
@@ -452,6 +467,11 @@ msgstr "Nur Administratoren des Arbeitsbereichs können Projekte teilen."
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Beim Unterzeichnen gewählte Optionen passen nicht zu monatlicher Abrechnung, Raten oder kostenlos."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +779,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Es gibt noch keine Zahlungsmethode zum Aktualisieren. Wähle zuerst einen Tarif."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.no_labels_question"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Dieses Konto hat bereits ein aktives Abonnement."
@@ -1017,6 +1042,11 @@ msgstr "Diese Person ist bereits Mitglied deiner Organisation und kann daher nic
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Diese Person ist extern in einem deiner Arbeitsbereiche. Entferne zuerst diese Rolle und ernenne sie dann zum Administrator oder Eigentümer."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:29
+msgid "error.room.person_not_found"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1657,11 @@ msgstr "Schreibe etwas für die Erkenntnis."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Schreibe etwas, das behalten werden soll."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -394,6 +394,11 @@ msgid "error.member.owner_removes_owner"
 msgstr "Only an owner can remove another owner."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.new_person_admins_only"
+msgstr "Only an owner or admin can invite someone who is not a member yet. You can add a colleague who is already a member."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Only claims can be fact-checked. Pick a claim and try again."
@@ -424,6 +429,16 @@ msgid "error.project.not_owner"
 msgstr "Only the owner of this project can do this."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr "Only the person who invited them, an admin or Billing can change what they do."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:33
+msgid "error.room.remove_forbidden"
+msgstr "Only the person who invited them, an admin or Billing can take them out."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Only the person who sent this invite or an admin can withdraw it."
@@ -452,6 +467,11 @@ msgstr "Only workspace admins can share projects."
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Options picked at signing do not go with monthly, instalment or no-charge invoicing."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr "Owners, admins and Billing are in the room by their role. Change their role on the Members page instead."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +779,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "There is no payment method to update yet. Choose a plan first."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.no_labels_question"
+msgstr "There is nothing to answer here."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "This account already has an active subscription."
@@ -1017,6 +1042,11 @@ msgstr "This person is already a member of your organisation, so they cannot joi
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "This person is an external on one of your workspaces. Remove that role first, then make them an admin or owner."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:29
+msgid "error.room.person_not_found"
+msgstr "This person is no longer in the room."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1657,11 @@ msgstr "Write something for the insight."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Write something for the memory to keep."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr "You already said what you do here."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

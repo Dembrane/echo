@@ -394,6 +394,11 @@ msgid "error.member.owner_removes_owner"
 msgstr "Odebrat jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.new_person_admins_only"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Ověřovat lze pouze tvrzení. Vyberte tvrzení a zkuste to znovu."
@@ -424,6 +429,16 @@ msgid "error.project.not_owner"
 msgstr "Toto může provést pouze vlastník tohoto projektu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:33
+msgid "error.room.remove_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Tuto pozvánku může stáhnout pouze ten, kdo ji odeslal, nebo správce."
@@ -452,6 +467,11 @@ msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Možnosti volené při podpisu nejdou dohromady s měsíční, splátkovou ani bezplatnou fakturací."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -759,6 +779,11 @@ msgid "error.billing.no_payment_profile"
 msgstr "Zatím nelze aktualizovat žádnou platební metodu. Nejprve si vyberte tarif."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.no_labels_question"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
 msgstr "Tento účet již má aktivní předplatné."
@@ -1017,6 +1042,11 @@ msgstr "Tato osoba už je členem vaší organizace, takže se nemůže připoji
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
 msgstr "Tato osoba je externistou v jednom z vašich pracovních prostorů. Nejprve tuto roli odeberte a pak ji nastavte jako správce nebo vlastníka."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:29
+msgid "error.room.person_not_found"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
@@ -1627,6 +1657,11 @@ msgstr "Napište k postřehu nějaký text."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Napište, co si má paměť uchovat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

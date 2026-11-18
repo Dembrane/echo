@@ -26,6 +26,7 @@ export const accountKeys = {
 	list: (stage: string | null) =>
 		["accounts", "staff", "list", stage ?? "all"] as const,
 	page: (orgId: string) => ["accounts", "page", orgId] as const,
+	room: (orgId: string) => ["accounts", "room", orgId] as const,
 };
 
 export const useAccountPage = (orgId: string | undefined) =>
@@ -33,6 +34,19 @@ export const useAccountPage = (orgId: string | undefined) =>
 		enabled: Boolean(orgId),
 		queryFn: () => call("accountPage", { params: { orgId: orgId as string } }),
 		queryKey: accountKeys.page(orgId ?? ""),
+	});
+
+/**
+ * The data room's people and what the caller may do there. Writes go through
+ * useAccountsMutation ("addRoomPerson", "removeRoomPerson", "answerRoomLabels",
+ * "dismissRoomHint"), which refreshes this key with the rest of ["accounts"].
+ */
+export const useRoom = (orgId: string | undefined, enabled = true) =>
+	useQuery({
+		enabled: Boolean(orgId) && enabled,
+		queryFn: () => call("roomPage", { params: { orgId: orgId as string } }),
+		queryKey: accountKeys.room(orgId ?? ""),
+		retry: false,
 	});
 
 export const useDocument = (
