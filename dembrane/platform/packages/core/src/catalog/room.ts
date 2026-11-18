@@ -42,4 +42,10 @@ export const room = {
     description:
       "Someone other than an owner or admin (Billing, or a room member) tried to bring into the room an address that is not a member of the organisation, as on the Members page.",
   },
+  "room.name_signer_admins_only": {
+    action: "contact_admin",
+    detail: "Only an owner or admin can name someone to sign",
+    description:
+      "Billing named someone to sign the offer or the DPA, or tried to change who signs, on the signer route or in the answer to who signs. Someone who is not a member is invited in when named, and bringing someone new in is for owners and admins, as on the Members page and in the room.",
+  },
 } as const satisfies Codes<"room">;

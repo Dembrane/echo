@@ -72,7 +72,6 @@ run("who may name a signer", () => {
     const task = (await store.tasks(w.db, w.orgId)).find(
       (t) => t.code === "who_signs" && t.documentId === offer.id,
     );
-    expect(dpa).toBeTruthy();
     expect(task?.status).toBe("open");
     return { offerId: offer.id, dpaId: dpa?.id as string, taskId: task?.id as string };
   }
@@ -230,7 +229,7 @@ run("who may name a signer", () => {
     expect((await store.signatureOf(w.db, offerId))?.email).toBe("billing@example.test");
   });
 
-  test("who signs: Billing answering \"I sign\" settles it; an answer by Billing that names anyone is refused whole, with nothing applied", async () => {
+  test('who signs: Billing answering "I sign" settles it; an answer by Billing that names anyone is refused whole, with nothing applied', async () => {
     const { offerId, dpaId, taskId } = await pushOffer();
     const path = `${C()}/tasks/${taskId}/who-signs`;
     const officer = { name: "Data Officer", email: "dpo@example.test", role: "FG" };
@@ -360,5 +359,40 @@ run("who may name a signer", () => {
     }
     expect([made, status]).toEqual([10, 200]);
     expect((await call(w, "POST", path, "admin", first)).status).toBe(429);
+  });
+  test("who signs: once the DPA no longer waits, an answer by Billing that names a DPA signer is still refused", async () => {
+    // An hour on, past the limit the test above used up.
+    w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
+    const { dpaId } = await pushOffer();
+    // The admin takes the DPA back and signs it, so the next offer goes out without one.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${dpaId}/signer`, "admin", {
+          name: "admin",
+          email: "admin@example.test",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+    expect((await sign(dpaId, "admin", "Anna de Vries")).status).toBe(200);
+    const next = await pushOffer();
+    expect(next.dpaId).toBeUndefined();
+    const path = `${C()}/tasks/${next.taskId}/who-signs`;
+    const officer = { name: "Data Officer", email: "late-dpo@example.test", role: null };
+    const r = await call(w, "POST", path, "billing", {
+      offer_signer: null,
+      dpa_same: false,
+      dpa_signer: officer,
+      dpia: false,
+    });
+    expect([r.status, codeOf(r)]).toEqual([403, REFUSED]);
+    expect((await store.task(w.db, w.orgId, next.taskId))?.status).toBe("open");
+    const ok = await call(w, "POST", path, "billing", {
+      offer_signer: null,
+      dpa_same: true,
+      dpa_signer: null,
+      dpia: false,
+    });
+    expect(ok.status).toBe(200);
   });
 });

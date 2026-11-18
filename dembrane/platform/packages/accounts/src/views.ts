@@ -50,6 +50,8 @@ export function documentSummary(
   remindedAt: Date | null = null,
   /** A room member reads it: no download until it is signed. */
   readOnly = false,
+  /** The caller may name someone to sign: an owner or admin, on the customer side. */
+  mayNameSigner = false,
 ) {
   const signedPdfUrl =
     sig && doc.status !== "sent" && doc.status !== "viewed"
@@ -93,6 +95,7 @@ export function documentSummary(
         }
       : null,
     may_download: !readOnly || signedPdfUrl !== null,
+    may_name_signer: mayNameSigner,
     ...(doc.kind === "invoice" && {
       invoice: {
         number: doc.reference,
