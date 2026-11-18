@@ -101,8 +101,98 @@ export function setFixtureActor(next: Actor) {
 	} catch {}
 }
 
+/** `?room=` (harness): how full the room starts. */
+type Seed = "typical" | "empty" | "crowded" | "unfilled";
+const seedOf = (): Seed => {
+	try {
+		const v = new URLSearchParams(window.location.search).get("room");
+		return v === "empty" || v === "crowded" || v === "unfilled" ? v : "typical";
+	} catch {
+		return "typical";
+	}
+};
+/** `?visit=0|1|3` (harness): how many labels Sam was given, for the first-visit card. */
+const visitLabels = (): RoomLabelT[] | null => {
+	try {
+		const v = new URLSearchParams(window.location.search).get("visit");
+		if (v === "0") return [];
+		if (v === "1") return ["rollout"];
+		if (v === "3") return ["go_ahead", "rollout", "it_security"];
+	} catch {}
+	return null;
+};
+
+const MORE = [
+	"Eva Jansen",
+	"Pieter Mulder",
+	"Lotte Kok",
+	"Daan Visser",
+	"Ilse Smits",
+	"Ruben Smit",
+	"Sem de Jong",
+	"Noa Bos",
+	"Kees van Dam",
+	"Fatima El Amrani",
+];
+const member = (name: string, i: number): RoomMember => ({
+	app_user_id: `0199a1b6-0000-7000-8000-${String(100 + i).padStart(12, "0")}`,
+	email: `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@example-town.example`,
+	name,
+	role: "member",
+});
+
 /** The seeded room: Robin, Sam, Noor (invited) and Kim from the contract fixtures, and Bo. */
 export function seedRoom(): RoomState {
+	const state = baseRoom();
+	const seed = seedOf();
+	const sam = state.rows.find((r) => r.email === ACTORS.colleague.email);
+	const visit = visitLabels();
+	if (sam && visit) sam.labels = visit;
+	if (seed === "empty") {
+		state.rows = state.rows.filter((r) => r.email === ACTORS.admin.email);
+		state.invites = [];
+		state.members = state.members.filter(
+			(m) => m.email === ACTORS.admin.email || m.email === ACTORS.member.email,
+		);
+		state.signers = { dpa: null, offer: null };
+	}
+	if (seed === "typical" || seed === "crowded") {
+		const extra = MORE.slice(0, 4).map(member);
+		state.members.push(...extra);
+		// Eva is in the room with nothing said yet; the others are members not added.
+		const eva = extra[0] as RoomMember;
+		state.rows.push({
+			access_granted_at: "2026-09-29T09:00:00.000Z",
+			email: eva.email,
+			id: "0199a1b8-0000-7000-8000-000000000010",
+			invited_by: {
+				app_user_id: ACTORS.admin.app_user_id,
+				name: "Robin Example",
+			},
+			labels: [],
+			labels_answered_at: "2026-09-29T10:00:00.000Z",
+			name: eva.name,
+			other: null,
+		});
+	}
+	if (seed === "crowded")
+		for (let i = 0; i < 40; i++)
+			state.members.push({
+				...member(
+					`${MORE[i % MORE.length]} ${Math.floor(i / MORE.length) + 2}`,
+					20 + i,
+				),
+				email: `member.${i + 1}@example-town.example`,
+			});
+	if (seed === "unfilled")
+		for (const r of state.rows) {
+			r.labels = [];
+			r.other = null;
+		}
+	return state;
+}
+
+function baseRoom(): RoomState {
 	const people = fx.roomPage.people;
 	const members: RoomMember[] = people
 		.filter((p) => p.org_role !== null && p.app_user_id !== null)
@@ -413,18 +503,20 @@ export function dismissRoomHint(r: RoomState, label: string) {
 	return { dismissed_hints: hintsInOrder(r.dismissed) };
 }
 
-/** The invitation page reads Noor's invitation for any token; `closed` reads closed. */
+/** The invitation page reads Noor's invitation for any token; see roomInvite for states. */
 const INVITED = "noor@example-town.example";
 
 export function roomInvite(r: RoomState, orgName: string, token: string) {
 	const row = rowOf(r, INVITED);
 	if (!row) throw refuse(404, "invite.not_found");
 	const [first, ...rest] = row.name.split(" ");
-	const status = memberByEmail(r, row.email)
-		? ("accepted" as const)
-		: token.startsWith("closed") || !r.invites.includes(row.email)
-			? ("closed" as const)
-			: ("open" as const);
+	// The harness reads the other states by token: `accepted…`, `closed…`.
+	const status =
+		memberByEmail(r, row.email) || token.startsWith("accepted")
+			? ("accepted" as const)
+			: token.startsWith("closed") || !r.invites.includes(row.email)
+				? ("closed" as const)
+				: ("open" as const);
 	return {
 		has_account: false,
 		inviter: row.invited_by ? { name: row.invited_by.name } : null,

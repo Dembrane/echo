@@ -26,7 +26,10 @@ export function ReadOnlyTasks({
 }) {
 	const { i18n } = useLingui();
 	return (
-		<PageSection title={<Trans>Tasks</Trans>} count={tasks.length}>
+		<PageSection
+			title={<Trans>On the offer and the DPA</Trans>}
+			count={tasks.length}
+		>
 			<div data-testid="room-tasks">
 				{tasks.length === 0 ? (
 					<Text c="dimmed" py="sm">
@@ -50,8 +53,8 @@ export function ReadOnlyTasks({
 									marker={<KindIcon kind={kindOf(task)} quiet />}
 									title={title}
 									fact={
-										<Stack gap={4}>
-											<Text size="sm" c="dimmed">
+										<Stack gap={4} component="span">
+											<Text span display="block" size="sm" c="dimmed">
 												{[
 													taskStatusLabel(task.status),
 													doc ? documentTitle(doc) : null,
@@ -60,20 +63,24 @@ export function ReadOnlyTasks({
 													.filter(Boolean)
 													.join(" · ")}
 											</Text>
-											{body && <Text size="sm">{body}</Text>}
+											{body && (
+												<Text span display="block" size="sm">
+													{body}
+												</Text>
+											)}
 											{task.response_text && (
-												<Text size="sm">
+												<Text span display="block" size="sm">
 													<Trans>Answer: {answer}</Trans>
 												</Text>
 											)}
 											{task.response_file_name && (
-												<Text size="sm">
+												<Text span display="block" size="sm">
 													<Trans>File:</Trans>{" "}
 													<span>{task.response_file_name}</span>
 												</Text>
 											)}
 											{task.review_note && (
-												<Text size="sm">
+												<Text span display="block" size="sm">
 													<Trans>From dembrane: {note}</Trans>
 												</Text>
 											)}

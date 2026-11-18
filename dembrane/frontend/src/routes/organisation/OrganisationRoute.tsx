@@ -749,7 +749,8 @@ export const OrganisationRoute = () => {
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
 				    per-workspace concept, shown in the column headers). */}
-				<Group justify="space-between" align="flex-start" wrap="nowrap">
+				{/* Wraps on a phone, so the room's pictures go under the name, not beside it. */}
+				<Group justify="space-between" align="flex-start" gap="sm">
 					<Group gap="md" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
 						{organisation.logo_url && (
 							<Image

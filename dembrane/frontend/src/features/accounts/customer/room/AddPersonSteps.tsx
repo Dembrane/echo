@@ -309,9 +309,15 @@ export function AddPersonSteps({
 									setNameFilled(false);
 								}
 							}}
-							data={people
-								.filter((p) => p.app_user_id !== me.app_user_id)
-								.map((p) => ({ label: p.email, value: p.email }))}
+							// Suggestions once they type, so the list never covers the name field
+							// before anything is asked of it.
+							data={
+								address
+									? people
+											.filter((p) => p.app_user_id !== me.app_user_id)
+											.map((p) => ({ label: p.email, value: p.email }))
+									: []
+							}
 							renderOption={({ option }) => {
 								const p = people.find((x) => x.email === option.value);
 								return p ? (

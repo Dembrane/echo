@@ -33,7 +33,7 @@ export function RoomSection({ orgId }: { orgId: string }) {
 		return id ? `/o/${orgId}/account/documents/${id}/sign` : null;
 	};
 	return (
-		<Stack gap="md">
+		<Stack gap="xl">
 			{me.labels_question && mine && (
 				<FirstVisitQuestion
 					inviter={mine.invited_by?.name ?? null}

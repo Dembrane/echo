@@ -24,14 +24,14 @@ export function LabelChoices({
 	value,
 	onChange,
 	question,
-	hint = true,
+	hint = "them",
 }: {
 	value: LabelValue;
 	onChange: (v: LabelValue) => void;
-	/** The question above the choices, naming the person. */
+	/** The question above the choices, naming the person; null where it was just asked. */
 	question: ReactNode;
-	/** Whether to say that the question is optional. */
-	hint?: boolean;
+	/** The optional-ness line under the question, about them or about you. */
+	hint?: "them" | "you" | null;
 }) {
 	const toggle = (l: RoomLabelT) =>
 		onChange({
@@ -45,12 +45,17 @@ export function LabelChoices({
 	return (
 		<Stack gap="sm">
 			<Stack gap={4}>
-				<Text size="sm">{question}</Text>
-				{hint && (
+				{question && <Text size="sm">{question}</Text>}
+				{hint === "them" && (
 					<Text size="xs" c="dimmed">
 						<Trans>
 							Optional. With nothing chosen, they are kept informed.
 						</Trans>
+					</Text>
+				)}
+				{hint === "you" && (
+					<Text size="xs" c="dimmed">
+						<Trans>Optional. With nothing chosen, you are kept informed.</Trans>
 					</Text>
 				)}
 			</Stack>

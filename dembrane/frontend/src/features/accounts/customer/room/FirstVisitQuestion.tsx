@@ -72,7 +72,8 @@ export function FirstVisitQuestion({
 						<LabelChoices
 							value={value}
 							onChange={setValue}
-							question={t`What do you do in this decision?`}
+							question={blank ? null : t`What do you do in this decision?`}
+							hint="you"
 						/>
 						<Group gap="md">
 							<Button
