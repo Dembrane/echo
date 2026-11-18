@@ -2096,8 +2096,8 @@ function SimpleDataTable<T extends object>({
 	initialSorting?: SortingState;
 	emptyLabel: string;
 }) {
-	// See BillingTable for the rationale.
-	"use no memo";
+	// React Compiler skips this component by itself: it knows useReactTable
+	// returns a table that changes without changing identity.
 	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
 	const table = useReactTable<T>({
 		columns,
