@@ -178,6 +178,8 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	}, [doc.id, doc.status, orgId, queryClient]);
 
 	if (doc.status === "signed") return <Signed doc={doc} orgId={orgId} />;
+	// A room member reads: the pages and the texts it includes, nothing to fill in.
+	if (doc.access === "room") return <Reading doc={doc} orgId={orgId} />;
 	if (doc.status !== "sent" && doc.status !== "viewed") {
 		return (
 			<>
@@ -207,6 +209,64 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	if (doc.access === "member" && doc.signer)
 		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/**
+ * A room member reading the offer or the DPA: its pages and the legal texts it includes.
+ * Nothing to fill in or sign, and no download or print while the server says it may not
+ * be saved (may_download); who signs it is said above the pages.
+ */
+function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+	const pdf = usePdfData(doc.file_url);
+	const href = usePdfHref(doc.may_download ? doc.file_url : null);
+	const signer = doc.signer?.name || doc.signer?.email || "";
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="md" py="lg" px="md" data-testid="sign-reading">
+				<Stack gap="lg">
+					<Text c="dimmed">
+						{signer ? (
+							<Trans>You can read this document. {signer} signs it.</Trans>
+						) : (
+							<Trans>
+								You can read this document. An owner, admin or Billing signs
+								it.
+							</Trans>
+						)}
+					</Text>
+					{href && (
+						<Group>
+							<Button
+								{...secondary}
+								component="a"
+								href={href}
+								target="_blank"
+								rel="noreferrer"
+								data-testid="doc-pdf"
+							>
+								<Trans>Download PDF</Trans>
+							</Button>
+						</Group>
+					)}
+					{pdf.data ? (
+						<PdfPages data={pdf.data} />
+					) : pdf.isError ? (
+						<Text size="sm" c="dimmed">
+							<Trans>
+								The document could not be loaded. Try again in a moment.
+							</Trans>
+						</Text>
+					) : (
+						<Stack align="center" py="xl">
+							<Loader size="sm" />
+						</Stack>
+					)}
+					<LegalDocuments doc={doc} />
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /** Signed by some, waiting for the rest: who signed, and whose signature comes next. */

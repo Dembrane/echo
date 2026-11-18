@@ -102,9 +102,10 @@ export const OrgHomeView = () => {
 
 	// Tasks and Documents show for orgs in the tasks summary: the backend lists an org
 	// there when it has account content (a stage, a task or a document) and the caller is
-	// an owner, admin or billing member. They stay when nothing is pending, so the
-	// documents, billing details and invoices are always one click away; Tasks counts what
-	// waits on the caller.
+	// an owner, admin or billing member, or a member brought into the data room (access
+	// "room": they read the offer, the DPA and the tasks on them). They stay when nothing
+	// is pending, so the documents are always one click away; Tasks counts what waits on
+	// the caller, never anything for a room member.
 	const { data: tasksSummary } = useTasksSummary();
 	const account = tasksSummary?.find((o) => o.org_id === orgId);
 

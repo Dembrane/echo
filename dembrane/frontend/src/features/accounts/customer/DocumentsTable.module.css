@@ -1,0 +1,15 @@
+.what {
+	min-width: 0;
+}
+.title {
+	overflow-wrap: anywhere;
+}
+.actions {
+	flex-shrink: 0;
+}
+/* The share link: its icon 4 from the words, as a button's section sits. */
+.share {
+	align-items: center;
+	display: inline-flex;
+	gap: 4px;
+}

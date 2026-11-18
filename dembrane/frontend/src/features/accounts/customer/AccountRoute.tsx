@@ -17,6 +17,7 @@ import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
 import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
+import { ReadOnlyTasks } from "./room/ReadOnlyTasks";
 import { RoomSection } from "./room/RoomSection";
 import { TalkToUs } from "./TalkToUs";
 
@@ -41,7 +42,8 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	const { data: me } = useV2Me();
 	const navigate = useI18nNavigate();
 	const [booking, setBooking] = useState(false);
-	if (!ready || !data) return null;
+	// A room member reads the tasks on Tasks; nothing here waits on them.
+	if (!ready || !data || data.access === "room") return null;
 	const today = localToday();
 	const plan = planAccount(data.tasks, data.documents, today, me?.email);
 	return (
@@ -77,7 +79,8 @@ export function AccountOverviewContact({ orgId }: { orgId: string }) {
 	const ready = useAccountsCatalog();
 	const { data } = useAccountPage(orgId);
 	const [booking, setBooking] = useState(false);
-	if (!ready || !data) return null;
+	// Questions and calls are for those who run the account.
+	if (!ready || !data || data.access === "room") return null;
 	return (
 		<>
 			<TalkToUs
@@ -108,14 +111,31 @@ export const AccountTasksRoute = () => (
 export const AccountDocumentsRoute = () => (
 	<AccountsI18n>
 		<AccountPage title={<Trans>Documents</Trans>} docTitle={t`Documents`}>
-			{(orgId, data) => (
-				<DocumentsTable orgId={orgId} documents={data.documents} title={null} />
-			)}
+			{(orgId, data) => <DocumentsBody orgId={orgId} data={data} />}
 		</AccountPage>
 	</AccountsI18n>
 );
 
+function DocumentsBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
+	const { data: me } = useV2Me();
+	return (
+		<DocumentsTable
+			orgId={orgId}
+			documents={data.documents}
+			title={null}
+			access={data.access}
+			myEmail={me?.email}
+		/>
+	);
+}
+
 function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
+	if (data.access === "room")
+		return <ReadOnlyTasks tasks={data.tasks} documents={data.documents} />;
+	return <AccountTasks orgId={orgId} data={data} />;
+}
+
+function AccountTasks({ orgId, data }: { orgId: string; data: AccountPageT }) {
 	const billingRef = useRef<HTMLDivElement>(null);
 	const [booking, setBooking] = useState(false);
 	const { hash } = useLocation();
