@@ -58,3 +58,27 @@ it("does not fire twice as time keeps rising", () => {
 	rerender({ isRecording: true, limitSeconds: 3600, recordingTime: 3602 });
 	expect(onLimit).toHaveBeenCalledTimes(1);
 });
+
+it("calls the onLimit of the render that reaches the limit", () => {
+	const first = vi.fn();
+	const latest = vi.fn();
+	const { rerender } = renderHook(
+		(props: Props & { onLimit: () => void }) => useRecordingLimit(props),
+		{
+			initialProps: {
+				isRecording: true,
+				limitSeconds: 10,
+				onLimit: first,
+				recordingTime: 9,
+			},
+		},
+	);
+	rerender({
+		isRecording: true,
+		limitSeconds: 10,
+		onLimit: latest,
+		recordingTime: 10,
+	});
+	expect(first).not.toHaveBeenCalled();
+	expect(latest).toHaveBeenCalledTimes(1);
+});
