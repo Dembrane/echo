@@ -755,12 +755,13 @@ run("accounts routes against Postgres", () => {
       "document.signer_named",
       "document.signer_named",
     ]);
-    const r = await call(w, "POST", path, "billing", second);
+    // Naming and changing the signer is for owners and admins (signer-naming tests).
+    const r = await call(w, "POST", path, "admin", second);
     expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("second@example.test");
     const replaced = (await mine()).find((e) => e.type === "document.signer_replaced");
     expect(replaced).toMatchObject({
       actorKind: "customer",
-      actorUserId: w.people.billing.directusUserId,
+      actorUserId: w.people.admin.directusUserId,
       createdAt: w.clock.now,
       detail: {
         email: "second@example.test",
@@ -772,13 +773,14 @@ run("accounts routes against Postgres", () => {
     const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
     expect(card.timeline.some((e) => e.type === "document.signer_replaced")).toBe(true);
 
-    // Ten an hour for the organisation, whoever asks.
+    // Ten an hour for the organisation, the namings above included; that owners and admins
+    // share it is in the signer-naming tests.
     const named = async () =>
       (await store.events(w.db, w.orgId)).filter((e) => e.type.startsWith("document.signer_"))
         .length;
     let status = 200;
     for (let i = 0; i < 10 && status === 200; i++)
-      status = (await call(w, "POST", path, i % 2 ? "admin" : "billing", first)).status;
+      status = (await call(w, "POST", path, "admin", first)).status;
     expect(status).toBe(429);
     expect(await named()).toBe(10);
     const signer = (await store.document(w.db, w.orgId, id))?.signerEmail;
