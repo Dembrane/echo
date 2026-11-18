@@ -17,6 +17,11 @@ export const room = {
 		message:
 			"Only the person who invited them, an admin or Billing can change what they do.",
 	}),
+	"room.name_signer_admins_only": msg({
+		id: "error.room.name_signer_admins_only",
+		message:
+			"Only an owner or admin can choose who signs. You can sign yourself, or remind the person already named.",
+	}),
 	"room.new_person_admins_only": msg({
 		id: "error.room.new_person_admins_only",
 		message:

@@ -193,6 +193,13 @@ export function roomAccess(r: RoomState): "account" | "room" | null {
 	return rowOf(r, me().email)?.access_granted_at ? "room" : null;
 }
 
+/** Naming or changing a signer: owners and admins (the server's may_name_signer). */
+export const mayNameSigner = (r: RoomState) => mayInviteNew(myRole(r));
+
+/** The refusal of naming a signer by anyone else. */
+export const nameSignerRefused = () =>
+	refuse(403, "room.name_signer_admins_only");
+
 /** account:room: those who run the account and room members; a plain member gets 403. */
 export function requireRoom(r: RoomState) {
 	const via = roomAccess(r);

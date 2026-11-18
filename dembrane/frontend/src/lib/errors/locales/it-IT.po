@@ -395,6 +395,11 @@ msgstr "Solo un proprietario può rimuovere un altro proprietario."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
 msgstr ""
 
@@ -434,7 +439,7 @@ msgid "error.room.manage_forbidden"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:33
+#: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
 msgstr ""
 
@@ -779,7 +784,7 @@ msgid "error.billing.no_payment_profile"
 msgstr "Non c'è ancora nessun metodo di pagamento da aggiornare. Scegli prima un piano."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr ""
 
@@ -1044,7 +1049,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Questa persona è un collaboratore esterno in uno dei tuoi spazi di lavoro. Rimuovi prima questo ruolo, poi assegnalo come amministratore o proprietario."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:29
+#: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
 msgstr ""
 

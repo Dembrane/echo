@@ -28,7 +28,6 @@ import {
 	firstName,
 	inLabelOrder,
 	looksLikeEmail,
-	mayNameSigner,
 	outsideDomain,
 	type RoomMe,
 	type SignKind,
@@ -60,6 +59,16 @@ export interface Signing {
 
 const SIGN_ORDER: SignKind[] = ["offer", "dpa"];
 
+/** A person collected without sending, for a flow that sends them itself (who signs). */
+export interface DraftPerson {
+	email: string;
+	name: string;
+	labels: RoomLabelT[];
+	other: string | null;
+	signs: SignKind[];
+	role: string | null;
+}
+
 /**
  * Bringing someone in, one question per step: who (their address, a colleague already
  * known offered as you type, and their name), what they do (optional; and, for those who
@@ -69,6 +78,7 @@ const SIGN_ORDER: SignKind[] = ["offer", "dpa"];
  * why. The last step says what happened.
  *
  * `change` is the same "what" step on its own, for someone already in: it saves.
+ * `onDraft` collects the person without sending anything (who signs sends them itself).
  */
 export function AddPersonSteps({
 	me,
@@ -77,6 +87,7 @@ export function AddPersonSteps({
 	preset,
 	signing,
 	change = false,
+	onDraft,
 	onSubmit,
 	onCancel,
 	onDone,
@@ -89,6 +100,7 @@ export function AddPersonSteps({
 	/** Who signs, when there is a document to sign; shown only to those who may name. */
 	signing?: Signing;
 	change?: boolean;
+	onDraft?: (person: DraftPerson) => void;
 	onSubmit: (
 		body: RequestOf<"addRoomPerson">,
 	) => Promise<ResponseOf<"addRoomPerson">>;
@@ -122,7 +134,9 @@ export function AddPersonSteps({
 	const first = firstName({ email: address, name: theirName });
 	const outside = outsideDomain(myEmail, address);
 	const own = known?.signs ?? [];
-	const mayName = Boolean(signing) && mayNameSigner(me);
+	// The documents in `signing` are those the server lets this person name a signer on
+	// (mayNameSigner); a room member never does, whatever reaches here.
+	const mayName = Boolean(signing) && me.room === "by_role";
 	const kinds = mayName
 		? SIGN_ORDER.filter((k) => signing?.docs[k] !== undefined)
 		: [];
@@ -212,6 +226,15 @@ export function AddPersonSteps({
 		e?.preventDefault();
 		if (step === "who") return toWhat();
 		if (step === "what") {
+			if (onDraft) {
+				onDraft({
+					...body(),
+					other: what.other?.trim() || null,
+					role: job.trim() || null,
+					signs: signs.filter((k) => kinds.includes(k)),
+				});
+				return onDone();
+			}
 			if (change) {
 				if (replaced.length) return setStep("confirm");
 				return void submit();
@@ -247,6 +270,8 @@ export function AddPersonSteps({
 		) : step === "what" ? (
 			change ? (
 				<Trans>Save</Trans>
+			) : onDraft ? (
+				<Trans>Add</Trans>
 			) : (
 				<Trans>Next</Trans>
 			)

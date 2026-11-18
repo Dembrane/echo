@@ -40,12 +40,14 @@ import {
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
+import { mayNameSigner } from "../customer/room/model";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
 import { FitLabel, fitting } from "../FitLabel";
 import { formatDateTime, formatMoney } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
+import { DocumentLoadError } from "./DocumentLoadError";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
@@ -63,10 +65,9 @@ import {
 	todayForDocument,
 	type Values,
 } from "./fieldStepper";
-import { DocumentLoadError } from "./DocumentLoadError";
+import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 import { clearDraft, readDraft, writeDraft } from "./signingDraft";
 import { captureSigning, SIGNING_EVENTS } from "./signingEvents";
-import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
 
 /**
  * Signing: the document as it will be signed, its fields on the pages, and one panel
@@ -313,13 +314,15 @@ function MaybeWaiting({
 						{mayRemind(signer) && (
 							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
 						)}
-						<Button
-							{...secondary}
-							onClick={() => setReassigning(true)}
-							data-testid="sign-reassign"
-						>
-							<Trans>Send to someone else</Trans>
-						</Button>
+						{mayNameSigner(doc) && (
+							<Button
+								{...secondary}
+								onClick={() => setReassigning(true)}
+								data-testid="sign-reassign"
+							>
+								<Trans>Send to someone else</Trans>
+							</Button>
+						)}
 					</Group>
 					<DocumentPreview doc={doc} who={assignee} />
 				</Stack>

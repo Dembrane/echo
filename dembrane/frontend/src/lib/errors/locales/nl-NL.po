@@ -395,6 +395,11 @@ msgstr "Alleen een eigenaar kan een andere eigenaar verwijderen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Alleen een eigenaar of beheerder kan kiezen wie ondertekent. Je kunt zelf ondertekenen, of de persoon herinneren die al is gekozen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
 msgstr "Alleen een eigenaar of beheerder kan iemand uitnodigen die nog geen lid is. Je kunt wel een collega toevoegen die al lid is."
 
@@ -434,7 +439,7 @@ msgid "error.room.manage_forbidden"
 msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan aanpassen wat diegene doet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:33
+#: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
 msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan diegene eruit halen."
 
@@ -779,7 +784,7 @@ msgid "error.billing.no_payment_profile"
 msgstr "Er is nog geen betaalmethode om bij te werken. Kies eerst een abonnement."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "Hier valt niets te beantwoorden."
 
@@ -1044,7 +1049,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Deze persoon is een externe in een van je werkruimtes. Verwijder eerst die rol en maak diegene daarna beheerder of eigenaar."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:29
+#: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
 msgstr "Deze persoon zit er niet meer in."
 

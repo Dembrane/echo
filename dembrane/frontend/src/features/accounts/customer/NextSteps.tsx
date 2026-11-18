@@ -32,6 +32,7 @@ import {
 	waitsOnWhoSigns,
 } from "./plan";
 import { mayRemind, RemindSigner } from "./RemindSigner";
+import { mayNameSigner } from "./room/model";
 import { SendToSomeoneElse } from "./SendToSomeoneElse";
 import { Figure, KindIcon, kindOf, secondary, TaskLine } from "./TaskLine";
 import { WhoSigns } from "./WhoSigns";
@@ -266,10 +267,10 @@ function OpenTask({
 		) : signing ? (
 			facts(
 				validUntil && <Trans>Valid until {validUntil}</Trans>,
-				withDpa && <Trans>Includes the data processing agreement</Trans>,
+				withDpa && <Trans>Includes the DPA</Trans>,
 			)
 		) : task.code === "who_signs" ? (
-			<Trans>3 questions</Trans>
+			<Trans>2 questions</Trans>
 		) : (
 			facts(
 				due && <Trans>Before {due}</Trans>,
@@ -294,13 +295,15 @@ function OpenTask({
 					>
 						<Trans>Review and sign</Trans>
 					</Button>
-					<Button
-						{...secondary}
-						onClick={onSendTo}
-						data-testid="action-send-to"
-					>
-						<Trans>Send to someone else</Trans>
-					</Button>
+					{mayNameSigner(doc) && (
+						<Button
+							{...secondary}
+							onClick={onSendTo}
+							data-testid="action-send-to"
+						>
+							<Trans>Send to someone else</Trans>
+						</Button>
+					)}
 				</>
 			);
 		}
@@ -396,7 +399,7 @@ function WaitingTask({
 						<Trans>Waiting on {assignee}</Trans>,
 						signer.email,
 						waited,
-						withDpa && <Trans>Includes the data processing agreement</Trans>,
+						withDpa && <Trans>Includes the DPA</Trans>,
 					)}
 				</span>
 			}
@@ -429,13 +432,15 @@ function WaitingTask({
 							)}
 						</Button>
 					)}
-					<Button
-						{...secondary}
-						onClick={onSendTo}
-						data-testid="action-send-to"
-					>
-						<Trans>Send to someone else</Trans>
-					</Button>
+					{mayNameSigner(doc) && (
+						<Button
+							{...secondary}
+							onClick={onSendTo}
+							data-testid="action-send-to"
+						>
+							<Trans>Send to someone else</Trans>
+						</Button>
+					)}
 				</>
 			}
 		/>
@@ -488,10 +493,7 @@ function QuietTask({
 					title
 				)
 			}
-			fact={facts(
-				withDpa && <Trans>Includes the data processing agreement</Trans>,
-				note,
-			)}
+			fact={facts(withDpa && <Trans>Includes the DPA</Trans>, note)}
 		/>
 	);
 }

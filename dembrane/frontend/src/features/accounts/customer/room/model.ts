@@ -136,12 +136,13 @@ export const mayChangeLabels = (me: RoomMe, p: RoomPersonT): boolean =>
 	(me.room === "by_role" || brought(me, p));
 
 /**
- * Who may name or change a signer. The server lets only owners and admins do it, the same
- * two roles as `may_invite_new`; it will say so in its own field (`may_name_signer`), and
- * this is the one place to read it then.
+ * Who may name or change a signer on a document: owners and admins, as the server says on
+ * each document (`may_name_signer`). Billing signs themselves and reminds; a room member
+ * never names anyone.
  */
-export const mayNameSigner = (me: RoomMe | null | undefined): boolean =>
-	me?.may_invite_new ?? false;
+export const mayNameSigner = (
+	doc: { may_name_signer: boolean } | null | undefined,
+): boolean => doc?.may_name_signer ?? false;
 
 /** The pictures in the page's top corner: the room's people, in the decision lens's order. */
 export function roomPictures(

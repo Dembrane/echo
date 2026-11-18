@@ -475,6 +475,11 @@ function customerEmail(
 	};
 }
 
+/** A document as the fixture actor reads it: naming a signer is for owners and admins. */
+function asActor(d: DocumentDetailT, s: Store): DocumentDetailT {
+	return { ...d, may_name_signer: room.mayNameSigner(roomOf(s)) };
+}
+
 /** A document as a room member reads it: nothing to fill in or confirm, no billing details. */
 function asRoom(d: DocumentDetailT): DocumentDetailT {
 	return {
@@ -483,6 +488,7 @@ function asRoom(d: DocumentDetailT): DocumentDetailT {
 		confirmation: null,
 		fields: [],
 		may_download: d.signed_pdf_url !== null,
+		may_name_signer: false,
 		prefill: { address: null, organisation: null, po_number: null },
 		signature: d.signature && {
 			...d.signature,
@@ -1326,7 +1332,7 @@ export async function handle(
 					billing: s.billing,
 					documents: s.docs
 						.filter((d) => d.status !== "draft" && d.status !== "void")
-						.map((d) => summary(withUrls(d, cBase, "member"))),
+						.map((d) => summary(asActor(withUrls(d, cBase, "member"), s))),
 					needs_form_reference: s.needs_form_reference,
 					organisation: { account_stage: s.stage, id: orgId, name: s.name },
 					tasks: s.tasks
@@ -1338,7 +1344,7 @@ export async function handle(
 			case "readDocument":
 				return via === "room"
 					? asRoom(withUrls(doc(), cBase, "member"))
-					: withUrls(doc(), cBase, "member");
+					: asActor(withUrls(doc(), cBase, "member"), s);
 			case "staffReadDocument":
 				return withUrls(doc(), sBase, "staff");
 			case "viewDocument": {
@@ -1477,6 +1483,7 @@ export async function handle(
 				return { status: "declined" };
 			}
 			case "nameSigner": {
+				if (!room.mayNameSigner(roomOf(s))) throw room.nameSignerRefused();
 				const d = doc();
 				const previous = d.signer;
 				d.signer = {
@@ -1589,6 +1596,12 @@ export async function handle(
 				return s.billing;
 			}
 			case "answerWhoSigns": {
+				// Billing answers "I sign"; naming someone else is for owners and admins.
+				if (
+					(body.offer_signer || body.dpa_signer) &&
+					!room.mayNameSigner(roomOf(s))
+				)
+					throw room.nameSignerRefused();
 				const t = task();
 				if (t.code !== "who_signs") throw notFound();
 				if (t.status !== "open" && t.status !== "changes_requested")
@@ -1983,7 +1996,6 @@ export async function handle(
 				const d: DocumentDetailT = {
 					accepted_outside: null,
 					access: "staff",
-					may_name_signer: false,
 					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
 					confirmation: null,
@@ -2001,6 +2013,7 @@ export async function handle(
 					legal: [],
 					lines: null,
 					may_download: true,
+					may_name_signer: false,
 					page_count: bytes ? await pageCountOf(bytes) : 1,
 					prefill: { address: null, organisation: null, po_number: null },
 					reference: (body.reference as string | null) ?? null,

@@ -42,7 +42,7 @@ export function AddPersonModal({
 	const roomMe = room?.me ?? null;
 	const docs = room && page ? signable(room, page) : {};
 	const signing: Signing | undefined =
-		roomMe && mayNameSigner(roomMe) && Object.keys(docs).length
+		roomMe && Object.keys(docs).length
 			? {
 					docs,
 					onName: (_kind, docId, body) =>
@@ -84,7 +84,8 @@ export function AddPersonModal({
 
 /**
  * The offer and the DPA a signer can still be named on (sent or viewed, waiting for a
- * signature), each with who is named now: the room's signer of that document.
+ * signature) by the person asking (the server's may_name_signer), each with who is named
+ * now: the room's signer of that document.
  */
 export function signable(room: RoomPageT, page: AccountPageT): Signing["docs"] {
 	const out: Signing["docs"] = {};
@@ -96,6 +97,7 @@ export function signable(room: RoomPageT, page: AccountPageT): Signing["docs"] {
 		if (
 			!doc ||
 			doc.kind !== kind ||
+			!mayNameSigner(doc) ||
 			!doc.requires_signature ||
 			(doc.status !== "sent" && doc.status !== "viewed")
 		)

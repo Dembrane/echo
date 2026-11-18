@@ -395,6 +395,11 @@ msgstr "Only an owner can remove another owner."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Only an owner or admin can choose who signs. You can sign yourself, or remind the person already named."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
 msgid "error.room.new_person_admins_only"
 msgstr "Only an owner or admin can invite someone who is not a member yet. You can add a colleague who is already a member."
 
@@ -434,7 +439,7 @@ msgid "error.room.manage_forbidden"
 msgstr "Only the person who invited them, an admin or Billing can change what they do."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:33
+#: src/lib/errors/messages/room.ts:38
 msgid "error.room.remove_forbidden"
 msgstr "Only the person who invited them, an admin or Billing can take them out."
 
@@ -779,7 +784,7 @@ msgid "error.billing.no_payment_profile"
 msgstr "There is no payment method to update yet. Choose a plan first."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "There is nothing to answer here."
 
@@ -1044,7 +1049,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "This person is an external on one of your workspaces. Remove that role first, then make them an admin or owner."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:29
+#: src/lib/errors/messages/room.ts:34
 msgid "error.room.person_not_found"
 msgstr "This person is no longer in the room."
 
