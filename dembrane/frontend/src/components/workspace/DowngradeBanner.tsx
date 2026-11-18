@@ -29,6 +29,8 @@ export const DowngradeBanner = () => {
 	const workspaceId = workspace?.id;
 
 	const [dismissed, setDismissed] = useState(false);
+	// Read once: the seven days are counted from when the page opened.
+	const [now] = useState(Date.now);
 
 	useEffect(() => {
 		if (!workspaceId || !downgradedAt) return;
@@ -57,7 +59,6 @@ export const DowngradeBanner = () => {
 	const stamp = Date.parse(downgradedAt);
 	if (Number.isNaN(stamp)) return null;
 
-	const now = Date.now();
 	if (now - stamp > SEVEN_DAYS_MS) return null;
 	if (dismissed) return null;
 

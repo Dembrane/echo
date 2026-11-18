@@ -230,6 +230,8 @@ const ReportProgressView = ({
 	dateCreated?: string | null;
 }) => {
 	const { progress } = useReportProgress(projectId, reportId);
+	// Only the first value matters: ExponentialProgress seeds its state with it.
+	const [mountedAt] = useState(Date.now);
 	const { mutate: updateReport, isPending: isCancelling } =
 		useUpdateProjectReportMutation();
 
@@ -239,8 +241,7 @@ const ReportProgressView = ({
 	const expectedDuration = 250;
 	const startFrom = (() => {
 		if (!dateCreated) return 0;
-		const elapsedSeconds =
-			(Date.now() - new Date(dateCreated).getTime()) / 1000;
+		const elapsedSeconds = (mountedAt - new Date(dateCreated).getTime()) / 1000;
 		if (elapsedSeconds <= 0) return 0;
 		const scaleFactor = 0.1 * (5 / expectedDuration);
 		return Math.min(100 - 100 * Math.exp(-scaleFactor * elapsedSeconds), 95);
