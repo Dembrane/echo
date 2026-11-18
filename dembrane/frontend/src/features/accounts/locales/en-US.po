@@ -1081,7 +1081,7 @@ msgstr "Document withdrawn"
 #: src/features/accounts/staff/AccountsPanel.tsx:167
 #: src/features/accounts/staff/AccountCardRoute.tsx:313
 #: src/features/accounts/staff/AccountCardRoute.tsx:643
-#: src/features/accounts/customer/DocumentsTable.tsx:30
+#: src/features/accounts/customer/DocumentsTable.tsx:36
 #: src/features/accounts/customer/AccountRoute.tsx:123
 #: src/features/accounts/customer/AccountRoute.tsx:123
 msgid "Documents"
@@ -1101,7 +1101,8 @@ msgid "Done"
 msgstr "Done"
 
 #: src/features/accounts/signing/SignRoute.tsx:304
-#: src/features/accounts/customer/DocumentsTable.tsx:160
+#: src/features/accounts/customer/DocumentsTable.tsx:163
+#: src/features/accounts/customer/DocumentsTable.tsx:171
 msgid "Download PDF"
 msgstr "Download PDF"
 
@@ -2086,7 +2087,7 @@ msgstr "Offer sent. The customer sees it the next time they log in."
 #~ msgid "Offer sent. The customer sees it the next time they sign in."
 #~ msgstr "Offer sent. The customer sees it the next time they sign in."
 
-#: src/features/accounts/customer/DocumentsTable.tsx:49
+#: src/features/accounts/customer/DocumentsTable.tsx:55
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Offers, agreements and invoices appear here once we send them."
 
@@ -2213,7 +2214,8 @@ msgstr "Open the signed PDF"
 msgid "Open the tutorial"
 msgstr "Open the tutorial"
 
-#: src/features/accounts/customer/DocumentsTable.tsx:140
+#: src/features/accounts/customer/DocumentsTable.tsx:136
+#: src/features/accounts/customer/DocumentsTable.tsx:142
 msgid "Open to sign"
 msgstr "Open to sign"
 
@@ -2534,6 +2536,7 @@ msgid "Questions"
 msgstr "Questions"
 
 #: src/features/accounts/customer/DocumentsTable.tsx:149
+#: src/features/accounts/customer/DocumentsTable.tsx:155
 msgid "Read"
 msgstr "Read"
 
@@ -2910,7 +2913,8 @@ msgstr "Share (%)"
 #: src/features/accounts/signing/SignRoute.tsx:184
 #: src/features/accounts/signing/SignRoute.tsx:198
 #: src/features/accounts/signing/SignRoute.tsx:209
-#: src/features/accounts/customer/DocumentsTable.tsx:173
+#: src/features/accounts/customer/DocumentsTable.tsx:180
+#: src/features/accounts/customer/DocumentsTable.tsx:185
 #: src/features/accounts/customer/AccountRoute.tsx:146
 msgid "Share with a colleague"
 msgstr "Share with a colleague"

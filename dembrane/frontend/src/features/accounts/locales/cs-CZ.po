@@ -1081,7 +1081,7 @@ msgstr "Dokument stažen zpět"
 #: src/features/accounts/staff/AccountsPanel.tsx:167
 #: src/features/accounts/staff/AccountCardRoute.tsx:313
 #: src/features/accounts/staff/AccountCardRoute.tsx:643
-#: src/features/accounts/customer/DocumentsTable.tsx:30
+#: src/features/accounts/customer/DocumentsTable.tsx:36
 #: src/features/accounts/customer/AccountRoute.tsx:123
 #: src/features/accounts/customer/AccountRoute.tsx:123
 msgid "Documents"
@@ -1101,7 +1101,8 @@ msgid "Done"
 msgstr "Hotovo"
 
 #: src/features/accounts/signing/SignRoute.tsx:304
-#: src/features/accounts/customer/DocumentsTable.tsx:160
+#: src/features/accounts/customer/DocumentsTable.tsx:163
+#: src/features/accounts/customer/DocumentsTable.tsx:171
 msgid "Download PDF"
 msgstr "Stáhnout PDF"
 
@@ -2086,7 +2087,7 @@ msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlá
 #~ msgid "Offer sent. The customer sees it the next time they sign in."
 #~ msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlásí."
 
-#: src/features/accounts/customer/DocumentsTable.tsx:49
+#: src/features/accounts/customer/DocumentsTable.tsx:55
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Nabídky, smlouvy a faktury se zde zobrazí, jakmile je odešleme."
 
@@ -2213,7 +2214,8 @@ msgstr "Otevřít podepsané PDF"
 msgid "Open the tutorial"
 msgstr "Otevřít návod"
 
-#: src/features/accounts/customer/DocumentsTable.tsx:140
+#: src/features/accounts/customer/DocumentsTable.tsx:136
+#: src/features/accounts/customer/DocumentsTable.tsx:142
 msgid "Open to sign"
 msgstr "Otevřít k podpisu"
 
@@ -2534,6 +2536,7 @@ msgid "Questions"
 msgstr "Dotazy"
 
 #: src/features/accounts/customer/DocumentsTable.tsx:149
+#: src/features/accounts/customer/DocumentsTable.tsx:155
 msgid "Read"
 msgstr "Číst"
 
@@ -2910,7 +2913,8 @@ msgstr "Podíl (%)"
 #: src/features/accounts/signing/SignRoute.tsx:184
 #: src/features/accounts/signing/SignRoute.tsx:198
 #: src/features/accounts/signing/SignRoute.tsx:209
-#: src/features/accounts/customer/DocumentsTable.tsx:173
+#: src/features/accounts/customer/DocumentsTable.tsx:180
+#: src/features/accounts/customer/DocumentsTable.tsx:185
 #: src/features/accounts/customer/AccountRoute.tsx:146
 msgid "Share with a colleague"
 msgstr "Sdílet s kolegou"

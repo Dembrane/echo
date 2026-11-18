@@ -1,7 +1,13 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Group, Stack, Text } from "@mantine/core";
-import { ShareNetworkIcon } from "@phosphor-icons/react";
+import { ActionIcon, Group, Stack, Text, Tooltip } from "@mantine/core";
+import {
+	BookOpenIcon,
+	DownloadSimpleIcon,
+	ShareNetworkIcon,
+	SignatureIcon,
+} from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { usePdfHref } from "../api/hooks";
@@ -17,12 +23,12 @@ import classes from "./DocumentsTable.module.css";
 import { PageSection, Row, Rows } from "./PageSection";
 
 /**
- * Every document between dembrane and the organisation, as a record: what it is, when,
- * how much, and where it stands, with the PDF one click away. Acting on a document
- * happens above (To pay, To do); a document still to sign links there too. A room member
- * reads the offer and the DPA: "Read" opens the document view, and the PDF is offered
- * only where the server says it may be saved (may_download). Share brings someone in,
- * for that document.
+ * Every document between dembrane and the organisation, as a record: on the left what it
+ * is, when, how much and where it stands; on the right its tools, as icons in one line,
+ * each named by its tooltip. Acting on a document happens above (To pay, To do); a
+ * document still to sign opens from here too. A room member reads the offer and the DPA:
+ * the book opens the document view, and the PDF is offered only where the server says it
+ * may be saved (may_download). Share brings someone in, on the documents the room holds.
  */
 export function DocumentsTable({
 	orgId,
@@ -92,6 +98,8 @@ function DocumentRow({
 	const pdfUrl = doc.status === "signed" ? doc.signed_pdf_url : doc.file_url;
 	const href = usePdfHref(signable || !doc.may_download ? null : pdfUrl);
 	const view = `/o/${orgId}/account/documents/${doc.id}/sign`;
+	// Sharing brings someone into the room, and the room holds the offer and the DPA only.
+	const inRoom = doc.kind === "offer" || doc.kind === "dpa";
 	const date = formatDate(
 		doc.signed_at ??
 			doc.invoice?.paid_at ??
@@ -110,70 +118,78 @@ function DocumentRow({
 
 	return (
 		<Row testId={`doc-${doc.kind}`}>
-			{/* On a phone the actions go under the title, so a title never breaks mid-word. */}
-			<Group
-				justify="space-between"
-				wrap="nowrap"
-				gap="sm"
-				align="flex-start"
-				className="app-stack-narrow"
-			>
+			<Group justify="space-between" wrap="nowrap" gap="sm" align="flex-start">
 				<Stack gap="xs" className={classes.what}>
 					<Text className={classes.title}>{documentTitle(doc)}</Text>
 					<Text size="sm" c="dimmed">
-						{[documentKindLabel(doc.kind), date].filter(Boolean).join(" · ")}
+						{[documentKindLabel(doc.kind), date, amount]
+							.filter(Boolean)
+							.join(" · ")}
 						{" · "}
 						<Text span size="sm" c={tone}>
 							{status}
 						</Text>
 					</Text>
 				</Stack>
-				<Stack gap="xs" className={classes.actions}>
-					{amount && <Text>{amount}</Text>}
+				<Group gap="xs" wrap="nowrap" className={classes.tools}>
 					{signable ? (
-						<Anchor
-							size="sm"
-							component={I18nLink}
-							to={view}
-							data-testid="doc-sign"
-						>
-							<Trans>Open to sign</Trans>
-						</Anchor>
+						<Tooltip label={t`Open to sign`}>
+							<ActionIcon
+								variant="subtle"
+								size="lg"
+								component={I18nLink}
+								to={view}
+								aria-label={t`Open to sign`}
+								data-testid="doc-sign"
+							>
+								<SignatureIcon size={20} />
+							</ActionIcon>
+						</Tooltip>
 					) : reads ? (
-						<Anchor
-							size="sm"
-							component={I18nLink}
-							to={view}
-							data-testid="doc-read"
-						>
-							<Trans>Read</Trans>
-						</Anchor>
+						<Tooltip label={t`Read`}>
+							<ActionIcon
+								variant="subtle"
+								size="lg"
+								component={I18nLink}
+								to={view}
+								aria-label={t`Read`}
+								data-testid="doc-read"
+							>
+								<BookOpenIcon size={20} />
+							</ActionIcon>
+						</Tooltip>
 					) : (
 						href && (
-							<Anchor
-								size="sm"
-								href={href}
-								target="_blank"
-								rel="noreferrer"
-								data-testid="doc-pdf"
-							>
-								<Trans>Download PDF</Trans>
-							</Anchor>
+							<Tooltip label={t`Download PDF`}>
+								<ActionIcon
+									variant="subtle"
+									size="lg"
+									component="a"
+									href={href}
+									target="_blank"
+									rel="noreferrer"
+									aria-label={t`Download PDF`}
+									data-testid="doc-pdf"
+								>
+									<DownloadSimpleIcon size={20} />
+								</ActionIcon>
+							</Tooltip>
 						)
 					)}
-					{onShare && (
-						<Anchor
-							component="button"
-							size="sm"
-							onClick={() => onShare(doc)}
-							data-testid="doc-share"
-							className={classes.share}
-						>
-							<ShareNetworkIcon size={16} aria-hidden />
-							<Trans>Share with a colleague</Trans>
-						</Anchor>
+					{onShare && inRoom && (
+						<Tooltip label={t`Share with a colleague`}>
+							<ActionIcon
+								variant="subtle"
+								size="lg"
+								onClick={() => onShare(doc)}
+								aria-label={t`Share with a colleague`}
+								data-testid="doc-share"
+							>
+								<ShareNetworkIcon size={20} />
+							</ActionIcon>
+						</Tooltip>
 					)}
-				</Stack>
+				</Group>
 			</Group>
 		</Row>
 	);

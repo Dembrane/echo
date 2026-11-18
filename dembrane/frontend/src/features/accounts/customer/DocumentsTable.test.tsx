@@ -105,11 +105,14 @@ describe("the documents, for those who run the account", () => {
 });
 
 describe("the share shortcut", () => {
-	it("sits on every document and opens the add flow for that document", () => {
+	it("sits on the offer and the DPA, which the room holds, and opens the add flow", () => {
 		const onShare = vi.fn();
 		show({ documents: docs, onShare });
 		for (const d of docs)
-			expect(within(row(d.kind)).getByTestId("doc-share")).toBeTruthy();
+			expect(within(row(d.kind)).queryByTestId("doc-share") !== null).toBe(
+				d.kind === "offer" || d.kind === "dpa",
+			);
+		expect(docs.some((d) => d.kind === "invoice")).toBe(true);
 		fireEvent.click(within(row("offer")).getByTestId("doc-share"));
 		expect(onShare).toHaveBeenCalledWith(
 			expect.objectContaining({ id: offer.id }),
