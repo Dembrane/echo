@@ -35,6 +35,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
+import { AvatarBubbles, pressable } from "@/components/common/AvatarBubbles";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
@@ -749,8 +750,13 @@ export const OrganisationRoute = () => {
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
 				    per-workspace concept, shown in the column headers). */}
-				{/* Wraps on a phone, so the room's pictures go under the name, not beside it. */}
-				<Group justify="space-between" align="flex-start" gap="sm">
+				{/* On a phone the room's pictures go under the name (app-stack-narrow). */}
+				<Group
+					justify="space-between"
+					align="flex-start"
+					gap="sm"
+					className="app-stack-narrow"
+				>
 					<Group gap="md" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
 						{organisation.logo_url && (
 							<Image
@@ -1425,55 +1431,39 @@ function OrganisationOverviewPanel({
 							<Trans>No one on this organisation yet.</Trans>
 						</Text>
 					) : (
-						<Tooltip.Group>
-							<Avatar.Group spacing="sm">
-								{visiblePeople.map((m) => (
-									<Tooltip
-										key={m.user_id}
-										label={`${m.display_name} · ${
-											m.is_external ? t`External` : displayRole(m.role)
-										}`}
-										withArrow
-									>
+						<AvatarBubbles
+							people={visiblePeople.map((m) => {
+								const label = `${m.display_name} · ${
+									m.is_external ? t`External` : displayRole(m.role)
+								}`;
+								return {
+									key: m.user_id,
+									label,
+									picture: (
 										<Avatar
+											component="button"
+											type="button"
 											size={36}
-											radius="full"
 											src={avatarUrl(m.avatar)}
 											color="primary"
-											style={{ cursor: "pointer" }}
+											aria-label={label}
+											className={pressable}
 											onClick={handlePeopleClick}
 										>
 											{memberInitials(m.display_name, m.email)}
 										</Avatar>
-									</Tooltip>
-								))}
-								{overflowPeople > 0 && (
-									<Avatar
-										size={36}
-										radius="full"
-										color="gray"
-										style={{ cursor: "pointer" }}
-										onClick={handlePeopleClick}
-									>
-										+{overflowPeople}
-									</Avatar>
-								)}
-								{isManager && (
-									<Tooltip label={t`Manage members`} withArrow>
-										<Avatar
-											size={36}
-											radius="full"
-											color="primary"
-											variant="light"
-											style={{ cursor: "pointer" }}
-											onClick={handlePeopleClick}
-										>
-											<PlusIcon size={16} />
-										</Avatar>
-									</Tooltip>
-								)}
-							</Avatar.Group>
-						</Tooltip.Group>
+									),
+								};
+							})}
+							more={overflowPeople}
+							moreLabel={t`${overflowPeople} more`}
+							onMore={handlePeopleClick}
+							add={
+								isManager
+									? { label: t`Manage members`, onClick: handlePeopleClick }
+									: undefined
+							}
+						/>
 					)}
 				</Stack>
 			)}

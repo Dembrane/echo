@@ -14,8 +14,8 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import * as fx from "../contract/fixtures.gen";
 
-// The who-signs task, now chosen one line per document from the room's people: it still
-// sends the same answerWhoSigns body as before (dashboard-plan.md, unit 6).
+// The who-signs task, chosen one line per document from the room's people: it sends the
+// answerWhoSigns body the server expects.
 const calls: { name: string; options: unknown }[] = [];
 vi.mock("../api/client", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("../api/client")>();

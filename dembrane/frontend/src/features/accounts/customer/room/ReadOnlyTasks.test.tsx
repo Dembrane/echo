@@ -9,8 +9,7 @@ import type { TaskT } from "../../contract/contract.gen";
 import * as fx from "../../contract/fixtures.gen";
 
 // What a room member sees of the tasks on the offer and the DPA: every one with its answer
-// and review note, and nothing to press. New in this slice (dashboard-plan.md, unit 9):
-// ./ReadOnlyTasks exports ReadOnlyTasks({ tasks, documents }).
+// and review note, and nothing to press: ReadOnlyTasks({ tasks, documents }).
 const load = async () => (await import("./ReadOnlyTasks")).ReadOnlyTasks;
 
 beforeAll(() => {

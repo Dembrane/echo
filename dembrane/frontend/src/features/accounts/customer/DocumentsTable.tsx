@@ -110,7 +110,14 @@ function DocumentRow({
 
 	return (
 		<Row testId={`doc-${doc.kind}`}>
-			<Group justify="space-between" wrap="nowrap" gap="sm" align="flex-start">
+			{/* On a phone the actions go under the title, so a title never breaks mid-word. */}
+			<Group
+				justify="space-between"
+				wrap="nowrap"
+				gap="sm"
+				align="flex-start"
+				className="app-stack-narrow"
+			>
 				<Stack gap="xs" className={classes.what}>
 					<Text className={classes.title}>{documentTitle(doc)}</Text>
 					<Text size="sm" c="dimmed">
@@ -121,7 +128,7 @@ function DocumentRow({
 						</Text>
 					</Text>
 				</Stack>
-				<Stack gap="xs" align="flex-end" className={classes.actions}>
+				<Stack gap="xs" className={classes.actions}>
 					{amount && <Text>{amount}</Text>}
 					{signable ? (
 						<Anchor

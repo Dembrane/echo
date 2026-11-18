@@ -12,7 +12,7 @@ import {
 /** A label as its tag: "Gives the go-ahead". */
 export const labelText = (label: RoomLabelT): string =>
 	({
-		contract_purchasing: t`Handles contract and purchasing`,
+		contract_purchasing: t`Handles contract`,
 		go_ahead: t`Gives the go-ahead`,
 		it_security: t`Checks IT and security`,
 		privacy_ai: t`Checks privacy and AI rules`,
@@ -26,7 +26,7 @@ export const labelText = (label: RoomLabelT): string =>
  */
 export const labelPhrase = (label: RoomLabelT): string =>
 	({
-		contract_purchasing: t`handle contract and purchasing`,
+		contract_purchasing: t`handle the contract`,
 		go_ahead: t`give the go-ahead`,
 		it_security: t`check IT and security`,
 		privacy_ai: t`check privacy and AI rules`,
@@ -37,7 +37,7 @@ export const labelPhrase = (label: RoomLabelT): string =>
 /** The hint under the list, as a plain fact. */
 export const hintText = (label: HintLabelT): string =>
 	({
-		contract_purchasing: t`Nobody handles contract and purchasing yet.`,
+		contract_purchasing: t`Nobody handles the contract yet.`,
 		go_ahead: t`Nobody gives the go-ahead yet.`,
 		it_security: t`Nobody checks IT and security yet.`,
 		privacy_ai: t`Nobody checks privacy and AI rules yet.`,
@@ -100,4 +100,20 @@ export function removeConsequence(p: RoomPersonT): string {
 	return p.status === "invited"
 		? t`${first}'s invitation is withdrawn and the link we sent stops working.`
 		: t`${first} stays a member of your organisation, but can no longer read the offer and the DPA here.`;
+}
+
+/**
+ * Taking out someone named to sign leaves the signing with them: the server keeps them
+ * the named signer (their signing link still works), so someone else is chosen on the
+ * document. Null for someone who signs nothing.
+ */
+export function removeSigning(p: RoomPersonT): string | null {
+	const first = firstName(p);
+	if (p.signs.length === 2)
+		return t`${first} still signs the offer and the DPA. Choose someone else to sign them after this.`;
+	if (p.signs[0] === "offer")
+		return t`${first} still signs the offer. Choose someone else to sign it after this.`;
+	if (p.signs[0] === "dpa")
+		return t`${first} still signs the DPA. Choose someone else to sign it after this.`;
+	return null;
 }

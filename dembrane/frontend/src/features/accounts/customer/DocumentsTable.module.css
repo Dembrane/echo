@@ -4,8 +4,16 @@
 .title {
 	overflow-wrap: anywhere;
 }
-.actions {
+/* The amount and the actions, at the row's right; under the title on a phone, where the
+ * row stacks (app-stack-narrow), at its left. Doubled to outweigh the Stack's own align. */
+.actions.actions {
+	align-items: flex-end;
 	flex-shrink: 0;
+}
+@media (max-width: 639px) {
+	.actions.actions {
+		align-items: flex-start;
+	}
 }
 /* The share link: its icon 4 from the words, as a button's section sits. */
 .share {

@@ -3,10 +3,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { room as catalog } from "../catalog/room.gen";
 import { presentError } from "../present";
 
-// The data room's error codes in friendly words (dashboard-plan.md, unit 2): a new
-// ./room.ts in this folder, `export const room = { ... } satisfies Messages<"room">`,
-// spread into ERROR_MESSAGES in ./index.ts. Until then every room code reads as the
-// generic "Something went wrong" line.
+// The data room's error codes in friendly words: ./room.ts, `export const room = { ... }
+// satisfies Messages<"room">`, spread into ERROR_MESSAGES in ./index.ts.
 
 const FALLBACKS = [
 	"Something went wrong. Try again, and contact support if it keeps happening.",

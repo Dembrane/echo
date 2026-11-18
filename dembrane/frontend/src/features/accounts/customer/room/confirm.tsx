@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Stack, Text } from "@mantine/core";
 import { openConfirm } from "@/lib/openConfirm";
 import type { RoomPersonT } from "../../contract/contract.gen";
-import { removeConsequence } from "./copy";
+import { removeConsequence, removeSigning } from "./copy";
 import { firstName, type SignKind } from "./model";
 
 /** Someone who signs a document now and would no longer sign it. */
@@ -43,7 +43,7 @@ export function NewSignerNotice({
 				const oldName = r.name;
 				const oldFirst = firstName(r);
 				return (
-					<Text key={r.email}>
+					<Text key={r.email} size="sm">
 						{r.isMe
 							? t`You will not sign it. ${newName} gets a link to sign instead.`
 							: t`${oldName} no longer signs it, and the link we sent ${oldFirst} stops working. ${newName} gets a new link.`}
@@ -55,8 +55,9 @@ export function NewSignerNotice({
 }
 
 /**
- * Before someone is taken out: what it does, which differs before and after they joined.
- * The confirm pill first, as every confirmation in the app (openConfirm).
+ * Before someone is taken out: what it does, which differs before and after they joined,
+ * and, for someone named to sign, that someone else is to be chosen to sign. The confirm
+ * pill first, as every confirmation in the app (openConfirm).
  */
 export function confirmRemove({
 	person,
@@ -67,9 +68,15 @@ export function confirmRemove({
 }) {
 	const name = person.name;
 	const first = firstName(person);
+	const signing = removeSigning(person);
 	openConfirm({
 		children: (
-			<Text data-testid="remove-consequence">{removeConsequence(person)}</Text>
+			<Stack gap="xs">
+				<Text data-testid="remove-consequence">
+					{removeConsequence(person)}
+				</Text>
+				{signing && <Text data-testid="remove-signing">{signing}</Text>}
+			</Stack>
 		),
 		danger: true,
 		labels: { confirm: t`Remove ${first}` },

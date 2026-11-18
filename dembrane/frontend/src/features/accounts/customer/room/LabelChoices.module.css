@@ -1,6 +1,8 @@
-/* A choice's words sit on the box's middle, at the compact height (rules.css). */
+/* A choice's words sit on the box's middle, at the compact height (rules.css); an icon
+ * leads them, 4 from the words, as a button's section sits. */
 .choice {
 	align-items: center;
 	display: inline-flex;
+	gap: 4px;
 	text-align: left;
 }

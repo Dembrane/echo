@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// The wording of the account area (dashboard-plan.md, units 13 and 14): "DPA", never the
+// The wording of the account area: "DPA", never the
 // words spelled out, in every language; "dembrane" lowercase; no em dashes; and the
 // room's own code never speaks of viewers or of who has seen what.
 

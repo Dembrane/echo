@@ -95,29 +95,39 @@ export function LabelChoices({
 	);
 }
 
-/** One option to tap; no check mark, so an option keeps its width when chosen. */
+/**
+ * One option to tap (the grammar's `app-do app-choice`): the control grey outline, chosen
+ * the blue box on the action tint. No check mark, so an option keeps its width when
+ * chosen. An icon, when given, leads the words. `fixed` shows it chosen and unchangeable.
+ */
 export function Choice({
 	pressed,
 	onClick,
 	children,
 	testId,
+	icon,
+	fixed = false,
 }: {
 	pressed: boolean;
 	onClick: () => void;
 	children: ReactNode;
 	testId: string;
+	icon?: ReactNode;
+	fixed?: boolean;
 }) {
 	return (
 		<UnstyledButton
 			className={`app-do app-choice ${classes.choice}`}
 			data-density="compact"
 			aria-pressed={pressed}
+			aria-disabled={fixed || undefined}
 			data-selected={pressed || undefined}
-			onClick={onClick}
+			onClick={fixed ? undefined : onClick}
 			px="sm"
 			py={4}
 			data-testid={testId}
 		>
+			{icon}
 			<Text size="sm" span>
 				{children}
 			</Text>

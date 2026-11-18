@@ -44,7 +44,7 @@ export type AddPreset = {
 };
 
 /**
- * The one people component, in two lenses. Decision ("Who is involved"): those who sign
+ * The one people component, in two lenses. Decision ("Involved in procurement"): those who sign
  * or say what they do lead; everyone else folds into "Other members" under them, with, for
  * those who run the account, the members not added yet. One "nobody does this yet" hint
  * at a time sits between the two. Access (the Members page): the same people by
@@ -122,8 +122,9 @@ export function PeopleList({
 		<div data-testid="people-list" data-lens="decision">
 			<PageSection
 				title={
-					<span className={classes.title}>
-						<Trans>Who is involved</Trans>
+					<span>
+						<Trans>Involved in procurement</Trans>
+						{/* The people in the room; the fold below also lists those not in it. */}
 						<Text span size="xs" c="dimmed" ml="xs" data-testid="section-count">
 							{inRoom.length}
 						</Text>
@@ -245,6 +246,7 @@ function OtherMembers({
 		? people.filter((p) => `${p.name} ${p.email}`.toLowerCase().includes(q))
 		: people;
 	const shown = all || q ? found : found.slice(0, FIRST);
+	// No count beside the fold: it holds members not in the room as well.
 	const count = people.length;
 	return (
 		<Accordion
@@ -260,9 +262,6 @@ function OtherMembers({
 				<Accordion.Control data-testid="other-members-toggle">
 					<Text span>
 						<Trans>Other members</Trans>
-					</Text>
-					<Text span size="xs" c="dimmed" ml="xs">
-						{count}
 					</Text>
 				</Accordion.Control>
 				<Accordion.Panel>

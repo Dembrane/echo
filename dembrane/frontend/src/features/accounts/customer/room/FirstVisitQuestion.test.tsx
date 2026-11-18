@@ -7,8 +7,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { RoomLabelT } from "../../contract/contract.gen";
 
 // The first-visit question, asked once of someone brought in by someone else
-// (me.labels_question). New in this slice (dashboard-plan.md, unit 6):
-// ./FirstVisitQuestion exports FirstVisitQuestion({ inviter, labels, other, onAnswer }).
+// (me.labels_question): FirstVisitQuestion({ inviter, labels, other, onAnswer }).
 const load = async () =>
 	(await import("./FirstVisitQuestion")).FirstVisitQuestion;
 

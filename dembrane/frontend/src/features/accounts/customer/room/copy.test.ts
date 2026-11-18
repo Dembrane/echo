@@ -2,10 +2,9 @@ import { i18n } from "@lingui/core";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type { RoomPersonT } from "../../contract/contract.gen";
 
-// The words of who does what, said as sentences. New in this slice (dashboard-plan.md,
-// unit 1): ./copy exports labelText, labelPhrase, hintText, signText, joinAnd,
-// invitedSentence and removeConsequence. Dutch comes from the compiled accounts catalog,
-// so the Dutch cases also need the translations (unit 13).
+// The words of who does what, said as sentences: labelText, labelPhrase, hintText,
+// signText, joinAnd, invitedSentence, removeConsequence and removeSigning. Dutch comes
+// from the compiled accounts catalog.
 const load = () => import("./copy");
 
 const english = () => {
@@ -99,7 +98,7 @@ describe("the first-visit question, in Dutch", () => {
 				other: null,
 			}),
 		).toBe(
-			"Anna Bakker heeft je uitgenodigd om groen licht te geven en de invoering te leiden.",
+			"Anna Bakker heeft je uitgenodigd om akkoord te geven en de invoering te leiden.",
 		);
 	});
 
@@ -113,7 +112,7 @@ describe("the first-visit question, in Dutch", () => {
 				other: null,
 			}),
 		).toBe(
-			"Anna Bakker heeft je uitgenodigd om groen licht te geven, de invoering te leiden en IT en beveiliging te checken.",
+			"Anna Bakker heeft je uitgenodigd om akkoord te geven, de invoering te leiden en IT en beveiliging te checken.",
 		);
 	});
 
@@ -133,9 +132,7 @@ describe("the words for labels, hints and signing", () => {
 		expect(labelText("rollout")).toBe("Will run the rollout");
 		expect(labelText("it_security")).toBe("Checks IT and security");
 		expect(labelText("privacy_ai")).toBe("Checks privacy and AI rules");
-		expect(labelText("contract_purchasing")).toBe(
-			"Handles contract and purchasing",
-		);
+		expect(labelText("contract_purchasing")).toBe("Handles contract");
 		expect(labelText("staff_stakeholders")).toBe(
 			"Represents staff or stakeholders",
 		);
@@ -151,7 +148,7 @@ describe("the words for labels, hints and signing", () => {
 			"Nobody checks privacy and AI rules yet.",
 		);
 		expect(hintText("contract_purchasing")).toBe(
-			"Nobody handles contract and purchasing yet.",
+			"Nobody handles the contract yet.",
 		);
 	});
 });
@@ -193,6 +190,17 @@ describe("what taking someone out does", () => {
 			}),
 		).toBe(
 			"Noor stays a member of your organisation, but can no longer read the offer and the DPA here.",
+		);
+	});
+
+	it("says that someone who signs still signs, and someone else is to be chosen", async () => {
+		const { removeSigning } = await load();
+		expect(removeSigning(base)).toBeNull();
+		expect(removeSigning({ ...base, signs: ["offer"] })).toBe(
+			"Noor still signs the offer. Choose someone else to sign it after this.",
+		);
+		expect(removeSigning({ ...base, signs: ["offer", "dpa"] })).toBe(
+			"Noor still signs the offer and the DPA. Choose someone else to sign them after this.",
 		);
 	});
 });

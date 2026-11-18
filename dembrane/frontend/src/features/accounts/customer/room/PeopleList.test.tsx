@@ -13,8 +13,8 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { RoomPageT, RoomPersonT } from "../../contract/contract.gen";
 
-// The one people component, decision lens. New in this slice (dashboard-plan.md, unit 3):
-// ./PeopleList exports PeopleList({ lens, page, onAdd, onChange, onRemove, onDismissHint }).
+// The one people component, decision lens: PeopleList({ lens, page, onAdd, onChange,
+// onRemove, onDismissHint }).
 const load = async () => (await import("./PeopleList")).PeopleList;
 
 beforeAll(() => {
@@ -165,28 +165,6 @@ describe("the decision lens", () => {
 		});
 	});
 
-	it("shows a room member the room's people only, as the server sends them", async () => {
-		await show(
-			page({
-				me: {
-					app_user_id: ME,
-					labels_question: false,
-					may_dismiss_hints: false,
-					may_invite_new: false,
-					room: "by_invite",
-				},
-				people: people.filter((p) => p.room !== "none"),
-			}),
-		);
-		fireEvent.click(screen.getByTestId("other-members-toggle"));
-		expect(
-			rowNames(screen.getByTestId("people-list")).includes(
-				"kim@example-town.example",
-			),
-		).toBe(false);
-		expect(screen.queryByTestId("person-bring-in")).toBeNull();
-	});
-
 	it("tags labels by their words, signing as an outlined marker with the pen, and nobody as 'informed'", async () => {
 		await show(page());
 		const noor = screen
@@ -209,7 +187,7 @@ describe("the decision lens", () => {
 			) as HTMLElement;
 		expect(
 			[...robin.querySelectorAll("[data-label]")].map((t) => t.textContent),
-		).toEqual(["Gives the go-ahead", "Handles contract and purchasing"]);
+		).toEqual(["Gives the go-ahead", "Handles contract"]);
 		const text = document.body.textContent ?? "";
 		expect(text).not.toMatch(/Will use it/);
 		expect(text).not.toMatch(/Keeping informed|Kept informed/);

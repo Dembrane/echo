@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
-// The grammar rule proposed with the data room (dashboard-plan.md, unit 15): in a row of
+// The grammar rule of a row of steps: in a row of
 // steps (data-steps), Back is the tertiary, text-only button (variant="subtle"); the pill
 // stays on the right. The scanner reports it as "flow.steps-back-tertiary".
 

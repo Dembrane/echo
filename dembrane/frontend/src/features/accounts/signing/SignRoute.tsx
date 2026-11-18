@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Alert,
 	Anchor,
 	Box,
@@ -19,6 +20,7 @@ import {
 	TextInput,
 	ThemeIcon,
 	Title,
+	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle, useMediaQuery } from "@mantine/hooks";
@@ -40,6 +42,7 @@ import {
 	useLegalHref,
 	usePdfData,
 	usePdfHref,
+	useRoom,
 } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
@@ -140,6 +143,8 @@ function Header({
 	children?: React.ReactNode;
 }) {
 	const [sharing, setSharing] = useState(false);
+	// On a phone the share control is its icon, so the title keeps the room.
+	const phone = useMediaQuery("(max-width: 48em)") ?? false;
 	// Those who run the account and room members share it; a named signer from outside
 	// has no room to bring anyone into.
 	const shares = doc.access === "member" || doc.access === "room";
@@ -165,20 +170,34 @@ function Header({
 							</ThemeIcon>
 						</I18nLink>
 					)}
-					<Text truncate>{doc.title}</Text>
+					{/* Two lines before it shortens, so a phone shows the whole title. */}
+					<Text lineClamp={2}>{doc.title}</Text>
 				</Group>
 				<Group gap="sm" wrap="nowrap">
 					{children}
-					{shares && (
-						<Button
-							variant="subtle"
-							leftSection={<ShareNetworkIcon size={16} aria-hidden />}
-							onClick={() => setSharing(true)}
-							data-testid="doc-share"
-						>
-							<Trans>Share with a colleague</Trans>
-						</Button>
-					)}
+					{shares &&
+						(phone ? (
+							<Tooltip label={t`Share with a colleague`}>
+								<ActionIcon
+									variant="subtle"
+									size="lg"
+									aria-label={t`Share with a colleague`}
+									onClick={() => setSharing(true)}
+									data-testid="doc-share"
+								>
+									<ShareNetworkIcon size={20} />
+								</ActionIcon>
+							</Tooltip>
+						) : (
+							<Button
+								variant="subtle"
+								leftSection={<ShareNetworkIcon size={16} aria-hidden />}
+								onClick={() => setSharing(true)}
+								data-testid="doc-share"
+							>
+								<Trans>Share with a colleague</Trans>
+							</Button>
+						))}
 				</Group>
 			</Group>
 			{/* Mounted only while open: the signing walk under it stays as it was. */}
@@ -244,12 +263,20 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 /**
  * A room member reading the offer or the DPA: its pages and the legal texts it includes.
  * Nothing to fill in or sign, and no download or print while the server says it may not
- * be saved (may_download); who signs it is said above the pages.
+ * be saved (may_download); who signs it is said above the pages: the person named on the
+ * document, else the room's signer of it.
  */
 function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const pdf = usePdfData(doc.file_url);
 	const href = usePdfHref(doc.may_download ? doc.file_url : null);
-	const signer = doc.signer?.name || doc.signer?.email || "";
+	const { data: room } = useRoom(orgId);
+	const kind = doc.kind === "offer" || doc.kind === "dpa" ? doc.kind : null;
+	const roomSigner = kind ? room?.signers[kind] : null;
+	const named =
+		doc.signer ??
+		(roomSigner?.document_id === doc.id ? roomSigner : null) ??
+		null;
+	const signer = named?.name || named?.email || "";
 	return (
 		<>
 			<Header doc={doc} orgId={orgId} />
@@ -260,7 +287,7 @@ function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 							<Trans>You can read this document. {signer} signs it.</Trans>
 						) : (
 							<Trans>
-								You can read this document. An owner, admin or Billing signs it.
+								You can read this document. Who signs it is not chosen yet.
 							</Trans>
 						)}
 					</Text>
@@ -419,7 +446,6 @@ function MaybeWaiting({
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={doc.id}
-				current={signer}
 				opened={reassigning}
 				onClose={() => setReassigning(false)}
 			/>

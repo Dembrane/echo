@@ -29,6 +29,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { Protected } from "@/components/common/Protected";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { LEGAL_PRIVACY_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -45,7 +46,7 @@ import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { AccountsApiError, call, type ResponseOf } from "../api/client";
 import { AccountsI18n } from "../i18n";
 import { SignRoute } from "./SignRoute";
-import { LogInButton, signPath as signPathOf } from "./signInLink";
+import { LogInButton, logInPath, signPath as signPathOf } from "./signInLink";
 import { clearAllDrafts } from "./signingDraft";
 
 type Invite = ResponseOf<"signerInvite">;
@@ -419,7 +420,7 @@ function OpenInvite({
 								) : (
 									<Trans>
 										You already have a dembrane account with {email}. We'll
-										email you a code to come in.
+										email you a code to log in.
 									</Trans>
 								)}
 							</Text>
@@ -433,8 +434,8 @@ function OpenInvite({
 										</Trans>
 									) : (
 										<Trans>
-											Check your name, and we'll email you a code to come in.
-											You don't need a password.
+											Check your name, and we'll email you a code to log in. You
+											don't need a password.
 										</Trans>
 									)}
 								</Text>
@@ -500,11 +501,7 @@ function OpenInvite({
 							onClick={() => submitCode(code)}
 							data-testid="invite-open"
 						>
-							{signs ? (
-								<Trans>Open the document</Trans>
-							) : (
-								<Trans>Come in</Trans>
-							)}
+							{signs ? <Trans>Open the document</Trans> : <Trans>Log in</Trans>}
 						</Button>
 						<Group justify="center">
 							<Button
@@ -610,13 +607,18 @@ const RoomGate = () => {
 	);
 };
 
-/** Signed in already: accept once when it is theirs and open, then the room. */
+/**
+ * Signed in already: accept once when it is theirs and open, then the room, read afresh
+ * so it shows at once. A refusal (withdrawn meanwhile, not for them) is said, not retried.
+ */
 function RoomSignedIn({ token }: { token: string }) {
 	const { orgId } = useRouteIds();
 	const invite = useRoomInvite(token);
 	const me = useV2Me();
 	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
 	const accepting = useRef(false);
+	const [failed, setFailed] = useState<unknown>(null);
 	const invitee = invite.data?.person.email.toLowerCase() ?? "";
 	const mine = Boolean(me.data) && me.data?.email.toLowerCase() === invitee;
 	const status = invite.data?.status;
@@ -635,12 +637,22 @@ function RoomSignedIn({ token }: { token: string }) {
 				},
 				params: { orgId },
 			})
-				.then(() => navigate(ROOM_HOME(orgId)))
-				.catch(() => {
-					accepting.current = false;
-				});
+				.then(async () => {
+					await queryClient.resetQueries();
+					navigate(ROOM_HOME(orgId));
+				})
+				.catch(setFailed);
 		}
-	}, [mine, status, orgId, token, invitee, invite.data, navigate]);
+	}, [mine, status, orgId, token, invitee, invite.data, navigate, queryClient]);
+	if (failed)
+		return (
+			<Frame>
+				<Stack gap="md" data-testid="invite-failed">
+					<ErrorNotice error={failed} />
+					<LogInLink next={ROOM_HOME(orgId)} />
+				</Stack>
+			</Frame>
+		);
 	if (invite.isError) return <RoomGone orgId={orgId} />;
 	if (!invite.data || !me.data) return <BeautifulLoading />;
 	if (!mine) return <NotYou invitee={invitee} email={me.data.email} />;
@@ -721,7 +733,7 @@ function RoomGone({ orgId }: { orgId: string }) {
 						person who invited you to send it again.
 					</Trans>
 				</Text>
-				<LogInButton next={ROOM_HOME(orgId)} />
+				<LogInLink next={ROOM_HOME(orgId)} />
 			</Stack>
 		</Frame>
 	);
@@ -737,8 +749,17 @@ function RoomClosed({ orgId }: { orgId: string }) {
 				<Text>
 					<Trans>Ask the person who invited you to send a new one.</Trans>
 				</Text>
-				<LogInButton next={ROOM_HOME(orgId)} />
+				<LogInLink next={ROOM_HOME(orgId)} />
 			</Stack>
 		</Frame>
+	);
+}
+
+/** On a page that ends here, logging in is a way on, not the page's action: a link. */
+function LogInLink({ next }: { next: string }) {
+	return (
+		<Anchor component={I18nLink} to={logInPath(next)} data-testid="sign-log-in">
+			<Trans>Log in</Trans>
+		</Anchor>
 	);
 }

@@ -24,10 +24,12 @@ import {
 
 // The page the room invitation email links to (/o/:orgId/account/join?invite=<token>):
 // who invited them to which organisation, the one-time code sign-in SignGate already has,
-// then accept and land in the room. dashboard-plan.md, unit 10: SignGate.tsx exports
-// RoomJoinGate, built on the same invitation flow as the signer's page (no second one).
+// then accept and land in the room. SignGate.tsx exports RoomJoinGate, built on the same
+// invitation flow as the signer's page (no second one).
 const state = vi.hoisted(() => ({
 	accepted: false,
+	/** The status accepting answers with instead of accepting (403, 404, 409). */
+	acceptRefused: null as null | number,
 	me: null as null | { email: string },
 	signedIn: false,
 	status: "open" as "open" | "accepted" | "closed" | "gone",
@@ -90,6 +92,18 @@ vi.mock("../api/client", async (importOriginal) => {
 				};
 			}
 			if (name === "acceptRoomInvite") {
+				if (state.acceptRefused)
+					throw new actual.AccountsApiError(
+						state.acceptRefused,
+						"Refused",
+						{},
+						{
+							action: "none",
+							code: "invite.not_found",
+							detail: "Refused",
+							params: {},
+						},
+					);
 				state.accepted = true;
 				return { org_id: "0199a1b5-0000-7000-8000-000000000001" };
 			}
@@ -122,6 +136,7 @@ beforeAll(() => {
 beforeEach(() => {
 	Object.assign(state, {
 		accepted: false,
+		acceptRefused: null,
 		me: null,
 		signedIn: false,
 		status: "open",
@@ -139,12 +154,12 @@ afterEach(() => {
 });
 
 const ORG = "0199a1b5-0000-7000-8000-000000000001";
-const open = async () => {
+const open = async (client = new QueryClient()) => {
 	const RoomJoinGate = await load();
 	return render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider env="test">
-				<QueryClientProvider client={new QueryClient()}>
+				<QueryClientProvider client={client}>
 					<MemoryRouter initialEntries={[`/o/${ORG}/account/join?invite=tok`]}>
 						<Routes>
 							<Route
@@ -241,6 +256,34 @@ describe("the room invitation page, signed in", () => {
 		await waitFor(() => expect(landed()).toBe(true));
 		expect(accepts()).toHaveLength(1);
 	});
+
+	it("reads everything afresh before landing, so the room shows at once", async () => {
+		state.signedIn = true;
+		state.me = { email: "noor@example-town.example" };
+		const client = new QueryClient();
+		const order: string[] = [];
+		const reset = client.resetQueries.bind(client);
+		vi.spyOn(client, "resetQueries").mockImplementation(async (...args) => {
+			order.push("reset");
+			await reset(...(args as Parameters<typeof reset>));
+		});
+		navigate.mockImplementation(() => order.push("navigate"));
+		await open(client);
+		await waitFor(() => expect(landed()).toBe(true));
+		expect(order.slice(0, 2)).toEqual(["reset", "navigate"]);
+	});
+
+	for (const status of [403, 404, 409])
+		it(`says so when accepting is refused (${status}), instead of waiting forever`, async () => {
+			state.signedIn = true;
+			state.me = { email: "noor@example-town.example" };
+			state.acceptRefused = status;
+			await open();
+			const failed = await screen.findByTestId("invite-failed");
+			expect(failed.querySelector("[data-error-code]")).toBeTruthy();
+			expect(landed()).toBe(false);
+			expect(accepts()).toHaveLength(1);
+		});
 
 	it("goes straight to the room once it is accepted", async () => {
 		state.signedIn = true;

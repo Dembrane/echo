@@ -6,8 +6,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { RoomPersonT } from "../../contract/contract.gen";
 
-// The small pictures at the top corner of the room's pages. New in this slice
-// (dashboard-plan.md, unit 7): ./RoomPictures exports RoomPictures({ people, onAdd }).
+// The small pictures at the top corner of the room's pages: RoomPictures({ people, onAdd }).
 const load = async () => (await import("./RoomPictures")).RoomPictures;
 
 beforeAll(() => {

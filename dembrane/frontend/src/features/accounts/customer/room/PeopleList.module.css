@@ -14,6 +14,12 @@
 	overflow-wrap: anywhere;
 }
 
+/* "you", "invited", "not added yet": after the name; on a phone "not added yet" takes its
+ * own line under it, where it would otherwise break across lines beside a long name. */
+.status {
+	margin-left: var(--mantine-spacing-xs);
+}
+
 /* A sentence with nothing beside it takes both middle columns. */
 .wide {
 	grid-column: 2 / 4;
@@ -47,6 +53,10 @@
 	.wide {
 		grid-column: 2;
 	}
+	.status[data-outside] {
+		display: block;
+		margin-left: 0;
+	}
 }
 
 /* "Other members": the accordion as a row of the list. Its header has the list's quiet
@@ -78,10 +88,8 @@
 	padding: 8px 0 16px;
 }
 
-/* The section title stays on one line; on a phone the button says less (FitLabel). */
-.title {
-	white-space: nowrap;
-}
+/* On a phone the section title may take two lines and the button says less (FitLabel),
+ * so neither is cut. */
 .info {
 	color: var(--app-muted);
 	display: inline-block;

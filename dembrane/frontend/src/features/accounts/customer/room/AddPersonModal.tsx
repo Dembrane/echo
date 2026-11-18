@@ -1,10 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { Modal } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useAccountPage, useAccountsMutation, useRoom } from "../../api/hooks";
 import type { AccountPageT, RoomPageT } from "../../contract/contract.gen";
+import { StepsModal } from "../StepsModal";
 import { AddPersonSteps, type Signing } from "./AddPersonSteps";
 import { firstName, mayNameSigner, type SignKind } from "./model";
 import type { AddPreset } from "./PeopleList";
@@ -12,8 +11,8 @@ import type { AddPreset } from "./PeopleList";
 /**
  * The one way to bring a person in or change what they do, in a dialog: from "Add
  * someone", a hint, a member not added yet, "Share" on a document, who signs and "Send to
- * someone else". Each opening starts over. On a phone it fills the screen, as the Share
- * dialog does, with the row of steps kept in view.
+ * someone else". Each opening starts over. On a phone it fills the screen with the row
+ * of steps at its foot (StepsModal).
  */
 export function AddPersonModal({
 	orgId,
@@ -37,7 +36,6 @@ export function AddPersonModal({
 	const { data: me } = useV2Me({ enabled: opened });
 	const add = useAccountsMutation("addRoomPerson", { orgId });
 	const name = useAccountsMutation("nameSigner", { orgId });
-	const phone = useMediaQuery("(max-width: 48em)") ?? false;
 	const [stepTitle, setStepTitle] = useState<string | null>(null);
 	const roomMe = room?.me ?? null;
 	const docs = room && page ? signable(room, page) : {};
@@ -51,14 +49,12 @@ export function AddPersonModal({
 			: undefined;
 	const who = preset?.person;
 	const first = who ? firstName(who) : "";
-	const fallback =
-		change && who ? t`Change what ${first} does` : t`Add someone`;
+	// Changing what someone does asks it once, as the title.
+	const fallback = change && who ? t`What does ${first} do?` : t`Add someone`;
 	return (
-		<Modal
+		<StepsModal
 			opened={opened && room !== undefined && roomMe !== null}
 			onClose={onClose}
-			centered
-			fullScreen={phone}
 			title={stepTitle ?? title ?? fallback}
 			data-testid="add-person"
 			onExitTransitionEnd={() => setStepTitle(null)}
@@ -78,7 +74,7 @@ export function AddPersonModal({
 					onTitle={setStepTitle}
 				/>
 			)}
-		</Modal>
+		</StepsModal>
 	);
 }
 

@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Anchor, Menu, Text } from "@mantine/core";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import { PersonAvatar } from "@/components/common/UserAvatar";
+import { displayRole } from "@/lib/roles";
 import type { RoomPersonT } from "../../contract/contract.gen";
 import { Row } from "../PageSection";
 import { labelText, signText } from "./copy";
@@ -57,7 +58,13 @@ export function PersonRow({
 					<Text lh="24px">
 						{person.name}
 						{(you || invited || outside) && (
-							<Text span size="xs" c="dimmed" ml="xs">
+							<Text
+								span
+								size="xs"
+								c="dimmed"
+								className={classes.status}
+								data-outside={(!you && !invited && outside) || undefined}
+							>
 								{you ? (
 									<Trans>you</Trans>
 								) : invited ? (
@@ -84,7 +91,7 @@ export function PersonRow({
 								onClick={onBringIn}
 								data-testid="person-bring-in"
 							>
-								<Trans>Add {first}</Trans>
+								<Trans>Involve {first} in procurement</Trans>
 							</Anchor>
 						)
 					) : (
@@ -133,17 +140,9 @@ export function PersonRow({
 	);
 }
 
-const roleText = (role: NonNullable<RoomPersonT["org_role"]>): string =>
-	({
-		admin: t`Admin`,
-		billing: t`Billing`,
-		member: t`Member`,
-		owner: t`Owner`,
-	})[role];
-
 /** The access lens: role and room access lead; what they do follows quietly, in words. */
 function AccessFacts({ person }: { person: RoomPersonT }) {
-	const role = person.org_role ? roleText(person.org_role) : t`Invited`;
+	const role = person.org_role ? displayRole(person.org_role) : t`Invited`;
 	const reads =
 		person.room === "none" ? t`Not added yet` : t`Reads the offer and the DPA`;
 	const doing = [

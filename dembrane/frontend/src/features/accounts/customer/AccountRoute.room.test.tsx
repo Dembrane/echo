@@ -11,7 +11,7 @@ import * as fx from "../contract/fixtures.gen";
 
 // A room member's view of the account (AccountPage.access "room"): the offer and the DPA,
 // the tasks on them read only, no invoices, billing details or questions, and no download
-// while may_download is false. dashboard-plan.md, unit 9.
+// while may_download is false.
 
 const ORG = fx.accountPage.organisation.id;
 const offer = fx.accountPage.documents.find((d) => d.kind === "offer");

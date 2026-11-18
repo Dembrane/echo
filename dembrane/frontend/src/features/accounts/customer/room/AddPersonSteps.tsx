@@ -18,7 +18,11 @@ import {
 } from "react";
 import { PersonAvatar } from "@/components/common/UserAvatar";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import type { RequestOf, ResponseOf } from "../../api/client";
+import {
+	AccountsApiError,
+	type RequestOf,
+	type ResponseOf,
+} from "../../api/client";
 import type { RoomLabelT, RoomPersonT } from "../../contract/contract.gen";
 import { FitLabel, fitting } from "../../FitLabel";
 import classes from "./AddPersonSteps.module.css";
@@ -75,9 +79,11 @@ export interface DraftPerson {
  * may, who signs, set apart), then send. Back on the left, the step's action on the right,
  * on one row. An address outside the inviter's own domain is flagged under the field and
  * again before sending: a hint, never a block. A refusal keeps the send step and says
- * why. The last step says what happened.
+ * why; refused because only an owner or admin invites someone new, it leaves only Back,
+ * to change the address. The last step says what happened.
  *
- * `change` is the same "what" step on its own, for someone already in: it saves.
+ * `change` is the same "what" step on its own, for someone already in: it saves. The
+ * dialog's title asks the question there, so the step does not repeat it.
  * `onDraft` collects the person without sending anything (who signs sends them itself).
  */
 export function AddPersonSteps({
@@ -243,6 +249,10 @@ export function AddPersonSteps({
 	};
 
 	const back = () => {
+		if (refusedNew) {
+			setError(null);
+			return setStep("who");
+		}
 		if (step === "confirm") return setStep(change ? "what" : "send");
 		if (step === "send") return setStep("what");
 		if (step === "what" && !change && !startKnown) return setStep("who");
@@ -255,7 +265,6 @@ export function AddPersonSteps({
 				name={theirName}
 				email={address}
 				answer={result.answer}
-				signed={result.signed}
 				onDone={onDone}
 			/>
 		);
@@ -273,7 +282,7 @@ export function AddPersonSteps({
 				<Trans>Next</Trans>
 			)
 		) : step === "confirm" ? (
-			<Trans>Change who signs</Trans>
+			<Trans>Have {first} sign</Trans>
 		) : inRoom && newSigns.length === 0 ? (
 			<Trans>Save</Trans>
 		) : (
@@ -281,6 +290,11 @@ export function AddPersonSteps({
 		);
 	const firstStep =
 		step === "who" || (step === "what" && (change || startKnown));
+	// Only an owner or admin brings in someone new: sending again would fail again.
+	const refusedNew =
+		error instanceof AccountsApiError &&
+		(error.body as { code?: string } | null)?.code ===
+			"room.new_person_admins_only";
 
 	return (
 		<form onSubmit={next} noValidate>
@@ -289,7 +303,7 @@ export function AddPersonSteps({
 					<Stack gap="md">
 						<Autocomplete
 							ref={field}
-							label={t`Their email address`}
+							label={t`Email address`}
 							type="email"
 							autoComplete="off"
 							value={email}
@@ -345,7 +359,7 @@ export function AddPersonSteps({
 							data-testid="person-email"
 						/>
 						<TextInput
-							label={t`Their name`}
+							label={t`Name`}
 							autoComplete="off"
 							maxLength={200}
 							value={name}
@@ -364,7 +378,7 @@ export function AddPersonSteps({
 						<LabelChoices
 							value={what}
 							onChange={setWhat}
-							question={t`What does ${first} do?`}
+							question={change ? null : t`What does ${first} do?`}
 						/>
 						<SigningChoice
 							kinds={kinds}
@@ -381,25 +395,19 @@ export function AddPersonSteps({
 						/>
 					</>
 				)}
-				{step === "send" && (
-					<Stack gap="md" data-testid="person-review">
-						<Group gap="sm" wrap="nowrap" align="flex-start">
-							<PersonAvatar person={{ email: address, name: theirName }} />
-							<Stack gap={0} className={classes.option}>
-								<Text lh="24px">{theirName}</Text>
-								<Text size="xs" lh="20px" c="dimmed">
-									{address}
-								</Text>
-							</Stack>
-						</Group>
+				{/* Refused, it would not happen: only the refusal is said. */}
+				{step === "send" && !refusedNew && (
+					<Stack gap="sm" data-testid="person-review">
+						<Text size="sm">
+							{whatHappens(theirName, address, known, newSigns)}
+						</Text>
 						<PersonTags
 							labels={what.labels}
 							other={what.other}
 							signs={[...own, ...newSigns]}
 						/>
-						<Text>{whatHappens(first, known, newSigns)}</Text>
 						{outside && (
-							<Text size="sm" c="dimmed">
+							<Text size="xs" c="dimmed">
 								<OutsideDomain domain={outside} />
 							</Text>
 						)}
@@ -410,12 +418,7 @@ export function AddPersonSteps({
 				)}
 				{error ? <ErrorNotice error={error} /> : null}
 				{/* A row of steps: Back on the left, quiet; the step's action on the right. */}
-				<Group
-					data-steps
-					justify="space-between"
-					wrap="nowrap"
-					className={classes.steps}
-				>
+				<Group data-steps justify="space-between" wrap="nowrap">
 					<Button
 						variant="subtle"
 						onClick={back}
@@ -424,15 +427,17 @@ export function AddPersonSteps({
 					>
 						{firstStep ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
-					<Button
-						type="submit"
-						variant="filled"
-						loading={pending}
-						data-testid="person-next"
-						{...fitting}
-					>
-						<FitLabel>{primary}</FitLabel>
-					</Button>
+					{!refusedNew && (
+						<Button
+							type="submit"
+							variant="filled"
+							loading={pending}
+							data-testid="person-next"
+							{...fitting}
+						>
+							<FitLabel>{primary}</FitLabel>
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		</form>
@@ -466,59 +471,47 @@ function OutsideDomain({ domain }: { domain: string }) {
 }
 
 /** The signing link that goes out with it, as a sentence; empty for none. */
-const alsoSigns = (first: string, signs: SignKind[]): string =>
+const alsoSigns = (signs: SignKind[]): string =>
 	signs.length === 2
-		? t`${first} also gets a link to sign the offer and the DPA.`
+		? t`The email also has a link to sign the offer and the DPA.`
 		: signs[0] === "offer"
-			? t`${first} also gets a link to sign the offer.`
+			? t`The email also has a link to sign the offer.`
 			: signs[0] === "dpa"
-				? t`${first} also gets a link to sign the DPA.`
+				? t`The email also has a link to sign the DPA.`
 				: "";
 
-/** What sending does, before it is sent. */
+/** What sending does, before it is sent: the person named once. */
 function whatHappens(
-	first: string,
+	name: string,
+	email: string,
 	known: RoomPersonT | null,
 	signs: SignKind[],
 ): string {
-	const sign = alsoSigns(first, signs);
+	const sign = alsoSigns(signs);
 	const base = !known
-		? t`We email ${first} a link to join your organisation. There, ${first} reads the offer and the DPA.`
+		? t`We email ${name} at ${email} a link to join your organisation and read the offer and the DPA.`
 		: known.room === "none"
-			? t`We email ${first} a link. ${first} can then read the offer and the DPA.`
-			: t`${first} is already here. Only what ${first} does changes.`;
+			? t`We email ${name} at ${email} a link to read the offer and the DPA.`
+			: signs.length
+				? t`${name} is already here.`
+				: t`${name} is already here. Only what they do changes.`;
 	return sign ? `${base} ${sign}` : base;
 }
 
-/** The end of the flow: what happened, then Done. */
+/** The end of the flow: what happened in one sentence, then Done, on the right. */
 function Sent({
 	name,
 	email,
 	answer,
-	signed,
 	onDone,
 }: {
 	name: string;
 	email: string;
 	answer: ResponseOf<"addRoomPerson"> | null;
-	signed: SignKind[];
 	onDone: () => void;
 }) {
 	const first = firstName({ email, name });
 	const status = answer?.status ?? null;
-	const signing = alsoSigns(first, signed);
-	const base =
-		status === "invited"
-			? t`We emailed ${name} at ${email} a link to join. There, ${first} can read the offer and the DPA.`
-			: status === "added"
-				? t`We emailed ${name} at ${email}. ${first} can now read the offer and the DPA.`
-				: status === "updated"
-					? t`${first} was already here. What ${first} does is updated.`
-					: signed.length === 2
-						? t`We emailed ${name} at ${email} a link to sign the offer and the DPA.`
-						: signed[0] === "dpa"
-							? t`We emailed ${name} at ${email} a link to sign the DPA.`
-							: t`We emailed ${name} at ${email} a link to sign the offer.`;
 	const reach = status === "invited" ? (answer?.workspaces_reached ?? 0) : 0;
 	return (
 		<Stack gap="md" data-testid="person-sent">
@@ -530,20 +523,22 @@ function Sent({
 					className={classes.done}
 				/>
 				<Stack gap="xs">
-					<Text>
-						{status === null ? base : [base, signing].filter(Boolean).join(" ")}
+					<Text size="sm">
+						{status === "updated"
+							? t`What ${first} does is saved.`
+							: t`We emailed ${name} at ${email}.`}
 					</Text>
 					{reach > 0 && (
-						<Text size="sm" c="dimmed" data-testid="person-workspaces">
+						<Text size="xs" c="dimmed" data-testid="person-workspaces">
 							{plural(reach, {
-								one: `Once ${first} joins, they are also in # workspace that every member joins.`,
-								other: `Once ${first} joins, they are also in # workspaces that every member joins.`,
+								one: `${first} will also be a member of # workspace that is open to everyone in your organisation.`,
+								other: `${first} will also be a member of # workspaces that are open to everyone in your organisation.`,
 							})}
 						</Text>
 					)}
 				</Stack>
 			</Group>
-			<Group>
+			<Group data-steps justify="flex-end">
 				<Button variant="filled" onClick={onDone} data-testid="person-done">
 					<Trans>Done</Trans>
 				</Button>

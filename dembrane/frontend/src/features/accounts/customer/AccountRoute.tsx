@@ -252,7 +252,13 @@ function AccountPage({
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<Group justify="space-between" align="center" gap="md">
+				{/* On a phone the room's pictures go under the title (app-stack-narrow). */}
+				<Group
+					justify="space-between"
+					align="center"
+					gap="md"
+					className="app-stack-narrow"
+				>
 					<Title order={2}>{title}</Title>
 					{data && organisationId && <RoomCorner orgId={organisationId} />}
 				</Group>

@@ -18,8 +18,6 @@ export function SendToSomeoneElse({
 	orgId: string;
 	docId: string | null;
 	opened: boolean;
-	/** Kept for the callers; who signs now shows in the flow itself. */
-	current?: { email: string; name: string | null; role: string | null } | null;
 	onClose: () => void;
 }) {
 	const { data: page } = useAccountPage(opened ? orgId : undefined);

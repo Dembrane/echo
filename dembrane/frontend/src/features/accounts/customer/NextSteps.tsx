@@ -188,7 +188,6 @@ export function NextSteps({
 				orgId={orgId}
 				docId={sendingTo}
 				opened={sendingTo !== null}
-				current={documents.find((d) => d.id === sendingTo)?.signer ?? null}
 				onClose={() => setSendingTo(null)}
 			/>
 		</>

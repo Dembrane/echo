@@ -12,9 +12,8 @@ import {
 } from "../../api/client";
 import type { RoomPageT, RoomPersonT } from "../../contract/contract.gen";
 
-// Adding someone, as steps: who, what they do, send. New in this slice (dashboard-plan.md,
-// unit 4): ./AddPersonSteps exports AddPersonSteps({ me, myEmail, people, preset,
-// onSubmit, onCancel, onDone }). The words for room.new_person_admins_only are unit 2.
+// Adding someone, as steps: who, what they do, send: AddPersonSteps({ me, myEmail,
+// people, preset, onSubmit, onCancel, onDone }).
 const load = async () => (await import("./AddPersonSteps")).AddPersonSteps;
 
 beforeAll(() => {
@@ -373,16 +372,17 @@ describe("signing, in the same flow", () => {
 		next();
 	};
 
-	it("shows Signs the offer and Signs the DPA as signing markers, apart from the labels", async () => {
+	it("shows Signs the offer and Signs the DPA as choices led by the pen, apart from the labels", async () => {
 		await showSigning();
 		toWhat();
 		for (const kind of ["offer", "dpa"]) {
 			const choice = screen.getByTestId(`sign-${kind}`);
-			expect(choice.getAttribute("data-sign")).toBe(kind);
-			expect(choice.getAttribute("data-variant")).toBe("outline");
 			expect(choice.querySelector("svg")).not.toBeNull();
-			expect(choice.classList.contains("app-choice")).toBe(false);
+			expect(choice.classList.contains("app-choice")).toBe(true);
 			expect(choice.hasAttribute("data-label")).toBe(false);
+			expect(choice.closest('[role="group"]')?.getAttribute("aria-label")).toBe(
+				"Signing",
+			);
 		}
 		expect(screen.getByTestId("sign-offer").textContent).toContain(
 			"Signs the offer",
@@ -424,8 +424,11 @@ describe("signing, in the same flow", () => {
 			offerSigner: { email: "noor@example-town.example", name: "Noor Example" },
 		});
 		toWhat();
-		expect(screen.getByText("Now: Noor Example")).toBeTruthy();
+		expect(screen.queryByTestId("sign-offer-replaces")).toBeNull();
 		fireEvent.click(screen.getByTestId("sign-offer"));
+		expect(screen.getByTestId("sign-offer-replaces").textContent).toBe(
+			"Replaces Noor Example",
+		);
 		next();
 		next();
 		expect(screen.getByTestId("new-signer-notice").textContent).toContain(

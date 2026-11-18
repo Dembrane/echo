@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Menu, Modal, Radio, Stack, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { Button, Group, Menu, Radio, Stack, Text } from "@mantine/core";
 import { CheckCircleIcon, UserPlusIcon } from "@phosphor-icons/react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -18,6 +17,7 @@ import { signable } from "./room/AddPersonModal";
 import { AddPersonSteps, type DraftPerson } from "./room/AddPersonSteps";
 import { signText } from "./room/copy";
 import { mayNameSigner, type SignKind } from "./room/model";
+import { StepsModal } from "./StepsModal";
 import { KindIcon, secondary, TaskLine } from "./TaskLine";
 import classes from "./WhoSigns.module.css";
 
@@ -31,6 +31,8 @@ interface Candidate {
 	name: string;
 	role: string | null;
 	draft?: DraftPerson;
+	/** A member who is not in the room yet. */
+	outside?: boolean;
 }
 
 /**
@@ -64,6 +66,8 @@ export function WhoSigns({
 	const [dpia, setDpia] = useState<"no" | "yes" | null>(null);
 	const [tried, setTried] = useState(false);
 	const [error, setError] = useState<unknown>(null);
+	// The answer went through, but bringing someone new into the room did not.
+	const [addError, setAddError] = useState<unknown>(null);
 	const [pending, setPending] = useState(false);
 	const { data: me } = useV2Me({ enabled: opened });
 	const { data: room } = useRoom(orgId, opened);
@@ -73,7 +77,6 @@ export function WhoSigns({
 		taskId: task?.id ?? "",
 	});
 	const add = useAccountsMutation("addRoomPerson", { orgId });
-	const phone = useMediaQuery("(max-width: 48em)") ?? false;
 
 	// Each opening starts over.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on open only
@@ -86,6 +89,7 @@ export function WhoSigns({
 		setDpia(null);
 		setTried(false);
 		setError(null);
+		setAddError(null);
 	}, [opened]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: a new step starts untried
@@ -97,6 +101,7 @@ export function WhoSigns({
 		myEmail;
 	const offer = page?.documents.find((d) => d.id === task?.document_id);
 	const mayName = mayNameSigner(offer);
+	// Everyone who may be chosen, by name; members not in the room yet are marked so.
 	const candidates: Candidate[] = [
 		{ email: myEmail, name: myName, role: null },
 		...(mayName
@@ -105,13 +110,14 @@ export function WhoSigns({
 					.map((p) => ({
 						email: p.email.toLowerCase(),
 						name: p.name,
+						outside: p.room === "none",
 						role: null,
 					}))
 			: []),
 		...added.filter(
 			(a) => !room?.people.some((p) => p.email.toLowerCase() === a.email),
 		),
-	];
+	].sort((a, b) => a.name.localeCompare(b.name));
 	const who = (email: string | null) =>
 		candidates.find((c) => c.email === email) ?? null;
 
@@ -155,11 +161,12 @@ export function WhoSigns({
 					offer_signer: o.email === myEmail ? null : asSigner(o),
 				},
 			});
-			// Someone new comes into the room with what they do, once named.
+			// Someone new comes into the room with what they do, once named. The signing
+			// link has gone out by now, so a refusal here is said on the last step.
 			for (const c of added) {
 				if (!c.draft || !room?.me?.may_invite_new) continue;
 				const { signs: _s, role: _r, ...body } = c.draft;
-				await add.mutateAsync({ body }).catch(() => null);
+				await add.mutateAsync({ body }).catch(setAddError);
 			}
 			setStep("done");
 		} catch (e) {
@@ -198,11 +205,9 @@ export function WhoSigns({
 
 	if (adding && room?.me && page)
 		return (
-			<Modal
+			<StepsModal
 				opened={opened}
 				onClose={onClose}
-				centered
-				fullScreen={phone}
 				title={<Trans>Someone new</Trans>}
 				data-testid="who-signs"
 			>
@@ -237,15 +242,13 @@ export function WhoSigns({
 					onCancel={() => setAdding(null)}
 					onDone={() => setAdding(null)}
 				/>
-			</Modal>
+			</StepsModal>
 		);
 
 	return (
-		<Modal
+		<StepsModal
 			opened={opened}
 			onClose={onClose}
-			centered
-			fullScreen={phone}
 			title={step === "done" ? <Trans>Thank you</Trans> : title}
 			data-testid="who-signs"
 		>
@@ -294,6 +297,7 @@ export function WhoSigns({
 							)}
 						</Stack>
 					</Group>
+					{addError ? <ErrorNotice error={addError} /> : null}
 					<ActionRow>
 						{offerOther ? (
 							<span />
@@ -382,6 +386,17 @@ export function WhoSigns({
 																	) : (
 																		c.name
 																	)}
+																	{c.outside && (
+																		<Text
+																			span
+																			size="xs"
+																			c="dimmed"
+																			ml="xs"
+																			data-testid="signer-candidate-outside"
+																		>
+																			<Trans>not added yet</Trans>
+																		</Text>
+																	)}
 																</Menu.Item>
 															))}
 															{mayName && (
@@ -455,19 +470,18 @@ export function WhoSigns({
 								data-testid="who-signs-next"
 							>
 								<FitLabel>
-									{need ??
-										(step === "dpia" ? (
-											<Trans>Confirm</Trans>
-										) : (
-											<Trans>Next</Trans>
-										))}
+									{step === "dpia" ? (
+										<Trans>Confirm</Trans>
+									) : (
+										<Trans>Next</Trans>
+									)}
 								</FitLabel>
 							</Button>
 						</ActionRow>
 					</Stack>
 				</form>
 			)}
-		</Modal>
+		</StepsModal>
 	);
 }
 
