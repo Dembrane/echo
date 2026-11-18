@@ -45,6 +45,135 @@ export const getReleases = (): Release[] => [
 	{
 		changes: [
 			{
+				text: t`Start from a template, like a focus group or citizens' assembly, already set up for you.`,
+				type: "feature",
+			},
+			{
+				text: t`Drop in an agenda or invitation and dembrane configures the project for you.`,
+				type: "feature",
+			},
+			{
+				text: t`Set up your portal page by page, with a live preview of what participants see.`,
+				type: "feature",
+			},
+			{
+				text: t`Test Explore and Verify on a sample conversation before participants use them.`,
+				type: "feature",
+			},
+			{
+				text: t`The free plan now includes a monthly AI allowance for chat, reports and more.`,
+				type: "feature",
+			},
+			{
+				text: t`Explore can draw on other groups in the project. Turn it off under Cross-pollination.`,
+				type: "improvement",
+			},
+			{
+				text: t`When you upgrade, the pricing calculator on dembrane.com helps you pick a plan.`,
+				type: "improvement",
+			},
+		],
+		publication: { date: "2026-11-18", tag: "v3.6.0" },
+		title: t`Easier onboarding`,
+		version: "2026-11",
+	},
+	{
+		changes: [
+			{
+				text: t`You can now upload Apple Voice Memos (.qta and .m4a files).`,
+				type: "fix",
+			},
+			{
+				text: t`Participants are told when their microphone drops, so they can fix it.`,
+				type: "fix",
+			},
+			{ text: t`Chat suggestions no longer get stuck loading.`, type: "fix" },
+			{
+				text: t`Tags stay where you drop them when you drag them into a new order.`,
+				type: "fix",
+			},
+			{
+				text: t`Scrolling to the bottom of a transcript now reaches the very end.`,
+				type: "fix",
+			},
+			{
+				text: t`The sign-up form tells you which fields are missing.`,
+				type: "fix",
+			},
+		],
+		publication: { date: "2026-10-29", tag: "v3.5.3" },
+		title: t`Voice memos and smoother chat`,
+		version: "v3.5.3",
+	},
+	{
+		changes: [
+			{
+				text: t`Uploads no longer fail because of how a file is named.`,
+				type: "fix",
+			},
+		],
+		publication: { date: "2026-10-27", tag: "v3.5.2" },
+		title: t`More reliable uploads`,
+		version: "v3.5.2",
+	},
+	{
+		publication: { date: "2026-10-23", tag: "v3.5.1" },
+		title: t`Improvements and bug fixes`,
+		version: "v3.5.1",
+	},
+	{
+		changes: [
+			{
+				text: t`Start using dembrane for free, with recording hours included every month.`,
+				type: "feature",
+			},
+			{
+				text: t`A banner tells you when this month's free hours are used up.`,
+				type: "improvement",
+			},
+		],
+		publication: { date: "2026-10-23", tag: "v3.5.0" },
+		title: t`A new free plan`,
+		version: "v3.5.0",
+	},
+	{
+		changes: [
+			{
+				text: t`The 15-second skip buttons now sit together, so it is easier to replay a moment.`,
+				type: "improvement",
+			},
+		],
+		publication: { date: "2026-10-20", tag: "v3.4.1" },
+		title: t`Easier playback`,
+		version: "v3.4.1",
+	},
+	{
+		changes: [
+			{
+				text: t`Transcripts are split into paragraphs, so long conversations are easier to read.`,
+				type: "improvement",
+			},
+			{
+				text: t`The audio player stays in view while you scroll, so you can listen and read along.`,
+				type: "improvement",
+			},
+			{
+				text: t`Long uploads in any audio format are transcribed reliably instead of timing out.`,
+				type: "fix",
+			},
+		],
+		publication: { date: "2026-10-20", tag: "v3.4.0" },
+		title: t`Easier-to-read transcripts`,
+		version: "v3.4.0",
+	},
+	{
+		publication: { date: "2026-10-20", tag: "v3.3.1" },
+		title: t`Improvements and bug fixes`,
+		version: "v3.3.1",
+	},
+	{
+		changes: [
+			{
 				text: t`All-new Present features: show live results on a big screen during your session.`,
 				type: "feature",
 			},
