@@ -95,6 +95,25 @@ describe("the fixture backend's room", () => {
 			});
 		});
 
+		it("says per person whether the one looking may take them out or change what they do", async () => {
+			const may = async (email: string) => {
+				const p = (await room()).people.find((x) => x.email === email);
+				return [p?.may_remove, p?.may_relabel];
+			};
+			expect(await may("noor@example-town.example")).toEqual([true, true]);
+			expect(await may("sam@example-town.example")).toEqual([true, true]);
+			expect(await may("billing@example-town.example")).toEqual([false, true]);
+			expect(await may("robin@example-town.example")).toEqual([false, false]);
+			expect(await may("kim@example-town.example")).toEqual([false, false]);
+			as("colleague");
+			for (const p of (await room()).people)
+				expect([p.email, p.may_remove, p.may_relabel]).toEqual([
+					p.email,
+					false,
+					false,
+				]);
+		});
+
 		it("refuses a member outside the room, the account page included", async () => {
 			as("member");
 			await expect(room()).rejects.toMatchObject({ status: 403 });
@@ -358,7 +377,10 @@ describe("the fixture backend's room", () => {
 	describe("the invitation", () => {
 		it("opens before sign-in, is accepted once, and then says so", async () => {
 			const read = () =>
-				client.call("roomInvite", { params, query: { invite: "invite-token-0001" } });
+				client.call("roomInvite", {
+					params,
+					query: { invite: "invite-token-0001" },
+				});
 			expect(await read()).toMatchObject({
 				inviter: { name: "Robin Example" },
 				person: { email: "noor@example-town.example" },
@@ -366,7 +388,11 @@ describe("the fixture backend's room", () => {
 			});
 			expect(
 				await client.call("acceptRoomInvite", {
-					body: { first_name: "Noor", invite: "invite-token-0001", last_name: "Example" },
+					body: {
+						first_name: "Noor",
+						invite: "invite-token-0001",
+						last_name: "Example",
+					},
 					params,
 				}),
 			).toEqual({ org_id: orgId });
@@ -382,7 +408,10 @@ describe("the fixture backend's room", () => {
 				params: { orgId, personId: personId("noor@example-town.example") },
 			});
 			await expect(
-				client.call("roomInvite", { params, query: { invite: "invite-token-0001" } }),
+				client.call("roomInvite", {
+					params,
+					query: { invite: "invite-token-0001" },
+				}),
 			).rejects.toMatchObject({ status: 404 });
 		});
 	});

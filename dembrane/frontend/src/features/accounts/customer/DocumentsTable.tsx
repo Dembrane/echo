@@ -29,7 +29,7 @@ export function DocumentsTable({
 	documents,
 	title = <Trans>Documents</Trans>,
 	access = "account",
-	myEmail,
+	signing = [],
 	onShare,
 }: {
 	orgId: string;
@@ -37,8 +37,8 @@ export function DocumentsTable({
 	/** The section heading; null on the Documents page, whose own title says it. */
 	title?: ReactNode;
 	access?: AccountPageT["access"];
-	/** The person looking: a room member named to sign opens their document to sign. */
-	myEmail?: string;
+	/** The documents the person looking is named to sign, as the room says (mySigning). */
+	signing?: readonly string[];
 	/** Brings someone in, for this document; absent where nobody can add someone. */
 	onShare?: (doc: DocumentSummaryT) => void;
 }) {
@@ -58,7 +58,7 @@ export function DocumentsTable({
 							orgId={orgId}
 							doc={doc}
 							access={access}
-							myEmail={myEmail}
+							signing={signing}
 							onShare={onShare}
 						/>
 					))}
@@ -72,13 +72,13 @@ function DocumentRow({
 	orgId,
 	doc,
 	access,
-	myEmail,
+	signing,
 	onShare,
 }: {
 	orgId: string;
 	doc: DocumentSummaryT;
 	access: AccountPageT["access"];
-	myEmail?: string;
+	signing: readonly string[];
 	onShare?: (doc: DocumentSummaryT) => void;
 }) {
 	const { i18n } = useLingui();
@@ -86,10 +86,8 @@ function DocumentRow({
 		doc.requires_signature &&
 		(doc.status === "sent" || doc.status === "viewed");
 	// A room member signs only what they are named to sign; everyone else reads.
-	const named =
-		myEmail !== undefined &&
-		doc.signer?.email.toLowerCase() === myEmail.toLowerCase();
-	const signable = waiting && (access === "account" || named);
+	const signable =
+		waiting && (access === "account" || signing.includes(doc.id));
 	const reads = access === "room" && !signable && !doc.may_download;
 	const pdfUrl = doc.status === "signed" ? doc.signed_pdf_url : doc.file_url;
 	const href = usePdfHref(signable || !doc.may_download ? null : pdfUrl);

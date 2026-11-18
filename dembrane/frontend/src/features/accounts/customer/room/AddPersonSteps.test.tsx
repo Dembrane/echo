@@ -62,6 +62,8 @@ const kim: RoomPersonT = {
 	invited_by: null,
 	labels: [],
 	labels_answered_at: null,
+	may_relabel: false,
+	may_remove: false,
 	name: "Kim Example",
 	org_role: "member",
 	other: null,
@@ -444,10 +446,22 @@ describe("signing, in the same flow", () => {
 		expect(screen.getByTestId("person-job")).toBeTruthy();
 	});
 
-	it("shows no signing to someone who may not name a signer", async () => {
-		await showSigning({ me: colleague });
-		toWhat();
-		expect(screen.queryByTestId("sign-offer")).toBeNull();
-		expect(document.querySelector("[data-sign]")).toBeNull();
+	it("offers no document to sign where the server says no signer may be named", async () => {
+		const { signable } = await import("./AddPersonModal");
+		const fx = await import("../../contract/fixtures.gen");
+		const open = {
+			...fx.accountPage,
+			documents: fx.accountPage.documents.map((d) => ({
+				...d,
+				requires_signature: true,
+				status: "sent" as const,
+			})),
+		};
+		expect(Object.keys(signable(fx.roomPage, open)).length).toBeGreaterThan(0);
+		const refused = {
+			...open,
+			documents: open.documents.map((d) => ({ ...d, may_name_signer: false })),
+		};
+		expect(signable(fx.roomPage, refused)).toEqual({});
 	});
 });

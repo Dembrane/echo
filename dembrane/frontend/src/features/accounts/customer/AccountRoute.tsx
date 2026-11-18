@@ -8,7 +8,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { AccountsApiError } from "../api/client";
-import { useAccountPage } from "../api/hooks";
+import { useAccountPage, useRoom } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
 import { AccountsI18n, useAccountsCatalog } from "../i18n";
 import { BillingForm } from "./BillingForm";
@@ -18,6 +18,7 @@ import { NextSteps } from "./NextSteps";
 import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
 import { AddPersonModal } from "./room/AddPersonModal";
+import { mySigning } from "./room/model";
 import { ReadOnlyTasks } from "./room/ReadOnlyTasks";
 import { RoomCorner } from "./room/RoomCorner";
 import { RoomSection } from "./room/RoomSection";
@@ -126,7 +127,7 @@ export const AccountDocumentsRoute = () => (
 );
 
 function DocumentsBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
-	const { data: me } = useV2Me();
+	const { data: room } = useRoom(orgId);
 	const [sharing, setSharing] = useState(false);
 	return (
 		<>
@@ -135,7 +136,7 @@ function DocumentsBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 				documents={data.documents}
 				title={null}
 				access={data.access}
-				myEmail={me?.email}
+				signing={mySigning(room)}
 				onShare={() => setSharing(true)}
 			/>
 			<AddPersonModal

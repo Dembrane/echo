@@ -165,6 +165,8 @@ describe("what taking someone out does", () => {
 		invited_by: null,
 		labels: [],
 		labels_answered_at: null,
+		may_relabel: false,
+		may_remove: false,
 		name: "Noor Example",
 		org_role: null,
 		other: null,

@@ -9,9 +9,9 @@ import {
 
 /**
  * The rules of who does what in the data room, apart from the screens: who leads the
- * list, which "nobody does this yet" hint shows, who may take someone out or change what
- * they do. Everything here reads the contract's own types; signing comes from
- * `RoomPerson.signs`, never from a label.
+ * list, which "nobody does this yet" hint shows. Everything here reads the contract's own
+ * types; signing comes from `RoomPerson.signs`, never from a label, and who may take
+ * someone out or change what they do from `may_remove` and `may_relabel`.
  */
 
 export type HintLabelT = z.output<typeof HintLabel>;
@@ -114,27 +114,6 @@ export function outsideDomain(
 	return theirs && theirs !== domainOf(inviterEmail) ? theirs : null;
 }
 
-const isMe = (me: RoomMe, p: RoomPersonT) =>
-	p.app_user_id !== null && p.app_user_id === me.app_user_id;
-const brought = (me: RoomMe, p: RoomPersonT) =>
-	p.invited_by?.app_user_id === me.app_user_id;
-
-/**
- * Taking someone out: only someone brought in by an invitation (nobody takes out someone
- * in by their role), by those who run the account or by whoever brought them in.
- */
-export const mayRemove = (me: RoomMe, p: RoomPersonT): boolean =>
-	p.room === "by_invite" && (me.room === "by_role" || brought(me, p));
-
-/**
- * Changing what someone in the room does: never one's own (the first-visit question asks
- * that once), by those who run the account or by whoever brought them in.
- */
-export const mayChangeLabels = (me: RoomMe, p: RoomPersonT): boolean =>
-	p.room !== "none" &&
-	!isMe(me, p) &&
-	(me.room === "by_role" || brought(me, p));
-
 /**
  * Who may name or change a signer on a document: owners and admins, as the server says on
  * each document (`may_name_signer`). Billing signs themselves and reminds; a room member
@@ -143,6 +122,17 @@ export const mayChangeLabels = (me: RoomMe, p: RoomPersonT): boolean =>
 export const mayNameSigner = (
 	doc: { may_name_signer: boolean } | null | undefined,
 ): boolean => doc?.may_name_signer ?? false;
+
+/** The documents the person looking is named to sign, as the room's signers say. */
+export function mySigning(page: RoomPageT | undefined): string[] {
+	const mine = page?.people.find(
+		(p) => p.app_user_id !== null && p.app_user_id === page.me?.app_user_id,
+	);
+	return (mine?.signs ?? []).flatMap((k) => {
+		const id = page?.signers[k]?.document_id;
+		return id ? [id] : [];
+	});
+}
 
 /** The pictures in the page's top corner: the room's people, in the decision lens's order. */
 export function roomPictures(

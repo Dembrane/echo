@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { RoomPageT, RoomPersonT } from "../../contract/contract.gen";
 
-// The rules of who does what, apart from the screens. The module is new in this slice
-// (dashboard-plan.md, unit 1): ./model exports ROOM_LABELS, HINT_LABELS, decides,
-// decisionSplit, openHints, outsideDomain, mayRemove, mayChangeLabels, roomPictures.
+// The rules of who does what, apart from the screens: ./model exports ROOM_LABELS,
+// HINT_LABELS, decides, decisionSplit, openHints, outsideDomain and roomPictures. Who may
+// take someone out or change what they do is the server's to say (RoomPerson.may_remove,
+// may_relabel).
 const load = () => import("./model");
 /** One picture of roomPictures: the person, and whether they have joined. */
 type Picture = { person: RoomPersonT; joined: boolean };
@@ -22,6 +23,8 @@ const person = (
 	invited_by: null,
 	labels: [],
 	labels_answered_at: null,
+	may_relabel: false,
+	may_remove: false,
 	name,
 	org_role: "member",
 	other: null,
@@ -198,40 +201,6 @@ describe("an address outside the inviter's own domain", () => {
 		const { outsideDomain } = await load();
 		expect(outsideDomain("robin@example-town.example", "anna@")).toBeNull();
 		expect(outsideDomain("robin@example-town.example", "")).toBeNull();
-	});
-});
-
-describe("who may take someone out or change what they do", () => {
-	const meAdmin = page().me as NonNullable<RoomPageT["me"]>;
-	const meSam: NonNullable<RoomPageT["me"]> = {
-		app_user_id: SAM,
-		labels_question: false,
-		may_dismiss_hints: false,
-		may_invite_new: false,
-		room: "by_invite",
-	};
-
-	it("lets those who run the account take out anyone brought in, never someone in by role", async () => {
-		const { mayRemove } = await load();
-		expect(mayRemove(meAdmin, noor)).toBe(true);
-		expect(mayRemove(meAdmin, eva)).toBe(true);
-		expect(mayRemove(meAdmin, bo)).toBe(false);
-		expect(mayRemove(meAdmin, robin)).toBe(false);
-	});
-
-	it("lets a room member take out only the people they brought in", async () => {
-		const { mayRemove } = await load();
-		expect(mayRemove(meSam, eva)).toBe(true);
-		expect(mayRemove(meSam, noor)).toBe(false);
-	});
-
-	it("lets nobody change their own labels here (the first-visit question does that)", async () => {
-		const { mayChangeLabels } = await load();
-		expect(mayChangeLabels(meAdmin, robin)).toBe(false);
-		expect(mayChangeLabels(meAdmin, sam)).toBe(true);
-		expect(mayChangeLabels(meAdmin, bo)).toBe(true);
-		expect(mayChangeLabels(meSam, eva)).toBe(true);
-		expect(mayChangeLabels(meSam, noor)).toBe(false);
 	});
 });
 

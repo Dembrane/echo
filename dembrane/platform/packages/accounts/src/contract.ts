@@ -1571,6 +1571,16 @@ export const RoomPerson = z.object({
   invited_by: z.object({ app_user_id: Uuid, name: z.string() }).nullable(),
   invited_at: IsoTime.nullable(),
   signs: z.array(z.enum(["offer", "dpa"])),
+  /**
+   * Whether the caller may take them out: someone in by invitation, for those who run the
+   * account or whoever invited them. False for anyone in by role, and on the staff side.
+   */
+  may_remove: z.boolean(),
+  /**
+   * Whether the caller may change what they do: anyone in the room but the caller, for those
+   * who run the account or whoever invited them. False on the staff side.
+   */
+  may_relabel: z.boolean(),
 });
 
 /** Who signs a document, as the signer model has it: the named signer, else who signed. */

@@ -301,7 +301,12 @@ const manages = (r: RoomState, row: RoomRow | undefined) =>
 	roomAccess(r) === "account" ||
 	row?.invited_by?.app_user_id === me().app_user_id;
 
-function people(r: RoomState): RoomPersonT[] {
+/**
+ * Everyone the room knows. With `viewer` (the actor), each says whether they may take
+ * that person out or change what they do, as the server's managesPerson; on the staff
+ * side both are false.
+ */
+function people(r: RoomState, viewer = true): RoomPersonT[] {
 	const view = (
 		row: RoomRow | undefined,
 		who: {
@@ -311,23 +316,30 @@ function people(r: RoomState): RoomPersonT[] {
 			role: Role | null;
 			room: RoomPersonT["room"];
 		},
-	): RoomPersonT => ({
-		app_user_id: who.app_user_id,
-		email: who.email,
-		id: row?.id ?? null,
-		invited_at: row?.access_granted_at ?? null,
-		invited_by: row?.invited_by ?? null,
-		labels: inOrder(row?.labels ?? []),
-		labels_answered_at: row?.labels_answered_at ?? null,
-		name: who.name,
-		org_role: who.role,
-		other: row?.other ?? null,
-		room: who.room,
-		signs: (["offer", "dpa"] as const).filter(
-			(k) => r.signers[k]?.email === who.email,
-		),
-		status: who.role ? "member" : "invited",
-	});
+	): RoomPersonT => {
+		const may = viewer && manages(r, row);
+		const self =
+			who.app_user_id !== null && who.app_user_id === me().app_user_id;
+		return {
+			app_user_id: who.app_user_id,
+			email: who.email,
+			id: row?.id ?? null,
+			invited_at: row?.access_granted_at ?? null,
+			invited_by: row?.invited_by ?? null,
+			labels: inOrder(row?.labels ?? []),
+			labels_answered_at: row?.labels_answered_at ?? null,
+			may_relabel: may && who.room !== "none" && !self,
+			may_remove: may && who.room === "by_invite",
+			name: who.name,
+			org_role: who.role,
+			other: row?.other ?? null,
+			room: who.room,
+			signs: (["offer", "dpa"] as const).filter(
+				(k) => r.signers[k]?.email === who.email,
+			),
+			status: who.role ? "member" : "invited",
+		};
+	};
 	const out: RoomPersonT[] = [];
 	for (const m of r.members) {
 		const row = rowOf(r, m.email);
@@ -384,7 +396,7 @@ export function roomPage(r: RoomState): RoomPageT {
 export const staffRoomPage = (r: RoomState): RoomPageT => ({
 	dismissed_hints: hintsInOrder(r.dismissed),
 	me: null,
-	people: people(r),
+	people: people(r, false),
 	signers: { dpa: r.signers.dpa, offer: r.signers.offer },
 });
 

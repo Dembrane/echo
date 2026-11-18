@@ -15,8 +15,8 @@ import type { DocumentSummaryT } from "../contract/contract.gen";
 import * as fx from "../contract/fixtures.gen";
 
 // The documents list for those who run the account and for a room member, with the share
-// shortcut. Extends DocumentsTable (dashboard-plan.md, unit 8) with two props:
-// access?: AccountPageT["access"] (default "account") and onShare?: (doc) => void.
+// shortcut: access (default "account"), signing (the documents the room says the person
+// looking signs) and onShare.
 import { DocumentsTable } from "./DocumentsTable";
 
 beforeAll(() => {
@@ -40,16 +40,8 @@ const docs = fx.accountPage.documents;
 const offer = docs.find((d) => d.kind === "offer") as DocumentSummaryT;
 const dpa = docs.find((d) => d.kind === "dpa") as DocumentSummaryT;
 
-// The contract's props, as the plan names them; typed loosely so the test reads before
-// the props exist.
-type Props = {
-	orgId: string;
-	documents: DocumentSummaryT[];
-	title?: null;
-	access?: "account" | "room";
-	onShare?: (doc: DocumentSummaryT) => void;
-};
-const Table = DocumentsTable as unknown as (p: Props) => React.ReactElement;
+type Props = Parameters<typeof DocumentsTable>[0];
+const Table = DocumentsTable;
 
 const show = (props: Omit<Props, "orgId">) =>
 	render(
@@ -84,6 +76,12 @@ describe("the documents, for a room member", () => {
 		expect(read.getAttribute("href")).toContain(
 			`/o/${ORG}/account/documents/${offer.id}/sign`,
 		);
+	});
+
+	it("opens a document they are named to sign, as the room says, to sign", () => {
+		show({ access: "room", documents: roomDocs, signing: [offer.id] });
+		expect(within(row("offer")).getByTestId("doc-sign")).toBeTruthy();
+		expect(within(row("offer")).queryByTestId("doc-read")).toBeNull();
 	});
 
 	it("lets them download a signed copy, as the server allows", () => {

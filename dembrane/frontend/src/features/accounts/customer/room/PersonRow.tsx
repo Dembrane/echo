@@ -10,8 +10,6 @@ import {
 	firstName,
 	inLabelOrder,
 	type Lens,
-	mayChangeLabels,
-	mayRemove,
 	type RoomMe,
 	type SignKind,
 } from "./model";
@@ -47,8 +45,8 @@ export function PersonRow({
 		person.app_user_id !== null && person.app_user_id === me?.app_user_id;
 	const invited = person.status === "invited";
 	const outside = person.room === "none";
-	const change = me ? mayChangeLabels(me, person) : false;
-	const remove = me ? mayRemove(me, person) : false;
+	const change = person.may_relabel;
+	const remove = person.may_remove;
 	return (
 		<Row testId="room-person" data-email={person.email}>
 			<div className={classes.person}>

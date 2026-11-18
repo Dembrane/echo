@@ -37,6 +37,8 @@ const person = (
 	invited_by: null,
 	labels: [],
 	labels_answered_at: null,
+	may_relabel: false,
+	may_remove: false,
 	name,
 	org_role: "member",
 	other: null,

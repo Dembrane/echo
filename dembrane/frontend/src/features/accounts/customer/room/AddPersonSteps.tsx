@@ -135,11 +135,8 @@ export function AddPersonSteps({
 	const outside = outsideDomain(myEmail, address);
 	const own = known?.signs ?? [];
 	// The documents in `signing` are those the server lets this person name a signer on
-	// (mayNameSigner); a room member never does, whatever reaches here.
-	const mayName = Boolean(signing) && me.room === "by_role";
-	const kinds = mayName
-		? SIGN_ORDER.filter((k) => signing?.docs[k] !== undefined)
-		: [];
+	// (may_name_signer); for a room member there are none.
+	const kinds = SIGN_ORDER.filter((k) => signing?.docs[k] !== undefined);
 	const newSigns = signs.filter((k) => kinds.includes(k) && !own.includes(k));
 	const replaced: Replaced[] = newSigns.flatMap((kind) => {
 		const now = signing?.docs[kind]?.signer;

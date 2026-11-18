@@ -115,15 +115,22 @@ function roomSigners(docs: readonly DocumentRow[], sigs: readonly SignatureRow[]
 
 // ── the people ──────────────────────────────────────────────────────────
 
+/** Who is looking, to say what they may do to each person; null on the staff side. */
+type Viewer = { who: Signed; access: RoomAccess } | null;
+
 /**
  * Everyone the room knows, as those who run the account see them: every member (by role,
  * by invitation or not in the room) and everyone invited who has not accepted yet. A row
- * whose person left the organisation, or whose invitation lapsed, shows nobody.
+ * whose person left the organisation, or whose invitation lapsed, shows nobody. Each says
+ * whether the viewer may take them out (only someone in by invitation: removeRoomPerson)
+ * or change what they do (anyone in the room but the viewer: addRoomPerson), by
+ * managesPerson; both false on the staff side.
  */
 async function roomPeople(
   d: AccountsDeps,
   orgId: string,
   signers: Signers,
+  viewer: Viewer,
 ): Promise<RoomPersonT[]> {
   const now = d.now();
   const [members, rows, pending] = await Promise.all([
@@ -140,23 +147,29 @@ async function roomPeople(
       role: RoomPersonT["org_role"];
       room: RoomPersonT["room"];
     },
-  ): RoomPersonT => ({
-    id: r?.row.id ?? null,
-    app_user_id: who.appUserId,
-    name: who.name,
-    email: who.email,
-    org_role: who.role,
-    room: who.room,
-    status: who.role ? "member" : "invited",
-    labels: inOrder(r?.row.labels ?? []),
-    other: r?.row.other ?? null,
-    labels_answered_at: iso(r?.row.labelsAnsweredAt),
-    invited_by: r?.row.invitedBy
-      ? { app_user_id: r.row.invitedBy, name: r.inviterName ?? "" }
-      : null,
-    invited_at: iso(r?.row.accessGrantedAt),
-    signs: (["offer", "dpa"] as const).filter((k) => signers[k]?.email === who.email),
-  });
+  ): RoomPersonT => {
+    const manages = viewer !== null && managesPerson(viewer.access, r?.row ?? null, viewer.who);
+    const self = who.appUserId !== null && who.appUserId === viewer?.who.appUserId;
+    return {
+      id: r?.row.id ?? null,
+      app_user_id: who.appUserId,
+      name: who.name,
+      email: who.email,
+      org_role: who.role,
+      room: who.room,
+      status: who.role ? "member" : "invited",
+      labels: inOrder(r?.row.labels ?? []),
+      other: r?.row.other ?? null,
+      labels_answered_at: iso(r?.row.labelsAnsweredAt),
+      invited_by: r?.row.invitedBy
+        ? { app_user_id: r.row.invitedBy, name: r.inviterName ?? "" }
+        : null,
+      invited_at: iso(r?.row.accessGrantedAt),
+      signs: (["offer", "dpa"] as const).filter((k) => signers[k]?.email === who.email),
+      may_remove: manages && who.room === "by_invite",
+      may_relabel: manages && who.room !== "none" && !self,
+    };
+  };
   const people: RoomPersonT[] = [];
   const seen = new Set<string>();
   for (const m of members) {
@@ -199,7 +212,12 @@ async function roomPage(
     store.dismissedHints(d.db, org.id),
   ]);
   const signers = roomSigners(docs, sigs);
-  const all = await roomPeople(d, org.id, signers);
+  const all = await roomPeople(
+    d,
+    org.id,
+    signers,
+    viewer ? { who: viewer.who, access: viewer.access } : null,
+  );
   const room = viewer?.access.via === "room";
   const myRole = all.find((p) => viewer && p.app_user_id === viewer.who.appUserId)?.org_role;
   return {
@@ -229,13 +247,18 @@ export async function staffRoom(d: AccountsDeps, orgId: string) {
   return roomPage(d, await staffOrg(d, orgId), null);
 }
 
-/** One person as the listing shows them, after a change. */
-async function personOf(d: AccountsDeps, orgId: string, email: string): Promise<RoomPersonT> {
+/** One person as the listing shows them to the viewer, after a change. */
+async function personOf(
+  d: AccountsDeps,
+  orgId: string,
+  email: string,
+  viewer: Viewer,
+): Promise<RoomPersonT> {
   const [docs, sigs] = await Promise.all([
     store.documents(d.db, orgId),
     store.signatures(d.db, orgId),
   ]);
-  const person = (await roomPeople(d, orgId, roomSigners(docs, sigs))).find(
+  const person = (await roomPeople(d, orgId, roomSigners(docs, sigs), viewer)).find(
     (p) => p.email === email,
   );
   if (!person) throw new NotFoundError("room.person_not_found");
@@ -326,7 +349,7 @@ export async function addRoomPerson(
     workspaces: number | null = null,
   ) => ({
     status,
-    person: await personOf(d, org.id, email),
+    person: await personOf(d, org.id, email, { who, access }),
     email_sent: sent,
     workspaces_reached: workspaces,
   });
@@ -561,7 +584,7 @@ export async function answerRoomLabels(
       },
     );
   }
-  return personOf(d, org.id, row.email);
+  return personOf(d, org.id, row.email, { who, access });
 }
 
 // ── hints ───────────────────────────────────────────────────────────────
