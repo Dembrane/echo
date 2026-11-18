@@ -2,6 +2,7 @@ export { Access } from "./authorize";
 export { DrizzleAccessStore, stickyRemovedIds, workspaceReach } from "./drizzle";
 export { MemoryAccessStore } from "./memory";
 export {
+  ORG_MANAGERS,
   ORG_POLICIES,
   ORG_ROLE_POLICIES,
   ORG_ROLES,

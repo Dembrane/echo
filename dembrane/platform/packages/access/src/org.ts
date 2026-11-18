@@ -26,6 +26,12 @@ export const ORG_ROLE_POLICIES: Record<OrgRole, ReadonlySet<OrgPolicy>> = {
   owner: ACCOUNT,
 };
 
+/**
+ * The org roles that manage the organisation's people: who invites someone new (the
+ * Members page, the account's data room) and who may change roles.
+ */
+export const ORG_MANAGERS: readonly string[] = ["admin", "owner"];
+
 export function orgRoleHas(role: string | null, policy: OrgPolicy): boolean {
   if (!role || !(ORG_ROLES as readonly string[]).includes(role)) return false;
   return ORG_ROLE_POLICIES[role as OrgRole].has(policy);

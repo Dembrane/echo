@@ -1,5 +1,6 @@
 import {
   deriveWorkspaceRole,
+  ORG_MANAGERS,
   ROLE_RANK,
   resolveWorkspace,
   type WorkspaceRole,
@@ -90,7 +91,7 @@ import { validLogoUrl } from "./settings";
 import { oneLine } from "./workspaces";
 
 const ORG_ROLES = new Set(["member", "admin", "billing", "owner"]);
-const MANAGERS = ["admin", "owner"];
+const MANAGERS = ORG_MANAGERS;
 
 export function orgService(deps: TenancyDeps) {
   const { db } = deps;
