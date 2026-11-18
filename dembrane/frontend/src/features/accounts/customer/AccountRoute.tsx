@@ -17,6 +17,7 @@ import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
 import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
+import { RoomSection } from "./room/RoomSection";
 import { TalkToUs } from "./TalkToUs";
 
 /**
@@ -62,6 +63,13 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 			/>
 		</Sections>
 	);
+}
+
+/** Who is involved, under what is open on the organisation overview. */
+export function AccountOverviewRoom({ orgId }: { orgId: string }) {
+	const ready = useAccountsCatalog();
+	if (!ready) return null;
+	return <RoomSection orgId={orgId} />;
 }
 
 /** "Talk to us", at the foot of the organisation overview. */

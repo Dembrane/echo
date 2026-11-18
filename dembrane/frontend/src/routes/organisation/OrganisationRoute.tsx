@@ -76,6 +76,11 @@ const AccountOverviewWork = lazy(() =>
 		default: m.AccountOverviewWork,
 	})),
 );
+const AccountOverviewRoom = lazy(() =>
+	import("@/features/accounts/customer/AccountRoute").then((m) => ({
+		default: m.AccountOverviewRoom,
+	})),
+);
 const AccountOverviewContact = lazy(() =>
 	import("@/features/accounts/customer/AccountRoute").then((m) => ({
 		default: m.AccountOverviewContact,
@@ -1369,6 +1374,12 @@ function OrganisationOverviewPanel({
 			{hasAccount && (
 				<Suspense fallback={null}>
 					<AccountOverviewWork orgId={orgId} />
+				</Suspense>
+			)}
+
+			{hasAccount && (
+				<Suspense fallback={null}>
+					<AccountOverviewRoom orgId={orgId} />
 				</Suspense>
 			)}
 
