@@ -7,13 +7,10 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import { FitLabel, fitting } from "../FitLabel";
+import { looksLikeEmail } from "./room/model";
 
 type Step = "email" | "name" | "job" | "sent";
 const ORDER: Step[] = ["email", "name", "job"];
-
-// Enough to catch a slip; the server has the final word.
-const looksLikeEmail = (v: string) =>
-	/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
 /**
  * Handing a document to the person who signs it, one question per step: their email

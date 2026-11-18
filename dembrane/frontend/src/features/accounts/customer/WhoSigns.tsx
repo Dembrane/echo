@@ -18,6 +18,7 @@ import { useAccountsMutation } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
 import { FitLabel, fitting } from "../FitLabel";
 import { taskText } from "../format";
+import { looksLikeEmail } from "./room/model";
 
 type Step = "offer" | "dpa" | "dpia" | "done";
 const ORDER: Step[] = ["offer", "dpa", "dpia"];
@@ -28,10 +29,6 @@ interface Person {
 	job: string;
 }
 const nobody: Person = { email: "", job: "", name: "" };
-
-// Enough to catch a slip; the server has the final word.
-const looksLikeEmail = (v: string) =>
-	/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
 /** The first thing missing about a person, or null when they are complete. */
 const missing = (p: Person): "email" | "name" | null =>
