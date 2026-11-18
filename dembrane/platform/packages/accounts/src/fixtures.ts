@@ -155,6 +155,7 @@ const offerSummary: Out<typeof DocumentSummary> = {
   signed_pdf_url: null,
   accepted_outside: null,
   may_download: true,
+  may_name_signer: true,
 };
 
 export const offerDetail: Out<typeof DocumentDetail> = {
@@ -266,6 +267,7 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   signed_pdf_url: `${C}/documents/${DPA}/signed.pdf`,
   accepted_outside: null,
   may_download: true,
+  may_name_signer: true,
 };
 
 export const signedDpaDetail: Out<typeof DocumentDetail> = {
@@ -424,6 +426,7 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
   signed_pdf_url: null,
   accepted_outside: null,
   may_download: true,
+  may_name_signer: true,
   invoice: {
     number: "2026-0421",
     exact_id: "DEMO-EXACT-0001",
@@ -864,7 +867,7 @@ export const accountCard: Out<typeof AccountCard> = {
 };
 
 export const pushOfferResponse: Out<typeof PushOfferResponse> = {
-  document: { ...offerDetail, access: "staff" },
+  document: { ...offerDetail, access: "staff", may_name_signer: false },
   task: signTask,
 };
 

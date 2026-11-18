@@ -1,4 +1,4 @@
-import { deriveWorkspaceRole, ORG_MANAGERS, workspaceReach } from "@dembrane/access";
+import { deriveWorkspaceRole, workspaceReach } from "@dembrane/access";
 import { sendEmail, subjectOf } from "@dembrane/account";
 import { hostDistinctId } from "@dembrane/analytics";
 import {
@@ -10,7 +10,15 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail } from "@dembrane/i18n";
-import { customerOrg, myRoomRow, type RoomAccess, roomOrg, runsAccount, staffOrg } from "./access";
+import {
+  bringsInNewPeople,
+  customerOrg,
+  myRoomRow,
+  type RoomAccess,
+  roomOrg,
+  runsAccount,
+  staffOrg,
+} from "./access";
 import {
   HintLabel,
   RoomLabel,
@@ -204,7 +212,7 @@ async function roomPage(
           app_user_id: viewer.who.appUserId as string,
           room: room ? "by_invite" : "by_role",
           may_dismiss_hints: !room,
-          may_invite_new: mayInviteNew(myRole),
+          may_invite_new: bringsInNewPeople(myRole),
           labels_question: asksLabels(viewer.row, viewer.who.appUserId),
         }
       : null,
@@ -235,9 +243,6 @@ async function personOf(d: AccountsDeps, orgId: string, email: string): Promise<
 }
 
 // ── adding someone ──────────────────────────────────────────────────────
-
-/** Whether this org role brings in someone who is not a member yet: owner and admin, as on the Members page. */
-const mayInviteNew = (role: string | null | undefined) => ORG_MANAGERS.includes(role ?? "");
 
 /**
  * How many workspaces someone new reaches as a plain member on accepting: those every
@@ -348,7 +353,7 @@ export async function addRoomPerson(
   }
 
   const appUser = member ? null : await store.appUserByEmail(d.db, email);
-  if (!member && !mayInviteNew(members.find((m) => m.appUserId === who.appUserId)?.role))
+  if (!member && !bringsInNewPeople(members.find((m) => m.appUserId === who.appUserId)?.role))
     throw new ForbiddenError("room.new_person_admins_only");
   const workspaces = member ? null : await newcomerReach(d, org.id);
   const id = row?.id ?? newId();
@@ -462,6 +467,8 @@ export async function removeRoomPerson(
     await store.deleteRoomPerson(tx, row.id);
     if (!member) {
       if (row.orgInviteId) await store.withdrawOrgInvite(tx, row.orgInviteId, now);
+      // Named to sign meanwhile: the Billing invitation that naming makes stands again. It
+      // restores what an owner or admin already did by naming them, so no role check here.
       if ((await store.waitingForSigner(tx, row.email)).some((x) => x.orgId === org.id))
         await store.inviteSigner(tx, {
           id: newId(),

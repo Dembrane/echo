@@ -1,4 +1,10 @@
-import { ORG_ROLE_POLICIES, type OrgPolicy, type OrgRole, requireStaff } from "@dembrane/access";
+import {
+  ORG_MANAGERS,
+  ORG_ROLE_POLICIES,
+  type OrgPolicy,
+  type OrgRole,
+  requireStaff,
+} from "@dembrane/access";
 import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { type AccountsDeps, isUuid } from "./deps";
@@ -19,6 +25,36 @@ export const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filte
 export const runsAccount = (role: string | null | undefined): boolean =>
   (ACCOUNT_ROLES as readonly string[]).includes(role ?? "");
 
+/**
+ * Whether this org role brings someone new into the organisation: owners and admins, as on
+ * the Members page. The data room asks it before inviting someone who is not a member yet,
+ * and naming a signer asks it too, since a signer who is not a member is invited in.
+ */
+export const bringsInNewPeople = (role: string | null | undefined): boolean =>
+  ORG_MANAGERS.includes(role ?? "");
+
+/**
+ * Naming someone to sign the offer or the DPA, or changing who signs, is for owners and
+ * admins (403 otherwise). Billing signs themselves, and reminds the person already named.
+ */
+export function assertMayNameSigner(role: string | null | undefined): void {
+  if (!bringsInNewPeople(role)) throw new ForbiddenError("room.name_signer_admins_only");
+}
+
+/** The live organisation and the caller's org role, when that role holds the policy. */
+export async function customerOrgAs(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  policy: OrgPolicy,
+): Promise<{ org: OrgRow; role: string }> {
+  if (!isUuid(orgId)) throw new NotFoundError("organisation.not_found");
+  const { role } = await d.access.org(who, orgId, policy);
+  const org = await store.org(d.db, orgId);
+  if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
+  return { org, role };
+}
+
 /** The live organisation, when the caller's org role holds the policy. */
 export async function customerOrg(
   d: AccountsDeps,
@@ -26,11 +62,7 @@ export async function customerOrg(
   orgId: string,
   policy: OrgPolicy,
 ): Promise<OrgRow> {
-  if (!isUuid(orgId)) throw new NotFoundError("organisation.not_found");
-  await d.access.org(who, orgId, policy);
-  const org = await store.org(d.db, orgId);
-  if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
-  return org;
+  return (await customerOrgAs(d, who, orgId, policy)).org;
 }
 
 /** The caller's verified address, or null. */
@@ -62,6 +94,8 @@ export interface RoomAccess {
   readonly via: "account" | "room";
   /** The room row that grants access, when `room`; null when `account` (see myRoomRow). */
   readonly row: RoomPersonRow | null;
+  /** The caller's org role when `account`; null when `room`. */
+  readonly role: string | null;
 }
 
 /** The caller's own room row: their access, or the labels someone set for them. */
@@ -74,14 +108,15 @@ export const myRoomRow = (d: AccountsDeps, who: Signed, access: RoomAccess) =>
  */
 export async function roomOrg(d: AccountsDeps, who: Signed, orgId: string): Promise<RoomAccess> {
   try {
-    return { org: await customerOrg(d, who, orgId, "account:read"), via: "account", row: null };
+    const { org, role } = await customerOrgAs(d, who, orgId, "account:read");
+    return { org, via: "account", row: null, role };
   } catch (err) {
     // Access.org refuses a member with 403 only after finding their active membership.
     if (!(err instanceof ForbiddenError)) throw err;
     const row = await roomRow(d, who, orgId);
     const org = row ? await store.org(d.db, orgId) : null;
     if (!row || !org || org.deleted_at) throw err;
-    return { org, via: "room", row };
+    return { org, via: "room", row, role: null };
   }
 }
 
@@ -99,6 +134,8 @@ export interface DocumentAccess {
   readonly via: "member" | "signer" | "room";
   /** The caller's verified address. */
   readonly email: string | null;
+  /** The caller's org role when `member`; null the other ways. */
+  readonly role: string | null;
 }
 
 const SIGNER_POLICIES: readonly OrgPolicy[] = ["account:read", "account:sign"];
@@ -120,9 +157,10 @@ export async function documentFor(
   if (!isUuid(orgId) || !isUuid(docId)) throw new NotFoundError("document.not_found");
   const email = await verifiedEmail(d, who);
   let org: OrgRow | null = null;
+  let role: string | null = null;
   let refused: Error | null = null;
   try {
-    org = await customerOrg(d, who, orgId, policy);
+    ({ org, role } = await customerOrgAs(d, who, orgId, policy));
   } catch (err) {
     // A plain member (403) or an outsider (404) may still be the named signer.
     if (!(err instanceof NotFoundError) && !(err instanceof ForbiddenError)) throw err;
@@ -131,7 +169,7 @@ export async function documentFor(
   const doc = await store.document(d.db, orgId, docId);
   if (org) {
     if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
-    return { org, doc, via: "member", email };
+    return { org, doc, via: "member", email, role };
   }
   const named =
     doc !== null &&
@@ -147,14 +185,15 @@ export async function documentFor(
           ? await roomRow(d, who, orgId, email)
           : null;
       const orgRow = room ? await store.org(d.db, orgId) : null;
-      if (orgRow && !orgRow.deleted_at && doc) return { org: orgRow, doc, via: "room", email };
+      if (orgRow && !orgRow.deleted_at && doc)
+        return { org: orgRow, doc, via: "room", email, role: null };
       throw refused;
     }
     throw new NotFoundError("document.not_found");
   }
   const orgRow = await store.org(d.db, orgId);
   if (!orgRow || orgRow.deleted_at) throw new NotFoundError("document.not_found");
-  return { org: orgRow, doc, via: "signer", email };
+  return { org: orgRow, doc, via: "signer", email, role: null };
 }
 
 /** Only the named signer signs once one is named; otherwise any member with account:sign. */

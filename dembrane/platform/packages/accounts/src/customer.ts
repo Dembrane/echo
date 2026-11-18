@@ -8,7 +8,16 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
-import { ACCOUNT_ROLES, customerOrg, documentFor, inRoom, roomOrg } from "./access";
+import {
+  ACCOUNT_ROLES,
+  assertMayNameSigner,
+  bringsInNewPeople,
+  customerOrg,
+  customerOrgAs,
+  documentFor,
+  inRoom,
+  roomOrg,
+} from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
@@ -47,8 +56,9 @@ import {
  * and no questions to dembrane.
  */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
-  const { org, via } = await roomOrg(d, who, orgId);
+  const { org, via, role } = await roomOrg(d, who, orgId);
   const room = via === "room";
+  const mayNameSigner = bringsInNewPeople(role);
   const [allDocs, sigs, allTasks, allTickets, billing, reminded] = await Promise.all([
     store.documents(d.db, org.id),
     store.signatures(d.db, org.id),
@@ -90,6 +100,7 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
           customerBase(org.id),
           reminded.get(x.id) ?? null,
           room,
+          mayNameSigner,
         ),
       ),
     billing: billingView(billing),
@@ -107,7 +118,7 @@ const taskOrder = (s: string) => {
 /** One document with everything the signing screen shows. */
 export async function readDocument(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
   const a = await documentFor(d, who, orgId, docId, "account:read");
-  return documentDetail(d, a.doc, a.via, who);
+  return documentDetail(d, a.doc, a.via, who, true, bringsInNewPeople(a.role));
 }
 
 export async function documentDetail(
@@ -118,6 +129,8 @@ export async function documentDetail(
   viewer: Signed | null = null,
   /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
   withEmail = true,
+  /** The caller may name someone to sign: an owner or admin reading as a member. */
+  mayNameSigner = false,
 ) {
   const [sig, allFields, terms, sla, dpa, reminded, all] = await Promise.all([
     store.signatureOf(d.db, doc.id),
@@ -170,6 +183,7 @@ export async function documentDetail(
       via === "staff" ? staffBase(doc.orgId) : customerBase(doc.orgId),
       reminded.get(doc.id) ?? null,
       reader,
+      mayNameSigner,
     ),
     body: doc.body,
     content: (doc.content ?? null) as OfferContent | null,
@@ -342,7 +356,8 @@ const REMIND_LIMIT = { name: "account_signer_remind", capacity: 1, windowSeconds
  * to that address reaches this one document and nothing else of the organisation. They
  * also show among the members as invited, and the signing task waits on them: their
  * signature completes it. Naming a different person than the one already named goes on
- * the timeline as a replacement.
+ * the timeline as a replacement. Only owners and admins name or change the signer: someone
+ * who is not a member is invited in, and bringing someone new in is theirs to do.
  */
 export async function nameSigner(
   d: AccountsDeps,
@@ -351,7 +366,9 @@ export async function nameSigner(
   docId: string,
   signer: { name: string; email: string; role: string | null },
 ) {
-  const org = await customerOrg(d, who, orgId, "account:sign");
+  const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
+  // Before anything else, so a refusal costs none of the organisation's namings.
+  assertMayNameSigner(role);
   const doc = await store.document(d.db, org.id, docId);
   if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
   if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
@@ -491,7 +508,9 @@ export function dpaOf(
  * same person signs the DPA, else who does (null: the person answering), and whether they
  * want their own DPIA. The DPA is its own document, sent with the offer (openDpa); the
  * answers only say whose each signature is. Asked once per offer, before signing; changing
- * it later goes through a question to us.
+ * it later goes through a question to us. An answer that names anyone is for owners and
+ * admins: from Billing it is refused whole, before anything is applied, and "I sign" (no
+ * one named) is theirs to give.
  */
 export async function answerWhoSigns(
   d: AccountsDeps,
@@ -505,7 +524,11 @@ export async function answerWhoSigns(
     dpia: boolean;
   },
 ) {
-  const org = await customerOrg(d, who, orgId, "account:sign");
+  const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
+  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
+  // Refused whole, before anything is applied: also when the DPA no longer waits, and the
+  // person would only be named in the answer.
+  if (input.offer_signer || dpaSigner) assertMayNameSigner(role);
   const task = await store.task(d.db, org.id, taskId);
   if (task?.code !== "who_signs") throw new NotFoundError("task.not_found");
   if (!["open", "changes_requested"].includes(task.status))
@@ -513,7 +536,6 @@ export async function answerWhoSigns(
   const offer = task.documentId ? await store.document(d.db, org.id, task.documentId) : null;
   if (!offer || !["sent", "viewed"].includes(offer.status))
     throw new ConflictError("document.not_awaiting_signature");
-  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
   // The DPA the offer went out with, while it still waits on a signature.
   const dpa = dpaOf(await store.documents(d.db, org.id), offer, ["sent", "viewed"]);
   const me = await store.identity(d.db, who.directusUserId);
