@@ -3,6 +3,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { act, cleanup, render, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import { MemoryRouter, useNavigate } from "react-router";
 import { afterEach, expect, it, vi } from "vitest";
 import { resolveSidebarView } from "../hooks/useSidebarView";
@@ -110,7 +111,9 @@ const WORKSPACES = [
 let go: (path: string) => void = () => {};
 const Navigator = () => {
 	const navigate = useNavigate();
-	go = (path) => navigate(path);
+	useEffect(() => {
+		go = (path) => navigate(path);
+	});
 	return null;
 };
 
