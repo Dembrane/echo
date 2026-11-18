@@ -183,6 +183,16 @@ run("the room, as reviewed", () => {
     const pay = await call(w, "POST", `${S()}/tasks`, "staff", { title: "Pay", kind: "generic" });
     expect(pay.status).toBe(201);
     const payId = K.Task.parse(pay.data).id;
+    // Billing details stay with admins and Billing even if that task is ever put on the offer.
+    await w.db
+      .update(schema.account_task)
+      .set({ documentId: offerId })
+      .where(
+        and(
+          eq(schema.account_task.orgId, w.orgId),
+          eq(schema.account_task.kind, "billing_details"),
+        ),
+      );
     const asAdmin = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
     expect(asAdmin.tasks.some((t) => t.kind === "billing_details")).toBe(true);
     const page = K.AccountPage.parse((await call(w, "GET", C(), asKees)).data);
