@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import {
 	type AnalysisRevision,
 	analysisKeys,
@@ -153,53 +153,60 @@ export function useResultActions({
 	projectId: string;
 	holdBack?: HoldBackAdapter | null;
 }): ResultActions {
-	const edit = useWrite(projectId, "revisions", "analysis_result_edited");
-	const rollback = useWrite(projectId, "rollback", "analysis_result_undone");
+	// mutateAsync is stable across renders; the mutation objects are not.
+	const { isPending: editPending, mutateAsync: saveEdit } = useWrite(
+		projectId,
+		"revisions",
+		"analysis_result_edited",
+	);
+	const { isPending: rollbackPending, mutateAsync: saveRollback } = useWrite(
+		projectId,
+		"rollback",
+		"analysis_result_undone",
+	);
 	// The reasons given on this page, so the row can say why a finding is not
 	// in the presentation rather than only dimming.
 	const reasons = useRef(new Map<string, string>());
 
-	const editWords = useCallback(
-		async ({
-			changeKind,
-			expectedRevisionId,
-			field,
+	const editWords = async ({
+		changeKind,
+		expectedRevisionId,
+		field,
+		objectId,
+		reason,
+		words,
+	}: WordsEditInput) => {
+		// The one field that changed, and nothing else: the endpoint takes a
+		// patch of allowlisted fields (`RevisionEdit` in
+		// `server/dembrane/api/v2/bff/analysis.py`) and keeps the rest of the
+		// payload as it stands, evidence and quotes included.
+		const { revision } = await saveEdit({
+			body: {
+				change_kind: changeKind,
+				expected_revision_id: expectedRevisionId,
+				patch: { [field]: words },
+				reason,
+			},
 			objectId,
-			reason,
-			words,
-		}: WordsEditInput) => {
-			// The one field that changed, and nothing else: the endpoint takes a
-			// patch of allowlisted fields (`RevisionEdit` in
-			// `server/dembrane/api/v2/bff/analysis.py`) and keeps the rest of the
-			// payload as it stands, evidence and quotes included.
-			const { revision } = await edit.mutateAsync({
-				body: {
-					change_kind: changeKind,
-					expected_revision_id: expectedRevisionId,
-					patch: { [field]: words },
-					reason,
-				},
-				objectId,
-			});
-			return revision;
-		},
-		[edit.mutateAsync],
-	);
+		});
+		return revision;
+	};
 
-	const undoWords = useCallback(
-		async ({ expectedRevisionId, objectId, toRevisionId }: WordsUndoInput) => {
-			const { revision } = await rollback.mutateAsync({
-				body: {
-					change_kind: "rollback",
-					expected_revision_id: expectedRevisionId,
-					to_revision_id: toRevisionId,
-				},
-				objectId,
-			});
-			return revision;
-		},
-		[rollback.mutateAsync],
-	);
+	const undoWords = async ({
+		expectedRevisionId,
+		objectId,
+		toRevisionId,
+	}: WordsUndoInput) => {
+		const { revision } = await saveRollback({
+			body: {
+				change_kind: "rollback",
+				expected_revision_id: expectedRevisionId,
+				to_revision_id: toRevisionId,
+			},
+			objectId,
+		});
+		return revision;
+	};
 
 	const heldBackReasons = useMemo(
 		() => (holdBack ? readReasons() : []),
@@ -229,7 +236,7 @@ export function useResultActions({
 				}
 			: null,
 		isHeld: holdBack ? holdBack.isHeld : () => false,
-		pending: edit.isPending || rollback.isPending,
+		pending: editPending || rollbackPending,
 		showAgain: holdBack
 			? (objectId, reason) => {
 					reasons.current.delete(objectId);

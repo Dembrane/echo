@@ -250,4 +250,48 @@ describe("OrganisationRoute", () => {
 		await waitFor(async () => expect(await rows()).toEqual(["Zed"]));
 		expect(where()).toBe("/o/o1/members?search=ze");
 	});
+
+	it("sums up each member's workspace access on their card", async () => {
+		const orgWs = (id: string, name: string, is_private: boolean) => ({
+			id,
+			is_default: false,
+			is_private,
+			member_count: 1,
+			name,
+			project_count: 0,
+			tier: "pro",
+		});
+		const saved = {
+			members: responses["/v2/orgs/o1/members"],
+			workspaces: responses["/v2/orgs/o1/workspaces"],
+		};
+		responses["/v2/orgs/o1/workspaces"] = [
+			orgWs("ws-a", "Open one", false),
+			orgWs("ws-b", "Private one", true),
+		];
+		responses["/v2/orgs/o1/members"] = [
+			{
+				...person("app-zed", "Zed", "member"),
+				direct_workspace_roles: { "ws-a": "member", "ws-b": "member" },
+			},
+			{
+				...person("app-eve", "Eve", "member", true),
+				direct_workspace_roles: { "ws-a": "member", "ws-b": "admin" },
+			},
+			// No direct roles: an org admin reaches the open workspace only.
+			person("app-me", "Ada", "admin"),
+		];
+		try {
+			show("/o/o1/members");
+			// Uniform: the same role on every workspace.
+			expect(await screen.findByText("Member across all")).toBeTruthy();
+			// Mixed: a count per role.
+			expect(screen.getByText("Member on 1 · Admin on 1")).toBeTruthy();
+			// Derived only, and not everywhere.
+			expect(screen.getByText("Admin on 1")).toBeTruthy();
+		} finally {
+			responses["/v2/orgs/o1/members"] = saved.members;
+			responses["/v2/orgs/o1/workspaces"] = saved.workspaces;
+		}
+	});
 });

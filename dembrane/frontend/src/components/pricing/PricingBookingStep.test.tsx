@@ -323,3 +323,69 @@ it("puts the same answers on the plain link, which is the only channel it has", 
 	expect(link.href.length).toBeLessThan(2000);
 	expect(link.target).toBe("_blank");
 });
+
+// 5. The timings and the embed's lifetime: what the step measures from when it opened,
+// and a parent that passes a fresh prefill object on every render.
+
+it("reports how long the person waited before the fallback", () => {
+	vi.useFakeTimers();
+	const { onUnavailable } = renderStep();
+
+	act(() => {
+		vi.advanceTimersByTime(8000);
+	});
+
+	expect(onUnavailable).toHaveBeenCalledWith("timeout", 8);
+});
+
+it("times a booking from when the step opened", () => {
+	vi.useFakeTimers();
+	mockCal();
+	const { onBooked } = renderStep();
+
+	act(() => {
+		vi.advanceTimersByTime(5000);
+		window.dispatchEvent(
+			new MessageEvent("message", {
+				data: {
+					data: { status: "ACCEPTED", uid: "b-1" },
+					originator: "CAL",
+					type: "bookingSuccessfulV2",
+				},
+				origin: "https://app.cal.com",
+			}),
+		);
+	});
+
+	expect(onBooked).toHaveBeenCalledTimes(1);
+	expect(onBooked.mock.calls[0][0]).toMatchObject({
+		secondsAfterOpen: 5,
+		signal: "postmessage",
+	});
+});
+
+it("doesn't set the embed up again when the parent passes a fresh prefill", () => {
+	const { inline } = mockCal();
+	const prefill = buildBookingPrefill({
+		answers: ANSWERS,
+		questions: getQuestionSet(),
+		reference: "DEM-4F2A",
+	});
+	// The same callbacks each render: only the prefill object is new.
+	const callbacks = {
+		onBooked: vi.fn(),
+		onOpened: vi.fn(),
+		onUnavailable: vi.fn(),
+	};
+	const step = (p: Record<string, string>) => (
+		<I18nProvider i18n={i18n}>
+			<MantineProvider>
+				<PricingBookingStep {...callbacks} prefill={p} reference="DEM-4F2A" />
+			</MantineProvider>
+		</I18nProvider>
+	);
+	const view = render(step(prefill));
+	view.rerender(step({ ...prefill }));
+
+	expect(inline).toHaveBeenCalledTimes(1);
+});

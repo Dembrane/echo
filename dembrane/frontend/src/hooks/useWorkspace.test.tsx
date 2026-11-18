@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren, useEffect } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
 	useWorkspace,
@@ -82,8 +82,12 @@ afterEach(() => {
 let ctx: WorkspaceContextValue;
 
 const Consumer = () => {
-	ctx = useWorkspace();
-	return <div data-testid="ws">{ctx.workspaceId ?? ""}</div>;
+	const current = useWorkspace();
+	// Hand the context to the test after each commit, not during render.
+	useEffect(() => {
+		ctx = current;
+	});
+	return <div data-testid="ws">{current.workspaceId ?? ""}</div>;
 };
 
 const Provider = ({ children }: PropsWithChildren) => {

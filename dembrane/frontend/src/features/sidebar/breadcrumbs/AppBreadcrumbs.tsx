@@ -1,7 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { Box, Menu, UnstyledButton } from "@mantine/core";
 import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
-import { useMemo } from "react";
 import { useLocation, useMatch, useParams } from "react-router";
 import { useCanvas } from "@/components/canvas/hooks";
 import { useChat } from "@/components/chat/hooks";
@@ -133,16 +132,12 @@ export const AppBreadcrumbs = () => {
 	const chatQuery = useChat(params.chatId ?? "");
 	const canvasQuery = useCanvas(params.canvasId ?? "");
 
-	const workspace = useMemo(
-		() => workspaces.find((w) => w.id === params.workspaceId),
-		[workspaces, params.workspaceId],
-	);
-	const orgNameForId = useMemo(() => {
-		const id = orgId ?? params.orgId;
-		return workspaces.find((w) => w.org_id === id)?.org_name ?? null;
-	}, [workspaces, orgId, params.orgId]);
+	const workspace = workspaces.find((w) => w.id === params.workspaceId);
+	const orgNameForId =
+		workspaces.find((w) => w.org_id === (orgId ?? params.orgId))?.org_name ??
+		null;
 
-	const crumbs: Crumb[] = useMemo(() => {
+	const crumbs: Crumb[] = (() => {
 		// Always start with Home so the trail is anchored to a real
 		// clickable parent.
 		const out: Crumb[] = [{ href: "/o", label: "Home" }];
@@ -322,19 +317,7 @@ export const AppBreadcrumbs = () => {
 			}
 		}
 		return out;
-	}, [
-		view,
-		params,
-		workspace,
-		orgNameForId,
-		projectQuery.data?.name,
-		conversationQuery.data,
-		chatQuery.data,
-		canvasQuery.data?.name,
-		isPopcornPath,
-		isReleaseNotesPage,
-		t,
-	]);
+	})();
 
 	if (crumbs.length === 0) return null;
 

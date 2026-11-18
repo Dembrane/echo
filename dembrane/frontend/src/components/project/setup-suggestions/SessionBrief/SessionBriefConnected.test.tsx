@@ -7,7 +7,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SUGGESTIONS } from "../setupSuggestions.fixture";
 import { Providers, setUpDom } from "../testing";
@@ -45,7 +45,9 @@ const Harness = ({
 }) => {
 	const [keyTerms, setKeyTerms] = useState(initialTerms);
 	const [overrides, setOverrides] = useState<SettingOverrides>({});
-	latest = { keyTerms, overrides };
+	useEffect(() => {
+		latest = { keyTerms, overrides };
+	});
 	return (
 		<SessionBriefConnected
 			workspaceId="w1"

@@ -12,16 +12,12 @@ import {
 import { baseColors, brandColors, stateColors } from "@/colors";
 import { cn } from "@/lib/utils";
 import type { MapBudgets } from "./budgets";
-import {
-	factCheckFor,
-	factCheckSignature,
-	type MapGraphData,
-	withFactChecks,
-} from "./data/adapter";
+import { factCheckFor, type MapGraphData } from "./data/adapter";
 import { relatedObjects } from "./data/relations";
 import { MAP_EDGE_GREY } from "./graph/nodeStyle";
 import type { FactCheckStates, MapGroupDoc } from "./hooks";
 import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
+import { useVerdictKeyedNodes } from "./hooks/useVerdictKeyedNodes";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
@@ -216,14 +212,8 @@ export const MapExperience = ({
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
 
-	// Renderers restyle from node metadata. Rebuild their node array only
-	// when a displayed verdict changes, never for other fact-check fields.
-	const signature = factCheckSignature(placedNodes, factCheckStates);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the verdict signature
-	const graphNodes = useMemo(
-		() => withFactChecks(placedNodes, factCheckStates),
-		[placedNodes, signature],
-	);
+	// Renderers restyle from node metadata: rebuilt only when a verdict shows differently.
+	const graphNodes = useVerdictKeyedNodes(placedNodes, factCheckStates);
 	// One layout per argument set and budget, shared by both renderers and titles.
 	const drawsMap = settings.showTree || settings.showClusters;
 	const geometry = useMapGeometry(drawsMap ? placedNodes : EMPTY_NODES, {

@@ -177,15 +177,19 @@ export const PricingBookingStep = ({
 	reference: string;
 }) => {
 	const [isUnavailable, setIsUnavailable] = useState(false);
-	const openedAtRef = useRef(Date.now());
+	// When the step opened, read once: booking and fallback timings count from here.
+	const [openedAt] = useState(Date.now);
 	const settledRef = useRef(false);
 	const routeReportedRef = useRef(false);
 	const bookedRef = useRef(false);
 
 	// Read through a ref so a caller passing a fresh object on every render
-	// cannot remount the embed underneath the person.
+	// cannot remount the embed underneath the person. Kept current after each
+	// commit; this effect is declared before the embed's, so it runs first.
 	const prefillRef = useRef(prefill);
-	prefillRef.current = prefill;
+	useEffect(() => {
+		prefillRef.current = prefill;
+	});
 
 	const fallbackHref = useMemo(
 		() => bookingLinkWithPrefill(BookingLinks.BOOK_A_CALL, prefill),
@@ -207,14 +211,14 @@ export const PricingBookingStep = ({
 			bookedRef.current = true;
 			const { startTime, status, uid } = readBooking(payload);
 			onBooked({
-				secondsAfterOpen: Math.round((Date.now() - openedAtRef.current) / 1000),
+				secondsAfterOpen: Math.round((Date.now() - openedAt) / 1000),
 				signal: "postmessage",
 				startTime,
 				status,
 				uid,
 			});
 		},
-		[onBooked],
+		[onBooked, openedAt],
 	);
 
 	// The raw channel. The origin and the originator are both checked, because
@@ -235,7 +239,6 @@ export const PricingBookingStep = ({
 
 	// The embed. The script is appended once; the CSP decides whether it lands.
 	useEffect(() => {
-		const openedAt = openedAtRef.current;
 		let cancelled = false;
 
 		// The stub first, so `Cal` exists before anything calls it. The three
@@ -306,7 +309,7 @@ export const PricingBookingStep = ({
 			clearTimeout(timer);
 			element.removeEventListener("load", announceEmbed);
 		};
-	}, [handleBooking, onUnavailable, reportRoute]);
+	}, [handleBooking, onUnavailable, openedAt, reportRoute]);
 
 	if (isUnavailable) {
 		// The screen is true rather than reassuring: the row is written before

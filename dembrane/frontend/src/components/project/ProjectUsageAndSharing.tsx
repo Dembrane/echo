@@ -412,10 +412,9 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 		staleTime: 60_000,
 	});
 
-	const usageDataUpdatedAt = Math.min(
-		usageUpdatedAt || Date.now(),
-		convUsageUpdatedAt || Date.now(),
-	);
+	// The older of the two loads; none until something has loaded (0 means not yet).
+	const loadedAt = [usageUpdatedAt, convUsageUpdatedAt].filter((at) => at > 0);
+	const usageDataUpdatedAt = loadedAt.length > 0 ? Math.min(...loadedAt) : null;
 	const [usageRefreshing, setUsageRefreshing] = useState(false);
 	const handleUsageRefresh = async () => {
 		setUsageRefreshing(true);

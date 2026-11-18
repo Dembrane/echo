@@ -362,14 +362,14 @@ const SheetBody = ({
 	const focusKey =
 		focus.kind === "cluster" ? `cluster:${clusterKey}` : focus.id;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the focus
-	const focusIds = useMemo(
-		() =>
-			focus.kind === "cluster"
-				? clusterNodes.map((node) => node.id)
-				: [focus.id],
-		[focusKey],
-	);
+	// Built from the keys, not the node objects, so the graph below is only
+	// rebuilt when the focus really moves.
+	const focusIds =
+		focus.kind === "cluster"
+			? clusterKey
+				? clusterKey.split(",")
+				: []
+			: [focus.id];
 	const graph = useMemo(
 		() =>
 			knowledgeGraph({

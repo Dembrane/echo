@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/react/macro";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
 import { BOOKING_REFERENCE_METADATA_KEY } from "@/components/pricing/bookingPrefill";
 import {
 	type BookingSignal,
@@ -24,34 +23,26 @@ export default function BookCall({
 }) {
 	const { data: me } = useV2Me();
 	const queryClient = useQueryClient();
-	const prefill = useMemo(() => {
-		const p: Record<string, string> = { notes: `Reference ${reference}` };
-		p[BOOKING_REFERENCE_METADATA_KEY] = reference;
-		if (me?.display_name) p.name = me.display_name;
-		if (me?.email) p.email = me.email;
-		return p;
-	}, [me?.display_name, me?.email, reference]);
+	const prefill: Record<string, string> = { notes: `Reference ${reference}` };
+	prefill[BOOKING_REFERENCE_METADATA_KEY] = reference;
+	if (me?.display_name) prefill.name = me.display_name;
+	if (me?.email) prefill.email = me.email;
 
-	const onBooked = useCallback(
-		(booking: BookingSignal) => {
-			if (!booking.uid) return;
-			void call("recordBooking", {
-				body: {
-					start: booking.startTime,
-					status: booking.status,
-					uid: booking.uid,
-				},
-				params: { orgId },
-			})
-				// The booking completes "Book a call with us": show the step done.
-				.then(() =>
-					queryClient.invalidateQueries({ queryKey: accountKeys.all }),
-				)
-				.catch(() => {});
-		},
-		[orgId, queryClient],
-	);
-	const noop = useCallback(() => {}, []);
+	const onBooked = (booking: BookingSignal) => {
+		if (!booking.uid) return;
+		void call("recordBooking", {
+			body: {
+				start: booking.startTime,
+				status: booking.status,
+				uid: booking.uid,
+			},
+			params: { orgId },
+		})
+			// The booking completes "Book a call with us": show the step done.
+			.then(() => queryClient.invalidateQueries({ queryKey: accountKeys.all }))
+			.catch(() => {});
+	};
+	const noop = () => {};
 	const host = bookingHostName();
 
 	return (

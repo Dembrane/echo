@@ -344,7 +344,7 @@ export function usePulseTimer<D>(
 		};
 	}, []);
 
-	return useCallback(() => {
+	return () => {
 		if (timerRef.current) return;
 		const pulsing = pulseSelectionRef.current;
 		if (!pulsing || pulsing.empty()) return;
@@ -359,5 +359,5 @@ export function usePulseTimer<D>(
 			current.attr("opacity", pulseOpacity());
 		});
 		timerRef.current = timer;
-	}, [pulseSelectionRef]);
+	};
 }
