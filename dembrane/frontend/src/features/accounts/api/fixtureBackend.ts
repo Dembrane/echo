@@ -1074,10 +1074,24 @@ export async function handle(
 	const sBase = staffBase(s.id);
 	// The fixture actor's access, as the server checks it: a plain member reaches nothing of
 	// the account, a room member only the room, the account page and the offer and the DPA.
-	const permission = (ROUTES[name] as { permission?: string }).permission;
-	const via = permission?.startsWith("account:")
-		? room.requireRoom(roomOf(s))
-		: null;
+	const route = ROUTES[name] as { permission?: string; signer?: boolean };
+	const permission = route.permission;
+	// The named signer reads and signs their document whatever their access to the
+	// account, a room member included, as the server's documentFor does.
+	const namedSigner = () => {
+		if (!route.signer || !params.docId) return false;
+		const d = s.docs.find((x) => x.id === params.docId);
+		return (
+			d !== undefined &&
+			d.signer?.email.toLowerCase() === room.actorEmail() &&
+			["sent", "viewed", "signed"].includes(d.status)
+		);
+	};
+	const via = !permission?.startsWith("account:")
+		? null
+		: room.roomAccess(roomOf(s)) !== "account" && namedSigner()
+			? ("signer" as const)
+			: room.requireRoom(roomOf(s));
 	if (via === "room") {
 		if (!ROOM_MEMBER_ROUTES.has(name)) throw room.forbidden();
 		if ((name === "readDocument" || name === "viewDocument") && !inRoom(doc()))
@@ -1238,34 +1252,38 @@ export async function handle(
 						).length,
 					};
 				};
-				const rows = [];
-				// As the server does: those who run the account see it whole; a room member
-				// sees it as room access, counting what they read, with nothing waiting on them.
-				const home = load()[DEMO] as Store;
-				const access = room.roomAccess(roomOf(home));
-				if (own && access === "account")
-					rows.push(summarise(own.id, own.name, home));
-				if (own && access === "room") {
-					const docs = home.docs.filter(inRoom);
-					const seen = home.tasks.filter(
+				// As the server does, for each organisation: those who run the account see it
+				// whole; a room member sees it as room access, counting what they read, with
+				// nothing waiting on them; anyone else does not see it.
+				const listed = (id: string, name: string, x: Store) => {
+					const access = room.roomAccess(roomOf(x));
+					if (access === "account") return [summarise(id, name, x)];
+					if (access !== "room") return [];
+					const docs = x.docs.filter(inRoom);
+					const seen = x.tasks.filter(
 						(t) =>
 							t.status !== "withdrawn" &&
 							t.kind !== "billing_details" &&
 							docs.some((d) => d.id === t.document_id),
 					);
-					rows.push({
-						...summarise(own.id, own.name, home),
-						access: "room" as const,
-						next_task_code: null,
-						next_task_document_id: null,
-						next_task_document_kind: null,
-						next_task_params: null,
-						next_task_title: null,
-						tasks_done: seen.filter((t) => t.status === "done").length,
-						tasks_total: seen.length,
-						tasks_waiting: 0,
-					});
-				}
+					return [
+						{
+							...summarise(id, name, x),
+							access: "room" as const,
+							next_task_code: null,
+							next_task_document_id: null,
+							next_task_document_kind: null,
+							next_task_params: null,
+							next_task_title: null,
+							tasks_done: seen.filter((t) => t.status === "done").length,
+							tasks_total: seen.length,
+							tasks_waiting: 0,
+						},
+					];
+				};
+				const rows = [];
+				const home = load()[DEMO] as Store;
+				if (own) rows.push(...listed(own.id, own.name, home));
 				if (twoOrgs()) {
 					const second = load()[
 						"0199a2c0-0000-7000-8000-000000000001"
@@ -1295,7 +1313,7 @@ export async function handle(
 						});
 						done.status = "done";
 					}
-					rows.push(summarise(second.id, second.name, second));
+					rows.push(...listed(second.id, second.name, second));
 				}
 				return rows;
 			}
@@ -1344,7 +1362,9 @@ export async function handle(
 			case "readDocument":
 				return via === "room"
 					? asRoom(withUrls(doc(), cBase, "member"))
-					: asActor(withUrls(doc(), cBase, "member"), s);
+					: via === "signer"
+						? { ...withUrls(doc(), cBase, "signer"), may_name_signer: false }
+						: asActor(withUrls(doc(), cBase, "member"), s);
 			case "staffReadDocument":
 				return withUrls(doc(), sBase, "staff");
 			case "viewDocument": {

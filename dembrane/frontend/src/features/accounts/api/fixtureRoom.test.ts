@@ -9,15 +9,15 @@ i18n.activate("en-US");
 /**
  * The fixture backend serves the room routes by the same access rules as the server
  * (platform/packages/accounts/test/room-*.test.ts), so the harness and
- * VITE_ACCOUNTS_FIXTURES=1 show what each person would really see. dashboard-plan.md,
- * unit 11: fixtureBackend exports setFixtureActor(actor), actor one of "admin" (Robin,
- * the fixtures' admin), "billing" (a Billing member the store adds), "colleague" (Sam,
- * brought into the room by Robin) and "member" (Kim, a member outside the room).
- * resetFixtures() also sets the actor back to "admin". Refusals carry the catalog's
- * code in the error body.
+ * VITE_ACCOUNTS_FIXTURES=1 show what each person would really see. fixtureBackend exports
+ * setFixtureActor(actor), actor one of "admin" (Robin, the fixtures' admin), "billing" (a
+ * Billing member the store adds), "colleague" (Sam, brought into the room by Robin),
+ * "member" (Kim, a member outside the room) and "invitee" (Noor, invited, not joined).
+ * resetFixtures() also sets the actor back to "admin". Refusals carry the catalog's code
+ * in the error body.
  */
 
-type Actor = "admin" | "billing" | "colleague" | "member";
+type Actor = "admin" | "billing" | "colleague" | "member" | "invitee";
 
 describe("the fixture backend's room", () => {
 	let client: typeof import("./client");
@@ -375,44 +375,124 @@ describe("the fixture backend's room", () => {
 	});
 
 	describe("the invitation", () => {
-		it("opens before sign-in, is accepted once, and then says so", async () => {
-			const read = () =>
-				client.call("roomInvite", {
-					params,
-					query: { invite: "invite-token-0001" },
-				});
-			expect(await read()).toMatchObject({
+		const tokenOf = async (email: string) => {
+			const { roomInviteToken } = await import("./fixtureRoom");
+			const p = fx.roomPage.people.find((x) => x.email === email);
+			return roomInviteToken({
+				access_granted_at: p?.invited_at ?? null,
+				id: p?.id as string,
+			}) as string;
+		};
+		const read = (invite: string) =>
+			client.call("roomInvite", { params, query: { invite } });
+		const accept = (invite: string) =>
+			client.call("acceptRoomInvite", {
+				body: { first_name: "Noor", invite, last_name: "Example" },
+				params,
+			});
+
+		it("opens by its own token before sign-in, is accepted once by the person invited, and then says so", async () => {
+			const token = await tokenOf("noor@example-town.example");
+			expect(await read(token)).toMatchObject({
 				inviter: { name: "Robin Example" },
 				person: { email: "noor@example-town.example" },
 				status: "open",
 			});
-			expect(
-				await client.call("acceptRoomInvite", {
-					body: {
-						first_name: "Noor",
-						invite: "invite-token-0001",
-						last_name: "Example",
-					},
-					params,
-				}),
-			).toEqual({ org_id: orgId });
-			expect((await read()).status).toBe("accepted");
+			as("invitee");
+			expect(await accept(token)).toEqual({ org_id: orgId });
+			expect((await read(token)).status).toBe("accepted");
+			as("admin");
 			const noor = (await room()).people.find(
 				(p) => p.email === "noor@example-town.example",
 			);
 			expect(noor?.status).toBe("member");
 		});
 
+		it("opens nothing for a token it did not make", async () => {
+			await expect(read("not-a-token-0123456789")).rejects.toMatchObject(
+				refused(404, "invite.not_found"),
+			);
+		});
+
+		it("is not taken up by someone signed in under another address", async () => {
+			const token = await tokenOf("noor@example-town.example");
+			as("colleague");
+			await expect(accept(token)).rejects.toMatchObject(
+				refused(403, "invite.not_for_you"),
+			);
+			expect((await read(token)).status).toBe("open");
+		});
+
+		it("reads as accepted for someone who joined", async () => {
+			expect(
+				(await read(await tokenOf("sam@example-town.example"))).status,
+			).toBe("accepted");
+		});
+
 		it("no longer opens once the person is taken out", async () => {
+			const token = await tokenOf("noor@example-town.example");
 			await client.call("removeRoomPerson", {
 				params: { orgId, personId: personId("noor@example-town.example") },
 			});
-			await expect(
-				client.call("roomInvite", {
-					params,
-					query: { invite: "invite-token-0001" },
-				}),
-			).rejects.toMatchObject({ status: 404 });
+			await expect(read(token)).rejects.toMatchObject({ status: 404 });
+		});
+	});
+
+	describe("the tasks summary", () => {
+		const summary = async () => {
+			vi.stubGlobal(
+				"fetch",
+				vi.fn(
+					async () =>
+						new Response(
+							JSON.stringify({ orgs: [{ id: orgId, name: "Example Town" }] }),
+						),
+				),
+			);
+			try {
+				return await client.call("tasksSummary");
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		};
+
+		it("lists each organisation by the caller's access to it, the second one too", async () => {
+			sessionStorage.setItem("echo.accounts.fixtures.orgs", "2");
+			try {
+				expect((await summary()).map((o) => o.access)).toEqual([
+					"account",
+					"account",
+				]);
+				as("colleague");
+				expect((await summary()).map((o) => o.access)).toEqual([
+					"room",
+					"room",
+				]);
+				as("member");
+				expect(await summary()).toEqual([]);
+			} finally {
+				sessionStorage.removeItem("echo.accounts.fixtures.orgs");
+			}
+		});
+	});
+
+	describe("a room member named to sign", () => {
+		it("reads and signs their document as its signer, as the server lets them", async () => {
+			const offer = fx.accountPage.documents.find((d) => d.kind === "offer");
+			await client.call("nameSigner", {
+				body: {
+					email: "sam@example-town.example",
+					name: "Sam Example",
+					role: null,
+				},
+				params: { docId: offer?.id as string, orgId },
+			});
+			as("colleague");
+			const doc = await client.call("readDocument", {
+				params: { docId: offer?.id as string, orgId },
+			});
+			expect(doc.access).toBe("signer");
+			expect(doc.fields.length).toBeGreaterThan(0);
 		});
 	});
 });

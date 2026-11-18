@@ -15,10 +15,11 @@ import { AccountsApiError } from "./client";
  * room.ts and access.ts): who is in the room by role, by invitation or not at all, who may
  * bring whom in, take whom out and change what they do, and the once-asked labels question.
  * The person asking is the fixture actor: Robin (admin), Bo (Billing), Sam (a member Robin
- * brought in) or Kim (a member outside the room). The harness picks one with `?as=`.
+ * brought in), Kim (a member outside the room) or Noor (invited, not joined yet). The
+ * harness picks one with `?as=`.
  */
 
-export type Actor = "admin" | "billing" | "colleague" | "member";
+export type Actor = "admin" | "billing" | "colleague" | "member" | "invitee";
 type Role = NonNullable<RoomPersonT["org_role"]>;
 type Hint = (typeof HintLabel.options)[number];
 
@@ -55,6 +56,8 @@ type Signer = { document_id: string; email: string; name: string | null };
 const ROBIN = fx.roomPage.people.find((p) => p.org_role === "admin");
 const SAM = fx.roomPageAsColleague.me?.app_user_id as string;
 const BILLING_APP_USER = "0199a1b6-0000-7000-8000-000000000004";
+/** The app user Noor's code sign-in gives her, before and after she joins. */
+const NOOR_APP_USER = "0199a1b6-0000-7000-8000-000000000005";
 
 /** The four people the fixtures can be. */
 export const ACTORS: Record<Actor, { app_user_id: string; email: string }> = {
@@ -67,6 +70,7 @@ export const ACTORS: Record<Actor, { app_user_id: string; email: string }> = {
 		email: "billing@example-town.example",
 	},
 	colleague: { app_user_id: SAM, email: "sam@example-town.example" },
+	invitee: { app_user_id: NOOR_APP_USER, email: "noor@example-town.example" },
 	member: {
 		app_user_id: fx.roomPage.people.find((p) => p.room === "none")
 			?.app_user_id as string,
@@ -78,7 +82,11 @@ const ACTOR_KEY = "echo.accounts.fixtures.actor";
 let actor: Actor | null = null;
 
 const isActor = (v: unknown): v is Actor =>
-	v === "admin" || v === "billing" || v === "colleague" || v === "member";
+	v === "admin" ||
+	v === "billing" ||
+	v === "colleague" ||
+	v === "member" ||
+	v === "invitee";
 
 /** Who the fixtures answer as: set here, or `?as=` on the page, kept for the session. */
 export function fixtureActor(): Actor {
@@ -109,6 +117,14 @@ const seedOf = (): Seed => {
 		return v === "empty" || v === "crowded" || v === "unfilled" ? v : "typical";
 	} catch {
 		return "typical";
+	}
+};
+/** `?join=closed` (harness): Noor's invitation lapsed before she took it up. */
+const lapsed = (): boolean => {
+	try {
+		return new URLSearchParams(window.location.search).get("join") === "closed";
+	} catch {
+		return false;
 	}
 };
 /** `?visit=0|1|3` (harness): how many labels Sam was given, for the first-visit card. */
@@ -148,6 +164,7 @@ export function seedRoom(): RoomState {
 	const sam = state.rows.find((r) => r.email === ACTORS.colleague.email);
 	const visit = visitLabels();
 	if (sam && visit) sam.labels = visit;
+	if (lapsed()) state.invites = state.invites.filter((e) => e !== INVITED);
 	if (seed === "empty") {
 		state.rows = state.rows.filter((r) => r.email === ACTORS.admin.email);
 		state.invites = [];
@@ -268,6 +285,8 @@ function refuse(status: number, code: string): AccountsApiError {
 export const forbidden = () => new AccountsApiError(403, "Forbidden");
 
 const me = () => ACTORS[fixtureActor()];
+/** The signed-in person's address, for the named signer's checks. */
+export const actorEmail = () => me().email;
 const memberByEmail = (r: RoomState, email: string) =>
 	r.members.find((m) => m.email === email);
 const rowOf = (r: RoomState, email: string) =>
@@ -515,20 +534,38 @@ export function dismissRoomHint(r: RoomState, label: string) {
 	return { dismissed_hints: hintsInOrder(r.dismissed) };
 }
 
-/** The invitation page reads Noor's invitation for any token; see roomInvite for states. */
+/** Noor, invited and not joined yet in the seed. */
 const INVITED = "noor@example-town.example";
 
-export function roomInvite(r: RoomState, orgName: string, token: string) {
-	const row = rowOf(r, INVITED);
+/**
+ * The token in a room invitation's link, as the server makes one (invite.ts,
+ * roomInviteToken): from the row and when access was granted, so it stops working once
+ * they are taken out or invited again. None without access.
+ */
+export function roomInviteToken(row: {
+	id: string;
+	access_granted_at: string | null;
+}): string | null {
+	if (!row.access_granted_at) return null;
+	return `${row.id.replace(/-/g, "")}${Date.parse(row.access_granted_at).toString(36)}`;
+}
+
+/** The room row a valid token names; anything else reads as not found. */
+const invitedRow = (r: RoomState, token: string) => {
+	const row = r.rows.find((x) => roomInviteToken(x) === token);
 	if (!row) throw refuse(404, "invite.not_found");
+	return row;
+};
+
+export function roomInvite(r: RoomState, orgName: string, token: string) {
+	const row = invitedRow(r, token);
 	const [first, ...rest] = row.name.split(" ");
-	// The harness reads the other states by token: `accepted…`, `closed…`.
-	const status =
-		memberByEmail(r, row.email) || token.startsWith("accepted")
-			? ("accepted" as const)
-			: token.startsWith("closed") || !r.invites.includes(row.email)
-				? ("closed" as const)
-				: ("open" as const);
+	// Joined: accepted; an invitation still waiting: open; else it lapsed or was withdrawn.
+	const status = memberByEmail(r, row.email)
+		? ("accepted" as const)
+		: r.invites.includes(row.email)
+			? ("open" as const)
+			: ("closed" as const);
 	return {
 		has_account: false,
 		inviter: row.invited_by ? { name: row.invited_by.name } : null,
@@ -544,18 +581,18 @@ export function roomInvite(r: RoomState, orgName: string, token: string) {
 	};
 }
 
+/** After the code sign-in: only the person invited takes it up, once, while it is open. */
 export function acceptRoomInvite(
 	r: RoomState,
 	orgId: string,
 	body: { invite: string; first_name: string; last_name: string | null },
 ) {
-	const row = rowOf(r, INVITED);
-	if (!row) throw refuse(404, "invite.not_found");
+	const row = invitedRow(r, body.invite);
+	if (me().email !== row.email) throw refuse(403, "invite.not_for_you");
 	if (memberByEmail(r, row.email)) return { org_id: orgId };
-	if (body.invite.startsWith("closed") || !r.invites.includes(row.email))
-		throw refuse(404, "invite.not_found");
+	if (!r.invites.includes(row.email)) throw refuse(404, "invite.not_found");
 	r.members.push({
-		app_user_id: crypto.randomUUID(),
+		app_user_id: me().app_user_id,
 		email: row.email,
 		name: [body.first_name, body.last_name].filter(Boolean).join(" "),
 		role: "member",
