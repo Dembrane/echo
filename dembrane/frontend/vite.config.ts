@@ -43,6 +43,16 @@ const injectJsxSource = (babel: any) => {
 							? callee.property.name
 							: null;
 				if (!name || !JSX_CALLEES.has(name)) return;
+				// React 19 warns on any Fragment prop besides key and children, and a
+				// Fragment has no DOM node for Agentation to point at anyway.
+				const typeArg = node.arguments[0];
+				const isFragment =
+					(typeArg?.type === "Identifier" &&
+						(typeArg.name === "Fragment" || typeArg.name === "_Fragment")) ||
+					(typeArg?.type === "MemberExpression" &&
+						typeArg.property.type === "Identifier" &&
+						typeArg.property.name === "Fragment");
+				if (isFragment) return;
 				const propsArg = node.arguments[1];
 				if (!propsArg || propsArg.type !== "ObjectExpression") return;
 				const loc = node.loc;
