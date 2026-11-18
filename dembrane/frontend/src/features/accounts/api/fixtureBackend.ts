@@ -19,9 +19,13 @@ import type {
 	TicketT,
 	TimelineEvent,
 } from "../contract/contract.gen";
+import { ROUTES } from "../contract/contract.gen";
 import * as fx from "../contract/fixtures.gen";
 import { AccountsApiError, type Params } from "./client";
 import { pageCountOf, renderSigned, renderUnsigned } from "./fixturePdf";
+import * as room from "./fixtureRoom";
+
+export { setFixtureActor } from "./fixtureRoom";
 
 /**
  * The accounts API answered in the page, for fixture mode. It starts from the Example Town
@@ -62,7 +66,30 @@ interface Store {
 	pendingTasks: Record<string, { title: string; body: string | null }>;
 	/** Signature images and confirmation texts, for stamping the signed PDF. */
 	signatures: Record<string, { png: string; confirmation: string }>;
+	/** The data room: who is in it and what they do (fixtureRoom.ts). */
+	room?: room.RoomState;
 }
+
+/** The room of an organisation; stores saved before the room existed get the seed. */
+const roomOf = (s: Store): room.RoomState => {
+	s.room ??= room.seedRoom();
+	return s.room;
+};
+
+/** What a room member reads of the account: the offer and the DPA, never a draft. */
+const inRoom = (d: Pick<DocumentDetailT, "kind" | "status">) =>
+	(d.kind === "offer" || d.kind === "dpa") && d.status !== "draft";
+
+/** The customer routes a room member reaches; every other account route answers 403. */
+const ROOM_MEMBER_ROUTES = new Set<RouteName>([
+	"accountPage",
+	"readDocument",
+	"viewDocument",
+	"roomPage",
+	"addRoomPerson",
+	"removeRoomPerson",
+	"answerRoomLabels",
+]);
 
 const KEY = "echo.accounts.fixtures.v2";
 const DEMO = fx.accountPage.organisation.id;
@@ -445,6 +472,24 @@ function customerEmail(
 			? `Je offerte van dembrane: ${doc.title}`
 			: `Your offer from dembrane: ${doc.title}`,
 		to: contact.email,
+	};
+}
+
+/** A document as a room member reads it: nothing to fill in or confirm, no billing details. */
+function asRoom(d: DocumentDetailT): DocumentDetailT {
+	return {
+		...d,
+		access: "room",
+		confirmation: null,
+		fields: [],
+		may_download: d.signed_pdf_url !== null,
+		prefill: { address: null, organisation: null, po_number: null },
+		signature: d.signature && {
+			...d.signature,
+			address: null,
+			values: {},
+			vat_number: null,
+		},
 	};
 }
 
@@ -1021,6 +1066,17 @@ export async function handle(
 	};
 	const cBase = customerBase(orgId);
 	const sBase = staffBase(s.id);
+	// The fixture actor's access, as the server checks it: a plain member reaches nothing of
+	// the account, a room member only the room, the account page and the offer and the DPA.
+	const permission = (ROUTES[name] as { permission?: string }).permission;
+	const via = permission?.startsWith("account:")
+		? room.requireRoom(roomOf(s))
+		: null;
+	if (via === "room") {
+		if (!ROOM_MEMBER_ROUTES.has(name)) throw room.forbidden();
+		if ((name === "readDocument" || name === "viewDocument") && !inRoom(doc()))
+			throw room.forbidden();
+	}
 	const result = await (async (): Promise<unknown> => {
 		switch (name) {
 			case "createDemo": {
@@ -1177,7 +1233,33 @@ export async function handle(
 					};
 				};
 				const rows = [];
-				if (own) rows.push(summarise(own.id, own.name, load()[DEMO] as Store));
+				// As the server does: those who run the account see it whole; a room member
+				// sees it as room access, counting what they read, with nothing waiting on them.
+				const home = load()[DEMO] as Store;
+				const access = room.roomAccess(roomOf(home));
+				if (own && access === "account")
+					rows.push(summarise(own.id, own.name, home));
+				if (own && access === "room") {
+					const docs = home.docs.filter(inRoom);
+					const seen = home.tasks.filter(
+						(t) =>
+							t.status !== "withdrawn" &&
+							t.kind !== "billing_details" &&
+							docs.some((d) => d.id === t.document_id),
+					);
+					rows.push({
+						...summarise(own.id, own.name, home),
+						access: "room" as const,
+						next_task_code: null,
+						next_task_document_id: null,
+						next_task_document_kind: null,
+						next_task_params: null,
+						next_task_title: null,
+						tasks_done: seen.filter((t) => t.status === "done").length,
+						tasks_total: seen.length,
+						tasks_waiting: 0,
+					});
+				}
 				if (twoOrgs()) {
 					const second = load()[
 						"0199a2c0-0000-7000-8000-000000000001"
@@ -1212,6 +1294,32 @@ export async function handle(
 				return rows;
 			}
 			case "accountPage":
+				if (via === "room") {
+					// A room member: the offer and the DPA, the tasks on them (billing details
+					// never), and nothing about paying or questions.
+					const docs = s.docs.filter(inRoom);
+					return {
+						access: "room",
+						billing: Object.fromEntries(
+							Object.keys(s.billing).map((k) => [k, null]),
+						),
+						documents: docs
+							.filter((d) => d.status !== "void")
+							.map((d) => summary(asRoom(withUrls(d, cBase, "member")))),
+						needs_form_reference: null,
+						organisation: { account_stage: s.stage, id: orgId, name: s.name },
+						tasks: s.tasks
+							.filter(
+								(t) =>
+									t.status !== "withdrawn" &&
+									t.kind !== "billing_details" &&
+									docs.some((d) => d.id === t.document_id),
+							)
+							.sort((a, b) => TASK_ORDER[a.status] - TASK_ORDER[b.status])
+							.map(publicTask),
+						tickets: [],
+					};
+				}
 				return {
 					// The fixtures' person runs the account, so sees all of it.
 					access: "account",
@@ -1228,7 +1336,9 @@ export async function handle(
 					tickets: s.tickets,
 				};
 			case "readDocument":
-				return withUrls(doc(), cBase, "member");
+				return via === "room"
+					? asRoom(withUrls(doc(), cBase, "member"))
+					: withUrls(doc(), cBase, "member");
 			case "staffReadDocument":
 				return withUrls(doc(), sBase, "staff");
 			case "viewDocument": {
@@ -1376,6 +1486,12 @@ export async function handle(
 					reminded_at: null,
 					role: (body.role as string | null) ?? null,
 				};
+				if (d.kind === "offer" || d.kind === "dpa")
+					room.nameRoomSigner(roomOf(s), d.kind, {
+						document_id: d.id,
+						email: String(body.email),
+						name: String(body.name),
+					});
 				const replaced = previous && previous.email !== body.email;
 				event(
 					s,
@@ -1488,6 +1604,12 @@ export async function handle(
 						reminded_at: null,
 						role: p.role,
 					};
+					if (d.kind === "offer" || d.kind === "dpa")
+						room.nameRoomSigner(roomOf(s), d.kind, {
+							document_id: d.id,
+							email: p.email,
+							name: p.name,
+						});
 					event(
 						s,
 						"document.signer_named",
@@ -1630,6 +1752,32 @@ export async function handle(
 						document: summary(withUrls(d, cBase, "signer")),
 						organisation: { id: orgId, name: s.name },
 					}));
+			case "roomPage":
+				return room.roomPage(roomOf(s));
+			case "addRoomPerson":
+				return room.addRoomPerson(
+					roomOf(s),
+					body as Parameters<typeof room.addRoomPerson>[1],
+				);
+			case "removeRoomPerson":
+				return room.removeRoomPerson(roomOf(s), params.personId as string);
+			case "answerRoomLabels":
+				return room.answerRoomLabels(
+					roomOf(s),
+					body as Parameters<typeof room.answerRoomLabels>[1],
+				);
+			case "dismissRoomHint":
+				return room.dismissRoomHint(roomOf(s), params.label as string);
+			case "roomInvite":
+				return room.roomInvite(roomOf(s), s.name, String(query?.invite ?? ""));
+			case "acceptRoomInvite":
+				return room.acceptRoomInvite(
+					roomOf(s),
+					orgId,
+					body as Parameters<typeof room.acceptRoomInvite>[2],
+				);
+			case "staffRoomPage":
+				return room.staffRoomPage(roomOf(s));
 			case "listAccounts": {
 				const all = Object.values(load());
 				const stage = query?.stage === "none" ? null : query?.stage;
@@ -1835,7 +1983,6 @@ export async function handle(
 				const d: DocumentDetailT = {
 					accepted_outside: null,
 					access: "staff",
-					may_download: true,
 					may_name_signer: false,
 					awaiting_signatures: [],
 					body: (body.body as string | null) ?? null,
@@ -1853,6 +2000,7 @@ export async function handle(
 					language: (body.language as "en" | "nl") ?? "en",
 					legal: [],
 					lines: null,
+					may_download: true,
 					page_count: bytes ? await pageCountOf(bytes) : 1,
 					prefill: { address: null, organisation: null, po_number: null },
 					reference: (body.reference as string | null) ?? null,
@@ -2169,6 +2317,7 @@ export async function pdfFor(url: string): Promise<Uint8Array> {
 export function resetFixtures() {
 	stores = null;
 	demos = null;
+	room.setFixtureActor("admin");
 	try {
 		sessionStorage.removeItem(KEY);
 	} catch {}
