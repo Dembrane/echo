@@ -9,11 +9,11 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { memo } from "react";
-import { Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { useProjectById } from "@/components/project/hooks";
 import { ProjectTagsInput } from "@/components/project/ProjectTagsInput";
 import { testId } from "@/lib/testUtils";
+import { PortalController } from "../PortalController";
 import { NAME_LABEL_MAX } from "../portalForm";
 import { onOff, type SectionContent, type SectionProps } from "./types";
 
@@ -28,7 +28,7 @@ export const useAboutOptions = ({
 	page,
 	readOnly,
 }: SectionProps): SectionContent => {
-	const { control, formState } = page.form;
+	const { formState } = page.form;
 	const v = page.values;
 	const tagsQuery = useProjectById({
 		projectId: project.id,
@@ -43,9 +43,9 @@ export const useAboutOptions = ({
 		options: {
 			"ask-email": {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="default_conversation_ask_for_participant_email"
-						control={control}
 						render={({ field }) => (
 							<Checkbox
 								label={
@@ -80,9 +80,9 @@ export const useAboutOptions = ({
 			},
 			"ask-name": {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="default_conversation_ask_for_participant_name"
-						control={control}
 						render={({ field }) => (
 							<Checkbox
 								label={
@@ -125,9 +125,9 @@ export const useAboutOptions = ({
 								is preserved separately, if they provided one.
 							</Trans>
 						</Text>
-						<Controller
+						<PortalController
+							page={page}
 							name="enable_ai_title_and_tags"
-							control={control}
 							render={({ field }) => (
 								<Switch
 									label={
@@ -150,9 +150,9 @@ export const useAboutOptions = ({
 			},
 			"name-label": {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="conversation_ask_for_participant_name_label"
-						control={control}
 						render={({ field }) => (
 							<TextInput
 								label={
@@ -196,9 +196,9 @@ export const useAboutOptions = ({
 			},
 			"title-prompt": {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="conversation_title_prompt"
-						control={control}
 						render={({ field }) => (
 							<Textarea
 								label={

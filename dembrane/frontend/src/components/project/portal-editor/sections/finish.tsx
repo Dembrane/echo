@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import { Box, InputDescription, Stack, Switch, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { memo } from "react";
-import { Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { MarkdownWYSIWYG } from "@/components/form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
@@ -11,6 +10,7 @@ import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
+import { PortalController } from "../PortalController";
 import {
 	onOff,
 	plainLine,
@@ -26,7 +26,7 @@ export const useFinishOptions = ({
 	page,
 	readOnly,
 }: SectionProps): SectionContent => {
-	const { control, formState } = page.form;
+	const { formState } = page.form;
 	const v = page.values;
 	// The event invitation switch is a paid-plan control. On the free tier it stays on and
 	// opens the upgrade path instead of toggling, the way the custom logo does.
@@ -91,9 +91,9 @@ export const useFinishOptions = ({
 								)}
 							</FeatureGatePopover>
 						) : (
-							<Controller
+							<PortalController
+								page={page}
 								name="is_dembrane_event_cta_enabled"
-								control={control}
 								render={({ field }) => (
 									<Switch
 										label={t`Show the invitation`}
@@ -120,9 +120,9 @@ export const useFinishOptions = ({
 							<Trans>Notify participants when a report is published.</Trans>
 						</Text>
 						{emailOn ? (
-							<Controller
+							<PortalController
+								page={page}
 								name="is_project_notification_subscription_allowed"
-								control={control}
 								render={({ field }) => (
 									<Switch
 										label={
@@ -171,9 +171,9 @@ export const useFinishOptions = ({
 								conversation.
 							</Trans>
 						</InputDescription>
-						<Controller
+						<PortalController
+							page={page}
 							name="default_conversation_finish_text"
-							control={control}
 							render={({ field }) => (
 								<Box {...testId("portal-editor-thank-you-content-editor")}>
 									<MemoizedMarkdownWYSIWYG

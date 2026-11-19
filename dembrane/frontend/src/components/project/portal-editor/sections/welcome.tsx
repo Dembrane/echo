@@ -7,10 +7,10 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { memo } from "react";
-import { Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { MarkdownWYSIWYG } from "@/components/form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { testId } from "@/lib/testUtils";
+import { PortalController } from "../PortalController";
 import { plainLine, type SectionContent, type SectionProps } from "./types";
 
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
@@ -49,7 +49,7 @@ export const useWelcomeOptions = ({
 	page,
 	readOnly,
 }: SectionProps): SectionContent => {
-	const { control, formState } = page.form;
+	const { formState } = page.form;
 	const v = page.values;
 	const languages = languageOptions();
 	const tutorials = tutorialOptions();
@@ -67,9 +67,9 @@ export const useWelcomeOptions = ({
 						<InputDescription>
 							{t`This page is shown to participants when they start a conversation after they successfully complete the tutorial.`}
 						</InputDescription>
-						<Controller
+						<PortalController
+							page={page}
 							name="default_conversation_description"
-							control={control}
 							render={({ field }) => (
 								<Box {...testId("portal-editor-page-content-editor")}>
 									<MemoizedMarkdownWYSIWYG
@@ -87,9 +87,9 @@ export const useWelcomeOptions = ({
 			},
 			language: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="language"
-						control={control}
 						render={({ field }) => (
 							<NativeSelect
 								label={
@@ -113,9 +113,9 @@ export const useWelcomeOptions = ({
 			},
 			title: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="default_conversation_title"
-						control={control}
 						render={({ field }) => (
 							<TextInput
 								label={
@@ -137,9 +137,9 @@ export const useWelcomeOptions = ({
 			},
 			tutorial: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="default_conversation_tutorial_slug"
-						control={control}
 						render={({ field }) => (
 							<NativeSelect
 								label={

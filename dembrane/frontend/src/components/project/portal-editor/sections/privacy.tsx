@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, Switch, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Controller } from "react-hook-form";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/components/project/ProjectLegalBasisSection";
 import { LEGAL_BASIS_LABELS } from "@/components/settings/LegalBasisCard";
 import { testId } from "@/lib/testUtils";
+import { PortalController } from "../PortalController";
 import type { PortalFormValues } from "../portalForm";
 import { AnonymiseExample } from "./AnonymiseExample";
 import { onOff, type SectionContent, type SectionProps } from "./types";
@@ -20,7 +20,7 @@ export const usePrivacyOptions = ({
 	project,
 	page,
 }: SectionProps): SectionContent => {
-	const { control, formState, setValue, getValues } = page.form;
+	const { formState, setValue, getValues } = page.form;
 	const legal = useProjectLegalQuery(project.id);
 	const [modalOpened, modal] = useDisclosure(false);
 	const basis = legal.data?._legal?.effective?.legal_basis;
@@ -67,9 +67,9 @@ export const usePrivacyOptions = ({
 								conversations.
 							</Trans>
 						</Text>
-						<Controller
+						<PortalController
+							page={page}
 							name="anonymize_transcripts"
-							control={control}
 							render={({ field }) => (
 								<Switch
 									label={

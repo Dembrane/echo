@@ -9,9 +9,9 @@ import {
 	Textarea,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { testId } from "@/lib/testUtils";
+import { PortalController } from "../PortalController";
 import { onOff, type SectionContent, type SectionProps } from "./types";
 
 export const exploreModeLabel = (mode: string) =>
@@ -23,7 +23,7 @@ export const exploreModeLabel = (mode: string) =>
 
 /** Explore: on or off, its mode, the custom prompt, and looking at other conversations. */
 export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
-	const { control, formState } = page.form;
+	const { formState } = page.form;
 	const v = page.values;
 	// Three modes side by side do not fit a phone in every language: stacked there.
 	const narrow = useMediaQuery("(max-width: 36em)");
@@ -42,9 +42,9 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 								cooldown period applies between requests.
 							</Trans>
 						</Text>
-						<Controller
+						<PortalController
+							page={page}
 							name="is_get_reply_enabled"
-							control={control}
 							render={({ field }) => (
 								<Switch
 									label={
@@ -67,9 +67,9 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 			},
 			mode: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="get_reply_mode"
-						control={control}
 						render={({ field }) => (
 							<Stack gap="xs">
 								<FormLabel
@@ -126,9 +126,9 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 			},
 			"other-conversations": {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="is_get_reply_cross_pollination_enabled"
-						control={control}
 						render={({ field }) => (
 							<Switch
 								label={
@@ -157,9 +157,9 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 			},
 			prompt: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="get_reply_prompt"
-						control={control}
 						render={({ field }) => (
 							<Textarea
 								label={

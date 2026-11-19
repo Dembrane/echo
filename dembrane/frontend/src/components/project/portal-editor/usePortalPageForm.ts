@@ -42,15 +42,11 @@ export function usePortalPageForm({
 	const queryClient = useQueryClient();
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 	const fields = SECTION_FIELDS[section];
-	const selectedTopicDefaults = useMemo(
-		() => verificationTopics?.selected_topics ?? [],
-		[verificationTopics],
-	);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: read once per project and page, as the one-page editor did, so a refetch after a save does not reset what the host is typing
-	const defaultValues = useMemo(
-		() => portalDefaults(project, selectedTopicDefaults),
-		[project.id, section, selectedTopicDefaults],
+	// Read once, when the page's form is made, as the one-page editor did, so a
+	// refetch after a save does not reset what the host is typing.
+	const defaultValues = portalDefaults(
+		project,
+		verificationTopics?.selected_topics ?? [],
 	);
 	const resolver = useMemo(() => zodResolver(PortalFormSchema), []);
 	// The values as last saved, to name the fields a save changed (names only).
@@ -65,86 +61,72 @@ export function usePortalPageForm({
 		resolver,
 		reValidateMode: "onChange",
 	});
-	const { formState, reset, watch, getValues, setValue } = form;
+	const { formState, reset, getValues } = form;
 	const values = useWatch({ control: form.control }) as PortalFormValues;
 
-	const onSave = useCallback(
-		async (all: PortalFormValues) => {
-			const own = pick(all, fields) as Partial<PortalFormValues>;
-			const {
-				verification_topics: topics,
+	const onSave = async (all: PortalFormValues) => {
+		const own = pick(all, fields) as Partial<PortalFormValues>;
+		const {
+			verification_topics: topics,
+			language,
+			...projectPayload
+		} = own as PortalFormValues;
+		const payload: Partial<Project> & Record<string, unknown> = {
+			...(projectPayload as Partial<Project>),
+		};
+		if (fields.includes("language")) {
+			const languageUpdate = projectLanguageForUpdate(
 				language,
-				...projectPayload
-			} = own as PortalFormValues;
-			const payload: Partial<Project> & Record<string, unknown> = {
-				...(projectPayload as Partial<Project>),
-			};
-			if (fields.includes("language")) {
-				const languageUpdate = projectLanguageForUpdate(
-					language,
-					!!formState.dirtyFields.language,
-				);
-				if (languageUpdate) payload.language = languageUpdate;
-			}
-			let normalizedTopics: string[] | null = null;
-			if (fields.includes("verification_topics")) {
-				normalizedTopics = normalizeTopicList(topics ?? []);
-				payload.selected_verification_key_list =
-					normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
-			}
-			// Report notifications need the email box: with it off they are off, as the
-			// one-page editor's form made them.
-			if (
-				(section === "about" || section === "finish") &&
-				!all.default_conversation_ask_for_participant_email &&
-				(project.is_project_notification_subscription_allowed ||
-					all.is_project_notification_subscription_allowed)
-			)
-				payload.is_project_notification_subscription_allowed = false;
-
-			await updateProjectMutation.mutateAsync({ id: project.id, payload });
-
-			if (normalizedTopics) {
-				await queryClient.invalidateQueries({
-					queryKey: ["verify", "topics", project.id],
-				});
-				// Store what we saved to detect when the query refetches.
-				savedTopicsRef.current = normalizedTopics.join(",");
-			}
-
-			const saved = {
-				...pick(all, fields),
-				...(normalizedTopics ? { verification_topics: normalizedTopics } : {}),
-			};
-			const fieldsChanged = changedFields(savedValuesRef.current, saved);
-			savedValuesRef.current = saved;
-			if (fieldsChanged.length > 0)
-				track("portal_settings_saved", {
-					fields_changed: fieldsChanged,
-					project_id: project.id,
-				});
-
-			reset(
-				{
-					...all,
-					...(normalizedTopics
-						? { verification_topics: normalizedTopics }
-						: {}),
-				},
-				{ keepDirty: false, keepValues: true },
+				!!formState.dirtyFields.language,
 			);
-		},
-		[
-			fields,
-			section,
-			project.id,
-			project.is_project_notification_subscription_allowed,
-			updateProjectMutation,
-			queryClient,
-			reset,
-			formState.dirtyFields.language,
-		],
-	);
+			if (languageUpdate) payload.language = languageUpdate;
+		}
+		let normalizedTopics: string[] | null = null;
+		if (fields.includes("verification_topics")) {
+			normalizedTopics = normalizeTopicList(topics ?? []);
+			payload.selected_verification_key_list =
+				normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
+		}
+		// Report notifications need the email box: with it off they are off, as the
+		// one-page editor's form made them.
+		if (
+			(section === "about" || section === "finish") &&
+			!all.default_conversation_ask_for_participant_email &&
+			(project.is_project_notification_subscription_allowed ||
+				all.is_project_notification_subscription_allowed)
+		)
+			payload.is_project_notification_subscription_allowed = false;
+
+		await updateProjectMutation.mutateAsync({ id: project.id, payload });
+
+		if (normalizedTopics) {
+			await queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", project.id],
+			});
+			// Store what we saved to detect when the query refetches.
+			savedTopicsRef.current = normalizedTopics.join(",");
+		}
+
+		const saved = {
+			...pick(all, fields),
+			...(normalizedTopics ? { verification_topics: normalizedTopics } : {}),
+		};
+		const fieldsChanged = changedFields(savedValuesRef.current, saved);
+		savedValuesRef.current = saved;
+		if (fieldsChanged.length > 0)
+			track("portal_settings_saved", {
+				fields_changed: fieldsChanged,
+				project_id: project.id,
+			});
+
+		reset(
+			{
+				...all,
+				...(normalizedTopics ? { verification_topics: normalizedTopics } : {}),
+			},
+			{ keepDirty: false, keepValues: true },
+		);
+	};
 
 	const autoSave = useAutoSave({
 		initialLastSavedAt: project.updated_at ?? new Date(),
@@ -155,14 +137,10 @@ export function usePortalPageForm({
 		dispatchRef.current = autoSave.dispatchAutoSave;
 	}, [autoSave.dispatchAutoSave]);
 
-	useEffect(() => {
-		if (readOnly) return;
-		const subscription = watch((next, { type }) => {
-			if (type === "change" && next)
-				dispatchRef.current(next as PortalFormValues);
-		});
-		return () => subscription.unsubscribe();
-	}, [watch, readOnly]);
+	/** Saves after a field's own change; each PortalController calls it. Observers never save. */
+	const saveAfterChange = () => {
+		if (!readOnly) dispatchRef.current(getValues());
+	};
 
 	// The topics as the server has them, unless the host changed them here (the
 	// one-page editor's sync, unchanged).
@@ -182,8 +160,10 @@ export function usePortalPageForm({
 		const differs =
 			normalizedSelected.length !== current.length ||
 			normalizedSelected.some((topic, i) => topic !== current[i]);
+		// The form's own store, not React state: this effect keeps it in step with
+		// the server.
 		if (differs)
-			setValue("verification_topics", normalizedSelected, {
+			form.setValue("verification_topics", normalizedSelected, {
 				shouldDirty: false,
 				shouldTouch: false,
 			});
@@ -191,7 +171,7 @@ export function usePortalPageForm({
 		fields,
 		formState.dirtyFields.verification_topics,
 		getValues,
-		setValue,
+		form,
 		verificationTopics,
 		isVerificationTopicsLoading,
 	]);
@@ -202,7 +182,7 @@ export function usePortalPageForm({
 		[],
 	);
 
-	return { autoSave, form, saveNow, values };
+	return { autoSave, form, saveAfterChange, saveNow, values };
 }
 
 export type PortalPageForm = ReturnType<typeof usePortalPageForm>;

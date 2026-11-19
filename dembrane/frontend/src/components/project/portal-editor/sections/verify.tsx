@@ -15,7 +15,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
-import { Controller } from "react-hook-form";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -31,6 +30,7 @@ import { TopicIcon, topicDescription } from "@/components/verify/topics";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicMetadata } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
+import { PortalController } from "../PortalController";
 import { normalizeTopicList } from "../portalForm";
 import { onOff, type SectionContent, type SectionProps } from "./types";
 
@@ -89,7 +89,7 @@ export const useVerifyOptions = ({
 	verificationTopics,
 	isVerificationTopicsLoading = false,
 }: SectionProps): SectionContent => {
-	const { control, formState, setValue, getValues } = page.form;
+	const { formState, setValue, getValues } = page.form;
 	const v = page.values;
 	const rows = useTopicRows(verificationTopics, v.language);
 	const custom = rows.filter((r) => r.is_custom);
@@ -180,9 +180,9 @@ export const useVerifyOptions = ({
 	const briefLink = `/w/${project.workspace_id}/projects/${project.id}/brief#${KEY_TERMS_HASH}`;
 
 	const topicsList = (
-		<Controller
+		<PortalController
+			page={page}
 			name="verification_topics"
-			control={control}
 			render={({ field }) => (
 				<Stack gap="xs">
 					<FormLabel
@@ -351,9 +351,9 @@ export const useVerifyOptions = ({
 								the overview.
 							</Trans>
 						</Text>
-						<Controller
+						<PortalController
+							page={page}
 							name="is_verify_enabled"
-							control={control}
 							render={({ field }) => (
 								<Switch
 									label={
@@ -406,9 +406,9 @@ export const useVerifyOptions = ({
 			},
 			remind: {
 				body: (
-					<Controller
+					<PortalController
+						page={page}
 						name="is_verify_on_finish_enabled"
-						control={control}
 						render={({ field }) => (
 							<Switch
 								label={
