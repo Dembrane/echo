@@ -88,10 +88,19 @@ export function PdfPages({
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
-	const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
-	const [failed, setFailed] = useState(false);
 	// Bumped by "Try again" to parse the same bytes once more.
 	const [attempt, setAttempt] = useState(0);
+	// A parse's outcome, with the bytes and attempt it was for: a new load reads
+	// as still parsing, with no reset.
+	const [parsed, setParsed] = useState<{
+		data: Uint8Array;
+		attempt: number;
+		pdf: PDFDocumentProxy | null;
+	} | null>(null);
+	const current =
+		parsed?.data === data && parsed.attempt === attempt ? parsed : null;
+	const pdf = current?.pdf ?? null;
+	const failed = current !== null && current.pdf === null;
 
 	useEffect(() => {
 		const el = containerRef.current;
@@ -105,17 +114,14 @@ export function PdfPages({
 
 	useEffect(() => {
 		let live = true;
-		setFailed(false);
-		setPdf(null);
-		void attempt;
 		// pdf.js takes ownership of the buffer it is given; hand it a copy.
 		const task = getDocument({ data: data.slice() });
 		task.promise.then(
 			(doc) => {
-				if (live) setPdf(doc);
+				if (live) setParsed({ attempt, data, pdf: doc });
 			},
 			() => {
-				if (live) setFailed(true);
+				if (live) setParsed({ attempt, data, pdf: null });
 			},
 		);
 		return () => {

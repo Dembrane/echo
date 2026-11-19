@@ -2,10 +2,18 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const annotations = vi.hoisted(() => ({ current: [] as unknown[] }));
+// pdf.js failing to parse the bytes
+const parse = vi.hoisted(() => ({ fails: false }));
 
 // A 600 x 800 point page; the viewport scale is the only thing the links depend on.
 vi.mock("pdfjs-dist", () => {
@@ -28,7 +36,9 @@ vi.mock("pdfjs-dist", () => {
 		GlobalWorkerOptions: {},
 		getDocument: () => ({
 			destroy: async () => {},
-			promise: Promise.resolve({ getPage: async () => page, numPages: 1 }),
+			promise: parse.fails
+				? Promise.reject(new Error("bad PDF"))
+				: Promise.resolve({ getPage: async () => page, numPages: 1 }),
 		}),
 	};
 });
@@ -63,7 +73,10 @@ beforeAll(() => {
 	HTMLCanvasElement.prototype.getContext = (() =>
 		null) as unknown as HTMLCanvasElement["getContext"];
 });
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	parse.fails = false;
+});
 
 const show = (props: Partial<Parameters<typeof PdfPages>[0]> = {}) =>
 	render(
@@ -185,5 +198,40 @@ describe("links and fields on the same page", () => {
 			expect(container.querySelector("[data-pdf-overlay]")).toBeTruthy(),
 		);
 		expect(container.querySelector("a[data-pdf-link]")).toBeNull();
+	});
+});
+
+describe("a document the browser can't draw", () => {
+	it("says so, and draws it on Try again once it can", async () => {
+		parse.fails = true;
+		const view = show();
+		expect(await screen.findByTestId("pdf-render-failed")).toBeTruthy();
+
+		parse.fails = false;
+		fireEvent.click(screen.getByText("Try again"));
+		await waitFor(() =>
+			expect(view.container.querySelector("[data-pdf-page]")).toBeTruthy(),
+		);
+		expect(screen.queryByTestId("pdf-render-failed")).toBeNull();
+	});
+
+	it("drops the failure when other bytes come in", async () => {
+		parse.fails = true;
+		const tree = (data: Uint8Array) => (
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<PdfPages data={data} />
+				</MantineProvider>
+			</I18nProvider>
+		);
+		const view = render(tree(new Uint8Array([1])));
+		expect(await screen.findByTestId("pdf-render-failed")).toBeTruthy();
+
+		parse.fails = false;
+		view.rerender(tree(new Uint8Array([2])));
+		expect(screen.queryByTestId("pdf-render-failed")).toBeNull();
+		await waitFor(() =>
+			expect(view.container.querySelector("[data-pdf-page]")).toBeTruthy(),
+		);
 	});
 });
