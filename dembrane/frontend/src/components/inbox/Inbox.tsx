@@ -370,96 +370,97 @@ function NotificationRowItem({
 	// button — impossible to mark read. Now the row is always clickable
 	// and falls back to a plain mark-read when there's no action.
 	return (
-		<UnstyledButton
-			onClick={onClick}
+		<Box
 			style={{
 				borderBottom: "1px solid var(--app-rule-color)",
-				cursor: "pointer",
-				display: "block",
-				padding: "var(--mantine-spacing-sm) var(--mantine-spacing-xs)",
+				position: "relative",
 			}}
 		>
-			<Group
-				gap="sm"
-				wrap="nowrap"
-				align="flex-start"
-				style={{ position: "relative" }}
+			<UnstyledButton
+				onClick={onClick}
+				style={{
+					cursor: "pointer",
+					display: "block",
+					padding: "var(--mantine-spacing-sm) var(--mantine-spacing-xs)",
+					width: "100%",
+				}}
 			>
-				{/* Explicit mark-read on unread rows. Clicking the row already
-				    fires onClick which marks read + (optionally) navigates,
-				    but this gives a keyboard/touch target that means "just
-				    clear it, don't take me anywhere" — matters when the row
-				    has a navigation target the user doesn't want to follow. */}
-				{!row.read && (
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						aria-label={t`Mark as read`}
-						onClick={(e) => {
-							e.stopPropagation();
-							onMarkRead();
-						}}
-						style={{
-							position: "absolute",
-							right: 0,
-							top: 0,
-						}}
-					>
-						<CheckIcon size={20} />
-					</ActionIcon>
-				)}
-				{row.actor_user_id ? (
-					<Avatar src={avatarUrl(row.actor_avatar, 48)} size="sm" radius="xl">
-						{(row.actor_name || "?").slice(0, 2).toUpperCase()}
-					</Avatar>
-				) : (
-					<Avatar size="sm" color={isDestructive ? "red" : "gray"}>
-						<BellIcon size={16} />
-					</Avatar>
-				)}
+				<Group gap="sm" wrap="nowrap" align="flex-start">
+					{row.actor_user_id ? (
+						<Avatar src={avatarUrl(row.actor_avatar, 48)} size="sm" radius="xl">
+							{(row.actor_name || "?").slice(0, 2).toUpperCase()}
+						</Avatar>
+					) : (
+						<Avatar size="sm" color={isDestructive ? "red" : "gray"}>
+							<BellIcon size={16} />
+						</Avatar>
+					)}
 
-				<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
-					<Group gap="xs" align="center" wrap="nowrap">
-						<Text size="sm" lineClamp={1}>
-							{renderInlineMarkdown(row.title)}
-						</Text>
-						{!row.read && (
-							<Box
-								style={{
-									background: isDestructive
-										? "var(--app-danger)"
-										: "var(--app-action)",
-									borderRadius: "50%",
-									flexShrink: 0,
-									height: 8,
-									width: 8,
-								}}
-								aria-label={t`Unread`}
-							/>
+					<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+						<Group gap="xs" align="center" wrap="nowrap">
+							<Text size="sm" lineClamp={1}>
+								{renderInlineMarkdown(row.title)}
+							</Text>
+							{!row.read && (
+								<Box
+									style={{
+										background: isDestructive
+											? "var(--app-danger)"
+											: "var(--app-action)",
+										borderRadius: "50%",
+										flexShrink: 0,
+										height: 8,
+										width: 8,
+									}}
+									aria-label={t`Unread`}
+								/>
+							)}
+							{isActionRequired && (
+								<Badge size="xs" color="yellow" variant="light">
+									<Trans>Action needed</Trans>
+								</Badge>
+							)}
+						</Group>
+						{row.scope && (
+							<Text size="xs" c="dimmed" lineClamp={1}>
+								{row.scope}
+							</Text>
 						)}
-						{isActionRequired && (
-							<Badge size="xs" color="yellow" variant="light">
-								<Trans>Action needed</Trans>
-							</Badge>
+						{row.message && (
+							<Text size="xs" c="dimmed" lineClamp={2}>
+								{renderInlineMarkdown(row.message)}
+							</Text>
 						)}
-					</Group>
-					{row.scope && (
-						<Text size="xs" c="dimmed" lineClamp={1}>
-							{row.scope}
-						</Text>
-					)}
-					{row.message && (
-						<Text size="xs" c="dimmed" lineClamp={2}>
-							{renderInlineMarkdown(row.message)}
-						</Text>
-					)}
-					{createdLabel && (
-						<Text size="xs" c="dimmed">
-							{createdLabel}
-						</Text>
-					)}
-				</Stack>
-			</Group>
-		</UnstyledButton>
+						{createdLabel && (
+							<Text size="xs" c="dimmed">
+								{createdLabel}
+							</Text>
+						)}
+					</Stack>
+				</Group>
+			</UnstyledButton>
+			{/* Explicit mark-read on unread rows. Clicking the row already
+		    fires onClick which marks read + (optionally) navigates,
+		    but this gives a keyboard/touch target that means "just
+		    clear it, don't take me anywhere" — matters when the row
+		    has a navigation target the user doesn't want to follow.
+		    A sibling of the row's button, not inside it: a button
+		    can't hold another. */}
+			{!row.read && (
+				<ActionIcon
+					variant="subtle"
+					color="gray"
+					aria-label={t`Mark as read`}
+					onClick={onMarkRead}
+					style={{
+						position: "absolute",
+						right: "var(--mantine-spacing-xs)",
+						top: "var(--mantine-spacing-sm)",
+					}}
+				>
+					<CheckIcon size={20} />
+				</ActionIcon>
+			)}
+		</Box>
 	);
 }
