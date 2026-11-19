@@ -14,6 +14,7 @@ for p in api worker dashboard portal; do
   [ -f "$STATE/$p.pid" ] && kill -9 "$(cat "$STATE/$p.pid")" 2>/dev/null
 done
 mkdir -p "$EVIDENCE/logs" && cp "$STATE"/*.log "$EVIDENCE/logs/" 2>/dev/null
+[ -d "$STATE/audio" ] && cp -R "$STATE/audio" "$EVIDENCE/"
 if [ "$MODE" = docker ]; then
   (cd "$PLATFORM" && docker compose -p "$COMPOSE_PROJECT" down -v) >/dev/null 2>&1
 else

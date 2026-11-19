@@ -77,7 +77,7 @@ $S/evidence.sh query "<label>" "<select>"  # read-only query on the run's databa
 .agents/skills/verify-dembrane/scripts/down.sh
 ```
 
-`down.sh` closes the run's browser session, kills only the processes in its pid files, copies the logs into `$EVIDENCE/logs/`, drops its database (or `docker compose down -v` on its own compose project), releases its ports and removes `$STATE`. It never touches `$EVIDENCE`. Afterwards, check that `$EVIDENCE/proof.md` still lists your artifacts. Run it after every failed attempt too, so broken runs don't leave ports and databases behind.
+`down.sh` closes the run's browser session, kills only the processes in its pid files, copies the logs into `$EVIDENCE/logs/` and any recorded audio into `$EVIDENCE/audio/`, drops its database (or `docker compose down -v` on its own compose project), releases its ports and removes `$STATE`. It never touches `$EVIDENCE`. Afterwards, check that `$EVIDENCE/proof.md` still lists your artifacts. Run it after every failed attempt too, so broken runs don't leave ports and databases behind.
 
 ## Helpers
 

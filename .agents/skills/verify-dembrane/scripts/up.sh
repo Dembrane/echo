@@ -78,7 +78,8 @@ MD
 # Shell env wins over --env-file in bun, so these override .env.local and the local config defaults.
 export DATABASE_URL=$DB_URL MIGRATION_DATABASE_URL=$DB_URL PORT=$API_PORT \
   API_PUBLIC_URL=http://localhost:$API_PORT DASHBOARD_URL=http://localhost:$DASH_PORT \
-  PORTAL_URL=http://portal.localhost:$PORTAL_PORT FILES_LOCAL_ROOT=$STATE/files
+  PORTAL_URL=http://portal.localhost:$PORTAL_PORT FILES_LOCAL_ROOT=$STATE/files \
+  AUDIO_LOCAL_ROOT=$STATE/audio
 
 cd "$PLATFORM"
 bun --env-file=.env.local packages/db/src/migrate.ts > "$STATE/migrate.log" 2>&1

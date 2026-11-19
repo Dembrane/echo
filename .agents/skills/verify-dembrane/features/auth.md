@@ -26,7 +26,7 @@ Preconditions:
 - **Verify.** `open "$(bun .agents/skills/verify-dembrane/scripts/verify-link.ts "$EMAIL" "$DASHBOARD_URL")"`. The URL becomes `…/en-US/login?verified=1`, and the `email_verified` query prints `t`.
 - **Log in.** Wait for the overlay to clear, fill the login fields again, click `auth-login-submit-button`. The URL becomes `…/en-US/onboarding` and the page shows "Welcome, <first name>". `select count(*) from auth_session s join auth_user u on u.id=s.user_id where u.email='$EMAIL'` prints `1`.
 
-Login batch, for other recipes that start signed in. With an account from `seed-user.sh --org`, it lands on the home page, `…/en-US/o`, with the heading "Hi Verify". Without `--org`, it lands on `…/en-US/onboarding`, so change the `--url` wait to `**/onboarding`.
+Login batch, for other recipes that start signed in. With an account from `seed-user.sh --org`, it lands on the home page, `…/en-US/o`, with the heading "Hi Verify", and closes the "What's new" dialog every new account gets there. Without `--org`, it lands on `…/en-US/onboarding`: change the `--url` wait to `**/onboarding` and drop the last three lines.
 
 ```sh
 agent-browser --session "$SESSION" batch --bail \
@@ -37,7 +37,10 @@ agent-browser --session "$SESSION" batch --bail \
   "fill [data-testid=auth-login-password-input] $PASSWORD" \
   "click [data-testid=auth-login-submit-button]" \
   "wait --url **/o" \
-  "wait --fn \"!document.querySelector('[class*=stageHost]')\""
+  "wait --fn \"!document.querySelector('[class*=stageHost]')\"" \
+  "wait \"[aria-label='Close and go to dembrane']\"" \
+  "click \"[aria-label='Close and go to dembrane']\"" \
+  "wait --fn \"!document.querySelector('.mantine-Modal-overlay')\""
 ```
 
 ## Gotchas
@@ -45,5 +48,5 @@ agent-browser --session "$SESSION" batch --bail \
 - The terms checkbox can't be clicked directly: the overlay or Mantine's hidden input intercepts it. Use the label.
 - Right after login, onboarding shows "Setting things up for you" for a few seconds before "Welcome". Wait for the heading, not the URL alone.
 - Registering the same address twice fails. Use a fresh address per run.
-- A "What's new" dialog can open over the home page a moment after login, covering "Hi Verify". It doesn't open every time. Snapshot after the batch, and if `dialog "What's new"` is there, close it with `find role button click --name "Close and go to dembrane"` (button name from the snapshot; closing it isn't proven yet).
+- A "What's new" dialog opens over the home page once per release for each account (`ReleaseVideoModal`), so every fresh account gets it. It waits for the account to load and the loading curtain to clear, which can be seconds after the overlay wait passes. In one run it took over 25 seconds. Wait for its close button rather than checking once: a check right after login races it, and a later click lands on `mantine-Modal-overlay`. The close button is an icon whose accessible name, "Close and go to dembrane", is its `aria-label`, so `wait --text` never matches it; wait on the selector.
 - The verification email is never sent locally; the API logs `no SENDGRID_API_KEY: emails are kept in memory`. The minted link is the only way through.

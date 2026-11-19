@@ -30,5 +30,5 @@ Each feature file has an H1, one paragraph of user-visible behaviour, then four 
 
 - [Account: register, verify, log in](./auth.md): proven on a fresh run.
 - [Onboarding](./onboarding.md): organisation, invite and about-you steps after the first login; proven on a fresh run.
-- [Create a project](./projects.md): entry points recorded, recipe not yet run end to end.
-- [Participant portal](./portal.md): entry points recorded, recipe not yet run end to end.
+- [Create a project](./projects.md): from a format proven on a fresh run; from files, text or a link not yet driven.
+- [Participant portal](./portal.md): start, tutorial, record and finish on a phone with a fake microphone; proven on a fresh run.
