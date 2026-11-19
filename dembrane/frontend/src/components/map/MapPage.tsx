@@ -15,9 +15,7 @@ import { WarningCircleIcon } from "@phosphor-icons/react";
 import {
 	type ReactNode,
 	useCallback,
-	useEffect,
 	useMemo,
-	useRef,
 	useState,
 } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -29,6 +27,7 @@ import { FreeAllowanceBanner } from "@/components/workspace/FreeAllowanceBanner"
 import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
+import { conversationColor, conversationSlotLabel } from "./attributes";
 import {
 	budgetState,
 	budgetsToAdmit,
@@ -42,19 +41,18 @@ import {
 	isMapPayloadV2,
 	type MapGraphData,
 } from "./data/adapter";
-import { conversationColor, conversationSlotLabel } from "./attributes";
 import { fixtureMapData, type MapFixtureId } from "./data/fixture";
-import {
-	buildTagIndex,
-	conversationsWithoutTags,
-	withTagSlots,
-} from "./data/tags";
 import {
 	filterNodesByConversation,
 	filterNodesByType,
 	typesKey,
 	zeroTypeCounts,
 } from "./data/scope";
+import {
+	buildTagIndex,
+	conversationsWithoutTags,
+	withTagSlots,
+} from "./data/tags";
 import {
 	type FactCheckStates,
 	isAttemptRunning,
@@ -77,14 +75,15 @@ import { MAP_LIGHT_VARS, MapExperience, MapSurface } from "./MapExperience";
 import { EmptyArgumentsState, OverBudgetState } from "./panels/BudgetStates";
 import {
 	MapFilterMenu,
-	MapSettingsMenu,
 	type MapSettingsControl,
+	MapSettingsMenu,
 } from "./panels/MapSettingsMenu";
 
 const MAP_PAGE_HIDDEN_CONTROLS: ReadonlyArray<MapSettingsControl> = [
 	"layout",
 	"showForceSettings",
 ];
+
 import type { ConversationHref } from "./panels/NodeDetailCard";
 import { ResultList } from "./panels/ResultList";
 import { MapInteractionProvider } from "./state/interactionStore";
@@ -188,16 +187,23 @@ const graphIdentity = (response: MapGraphResponse): string => {
 	return `v1|${response.id}`;
 };
 
-function useStableGraph(
+export function useStableGraph(
 	response: MapGraphResponse | null,
 ): MapGraphData | null {
-	const ref = useRef<{ id: string; graph: MapGraphData } | null>(null);
+	// The graph built last, kept with its identity; built anew during render
+	// for another graph.
+	const [built, setBuilt] = useState<{
+		id: string;
+		graph: MapGraphData;
+	} | null>(null);
 	if (!response) return null;
 	const id = graphIdentity(response);
-	if (ref.current?.id !== id) {
-		ref.current = { graph: buildMapGraph(response), id };
+	if (built?.id !== id) {
+		const next = { graph: buildMapGraph(response), id };
+		setBuilt(next);
+		return next.graph;
 	}
-	return ref.current.graph;
+	return built.graph;
 }
 
 const EMPTY_STATES: FactCheckStates = {};
@@ -323,8 +329,8 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			: null;
 	const activeAdmission =
 		admission && admission.key === currentAdmissionKey ? admission : null;
-	useEffect(() => {
-		if (!admission) return;
+	// Another scope or result needs admission again: forgotten during render.
+	if (admission) {
 		const changedScope =
 			admission.projectId !== projectId || admission.scope !== urlState.scope;
 		const changedResult =
@@ -332,13 +338,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			(projectResultToken !== null &&
 				admission.resultToken !== projectResultToken);
 		if (changedScope || changedResult) setAdmission(null);
-	}, [
-		admission,
-		currentAdmissionKey,
-		projectId,
-		projectResultToken,
-		urlState.scope,
-	]);
+	}
 	const budgets = activeAdmission?.budgets ?? budgetResolution.budgets;
 	const visibleSet = useMemo(
 		() => new Set<ObjectType>(scopedArgumentTypes),
