@@ -89,6 +89,22 @@ export const ProjectsHomeRoute = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const initialSearch = searchParams.get("search") || "";
 	const [search, setSearch] = useState(initialSearch);
+	// The search lives in the address too, written with each change.
+	const changeSearch = (value: string) => {
+		setSearch(value);
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				if (value) {
+					next.set("search", value);
+				} else {
+					next.delete("search");
+				}
+				return next;
+			},
+			{ replace: true },
+		);
+	};
 
 	const [debouncedSearchValue] = useDebouncedValue(search, 200);
 
@@ -136,21 +152,6 @@ export const ProjectsHomeRoute = () => {
 	const togglePinMutation = useTogglePinMutation();
 
 	useEffect(() => {
-		setSearchParams(
-			(prev) => {
-				const next = new URLSearchParams(prev);
-				if (search) {
-					next.set("search", search);
-				} else {
-					next.delete("search");
-				}
-				return next;
-			},
-			{ replace: true },
-		);
-	}, [search, setSearchParams]);
-
-	useEffect(() => {
 		if (inView && hasNextPage && !isFetchingNextPage) {
 			fetchNextPage();
 		}
@@ -193,9 +194,7 @@ export const ProjectsHomeRoute = () => {
 		return null;
 	}, [pinnedProjects]);
 
-	const handleSearchOwner = useCallback((term: string) => {
-		setSearch(`owner:${term}`);
-	}, []);
+	const handleSearchOwner = (term: string) => changeSearch(`owner:${term}`);
 
 	const handleTogglePin = useCallback(
 		(projectId: string) => {
@@ -460,7 +459,7 @@ export const ProjectsHomeRoute = () => {
 										<ActionIcon
 											disabled={isFetchingNextPage}
 											variant="transparent"
-											onClick={() => setSearch("")}
+											onClick={() => changeSearch("")}
 											aria-label={t`Clear search`}
 											{...testId("project-search-clear-button")}
 										>
@@ -471,7 +470,7 @@ export const ProjectsHomeRoute = () => {
 								placeholder={t`Search projects`}
 								value={search}
 								size="md"
-								onChange={(e) => setSearch(e.currentTarget.value)}
+								onChange={(e) => changeSearch(e.currentTarget.value)}
 								className="w-full"
 								{...testId("project-search-input")}
 							/>

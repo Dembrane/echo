@@ -4,7 +4,7 @@ import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEMPLATE_SUMMARIES } from "@/components/project/templates/projectTemplates.fixture";
 import { ProjectsHomeRoute } from "./ProjectsHome";
@@ -181,5 +181,41 @@ describe("workspace home for a host with no project of their own", () => {
 		renderHome();
 		expect(screen.queryByTestId("workspace-home-start")).toBeNull();
 		expect(screen.getByText("Nothing here for you yet.")).toBeTruthy();
+	});
+});
+
+// The search lives in the address too, so a reload or a shared link keeps it.
+describe("project search", () => {
+	const Address = () => (
+		<output data-testid="address">{useLocation().search}</output>
+	);
+	const renderAt = (entry: string) =>
+		render(
+			<QueryClientProvider client={new QueryClient()}>
+				<I18nProvider i18n={i18n}>
+					<MantineProvider>
+						<MemoryRouter initialEntries={[entry]}>
+							<ProjectsHomeRoute />
+							<Address />
+						</MemoryRouter>
+					</MantineProvider>
+				</I18nProvider>
+			</QueryClientProvider>,
+		);
+	const input = () =>
+		screen.getByTestId("project-search-input") as HTMLInputElement;
+	const address = () => screen.getByTestId("address").textContent;
+
+	it("starts from the address, writes each change to it, and clears it", () => {
+		projects.current = [own];
+		renderAt("/?search=town");
+		expect(input().value).toBe("town");
+
+		fireEvent.change(input(), { target: { value: "hall" } });
+		expect(address()).toBe("?search=hall");
+
+		fireEvent.click(screen.getByTestId("project-search-clear-button"));
+		expect(input().value).toBe("");
+		expect(address()).toBe("");
 	});
 });
