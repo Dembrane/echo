@@ -1459,7 +1459,7 @@ msgstr "Acción de"
 #~ msgstr "Acción de"
 
 #: src/features/sidebar/views/InboxView.tsx:470
-#: src/components/inbox/Inbox.tsx:442
+#: src/components/inbox/Inbox.tsx:420
 msgid "Action needed"
 msgstr "Acción requerida"
 
@@ -3142,7 +3142,7 @@ msgstr "Llamadas no asociadas a ninguna cuenta"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:66
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3957,7 +3957,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Continuar"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:58
 msgid "Confirm"
 msgstr "Confirmar"
 
@@ -8888,7 +8888,7 @@ msgstr "Marcar como asistido"
 
 #: src/features/sidebar/views/InboxView.tsx:480
 #: src/features/sidebar/views/InboxView.tsx:571
-#: src/components/inbox/Inbox.tsx:397
+#: src/components/inbox/Inbox.tsx:453
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Marcar como leído"
@@ -17197,7 +17197,7 @@ msgstr "Desanclar proyecto"
 #~ msgid "Unpublished changes"
 #~ msgstr "Cambios sin publicar"
 
-#: src/components/inbox/Inbox.tsx:437
+#: src/components/inbox/Inbox.tsx:415
 msgid "Unread"
 msgstr "No leídos"
 

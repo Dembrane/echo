@@ -188,7 +188,7 @@ msgstr "{more} de plus"
 msgid "{name} · invited, not joined yet"
 msgstr "{name} · invité, pas encore arrivé"
 
-#: src/features/accounts/customer/WhoSigns.tsx:499
+#: src/features/accounts/customer/WhoSigns.tsx:506
 msgid "{name} (you)"
 msgstr "{name} (toi)"
 
@@ -252,7 +252,7 @@ msgstr "2 questions"
 #~ msgid "3 questions"
 #~ msgstr "3 questions"
 
-#: src/features/accounts/customer/BillingForm.tsx:430
+#: src/features/accounts/customer/BillingForm.tsx:436
 msgid "8 digits"
 msgstr "8 chiffres"
 
@@ -264,7 +264,7 @@ msgstr "Un brouillon sur leur compte, à leur envoyer après la démo."
 msgid "A file"
 msgstr "Un fichier"
 
-#: src/features/accounts/customer/BillingForm.tsx:183
+#: src/features/accounts/customer/BillingForm.tsx:187
 msgid "A KvK number has 8 digits."
 msgstr "Un numéro KvK compte 8 chiffres."
 
@@ -418,12 +418,12 @@ msgstr "Ajoutez d'abord votre signature."
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
 #: src/features/accounts/staff/BillToFields.tsx:106
 #: src/features/accounts/staff/AccountCardRoute.tsx:866
-#: src/features/accounts/customer/BillingForm.tsx:391
-#: src/features/accounts/customer/BillingForm.tsx:584
+#: src/features/accounts/customer/BillingForm.tsx:397
+#: src/features/accounts/customer/BillingForm.tsx:590
 msgid "Address"
 msgstr "Adresse"
 
-#: src/features/accounts/customer/BillingForm.tsx:395
+#: src/features/accounts/customer/BillingForm.tsx:401
 msgid "Address line 2"
 msgstr "Complément d'adresse"
 
@@ -460,7 +460,7 @@ msgstr "Annexes"
 msgid "Another signer of theirs"
 msgstr "Un autre signataire chez eux"
 
-#: src/features/accounts/customer/BillingForm.tsx:481
+#: src/features/accounts/customer/BillingForm.tsx:487
 msgid "Another way"
 msgstr "Autrement"
 
@@ -522,7 +522,7 @@ msgstr "À la signature, ils cochent"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:1115
-#: src/features/accounts/customer/WhoSigns.tsx:462
+#: src/features/accounts/customer/WhoSigns.tsx:469
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
 msgid "Back"
 msgstr "Retour"
@@ -560,12 +560,12 @@ msgstr "Avant le {due}"
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:642
 #: src/features/accounts/staff/AccountCardRoute.tsx:878
-#: src/features/accounts/customer/BillingForm.tsx:299
-#: src/features/accounts/customer/BillingForm.tsx:338
+#: src/features/accounts/customer/BillingForm.tsx:305
+#: src/features/accounts/customer/BillingForm.tsx:344
 msgid "Billing details"
 msgstr "Coordonnées de facturation"
 
-#: src/features/accounts/customer/BillingForm.tsx:289
+#: src/features/accounts/customer/BillingForm.tsx:295
 msgid "Billing details saved"
 msgstr "Coordonnées de facturation enregistrées"
 
@@ -618,7 +618,7 @@ msgid "By bank transfer"
 msgstr "Par virement bancaire"
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:29
-#: src/features/accounts/customer/BillingForm.tsx:469
+#: src/features/accounts/customer/BillingForm.tsx:475
 msgid "By email"
 msgstr "Par e-mail"
 
@@ -638,9 +638,9 @@ msgstr "Appel réservé"
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
-#: src/features/accounts/customer/WhoSigns.tsx:460
+#: src/features/accounts/customer/WhoSigns.tsx:467
 #: src/features/accounts/customer/Questions.tsx:250
-#: src/features/accounts/customer/BillingForm.tsx:551
+#: src/features/accounts/customer/BillingForm.tsx:557
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
 msgid "Cancel"
@@ -652,7 +652,7 @@ msgstr "Annulé"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:214
 #: src/features/accounts/signing/SignRoute.tsx:1280
-#: src/features/accounts/customer/WhoSigns.tsx:368
+#: src/features/accounts/customer/WhoSigns.tsx:375
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:122
 msgid "Change"
 msgstr "Modifier"
@@ -705,7 +705,7 @@ msgstr "Découvrez la démo que nous avons préparée pour vous"
 msgid "check privacy and AI rules"
 msgstr "vérifier la vie privée et les règles sur l’IA"
 
-#: src/features/accounts/customer/BillingForm.tsx:186
+#: src/features/accounts/customer/BillingForm.tsx:190
 msgid "Check this. It should look like {example}."
 msgstr "Vérifiez ce champ. Il doit ressembler à {example}."
 
@@ -734,7 +734,7 @@ msgstr "Relance prévue le {0}"
 msgid "Checkbox"
 msgstr "Case à cocher"
 
-#: src/features/accounts/customer/BillingForm.tsx:494
+#: src/features/accounts/customer/BillingForm.tsx:500
 msgid "Checking the Peppol directory…"
 msgstr "Vérification de l’annuaire Peppol…"
 
@@ -747,12 +747,12 @@ msgid "Checks privacy and AI rules"
 msgstr "Vérifie la vie privée et les règles sur l’IA"
 
 #: src/features/accounts/staff/BillToFields.tsx:133
-#: src/features/accounts/customer/BillingForm.tsx:351
+#: src/features/accounts/customer/BillingForm.tsx:357
 msgid "Choose a country"
 msgstr "Choisissez un pays"
 
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:249
-#: src/features/accounts/customer/NextSteps.tsx:648
+#: src/features/accounts/customer/NextSteps.tsx:657
 msgid "Choose a file"
 msgstr "Choisir un fichier"
 
@@ -760,7 +760,7 @@ msgstr "Choisir un fichier"
 msgid "Choose a PDF"
 msgstr "Choisir un PDF"
 
-#: src/features/accounts/customer/WhoSigns.tsx:139
+#: src/features/accounts/customer/WhoSigns.tsx:141
 msgid "Choose an answer"
 msgstr "Choisissez une réponse"
 
@@ -777,12 +777,12 @@ msgstr "Choisissez-en une"
 msgid "Choose one to continue."
 msgstr "Choisissez une option pour continuer."
 
-#: src/features/accounts/customer/WhoSigns.tsx:437
-#: src/features/accounts/customer/BillingForm.tsx:181
+#: src/features/accounts/customer/WhoSigns.tsx:444
+#: src/features/accounts/customer/BillingForm.tsx:185
 msgid "Choose one."
 msgstr "Choisissez-en une."
 
-#: src/features/accounts/customer/WhoSigns.tsx:370
+#: src/features/accounts/customer/WhoSigns.tsx:377
 msgid "Choose someone"
 msgstr "Choisir quelqu’un"
 
@@ -790,11 +790,11 @@ msgstr "Choisir quelqu’un"
 msgid "Choose who signs"
 msgstr "Choisissez qui signe"
 
-#: src/features/accounts/customer/WhoSigns.tsx:136
+#: src/features/accounts/customer/WhoSigns.tsx:138
 msgid "Choose who signs the DPA"
 msgstr "Choisis qui signe le DPA"
 
-#: src/features/accounts/customer/WhoSigns.tsx:135
+#: src/features/accounts/customer/WhoSigns.tsx:137
 msgid "Choose who signs the offer"
 msgstr "Choisis qui signe l’offre"
 
@@ -803,7 +803,7 @@ msgid "Churned"
 msgstr "Désabonné"
 
 #: src/features/accounts/staff/BillToFields.tsx:123
-#: src/features/accounts/customer/BillingForm.tsx:402
+#: src/features/accounts/customer/BillingForm.tsx:408
 msgid "City"
 msgstr "Ville"
 
@@ -812,7 +812,7 @@ msgid "Clear"
 msgstr "Effacer"
 
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:81
-#: src/features/accounts/customer/WhoSigns.tsx:306
+#: src/features/accounts/customer/WhoSigns.tsx:313
 msgid "Close"
 msgstr "Fermer"
 
@@ -833,7 +833,7 @@ msgstr "Co-développement"
 msgid "Coming up"
 msgstr "À venir"
 
-#: src/features/accounts/customer/WhoSigns.tsx:474
+#: src/features/accounts/customer/WhoSigns.tsx:481
 msgid "Confirm"
 msgstr "Confirmer"
 
@@ -898,7 +898,7 @@ msgid "Counter-signed"
 msgstr "Contresigné"
 
 #: src/features/accounts/staff/BillToFields.tsx:132
-#: src/features/accounts/customer/BillingForm.tsx:350
+#: src/features/accounts/customer/BillingForm.tsx:356
 msgid "Country"
 msgstr "Pays"
 
@@ -1044,7 +1044,7 @@ msgstr "Remise"
 msgid "Discount ({currency})"
 msgstr "Remise ({currency})"
 
-#: src/features/accounts/customer/WhoSigns.tsx:435
+#: src/features/accounts/customer/WhoSigns.tsx:442
 msgid "Do you need your own data protection impact assessment (DPIA)?"
 msgstr "Avez-vous besoin de votre propre analyse d’impact relative à la protection des données (AIPD) ?"
 
@@ -1093,7 +1093,7 @@ msgstr "Documents qui font partie de l'accord"
 
 #: src/features/accounts/format.ts:89
 #: src/features/accounts/staff/SendOfferModals.tsx:191
-#: src/features/accounts/customer/WhoSigns.tsx:315
+#: src/features/accounts/customer/WhoSigns.tsx:322
 #: src/features/accounts/customer/NextSteps.tsx:133
 #: src/features/accounts/customer/NextSteps.tsx:475
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:543
@@ -1180,7 +1180,7 @@ msgstr "À payer avant le {due}"
 msgid "Dutch VAT"
 msgstr "TVA néerlandaise"
 
-#: src/features/accounts/customer/BillingForm.tsx:308
+#: src/features/accounts/customer/BillingForm.tsx:314
 msgid "Edit"
 msgstr "Modifier"
 
@@ -1347,8 +1347,8 @@ msgstr "Indiquer votre numéro de bon de commande"
 msgid "Fill in your VAT number"
 msgstr "Indiquer votre numéro de TVA"
 
-#: src/features/accounts/customer/BillingForm.tsx:181
-#: src/features/accounts/customer/BillingForm.tsx:187
+#: src/features/accounts/customer/BillingForm.tsx:185
+#: src/features/accounts/customer/BillingForm.tsx:191
 msgid "Fill this in."
 msgstr "Renseignez ce champ."
 
@@ -1364,11 +1364,11 @@ msgstr "Prénom"
 #~ msgid "For e-invoicing"
 #~ msgstr "Pour la facturation électronique"
 
-#: src/features/accounts/customer/BillingForm.tsx:177
+#: src/features/accounts/customer/BillingForm.tsx:181
 msgid "For example {example}"
 msgstr "Par exemple {example}"
 
-#: src/features/accounts/customer/BillingForm.tsx:482
+#: src/features/accounts/customer/BillingForm.tsx:488
 msgid "For example an invoice portal"
 msgstr "Par exemple un portail de facturation"
 
@@ -1459,7 +1459,7 @@ msgstr "Masquer les tâches terminées"
 msgid "How"
 msgstr "Comment"
 
-#: src/features/accounts/customer/BillingForm.tsx:458
+#: src/features/accounts/customer/BillingForm.tsx:464
 msgid "How do you want to get invoices?"
 msgstr "Comment souhaitez-vous recevoir les factures ?"
 
@@ -1484,15 +1484,15 @@ msgstr "Notre facturation"
 msgid "If not, the DPA becomes a separate document for someone who may."
 msgstr "Sinon, le DPA devient un document séparé pour quelqu’un qui en a le droit."
 
-#: src/features/accounts/customer/WhoSigns.tsx:436
+#: src/features/accounts/customer/WhoSigns.tsx:443
 msgid "If you do, we get in touch to work on it with you."
 msgstr "Si oui, nous vous contactons pour la réaliser avec vous."
 
-#: src/features/accounts/customer/BillingForm.tsx:453
+#: src/features/accounts/customer/BillingForm.tsx:459
 msgid "If you have one"
 msgstr "Si vous en avez un"
 
-#: src/features/accounts/customer/BillingForm.tsx:525
+#: src/features/accounts/customer/BillingForm.tsx:531
 msgid "If your finance team uses one"
 msgstr "Si votre équipe financière en utilise un"
 
@@ -1584,8 +1584,8 @@ msgstr "Facturer une autre organisation"
 
 #: src/features/accounts/staff/BillToFields.tsx:97
 #: src/features/accounts/staff/AccountCardRoute.tsx:865
-#: src/features/accounts/customer/BillingForm.tsx:385
-#: src/features/accounts/customer/BillingForm.tsx:585
+#: src/features/accounts/customer/BillingForm.tsx:391
+#: src/features/accounts/customer/BillingForm.tsx:591
 msgid "Invoice email"
 msgstr "E-mail de facturation"
 
@@ -1605,7 +1605,7 @@ msgstr "La facture attend les coordonnées de facturation et la signature du DPA
 msgid "Invoice waits for the DPA signature"
 msgstr "La facture attend la signature du DPA"
 
-#: src/features/accounts/customer/BillingForm.tsx:476
+#: src/features/accounts/customer/BillingForm.tsx:482
 msgid "Invoices arrive in your accounting software"
 msgstr "Les factures arrivent dans votre logiciel comptable"
 
@@ -1637,11 +1637,11 @@ msgstr "Les factures sont envoyées par e-mail, pas via Peppol ({id})."
 msgid "Invoices go via Peppol ({id})."
 msgstr "Les factures passent par Peppol ({id})."
 
-#: src/features/accounts/customer/BillingForm.tsx:224
+#: src/features/accounts/customer/BillingForm.tsx:228
 msgid "Invoices will come by email"
 msgstr "Les factures arriveront par e-mail"
 
-#: src/features/accounts/customer/BillingForm.tsx:225
+#: src/features/accounts/customer/BillingForm.tsx:229
 msgid "Invoices will come via Peppol"
 msgstr "Les factures arriveront via Peppol"
 
@@ -1674,8 +1674,8 @@ msgid "Job title"
 msgstr "Fonction"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:872
-#: src/features/accounts/customer/BillingForm.tsx:438
-#: src/features/accounts/customer/BillingForm.tsx:588
+#: src/features/accounts/customer/BillingForm.tsx:444
+#: src/features/accounts/customer/BillingForm.tsx:594
 msgid "KBO number"
 msgstr "Numéro KBO"
 
@@ -1689,8 +1689,8 @@ msgid "Kind"
 msgstr "Type"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:871
-#: src/features/accounts/customer/BillingForm.tsx:429
-#: src/features/accounts/customer/BillingForm.tsx:587
+#: src/features/accounts/customer/BillingForm.tsx:435
+#: src/features/accounts/customer/BillingForm.tsx:593
 msgid "KvK number"
 msgstr "Numéro KvK"
 
@@ -1727,7 +1727,7 @@ msgstr "Nom"
 msgid "Legal name"
 msgstr "Nom légal"
 
-#: src/features/accounts/customer/BillingForm.tsx:381
+#: src/features/accounts/customer/BillingForm.tsx:387
 msgid "Legal name of your organisation"
 msgstr "Nom légal de votre organisation"
 
@@ -1861,7 +1861,7 @@ msgstr "Nouvelle tâche"
 
 #: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:1240
-#: src/features/accounts/customer/WhoSigns.tsx:476
+#: src/features/accounts/customer/WhoSigns.tsx:483
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:275
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:282
 msgid "Next"
@@ -1890,7 +1890,7 @@ msgstr "Suivant : {next}"
 #~ msgid "Next: {nextTask}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:440
+#: src/features/accounts/customer/WhoSigns.tsx:447
 msgid "No"
 msgstr "Non"
 
@@ -1905,7 +1905,7 @@ msgstr "Aucun compte"
 msgid "No charge"
 msgstr "Gratuit"
 
-#: src/features/accounts/customer/BillingForm.tsx:370
+#: src/features/accounts/customer/BillingForm.tsx:376
 msgid "No country found"
 msgstr "Aucun pays trouvé"
 
@@ -1918,7 +1918,7 @@ msgid "No email went to the customer. Send them these links in your own email."
 msgstr "Aucun e-mail n'a été envoyé au client. Envoyez-lui ces liens dans votre propre e-mail."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:653
+#: src/features/accounts/customer/NextSteps.tsx:662
 msgid "No file chosen"
 msgstr "Aucun fichier choisi"
 
@@ -1981,7 +1981,7 @@ msgstr "Personne ne gère encore le contrat."
 msgid "Nobody on this account has an email address yet."
 msgstr "Personne sur ce compte n'a encore d'adresse e-mail."
 
-#: src/features/accounts/customer/WhoSigns.tsx:357
+#: src/features/accounts/customer/WhoSigns.tsx:364
 msgid "Nobody yet"
 msgstr "Personne pour l’instant"
 
@@ -1989,7 +1989,7 @@ msgstr "Personne pour l’instant"
 msgid "None"
 msgstr "Aucune"
 
-#: src/features/accounts/customer/WhoSigns.tsx:397
+#: src/features/accounts/customer/WhoSigns.tsx:404
 #: src/features/accounts/customer/room/PersonRow.tsx:73
 msgid "not added yet"
 msgstr "pas encore ajouté"
@@ -2030,7 +2030,7 @@ msgstr "Non envoyé"
 msgid "Not yet a customer"
 msgstr "Pas encore client"
 
-#: src/features/accounts/customer/NextSteps.tsx:658
+#: src/features/accounts/customer/NextSteps.tsx:667
 msgid "Note"
 msgstr "Remarque"
 
@@ -2270,7 +2270,7 @@ msgstr "facultatif"
 #: src/features/accounts/staff/BillToFields.tsx:144
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
 #: src/features/accounts/signing/SignRoute.tsx:1213
-#: src/features/accounts/customer/NextSteps.tsx:659
+#: src/features/accounts/customer/NextSteps.tsx:668
 msgid "Optional"
 msgstr "Facultatif"
 
@@ -2305,7 +2305,7 @@ msgstr "Options pour {first}"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/BillToFields.tsx:89
 #: src/features/accounts/staff/AccountsPanel.tsx:141
-#: src/features/accounts/customer/BillingForm.tsx:583
+#: src/features/accounts/customer/BillingForm.tsx:589
 msgid "Organisation"
 msgstr "Organisation"
 
@@ -2402,8 +2402,8 @@ msgid "PDF, or the email as EML"
 msgstr "PDF, ou l'e-mail en EML"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:874
-#: src/features/accounts/customer/BillingForm.tsx:498
-#: src/features/accounts/customer/BillingForm.tsx:590
+#: src/features/accounts/customer/BillingForm.tsx:504
+#: src/features/accounts/customer/BillingForm.tsx:596
 msgid "Peppol ID"
 msgstr "Identifiant Peppol"
 
@@ -2427,8 +2427,8 @@ msgstr "Formule"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:873
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:199
-#: src/features/accounts/customer/BillingForm.tsx:524
-#: src/features/accounts/customer/BillingForm.tsx:589
+#: src/features/accounts/customer/BillingForm.tsx:530
+#: src/features/accounts/customer/BillingForm.tsx:595
 msgid "PO number"
 msgstr "Numéro de bon de commande"
 
@@ -2438,7 +2438,7 @@ msgid "PO, order or project number"
 msgstr "Numéro de bon de commande, de commande ou de projet"
 
 #: src/features/accounts/staff/BillToFields.tsx:115
-#: src/features/accounts/customer/BillingForm.tsx:398
+#: src/features/accounts/customer/BillingForm.tsx:404
 msgid "Postal code"
 msgstr "Code postal"
 
@@ -2688,7 +2688,7 @@ msgid "Review and send"
 msgstr "Relire et envoyer"
 
 #: src/features/accounts/signing/SignRoute.tsx:1419
-#: src/features/accounts/customer/WhoSigns.tsx:324
+#: src/features/accounts/customer/WhoSigns.tsx:331
 #: src/features/accounts/customer/NextSteps.tsx:295
 msgid "Review and sign"
 msgstr "Examiner et signer"
@@ -2736,7 +2736,7 @@ msgstr "piloter le déploiement"
 msgid "Save"
 msgstr "Enregistrer"
 
-#: src/features/accounts/customer/BillingForm.tsx:536
+#: src/features/accounts/customer/BillingForm.tsx:542
 msgid "Save billing details"
 msgstr "Enregistrer les informations de facturation"
 
@@ -2792,7 +2792,7 @@ msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:243
 #: src/features/accounts/customer/Questions.tsx:263
-#: src/features/accounts/customer/NextSteps.tsx:672
+#: src/features/accounts/customer/NextSteps.tsx:681
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Send"
 msgstr "Envoyer"
@@ -2888,7 +2888,7 @@ msgstr "Envoyé immédiatement, pour lecture."
 #~ msgid "Sent to {name}"
 #~ msgstr "Envoyé à {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:614
+#: src/features/accounts/customer/NextSteps.tsx:616
 msgid "Sent to dembrane"
 msgstr "Envoyé à dembrane"
 
@@ -3126,8 +3126,8 @@ msgstr "Une autre personne de votre organisation signe ensuite."
 #~ msgid "Someone else signs"
 #~ msgstr "Une autre personne signe"
 
-#: src/features/accounts/customer/WhoSigns.tsx:211
-#: src/features/accounts/customer/WhoSigns.tsx:412
+#: src/features/accounts/customer/WhoSigns.tsx:218
+#: src/features/accounts/customer/WhoSigns.tsx:419
 msgid "Someone new"
 msgstr "Quelqu’un de nouveau"
 
@@ -3177,7 +3177,7 @@ msgstr "Statut"
 msgid "Stay signed in as {email}"
 msgstr "Rester connecté en tant que {email}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:333
+#: src/features/accounts/customer/WhoSigns.tsx:340
 msgid "Step {count} of 2"
 msgstr "Étape {count} sur 2"
 
@@ -3261,7 +3261,7 @@ msgstr "Tâches"
 msgid "Tasks | dembrane"
 msgstr "Tâches | dembrane"
 
-#: src/features/accounts/customer/BillingForm.tsx:507
+#: src/features/accounts/customer/BillingForm.tsx:513
 msgid "Tell us how your organisation receives invoices"
 msgstr "Dites-nous comment votre organisation reçoit les factures"
 
@@ -3294,7 +3294,7 @@ msgstr "Conditions"
 msgid "Text"
 msgstr "Texte"
 
-#: src/features/accounts/customer/WhoSigns.tsx:252
+#: src/features/accounts/customer/WhoSigns.tsx:259
 msgid "Thank you"
 msgstr "Merci"
 
@@ -3580,7 +3580,7 @@ msgstr "Cette page n'a pas pu être chargée. Réessayez dans un instant."
 #~ msgid "Through an invoice portal"
 #~ msgstr "Via un portail de facturation"
 
-#: src/features/accounts/customer/BillingForm.tsx:475
+#: src/features/accounts/customer/BillingForm.tsx:481
 msgid "Through Peppol"
 msgstr "Via Peppol"
 
@@ -3603,7 +3603,7 @@ msgstr "Titre"
 msgid "To"
 msgstr "Destinataire"
 
-#: src/features/accounts/customer/WhoSigns.tsx:445
+#: src/features/accounts/customer/WhoSigns.tsx:452
 msgid "To change these answers later, ask us a question."
 msgstr "Pour modifier ces réponses plus tard, posez-nous une question."
 
@@ -3632,7 +3632,7 @@ msgstr "Pour envoyer, ajoutez un champ signature."
 msgid "To sign"
 msgstr "À signer"
 
-#: src/features/accounts/customer/BillingForm.tsx:470
+#: src/features/accounts/customer/BillingForm.tsx:476
 msgid "To your invoice email"
 msgstr "À votre e-mail de facturation"
 
@@ -3748,12 +3748,12 @@ msgstr "% VAT"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
 #: src/features/accounts/staff/BillToFields.tsx:143
 #: src/features/accounts/staff/AccountCardRoute.tsx:868
-#: src/features/accounts/customer/BillingForm.tsx:411
-#: src/features/accounts/customer/BillingForm.tsx:586
+#: src/features/accounts/customer/BillingForm.tsx:417
+#: src/features/accounts/customer/BillingForm.tsx:592
 msgid "VAT number"
 msgstr "Numéro de VAT"
 
-#: src/features/accounts/customer/BillingForm.tsx:452
+#: src/features/accounts/customer/BillingForm.tsx:458
 msgid "VAT or tax number"
 msgstr "Numéro de VAT ou numéro fiscal"
 
@@ -3893,7 +3893,7 @@ msgstr "Nous envoyons à {name} ({email}) un lien pour lire l’offre et le DPA.
 #~ msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
 #~ msgstr "Nous avons envoyé à {dpaName} ({dpaEmail}) un lien pour signer l’accord de traitement des données."
 
-#: src/features/accounts/customer/WhoSigns.tsx:283
+#: src/features/accounts/customer/WhoSigns.tsx:290
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
 msgstr "Nous avons envoyé à {dpaName} ({dpaEmail}) un lien pour signer le DPA."
 
@@ -3929,11 +3929,11 @@ msgstr "Nous avons renvoyé le lien à {name}."
 #~ msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
 #~ msgstr "Nous avons envoyé à {offerName} ({offerEmail}) un lien pour signer l’offre et l’accord de traitement des données."
 
-#: src/features/accounts/customer/WhoSigns.tsx:268
+#: src/features/accounts/customer/WhoSigns.tsx:275
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
 msgstr "Nous avons envoyé à {offerName} ({offerEmail}) un lien pour signer l’offre et le DPA."
 
-#: src/features/accounts/customer/WhoSigns.tsx:275
+#: src/features/accounts/customer/WhoSigns.tsx:282
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer."
 msgstr "Nous avons envoyé à {offerName} ({offerEmail}) un lien pour signer l’offre."
 
@@ -3941,12 +3941,12 @@ msgstr "Nous avons envoyé à {offerName} ({offerEmail}) un lien pour signer l�
 #~ msgid "We emailed {theirName} at {theirEmail} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr "Nous avons envoyé à {theirName} ({theirEmail}) un lien pour signer. La tâche attend maintenant {first}, et sa signature la termine."
 
-#: src/features/accounts/customer/BillingForm.tsx:490
+#: src/features/accounts/customer/BillingForm.tsx:496
 msgid "We found you in the Peppol directory ({id})."
 msgstr "Nous vous avons trouvé dans l’annuaire Peppol ({id})."
 
-#: src/features/accounts/customer/BillingForm.tsx:419
-#: src/features/accounts/customer/BillingForm.tsx:586
+#: src/features/accounts/customer/BillingForm.tsx:425
+#: src/features/accounts/customer/BillingForm.tsx:592
 msgid "We have no VAT number"
 msgstr "Nous n’avons pas de numéro de VAT"
 
@@ -3971,11 +3971,11 @@ msgstr "Nous avons envoyé un nouveau code à {email}."
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Nous parcourons votre démo avec vous et planifions une première session."
 
-#: src/features/accounts/customer/WhoSigns.tsx:295
+#: src/features/accounts/customer/WhoSigns.tsx:302
 msgid "We will get in touch about your DPIA."
 msgstr "Nous vous contacterons au sujet de votre AIPD."
 
-#: src/features/accounts/customer/BillingForm.tsx:508
+#: src/features/accounts/customer/BillingForm.tsx:514
 msgid "We will set it up with you."
 msgstr "Nous le mettrons en place avec vous."
 
@@ -4021,7 +4021,7 @@ msgstr "Ce qu'il faut modifier"
 msgid "What we ask"
 msgstr "Ce que nous demandons"
 
-#: src/features/accounts/customer/BillingForm.tsx:342
+#: src/features/accounts/customer/BillingForm.tsx:348
 msgid "What we put on your invoices."
 msgstr "Ce que nous indiquons sur vos factures."
 
@@ -4083,7 +4083,7 @@ msgstr "Retiré"
 msgid "Write a reply"
 msgstr "Rédiger une réponse"
 
-#: src/features/accounts/customer/WhoSigns.tsx:441
+#: src/features/accounts/customer/WhoSigns.tsx:448
 msgid "Yes"
 msgstr "Oui"
 
@@ -4147,7 +4147,7 @@ msgstr "Tu peux lire ce document. {signer} le signe."
 msgid "You can read this document. Who signs it is not chosen yet."
 msgstr "Tu peux lire ce document. La personne qui le signe n’est pas encore choisie."
 
-#: src/features/accounts/customer/WhoSigns.tsx:290
+#: src/features/accounts/customer/WhoSigns.tsx:297
 msgid "You can review and sign the offer now."
 msgstr "Vous pouvez maintenant relire et signer l’offre."
 
@@ -4195,7 +4195,7 @@ msgstr "Vos appareils actifs ont changé. Choisissez à nouveau un appareil."
 msgid "Your address is empty."
 msgstr "Votre adresse est vide."
 
-#: src/features/accounts/customer/NextSteps.tsx:658
+#: src/features/accounts/customer/NextSteps.tsx:667
 msgid "Your answer"
 msgstr "Votre réponse"
 
