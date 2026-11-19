@@ -4,6 +4,7 @@ import {
 	VOICE_LEVEL_SAMPLE_MS,
 	VOICE_WAVEFORM_BARS,
 } from "@/components/voice/voiceInput";
+import { useLatest } from "@/hooks/useLatest";
 
 /** What the meter is reporting, worst case first.
  *
@@ -60,8 +61,7 @@ export const ParticipantRecordingWaveform = ({
 
 	const silentSinceRef = useRef<number | null>(null);
 	const reportedRef = useRef(false);
-	const onSilenceRef = useRef(onSilence);
-	onSilenceRef.current = onSilence;
+	const onSilenceRef = useLatest(onSilence);
 
 	useEffect(() => {
 		if (!peekAudioLevel) return;
@@ -91,7 +91,7 @@ export const ParticipantRecordingWaveform = ({
 		}, VOICE_LEVEL_SAMPLE_MS);
 
 		return () => clearInterval(id);
-	}, [peekAudioLevel, paused]);
+	}, [peekAudioLevel, paused, onSilenceRef]);
 
 	if (!peekAudioLevel) return null;
 
