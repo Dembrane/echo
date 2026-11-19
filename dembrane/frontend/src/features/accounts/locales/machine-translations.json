@@ -467,6 +467,7 @@
     "Signer named": "Jméno podepisujícího uvedeno",
     "Signer reminded": "Podepisující upozorněn",
     "Signer replaced": "Podepisující nahrazen",
+    "Signer taken off": "Podepisující odebrán",
     "Signs {0} as shown.": "Podepisuje {0} tak, jak je zobrazeno.",
     "Since {0}": "Od {0}",
     "So the signature record can read it": "Aby byl záznam o podpisu čitelný",
@@ -679,6 +680,8 @@
     "{0} excl. VAT, {1} incl.": "{0} bez VAT, {1} vč.",
     "{0} incl. VAT": "{0} vč. DPH",
     "{0} is signed": "{0} je podepsáno",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} už nepodepisuje DPA a odkaz, který jsme poslali, přestane fungovat.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} už nepodepisuje nabídku a odkaz, který jsme poslali, přestane fungovat.",
     "{0} of {1} done": "{0} z {1} hotovo",
     "{0} pages": "{0} stran",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech.",
@@ -693,7 +696,8 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0}: při podpisu, pak vždy 1.",
     "{name} signed on {when}.": "{name} podepsal(a) {when}.",
     "{newName} gets an email with a link to sign.": "{newName} dostane e-mail s odkazem k podpisu.",
-    "{org} invited you to sign": "{org} vás zve k podpisu"
+    "{org} invited you to sign": "{org} vás zve k podpisu",
+    "{signerName} is named to sign the offer.": "{signerName} je určen k podpisu nabídky."
   },
   "de-DE": {
     "1 page": "1 Seite",
@@ -1163,6 +1167,7 @@
     "Signer named": "Unterzeichnende Person benannt",
     "Signer reminded": "Unterzeichner erinnert",
     "Signer replaced": "Unterzeichnende Person ersetzt",
+    "Signer taken off": "Unterzeichner entfernt",
     "Signs {0} as shown.": "Unterzeichnet {0} wie gezeigt.",
     "Since {0}": "Seit {0}",
     "So the signature record can read it": "Damit der Unterschriftseintrag lesbar ist",
@@ -1375,6 +1380,8 @@
     "{0} excl. VAT, {1} incl.": "{0} zzgl. VAT, {1} inkl.",
     "{0} incl. VAT": "{0} inkl. MwSt.",
     "{0} is signed": "{0} ist unterschrieben",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} unterschreibt die DPA nicht mehr, und der Link, den wir geschickt haben, funktioniert nicht mehr.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} unterschreibt das Angebot nicht mehr, und der Link, den wir geschickt haben, funktioniert nicht mehr.",
     "{0} of {1} done": "{0} von {1} erledigt",
     "{0} pages": "{0} Seiten",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} hat am {1} unterschrieben. Die signierte Kopie befindet sich in deinen Dokumenten.",
@@ -1389,7 +1396,8 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0}: bei Unterschrift, dann jeden 1.",
     "{name} signed on {when}.": "{name} hat am {when} unterzeichnet.",
     "{newName} gets an email with a link to sign.": "{newName} bekommt eine E-Mail mit einem Link zum Unterschreiben.",
-    "{org} invited you to sign": "{org} hat dich zum Unterschreiben eingeladen"
+    "{org} invited you to sign": "{org} hat dich zum Unterschreiben eingeladen",
+    "{signerName} is named to sign the offer.": "{signerName} ist benannt, das Angebot zu unterschreiben."
   },
   "es-ES": {
     "1 page": "1 página",
@@ -1859,6 +1867,7 @@
     "Signer named": "Firmante asignado",
     "Signer reminded": "Firmante avisado",
     "Signer replaced": "Firmante sustituido",
+    "Signer taken off": "Firmante retirado",
     "Signs {0} as shown.": "Firma {0} tal como se muestra.",
     "Since {0}": "Desde {0}",
     "So the signature record can read it": "Para que conste en el registro de la firma",
@@ -2071,6 +2080,8 @@
     "{0} excl. VAT, {1} incl.": "{0} sin VAT, {1} con VAT",
     "{0} incl. VAT": "{0} IVA incluido",
     "{0} is signed": "{0} está firmado",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} ya no firma el DPA, y el enlace que le enviamos deja de funcionar.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} ya no firma la oferta, y el enlace que le enviamos deja de funcionar.",
     "{0} of {1} done": "{0} de {1} completadas",
     "{0} pages": "{0} páginas",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} firmó el {1}. La copia firmada está en tus documentos.",
@@ -2085,7 +2096,8 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0}: al firmar, luego cada día 1",
     "{name} signed on {when}.": "{name} firmó el {when}.",
     "{newName} gets an email with a link to sign.": "{newName} recibe un correo con un enlace para firmar.",
-    "{org} invited you to sign": "{org} te ha invitado a firmar"
+    "{org} invited you to sign": "{org} te ha invitado a firmar",
+    "{signerName} is named to sign the offer.": "{signerName} está asignado para firmar la oferta."
   },
   "fr-FR": {
     "1 page": "1 page",
@@ -2555,6 +2567,7 @@
     "Signer named": "Signataire désigné",
     "Signer reminded": "Signataire relancé",
     "Signer replaced": "Signataire remplacé",
+    "Signer taken off": "Signataire retiré",
     "Signs {0} as shown.": "Signe {0} tel qu'affiché.",
     "Since {0}": "Depuis le {0}",
     "So the signature record can read it": "Pour que le registre des signatures puisse le lire",
@@ -2767,6 +2780,8 @@
     "{0} excl. VAT, {1} incl.": "{0} hors VAT, {1} avec.",
     "{0} incl. VAT": "{0} TVA incluse",
     "{0} is signed": "{0} est signé",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} ne signe plus le DPA, et le lien que nous lui avons envoyé ne fonctionne plus.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} ne signe plus l’offre, et le lien que nous lui avons envoyé ne fonctionne plus.",
     "{0} of {1} done": "{0} sur {1} terminées",
     "{0} pages": "{0} pages",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} a signé le {1}. L'exemplaire signé est dans vos documents.",
@@ -2781,7 +2796,8 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0} : à la signature, puis chaque 1er",
     "{name} signed on {when}.": "{name} a signé le {when}.",
     "{newName} gets an email with a link to sign.": "{newName} reçoit un e-mail avec un lien pour signer.",
-    "{org} invited you to sign": "{org} vous invite à signer"
+    "{org} invited you to sign": "{org} vous invite à signer",
+    "{signerName} is named to sign the offer.": "{signerName} est désigné pour signer l’offre."
   },
   "it-IT": {
     "1 page": "1 pagina",
@@ -3251,6 +3267,7 @@
     "Signer named": "Firmatario indicato",
     "Signer reminded": "Firmatario sollecitato",
     "Signer replaced": "Firmatario sostituito",
+    "Signer taken off": "Firmatario rimosso",
     "Signs {0} as shown.": "Firma {0} come mostrato.",
     "Since {0}": "Dal {0}",
     "So the signature record can read it": "Così il registro delle firme può leggerlo",
@@ -3463,6 +3480,8 @@
     "{0} excl. VAT, {1} incl.": "{0} IVA esclusa, {1} IVA inclusa",
     "{0} incl. VAT": "{0} IVA inclusa",
     "{0} is signed": "{0} è firmato",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} non firma più il DPA, e il link che gli abbiamo inviato smette di funzionare.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} non firma più l’offerta, e il link che gli abbiamo inviato smette di funzionare.",
     "{0} of {1} done": "{0} di {1} completate",
     "{0} pages": "{0} pagine",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} ha firmato il {1}. La copia firmata è nei tuoi documenti.",
@@ -3477,7 +3496,8 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0}: alla firma, poi ogni 1°",
     "{name} signed on {when}.": "{name} ha firmato il {when}.",
     "{newName} gets an email with a link to sign.": "{newName} riceve un’email con un link per firmare.",
-    "{org} invited you to sign": "{org} ti ha invitato a firmare"
+    "{org} invited you to sign": "{org} ti ha invitato a firmare",
+    "{signerName} is named to sign the offer.": "{signerName} è indicato per firmare l’offerta."
   },
   "nl-NL": {
     "1 page": "1 pagina",
@@ -4312,6 +4332,7 @@
     "Signer named": "Підписанта вказано",
     "Signer reminded": "Підписантові нагадано",
     "Signer replaced": "Підписанта замінено",
+    "Signer taken off": "Підписанта прибрано",
     "Signs {0} as shown.": "Підписує {0} у показаному вигляді.",
     "Since {0}": "З {0}",
     "So the signature record can read it": "Щоб запис про підпис міг це зчитати",
@@ -4523,6 +4544,8 @@
     "{0} excl. VAT, {1} incl.": "{0} без ПДВ, {1} з ПДВ",
     "{0} incl. VAT": "{0} з ПДВ",
     "{0} is signed": "{0} підписано",
+    "{0} no longer signs the DPA, and the link we sent them stops working.": "{0} більше не підписує DPA, і посилання, яке ми надіслали, більше не працює.",
+    "{0} no longer signs the offer, and the link we sent them stops working.": "{0} більше не підписує пропозицію, і посилання, яке ми надіслали, більше не працює.",
     "{0} of {1} done": "Виконано {0} з {1}",
     "{0} pages": "{0} стор.",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} підписав(-ла) {1}. Підписана копія у ваших документах.",
@@ -4537,6 +4560,7 @@
     "{months} × {0}: signing, then each 1st": "{months} × {0}: під час підписання, далі щомісяця 1-го",
     "{name} signed on {when}.": "{name} підписав(-ла) {when}.",
     "{newName} gets an email with a link to sign.": "{newName} отримає лист із посиланням для підпису.",
-    "{org} invited you to sign": "{org} запрошує вас підписати"
+    "{org} invited you to sign": "{org} запрошує вас підписати",
+    "{signerName} is named to sign the offer.": "{signerName} вказано підписантом пропозиції."
   }
 }

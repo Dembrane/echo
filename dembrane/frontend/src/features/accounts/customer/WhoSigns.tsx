@@ -101,9 +101,33 @@ export function WhoSigns({
 		myEmail;
 	const offer = page?.documents.find((d) => d.id === task?.document_id);
 	const mayName = mayNameSigner(offer);
+	// The DPA sent with the offer, while it waits; its signer may be named apart.
+	const dpaDoc = page?.documents.find(
+		(d) =>
+			d.kind === "dpa" &&
+			d.requires_signature &&
+			(d.status === "sent" || d.status === "viewed"),
+	);
+	const docOf = (kind: SignKind) => (kind === "offer" ? offer : dpaDoc);
+	// Who is named on each document now (staff may name the offer's signer when sending).
+	const named = (kind: SignKind) => {
+		const s = docOf(kind)?.signer;
+		return s
+			? { email: s.email.toLowerCase(), name: s.name || s.email, role: s.role }
+			: null;
+	};
+	// Someone named is kept unless changed; only who may name a signer changes them.
+	const locked = (kind: SignKind) =>
+		named(kind) !== null &&
+		named(kind)?.email !== myEmail &&
+		!mayNameSigner(docOf(kind));
 	// Everyone who may be chosen, by name; members not in the room yet are marked so.
 	const candidates: Candidate[] = [
 		{ email: myEmail, name: myName, role: null },
+		...KINDS.flatMap((k) => {
+			const n = named(k);
+			return n && n.email !== myEmail ? [n] : [];
+		}),
 		...(mayName
 			? (room?.people ?? [])
 					.filter((p) => p.email.toLowerCase() !== myEmail)
@@ -117,9 +141,23 @@ export function WhoSigns({
 		...added.filter(
 			(a) => !room?.people.some((p) => p.email.toLowerCase() === a.email),
 		),
-	].sort((a, b) => a.name.localeCompare(b.name));
+	]
+		// One line per person: someone named may be in the room too.
+		.filter((c, i, all) => all.findIndex((x) => x.email === c.email) === i)
+		.sort((a, b) => a.name.localeCompare(b.name));
 	const who = (email: string | null) =>
 		candidates.find((c) => c.email === email) ?? null;
+
+	// The question starts from what is true: whoever is named on each document now.
+	const offerNamed = named("offer")?.email ?? null;
+	const dpaNamed = named("dpa")?.email ?? null;
+	useEffect(() => {
+		if (!opened) return;
+		setHolders((h) => ({
+			dpa: h.dpa ?? dpaNamed,
+			offer: h.offer ?? offerNamed,
+		}));
+	}, [opened, offerNamed, dpaNamed]);
 
 	const choose = (kind: SignKind, email: string) =>
 		setHolders((h) => ({
@@ -191,6 +229,15 @@ export function WhoSigns({
 		else setStep(ORDER[i - 1] as Step);
 	};
 
+	// A choice that moves a signing duty away from the person named: said before it is sent.
+	const replacedNow = KINDS.flatMap((kind) => {
+		const n = named(kind);
+		const h = holders[kind];
+		return n && h && h !== n.email && n.email !== myEmail
+			? [{ kind, name: n.name }]
+			: [];
+	});
+
 	const title = task ? taskText(task).title : "";
 	const count = ORDER.indexOf(step) + 1;
 	const o = who(holders.offer);
@@ -216,15 +263,9 @@ export function WhoSigns({
 					myEmail={myEmail}
 					people={room.people}
 					preset={{ signs: [adding] }}
-					signing={{
-						docs: Object.fromEntries(
-							Object.entries(signable(room, page)).map(([k, v]) => [
-								k,
-								{ ...v, signer: null },
-							]),
-						),
-						onName: async () => null,
-					}}
+					// With whoever is named now, so choosing someone new in their place says
+					// what happens to them first.
+					signing={{ docs: signable(room, page), onName: async () => null }}
 					onDraft={(p) => {
 						const c: Candidate = {
 							draft: p,
@@ -349,77 +390,93 @@ export function WhoSigns({
 														holder.email === myEmail ? (
 															<You name={holderName} />
 														) : (
-															<>
+															// A long address breaks rather than running past a phone's edge.
+															<span style={{ overflowWrap: "anywhere" }}>
 																{holderName} · {holder.email}
-															</>
+															</span>
 														)
 													) : (
 														<Trans>Nobody yet</Trans>
 													)
 												}
 												actions={
-													<Menu position="bottom-start" withinPortal>
-														<Menu.Target>
-															<Button
-																{...secondary}
-																data-testid={`signer-choose-${kind}`}
-															>
-																{holder ? (
-																	<Trans>Change</Trans>
-																) : (
-																	<Trans>Choose someone</Trans>
-																)}
-															</Button>
-														</Menu.Target>
-														<Menu.Dropdown>
-															{candidates.map((c) => (
-																<Menu.Item
-																	key={c.email}
-																	leftSection={
-																		<PersonAvatar person={c} size={28} />
-																	}
-																	onClick={() => choose(kind, c.email)}
-																	data-testid="signer-candidate"
+													// Named, and not theirs to change: shown as it is.
+													locked(kind) ? null : (
+														<Menu position="bottom-start" withinPortal>
+															<Menu.Target>
+																<Button
+																	{...secondary}
+																	data-testid={`signer-choose-${kind}`}
 																>
-																	{c.email === myEmail ? (
-																		<You name={c.name} />
+																	{holder ? (
+																		<Trans>Change</Trans>
 																	) : (
-																		c.name
+																		<Trans>Choose someone</Trans>
 																	)}
-																	{c.outside && (
-																		<Text
-																			span
-																			size="xs"
-																			c="dimmed"
-																			ml="xs"
-																			data-testid="signer-candidate-outside"
-																		>
-																			<Trans>not added yet</Trans>
-																		</Text>
-																	)}
-																</Menu.Item>
-															))}
-															{mayName && (
-																<>
-																	<Menu.Divider />
+																</Button>
+															</Menu.Target>
+															<Menu.Dropdown>
+																{candidates.map((c) => (
 																	<Menu.Item
+																		key={c.email}
 																		leftSection={
-																			<UserPlusIcon size={20} aria-hidden />
+																			<PersonAvatar person={c} size={28} />
 																		}
-																		onClick={() => setAdding(kind)}
-																		data-testid="signer-new"
+																		onClick={() => choose(kind, c.email)}
+																		data-testid="signer-candidate"
 																	>
-																		<Trans>Someone new</Trans>
+																		{c.email === myEmail ? (
+																			<You name={c.name} />
+																		) : (
+																			c.name
+																		)}
+																		{c.outside && (
+																			<Text
+																				span
+																				size="xs"
+																				c="dimmed"
+																				ml="xs"
+																				data-testid="signer-candidate-outside"
+																			>
+																				<Trans>not added yet</Trans>
+																			</Text>
+																		)}
 																	</Menu.Item>
-																</>
-															)}
-														</Menu.Dropdown>
-													</Menu>
+																))}
+																{mayName && (
+																	<>
+																		<Menu.Divider />
+																		<Menu.Item
+																			leftSection={
+																				<UserPlusIcon size={20} aria-hidden />
+																			}
+																			onClick={() => setAdding(kind)}
+																			data-testid="signer-new"
+																		>
+																			<Trans>Someone new</Trans>
+																		</Menu.Item>
+																	</>
+																)}
+															</Menu.Dropdown>
+														</Menu>
+													)
 												}
 											/>
 										);
 									})}
 								</Rows>
+								{replacedNow.map((r) => (
+									<Text
+										key={r.kind}
+										size="sm"
+										mt="xs"
+										data-testid={`signer-replaces-${r.kind}`}
+									>
+										{r.kind === "dpa"
+											? t`${r.name} no longer signs the DPA, and the link we sent them stops working.`
+											: t`${r.name} no longer signs the offer, and the link we sent them stops working.`}
+									</Text>
+								))}
 								{tried && need && (
 									<Text size="sm" c="var(--app-danger)" mt="xs">
 										{need}

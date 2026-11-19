@@ -1082,6 +1082,25 @@ function nameSignerIn(
 	return { signer: d.signer };
 }
 
+/** Takes a naming off, as the server's unsetSigner does: whoever runs the account signs. */
+function unnameSignerIn(
+	s: Store,
+	d: DocumentDetailT,
+	actor: "customer" | "staff",
+) {
+	const previous = d.signer;
+	if (!previous) return;
+	d.signer = null;
+	if (d.kind === "offer" || d.kind === "dpa") roomOf(s).signers[d.kind] = null;
+	event(
+		s,
+		"document.signer_removed",
+		actor,
+		{ id: d.id, type: "document" },
+		{ previous_email: previous.email, previous_name: previous.name },
+	);
+}
+
 /** The customer's signer as a draft keeps it: named, not invited until it is sent. */
 const draftSigner = (p: Named | null | undefined): DocumentDetailT["signer"] =>
 	p
@@ -1653,28 +1672,45 @@ export async function handle(
 				return s.billing;
 			}
 			case "answerWhoSigns": {
-				// Billing answers "I sign"; naming someone else is for owners and admins.
-				if (
-					(body.offer_signer || body.dpa_signer) &&
-					!room.mayNameSigner(roomOf(s))
-				)
-					throw room.nameSignerRefused();
 				const t = task();
 				if (t.code !== "who_signs") throw notFound();
 				if (t.status !== "open" && t.status !== "changes_requested")
 					throw new AccountsApiError(409, "This task is not waiting on you.");
 				const offer = s.docs.find((x) => x.id === t.document_id);
 				if (!offer) throw notFound();
-				const name = (d: DocumentDetailT, p: Named) =>
-					nameSignerIn(s, d, p, "customer");
 				const offerSigner = body.offer_signer as Named | null;
 				const dpaSigner =
 					body.dpa_same === true
 						? offerSigner
 						: (body.dpa_signer as Named | null);
-				if (offerSigner) name(offer, offerSigner);
-				const dpa = dpaOf(s, offer.id);
-				if (dpa && dpaSigner && dpa.status !== "signed") name(dpa, dpaSigner);
+				const found = dpaOf(s, offer.id);
+				const dpa = found && found.status !== "signed" ? found : null;
+				// The answer is made true, as the server's answerWhoSigns does: someone else is
+				// named, or "I sign" takes someone else's naming off. Changing who signs is for
+				// owners and admins; keeping the person named is not a change.
+				const me = room.actorEmail().toLowerCase();
+				const isNamed = (d: DocumentDetailT, email: string) =>
+					d.signer?.email.toLowerCase() === email.trim().toLowerCase();
+				const names = (d: DocumentDetailT | null, p: Named | null) =>
+					p !== null && !(d && isNamed(d, p.email));
+				const unnames = (d: DocumentDetailT | null, p: Named | null) =>
+					p === null && d !== null && d.signer !== null && !isNamed(d, me);
+				if (
+					(names(offer, offerSigner) ||
+						names(dpa, dpaSigner) ||
+						unnames(offer, offerSigner) ||
+						unnames(dpa, dpaSigner)) &&
+					!room.mayNameSigner(roomOf(s))
+				)
+					throw room.nameSignerRefused();
+				for (const [d, p] of [
+					[offer, offerSigner],
+					[dpa, dpaSigner],
+				] as const) {
+					if (!d) continue;
+					if (p && names(d, p)) nameSignerIn(s, d, p, "customer");
+					else if (unnames(d, p)) unnameSignerIn(s, d, "customer");
+				}
 				t.status = "done";
 				t.submitted_at = now();
 				t.next_reminder_at = null;
