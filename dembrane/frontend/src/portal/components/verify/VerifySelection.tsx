@@ -15,6 +15,7 @@ import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useLatest } from "@/hooks/useLatest";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
@@ -95,15 +96,14 @@ export const VerifySelection = () => {
 
 	const isLoading = projectQuery.isLoading || topicsQuery.isLoading;
 
-	useEffect(() => {
-		if (
-			selectedOption &&
-			selectedTopics.length > 0 &&
-			!selectedTopics.includes(selectedOption)
-		) {
-			setSelectedOption(null);
-		}
-	}, [selectedOption, selectedTopics]);
+	// the host removed the chosen topic: drop the choice
+	if (
+		selectedOption &&
+		selectedTopics.length > 0 &&
+		!selectedTopics.includes(selectedOption)
+	) {
+		setSelectedOption(null);
+	}
 
 	useEffect(() => {
 		return () => {
@@ -118,7 +118,13 @@ export const VerifySelection = () => {
 		return availableOptions.find((option) => option.key === key)?.label ?? key;
 	};
 
-	const handleGenerationFlow = async (topicKey: string) => {
+	// Set by the first generation, automatic or chosen; ends the single-topic
+	// spinner and the automatic try.
+	const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
+
+	// a promise chain, not try/catch/finally: React Compiler can't compile
+	// a try with a finally, or one holding && or ?.
+	const handleGenerationFlow = (topicKey: string) => {
 		if (!conversationId) return;
 
 		if (abortControllerRef.current) {
@@ -127,54 +133,59 @@ export const VerifySelection = () => {
 		const controller = new AbortController();
 		abortControllerRef.current = controller;
 
+		setHasStartedGeneration(true);
 		setGeneratedArtefactId(null);
 		setInstructionTopicKey(topicKey);
 		setSearchParams({ instructions: "true" });
-		try {
-			const artefact = await generateArtefactMutation.mutateAsync({
+		return generateArtefactMutation
+			.mutateAsync({
 				conversationId,
 				signal: controller.signal,
 				topicKey,
+			})
+			.then((artefact) => {
+				setGeneratedArtefactId(artefact.id);
+				startCooldown(conversationId, "verify");
+			})
+			.catch((error: unknown) => {
+				if (error instanceof Error && error.name === "CanceledError") {
+					return;
+				}
+
+				if (isAiUnavailableError(error)) {
+					setAiRefused(true);
+				} else {
+					console.error("error generating verification artefact", error);
+					const label = getOptionLabel(topicKey);
+					toast.error(t`Failed to generate ${label}. Please try again.`);
+				}
+
+				setInstructionTopicKey(null);
+				setSelectedOption(null);
+				setSearchParams({});
+			})
+			.finally(() => {
+				if (abortControllerRef.current === controller) {
+					abortControllerRef.current = null;
+				}
 			});
-			setGeneratedArtefactId(artefact.id);
-			startCooldown(conversationId, "verify");
-		} catch (error) {
-			if (error instanceof Error && error.name === "CanceledError") {
-				return;
-			}
-
-			if (isAiUnavailableError(error)) {
-				setAiRefused(true);
-			} else {
-				console.error("error generating verification artefact", error);
-				const label = getOptionLabel(topicKey);
-				toast.error(t`Failed to generate ${label}. Please try again.`);
-			}
-
-			setInstructionTopicKey(null);
-			setSelectedOption(null);
-			setSearchParams({});
-		} finally {
-			if (abortControllerRef.current === controller) {
-				abortControllerRef.current = null;
-			}
-		}
 	};
 
 	const singleTopicKey =
 		availableOptions.length === 1 ? availableOptions[0].key : null;
 
-	const [hasAutoTriedSingle, setHasAutoTriedSingle] = useState(false);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: handleGenerationFlow is intentionally excluded; auto-skip should only react to data/route changes, not function-identity changes.
+	// One automatic try: after a failure the participant retries by hand.
+	// handleGenerationFlow is read through a ref, so the effect reacts to the
+	// data and the route, not to the function's identity.
+	const handleGenerationFlowRef = useLatest(handleGenerationFlow);
 	useEffect(() => {
-		if (hasAutoTriedSingle || aiUnavailable) return;
+		if (hasStartedGeneration || aiUnavailable) return;
 		if (!isLoading && !showInstructions && singleTopicKey && conversationId) {
-			setHasAutoTriedSingle(true);
-			handleGenerationFlow(singleTopicKey);
+			handleGenerationFlowRef.current(singleTopicKey);
 		}
 	}, [
-		hasAutoTriedSingle,
+		hasStartedGeneration,
+		handleGenerationFlowRef,
 		isLoading,
 		singleTopicKey,
 		conversationId,
@@ -211,7 +222,7 @@ export const VerifySelection = () => {
 		isLoading ||
 		(singleTopicKey &&
 			!showInstructions &&
-			!hasAutoTriedSingle &&
+			!hasStartedGeneration &&
 			!aiUnavailable)
 	) {
 		return (

@@ -80,21 +80,21 @@ afterEach(() => {
 	state.topics = ["gems", "actions"];
 });
 
-const renderPage = () =>
-	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<MemoryRouter initialEntries={["/p-1/conversation/c-1/verify"]}>
-					<Routes>
-						<Route
-							path="/:projectId/conversation/:conversationId/verify"
-							element={<VerifySelection />}
-						/>
-					</Routes>
-				</MemoryRouter>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+const page = () => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider>
+			<MemoryRouter initialEntries={["/p-1/conversation/c-1/verify"]}>
+				<Routes>
+					<Route
+						path="/:projectId/conversation/:conversationId/verify"
+						element={<VerifySelection />}
+					/>
+				</Routes>
+			</MemoryRouter>
+		</MantineProvider>
+	</I18nProvider>
+);
+const renderPage = () => render(page());
 
 const pickAndContinue = () => {
 	fireEvent.click(screen.getByTestId("portal-verify-topic-gems"));
@@ -169,4 +169,38 @@ it("shows several topics as buttons with their label and one line each", () => {
 	fireEvent.click(tableCheck);
 	expect(tableCheck.getAttribute("aria-pressed")).toBe("true");
 	expect(state.mutateAsync).not.toHaveBeenCalled();
+});
+
+it("tries the single topic once, and doesn't retry by itself after a failure", async () => {
+	state.topics = ["agreements"];
+	state.mutateAsync.mockRejectedValue(new Error("boom"));
+	const view = renderPage();
+	await vi.waitFor(() => expect(state.toastError).toHaveBeenCalled());
+	view.rerender(page());
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	expect(state.mutateAsync).toHaveBeenCalledTimes(1);
+});
+
+it("drops the choice when the host removes that topic", () => {
+	const view = renderPage();
+	fireEvent.click(screen.getByTestId("portal-verify-topic-gems"));
+	const next = screen.getByTestId("portal-verify-selection-next-button");
+	expect(next).toHaveProperty("disabled", false);
+
+	state.topics = ["actions", "heard"];
+	view.rerender(page());
+	expect(next).toHaveProperty("disabled", true);
+});
+
+it("goes to the instructions once the chosen topic is generated", async () => {
+	state.mutateAsync.mockResolvedValue({ id: "a-1" });
+	renderPage();
+	pickAndContinue();
+	await vi.waitFor(() =>
+		expect(state.mutateAsync).toHaveBeenCalledWith(
+			expect.objectContaining({ conversationId: "c-1", topicKey: "gems" }),
+		),
+	);
+	expect(screen.queryByTestId("portal-verify-selection-container")).toBeNull();
+	expect(state.toastError).not.toHaveBeenCalled();
 });
