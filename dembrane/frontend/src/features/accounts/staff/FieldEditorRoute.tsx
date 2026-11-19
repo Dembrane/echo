@@ -19,7 +19,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -107,8 +107,8 @@ function Editor() {
 		doc.data ? `${doc.data.title} | ${t`Fields`}` : t`Fields | dembrane`,
 	);
 
-	useEffect(() => {
-		if (!saved.data || fields) return;
+	// The saved fields, copied in once they load, during render.
+	if (saved.data && !fields) {
 		setFields(
 			saved.data.fields.map((f) => ({
 				height: f.height,
@@ -123,7 +123,7 @@ function Editor() {
 				y: f.y,
 			})),
 		);
-	}, [saved.data, fields]);
+	}
 
 	if (doc.isLoading || saved.isLoading || !fields)
 		return <Loader m="xl" size="sm" />;
@@ -170,50 +170,56 @@ function Editor() {
 		setDirty(true);
 	};
 
+	// save and send are promise chains, not try/catch/finally: React Compiler
+	// can't compile a try with a finally
 	const save = async () => {
 		setBusy("save");
-		try {
-			const res = await call("setDocumentFields", {
-				body: {
-					fields: fields.map((f) => ({
-						height: f.height,
-						key: f.kind === "text" ? f.key : null,
-						kind: f.kind,
-						label: f.label,
-						page: f.page,
-						required: f.required,
-						signer_role: "signer" as const,
-						width: f.width,
-						x: f.x,
-						y: f.y,
-					})),
-				},
-				params: { docId, orgId },
+		await call("setDocumentFields", {
+			body: {
+				fields: fields.map((f) => ({
+					height: f.height,
+					key: f.kind === "text" ? f.key : null,
+					kind: f.kind,
+					label: f.label,
+					page: f.page,
+					required: f.required,
+					signer_role: "signer" as const,
+					width: f.width,
+					x: f.x,
+					y: f.y,
+				})),
+			},
+			params: { docId, orgId },
+		})
+			.then((res) => {
+				queryClient.setQueryData(accountKeys.fields(orgId, docId), res);
+				setFields(res.fields.map((f) => ({ ...f, uid: f.id })));
+				setSelected(null);
+				setDirty(false);
+				toast.success(t`Fields saved`);
+			})
+			.catch((e: unknown) => {
+				void notifyError(e);
+			})
+			.finally(() => {
+				setBusy(null);
 			});
-			queryClient.setQueryData(accountKeys.fields(orgId, docId), res);
-			setFields(res.fields.map((f) => ({ ...f, uid: f.id })));
-			setSelected(null);
-			setDirty(false);
-			toast.success(t`Fields saved`);
-		} catch (e) {
-			void notifyError(e);
-		} finally {
-			setBusy(null);
-		}
 	};
 
 	const send = async () => {
 		setBusy("send");
-		try {
-			await call("sendDocument", { params: { docId, orgId } });
-			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
-			toast.success(t`Sent. The customer has a signing task.`);
-			navigate(`/admin/accounts/${orgId}`);
-		} catch (e) {
-			void notifyError(e);
-		} finally {
-			setBusy(null);
-		}
+		await call("sendDocument", { params: { docId, orgId } })
+			.then(() => queryClient.invalidateQueries({ queryKey: accountKeys.all }))
+			.then(() => {
+				toast.success(t`Sent. The customer has a signing task.`);
+				navigate(`/admin/accounts/${orgId}`);
+			})
+			.catch((e: unknown) => {
+				void notifyError(e);
+			})
+			.finally(() => {
+				setBusy(null);
+			});
 	};
 
 	const overlay = (box: PageBox) =>
@@ -501,14 +507,14 @@ function FieldHandle({
 		mode: "move" | "resize";
 	} | null>(null);
 
-	const onPointerDown =
-		(mode: "move" | "resize") => (e: React.PointerEvent) => {
-			e.stopPropagation();
-			onSelect();
-			if (!editable) return;
-			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-			start.current = { f: field, mode, px: e.clientX, py: e.clientY };
-		};
+	// Called from the handlers below, never in render: it writes the drag ref.
+	const startDrag = (mode: "move" | "resize", e: React.PointerEvent) => {
+		e.stopPropagation();
+		onSelect();
+		if (!editable) return;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+		start.current = { f: field, mode, px: e.clientX, py: e.clientY };
+	};
 	const onPointerMove = (e: React.PointerEvent) => {
 		const s = start.current;
 		if (!s) return;
@@ -532,7 +538,7 @@ function FieldHandle({
 
 	return (
 		<Box
-			onPointerDown={onPointerDown("move")}
+			onPointerDown={(e) => startDrag("move", e)}
 			onPointerMove={onPointerMove}
 			onPointerUp={onPointerUp}
 			data-testid="placed-field"
@@ -569,7 +575,7 @@ function FieldHandle({
 			</Text>
 			{editable && selected && (
 				<Box
-					onPointerDown={onPointerDown("resize")}
+					onPointerDown={(e) => startDrag("resize", e)}
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
 					data-testid="resize-handle"
