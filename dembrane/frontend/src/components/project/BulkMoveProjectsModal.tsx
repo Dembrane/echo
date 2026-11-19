@@ -3,7 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isFreeTierLimitError } from "@/lib/freeTier";
@@ -58,9 +58,12 @@ export const BulkMoveProjectsModal = ({
 			.map((w) => ({ label: w.name, value: w.id }));
 	}, [workspaces, sourceWorkspaceId]);
 
-	useEffect(() => {
+	// Closing forgets the choice, during render.
+	const [wasOpened, setWasOpened] = useState(opened);
+	if (opened !== wasOpened) {
+		setWasOpened(opened);
 		if (!opened) setTargetWorkspaceId(null);
-	}, [opened]);
+	}
 
 	const handleMove = () => {
 		if (!targetWorkspaceId || projectIds.length === 0) return;
