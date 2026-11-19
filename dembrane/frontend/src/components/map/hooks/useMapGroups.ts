@@ -240,7 +240,12 @@ export function useMapGroups({
 	}, [docs, local, resolve, resultId]);
 	const historyRef = useLatest(history);
 
+	// When each group was last selected, so one brought back sorts as recent.
+	const [selectedAt, setSelectedAt] = useState<Record<string, number>>({});
+
 	const setSelected = useCallback((id: string | null) => {
+		if (id && id !== selectedRef.current)
+			setSelectedAt((current) => ({ ...current, [id]: Date.now() }));
 		selectedRef.current = id;
 		setSelectedState(id);
 	}, []);
@@ -528,6 +533,7 @@ export function useMapGroups({
 		isProcessing: history.some((entry) => entry.status === "pending"),
 		retry,
 		selectDistillation,
+		selectedAt,
 		selectedDistillationId,
 		timerActive: timerRun !== null,
 		timerProgress,

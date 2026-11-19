@@ -282,18 +282,12 @@ export const MapExperience = ({
 			]);
 		});
 	}, [store, deselect]);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on the result id only
-	useEffect(() => setClicks([]), [graph.resultId]);
-
-	// When each cluster was last spotlit, so a cluster brought back from the
-	// rows sorts as recent as a fresh click.
-	const [clusterTouched, setClusterTouched] = useState<Record<string, number>>(
-		{},
-	);
-	useEffect(() => {
-		const id = title.selectedDistillationId;
-		if (id) setClusterTouched((current) => ({ ...current, [id]: Date.now() }));
-	}, [title.selectedDistillationId]);
+	// A new result starts with no clicks, during render.
+	const [clicksFor, setClicksFor] = useState(graph.resultId);
+	if (graph.resultId !== clicksFor) {
+		setClicksFor(graph.resultId);
+		setClicks([]);
+	}
 
 	const historyItems = useMemo<HistoryItem[]>(
 		() =>
@@ -310,7 +304,7 @@ export const MapExperience = ({
 					(distillation): HistoryItem => ({
 						at: Math.max(
 							Date.parse(distillation.createdAt),
-							clusterTouched[distillation.id] ?? 0,
+							title.selectedAt[distillation.id] ?? 0,
 						),
 						distillation,
 						id: distillation.id,
@@ -318,7 +312,7 @@ export const MapExperience = ({
 					}),
 				),
 			].sort((a, b) => b.at - a.at),
-		[clicks, clusterTouched, title.history],
+		[clicks, title.history, title.selectedAt],
 	);
 	const graphNodesById = useMemo(
 		() => new Map(graphNodes.map((node) => [node.id, node] as const)),
