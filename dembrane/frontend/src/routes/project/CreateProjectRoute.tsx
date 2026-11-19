@@ -180,19 +180,19 @@ export const CreateProjectRoute = () => {
 	const tier = workspace?.tier ?? "pilot";
 	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
 	const cap = useProjectCapStatus(workspace);
-	const capDecided = useRef(false);
 	const wizardStarted =
 		screen !== "start" || template !== null || name.trim() !== "";
 	const [atProjectCap, setAtProjectCap] = useState(false);
-	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
-	useEffect(() => {
-		if (capDecided.current || !cap.settled) return;
-		capDecided.current = true;
+	// Decided during render, once the cap is known. The wall may mount open: it
+	// stays open under StrictMode (FeatureGate.test).
+	const [capDecided, setCapDecided] = useState(false);
+	if (!capDecided && cap.settled) {
+		setCapDecided(true);
 		if (cap.atCap && !wizardStarted) {
 			setAtProjectCap(true);
 			upgradeHandlers.open();
 		}
-	}, [cap.atCap, cap.settled, wizardStarted, upgradeHandlers.open]);
+	}
 	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
 	const privateAvailable = privateTiers.has(tier);
 
