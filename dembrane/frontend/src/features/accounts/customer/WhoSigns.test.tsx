@@ -13,6 +13,7 @@ import {
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import * as fx from "../contract/fixtures.gen";
+import { WhoSigns } from "./WhoSigns";
 
 // The who-signs task, chosen one line per document from the room's people: it sends the
 // answerWhoSigns body the server expects.
@@ -65,7 +66,6 @@ const task = fx.accountPage.tasks.find((t) => t.code === "who_signs");
 const orgId = fx.accountPage.organisation.id;
 
 const show = async () => {
-	const { WhoSigns } = await import("./WhoSigns");
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider env="test">
