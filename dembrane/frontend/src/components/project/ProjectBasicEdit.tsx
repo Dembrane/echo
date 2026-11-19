@@ -31,7 +31,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 
 	type TFormSchema = z.infer<typeof FormSchema>;
 
-	const { control, handleSubmit, watch, trigger, formState, reset } =
+	const { control, handleSubmit, subscribe, trigger, formState, reset } =
 		useForm<TFormSchema>({
 			defaultValues: {
 				context: project.context ?? "",
@@ -78,19 +78,20 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 		onSave,
 	});
 
-	useEffect(() => {
-		const subscription = watch((values, { type }) => {
-			if (type === "change" && values) {
-				trigger().then((isValid) => {
-					if (isValid) {
-						dispatchAutoSave(values as TFormSchema);
-					}
-				});
-			}
-		});
-
-		return () => subscription.unsubscribe();
-	}, [watch, dispatchAutoSave, trigger]);
+	// Saves the host's own edits ("change"), not values set in code.
+	useEffect(
+		() =>
+			subscribe({
+				callback: ({ values, type }) => {
+					if (type !== "change") return;
+					trigger().then((isValid) => {
+						if (isValid) dispatchAutoSave(values);
+					});
+				},
+				formState: { values: true },
+			}),
+		[subscribe, dispatchAutoSave, trigger],
+	);
 
 	return (
 		<ProjectSettingsSection

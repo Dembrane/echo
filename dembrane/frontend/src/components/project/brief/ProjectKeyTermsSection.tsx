@@ -10,6 +10,7 @@ import {
 import { ProjectSettingsSection } from "@/components/project/ProjectSettingsSection";
 import { LazySuggestKeyTerms } from "@/components/project/setup-suggestions/lazy";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useLatest } from "@/hooks/useLatest";
 import { changedFields, keyTermCount, track } from "@/lib/analytics/events";
 import { testId } from "@/lib/testUtils";
 
@@ -30,7 +31,7 @@ export const ProjectKeyTermsSection = ({
 	readOnly?: boolean;
 }) => {
 	const initial = project.default_conversation_transcript_prompt ?? "";
-	const { control, watch, reset, formState } = useForm<Values>({
+	const { control, subscribe, reset, formState } = useForm<Values>({
 		defaultValues: { default_conversation_transcript_prompt: initial },
 	});
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -64,16 +65,18 @@ export const ProjectKeyTermsSection = ({
 			initialLastSavedAt: project.updated_at ?? new Date(),
 			onSave,
 		});
-	const dispatchRef = useRef(dispatchAutoSave);
-	dispatchRef.current = dispatchAutoSave;
+	const dispatchRef = useLatest(dispatchAutoSave);
 
 	useEffect(() => {
 		if (readOnly) return;
-		const subscription = watch((values, { type }) => {
-			if (type === "change" && values) dispatchRef.current(values as Values);
+		// Saves the host's own edits ("change"), not values set in code.
+		return subscribe({
+			callback: ({ values, type }) => {
+				if (type === "change") dispatchRef.current(values);
+			},
+			formState: { values: true },
 		});
-		return () => subscription.unsubscribe();
-	}, [watch, readOnly]);
+	}, [subscribe, readOnly, dispatchRef]);
 
 	return (
 		<ProjectSettingsSection

@@ -42,7 +42,8 @@ const usePage = (initialProps: Props) =>
 const shown = (result: { current: ReturnType<typeof usePortalPageForm> }) =>
 	result.current.form.getValues("verification_topics");
 
-it("takes the topics once they load, and later changes to them", async () => {
+it("takes the topics once they load, and later changes to them, without saving", async () => {
+	state.mutateAsync.mockClear();
 	const { result, rerender } = usePage({
 		isVerificationTopicsLoading: true,
 		section: "verify",
@@ -53,6 +54,9 @@ it("takes the topics once they load, and later changes to them", async () => {
 	expect(result.current.form.formState.isDirty).toBe(false);
 	rerender({ section: "verify", verificationTopics: topics("a", "b", "c") });
 	await waitFor(() => expect(shown(result)).toEqual(["a", "b", "c"]));
+	// Only the host's own edits save; following the server doesn't.
+	await new Promise((resolve) => setTimeout(resolve, 1300));
+	expect(state.mutateAsync).not.toHaveBeenCalled();
 });
 
 it("keeps topics the host changed here", async () => {
