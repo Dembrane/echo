@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import audioAlertSound from "@/assets/audio-alert.mp3";
+import { useLatest } from "@/hooks/useLatest";
 
 // Minimum chunk size in bytes - chunks smaller than this are considered suspicious
 const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
@@ -62,6 +63,17 @@ export const getSupportedMimeType = () => {
 };
 
 const defaultMimeType = getSupportedMimeType();
+
+// RMS of 8-bit time-domain samples, 0 (silence) to 1 (full scale)
+const rmsLevel = (buffer: Uint8Array) => {
+	let sumSquares = 0;
+	for (let i = 0; i < buffer.length; i++) {
+		const v = (buffer[i] - 128) / 128;
+		sumSquares += v * v;
+	}
+	return Math.sqrt(sumSquares / buffer.length);
+};
+
 const useChunkedAudioRecorder = ({
 	onChunk,
 	onRecordingInterrupted,
@@ -114,7 +126,8 @@ const useChunkedAudioRecorder = ({
 
 	// Suspicious chunk tracking for iOS interruption detection
 	const suspiciousChunkCountRef = useRef(0);
-	const hadConsecutiveSuspiciousChunksRef = useRef(false);
+	// State, not a ref: the screen shows it.
+	const [hadInterruption, setHadInterruption] = useState(false);
 	const chunkHistoryRef = useRef<ChunkInfo[]>([]);
 	const hasCalledInterruptionCallbackRef = useRef(false);
 
@@ -150,12 +163,7 @@ const useChunkedAudioRecorder = ({
 			}
 			try {
 				analyser.getByteTimeDomainData(buffer);
-				let sumSquares = 0;
-				for (let i = 0; i < buffer.length; i++) {
-					const v = (buffer[i] - 128) / 128;
-					sumSquares += v * v;
-				}
-				const instant = Math.sqrt(sumSquares / buffer.length);
+				const instant = rmsLevel(buffer);
 				peakLevelRef.current = Math.max(instant, peakLevelRef.current);
 				instantLevelRef.current = instant;
 			} catch {
@@ -199,8 +207,13 @@ const useChunkedAudioRecorder = ({
 
 	const chunkBufferRef = useRef<Blob[]>([]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
-	const startRecordingChunk = useCallback(() => {
+	// A chunk's recorder outlives the render that made it: its onstop starts
+	// the next chunk. So the props it calls are read through refs, and each
+	// chunk goes to the latest onChunk.
+	const onChunkRef = useLatest(onChunk);
+	const onRecordingInterruptedRef = useLatest(onRecordingInterrupted);
+
+	const startRecordingChunk = () => {
 		log("startRecordingChunk", {
 			isRecording,
 			mediaRecorderRefState: mediaRecorderRef.current?.state,
@@ -237,7 +250,7 @@ const useChunkedAudioRecorder = ({
 		};
 
 		const reportInterruption = () => {
-			hadConsecutiveSuspiciousChunksRef.current = true;
+			setHadInterruption(true);
 			hasCalledInterruptionCallbackRef.current = true;
 
 			// Play notification sound for interruption using pre-unlocked audio
@@ -250,7 +263,7 @@ const useChunkedAudioRecorder = ({
 			}
 
 			chunkBufferRef.current = [];
-			onRecordingInterrupted?.();
+			onRecordingInterruptedRef.current?.();
 		};
 
 		// The mic track can end between chunks (a phone call, or another app
@@ -302,7 +315,7 @@ const useChunkedAudioRecorder = ({
 
 			// Good chunk - reset suspicious counter and upload
 			suspiciousChunkCountRef.current = 0;
-			onChunk(chunkBlob);
+			onChunkRef.current(chunkBlob);
 
 			// flush the buffer and restart
 			chunkBufferRef.current = [];
@@ -311,7 +324,181 @@ const useChunkedAudioRecorder = ({
 
 		// allow for some room to restart so all is just one chunk as per mediarec
 		recorder.start(timeslice * 2);
-	}, [isRecording]);
+	};
+
+	// The start is three functions, not one try/catch: React Compiler can't
+	// compile a try block that holds ?., ?? or a ternary.
+	const openSession = async (
+		startToken: number,
+		initialTime: number,
+		attempt: { stream: MediaStream | null },
+	): Promise<boolean> => {
+		log("Requesting access to the microphone...");
+
+		// We create the Audio element, load it, and play+pause silently to unlock it.
+		// This allows programmatic playback later when interruption is detected.
+		if (!audioAlertRef.current) {
+			const audio = new Audio(audioAlertSound);
+			audio.load();
+			// Mute before playing to unlock silently on iOS
+			audio.muted = true;
+			audio
+				.play()
+				.then(() => {
+					audio.pause();
+					audio.currentTime = 0;
+				})
+				.catch(() => {
+					// Ignore errors - audio will still work on desktop
+				});
+			audioAlertRef.current = audio;
+		}
+
+		const audioConstraint = deviceId ? { deviceId: { exact: deviceId } } : true;
+		const stream = await navigator.mediaDevices.getUserMedia({
+			audio: audioConstraint,
+		});
+		attempt.stream = stream;
+
+		if (startToken !== startTokenRef.current) {
+			log("startRecording: stopped while awaiting mic access, bailing");
+			stream.getTracks().forEach((track) => {
+				track.stop();
+			});
+			return false;
+		}
+
+		if (!navigator.mediaDevices?.enumerateDevices) {
+			log("enumerateDevices() not supported.");
+		} else if (debug) {
+			// List cameras and microphones (debug only - device labels are
+			// semi-identifying and must never log unconditionally in production).
+			navigator.mediaDevices
+				.enumerateDevices()
+				.then((devices) => {
+					devices.forEach((device) => {
+						log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
+					});
+				})
+				.catch((err) => {
+					console.error(`${err.name}: ${err.message}`);
+				});
+		}
+
+		streamRef.current = stream;
+		log("Access to microphone granted.", { stream });
+
+		// Set up the passive VU meter on the captured stream (see refs above).
+		// Created here, inside the user gesture, so the AudioContext starts
+		// "running" (important on iOS). Best-effort: if Web Audio is missing
+		// the recorder works unchanged and the monitor just shows no level.
+		const AudioCtx =
+			window.AudioContext ||
+			(window as unknown as { webkitAudioContext?: typeof AudioContext })
+				.webkitAudioContext;
+		try {
+			if (AudioCtx) {
+				const meterCtx = new AudioCtx();
+				const source = meterCtx.createMediaStreamSource(stream);
+				const analyser = meterCtx.createAnalyser();
+				analyser.fftSize = 256;
+				source.connect(analyser);
+				meterCtxRef.current = meterCtx;
+				meterSourceRef.current = source;
+				analyserRef.current = analyser;
+				meterBufferRef.current = new Uint8Array(analyser.frequencyBinCount);
+			}
+		} catch (error) {
+			log("VU meter setup failed (non-fatal)", error);
+		}
+
+		log("Creating MediaRecorder instance");
+
+		// Reset suspicious chunk tracking for new recording session
+		suspiciousChunkCountRef.current = 0;
+		setHadInterruption(false);
+		chunkHistoryRef.current = [];
+		hasCalledInterruptionCallbackRef.current = false;
+
+		// synchronous so the re-entrancy guard closes before startingRef clears
+		isRecordingRef.current = true;
+		setIsRecording(true);
+		setIsPaused(false);
+		setUserPaused(false);
+		setRecordingTime(initialTime);
+		startRecordingChunk();
+
+		// allow to restart recording chunk
+		startRecordingIntervalRef.current = setInterval(() => {
+			log("Checking if MediaRecorder should be stopped");
+			if (mediaRecorderRef.current?.state === "recording") {
+				log("attempting to Stop recording chunk");
+				mediaRecorderRef.current.stop();
+
+				log("attempt to Restart recording chunk", {
+					isRecording,
+					mediaRecorderRefState: mediaRecorderRef.current?.state,
+				});
+
+				if (isRecording) {
+					log("Restarting recording chunk");
+					startRecordingChunk();
+				}
+			}
+		}, timeslice);
+
+		if (intervalRef.current) {
+			clearInterval(intervalRef.current);
+		}
+		intervalRef.current = setInterval(updateRecordingTime, 1000);
+		return true;
+	};
+
+	// undo a failed start
+	const abortStart = (error: unknown, acquiredStream: MediaStream | null) => {
+		console.error("Error accessing audio stream", error);
+		setPermissionError("Error accessing audio stream");
+		// the ref must be reset too: React batches true -> false into a no-op,
+		// so the sync effect never fires and the guard would swallow every retry
+		isRecordingRef.current = false;
+		setIsRecording(false);
+		// release the mic; a failed start must not leave tracks live
+		const stream = streamRef.current ?? acquiredStream;
+		stream?.getTracks().forEach((track) => {
+			track.stop();
+		});
+		streamRef.current = null;
+		// drop a half-started recorder: the next attempt calls stop() on it,
+		// which throws InvalidStateError while inactive and fails every retry
+		if (mediaRecorderRef.current) {
+			try {
+				mediaRecorderRef.current.stop();
+			} catch {
+				// already inactive
+			}
+			mediaRecorderRef.current = null;
+		}
+		// close the VU meter opened by this attempt, so repeated failures
+		// don't exhaust the browser's AudioContext limit
+		meterSourceRef.current?.disconnect();
+		meterSourceRef.current = null;
+		if (meterCtxRef.current && meterCtxRef.current.state !== "closed") {
+			meterCtxRef.current.close();
+		}
+		meterCtxRef.current = null;
+		analyserRef.current = null;
+		meterBufferRef.current = null;
+	};
+
+	const attemptStart = (startToken: number, initialTime: number) => {
+		const attempt: { stream: MediaStream | null } = { stream: null };
+		return openSession(startToken, initialTime, attempt).catch(
+			(error: unknown) => {
+				abortStart(error, attempt.stream);
+				return false;
+			},
+		);
+	};
 
 	const startRecording = async (initialTime = 0): Promise<boolean> => {
 		if (startingRef.current || isRecordingRef.current) {
@@ -321,168 +508,12 @@ const useChunkedAudioRecorder = ({
 		startingRef.current = true;
 		const startToken = ++startTokenRef.current;
 		setIsStarting(true);
-		let acquiredStream: MediaStream | null = null;
-
-		try {
-			log("Requesting access to the microphone...");
-
-			// We create the Audio element, load it, and play+pause silently to unlock it.
-			// This allows programmatic playback later when interruption is detected.
-			if (!audioAlertRef.current) {
-				const audio = new Audio(audioAlertSound);
-				audio.load();
-				// Mute before playing to unlock silently on iOS
-				audio.muted = true;
-				audio
-					.play()
-					.then(() => {
-						audio.pause();
-						audio.currentTime = 0;
-					})
-					.catch(() => {
-						// Ignore errors - audio will still work on desktop
-					});
-				audioAlertRef.current = audio;
-			}
-
-			const audioConstraint = deviceId
-				? { deviceId: { exact: deviceId } }
-				: true;
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: audioConstraint,
-			});
-			acquiredStream = stream;
-
-			if (startToken !== startTokenRef.current) {
-				log("startRecording: stopped while awaiting mic access, bailing");
-				stream.getTracks().forEach((track) => {
-					track.stop();
-				});
-				return false;
-			}
-
-			if (!navigator.mediaDevices?.enumerateDevices) {
-				log("enumerateDevices() not supported.");
-			} else if (debug) {
-				// List cameras and microphones (debug only - device labels are
-				// semi-identifying and must never log unconditionally in production).
-				navigator.mediaDevices
-					.enumerateDevices()
-					.then((devices) => {
-						devices.forEach((device) => {
-							log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
-						});
-					})
-					.catch((err) => {
-						console.error(`${err.name}: ${err.message}`);
-					});
-			}
-
-			streamRef.current = stream;
-			log("Access to microphone granted.", { stream });
-
-			// Set up the passive VU meter on the captured stream (see refs above).
-			// Created here, inside the user gesture, so the AudioContext starts
-			// "running" (important on iOS). Best-effort: if Web Audio is missing
-			// the recorder works unchanged and the monitor just shows no level.
-			try {
-				const AudioCtx =
-					window.AudioContext ||
-					(window as unknown as { webkitAudioContext?: typeof AudioContext })
-						.webkitAudioContext;
-				if (AudioCtx) {
-					const meterCtx = new AudioCtx();
-					const source = meterCtx.createMediaStreamSource(stream);
-					const analyser = meterCtx.createAnalyser();
-					analyser.fftSize = 256;
-					source.connect(analyser);
-					meterCtxRef.current = meterCtx;
-					meterSourceRef.current = source;
-					analyserRef.current = analyser;
-					meterBufferRef.current = new Uint8Array(analyser.frequencyBinCount);
-				}
-			} catch (error) {
-				log("VU meter setup failed (non-fatal)", error);
-			}
-
-			log("Creating MediaRecorder instance");
-
-			// Reset suspicious chunk tracking for new recording session
-			suspiciousChunkCountRef.current = 0;
-			hadConsecutiveSuspiciousChunksRef.current = false;
-			chunkHistoryRef.current = [];
-			hasCalledInterruptionCallbackRef.current = false;
-
-			// synchronous so the re-entrancy guard closes before startingRef clears
-			isRecordingRef.current = true;
-			setIsRecording(true);
-			setIsPaused(false);
-			setUserPaused(false);
-			setRecordingTime(initialTime);
-			startRecordingChunk();
-
-			// allow to restart recording chunk
-			startRecordingIntervalRef.current = setInterval(() => {
-				log("Checking if MediaRecorder should be stopped");
-				if (mediaRecorderRef.current?.state === "recording") {
-					log("attempting to Stop recording chunk");
-					mediaRecorderRef.current.stop();
-
-					log("attempt to Restart recording chunk", {
-						isRecording,
-						mediaRecorderRefState: mediaRecorderRef.current?.state,
-					});
-
-					if (isRecording) {
-						log("Restarting recording chunk");
-						startRecordingChunk();
-					}
-				}
-			}, timeslice);
-
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current);
-			}
-			intervalRef.current = setInterval(updateRecordingTime, 1000);
-			return true;
-		} catch (error) {
-			console.error("Error accessing audio stream", error);
-			setPermissionError("Error accessing audio stream");
-			// the ref must be reset too: React batches true -> false into a no-op,
-			// so the sync effect never fires and the guard would swallow every retry
-			isRecordingRef.current = false;
-			setIsRecording(false);
-			// release the mic; a failed start must not leave tracks live
-			const stream = streamRef.current ?? acquiredStream;
-			stream?.getTracks().forEach((track) => {
-				track.stop();
-			});
-			streamRef.current = null;
-			// drop a half-started recorder: the next attempt calls stop() on it,
-			// which throws InvalidStateError while inactive and fails every retry
-			if (mediaRecorderRef.current) {
-				try {
-					mediaRecorderRef.current.stop();
-				} catch {
-					// already inactive
-				}
-				mediaRecorderRef.current = null;
-			}
-			// close the VU meter opened by this attempt, so repeated failures
-			// don't exhaust the browser's AudioContext limit
-			meterSourceRef.current?.disconnect();
-			meterSourceRef.current = null;
-			if (meterCtxRef.current && meterCtxRef.current.state !== "closed") {
-				meterCtxRef.current.close();
-			}
-			meterCtxRef.current = null;
-			analyserRef.current = null;
-			meterBufferRef.current = null;
-			return false;
-		} finally {
+		// clear the latch however the attempt ends. A promise .finally(),
+		// because React Compiler can't compile a try with a finally block
+		return attemptStart(startToken, initialTime).finally(() => {
 			startingRef.current = false;
 			setIsStarting(false);
-		}
+		});
 	};
 
 	const stopRecording = () => {
@@ -582,7 +613,7 @@ const useChunkedAudioRecorder = ({
 		errored: false,
 		getAudioLevel,
 		getChunkHistory: () => chunkHistoryRef.current,
-		hadInterruption: hadConsecutiveSuspiciousChunksRef.current,
+		hadInterruption,
 		isPaused,
 		isRecording,
 		isStarting,

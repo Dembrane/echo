@@ -8,7 +8,12 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 	// lets a test simulate an unsupported-mimeType constructor throw (Safari)
 	// or a start() that throws after the ref was already assigned
-	const recorderFailure = { failNextConstruct: false, failNextStart: false };
+	const recorderFailure = {
+		// bytes each stopped chunk carries; 0 is a suspicious (failed) chunk
+		chunkBytes: 0,
+		failNextConstruct: false,
+		failNextStart: false,
+	};
 
 	class FakeMediaRecorder {
 		static isTypeSupported = () => true;
@@ -37,6 +42,11 @@ const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 				throw new DOMException("recorder is inactive", "InvalidStateError");
 			}
 			this.state = "inactive";
+			if (recorderFailure.chunkBytes > 0) {
+				this.ondataavailable?.({
+					data: new Blob([new Uint8Array(recorderFailure.chunkBytes)]),
+				});
+			}
 			// browsers fire onstop asynchronously, after the caller has swapped
 			// in the next recorder
 			queueMicrotask(() => this.onstop?.());
@@ -80,6 +90,7 @@ const makeStream = () => {
 
 beforeEach(() => {
 	getUserMedia.mockReset();
+	recorderFailure.chunkBytes = 0;
 	recorderFailure.failNextConstruct = false;
 	recorderFailure.failNextStart = false;
 });
@@ -310,4 +321,119 @@ it("reports an interruption when a chunk restart fails", async () => {
 	expect(result.current.isRecording).toBe(false);
 	vi.useRealTimers();
 	consoleError.mockRestore();
+});
+
+// One chunk's worth of time: the chunk timer stops the recorder, and its
+// onstop hands the chunk over and starts the next one.
+const nextChunk = async () => {
+	await act(async () => {
+		vi.advanceTimersByTime(30000);
+		await Promise.resolve();
+	});
+};
+
+it("hands each good chunk to onChunk and keeps recording", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	recorderFailure.chunkBytes = 2048;
+	const onChunk = vi.fn();
+	const { result } = renderHook(() =>
+		useChunkedAudioRecorder({ onChunk, onRecordingInterrupted: vi.fn() }),
+	);
+	await act(async () => {
+		await result.current.startRecording();
+	});
+
+	await nextChunk();
+	await nextChunk();
+	await nextChunk();
+
+	expect(onChunk).toHaveBeenCalledTimes(3);
+	expect((onChunk.mock.calls[0][0] as Blob).size).toBe(2048);
+	expect(result.current.isRecording).toBe(true);
+	expect(result.current.getChunkHistory().map((c) => c.size)).toEqual([
+		2048, 2048, 2048,
+	]);
+	expect(result.current.hadInterruption).toBe(false);
+	act(() => result.current.stopRecording());
+	vi.useRealTimers();
+});
+
+it("hands chunks to the onChunk of the latest render", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	recorderFailure.chunkBytes = 2048;
+	const first = vi.fn();
+	const latest = vi.fn();
+	const { rerender, result } = renderHook(
+		({ onChunk }) =>
+			useChunkedAudioRecorder({ onChunk, onRecordingInterrupted: vi.fn() }),
+		{ initialProps: { onChunk: first } },
+	);
+	await act(async () => {
+		await result.current.startRecording();
+	});
+	await nextChunk();
+	expect(first).toHaveBeenCalledTimes(1);
+
+	rerender({ onChunk: latest });
+	await nextChunk();
+
+	expect(first).toHaveBeenCalledTimes(1);
+	expect(latest).toHaveBeenCalledTimes(1);
+	act(() => result.current.stopRecording());
+	vi.useRealTimers();
+});
+
+it("shows the interruption as soon as two chunks in a row fail, with no outside render", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	const onChunk = vi.fn();
+	const onRecordingInterrupted = vi.fn();
+	const { result } = renderHook(() =>
+		useChunkedAudioRecorder({ onChunk, onRecordingInterrupted }),
+	);
+	await act(async () => {
+		await result.current.startRecording();
+	});
+
+	// Empty chunks: the first is dropped and recording goes on, the second
+	// is an interruption.
+	await nextChunk();
+	expect(onRecordingInterrupted).not.toHaveBeenCalled();
+	expect(result.current.hadInterruption).toBe(false);
+	await nextChunk();
+
+	expect(onRecordingInterrupted).toHaveBeenCalledTimes(1);
+	expect(result.current.hadInterruption).toBe(true);
+	expect(onChunk).not.toHaveBeenCalled();
+	act(() => result.current.stopRecording());
+	vi.useRealTimers();
+});
+
+it("starts a new session without the last one's interruption", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	const { result } = renderHook(() =>
+		useChunkedAudioRecorder({
+			onChunk: vi.fn(),
+			onRecordingInterrupted: vi.fn(),
+		}),
+	);
+	await act(async () => {
+		await result.current.startRecording();
+	});
+	await nextChunk();
+	await nextChunk();
+	expect(result.current.hadInterruption).toBe(true);
+	act(() => result.current.stopRecording());
+
+	await act(async () => {
+		await result.current.startRecording();
+	});
+
+	expect(result.current.hadInterruption).toBe(false);
+	expect(result.current.getChunkHistory()).toEqual([]);
+	act(() => result.current.stopRecording());
+	vi.useRealTimers();
 });
