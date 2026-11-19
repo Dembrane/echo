@@ -132,7 +132,7 @@ msgstr "Genera idee"
 msgid "Change the key terms in the project brief"
 msgstr "Modifica i termini chiave nel brief del progetto"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:74
+#: src/components/project/brief/ProjectBriefRoute.tsx:76
 msgid "Change the privacy settings in the portal editor"
 msgstr "Modifica le impostazioni della privacy nell'editor del portale"
 
@@ -230,7 +230,7 @@ msgid "English"
 msgstr "English"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
-#: src/components/project/brief/ProjectBriefRoute.tsx:83
+#: src/components/project/brief/ProjectBriefRoute.tsx:85
 #: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
 msgid "Error loading project"
 msgstr "Error loading project"
@@ -301,7 +301,7 @@ msgid "Keep it to {NAME_LABEL_MAX} characters."
 msgstr "Al massimo {NAME_LABEL_MAX} caratteri."
 
 #: src/components/project/portal-editor/sections/verify.tsx:405
-#: src/components/project/brief/ProjectKeyTermsSection.tsx:81
+#: src/components/project/brief/ProjectKeyTermsSection.tsx:78
 msgid "Key terms"
 msgstr "Termini chiave"
 
@@ -446,7 +446,7 @@ msgstr "Privacy"
 msgid "Privacy card"
 msgstr "Scheda privacy"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:60
+#: src/components/project/brief/ProjectBriefRoute.tsx:62
 msgid "Project brief"
 msgstr "Brief del progetto"
 
@@ -663,7 +663,7 @@ msgstr "Cosa chiede il campo del nome"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Cosa chiede la schermata iniziale e come le conversazioni ricevono il titolo."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:63
+#: src/components/project/brief/ProjectBriefRoute.tsx:65
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "Di cosa parla questo progetto. dembrane lo legge per trascrizioni, riassunti, chat e report."
 
