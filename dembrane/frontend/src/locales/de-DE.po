@@ -8814,7 +8814,7 @@ msgstr "Verwaltet von dembrane"
 msgid "Manages members, workspaces, and organisation settings."
 msgstr "Verwaltet Mitglieder, Arbeitsbereiche und Organisationseinstellungen."
 
-#: src/components/map/hooks/useMapFactCheck.ts:77
+#: src/components/map/hooks/useMapFactCheck.ts:94
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Gerade wurden viele Faktenprüfungen gestartet. Versuche es gleich noch einmal."
 
@@ -15541,11 +15541,11 @@ msgstr "Die E-Mail-Adresse oder das Passwort ist nicht korrekt. Bitte prüfen un
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "Der Endpunkt, an den wir die Daten senden. Hole dir diesen von deinem Empfangs-Service (z.B. Zapier, Make oder deinem eigenen Server)."
 
-#: src/components/map/hooks/useMapFactCheck.ts:307
+#: src/components/map/hooks/useMapFactCheck.ts:310
 msgid "The fact-check could not be cancelled."
 msgstr "Die Faktenprüfung konnte nicht abgebrochen werden."
 
-#: src/components/map/hooks/useMapFactCheck.ts:79
+#: src/components/map/hooks/useMapFactCheck.ts:96
 msgid "The fact-check could not be started."
 msgstr "Die Faktenprüfung konnte nicht gestartet werden."
 
@@ -18743,7 +18743,7 @@ msgstr "Du kannst den MCP-Zugriff für diese Organisation nicht verwalten."
 msgid "error.fallback.contact_admin"
 msgstr "Du hast keine Berechtigung hierfür. Bitte deinen Administrator um Zugriff."
 
-#: src/components/map/hooks/useMapFactCheck.ts:75
+#: src/components/map/hooks/useMapFactCheck.ts:92
 msgid "You do not have permission to fact-check claims."
 msgstr "Du hast keine Berechtigung, Aussagen zu überprüfen."
 

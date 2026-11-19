@@ -8814,7 +8814,7 @@ msgstr "Керується dembrane"
 msgid "Manages members, workspaces, and organisation settings."
 msgstr "Керує учасниками, робочими просторами та налаштуваннями організації."
 
-#: src/components/map/hooks/useMapFactCheck.ts:77
+#: src/components/map/hooks/useMapFactCheck.ts:94
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Щойно було запущено багато перевірок фактів. Спробуйте ще раз за мить."
 
@@ -15541,11 +15541,11 @@ msgstr "Неправильна електронна адреса або паро
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
-#: src/components/map/hooks/useMapFactCheck.ts:307
+#: src/components/map/hooks/useMapFactCheck.ts:310
 msgid "The fact-check could not be cancelled."
 msgstr "Не вдалося скасувати перевірку фактів."
 
-#: src/components/map/hooks/useMapFactCheck.ts:79
+#: src/components/map/hooks/useMapFactCheck.ts:96
 msgid "The fact-check could not be started."
 msgstr "Не вдалося розпочати перевірку фактів."
 
@@ -18745,7 +18745,7 @@ msgstr "Ви не можете керувати доступом до MCP для
 msgid "error.fallback.contact_admin"
 msgstr "У вас немає дозволу на цю дію. Зверніться до адміністратора за доступом."
 
-#: src/components/map/hooks/useMapFactCheck.ts:75
+#: src/components/map/hooks/useMapFactCheck.ts:92
 msgid "You do not have permission to fact-check claims."
 msgstr "У вас немає дозволу перевіряти факти."
 
