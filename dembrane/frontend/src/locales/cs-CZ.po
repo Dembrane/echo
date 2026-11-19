@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# živě} few {# živě} other {# živě}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:307
+#: src/routes/project/ProjectsHome.tsx:306
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# předplacené místo je} few {# předplacená místa 
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:514
+#: src/routes/project/ProjectsHome.tsx:513
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# vybrán} few {# vybrány} other {# vybráno}}"
@@ -1228,7 +1228,7 @@ msgstr "Portál účastníků pro nahrávání konverzací."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Pro zpracování na základě souhlasu je vyžadován odkaz na zásady ochrany osobních údajů. Musí začínat http:// nebo https:// a mít nejvýše 255 znaků."
 
-#: src/routes/project/ProjectsHome.tsx:397
+#: src/routes/project/ProjectsHome.tsx:396
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 
@@ -1459,7 +1459,7 @@ msgstr "Autor akce"
 #~ msgstr "Action By"
 
 #: src/features/sidebar/views/InboxView.tsx:470
-#: src/components/inbox/Inbox.tsx:442
+#: src/components/inbox/Inbox.tsx:420
 msgid "Action needed"
 msgstr "Action needed"
 
@@ -1978,7 +1978,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "Všechny druhy"
 
-#: src/routes/project/ProjectsHome.tsx:441
+#: src/routes/project/ProjectsHome.tsx:440
 msgid "All projects"
 msgstr "All projects"
 
@@ -2138,7 +2138,7 @@ msgstr "E-mailové upozornění bude odesláno {participantCount, plural, one {#
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Účastníkům bude odesláno e-mailové upozornění. Chcete pokračovat?"
 
-#: src/portal/routes/ParticipantStart.tsx:85
+#: src/portal/routes/ParticipantStart.tsx:76
 msgid "An error occurred while loading the portal. Please contact the support team."
 msgstr "Při načítání portálu došlo k chybě. Kontaktujte prosím tým podpory."
 
@@ -2806,7 +2806,7 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:94
+#: src/portal/layout/ParticipantHeader.tsx:90
 #: src/portal/components/start/ParticipantOnboardingCards.tsx:438
 msgid "participant.button.back"
 msgstr "Back"
@@ -3100,7 +3100,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/ProjectsHome.tsx:543
+#: src/routes/project/ProjectsHome.tsx:542
 #: src/routes/project/CreateProjectRoute.tsx:478
 #: src/routes/project/report/ProjectReportRoute.tsx:282
 #: src/routes/organisation/OrganisationRoute.tsx:1821
@@ -3142,7 +3142,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:66
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3150,7 +3150,7 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:105
+#: src/portal/layout/ParticipantHeader.tsx:101
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "Cancel"
 
@@ -3665,7 +3665,7 @@ msgid "Clear filters"
 msgstr "Clear filters"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:464
+#: src/routes/project/ProjectsHome.tsx:463
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -3957,7 +3957,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:58
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -8258,8 +8258,8 @@ msgstr "Pojďme najít, co vám sedí"
 #~ msgid "Let's go!"
 #~ msgstr "Jdeme na to!"
 
-#: src/routes/project/ProjectsHome.tsx:342
-#: src/routes/project/ProjectsHome.tsx:387
+#: src/routes/project/ProjectsHome.tsx:341
+#: src/routes/project/ProjectsHome.tsx:386
 msgid "Let's hear your first conversation."
 msgstr "Let's hear your first conversation."
 
@@ -8888,7 +8888,7 @@ msgstr "Označit jako absolvované"
 
 #: src/features/sidebar/views/InboxView.tsx:480
 #: src/features/sidebar/views/InboxView.tsx:571
-#: src/components/inbox/Inbox.tsx:397
+#: src/components/inbox/Inbox.tsx:453
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
@@ -9196,7 +9196,7 @@ msgstr "Historie přesunů"
 msgid "Move project"
 msgstr "Přesunout projekt"
 
-#: src/routes/project/ProjectsHome.tsx:533
+#: src/routes/project/ProjectsHome.tsx:532
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Přesunout projekty"
@@ -9857,7 +9857,7 @@ msgstr "No project activity this period."
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:483
+#: src/routes/project/ProjectsHome.tsx:482
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10206,7 +10206,7 @@ msgstr "Poznámky, které si asistent k tomuto pracovnímu prostoru uložil z ch
 msgid "Nothing from dembrane right now."
 msgstr "Nothing from dembrane right now."
 
-#: src/routes/project/ProjectsHome.tsx:385
+#: src/routes/project/ProjectsHome.tsx:384
 msgid "Nothing here for you yet."
 msgstr "Nothing here for you yet."
 
@@ -11295,7 +11295,7 @@ msgstr "Připněte si až tři projekty na začátek seznamu projektů."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Připněte si nejpoužívanější šablony přímo v chatu."
 
-#: src/routes/project/ProjectsHome.tsx:418
+#: src/routes/project/ProjectsHome.tsx:417
 msgid "Pinned"
 msgstr "Pinned"
 
@@ -11351,7 +11351,7 @@ msgstr "Please check back later or contact the project owner for more informatio
 msgid "Please check your inputs for errors."
 msgstr "Please check your inputs for errors."
 
-#: src/components/project/ProjectQRCode.tsx:97
+#: src/components/project/ProjectQRCode.tsx:93
 msgid "Please enable participation to enable sharing"
 msgstr "Please enable participation to enable sharing"
 
@@ -11930,7 +11930,7 @@ msgstr "Projects across organisation · {0}"
 msgid "Projects moved"
 msgstr "Projekty byly přesunuty"
 
-#: src/routes/project/ProjectsHome.tsx:392
+#: src/routes/project/ProjectsHome.tsx:391
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Projekty se zde zobrazí, jakmile s vámi někdo z organizace nějaký nasdílí."
 
@@ -13570,7 +13570,7 @@ msgstr "Hledejte lidi nebo zadejte e-mail"
 msgid "Search project or workspace"
 msgstr "Search project or workspace"
 
-#: src/routes/project/ProjectsHome.tsx:471
+#: src/routes/project/ProjectsHome.tsx:470
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -13719,7 +13719,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Sees usage and invoices. No project or content access."
 
-#: src/routes/project/ProjectsHome.tsx:555
+#: src/routes/project/ProjectsHome.tsx:554
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Vybrat"
@@ -13760,7 +13760,7 @@ msgstr "Nejprve vyberte slovo"
 msgid "Select a workspace"
 msgstr "Vyberte pracovní prostor"
 
-#: src/routes/project/ProjectsHome.tsx:520
+#: src/routes/project/ProjectsHome.tsx:519
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -14068,9 +14068,9 @@ msgid "Setting up"
 msgstr "Příprava"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:302
-#: src/portal/layout/ParticipantHeader.tsx:125
-#: src/portal/layout/ParticipantHeader.tsx:126
+#: src/routes/project/ProjectsHome.tsx:301
+#: src/portal/layout/ParticipantHeader.tsx:121
+#: src/portal/layout/ParticipantHeader.tsx:122
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:108
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -14129,8 +14129,8 @@ msgstr "Sdílejte zvací odkazy namísto pozvánek e-mailem."
 #~ msgid "Share options"
 #~ msgstr "Možnosti sdílení"
 
-#: src/portal/layout/ParticipantHeader.tsx:117
-#: src/portal/layout/ParticipantHeader.tsx:118
+#: src/portal/layout/ParticipantHeader.tsx:113
+#: src/portal/layout/ParticipantHeader.tsx:114
 msgid "Share portal"
 msgstr "Sdílet portál"
 
@@ -17180,7 +17180,7 @@ msgstr "Webhook bez názvu"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:207
+#: src/routes/project/ProjectsHome.tsx:206
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -17196,7 +17196,7 @@ msgstr "Unpin project"
 #~ msgid "Unpublished changes"
 #~ msgstr "Nepublikované změny"
 
-#: src/components/inbox/Inbox.tsx:437
+#: src/components/inbox/Inbox.tsx:415
 msgid "Unread"
 msgstr "Unread"
 
@@ -19261,7 +19261,7 @@ msgstr "Vaše portály dál fungují a nic z toho, co účastníci řeknou, se n
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Kontext vašeho projektu je dlouhý, proto návrhy čtou jeho prvních 20 000 znaků. Celý text se uloží."
 
-#: src/routes/project/ProjectsHome.tsx:345
+#: src/routes/project/ProjectsHome.tsx:344
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Zde se objeví vaše projekty. Projekt obsahuje vše k jednomu tématu: odkaz, přes který účastníci nahrávají, jejich rozhovory a to, co z nich dembrane vytvoří."
 

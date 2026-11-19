@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# live} other {# live}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:307
+#: src/routes/project/ProjectsHome.tsx:306
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# plek betaald} other {# plekken betaald}} voor deze pe
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:514
+#: src/routes/project/ProjectsHome.tsx:513
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# geselecteerd} other {# geselecteerd}}"
@@ -1228,7 +1228,7 @@ msgstr "Een deelnemersportaal om gesprekken op te nemen."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Een link naar het privacybeleid is verplicht voor verwerking op basis van toestemming. De link moet beginnen met http:// of https:// en mag maximaal 255 tekens bevatten."
 
-#: src/routes/project/ProjectsHome.tsx:397
+#: src/routes/project/ProjectsHome.tsx:396
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Een project bevat alles voor één onderwerp. Deel de link met deelnemers, verzamel stemmen en laat dembrane ze omzetten in inzichten."
 
@@ -1459,7 +1459,7 @@ msgstr "Actie door"
 #~ msgstr "Actie door"
 
 #: src/features/sidebar/views/InboxView.tsx:470
-#: src/components/inbox/Inbox.tsx:442
+#: src/components/inbox/Inbox.tsx:420
 msgid "Action needed"
 msgstr "Actie nodig"
 
@@ -1978,7 +1978,7 @@ msgstr "Alle bestanden zijn succesvol geüpload."
 msgid "All kinds"
 msgstr "Alle soorten"
 
-#: src/routes/project/ProjectsHome.tsx:441
+#: src/routes/project/ProjectsHome.tsx:440
 msgid "All projects"
 msgstr "Alle projecten"
 
@@ -2138,7 +2138,7 @@ msgstr "Er wordt een e-mailmelding verstuurd naar {participantCount, plural, one
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Er wordt een e-mailmelding naar de deelnemers verstuurd. Wil je doorgaan?"
 
-#: src/portal/routes/ParticipantStart.tsx:85
+#: src/portal/routes/ParticipantStart.tsx:76
 msgid "An error occurred while loading the portal. Please contact the support team."
 msgstr "Er is een fout opgetreden bij het laden van het portaal. Neem contact op met het supportteam."
 
@@ -2803,7 +2803,7 @@ msgid "Back"
 msgstr "Terug"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:94
+#: src/portal/layout/ParticipantHeader.tsx:90
 #: src/portal/components/start/ParticipantOnboardingCards.tsx:438
 msgid "participant.button.back"
 msgstr "Terug"
@@ -3097,7 +3097,7 @@ msgstr "Aanroepen die aan geen enkel account konden worden gekoppeld"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/ProjectsHome.tsx:543
+#: src/routes/project/ProjectsHome.tsx:542
 #: src/routes/project/CreateProjectRoute.tsx:478
 #: src/routes/project/report/ProjectReportRoute.tsx:282
 #: src/routes/organisation/OrganisationRoute.tsx:1821
@@ -3139,7 +3139,7 @@ msgstr "Aanroepen die aan geen enkel account konden worden gekoppeld"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:66
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3147,7 +3147,7 @@ msgid "Cancel"
 msgstr "Annuleren"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:105
+#: src/portal/layout/ParticipantHeader.tsx:101
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "Annuleren"
 
@@ -3662,7 +3662,7 @@ msgid "Clear filters"
 msgstr "Filters wissen"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:464
+#: src/routes/project/ProjectsHome.tsx:463
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -3954,7 +3954,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Doorgaan"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:58
 msgid "Confirm"
 msgstr "Bevestigen"
 
@@ -8255,8 +8255,8 @@ msgstr "Laten we kijken wat bij je past"
 #~ msgid "Let's go!"
 #~ msgstr "Aan de slag!"
 
-#: src/routes/project/ProjectsHome.tsx:342
-#: src/routes/project/ProjectsHome.tsx:387
+#: src/routes/project/ProjectsHome.tsx:341
+#: src/routes/project/ProjectsHome.tsx:386
 msgid "Let's hear your first conversation."
 msgstr "Laten we je eerste gesprek horen."
 
@@ -8885,7 +8885,7 @@ msgstr "Markeer als aanwezig"
 
 #: src/features/sidebar/views/InboxView.tsx:480
 #: src/features/sidebar/views/InboxView.tsx:571
-#: src/components/inbox/Inbox.tsx:397
+#: src/components/inbox/Inbox.tsx:453
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Als gelezen markeren"
@@ -9193,7 +9193,7 @@ msgstr "Verplaatsingsgeschiedenis"
 msgid "Move project"
 msgstr "Project verplaatsen"
 
-#: src/routes/project/ProjectsHome.tsx:533
+#: src/routes/project/ProjectsHome.tsx:532
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Projecten verplaatsen"
@@ -9854,7 +9854,7 @@ msgstr "Geen projectactiviteit deze periode."
 msgid "No projects found {0}"
 msgstr "Geen projecten gevonden {0}"
 
-#: src/routes/project/ProjectsHome.tsx:483
+#: src/routes/project/ProjectsHome.tsx:482
 msgid "No projects found for search term"
 msgstr "Geen projecten gevonden voor de zoekterm"
 
@@ -10203,7 +10203,7 @@ msgstr "Notities die de assistent vanuit chats over deze werkruimte heeft opgesl
 msgid "Nothing from dembrane right now."
 msgstr "Op dit moment niets van dembrane."
 
-#: src/routes/project/ProjectsHome.tsx:385
+#: src/routes/project/ProjectsHome.tsx:384
 msgid "Nothing here for you yet."
 msgstr "Hier is nog niets voor je."
 
@@ -11292,7 +11292,7 @@ msgstr "Pin maximaal drie projecten bovenaan je projectlijst."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Pin je meestgebruikte templates direct in chat."
 
-#: src/routes/project/ProjectsHome.tsx:418
+#: src/routes/project/ProjectsHome.tsx:417
 msgid "Pinned"
 msgstr "Vastgezet"
 
@@ -11348,7 +11348,7 @@ msgstr "Controleer later of contacteer de eigenaar van het project voor meer inf
 msgid "Please check your inputs for errors."
 msgstr "Controleer uw invoer voor fouten."
 
-#: src/components/project/ProjectQRCode.tsx:97
+#: src/components/project/ProjectQRCode.tsx:93
 msgid "Please enable participation to enable sharing"
 msgstr "Schakel deelneming in om delen mogelijk te maken"
 
@@ -11927,7 +11927,7 @@ msgstr "Projecten binnen organisatie · {0}"
 msgid "Projects moved"
 msgstr "Projecten verplaatst"
 
-#: src/routes/project/ProjectsHome.tsx:392
+#: src/routes/project/ProjectsHome.tsx:391
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Projecten verschijnen hier zodra iemand in de organisatie er een met je deelt."
 
@@ -13567,7 +13567,7 @@ msgstr "Zoek mensen of typ een e-mailadres"
 msgid "Search project or workspace"
 msgstr "Zoek project of werkruimte"
 
-#: src/routes/project/ProjectsHome.tsx:471
+#: src/routes/project/ProjectsHome.tsx:470
 msgid "Search projects"
 msgstr "Zoek projecten"
 
@@ -13716,7 +13716,7 @@ msgstr "Tot snel"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Ziet gebruik en facturen. Geen toegang tot projecten of content."
 
-#: src/routes/project/ProjectsHome.tsx:555
+#: src/routes/project/ProjectsHome.tsx:554
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Selecteren"
@@ -13757,7 +13757,7 @@ msgstr "Selecteer eerst een woord"
 msgid "Select a workspace"
 msgstr "Selecteer een werkruimte"
 
-#: src/routes/project/ProjectsHome.tsx:520
+#: src/routes/project/ProjectsHome.tsx:519
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -14065,9 +14065,9 @@ msgid "Setting up"
 msgstr "Instellen"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:302
-#: src/portal/layout/ParticipantHeader.tsx:125
-#: src/portal/layout/ParticipantHeader.tsx:126
+#: src/routes/project/ProjectsHome.tsx:301
+#: src/portal/layout/ParticipantHeader.tsx:121
+#: src/portal/layout/ParticipantHeader.tsx:122
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:108
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -14126,8 +14126,8 @@ msgstr "Deel uitnodigingslinks als alternatief voor uitnodigingen per e-mail."
 #~ msgid "Share options"
 #~ msgstr "Deelopties"
 
-#: src/portal/layout/ParticipantHeader.tsx:117
-#: src/portal/layout/ParticipantHeader.tsx:118
+#: src/portal/layout/ParticipantHeader.tsx:113
+#: src/portal/layout/ParticipantHeader.tsx:114
 msgid "Share portal"
 msgstr "Portal delen"
 
@@ -17175,7 +17175,7 @@ msgstr "Naamloze webhook"
 msgid "Unpin"
 msgstr "Losmaken"
 
-#: src/routes/project/ProjectsHome.tsx:207
+#: src/routes/project/ProjectsHome.tsx:206
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Maak eerst een project los (max {MAX_PINNED})"
 
@@ -17191,7 +17191,7 @@ msgstr "Project losmaken"
 #~ msgid "Unpublished changes"
 #~ msgstr "Niet-gepubliceerde wijzigingen"
 
-#: src/components/inbox/Inbox.tsx:437
+#: src/components/inbox/Inbox.tsx:415
 msgid "Unread"
 msgstr "Ongelezen"
 
@@ -19256,7 +19256,7 @@ msgstr "Je portalen blijven werken en niets van wat je deelnemers zeggen gaat ve
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Je projectcontext is lang, dus de suggesties lezen de eerste 20.000 tekens. De hele tekst wordt bewaard."
 
-#: src/routes/project/ProjectsHome.tsx:345
+#: src/routes/project/ProjectsHome.tsx:344
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Hier komen je projecten. Een project bevat alles voor één onderwerp: de link waarop deelnemers opnemen, hun gesprekken en wat dembrane ervan maakt."
 
