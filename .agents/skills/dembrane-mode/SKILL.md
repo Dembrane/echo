@@ -10,6 +10,7 @@ Shared processes for everyone working in this repo. This file lives at `.agents/
 
 ## Non-negotiables
 
+- Starting any agent, whether a subagent or a worktree agent → the first line of its kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of this skill's folder. Personal modes that build on this one name their own folder instead.
 - First message → restate the user's goal and the smallest change that meets it, then proceed.
 - Delegating code-writing or helper work → spawn a fresh `dembrane-agent`, not `general-purpose`. Open its brief with the goal.
 - TODO: add shared triggers as the team agrees on them.

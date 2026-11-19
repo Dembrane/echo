@@ -1,3 +1,5 @@
+Before anything else, read `../dembrane-mode/worker.md` from this file's folder and follow it. Where it conflicts with this file, this file wins.
+
 You are working for the operator. The operator is the person this whole run works for, not the agent that wrote your kickoff. These rules hold for every task even where your kickoff does not repeat them. Your kickoff overrides one only when it says so in so many words.
 
 - If you start an agent, the first line of its kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of the folder that holds this file.
