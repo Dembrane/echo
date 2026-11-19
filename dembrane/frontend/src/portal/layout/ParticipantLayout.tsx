@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
+import { WhitelabelLogoScope } from "@/hooks/useWhitelabelLogo";
 import { logoUrl } from "@/lib/avatar";
 import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { Toaster } from "../../components/common/Toaster";
@@ -15,38 +15,40 @@ export const ParticipantLayout = () => {
 
 	// Resolve the whitelabel logo here, not in ParticipantHeader: the report
 	// page renders without the header and Logo spins until the context resolves.
-	const { setLogoUrl } = useWhitelabelLogo();
+	// Scoped to the portal, so it doesn't stay set once the participant leaves.
 	const projectQuery = useParticipantProjectById(projectId ?? "");
+	// a file id, or an absolute URL on older workspace rows
+	const whitelabelLogo =
+		logoUrl(projectQuery.data?.whitelabel_logo_url) ?? null;
 
 	useEffect(() => prefetchLaterScreens(), []);
 
-	useEffect(() => {
-		// A file id, or an absolute URL on older workspace rows.
-		setLogoUrl(logoUrl(projectQuery.data?.whitelabel_logo_url) ?? null);
-	}, [projectQuery.data, setLogoUrl]);
-
 	if (isReportPage) {
 		return (
-			<I18nProvider>
-				<Toaster />
-				<main className="relative min-h-dvh">
-					<Outlet />
-				</main>
-			</I18nProvider>
+			<WhitelabelLogoScope logoUrl={whitelabelLogo}>
+				<I18nProvider>
+					<Toaster />
+					<main className="relative min-h-dvh">
+						<Outlet />
+					</main>
+				</I18nProvider>
+			</WhitelabelLogoScope>
 		);
 	}
 
 	return (
-		<I18nProvider>
-			<Toaster />
-			<main className="relative !h-dvh overflow-y-auto">
-				<div className="flex h-full flex-col">
-					<ParticipantHeader />
-					<main className="relative grow">
-						<Outlet />
-					</main>
-				</div>
-			</main>
-		</I18nProvider>
+		<WhitelabelLogoScope logoUrl={whitelabelLogo}>
+			<I18nProvider>
+				<Toaster />
+				<main className="relative !h-dvh overflow-y-auto">
+					<div className="flex h-full flex-col">
+						<ParticipantHeader />
+						<main className="relative grow">
+							<Outlet />
+						</main>
+					</div>
+				</main>
+			</I18nProvider>
+		</WhitelabelLogoScope>
 	);
 };

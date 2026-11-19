@@ -25,6 +25,25 @@ export const WhitelabelLogoProvider = ({
 	);
 };
 
+/**
+ * Shows `logoUrl` to everything inside, leaving the app-wide logo alone.
+ * For a subtree that knows its logo during render, such as the portal.
+ */
+export const WhitelabelLogoScope = ({
+	logoUrl,
+	children,
+}: {
+	logoUrl: string | null;
+	children: ReactNode;
+}) => {
+	const { setLogoUrl } = useContext(WhitelabelLogoContext);
+	return (
+		<WhitelabelLogoContext.Provider value={{ logoUrl, setLogoUrl }}>
+			{children}
+		</WhitelabelLogoContext.Provider>
+	);
+};
+
 export const useWhitelabelLogo = () => {
 	return useContext(WhitelabelLogoContext);
 };
