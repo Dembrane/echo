@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLatest } from "@/hooks/useLatest";
 import { centralityOrder } from "../graph/mst";
 import { useMapInteractionStore } from "../state/interactionStore";
 import type { Edge, MapGraphNode } from "../types";
@@ -172,7 +173,7 @@ export function useMapGroups({
 	const [timerRun, setTimerRun] = useState<number | null>(null);
 	const [timerProgress, setTimerProgress] = useState(0);
 
-	const latestRef = useRef({
+	const latestRef = useLatest({
 		backend,
 		canCommit,
 		edges,
@@ -181,15 +182,6 @@ export function useMapGroups({
 		resultId,
 		snapshotId,
 	});
-	latestRef.current = {
-		backend,
-		canCommit,
-		edges,
-		enabled,
-		nodes,
-		resultId,
-		snapshotId,
-	};
 
 	const selectedRef = useRef<string | null>(null);
 	const currentSetRef = useRef<ReadonlySet<string>>(new Set());
@@ -246,8 +238,7 @@ export function useMapGroups({
 			b.createdAt.localeCompare(a.createdAt),
 		);
 	}, [docs, local, resolve, resultId]);
-	const historyRef = useRef(history);
-	historyRef.current = history;
+	const historyRef = useLatest(history);
 
 	const setSelected = useCallback((id: string | null) => {
 		selectedRef.current = id;
@@ -352,7 +343,7 @@ export function useMapGroups({
 				},
 			);
 		},
-		[queryClient],
+		[latestRef, queryClient],
 	);
 
 	const commit = useCallback(
@@ -381,7 +372,7 @@ export function useMapGroups({
 			// cannot title whole rather than trimming it here.
 			send(centralityOrder(eligible, graphNodes, treeEdges));
 		},
-		[send],
+		[latestRef, send],
 	);
 
 	const handleChange = useCallback(() => {
@@ -450,7 +441,7 @@ export function useMapGroups({
 		setTimerProgress(0);
 		setTimerRun(++timerSeqRef.current);
 		timeoutRef.current = setTimeout(() => commit(ids), DWELL_MS);
-	}, [clearTimer, commit, store]);
+	}, [clearTimer, commit, historyRef, latestRef, store]);
 
 	useEffect(() => {
 		if (!enabled) return;
@@ -480,7 +471,7 @@ export function useMapGroups({
 	}, [timerRun]);
 
 	// A new result starts again from the server's list.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on the result id only
+	// Keyed on the result id only.
 	useEffect(() => {
 		return () => {
 			if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -515,7 +506,7 @@ export function useMapGroups({
 			setSelected(id);
 			highlightAsHistory(entry.nodeIds);
 		},
-		[highlightAsHistory, setSelected, store],
+		[highlightAsHistory, historyRef, setSelected, store],
 	);
 
 	/** Lets the selected group go without touching the map, as a click on a node does. */
@@ -528,7 +519,7 @@ export function useMapGroups({
 			const entry = historyRef.current.find((item) => item.id === id);
 			if (entry?.status === "failed") send(entry.nodeIds);
 		},
-		[send],
+		[historyRef, latestRef, send],
 	);
 
 	return {
