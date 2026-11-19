@@ -267,7 +267,9 @@ export const ParticipantInitiateForm = ({
 
 	return (
 		<form
-			onSubmit={handleSubmit(startConversation)}
+			// handleSubmit is called in the handler, not in render: startConversation
+			// uses the latch ref, which React Compiler won't let render touch
+			onSubmit={(event) => handleSubmit(startConversation)(event)}
 			className="w-full"
 			{...testId("portal-initiate-form")}
 		>
