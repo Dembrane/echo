@@ -75,7 +75,7 @@ End state:
 - The query returns `Table 7|PORTAL_AUDIO|t|<chunks>|<seconds>`: one chunk per ~30 s recorded, plus the partial one sent at Stop.
 - `$STATE/audio/conversation/<conversation-id>/chunks/` holds a `.webm` and an `.mp3` per chunk.
 
-While recording, the record screen shows "ECHO" and "Stop" in place of "Record". "Recording paused" offers "Resume", "Finish" and "Switch to text input". "Before you finish" offers "Verify", which asks an LLM to summarise, and "Skip".
+While recording, the record screen shows "ECHO" and "Stop" in place of "Record". "Recording paused" offers "Resume", "Finish" and "Switch to text input". "Before you finish" offers "Verify", which asks an LLM to summarise, and "Skip". It appears only when the recording reached 60 seconds and the project has Verify on (`shouldVerifyOnFinish` in `ParticipantConversationAudio.tsx`); a shorter recording goes straight from "Finish" to the thank-you screen.
 
 ## Gotchas
 
