@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { useLatest } from "@/hooks/useLatest";
 import { useV2Me } from "@/hooks/useV2Me";
 import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
@@ -529,6 +530,8 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const queryClient = useQueryClient();
+	// Where a restored draft resumed, for the resume event below.
+	const [resumedAt, setResumedAt] = useState<number | null>(null);
 	const draft = useSigningDraft({
 		current,
 		doc,
@@ -542,32 +545,45 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			setVisited(new Set(d.visited));
 			if (d.finishing) setFinishing(true);
 			else if (d.current) setCurrent(d.current);
-			captureSigning(SIGNING_EVENTS.resumed, doc, {
-				step_index: d.finishing
+			setResumedAt(
+				d.finishing
 					? fields.length
 					: Math.max(
 							0,
 							fields.findIndex((f) => f.id === d.current),
 						),
-			});
+			);
 		},
 		values,
 		visited,
 	});
+	// The resume event, once, after the restored step shows (not during render).
+	const resumeCaptured = useRef(false);
+	const docRef = useLatest(doc);
+	useEffect(() => {
+		if (resumedAt === null || resumeCaptured.current) return;
+		resumeCaptured.current = true;
+		captureSigning(SIGNING_EVENTS.resumed, docRef.current, {
+			step_index: resumedAt,
+		});
+	}, [resumedAt, docRef]);
 	const step = stepOf(fields, current, finishing);
 	useSigningEvents(doc, draft.started, step);
 
 	// The signer's name is the one thing we know; fill it once so they only check it.
-	useEffect(() => {
-		const name = me?.display_name;
-		if (!name) return;
+	// During render, once per name and document: a name they clear stays cleared.
+	const name = me?.display_name;
+	const nameKey = name ? `${doc.id}:${name}` : null;
+	const [namedFor, setNamedFor] = useState<string | null>(null);
+	if (name && nameKey !== namedFor) {
+		setNamedFor(nameKey);
 		setValues((v) => {
 			const next = { ...v };
 			for (const f of doc.fields)
 				if (f.kind === "name" && !next[f.id]) next[f.id] = name;
 			return next;
 		});
-	}, [me?.display_name, doc.fields]);
+	}
 
 	const field = fields.find((f) => f.id === current) ?? null;
 	const { done, total } = progress(fields, values, images);
@@ -623,10 +639,13 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 		Boolean(signature || !fields.some((f) => f.kind === "signature"));
 
 	const submit = async () => {
-		if (!doc.sha256) return;
+		const sha256 = doc.sha256;
+		if (!sha256) return;
 		setSubmitting(true);
 		setError(null);
-		try {
+		// A promise chain, not try/catch/finally: React Compiler can't compile a
+		// try with a finally, or a throw inside a try.
+		const sign = async () => {
 			const sig = signature ?? initials;
 			if (!sig) throw new Error(t`Add your signature first.`);
 			await call("signDocument", {
@@ -636,7 +655,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 					initials: initials
 						? { method: initials.method, png_base64: initials.png_base64 }
 						: null,
-					sha256: doc.sha256,
+					sha256,
 					signature: { method: sig.method, png_base64: sig.png_base64 },
 					values: requestValues(allFields, values),
 				},
@@ -646,11 +665,14 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			signedDocs.add(doc.id);
 			captureSigning(SIGNING_EVENTS.signed, doc);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
-		} catch (e) {
-			setError((await presentError(e, i18n)).message);
-		} finally {
-			setSubmitting(false);
-		}
+		};
+		await sign()
+			.catch(async (e: unknown) => {
+				setError((await presentError(e, i18n)).message);
+			})
+			.finally(() => {
+				setSubmitting(false);
+			});
 	};
 
 	const overlay = (box: PageBox) =>
@@ -925,44 +947,45 @@ function useSigningDraft({
 	restore: (d: NonNullable<ReturnType<typeof readDraft>>) => void;
 }) {
 	const extraIds = useMemo(() => (pickOne ? [PICK_STEP] : []), [pickOne]);
-	const restored = useRef(false);
 	const [started, setStarted] = useState(false);
-	const [kept, setKept] = useState(true);
 	const done = useRef(false);
-	const restoreRef = useRef(restore);
-	restoreRef.current = restore;
 
-	useEffect(() => {
-		if (restored.current || !owner) return;
-		restored.current = true;
+	// Put a kept draft back once the signer is known, during render, so the
+	// first paint is already where they were. Once per document and signer.
+	const restoreKey = owner ? `${doc.id}:${owner}` : null;
+	const [restoredFor, setRestoredFor] = useState<string | null>(null);
+	if (owner && restoreKey !== restoredFor) {
+		setRestoredFor(restoreKey);
 		const d = readDraft(doc.id, {
 			extraIds,
 			fields,
 			owner,
 			sha256: doc.sha256,
 		});
-		if (!d) return;
-		setStarted(true);
-		restoreRef.current(d);
-	}, [doc.id, doc.sha256, extraIds, fields, owner]);
+		if (d) {
+			setStarted(true);
+			restore(d);
+		}
+	}
+	const restoreDone = restoreKey !== null && restoredFor === restoreKey;
 
+	// Whether the browser kept the last write: read when the page is left.
+	const kept = useRef(true);
 	useEffect(() => {
-		if (!owner || !restored.current || done.current) return;
+		if (!owner || !restoreDone || done.current) return;
 		if (!started && current === null && !finishing) return;
-		setKept(
-			writeDraft(
-				doc.id,
-				{
-					current,
-					finishing,
-					owner,
-					sha256: doc.sha256,
-					values,
-					visited: [...visited],
-				},
-				fields,
-				extraIds,
-			),
+		kept.current = writeDraft(
+			doc.id,
+			{
+				current,
+				finishing,
+				owner,
+				sha256: doc.sha256,
+				values,
+				visited: [...visited],
+			},
+			fields,
+			extraIds,
 		);
 	}, [
 		current,
@@ -972,24 +995,28 @@ function useSigningDraft({
 		fields,
 		finishing,
 		owner,
+		restoreDone,
 		started,
 		values,
 		visited,
 	]);
 
-	const unsaved =
-		(started || current !== null || finishing) && (hasImage || !kept);
+	// Ask before leaving while something would be lost: a drawn signature, or
+	// any input the browser did not keep.
+	const begun = started || current !== null || finishing;
+	const hasImageRef = useLatest(hasImage);
 	useEffect(() => {
-		if (!unsaved) return;
+		if (!begun) return;
 		const warn = (e: BeforeUnloadEvent) => {
 			if (done.current) return;
+			if (!hasImageRef.current && kept.current) return;
 			e.preventDefault();
 			// Older browsers show the prompt only when returnValue is set.
 			e.returnValue = "";
 		};
 		window.addEventListener("beforeunload", warn);
 		return () => window.removeEventListener("beforeunload", warn);
-	}, [unsaved]);
+	}, [begun, hasImageRef]);
 
 	return {
 		signed: () => {
@@ -997,8 +1024,7 @@ function useSigningDraft({
 			clearDraft(doc.id);
 		},
 		start: () => setStarted(true),
-		started: started || current !== null || finishing,
-		unsaved,
+		started: begun,
 	};
 }
 
