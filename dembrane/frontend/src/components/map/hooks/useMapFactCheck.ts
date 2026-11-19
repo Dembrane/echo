@@ -1,7 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { useLatest } from "@/hooks/useLatest";
 import { attributeInputsOf, isFactCheckEligible } from "../attributes";
 import type { FactCheckState, MapGraphNode } from "../types";
 import {
@@ -66,6 +67,22 @@ const isCurrent = (
 	token: number,
 ) => tokens.get(nodeId) === token;
 
+// The overrides without the errors whose server state has moved on; the same
+// object when there are none.
+const dropPassedErrors = (
+	overrides: Record<string, Override>,
+	serverStates: FactCheckStates | undefined,
+) => {
+	let next: Record<string, Override> | null = null;
+	for (const [nodeId, override] of Object.entries(overrides)) {
+		if (!override.server) continue;
+		if (sameState(serverStates?.[nodeId], override.server)) continue;
+		if (!next) next = { ...overrides };
+		delete next[nodeId];
+	}
+	return next ?? overrides;
+};
+
 const backoffMs = (retries: number) =>
 	Math.min(RATE_LIMIT_BACKOFF_MS * 2 ** retries, RATE_LIMIT_BACKOFF_CAP_MS);
 
@@ -106,35 +123,37 @@ export function useMapFactCheck({
 	const queueRef = useRef<StartJob[]>([]);
 	const activeRef = useRef(0);
 	const pauseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const onRefusedRef = useRef(onRefused);
-	onRefusedRef.current = onRefused;
+	const onRefusedRef = useLatest(onRefused);
+
+	// A new result starts from the server's states, during render.
+	const [overridesFor, setOverridesFor] = useState(resultId);
+	if (resultId !== overridesFor) {
+		setOverridesFor(resultId);
+		setOverrides({});
+	}
 
 	// Requests in flight for the previous result still settle and free their
 	// slot; their tokens are gone, so they change nothing.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on the result id only
+	// Keyed on the result id only.
 	useEffect(() => {
 		tokensRef.current = new Map();
 		queueRef.current = [];
-		setOverrides({});
 		return () => {
 			if (pauseRef.current) clearTimeout(pauseRef.current);
 			pauseRef.current = null;
 		};
 	}, [resultId]);
 
-	const setOverride = useCallback(
-		(nodeId: string, override: Override | null) =>
-			setOverrides((previous) => {
-				const next = { ...previous };
-				if (override) {
-					next[nodeId] = override;
-				} else {
-					delete next[nodeId];
-				}
-				return next;
-			}),
-		[],
-	);
+	const setOverride = (nodeId: string, override: Override | null) =>
+		setOverrides((previous) => {
+			const next = { ...previous };
+			if (override) {
+				next[nodeId] = override;
+			} else {
+				delete next[nodeId];
+			}
+			return next;
+		});
 
 	const serverStates = offline ? initialStates : query.data;
 	// Until the saved states arrive every claim looks idle. Nothing may start
@@ -154,21 +173,15 @@ export function useMapFactCheck({
 		return merged;
 	}, [serverStates, overrides]);
 
-	// An error the server has moved past is dropped for good.
-	useEffect(() => {
-		setOverrides((previous) => {
-			let next: Record<string, Override> | null = null;
-			for (const [nodeId, override] of Object.entries(previous)) {
-				if (!override.server) continue;
-				if (sameState(serverStates?.[nodeId], override.server)) continue;
-				next ??= { ...previous };
-				delete next[nodeId];
-			}
-			return next ?? previous;
-		});
-	}, [serverStates]);
+	// An error the server has moved past is dropped for good, on each new set of
+	// server states, during render.
+	const [prunedFor, setPrunedFor] = useState(serverStates);
+	if (serverStates !== prunedFor) {
+		setPrunedFor(serverStates);
+		setOverrides((previous) => dropPassedErrors(previous, serverStates));
+	}
 
-	const pump = useCallback(() => {
+	const pump = () => {
 		const send = async (job: StartJob) => {
 			const { nodeId, token } = job;
 			try {
@@ -242,76 +255,64 @@ export function useMapFactCheck({
 		};
 
 		next();
-	}, [queryClient, setOverride, startCheck]);
+	};
 
-	const enqueue = useCallback(
-		(
-			nodeIds: ReadonlyArray<string>,
-			options: { force?: boolean; front?: boolean },
-		) => {
-			if (readOnly || !resultId || nodeIds.length === 0) return;
-			const jobs = nodeIds.map((nodeId): StartJob => {
-				const token = ++seqRef.current;
-				tokensRef.current.set(nodeId, token);
-				return { force: !!options.force, nodeId, resultId, retries: 0, token };
-			});
-			const startedAt = new Date().toISOString();
-			setOverrides((previous) => {
-				const next = { ...previous };
-				for (const { nodeId } of jobs) {
-					next[nodeId] = { state: { startedAt, status: "processing" } };
-				}
-				return next;
-			});
-			if (offline) return;
-			if (options.front) {
-				queueRef.current.unshift(...jobs);
-			} else {
-				queueRef.current.push(...jobs);
-			}
-			pump();
-		},
-		[offline, pump, readOnly, resultId],
-	);
-
-	/** Starts one claim, ahead of any bulk starts still waiting. */
-	const run = useCallback(
-		(nodeId: string, options?: { force?: boolean }) =>
-			enqueue([nodeId], { force: options?.force, front: true }),
-		[enqueue],
-	);
-
-	/** Starts many claims, in order, through the same queue. */
-	const runAll = useCallback(
-		(nodeIds: ReadonlyArray<string>) => enqueue(nodeIds, {}),
-		[enqueue],
-	);
-
-	const cancel = useCallback(
-		async (nodeId: string) => {
-			if (readOnly || !resultId) return;
+	const enqueue = (
+		nodeIds: ReadonlyArray<string>,
+		options: { force?: boolean; front?: boolean },
+	) => {
+		if (readOnly || !resultId || nodeIds.length === 0) return;
+		const jobs = nodeIds.map((nodeId): StartJob => {
 			const token = ++seqRef.current;
 			tokensRef.current.set(nodeId, token);
-			setOverride(nodeId, { state: { status: "idle" } });
-			if (offline) return;
-			try {
-				const state = await cancelCheck({ nodeId, resultId });
-				if (!isCurrent(tokensRef.current, nodeId, token)) return;
-				tokensRef.current.delete(nodeId);
-				putFactCheck(queryClient, resultId, nodeId, state);
-				setOverride(nodeId, null);
-			} catch {
-				if (!isCurrent(tokensRef.current, nodeId, token)) return;
-				tokensRef.current.delete(nodeId);
-				setOverride(nodeId, null);
-				toast.error(t`The fact-check could not be cancelled.`);
-				void queryClient.invalidateQueries({
-					queryKey: mapKeys.factChecks(resultId),
-				});
+			return { force: !!options.force, nodeId, resultId, retries: 0, token };
+		});
+		const startedAt = new Date().toISOString();
+		setOverrides((previous) => {
+			const next = { ...previous };
+			for (const { nodeId } of jobs) {
+				next[nodeId] = { state: { startedAt, status: "processing" } };
 			}
-		},
-		[cancelCheck, offline, queryClient, readOnly, resultId, setOverride],
-	);
+			return next;
+		});
+		if (offline) return;
+		if (options.front) {
+			queueRef.current.unshift(...jobs);
+		} else {
+			queueRef.current.push(...jobs);
+		}
+		pump();
+	};
+
+	/** Starts one claim, ahead of any bulk starts still waiting. */
+	const run = (nodeId: string, options?: { force?: boolean }) =>
+		enqueue([nodeId], { force: options?.force, front: true });
+
+	/** Starts many claims, in order, through the same queue. */
+	const runAll = (nodeIds: ReadonlyArray<string>) => enqueue(nodeIds, {});
+
+	const cancel = async (nodeId: string) => {
+		if (readOnly || !resultId) return;
+		const token = ++seqRef.current;
+		tokensRef.current.set(nodeId, token);
+		setOverride(nodeId, { state: { status: "idle" } });
+		if (offline) return;
+		try {
+			const state = await cancelCheck({ nodeId, resultId });
+			if (!isCurrent(tokensRef.current, nodeId, token)) return;
+			tokensRef.current.delete(nodeId);
+			putFactCheck(queryClient, resultId, nodeId, state);
+			setOverride(nodeId, null);
+		} catch {
+			if (!isCurrent(tokensRef.current, nodeId, token)) return;
+			tokensRef.current.delete(nodeId);
+			setOverride(nodeId, null);
+			toast.error(t`The fact-check could not be cancelled.`);
+			void queryClient.invalidateQueries({
+				queryKey: mapKeys.factChecks(resultId),
+			});
+		}
+	};
 
 	return {
 		cancel,
