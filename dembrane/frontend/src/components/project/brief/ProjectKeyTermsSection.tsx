@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
@@ -30,7 +30,7 @@ export const ProjectKeyTermsSection = ({
 	readOnly?: boolean;
 }) => {
 	const initial = project.default_conversation_transcript_prompt ?? "";
-	const { control, watch, reset, formState } = useForm<Values>({
+	const { control, getValues, reset, formState } = useForm<Values>({
 		defaultValues: { default_conversation_transcript_prompt: initial },
 	});
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -64,16 +64,13 @@ export const ProjectKeyTermsSection = ({
 			initialLastSavedAt: project.updated_at ?? new Date(),
 			onSave,
 		});
-	const dispatchRef = useRef(dispatchAutoSave);
-	dispatchRef.current = dispatchAutoSave;
 
-	useEffect(() => {
-		if (readOnly) return;
-		const subscription = watch((values, { type }) => {
-			if (type === "change" && values) dispatchRef.current(values as Values);
-		});
-		return () => subscription.unsubscribe();
-	}, [watch, readOnly]);
+	// Autosave on the user's own edits, typed or suggested: each calls this
+	// after its change. Not a watch() subscription, which React Compiler can't
+	// compile.
+	const saveAfterChange = () => {
+		if (!readOnly) dispatchAutoSave(getValues());
+	};
 
 	return (
 		<ProjectSettingsSection
@@ -100,23 +97,30 @@ export const ProjectKeyTermsSection = ({
 				<Controller
 					name="default_conversation_transcript_prompt"
 					control={control}
-					render={({ field }) => (
-						<>
-							<KeyTermsInput
-								value={field.value}
-								onChange={field.onChange}
-								isDirty={
-									!!formState.dirtyFields.default_conversation_transcript_prompt
-								}
-								inputTestId="portal-editor-specific-context-input"
-							/>
-							<LazySuggestKeyTerms
-								project={project}
-								value={field.value}
-								onChange={field.onChange}
-							/>
-						</>
-					)}
+					render={({ field }) => {
+						const onChange = (value: string) => {
+							field.onChange(value);
+							saveAfterChange();
+						};
+						return (
+							<>
+								<KeyTermsInput
+									value={field.value}
+									onChange={onChange}
+									isDirty={
+										!!formState.dirtyFields
+											.default_conversation_transcript_prompt
+									}
+									inputTestId="portal-editor-specific-context-input"
+								/>
+								<LazySuggestKeyTerms
+									project={project}
+									value={field.value}
+									onChange={onChange}
+								/>
+							</>
+						);
+					}}
 				/>
 			</fieldset>
 		</ProjectSettingsSection>
