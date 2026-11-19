@@ -888,11 +888,11 @@ msgstr "{person} will lose access to every workspace in this organisation. Direc
 msgid "{phrases, plural, one {# phrase} other {# phrases}}"
 msgstr "{phrases, plural, one {# phrase} other {# phrases}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:600
+#: src/routes/project/chat/NewChatRoute.tsx:653
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
 msgstr "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:606
+#: src/routes/project/chat/NewChatRoute.tsx:659
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 
@@ -2504,7 +2504,7 @@ msgstr "Arranged with dembrane"
 msgid "Ask"
 msgstr "Ask"
 
-#: src/routes/project/chat/NewChatRoute.tsx:262
+#: src/routes/project/chat/NewChatRoute.tsx:263
 msgid "Ask | dembrane"
 msgstr "Ask | dembrane"
 
@@ -2532,7 +2532,7 @@ msgstr "Ask about the app."
 msgid "Ask about these"
 msgstr "Ask about these"
 
-#: src/routes/project/chat/NewChatRoute.tsx:682
+#: src/routes/project/chat/NewChatRoute.tsx:735
 #: src/components/chat/AgenticChatPanel.tsx:2350
 msgid "Ask about your conversations..."
 msgstr "Ask about your conversations..."
@@ -2907,7 +2907,7 @@ msgstr "Before you finish"
 #: src/routes/project/ProjectMonitorRoute.tsx:86
 #: src/routes/project/popcorn/PopcornRoute.tsx:111
 #: src/routes/project/library/LibraryRoute.tsx:98
-#: src/routes/project/chat/NewChatRoute.tsx:710
+#: src/routes/project/chat/NewChatRoute.tsx:763
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:124
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:146
@@ -3437,7 +3437,7 @@ msgid "Chat is more reliable."
 msgstr "Chat is more reliable."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:630
-#: src/routes/project/chat/NewChatRoute.tsx:542
+#: src/routes/project/chat/NewChatRoute.tsx:595
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 
@@ -3468,7 +3468,7 @@ msgstr "Chat warns before sending a message over the character limit."
 msgid "Chat with individual conversations."
 msgstr "Chat with individual conversations."
 
-#: src/routes/project/chat/NewChatRoute.tsx:159
+#: src/routes/project/chat/NewChatRoute.tsx:160
 msgid "Chats"
 msgstr "Chats"
 
@@ -3666,7 +3666,7 @@ msgstr "Clear filters"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
 #: src/routes/project/ProjectsHome.tsx:463
-#: src/routes/project/chat/NewChatRoute.tsx:175
+#: src/routes/project/chat/NewChatRoute.tsx:176
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:709
@@ -4382,7 +4382,7 @@ msgstr "Could not apply all the tag changes."
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Could not apply the changes. Nothing was saved."
 
-#: src/routes/project/chat/NewChatRoute.tsx:457
+#: src/routes/project/chat/NewChatRoute.tsx:474
 msgid "Could not carry over your selection. Pick again below."
 msgstr "Could not carry over your selection. Pick again below."
 
@@ -4461,7 +4461,7 @@ msgstr "Could not load the rollup. Check auth and backend logs."
 msgid "Could not load this project's goal."
 msgstr "Could not load this project's goal."
 
-#: src/routes/project/chat/NewChatRoute.tsx:461
+#: src/routes/project/chat/NewChatRoute.tsx:479
 msgid "Could not open the conversation list. Try again."
 msgstr "Could not open the conversation list. Try again."
 
@@ -9591,11 +9591,11 @@ msgstr "No change"
 msgid "project.sidebar.chat.empty.description"
 msgstr "No chats found. Start a chat using the \"Ask\" button."
 
-#: src/routes/project/chat/NewChatRoute.tsx:188
+#: src/routes/project/chat/NewChatRoute.tsx:189
 msgid "No chats match your search."
 msgstr "No chats match your search."
 
-#: src/routes/project/chat/NewChatRoute.tsx:193
+#: src/routes/project/chat/NewChatRoute.tsx:194
 msgid "No chats yet."
 msgstr "No chats yet."
 
@@ -11875,7 +11875,7 @@ msgstr "Project name and ID"
 msgid "Project name must be at least 4 characters long"
 msgstr "Project name must be at least 4 characters long"
 
-#: src/routes/project/chat/NewChatRoute.tsx:530
+#: src/routes/project/chat/NewChatRoute.tsx:583
 msgid "Project not found"
 msgstr "Project not found"
 
@@ -13537,8 +13537,8 @@ msgstr "Search arguments"
 msgid "Search by organisation"
 msgstr "Search by organisation"
 
-#: src/routes/project/chat/NewChatRoute.tsx:168
 #: src/routes/project/chat/NewChatRoute.tsx:169
+#: src/routes/project/chat/NewChatRoute.tsx:170
 msgid "Search chats"
 msgstr "Search chats"
 
@@ -13806,9 +13806,9 @@ msgstr "Select conversation"
 #: src/routes/project/chat/ProjectChatRoute.tsx:976
 #: src/routes/project/chat/ProjectChatRoute.tsx:977
 #: src/routes/project/chat/ProjectChatRoute.tsx:1062
-#: src/routes/project/chat/NewChatRoute.tsx:633
-#: src/routes/project/chat/NewChatRoute.tsx:635
-#: src/routes/project/chat/NewChatRoute.tsx:746
+#: src/routes/project/chat/NewChatRoute.tsx:686
+#: src/routes/project/chat/NewChatRoute.tsx:688
+#: src/routes/project/chat/NewChatRoute.tsx:799
 #: src/components/conversation/ProjectConversationsPanel.tsx:829
 msgid "Select conversations"
 msgstr "Select conversations"
@@ -13892,7 +13892,7 @@ msgid "Self-serve"
 msgstr "Self-serve"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1001
-#: src/routes/project/chat/NewChatRoute.tsx:656
+#: src/routes/project/chat/NewChatRoute.tsx:709
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2324
 msgid "Send"
@@ -14426,7 +14426,7 @@ msgid "Showing the arguments of one result."
 msgstr "Showing the arguments of one result."
 
 #. placeholder {0}: listedChats.length
-#: src/routes/project/chat/NewChatRoute.tsx:198
+#: src/routes/project/chat/NewChatRoute.tsx:199
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 
@@ -15299,7 +15299,7 @@ msgid "Template"
 msgstr "Template"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:596
-#: src/routes/project/chat/NewChatRoute.tsx:314
+#: src/routes/project/chat/NewChatRoute.tsx:315
 #: src/components/chat/AgenticChatPanel.tsx:1738
 msgid "Template applied"
 msgstr "Template applied"
@@ -16987,7 +16987,7 @@ msgstr "Try again"
 #~ msgid "Try again in a moment."
 #~ msgstr "Try again in a moment."
 
-#: src/routes/project/chat/NewChatRoute.tsx:707
+#: src/routes/project/chat/NewChatRoute.tsx:760
 msgid "Try Agentic instead"
 msgstr "Try Agentic instead"
 
@@ -17124,7 +17124,7 @@ msgid "Under your organisation"
 msgstr "Under your organisation"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:598
-#: src/routes/project/chat/NewChatRoute.tsx:316
+#: src/routes/project/chat/NewChatRoute.tsx:317
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
 #: src/components/chat/AgenticChatPanel.tsx:1740
@@ -18345,7 +18345,7 @@ msgstr "Where views stayed different, each side in one line."
 msgid "Where would you like to go?"
 msgstr "Where would you like to go?"
 
-#: src/routes/project/chat/NewChatRoute.tsx:574
+#: src/routes/project/chat/NewChatRoute.tsx:627
 #: src/components/chat/AgenticChatPanel.tsx:1916
 msgid "Where would you like to start?"
 msgstr "Where would you like to start?"
