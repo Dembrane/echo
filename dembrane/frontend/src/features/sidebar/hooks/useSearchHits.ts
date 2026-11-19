@@ -1,5 +1,6 @@
-import { t } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
 	BuildingsIcon,
@@ -79,11 +80,11 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 const MAX_HITS = 40;
 const EXCERPT_LENGTH = 60;
 
-// Settings shortcuts surfaced in search. Labels are translated at build time.
-const SETTINGS_LINKS: { href: string; label: () => string }[] = [
-	{ href: "/settings/account", label: () => t`Account & security` },
-	{ href: "/settings/access", label: () => t`My access` },
-	{ href: "/settings/appearance", label: () => t`Appearance` },
+// Settings shortcuts surfaced in search, translated where the hits are built.
+const SETTINGS_LINKS: { href: string; label: MessageDescriptor }[] = [
+	{ href: "/settings/account", label: msg`Account & security` },
+	{ href: "/settings/access", label: msg`My access` },
+	{ href: "/settings/appearance", label: msg`Appearance` },
 ];
 
 export function useSearchHits(
@@ -92,7 +93,8 @@ export function useSearchHits(
 	options: { enabled?: boolean } = {},
 ): { hits: SearchHit[]; isFetching: boolean } {
 	const { enabled = true } = options;
-	const { i18n } = useLingui();
+	// The hook's `t` changes with the language, so the hits rebuild on a switch.
+	const { t } = useLingui();
 	const { items: recents } = useRecents();
 	const { data: me } = useV2Me();
 
@@ -113,7 +115,6 @@ export function useSearchHits(
 		staleTime: 30_000,
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: `t` macro reads the active locale, so labels must recompute on language switch.
 	const hits = useMemo<SearchHit[]>(() => {
 		const needle = query.trim().toLowerCase();
 		// O(1) workspace lookups for the deep-result loops below.
@@ -147,7 +148,7 @@ export function useSearchHits(
 		}
 		const userName = me?.display_name || t`Account`;
 		for (const s of SETTINGS_LINKS) {
-			const label = s.label();
+			const label = t(s.label);
 			all.push({
 				href: s.href,
 				icon: GearIcon,
@@ -267,7 +268,7 @@ export function useSearchHits(
 		}
 
 		return merged.slice(0, MAX_HITS);
-	}, [query, workspaces, recents, deepSearch.data, me, i18n.locale]);
+	}, [query, workspaces, recents, deepSearch.data, me, t]);
 
 	return { hits, isFetching: deepSearch.isFetching };
 }
