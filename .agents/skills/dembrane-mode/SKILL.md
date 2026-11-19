@@ -17,4 +17,6 @@ Shared processes for everyone working in this repo. This file lives at `.agents/
 
 ## Processes
 
-TODO: add shared processes (branching, PRs, review, shipping).
+- Dashboard or portal change → prove it on a running copy with the `verify-dembrane` skill before calling it done. Pure logic, or a refactor with no visible change → unit tests are enough.
+- A flow verified by hand twice → turn its `verify-dembrane` recipe into a spec under `dembrane/frontend/e2e/`.
+- TODO: add shared processes (branching, PRs, review, shipping).
