@@ -23,7 +23,7 @@ import {
 	AccountTasksRoute,
 } from "@/features/accounts/customer/AccountRoute";
 import { AccountsI18n } from "@/features/accounts/i18n";
-import { RoomJoinGate } from "@/features/accounts/signing/SignGate";
+import { RoomJoinGate, SignGate } from "@/features/accounts/signing/SignGate";
 import { SignRoute } from "@/features/accounts/signing/SignRoute";
 import { AccountCardRoute } from "@/features/accounts/staff/AccountCardRoute";
 import { DocumentRoute } from "@/features/accounts/staff/DocumentRoute";
@@ -36,6 +36,7 @@ import { cssVariablesResolver, theme } from "@/theme";
 // unfilled how full the room is; ?visit=0|1|3 the labels a colleague was given. The join
 // page (a path ending in /account/join) takes the invitation's real token from
 // ?join=open|accepted|closed: Noor's waiting invitation, Sam's taken up, Noor's lapsed.
+// A signing path with ?invite= opens the signer's invitation page (SignGate), signed out.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
@@ -134,7 +135,7 @@ if (path.includes("/admin/")) {
 		email: "staff@dembrane.com",
 		is_staff: true,
 	});
-} else if (!path.includes("/account/join")) {
+} else if (!path.includes("/account/join") && !path.includes("?invite=")) {
 	queryClient.setQueryData(["v2", "me"], {
 		email: ACTORS[fixtureActor()].email,
 	});
@@ -182,7 +183,9 @@ const router = createMemoryRouter(
 			path: "/:language/o/:organisationId/documents",
 		},
 		{
-			element: (
+			element: path.includes("?invite=") ? (
+				<SignGate />
+			) : (
 				<AccountsI18n signing>
 					<SignRoute />
 				</AccountsI18n>
