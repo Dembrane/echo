@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
-import { act } from "react";
 import {
 	afterEach,
 	beforeAll,
