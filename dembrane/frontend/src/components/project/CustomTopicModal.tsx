@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import type { VerificationTopicMetadata } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -65,25 +65,37 @@ export const CustomTopicModal = ({
 	const [prompt, setPrompt] = useState("");
 	const [icon, setIcon] = useState("");
 
-	useEffect(() => {
-		if (!opened) return;
-
-		if (mode === "edit" && topic) {
-			const translationLabels: Record<string, string> = {};
-			for (const lang of SUPPORTED_LANGUAGES) {
-				translationLabels[lang.code] =
-					topic.translations?.[lang.code]?.label ?? "";
+	// Each opening, and another topic or mode while open, starts the form from
+	// the topic again, during render.
+	const [filledFor, setFilledFor] = useState<{
+		opened: boolean;
+		mode: typeof mode;
+		topic: typeof topic;
+	} | null>(null);
+	if (
+		filledFor?.opened !== opened ||
+		filledFor.mode !== mode ||
+		filledFor.topic !== topic
+	) {
+		setFilledFor({ mode, opened, topic });
+		if (opened) {
+			if (mode === "edit" && topic) {
+				const translationLabels: Record<string, string> = {};
+				for (const lang of SUPPORTED_LANGUAGES) {
+					translationLabels[lang.code] =
+						topic.translations?.[lang.code]?.label ?? "";
+				}
+				setLabels(translationLabels);
+				setPrompt(topic.prompt ?? "");
+				setIcon(topic.icon ?? "");
+			} else {
+				setLabels({});
+				setPrompt("");
+				setIcon("");
 			}
-			setLabels(translationLabels);
-			setPrompt(topic.prompt ?? "");
-			setIcon(topic.icon ?? "");
-		} else {
-			setLabels({});
-			setPrompt("");
-			setIcon("");
+			closeTranslations();
 		}
-		closeTranslations();
-	}, [opened, mode, topic, closeTranslations]);
+	}
 
 	const enUsLabel = labels["en-US"]?.trim() ?? "";
 
