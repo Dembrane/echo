@@ -65,22 +65,30 @@ afterEach(() => {
 const task = fx.accountPage.tasks.find((t) => t.code === "who_signs");
 const orgId = fx.accountPage.organisation.id;
 
+const client = new QueryClient();
+const tree = (open = true) => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider env="test">
+			<QueryClientProvider client={client}>
+				<MemoryRouter>
+					<WhoSigns
+						orgId={orgId}
+						task={open ? (task ?? null) : null}
+						onClose={vi.fn()}
+					/>
+				</MemoryRouter>
+			</QueryClientProvider>
+		</MantineProvider>
+	</I18nProvider>
+);
+
 const show = async () => {
-	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider env="test">
-				<QueryClientProvider client={new QueryClient()}>
-					<MemoryRouter>
-						<WhoSigns orgId={orgId} task={task ?? null} onClose={vi.fn()} />
-					</MemoryRouter>
-				</QueryClientProvider>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+	const view = render(tree());
 	await screen.findByTestId("signer-choose-offer");
 	await waitFor(() =>
 		expect(calls.some((c) => c.name === "accountPage")).toBe(true),
 	);
+	return view;
 };
 
 const pick = async (kind: "offer" | "dpa", name: RegExp) => {
@@ -150,5 +158,34 @@ describe("who signs", () => {
 			dpia: false,
 			offer_signer: null,
 		});
+	});
+
+	it("says what is missing once Next is pressed, and each step starts untried", async () => {
+		await show();
+		const offerMissing = () =>
+			screen.queryAllByText("Choose who signs the offer").length;
+		const before = offerMissing();
+		fireEvent.click(screen.getByTestId("who-signs-next"));
+		expect(offerMissing()).toBe(before + 1);
+
+		await pick("offer", /\(you\)/);
+		fireEvent.click(screen.getByTestId("who-signs-next"));
+		await screen.findByTestId("dpia-no");
+		expect(screen.queryByText("Choose one.")).toBeNull();
+		fireEvent.click(screen.getByTestId("who-signs-next"));
+		expect(screen.getByText("Choose one.")).toBeTruthy();
+	});
+
+	it("starts over each time it opens", async () => {
+		const view = await show();
+		await pick("offer", /Sam Example/);
+		fireEvent.click(screen.getByTestId("who-signs-next"));
+		await screen.findByTestId("dpia-no");
+
+		view.rerender(tree(false));
+		view.rerender(tree(true));
+		await screen.findByTestId("signer-choose-offer");
+		expect(screen.queryByTestId("dpia-no")).toBeNull();
+		expect(screen.queryByText(/Sam Example/)).toBeNull();
 	});
 });

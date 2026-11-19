@@ -274,4 +274,28 @@ describe("the billing details form", () => {
 			vat_id: "NL123456789B01",
 		});
 	});
+
+	it("takes up details saved since, when they arrive", () => {
+		const tree = (billing: typeof empty) => (
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<QueryClientProvider client={new QueryClient()}>
+						<BillingForm orgId="org" billing={billing} pending />
+					</QueryClientProvider>
+				</MantineProvider>
+			</I18nProvider>
+		);
+		const view = render(tree(empty));
+		expect(field("legal_name").value).toBe("");
+
+		view.rerender(
+			tree({
+				...empty,
+				city: "Example Town",
+				legal_name: "Example Town Council",
+			}),
+		);
+		expect(field("legal_name").value).toBe("Example Town Council");
+		expect(field("city").value).toBe("Example Town");
+	});
 });

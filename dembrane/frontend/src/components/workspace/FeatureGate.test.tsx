@@ -9,7 +9,7 @@ import {
 	render,
 	screen,
 } from "@testing-library/react";
-import { useState } from "react";
+import { StrictMode, useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import type { Tier } from "@/lib/tiers";
@@ -606,6 +606,31 @@ it("fires gate_viewed on the modal when no popover came first, once", () => {
 		</I18nProvider>,
 	);
 	expect(gateViewedCalls()).toHaveLength(1);
+});
+
+// A page may open the wall as it mounts (the create page at the project cap
+// does). Under StrictMode's double mount it must stay open, save once and
+// count one view.
+it("stays open when mounted open under StrictMode, saving and counting once", () => {
+	const onClose = vi.fn();
+	wrap(
+		<StrictMode>
+			<UpgradeModal
+				canRequestUpgrade
+				currentTier="free"
+				entry="modal_direct"
+				onClose={onClose}
+				opened
+				requiredTier="changemaker"
+				wallKey="project_cap"
+				workspaceId="workspace-1"
+			/>
+		</StrictMode>,
+	);
+	expect(continueLink()).toBeTruthy();
+	expect(saveHandover).toHaveBeenCalledTimes(1);
+	expect(gateViewedCalls()).toHaveLength(1);
+	expect(onClose).not.toHaveBeenCalled();
 });
 
 it("names the refused AI action on the ai_budget wall's gate events", () => {
