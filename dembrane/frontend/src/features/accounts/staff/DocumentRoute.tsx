@@ -45,6 +45,7 @@ import {
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
 import { StaffOnly } from "./AccountCardRoute";
+import { CustomerSignerLine } from "./CustomerSigner";
 import { AnnexesPanel, CountersignModal } from "./OfferExtras";
 import { PushOfferModal } from "./PushOfferModal";
 import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
@@ -295,6 +296,7 @@ function DocumentPage() {
 						)}
 					</Group>
 				</Group>
+				<CustomerSignerLine orgId={orgId} doc={d} />
 				{draftOffer && <AnnexesPanel orgId={orgId} doc={d} />}
 				{draftOffer && (
 					<Text size="sm" c="dimmed" data-testid="draft-note">

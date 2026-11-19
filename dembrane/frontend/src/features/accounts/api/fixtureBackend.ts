@@ -1042,6 +1042,58 @@ const publicDemo = ({
 
 type Body = Record<string, unknown>;
 
+/** Someone named to sign, as staff and customers give them (a draft's may lack a name). */
+type Named = { email: string; name: string | null; role: string | null };
+
+/**
+ * Names who signs a document, or changes who it is, as the server's setSigner does for
+ * every path: the customer's route, their answer to "who signs", the staff route and an
+ * offer sent with its signer. One signer per document; the room's list follows.
+ */
+function nameSignerIn(
+	s: Store,
+	d: DocumentDetailT,
+	p: Named,
+	actor: "customer" | "staff",
+) {
+	const previous = d.signer;
+	const email = p.email.trim().toLowerCase();
+	d.signer = {
+		email,
+		name: p.name,
+		named_at: now(),
+		reminded_at: null,
+		role: p.role ?? null,
+	};
+	if (d.kind === "offer" || d.kind === "dpa")
+		room.nameRoomSigner(roomOf(s), d.kind, {
+			document_id: d.id,
+			email,
+			name: p.name,
+		});
+	const replaced = previous && previous.email !== email;
+	event(
+		s,
+		replaced ? "document.signer_replaced" : "document.signer_named",
+		actor,
+		{ id: d.id, type: "document" },
+		replaced ? { email, previous_email: previous.email } : { email },
+	);
+	return { signer: d.signer };
+}
+
+/** The customer's signer as a draft keeps it: named, not invited until it is sent. */
+const draftSigner = (p: Named | null | undefined): DocumentDetailT["signer"] =>
+	p
+		? {
+				email: p.email.trim().toLowerCase(),
+				name: p.name,
+				named_at: null,
+				reminded_at: null,
+				role: p.role ?? null,
+			}
+		: null;
+
 /** One handler per contract route; the client parses whatever this returns. */
 export async function handle(
 	name: RouteName,
@@ -1504,32 +1556,17 @@ export async function handle(
 			}
 			case "nameSigner": {
 				if (!room.mayNameSigner(roomOf(s))) throw room.nameSignerRefused();
+				return nameSignerIn(s, doc(), body as unknown as Named, "customer");
+			}
+			case "staffNameSigner": {
 				const d = doc();
-				const previous = d.signer;
-				d.signer = {
-					email: String(body.email),
-					name: String(body.name),
-					named_at: now(),
-					reminded_at: null,
-					role: (body.role as string | null) ?? null,
-				};
-				if (d.kind === "offer" || d.kind === "dpa")
-					room.nameRoomSigner(roomOf(s), d.kind, {
-						document_id: d.id,
-						email: String(body.email),
-						name: String(body.name),
-					});
-				const replaced = previous && previous.email !== body.email;
-				event(
-					s,
-					replaced ? "document.signer_replaced" : "document.signer_named",
-					"customer",
-					{ id: d.id, type: "document" },
-					replaced
-						? { email: body.email, previous_email: previous.email }
-						: { email: body.email },
-				);
-				return { signer: d.signer };
+				if (d.status === "draft") throw notFound();
+				if (!d.requires_signature || !["sent", "viewed"].includes(d.status))
+					throw new AccountsApiError(
+						409,
+						"This document is not waiting for a signature",
+					);
+				return nameSignerIn(s, d, body as unknown as Named, "staff");
 			}
 			case "remindSigner": {
 				const d = doc();
@@ -1628,32 +1665,8 @@ export async function handle(
 					throw new AccountsApiError(409, "This task is not waiting on you.");
 				const offer = s.docs.find((x) => x.id === t.document_id);
 				if (!offer) throw notFound();
-				type Named = { email: string; name: string; role: string | null };
-				const name = (d: DocumentDetailT, p: Named) => {
-					d.signer = {
-						email: p.email.toLowerCase(),
-						name: p.name,
-						named_at: now(),
-						reminded_at: null,
-						role: p.role,
-					};
-					if (d.kind === "offer" || d.kind === "dpa")
-						room.nameRoomSigner(roomOf(s), d.kind, {
-							document_id: d.id,
-							email: p.email,
-							name: p.name,
-						});
-					event(
-						s,
-						"document.signer_named",
-						"customer",
-						{
-							id: d.id,
-							type: "document",
-						},
-						{ email: p.email },
-					);
-				};
+				const name = (d: DocumentDetailT, p: Named) =>
+					nameSignerIn(s, d, p, "customer");
 				const offerSigner = body.offer_signer as Named | null;
 				const dpaSigner =
 					body.dpa_same === true
@@ -1874,8 +1887,10 @@ export async function handle(
 					template: body.template as "subscription" | "event",
 					...offerTerms(body),
 				};
-				// Absent keeps the draft's currency, as the API does.
+				// Absent keeps the draft's currency and signer, as the API does; null drops the signer.
 				d.currency = (body.currency as string | undefined) ?? d.currency;
+				if (body.customer_signer !== undefined)
+					d.signer = draftSigner(body.customer_signer as Named | null);
 				d.language = language;
 				d.reference = reference;
 				d.lines = lines;
@@ -1958,6 +1973,8 @@ export async function handle(
 					sha256: sha,
 					signature: null,
 					signed_at: null,
+					// Kept on a draft; the send names them, as the API does.
+					signer: draftSigner(body.customer_signer as Named | null | undefined),
 					signing_note:
 						language === "nl"
 							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden."
@@ -1999,6 +2016,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ kind: "offer", total_cents: d.total_cents },
 				);
+				if (body.send !== false && d.signer)
+					nameSignerIn(s, d, d.signer, "staff");
 				return {
 					document: withUrls(d, sBase, "staff"),
 					task: t ? publicTask(t) : null,
@@ -2205,6 +2224,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ kind: d.kind },
 				);
+				if (d.kind === "offer" && d.signer && !d.signer.named_at)
+					nameSignerIn(s, d, d.signer, "staff");
 				return withUrls(d, sBase, "staff");
 			}
 			case "voidDocument": {

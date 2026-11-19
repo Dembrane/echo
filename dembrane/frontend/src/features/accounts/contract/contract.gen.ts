@@ -1173,6 +1173,14 @@ export const PushOfferRequest = z.object({
    */
   dembrane_signs_offer: z.boolean().optional(),
   /**
+   * Who signs the offer for the customer, named as POST .../documents/:docId/signer names
+   * them: on a send they are invited and emailed at once, so the sign-in step sends them a
+   * code; a draft keeps them and invites them when it is sent. Absent or null names nobody,
+   * as before. On a change, absent keeps the draft's and null drops it. Naming emails them,
+   * so a staff key that names someone on a send answers 403 `staff.key_cannot_email`.
+   */
+  customer_signer: NameSignerRequest.nullable().optional(),
+  /**
    * Subscription offers only: `seat` (default when absent) prices per seat per month and the quantity
    * is seats; `month` prices per month and the quantity is months, with no mention of seats.
    */
@@ -1999,6 +2007,19 @@ export const ROUTES = {
     permission: "staff:accounts",
     request: SendDocumentRequest,
     response: DocumentDetail,
+  },
+  /**
+   * Names who signs for the customer on an offer or a DPA still waiting, or changes who it
+   * is, as the customer's own route does: the person is invited and emailed, the earlier
+   * signer's link stops working, and a signed document answers 409. Not counted against the
+   * customer's own namings. A staff key answers 403 `staff.key_cannot_email`.
+   */
+  staffNameSigner: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/signer`,
+    permission: "staff:accounts",
+    request: NameSignerRequest,
+    response: NameSignerResponse,
   },
   voidDocument: {
     method: "POST",
