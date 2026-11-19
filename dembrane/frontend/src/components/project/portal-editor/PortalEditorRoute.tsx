@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Navigate, useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -14,6 +14,10 @@ import { isReadOnlyRole } from "@/lib/roles";
 import { useSettingsCatalog } from "./i18n";
 import { PortalSectionEditor } from "./PortalSectionEditor/PortalSectionEditor";
 import { isSectionKey, PORTAL_PROJECT_FIELDS } from "./portalForm";
+
+/** The same project as last saved. */
+const sameSave = (a?: Project, b?: Project) =>
+	a?.id === b?.id && a?.updated_at === b?.updated_at;
 
 /**
  * The portal editor (ECHO-1060), one page per part of the portal at
@@ -39,11 +43,10 @@ export const PortalEditorRoute = () => {
 	const wantsTopics = section === "verify";
 	const topicsQuery = useVerificationTopicsQuery(projectId);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a stable project per id and save, as the one-page editor kept it
-	const project = useMemo(
-		() => projectQuery.data,
-		[projectQuery.data?.id, projectQuery.data?.updated_at],
-	);
+	// A stable project per id and save, as the one-page editor kept it: a
+	// refetch that changed nothing keeps the one the page has.
+	const [project, setProject] = useState(projectQuery.data);
+	if (!sameSave(projectQuery.data, project)) setProject(projectQuery.data);
 
 	if (!isSectionKey(section)) return <Navigate to="../welcome" replace />;
 
