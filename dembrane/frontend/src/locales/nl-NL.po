@@ -314,7 +314,7 @@ msgid "{0, plural, one {running a plan} other {running # plans}}"
 msgstr "{0, plural, one {voert een plan uit} other {voert # plannen uit}}"
 
 #. placeholder {0}: suggestion.changes.length
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:701
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:699
 msgid "{0, plural, one {Show what changes (# field)} other {Show what changes (# fields)}}"
 msgstr "{0, plural, one {Laat zien wat er verandert (# veld)} other {Laat zien wat er verandert (# velden)}}"
 
@@ -325,14 +325,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:955
+#: src/routes/project/chat/ProjectChatRoute.tsx:954
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {# gesprek in gebruik:} other {# gesprekken in gebruik:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:788
+#: src/routes/project/chat/ProjectChatRoute.tsx:787
 #: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -930,7 +930,7 @@ msgstr "{seats, plural, one {# plek} other {# plekken}}"
 #~ msgid "{seats} seats"
 #~ msgstr "{seats} plekken"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:615
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:613
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "{selectedCount} van {totalCount} velden geselecteerd. Accepteren geldt alleen voor de aangevinkte velden."
 
@@ -1308,7 +1308,7 @@ msgstr "een werkruimte"
 msgid "About"
 msgstr "Over"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:430
 msgid "About the suggested project update: {hostNote}"
 msgstr "Over de voorgestelde projectupdate: {hostNote}"
 
@@ -1317,7 +1317,7 @@ msgstr "Over de voorgestelde projectupdate: {hostNote}"
 msgid "About you"
 msgstr "Over jou"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:718
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:716
 msgid "Accept"
 msgstr "Accepteren"
 
@@ -1543,8 +1543,8 @@ msgstr "Voeg een naam en een prompt toe voordat je dit toepast."
 msgid "Add a name, description, and framing."
 msgstr "Voeg een naam, beschrijving en framing toe."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:647
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:727
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:725
 msgid "Add a note"
 msgstr "Notitie toevoegen"
 
@@ -2145,7 +2145,7 @@ msgstr "Er is een fout opgetreden bij het laden van het portaal. Neem contact op
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:847
+#: src/routes/project/chat/ProjectChatRoute.tsx:846
 msgid "An error occurred."
 msgstr "Er is een fout opgetreden."
 
@@ -3140,7 +3140,7 @@ msgstr "Aanroepen die aan geen enkel account konden worden gekoppeld"
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
 #: src/components/common/ConfirmModal.tsx:66
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:673
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
 msgid "Cancel"
@@ -3355,7 +3355,7 @@ msgstr "Gewijzigd door"
 msgid "Changemaker plan takes it off"
 msgstr "Het Changemaker-abonnement verwijdert dit"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:409
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:407
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Wijzigingen toegepast. Je kunt ze altijd bijstellen in de projectinstellingen."
 
@@ -3403,8 +3403,8 @@ msgstr "Laadafstand (viewport-fractie): {0}"
 msgid "Charged to accounts"
 msgstr "In rekening gebracht bij accounts"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:693
-#: src/routes/project/chat/ProjectChatRoute.tsx:699
+#: src/routes/project/chat/ProjectChatRoute.tsx:692
+#: src/routes/project/chat/ProjectChatRoute.tsx:698
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:259
 #: src/features/sidebar/hooks/useSearchHits.ts:260
@@ -3413,7 +3413,7 @@ msgstr "In rekening gebracht bij accounts"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:355
+#: src/routes/project/chat/ProjectChatRoute.tsx:354
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3433,7 +3433,7 @@ msgstr "Chat verwijderd"
 msgid "Chat is more reliable."
 msgstr "Chat werkt betrouwbaarder."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:630
+#: src/routes/project/chat/ProjectChatRoute.tsx:629
 #: src/routes/project/chat/NewChatRoute.tsx:542
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat is niet beschikbaar op jouw toegangsniveau. Neem contact op met je werkruimtebeheerder om een upgrade aan te vragen."
@@ -4237,7 +4237,7 @@ msgstr "gesprekken"
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:638
 #: src/components/conversation/ConversationsMiniList.tsx:151
-#: src/components/conversation/ConversationAccordion.tsx:1100
+#: src/components/conversation/ConversationAccordion.tsx:1098
 msgid "Conversations"
 msgstr "Gesprekken"
 
@@ -4375,7 +4375,7 @@ msgstr "Kon je gesprekken niet aan deze chat toevoegen"
 msgid "Could not apply all the tag changes."
 msgstr "Kon niet alle tagwijzigingen toepassen."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:625
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:623
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Kon de wijzigingen niet toepassen. Er is niets opgeslagen."
 
@@ -4390,8 +4390,8 @@ msgstr "Je selectie kon niet worden meegenomen. Kies hieronder opnieuw."
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Kon de betaling niet bevestigen. Vernieuw om opnieuw te proberen."
 
-#: src/hooks/useCopyToRichText.ts:77
-#: src/hooks/useCopyToRichText.ts:81
+#: src/hooks/useCopyToRichText.ts:75
+#: src/hooks/useCopyToRichText.ts:79
 msgid "Could not copy to clipboard. Please try again."
 msgstr "Kon niet naar het klembord kopiëren. Probeer het opnieuw."
 
@@ -5120,8 +5120,8 @@ msgstr "Ook dembrane inzetten?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1041
-#: src/routes/project/chat/ProjectChatRoute.tsx:1051
+#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:1050
 #: src/components/chat/AgenticChatPanel.tsx:2393
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
@@ -5311,7 +5311,7 @@ msgstr "Vindbaar in deze organisatie"
 #: src/components/workspace/DowngradeBanner.tsx:84
 #: src/components/goal/GoalSuggestionCard.tsx:138
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:219
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:738
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:736
 #: src/components/chat/InsightNoteCard.tsx:154
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:175
 #: src/components/chat/CanvasSuggestionCard.tsx:357
@@ -5326,7 +5326,7 @@ msgstr "Negeren"
 msgid "Dismissed"
 msgstr "Genegeerd"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:493
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:491
 msgid "Dismissed. Nothing was changed."
 msgstr "Afgewezen. Er is niets gewijzigd."
 
@@ -5389,7 +5389,7 @@ msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 #: src/routes/onboarding/OnboardingRoute.tsx:596
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:108
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:435
 msgid "Done"
@@ -5604,7 +5604,7 @@ msgstr "Beter leesbare transcripten"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 msgid "Edit"
 msgstr "Bewerken"
 
@@ -5799,7 +5799,7 @@ msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji getoond naast het onderwerp bijvoorbeeld 💡 🔍 📊"
 
 #: src/components/common/settingChange.tsx:96
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:473
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:471
 msgid "emptied out"
 msgstr "leeggemaakt"
 
@@ -5929,7 +5929,7 @@ msgstr "Ingevoerd door de deelnemer op het portaal"
 msgid "Entered details"
 msgstr "Gegevens ingevuld"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:837
+#: src/routes/project/chat/ProjectChatRoute.tsx:836
 #: src/routes/project/canvas/CanvasRoute.tsx:341
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
 #: src/components/dropzone/UploadConversationDropzone.tsx:943
@@ -6256,8 +6256,8 @@ msgstr "Mislukt"
 #~ msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:624
-#: src/components/conversation/ConversationAccordion.tsx:977
-#: src/components/conversation/ConversationAccordion.tsx:997
+#: src/components/conversation/ConversationAccordion.tsx:975
+#: src/components/conversation/ConversationAccordion.tsx:995
 msgid "Failed to add conversations to context"
 msgstr "Mislukt om gesprekken aan context toe te voegen"
 
@@ -7230,7 +7230,7 @@ msgstr "Revisiegegevens verbergen"
 msgid "Hide steps"
 msgstr "Stappen verbergen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:699
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:697
 msgid "Hide the changes"
 msgstr "Wijzigingen verbergen"
 
@@ -9619,7 +9619,7 @@ msgstr "Geen inhoud"
 msgid "No conversations found."
 msgstr "Geen gesprekken gevonden."
 
-#: src/components/conversation/ConversationAccordion.tsx:1462
+#: src/components/conversation/ConversationAccordion.tsx:1460
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
@@ -9939,7 +9939,7 @@ msgstr "Nog geen samenvatting"
 msgid "No tag"
 msgstr "Geen tag"
 
-#: src/components/conversation/ConversationAccordion.tsx:1376
+#: src/components/conversation/ConversationAccordion.tsx:1374
 msgid "No tags found"
 msgstr "Geen tags gevonden"
 
@@ -10272,7 +10272,7 @@ msgstr "Waarnemers zijn alleen beschikbaar in werkruimtes voor een externe klant
 #: src/components/results/curate/CurateTabs.tsx:105
 #: src/components/common/settingChange.tsx:106
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:469
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:467
 msgid "off"
 msgstr "uit"
 
@@ -10308,7 +10308,7 @@ msgstr "Oudste eerst"
 
 #: src/components/common/settingChange.tsx:104
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:467
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:465
 msgid "on"
 msgstr "aan"
 
@@ -10679,8 +10679,8 @@ msgstr "Optioneel. Een uitnodiging of projectpagina; dembrane leest die één ke
 msgid "Optional. What this workspace is for."
 msgstr "Optioneel. Waar deze werkruimte voor is."
 
-#: src/components/conversation/ConversationAccordion.tsx:1151
-#: src/components/conversation/ConversationAccordion.tsx:1156
+#: src/components/conversation/ConversationAccordion.tsx:1149
+#: src/components/conversation/ConversationAccordion.tsx:1154
 msgid "Options"
 msgstr "Opties"
 
@@ -12422,7 +12422,7 @@ msgid "Refreshing…"
 msgstr "Vernieuwen…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:513
-#: src/routes/project/chat/ProjectChatRoute.tsx:765
+#: src/routes/project/chat/ProjectChatRoute.tsx:764
 #: src/routes/project/canvas/CanvasRoute.tsx:697
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
@@ -12964,8 +12964,8 @@ msgstr "Wachtwoord resetten | dembrane"
 msgid "Reset the guide?"
 msgstr "De gids resetten?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1399
-#: src/components/conversation/ConversationAccordion.tsx:1404
+#: src/components/conversation/ConversationAccordion.tsx:1397
+#: src/components/conversation/ConversationAccordion.tsx:1402
 msgid "Reset to default"
 msgstr "Resetten naar standaardinstellingen"
 
@@ -13114,7 +13114,7 @@ msgid "Review activity for your workspace. Filter by collection or action, and e
 msgstr "Bekijk de activiteiten van je werkruimte. Filter op collectie of actie en exporteer de huidige weergave voor verder onderzoek."
 
 #: src/components/goal/GoalSuggestionCard.tsx:147
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:502
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:500
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:156
 #: src/components/chat/CanvasSuggestionCard.tsx:367
 msgid "Review again"
@@ -13539,7 +13539,7 @@ msgstr "Zoeken op organisatie"
 msgid "Search chats"
 msgstr "Zoek chats"
 
-#: src/components/conversation/ConversationAccordion.tsx:1144
+#: src/components/conversation/ConversationAccordion.tsx:1142
 msgid "Search conversations"
 msgstr "Zoek gesprekken"
 
@@ -13593,7 +13593,7 @@ msgstr "Zoek projecten..."
 msgid "Search results"
 msgstr "Zoekresultaten"
 
-#: src/components/conversation/ConversationAccordion.tsx:1285
+#: src/components/conversation/ConversationAccordion.tsx:1283
 msgid "Search tags"
 msgstr "Zoek tags"
 
@@ -13730,7 +13730,7 @@ msgstr "{0} selecteren"
 msgid "Select {title}"
 msgstr "{title} selecteren"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:905
+#: src/routes/project/chat/ProjectChatRoute.tsx:904
 msgid "Select a conversation to continue"
 msgstr "Selecteer een gesprek om verder te gaan"
 
@@ -13759,11 +13759,11 @@ msgstr "Selecteer een werkruimte"
 
 #: src/routes/project/ProjectsHome.tsx:519
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1442
+#: src/components/conversation/ConversationAccordion.tsx:1440
 msgid "Select all"
 msgstr "Alles selecteren"
 
-#: src/components/conversation/ConversationAccordion.tsx:1440
+#: src/components/conversation/ConversationAccordion.tsx:1438
 msgid "Select all ({remainingCount})"
 msgstr "Alles selecteren ({remainingCount})"
 
@@ -13799,10 +13799,10 @@ msgstr "Audiobestanden selecteren"
 msgid "Select conversation"
 msgstr "Gesprek selecteren"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:914
+#: src/routes/project/chat/ProjectChatRoute.tsx:913
+#: src/routes/project/chat/ProjectChatRoute.tsx:975
 #: src/routes/project/chat/ProjectChatRoute.tsx:976
-#: src/routes/project/chat/ProjectChatRoute.tsx:977
-#: src/routes/project/chat/ProjectChatRoute.tsx:1062
+#: src/routes/project/chat/ProjectChatRoute.tsx:1061
 #: src/routes/project/chat/NewChatRoute.tsx:633
 #: src/routes/project/chat/NewChatRoute.tsx:635
 #: src/routes/project/chat/NewChatRoute.tsx:746
@@ -13888,7 +13888,7 @@ msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
 msgid "Self-serve"
 msgstr "Self-serve"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1001
+#: src/routes/project/chat/ProjectChatRoute.tsx:1000
 #: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2324
@@ -13926,7 +13926,7 @@ msgstr "Uitnodiging versturen"
 msgid "Send invites"
 msgstr "Uitnodigingen versturen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:662
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:660
 msgid "Send note"
 msgstr "Notitie versturen"
 
@@ -14636,8 +14636,8 @@ msgstr "We kunnen hier niet dieper op ingaan door onze contentregels."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:722
 #: src/components/conversation/ConversationsMiniList.tsx:179
-#: src/components/conversation/ConversationAccordion.tsx:1206
-#: src/components/conversation/ConversationAccordion.tsx:1213
+#: src/components/conversation/ConversationAccordion.tsx:1204
+#: src/components/conversation/ConversationAccordion.tsx:1211
 msgid "Sort"
 msgstr "Sorteer"
 
@@ -14909,7 +14909,7 @@ msgstr "Lukt het nog steeds niet? Mail <0>{SUPPORT_EMAIL}</0> en we helpen je in
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kom je er nog niet uit? Mail <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:800
+#: src/routes/project/chat/ProjectChatRoute.tsx:799
 #: src/components/pricing/PricingTextInput.tsx:263
 #: src/components/feedback/ReportIssueModal.tsx:247
 #: src/components/chat/AgenticChatPanel.tsx:2280
@@ -15234,8 +15234,8 @@ msgstr "Tag verwijderd"
 #: src/components/conversation/ConversationsMiniList.tsx:189
 #: src/components/conversation/ConversationEdit.tsx:478
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
-#: src/components/conversation/ConversationAccordion.tsx:1275
-#: src/components/conversation/ConversationAccordion.tsx:1278
+#: src/components/conversation/ConversationAccordion.tsx:1273
+#: src/components/conversation/ConversationAccordion.tsx:1276
 msgid "Tags"
 msgstr "Tags"
 
@@ -15295,7 +15295,7 @@ msgstr "Vertel ons wat je nodig hebt"
 msgid "Template"
 msgstr "Sjabloon"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:596
+#: src/routes/project/chat/ProjectChatRoute.tsx:595
 #: src/routes/project/chat/NewChatRoute.tsx:314
 #: src/components/chat/AgenticChatPanel.tsx:1738
 msgid "Template applied"
@@ -15461,7 +15461,7 @@ msgstr "De agent handelt namens jou: hij kan alleen zien wat jij al kunt zien."
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "De agent en het bedrijf erachter ontvangen de gespreksinhoud die jij toestaat."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:843
+#: src/routes/project/chat/ProjectChatRoute.tsx:842
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "De AI kon deze vraag niet beantwoorden. Probeer hem anders te formuleren."
 
@@ -15477,7 +15477,7 @@ msgstr "De argumenten waarop je klikt, worden hier bewaard."
 msgid "The assistant forgets it in every future chat."
 msgstr "De assistent vergeet dit in elke toekomstige chat."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:511
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "De assistent stelt voor om {headlineFields} bij te werken. Wacht op jou."
 
@@ -15956,7 +15956,7 @@ msgstr "Er is een fout opgetreden bij het laden van je gegevens"
 msgid "There was no speech in that recording."
 msgstr "Er zat geen spraak in die opname."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:446
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:444
 msgid "These changes are applied to your project."
 msgstr "Deze wijzigingen zijn toegepast op je project."
 
@@ -16957,7 +16957,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:1003
 #: src/routes/project/present/PresentResultsPanel.tsx:173
-#: src/routes/project/chat/ProjectChatRoute.tsx:856
+#: src/routes/project/chat/ProjectChatRoute.tsx:855
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:171
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:466
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -17075,7 +17075,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Typ <0>{0}</0> om te bevestigen."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1010
+#: src/routes/project/chat/ProjectChatRoute.tsx:1009
 msgid "Type a message or press / for templates..."
 msgstr "Typ een bericht of druk / voor templates..."
 
@@ -17118,7 +17118,7 @@ msgstr "Minder dan 50."
 msgid "Under your organisation"
 msgstr "Onder je organisatie"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:598
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
 #: src/routes/project/chat/NewChatRoute.tsx:316
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
@@ -17211,7 +17211,7 @@ msgstr "Afmelden voor meldingen"
 msgid "Untagged"
 msgstr "Zonder tag"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:528
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:526
 msgid "Untick a field to leave it exactly as it is."
 msgstr "Vink een veld uit om het precies te laten zoals het is."
 
@@ -17402,7 +17402,7 @@ msgstr "Upgrade je werkruimte om transcripties van nieuwe gesprekken te bekijken
 #: src/components/dropzone/UploadConversationDropzone.tsx:633
 #: src/components/conversation/ProjectConversationsPanel.tsx:666
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:1113
+#: src/components/conversation/ConversationAccordion.tsx:1111
 msgid "Upload"
 msgstr "Uploaden"
 
@@ -17449,7 +17449,7 @@ msgid "Upload limit reached"
 msgstr "Uploadlimiet bereikt"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:663
-#: src/components/conversation/ConversationAccordion.tsx:1107
+#: src/components/conversation/ConversationAccordion.tsx:1105
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Uploadlimiet bereikt. Upgrade je werkruimte."
 
@@ -17568,8 +17568,8 @@ msgstr "Liever met mijn wachtwoord"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Gebruik vastgepinde en opgeslagen vraagtemplates, inclusief de /-sneltoets, vanuit Ask."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1038
-#: src/routes/project/chat/ProjectChatRoute.tsx:1048
+#: src/routes/project/chat/ProjectChatRoute.tsx:1037
+#: src/routes/project/chat/ProjectChatRoute.tsx:1047
 #: src/components/chat/AgenticChatPanel.tsx:2389
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
@@ -17696,7 +17696,7 @@ msgid "Verified"
 msgstr "Geverifieerd"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1394
+#: src/components/conversation/ConversationAccordion.tsx:1392
 msgid "conversation.filters.verified.text"
 msgstr "Geverifieerd"
 
@@ -18108,7 +18108,7 @@ msgstr "Welkom terug, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Welkom bij dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:722
+#: src/routes/project/chat/ProjectChatRoute.tsx:721
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Welkom bij dembrane chat. Selecteer de gesprekken die je wilt analyseren en vraag dan naar details, citaten en samenvattingen."
 
@@ -18116,7 +18116,7 @@ msgstr "Welkom bij dembrane chat. Selecteer de gesprekken die je wilt analyseren
 msgid "Welcome to dembrane!"
 msgstr "Welkom bij dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:721
+#: src/routes/project/chat/ProjectChatRoute.tsx:720
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Context mode."
 
@@ -18178,7 +18178,7 @@ msgstr "Waar gaat het over, wie doet er mee en waar is het? Je kunt ook de agend
 #~ msgid "What is it?"
 #~ msgstr "Wat is het?"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:648
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:646
 msgid "What should be different about this?"
 msgstr "Wat zou hieraan anders moeten zijn?"
 
@@ -18790,7 +18790,7 @@ msgstr "Je hebt een openstaande uitnodiging voor {0}. De beheerder moet een plek
 msgid "select.all.modal.already.added"
 msgstr "U heeft al <0>{existingContextCount, plural, one {# conversatie} other {# conversaties}}</0> aan deze chat toegevoegd."
 
-#: src/components/conversation/ConversationAccordion.tsx:1424
+#: src/components/conversation/ConversationAccordion.tsx:1422
 msgid "You have already added all the conversations related to this"
 msgstr "Je hebt alle gerelateerde gesprekken al toegevoegd"
 

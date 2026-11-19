@@ -314,7 +314,7 @@ msgid "{0, plural, one {running a plan} other {running # plans}}"
 msgstr "{0, plural, one {виконує план} few {виконує # плани} many {виконує # планів} other {виконує # плану}}"
 
 #. placeholder {0}: suggestion.changes.length
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:701
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:699
 msgid "{0, plural, one {Show what changes (# field)} other {Show what changes (# fields)}}"
 msgstr "{0, plural, one {Показати, що змінюється (# поле)} few {Показати, що змінюється (# поля)} many {Показати, що змінюється (# полів)} other {Показати, що змінюється (# полів)}}"
 
@@ -325,14 +325,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:955
+#: src/routes/project/chat/ProjectChatRoute.tsx:954
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Використовується # розмова:} few {Використовуються # розмови:} many {Використовується # розмов:} other {Використовується # розмов:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:788
+#: src/routes/project/chat/ProjectChatRoute.tsx:787
 #: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -930,7 +930,7 @@ msgstr "{seats, plural, one {# місце} few {# місця} many {# місць
 #~ msgid "{seats} seats"
 #~ msgstr "Місць: {seats}"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:615
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:613
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "Вибрано {selectedCount} з {totalCount} полів. Підтвердження застосує лише вибрані."
 
@@ -1308,7 +1308,7 @@ msgstr "робочий простір"
 msgid "About"
 msgstr "Про учасника"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:430
 msgid "About the suggested project update: {hostNote}"
 msgstr "Про запропоноване оновлення проєкту: {hostNote}"
 
@@ -1317,7 +1317,7 @@ msgstr "Про запропоноване оновлення проєкту: {ho
 msgid "About you"
 msgstr "Про вас"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:718
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:716
 msgid "Accept"
 msgstr "Прийняти"
 
@@ -1543,8 +1543,8 @@ msgstr "Додайте назву та промпт перед застосув�
 msgid "Add a name, description, and framing."
 msgstr "Додайте назву, опис і формулювання."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:647
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:727
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:725
 msgid "Add a note"
 msgstr "Додати примітку"
 
@@ -2145,7 +2145,7 @@ msgstr "Під час завантаження порталу сталася п�
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:847
+#: src/routes/project/chat/ProjectChatRoute.tsx:846
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -3143,7 +3143,7 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
 #: src/components/common/ConfirmModal.tsx:66
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:673
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
 msgid "Cancel"
@@ -3358,7 +3358,7 @@ msgstr "Хто змінив"
 msgid "Changemaker plan takes it off"
 msgstr "Тариф Changemaker прибирає це"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:409
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:407
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Зміни застосовано. Ви можете уточнити їх будь-коли в налаштуваннях проєкту."
 
@@ -3406,8 +3406,8 @@ msgstr "Дистанція заряду (частка області перег�
 msgid "Charged to accounts"
 msgstr "Списано з акаунтів"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:693
-#: src/routes/project/chat/ProjectChatRoute.tsx:699
+#: src/routes/project/chat/ProjectChatRoute.tsx:692
+#: src/routes/project/chat/ProjectChatRoute.tsx:698
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:259
 #: src/features/sidebar/hooks/useSearchHits.ts:260
@@ -3416,7 +3416,7 @@ msgstr "Списано з акаунтів"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:355
+#: src/routes/project/chat/ProjectChatRoute.tsx:354
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3436,7 +3436,7 @@ msgstr "Чат видалено"
 msgid "Chat is more reliable."
 msgstr "Чат працює надійніше."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:630
+#: src/routes/project/chat/ProjectChatRoute.tsx:629
 #: src/routes/project/chat/NewChatRoute.tsx:542
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Чат недоступний для вашого рівня доступу. Зверніться до адміністратора робочого простору, щоб отримати доступ."
@@ -4240,7 +4240,7 @@ msgstr "conversations"
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:638
 #: src/components/conversation/ConversationsMiniList.tsx:151
-#: src/components/conversation/ConversationAccordion.tsx:1100
+#: src/components/conversation/ConversationAccordion.tsx:1098
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -4378,7 +4378,7 @@ msgstr "Не вдалося додати ваші розмови до цього
 msgid "Could not apply all the tag changes."
 msgstr "Не вдалося застосувати всі зміни тегів."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:625
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:623
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Не вдалося застосувати зміни. Нічого не збережено."
 
@@ -4393,8 +4393,8 @@ msgstr "Could not carry over your selection. Pick again below."
 msgid "Could not confirm payment. Refresh to retry."
 msgstr "Не вдалося підтвердити платіж. Оновіть сторінку, щоб повторити спробу."
 
-#: src/hooks/useCopyToRichText.ts:77
-#: src/hooks/useCopyToRichText.ts:81
+#: src/hooks/useCopyToRichText.ts:75
+#: src/hooks/useCopyToRichText.ts:79
 msgid "Could not copy to clipboard. Please try again."
 msgstr "Could not copy to clipboard. Please try again."
 
@@ -5123,8 +5123,8 @@ msgstr "dembrane на вашій події?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, усі права захищено."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1041
-#: src/routes/project/chat/ProjectChatRoute.tsx:1051
+#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:1050
 #: src/components/chat/AgenticChatPanel.tsx:2393
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane може припускатися помилок. Будь ласка, перевіряйте відповіді."
@@ -5314,7 +5314,7 @@ msgstr "Видимий у цій організації"
 #: src/components/workspace/DowngradeBanner.tsx:84
 #: src/components/goal/GoalSuggestionCard.tsx:138
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:219
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:738
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:736
 #: src/components/chat/InsightNoteCard.tsx:154
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:175
 #: src/components/chat/CanvasSuggestionCard.tsx:357
@@ -5329,7 +5329,7 @@ msgstr "Відхилити"
 msgid "Dismissed"
 msgstr "Відхилено"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:493
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:491
 msgid "Dismissed. Nothing was changed."
 msgstr "Відхилено. Жодних змін не внесено."
 
@@ -5392,7 +5392,7 @@ msgstr "Не оновлюється автоматично. Оновлено {up
 #: src/routes/onboarding/OnboardingRoute.tsx:596
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:108
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:435
 msgid "Done"
@@ -5607,7 +5607,7 @@ msgstr "Транскрипти, які легше читати"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 msgid "Edit"
 msgstr "Edit"
 
@@ -5802,7 +5802,7 @@ msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji shown next to the topic e.g. 💡 🔍 📊"
 
 #: src/components/common/settingChange.tsx:96
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:473
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:471
 msgid "emptied out"
 msgstr "очищено"
 
@@ -5932,7 +5932,7 @@ msgstr "Entered by the participant on the portal"
 msgid "Entered details"
 msgstr "Введені дані"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:837
+#: src/routes/project/chat/ProjectChatRoute.tsx:836
 #: src/routes/project/canvas/CanvasRoute.tsx:341
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
 #: src/components/dropzone/UploadConversationDropzone.tsx:943
@@ -6259,8 +6259,8 @@ msgstr "Failed"
 #~ msgstr "Failed to add conversation to chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:624
-#: src/components/conversation/ConversationAccordion.tsx:977
-#: src/components/conversation/ConversationAccordion.tsx:997
+#: src/components/conversation/ConversationAccordion.tsx:975
+#: src/components/conversation/ConversationAccordion.tsx:995
 msgid "Failed to add conversations to context"
 msgstr "Failed to add conversations to context"
 
@@ -7233,7 +7233,7 @@ msgstr "Hide revision data"
 msgid "Hide steps"
 msgstr "Сховати кроки"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:699
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:697
 msgid "Hide the changes"
 msgstr "Сховати зміни"
 
@@ -9622,7 +9622,7 @@ msgstr "No content"
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:1462
+#: src/components/conversation/ConversationAccordion.tsx:1460
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -9942,7 +9942,7 @@ msgstr "Підсумку ще немає"
 msgid "No tag"
 msgstr "Без тегу"
 
-#: src/components/conversation/ConversationAccordion.tsx:1376
+#: src/components/conversation/ConversationAccordion.tsx:1374
 msgid "No tags found"
 msgstr "No tags found"
 
@@ -10275,7 +10275,7 @@ msgstr "Спостерігачі доступні лише в робочих п�
 #: src/components/results/curate/CurateTabs.tsx:105
 #: src/components/common/settingChange.tsx:106
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:469
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:467
 msgid "off"
 msgstr "вимкнено"
 
@@ -10311,7 +10311,7 @@ msgstr "Oldest First"
 
 #: src/components/common/settingChange.tsx:104
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:259
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:467
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:465
 msgid "on"
 msgstr "увімкнено"
 
@@ -10682,8 +10682,8 @@ msgstr "Необовʼязково. Запрошення або сторінка
 msgid "Optional. What this workspace is for."
 msgstr "Необов'язково. Для чого призначений цей робочий простір."
 
-#: src/components/conversation/ConversationAccordion.tsx:1151
-#: src/components/conversation/ConversationAccordion.tsx:1156
+#: src/components/conversation/ConversationAccordion.tsx:1149
+#: src/components/conversation/ConversationAccordion.tsx:1154
 msgid "Options"
 msgstr "Options"
 
@@ -12425,7 +12425,7 @@ msgid "Refreshing…"
 msgstr "Оновлення…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:513
-#: src/routes/project/chat/ProjectChatRoute.tsx:765
+#: src/routes/project/chat/ProjectChatRoute.tsx:764
 #: src/routes/project/canvas/CanvasRoute.tsx:697
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
@@ -12967,8 +12967,8 @@ msgstr "Скинути пароль | dembrane"
 msgid "Reset the guide?"
 msgstr "Скинути посібник?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1399
-#: src/components/conversation/ConversationAccordion.tsx:1404
+#: src/components/conversation/ConversationAccordion.tsx:1397
+#: src/components/conversation/ConversationAccordion.tsx:1402
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -13117,7 +13117,7 @@ msgid "Review activity for your workspace. Filter by collection or action, and e
 msgstr "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 
 #: src/components/goal/GoalSuggestionCard.tsx:147
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:502
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:500
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:156
 #: src/components/chat/CanvasSuggestionCard.tsx:367
 msgid "Review again"
@@ -13542,7 +13542,7 @@ msgstr "Пошук за організацією"
 msgid "Search chats"
 msgstr "Пошук чатів"
 
-#: src/components/conversation/ConversationAccordion.tsx:1144
+#: src/components/conversation/ConversationAccordion.tsx:1142
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -13596,7 +13596,7 @@ msgstr "Search projects..."
 msgid "Search results"
 msgstr "Результати пошуку"
 
-#: src/components/conversation/ConversationAccordion.tsx:1285
+#: src/components/conversation/ConversationAccordion.tsx:1283
 msgid "Search tags"
 msgstr "Search tags"
 
@@ -13733,7 +13733,7 @@ msgstr "Вибрати {0}"
 msgid "Select {title}"
 msgstr "Вибрати {title}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:905
+#: src/routes/project/chat/ProjectChatRoute.tsx:904
 msgid "Select a conversation to continue"
 msgstr "Виберіть розмову, щоб продовжити"
 
@@ -13762,11 +13762,11 @@ msgstr "Виберіть робочий простір"
 
 #: src/routes/project/ProjectsHome.tsx:519
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1442
+#: src/components/conversation/ConversationAccordion.tsx:1440
 msgid "Select all"
 msgstr "Select all"
 
-#: src/components/conversation/ConversationAccordion.tsx:1440
+#: src/components/conversation/ConversationAccordion.tsx:1438
 msgid "Select all ({remainingCount})"
 msgstr "Select all ({remainingCount})"
 
@@ -13802,10 +13802,10 @@ msgstr "Вибрати аудіофайли"
 msgid "Select conversation"
 msgstr "Вибрати розмову"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:914
+#: src/routes/project/chat/ProjectChatRoute.tsx:913
+#: src/routes/project/chat/ProjectChatRoute.tsx:975
 #: src/routes/project/chat/ProjectChatRoute.tsx:976
-#: src/routes/project/chat/ProjectChatRoute.tsx:977
-#: src/routes/project/chat/ProjectChatRoute.tsx:1062
+#: src/routes/project/chat/ProjectChatRoute.tsx:1061
 #: src/routes/project/chat/NewChatRoute.tsx:633
 #: src/routes/project/chat/NewChatRoute.tsx:635
 #: src/routes/project/chat/NewChatRoute.tsx:746
@@ -13891,7 +13891,7 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr "Самообслуговування"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1001
+#: src/routes/project/chat/ProjectChatRoute.tsx:1000
 #: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2324
@@ -13929,7 +13929,7 @@ msgstr "Надіслати запрошення"
 msgid "Send invites"
 msgstr "Надіслати запрошення"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:662
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:660
 msgid "Send note"
 msgstr "Надіслати примітку"
 
@@ -14639,8 +14639,8 @@ msgstr "Sorry, we cannot process this request due to an LLM provider's content p
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:722
 #: src/components/conversation/ConversationsMiniList.tsx:179
-#: src/components/conversation/ConversationAccordion.tsx:1206
-#: src/components/conversation/ConversationAccordion.tsx:1213
+#: src/components/conversation/ConversationAccordion.tsx:1204
+#: src/components/conversation/ConversationAccordion.tsx:1211
 msgid "Sort"
 msgstr "Sort"
 
@@ -14912,7 +14912,7 @@ msgstr "Досі не виходить? Напишіть на <0>{SUPPORT_EMAIL}
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Усе ще потрібна допомога? Напишіть на <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:800
+#: src/routes/project/chat/ProjectChatRoute.tsx:799
 #: src/components/pricing/PricingTextInput.tsx:263
 #: src/components/feedback/ReportIssueModal.tsx:247
 #: src/components/chat/AgenticChatPanel.tsx:2280
@@ -15237,8 +15237,8 @@ msgstr "Тег видалено"
 #: src/components/conversation/ConversationsMiniList.tsx:189
 #: src/components/conversation/ConversationEdit.tsx:478
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
-#: src/components/conversation/ConversationAccordion.tsx:1275
-#: src/components/conversation/ConversationAccordion.tsx:1278
+#: src/components/conversation/ConversationAccordion.tsx:1273
+#: src/components/conversation/ConversationAccordion.tsx:1276
 msgid "Tags"
 msgstr "Tags"
 
@@ -15298,7 +15298,7 @@ msgstr "Розкажіть нам про ваші потреби"
 msgid "Template"
 msgstr "Шаблон"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:596
+#: src/routes/project/chat/ProjectChatRoute.tsx:595
 #: src/routes/project/chat/NewChatRoute.tsx:314
 #: src/components/chat/AgenticChatPanel.tsx:1738
 msgid "Template applied"
@@ -15464,7 +15464,7 @@ msgstr "Агент діє від вашого імені: він бачить л
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "Агент і компанія, що ним керує, отримають доступ до вмісту розмови, який ви дозволите."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:843
+#: src/routes/project/chat/ProjectChatRoute.tsx:842
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "ШІ не зміг відповісти на це запитання. Спробуйте перефразувати його."
 
@@ -15480,7 +15480,7 @@ msgstr "Аргументи, на які ви натискаєте, зберіг�
 msgid "The assistant forgets it in every future chat."
 msgstr "Асистент забуде це для всіх майбутніх чатів."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:511
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "Асистент пропонує оновити {headlineFields}. Очікуємо на ваше рішення."
 
@@ -15960,7 +15960,7 @@ msgstr "Під час завантаження ваших даних стала�
 msgid "There was no speech in that recording."
 msgstr "У цьому записі немає мовлення."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:446
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:444
 msgid "These changes are applied to your project."
 msgstr "Ці зміни застосовано до вашого проєкту."
 
@@ -16963,7 +16963,7 @@ msgstr "Не вдається увійти? Напишіть на support@dembra
 
 #: src/routes/project/present/PresentRoute.tsx:1003
 #: src/routes/project/present/PresentResultsPanel.tsx:173
-#: src/routes/project/chat/ProjectChatRoute.tsx:856
+#: src/routes/project/chat/ProjectChatRoute.tsx:855
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:171
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:466
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -17081,7 +17081,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Введіть <0>{0}</0> для підтвердження."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1010
+#: src/routes/project/chat/ProjectChatRoute.tsx:1009
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
@@ -17124,7 +17124,7 @@ msgstr "Менше ніж 50."
 msgid "Under your organisation"
 msgstr "У вашій організації"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:598
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
 #: src/routes/project/chat/NewChatRoute.tsx:316
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
@@ -17217,7 +17217,7 @@ msgstr "Відписатися від сповіщень"
 msgid "Untagged"
 msgstr "Без тегів"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:528
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:526
 msgid "Untick a field to leave it exactly as it is."
 msgstr "Зніміть прапорець із поля, щоб залишити його без змін."
 
@@ -17408,7 +17408,7 @@ msgstr "Оновіть тариф робочого простору, щоб пе
 #: src/components/dropzone/UploadConversationDropzone.tsx:633
 #: src/components/conversation/ProjectConversationsPanel.tsx:666
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:1113
+#: src/components/conversation/ConversationAccordion.tsx:1111
 msgid "Upload"
 msgstr "Upload"
 
@@ -17455,7 +17455,7 @@ msgid "Upload limit reached"
 msgstr "Ліміт завантажень вичерпано"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:663
-#: src/components/conversation/ConversationAccordion.tsx:1107
+#: src/components/conversation/ConversationAccordion.tsx:1105
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Ліміт завантажень вичерпано. Оновіть тариф робочого простору."
 
@@ -17574,8 +17574,8 @@ msgstr "Натомість використати пароль"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Використовуйте закріплені та збережені шаблони запитань у розділі «Запитати», зокрема за допомогою скорочення /."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1038
-#: src/routes/project/chat/ProjectChatRoute.tsx:1048
+#: src/routes/project/chat/ProjectChatRoute.tsx:1037
+#: src/routes/project/chat/ProjectChatRoute.tsx:1047
 #: src/components/chat/AgenticChatPanel.tsx:2389
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
@@ -17702,7 +17702,7 @@ msgid "Verified"
 msgstr "Перевірено"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1394
+#: src/components/conversation/ConversationAccordion.tsx:1392
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
@@ -18115,7 +18115,7 @@ msgstr "З поверненням, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Ласкаво просимо до dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:722
+#: src/routes/project/chat/ProjectChatRoute.tsx:721
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Ласкаво просимо до чату dembrane. Виберіть розмови, які хочете проаналізувати, а потім запитуйте про деталі, цитати та підсумки."
 
@@ -18123,7 +18123,7 @@ msgstr "Ласкаво просимо до чату dembrane. Виберіть �
 msgid "Welcome to dembrane!"
 msgstr "Welcome to dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:721
+#: src/routes/project/chat/ProjectChatRoute.tsx:720
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Ласкаво просимо в режим Огляду! Я завантажив підсумки всіх ваших розмов. Запитуйте мене про закономірності, теми та висновки у ваших даних. Для точних цитат розпочніть нову бесіду в режимі Конкретного Контексту."
 
@@ -18185,7 +18185,7 @@ msgstr "Про що вона, хто бере участь і де? Можна �
 #~ msgid "What is it?"
 #~ msgstr "Що це таке?"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:648
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:646
 msgid "What should be different about this?"
 msgstr "Що тут варто змінити?"
 
@@ -18797,7 +18797,7 @@ msgstr "У вас є очікуване запрошення до {0}. Адмі�
 msgid "select.all.modal.already.added"
 msgstr "You have already added <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> to this chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1424
+#: src/components/conversation/ConversationAccordion.tsx:1422
 msgid "You have already added all the conversations related to this"
 msgstr "You have already added all the conversations related to this"
 
