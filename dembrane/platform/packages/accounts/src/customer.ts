@@ -21,8 +21,8 @@ import {
 } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
-import type { AccountsDeps, Tx } from "./deps";
-import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
+import { type AccountsDeps, type Conn, isUuid, type Tx } from "./deps";
+import { type Actor, billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
 import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
 import { legalTextPage } from "./legal/page";
@@ -365,23 +365,55 @@ export async function nameSigner(
   who: Signed,
   orgId: string,
   docId: string,
-  signer: { name: string; email: string; role: string | null },
+  signer: Person,
 ) {
   const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
   // Before anything else, so a refusal costs none of the organisation's namings.
   assertMayNameSigner(role);
-  const doc = await store.document(d.db, org.id, docId);
+  return setSigner(d, who, org, docId, signer, {
+    actor: { kind: "customer", userId: who.directusUserId },
+    counted: true,
+  });
+}
+
+/**
+ * Names who signs a document that waits for a signature, or changes who it is: the one
+ * function behind every way a signer is named (the customer's route, their answer to "who
+ * signs", the staff route, an offer sent with its signer). Whoever calls it has decided
+ * that the caller may; this checks the document. The person gets the signing email with a
+ * link bound to them and this moment, so an earlier signer's link stops working; they are
+ * invited into the organisation, so the sign-in step sends them a code. One signer per
+ * document, and none once it is signed (409).
+ *
+ * `counted`: the naming counts against the organisation's own namings (SIGNER_LIMIT), as
+ * the customer's do. `tx`: within a transaction already open, as a send is.
+ */
+export async function setSigner(
+  d: AccountsDeps,
+  who: Signed,
+  org: { id: string; name: string },
+  docId: string,
+  signer: Person,
+  how: { actor: Actor; counted?: boolean; tx?: Conn },
+) {
+  const doc = isUuid(docId) ? await store.document(how.tx ?? d.db, org.id, docId) : null;
   if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
   if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
     throw new ConflictError("document.not_awaiting_signature");
-  await d.limiter.check(SIGNER_LIMIT, org.id);
+  // After the checks, so a refused naming costs the organisation none of its namings.
+  if (how.counted) await d.limiter.check(SIGNER_LIMIT, org.id);
   const email = signer.email.trim().toLowerCase();
   const replaced =
     doc.signerEmail && doc.signerEmail.toLowerCase() !== email
       ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
       : null;
   const now = d.now();
-  await d.db.transaction(async (tx) => {
+  const write = async (tx: Conn) => {
+    // Locked, so a signature at the same moment either lands first (and this is refused)
+    // or waits for the person named here.
+    const locked = await store.documentForUpdate(tx, org.id, doc.id);
+    if (!locked?.requiresSignature || !["sent", "viewed"].includes(locked.status))
+      throw new ConflictError("document.not_awaiting_signature");
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
       signerName: signer.name,
@@ -399,12 +431,14 @@ export async function nameSigner(
     await emailSigner(d, tx, who, org, { ...doc, signerEmail: email, signerInvitedAt: now });
     await emit(d, tx, {
       orgId: org.id,
-      actor: { kind: "customer", userId: who.directusUserId },
+      actor: how.actor,
       type: replaced ? "document.signer_replaced" : "document.signer_named",
       subject: { type: "document", id: doc.id },
       detail: { email, name: signer.name, ...replaced },
     });
-  });
+  };
+  if (how.tx) await write(how.tx);
+  else await d.db.transaction(write);
   return {
     signer: {
       email,
@@ -459,7 +493,7 @@ export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, 
 /** The invitation to sign, with the link for the person and naming the document carries. */
 async function emailSigner(
   d: AccountsDeps,
-  tx: Tx,
+  tx: Conn,
   who: Signed,
   org: { name: string },
   doc: DocumentRow,
@@ -489,7 +523,8 @@ async function emailSigner(
   );
 }
 
-type Person = { name: string; email: string; role: string | null };
+/** Someone named to sign, as staff and customers give them. */
+export type Person = { name: string; email: string; role: string | null };
 
 /** The DPA an offer went out with: the one pinning the same DPA text, in one of `statuses`. */
 export function dpaOf(

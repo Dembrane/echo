@@ -546,6 +546,9 @@ export async function auditTrail(
     const email = emails.get(e.actorUserId);
     return name && email ? `${name} (${email})` : (email ?? name ?? "an unknown user");
   };
+  /** Who acted, marked as dembrane's when staff did, as a send is. */
+  const by = (e: (typeof rows)[number]) =>
+    e.actorKind === "staff" ? `${who(e)}, dembrane` : who(e);
   const at = (e: (typeof rows)[number]) => new Date(e.createdAt).toISOString();
   const trail: { at: string; what: string }[] = [];
   let opened = false;
@@ -555,15 +558,15 @@ export async function auditTrail(
     if (e.type === "document.sent")
       trail.push({
         at: at(e),
-        what: e.actorKind === "staff" ? `Sent by ${who(e)}, dembrane` : `Sent by ${who(e)}`,
+        what: `Sent by ${by(e)}`,
       });
     else if (e.type === "document.viewed" && !opened) {
       opened = true;
       trail.push({ at: at(e), what: `First opened by ${who(e)}` });
     } else if (e.type === "document.signer_named")
-      trail.push({ at: at(e), what: `${named} named as signer by ${who(e)}` });
+      trail.push({ at: at(e), what: `${named} named as signer by ${by(e)}` });
     else if (e.type === "document.signer_replaced")
-      trail.push({ at: at(e), what: `Signer changed to ${named} by ${who(e)}` });
+      trail.push({ at: at(e), what: `Signer changed to ${named} by ${by(e)}` });
   }
   // dembrane's signature, applied when the document was sent, in its place in time.
   for (const s of await store.signaturesOf(d.db, doc.id))

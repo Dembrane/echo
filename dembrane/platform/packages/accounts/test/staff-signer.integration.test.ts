@@ -129,7 +129,11 @@ run("staff name the customer's signer", () => {
     const email = "wethouder@testdorp.example";
     expect(await mayGetCode(email)).toBe(false);
     const doc = await pushed({
-      customer_signer: { name: "Wil Wethouder", email: "Wethouder@Testdorp.example", role: "Wethouder" },
+      customer_signer: {
+        name: "Wil Wethouder",
+        email: "Wethouder@Testdorp.example",
+        role: "Wethouder",
+      },
     });
     expect(doc.status).toBe("sent");
     expect(doc.signer).toMatchObject({ email, name: "Wil Wethouder", role: "Wethouder" });
@@ -150,14 +154,8 @@ run("staff name the customer's signer", () => {
     expect([room.signers.offer?.email, room.signers.offer?.document_id]).toEqual([email, doc.id]);
     // The invitation page greets them, and names who asked.
     const invite = K.SignerInvite.parse(
-      (
-        await call(
-          w,
-          "GET",
-          `${C()}/documents/${doc.id}/invite?invite=${lastToken(email)}`,
-          null,
-        )
-      ).data,
+      (await call(w, "GET", `${C()}/documents/${doc.id}/invite?invite=${lastToken(email)}`, null))
+        .data,
     );
     expect(invite.signer.email).toBe(email);
     expect(invite.inviter).toEqual({ name: "staff" });
@@ -235,6 +233,14 @@ run("staff name the customer's signer", () => {
     w.jobs.jobs.length = 0;
     const doc = await pushed();
     const email = "inkoper@testdorp.example";
+    const audited = () =>
+      w.db
+        .select()
+        .from(schema.staff_audit_event)
+        .where(eq(schema.staff_audit_event.action, "accounts.document.signer.set"))
+        .orderBy(schema.staff_audit_event.createdAt);
+    // The staff key's refused attempt above is on the audit trail already.
+    const before = (await audited()).length;
     const r = await call(w, "POST", signerPath(doc.id), "staff", {
       name: "Ina Inkoper",
       email,
@@ -250,10 +256,7 @@ run("staff name the customer's signer", () => {
     expect((await row(doc.id))?.signerEmail).toBe(email);
     expect(await traces(email)).toEqual({ invites: ["billing"], mails: 1 });
     expect(await mayGetCode(email)).toBe(true);
-    const audit = await w.db
-      .select()
-      .from(schema.staff_audit_event)
-      .where(eq(schema.staff_audit_event.action, "accounts.document.signer.set"));
+    const audit = (await audited()).slice(before);
     expect(audit.map((a) => [a.permission, a.targetType, a.targetId])).toEqual([
       ["staff:accounts", "org", w.orgId],
     ]);
