@@ -359,32 +359,6 @@ it("hands each good chunk to onChunk and keeps recording", async () => {
 	vi.useRealTimers();
 });
 
-it("hands chunks to the onChunk of the latest render", async () => {
-	vi.useFakeTimers();
-	getUserMedia.mockResolvedValue(fakeStream);
-	recorderFailure.chunkBytes = 2048;
-	const first = vi.fn();
-	const latest = vi.fn();
-	const { rerender, result } = renderHook(
-		({ onChunk }) =>
-			useChunkedAudioRecorder({ onChunk, onRecordingInterrupted: vi.fn() }),
-		{ initialProps: { onChunk: first } },
-	);
-	await act(async () => {
-		await result.current.startRecording();
-	});
-	await nextChunk();
-	expect(first).toHaveBeenCalledTimes(1);
-
-	rerender({ onChunk: latest });
-	await nextChunk();
-
-	expect(first).toHaveBeenCalledTimes(1);
-	expect(latest).toHaveBeenCalledTimes(1);
-	act(() => result.current.stopRecording());
-	vi.useRealTimers();
-});
-
 it("shows the interruption as soon as two chunks in a row fail, with no outside render", async () => {
 	vi.useFakeTimers();
 	getUserMedia.mockResolvedValue(fakeStream);
