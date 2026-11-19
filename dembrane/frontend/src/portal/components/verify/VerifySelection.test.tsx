@@ -131,11 +131,18 @@ it("does not generate and shows the line when the project has no AI", () => {
 });
 
 it("still toasts other generation failures", async () => {
-	state.mutateAsync.mockRejectedValue(new Error("boom"));
+	const boom = new Error("boom");
+	state.mutateAsync.mockRejectedValue(boom);
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	renderPage();
 	pickAndContinue();
 	await vi.waitFor(() => expect(state.toastError).toHaveBeenCalledTimes(1));
 	expect(screen.queryByText("Not available right now")).toBeNull();
+	expect(consoleError).toHaveBeenCalledWith(
+		"error generating verification artefact",
+		boom,
+	);
+	consoleError.mockRestore();
 });
 
 // ECHO-1052: one topic starts at once; several are clear buttons, each with what it gives.

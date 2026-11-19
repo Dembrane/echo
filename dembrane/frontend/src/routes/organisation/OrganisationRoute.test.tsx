@@ -188,6 +188,8 @@ const show = (at: string) =>
 								path="/o/:organisationId/*"
 								element={<OrganisationRoute />}
 							/>
+							{/* Where a card leads, so leaving the organisation lands somewhere. */}
+							<Route path="*" element={null} />
 						</Routes>
 					</MemoryRouter>
 				</MantineProvider>

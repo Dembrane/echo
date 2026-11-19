@@ -232,19 +232,33 @@ it("opens the AI wall when the server refuses the new chat", async () => {
 });
 
 it("lets a sample project start a chat when this month's AI is used up", async () => {
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	project.isSample = true;
 	await renderRoute();
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
 	await send();
 	expect(createChat).toHaveBeenCalledTimes(1);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	// The mocked createChat throws to end the test; the route logs it.
+	expect(consoleError).toHaveBeenCalledWith(
+		"Failed to create chat with mode:",
+		expect.any(Error),
+	);
+	consoleError.mockRestore();
 });
 
 it("walls nothing while is_sample is still loading", async () => {
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	project.loaded = false;
 	await renderRoute();
 	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
 	await send();
 	expect(createChat).toHaveBeenCalledTimes(1);
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	// The mocked createChat throws to end the test; the route logs it.
+	expect(consoleError).toHaveBeenCalledWith(
+		"Failed to create chat with mode:",
+		expect.any(Error),
+	);
+	consoleError.mockRestore();
 });
