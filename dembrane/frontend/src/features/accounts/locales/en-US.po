@@ -183,7 +183,7 @@ msgstr "{first}'s invitation is withdrawn and the link we sent stops working."
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} from {org} invited you to sign"
 
-#: src/features/accounts/signing/SignGate.tsx:702
+#: src/features/accounts/signing/SignGate.tsx:719
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} invited you to {org}"
 
@@ -549,7 +549,7 @@ msgstr "Ask a question"
 msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
 msgstr "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
 
-#: src/features/accounts/signing/SignGate.tsx:760
+#: src/features/accounts/signing/SignGate.tsx:777
 msgid "Ask the person who invited you to send a new one."
 msgstr "Ask the person who invited you to send a new one."
 
@@ -1564,7 +1564,7 @@ msgstr "How"
 msgid "How do you want to get invoices?"
 msgstr "How do you want to get invoices?"
 
-#: src/features/accounts/signing/SignGate.tsx:541
+#: src/features/accounts/signing/SignGate.tsx:558
 msgid "How we handle your details"
 msgstr "How we handle your details"
 
@@ -1656,7 +1656,7 @@ msgstr "Initials fields use this signature unless you draw initials."
 msgid "Intro"
 msgstr "Intro"
 
-#: src/features/accounts/signing/SignGate.tsx:675
+#: src/features/accounts/signing/SignGate.tsx:692
 msgid "Invitation | dembrane"
 msgstr "Invitation | dembrane"
 
@@ -1875,7 +1875,7 @@ msgstr "Locked"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:507
-#: src/features/accounts/signing/SignGate.tsx:772
+#: src/features/accounts/signing/SignGate.tsx:789
 msgid "Log in"
 msgstr "Log in"
 
@@ -1883,7 +1883,7 @@ msgstr "Log in"
 msgid "Log in to download the signed copy."
 msgstr "Log in to download the signed copy."
 
-#: src/features/accounts/signing/SignGate.tsx:688
+#: src/features/accounts/signing/SignGate.tsx:705
 msgid "Log in to read the offer and the DPA."
 msgstr "Log in to read the offer and the DPA."
 
@@ -2036,6 +2036,10 @@ msgstr "No account"
 #: src/features/accounts/staff/InvoicePlanFields.tsx:132
 msgid "No charge"
 msgstr "No charge"
+
+#: src/features/accounts/signing/SignGate.tsx:534
+msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
+msgstr "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
 
 #: src/features/accounts/customer/BillingForm.tsx:370
 msgid "No country found"
@@ -2731,7 +2735,7 @@ msgstr "Read only"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 
-#: src/features/accounts/signing/SignGate.tsx:712
+#: src/features/accounts/signing/SignGate.tsx:729
 msgid "Read the offer and the DPA with your team"
 msgstr "Read the offer and the DPA with your team"
 
@@ -2985,12 +2989,12 @@ msgstr "Select a field to set its kind, label and whether it is required. Drag t
 msgid "Send"
 msgstr "Send"
 
-#: src/features/accounts/signing/SignGate.tsx:519
+#: src/features/accounts/signing/SignGate.tsx:523
 msgid "Send a new code"
 msgstr "Send a new code"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:517
+#: src/features/accounts/signing/SignGate.tsx:521
 msgid "Send a new code in {0}s"
 msgstr "Send a new code in {0}s"
 
@@ -3598,7 +3602,7 @@ msgstr "The invitation was sent to"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr "The invitation was sent to this address."
 
-#: src/features/accounts/signing/SignGate.tsx:741
+#: src/features/accounts/signing/SignGate.tsx:758
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 
@@ -3772,7 +3776,7 @@ msgstr "This document was sent. Its fields are fixed; send a new version to chan
 msgid "This invitation could not be loaded"
 msgstr "This invitation could not be loaded"
 
-#: src/features/accounts/signing/SignGate.tsx:757
+#: src/features/accounts/signing/SignGate.tsx:774
 msgid "This invitation has closed"
 msgstr "This invitation has closed"
 
@@ -3785,7 +3789,7 @@ msgid "This is not an email address."
 msgstr "This is not an email address."
 
 #: src/features/accounts/signing/SignGate.tsx:191
-#: src/features/accounts/signing/SignGate.tsx:738
+#: src/features/accounts/signing/SignGate.tsx:755
 msgid "This link no longer works"
 msgstr "This link no longer works"
 
@@ -4350,7 +4354,7 @@ msgstr "you"
 msgid "You"
 msgstr "You"
 
-#: src/features/accounts/signing/SignGate.tsx:685
+#: src/features/accounts/signing/SignGate.tsx:702
 msgid "You accepted this invitation"
 msgstr "You accepted this invitation"
 
@@ -4369,7 +4373,7 @@ msgstr "You already have a dembrane account with {email}. We'll email you a code
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "You are all set. Nothing needs you right now."
 
-#: src/features/accounts/signing/SignGate.tsx:706
+#: src/features/accounts/signing/SignGate.tsx:723
 msgid "You are invited to {org}"
 msgstr "You are invited to {org}"
 
@@ -4421,7 +4425,7 @@ msgstr "You were invited. What do you do in this decision?"
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "You will not sign it. {newName} gets a link to sign instead."
 
-#: src/features/accounts/signing/SignGate.tsx:529
+#: src/features/accounts/signing/SignGate.tsx:546
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 
