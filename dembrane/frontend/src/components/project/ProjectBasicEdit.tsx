@@ -3,7 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, TextInput } from "@mantine/core";
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -31,7 +31,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 
 	type TFormSchema = z.infer<typeof FormSchema>;
 
-	const { control, handleSubmit, watch, trigger, formState, reset } =
+	const { control, handleSubmit, getValues, trigger, formState, reset } =
 		useForm<TFormSchema>({
 			defaultValues: {
 				context: project.context ?? "",
@@ -78,19 +78,13 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 		onSave,
 	});
 
-	useEffect(() => {
-		const subscription = watch((values, { type }) => {
-			if (type === "change" && values) {
-				trigger().then((isValid) => {
-					if (isValid) {
-						dispatchAutoSave(values as TFormSchema);
-					}
-				});
-			}
+	// Autosave on the user's own edits: each field calls this after its change.
+	// Not a watch() subscription, which React Compiler can't compile.
+	const saveAfterChange = () => {
+		trigger().then((isValid) => {
+			if (isValid) dispatchAutoSave(getValues());
 		});
-
-		return () => subscription.unsubscribe();
-	}, [watch, dispatchAutoSave, trigger]);
+	};
 
 	return (
 		<ProjectSettingsSection
@@ -127,6 +121,10 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 									/>
 								}
 								{...field}
+								onChange={(e) => {
+									field.onChange(e);
+									saveAfterChange();
+								}}
 								readOnly={readOnly}
 								{...testId("project-settings-name-input")}
 							/>
@@ -147,6 +145,10 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 									/>
 								}
 								{...field}
+								onChange={(e) => {
+									field.onChange(e);
+									saveAfterChange();
+								}}
 								readOnly={readOnly}
 							/>
 						)}
