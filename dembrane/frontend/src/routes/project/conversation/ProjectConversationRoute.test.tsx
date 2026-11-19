@@ -230,8 +230,9 @@ describe("ProjectConversationRoute summary at a used-up AI budget", () => {
 		fireEvent.click(
 			screen.getByTestId("conversation-overview-regenerate-summary-button"),
 		);
+		const confirm = await screen.findByText("Regenerate");
 		await act(async () => {
-			fireEvent.click(await screen.findByText("Regenerate"));
+			fireEvent.click(confirm);
 		});
 		const modal = await screen.findByTestId("upgrade-modal");
 		expect(modal.dataset.wall).toBe("ai_budget");
