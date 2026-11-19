@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLatest } from "@/hooks/useLatest";
 import { centralityOrder } from "../graph/mst";
 import { useMapInteractionStore } from "../state/interactionStore";
@@ -196,48 +196,44 @@ export function useMapGroups({
 
 	// Members to the nodes of the current map: by exact revision, or by object
 	// where the map has moved on to a newer revision of it.
-	const resolve = useMemo(() => {
-		const byRevision = new Map<string, string>();
-		const byObject = new Map<string, string>();
-		for (const node of nodes) {
-			byRevision.set(node.id, node.id);
-			if (node.metadata.revisionId)
-				byRevision.set(node.metadata.revisionId, node.id);
-			if (node.metadata.objectId) byObject.set(node.metadata.objectId, node.id);
+	const byRevision = new Map<string, string>();
+	const byObject = new Map<string, string>();
+	for (const node of nodes) {
+		byRevision.set(node.id, node.id);
+		if (node.metadata.revisionId)
+			byRevision.set(node.metadata.revisionId, node.id);
+		if (node.metadata.objectId) byObject.set(node.metadata.objectId, node.id);
+	}
+	const resolve = (members: ReadonlyArray<MapGroupMember>): string[] => {
+		const ids: string[] = [];
+		for (const member of members) {
+			const id =
+				byRevision.get(member.revisionId) ??
+				(member.objectId ? byObject.get(member.objectId) : undefined);
+			if (id && !ids.includes(id)) ids.push(id);
 		}
-		return (members: ReadonlyArray<MapGroupMember>): string[] => {
-			const ids: string[] = [];
-			for (const member of members) {
-				const id =
-					byRevision.get(member.revisionId) ??
-					(member.objectId ? byObject.get(member.objectId) : undefined);
-				if (id && !ids.includes(id)) ids.push(id);
-			}
-			return ids;
-		};
-	}, [nodes]);
+		return ids;
+	};
 
 	// A group none of whose members is on this map has nothing to show, and a
 	// commit on its way stands in for the group it will answer with.
-	const history = useMemo<Distillation[]>(() => {
-		const id = resultId ?? "";
-		const shadowed = new Set(local.map((entry) => entry.key));
-		const server = (docs ?? [])
-			.map(
-				(doc): Distillation => ({
-					createdAt: doc.createdAt ?? "",
-					id: doc.id,
-					key: `${id}::${setKey(resolve(doc.members))}`,
-					nodeIds: resolve(doc.members),
-					status: STATUS[doc.status],
-					title: doc.title ?? undefined,
-				}),
-			)
-			.filter((entry) => entry.nodeIds.length > 0 && !shadowed.has(entry.key));
-		return [...local, ...server].sort((a, b) =>
-			b.createdAt.localeCompare(a.createdAt),
-		);
-	}, [docs, local, resolve, resultId]);
+	const id = resultId ?? "";
+	const shadowed = new Set(local.map((entry) => entry.key));
+	const server = (docs ?? [])
+		.map(
+			(doc): Distillation => ({
+				createdAt: doc.createdAt ?? "",
+				id: doc.id,
+				key: `${id}::${setKey(resolve(doc.members))}`,
+				nodeIds: resolve(doc.members),
+				status: STATUS[doc.status],
+				title: doc.title ?? undefined,
+			}),
+		)
+		.filter((entry) => entry.nodeIds.length > 0 && !shadowed.has(entry.key));
+	const history: Distillation[] = [...local, ...server].sort((a, b) =>
+		b.createdAt.localeCompare(a.createdAt),
+	);
 	const historyRef = useLatest(history);
 
 	// When each group was last selected, so one brought back sorts as recent.

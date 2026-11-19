@@ -513,30 +513,27 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	}, [settings]);
 
-	const filteredMembers = useMemo(() => {
-		const q = memberSearch.trim().toLowerCase();
-		return sortedMembers.filter((m) => {
-			if (memberRoleFilter === "admins") {
-				if (isExternalMember(m)) return false;
-				if (!(m.role === "owner" || m.role === "admin")) return false;
-			}
-			if (memberRoleFilter === "members") {
-				if (isExternalMember(m)) return false;
-				if (m.role !== "member") return false;
-			}
-			if (memberRoleFilter === "billing") {
-				if (isExternalMember(m)) return false;
-				if (m.role !== "billing") return false;
-			}
-			if (memberRoleFilter === "externals" && !isExternalMember(m))
-				return false;
-			if (!q) return true;
-			return (
-				(m.display_name || "").toLowerCase().includes(q) ||
-				(m.email || "").toLowerCase().includes(q)
-			);
-		});
-	}, [sortedMembers, memberSearch, memberRoleFilter]);
+	const q = memberSearch.trim().toLowerCase();
+	const filteredMembers = sortedMembers.filter((m) => {
+		if (memberRoleFilter === "admins") {
+			if (isExternalMember(m)) return false;
+			if (!(m.role === "owner" || m.role === "admin")) return false;
+		}
+		if (memberRoleFilter === "members") {
+			if (isExternalMember(m)) return false;
+			if (m.role !== "member") return false;
+		}
+		if (memberRoleFilter === "billing") {
+			if (isExternalMember(m)) return false;
+			if (m.role !== "billing") return false;
+		}
+		if (memberRoleFilter === "externals" && !isExternalMember(m)) return false;
+		if (!q) return true;
+		return (
+			(m.display_name || "").toLowerCase().includes(q) ||
+			(m.email || "").toLowerCase().includes(q)
+		);
+	});
 
 	const hasExternalMembers = sortedMembers.some((m) => isExternalMember(m));
 

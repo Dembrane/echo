@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Checkbox, Select, SimpleGrid, Stack, TextInput } from "@mantine/core";
-import { useMemo } from "react";
+
 import { COUNTRY_CODES, countryName } from "../contract/billing-rules.gen";
 import type { DocumentDetailT } from "../contract/contract.gen";
 
@@ -64,13 +64,11 @@ export function BillToFields({
 	errors: Record<string, string>;
 }) {
 	const { i18n } = useLingui();
-	const countries = useMemo(() => {
-		const collator = new Intl.Collator(i18n.locale);
-		return COUNTRY_CODES.map((code) => ({
-			label: countryName(code, i18n.locale),
-			value: code,
-		})).sort((a, b) => collator.compare(a.label, b.label));
-	}, [i18n.locale]);
+	const collator = new Intl.Collator(i18n.locale);
+	const countries = COUNTRY_CODES.map((code) => ({
+		label: countryName(code, i18n.locale),
+		value: code,
+	})).sort((a, b) => collator.compare(a.label, b.label));
 	const set = (patch: Partial<BillToForm>) => onChange({ ...value, ...patch });
 	const err = (k: keyof BillToForm) => errors[`bill_to.${k}`];
 

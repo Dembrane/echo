@@ -2,7 +2,7 @@ import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { useDebouncedValue } from "@mantine/hooks";
 import { formatDistanceToNowStrict } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useProjectById } from "@/components/project/hooks";
 import type { ListQuery } from "@/lib/listQuery";
@@ -96,15 +96,13 @@ export const useConversationList = (
 
 	const allProjectTags =
 		((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [];
-	const tagOptions = useMemo(() => {
-		const options: { label: string; value: string }[] = [];
-		for (const tag of allProjectTags) {
-			if (tag.id && tag.text) {
-				options.push({ label: tag.text, value: tag.id });
-			}
+	const options: { label: string; value: string }[] = [];
+	for (const tag of allProjectTags) {
+		if (tag.id && tag.text) {
+			options.push({ label: tag.text, value: tag.id });
 		}
-		return options;
-	}, [allProjectTags]);
+	}
+	const tagOptions = options;
 
 	const conversationQuery = {
 		filter: {

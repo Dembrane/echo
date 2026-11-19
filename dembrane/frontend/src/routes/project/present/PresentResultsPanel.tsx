@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useResultsList, useResultsVisit } from "@/components/analysis";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
@@ -93,12 +93,10 @@ export function PresentResultsPanel({
 	// round trip. What this page decided leads; the draft catches up and the
 	// two agree, and an entry that agrees is dropped.
 	const [decided, setDecided] = useState<Record<string, boolean>>({});
-	const pending = useMemo(() => {
-		const kept: Record<string, boolean> = {};
-		for (const [objectId, held] of Object.entries(decided))
-			if (hidden.includes(objectId) !== held) kept[objectId] = held;
-		return kept;
-	}, [decided, hidden]);
+	const kept: Record<string, boolean> = {};
+	for (const [objectId, held] of Object.entries(decided))
+		if (hidden.includes(objectId) !== held) kept[objectId] = held;
+	const pending = kept;
 
 	const holdBack: HoldBackAdapter = {
 		isHeld: (objectId) => pending[objectId] ?? hidden.includes(objectId),

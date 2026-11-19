@@ -23,7 +23,7 @@ import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { Buildings, Lock, UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -215,17 +215,15 @@ export const CreateWorkspaceRoute = () => {
 		if (!canGoPrivate && access !== "everyone") setAccess("everyone");
 	}, [canGoPrivate, access]);
 
-	const memberOptions = useMemo(() => {
-		const selfEmail = (meV2?.email ?? "").toLowerCase();
-		return (orgMembers ?? [])
-			.filter(
-				(m) => !m.is_external && m.email && m.email.toLowerCase() !== selfEmail,
-			)
-			.map((m) => ({
-				label: m.display_name ? `${m.display_name} (${m.email})` : m.email,
-				value: m.email,
-			}));
-	}, [orgMembers, meV2]);
+	const selfEmail = (meV2?.email ?? "").toLowerCase();
+	const memberOptions = (orgMembers ?? [])
+		.filter(
+			(m) => !m.is_external && m.email && m.email.toLowerCase() !== selfEmail,
+		)
+		.map((m) => ({
+			label: m.display_name ? `${m.display_name} (${m.email})` : m.email,
+			value: m.email,
+		}));
 
 	const backDestination = targetOrganisationId
 		? `/o/${targetOrganisationId}/overview`

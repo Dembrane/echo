@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 /** The rail items that can show work in progress. */
 export type Tool = "ask" | "conversations" | "map" | "present" | "report";
@@ -172,12 +172,10 @@ export const toolStatus = (s: State, projectId: string, tool: Tool) => {
 
 export const useToolStatuses = (projectId: string | undefined) => {
 	const s = useProcessState();
-	return useMemo(() => {
-		const out = {} as Record<Tool, ToolStatus | undefined>;
-		for (const tool of TOOLS)
-			out[tool] = projectId ? toolStatus(s, projectId, tool) : undefined;
-		return out;
-	}, [s, projectId]);
+	const out = {} as Record<Tool, ToolStatus | undefined>;
+	for (const tool of TOOLS)
+		out[tool] = projectId ? toolStatus(s, projectId, tool) : undefined;
+	return out;
 };
 
 /** Test-only: back to an empty store. */

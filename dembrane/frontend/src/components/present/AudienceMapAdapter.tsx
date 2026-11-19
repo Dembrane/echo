@@ -217,15 +217,14 @@ const AudienceMap = ({
 	const graph = buildMapGraph(payload);
 	// Audience projections expose an existing display classification, never
 	// the capability to start or refresh a factual check.
-	const factCheckStates = useMemo(() => {
-		const assessments = (payload as AudienceMapResponse).fact_checks ?? {};
-		const states: FactCheckStates = {};
-		for (const node of graph.placedNodes) {
-			const assessment = readAssessment(assessments[node.id]);
-			if (assessment) states[node.id] = assessment;
-		}
-		return Object.keys(states).length > 0 ? states : EMPTY_STATES;
-	}, [graph.placedNodes, payload]);
+	const assessments = (payload as AudienceMapResponse).fact_checks ?? {};
+	const states: FactCheckStates = {};
+	for (const node of graph.placedNodes) {
+		const assessment = readAssessment(assessments[node.id]);
+		if (assessment) states[node.id] = assessment;
+	}
+	const factCheckStates =
+		Object.keys(states).length > 0 ? states : EMPTY_STATES;
 	const nodes = graph.placedNodes.map((node) => ({
 		...node,
 		metadata: {
@@ -238,14 +237,12 @@ const AudienceMap = ({
 	}));
 	const visibleIds = new Set(graph.allNodes.map((node) => node.id));
 	// The same nodes the panels look up, with the room's eligibility.
-	const roomGraph = useMemo(() => {
-		const byId = new Map(nodes.map((node) => [node.id, node] as const));
-		return {
-			...graph,
-			allNodes: graph.allNodes.map((node) => byId.get(node.id) ?? node),
-			placedNodes: nodes,
-		};
-	}, [graph, nodes]);
+	const byId = new Map(nodes.map((node) => [node.id, node] as const));
+	const roomGraph = {
+		...graph,
+		allNodes: graph.allNodes.map((node) => byId.get(node.id) ?? node),
+		placedNodes: nodes,
+	};
 	const budgets =
 		graph.serverBudgets ??
 		graph.budgetBounds?.defaults ??
