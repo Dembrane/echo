@@ -164,7 +164,7 @@ msgstr "L’invitation de {first} est retirée et le lien que nous avons envoyé
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} de {org} vous invite à signer"
 
-#: src/features/accounts/signing/SignGate.tsx:700
+#: src/features/accounts/signing/SignGate.tsx:717
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} t’a invité à rejoindre {org}"
 
@@ -497,7 +497,7 @@ msgstr "Approuver et déposer l'offre"
 msgid "Ask a question"
 msgstr "Poser une question"
 
-#: src/features/accounts/signing/SignGate.tsx:757
+#: src/features/accounts/signing/SignGate.tsx:774
 msgid "Ask the person who invited you to send a new one."
 msgstr "Demande à la personne qui t’a invité d’en envoyer une nouvelle."
 
@@ -1463,7 +1463,7 @@ msgstr "Comment"
 msgid "How do you want to get invoices?"
 msgstr "Comment souhaitez-vous recevoir les factures ?"
 
-#: src/features/accounts/signing/SignGate.tsx:539
+#: src/features/accounts/signing/SignGate.tsx:556
 msgid "How we handle your details"
 msgstr "Comment nous traitons vos données"
 
@@ -1547,7 +1547,7 @@ msgstr "Les champs d'initiales utilisent cette signature, à moins que vous ne d
 msgid "Intro"
 msgstr "Introduction"
 
-#: src/features/accounts/signing/SignGate.tsx:673
+#: src/features/accounts/signing/SignGate.tsx:690
 msgid "Invitation | dembrane"
 msgstr "Invitation | dembrane"
 
@@ -1757,7 +1757,7 @@ msgstr "Verrouillé"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:505
-#: src/features/accounts/signing/SignGate.tsx:769
+#: src/features/accounts/signing/SignGate.tsx:786
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -1765,7 +1765,7 @@ msgstr "Se connecter"
 msgid "Log in to download the signed copy."
 msgstr "Connectez-vous pour télécharger l'exemplaire signé."
 
-#: src/features/accounts/signing/SignGate.tsx:686
+#: src/features/accounts/signing/SignGate.tsx:703
 msgid "Log in to read the offer and the DPA."
 msgstr "Connecte-toi pour lire l’offre et le DPA."
 
@@ -1904,6 +1904,10 @@ msgstr "Aucun compte"
 #: src/features/accounts/staff/InvoicePlanFields.tsx:132
 msgid "No charge"
 msgstr "Gratuit"
+
+#: src/features/accounts/signing/SignGate.tsx:532
+msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
+msgstr "Pas de code après une minute ? Regarde dans tes spams, ou demande à la personne qui a partagé ceci avec toi de t’ajouter."
 
 #: src/features/accounts/customer/BillingForm.tsx:370
 msgid "No country found"
@@ -2551,7 +2555,7 @@ msgstr "Lire"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Lisez l'offre et signez-la ici. Quelqu'un d'autre signe pour votre organisation ? Indiquez son nom sur l'offre ; cette personne recevra son propre lien."
 
-#: src/features/accounts/signing/SignGate.tsx:710
+#: src/features/accounts/signing/SignGate.tsx:727
 msgid "Read the offer and the DPA with your team"
 msgstr "Lis l’offre et le DPA avec ton équipe"
 
@@ -2797,12 +2801,12 @@ msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est 
 msgid "Send"
 msgstr "Envoyer"
 
-#: src/features/accounts/signing/SignGate.tsx:517
+#: src/features/accounts/signing/SignGate.tsx:521
 msgid "Send a new code"
 msgstr "Envoyer un nouveau code"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:515
+#: src/features/accounts/signing/SignGate.tsx:519
 msgid "Send a new code in {0}s"
 msgstr "Envoyer un nouveau code dans {0} s"
 
@@ -3401,7 +3405,7 @@ msgstr "L'invitation a été envoyée à"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignGate.tsx:738
+#: src/features/accounts/signing/SignGate.tsx:755
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "L’invitation a été retirée, ou une plus récente l’a remplacée. Demande à la personne qui t’a invité de la renvoyer."
 
@@ -3551,7 +3555,7 @@ msgstr "Ce document a été envoyé. Ses champs sont verrouillés ; envoyez une 
 msgid "This invitation could not be loaded"
 msgstr "Impossible de charger cette invitation"
 
-#: src/features/accounts/signing/SignGate.tsx:754
+#: src/features/accounts/signing/SignGate.tsx:771
 msgid "This invitation has closed"
 msgstr "Cette invitation a expiré"
 
@@ -3564,7 +3568,7 @@ msgid "This is not an email address."
 msgstr "Ce n'est pas une adresse e-mail."
 
 #: src/features/accounts/signing/SignGate.tsx:190
-#: src/features/accounts/signing/SignGate.tsx:735
+#: src/features/accounts/signing/SignGate.tsx:752
 msgid "This link no longer works"
 msgstr "Ce lien ne fonctionne plus"
 
@@ -4104,7 +4108,7 @@ msgstr "toi"
 msgid "You"
 msgstr "Vous"
 
-#: src/features/accounts/signing/SignGate.tsx:683
+#: src/features/accounts/signing/SignGate.tsx:700
 msgid "You accepted this invitation"
 msgstr "Tu as accepté cette invitation"
 
@@ -4123,7 +4127,7 @@ msgstr "Vous avez déjà un compte dembrane avec {email}. Nous vous enverrons pa
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Tout est en ordre. Rien ne vous attend pour le moment."
 
-#: src/features/accounts/signing/SignGate.tsx:704
+#: src/features/accounts/signing/SignGate.tsx:721
 msgid "You are invited to {org}"
 msgstr "Tu es invité à rejoindre {org}"
 
@@ -4175,7 +4179,7 @@ msgstr "Tu as été invité. Quel est ton rôle dans cette décision ?"
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "Tu ne signes pas. {newName} reçoit un lien pour signer à ta place."
 
-#: src/features/accounts/signing/SignGate.tsx:527
+#: src/features/accounts/signing/SignGate.tsx:544
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Vous signerez électroniquement. Votre signature électronique engage autant qu'une signature manuscrite."
 
