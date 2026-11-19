@@ -14,7 +14,6 @@ import { DeviceMobileIcon } from "@phosphor-icons/react";
 import {
 	type ComponentType,
 	type ReactNode,
-	useCallback,
 	useEffect,
 	useMemo,
 	useState,
@@ -169,17 +168,23 @@ export const PortalSectionEditor = ({
 	// moments, and the portal starts the screen again on a new one.
 	const [pickedScreen, setPickedScreen] = useState<PreviewScreen | null>(null);
 	const [reset, setReset] = useState(0);
-	const showScreen = useCallback((s: PreviewScreen | null) => {
+	const showScreen = (s: PreviewScreen | null) => {
 		setPickedScreen(s);
 		setReset((v) => v + 1);
-	}, []);
+	};
 	// An edit is a change in what the page holds: a save that keeps the values is not one.
 	const edited = useMemo(
 		() => JSON.stringify([page.values, tags]),
 		[page.values, tags],
 	);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: the open option and an edit are the moments, not their values
-	useEffect(() => showScreen(null), [open?.key, edited, showScreen]);
+	// The open option and an edit are the moments, not their values: each one,
+	// the first included, goes back to the option's screen, during render.
+	const moment = `${open?.key ?? ""}\u0000${edited}`;
+	const [lastMoment, setLastMoment] = useState<string | null>(null);
+	if (moment !== lastMoment) {
+		setLastMoment(moment);
+		showScreen(null);
+	}
 	const screen = pickedScreen ?? open?.screen ?? SECTIONS[section].screens[0];
 	const screens = useMemo(() => {
 		const list = [...SECTIONS[section].screens];
@@ -225,11 +230,13 @@ export const PortalSectionEditor = ({
 		section: trySection ?? "explore",
 	});
 	const tried = tryIt.result;
-	// A new result is shown on the screen it belongs to.
-	useEffect(() => {
+	// A new result is shown on the screen it belongs to, during render.
+	const [shownTried, setShownTried] = useState<typeof tried>(null);
+	if (tried !== shownTried) {
+		setShownTried(tried);
 		if (tried)
 			showScreen(tried.kind === "explore" ? "explore" : "verify-summary");
-	}, [tried, showScreen]);
+	}
 
 	const legal = useProjectLegalQuery(project.id);
 	const message = useMemo(

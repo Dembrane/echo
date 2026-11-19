@@ -77,14 +77,27 @@ vi.mock("../preview/PortalPreviewFrame", () => ({
 	PortalPreviewFrame: ({
 		message,
 		action,
+		screens,
+		onScreen,
 	}: {
 		message: PreviewMessage;
 		action?: React.ReactNode;
+		screens?: string[];
+		onScreen?: (screen: string) => void;
 	}) => {
 		lastMessage.current = message;
 		return (
 			<div data-testid="preview" data-screen={message.screen}>
 				{action}
+				<button
+					type="button"
+					data-testid="pick-other-screen"
+					onClick={() =>
+						onScreen?.(screens?.find((s) => s !== message.screen) ?? "")
+					}
+				>
+					pick
+				</button>
 			</div>
 		);
 	},
@@ -264,6 +277,19 @@ describe("portal editor pages: permissions and saving", () => {
 		const edited = lastMessage.current as PreviewMessage;
 		expect(edited.reset).toBeGreaterThan(opened);
 		expect(edited.screen).toBe("recording");
+	});
+
+	it("a picked screen stays until the next edit, which goes back to the option's", () => {
+		renderPage("welcome", "title");
+		fireEvent.click(screen.getByTestId("pick-other-screen"));
+		const picked = lastMessage.current as PreviewMessage;
+		expect(picked.screen).not.toBe("recording");
+		fireEvent.change(screen.getByTestId("portal-editor-page-title-input"), {
+			target: { value: "The square" },
+		});
+		const edited = lastMessage.current as PreviewMessage;
+		expect(edited.screen).toBe("recording");
+		expect(edited.reset).toBeGreaterThan(picked.reset);
 	});
 
 	it("the preview gets an unsaved value at once", () => {
