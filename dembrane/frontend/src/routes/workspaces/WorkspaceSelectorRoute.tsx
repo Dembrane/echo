@@ -12,7 +12,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Navigate } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -182,10 +182,7 @@ export const WorkspaceSelectorRoute = () => {
 
 	// No single-org redirect here (it's in RootRedirect), so this list stays
 	// reachable for single-org users.
-	const orgList = useMemo(
-		() => deriveOrgList(organisations, workspaces),
-		[organisations, workspaces],
-	);
+	const orgList = deriveOrgList(organisations, workspaces);
 
 	const { hits, isFetching } = useSearchHits(q, workspaces);
 

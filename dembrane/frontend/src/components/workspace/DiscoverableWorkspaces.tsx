@@ -15,7 +15,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { CaretDownIcon, LockIcon } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -100,19 +100,12 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 			w.action === "pending",
 	);
 	// Admin self-join rows (private workspaces) vs member request-access rows.
-	const joinRows = useMemo(
-		() => joinable.filter((w) => w.action === "join"),
-		[joinable],
-	);
-	const otherRows = useMemo(
-		() => joinable.filter((w) => w.action !== "join"),
-		[joinable],
-	);
+	const joinRows = joinable.filter((w) => w.action === "join");
+	const otherRows = joinable.filter((w) => w.action !== "join");
 	// Selection scoped to the rows currently available (drop stale ids).
-	const selectedIds = useMemo(
-		() => joinRows.filter((w) => selected.has(w.id)).map((w) => w.id),
-		[joinRows, selected],
-	);
+	const selectedIds = joinRows
+		.filter((w) => selected.has(w.id))
+		.map((w) => w.id);
 	const allSelected =
 		joinRows.length > 0 && selectedIds.length === joinRows.length;
 	const someSelected = selectedIds.length > 0 && !allSelected;

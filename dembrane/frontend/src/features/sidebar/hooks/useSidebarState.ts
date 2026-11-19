@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const WIDTH_KEY = "dembrane.sidebar.width";
 const EXPANDED_KEY = "dembrane.sidebar.expanded";
@@ -85,18 +85,15 @@ function useLocalState<T>(
 		};
 	}, [key, initial]);
 
-	const set = useCallback(
-		(next: T | ((prev: T) => T)) => {
-			setValue((prev) => {
-				const resolved =
-					typeof next === "function" ? (next as (p: T) => T)(prev) : next;
-				writeLS(key, resolved);
-				queueMicrotask(() => emitLocalStateChange(key, resolved));
-				return resolved;
-			});
-		},
-		[key],
-	);
+	const set = (next: T | ((prev: T) => T)) => {
+		setValue((prev) => {
+			const resolved =
+				typeof next === "function" ? (next as (p: T) => T)(prev) : next;
+			writeLS(key, resolved);
+			queueMicrotask(() => emitLocalStateChange(key, resolved));
+			return resolved;
+		});
+	};
 
 	return [value, set];
 }
@@ -114,29 +111,18 @@ export function useSidebarState(): SidebarState {
 		Record<string, boolean>
 	>(EXPANDED_KEY, {});
 
-	const setWidth = useCallback(
-		(n: number) => setWidthRaw(clamp(n, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)),
-		[setWidthRaw],
-	);
+	const setWidth = (n: number) =>
+		setWidthRaw(clamp(n, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX));
 
-	const isNodeExpanded = useCallback(
-		(id: string) => expandedNodes[id] === true,
-		[expandedNodes],
-	);
+	const isNodeExpanded = (id: string) => expandedNodes[id] === true;
 
-	const setNodeExpanded = useCallback(
-		(id: string, open: boolean) => {
-			setExpandedNodes((prev) => ({ ...prev, [id]: open }));
-		},
-		[setExpandedNodes],
-	);
+	const setNodeExpanded = (id: string, open: boolean) => {
+		setExpandedNodes((prev) => ({ ...prev, [id]: open }));
+	};
 
-	const toggleNode = useCallback(
-		(id: string) => {
-			setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
-		},
-		[setExpandedNodes],
-	);
+	const toggleNode = (id: string) => {
+		setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+	};
 
 	return {
 		collapsed,

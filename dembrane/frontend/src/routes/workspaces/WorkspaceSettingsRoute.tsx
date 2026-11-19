@@ -538,27 +538,17 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	}, [sortedMembers, memberSearch, memberRoleFilter]);
 
-	const hasExternalMembers = useMemo(
-		() => sortedMembers.some((m) => isExternalMember(m)),
-		[sortedMembers],
-	);
+	const hasExternalMembers = sortedMembers.some((m) => isExternalMember(m));
 
 	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasExternalMembers).
-	const hasBillingMembers = useMemo(
-		() =>
-			sortedMembers.some((m) => !isExternalMember(m) && m.role === "billing"),
-		[sortedMembers],
+	const hasBillingMembers = sortedMembers.some(
+		(m) => !isExternalMember(m) && m.role === "billing",
 	);
 
 	// Used to lock the role picker for the only admin so they can't trap themselves.
-	const adminLikeCount = useMemo(
-		() =>
-			sortedMembers.filter(
-				(m) =>
-					!isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
-			).length,
-		[sortedMembers],
-	);
+	const adminLikeCount = sortedMembers.filter(
+		(m) => !isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
+	).length;
 
 	// Must come before the loading branch — otherwise a 403 reads as "loading forever."
 	if (settingsError instanceof WorkspaceAccessDeniedError) {

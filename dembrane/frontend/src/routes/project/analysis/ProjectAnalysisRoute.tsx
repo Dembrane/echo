@@ -21,7 +21,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { WarningCircleIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import {
 	type AnalysisObject,
@@ -443,7 +443,7 @@ function RecipeCard({
 	const walled = aiBudgetDetails(request.error) !== null;
 	const isConversationScoped = recipe.scopeKeyPattern.includes("conversation:");
 	const [conversationId, setConversationId] = useState<string | null>(null);
-	const defaults = useMemo(() => recipeDefaults(recipe, runs), [recipe, runs]);
+	const defaults = recipeDefaults(recipe, runs);
 	const scopeKey =
 		isConversationScoped && conversationId
 			? `conversation:${conversationId}`

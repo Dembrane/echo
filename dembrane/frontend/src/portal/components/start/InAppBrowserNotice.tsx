@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Alert, Button, CopyButton, Stack, Text } from "@mantine/core";
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { testId } from "@/lib/testUtils";
 
@@ -14,10 +14,7 @@ const APP_NAMES = {
 
 /** Asks participants inside a social app's browser to reopen the portal where the mic works. */
 export const InAppBrowserNotice = ({ projectId }: { projectId?: string }) => {
-	const inApp = useMemo(
-		() => detectInAppBrowser(globalThis.navigator?.userAgent ?? ""),
-		[],
-	);
+	const inApp = detectInAppBrowser(globalThis.navigator?.userAgent ?? "");
 
 	// Once per mount, so StrictMode's second effect run in dev does not double count.
 	const captured = useRef(false);

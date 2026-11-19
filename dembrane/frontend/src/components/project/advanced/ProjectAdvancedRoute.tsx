@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, Stack, Text, Title } from "@mantine/core";
-import { useMemo } from "react";
+
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -30,24 +30,21 @@ export const ProjectAdvancedRoute = () => {
 	const ready = useSettingsCatalog();
 	const { workspace, workspaceId } = useWorkspace();
 	const canEdit = !!workspace && !isReadOnlyRole(workspace.role);
-	const query = useMemo(
-		() => ({
-			fields: [
-				"id",
-				"name",
-				"context",
-				"visibility",
-				"workspace_id",
-				"methodology_version_id",
-				"updated_at",
-				"language",
-				"is_conversation_allowed",
-				"is_canvas_enabled",
-				"default_conversation_ask_for_participant_name",
-			],
-		}),
-		[],
-	);
+	const query = {
+		fields: [
+			"id",
+			"name",
+			"context",
+			"visibility",
+			"workspace_id",
+			"methodology_version_id",
+			"updated_at",
+			"language",
+			"is_conversation_allowed",
+			"is_canvas_enabled",
+			"default_conversation_ask_for_participant_name",
+		],
+	};
 	const projectQuery = useProjectById({ projectId: projectId ?? "", query });
 	// Webhooks are a workspace admin surface (workspace:webhooks policy): members never see
 	// the section, and below the changemaker tier the FeatureGate placeholder renders

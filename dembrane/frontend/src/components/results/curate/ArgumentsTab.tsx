@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import {
 	conversationWords,
@@ -166,13 +166,9 @@ export function ArgumentsTab({
 	const [sort, setSort] = useState<Sort>(null);
 	const [all, setAll] = useState(false);
 
-	const conversations = useMemo(
-		() =>
-			[...new Set(items.map(conversationOf).filter(Boolean))].sort((one, two) =>
-				one.localeCompare(two),
-			),
-		[items],
-	);
+	const conversations = [
+		...new Set(items.map(conversationOf).filter(Boolean)),
+	].sort((one, two) => one.localeCompare(two));
 
 	const shown = sortArguments(
 		filterArguments(items, { conversation, query, stance }),

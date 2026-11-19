@@ -2,7 +2,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import {
 	budgetsToAdmit,
@@ -214,7 +214,7 @@ const AudienceMap = ({
 	dark: boolean;
 	titles: boolean;
 }) => {
-	const graph = useMemo(() => buildMapGraph(payload), [payload]);
+	const graph = buildMapGraph(payload);
 	// Audience projections expose an existing display classification, never
 	// the capability to start or refresh a factual check.
 	const factCheckStates = useMemo(() => {
@@ -226,24 +226,17 @@ const AudienceMap = ({
 		}
 		return Object.keys(states).length > 0 ? states : EMPTY_STATES;
 	}, [graph.placedNodes, payload]);
-	const nodes = useMemo(
-		() =>
-			graph.placedNodes.map((node) => ({
-				...node,
-				metadata: {
-					...node.metadata,
-					// The projection withholds eligibility. An assessed node shows
-					// its verdict; any other follows its own kind, so an unchecked
-					// claim reads as unverified and never as an opinion.
-					factCheckEligible: factCheckStates[node.id] ? true : undefined,
-				},
-			})),
-		[factCheckStates, graph.placedNodes],
-	);
-	const visibleIds = useMemo(
-		() => new Set(graph.allNodes.map((node) => node.id)),
-		[graph.allNodes],
-	);
+	const nodes = graph.placedNodes.map((node) => ({
+		...node,
+		metadata: {
+			...node.metadata,
+			// The projection withholds eligibility. An assessed node shows
+			// its verdict; any other follows its own kind, so an unchecked
+			// claim reads as unverified and never as an opinion.
+			factCheckEligible: factCheckStates[node.id] ? true : undefined,
+		},
+	}));
+	const visibleIds = new Set(graph.allNodes.map((node) => node.id));
 	// The same nodes the panels look up, with the room's eligibility.
 	const roomGraph = useMemo(() => {
 		const byId = new Map(nodes.map((node) => [node.id, node] as const));
@@ -265,20 +258,15 @@ const AudienceMap = ({
 		if (selected && nodes.some((node) => node.id === selected)) return;
 		store.setSelectedNodeId(nodes[0]?.id ?? null);
 	}, [nodes, store]);
-	const roomSettings = useMemo(
-		() => ({
-			...settings,
-			darkMode: dark,
-			showForceSettings: false,
-			showRelationships: false,
-		}),
-		[dark, settings],
-	);
-	const groups = useMemo(() => readGroups(payload), [payload]);
-	const handleColorByChange = useCallback(
-		(colorBy: ColorBy) => onSettingsChange({ colorBy }),
-		[onSettingsChange],
-	);
+	const roomSettings = {
+		...settings,
+		darkMode: dark,
+		showForceSettings: false,
+		showRelationships: false,
+	};
+	const groups = readGroups(payload);
+	const handleColorByChange = (colorBy: ColorBy) =>
+		onSettingsChange({ colorBy });
 
 	if (graph.overBudget) {
 		const count = Object.values(graph.counts).reduce(
@@ -393,11 +381,8 @@ export const AudienceMapAdapter = ({
 	// left running. Kept in memory only: rooms share an origin with each other
 	// and with the host's own saved Map settings.
 	const [settings, setSettings] = useState<MapSettings>(roomStartSettings);
-	const updateSettings = useCallback(
-		(patch: Partial<MapSettings>) =>
-			setSettings((current) => ({ ...current, ...patch })),
-		[],
-	);
+	const updateSettings = (patch: Partial<MapSettings>) =>
+		setSettings((current) => ({ ...current, ...patch }));
 	const activeAdmission =
 		admission?.endpoint === endpoint ? admission.budgets : null;
 	const requestEndpoint = useMemo(() => {
@@ -410,15 +395,12 @@ export const AudienceMapAdapter = ({
 	// `revision` is deliberately not in the key: a new audience event re-reads
 	// this same key, so the graph on the wall stays up while the read runs and
 	// survives a read that fails. A raised budget is a different read.
-	const queryKey = useMemo(
-		() => [
-			"presentation-audience-map",
-			endpoint,
-			activeAdmission?.nodeLimit ?? null,
-			activeAdmission?.edgeLimit ?? null,
-		],
-		[activeAdmission, endpoint],
-	);
+	const queryKey = [
+		"presentation-audience-map",
+		endpoint,
+		activeAdmission?.nodeLimit ?? null,
+		activeAdmission?.edgeLimit ?? null,
+	];
 	const query = useQuery<AudienceMapResponse | null>({
 		// Hidden tab, no request.
 		enabled: active,

@@ -21,13 +21,6 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
-	addDays,
-	addHours,
-	format,
-	formatDistanceToNow,
-	isSameDay,
-} from "date-fns";
-import {
 	ArrowsClockwiseIcon,
 	ArrowsInIcon,
 	ArrowsOutIcon,
@@ -37,7 +30,14 @@ import {
 	PencilSimpleIcon,
 	PlayIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import {
+	addDays,
+	addHours,
+	format,
+	formatDistanceToNow,
+	isSameDay,
+} from "date-fns";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
 import { canvasCadenceLabel } from "@/components/canvas/cadenceLabel";
@@ -414,23 +414,13 @@ export const CanvasRoute = () => {
 	const canvas = canvasQuery.data;
 	useDocumentTitle(canvas?.name ? `${canvas.name} | dembrane` : t`Canvas`);
 
-	const generations = useMemo(
-		() =>
-			[...(generationsQuery.data ?? [])].sort(
-				(a, b) =>
-					new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-			),
-		[generationsQuery.data],
+	const generations = [...(generationsQuery.data ?? [])].sort(
+		(a, b) =>
+			new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
 	);
-	const selectedGeneration = useMemo(
-		() =>
-			selectedGenerationId
-				? generations.find(
-						(generation) => generation.id === selectedGenerationId,
-					)
-				: null,
-		[generations, selectedGenerationId],
-	);
+	const selectedGeneration = selectedGenerationId
+		? generations.find((generation) => generation.id === selectedGenerationId)
+		: null;
 	const displayedGeneration =
 		selectedGeneration ?? canvas?.latest_generation ?? generations[0] ?? null;
 	const [menuOpened, setMenuOpened] = useState(false);

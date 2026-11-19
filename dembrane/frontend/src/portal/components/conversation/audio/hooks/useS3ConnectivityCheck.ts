@@ -1,5 +1,5 @@
 import posthog from "posthog-js";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSessionStorageState from "use-session-storage-state";
 import { checkS3Connectivity } from "@/lib/api";
 
@@ -20,7 +20,7 @@ export const useS3ConnectivityCheck = (
 
 	const checkStarted = useRef(false);
 
-	const runCheck = useCallback(async () => {
+	const runCheck = async () => {
 		setS3Status("checking");
 		const reachable = await checkS3Connectivity(conversationId ?? "");
 		if (reachable) {
@@ -29,7 +29,7 @@ export const useS3ConnectivityCheck = (
 			posthog.capture("s3_connectivity_check_failed");
 		}
 		setS3Status(reachable ? "passed" : "failed");
-	}, [conversationId, setS3CheckPassed]);
+	};
 
 	useEffect(() => {
 		if (

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 const UPLOAD_WAIT_TIMEOUT_MS = 30_000;
 
@@ -15,7 +15,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const usePendingUploads = () => {
 	const pendingRef = useRef<Promise<unknown>[]>([]);
 
-	const track = useCallback((upload: Promise<unknown>) => {
+	const track = (upload: Promise<unknown>) => {
 		pendingRef.current.push(upload);
 		const untrack = () => {
 			pendingRef.current = pendingRef.current.filter((p) => p !== upload);
@@ -23,12 +23,12 @@ export const usePendingUploads = () => {
 		// Not .finally(): that hands back a promise rejecting with the upload's
 		// error, which nothing handles, so PostHog logged it as an exception.
 		upload.then(untrack, untrack);
-	}, []);
+	};
 
-	const count = useCallback(() => pendingRef.current.length, []);
+	const count = () => pendingRef.current.length;
 
 	/** Settles when every tracked upload has, or after 30s, whichever is first. */
-	const waitForAll = useCallback(async (): Promise<"done" | "timeout"> => {
+	const waitForAll = async (): Promise<"done" | "timeout"> => {
 		await sleep(FINAL_CHUNK_GRACE_MS);
 		if (pendingRef.current.length === 0) return "done";
 
@@ -36,7 +36,7 @@ export const usePendingUploads = () => {
 			Promise.allSettled(pendingRef.current).then(() => "done" as const),
 			sleep(UPLOAD_WAIT_TIMEOUT_MS).then(() => "timeout" as const),
 		]);
-	}, []);
+	};
 
 	return { count, track, waitForAll };
 };

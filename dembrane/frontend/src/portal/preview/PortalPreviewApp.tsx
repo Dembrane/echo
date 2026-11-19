@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router";
 import { ADMIN_BASE_URL } from "@/config";
 import {
@@ -38,23 +38,19 @@ import {
  */
 export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 	const [message, setMessage] = useState<PreviewMessage | null>(null);
-	const queryClient = useMemo(
-		() =>
-			new QueryClient({
-				defaultOptions: {
-					mutations: { retry: false },
-					queries: {
-						gcTime: Number.POSITIVE_INFINITY,
-						refetchOnMount: false,
-						refetchOnReconnect: false,
-						refetchOnWindowFocus: false,
-						retry: false,
-						staleTime: Number.POSITIVE_INFINITY,
-					},
-				},
-			}),
-		[],
-	);
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			mutations: { retry: false },
+			queries: {
+				gcTime: Number.POSITIVE_INFINITY,
+				refetchOnMount: false,
+				refetchOnReconnect: false,
+				refetchOnWindowFocus: false,
+				retry: false,
+				staleTime: Number.POSITIVE_INFINITY,
+			},
+		},
+	});
 
 	useEffect(
 		() => answerRequests(queryClient, projectId),

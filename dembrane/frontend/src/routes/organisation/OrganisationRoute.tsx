@@ -620,16 +620,12 @@ export const OrganisationRoute = () => {
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
 
-	const hasExternals = useMemo(
-		() => members.some((m) => m.is_external),
-		[members],
-	);
+	const hasExternals = members.some((m) => m.is_external);
 
 	// Org picker only offers admin/member but rows can still hold "billing"
 	// via legacy/future flows — show the chip only when ≥1 such row exists.
-	const hasBilling = useMemo(
-		() => members.some((m) => !m.is_external && m.role === "billing"),
-		[members],
+	const hasBilling = members.some(
+		(m) => !m.is_external && m.role === "billing",
 	);
 
 	const filteredMembers = useMemo(() => {
@@ -1337,10 +1333,7 @@ function OrganisationOverviewPanel({
 
 	// Pinned projects + private flag live on the enriched org roster; key them
 	// by workspace id so the access-scoped cards can pull them in.
-	const rosterMap = useMemo(
-		() => new Map(workspaces.map((w) => [w.id, w])),
-		[workspaces],
-	);
+	const rosterMap = new Map(workspaces.map((w) => [w.id, w]));
 
 	const ONE_DAY_MS = 86_400_000;
 	// Read once: "recently approved" is counted from when the page opened.

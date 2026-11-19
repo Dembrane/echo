@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useSearchParams } from "react-router";
 
 /**
@@ -16,18 +15,15 @@ export function useUrlSearch(
 	const [searchParams, setSearchParams] = useSearchParams();
 	const current = searchParams.get(paramName) ?? "";
 
-	const setSearch = useCallback(
-		(value: string) => {
-			const next = new URLSearchParams(searchParams);
-			if (value) {
-				next.set(paramName, value);
-			} else {
-				next.delete(paramName);
-			}
-			setSearchParams(next, { replace: true });
-		},
-		[paramName, searchParams, setSearchParams],
-	);
+	const setSearch = (value: string) => {
+		const next = new URLSearchParams(searchParams);
+		if (value) {
+			next.set(paramName, value);
+		} else {
+			next.delete(paramName);
+		}
+		setSearchParams(next, { replace: true });
+	};
 
 	return [current, setSearch];
 }

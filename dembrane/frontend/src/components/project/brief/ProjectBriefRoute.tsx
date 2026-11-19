@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Anchor, Box, Divider, Stack, Text, Title } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -27,22 +27,19 @@ import { ProjectKeyTermsSection } from "./ProjectKeyTermsSection";
 export const ProjectBriefRoute = () => {
 	const { workspaceId, projectId } = useParams();
 	const ready = useSettingsCatalog();
-	const query = useMemo(
-		() => ({
-			fields: [
-				"id",
-				"name",
-				"context",
-				"visibility",
-				"workspace_id",
-				"methodology_version_id",
-				"updated_at",
-				"language",
-				"default_conversation_transcript_prompt",
-			],
-		}),
-		[],
-	);
+	const query = {
+		fields: [
+			"id",
+			"name",
+			"context",
+			"visibility",
+			"workspace_id",
+			"methodology_version_id",
+			"updated_at",
+			"language",
+			"default_conversation_transcript_prompt",
+		],
+	};
 	const projectQuery = useProjectById({ projectId: projectId ?? "", query });
 	const { workspace } = useWorkspace();
 	// Observers lack project:update: sections show read-only rather than answer with a 403.

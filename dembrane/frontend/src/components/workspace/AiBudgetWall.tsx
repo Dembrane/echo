@@ -1,5 +1,5 @@
 import { QueryClientContext } from "@tanstack/react-query";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useContext, useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { aiBudgetDetails } from "@/lib/freeTier";
@@ -15,27 +15,18 @@ export function useAiBudgetWall() {
 		resetsAt: null as string | null,
 		usedUp: true,
 	});
-	const open = useCallback(
-		(resetsAt: string | null = null, usedUp = true) =>
-			setState({ opened: true, resetsAt, usedUp }),
-		[],
-	);
+	const open = (resetsAt: string | null = null, usedUp = true) =>
+		setState({ opened: true, resetsAt, usedUp });
 	// Keeps the date while closing, so the closing popup does not change.
-	const close = useCallback(
-		() => setState((s) => ({ ...s, opened: false })),
-		[],
-	);
-	const openFor = useCallback(
-		(err: unknown) => {
-			const refused = aiBudgetDetails(err);
-			if (!refused) return false;
-			open(refused.resetsAt);
-			if (queryClient) void invalidateFreeAllowance(queryClient);
-			return true;
-		},
-		[open, queryClient],
-	);
-	const props = useMemo(() => ({ ...state, onClose: close }), [state, close]);
+	const close = () => setState((s) => ({ ...s, opened: false }));
+	const openFor = (err: unknown) => {
+		const refused = aiBudgetDetails(err);
+		if (!refused) return false;
+		open(refused.resetsAt);
+		if (queryClient) void invalidateFreeAllowance(queryClient);
+		return true;
+	};
+	const props = { ...state, onClose: close };
 	return { close, open, openFor, props };
 }
 

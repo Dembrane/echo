@@ -94,11 +94,8 @@ export const useConversationList = (
 		},
 	});
 
-	const allProjectTags = useMemo(
-		() =>
-			((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [],
-		[projectQuery.data],
-	);
+	const allProjectTags =
+		((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [];
 	const tagOptions = useMemo(() => {
 		const options: { label: string; value: string }[] = [];
 		for (const tag of allProjectTags) {
@@ -109,35 +106,31 @@ export const useConversationList = (
 		return options;
 	}, [allProjectTags]);
 
-	const conversationQuery = useMemo(
-		() =>
-			({
-				filter: {
-					project_id: { _eq: projectId },
-					...(selectedTagIds.length > 0 && {
-						tags: {
-							_some: {
-								project_tag_id: {
-									id: { _in: selectedTagIds },
-								},
-							},
+	const conversationQuery = {
+		filter: {
+			project_id: { _eq: projectId },
+			...(selectedTagIds.length > 0 && {
+				tags: {
+					_some: {
+						project_tag_id: {
+							id: { _in: selectedTagIds },
 						},
-					}),
-					...(showOnlyVerified && {
-						conversation_artifacts: {
-							_some: {
-								approved_at: {
-									_nnull: true,
-								},
-							},
-						},
-					}),
+					},
 				},
-				search: debouncedSearch,
-				sort: sortBy,
-			}) as Partial<ListQuery<Conversation>>,
-		[projectId, selectedTagIds, showOnlyVerified, debouncedSearch, sortBy],
-	);
+			}),
+			...(showOnlyVerified && {
+				conversation_artifacts: {
+					_some: {
+						approved_at: {
+							_nnull: true,
+						},
+					},
+				},
+			}),
+		},
+		search: debouncedSearch,
+		sort: sortBy,
+	} as Partial<ListQuery<Conversation>>;
 
 	const conversationsQuery = useInfiniteConversationsByProjectId(
 		projectId,

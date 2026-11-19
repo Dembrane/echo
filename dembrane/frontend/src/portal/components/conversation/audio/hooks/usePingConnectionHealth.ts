@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 /**
  * Failed pings in a row before the portal says the connection is in trouble.
@@ -15,9 +15,9 @@ export const FAILED_PINGS_BEFORE_TROUBLE = 2;
 export function usePingConnectionHealth() {
 	const failures = useRef(0);
 	const [connectionHealthy, setConnectionHealthy] = useState(true);
-	const reportPing = useCallback((answered: boolean) => {
+	const reportPing = (answered: boolean) => {
 		failures.current = answered ? 0 : failures.current + 1;
 		setConnectionHealthy(failures.current < FAILED_PINGS_BEFORE_TROUBLE);
-	}, []);
+	};
 	return { connectionHealthy, reportPing };
 }

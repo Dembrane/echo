@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Slider, Stack, Text } from "@mantine/core";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { roles } from "@/colors";
 
@@ -70,12 +70,12 @@ export const ImageCropModal = ({
 	const [zoom, setZoom] = useState(1);
 	const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-	const onCropCompleteCallback = useCallback(
-		(_croppedArea: Area, croppedAreaPixels: Area) => {
-			setCroppedAreaPixels(croppedAreaPixels);
-		},
-		[],
-	);
+	const onCropCompleteCallback = (
+		_croppedArea: Area,
+		croppedAreaPixels: Area,
+	) => {
+		setCroppedAreaPixels(croppedAreaPixels);
+	};
 
 	const handleSave = async () => {
 		if (!croppedAreaPixels) return;

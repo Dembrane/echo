@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Badge } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { AppWindow, Gear, Plus, PushPin, Users } from "@phosphor-icons/react";
-import { useMemo } from "react";
+
 import { useParams } from "react-router";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { wallPopoverLine } from "@/components/workspace/gateWalls";
@@ -21,14 +21,9 @@ export const WorkspaceHomeView = () => {
 	const { workspaces } = useWorkspace();
 	const projectsQuery = useWorkspaceProjects({ limit: 8 });
 
-	const workspace = useMemo(
-		() => workspaces.find((w) => w.id === workspaceId),
-		[workspaces, workspaceId],
-	);
-	const pinnedProjects = useMemo(
-		() => projectsQuery.data?.pages.flatMap((page) => page.pinned) ?? [],
-		[projectsQuery.data],
-	);
+	const workspace = workspaces.find((w) => w.id === workspaceId);
+	const pinnedProjects =
+		projectsQuery.data?.pages.flatMap((page) => page.pinned) ?? [];
 	const atProjectCap = useProjectCap(workspace);
 	const [capWallOpened, capWall] = useDisclosure(false);
 

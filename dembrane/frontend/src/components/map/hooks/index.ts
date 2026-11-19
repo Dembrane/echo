@@ -6,7 +6,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -579,73 +579,70 @@ export const useMapEvents = (projectId: string) => {
 		[projectId],
 	);
 
-	const onEvent = useCallback(
-		(event: ServerEvent) => {
-			switch (event.type) {
-				case "connected":
-					void queryClient.invalidateQueries({
-						queryKey: mapKeys.project(projectId),
-					});
-					void queryClient.invalidateQueries({ queryKey: mapKeys.results });
-					return;
-				case "progress": {
-					const key = mapKeys.project(projectId);
-					const next = applyProgressEvent(
-						queryClient.getQueryData<ProjectMapState>(key),
-						event,
-					);
-					if (next) {
-						queryClient.setQueryData(key, next);
-					} else {
-						void queryClient.invalidateQueries({ queryKey: key });
-					}
-					return;
+	const onEvent = (event: ServerEvent) => {
+		switch (event.type) {
+			case "connected":
+				void queryClient.invalidateQueries({
+					queryKey: mapKeys.project(projectId),
+				});
+				void queryClient.invalidateQueries({ queryKey: mapKeys.results });
+				return;
+			case "progress": {
+				const key = mapKeys.project(projectId);
+				const next = applyProgressEvent(
+					queryClient.getQueryData<ProjectMapState>(key),
+					event,
+				);
+				if (next) {
+					queryClient.setQueryData(key, next);
+				} else {
+					void queryClient.invalidateQueries({ queryKey: key });
 				}
-				case "fact_check":
-					// A bulk run sends one event per claim. The first event of a
-					// burst schedules a refetch of the current result's states;
-					// the rest join it.
-					if (factCheckTimerRef.current) return;
-					factCheckTimerRef.current = setTimeout(() => {
-						factCheckTimerRef.current = null;
-						const current = queryClient.getQueryData<ProjectMapState>(
-							mapKeys.project(projectId),
-						)?.current;
-						const resultId = current ? currentResultId(current) : null;
-						if (!resultId) {
-							// The graph comes from its own query: refresh every
-							// result's states rather than miss the one on screen.
-							void queryClient.invalidateQueries({
-								predicate: (query) =>
-									query.queryKey[0] === "map" &&
-									query.queryKey[1] === "result" &&
-									query.queryKey[3] === "fact-checks",
-							});
-							return;
-						}
-						void queryClient.invalidateQueries({
-							queryKey: mapKeys.factChecks(resultId),
-						});
-					}, FACT_CHECK_REFETCH_DELAY_MS);
-					return;
-				case "group":
-					// Someone's group was committed or titled: every page on the
-					// project reads the list again.
-					void queryClient.invalidateQueries({
-						predicate: (query) =>
-							query.queryKey[0] === "map" &&
-							query.queryKey[1] === "result" &&
-							query.queryKey[3] === "groups",
-					});
-					return;
-				default:
-					void queryClient.invalidateQueries({
-						queryKey: mapKeys.project(projectId),
-					});
+				return;
 			}
-		},
-		[projectId, queryClient],
-	);
+			case "fact_check":
+				// A bulk run sends one event per claim. The first event of a
+				// burst schedules a refetch of the current result's states;
+				// the rest join it.
+				if (factCheckTimerRef.current) return;
+				factCheckTimerRef.current = setTimeout(() => {
+					factCheckTimerRef.current = null;
+					const current = queryClient.getQueryData<ProjectMapState>(
+						mapKeys.project(projectId),
+					)?.current;
+					const resultId = current ? currentResultId(current) : null;
+					if (!resultId) {
+						// The graph comes from its own query: refresh every
+						// result's states rather than miss the one on screen.
+						void queryClient.invalidateQueries({
+							predicate: (query) =>
+								query.queryKey[0] === "map" &&
+								query.queryKey[1] === "result" &&
+								query.queryKey[3] === "fact-checks",
+						});
+						return;
+					}
+					void queryClient.invalidateQueries({
+						queryKey: mapKeys.factChecks(resultId),
+					});
+				}, FACT_CHECK_REFETCH_DELAY_MS);
+				return;
+			case "group":
+				// Someone's group was committed or titled: every page on the
+				// project reads the list again.
+				void queryClient.invalidateQueries({
+					predicate: (query) =>
+						query.queryKey[0] === "map" &&
+						query.queryKey[1] === "result" &&
+						query.queryKey[3] === "groups",
+				});
+				return;
+			default:
+				void queryClient.invalidateQueries({
+					queryKey: mapKeys.project(projectId),
+				});
+		}
+	};
 
 	useServerEvents(
 		projectId

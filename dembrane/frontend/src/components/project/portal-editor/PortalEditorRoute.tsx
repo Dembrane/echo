@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -32,13 +32,10 @@ export const PortalEditorRoute = () => {
 	const { workspace } = useWorkspace();
 	// Observers lack project:update: they see every page read-only, as before.
 	const readOnly = !workspace || isReadOnlyRole(workspace.role);
-	const query = useMemo(
-		() => ({
-			deep: { tags: { _sort: "sort" } },
-			fields: [...PORTAL_PROJECT_FIELDS] as never,
-		}),
-		[],
-	);
+	const query = {
+		deep: { tags: { _sort: "sort" } },
+		fields: [...PORTAL_PROJECT_FIELDS] as never,
+	};
 	const projectQuery = useProjectById({ projectId: projectId ?? "", query });
 	const wantsTopics = section === "verify";
 	const topicsQuery = useVerificationTopicsQuery(projectId);

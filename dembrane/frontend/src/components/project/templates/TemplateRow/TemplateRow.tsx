@@ -2,14 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Button, Group, Skeleton, Text } from "@mantine/core";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import {
-	type KeyboardEvent,
-	useCallback,
-	useEffect,
-	useId,
-	useRef,
-	useState,
-} from "react";
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import {
 	type CardKey,
 	rowCards,
@@ -55,14 +48,14 @@ export const TemplateRow = ({
 		key: CardKey;
 	})[];
 
-	const measure = useCallback(() => {
+	const measure = () => {
 		const el = listRef.current;
 		if (!el) return;
 		setEnds({
 			end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
 			start: el.scrollLeft <= 2,
 		});
-	}, []);
+	};
 	// biome-ignore lint/correctness/useExhaustiveDependencies: measure again once the cards are in
 	useEffect(() => {
 		measure();

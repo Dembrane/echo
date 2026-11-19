@@ -3,7 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Stack, Text } from "@mantine/core";
 import posthog from "posthog-js";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -44,27 +44,24 @@ const ReportEditorComponent: React.FC<{
 
 	const updateReportMutation = useUpdateProjectReportMutation();
 
-	const onSave = useCallback(
-		async (values: ReportEditorFormValues) => {
-			posthog.capture("report_edited");
+	const onSave = async (values: ReportEditorFormValues) => {
+		posthog.capture("report_edited");
 
-			const projectId =
-				typeof report.project_id === "object" && report.project_id?.id
-					? report.project_id.id
-					: report.project_id;
+		const projectId =
+			typeof report.project_id === "object" && report.project_id?.id
+				? report.project_id.id
+				: report.project_id;
 
-			await updateReportMutation.mutateAsync({
-				payload: values,
-				projectId: projectId as string,
-				reportId: report.id,
-			});
+		await updateReportMutation.mutateAsync({
+			payload: values,
+			projectId: projectId as string,
+			reportId: report.id,
+		});
 
-			// Reset the form with the current values to clear the dirty state
-			reset(values, { keepDirty: false, keepValues: true });
-			onSaveSuccess?.();
-		},
-		[report.id, report.project_id, updateReportMutation, reset, onSaveSuccess],
-	);
+		// Reset the form with the current values to clear the dirty state
+		reset(values, { keepDirty: false, keepValues: true });
+		onSaveSuccess?.();
+	};
 
 	const {
 		dispatchAutoSave,

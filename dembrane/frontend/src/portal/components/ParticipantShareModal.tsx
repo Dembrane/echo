@@ -10,7 +10,7 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import posthog from "posthog-js";
-import { useMemo } from "react";
+
 import { useSearchParams } from "react-router";
 import { QRCode } from "@/components/common/QRCode";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
@@ -31,16 +31,12 @@ export const ParticipantShareModal = ({
 	const [searchParams] = useSearchParams();
 	const baseLink = useProjectSharingLink(project, "portal");
 	const currentSearch = searchParams.toString();
-	const shareLink = useMemo(
-		() =>
-			baseLink
-				? buildPortalSessionSharingLink(
-						baseLink,
-						new URLSearchParams(currentSearch),
-					)
-				: null,
-		[baseLink, currentSearch],
-	);
+	const shareLink = baseLink
+		? buildPortalSessionSharingLink(
+				baseLink,
+				new URLSearchParams(currentSearch),
+			)
+		: null;
 
 	const trackShare = (method: "copy" | "email" | "native" | "whatsapp") => {
 		posthog.capture("portal_share_selected", {

@@ -28,14 +28,7 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ComponentProps,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -176,15 +169,12 @@ export const ProjectsHomeRoute = () => {
 
 	const isAdmin = firstPage?.is_admin ?? false;
 
-	const pinnedIds = useMemo(
-		() => new Set(pinnedProjects.map((p) => p.id)),
-		[pinnedProjects],
-	);
+	const pinnedIds = new Set(pinnedProjects.map((p) => p.id));
 
 	const canPin = pinnedProjects.length < MAX_PINNED;
 	const showPinnedSection = pinnedProjects.length > 0 && !debouncedSearchValue;
 
-	const getNextPinOrder = useCallback(() => {
+	const getNextPinOrder = () => {
 		const usedOrders = new Set(
 			pinnedProjects.map((p) => p.pin_order).filter(Boolean),
 		);
@@ -192,25 +182,22 @@ export const ProjectsHomeRoute = () => {
 			if (!usedOrders.has(i)) return i;
 		}
 		return null;
-	}, [pinnedProjects]);
+	};
 
 	const handleSearchOwner = (term: string) => changeSearch(`owner:${term}`);
 
-	const handleTogglePin = useCallback(
-		(projectId: string) => {
-			if (pinnedIds.has(projectId)) {
-				togglePinMutation.mutate({ pin_order: null, projectId });
-			} else {
-				const nextOrder = getNextPinOrder();
-				if (nextOrder === null) {
-					toast.error(t`Unpin a project first (max ${MAX_PINNED})`);
-					return;
-				}
-				togglePinMutation.mutate({ pin_order: nextOrder, projectId });
+	const handleTogglePin = (projectId: string) => {
+		if (pinnedIds.has(projectId)) {
+			togglePinMutation.mutate({ pin_order: null, projectId });
+		} else {
+			const nextOrder = getNextPinOrder();
+			if (nextOrder === null) {
+				toast.error(t`Unpin a project first (max ${MAX_PINNED})`);
+				return;
 			}
-		},
-		[pinnedIds, getNextPinOrder, togglePinMutation],
-	);
+			togglePinMutation.mutate({ pin_order: nextOrder, projectId });
+		}
+	};
 
 	// Pinned rail shouldn't also appear in the "All projects" list —
 	// audit 2026-04-23 called the duplication out. One surface per project.
@@ -219,20 +206,17 @@ export const ProjectsHomeRoute = () => {
 	// selection — operate on the full set.
 	const displayProjects = allProjects;
 
-	const selectableIds = useMemo(
-		() => displayProjects.map((p) => p.id),
-		[displayProjects],
-	);
+	const selectableIds = displayProjects.map((p) => p.id);
 	const selection = useBulkSelection(selectableIds);
 	const [moveOpen, moveHandlers] = useDisclosure(false);
 	// Select mode is off by default: the checkboxes only appear once the user
 	// clicks "Select", keeping the list clean for the common (browse) case.
 	const [selectMode, setSelectMode] = useState(false);
 
-	const exitSelectMode = useCallback(() => {
+	const exitSelectMode = () => {
 		selection.clear();
 		setSelectMode(false);
-	}, [selection]);
+	};
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";

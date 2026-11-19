@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { isColorBy } from "../state/settings";
 import type { ColorBy } from "../types";
@@ -86,16 +85,10 @@ export function useMapUrlState(): [
 	(patch: Partial<MapUrlState>) => void,
 ] {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const state = useMemo(
-		() => parseMapSearchParams(searchParams),
-		[searchParams],
-	);
-	const update = useCallback(
-		(patch: Partial<MapUrlState>) =>
-			setSearchParams((previous) => applyMapUrlState(previous, patch), {
-				replace: true,
-			}),
-		[setSearchParams],
-	);
+	const state = parseMapSearchParams(searchParams);
+	const update = (patch: Partial<MapUrlState>) =>
+		setSearchParams((previous) => applyMapUrlState(previous, patch), {
+			replace: true,
+		});
 	return [state, update];
 }

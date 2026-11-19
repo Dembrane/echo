@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "@/hooks/useLatest";
 import { centralityOrder } from "../graph/mst";
 import { useMapInteractionStore } from "../state/interactionStore";
@@ -243,25 +243,22 @@ export function useMapGroups({
 	// When each group was last selected, so one brought back sorts as recent.
 	const [selectedAt, setSelectedAt] = useState<Record<string, number>>({});
 
-	const setSelected = useCallback((id: string | null) => {
+	const setSelected = (id: string | null) => {
 		if (id && id !== selectedRef.current)
 			setSelectedAt((current) => ({ ...current, [id]: Date.now() }));
 		selectedRef.current = id;
 		setSelectedState(id);
-	}, []);
+	};
 
-	const highlightAsHistory = useCallback(
-		(nodeIds: string[]) => {
-			store.setHighlightedNodeIds(new Set(nodeIds), {
-				isPreview: false,
-				source: "history",
-			});
-			store.setHighlightedNodesDistance(
-				new Map(nodeIds.map((id) => [id, 0] as const)),
-			);
-		},
-		[store],
-	);
+	const highlightAsHistory = (nodeIds: string[]) => {
+		store.setHighlightedNodeIds(new Set(nodeIds), {
+			isPreview: false,
+			source: "history",
+		});
+		store.setHighlightedNodesDistance(
+			new Map(nodeIds.map((id) => [id, 0] as const)),
+		);
+	};
 
 	// The group this page committed lands: Spotlight shows it, and the map
 	// follows unless the cursor is mid-circle elsewhere.
@@ -278,7 +275,7 @@ export function useMapGroups({
 		if (!busy) highlightAsHistory(entry.nodeIds);
 	}, [highlightAsHistory, history, setSelected, store]);
 
-	const clearTimer = useCallback(() => {
+	const clearTimer = () => {
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
 			timeoutRef.current = null;
@@ -289,98 +286,92 @@ export function useMapGroups({
 			setTimerRun(null);
 			setTimerProgress(0);
 		}
-	}, []);
+	};
 
 	/** Commits nodes of the current map, most central first. */
-	const send = useCallback(
-		(nodeIds: string[]) => {
-			const {
-				backend: groups,
-				nodes: graphNodes,
-				resultId: id,
-				snapshotId: snapshot,
-			} = latestRef.current;
-			if (!id) return;
-			const byId = new Map(graphNodes.map((node) => [node.id, node] as const));
-			const revisionIds = nodeIds.map(
-				(nodeId) => byId.get(nodeId)?.metadata.revisionId || nodeId,
-			);
-			const key = `${id}::${setKey(nodeIds)}`;
-			const localId = `local-${++localSeqRef.current}`;
-			const pending: Distillation = {
-				createdAt: new Date().toISOString(),
-				id: localId,
-				key,
-				nodeIds,
-				status: "pending",
-			};
-			setLocal((previous) => [
-				pending,
-				...previous.filter((entry) => entry.key !== key),
-			]);
-			awaitingRef.current = null;
-			groups.create(id, { revisionIds, snapshotId: snapshot ?? null }).then(
-				(doc) => {
-					if (latestRef.current.resultId !== id) return;
-					const listKey = mapKeys.groups(id);
-					queryClient.setQueryData<MapGroupDoc[]>(listKey, (previous) => [
-						doc,
-						...(previous ?? []).filter((item) => item.id !== doc.id),
-					]);
-					setLocal((previous) =>
-						previous.filter((entry) => entry.id !== localId),
-					);
-					awaitingRef.current = doc.id;
-					void queryClient.invalidateQueries({ queryKey: listKey });
-				},
-				(reason: HttpError) => {
-					if (latestRef.current.resultId !== id) return;
-					setLocal((previous) =>
-						previous.map((entry) =>
-							entry.id === localId
-								? {
-										...entry,
-										status: reason?.status === 413 ? "too-large" : "failed",
-									}
-								: entry,
-						),
-					);
-				},
-			);
-		},
-		[latestRef, queryClient],
-	);
+	const send = (nodeIds: string[]) => {
+		const {
+			backend: groups,
+			nodes: graphNodes,
+			resultId: id,
+			snapshotId: snapshot,
+		} = latestRef.current;
+		if (!id) return;
+		const byId = new Map(graphNodes.map((node) => [node.id, node] as const));
+		const revisionIds = nodeIds.map(
+			(nodeId) => byId.get(nodeId)?.metadata.revisionId || nodeId,
+		);
+		const key = `${id}::${setKey(nodeIds)}`;
+		const localId = `local-${++localSeqRef.current}`;
+		const pending: Distillation = {
+			createdAt: new Date().toISOString(),
+			id: localId,
+			key,
+			nodeIds,
+			status: "pending",
+		};
+		setLocal((previous) => [
+			pending,
+			...previous.filter((entry) => entry.key !== key),
+		]);
+		awaitingRef.current = null;
+		groups.create(id, { revisionIds, snapshotId: snapshot ?? null }).then(
+			(doc) => {
+				if (latestRef.current.resultId !== id) return;
+				const listKey = mapKeys.groups(id);
+				queryClient.setQueryData<MapGroupDoc[]>(listKey, (previous) => [
+					doc,
+					...(previous ?? []).filter((item) => item.id !== doc.id),
+				]);
+				setLocal((previous) =>
+					previous.filter((entry) => entry.id !== localId),
+				);
+				awaitingRef.current = doc.id;
+				void queryClient.invalidateQueries({ queryKey: listKey });
+			},
+			(reason: HttpError) => {
+				if (latestRef.current.resultId !== id) return;
+				setLocal((previous) =>
+					previous.map((entry) =>
+						entry.id === localId
+							? {
+									...entry,
+									status: reason?.status === 413 ? "too-large" : "failed",
+								}
+							: entry,
+					),
+				);
+			},
+		);
+	};
 
-	const commit = useCallback(
-		(ids: ReadonlySet<string>) => {
-			timeoutRef.current = null;
-			timerStartRef.current = null;
-			const { edges: treeEdges, nodes: graphNodes } = latestRef.current;
-			const byId = new Map(graphNodes.map((node) => [node.id, node] as const));
-			const eligible = Array.from(ids).filter((id) => byId.has(id));
-			if (eligible.length < MIN_GROUP_NODES) {
-				setTimerRun(null);
-				setTimerProgress(0);
-				return;
-			}
-			// The circle closed: show it whole for a moment, whatever comes next.
-			setTimerProgress(1);
-			if (flashRef.current) clearTimeout(flashRef.current);
-			flashRef.current = setTimeout(() => {
-				flashRef.current = null;
-				if (timerStartRef.current !== null) return;
-				setTimerRun(null);
-				setTimerProgress(0);
-			}, COMMIT_FLASH_MS);
+	const commit = (ids: ReadonlySet<string>) => {
+		timeoutRef.current = null;
+		timerStartRef.current = null;
+		const { edges: treeEdges, nodes: graphNodes } = latestRef.current;
+		const byId = new Map(graphNodes.map((node) => [node.id, node] as const));
+		const eligible = Array.from(ids).filter((id) => byId.has(id));
+		if (eligible.length < MIN_GROUP_NODES) {
+			setTimerRun(null);
+			setTimerProgress(0);
+			return;
+		}
+		// The circle closed: show it whole for a moment, whatever comes next.
+		setTimerProgress(1);
+		if (flashRef.current) clearTimeout(flashRef.current);
+		flashRef.current = setTimeout(() => {
+			flashRef.current = null;
+			if (timerStartRef.current !== null) return;
+			setTimerRun(null);
+			setTimerProgress(0);
+		}, COMMIT_FLASH_MS);
 
-			// Every settled node goes to the server; it refuses a selection it
-			// cannot title whole rather than trimming it here.
-			send(centralityOrder(eligible, graphNodes, treeEdges));
-		},
-		[latestRef, send],
-	);
+		// Every settled node goes to the server; it refuses a selection it
+		// cannot title whole rather than trimming it here.
+		send(centralityOrder(eligible, graphNodes, treeEdges));
+	};
 
-	const handleChange = useCallback(() => {
+	const handleChange = () => {
 		const state = store.getState();
 		const previous = metaRef.current;
 		const previewCommitted =
@@ -446,7 +437,7 @@ export function useMapGroups({
 		setTimerProgress(0);
 		setTimerRun(++timerSeqRef.current);
 		timeoutRef.current = setTimeout(() => commit(ids), DWELL_MS);
-	}, [clearTimer, commit, historyRef, latestRef, store]);
+	};
 
 	useEffect(() => {
 		if (!enabled) return;
@@ -495,37 +486,31 @@ export function useMapGroups({
 	}, [resultId]);
 
 	/** Shows a group in Spotlight and on the map; again to let it go. */
-	const selectDistillation = useCallback(
-		(id: string) => {
-			if (selectedRef.current === id) {
-				setSelected(null);
-				store.setHighlightedNodeIds(new Set(), {
-					isPreview: false,
-					source: "history",
-				});
-				store.setHighlightedNodesDistance(new Map());
-				return;
-			}
-			const entry = historyRef.current.find((item) => item.id === id);
-			if (!entry) return;
-			setSelected(id);
-			highlightAsHistory(entry.nodeIds);
-		},
-		[highlightAsHistory, historyRef, setSelected, store],
-	);
+	const selectDistillation = (id: string) => {
+		if (selectedRef.current === id) {
+			setSelected(null);
+			store.setHighlightedNodeIds(new Set(), {
+				isPreview: false,
+				source: "history",
+			});
+			store.setHighlightedNodesDistance(new Map());
+			return;
+		}
+		const entry = historyRef.current.find((item) => item.id === id);
+		if (!entry) return;
+		setSelected(id);
+		highlightAsHistory(entry.nodeIds);
+	};
 
 	/** Lets the selected group go without touching the map, as a click on a node does. */
-	const deselect = useCallback(() => setSelected(null), [setSelected]);
+	const deselect = () => setSelected(null);
 
 	/** Commits again a group whose run or commit failed. */
-	const retry = useCallback(
-		(id: string) => {
-			if (!latestRef.current.canCommit) return;
-			const entry = historyRef.current.find((item) => item.id === id);
-			if (entry?.status === "failed") send(entry.nodeIds);
-		},
-		[historyRef, latestRef, send],
-	);
+	const retry = (id: string) => {
+		if (!latestRef.current.canCommit) return;
+		const entry = historyRef.current.find((item) => item.id === id);
+		if (entry?.status === "failed") send(entry.nodeIds);
+	};
 
 	return {
 		deselect,

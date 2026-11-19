@@ -1,12 +1,15 @@
 import { Alert, type AlertProps } from "@mantine/core";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 interface CloseableAlertProps extends AlertProps {
 	/** When provided, dismissal is persisted to localStorage under this key. */
 	storageKey?: string;
 }
 
-export const CloseableAlert = ({ storageKey, ...props }: CloseableAlertProps) => {
+export const CloseableAlert = ({
+	storageKey,
+	...props
+}: CloseableAlertProps) => {
 	const [alertOpened, setAlertOpened] = useState(() => {
 		if (storageKey) {
 			return localStorage.getItem(storageKey) !== "dismissed";
@@ -14,12 +17,12 @@ export const CloseableAlert = ({ storageKey, ...props }: CloseableAlertProps) =>
 		return true;
 	});
 
-	const handleClose = useCallback(() => {
+	const handleClose = () => {
 		setAlertOpened(false);
 		if (storageKey) {
 			localStorage.setItem(storageKey, "dismissed");
 		}
-	}, [storageKey]);
+	};
 
 	return (
 		<>

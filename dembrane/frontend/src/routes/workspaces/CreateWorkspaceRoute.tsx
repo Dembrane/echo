@@ -148,12 +148,8 @@ export const CreateWorkspaceRoute = () => {
 		posthog.capture("workspace_create_started");
 	}, []);
 
-	const adminOrganisations = useMemo(
-		() =>
-			(meV2?.orgs ?? []).filter(
-				(o) => o.role === "owner" || o.role === "admin",
-			),
-		[meV2],
+	const adminOrganisations = (meV2?.orgs ?? []).filter(
+		(o) => o.role === "owner" || o.role === "admin",
 	);
 
 	useEffect(() => {

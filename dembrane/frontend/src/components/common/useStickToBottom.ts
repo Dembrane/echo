@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	evaluateScrollPosition,
 	resolveScrollContainer,
@@ -17,7 +17,7 @@ export const useStickToBottom = (
 	const isAtBottomRef = useRef(true);
 	const containerRef = useRef<HTMLElement | null>(null);
 
-	const measure = useCallback(() => {
+	const measure = () => {
 		const container =
 			containerRef.current ?? resolveScrollContainer(anchorRef.current);
 		if (!container) return;
@@ -37,7 +37,7 @@ export const useStickToBottom = (
 						showScrollButton: next.showScrollButton,
 					},
 		);
-	}, [anchorRef]);
+	};
 
 	useEffect(() => {
 		let disposed = false;
@@ -104,17 +104,14 @@ export const useStickToBottom = (
 		};
 	}, [anchorRef, measure]);
 
-	const scrollToBottom = useCallback(
-		(behavior: ScrollBehavior = "smooth") => {
-			window.requestAnimationFrame(() => {
-				const container =
-					containerRef.current ?? resolveScrollContainer(anchorRef.current);
-				if (!container) return;
-				container.scrollTo({ behavior, top: container.scrollHeight });
-			});
-		},
-		[anchorRef],
-	);
+	const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+		window.requestAnimationFrame(() => {
+			const container =
+				containerRef.current ?? resolveScrollContainer(anchorRef.current);
+			if (!container) return;
+			container.scrollTo({ behavior, top: container.scrollHeight });
+		});
+	};
 
 	return {
 		isAtBottom: state.isAtBottom,

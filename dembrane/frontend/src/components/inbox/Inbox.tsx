@@ -22,7 +22,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { BellIcon, CheckIcon } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { AnnouncementItem } from "@/components/announcement/AnnouncementItem";
 import {
@@ -102,14 +102,8 @@ export const Inbox = () => {
 		allAnnouncements,
 		language,
 	);
-	const unreadAnnouncementRows = useMemo(
-		() => processedAnnouncements.filter((a) => !a.read),
-		[processedAnnouncements],
-	);
-	const readAnnouncementRows = useMemo(
-		() => processedAnnouncements.filter((a) => a.read),
-		[processedAnnouncements],
-	);
+	const unreadAnnouncementRows = processedAnnouncements.filter((a) => !a.read);
+	const readAnnouncementRows = processedAnnouncements.filter((a) => a.read);
 
 	// Infinite-scroll sentinel. Fire-and-forget inside useEffect so the
 	// fetch doesn't run during render (which caused max-depth churn on

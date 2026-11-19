@@ -14,7 +14,6 @@ import {
 	toolbarPlugin,
 	UndoRedo,
 } from "@mdxeditor/editor";
-import { useCallback, useMemo } from "react";
 
 import "./styles.css";
 import {
@@ -27,17 +26,11 @@ export function MarkdownWYSIWYG({
 	onChange,
 	...rest
 }: MDXEditorProps) {
-	const safeMarkdown = useMemo(
-		() => escapeRedactedTokens(markdown ?? ""),
-		[markdown],
-	);
+	const safeMarkdown = escapeRedactedTokens(markdown ?? "");
 
-	const handleChange = useCallback(
-		(value: string, initialMarkdownNormalize: boolean) => {
-			onChange?.(unescapeRedactedTokens(value), initialMarkdownNormalize);
-		},
-		[onChange],
-	);
+	const handleChange = (value: string, initialMarkdownNormalize: boolean) => {
+		onChange?.(unescapeRedactedTokens(value), initialMarkdownNormalize);
+	};
 
 	return (
 		<MDXEditor
