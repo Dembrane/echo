@@ -131,11 +131,18 @@ it("does not generate and shows the line when the project has no AI", () => {
 });
 
 it("still toasts other generation failures", async () => {
-	state.mutateAsync.mockRejectedValue(new Error("boom"));
+	const boom = new Error("boom");
+	state.mutateAsync.mockRejectedValue(boom);
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	renderPage();
 	pickAndContinue();
 	await vi.waitFor(() => expect(state.toastError).toHaveBeenCalledTimes(1));
 	expect(screen.queryByText("Not available right now")).toBeNull();
+	expect(consoleError).toHaveBeenCalledWith(
+		"error generating verification artefact",
+		boom,
+	);
+	consoleError.mockRestore();
 });
 
 // ECHO-1052: one topic starts at once; several are clear buttons, each with what it gives.
@@ -173,12 +180,20 @@ it("shows several topics as buttons with their label and one line each", () => {
 
 it("tries the single topic once, and doesn't retry by itself after a failure", async () => {
 	state.topics = ["agreements"];
-	state.mutateAsync.mockRejectedValue(new Error("boom"));
+	const boom = new Error("boom");
+	state.mutateAsync.mockRejectedValue(boom);
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	const view = renderPage();
 	await vi.waitFor(() => expect(state.toastError).toHaveBeenCalled());
 	view.rerender(page());
 	await new Promise((resolve) => setTimeout(resolve, 20));
 	expect(state.mutateAsync).toHaveBeenCalledTimes(1);
+	expect(consoleError).toHaveBeenCalledTimes(1);
+	expect(consoleError).toHaveBeenCalledWith(
+		"error generating verification artefact",
+		boom,
+	);
+	consoleError.mockRestore();
 });
 
 it("drops the choice when the host removes that topic", () => {

@@ -134,8 +134,10 @@ it("passes the test once it hears the participant", async () => {
 });
 
 it("tells the participant to allow the mic when access is blocked", async () => {
+	const blocked = new Error("NotAllowedError");
 	const onMicAccessDenied = vi.fn();
-	getUserMedia.mockRejectedValue(new Error("NotAllowedError"));
+	getUserMedia.mockRejectedValue(blocked);
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
@@ -153,6 +155,11 @@ it("tells the participant to allow the mic when access is blocked", async () => 
 		await screen.findByTestId("portal-settings-mic-error-alert"),
 	).toBeTruthy();
 	expect(onMicAccessDenied).toHaveBeenCalledWith(true);
+	expect(consoleError).toHaveBeenCalledWith(
+		"Failed to get microphone permission or enumerate devices:",
+		blocked,
+	);
+	consoleError.mockRestore();
 });
 
 it("keeps the mic open when the parent passes a new callback", async () => {

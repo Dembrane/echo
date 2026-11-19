@@ -88,10 +88,16 @@ describe("the theme of the room's screen", () => {
 		};
 		vi.spyOn(Storage.prototype, "getItem").mockImplementation(blocked);
 		vi.spyOn(Storage.prototype, "setItem").mockImplementation(blocked);
+		const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const { result } = renderHook(() => useAudienceTheme(), { wrapper: room });
 		expect(result.current[0]).toBe("light");
 		act(() => result.current[1]("dark"));
 		expect(result.current[0]).toBe("dark");
+		// Mantine says so when it can't save the choice.
+		expect(consoleWarn).toHaveBeenCalledWith(
+			expect.stringContaining("unable to save color scheme"),
+			expect.anything(),
+		);
 	});
 });

@@ -11,7 +11,8 @@ import { ParticipantStartRoute } from "./ParticipantStart";
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
 vi.mock("@/hooks/useVisitorBeacon", () => ({ useVisitorBeacon: vi.fn() }));
 vi.mock("@/components/common/Logo", () => ({
-	DembraneLogomark: () => null,
+	// The logomark is an image URL, not a component: the spinner puts it in <img src>.
+	DembraneLogomark: "logomark.svg",
 	Logo: () => <div data-testid="logo" />,
 }));
 vi.mock("@/portal/components/start/InAppBrowserNotice", () => ({
