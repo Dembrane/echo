@@ -21,13 +21,6 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
-	addDays,
-	addHours,
-	format,
-	formatDistanceToNow,
-	isSameDay,
-} from "date-fns";
-import {
 	ArrowsClockwiseIcon,
 	ArrowsInIcon,
 	ArrowsOutIcon,
@@ -37,6 +30,13 @@ import {
 	PencilSimpleIcon,
 	PlayIcon,
 } from "@phosphor-icons/react";
+import {
+	addDays,
+	addHours,
+	format,
+	formatDistanceToNow,
+	isSameDay,
+} from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
@@ -168,14 +168,20 @@ function CanvasLoopSettings({
 	const [cadence, setCadence] = useState(String(loop?.cadence_minutes ?? 5));
 	const mutation = useCanvasLoopSettingsMutation(canvasId);
 
-	useEffect(() => {
-		setCadence(String(loop?.cadence_minutes ?? 5));
-		if (!loop?.expires_at) return;
-		const expiry = new Date(loop.expires_at);
-		if (!Number.isNaN(expiry.getTime())) {
+	// The fields follow the loop's own cadence and expiry when those change (a
+	// reread of the same loop keeps an edit), during render.
+	const cadenceMinutes = loop?.cadence_minutes;
+	const expiresAt = loop?.expires_at;
+	const loopKey = `${cadenceMinutes ?? ""}|${expiresAt ?? ""}`;
+	const [filledFor, setFilledFor] = useState<string | null>(null);
+	if (filledFor !== loopKey) {
+		setFilledFor(loopKey);
+		setCadence(String(cadenceMinutes ?? 5));
+		const expiry = expiresAt ? new Date(expiresAt) : null;
+		if (expiry && !Number.isNaN(expiry.getTime())) {
 			setCustomExpiry(toDatetimeLocalValue(expiry));
 		}
-	}, [loop?.cadence_minutes, loop?.expires_at]);
+	}
 
 	const cadenceText = loop ? canvasCadenceLabel(loop) : null;
 	const canEdit =
