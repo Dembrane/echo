@@ -118,7 +118,20 @@ export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
 	const { iso639_1 } = useLanguage();
 
-	const chat = useChat({
+	const {
+		messages: chatMessages,
+		setMessages,
+		input,
+		setInput,
+		handleInputChange,
+		handleSubmit,
+		isLoading,
+		status,
+		error,
+		stop,
+		reload,
+		data,
+	} = useChat({
 		api: `${API_BASE_URL}/chats/${chatId}?language=${iso639_1 ?? "en"}`,
 		credentials: "include",
 		experimental_prepareRequestBody: (options) => {
@@ -177,20 +190,18 @@ export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		onResponse: async (_response) => {},
 		streamProtocol: "data",
 	});
-	const {
-		messages,
-		setMessages,
-		input,
-		setInput,
-		handleInputChange,
-		handleSubmit,
-		isLoading,
-		status,
-		error,
-		stop,
-		reload,
-		data,
-	} = chat;
+
+	// The server's history shows once it holds more than the chat does (the
+	// first load, and messages the server adds), unless a reply is streaming.
+	// Sending loads it into the chat first (customHandleSubmit).
+	// Cast: getChatHistory's messages are untyped (see its @ts-expect-error).
+	const history = chatHistoryQuery.data as unknown as
+		| typeof chatMessages
+		| undefined;
+	const messages =
+		!isLoading && history && history.length > chatMessages.length
+			? history
+			: chatMessages;
 
 	// Handle load status (shows inline message when backend reports high load)
 	const hasContent =
@@ -275,28 +286,6 @@ export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 				setIsSubmitting(false);
 			});
 	};
-
-	// reconcile for "dembrane" messages: the server's history takes over the
-	// AI SDK's message store once it holds more.
-	useEffect(() => {
-		if (isLoading || chatHistoryQuery.isLoading || !chatHistoryQuery.data) {
-			return;
-		}
-
-		if (
-			chatHistoryQuery.data &&
-			chatHistoryQuery.data.length > (messages?.length ?? 0)
-		) {
-			// @ts-expect-error chatHistoryQuery.data is not typed
-			chat.setMessages(chatHistoryQuery.data);
-		}
-	}, [
-		chatHistoryQuery.data,
-		isLoading,
-		chatHistoryQuery.isLoading,
-		messages,
-		chat,
-	]);
 
 	return {
 		assistantResponseTick,

@@ -28,6 +28,7 @@ const s = vi.hoisted(() => ({
 		messages?: unknown[];
 	},
 	history: [] as { id: string; role: string; content: string }[],
+	loading: false,
 	lock: vi.fn(async (_vars: unknown) => ({})),
 	refetchContext: vi.fn(async () => ({})),
 	refetchHistory: vi.fn(async (_opts?: unknown) => ({ data: [] as unknown })),
@@ -46,7 +47,7 @@ vi.mock("@ai-sdk/react", () => ({
 				setInput(e.target.value),
 			handleSubmit: s.submit,
 			input,
-			isLoading: false,
+			isLoading: s.loading,
 			messages,
 			reload: vi.fn(),
 			setInput,
@@ -154,6 +155,7 @@ beforeEach(() => {
 		messages: [],
 	};
 	s.history = [];
+	s.loading = false;
 	s.lock.mockReset();
 	s.lock.mockResolvedValue({});
 	s.refetchHistory.mockReset();
@@ -235,6 +237,17 @@ it("takes the server's history when it holds more than the chat", () => {
 	];
 	rerender();
 	expect(result.current.messages).toHaveLength(2);
+});
+
+it("keeps a streaming reply in view until it is done", () => {
+	s.loading = true;
+	const { result, rerender } = useChatHook();
+	s.history = [{ content: "q", id: "m1", role: "user" }];
+	rerender();
+	expect(result.current.messages).toEqual([]);
+	s.loading = false;
+	rerender();
+	expect(result.current.messages).toHaveLength(1);
 });
 
 const showRoute = (entry: string) =>
