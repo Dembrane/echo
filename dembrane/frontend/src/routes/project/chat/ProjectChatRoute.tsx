@@ -91,7 +91,7 @@ import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
 import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 
-const useDembraneChat = ({ chatId }: { chatId: string }) => {
+export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
 	const { projectId } = useParams();
@@ -108,7 +108,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const lastInput = useRef("");
 	const lastMessageRef = useRef<HTMLDivElement>(null);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
 	const contextToBeAdded = useMemo(() => {
 		if (!chatContextQuery.data) {
 			return null;
@@ -118,7 +117,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			conversations: conversations.filter((c) => !c.locked),
 			locked_conversations: conversations.filter((c) => c.locked),
 		};
-	}, [chatContextQuery.data, chatHistoryQuery.data]);
+	}, [chatContextQuery.data]);
 
 	const { iso639_1 } = useLanguage();
 

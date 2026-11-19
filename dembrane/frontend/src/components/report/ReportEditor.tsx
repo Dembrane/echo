@@ -3,10 +3,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Stack, Text } from "@mantine/core";
 import posthog from "posthog-js";
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useLatest } from "@/hooks/useLatest";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
@@ -19,6 +20,8 @@ const FormSchema = z.object({
 
 type ReportEditorFormValues = z.infer<typeof FormSchema>;
 
+const formResolver = zodResolver(FormSchema);
+
 // Memoized MarkdownWYSIWYG wrapper
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
@@ -26,19 +29,14 @@ const ReportEditorComponent: React.FC<{
 	report: ProjectReport;
 	onSaveSuccess?: () => void;
 }> = ({ report, onSaveSuccess }) => {
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
-	const defaultValues = useMemo(() => {
-		return {
-			content: report.content ?? "",
-			show_portal_link: report.show_portal_link ?? true,
-		};
-	}, [report.id]);
-
-	const formResolver = useMemo(() => zodResolver(FormSchema), []);
-
-	const { control, handleSubmit, watch, formState, reset } =
+	// useForm reads these once, on mount: a later copy of the same report
+	// does not overwrite what the host is writing.
+	const { control, handleSubmit, subscribe, formState, reset } =
 		useForm<ReportEditorFormValues>({
-			defaultValues,
+			defaultValues: {
+				content: report.content ?? "",
+				show_portal_link: report.show_portal_link ?? true,
+			},
 			mode: "onChange",
 			resolver: formResolver,
 			reValidateMode: "onChange",
@@ -46,27 +44,24 @@ const ReportEditorComponent: React.FC<{
 
 	const updateReportMutation = useUpdateProjectReportMutation();
 
-	const onSave = useCallback(
-		async (values: ReportEditorFormValues) => {
-			posthog.capture("report_edited");
+	const onSave = async (values: ReportEditorFormValues) => {
+		posthog.capture("report_edited");
 
-			const projectId =
-				typeof report.project_id === "object" && report.project_id?.id
-					? report.project_id.id
-					: report.project_id;
+		const projectId =
+			typeof report.project_id === "object" && report.project_id?.id
+				? report.project_id.id
+				: report.project_id;
 
-			await updateReportMutation.mutateAsync({
-				payload: values,
-				projectId: projectId as string,
-				reportId: report.id,
-			});
+		await updateReportMutation.mutateAsync({
+			payload: values,
+			projectId: projectId as string,
+			reportId: report.id,
+		});
 
-			// Reset the form with the current values to clear the dirty state
-			reset(values, { keepDirty: false, keepValues: true });
-			onSaveSuccess?.();
-		},
-		[report.id, report.project_id, updateReportMutation, reset, onSaveSuccess],
-	);
+		// Reset the form with the current values to clear the dirty state
+		reset(values, { keepDirty: false, keepValues: true });
+		onSaveSuccess?.();
+	};
 
 	const {
 		dispatchAutoSave,
@@ -82,23 +77,18 @@ const ReportEditorComponent: React.FC<{
 		onSave,
 	});
 
-	// Create a stable reference to dispatchAutoSave
-	const dispatchAutoSaveRef = useRef(dispatchAutoSave);
-	useEffect(() => {
-		dispatchAutoSaveRef.current = dispatchAutoSave;
-	}, [dispatchAutoSave]);
-
-	useEffect(() => {
-		const subscription = watch((values, { type }) => {
-			if (type === "change" && values) {
-				dispatchAutoSaveRef.current(values as ReportEditorFormValues);
-			}
-		});
-
-		return () => {
-			subscription.unsubscribe();
-		};
-	}, [watch]);
+	// The host's own edits save themselves; reset() after a save does not.
+	const dispatchAutoSaveRef = useLatest(dispatchAutoSave);
+	useEffect(
+		() =>
+			subscribe({
+				callback: ({ values, type }) => {
+					if (type === "change") dispatchAutoSaveRef.current(values);
+				},
+				formState: { values: true },
+			}),
+		[subscribe, dispatchAutoSaveRef],
+	);
 
 	return (
 		<Box>

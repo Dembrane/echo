@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { isReadByMe } from "../announcementFilters";
 
 export const getTranslatedContent = (
@@ -71,27 +70,21 @@ export function useProcessedAnnouncements(
 	announcements: Announcement[],
 	language: string,
 ) {
-	return useMemo(() => {
-		const processed = announcements.map((a) =>
-			processAnnouncement(a, language),
-		);
+	const processed = announcements.map((a) => processAnnouncement(a, language));
 
-		// Sort: unread first, then by date descending
-		return processed.sort((a, b) => {
-			if (a.read !== b.read) return a.read ? 1 : -1;
-			return sortByDateDesc(a, b);
-		});
-	}, [announcements, language]);
+	// Sort: unread first, then by date descending
+	return processed.sort((a, b) => {
+		if (a.read !== b.read) return a.read ? 1 : -1;
+		return sortByDateDesc(a, b);
+	});
 }
 
 export function useWhatsNewProcessed(
 	announcements: Announcement[],
 	language: string,
 ) {
-	return useMemo(() => {
-		return announcements
-			.filter((a) => isWhatsNew(a))
-			.map((a) => processAnnouncement(a, language))
-			.sort(sortByDateDesc);
-	}, [announcements, language]);
+	return announcements
+		.filter((a) => isWhatsNew(a))
+		.map((a) => processAnnouncement(a, language))
+		.sort(sortByDateDesc);
 }

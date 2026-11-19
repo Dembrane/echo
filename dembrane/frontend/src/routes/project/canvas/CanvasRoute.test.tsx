@@ -78,7 +78,7 @@ class FakeEventSource {
 	}
 }
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 beforeAll(() => {
 	window.matchMedia = vi.fn().mockImplementation((query) => ({
@@ -122,21 +122,21 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = () =>
-	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<MemoryRouter initialEntries={["/w/w1/canvases/cv1"]}>
-					<Routes>
-						<Route
-							path="/w/:workspaceId/canvases/:canvasId"
-							element={<CanvasRoute />}
-						/>
-					</Routes>
-				</MemoryRouter>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+const showTree = () => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider>
+			<MemoryRouter initialEntries={["/w/w1/canvases/cv1"]}>
+				<Routes>
+					<Route
+						path="/w/:workspaceId/canvases/:canvasId"
+						element={<CanvasRoute />}
+					/>
+				</Routes>
+			</MemoryRouter>
+		</MantineProvider>
+	</I18nProvider>
+);
+const show = () => render(showTree());
 
 const frame = () => screen.getByTestId("frame").textContent;
 
@@ -183,6 +183,40 @@ describe("CanvasRoute", () => {
 		fireEvent.click(screen.getByTestId("canvas-actions-menu-button"));
 		fireEvent.click(await screen.findByTestId("canvas-lifecycle-button"));
 		expect(lifecycle).toHaveBeenCalledWith("pause");
+	});
+
+	it("fills the freshness settings from the loop, keeps an edit, and follows a new loop", async () => {
+		Element.prototype.scrollIntoView ??= () => {};
+		const loop = {
+			cadence_minutes: 15,
+			expires_at: "2026-12-01T10:00:00.000Z",
+			status: "active",
+		};
+		state.canvas = { ...state.canvas, loop };
+		const view = show();
+		fireEvent.click(screen.getByTestId("canvas-freshness-settings-button"));
+		const rhythm = () =>
+			screen.getByRole("textbox", {
+				name: "Update rhythm",
+			}) as HTMLInputElement;
+		expect(
+			await screen.findByRole("textbox", { name: "Update rhythm" }),
+		).toBeTruthy();
+		expect(rhythm().value).toBe("Every 15 minutes");
+
+		fireEvent.click(rhythm());
+		fireEvent.click(
+			await screen.findByRole("option", { name: "Every 5 minutes" }),
+		);
+		expect(rhythm().value).toBe("Every 5 minutes");
+		// A reread of the same loop keeps the host's edit.
+		state.canvas = { ...state.canvas, loop: { ...loop } };
+		view.rerender(showTree());
+		expect(rhythm().value).toBe("Every 5 minutes");
+
+		state.canvas = { ...state.canvas, loop: { ...loop, cadence_minutes: 60 } };
+		view.rerender(showTree());
+		expect(rhythm().value).toBe("Every 60 minutes");
 	});
 
 	it("asks for more versions when Show more is pressed", () => {

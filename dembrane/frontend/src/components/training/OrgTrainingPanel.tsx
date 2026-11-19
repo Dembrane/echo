@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Skeleton, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
 	type CatalogProduct,
 	useOrgTrainingRoster,
@@ -33,10 +33,8 @@ export const OrgTrainingPanel = ({ orgId }: OrgTrainingPanelProps) => {
 		"online" | "in_person" | null
 	>(null);
 
-	const selectedProduct: CatalogProduct | null = useMemo(
-		() => catalog.find((p) => p.type === selectedType) ?? null,
-		[catalog, selectedType],
-	);
+	const selectedProduct: CatalogProduct | null =
+		catalog.find((p) => p.type === selectedType) ?? null;
 
 	const canManage = roster?.can_manage ?? false;
 

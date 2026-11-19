@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Text, Tooltip } from "@mantine/core";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
 
 export const REDACTED_PATTERN = /<redacted_([a-z_]+)>/g;
 export const REDACTED_CODE_PREFIX = "redacted:";
@@ -115,7 +115,7 @@ export const RedactedText = ({
 	children: string;
 	className?: string;
 }) => {
-	const rendered = useMemo(() => parseRedactedText(children), [children]);
+	const rendered = parseRedactedText(children);
 
 	if (typeof rendered === "string") {
 		return <span className={className}>{rendered}</span>;

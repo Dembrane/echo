@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react";
 import posthog from "posthog-js";
-import { useCallback, useMemo } from "react";
+
 import { useCurrentUser } from "@/components/auth/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { AiAction, WallKey } from "./gateWalls";
@@ -36,16 +36,13 @@ export function usePricingGateBase(workspaceId?: string) {
 	const { data: user } = useCurrentUser();
 	const email = (user?.email as string | undefined) ?? "";
 
-	return useMemo(
-		() => ({
-			is_internal: email.toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN),
-			locale: i18n.locale,
-			org_id: workspace?.org_id,
-			tier: workspace?.tier ?? "free",
-			workspace_id: workspaceId || workspace?.id,
-		}),
-		[email, i18n.locale, workspace, workspaceId],
-	);
+	return {
+		is_internal: email.toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN),
+		locale: i18n.locale,
+		org_id: workspace?.org_id,
+		tier: workspace?.tier ?? "free",
+		workspace_id: workspaceId || workspace?.id,
+	};
 }
 
 /**
@@ -59,16 +56,13 @@ export function usePricingGateEmitter(
 ): PricingGateEmitter {
 	const base = usePricingGateBase(workspaceId);
 
-	return useCallback(
-		(name: string, props: Record<string, unknown> = {}) => {
-			posthog.capture(name, {
-				...base,
-				...(aiAction ? { ai_action: aiAction } : {}),
-				...props,
-			});
-		},
-		[aiAction, base],
-	);
+	return (name: string, props: Record<string, unknown> = {}) => {
+		posthog.capture(name, {
+			...base,
+			...(aiAction ? { ai_action: aiAction } : {}),
+			...props,
+		});
+	};
 }
 
 /**
@@ -95,24 +89,21 @@ export type GateViewedProps = {
 export function useGateViewed(workspaceId?: string) {
 	const base = usePricingGateBase(workspaceId);
 
-	return useCallback(
-		({
-			wallKey,
-			aiAction,
+	return ({
+		wallKey,
+		aiAction,
+		surface,
+		requiredTier,
+		canRequestUpgrade,
+	}: GateViewedProps) => {
+		posthog.capture("pricing_config_gate_viewed", {
+			...base,
+			...(aiAction ? { ai_action: aiAction } : {}),
+			can_request_upgrade: canRequestUpgrade,
+			mount: "app",
+			required_tier: requiredTier,
 			surface,
-			requiredTier,
-			canRequestUpgrade,
-		}: GateViewedProps) => {
-			posthog.capture("pricing_config_gate_viewed", {
-				...base,
-				...(aiAction ? { ai_action: aiAction } : {}),
-				can_request_upgrade: canRequestUpgrade,
-				mount: "app",
-				required_tier: requiredTier,
-				surface,
-				wall_key: wallKey,
-			});
-		},
-		[base],
-	);
+			wall_key: wallKey,
+		});
+	};
 }

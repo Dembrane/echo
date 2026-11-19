@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import { useEffect, useRef } from "react";
+import { useLatest } from "@/hooks/useLatest";
 import { readNetworkTelemetry } from "@/lib/deviceTelemetry";
 import type { ParticipantState } from "../participantState";
 
@@ -30,8 +31,7 @@ export const useRecordingTelemetry = ({
 }: RecordingTelemetryOptions) => {
 	// Ticking values, read through a ref so the listeners below report current
 	// ones without re-subscribing every tick.
-	const liveRef = useRef({ isRecording, participantState, recordingTime });
-	liveRef.current = { isRecording, participantState, recordingTime };
+	const liveRef = useLatest({ isRecording, participantState, recordingTime });
 
 	// Backgrounding while recording is our proxy for a call/lock/tab-switch.
 	const backgroundedAtRef = useRef<number | null>(null);

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
@@ -108,12 +108,9 @@ export const ProjectExportRoute = () => {
 
 export const ProjectAccessRoute = () => {
 	const { projectId } = useParams();
-	const query = useMemo(
-		() => ({
-			fields: ["id", "name", "visibility"],
-		}),
-		[],
-	);
+	const query = {
+		fields: ["id", "name", "visibility"],
+	};
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
 		query,

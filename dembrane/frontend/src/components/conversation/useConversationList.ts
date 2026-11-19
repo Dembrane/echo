@@ -2,7 +2,7 @@ import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { useDebouncedValue } from "@mantine/hooks";
 import { formatDistanceToNowStrict } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useProjectById } from "@/components/project/hooks";
 import type { ListQuery } from "@/lib/listQuery";
@@ -94,50 +94,41 @@ export const useConversationList = (
 		},
 	});
 
-	const allProjectTags = useMemo(
-		() =>
-			((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [],
-		[projectQuery.data],
-	);
-	const tagOptions = useMemo(() => {
-		const options: { label: string; value: string }[] = [];
-		for (const tag of allProjectTags) {
-			if (tag.id && tag.text) {
-				options.push({ label: tag.text, value: tag.id });
-			}
+	const allProjectTags =
+		((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [];
+	const options: { label: string; value: string }[] = [];
+	for (const tag of allProjectTags) {
+		if (tag.id && tag.text) {
+			options.push({ label: tag.text, value: tag.id });
 		}
-		return options;
-	}, [allProjectTags]);
+	}
+	const tagOptions = options;
 
-	const conversationQuery = useMemo(
-		() =>
-			({
-				filter: {
-					project_id: { _eq: projectId },
-					...(selectedTagIds.length > 0 && {
-						tags: {
-							_some: {
-								project_tag_id: {
-									id: { _in: selectedTagIds },
-								},
-							},
+	const conversationQuery = {
+		filter: {
+			project_id: { _eq: projectId },
+			...(selectedTagIds.length > 0 && {
+				tags: {
+					_some: {
+						project_tag_id: {
+							id: { _in: selectedTagIds },
 						},
-					}),
-					...(showOnlyVerified && {
-						conversation_artifacts: {
-							_some: {
-								approved_at: {
-									_nnull: true,
-								},
-							},
-						},
-					}),
+					},
 				},
-				search: debouncedSearch,
-				sort: sortBy,
-			}) as Partial<ListQuery<Conversation>>,
-		[projectId, selectedTagIds, showOnlyVerified, debouncedSearch, sortBy],
-	);
+			}),
+			...(showOnlyVerified && {
+				conversation_artifacts: {
+					_some: {
+						approved_at: {
+							_nnull: true,
+						},
+					},
+				},
+			}),
+		},
+		search: debouncedSearch,
+		sort: sortBy,
+	} as Partial<ListQuery<Conversation>>;
 
 	const conversationsQuery = useInfiniteConversationsByProjectId(
 		projectId,

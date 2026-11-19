@@ -48,7 +48,7 @@ msgstr "O funkci Vyzkoušet"
 msgid "Add topic"
 msgstr "Přidat téma"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:60
 msgid "Advanced"
 msgstr "Pokročilé"
 
@@ -96,7 +96,7 @@ msgstr "Auto-generate titles"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatizace, rané funkce a přesunutí nebo smazání tohoto projektu."
 
@@ -132,7 +132,7 @@ msgstr "Brainstorming nápadů"
 msgid "Change the key terms in the project brief"
 msgstr "Upravit klíčové pojmy v zadání projektu"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:74
+#: src/components/project/brief/ProjectBriefRoute.tsx:73
 msgid "Change the privacy settings in the portal editor"
 msgstr "Upravit nastavení soukromí v editoru portálu"
 
@@ -230,8 +230,8 @@ msgid "English"
 msgstr "English"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
-#: src/components/project/brief/ProjectBriefRoute.tsx:83
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/brief/ProjectBriefRoute.tsx:82
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:71
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -301,7 +301,7 @@ msgid "Keep it to {NAME_LABEL_MAX} characters."
 msgstr "Nejvýše {NAME_LABEL_MAX} znaků."
 
 #: src/components/project/portal-editor/sections/verify.tsx:405
-#: src/components/project/brief/ProjectKeyTermsSection.tsx:81
+#: src/components/project/brief/ProjectKeyTermsSection.tsx:84
 msgid "Key terms"
 msgstr "Klíčové výrazy"
 
@@ -402,7 +402,7 @@ msgstr "Jedna otázka"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Jedna ukázka nemůže ukázat, co Explore bere z jiných rozhovorů."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:83
 msgid "Only workspace admins can manage project automation."
 msgstr "Automatizaci projektů mohou spravovat pouze správci pracovního prostoru."
 
@@ -446,7 +446,7 @@ msgstr "Soukromí"
 msgid "Privacy card"
 msgstr "Karta soukromí"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:60
+#: src/components/project/brief/ProjectBriefRoute.tsx:59
 msgid "Project brief"
 msgstr "Zadání projektu"
 
@@ -638,11 +638,11 @@ msgstr "Verify"
 msgid "Verify topics"
 msgstr "Ověřit témata"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:95
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:78
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
@@ -663,7 +663,7 @@ msgstr "Na co se ptá pole pro jméno"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Na co se ptá úvodní obrazovka a jak rozhovory dostávají názvy."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:63
+#: src/components/project/brief/ProjectBriefRoute.tsx:62
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "O čem tento projekt je. dembrane to čte pro přepisy, shrnutí, chaty a zprávy."
 

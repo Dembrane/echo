@@ -23,7 +23,6 @@ import posthog from "posthog-js";
 import {
 	type CSSProperties,
 	type ReactNode,
-	useCallback,
 	useEffect,
 	useLayoutEffect,
 	useMemo,
@@ -263,13 +262,10 @@ export const ChatTemplatesMenu = ({
 	const listRef = useRef<HTMLDivElement | null>(null);
 	// A stable ref: auto-animate's ref sets state, so a new callback each render
 	// would loop.
-	const setListRef = useCallback(
-		(node: HTMLDivElement | null) => {
-			listRef.current = node;
-			animateRef(node);
-		},
-		[animateRef],
-	);
+	const setListRef = (node: HTMLDivElement | null) => {
+		listRef.current = node;
+		animateRef(node);
+	};
 	const [hiddenCount, setHiddenCount] = useState(0);
 	const [rowHeight, setRowHeight] = useState<number | undefined>(undefined);
 	useLayoutEffect(() => {

@@ -83,8 +83,8 @@ import { RELEASE_VIDEO_SEEN_KEY } from "./releaseVideo";
 
 // getReleases() resolves its copy through `t`, so a locale has to be active
 // before the first call; with an empty catalog the English source comes back.
-i18n.load("en", {});
-i18n.activate("en");
+i18n.load("en-US", {});
+i18n.activate("en-US");
 
 const LATEST = getReleases()[0];
 

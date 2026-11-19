@@ -2,7 +2,6 @@ import { Tooltip } from "@mantine/core";
 import {
 	createContext,
 	type ReactNode,
-	useCallback,
 	useContext,
 	useEffect,
 	useRef,
@@ -68,10 +67,10 @@ export const RailTip = ({
 	// would leave the name stuck open with no mouseleave to close it.
 	const lastTouch = useRef(0);
 
-	const clearTimers = useCallback(() => {
+	const clearTimers = () => {
 		clearTimeout(holdTimer.current);
 		clearTimeout(lingerTimer.current);
-	}, []);
+	};
 	useEffect(() => clearTimers, [clearTimers]);
 
 	const onTouchStart = () => {

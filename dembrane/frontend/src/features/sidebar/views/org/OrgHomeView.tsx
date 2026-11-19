@@ -10,7 +10,7 @@ import {
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+
 import { useParams } from "react-router";
 import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
 import { useTasksSummary } from "@/features/accounts/help/tasksSummary";
@@ -55,10 +55,7 @@ export const OrgHomeView = () => {
 	const { workspaces: myWorkspaces } = useWorkspace();
 	const { data: me } = useV2Me();
 
-	const myOrgWorkspaces = useMemo(
-		() => myWorkspaces.filter((w) => w.org_id === orgId),
-		[myWorkspaces, orgId],
-	);
+	const myOrgWorkspaces = myWorkspaces.filter((w) => w.org_id === orgId);
 
 	const orgWsQuery = useQuery({
 		enabled: Boolean(orgId),
@@ -84,17 +81,13 @@ export const OrgHomeView = () => {
 	// discover and self-join other (private) workspaces from /o; once joined they
 	// appear here. This stops the sidebar from listing workspaces the admin isn't
 	// a member of yet (which dead-link on click). Sorted to match the /o ordering.
-	const displayList = useMemo(
-		() =>
-			myOrgWorkspaces
-				.map((w) => ({
-					id: w.id,
-					isExternal: isOutsiderRole(w.role),
-					name: w.name,
-				}))
-				.sort((a, b) => a.name.localeCompare(b.name)),
-		[myOrgWorkspaces],
-	);
+	const displayList = myOrgWorkspaces
+		.map((w) => ({
+			id: w.id,
+			isExternal: isOutsiderRole(w.role),
+			name: w.name,
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	// Show the Workspaces section whenever there is something to show — for
 	// managers that is the full org list, for everyone else their direct rows.

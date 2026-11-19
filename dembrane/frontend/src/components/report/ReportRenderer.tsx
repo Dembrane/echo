@@ -136,7 +136,8 @@ export const ReportRenderer = ({
 				className={isEditing ? "max-w-3xl" : ""}
 			>
 				{isEditing ? (
-					<ReportEditor report={data as ProjectReport} />
+					// Keyed so another report gets a fresh form, not the last one's text.
+					<ReportEditor key={data.id} report={data as ProjectReport} />
 				) : (
 					<Markdown content={data?.content ?? ""} />
 				)}

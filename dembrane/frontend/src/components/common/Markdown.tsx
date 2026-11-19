@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -47,43 +47,34 @@ export const Markdown = ({
 		}
 	}, []);
 
-	const processedContent = useMemo(
-		() => escapeRedactedTokens(content),
-		[content],
-	);
+	const processedContent = escapeRedactedTokens(content);
 
-	const components = useMemo<Components>(
-		() => ({
-			code({ children, className: codeClassName, ...props }) {
-				const text = String(children).trim();
-				if (!codeClassName && text.startsWith(REDACTED_CODE_PREFIX)) {
-					const type = text.slice(REDACTED_CODE_PREFIX.length);
-					return <RedactedBadge type={type} />;
-				}
-				return (
-					<code className={codeClassName} {...props}>
-						{children}
-					</code>
-				);
-			},
-			...customComponents,
-		}),
-		[customComponents],
-	);
+	const components: Components = {
+		code({ children, className: codeClassName, ...props }) {
+			const text = String(children).trim();
+			if (!codeClassName && text.startsWith(REDACTED_CODE_PREFIX)) {
+				const type = text.slice(REDACTED_CODE_PREFIX.length);
+				return <RedactedBadge type={type} />;
+			}
+			return (
+				<code className={codeClassName} {...props}>
+					{children}
+				</code>
+			);
+		},
+		...customComponents,
+	};
 
-	const remarkRehypeOptions = useMemo(
-		() => ({
-			...(footnoteIdPrefix ? { clobberPrefix: footnoteIdPrefix } : {}),
-			// A caller who names the label wants it visible; without one, the
-			// renderer's default English "Footnotes" heading stays, hidden with
-			// our own class. The library's default is `sr-only`, which our
-			// Tailwind build never generates (no source file uses it).
-			...(footnoteLabel
-				? { footnoteLabel, footnoteLabelProperties: {} }
-				: { footnoteLabelProperties: { className: "dembrane-sr-only" } }),
-		}),
-		[footnoteLabel, footnoteIdPrefix],
-	);
+	const remarkRehypeOptions = {
+		...(footnoteIdPrefix ? { clobberPrefix: footnoteIdPrefix } : {}),
+		// A caller who names the label wants it visible; without one, the
+		// renderer's default English "Footnotes" heading stays, hidden with
+		// our own class. The library's default is `sr-only`, which our
+		// Tailwind build never generates (no source file uses it).
+		...(footnoteLabel
+			? { footnoteLabel, footnoteLabelProperties: {} }
+			: { footnoteLabelProperties: { className: "dembrane-sr-only" } }),
+	};
 
 	return (
 		<ReactMarkdown

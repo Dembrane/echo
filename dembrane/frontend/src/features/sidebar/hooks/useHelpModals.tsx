@@ -1,5 +1,5 @@
 import { useDisclosure } from "@mantine/hooks";
-import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { useParams } from "react-router";
 import { ReportIssueModal } from "@/components/feedback/ReportIssueModal";
 import { useSidebarView } from "./useSidebarView";
@@ -17,10 +17,7 @@ export const HelpModalsProvider = ({ children }: { children: ReactNode }) => {
 	// The sidebar mounts above the scope routes, so useParams never sees the ids.
 	const { params } = useSidebarView();
 	const [feedbackOpen, feedback] = useDisclosure(false);
-	const value = useMemo(
-		() => ({ openFeedback: feedback.open }),
-		[feedback.open],
-	);
+	const value = { openFeedback: feedback.open };
 
 	return (
 		<HelpModalsContext.Provider value={value}>

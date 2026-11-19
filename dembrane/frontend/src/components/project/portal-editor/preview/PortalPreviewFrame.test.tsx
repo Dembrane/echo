@@ -12,8 +12,8 @@ import { PortalPreviewFrame } from "./PortalPreviewFrame";
 const PORTAL = "https://portal.example";
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		(((query: string) => ({
@@ -89,6 +89,58 @@ describe("PortalPreviewFrame", () => {
 		ready(PORTAL, inner);
 		expect(post).toHaveBeenCalledTimes(1);
 		expect(post).toHaveBeenCalledWith(message, PORTAL);
+	});
+
+	it("waits for a new language's page to say it is ready", () => {
+		const german = buildPreviewMessage({
+			highlight: null,
+			legal: null,
+			screen: "landing",
+			tags: [],
+			topics: undefined,
+			values: portalDefaults({
+				id: "p1",
+				language: "de",
+			} as unknown as Project),
+		});
+		const tree = (m: typeof message) => (
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<PortalPreviewFrame
+						projectId="p1"
+						message={m}
+						screens={["landing"]}
+						onScreen={() => {}}
+						portalUrl={`${PORTAL}/`}
+					/>
+				</MantineProvider>
+			</I18nProvider>
+		);
+		const view = render(tree(message));
+		const say = (source: MessageEventSource | null) =>
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: { type: PREVIEW_READY },
+						origin: PORTAL,
+						source,
+					}),
+				);
+			});
+		const phone = () => screen.getByTestId("portal-preview-phone");
+		say(view.container.querySelector("iframe")?.contentWindow ?? null);
+		expect(phone().dataset.ready).toBe("true");
+
+		view.rerender(tree(german));
+		const frame = view.container.querySelector("iframe") as HTMLIFrameElement;
+		expect(frame.getAttribute("src")).toBe(`${PORTAL}/de-DE/p1/preview`);
+		expect(phone().dataset.ready).toBeUndefined();
+		const post = vi
+			.spyOn(frame.contentWindow as Window, "postMessage")
+			.mockImplementation(() => {});
+		say(frame.contentWindow);
+		expect(phone().dataset.ready).toBe("true");
+		expect(post).toHaveBeenCalledWith(german, PORTAL);
 	});
 
 	it("holds only the title, its i, the picker and the phone; the explanation is the i's", () => {

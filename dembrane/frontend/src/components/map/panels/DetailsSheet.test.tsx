@@ -5,6 +5,7 @@ import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+	act,
 	cleanup,
 	fireEvent,
 	render,
@@ -613,5 +614,40 @@ describe("the knowledge graph", () => {
 		const relation = svg.querySelector('[data-link="relation"]');
 		expect(relation?.getAttribute("stroke-dasharray")).toBeTruthy();
 		expect(relation?.getAttribute("stroke-width")).toBe("1");
+	});
+});
+
+// The rows under the spotlight, latest first: a cluster brought back from
+// the rows counts as recent as a fresh click.
+describe("the spotlight's history", () => {
+	it("sorts a cluster brought back from the rows as recent", async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			vi.setSystemTime(new Date("2026-11-18T10:00:00Z"));
+			const { graph, store } = renderMap();
+			const [first, one, two] = graph.placedNodes;
+			const at = (minute: number) =>
+				vi.setSystemTime(new Date(`2026-11-18T10:0${minute}:00Z`));
+			const rows = () =>
+				screen.getAllByTestId(/^history-/).map((row) => row.dataset.testid);
+
+			at(1);
+			act(() => store.setSelectedNodeId(one.id));
+			at(2);
+			act(() => store.setSelectedNodeId(two.id));
+			expect(rows()).toEqual(["history-argument", "history-cluster"]);
+
+			at(3);
+			fireEvent.click(await screen.findByTestId("history-cluster"));
+			at(4);
+			act(() => store.setSelectedNodeId(first.id));
+			expect(rows()).toEqual([
+				"history-cluster",
+				"history-argument",
+				"history-argument",
+			]);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

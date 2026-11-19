@@ -2,10 +2,8 @@ import { useLingui } from "@lingui/react";
 import {
 	createContext,
 	type PropsWithChildren,
-	useCallback,
 	useContext,
 	useEffect,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -47,71 +45,68 @@ export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 	const cleanupTimerRef = useRef<number | null>(null);
 	const pendingResolveRef = useRef<(() => void) | null>(null);
 
-	const runTransition = useCallback(
-		(options?: TransitionOptions) => {
-			const normalizedMessage = options?.message?.trim() || undefined;
-			const normalizedDescription =
-				options?.description === undefined
-					? undefined
-					: options.description === null
-						? null
-						: options.description.trim() || undefined;
-			const dramatic = options?.dramatic ?? false;
+	const runTransition = (options?: TransitionOptions) => {
+		const normalizedMessage = options?.message?.trim() || undefined;
+		const normalizedDescription =
+			options?.description === undefined
+				? undefined
+				: options.description === null
+					? null
+					: options.description.trim() || undefined;
+		const dramatic = options?.dramatic ?? false;
 
-			if (isActive) {
-				return new Promise<void>((resolve) => {
-					const previous = pendingResolveRef.current;
-					pendingResolveRef.current = () => {
-						previous?.();
-						resolve();
-					};
-				});
+		if (isActive) {
+			return new Promise<void>((resolve) => {
+				const previous = pendingResolveRef.current;
+				pendingResolveRef.current = () => {
+					previous?.();
+					resolve();
+				};
+			});
+		}
+
+		// Timing adjustments for dramatic mode
+		const settleTime = dramatic ? 2200 : 1600;
+		const fadeTime = dramatic ? 3000 : 2200;
+		const cleanupTime = dramatic ? 600 : 400;
+
+		return new Promise<void>((resolve) => {
+			pendingResolveRef.current = resolve;
+
+			if (settleTimerRef.current !== null) {
+				window.clearTimeout(settleTimerRef.current);
+			}
+			if (fadeTimerRef.current !== null) {
+				window.clearTimeout(fadeTimerRef.current);
+			}
+			if (cleanupTimerRef.current !== null) {
+				window.clearTimeout(cleanupTimerRef.current);
 			}
 
-			// Timing adjustments for dramatic mode
-			const settleTime = dramatic ? 2200 : 1600;
-			const fadeTime = dramatic ? 3000 : 2200;
-			const cleanupTime = dramatic ? 600 : 400;
-
-			return new Promise<void>((resolve) => {
-				pendingResolveRef.current = resolve;
-
-				if (settleTimerRef.current !== null) {
-					window.clearTimeout(settleTimerRef.current);
-				}
-				if (fadeTimerRef.current !== null) {
-					window.clearTimeout(fadeTimerRef.current);
-				}
-				if (cleanupTimerRef.current !== null) {
-					window.clearTimeout(cleanupTimerRef.current);
-				}
-
-				setMessage(normalizedMessage);
-				setDescription(normalizedDescription);
-				setIsDramatic(dramatic);
-				setIsActive(true);
-				requestAnimationFrame(() => {
-					setHasEntered(true);
-				});
-
-				settleTimerRef.current = window.setTimeout(() => {
-					pendingResolveRef.current?.();
-					pendingResolveRef.current = null;
-				}, settleTime);
-
-				fadeTimerRef.current = window.setTimeout(() => {
-					setHasEntered(false);
-					cleanupTimerRef.current = window.setTimeout(() => {
-						setIsActive(false);
-						setMessage(undefined);
-						setDescription(undefined);
-						setIsDramatic(false);
-					}, cleanupTime);
-				}, fadeTime);
+			setMessage(normalizedMessage);
+			setDescription(normalizedDescription);
+			setIsDramatic(dramatic);
+			setIsActive(true);
+			requestAnimationFrame(() => {
+				setHasEntered(true);
 			});
-		},
-		[isActive],
-	);
+
+			settleTimerRef.current = window.setTimeout(() => {
+				pendingResolveRef.current?.();
+				pendingResolveRef.current = null;
+			}, settleTime);
+
+			fadeTimerRef.current = window.setTimeout(() => {
+				setHasEntered(false);
+				cleanupTimerRef.current = window.setTimeout(() => {
+					setIsActive(false);
+					setMessage(undefined);
+					setDescription(undefined);
+					setIsDramatic(false);
+				}, cleanupTime);
+			}, fadeTime);
+		});
+	};
 
 	useEffect(() => {
 		return () => {
@@ -141,13 +136,10 @@ export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 		};
 	}, [isActive]);
 
-	const contextValue = useMemo(
-		(): TransitionCurtainContextValue => ({
-			isActive,
-			runTransition,
-		}),
-		[isActive, runTransition],
-	);
+	const contextValue = {
+		isActive,
+		runTransition,
+	};
 
 	const { i18n } = useLingui();
 	const resolvedDescription =

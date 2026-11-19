@@ -43,7 +43,10 @@ export const ConfirmModal = ({
 		data-testid={dataTestId}
 	>
 		<Stack gap="md">
-			<Text size="sm">{message}</Text>
+			{/* A div, not Text's default <p>: some callers pass Stacks of Texts. */}
+			<Text size="sm" component="div">
+				{message}
+			</Text>
 			<Group gap="sm">
 				<Button
 					variant="filled"

@@ -1,6 +1,6 @@
 import { i18n } from "@lingui/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -88,7 +88,7 @@ export const useConversationUploader = () => {
 	const errorsRef = useRef<Record<string, string>>({});
 
 	// Clean up function to reset states
-	const resetUpload = useCallback(() => {
+	const resetUpload = () => {
 		hasCompletedRef.current = false;
 		progressRef.current = {};
 		errorsRef.current = {};
@@ -96,10 +96,10 @@ export const useConversationUploader = () => {
 		setUploadProgress({});
 		setUploadErrors({});
 		uploadMutation.reset();
-	}, [uploadMutation]);
+	};
 
 	// Handle real progress updates with debouncing
-	const handleProgress = useCallback((fileName: string, progress: number) => {
+	const handleProgress = (fileName: string, progress: number) => {
 		// Only update if progress actually changed by at least 1%
 		if (Math.abs((progressRef.current[fileName] || 0) - progress) < 1) {
 			return; // Skip tiny updates that don't matter visually
@@ -115,54 +115,51 @@ export const useConversationUploader = () => {
 			...prev,
 			[fileName]: progress,
 		}));
-	}, []);
+	};
 
 	// Upload files with real progress tracking
-	const uploadFiles = useCallback(
-		(payload: {
-			projectId: string;
-			pin: string;
-			namePrefix: string;
-			tagIdList: string[];
-			chunks: Blob[];
-			timestamps: Date[];
-			email?: string;
-			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
-		}) => {
-			// Don't start if already uploading
-			if (isUploading || uploadMutation.isPending) {
-				return;
-			}
+	const uploadFiles = (payload: {
+		projectId: string;
+		pin: string;
+		namePrefix: string;
+		tagIdList: string[];
+		chunks: Blob[];
+		timestamps: Date[];
+		email?: string;
+		source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
+	}) => {
+		// Don't start if already uploading
+		if (isUploading || uploadMutation.isPending) {
+			return;
+		}
 
-			hasCompletedRef.current = false;
+		hasCompletedRef.current = false;
 
-			// Initialize progress tracking for all files
-			const initialProgress: Record<string, number> = {};
-			payload.chunks.forEach((chunk) => {
-				const name =
-					chunk instanceof File
-						? chunk.name
-						: `chunk-${payload.chunks.indexOf(chunk)}`;
-				initialProgress[name] = 0;
-			});
+		// Initialize progress tracking for all files
+		const initialProgress: Record<string, number> = {};
+		payload.chunks.forEach((chunk) => {
+			const name =
+				chunk instanceof File
+					? chunk.name
+					: `chunk-${payload.chunks.indexOf(chunk)}`;
+			initialProgress[name] = 0;
+		});
 
-			// Update refs first
-			progressRef.current = initialProgress;
-			errorsRef.current = {};
+		// Update refs first
+		progressRef.current = initialProgress;
+		errorsRef.current = {};
 
-			// Then update state
-			setUploadProgress(initialProgress);
-			setUploadErrors({});
-			setIsUploading(true);
+		// Then update state
+		setUploadProgress(initialProgress);
+		setUploadErrors({});
+		setIsUploading(true);
 
-			// Start the upload with progress tracking
-			uploadMutation.mutate({
-				...payload,
-				onProgress: handleProgress,
-			});
-		},
-		[isUploading, uploadMutation, handleProgress],
-	);
+		// Start the upload with progress tracking
+		uploadMutation.mutate({
+			...payload,
+			onProgress: handleProgress,
+		});
+	};
 
 	// Handle success state - separate from error handling to prevent cycles
 	useEffect(() => {

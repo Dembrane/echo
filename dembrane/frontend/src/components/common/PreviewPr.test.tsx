@@ -11,8 +11,8 @@ import { afterEach, beforeAll, expect, it, vi } from "vitest";
  * before: their env badge (or none), and no footer line. */
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 		addEventListener: vi.fn(),
 		addListener: vi.fn(),

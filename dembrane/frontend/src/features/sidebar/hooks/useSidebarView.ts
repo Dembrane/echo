@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useLocation } from "react-router";
 import type { ResolvedSidebarView, SidebarViewId } from "../types";
 import { SIDEBAR_TAB_PARAM } from "./useSidebarOverlayLink";
@@ -191,10 +190,7 @@ export function resolveSidebarView(
 
 export function useSidebarView(): ResolvedSidebarView {
 	const { pathname, search } = useLocation();
-	return useMemo(
-		() => resolveSidebarView(pathname, search),
-		[pathname, search],
-	);
+	return resolveSidebarView(pathname, search);
 }
 
 export const VIEW_IDS: readonly SidebarViewId[] = [

@@ -20,7 +20,7 @@ import {
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
@@ -94,36 +94,32 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 		staleTime: 30_000,
 	});
 
-	const workspaceOptions = useMemo(() => {
-		const seen = new Map<string, string>();
-		for (const p of projects) {
-			if (!seen.has(p.workspace_id)) {
-				seen.set(p.workspace_id, p.workspace_name);
-			}
+	const seen = new Map<string, string>();
+	for (const p of projects) {
+		if (!seen.has(p.workspace_id)) {
+			seen.set(p.workspace_id, p.workspace_name);
 		}
-		return Array.from(seen.entries()).map(([value, label]) => ({
-			label,
-			value,
-		}));
-	}, [projects]);
+	}
+	const workspaceOptions = Array.from(seen.entries()).map(([value, label]) => ({
+		label,
+		value,
+	}));
 
-	const filtered = useMemo(() => {
-		const q = search.trim().toLowerCase();
-		// Sort by conversation_count desc so busiest projects are on top
-		// — matches the demo feedback "sort it by the most highest
-		// conversations project."
-		return projects
-			.filter((p) => {
-				if (workspaceFilter && p.workspace_id !== workspaceFilter) return false;
-				if (!q) return true;
-				return (
-					p.name.toLowerCase().includes(q) ||
-					p.workspace_name.toLowerCase().includes(q)
-				);
-			})
-			.slice()
-			.sort((a, b) => b.conversation_count - a.conversation_count);
-	}, [projects, search, workspaceFilter]);
+	const q = search.trim().toLowerCase();
+	// Sort by conversation_count desc so busiest projects are on top
+	// — matches the demo feedback "sort it by the most highest
+	// conversations project."
+	const filtered = projects
+		.filter((p) => {
+			if (workspaceFilter && p.workspace_id !== workspaceFilter) return false;
+			if (!q) return true;
+			return (
+				p.name.toLowerCase().includes(q) ||
+				p.workspace_name.toLowerCase().includes(q)
+			);
+		})
+		.slice()
+		.sort((a, b) => b.conversation_count - a.conversation_count);
 
 	const deleteMutation = useMutation({
 		mutationFn: deleteProject,

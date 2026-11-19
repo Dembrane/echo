@@ -6,7 +6,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
@@ -253,7 +253,7 @@ const ANALYSIS_EVENT_TYPES = [
 
 export function useAnalysisEvents(projectId: string) {
 	const queryClient = useQueryClient();
-	const onEvent = useCallback(() => {
+	const onEvent = () => {
 		void queryClient.invalidateQueries({
 			queryKey: [...analysisKeys.all, projectId],
 		});
@@ -261,7 +261,7 @@ export function useAnalysisEvents(projectId: string) {
 			predicate: (query) =>
 				query.queryKey[0] === "analysis" && query.queryKey[1] === "run",
 		});
-	}, [projectId, queryClient]);
+	};
 	useServerEvents(
 		projectId
 			? `${API_BASE_URL}/v2/bff/map/projects/${encodeURIComponent(projectId)}/events?runs=1`

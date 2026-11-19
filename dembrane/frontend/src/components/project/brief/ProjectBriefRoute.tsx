@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Anchor, Box, Divider, Stack, Text, Title } from "@mantine/core";
-import { useMemo } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -27,30 +27,29 @@ import { ProjectKeyTermsSection } from "./ProjectKeyTermsSection";
 export const ProjectBriefRoute = () => {
 	const { workspaceId, projectId } = useParams();
 	const ready = useSettingsCatalog();
-	const query = useMemo(
-		() => ({
-			fields: [
-				"id",
-				"name",
-				"context",
-				"visibility",
-				"workspace_id",
-				"methodology_version_id",
-				"updated_at",
-				"language",
-				"default_conversation_transcript_prompt",
-			],
-		}),
-		[],
-	);
+	const query = {
+		fields: [
+			"id",
+			"name",
+			"context",
+			"visibility",
+			"workspace_id",
+			"methodology_version_id",
+			"updated_at",
+			"language",
+			"default_conversation_transcript_prompt",
+		],
+	};
 	const projectQuery = useProjectById({ projectId: projectId ?? "", query });
 	const { workspace } = useWorkspace();
 	// Observers lack project:update: sections show read-only rather than answer with a 403.
 	const canEdit = !!workspace && !isReadOnlyRole(workspace.role);
 	// Project memory is listed with chat:use.
 	const canSeeMemory = !!workspace && canUseChat(workspace.role);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: one project per id, so a refetch after a save does not reset the key terms being typed
-	const project = useMemo(() => projectQuery.data, [projectQuery.data?.id]);
+	// One project per id, kept from its first fetch, so a refetch after a save
+	// does not reset the key terms being typed.
+	const [project, setProject] = useState(projectQuery.data);
+	if (projectQuery.data?.id !== project?.id) setProject(projectQuery.data);
 
 	return (
 		<PageContainer>

@@ -56,7 +56,7 @@ vi.mock("@/components/workspace/OrganisationUsageRollup", () => ({
 	OrganisationUsageRollup: none,
 }));
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 beforeAll(() => {
 	window.matchMedia = vi.fn().mockImplementation((query) => ({
@@ -188,6 +188,8 @@ const show = (at: string) =>
 								path="/o/:organisationId/*"
 								element={<OrganisationRoute />}
 							/>
+							{/* Where a card leads, so leaving the organisation lands somewhere. */}
+							<Route path="*" element={null} />
 						</Routes>
 					</MemoryRouter>
 				</MantineProvider>

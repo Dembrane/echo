@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ENABLE_MONITOR } from "@/config";
+import { useLatest } from "@/hooks/useLatest";
 import { pingConversation, pingConversationLeft } from "@/lib/api";
 import {
 	readBatteryTelemetry,
@@ -51,23 +52,17 @@ export const useMonitorBeacon = ({
 }: MonitorBeaconOptions) => {
 	// Ticking values, read through a ref so the interval samples current ones
 	// without restarting every tick.
-	const liveRef = useRef({
+	const liveRef = useLatest({
 		getAudioLevel,
 		isRecording,
 		recordingTime,
 		stoppedRecordingTime,
 	});
-	liveRef.current = {
-		getAudioLevel,
-		isRecording,
-		recordingTime,
-		stoppedRecordingTime,
-	};
 
 	// Recorded time when the current run started, so the beacon can report how
 	// long THIS run has been going (segment_seconds); resets on resume.
 	const segmentBaselineRef = useRef(0);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: capture recordingTime only at the recording (re)start edge
+	// Captures recordingTime only at the recording (re)start edge, so it is not a dependency.
 	useEffect(() => {
 		if (isRecording) segmentBaselineRef.current = recordingTime;
 	}, [isRecording]);

@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/react/macro";
 import { Skeleton, Text } from "@mantine/core";
-import { useMemo } from "react";
 import { useParams } from "react-router";
 import { EventPrintoutsItem, QRShare } from "@/components/sharing/Share";
 import { PARTICIPANT_BASE_URL } from "@/config";
@@ -27,55 +26,52 @@ export const useProjectSharingLink = (
 	project?: Project,
 	source?: ShareLinkSource,
 ) => {
-	// biome-ignore lint/correctness/useExhaustiveDependencies: not an issue
-	return useMemo(() => {
-		if (!project) {
-			return null;
-		}
+	if (!project) {
+		return null;
+	}
 
-		// map the project.language to the language code
-		const languageCode = {
-			cs: "cs-CZ",
-			"cs-CZ": "cs-CZ",
-			de: "de-DE",
-			"de-DE": "de-DE",
-			en: "en-US",
-			"en-US": "en-US",
-			es: "es-ES",
-			"es-ES": "es-ES",
-			fr: "fr-FR",
-			"fr-FR": "fr-FR",
-			it: "it-IT",
-			"it-IT": "it-IT",
-			nl: "nl-NL",
-			"nl-NL": "nl-NL",
-			uk: "uk-UA",
-			"uk-UA": "uk-UA",
-		}[
-			project.language as
-				| "en"
-				| "nl"
-				| "de"
-				| "fr"
-				| "es"
-				| "it"
-				| "uk"
-				| "cs"
-				| "en-US"
-				| "nl-NL"
-				| "de-DE"
-				| "fr-FR"
-				| "es-ES"
-				| "it-IT"
-				| "uk-UA"
-				| "cs-CZ"
-		];
+	// map the project.language to the language code
+	const languageCode = {
+		cs: "cs-CZ",
+		"cs-CZ": "cs-CZ",
+		de: "de-DE",
+		"de-DE": "de-DE",
+		en: "en-US",
+		"en-US": "en-US",
+		es: "es-ES",
+		"es-ES": "es-ES",
+		fr: "fr-FR",
+		"fr-FR": "fr-FR",
+		it: "it-IT",
+		"it-IT": "it-IT",
+		nl: "nl-NL",
+		"nl-NL": "nl-NL",
+		uk: "uk-UA",
+		"uk-UA": "uk-UA",
+	}[
+		project.language as
+			| "en"
+			| "nl"
+			| "de"
+			| "fr"
+			| "es"
+			| "it"
+			| "uk"
+			| "cs"
+			| "en-US"
+			| "nl-NL"
+			| "de-DE"
+			| "fr-FR"
+			| "es-ES"
+			| "it-IT"
+			| "uk-UA"
+			| "cs-CZ"
+	];
 
-		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
-		if (!source) return baseLink;
-		const params = new URLSearchParams({ utm_source: source });
-		return `${baseLink}?${params.toString()}`;
-	}, [project?.language, project?.id, source]);
+	const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+	if (!source) return baseLink;
+	const params = new URLSearchParams({ utm_source: source });
+	return `${baseLink}?${params.toString()}`;
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {

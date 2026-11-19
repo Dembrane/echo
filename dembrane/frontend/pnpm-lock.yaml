@@ -32,7 +32,7 @@ importers:
         version: 0.8.2
       '@hookform/resolvers':
         specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.54.2(react@19.0.0))
+        version: 3.10.0(react-hook-form@7.91.0(@types/react@19.0.12)(react@19.0.0))
       '@lingui/conf':
         specifier: ^5.3.3
         version: 5.3.3(typescript@5.8.2)
@@ -184,8 +184,8 @@ importers:
         specifier: ^0.1.28
         version: 0.1.28(@types/react@19.0.12)(react@19.0.0)
       react-hook-form:
-        specifier: ^7.54.2
-        version: 7.54.2(react@19.0.0)
+        specifier: ^7.91.0
+        version: 7.91.0(@types/react@19.0.12)(react@19.0.0)
       react-intersection-observer:
         specifier: ^9.16.0
         version: 9.16.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -355,6 +355,9 @@ importers:
       vitest:
         specifier: ^4.1.9
         version: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))
+      vitest-fail-on-console:
+        specifier: 0.10.1
+        version: 0.10.1(@vitest/utils@4.1.9)(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))(vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)))
 
 packages:
 
@@ -4739,17 +4742,15 @@ packages:
       react:
         optional: true
 
-  react-hook-form@7.54.2:
-    resolution: {integrity: sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==}
+  react-hook-form@7.91.0:
+    resolution: {integrity: sha512-5BEBUnCBwa28AFXYTYmOaB/+CSpJ/+CWVASHEvIGUzFdHyUiPHeRhG7r5hOZ8nZi0yP7pbHdFNXO/p31EKTJFQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
+      '@types/react': '*'
       react: ^16.8.0 || ^17 || ^18 || ^19
-
-  react-hook-form@7.60.0:
-    resolution: {integrity: sha512-SBrYOvMbDB7cV8ZfNpaiLcgjH/a1c7aK0lK+aNigpf4xWLO8q+o4tcvVurv3c4EOyzn/3dCsYt4GKD42VvJ/+A==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-intersection-observer@9.16.0:
     resolution: {integrity: sha512-w9nJSEp+DrW9KmQmeWHQyfaP6b03v+TdXynaoA964Wxt7mdR3An11z4NNCQgL4gKSK7y1ver2Fq+JKH6CWEzUA==}
@@ -5466,6 +5467,13 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-fail-on-console@0.10.1:
+    resolution: {integrity: sha512-Xjy2SpgND547qSy0s0zYVnh1G/WyGtdjAbi4PFV8mkYRmTq+6NzRUJYdc08BHrw7HJLpO2kMxHFB8PWn7FOVsg==}
+    peerDependencies:
+      '@vitest/utils': '>=0.26.2'
+      vite: '>=4.5.2'
+      vitest: '>=0.26.2'
 
   vitest@4.1.9:
     resolution: {integrity: sha512-nE3/LEyc0z87uHYLZebqCUOaJr2hdtuPp7BQ4BosVFnfltxgAvMG08NyrSGlPpOUWvR27c5flSmYFTNr78L9GQ==}
@@ -6640,9 +6648,9 @@ snapshots:
 
   '@formkit/auto-animate@0.8.2': {}
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.54.2(react@19.0.0))':
+  '@hookform/resolvers@3.10.0(react-hook-form@7.91.0(@types/react@19.0.12)(react@19.0.0))':
     dependencies:
-      react-hook-form: 7.54.2(react@19.0.0)
+      react-hook-form: 7.91.0(@types/react@19.0.12)(react@19.0.0)
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -7267,7 +7275,7 @@ snapshots:
       micromark-util-symbol: 2.0.1
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
-      react-hook-form: 7.60.0(react@19.0.0)
+      react-hook-form: 7.91.0(@types/react@19.0.12)(react@19.0.0)
       unidiff: 1.0.4
     transitivePeerDependencies:
       - '@codemirror/language'
@@ -10575,13 +10583,11 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  react-hook-form@7.54.2(react@19.0.0):
+  react-hook-form@7.91.0(@types/react@19.0.12)(react@19.0.0):
     dependencies:
       react: 19.0.0
-
-  react-hook-form@7.60.0(react@19.0.0):
-    dependencies:
-      react: 19.0.0
+    optionalDependencies:
+      '@types/react': 19.0.12
 
   react-intersection-observer@9.16.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -11375,6 +11381,13 @@ snapshots:
       jiti: 1.21.7
       sugarss: 4.0.1(postcss@8.5.22)
       yaml: 2.7.0
+
+  vitest-fail-on-console@0.10.1(@vitest/utils@4.1.9)(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))(vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))):
+    dependencies:
+      '@vitest/utils': 4.1.9
+      chalk: 5.4.1
+      vite: 6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)
+      vitest: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))
 
   vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)):
     dependencies:

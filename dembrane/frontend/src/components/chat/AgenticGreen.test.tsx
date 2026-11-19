@@ -13,8 +13,8 @@ import { MODE_COLORS } from "./ChatModeSelector";
 const ORANGE = /ff8a4c|255,\s*138,\s*76/i;
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	vi.stubGlobal(
 		"matchMedia",
 		vi.fn().mockImplementation((media: string) => ({

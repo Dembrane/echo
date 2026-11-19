@@ -13,7 +13,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { type StaffTrainingRow, useStaffTrainings } from "./staffHooks";
 import { TrainingRowActions } from "./TrainingRowActions";
 
@@ -73,17 +73,15 @@ export const StaffTrainingPanel = () => {
 	// name/id by substring.
 	const { data: trainings = [], isLoading } = useStaffTrainings();
 
-	const filtered = useMemo(() => {
-		const q = orgQuery.trim().toLowerCase();
-		return trainings.filter((tr) => {
-			const matchesStatus = !statusFilter || tr.status === statusFilter;
-			const matchesOrg =
-				!q ||
-				(tr.org_name ?? "").toLowerCase().includes(q) ||
-				(tr.org_id ?? "").toLowerCase().includes(q);
-			return matchesStatus && matchesOrg;
-		});
-	}, [trainings, orgQuery, statusFilter]);
+	const q = orgQuery.trim().toLowerCase();
+	const filtered = trainings.filter((tr) => {
+		const matchesStatus = !statusFilter || tr.status === statusFilter;
+		const matchesOrg =
+			!q ||
+			(tr.org_name ?? "").toLowerCase().includes(q) ||
+			(tr.org_id ?? "").toLowerCase().includes(q);
+		return matchesStatus && matchesOrg;
+	});
 
 	if (isLoading) {
 		return (

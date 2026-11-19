@@ -105,6 +105,16 @@ describe("PortalPreviewApp", () => {
 		expect(mounts.count).toBe(first + 1);
 		expect(screen.getByTestId("screen-finish")).toBeTruthy();
 	});
+
+	it("starts a screen once when one message both moves to it and resets", () => {
+		render(<PortalPreviewApp projectId="p1" />);
+		send({ ...message, reset: 1 }, dashboard);
+		fireEvent.pointerDown(screen.getByTestId("screen-finish"));
+		const before = mounts.count;
+		send({ ...message, reset: 2, screen: "recording" }, dashboard);
+		expect(screen.getByTestId("screen-recording")).toBeTruthy();
+		expect(mounts.count).toBe(before + 1);
+	});
 });
 
 describe("lockDown", () => {

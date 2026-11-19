@@ -48,7 +48,7 @@ msgstr "Sobre Probar"
 msgid "Add topic"
 msgstr "Añadir tema"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:60
 msgid "Advanced"
 msgstr "Avanzado"
 
@@ -96,7 +96,7 @@ msgstr "Generar títulos automáticamente"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Generar automáticamente un título corto basado en temas para cada conversación después de la resumen. El título describe lo que se discutió, no quién participó. El nombre original del participante se conserva por separado, si lo proporcionaron."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatización, funciones en prueba, y mover o eliminar este proyecto."
 
@@ -132,7 +132,7 @@ msgstr "Lluvia de ideas"
 msgid "Change the key terms in the project brief"
 msgstr "Cambia los términos clave en el resumen del proyecto"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:74
+#: src/components/project/brief/ProjectBriefRoute.tsx:73
 msgid "Change the privacy settings in the portal editor"
 msgstr "Cambia la configuración de privacidad en el editor del portal"
 
@@ -230,8 +230,8 @@ msgid "English"
 msgstr "Inglés"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
-#: src/components/project/brief/ProjectBriefRoute.tsx:83
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/brief/ProjectBriefRoute.tsx:82
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:71
 msgid "Error loading project"
 msgstr "Error al cargar el proyecto"
 
@@ -301,7 +301,7 @@ msgid "Keep it to {NAME_LABEL_MAX} characters."
 msgstr "Máximo {NAME_LABEL_MAX} caracteres."
 
 #: src/components/project/portal-editor/sections/verify.tsx:405
-#: src/components/project/brief/ProjectKeyTermsSection.tsx:81
+#: src/components/project/brief/ProjectKeyTermsSection.tsx:84
 msgid "Key terms"
 msgstr "Términos clave"
 
@@ -402,7 +402,7 @@ msgstr "Una pregunta"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Un solo ejemplo no puede mostrar lo que Explorar toma de otras conversaciones."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:83
 msgid "Only workspace admins can manage project automation."
 msgstr "Solo los administradores del espacio de trabajo pueden gestionar la automatización del proyecto."
 
@@ -446,7 +446,7 @@ msgstr "Privacidad"
 msgid "Privacy card"
 msgstr "Tarjeta de privacidad"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:60
+#: src/components/project/brief/ProjectBriefRoute.tsx:59
 msgid "Project brief"
 msgstr "Resumen del proyecto"
 
@@ -638,11 +638,11 @@ msgstr "Verificar"
 msgid "Verify topics"
 msgstr "Verificar temas"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:95
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:78
 msgid "Webhooks are not enabled for this environment."
 msgstr "Los webhooks no están habilitados para este entorno."
 
@@ -663,7 +663,7 @@ msgstr "Lo que pide el campo del nombre"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Lo que pregunta la pantalla de inicio y cómo reciben su título las conversaciones."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:63
+#: src/components/project/brief/ProjectBriefRoute.tsx:62
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "De qué trata este proyecto. dembrane lo lee para transcripciones, resúmenes, chats e informes."
 

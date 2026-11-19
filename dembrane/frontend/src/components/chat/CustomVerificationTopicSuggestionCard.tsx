@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { CheckIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -47,21 +47,18 @@ export const CustomVerificationTopicSuggestionCard = ({
 	const [prompt, setPrompt] = useState(suggestion.prompt);
 	const [dismissed, setDismissed] = useState(false);
 
-	const applied = useMemo(() => {
-		const topics = topicsQuery.data?.available_topics ?? [];
-		const targetLabel = label.trim().toLowerCase();
-		const targetPrompt = prompt.trim();
-		return topics.some((topic) => {
-			if (!topic.is_custom) return false;
-			const topicLabel = (topic.translations?.["en-US"]?.label ?? topic.key)
-				.trim()
-				.toLowerCase();
-			return (
-				topicLabel === targetLabel &&
-				(topic.prompt ?? "").trim() === targetPrompt
-			);
-		});
-	}, [topicsQuery.data, label, prompt]);
+	const topics = topicsQuery.data?.available_topics ?? [];
+	const targetLabel = label.trim().toLowerCase();
+	const targetPrompt = prompt.trim();
+	const applied = topics.some((topic) => {
+		if (!topic.is_custom) return false;
+		const topicLabel = (topic.translations?.["en-US"]?.label ?? topic.key)
+			.trim()
+			.toLowerCase();
+		return (
+			topicLabel === targetLabel && (topic.prompt ?? "").trim() === targetPrompt
+		);
+	});
 
 	const handleApply = async () => {
 		const normalizedLabel = label.trim();

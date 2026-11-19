@@ -2,7 +2,13 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import {
@@ -12,6 +18,7 @@ import {
 
 const navigate = vi.fn();
 const initiate = vi.fn();
+const mutate = vi.fn();
 
 vi.mock("posthog-js", () => ({
 	default: { capture: () => {} },
@@ -34,13 +41,13 @@ vi.mock("@/portal/components/start/useInitiateConversationMutation", () => ({
 		isError: mutationError !== null,
 		isPending: false,
 		isSuccess: false,
-		mutate: () => {},
+		mutate: (...args: unknown[]) => mutate(...args),
 	}),
 }));
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -67,6 +74,7 @@ afterEach(() => {
 	mutationError = null;
 	navigate.mockClear();
 	initiate.mockClear();
+	mutate.mockClear();
 });
 
 const project = (overrides: Partial<Project> = {}) =>
@@ -139,6 +147,24 @@ it("creates one conversation even if the form is torn down mid-request", async (
 		expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1"),
 	);
 	expect(initiate).toHaveBeenCalledTimes(1);
+});
+
+it("starts one conversation with the typed name, however fast Continue is clicked", async () => {
+	wrap(project({ default_conversation_ask_for_participant_name: true }));
+	fireEvent.change(screen.getByTestId("portal-initiate-name-input"), {
+		target: { value: "Sam" },
+	});
+	const next = screen.getByTestId("portal-initiate-next-button");
+	fireEvent.click(next);
+	fireEvent.click(next);
+
+	await waitFor(() => expect(mutate).toHaveBeenCalled());
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	expect(mutate).toHaveBeenCalledTimes(1);
+	expect(mutate.mock.calls[0][0]).toMatchObject({
+		name: "Sam",
+		projectId: "p1",
+	});
 });
 
 it("leaves the Continue button alone when the project asks for a name", () => {

@@ -77,8 +77,8 @@ const isRed = (key: string) =>
 		?.innerHTML.includes("red");
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -480,6 +480,6 @@ it("formats the reset moment in the app language, not the browser's", async () =
 			"1 november 2026",
 		);
 	} finally {
-		i18n.activate("en");
+		i18n.activate("en-US");
 	}
 });

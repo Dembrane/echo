@@ -3,7 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isFreeTierLimitError } from "@/lib/freeTier";
@@ -43,20 +43,18 @@ export const BulkMoveProjectsModal = ({
 
 	// Same context key as billing_service._billing_context_key: an external
 	// (bills_separately) workspace is its own context; internal ones share the org.
-	const options = useMemo(() => {
-		const contextKey = (w: (typeof workspaces)[number]) =>
-			w.bills_separately ? `ws:${w.id}` : `org:${w.org_id}`;
-		const source = workspaces.find((w) => w.id === sourceWorkspaceId);
-		const sourceKey = source ? contextKey(source) : null;
-		return workspaces
-			.filter(
-				(w) =>
-					(w.role === "admin" || w.role === "owner") &&
-					w.id !== sourceWorkspaceId &&
-					(sourceKey === null || contextKey(w) === sourceKey),
-			)
-			.map((w) => ({ label: w.name, value: w.id }));
-	}, [workspaces, sourceWorkspaceId]);
+	const contextKey = (w: (typeof workspaces)[number]) =>
+		w.bills_separately ? `ws:${w.id}` : `org:${w.org_id}`;
+	const source = workspaces.find((w) => w.id === sourceWorkspaceId);
+	const sourceKey = source ? contextKey(source) : null;
+	const options = workspaces
+		.filter(
+			(w) =>
+				(w.role === "admin" || w.role === "owner") &&
+				w.id !== sourceWorkspaceId &&
+				(sourceKey === null || contextKey(w) === sourceKey),
+		)
+		.map((w) => ({ label: w.name, value: w.id }));
 
 	useEffect(() => {
 		if (!opened) setTargetWorkspaceId(null);

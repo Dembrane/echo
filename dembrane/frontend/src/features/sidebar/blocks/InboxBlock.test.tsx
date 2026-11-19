@@ -31,8 +31,8 @@ vi.mock("@/hooks/useLanguage", () => ({
 const { InboxBlock } = await import("./InboxBlock");
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 });
 
 const renderBlock = (url = "/en-US/o") =>

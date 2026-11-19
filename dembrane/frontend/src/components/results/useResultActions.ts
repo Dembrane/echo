@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import {
 	type AnalysisRevision,
 	analysisKeys,
@@ -208,10 +208,7 @@ export function useResultActions({
 		return revision;
 	};
 
-	const heldBackReasons = useMemo(
-		() => (holdBack ? readReasons() : []),
-		[holdBack],
-	);
+	const heldBackReasons = holdBack ? readReasons() : [];
 
 	return {
 		editWords,

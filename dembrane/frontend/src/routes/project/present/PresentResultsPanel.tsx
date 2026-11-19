@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useResultsList, useResultsVisit } from "@/components/analysis";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
@@ -58,14 +58,11 @@ export function PresentResultsPanel({
 	// Each kind from the snapshot the preview above is drawn from: the list holds
 	// what the room is shown, and a pinned slide's list is its pin.
 	const drawnFrom = presentation.result_snapshots;
-	const snapshots = useMemo(
-		() => ({
-			popcorn: drawnFrom?.popcorn,
-			stakeholder: drawnFrom?.stakeholders,
-			tension: drawnFrom?.tensions,
-		}),
-		[drawnFrom?.popcorn, drawnFrom?.stakeholders, drawnFrom?.tensions],
-	);
+	const snapshots = {
+		popcorn: drawnFrom?.popcorn,
+		stakeholder: drawnFrom?.stakeholders,
+		tension: drawnFrom?.tensions,
+	};
 	const results = useResultsList(projectId, { snapshots });
 	// What is new is new since the host last opened this list; leaving it marks
 	// it seen.
@@ -77,10 +74,7 @@ export function PresentResultsPanel({
 		projectId,
 		presentation.id,
 	);
-	const hidden = useMemo(
-		() => presentation.settings.presentation?.hidden_items ?? [],
-		[presentation.settings.presentation?.hidden_items],
-	);
+	const hidden = presentation.settings.presentation?.hidden_items ?? [];
 	const blocks = orderedBlocks([
 		...(presentation.settings.presentation?.blocks ?? []),
 		ALWAYS_ON_BLOCK,
@@ -99,44 +93,39 @@ export function PresentResultsPanel({
 	// round trip. What this page decided leads; the draft catches up and the
 	// two agree, and an entry that agrees is dropped.
 	const [decided, setDecided] = useState<Record<string, boolean>>({});
-	const pending = useMemo(() => {
-		const kept: Record<string, boolean> = {};
-		for (const [objectId, held] of Object.entries(decided))
-			if (hidden.includes(objectId) !== held) kept[objectId] = held;
-		return kept;
-	}, [decided, hidden]);
+	const kept: Record<string, boolean> = {};
+	for (const [objectId, held] of Object.entries(decided))
+		if (hidden.includes(objectId) !== held) kept[objectId] = held;
+	const pending = kept;
 
-	const holdBack: HoldBackAdapter = useMemo(
-		() => ({
-			isHeld: (objectId) => pending[objectId] ?? hidden.includes(objectId),
-			setHeld: (objectId, held) => {
-				setDecided((old) => ({ ...old, [objectId]: held }));
-				saveSettings({
-					presentation: {
-						hidden_items: held
-							? [...new Set([...hidden, objectId])]
-							: hidden.filter((id) => id !== objectId),
-					},
-				});
-			},
-			// A selection is one decision, so it is one write: the route takes the
-			// whole list, and eleven writes of it would race each other.
-			setManyHeld: (objectIds, held) => {
-				setDecided((old) => ({
-					...old,
-					...Object.fromEntries(objectIds.map((id) => [id, held])),
-				}));
-				saveSettings({
-					presentation: {
-						hidden_items: held
-							? [...new Set([...hidden, ...objectIds])]
-							: hidden.filter((id) => !objectIds.includes(id)),
-					},
-				});
-			},
-		}),
-		[hidden, pending, saveSettings],
-	);
+	const holdBack: HoldBackAdapter = {
+		isHeld: (objectId) => pending[objectId] ?? hidden.includes(objectId),
+		setHeld: (objectId, held) => {
+			setDecided((old) => ({ ...old, [objectId]: held }));
+			saveSettings({
+				presentation: {
+					hidden_items: held
+						? [...new Set([...hidden, objectId])]
+						: hidden.filter((id) => id !== objectId),
+				},
+			});
+		},
+		// A selection is one decision, so it is one write: the route takes the
+		// whole list, and eleven writes of it would race each other.
+		setManyHeld: (objectIds, held) => {
+			setDecided((old) => ({
+				...old,
+				...Object.fromEntries(objectIds.map((id) => [id, held])),
+			}));
+			saveSettings({
+				presentation: {
+					hidden_items: held
+						? [...new Set([...hidden, ...objectIds])]
+						: hidden.filter((id) => !objectIds.includes(id)),
+				},
+			});
+		},
+	};
 	const actions = useResultActions({ holdBack, projectId });
 
 	return (

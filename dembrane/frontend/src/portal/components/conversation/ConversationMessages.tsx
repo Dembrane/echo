@@ -5,7 +5,7 @@ import { Button, Modal, Stack, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon, WifiSlashIcon } from "@phosphor-icons/react";
-import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
+import { type PropsWithChildren, useEffect, useRef } from "react";
 import { TipBanner } from "@/components/common/TipBanner";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
@@ -47,54 +47,52 @@ export const ConversationMessages = ({
 	const repliesQuery = useConversationRepliesQuery(projectId, conversationId);
 	const isOnline = useOnlineStatus();
 
-	const combinedMessages = useMemo(() => {
-		const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
-			data: chunk,
-			timestamp: new Date(chunk.timestamp),
-			type: "user_chunk" as const,
+	const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
+		data: chunk,
+		timestamp: new Date(chunk.timestamp),
+		type: "user_chunk" as const,
+	}));
+
+	const replies = (repliesQuery.data ?? [])
+		.filter((m) => ["assistant_reply"].includes(m.type ?? ""))
+		.map((m) => ({
+			data: m,
+			timestamp: new Date(m.date_created ?? ""),
+			type: "assistant_chunk" as const,
 		}));
 
-		const replies = (repliesQuery.data ?? [])
-			.filter((m) => ["assistant_reply"].includes(m.type ?? ""))
-			.map((m) => ({
-				data: m,
-				timestamp: new Date(m.date_created ?? ""),
-				type: "assistant_chunk" as const,
-			}));
+	const allMessages = [...userChunks, ...replies].sort(
+		(a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+	);
 
-		const allMessages = [...userChunks, ...replies].sort(
-			(a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
-		);
+	const combinedResult = [];
+	let currentUserChunks = [];
 
-		const combinedResult = [];
-		let currentUserChunks = [];
-
-		for (let i = 0; i < allMessages.length; i++) {
-			const message = allMessages[i];
-			if (message.type === "user_chunk") {
-				currentUserChunks.push(message);
-			} else {
-				if (currentUserChunks.length > 0) {
-					if (currentUserChunks.length > 1) {
-						combinedResult.push(combineUserChunks(currentUserChunks));
-					} else {
-						combinedResult.push(currentUserChunks[0]);
-					}
-					currentUserChunks = [];
+	for (let i = 0; i < allMessages.length; i++) {
+		const message = allMessages[i];
+		if (message.type === "user_chunk") {
+			currentUserChunks.push(message);
+		} else {
+			if (currentUserChunks.length > 0) {
+				if (currentUserChunks.length > 1) {
+					combinedResult.push(combineUserChunks(currentUserChunks));
+				} else {
+					combinedResult.push(currentUserChunks[0]);
 				}
-				combinedResult.push(message);
+				currentUserChunks = [];
 			}
+			combinedResult.push(message);
 		}
-		if (currentUserChunks.length > 0) {
-			if (currentUserChunks.length > 1) {
-				combinedResult.push(combineUserChunks(currentUserChunks));
-			} else {
-				combinedResult.push(currentUserChunks[0]);
-			}
+	}
+	if (currentUserChunks.length > 0) {
+		if (currentUserChunks.length > 1) {
+			combinedResult.push(combineUserChunks(currentUserChunks));
+		} else {
+			combinedResult.push(currentUserChunks[0]);
 		}
+	}
 
-		return combinedResult;
-	}, [chunksQuery.data, repliesQuery.data]);
+	const combinedMessages = combinedResult;
 
 	const [opened, { open, close }] = useDisclosure(false);
 

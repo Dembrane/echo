@@ -922,10 +922,8 @@ export const ConversationAccordion = ({
 	const remainingCount =
 		remainingCountQuery.data ?? remainingConversations.length;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
-	const appliedFiltersCount = useMemo(() => {
-		return selectedTagIds.length + (showOnlyVerified ? 1 : 0);
-	}, [sortBy, selectedTagIds.length, showOnlyVerified]);
+	const appliedFiltersCount =
+		selectedTagIds.length + (showOnlyVerified ? 1 : 0);
 
 	const [showFilterActions, setShowFilterActions] = useState(false);
 	const [sortMenuOpened, setSortMenuOpened] = useState(false);

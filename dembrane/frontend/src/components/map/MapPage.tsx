@@ -188,7 +188,7 @@ const graphIdentity = (response: MapGraphResponse): string => {
 	return `v1|${response.id}`;
 };
 
-function useStableGraph(
+export function useStableGraph(
 	response: MapGraphResponse | null,
 ): MapGraphData | null {
 	const ref = useRef<{ id: string; graph: MapGraphData } | null>(null);

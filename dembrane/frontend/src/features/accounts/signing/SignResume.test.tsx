@@ -64,8 +64,8 @@ const ORG = "0199a1bd-0000-7000-8000-000000000001";
 const SIGN = `/en-US/o/${ORG}/account/documents/${offerDetail.id}/sign`;
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia = ((query: string) => ({
 		addEventListener: () => {},
 		addListener: () => {},
@@ -207,6 +207,15 @@ describe("signing survives a reload", () => {
 		expect(sessionStorage.getItem(draftKey(offerDetail.id))).toBeNull();
 	});
 
+	it("fills in the signer's name once, and leaves it cleared if they clear it", async () => {
+		open();
+		fireEvent.click(await screen.findByTestId("sign-start"));
+		await waitFor(() => expect(input().value).toBe("Ada Lovelace"));
+		fireEvent.change(input(), { target: { value: "" } });
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(input().value).toBe("");
+	});
+
 	it("asks before leaving only while something would be lost", async () => {
 		const leave = () => {
 			const e = new Event("beforeunload", { cancelable: true });
@@ -219,6 +228,8 @@ describe("signing survives a reload", () => {
 		// Kept in session storage: a reload loses nothing, so no question.
 		expect(leave()).toBe(false);
 		cleanup();
+		// Blocked storage keeps nothing: start without the draft just kept.
+		sessionStorage.clear();
 
 		// With storage blocked, the same walk would be lost: ask first.
 		const setItem = vi

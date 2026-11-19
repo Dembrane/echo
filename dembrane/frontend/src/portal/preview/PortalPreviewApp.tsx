@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router";
 import { ADMIN_BASE_URL } from "@/config";
 import {
@@ -38,23 +38,19 @@ import {
  */
 export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 	const [message, setMessage] = useState<PreviewMessage | null>(null);
-	const queryClient = useMemo(
-		() =>
-			new QueryClient({
-				defaultOptions: {
-					mutations: { retry: false },
-					queries: {
-						gcTime: Number.POSITIVE_INFINITY,
-						refetchOnMount: false,
-						refetchOnReconnect: false,
-						refetchOnWindowFocus: false,
-						retry: false,
-						staleTime: Number.POSITIVE_INFINITY,
-					},
-				},
-			}),
-		[],
-	);
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			mutations: { retry: false },
+			queries: {
+				gcTime: Number.POSITIVE_INFINITY,
+				refetchOnMount: false,
+				refetchOnReconnect: false,
+				refetchOnWindowFocus: false,
+				retry: false,
+				staleTime: Number.POSITIVE_INFINITY,
+			},
+		},
+	});
 
 	useEffect(
 		() => answerRequests(queryClient, projectId),
@@ -85,74 +81,21 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 	// A new router per screen and language, and per run: each screen opens at its own
 	// address, as it would for a participant, and the host moves on from there. Values
 	// change in place, through the seeded queries.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: run starts the screen again
-	const router = useMemo(() => {
-		if (!screen || !language) return null;
-		return createMemoryRouter(
-			[
-				{
-					children: [
-						{
-							children: [
-								{
-									element: <OnboardingScreen card="first" />,
-									path: "start",
-								},
-								{
-									element: <OnboardingScreen card="privacy" />,
-									path: "start/privacy",
-								},
-								{
-									element: <OnboardingScreen card="last" />,
-									path: "start/form",
-								},
-								{
-									// The recording screen, with an Explore reply when asked for
-									// one (?echo=1), as on the live portal.
-									element: <RecordingScreen />,
-									path: "conversation/:conversationId",
-								},
-								{
-									element: <RefineScreen />,
-									path: "conversation/:conversationId/refine",
-								},
-								{
-									element: <VerifyTopicsScreen />,
-									path: "conversation/:conversationId/verify",
-								},
-								{
-									element: <VerifySummaryScreen />,
-									path: "conversation/:conversationId/verify/approve",
-								},
-								{
-									element: <FinishScreen />,
-									path: "conversation/:conversationId/finish",
-								},
-							],
-							element: <ParticipantLayout />,
-						},
-					],
-					element: <Outlet />,
-					path: "/:language/:projectId",
-				},
-			],
-			{ initialEntries: [previewEntry(screen, language, projectId)] },
-		);
-	}, [screen, language, projectId, run]);
+	const routerKey =
+		screen && language ? `${projectId}-${screen}-${language}-${run}` : null;
 	// A new router is an untouched screen. Before the reset below, so a message that both
 	// moves the screen and resets it starts it once.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new router is the moment
 	useEffect(() => {
 		touched.current = false;
-	}, [router]);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new reset is the moment, not its value
+	}, [routerKey]);
+	// a new reset is the moment, not its value
 	useEffect(() => {
 		if (!touched.current) return;
 		touched.current = false;
 		setRun((r) => r + 1);
 	}, [reset]);
 
-	if (!router || !message) return null;
+	if (!routerKey || !screen || !language || !message) return null;
 	return (
 		<QueryClientProvider client={queryClient}>
 			<div
@@ -167,10 +110,11 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 				}}
 			>
 				<ExploreReplyContext.Provider value={message.explore}>
-					{/* Keyed: a router provider reads its router's state once. */}
-					<RouterProvider
-						key={`${screen}-${language}-${run}`}
-						router={router}
+					<PreviewRouter
+						key={routerKey}
+						screen={screen}
+						language={language}
+						projectId={projectId}
 					/>
 				</ExploreReplyContext.Provider>
 			</div>
@@ -181,4 +125,79 @@ export const PortalPreviewApp = ({ projectId }: { projectId: string }) => {
 			/>
 		</QueryClientProvider>
 	);
+};
+
+// The participant screens at their own addresses, opening on the one the
+// dashboard asked for.
+const createPreviewRouter = (
+	screen: PreviewMessage["screen"],
+	language: string,
+	projectId: string,
+) =>
+	createMemoryRouter(
+		[
+			{
+				children: [
+					{
+						children: [
+							{
+								element: <OnboardingScreen card="first" />,
+								path: "start",
+							},
+							{
+								element: <OnboardingScreen card="privacy" />,
+								path: "start/privacy",
+							},
+							{
+								element: <OnboardingScreen card="last" />,
+								path: "start/form",
+							},
+							{
+								// The recording screen, with an Explore reply when asked for
+								// one (?echo=1), as on the live portal.
+								element: <RecordingScreen />,
+								path: "conversation/:conversationId",
+							},
+							{
+								element: <RefineScreen />,
+								path: "conversation/:conversationId/refine",
+							},
+							{
+								element: <VerifyTopicsScreen />,
+								path: "conversation/:conversationId/verify",
+							},
+							{
+								element: <VerifySummaryScreen />,
+								path: "conversation/:conversationId/verify/approve",
+							},
+							{
+								element: <FinishScreen />,
+								path: "conversation/:conversationId/finish",
+							},
+						],
+						element: <ParticipantLayout />,
+					},
+				],
+				element: <Outlet />,
+				path: "/:language/:projectId",
+			},
+		],
+		{ initialEntries: [previewEntry(screen, language, projectId)] },
+	);
+
+// Keyed by its parent: a new key is a new router, and a router provider reads
+// its router's state once.
+const PreviewRouter = ({
+	screen,
+	language,
+	projectId,
+}: {
+	screen: PreviewMessage["screen"];
+	language: string;
+	projectId: string;
+}) => {
+	const [router] = useState(() =>
+		createPreviewRouter(screen, language, projectId),
+	);
+	return <RouterProvider router={router} />;
 };

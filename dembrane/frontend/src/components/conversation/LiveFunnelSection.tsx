@@ -4,7 +4,7 @@ import { Box, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { BatteryLowIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import posthog from "posthog-js";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 
 import {
@@ -164,55 +164,53 @@ export const LiveFunnelSection = ({
 	const selectedConversation =
 		conversations.find((c) => c.id === selectedConversationId) ?? null;
 
-	const { nodes, counts, weights } = useMemo(() => {
-		// Three conversation columns: on the recording page (waiting, paused,
-		// away), actually live, then finished (finished cleanly, or left without
-		// finishing). Offline is the one status with no column; see monitorGrouping.
-		const onPage = conversations.filter(isOnRecordingPage);
-		const live = conversations.filter(isLiveRecording);
-		const finished = conversations.filter(isFinishedSession);
-		const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
-			column: data.stage === "scanned" ? 0 : 1,
-			data,
-			kind: "visitor",
-		}));
-		const onPageNodes: NodeDatum[] = onPage.map((data) => ({
-			column: 2,
-			data,
-			kind: "conversation",
-		}));
-		const liveNodes: NodeDatum[] = live.map((data) => ({
-			column: 3,
-			data,
-			kind: "conversation",
-		}));
-		const finishedNodes: NodeDatum[] = finished.map((data) => ({
-			column: 4,
-			data,
-			kind: "conversation",
-		}));
-		const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
-		const setup = funnel.visitors.length - scanned;
-		return {
-			counts: {
-				finished: finished.length,
-				live: live.length,
-				onPage: onPage.length,
-				scanned,
-				setup,
-			},
-			nodes: [...visitorNodes, ...onPageNodes, ...liveNodes, ...finishedNodes],
-			// Empty stages shrink; live carries extra weight so an all-recording
-			// view still gives the live column the most room.
-			weights: [
-				Math.max(1, scanned),
-				Math.max(1, setup),
-				Math.max(1, onPage.length),
-				Math.max(2, live.length),
-				Math.max(1, finished.length),
-			],
-		};
-	}, [funnel.visitors, conversations]);
+	// Three conversation columns: on the recording page (waiting, paused,
+	// away), actually live, then finished (finished cleanly, or left without
+	// finishing). Offline is the one status with no column; see monitorGrouping.
+	const onPage = conversations.filter(isOnRecordingPage);
+	const live = conversations.filter(isLiveRecording);
+	const finished = conversations.filter(isFinishedSession);
+	const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
+		column: data.stage === "scanned" ? 0 : 1,
+		data,
+		kind: "visitor",
+	}));
+	const onPageNodes: NodeDatum[] = onPage.map((data) => ({
+		column: 2,
+		data,
+		kind: "conversation",
+	}));
+	const liveNodes: NodeDatum[] = live.map((data) => ({
+		column: 3,
+		data,
+		kind: "conversation",
+	}));
+	const finishedNodes: NodeDatum[] = finished.map((data) => ({
+		column: 4,
+		data,
+		kind: "conversation",
+	}));
+	const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
+	const setup = funnel.visitors.length - scanned;
+	const { nodes, counts, weights } = {
+		counts: {
+			finished: finished.length,
+			live: live.length,
+			onPage: onPage.length,
+			scanned,
+			setup,
+		},
+		nodes: [...visitorNodes, ...onPageNodes, ...liveNodes, ...finishedNodes],
+		// Empty stages shrink; live carries extra weight so an all-recording
+		// view still gives the live column the most room.
+		weights: [
+			Math.max(1, scanned),
+			Math.max(1, setup),
+			Math.max(1, onPage.length),
+			Math.max(2, live.length),
+			Math.max(1, finished.length),
+		],
+	};
 
 	const totalActive = nodes.length;
 

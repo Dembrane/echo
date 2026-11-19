@@ -8,7 +8,7 @@ import { defaultReadyTime, LiveButton, readyByFrom } from "./LiveButton";
 import { PresentButton } from "./PresentButton";
 import { formatWhen, StatusLine } from "./StatusLine";
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 beforeAll(() => {
 	window.matchMedia = vi.fn().mockImplementation((query) => ({

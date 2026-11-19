@@ -101,10 +101,7 @@ export function EmailChipsInput({
 	});
 
 	// Already-added emails so we don't re-offer someone the admin just picked.
-	const addedLookup = useMemo(
-		() => new Set(chips.map((c) => c.value.toLowerCase())),
-		[chips],
-	);
+	const addedLookup = new Set(chips.map((c) => c.value.toLowerCase()));
 
 	// Suggestions matching the current draft, minus self and already-added. New
 	// (unknown) emails never enter this list, so they can't show in the dropdown.

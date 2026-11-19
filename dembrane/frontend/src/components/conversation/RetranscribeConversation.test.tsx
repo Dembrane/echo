@@ -58,8 +58,8 @@ vi.mock("@/components/workspace/FeatureGate", () => ({
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -156,9 +156,13 @@ it("closes and opens the AI wall, with no failure toast, when the AI budget is u
 });
 
 it("still toasts any other failure, and opens no wall", async () => {
-	retranscribe.mockRejectedValueOnce(new Error("boom"));
+	const boom = new Error("boom");
+	retranscribe.mockRejectedValueOnce(boom);
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 	renderIcon();
 	await retranscribeNow();
 	await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
 	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	expect(consoleError).toHaveBeenCalledWith("Retranscribe error:", boom);
+	consoleError.mockRestore();
 });

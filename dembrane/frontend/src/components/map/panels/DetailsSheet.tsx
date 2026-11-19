@@ -6,10 +6,8 @@ import {
 	type CSSProperties,
 	Fragment,
 	type ReactNode,
-	useCallback,
 	useEffect,
 	useId,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -370,50 +368,33 @@ const SheetBody = ({
 				? clusterKey.split(",")
 				: []
 			: [focus.id];
-	const graph = useMemo(
-		() =>
-			knowledgeGraph({
-				edges,
-				evidenceFor,
-				expand: focus.kind === "argument",
-				focusIds,
-				// The opened argument is drawn even where it is not on the map.
-				nodesById:
-					focusNode && !nodesById.has(focusNode.id)
-						? new Map([...nodesById, [focusNode.id, focusNode]])
-						: nodesById,
-				relations,
-			}),
-		[edges, evidenceFor, focusIds, focusNode, nodesById, relations, focus.kind],
-	);
+	const graph = knowledgeGraph({
+		edges,
+		evidenceFor,
+		expand: focus.kind === "argument",
+		focusIds,
+		// The opened argument is drawn even where it is not on the map.
+		nodesById:
+			focusNode && !nodesById.has(focusNode.id)
+				? new Map([...nodesById, [focusNode.id, focusNode]])
+				: nodesById,
+		relations,
+	});
 
-	const voicesFor = useCallback(
-		(id: string) => voicesOf(evidenceFor(id)),
-		[evidenceFor],
-	);
-	const expand = useCallback(
-		(id: string) => setExpanded((current) => new Set(current).add(id)),
-		[],
-	);
+	const voicesFor = (id: string) => voicesOf(evidenceFor(id));
+	const expand = (id: string) =>
+		setExpanded((current) => new Set(current).add(id));
 
-	const travel = useCallback(
-		(next: Focus) => {
-			setTrail((current) => travelTo(current, next));
-			setMark(null);
-			setAllQuotes(false);
-			revealPending.current = true;
-			onMark(
-				next.kind === "cluster"
-					? clusterNodes.map((node) => node.id)
-					: [next.id],
-			);
-		},
-		[clusterNodes, onMark],
-	);
-	const travelToArgument = useCallback(
-		(id: string) => travel({ id, kind: "argument" }),
-		[travel],
-	);
+	const travel = (next: Focus) => {
+		setTrail((current) => travelTo(current, next));
+		setMark(null);
+		setAllQuotes(false);
+		revealPending.current = true;
+		onMark(
+			next.kind === "cluster" ? clusterNodes.map((node) => node.id) : [next.id],
+		);
+	};
+	const travelToArgument = (id: string) => travel({ id, kind: "argument" });
 
 	// Nothing scrolls by itself on a click. Only where the reader had scrolled
 	// past the top of the panel does the sheet come back to it, so the new
@@ -430,20 +411,17 @@ const SheetBody = ({
 		if (top < view.top) container.scrollTop += top - view.top;
 	}, [focusKey]);
 
-	const pick = useCallback(
-		(node: KnowledgeNode) => {
-			if (node.kind === "quote") {
-				// A quote is marked where it is read; the graph stays put.
-				if (node.index >= FIRST_QUOTES) expand(node.nodeId);
-				if (focus.kind === "cluster") setAllQuotes(true);
-				setMark({ index: node.index, nodeId: node.nodeId });
-				return;
-			}
-			if (focus.kind === "argument" && focus.id === node.nodeId) return;
-			travelToArgument(node.nodeId);
-		},
-		[expand, focus, travelToArgument],
-	);
+	const pick = (node: KnowledgeNode) => {
+		if (node.kind === "quote") {
+			// A quote is marked where it is read; the graph stays put.
+			if (node.index >= FIRST_QUOTES) expand(node.nodeId);
+			if (focus.kind === "cluster") setAllQuotes(true);
+			setMark({ index: node.index, nodeId: node.nodeId });
+			return;
+		}
+		if (focus.kind === "argument" && focus.id === node.nodeId) return;
+		travelToArgument(node.nodeId);
+	};
 
 	const markedId =
 		mark && (focus.kind === "cluster" || mark.nodeId === focus.id)

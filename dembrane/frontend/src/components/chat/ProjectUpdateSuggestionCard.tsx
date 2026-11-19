@@ -362,16 +362,14 @@ export const ProjectUpdateSuggestionCard = ({
 
 	// Stateless applied detection: if the live project already matches every
 	// proposed value, this suggestion has been applied (even after a reload).
-	// biome-ignore lint/correctness/useExhaustiveDependencies: effectiveValue is stable over `edited`, which is listed
-	const applied = useMemo(() => {
-		const project = projectQuery.data as Record<string, unknown> | undefined;
-		if (!project) return false;
-		return suggestion.changes.every((change) => {
-			const live = project[change.field];
-			const target = effectiveValue(change);
-			return String(live ?? "") === String(target ?? "");
-		});
-	}, [projectQuery.data, suggestion.changes, edited]);
+	const project = projectQuery.data as Record<string, unknown> | undefined;
+	const applied =
+		!!project &&
+		suggestion.changes.every(
+			(change) =>
+				String(project[change.field] ?? "") ===
+				String(effectiveValue(change) ?? ""),
+		);
 
 	const selectedChanges = useMemo(
 		() => suggestion.changes.filter((c) => selected[c.field]),

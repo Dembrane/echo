@@ -513,52 +513,39 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	}, [settings]);
 
-	const filteredMembers = useMemo(() => {
-		const q = memberSearch.trim().toLowerCase();
-		return sortedMembers.filter((m) => {
-			if (memberRoleFilter === "admins") {
-				if (isExternalMember(m)) return false;
-				if (!(m.role === "owner" || m.role === "admin")) return false;
-			}
-			if (memberRoleFilter === "members") {
-				if (isExternalMember(m)) return false;
-				if (m.role !== "member") return false;
-			}
-			if (memberRoleFilter === "billing") {
-				if (isExternalMember(m)) return false;
-				if (m.role !== "billing") return false;
-			}
-			if (memberRoleFilter === "externals" && !isExternalMember(m))
-				return false;
-			if (!q) return true;
-			return (
-				(m.display_name || "").toLowerCase().includes(q) ||
-				(m.email || "").toLowerCase().includes(q)
-			);
-		});
-	}, [sortedMembers, memberSearch, memberRoleFilter]);
+	const q = memberSearch.trim().toLowerCase();
+	const filteredMembers = sortedMembers.filter((m) => {
+		if (memberRoleFilter === "admins") {
+			if (isExternalMember(m)) return false;
+			if (!(m.role === "owner" || m.role === "admin")) return false;
+		}
+		if (memberRoleFilter === "members") {
+			if (isExternalMember(m)) return false;
+			if (m.role !== "member") return false;
+		}
+		if (memberRoleFilter === "billing") {
+			if (isExternalMember(m)) return false;
+			if (m.role !== "billing") return false;
+		}
+		if (memberRoleFilter === "externals" && !isExternalMember(m)) return false;
+		if (!q) return true;
+		return (
+			(m.display_name || "").toLowerCase().includes(q) ||
+			(m.email || "").toLowerCase().includes(q)
+		);
+	});
 
-	const hasExternalMembers = useMemo(
-		() => sortedMembers.some((m) => isExternalMember(m)),
-		[sortedMembers],
-	);
+	const hasExternalMembers = sortedMembers.some((m) => isExternalMember(m));
 
 	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasExternalMembers).
-	const hasBillingMembers = useMemo(
-		() =>
-			sortedMembers.some((m) => !isExternalMember(m) && m.role === "billing"),
-		[sortedMembers],
+	const hasBillingMembers = sortedMembers.some(
+		(m) => !isExternalMember(m) && m.role === "billing",
 	);
 
 	// Used to lock the role picker for the only admin so they can't trap themselves.
-	const adminLikeCount = useMemo(
-		() =>
-			sortedMembers.filter(
-				(m) =>
-					!isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
-			).length,
-		[sortedMembers],
-	);
+	const adminLikeCount = sortedMembers.filter(
+		(m) => !isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
+	).length;
 
 	// Must come before the loading branch — otherwise a 403 reads as "loading forever."
 	if (settingsError instanceof WorkspaceAccessDeniedError) {

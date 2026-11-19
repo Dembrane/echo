@@ -17,7 +17,7 @@ vi.mock("@/hooks/useWorkspace", () => ({
 	useWorkspace: () => ({ workspace: { id: "w1" }, workspaceId: "w1" }),
 }));
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 beforeAll(() => {
 	window.matchMedia = vi.fn().mockImplementation((query) => ({

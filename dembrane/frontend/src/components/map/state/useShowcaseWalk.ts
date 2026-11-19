@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { DEFAULT_WALK_INTERVAL_MS } from "../renderers/MstGraph";
 import type { MapGraphNode } from "../types";
 
@@ -34,10 +34,10 @@ export type ShowcaseWalk = ShowcaseWalkState & {
  */
 export function useShowcaseWalk(): ShowcaseWalk {
 	const [walk, setWalk] = useState<ShowcaseWalkState>(IDLE);
-	const onActiveNodeChange = useCallback(
-		(node: MapGraphNode | null, expiresAt: number | null, durationMs: number) =>
-			setWalk({ durationMs, expiresAt, nodeId: node?.id ?? null }),
-		[],
-	);
+	const onActiveNodeChange = (
+		node: MapGraphNode | null,
+		expiresAt: number | null,
+		durationMs: number,
+	) => setWalk({ durationMs, expiresAt, nodeId: node?.id ?? null });
 	return { ...walk, onActiveNodeChange };
 }

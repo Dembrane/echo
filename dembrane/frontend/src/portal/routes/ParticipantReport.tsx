@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
 import posthog from "posthog-js";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { Logo } from "@/components/common/Logo";
@@ -28,32 +28,29 @@ export const ParticipantReport = () => {
 
 	const contributeLink = `${window.location.origin}/${language}/${projectId}/start?utm_source=report`;
 
-	const recordView = useCallback(
-		(reportId: number) => {
-			const key = `rm_${reportId}_updated`;
-			try {
-				const lastUpdated = localStorage.getItem(key);
-				if (lastUpdated) {
-					const hoursDiff =
-						(Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60);
-					if (hoursDiff < 24) return;
-				}
-				localStorage.setItem(key, new Date().toISOString());
-			} catch {
-				// Ignore localStorage errors
+	const recordView = (reportId: number) => {
+		const key = `rm_${reportId}_updated`;
+		try {
+			const lastUpdated = localStorage.getItem(key);
+			if (lastUpdated) {
+				const hoursDiff =
+					(Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60);
+				if (hoursDiff < 24) return;
 			}
+			localStorage.setItem(key, new Date().toISOString());
+		} catch {
+			// Ignore localStorage errors
+		}
 
-			createPublicReportMetric(projectId ?? "", {
-				project_report_id: reportId,
-				type: "view",
+		createPublicReportMetric(projectId ?? "", {
+			project_report_id: reportId,
+			type: "view",
+		})
+			.then(() => {
+				setTimeout(() => refetchViews(), 1000);
 			})
-				.then(() => {
-					setTimeout(() => refetchViews(), 1000);
-				})
-				.catch(() => {});
-		},
-		[projectId, refetchViews],
-	);
+			.catch(() => {});
+	};
 
 	useEffect(() => {
 		if (report) {

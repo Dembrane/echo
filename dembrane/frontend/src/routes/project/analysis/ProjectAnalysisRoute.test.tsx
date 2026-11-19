@@ -70,7 +70,7 @@ vi.mock("@/components/popcorn/hooks", async (importOriginal) => ({
 }));
 
 beforeAll(() => {
-	i18n.loadAndActivate({ locale: "en", messages: {} });
+	i18n.loadAndActivate({ locale: "en-US", messages: {} });
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -144,8 +144,9 @@ it.each(["ai_budget"])(
 				</I18nProvider>
 			</StrictMode>,
 		);
+		const prepare = await screen.findByRole("button", { name: "Prepare" });
 		await act(async () => {
-			fireEvent.click(await screen.findByRole("button", { name: "Prepare" }));
+			fireEvent.click(prepare);
 		});
 		expect(await screen.findByTestId("upgrade-modal")).toBeTruthy();
 		await act(async () => {

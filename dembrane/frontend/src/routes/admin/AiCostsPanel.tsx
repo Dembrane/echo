@@ -22,7 +22,7 @@ import {
 	CaretRightIcon,
 	DotsThreeIcon,
 } from "@phosphor-icons/react";
-import { Fragment, type ReactNode, useMemo, useState } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import {
 	type AiCostAccount,
@@ -556,16 +556,12 @@ export function AiCostsPanel({
 	const { data, error, isLoading, refetch } = useAiCosts(offset);
 	const narrow = useMediaQuery(NARROW) ?? false;
 
-	const accounts = useMemo(
-		() =>
-			[...(data?.accounts ?? [])].sort(
-				(a, b) => b.cost_micro_eur - a.cost_micro_eur,
-			),
-		[data],
+	const accounts = [...(data?.accounts ?? [])].sort(
+		(a, b) => b.cost_micro_eur - a.cost_micro_eur,
 	);
-	const total = useMemo(
-		() => (data?.by_provider ?? []).reduce((s, p) => s + p.cost_micro_eur, 0),
-		[data],
+	const total = (data?.by_provider ?? []).reduce(
+		(s, p) => s + p.cost_micro_eur,
+		0,
 	);
 	const rowProps = (a: AiCostAccount): RowProps => {
 		const id = a.billing_account_id;

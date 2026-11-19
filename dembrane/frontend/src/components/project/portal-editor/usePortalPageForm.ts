@@ -65,7 +65,7 @@ export function usePortalPageForm({
 		resolver,
 		reValidateMode: "onChange",
 	});
-	const { formState, reset, watch, getValues, setValue } = form;
+	const { formState, reset, subscribe, getValues, setValue } = form;
 	const values = useWatch({ control: form.control }) as PortalFormValues;
 
 	const onSave = useCallback(
@@ -157,12 +157,15 @@ export function usePortalPageForm({
 
 	useEffect(() => {
 		if (readOnly) return;
-		const subscription = watch((next, { type }) => {
-			if (type === "change" && next)
-				dispatchRef.current(next as PortalFormValues);
+		// Saves the host's own edits ("change"), not values set in code (those
+		// save through saveNow).
+		return subscribe({
+			callback: ({ values, type }) => {
+				if (type === "change") dispatchRef.current(values);
+			},
+			formState: { values: true },
 		});
-		return () => subscription.unsubscribe();
-	}, [watch, readOnly]);
+	}, [subscribe, readOnly]);
 
 	// The topics as the server has them, unless the host changed them here (the
 	// one-page editor's sync, unchanged).

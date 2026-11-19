@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Radio, Stack, Text } from "@mantine/core";
-import { useMemo } from "react";
+
 import { roleLevel } from "@/lib/roles";
 
 export type InviteRole =
@@ -36,41 +36,39 @@ export function RoleSelect({
 }: Props) {
 	const inviterRank = roleLevel(inviterLevel);
 
-	const options = useMemo(() => {
-		const rows: { value: InviteRole; label: string; description: string }[] = [
-			{
-				description: t`Standard access. Collaborates in the workspaces they're added to.`,
-				label: t`Member`,
-				value: "member",
-			},
-			{
-				description: t`Sees usage and invoices. No project or content access.`,
-				label: t`Billing`,
-				value: "billing",
-			},
-			{
-				description: t`Manages members, workspaces, and organisation settings.`,
-				label: t`Admin`,
-				value: "admin",
-			},
-		];
-		if (allowExternal) {
-			rows.push({
-				description: t`Workspace-only guest. Not added to the organisation.`,
-				label: t`External`,
-				value: "external",
-			});
-			rows.push({
-				description: t`Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports.`,
-				label: t`Observer`,
-				value: "observer",
-			});
-		}
-		// Funnel every option through the same hierarchy gate; levels come from lib/roles.ts (mirrors backend policies.py).
-		return rows
-			.filter((r) => !exclude.includes(r.value))
-			.filter((r) => roleLevel(r.value) <= inviterRank);
-	}, [inviterRank, allowExternal, exclude]);
+	const rows: { value: InviteRole; label: string; description: string }[] = [
+		{
+			description: t`Standard access. Collaborates in the workspaces they're added to.`,
+			label: t`Member`,
+			value: "member",
+		},
+		{
+			description: t`Sees usage and invoices. No project or content access.`,
+			label: t`Billing`,
+			value: "billing",
+		},
+		{
+			description: t`Manages members, workspaces, and organisation settings.`,
+			label: t`Admin`,
+			value: "admin",
+		},
+	];
+	if (allowExternal) {
+		rows.push({
+			description: t`Workspace-only guest. Not added to the organisation.`,
+			label: t`External`,
+			value: "external",
+		});
+		rows.push({
+			description: t`Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports.`,
+			label: t`Observer`,
+			value: "observer",
+		});
+	}
+	// Funnel every option through the same hierarchy gate; levels come from lib/roles.ts (mirrors backend policies.py).
+	const options = rows
+		.filter((r) => !exclude.includes(r.value))
+		.filter((r) => roleLevel(r.value) <= inviterRank);
 
 	return (
 		<Stack gap="xs">

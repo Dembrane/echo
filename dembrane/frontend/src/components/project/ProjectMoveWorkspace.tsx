@@ -4,7 +4,7 @@ import { Button, Select, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
@@ -40,22 +40,20 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 	// context, so its projects can't move out. The backend enforces all three;
 	// filtering here keeps the picker from offering moves that would 403.
 	const currentWorkspaceId = project.workspace_id ?? workspaceId ?? null;
-	const options = useMemo(() => {
-		// Context key mirrors billing_service._billing_context_key.
-		const contextKey = (w: (typeof workspaces)[number]) =>
-			w.bills_separately ? `ws:${w.id}` : `org:${w.org_id}`;
-		const sourceWs = workspaces.find((w) => w.id === currentWorkspaceId);
-		// Orphaned project (no source workspace) has no context to violate.
-		const sourceKey = sourceWs ? contextKey(sourceWs) : null;
-		return workspaces
-			.filter(
-				(w) =>
-					(w.role === "admin" || w.role === "owner") &&
-					w.id !== currentWorkspaceId &&
-					(sourceKey === null || contextKey(w) === sourceKey),
-			)
-			.map((w) => ({ label: w.name, value: w.id }));
-	}, [workspaces, currentWorkspaceId]);
+	// Context key mirrors billing_service._billing_context_key.
+	const contextKey = (w: (typeof workspaces)[number]) =>
+		w.bills_separately ? `ws:${w.id}` : `org:${w.org_id}`;
+	const sourceWs = workspaces.find((w) => w.id === currentWorkspaceId);
+	// Orphaned project (no source workspace) has no context to violate.
+	const sourceKey = sourceWs ? contextKey(sourceWs) : null;
+	const options = workspaces
+		.filter(
+			(w) =>
+				(w.role === "admin" || w.role === "owner") &&
+				w.id !== currentWorkspaceId &&
+				(sourceKey === null || contextKey(w) === sourceKey),
+		)
+		.map((w) => ({ label: w.name, value: w.id }));
 
 	const targetWorkspaceName = workspaces.find(
 		(w) => w.id === targetWorkspaceId,

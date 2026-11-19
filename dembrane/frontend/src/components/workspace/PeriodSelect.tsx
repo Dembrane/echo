@@ -1,6 +1,5 @@
 import { t } from "@lingui/core/macro";
 import { Select } from "@mantine/core";
-import { useMemo } from "react";
 
 interface PeriodSelectProps {
 	value: number; // month_offset: 0 = current, 1 = last month, …
@@ -30,14 +29,10 @@ export const PeriodSelect = ({
 	monthsBack = 6,
 	size = "xs",
 }: PeriodSelectProps) => {
-	const data = useMemo(
-		() =>
-			Array.from({ length: monthsBack + 1 }, (_, i) => ({
-				label: monthLabel(i),
-				value: String(i),
-			})),
-		[monthsBack],
-	);
+	const data = Array.from({ length: monthsBack + 1 }, (_, i) => ({
+		label: monthLabel(i),
+		value: String(i),
+	}));
 
 	return (
 		<Select

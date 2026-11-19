@@ -31,7 +31,7 @@ import {
 	UsersThree,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
@@ -620,56 +620,50 @@ export const OrganisationRoute = () => {
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
 
-	const hasExternals = useMemo(
-		() => members.some((m) => m.is_external),
-		[members],
-	);
+	const hasExternals = members.some((m) => m.is_external);
 
 	// Org picker only offers admin/member but rows can still hold "billing"
 	// via legacy/future flows — show the chip only when ≥1 such row exists.
-	const hasBilling = useMemo(
-		() => members.some((m) => !m.is_external && m.role === "billing"),
-		[members],
+	const hasBilling = members.some(
+		(m) => !m.is_external && m.role === "billing",
 	);
 
-	const filteredMembers = useMemo(() => {
-		const q = search.trim().toLowerCase();
-		const list = members.filter((m) => {
-			// Matrix §5: internal organisation roles are Admin / Billing / Member.
-			// Externals show up as a fourth bucket ("externals") — they have
-			// no org_membership, only per-workspace external rows. The
-			// admins/members filters exclude externals; "externals" isolates
-			// them. Filter collapses owner → admin for display.
-			if (roleFilter === "admins") {
-				if (m.is_external) return false;
-				if (!(m.role === "owner" || m.role === "admin")) return false;
-			}
-			if (roleFilter === "members") {
-				if (m.is_external) return false;
-				if (m.role !== "member") return false;
-			}
-			if (roleFilter === "billing") {
-				if (m.is_external) return false;
-				if (m.role !== "billing") return false;
-			}
-			if (roleFilter === "externals" && !m.is_external) return false;
-			if (!q) return true;
-			return (
-				(m.display_name || "").toLowerCase().includes(q) ||
-				(m.email || "").toLowerCase().includes(q)
-			);
-		});
-		// Pin the viewer's own row to the top (stable sort keeps the rest in
-		// place) so "you" are always the first card you see.
-		if (myAppUserId) {
-			list.sort(
-				(a, b) =>
-					(a.app_user_id === myAppUserId ? 0 : 1) -
-					(b.app_user_id === myAppUserId ? 0 : 1),
-			);
+	const q = search.trim().toLowerCase();
+	const list = members.filter((m) => {
+		// Matrix §5: internal organisation roles are Admin / Billing / Member.
+		// Externals show up as a fourth bucket ("externals") — they have
+		// no org_membership, only per-workspace external rows. The
+		// admins/members filters exclude externals; "externals" isolates
+		// them. Filter collapses owner → admin for display.
+		if (roleFilter === "admins") {
+			if (m.is_external) return false;
+			if (!(m.role === "owner" || m.role === "admin")) return false;
 		}
-		return list;
-	}, [members, search, roleFilter, myAppUserId]);
+		if (roleFilter === "members") {
+			if (m.is_external) return false;
+			if (m.role !== "member") return false;
+		}
+		if (roleFilter === "billing") {
+			if (m.is_external) return false;
+			if (m.role !== "billing") return false;
+		}
+		if (roleFilter === "externals" && !m.is_external) return false;
+		if (!q) return true;
+		return (
+			(m.display_name || "").toLowerCase().includes(q) ||
+			(m.email || "").toLowerCase().includes(q)
+		);
+	});
+	// Pin the viewer's own row to the top (stable sort keeps the rest in
+	// place) so "you" are always the first card you see.
+	if (myAppUserId) {
+		list.sort(
+			(a, b) =>
+				(a.app_user_id === myAppUserId ? 0 : 1) -
+				(b.app_user_id === myAppUserId ? 0 : 1),
+		);
+	}
+	const filteredMembers = list;
 
 	if (organisationLoading) {
 		return <BeautifulLoading />;
@@ -1337,43 +1331,38 @@ function OrganisationOverviewPanel({
 
 	// Pinned projects + private flag live on the enriched org roster; key them
 	// by workspace id so the access-scoped cards can pull them in.
-	const rosterMap = useMemo(
-		() => new Map(workspaces.map((w) => [w.id, w])),
-		[workspaces],
-	);
+	const rosterMap = new Map(workspaces.map((w) => [w.id, w]));
 
 	const ONE_DAY_MS = 86_400_000;
 	// Read once: "recently approved" is counted from when the page opened.
 	const [now] = useState(Date.now);
-	const myCards: WorkspaceCardModel[] = useMemo(() => {
-		const list = (mine?.workspaces ?? []).filter((w) => w.org_id === orgId);
-		return list
-			.map((w) => {
-				const roster = rosterMap.get(w.id);
-				// Free workspaces are auto-created on signup, never "approved".
-				const recentlyApproved =
-					!!w.created_at &&
-					w.tier !== "free" &&
-					now - new Date(w.created_at).getTime() < ONE_DAY_MS;
-				return {
-					audio_hours: w.usage?.audio_hours ?? 0,
-					bills_separately: roster?.bills_separately ?? false,
-					conversation_count: w.usage?.conversation_count ?? 0,
-					id: w.id,
-					is_private: roster?.is_private ?? false,
-					logo_url: w.logo_url ?? null,
-					member_count: w.member_count,
-					members_preview: w.members_preview ?? [],
-					name: w.name,
-					pinned_projects: roster?.pinned_projects ?? [],
-					project_count: w.project_count,
-					recently_approved: recentlyApproved,
-					tier: w.tier,
-					visibility: roster?.visibility ?? "open_to_organisation",
-				};
-			})
-			.sort((a, b) => a.name.localeCompare(b.name));
-	}, [mine, now, orgId, rosterMap]);
+	const list = (mine?.workspaces ?? []).filter((w) => w.org_id === orgId);
+	const myCards: WorkspaceCardModel[] = list
+		.map((w) => {
+			const roster = rosterMap.get(w.id);
+			// Free workspaces are auto-created on signup, never "approved".
+			const recentlyApproved =
+				!!w.created_at &&
+				w.tier !== "free" &&
+				now - new Date(w.created_at).getTime() < ONE_DAY_MS;
+			return {
+				audio_hours: w.usage?.audio_hours ?? 0,
+				bills_separately: roster?.bills_separately ?? false,
+				conversation_count: w.usage?.conversation_count ?? 0,
+				id: w.id,
+				is_private: roster?.is_private ?? false,
+				logo_url: w.logo_url ?? null,
+				member_count: w.member_count,
+				members_preview: w.members_preview ?? [],
+				name: w.name,
+				pinned_projects: roster?.pinned_projects ?? [],
+				project_count: w.project_count,
+				recently_approved: recentlyApproved,
+				tier: w.tier,
+				visibility: roster?.visibility ?? "open_to_organisation",
+			};
+		})
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	// Pending invites aren't on the team yet, so they don't count toward the
 	// people glance. Everyone with access (incl. externals) shows as a bubble.

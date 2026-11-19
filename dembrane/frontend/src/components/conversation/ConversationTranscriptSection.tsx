@@ -14,14 +14,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { Info } from "@phosphor-icons/react";
-import {
-	lazy,
-	Suspense,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
@@ -121,13 +114,10 @@ export const ConversationTranscriptSection = ({
 		threshold: 0.2,
 	});
 	const bottomTargetRef = useRef<HTMLDivElement | null>(null);
-	const setBottomTargetRef = useCallback(
-		(node: HTMLDivElement | null) => {
-			bottomTargetRef.current = node;
-			bottomInViewRef(node);
-		},
-		[bottomInViewRef],
-	);
+	const setBottomTargetRef = (node: HTMLDivElement | null) => {
+		bottomTargetRef.current = node;
+		bottomInViewRef(node);
+	};
 
 	const {
 		data: chunksData,
@@ -138,7 +128,7 @@ export const ConversationTranscriptSection = ({
 	} = useInfiniteConversationChunks(conversationId, { isFinished });
 
 	const [isScrollingToEnd, setIsScrollingToEnd] = useState(false);
-	const handleScrollToBottom = useCallback(async () => {
+	const handleScrollToBottom = async () => {
 		if (isScrollingToEnd) return;
 		setIsScrollingToEnd(true);
 		// No try/finally: it makes the React Compiler skip this component, and this never throws.
@@ -150,7 +140,7 @@ export const ConversationTranscriptSection = ({
 				bottomTargetRef.current?.scrollIntoView({ behavior: "smooth" }),
 		});
 		setIsScrollingToEnd(false);
-	}, [fetchNextPage, hasNextPage, isScrollingToEnd]);
+	};
 
 	useEffect(() => {
 		if (inView && hasNextPage && !isFetchingNextPage) {

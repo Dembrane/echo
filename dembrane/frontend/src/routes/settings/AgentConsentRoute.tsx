@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { AgentRiskNotice } from "@/components/agent-access/AgentRiskNotice";
 import { scopeLabel } from "@/components/agent-access/format";
@@ -116,9 +116,8 @@ export const AgentConsentRoute = () => {
 	// Preselect the one enabled org when there is exactly one; more than one
 	// is a real choice the user should make. Once only: unticking it must
 	// stick, or the user can never clear the selection.
-	const enabledOrgs = useMemo(
-		() => (data?.organisations ?? []).filter((o) => o.agent_access_enabled),
-		[data],
+	const enabledOrgs = (data?.organisations ?? []).filter(
+		(o) => o.agent_access_enabled,
 	);
 	const preselected = useRef(false);
 	useEffect(() => {

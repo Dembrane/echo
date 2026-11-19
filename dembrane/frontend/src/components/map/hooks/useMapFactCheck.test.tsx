@@ -363,6 +363,29 @@ describe("useMapFactCheck", () => {
 		expect(result.current.states.c1.status).toBe("idle");
 	});
 
+	it("starts a new result from the server's states, whatever the last one had in flight", async () => {
+		const post = deferred<FactCheckState>();
+		bffMock.post.mockReturnValue(post.promise);
+		const { result, rerender } = renderHook(
+			({ resultId }) => useMapFactCheck({ readOnly: false, resultId }),
+			{ initialProps: { resultId: "r1" }, wrapper },
+		);
+		await waitFor(() => expect(result.current.states.c1).toBeDefined());
+		act(() => {
+			result.current.run("c1");
+		});
+		expect(result.current.states.c1.status).toBe("processing");
+
+		rerender({ resultId: "r2" });
+		expect(result.current.states.c1?.status).not.toBe("processing");
+		await waitFor(() => expect(result.current.states.c1?.status).toBe("idle"));
+		// The old result's answer lands late and changes nothing here.
+		await act(async () => {
+			post.resolve(done);
+		});
+		expect(result.current.states.c1.status).toBe("idle");
+	});
+
 	it("keeps at most four starts in flight", async () => {
 		const ids = Array.from({ length: 10 }, (_, index) => `c${index}`);
 		bffMock.get.mockResolvedValue({

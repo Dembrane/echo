@@ -12,10 +12,12 @@ vi.mock("@/components/common/Logo", () => ({ Logo: () => null }));
 vi.mock("@/hooks/useLanguage", () => ({
 	useLanguage: () => ({ language: "en-US" }),
 }));
+const welcomeOnly = [
+	{ section: "Intro", slides: [{ content: "Hi", title: "Welcome" }] },
+];
+let systemCards: unknown[] = welcomeOnly;
 vi.mock("./onboardingCards", () => ({
-	getSystemCards: () => [
-		{ section: "Intro", slides: [{ content: "Hi", title: "Welcome" }] },
-	],
+	getSystemCards: () => systemCards,
 }));
 vi.mock("./ParticipantInitiateForm", () => ({
 	ParticipantInitiateForm: ({
@@ -31,8 +33,8 @@ vi.mock("./ParticipantInitiateForm", () => ({
 }));
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -47,19 +49,25 @@ beforeAll(() => {
 		}));
 });
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	systemCards = welcomeOnly;
+});
 
 const project = {
 	id: "p1",
 	tags: [],
 } as unknown as ParticipantProject;
 
-const wrap = (url: string) =>
+const wrap = (url: string, initialSlide?: "first" | "privacy" | "last") =>
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
 				<MemoryRouter initialEntries={[url]}>
-					<ParticipantOnboardingCards project={project} />
+					<ParticipantOnboardingCards
+						project={project}
+						initialSlide={initialSlide}
+					/>
 				</MemoryRouter>
 			</MantineProvider>
 		</I18nProvider>,
@@ -84,4 +92,48 @@ it("drops the heading once the start is refused when onboarding is skipped", () 
 	fireEvent.click(screen.getByText("refuse"));
 
 	expect(screen.queryByText("Ready to begin?")).toBeNull();
+});
+
+const withPrivacy = [
+	{
+		section: "Intro",
+		slides: [
+			{ content: "Hi", title: "Welcome" },
+			{
+				checkbox: { label: "I agree", required: true },
+				content: "We keep it safe",
+				title: "Your privacy",
+				type: "privacy",
+			},
+		],
+	},
+];
+
+it("opens on the first card by default", () => {
+	wrap("/en-US/p1/start");
+	expect(screen.getByText("Welcome")).toBeTruthy();
+});
+
+it("opens on the last card when asked", () => {
+	wrap("/en-US/p1/start", "last");
+	expect(screen.getByText("Ready to begin?")).toBeTruthy();
+});
+
+it("opens on the privacy card when asked", () => {
+	systemCards = withPrivacy;
+	wrap("/en-US/p1/start", "privacy");
+	expect(screen.getByText("Your privacy")).toBeTruthy();
+});
+
+it("holds Next on a required checkbox until it is ticked", () => {
+	systemCards = withPrivacy;
+	wrap("/en-US/p1/start", "privacy");
+	const next = screen.getByTestId("portal-onboarding-next-button");
+	expect(next).toHaveProperty("disabled", true);
+
+	fireEvent.click(screen.getByLabelText("I agree"));
+	expect(next).toHaveProperty("disabled", false);
+	fireEvent.click(next);
+
+	expect(screen.getByText("Ready to begin?")).toBeTruthy();
 });

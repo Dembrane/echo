@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { ArrowCounterClockwise, Bell, Check } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { roles } from "@/colors";
@@ -59,18 +59,15 @@ export const InboxView = () => {
 			? "announcements"
 			: "for-you";
 
-	const setActiveTab = useCallback(
-		(tab: Tab) => {
-			const next = new URLSearchParams(searchParams);
-			if (tab === "announcements") {
-				next.set(SIDEBAR_TAB_PARAM, "updates");
-			} else {
-				next.delete(SIDEBAR_TAB_PARAM);
-			}
-			setSearchParams(next, { replace: true });
-		},
-		[searchParams, setSearchParams],
-	);
+	const setActiveTab = (tab: Tab) => {
+		const next = new URLSearchParams(searchParams);
+		if (tab === "announcements") {
+			next.set(SIDEBAR_TAB_PARAM, "updates");
+		} else {
+			next.delete(SIDEBAR_TAB_PARAM);
+		}
+		setSearchParams(next, { replace: true });
+	};
 	const navigate = useI18nNavigate();
 	const { language } = useLanguage();
 
