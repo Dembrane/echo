@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -199,7 +199,7 @@ const facts = (...parts: ReactNode[]) => {
 	const shown = parts.filter(Boolean);
 	if (shown.length === 0) return null;
 	return shown.map((part, i) => (
-		// biome-ignore lint/suspicious/noArrayIndexKey: a fixed, ordered list of facts
+		// keyed by index: a fixed, ordered list of facts
 		<Fragment key={i}>
 			{i > 0 && " · "}
 			{part}
@@ -589,15 +589,17 @@ function TaskResponseModal({
 	const [error, setError] = useState<unknown>(null);
 	const queryClient = useQueryClient();
 	const needsFile = task?.kind === "upload";
+	// A new task (or none) starts clean, during render.
 	const taskId = task?.id;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new task starts clean
-	useEffect(() => setError(null), [taskId]);
+	const [shownTaskId, setShownTaskId] = useState(taskId);
+	if (taskId !== shownTaskId) {
+		setShownTaskId(taskId);
+		setError(null);
+	}
 
 	const submit = async () => {
 		if (!task) return;
-		setPending(true);
-		setError(null);
-		try {
+		const send = async () => {
 			if (file) {
 				await submitTaskWithFile(
 					{ orgId, taskId: task.id },
@@ -615,11 +617,18 @@ function TaskResponseModal({
 			setText("");
 			setFile(null);
 			onClose();
-		} catch (e) {
-			setError(e);
-		} finally {
-			setPending(false);
-		}
+		};
+		setPending(true);
+		setError(null);
+		// a promise chain, not try/catch/finally: React Compiler can't compile
+		// a try with a finally, or one holding ||
+		await send()
+			.catch((e: unknown) => {
+				setError(e);
+			})
+			.finally(() => {
+				setPending(false);
+			});
 	};
 
 	return (
