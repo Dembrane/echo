@@ -11,10 +11,14 @@ import {
 	type ResponseOf,
 } from "../../api/client";
 import type { RoomPageT, RoomPersonT } from "../../contract/contract.gen";
+import * as fx from "../../contract/fixtures.gen";
+import { signable } from "./AddPersonModal";
+import { AddPersonSteps as AddPersonStepsComponent } from "./AddPersonSteps";
 
 // Adding someone, as steps: who, what they do, send: AddPersonSteps({ me, myEmail,
 // people, preset, onSubmit, onCancel, onDone }).
-const load = async () => (await import("./AddPersonSteps")).AddPersonSteps;
+// imported up front, so no test is timed on loading it
+const load = async () => AddPersonStepsComponent;
 
 beforeAll(() => {
 	i18n.load("en-US", {});
@@ -450,8 +454,6 @@ describe("signing, in the same flow", () => {
 	});
 
 	it("offers no document to sign where the server says no signer may be named", async () => {
-		const { signable } = await import("./AddPersonModal");
-		const fx = await import("../../contract/fixtures.gen");
 		const open = {
 			...fx.accountPage,
 			documents: fx.accountPage.documents.map((d) => ({
