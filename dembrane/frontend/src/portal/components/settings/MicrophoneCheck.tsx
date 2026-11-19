@@ -13,8 +13,9 @@ import {
 } from "@mantine/core";
 import Cookies from "js-cookie";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
+import { useLatest } from "@/hooks/useLatest";
 import { testId } from "@/lib/testUtils";
 
 interface MicrophoneCheckProps {
@@ -44,6 +45,8 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 	const [micAccessDenied, setMicAccessDenied] = useState(false);
 	const [isMicTestSuccessful, setIsMicTestSuccessful] = useState(false);
 	const isMicSuccessRef = useRef(false);
+	// read through a ref, so a new callback doesn't re-open the mic
+	const onMicTestSuccessRef = useLatest(onMicTestSuccess);
 
 	// Surface a blocked mic to the host funnel (best-effort; optional callback).
 	useEffect(() => {
@@ -61,43 +64,43 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 	const isStartPage = pathname.includes("start");
 	// Request permission and enumerate audio input devices
 	useEffect(() => {
+		// a promise chain, not try/catch/finally: React Compiler can't compile
+		// a try with a finally, or one holding ?. or &&
 		const initializeDevices = async () => {
-			setIsLoadingDevices(true);
-			try {
-				// First request microphone permission to get device labels
-				const stream = await navigator.mediaDevices.getUserMedia({
-					audio: true,
-				});
+			// First request microphone permission to get device labels
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: true,
+			});
 
-				// Now enumerate devices - this will include labels
-				if (navigator.mediaDevices?.enumerateDevices) {
-					const all = await navigator.mediaDevices.enumerateDevices();
-					const inputs = all.filter((d) => d.kind === "audioinput");
-					setDevices(inputs);
+			// Now enumerate devices - this will include labels
+			if (navigator.mediaDevices?.enumerateDevices) {
+				const all = await navigator.mediaDevices.enumerateDevices();
+				const inputs = all.filter((d) => d.kind === "audioinput");
+				setDevices(inputs);
 
-					// Check if device ID is in cookies
-					const savedDeviceId = Cookies.get("micDeviceId");
-					if (
-						savedDeviceId &&
-						inputs.some((d) => d.deviceId === savedDeviceId)
-					) {
-						setSelectedDeviceId(savedDeviceId);
-						setDisplayDeviceId(savedDeviceId);
-					} else if (inputs.length > 0) {
-						setSelectedDeviceId(inputs[0].deviceId);
-						setDisplayDeviceId(inputs[0].deviceId);
-					}
+				// Check if device ID is in cookies
+				const savedDeviceId = Cookies.get("micDeviceId");
+				if (savedDeviceId && inputs.some((d) => d.deviceId === savedDeviceId)) {
+					setSelectedDeviceId(savedDeviceId);
+					setDisplayDeviceId(savedDeviceId);
+				} else if (inputs.length > 0) {
+					setSelectedDeviceId(inputs[0].deviceId);
+					setDisplayDeviceId(inputs[0].deviceId);
 				}
+			}
 
-				// Stop the temporary stream
-				stream.getTracks().forEach((track) => {
-					track.stop();
-				});
+			// Stop the temporary stream
+			stream.getTracks().forEach((track) => {
+				track.stop();
+			});
 
-				// Mark that we have mic access
-				setMicAccessGranted(true);
-				setMicAccessDenied(false);
-			} catch (error) {
+			// Mark that we have mic access
+			setMicAccessGranted(true);
+			setMicAccessDenied(false);
+		};
+
+		initializeDevices()
+			.catch((error: unknown) => {
 				console.error(
 					"Failed to get microphone permission or enumerate devices:",
 					error,
@@ -106,74 +109,72 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 				setErrorMessage(
 					"Microphone permission is required. Please allow access to proceed.",
 				);
-			} finally {
+			})
+			.finally(() => {
 				setIsLoadingDevices(false);
-			}
-		};
-
-		initializeDevices();
+			});
 	}, []);
-
-	const stopAnalyzer = useCallback(() => {
-		if (animationFrameRef.current) {
-			cancelAnimationFrame(animationFrameRef.current);
-			animationFrameRef.current = null;
-		}
-	}, []);
-
-	const startAnalyzer = useCallback(() => {
-		const tick = () => {
-			if (analyserRef.current && dataArrayRef.current) {
-				// Get time-domain data for quick RMS level estimation (more performant)
-				analyserRef.current.getByteTimeDomainData(
-					dataArrayRef.current as Uint8Array<ArrayBuffer>,
-				);
-				let sumSq = 0;
-				for (let i = 0; i < dataArrayRef.current.length; i++) {
-					const centered = dataArrayRef.current[i] - 128;
-					sumSq += centered * centered;
-				}
-				const rms = Math.sqrt(sumSq / dataArrayRef.current.length);
-				const avg = rms * 2; // approx scale 0-255
-
-				// Throttle UI update
-				const now = performance.now();
-				if (now - lastUpdateRef.current >= UPDATE_INTERVAL) {
-					lastUpdateRef.current = now;
-					// Only update state if change is noticeable (≥1%) to avoid unnecessary re-renders
-					setLevel((prev) => {
-						const newLevel = avg;
-						const prevDisplay = Math.min(Math.sqrt(prev / 255) * 100, 100);
-						const newDisplay = Math.min(Math.sqrt(newLevel / 255) * 100, 100);
-						return Math.abs(newDisplay - prevDisplay) >= 1 ? newLevel : prev;
-					});
-				}
-
-				// Voice / silence detection logic
-				if (avg > SILENCE_THRESHOLD) {
-					silenceStartRef.current = null;
-					if (!isMicSuccessRef.current) {
-						setIsMicTestSuccessful(true);
-						isMicSuccessRef.current = true;
-						onMicTestSuccess(true);
-					}
-				} else if (silenceStartRef.current === null) {
-					silenceStartRef.current = now;
-				} else if (
-					now - silenceStartRef.current > 2000 &&
-					isMicSuccessRef.current
-				) {
-					setIsMicTestSuccessful(false);
-					isMicSuccessRef.current = false;
-				}
-			}
-			animationFrameRef.current = requestAnimationFrame(tick);
-		};
-		tick();
-	}, [onMicTestSuccess]);
 
 	// setup stream, analyser when device changes
 	useEffect(() => {
+		const stopAnalyzer = () => {
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
+			}
+		};
+
+		const startAnalyzer = () => {
+			const tick = () => {
+				if (analyserRef.current && dataArrayRef.current) {
+					// Get time-domain data for quick RMS level estimation (more performant)
+					analyserRef.current.getByteTimeDomainData(
+						dataArrayRef.current as Uint8Array<ArrayBuffer>,
+					);
+					let sumSq = 0;
+					for (let i = 0; i < dataArrayRef.current.length; i++) {
+						const centered = dataArrayRef.current[i] - 128;
+						sumSq += centered * centered;
+					}
+					const rms = Math.sqrt(sumSq / dataArrayRef.current.length);
+					const avg = rms * 2; // approx scale 0-255
+
+					// Throttle UI update
+					const now = performance.now();
+					if (now - lastUpdateRef.current >= UPDATE_INTERVAL) {
+						lastUpdateRef.current = now;
+						// Only update state if change is noticeable (≥1%) to avoid unnecessary re-renders
+						setLevel((prev) => {
+							const newLevel = avg;
+							const prevDisplay = Math.min(Math.sqrt(prev / 255) * 100, 100);
+							const newDisplay = Math.min(Math.sqrt(newLevel / 255) * 100, 100);
+							return Math.abs(newDisplay - prevDisplay) >= 1 ? newLevel : prev;
+						});
+					}
+
+					// Voice / silence detection logic
+					if (avg > SILENCE_THRESHOLD) {
+						silenceStartRef.current = null;
+						if (!isMicSuccessRef.current) {
+							setIsMicTestSuccessful(true);
+							isMicSuccessRef.current = true;
+							onMicTestSuccessRef.current(true);
+						}
+					} else if (silenceStartRef.current === null) {
+						silenceStartRef.current = now;
+					} else if (
+						now - silenceStartRef.current > 2000 &&
+						isMicSuccessRef.current
+					) {
+						setIsMicTestSuccessful(false);
+						isMicSuccessRef.current = false;
+					}
+				}
+				animationFrameRef.current = requestAnimationFrame(tick);
+			};
+			tick();
+		};
+
 		const setup = async () => {
 			if (!selectedDeviceId) return;
 
@@ -188,7 +189,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 
 			// Reset success state when device changes
 			setIsMicTestSuccessful(false);
-			onMicTestSuccess(false);
+			onMicTestSuccessRef.current(false);
 			isMicSuccessRef.current = false;
 			silenceStartRef.current = null;
 
@@ -257,7 +258,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 				audioContextRef.current = null;
 			}
 		};
-	}, [selectedDeviceId, onMicTestSuccess, startAnalyzer, stopAnalyzer]);
+	}, [selectedDeviceId, onMicTestSuccessRef]);
 
 	const handleContinue = () => {
 		// Ensure device ID is saved in cookies before continuing
