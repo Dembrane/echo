@@ -48,7 +48,7 @@ msgstr "Over Probeer het"
 msgid "Add topic"
 msgstr "Onderwerp toevoegen"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:60
 msgid "Advanced"
 msgstr "Geavanceerd"
 
@@ -96,7 +96,7 @@ msgstr "Automatisch titels genereren"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatisch een korte onderwerp-gebaseerde titel genereren voor elk gesprek na samenvatting. De titel beschrijft wat er werd besproken, niet wie deelnemde. De oorspronkelijke naam van de deelnemer wordt apart bewaard, als ze er een had."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatisering, vroege functies, en dit project verplaatsen of verwijderen."
 
@@ -132,7 +132,7 @@ msgstr "Ideeën brainstormen"
 msgid "Change the key terms in the project brief"
 msgstr "Pas de kernbegrippen aan in de projectbriefing"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:76
+#: src/components/project/brief/ProjectBriefRoute.tsx:73
 msgid "Change the privacy settings in the portal editor"
 msgstr "Pas de privacy-instellingen aan in de portaalbewerker"
 
@@ -229,9 +229,9 @@ msgstr "Verifiëren inschakelen"
 msgid "English"
 msgstr "Engels"
 
-#: src/components/project/portal-editor/PortalEditorRoute.tsx:62
-#: src/components/project/brief/ProjectBriefRoute.tsx:85
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/portal-editor/PortalEditorRoute.tsx:59
+#: src/components/project/brief/ProjectBriefRoute.tsx:82
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:71
 msgid "Error loading project"
 msgstr "Fout bij laden van project"
 
@@ -402,7 +402,7 @@ msgstr "Eén vraag"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Eén voorbeeld kan niet laten zien wat Verkennen uit andere gesprekken haalt."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:83
 msgid "Only workspace admins can manage project automation."
 msgstr "Alleen werkruimtebeheerders kunnen projectautomatisering beheren."
 
@@ -446,7 +446,7 @@ msgstr "Privacy"
 msgid "Privacy card"
 msgstr "Privacykaart"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:62
+#: src/components/project/brief/ProjectBriefRoute.tsx:59
 msgid "Project brief"
 msgstr "Projectbriefing"
 
@@ -638,11 +638,11 @@ msgstr "Verifiëren"
 msgid "Verify topics"
 msgstr "Onderwerpen voor Verifiëren"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:95
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:78
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
@@ -663,7 +663,7 @@ msgstr "Waar het naamveld om vraagt"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Wat het startscherm vraagt, en hoe gesprekken hun titel krijgen."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:65
+#: src/components/project/brief/ProjectBriefRoute.tsx:62
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "Waar dit project over gaat. dembrane leest het voor transcripten, samenvattingen, chats en rapporten."
 

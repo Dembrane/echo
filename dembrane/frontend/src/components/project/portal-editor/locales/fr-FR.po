@@ -48,7 +48,7 @@ msgstr "À propos d'Essayer"
 msgid "Add topic"
 msgstr "Ajouter un sujet"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:60
 msgid "Advanced"
 msgstr "Avancé"
 
@@ -96,7 +96,7 @@ msgstr "Générer automatiquement les titres"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque conversation après la synthèse. Le titre décrit ce qui a été discuté, pas qui a participé. Le nom original du participant est conservé séparément, s'il a fourni un nom."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatisation, fonctions en avant-première, et déplacer ou supprimer ce projet."
 
@@ -132,7 +132,7 @@ msgstr "Brainstorming d'idées"
 msgid "Change the key terms in the project brief"
 msgstr "Modifier les termes clés dans le brief du projet"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:76
+#: src/components/project/brief/ProjectBriefRoute.tsx:73
 msgid "Change the privacy settings in the portal editor"
 msgstr "Modifier les paramètres de confidentialité dans l'éditeur du portail"
 
@@ -229,9 +229,9 @@ msgstr "Activer la vérification"
 msgid "English"
 msgstr "Anglais"
 
-#: src/components/project/portal-editor/PortalEditorRoute.tsx:62
-#: src/components/project/brief/ProjectBriefRoute.tsx:85
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/portal-editor/PortalEditorRoute.tsx:59
+#: src/components/project/brief/ProjectBriefRoute.tsx:82
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:71
 msgid "Error loading project"
 msgstr "Erreur lors du chargement du projet"
 
@@ -402,7 +402,7 @@ msgstr "Une question"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Un seul exemple ne peut pas montrer ce qu'Explorer reprend d'autres conversations."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:83
 msgid "Only workspace admins can manage project automation."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent gérer l'automatisation du projet."
 
@@ -446,7 +446,7 @@ msgstr "Confidentialité"
 msgid "Privacy card"
 msgstr "Carte de confidentialité"
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:62
+#: src/components/project/brief/ProjectBriefRoute.tsx:59
 msgid "Project brief"
 msgstr "Brief du projet"
 
@@ -638,11 +638,11 @@ msgstr "Vérifier"
 msgid "Verify topics"
 msgstr "Vérifier les sujets"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:95
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:78
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
@@ -663,7 +663,7 @@ msgstr "Ce que demande le champ du nom"
 msgid "What the start screen asks, and how conversations get their titles."
 msgstr "Ce que demande l'écran d'accueil, et comment les conversations reçoivent leur titre."
 
-#: src/components/project/brief/ProjectBriefRoute.tsx:65
+#: src/components/project/brief/ProjectBriefRoute.tsx:62
 msgid "What this project is about. dembrane reads it for transcripts, summaries, chats and reports."
 msgstr "De quoi parle ce projet. dembrane le lit pour les transcriptions, les résumés, les chats et les rapports."
 
