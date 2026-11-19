@@ -91,7 +91,7 @@ import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
 import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 
-const useDembraneChat = ({ chatId }: { chatId: string }) => {
+export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
 	const { projectId } = useParams();
@@ -108,34 +108,17 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const lastInput = useRef("");
 	const lastMessageRef = useRef<HTMLDivElement>(null);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
-	const contextToBeAdded = useMemo(() => {
-		if (!chatContextQuery.data) {
-			return null;
-		}
-		const conversations = chatContextQuery.data.conversations ?? [];
-		return {
-			conversations: conversations.filter((c) => !c.locked),
-			locked_conversations: conversations.filter((c) => c.locked),
-		};
-	}, [chatContextQuery.data, chatHistoryQuery.data]);
+	const contextConversations = chatContextQuery.data?.conversations ?? [];
+	const contextToBeAdded = chatContextQuery.data
+		? {
+				conversations: contextConversations.filter((c) => !c.locked),
+				locked_conversations: contextConversations.filter((c) => c.locked),
+			}
+		: null;
 
 	const { iso639_1 } = useLanguage();
 
-	const {
-		messages,
-		setMessages,
-		input,
-		setInput,
-		handleInputChange,
-		handleSubmit,
-		isLoading,
-		status,
-		error,
-		stop,
-		reload,
-		data,
-	} = useChat({
+	const chat = useChat({
 		api: `${API_BASE_URL}/chats/${chatId}?language=${iso639_1 ?? "en"}`,
 		credentials: "include",
 		experimental_prepareRequestBody: (options) => {
@@ -194,6 +177,20 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		onResponse: async (_response) => {},
 		streamProtocol: "data",
 	});
+	const {
+		messages,
+		setMessages,
+		input,
+		setInput,
+		handleInputChange,
+		handleSubmit,
+		isLoading,
+		status,
+		error,
+		stop,
+		reload,
+		data,
+	} = chat;
 
 	// Handle load status (shows inline message when backend reports high load)
 	const hasContent =
@@ -239,43 +236,48 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		});
 	};
 
-	const customHandleSubmit = async () => {
+	const customHandleSubmit = () => {
 		lastInput.current = input;
 		setIsSubmitting(true);
 
-		try {
-			// Lock conversations first
-			await lockConversationsMutation.mutateAsync({ chatId });
-			const [, refreshedHistory] = await Promise.all([
-				chatContextQuery.refetch(),
-				chatHistoryQuery.refetch({ cancelRefetch: false }),
-			]);
-			if (refreshedHistory.data) {
-				// @ts-expect-error chatHistoryQuery.data is not typed
-				setMessages(refreshedHistory.data);
-			}
+		// Lock conversations first, then send on the refreshed history.
+		return lockConversationsMutation
+			.mutateAsync({ chatId })
+			.then(() =>
+				Promise.all([
+					chatContextQuery.refetch(),
+					chatHistoryQuery.refetch({ cancelRefetch: false }),
+				]),
+			)
+			.then(([, refreshedHistory]) => {
+				if (refreshedHistory.data) {
+					// @ts-expect-error chatHistoryQuery.data is not typed
+					setMessages(refreshedHistory.data);
+				}
 
-			// Submit the chat
-			handleSubmit();
+				handleSubmit();
 
-			track("chat_message_sent", {
-				chat_id: chatId,
-				project_id: projectId,
-				template_key: templateKey,
+				track("chat_message_sent", {
+					chat_id: chatId,
+					project_id: projectId,
+					template_key: templateKey,
+				});
+
+				// Scroll to bottom when user submits a message
+				setTimeout(() => {
+					lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+				}, 0);
+			})
+			.catch((error) => {
+				console.error("Error in customHandleSubmit:", error);
+			})
+			.finally(() => {
+				setIsSubmitting(false);
 			});
-
-			// Scroll to bottom when user submits a message
-			setTimeout(() => {
-				lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-			}, 0);
-		} catch (error) {
-			console.error("Error in customHandleSubmit:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
 	};
 
-	// reconcile for "dembrane" messages
+	// reconcile for "dembrane" messages: the server's history takes over the
+	// AI SDK's message store once it holds more.
 	useEffect(() => {
 		if (isLoading || chatHistoryQuery.isLoading || !chatHistoryQuery.data) {
 			return;
@@ -286,14 +288,14 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			chatHistoryQuery.data.length > (messages?.length ?? 0)
 		) {
 			// @ts-expect-error chatHistoryQuery.data is not typed
-			setMessages(chatHistoryQuery.data ?? messages);
+			chat.setMessages(chatHistoryQuery.data);
 		}
 	}, [
 		chatHistoryQuery.data,
 		isLoading,
 		chatHistoryQuery.isLoading,
 		messages,
-		setMessages,
+		chat,
 	]);
 
 	return {
@@ -332,7 +334,7 @@ const AutoInitializeAgentic = ({
 }) => {
 	const initializeModeMutation = useInitializeChatModeMutation();
 	const startedRef = useRef(false);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: mutation/callback identities change per render; the ref guards a single run
+	// Deps on purpose: mutation/callback identities change per render; the ref guards a single run
 	useEffect(() => {
 		if (startedRef.current || !chatId || !projectId) return;
 		startedRef.current = true;
@@ -369,7 +371,10 @@ export const ProjectChatRoute = () => {
 		string | null
 	>(null);
 	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
-	const queryPrefillStartedRef = useRef(false);
+	// The address with a ?prefill= question taken out, once it is in the box.
+	const [prefillTakenSearch, setPrefillTakenSearch] = useState<string | null>(
+		null,
+	);
 	// A question typed on the Ask home page arrives as router state. The
 	// agentic panel consumes this itself; this route consumes it for every
 	// other mode (deep_dive, legacy overview), so Specific Details (the new
@@ -480,27 +485,27 @@ export const ProjectChatRoute = () => {
 	const needsConversations =
 		chatMode !== "overview" && Boolean(noConversationsSelected);
 
-	useEffect(() => {
-		if (chatContextQuery.isLoading) return;
-		if (isAgenticMode) return;
-		if (queryPrefillStartedRef.current) return;
+	// A ?prefill= question goes into the box once, when the chat is ready.
+	if (
+		prefillTakenSearch === null &&
+		!chatContextQuery.isLoading &&
+		!isAgenticMode
+	) {
 		const { prefill, search } = consumeChatPrefill(location.search);
-		if (!prefill && search === location.search) return;
-		queryPrefillStartedRef.current = true;
+		if (prefill || search !== location.search) {
+			setPrefillTakenSearch(search);
+			if (prefill) setInput(prefill);
+		}
+	}
+	// ...and leaves the address, so a reload doesn't put it back.
+	useEffect(() => {
+		if (prefillTakenSearch === null) return;
 		window.history.replaceState(
 			window.history.state,
 			"",
-			`${location.pathname}${search}${location.hash}`,
+			`${location.pathname}${prefillTakenSearch}${location.hash}`,
 		);
-		if (prefill) setInput(prefill);
-	}, [
-		chatContextQuery.isLoading,
-		isAgenticMode,
-		location.hash,
-		location.pathname,
-		location.search,
-		setInput,
-	]);
+	}, [prefillTakenSearch, location.hash, location.pathname]);
 
 	// Free tier: a sample project's refused turn, or a used-up AI budget.
 	const aiWall = useAiBudgetWall();
@@ -509,7 +514,7 @@ export const ProjectChatRoute = () => {
 	const aiRefusal = aiBudgetRefusalOf(error);
 	const queryClient = useQueryClient();
 	// A reply refused for the AI budget: show the wall at once.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: opens once per refused reply
+	// Deps on purpose: opens once per refused reply
 	useEffect(() => {
 		if (!aiRefusal) return;
 		aiWall.open(aiRefusal.resetsAt);
@@ -526,7 +531,7 @@ export const ProjectChatRoute = () => {
 
 	// Step 1: once the chat is ready and its mode resolved, type the seeded
 	// question into the input, same as a host would. Runs once.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: setInput identity changes per render; the ref guards a single run
+	// Deps on purpose: setInput identity changes per render; the ref guards a single run
 	useEffect(() => {
 		if (!initialMessageRef.current) return;
 		if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading)
@@ -551,7 +556,7 @@ export const ProjectChatRoute = () => {
 	// Step 2: once the input reflects the seeded text, send it through the
 	// same path a manual Enter/Send would use (turn-limit guard, conversation
 	// lock, posthog capture). Consumed exactly once via the ref.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: guardedSubmit is recreated per render; the ref guards a single run
+	// Deps on purpose: guardedSubmit is recreated per render; the ref guards a single run
 	useEffect(() => {
 		if (!pendingInitialMessageRef.current) return;
 		if (normalizedInput !== pendingInitialMessageRef.current) return;
@@ -606,11 +611,9 @@ export const ProjectChatRoute = () => {
 	};
 
 	// Clear template selection when input becomes empty
-	useEffect(() => {
-		if (normalizedInput.trim() === "" && templateKey) {
-			setTemplateKey(null);
-		}
-	}, [normalizedInput, templateKey, setTemplateKey]);
+	if (normalizedInput.trim() === "" && templateKey) {
+		setTemplateKey(null);
+	}
 
 	if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading) {
 		return (
