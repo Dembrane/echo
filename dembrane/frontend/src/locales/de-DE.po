@@ -293,7 +293,7 @@ msgid "{0, plural, one {Message from dembrane} other {Messages from dembrane}}"
 msgstr "{0, plural, one {Nachricht von dembrane} other {Nachrichten von dembrane}}"
 
 #. placeholder {0}: projectIds.length
-#: src/components/project/BulkMoveProjectsModal.tsx:94
+#: src/components/project/BulkMoveProjectsModal.tsx:97
 msgid "{0, plural, one {Move # project to another workspace.} other {Move # projects to another workspace.}}"
 msgstr "{0, plural, one {# Projekt in einen anderen Arbeitsbereich verschieben.} other {# Projekte in einen anderen Arbeitsbereich verschieben.}}"
 
@@ -1579,7 +1579,7 @@ msgstr "Unterhaltungen zum Kontext hinzufügen"
 msgid "Add conversations to your project first"
 msgstr "Fuge zuerst Gesprache zu deinem Projekt hinzu"
 
-#: src/components/project/CustomTopicModal.tsx:136
+#: src/components/project/CustomTopicModal.tsx:148
 msgid "Add custom topic"
 msgstr "Benutzerdefiniertes Thema hinzufügen"
 
@@ -1667,14 +1667,14 @@ msgstr "Zu diesem Chat hinzufügen"
 msgid "Add to workspaces"
 msgstr "Zu Arbeitsbereichen hinzufügen"
 
-#: src/components/project/CustomTopicModal.tsx:252
+#: src/components/project/CustomTopicModal.tsx:264
 msgid "Add topic"
 msgstr "Thema hinzufügen"
 
 #~ msgid "Add Topic"
 #~ msgstr "Thema hinzufügen"
 
-#: src/components/project/CustomTopicModal.tsx:174
+#: src/components/project/CustomTopicModal.tsx:186
 msgid "Add translations"
 msgstr "Übersetzungen hinzufügen"
 
@@ -3126,8 +3126,8 @@ msgstr "Aufrufe, die keinem Account zugeordnet werden konnten"
 #: src/components/project/ProjectSharingModal.tsx:319
 #: src/components/project/ProjectSharingModal.tsx:523
 #: src/components/project/ProjectDangerZone.tsx:168
-#: src/components/project/CustomTopicModal.tsx:255
-#: src/components/project/BulkMoveProjectsModal.tsx:134
+#: src/components/project/CustomTopicModal.tsx:267
+#: src/components/project/BulkMoveProjectsModal.tsx:137
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:478
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:632
 #: src/components/organisation/CreateOrganisationModal.tsx:241
@@ -5198,7 +5198,7 @@ msgstr "Ablehnen"
 msgid "Describe the session in the <0>project context</0> first, and dembrane suggests key terms from it."
 msgstr "Beschreibe die Sitzung zuerst im <0>Projektkontext</0>, dann schlägt dembrane daraus Schlüsselbegriffe vor."
 
-#: src/components/project/CustomTopicModal.tsx:217
+#: src/components/project/CustomTopicModal.tsx:229
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschreibe, was die Sprachmodell aus dem Gespräch extrahieren oder zusammenfassen soll..."
 
@@ -5220,7 +5220,7 @@ msgid "Description"
 msgstr "Beschreibung"
 
 #: src/components/project/ProjectMoveWorkspace.tsx:118
-#: src/components/project/BulkMoveProjectsModal.tsx:108
+#: src/components/project/BulkMoveProjectsModal.tsx:111
 msgid "Destination workspace"
 msgstr "Ziel-Arbeitsbereich"
 
@@ -5618,7 +5618,7 @@ msgstr "Gespräch bearbeiten"
 #~ msgid "Edit Conversation"
 #~ msgstr "Gespräch bearbeiten"
 
-#: src/components/project/CustomTopicModal.tsx:138
+#: src/components/project/CustomTopicModal.tsx:150
 msgid "Edit custom topic"
 msgstr "Benutzerdefiniertes Thema bearbeiten"
 
@@ -5793,11 +5793,11 @@ msgstr "Argumente werden eingebettet"
 msgid "Embedding arguments {done} of {total}"
 msgstr "Argumente werden eingebettet: {done} von {total}"
 
-#: src/components/project/CustomTopicModal.tsx:230
+#: src/components/project/CustomTopicModal.tsx:242
 msgid "Emoji"
 msgstr "Emoji"
 
-#: src/components/project/CustomTopicModal.tsx:232
+#: src/components/project/CustomTopicModal.tsx:244
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji, das neben dem Thema angezeigt wird, z.B. 💡 🔍 📊"
 
@@ -7613,7 +7613,7 @@ msgstr "Erkenntnis {0}"
 msgid "Inspect missing arguments"
 msgstr "Fehlende Argumente ansehen"
 
-#: src/components/project/CustomTopicModal.tsx:213
+#: src/components/project/CustomTopicModal.tsx:225
 msgid "Instructions for generating the verification outcome"
 msgstr "Anweisungen für die Generierung des Verifizierungsergebnisses"
 
@@ -9152,7 +9152,7 @@ msgstr "Weitere Möglichkeiten zum Analysieren"
 msgid "More ways to present"
 msgstr "Weitere Möglichkeiten zum Präsentieren"
 
-#: src/components/project/BulkMoveProjectsModal.tsx:125
+#: src/components/project/BulkMoveProjectsModal.tsx:128
 #: src/components/conversation/MoveConversationButton.tsx:240
 #: src/components/conversation/ConversationAccordion.tsx:348
 msgid "Move"
@@ -9197,7 +9197,7 @@ msgid "Move project"
 msgstr "Projekt verschieben"
 
 #: src/routes/project/ProjectsHome.tsx:533
-#: src/components/project/BulkMoveProjectsModal.tsx:89
+#: src/components/project/BulkMoveProjectsModal.tsx:92
 msgid "Move projects"
 msgstr "Projekte verschieben"
 
@@ -10661,7 +10661,7 @@ msgid "Opt-in to experimental features and help shape dembrane. These features m
 msgstr "Aktiviere experimentelle Funktionen und gestalte dembrane mit. Diese Funktionen können sich jederzeit ändern oder entfernt werden."
 
 #: src/routes/auth/Register.tsx:191
-#: src/components/project/CustomTopicModal.tsx:234
+#: src/components/project/CustomTopicModal.tsx:246
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:417
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
 #: src/components/billing/BillingManager.tsx:443
@@ -10670,7 +10670,7 @@ msgstr "Aktiviere experimentelle Funktionen und gestalte dembrane mit. Diese Fun
 msgid "Optional"
 msgstr "Optional"
 
-#: src/components/project/CustomTopicModal.tsx:186
+#: src/components/project/CustomTopicModal.tsx:198
 msgid "Optional (falls back to English)"
 msgstr "Optional (falls auf Englisch zurückgegriffen wird)"
 
@@ -11934,7 +11934,7 @@ msgstr "Projekte verschoben"
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Projekte werden hier angezeigt, sobald jemand aus der Organisation eines mit dir teilt."
 
-#: src/components/project/CustomTopicModal.tsx:211
+#: src/components/project/CustomTopicModal.tsx:223
 #: src/components/chat/TemplatesModal.tsx:468
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:137
 msgid "Prompt"
@@ -12893,7 +12893,7 @@ msgstr "Anfragende Person"
 msgid "participant.alert.microphone.access.loading"
 msgstr "Mikrofonzugriff wird angefragt..."
 
-#: src/components/project/CustomTopicModal.tsx:149
+#: src/components/project/CustomTopicModal.tsx:161
 msgid "Required"
 msgstr "Erforderlich"
 
@@ -13316,7 +13316,7 @@ msgstr "Beispielprojekte erlauben einen Bericht"
 #: src/components/settings/AccountSettingsCard.tsx:192
 #: src/components/results/resultEditing.tsx:480
 #: src/components/results/ReasonPrompt.tsx:229
-#: src/components/project/CustomTopicModal.tsx:252
+#: src/components/project/CustomTopicModal.tsx:264
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:370
 #: src/components/goal/ProjectGoalSection.tsx:154
 #: src/components/common/InputModal.tsx:78
@@ -13756,7 +13756,7 @@ msgid "Select a word first"
 msgstr "Wähle zuerst ein Wort aus"
 
 #: src/components/project/ProjectMoveWorkspace.tsx:119
-#: src/components/project/BulkMoveProjectsModal.tsx:109
+#: src/components/project/BulkMoveProjectsModal.tsx:112
 msgid "Select a workspace"
 msgstr "Arbeitsbereich auswählen"
 
@@ -15936,7 +15936,7 @@ msgstr "Design"
 msgid "there"
 msgstr "dort"
 
-#: src/components/project/BulkMoveProjectsModal.tsx:102
+#: src/components/project/BulkMoveProjectsModal.tsx:105
 msgid "There are no other workspaces you can move these projects into."
 msgstr "Es gibt keine anderen Arbeitsbereiche, in die du diese Projekte verschieben kannst."
 
@@ -16717,7 +16717,7 @@ msgstr "Thema erfolgreich erstellt"
 msgid "Topic deleted successfully"
 msgstr "Thema erfolgreich gelöscht"
 
-#: src/components/project/CustomTopicModal.tsx:148
+#: src/components/project/CustomTopicModal.tsx:160
 msgid "Topic label"
 msgstr "Themenbezeichnung"
 
