@@ -83,26 +83,26 @@ export const PortalPreviewFrame = ({
 	portalUrl = PARTICIPANT_BASE_URL,
 }: PortalPreviewFrameProps) => {
 	const frame = useRef<HTMLIFrameElement>(null);
-	const [ready, setReady] = useState(false);
+	// The page the frame said was ready: a new language loads a new page, which
+	// says it is ready again.
+	const [readyFor, setReadyFor] = useState<string | null>(null);
 	const portalOrigin = originOf(portalUrl);
 	const locale = localeForLanguage(message.project.language);
 	const src = portalOrigin
 		? `${portalUrl.replace(/\/$/, "")}/${locale}/${encodeURIComponent(projectId)}/preview`
 		: null;
 
-	// A new language loads a new page, which says it is ready again.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: src names the page the frame holds
-	useEffect(() => setReady(false), [src]);
+	const ready = src !== null && readyFor === src;
 
 	useEffect(() => {
 		const onMessage = (event: MessageEvent) => {
 			if (event.source !== frame.current?.contentWindow) return;
 			if (!portalOrigin || event.origin !== portalOrigin) return;
-			if (isReadyMessage(event.data)) setReady(true);
+			if (isReadyMessage(event.data)) setReadyFor(src);
 		};
 		window.addEventListener("message", onMessage);
 		return () => window.removeEventListener("message", onMessage);
-	}, [portalOrigin]);
+	}, [portalOrigin, src]);
 
 	useEffect(() => {
 		if (!ready || !portalOrigin) return;
