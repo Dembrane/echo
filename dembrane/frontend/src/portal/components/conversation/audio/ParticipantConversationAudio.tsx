@@ -15,6 +15,7 @@ import posthog from "posthog-js";
 import {
 	type CSSProperties,
 	useEffect,
+	useLayoutEffect,
 	useReducer,
 	useRef,
 	useState,
@@ -198,8 +199,10 @@ export const ParticipantConversationAudio = () => {
 		onRecordingInterrupted: () => onRecordingInterruptedRef.current?.(),
 	});
 
-	// Set up the interruption callback after audioRecorder is available
-	onRecordingInterruptedRef.current = () => {
+	// The recorder takes the handler through a ref, because the handler needs
+	// the recorder. Kept current after commit (useLatest's mechanism, written
+	// out because the ref has to exist before the handler does).
+	const handleRecordingInterrupted = () => {
 		// Capture the recording time before stopping.
 		const at = audioRecorder.recordingTime;
 
@@ -217,6 +220,9 @@ export const ParticipantConversationAudio = () => {
 		// Show the interruption modal.
 		dispatch({ at, type: "interrupted" });
 	};
+	useLayoutEffect(() => {
+		onRecordingInterruptedRef.current = handleRecordingInterrupted;
+	});
 
 	const {
 		startRecording,
@@ -230,9 +236,7 @@ export const ParticipantConversationAudio = () => {
 
 	// Sticky: a stop resets recordingTime, and a limit stop may leave no chunk.
 	const [startedHere, setStartedHere] = useState(false);
-	useEffect(() => {
-		if (isRecording || isStarting) setStartedHere(true);
-	}, [isRecording, isStarting]);
+	if ((isRecording || isStarting) && !startedHere) setStartedHere(true);
 
 	// What colour the meter runs in. A run that was interrupted is the recording
 	// itself failing, so it outranks a connection that has merely gone quiet.
@@ -388,7 +392,10 @@ export const ParticipantConversationAudio = () => {
 			recording_time_seconds: at,
 		});
 	};
-	wrapUpRef.current = wrapUp;
+	// Declared above for the upload callback; filled once wrapUp exists.
+	useLayoutEffect(() => {
+		wrapUpRef.current = wrapUp;
+	});
 
 	useRecordingLimit({
 		isRecording,
@@ -441,6 +448,8 @@ export const ParticipantConversationAudio = () => {
 	// Handler for reconnect button - waits for uploads, reports error, then reloads
 	const handleReconnect = async () => {
 		dispatch({ type: "reconnectStarted" });
+		// Outside the try: React Compiler can't compile `??` inside one yet.
+		const interruptedTime = interruptedAt ?? 0;
 		try {
 			await waitForPendingUploads("reconnect");
 
@@ -449,7 +458,7 @@ export const ParticipantConversationAudio = () => {
 					chunkHistory: audioRecorder.getChunkHistory(),
 					conversationId,
 					projectId,
-					recordingTime: interruptedAt ?? 0,
+					recordingTime: interruptedTime,
 				});
 			}
 
@@ -500,10 +509,7 @@ export const ParticipantConversationAudio = () => {
 	const [footer, setFooter] = useState<HTMLDivElement | null>(null);
 	const [footerHeight, setFooterHeight] = useState(0);
 	useEffect(() => {
-		if (!footer || typeof ResizeObserver === "undefined") {
-			setFooterHeight(0);
-			return;
-		}
+		if (!footer || typeof ResizeObserver === "undefined") return;
 		const observer = new ResizeObserver(() =>
 			setFooterHeight(footer.offsetHeight),
 		);
@@ -560,7 +566,12 @@ export const ParticipantConversationAudio = () => {
 	return (
 		<Box
 			className="container mx-auto flex h-full max-w-2xl flex-col justify-end"
-			style={{ "--portal-footer-height": `${footerHeight}px` } as CSSProperties}
+			style={
+				{
+					// No footer, no height: the last measurement doesn't outlive it.
+					"--portal-footer-height": `${footer ? footerHeight : 0}px`,
+				} as CSSProperties
+			}
 		>
 			{/* modal for permissions error */}
 			<PermissionErrorModal permissionError={permissionError} />
