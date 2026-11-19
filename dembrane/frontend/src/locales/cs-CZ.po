@@ -1079,7 +1079,7 @@ msgstr "1 hodina"
 #~ msgid "1 view"
 #~ msgstr "1 view"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. You provide a URL where you want to receive notifications"
 
@@ -1095,7 +1095,7 @@ msgstr "2 months ago"
 msgid "2 to 5."
 msgstr "2 až 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:705
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:701
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
@@ -1116,7 +1116,7 @@ msgstr "3 dny"
 msgid "3 months ago"
 msgstr "3 months ago"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:711
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:707
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
@@ -1169,7 +1169,7 @@ msgstr "Ještě pár slov, aby to pochopil i někdo, kdo to bude číst později
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Jakmile bude první verze připravena, objeví se zde."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
 msgid "A friendly name to identify this webhook"
 msgstr "A friendly name to identify this webhook"
 
@@ -1471,7 +1471,7 @@ msgstr "Objekt akce"
 #~ msgstr "Action On"
 
 #: src/components/project/ProjectDangerZone.tsx:87
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:930
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
 msgid "Actions"
 msgstr "Actions"
 
@@ -1682,10 +1682,10 @@ msgstr "Add translations"
 msgid "Add verification prompt"
 msgstr "Přidat ověřovací prompt"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:469
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:898
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:965
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:127
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:470
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:894
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:961
 msgid "Add webhook"
 msgstr "Přidat webhook"
 
@@ -1825,7 +1825,7 @@ msgid "Admins can reach every workspace in this organisation. Members and extern
 msgstr "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:42
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:878
 msgid "Advanced"
 msgstr "Pokročilé"
 
@@ -2409,7 +2409,7 @@ msgid "Archived"
 msgstr "Archivováno"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:613
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:609
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 
@@ -2756,7 +2756,7 @@ msgstr "Automatická shrnutí, slučování rozhovorů i trvání fungují spole
 msgid "Automatic titles and draft tags"
 msgstr "Automatické názvy a koncepty štítků"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:786
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Automatically save transcripts to your CRM or database"
 
@@ -2764,7 +2764,7 @@ msgstr "Automatically save transcripts to your CRM or database"
 msgid "Automatically select relevant conversations for your question."
 msgstr "Automaticky vybírejte relevantní rozhovory pro vaši otázku."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:887
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:883
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Automatically send conversation data to your other tools and services when events occur."
 
@@ -2798,8 +2798,8 @@ msgstr "Pryč"
 #: src/routes/organisation/OrganisationRoute.tsx:719
 #: src/routes/onboarding/OnboardingRoute.tsx:502
 #: src/routes/auth/Register.tsx:304
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:323
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:361
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:324
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:362
 #: src/components/dropzone/UploadConversationDropzone.tsx:974
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
@@ -3000,7 +3000,7 @@ msgstr "Režim fakturace"
 msgid "Book"
 msgstr "Naplánovat"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:992
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:988
 msgid "Book a call"
 msgstr "Book a call"
 
@@ -3044,7 +3044,7 @@ msgstr "Rozpočet"
 msgid "Bug fixes"
 msgstr "Opravy chyb"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:809
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:805
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Build custom dashboards with real-time conversation data"
 
@@ -3128,8 +3128,8 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/components/project/ProjectDangerZone.tsx:168
 #: src/components/project/CustomTopicModal.tsx:267
 #: src/components/project/BulkMoveProjectsModal.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:478
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:632
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:479
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:628
 #: src/components/organisation/CreateOrganisationModal.tsx:241
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -3596,7 +3596,7 @@ msgstr "Choose an organisation first"
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr "Zvolte vyhledatelné, pouze pro zvané nebo soukromé pracovní prostory."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 msgid "Choose from your other projects"
 msgstr "Choose from your other projects"
 
@@ -3615,7 +3615,7 @@ msgstr "Vyberte výsledky, které může vaše publikum prozkoumat."
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Vyberte, co uvidí sál: Popcorn, Napětí, Mapa a Zainteresovaní."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:443
 msgid "Choose when you want to receive notifications"
 msgstr "Choose when you want to receive notifications"
 
@@ -3744,11 +3744,11 @@ msgstr "Client-managed"
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr "Tlačítka schránky fungují i v Safari a zvolený jazyk rozhraní se ukládá."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:280
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:281
 msgid "Clone from another project"
 msgstr "Clone from another project"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:249
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:126
 msgid "Clone from project"
 msgstr "Klonovat z projektu"
 
@@ -3906,7 +3906,7 @@ msgstr "Sloučeno z {0} argumentů"
 msgid "Coming soon"
 msgstr "Již brzy"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:781
 msgid "Common use cases:"
 msgstr "Common use cases:"
 
@@ -4214,7 +4214,7 @@ msgstr "Shrnutí rozhovorů se už v dotčených případech zpracování nezase
 msgid "Conversation summarized"
 msgstr "Rozhovor shrnut"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:756
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
 msgid "Conversation tags"
 msgstr "Conversation tags"
 
@@ -4276,7 +4276,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/sharing/Share.tsx:124
 #: src/components/sharing/Share.tsx:162
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1023
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1019
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:59
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -4346,7 +4346,7 @@ msgstr "Kopírovat shrnutí"
 #~ msgid "Copy Summary"
 #~ msgstr "Copy Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1025
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1021
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
@@ -4882,7 +4882,7 @@ msgstr "Tmavý režim"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:772
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "Dashboard URL (direct link to conversation overview)"
 
@@ -4998,8 +4998,8 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectDangerZone.tsx:179
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:625
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:587
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:621
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
 #: src/components/conversation/ConversationDangerZone.tsx:103
@@ -5069,7 +5069,7 @@ msgstr "Delete this workspace"
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:607
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:603
 msgid "Delete webhook"
 msgstr "Smazat webhook"
 
@@ -5354,7 +5354,7 @@ msgstr "Rozdílná propojení: {0}"
 msgid "Distilling core idea…"
 msgstr "Destiluje se hlavní myšlenka…"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:816
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:812
 msgid "Do I need this?"
 msgstr "Do I need this?"
 
@@ -5554,7 +5554,7 @@ msgstr "např. Jsme výzkumná agentura. Zprávy putují městským klientům, s
 msgid "e.g. Weekly stakeholder digest"
 msgstr "e.g. Weekly stakeholder digest"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:374
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:375
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "např. upozornění ve Slacku, workflow v Make"
 
@@ -5604,7 +5604,7 @@ msgstr "Čitelnější přepisy"
 #: src/portal/components/verify/VerifyArtefact.tsx:463
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:582
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:607
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
@@ -5695,7 +5695,7 @@ msgstr "Edit the report content using the rich text editor below. You can format
 #~ msgid "Edit the wording, check the evidence, or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:248
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:125
 msgid "Edit webhook"
 msgstr "Upravit webhook"
 
@@ -5838,7 +5838,7 @@ msgid "Enable two-factor authentication"
 msgstr "Enable two-factor authentication"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:927
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -5875,7 +5875,7 @@ msgstr "Zadejte heslo"
 msgid "Enter a presentation title"
 msgstr "Zadejte název prezentace"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:426
 msgid "Enter a secret key"
 msgstr "Enter a secret key"
 
@@ -5979,11 +5979,11 @@ msgstr "Včetně LLM hostovaných v EU"
 msgid "Event help from the dembrane team"
 msgstr "Podpora při akcích od týmu dembrane"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:924
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
 msgid "Events"
 msgstr "Events"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:442
 msgid "Events to listen for"
 msgstr "Události ke sledování"
 
@@ -6072,7 +6072,7 @@ msgstr "Podklady"
 msgid "Evidenced connections"
 msgstr "Doložená spojení"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1003
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:999
 msgid "Example webhook payload"
 msgstr "Ukázkový payload webhooku"
 
@@ -6319,7 +6319,7 @@ msgstr "Failed to generate the summary. Please try again later."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Zvuk se nepodařilo načíst nebo není k dispozici"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:913
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:909
 msgid "Failed to load webhooks"
 msgstr "Failed to load webhooks"
 
@@ -6674,7 +6674,7 @@ msgstr "Pro"
 msgid "For <0>{0}</0>"
 msgstr "For <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:421
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:422
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 
@@ -6818,7 +6818,7 @@ msgstr "Z přepisu"
 msgid "Full screen"
 msgstr "Celá obrazovka"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:759
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
@@ -7335,7 +7335,7 @@ msgstr "Jak funguje Ask a co všechno dokáže."
 msgid "How dembrane improves your transcript"
 msgstr "Jak dembrane vylepšuje váš přepis"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:696
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:692
 msgid "How it works:"
 msgstr "How it works:"
 
@@ -7451,11 +7451,11 @@ msgstr "Pokud potřebujete něco jiného, rádi vám připravíme nabídku na m�
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "If you were expecting access, please ask the person who invited you to send it again."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:819
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:983
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 
@@ -8198,11 +8198,11 @@ msgstr "Latest report"
 msgid "Learn more"
 msgstr "Learn more"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:832
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:828
 msgid "Learn more about webhooks"
 msgstr "Learn more about webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:425
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
 
@@ -9256,7 +9256,7 @@ msgstr "My templates"
 #: src/routes/project/CreateProjectRoute.tsx:675
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:118
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:416
@@ -9271,7 +9271,7 @@ msgstr "Name"
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:369
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:370
 msgid "Name is required"
 msgstr "Name is required"
 
@@ -10016,11 +10016,11 @@ msgstr "Zatím žádná verze"
 #~ msgid "No webhooks configured"
 #~ msgstr "No webhooks configured"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:335
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:336
 msgid "No webhooks found"
 msgstr "No webhooks found"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:956
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:952
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Zatím žádné webhooky. Přidejte webhook a data rozhovorů budete dostávat automaticky, když nastanou události."
 
@@ -10662,7 +10662,7 @@ msgstr "Zapojte se do testování experimentálních funkcí a pomozte utvářet
 
 #: src/routes/auth/Register.tsx:191
 #: src/components/project/CustomTopicModal.tsx:246
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:417
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:418
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
 #: src/components/billing/BillingManager.tsx:443
 #: src/components/billing/BillingManager.tsx:469
@@ -10945,7 +10945,7 @@ msgstr "Funkce pro účastníky"
 msgid "Participant name"
 msgstr "Participant name"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:753
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
 msgid "Participant name and email"
 msgstr "Participant name and email"
 
@@ -11867,7 +11867,7 @@ msgstr "Projekt byl přesunut"
 msgid "Project name"
 msgstr "Project name"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:768
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
 msgid "Project name and ID"
 msgstr "Project name and ID"
 
@@ -12063,7 +12063,7 @@ msgstr "Znovu zkontrolovat"
 msgid "Re-enter new password"
 msgstr "Re-enter new password"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:283
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:284
 msgid "Re-use settings from an existing webhook"
 msgstr "Re-use settings from an existing webhook"
 
@@ -13345,7 +13345,7 @@ msgstr "Save as template"
 msgid "Save billing details"
 msgstr "Uložit fakturační údaje"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
 msgid "Save changes"
 msgstr "Uložit změny"
 
@@ -13613,7 +13613,7 @@ msgstr "Search templates..."
 msgid "select.all.modal.search.text"
 msgstr "Search text:"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:331
 msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
@@ -13674,7 +13674,7 @@ msgstr "Seats full"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:409
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:410
 msgid "Secret"
 msgstr "Secret"
 
@@ -13747,7 +13747,7 @@ msgstr "Select a microphone"
 #~ msgid "Select a tab to show results on the screen."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:328
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:329
 msgid "Select a webhook to clone"
 msgstr "Select a webhook to clone"
 
@@ -13787,7 +13787,7 @@ msgstr "Vybrat všechny výsledky"
 msgid "Select all visible ({remainingCount})"
 msgstr "Select all visible ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:437
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:438
 msgid "Select at least one event"
 msgstr "Select at least one event"
 
@@ -13945,7 +13945,7 @@ msgstr "Odeslat žádost"
 msgid "Send reset link"
 msgstr "Odeslat odkaz pro obnovení"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:796
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:792
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Send Slack/Teams notifications when new conversations are completed"
 
@@ -14026,7 +14026,7 @@ msgstr "Nastavit na spravované"
 msgid "Set to managed billing"
 msgstr "Nastavit na spravovanou fakturaci"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:301
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:302
 msgid "Set up a new webhook from scratch"
 msgstr "Nastavit nový webhook od začátku"
 
@@ -14786,7 +14786,7 @@ msgstr "Začněte znovu od svého agenta. Otevře se zde nový požadavek."
 #~ msgid "Start blank"
 #~ msgstr "Začít od nuly"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:298
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:299
 msgid "Start fresh"
 msgstr "Start fresh"
 
@@ -15094,7 +15094,7 @@ msgstr "Summarize this interview into a shareable article"
 msgid "Summary"
 msgstr "Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:762
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
 msgid "Summary (when available)"
 msgstr "Summary (when available)"
 
@@ -15364,7 +15364,7 @@ msgstr "Vyzkoušej Explore a Verify na ukázkovém rozhovoru, než je použijí 
 msgid "test mode"
 msgstr "testovací režim"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:573
 msgid "Test webhook"
 msgstr "Otestovat webhook"
 
@@ -15537,7 +15537,7 @@ msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí
 msgid "The email or password is not right. Check them and try again."
 msgstr "E-mail nebo heslo není správné. Zkontrolujte je a zkuste to znovu."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:395
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
@@ -15892,7 +15892,7 @@ msgstr "Překlad se nepodařilo spustit"
 msgid "The valence of this object has not been assessed."
 msgstr "Valence tohoto objektu nebyla vyhodnocena."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:339
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:340
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 
@@ -16163,7 +16163,7 @@ msgstr "Toto je ukázkový projekt. Organizace, lidé a rozhovory v něm jsou sm
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Toto je syntetická ukázka. Její oznámení a rámec jsou součástí dema a zobrazují se vždy."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1008
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1004
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 
@@ -16573,7 +16573,7 @@ msgstr "Časová osa"
 msgid "Timestamp"
 msgstr "Timestamp"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:765
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
@@ -16581,7 +16581,7 @@ msgstr "Timestamps and duration"
 msgid "Tip"
 msgstr "Tip"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:947
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:943
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 
@@ -16952,7 +16952,7 @@ msgstr "Zkušební verze"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Zkušební a bezplatné účty, nezapočítané do celkového počtu platících."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:803
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:799
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
@@ -17171,8 +17171,8 @@ msgstr "Neznámý čas"
 #~ msgid "Unlabelled"
 #~ msgstr "Bez označení"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:138
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:556
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:196
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:552
 msgid "Unnamed webhook"
 msgstr "Webhook bez názvu"
 
@@ -17503,11 +17503,11 @@ msgstr "Nahrávání jasně ukáže, když selže."
 msgid "URL copied"
 msgstr "URL zkopírována"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:389
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:390
 msgid "URL is required"
 msgstr "URL is required"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:386
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:387
 msgid "URL must start with http:// or https://"
 msgstr "URL must start with http:// or https://"
 
@@ -17642,7 +17642,7 @@ msgstr "Using default dembrane logo"
 msgid "Using fixture data."
 msgstr "Používají se testovací data."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:980
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:976
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
@@ -17782,7 +17782,7 @@ msgstr "View"
 #~ msgid "View Details"
 #~ msgstr "View Details"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:776
 msgid "View example payload"
 msgstr "View example payload"
 
@@ -18068,19 +18068,19 @@ msgstr "Slabé připojení"
 msgid "Weak password"
 msgstr "Slabé heslo"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:921
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:917
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:394
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:880
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:876
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:688
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:684
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
@@ -18133,7 +18133,7 @@ msgstr "Welcome, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Welcome!"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:681
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:677
 msgid "What are webhooks? (2 min read)"
 msgstr "What are webhooks? (2 min read)"
 
@@ -18143,7 +18143,7 @@ msgstr "What are webhooks? (2 min read)"
 #~ msgid "What are you trying to learn?"
 #~ msgstr "What are you trying to learn?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:749
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:745
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
@@ -18270,7 +18270,7 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Kdy"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:724
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:720
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "When a participant opens the portal, enters their details, and begins a conversation"
 
@@ -18282,7 +18282,7 @@ msgstr "Když účastník zahájí nový rozhovor"
 msgid "When a report has been generated"
 msgstr "Když byla vygenerována zpráva"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:740
 msgid "When a report has been generated for the project"
 msgstr "When a report has been generated for the project"
 
@@ -18290,11 +18290,11 @@ msgstr "When a report has been generated for the project"
 msgid "When all audio has been converted to text"
 msgstr "Když je veškerý zvuk převeden na text"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:731
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:727
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "When all audio has been converted to text and the full transcript is available"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:715
 msgid "When are webhooks triggered?"
 msgstr "When are webhooks triggered?"
 
@@ -18329,7 +18329,7 @@ msgstr "Po skončení rozhovoru si dembrane celou nahrávku poslechne znovu."
 msgid "When the summary is generated"
 msgstr "Když je vygenerováno shrnutí"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:738
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:734
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
