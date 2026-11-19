@@ -66,23 +66,31 @@ export const SignGate = () => (
 	</AccountsI18n>
 );
 
+/**
+ * Whether the session check has answered once. The loading screen is for that first answer
+ * only: later checks (on tab focus) count as loading again, and showing the loading screen
+ * then would unmount the page and lose its step and the code typed into it.
+ */
+const useFirstAnswer = (loading: boolean) => {
+	const [answered, setAnswered] = useState(!loading);
+	if (!loading && !answered) setAnswered(true);
+	return answered;
+};
+
 const Gate = () => {
 	const [searchParams] = useSearchParams();
 	const invite = searchParams.get("invite");
 	const { loading, isAuthenticated } = useAuthenticated(false);
-	// The loading screen is for the first answer only. The session is checked again when the
-	// tab regains focus (the signer leaves to read the code in their mail), and for a signer
-	// with no session yet that check counts as loading again: showing the loading screen then
-	// would unmount the invitation and lose the step and the code typed into it.
-	const answered = useRef(false);
-	if (!loading) answered.current = true;
+	// The signer leaves to read the code in their mail; the check on return must not
+	// replace the invitation (useFirstAnswer).
+	const answered = useFirstAnswer(loading);
 	if (!invite)
 		return (
 			<Protected>
 				<SignRoute />
 			</Protected>
 		);
-	if (loading && !answered.current) return <BeautifulLoading />;
+	if (loading && !answered) return <BeautifulLoading />;
 	return isAuthenticated ? (
 		<SignedInWithInvite token={invite} />
 	) : (
@@ -317,17 +325,21 @@ function OpenInvite({
 		if (busy || (resend && resendCooldown.wait > 0)) return;
 		setBusy(true);
 		setError("");
-		try {
-			await sendSignInCode(email);
-			setStep("code");
-			setCode("");
-			resendCooldown.start();
-			if (resend) toast.success(t`We sent a new code to ${email}.`);
-		} catch (e) {
-			setError(describeAuthError(e));
-		} finally {
-			setBusy(false);
-		}
+		// Promise chains here, not try/catch/finally: React Compiler can't
+		// compile a try with a finally.
+		await sendSignInCode(email)
+			.then(() => {
+				setStep("code");
+				setCode("");
+				resendCooldown.start();
+				if (resend) toast.success(t`We sent a new code to ${email}.`);
+			})
+			.catch((e: unknown) => {
+				setError(describeAuthError(e));
+			})
+			.finally(() => {
+				setBusy(false);
+			});
 	};
 
 	// Signed in: keep the confirmed names, then go on (the document, or the room).
@@ -341,7 +353,7 @@ function OpenInvite({
 		if (busy || value.length < 6) return;
 		setBusy(true);
 		setError("");
-		try {
+		const signIn = async () => {
 			await signInWithCode(email, value);
 			const state = await otherSessions();
 			if (state.held) {
@@ -350,16 +362,19 @@ function OpenInvite({
 				return;
 			}
 			await enter();
-		} catch (e) {
-			setError(
-				e instanceof AccountsApiError
-					? t`Something went wrong`
-					: describeAuthError(e),
-			);
-			setCode("");
-		} finally {
-			setBusy(false);
-		}
+		};
+		await signIn()
+			.catch((e: unknown) => {
+				setError(
+					e instanceof AccountsApiError
+						? t`Something went wrong`
+						: describeAuthError(e),
+				);
+				setCode("");
+			})
+			.finally(() => {
+				setBusy(false);
+			});
 	};
 
 	return (
@@ -372,21 +387,21 @@ function OpenInvite({
 					onConfirm={async (sessionId) => {
 						setBusy(true);
 						setReplacementError("");
-						try {
-							await replaceOtherDevice(sessionId);
-							await enter();
-						} catch (error) {
-							const state = await otherSessions().catch(() => null);
-							if (state?.held) setElsewhere({ devices: state.devices });
-							const code = authErrorCode(error);
-							setReplacementError(
-								code === "HTTP_409" || code === "CONFLICT"
-									? t`Your active devices changed. Choose a device again.`
-									: t`Something went wrong`,
-							);
-						} finally {
-							setBusy(false);
-						}
+						await replaceOtherDevice(sessionId)
+							.then(() => enter())
+							.catch(async (error: unknown) => {
+								const state = await otherSessions().catch(() => null);
+								if (state?.held) setElsewhere({ devices: state.devices });
+								const code = authErrorCode(error);
+								setReplacementError(
+									code === "HTTP_409" || code === "CONFLICT"
+										? t`Your active devices changed. Choose a device again.`
+										: t`Something went wrong`,
+								);
+							})
+							.finally(() => {
+								setBusy(false);
+							});
 					}}
 					onCancel={async () => {
 						setElsewhere(null);
@@ -596,11 +611,9 @@ const RoomGate = () => {
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("invite") ?? "";
 	const { loading, isAuthenticated } = useAuthenticated(false);
-	// As the signer's gate: the loading screen only for the first answer, so a focus
-	// check while the code is being read does not unmount the page.
-	const answered = useRef(false);
-	if (!loading) answered.current = true;
-	if (loading && !answered.current) return <BeautifulLoading />;
+	// As the signer's gate: the loading screen only for the first answer.
+	const answered = useFirstAnswer(loading);
+	if (loading && !answered) return <BeautifulLoading />;
 	return isAuthenticated ? (
 		<RoomSignedIn token={token} />
 	) : (

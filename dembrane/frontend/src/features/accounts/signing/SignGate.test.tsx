@@ -12,13 +12,23 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 
 // The signer leaves the invitation to read the code in their mail and comes back. The page
 // checks the session again on return; that check must not replace the page, or the step and
 // the digits typed into it are gone. Everything but the session check is stood in for.
 const auth = vi.hoisted(() => ({
 	hasSession: vi.fn(),
+	otherSessions: vi.fn(),
+	replaceOtherDevice: vi.fn(),
 	sendSignInCode: vi.fn(),
 	signInWithCode: vi.fn(),
 }));
@@ -26,8 +36,8 @@ const auth = vi.hoisted(() => ({
 vi.mock("@/lib/auth", () => ({
 	AuthError: class extends Error {},
 	hasSession: auth.hasSession,
-	otherSessions: async () => ({ devices: [], held: false }),
-	replaceOtherDevice: async () => {},
+	otherSessions: auth.otherSessions,
+	replaceOtherDevice: auth.replaceOtherDevice,
 	requestPasswordReset: async () => {},
 	resendVerificationEmail: async () => {},
 	resetPassword: async () => {},
@@ -82,6 +92,11 @@ beforeAll(() => {
 			removeEventListener: () => {},
 			removeListener: () => {},
 		}));
+});
+
+beforeEach(() => {
+	auth.otherSessions.mockResolvedValue({ devices: [], held: false });
+	auth.replaceOtherDevice.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -188,5 +203,76 @@ describe("the invitation page", () => {
 		expect(screen.queryByTestId("invite-page")).toBeNull();
 		await act(async () => finish(false));
 		expect(await screen.findByTestId("invite-page")).toBeTruthy();
+	});
+});
+
+describe("signing in with the emailed code", () => {
+	const codeInputs = () =>
+		Array.from(
+			screen
+				.getByTestId("invite-code")
+				.closest("div")
+				?.querySelectorAll("input") ?? [],
+		).filter((i) => i.type !== "hidden");
+	const typeCode = (code: string) =>
+		code.split("").forEach((digit, i) => {
+			fireEvent.change(codeInputs()[i] as HTMLInputElement, {
+				target: { value: digit },
+			});
+		});
+	const toCodeStep = async () => {
+		auth.hasSession.mockResolvedValue(false);
+		auth.sendSignInCode.mockResolvedValue(undefined);
+		renderGate();
+		fireEvent.click(await screen.findByTestId("invite-send-code"));
+		await screen.findByTestId("invite-code");
+	};
+
+	it("says the code could not be sent, and stays on the details", async () => {
+		auth.hasSession.mockResolvedValue(false);
+		auth.sendSignInCode.mockRejectedValue(new Error("offline"));
+		renderGate();
+		fireEvent.click(await screen.findByTestId("invite-send-code"));
+		expect(await screen.findByRole("alert")).toBeTruthy();
+		expect(screen.getByTestId("invite-send-code")).toBeTruthy();
+		expect(screen.queryByTestId("invite-code")).toBeNull();
+	});
+
+	it("says a wrong code is wrong, and clears it", async () => {
+		await toCodeStep();
+		auth.signInWithCode.mockRejectedValue(new Error("bad code"));
+		typeCode("123456");
+		expect(await screen.findByRole("alert")).toBeTruthy();
+		await waitFor(() =>
+			expect(
+				codeInputs()
+					.map((i) => i.value)
+					.join(""),
+			).toBe(""),
+		);
+	});
+
+	it("asks to sign out a device elsewhere, and signs out the one chosen", async () => {
+		await toCodeStep();
+		auth.signInWithCode.mockResolvedValue(undefined);
+		auth.otherSessions.mockResolvedValue({
+			devices: [
+				{
+					browser: "Firefox",
+					id: "s-2",
+					lastActiveAt: "2026-11-18T10:00:00.000Z",
+					platform: "Linux",
+				},
+			],
+			held: true,
+			since: null,
+		});
+		typeCode("123456");
+		await screen.findByTestId("auth-login-elsewhere");
+		fireEvent.click(screen.getByRole("radio"));
+		fireEvent.click(screen.getByTestId("auth-login-elsewhere-confirm"));
+		await waitFor(() =>
+			expect(auth.replaceOtherDevice).toHaveBeenCalledWith("s-2"),
+		);
 	});
 });
