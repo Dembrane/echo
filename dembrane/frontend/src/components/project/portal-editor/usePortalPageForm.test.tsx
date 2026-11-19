@@ -82,7 +82,7 @@ it("keeps saved topics through the refetch that follows the save", async () => {
 		result.current.form.setValue("verification_topics", ["a", "b"], {
 			shouldDirty: true,
 		});
-		result.current.saveAfterChange();
+		result.current.saveNow(result.current.form.getValues());
 	});
 	await act(async () => {
 		await vi.advanceTimersByTimeAsync(2000);
