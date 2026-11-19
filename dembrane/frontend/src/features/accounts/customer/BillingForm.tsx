@@ -17,7 +17,7 @@ import {
 	Textarea,
 	TextInput,
 } from "@mantine/core";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
@@ -124,12 +124,16 @@ export function BillingForm({
 	const [noVat, setNoVat] = useState(() => noVatOf(billing));
 	const [chosen, setChosen] = useState(billing.invoice_delivery);
 	const [problems, setProblems] = useState<Problems>({});
-	useEffect(() => {
+	// New details from the server (saved here or elsewhere) replace what is
+	// in the form, during render, so no frame shows the old ones.
+	const [shownBilling, setShownBilling] = useState(billing);
+	if (billing !== shownBilling) {
+		setShownBilling(billing);
 		setForm(toForm(billing));
 		setCountry(countryOf(billing));
 		setNoVat(noVatOf(billing));
 		setChosen(billing.invoice_delivery);
-	}, [billing]);
+	}
 
 	const group = countryGroup(country);
 	// Every EU country is asked for a VAT number, or the plain answer that there is none.
@@ -266,7 +270,9 @@ export function BillingForm({
 		// Every gap at once, so nobody fixes one field to be told about the next.
 		const gaps: Problems = {};
 		for (const k of REQUIRED) if (!form[k].trim()) gaps[k] = "missing";
-		for (const p of checkBilling(answers).problems) gaps[p.field] ??= p.kind;
+		// the first problem per field; React Compiler can't compile ??=
+		for (const p of checkBilling(answers).problems)
+			gaps[p.field] = gaps[p.field] ?? p.kind;
 		if (delivery === "peppol" && !lookup.match && !typedPeppol)
 			gaps.peppol_id = "missing";
 		setProblems(gaps);
