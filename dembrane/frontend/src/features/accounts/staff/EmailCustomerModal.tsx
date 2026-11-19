@@ -36,32 +36,34 @@ export function EmailCustomerModal({
 	orgId: string;
 }) {
 	const [note, setNote] = useState("");
-	const [preview, setPreview] = useState<ResponseOf<"sendMessage"> | null>(
-		null,
-	);
-	const render = useAccountsMutation("sendMessage", { orgId });
+	// The last preview, with the subject it is for: another subject (or none)
+	// shows none, with no reset.
+	const [drawn, setDrawn] = useState<{
+		key: string;
+		preview: ResponseOf<"sendMessage">;
+	} | null>(null);
+	const { mutate: drawPreview } = useAccountsMutation("sendMessage", { orgId });
 	const send = useAccountsMutation("sendMessage", { orgId });
-	const { label: _, ...target } = subject ?? { label: "" };
-	const body = (dry_run: boolean) =>
-		({ ...target, dry_run, note: note.trim() || null }) as never;
+	const key = subject ? subjectKey(subject) : null;
+	const preview = drawn && drawn.key === key ? drawn.preview : null;
 
 	// Draw the preview on open, and again when the manager stops typing their line.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: re-render on subject and note only
 	useEffect(() => {
-		if (!subject) {
-			setPreview(null);
-			return;
-		}
+		if (!subject) return;
 		const id = setTimeout(
 			() =>
-				render.mutate(
-					{ body: body(true) },
-					{ onError: (e) => void notifyError(e), onSuccess: setPreview },
+				drawPreview(
+					{ body: bodyFor(subject, note, true) },
+					{
+						onError: (e) => void notifyError(e),
+						onSuccess: (p) =>
+							setDrawn({ key: subjectKey(subject), preview: p }),
+					},
 				),
 			note ? 400 : 0,
 		);
 		return () => clearTimeout(id);
-	}, [subject, note]);
+	}, [subject, note, drawPreview]);
 
 	const close = () => {
 		setNote("");
@@ -113,7 +115,7 @@ export function EmailCustomerModal({
 						data-testid="email-send"
 						onClick={() =>
 							send.mutate(
-								{ body: body(false) },
+								{ body: bodyFor(subject, note, false) },
 								{
 									onError: (e) => void notifyError(e),
 									onSuccess: (r) => {
@@ -138,3 +140,17 @@ export function EmailCustomerModal({
 		</Modal>
 	);
 }
+
+const subjectKey = (subject: EmailSubject) =>
+	subject.kind === "document_withdrawn"
+		? `document:${subject.document_id}`
+		: `task:${subject.task_id}`;
+
+const bodyFor = (
+	subject: EmailSubject | null,
+	note: string,
+	dry_run: boolean,
+) => {
+	const { label: _, ...target } = subject ?? { label: "" };
+	return { ...target, dry_run, note: note.trim() || null } as never;
+};
