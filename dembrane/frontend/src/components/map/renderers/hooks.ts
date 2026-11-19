@@ -37,19 +37,21 @@ export const DEFAULT_MAP_SIZE: MapSize = { height: 600, width: 800 };
  * unchanged, so a refetch that only changes metadata or array identity does
  * not rebuild the graph. Size, colour and labels are not part of the key.
  *
- * Held in a ref rather than a useMemo keyed on the geometry: the build can
- * widen a memo's dependencies to everything its callback reads (here the
- * nodes array), which would hand back every new array.
+ * Held in state rather than a useMemo keyed on the geometry: React Compiler
+ * memoizes on everything a memo's callback reads (here the nodes array), so
+ * it would hand back every new array.
  */
 export function useGeometry<N extends MapGraphNode>(
 	nodes: N[],
 ): { key: string; nodes: N[] } {
 	const key = useMemo(() => nodeGeometryKey(nodes), [nodes]);
-	const stableRef = useRef<{ key: string; nodes: N[] } | null>(null);
-	if (stableRef.current === null || stableRef.current.key !== key) {
-		stableRef.current = { key, nodes };
+	const [stable, setStable] = useState({ key, nodes });
+	if (stable.key !== key) {
+		const next = { key, nodes };
+		setStable(next);
+		return next;
 	}
-	return stableRef.current;
+	return stable;
 }
 
 /** The geometry-stable node array; see useGeometry. */
@@ -153,9 +155,10 @@ export function useRendererGeometry<N extends MapGraphNode>(
 		};
 	}, [own, key, geometryNodes, providedEdges, providedNeighbours]);
 
-	const acceptedRef = useRef<RendererGeometry<N>>(EMPTY_GEOMETRY);
-	if (resolved) acceptedRef.current = resolved;
-	return resolved ?? acceptedRef.current;
+	// The last geometry accepted, kept during render.
+	const [accepted, setAccepted] = useState<RendererGeometry<N>>(EMPTY_GEOMETRY);
+	if (resolved && resolved !== accepted) setAccepted(resolved);
+	return resolved ?? accepted;
 }
 
 /** Node style by id, computed once per nodes and colour inputs. */
