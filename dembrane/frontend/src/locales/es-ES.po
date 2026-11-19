@@ -2474,7 +2474,7 @@ msgstr "Mapa de argumentos"
 msgid "Argument tree"
 msgstr "Árbol de argumentos"
 
-#: src/components/map/MapExperience.tsx:610
+#: src/components/map/MapExperience.tsx:600
 msgid "Argument tree (MST)"
 msgstr "Árbol de argumentos (MST)"
 
@@ -3160,7 +3160,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "cancelar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:447
+#: src/portal/components/settings/MicrophoneCheck.tsx:452
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Cancelar"
 
@@ -3580,7 +3580,7 @@ msgstr "Elige un dispositivo para cerrar su sesión"
 msgid "Choose a logo file"
 msgstr "Elegir un archivo de logo"
 
-#: src/components/map/MapExperience.tsx:688
+#: src/components/map/MapExperience.tsx:678
 msgid "Choose a map under Advanced"
 msgstr "Elige un mapa en Avanzado"
 
@@ -3952,7 +3952,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Configura los ajustes para cada base legal."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:436
+#: src/portal/components/settings/MicrophoneCheck.tsx:441
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Continuar"
 
@@ -4117,7 +4117,7 @@ msgid "participant.ready.to.begin.button.text"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:416
+#: src/portal/components/settings/MicrophoneCheck.tsx:421
 msgid "participant.button.continue"
 msgstr "Continuar"
 
@@ -6050,7 +6050,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Todo el personal de la lista está capacitado."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:389
+#: src/portal/components/settings/MicrophoneCheck.tsx:394
 msgid "participant.alert.microphone.access.success"
 msgstr "Acceso al micrófono verificado con éxito"
 
@@ -8432,7 +8432,7 @@ msgstr "Vivo"
 #~ msgstr "Modo de ejecución de agente en vivo"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:341
 msgid "participant.live.audio.level"
 msgstr "Nivel de audio en vivo"
 
@@ -8555,7 +8555,7 @@ msgstr "Cargando miembros"
 msgid "Loading methodology"
 msgstr "Cargando metodología"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:327
 msgid "Loading microphones..."
 msgstr "Cargando micrófonos..."
 
@@ -8608,7 +8608,7 @@ msgstr "Cargando…"
 msgid "Local argument map"
 msgstr "Mapa local de argumentos"
 
-#: src/components/map/MapExperience.tsx:653
+#: src/components/map/MapExperience.tsx:643
 msgid "Local map"
 msgstr "Mapa local"
 
@@ -11339,7 +11339,7 @@ msgstr "Reproducción y pantalla completa"
 #~ msgstr "Acepta los términos para continuar."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:365
+#: src/portal/components/settings/MicrophoneCheck.tsx:370
 msgid "participant.alert.microphone.access"
 msgstr "Por favor, permite el acceso al micrófono para iniciar el test."
 
@@ -12889,7 +12889,7 @@ msgid "Requester"
 msgstr "Solicitante"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:377
+#: src/portal/components/settings/MicrophoneCheck.tsx:382
 msgid "participant.alert.microphone.access.loading"
 msgstr "Por favor, espera mientras verificamos el acceso al micrófono."
 
@@ -13737,7 +13737,7 @@ msgstr "Seleccionar {title}"
 msgid "Select a conversation to continue"
 msgstr "Selecciona una conversación para continuar"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:328
 msgid "Select a microphone"
 msgstr "Seleccionar un micrófono"
 
@@ -13854,7 +13854,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Selecciona quiénes asistieron. Cada persona recibe una licencia de un año para usar dembrane en entornos de alto riesgo."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:320
 msgid "participant.select.microphone"
 msgstr "Seleccionar un micrófono"
 
@@ -13874,7 +13874,7 @@ msgstr "Archivos seleccionados ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:316
 msgid "participant.selected.microphone"
 msgstr "Micrófono seleccionado"
 
@@ -17926,7 +17926,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Mira el vídeo para conocer las organizaciones, los espacios de trabajo y los proyectos."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:398
+#: src/portal/components/settings/MicrophoneCheck.tsx:403
 msgid "participant.alert.microphone.access.issue"
 msgstr "No podemos escucharte. Por favor, intenta cambiar tu micrófono o acercarte un poco más al dispositivo."
 
@@ -18042,7 +18042,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "Nos encantaría saber un poco más sobre cómo usas dembrane, para poder ayudarte mejor. Son unos dos minutos en nuestra web y, al final, puedes reservar una llamada corta con nosotros si quieres."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:305
 msgid "participant.test.microphone.description"
 msgstr "Vamos a probar tu micrófono para asegurarnos de que todos tengan la mejor experiencia en la sesión."
 
@@ -18802,7 +18802,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "Ya has añadido todas las conversaciones relacionadas con esto"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:424
+#: src/portal/components/settings/MicrophoneCheck.tsx:429
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "Has cambiado tu micrófono. Por favor, haz clic en \"Continuar\", para continuar con la sesión."
 

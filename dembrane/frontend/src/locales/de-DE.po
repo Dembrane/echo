@@ -2474,7 +2474,7 @@ msgstr "Argumentationskarte"
 msgid "Argument tree"
 msgstr "Argumentbaum"
 
-#: src/components/map/MapExperience.tsx:610
+#: src/components/map/MapExperience.tsx:600
 msgid "Argument tree (MST)"
 msgstr "Argumentationsbaum (MST)"
 
@@ -3160,7 +3160,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "Abbrechen"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:447
+#: src/portal/components/settings/MicrophoneCheck.tsx:452
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Abbrechen"
 
@@ -3580,7 +3580,7 @@ msgstr "Wähle ein Gerät zum Abmelden"
 msgid "Choose a logo file"
 msgstr "Ein Logo-Datei auswählen"
 
-#: src/components/map/MapExperience.tsx:688
+#: src/components/map/MapExperience.tsx:678
 msgid "Choose a map under Advanced"
 msgstr "Wähle eine Karte unter Erweitert"
 
@@ -3952,7 +3952,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Einstellungen für jede Rechtsgrundlage konfigurieren."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:436
+#: src/portal/components/settings/MicrophoneCheck.tsx:441
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Weiter"
 
@@ -4117,7 +4117,7 @@ msgid "participant.ready.to.begin.button.text"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:416
+#: src/portal/components/settings/MicrophoneCheck.tsx:421
 msgid "participant.button.continue"
 msgstr "Weiter"
 
@@ -6050,7 +6050,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Alle auf der Liste sind geschult."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:389
+#: src/portal/components/settings/MicrophoneCheck.tsx:394
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles sieht gut aus – du kannst fortfahren."
 
@@ -8432,7 +8432,7 @@ msgstr "Live"
 #~ msgstr "Live Agent Ausführungsmodus"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:341
 msgid "participant.live.audio.level"
 msgstr "Live Audiopegel:"
 
@@ -8555,7 +8555,7 @@ msgstr "Mitglieder werden geladen"
 msgid "Loading methodology"
 msgstr "Methodik wird geladen"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:327
 msgid "Loading microphones..."
 msgstr "Mikrofone werden geladen..."
 
@@ -8608,7 +8608,7 @@ msgstr "Laden…"
 msgid "Local argument map"
 msgstr "Lokale Argumentationskarte"
 
-#: src/components/map/MapExperience.tsx:653
+#: src/components/map/MapExperience.tsx:643
 msgid "Local map"
 msgstr "Lokale Karte"
 
@@ -11339,7 +11339,7 @@ msgstr "Wiedergabe und Vollbild"
 #~ msgstr "Bitte akzeptieren Sie die Nutzungsbedingungen, um fortzufahren."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:365
+#: src/portal/components/settings/MicrophoneCheck.tsx:370
 msgid "participant.alert.microphone.access"
 msgstr "Bitte erlaube den Mikrofonzugriff, um den Test zu starten."
 
@@ -12889,7 +12889,7 @@ msgid "Requester"
 msgstr "Anfragende Person"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:377
+#: src/portal/components/settings/MicrophoneCheck.tsx:382
 msgid "participant.alert.microphone.access.loading"
 msgstr "Mikrofonzugriff wird angefragt..."
 
@@ -13737,7 +13737,7 @@ msgstr "{title} auswählen"
 msgid "Select a conversation to continue"
 msgstr "Wähle ein Gespräch aus, um fortzufahren"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:328
 msgid "Select a microphone"
 msgstr "Mikrofon auswählen"
 
@@ -13854,7 +13854,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Wähle aus, wer teilgenommen hat. Jede Person erhält eine 1-Jahres-Lizenz zur Nutzung von dembrane in Hochrisikoumgebungen."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:320
 msgid "participant.select.microphone"
 msgstr "Mikrofon auswählen"
 
@@ -13874,7 +13874,7 @@ msgstr "Ausgewählte Dateien ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:316
 msgid "participant.selected.microphone"
 msgstr "Ausgewähltes Mikrofon"
 
@@ -17924,7 +17924,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Sieh dir das Video als Einführung in Organisationen, Workspaces und Projekte an."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:398
+#: src/portal/components/settings/MicrophoneCheck.tsx:403
 msgid "participant.alert.microphone.access.issue"
 msgstr "Wir können dich nicht hören. Bitte versuche, dein Mikrofon zu ändern oder ein wenig näher an das Gerät zu kommen."
 
@@ -18040,7 +18040,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "Wir würden gern mehr darüber erfahren, wie du dembrane nutzt, damit wir dir besser helfen können. Das dauert auf unserer Website etwa zwei Minuten, und am Ende kannst du, wenn du möchtest, ein kurzes Gespräch mit uns buchen."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:305
 msgid "participant.test.microphone.description"
 msgstr "Wir testen dein Mikrofon, um sicherzustellen, dass jeder in der Sitzung die beste Erfahrung hat."
 
@@ -18800,7 +18800,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "Du hast bereits alle damit verbundenen Unterhaltungen hinzugefügt"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:424
+#: src/portal/components/settings/MicrophoneCheck.tsx:429
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "Du hast dein Mikrofon geändert. Bitte klicke auf \"Weiter\", um mit der Sitzung fortzufahren."
 

@@ -2471,7 +2471,7 @@ msgstr "Argumentenkaart"
 msgid "Argument tree"
 msgstr "Argumentenboom"
 
-#: src/components/map/MapExperience.tsx:610
+#: src/components/map/MapExperience.tsx:600
 msgid "Argument tree (MST)"
 msgstr "Argumentenboom (MST)"
 
@@ -3157,7 +3157,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "Annuleren"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:447
+#: src/portal/components/settings/MicrophoneCheck.tsx:452
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Annuleren"
 
@@ -3577,7 +3577,7 @@ msgstr "Kies een apparaat om uit te loggen"
 msgid "Choose a logo file"
 msgstr "Een logo-bestand kiezen"
 
-#: src/components/map/MapExperience.tsx:688
+#: src/components/map/MapExperience.tsx:678
 msgid "Choose a map under Advanced"
 msgstr "Kies een kaart onder Geavanceerd"
 
@@ -3949,7 +3949,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Configureer instellingen voor elke rechtsgrondslag."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:436
+#: src/portal/components/settings/MicrophoneCheck.tsx:441
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Doorgaan"
 
@@ -4114,7 +4114,7 @@ msgid "participant.ready.to.begin.button.text"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:416
+#: src/portal/components/settings/MicrophoneCheck.tsx:421
 msgid "participant.button.continue"
 msgstr "Doorgaan"
 
@@ -6047,7 +6047,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Iedereen op de lijst is getraind."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:389
+#: src/portal/components/settings/MicrophoneCheck.tsx:394
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
 
@@ -8429,7 +8429,7 @@ msgstr "Live"
 #~ msgstr "Live agent uitvoermodus"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:341
 msgid "participant.live.audio.level"
 msgstr "Live audio niveau:"
 
@@ -8552,7 +8552,7 @@ msgstr "Leden laden"
 msgid "Loading methodology"
 msgstr "Methodologie laden"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:327
 msgid "Loading microphones..."
 msgstr "Microfoons laden..."
 
@@ -8605,7 +8605,7 @@ msgstr "Bezig met laden…"
 msgid "Local argument map"
 msgstr "Lokale argumentenkaart"
 
-#: src/components/map/MapExperience.tsx:653
+#: src/components/map/MapExperience.tsx:643
 msgid "Local map"
 msgstr "Lokale kaart"
 
@@ -11336,7 +11336,7 @@ msgstr "Afspelen en schermvullend"
 #~ msgstr "Accepteer de voorwaarden om door te gaan."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:365
+#: src/portal/components/settings/MicrophoneCheck.tsx:370
 msgid "participant.alert.microphone.access"
 msgstr "Schakel microfoontoegang in om de test te starten."
 
@@ -12886,7 +12886,7 @@ msgid "Requester"
 msgstr "Aanvrager"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:377
+#: src/portal/components/settings/MicrophoneCheck.tsx:382
 msgid "participant.alert.microphone.access.loading"
 msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
 
@@ -13734,7 +13734,7 @@ msgstr "{title} selecteren"
 msgid "Select a conversation to continue"
 msgstr "Selecteer een gesprek om verder te gaan"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:328
 msgid "Select a microphone"
 msgstr "Selecteer een microfoon"
 
@@ -13851,7 +13851,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Selecteer wie erbij was. Iedereen krijgt een licentie van een jaar om dembrane te gebruiken in situaties met een hoog risico."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:320
 msgid "participant.select.microphone"
 msgstr "Selecteer een microfoon"
 
@@ -13871,7 +13871,7 @@ msgstr "Geselecteerde bestanden ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:316
 msgid "participant.selected.microphone"
 msgstr "Geselecteerde microfoon"
 
@@ -17920,7 +17920,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Bekijk de video voor een introductie tot organisaties, workspaces en projecten."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:398
+#: src/portal/components/settings/MicrophoneCheck.tsx:403
 msgid "participant.alert.microphone.access.issue"
 msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje dichter bij het apparaat te komen."
 
@@ -18035,7 +18035,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "We horen graag hoe je dembrane gebruikt, zodat we je beter kunnen helpen. Dat kost je zo'n twee minuten op onze website. Aan het eind kun je, als je wilt, een kort gesprek met ons inplannen."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:305
 msgid "participant.test.microphone.description"
 msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie te garanderen."
 
@@ -18795,7 +18795,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "Je hebt alle gerelateerde gesprekken al toegevoegd"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:424
+#: src/portal/components/settings/MicrophoneCheck.tsx:429
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "Je hebt je microfoon gewisseld. Klik op \"Doorgaan\" om verder te gaan met de sessie."
 

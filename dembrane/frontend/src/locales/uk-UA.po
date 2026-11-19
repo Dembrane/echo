@@ -2474,7 +2474,7 @@ msgstr "Карта аргументів"
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
-#: src/components/map/MapExperience.tsx:610
+#: src/components/map/MapExperience.tsx:600
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -3160,7 +3160,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:447
+#: src/portal/components/settings/MicrophoneCheck.tsx:452
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Cancel"
 
@@ -3580,7 +3580,7 @@ msgstr "Виберіть пристрій, на якому завершити с
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:688
+#: src/components/map/MapExperience.tsx:678
 msgid "Choose a map under Advanced"
 msgstr "Виберіть мапу в розділі «Додатково»"
 
@@ -3952,7 +3952,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Налаштуйте параметри для кожної правової підстави."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:436
+#: src/portal/components/settings/MicrophoneCheck.tsx:441
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
@@ -4117,7 +4117,7 @@ msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:416
+#: src/portal/components/settings/MicrophoneCheck.tsx:421
 msgid "participant.button.continue"
 msgstr "Continue"
 
@@ -6050,7 +6050,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Усі у списку пройшли навчання."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:389
+#: src/portal/components/settings/MicrophoneCheck.tsx:394
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
@@ -8432,7 +8432,7 @@ msgstr "Live"
 #~ msgstr "Live agent execution mode"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:341
 msgid "participant.live.audio.level"
 msgstr "Live audio level:"
 
@@ -8555,7 +8555,7 @@ msgstr "Завантаження учасників"
 msgid "Loading methodology"
 msgstr "Завантаження методології"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:327
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
@@ -8608,7 +8608,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:653
+#: src/components/map/MapExperience.tsx:643
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -11339,7 +11339,7 @@ msgstr "Відтворення та повноекранний режим"
 #~ msgstr "Будь ласка, прийміть умови, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:365
+#: src/portal/components/settings/MicrophoneCheck.tsx:370
 msgid "participant.alert.microphone.access"
 msgstr "Please allow microphone access to start the test."
 
@@ -12889,7 +12889,7 @@ msgid "Requester"
 msgstr "Запитувач"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:377
+#: src/portal/components/settings/MicrophoneCheck.tsx:382
 msgid "participant.alert.microphone.access.loading"
 msgstr "Requesting microphone access to detect available devices..."
 
@@ -13737,7 +13737,7 @@ msgstr "Вибрати {title}"
 msgid "Select a conversation to continue"
 msgstr "Виберіть розмову, щоб продовжити"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:328
 msgid "Select a microphone"
 msgstr "Select a microphone"
 
@@ -13854,7 +13854,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Виберіть присутніх. Кожен отримає річну ліцензію на використання dembrane у середовищах із високим рівнем ризику."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:320
 msgid "participant.select.microphone"
 msgstr "Select your microphone:"
 
@@ -13874,7 +13874,7 @@ msgstr "Вибрані файли ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:316
 msgid "participant.selected.microphone"
 msgstr "Selected microphone:"
 
@@ -17926,7 +17926,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Перегляньте відео, щоб познайомитися з організаціями, робочими просторами та проєктами."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:398
+#: src/portal/components/settings/MicrophoneCheck.tsx:403
 msgid "participant.alert.microphone.access.issue"
 msgstr "We cannot hear you. Please try changing your microphone or get a little closer to the device."
 
@@ -18042,7 +18042,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "Нам дуже хочеться дізнатися, як ви користуєтеся dembrane, щоб краще вам допомогти. Це займе близько двох хвилин на нашому сайті, а наприкінці за бажанням можна запланувати коротку розмову з нами."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:305
 msgid "participant.test.microphone.description"
 msgstr "We'll test your microphone to ensure the best experience for everyone in the session."
 
@@ -18802,7 +18802,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "You have already added all the conversations related to this"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:424
+#: src/portal/components/settings/MicrophoneCheck.tsx:429
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "You have changed the mic. Doing this will save your audio till this point and restart your recording."
 
