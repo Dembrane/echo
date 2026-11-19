@@ -53,13 +53,27 @@ export function usePortalPageForm({
 	const savedValuesRef = useRef<Record<string, unknown>>(
 		pick(defaultValues, fields),
 	);
-	const savedTopicsRef = useRef<string | null>(null);
+
+	// The topics follow the server once they load (react-hook-form's `values`:
+	// it resets to them whenever they change, keeping what the host changed).
+	// Only the Verify page has them; other pages keep their values as read.
+	const serverValues =
+		fields.includes("verification_topics") &&
+		verificationTopics &&
+		!isVerificationTopicsLoading
+			? portalDefaults(
+					project,
+					normalizeTopicList(verificationTopics.selected_topics ?? []),
+				)
+			: undefined;
 
 	const form = useForm<PortalFormValues>({
 		defaultValues,
 		mode: "onChange",
+		resetOptions: { keepDirtyValues: true },
 		resolver,
 		reValidateMode: "onChange",
+		values: serverValues,
 	});
 	const { formState, reset, getValues } = form;
 	const values = useWatch({ control: form.control }) as PortalFormValues;
@@ -103,8 +117,6 @@ export function usePortalPageForm({
 			await queryClient.invalidateQueries({
 				queryKey: ["verify", "topics", project.id],
 			});
-			// Store what we saved to detect when the query refetches.
-			savedTopicsRef.current = normalizedTopics.join(",");
 		}
 
 		const saved = {
@@ -141,40 +153,6 @@ export function usePortalPageForm({
 	const saveAfterChange = () => {
 		if (!readOnly) dispatchRef.current(getValues());
 	};
-
-	// The topics as the server has them, unless the host changed them here (the
-	// one-page editor's sync, unchanged).
-	useEffect(() => {
-		if (!fields.includes("verification_topics")) return;
-		if (!verificationTopics || isVerificationTopicsLoading) return;
-		const normalizedSelected = normalizeTopicList(
-			verificationTopics.selected_topics ?? [],
-		);
-		if (savedTopicsRef.current) {
-			if (normalizedSelected.join(",") === savedTopicsRef.current)
-				savedTopicsRef.current = null;
-			else return;
-		}
-		if (formState.dirtyFields.verification_topics) return;
-		const current = normalizeTopicList(getValues("verification_topics") ?? []);
-		const differs =
-			normalizedSelected.length !== current.length ||
-			normalizedSelected.some((topic, i) => topic !== current[i]);
-		// The form's own store, not React state: this effect keeps it in step with
-		// the server.
-		if (differs)
-			form.setValue("verification_topics", normalizedSelected, {
-				shouldDirty: false,
-				shouldTouch: false,
-			});
-	}, [
-		fields,
-		formState.dirtyFields.verification_topics,
-		getValues,
-		form,
-		verificationTopics,
-		isVerificationTopicsLoading,
-	]);
 
 	/** Saves now, for a change made outside a field's own onChange (a confirm modal). */
 	const saveNow = useCallback(
