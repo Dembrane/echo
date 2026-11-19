@@ -19,7 +19,7 @@ A host creates a project in a workspace, starting from uploaded files, pasted te
 
 Preconditions:
 
-- Signed in with onboarding finished (the end of [onboarding.md](./onboarding.md)), on "Create project".
+- Signed in with onboarding finished: `scripts/seed-user.sh --org "Verify Org"` and the login batch in [auth.md](./auth.md), then "Create project" in the sidebar. Or the end of [onboarding.md](./onboarding.md).
 
 Not yet run end to end. On the "Create project" page the entry points are a region "Drop files or choose them" with a "Choose Files" button, buttons "Paste text", "Add a link" and "More formats", and format cards in the region "Or start from a format". The first run that drives one records its steps and end state here.
 

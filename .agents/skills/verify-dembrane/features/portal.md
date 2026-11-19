@@ -20,9 +20,11 @@ Preconditions:
 
 - A project made through [projects.md](./projects.md), with its id.
 
-Not yet run end to end. Open `$PORTAL_URL/<project-id>/start` (always the `portal.localhost` host from the env file). The first run records the steps and end state here.
+Launch the session as a phone with a fake microphone (the Drive section of the skill), then open `$PORTAL_URL/<project-id>/start`. Proven so far: the portal host renders at 390px wide with an iPhone user agent, and `navigator.mediaDevices.getUserMedia({audio: true})` returns "Fake Default Audio Input". The start, record and finish steps are not yet driven; the first run records them here.
 
 ## Gotchas
 
 - Opening the portal port as `localhost` instead of `portal.localhost` shows the dashboard, not the portal.
-- Recording needs a microphone. Headless Chrome has none unless launched with fake-media flags; record how the first run provides one.
+- Recording needs a microphone. Without the `--args` fake-media flags at launch the browser has none, and `--args` is ignored by a session that is already running.
+- `$PORTAL_URL/` with no project id shows "404 Not Found". That is expected, not a broken portal.
+- Device emulation is Chromium, not Safari. It proves layout at phone size, not iOS behaviour.

@@ -17,7 +17,7 @@ After their first login, a new person names their organisation, can invite teamm
 
 Preconditions:
 
-- Signed in as a newly verified account, on "Welcome, <first name>" (the end of [auth.md](./auth.md)).
+- Signed in as a verified account that hasn't onboarded, on "Welcome, <first name>": either the end of [auth.md](./auth.md), or `scripts/seed-user.sh` (no `--org`) and the login batch in auth.md.
 
 - **Name the organisation.** `find label "Organisation name" fill "Verify Org"`, then `find role button click --name "Get started"`. The heading becomes "Invite your team".
 - **Skip invites.** `find role button click --name "Skip"`. The heading becomes "Almost ready", with radios "Yes" and "No" and a disabled "Continue".
@@ -28,3 +28,4 @@ Preconditions:
 
 - "Send invites" stays disabled until an address is entered. Sending real invites queues emails that are only kept in memory locally.
 - The two "Skip" buttons are on different steps; snapshot between them so you click the one on the current step.
+- An account that finished the organisation step but not "About you" goes back to "About you" on every login.

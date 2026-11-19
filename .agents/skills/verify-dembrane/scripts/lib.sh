@@ -1,16 +1,64 @@
-# Shared by up.sh, doctor.sh and down.sh. Sourced, not run.
+# Shared by the verify-dembrane scripts. Sourced, not run.
 ROOT=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)
 PLATFORM=$ROOT/dembrane/platform
 FRONTEND=$ROOT/dembrane/frontend
 RUNS=$PLATFORM/.data/verify
+SCRIPTS=$ROOT/.agents/skills/verify-dembrane/scripts
 
-# The run to act on: $VERIFY_RUN, else the newest one under $RUNS.
+# Loads the run's env file: $VERIFY_RUN, or the only run there is. Several runs can be up at
+# once (other agents, other worktrees), so with more than one it refuses to guess.
 pick_run() {
-  local run=${VERIFY_RUN:-}
-  [ -n "$run" ] || run=$(ls -1t "$RUNS" 2>/dev/null | head -1)
-  [ -n "$run" ] && [ -f "$RUNS/$run/env" ] || { echo "no verify run found under $RUNS" >&2; return 1; }
+  local run=${VERIFY_RUN:-} runs n
+  if [ -z "$run" ]; then
+    runs=$(ls -1 "$RUNS" 2>/dev/null || true)
+    n=$(printf '%s\n' "$runs" | grep -c . || true)
+    if [ "$n" -ne 1 ]; then
+      echo "found $n verify runs under $RUNS; set VERIFY_RUN to the one you started:" >&2
+      [ -z "$runs" ] || printf '  %s\n' $runs >&2
+      return 1
+    fi
+    run=$runs
+  fi
+  [ -f "$RUNS/$run/env" ] || { echo "no verify run $run under $RUNS" >&2; return 1; }
   # shellcheck disable=SC1090
   . "$RUNS/$run/env"
 }
 
 listener_pid() { lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -1; }
+
+# Claims the first port from $1 up that nothing listens on and no other run has claimed.
+# mkdir is atomic, so two runs starting together never get the same port. A claim whose run
+# no longer exists is stale and gets reused. Needs $RUN, and $RUNS/$RUN to exist already.
+claim_port() {
+  local p=$1 owner
+  mkdir -p "$RUNS/.ports"
+  while :; do
+    if [ -z "$(listener_pid "$p")" ]; then
+      if mkdir "$RUNS/.ports/$p" 2>/dev/null; then
+        echo "$RUN" > "$RUNS/.ports/$p/run"
+        echo "$p"
+        return
+      fi
+      owner=$(cat "$RUNS/.ports/$p/run" 2>/dev/null || true)
+      if [ -n "$owner" ] && [ ! -d "$RUNS/$owner" ]; then
+        rm -rf "$RUNS/.ports/$p"
+        continue
+      fi
+    fi
+    p=$((p + 1))
+  done
+}
+
+release_ports() {
+  local d
+  for d in "$RUNS"/.ports/*/; do
+    [ "$(cat "$d/run" 2>/dev/null)" = "$RUN" ] && rm -rf "$d"
+  done
+  return 0
+}
+
+# Fingerprint of the platform code: API and worker don't reload, so a change here after launch
+# means they run stale code. The frontend hot-reloads and is left out.
+platform_fingerprint() {
+  { git -C "$ROOT" rev-parse HEAD; git -C "$ROOT" diff HEAD -- dembrane/platform; } | shasum | cut -c1-12
+}
