@@ -33,7 +33,7 @@ import {
 	QuestionIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import type { Webhook, WebhookCreatePayload, WebhookEvent } from "@/lib/api";
@@ -92,6 +92,12 @@ interface WebhookFormModalProps {
 
 type ModalStep = "choose" | "copy" | "form";
 
+const DEFAULT_EVENTS: WebhookEvent[] = [
+	"conversation.started",
+	"conversation.transcribed",
+	"conversation.summarized",
+];
+
 const WebhookFormModal = ({
 	opened,
 	onClose,
@@ -99,23 +105,75 @@ const WebhookFormModal = ({
 	webhook,
 }: WebhookFormModalProps) => {
 	const isEditing = !!webhook;
+	const [step, setStep] = useState<ModalStep>(isEditing ? "form" : "choose");
+
+	// Each opening, and another webhook while open, starts again: an edit on
+	// the form, an addition on the choice of cloning. The steps below are keyed
+	// to the opening, so each gets a fresh form.
+	const [shownFor, setShownFor] = useState({ opened, openings: 0, webhook });
+	if (shownFor.opened !== opened || shownFor.webhook !== webhook) {
+		setShownFor({
+			opened,
+			openings: shownFor.openings + (opened ? 1 : 0),
+			webhook,
+		});
+		if (opened) setStep(isEditing ? "form" : "choose");
+	}
+
+	// Determine modal title based on step
+	const getModalTitle = () => {
+		if (isEditing) return <Trans>Edit webhook</Trans>;
+		if (step === "copy") return <Trans>Clone from project</Trans>;
+		return <Trans>Add webhook</Trans>;
+	};
+
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={getModalTitle()}
+			size="md"
+			centered
+		>
+			<WebhookFormSteps
+				key={shownFor.openings}
+				onClose={onClose}
+				projectId={projectId}
+				webhook={webhook}
+				step={step}
+				setStep={setStep}
+			/>
+		</Modal>
+	);
+};
+
+interface WebhookFormStepsProps {
+	onClose: () => void;
+	projectId: string;
+	webhook?: Webhook | null;
+	step: ModalStep;
+	setStep: (step: ModalStep) => void;
+}
+
+const WebhookFormSteps = ({
+	onClose,
+	projectId,
+	webhook,
+	step,
+	setStep,
+}: WebhookFormStepsProps) => {
+	const isEditing = !!webhook;
 	const createMutation = useCreateWebhookMutation();
 	const updateMutation = useUpdateWebhookMutation();
 	const { data: copyableWebhooks, isLoading: isLoadingCopyable } =
 		useCopyableWebhooks(!isEditing ? projectId : undefined);
 
-	const [step, setStep] = useState<ModalStep>("choose");
-
 	const { control, handleSubmit, reset } = useForm<WebhookFormData>({
 		defaultValues: {
-			events: [
-				"conversation.started",
-				"conversation.transcribed",
-				"conversation.summarized",
-			],
-			name: "",
+			events: webhook?.events || DEFAULT_EVENTS,
+			name: webhook?.name || "",
 			secret: "",
-			url: "",
+			url: webhook?.url || "",
 		},
 	});
 
@@ -143,6 +201,13 @@ const WebhookFormModal = ({
 
 	const hasCopyableWebhooks = copyFromOptions.length > 0;
 
+	// With nothing to clone, an addition skips the choice for the form.
+	const shown =
+		step === "choose" &&
+		(isEditing || (!isLoadingCopyable && !hasCopyableWebhooks))
+			? "form"
+			: step;
+
 	const handleCopyFrom = (webhookId: string | null) => {
 		if (!webhookId || !copyableWebhooks) return;
 
@@ -150,11 +215,7 @@ const WebhookFormModal = ({
 		if (!source) return;
 
 		reset({
-			events: source.events || [
-				"conversation.started",
-				"conversation.transcribed",
-				"conversation.summarized",
-			],
+			events: source.events || DEFAULT_EVENTS,
 			name: source.name || "",
 			secret: "", // Never copy secrets
 			url: source.url || "",
@@ -163,103 +224,43 @@ const WebhookFormModal = ({
 	};
 
 	const handleStartFresh = () => {
-		reset({
-			events: [
-				"conversation.started",
-				"conversation.transcribed",
-				"conversation.summarized",
-			],
-			name: "",
-			secret: "",
-			url: "",
-		});
+		reset({ events: DEFAULT_EVENTS, name: "", secret: "", url: "" });
 		setStep("form");
 	};
 
-	// Reset form and step when modal opens/closes
-	useEffect(() => {
-		if (opened) {
-			reset({
-				events: webhook?.events || [
-					"conversation.started",
-					"conversation.transcribed",
-					"conversation.summarized",
-				],
-				name: webhook?.name || "",
-				secret: "",
-				url: webhook?.url || "",
-			});
-			// When editing, go straight to form
-			if (isEditing) {
-				setStep("form");
-			} else {
-				setStep("choose");
-			}
-		}
-	}, [opened, webhook, reset, isEditing]);
-
-	// Redirect to form when on choose step but no copyable webhooks available
-	useEffect(() => {
-		if (
-			step === "choose" &&
-			!isEditing &&
-			!isLoadingCopyable &&
-			!hasCopyableWebhooks
-		) {
-			setStep("form");
-		}
-	}, [step, isEditing, isLoadingCopyable, hasCopyableWebhooks]);
-
-	const onSubmit = async (data: WebhookFormData) => {
-		try {
-			if (isEditing && webhook) {
-				await updateMutation.mutateAsync({
-					payload: {
-						name: data.name,
-						url: data.url,
-						...(data.secret ? { secret: data.secret } : {}),
-						events: data.events,
-					},
+	const onSubmit = (data: WebhookFormData) => {
+		const payload = {
+			name: data.name,
+			url: data.url,
+			...(data.secret ? { secret: data.secret } : {}),
+			events: data.events,
+		};
+		const saved: Promise<unknown> = webhook
+			? updateMutation.mutateAsync({
+					payload,
 					projectId,
 					webhookId: webhook.id,
-				});
-			} else {
-				await createMutation.mutateAsync({
-					payload: {
-						name: data.name,
-						url: data.url,
-						...(data.secret ? { secret: data.secret } : {}),
-						events: data.events,
-					} as WebhookCreatePayload,
+				})
+			: createMutation.mutateAsync({
+					payload: payload as WebhookCreatePayload,
 					projectId,
 				});
-			}
-			reset();
-			onClose();
-		} catch (_error) {
-			// Error handling is done in the mutation
-		}
+		return saved
+			.then(() => {
+				reset();
+				onClose();
+			})
+			.catch(() => {
+				// Error handling is done in the mutation
+			});
 	};
 
 	const isPending = createMutation.isPending || updateMutation.isPending;
 
-	// Determine modal title based on step
-	const getModalTitle = () => {
-		if (isEditing) return <Trans>Edit webhook</Trans>;
-		if (step === "copy") return <Trans>Clone from project</Trans>;
-		return <Trans>Add webhook</Trans>;
-	};
-
 	return (
-		<Modal
-			opened={opened}
-			onClose={onClose}
-			title={getModalTitle()}
-			size="md"
-			centered
-		>
+		<>
 			{/* Step: Choose between copy or fresh */}
-			{step === "choose" && !isEditing && (
+			{shown === "choose" && (
 				<Stack gap="md">
 					{isLoadingCopyable ? (
 						<>
@@ -309,7 +310,7 @@ const WebhookFormModal = ({
 			)}
 
 			{/* Step: Select webhook to clone */}
-			{step === "copy" && (
+			{shown === "copy" && (
 				<Stack gap="md">
 					<div>
 						<Button
@@ -345,7 +346,7 @@ const WebhookFormModal = ({
 			)}
 
 			{/* Step: Form */}
-			{step === "form" && (
+			{shown === "form" && (
 				<form onSubmit={handleSubmit(onSubmit)}>
 					<Stack gap="lg">
 						{!isEditing && hasCopyableWebhooks && (
@@ -481,7 +482,7 @@ const WebhookFormModal = ({
 					</Stack>
 				</form>
 			)}
-		</Modal>
+		</>
 	);
 };
 
@@ -502,11 +503,6 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 		null,
 	);
 	const isEnabled = optimisticEnabled ?? webhook.status === "published";
-
-	// Reset optimistic state when webhook data changes from server
-	useEffect(() => {
-		setOptimisticEnabled(null);
-	}, []);
 
 	const handleToggle = async () => {
 		const newStatus = isEnabled ? "draft" : "published";
