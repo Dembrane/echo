@@ -58,8 +58,8 @@ const DOC = "0199a1bd-0000-7000-8000-000000000002";
 const SIGN = `/o/${ORG}/account/documents/${DOC}/sign`;
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({

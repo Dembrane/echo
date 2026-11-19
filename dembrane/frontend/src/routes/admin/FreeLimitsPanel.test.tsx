@@ -44,8 +44,8 @@ const answer = (status: number, body: unknown) =>
 	});
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
@@ -261,7 +261,7 @@ it("formats the changed-at time in the app language, not the browser's", async (
 		});
 		expect(row("projects").textContent).toContain(nl);
 	} finally {
-		i18n.activate("en");
+		i18n.activate("en-US");
 	}
 });
 

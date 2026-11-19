@@ -148,8 +148,8 @@ const link = (name: RegExp) => screen.queryByRole("link", { name });
 const held = () => screen.getByTestId("whats-new").getAttribute("data-held");
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 });
 
 beforeEach(() => {

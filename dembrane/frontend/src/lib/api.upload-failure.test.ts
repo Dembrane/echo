@@ -14,8 +14,8 @@ vi.mock("@/components/common/Toaster", () => ({
 }));
 
 beforeEach(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	vi.useFakeTimers();
 });
 

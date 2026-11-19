@@ -54,8 +54,8 @@ const SIGN = `/en-US/o/${ORG}/account/documents/${offerDetail.id}/sign`;
 const NOW = new Date("2026-10-10T12:00:00Z");
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia = ((query: string) => ({
 		addEventListener: () => {},
 		addListener: () => {},

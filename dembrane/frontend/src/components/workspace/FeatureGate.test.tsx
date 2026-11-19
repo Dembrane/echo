@@ -56,8 +56,8 @@ vi.mock("@/components/auth/hooks", () => ({
 }));
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 
 	window.matchMedia =
 		window.matchMedia ||
@@ -91,7 +91,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	cleanup();
-	i18n.activate("en");
+	i18n.activate("en-US");
 });
 
 const wrap = (node: React.ReactNode) =>
@@ -345,7 +345,7 @@ it("saves a row for the account on opening, and links it once the server says th
 	const saved = saveHandover.mock.calls[0]?.[0];
 	expect(saved).toEqual({
 		config_session_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
-		locale: "en",
+		locale: "en-US",
 		org_id: "org-1",
 		project_id: undefined,
 		wall_key: "custom_logo",

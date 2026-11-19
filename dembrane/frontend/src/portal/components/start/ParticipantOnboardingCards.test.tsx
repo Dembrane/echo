@@ -33,8 +33,8 @@ vi.mock("./ParticipantInitiateForm", () => ({
 }));
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({

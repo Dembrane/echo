@@ -78,7 +78,7 @@ class FakeEventSource {
 	}
 }
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 beforeAll(() => {
 	window.matchMedia = vi.fn().mockImplementation((query) => ({

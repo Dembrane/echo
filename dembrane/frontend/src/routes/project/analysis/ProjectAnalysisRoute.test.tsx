@@ -70,7 +70,7 @@ vi.mock("@/components/popcorn/hooks", async (importOriginal) => ({
 }));
 
 beforeAll(() => {
-	i18n.loadAndActivate({ locale: "en", messages: {} });
+	i18n.loadAndActivate({ locale: "en-US", messages: {} });
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({
