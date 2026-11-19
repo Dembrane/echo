@@ -696,20 +696,37 @@ export const LoginRoute = () => {
 					{codeMode ? (
 						<Stack gap="xs" align="center">
 							{codeSent && (
-								<Button
-									variant="subtle"
-									color="gray"
-									loading={codeSending}
-									disabled={resendCooldown.wait > 0}
-									onClick={requestCode}
-									{...testId("auth-login-code-resend")}
-								>
-									{resendCooldown.wait > 0 ? (
-										<Trans>Send a new code in {resendCooldown.wait}s</Trans>
-									) : (
-										<Trans>Send a new code</Trans>
-									)}
-								</Button>
+								<>
+									<Button
+										variant="subtle"
+										color="gray"
+										loading={codeSending}
+										disabled={resendCooldown.wait > 0}
+										onClick={requestCode}
+										{...testId("auth-login-code-resend")}
+									>
+										{resendCooldown.wait > 0 ? (
+											<Trans>Send a new code in {resendCooldown.wait}s</Trans>
+										) : (
+											<Trans>Send a new code</Trans>
+										)}
+									</Button>
+									{/* The same for every address, so it says nothing about
+									    whether this one is known: a code only goes to someone
+									    with an account or an invitation. */}
+									<Text
+										size="sm"
+										c="dimmed"
+										ta="center"
+										style={{ textWrap: "balance" }}
+										{...testId("auth-login-no-code")}
+									>
+										<Trans>
+											No code after a minute? Check your spam folder. If someone
+											shared a dembrane page with you, ask them to add you.
+										</Trans>
+									</Text>
+								</>
 							)}
 							<Button
 								variant="subtle"
