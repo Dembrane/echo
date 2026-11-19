@@ -4648,7 +4648,7 @@ msgid "Create account"
 msgstr "Account aanmaken"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:762
+#: src/routes/auth/Login.tsx:779
 msgid "Create an account"
 msgstr "Maak een account aan"
 
@@ -5754,7 +5754,7 @@ msgstr "E-mailadres"
 msgid "Email me a code"
 msgstr "Mail me een code"
 
-#: src/routes/auth/Login.tsx:737
+#: src/routes/auth/Login.tsx:754
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Mail me liever een inlogcode"
@@ -6736,7 +6736,7 @@ msgstr "Prognose"
 msgid "Forgetting a saved memory"
 msgstr "Een opgeslagen herinnering vergeten"
 
-#: src/routes/auth/Login.tsx:747
+#: src/routes/auth/Login.tsx:764
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -9596,6 +9596,10 @@ msgstr "Geen chats gevonden voor je zoekopdracht."
 msgid "No chats yet."
 msgstr "Nog geen chats."
 
+#: src/routes/auth/Login.tsx:724
+msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Geen code na een minuut? Kijk in je spam. Heeft iemand een dembrane-pagina met je gedeeld? Vraag diegene dan om je toe te voegen."
+
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "Geen collecties gevonden"
@@ -10685,7 +10689,7 @@ msgid "Options"
 msgstr "Opties"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:753
+#: src/routes/auth/Login.tsx:770
 msgid "or"
 msgstr "of"
 
@@ -13902,12 +13906,12 @@ msgstr "Verzenden"
 msgid "Send {0} invites"
 msgstr "{0} uitnodigingen versturen"
 
-#: src/routes/auth/Login.tsx:710
+#: src/routes/auth/Login.tsx:711
 msgid "Send a new code"
 msgstr "Stuur een nieuwe code"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/routes/auth/Login.tsx:708
+#: src/routes/auth/Login.tsx:709
 msgid "Send a new code in {0}s"
 msgstr "Stuur een nieuwe code over {0}s"
 
@@ -17560,7 +17564,7 @@ msgstr "Gebruik Italiaans voor chat, rapporten, transcriptie en introductiekaart
 msgid "Use latest results"
 msgstr "Nieuwste resultaten gebruiken"
 
-#: src/routes/auth/Login.tsx:722
+#: src/routes/auth/Login.tsx:739
 msgid "Use my password instead"
 msgstr "Liever met mijn wachtwoord"
 

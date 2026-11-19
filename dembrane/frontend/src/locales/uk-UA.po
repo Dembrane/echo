@@ -4651,7 +4651,7 @@ msgid "Create account"
 msgstr "Створити акаунт"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:762
+#: src/routes/auth/Login.tsx:779
 msgid "Create an account"
 msgstr "Створіть акаунт"
 
@@ -5757,7 +5757,7 @@ msgstr "Електронна пошта"
 msgid "Email me a code"
 msgstr "Надіслати код на пошту"
 
-#: src/routes/auth/Login.tsx:737
+#: src/routes/auth/Login.tsx:754
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
@@ -6739,7 +6739,7 @@ msgstr "Прогноз"
 msgid "Forgetting a saved memory"
 msgstr "Забуваємо збережений спогад"
 
-#: src/routes/auth/Login.tsx:747
+#: src/routes/auth/Login.tsx:764
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9599,6 +9599,10 @@ msgstr "За вашим запитом чатів не знайдено."
 msgid "No chats yet."
 msgstr "Чатів ще немає."
 
+#: src/routes/auth/Login.tsx:724
+msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Код не прийшов за хвилину? Перевір папку зі спамом. Якщо хтось поділився з тобою сторінкою dembrane, попроси цю людину додати тебе."
+
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No collections found"
@@ -10688,7 +10692,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:753
+#: src/routes/auth/Login.tsx:770
 msgid "or"
 msgstr "or"
 
@@ -13905,12 +13909,12 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Надіслати {0} запрошень"
 
-#: src/routes/auth/Login.tsx:710
+#: src/routes/auth/Login.tsx:711
 msgid "Send a new code"
 msgstr "Надіслати новий код"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/routes/auth/Login.tsx:708
+#: src/routes/auth/Login.tsx:709
 msgid "Send a new code in {0}s"
 msgstr "Надіслати новий код через {0} с"
 
@@ -17566,7 +17570,7 @@ msgstr "Використовуйте італійську для чату, зв�
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
-#: src/routes/auth/Login.tsx:722
+#: src/routes/auth/Login.tsx:739
 msgid "Use my password instead"
 msgstr "Натомість використати пароль"
 

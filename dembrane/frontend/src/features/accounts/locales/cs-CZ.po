@@ -164,7 +164,7 @@ msgstr "Pozvánka pro {first} se ruší a odkaz, který jsme poslali, přestane 
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} z {org} vás zve k podpisu"
 
-#: src/features/accounts/signing/SignGate.tsx:700
+#: src/features/accounts/signing/SignGate.tsx:717
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} tě pozval do {org}"
 
@@ -497,7 +497,7 @@ msgstr "Schválit a umístit nabídku"
 msgid "Ask a question"
 msgstr "Položit otázku"
 
-#: src/features/accounts/signing/SignGate.tsx:757
+#: src/features/accounts/signing/SignGate.tsx:774
 msgid "Ask the person who invited you to send a new one."
 msgstr "Požádej toho, kdo tě pozval, aby poslal novou."
 
@@ -1463,7 +1463,7 @@ msgstr "Jak"
 msgid "How do you want to get invoices?"
 msgstr "Jak chcete dostávat faktury?"
 
-#: src/features/accounts/signing/SignGate.tsx:539
+#: src/features/accounts/signing/SignGate.tsx:556
 msgid "How we handle your details"
 msgstr "Jak nakládáme s vašimi údaji"
 
@@ -1547,7 +1547,7 @@ msgstr "Pole pro iniciály použijí tento podpis, pokud nenakreslíte iniciály
 msgid "Intro"
 msgstr "Úvod"
 
-#: src/features/accounts/signing/SignGate.tsx:673
+#: src/features/accounts/signing/SignGate.tsx:690
 msgid "Invitation | dembrane"
 msgstr "Pozvánka | dembrane"
 
@@ -1757,7 +1757,7 @@ msgstr "Uzamčeno"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:505
-#: src/features/accounts/signing/SignGate.tsx:769
+#: src/features/accounts/signing/SignGate.tsx:786
 msgid "Log in"
 msgstr "Přihlásit se"
 
@@ -1765,7 +1765,7 @@ msgstr "Přihlásit se"
 msgid "Log in to download the signed copy."
 msgstr "Přihlaste se a stáhněte si podepsanou kopii."
 
-#: src/features/accounts/signing/SignGate.tsx:686
+#: src/features/accounts/signing/SignGate.tsx:703
 msgid "Log in to read the offer and the DPA."
 msgstr "Přihlas se a přečti si nabídku a DPA."
 
@@ -1904,6 +1904,10 @@ msgstr "Žádný účet"
 #: src/features/accounts/staff/InvoicePlanFields.tsx:132
 msgid "No charge"
 msgstr "Zdarma"
+
+#: src/features/accounts/signing/SignGate.tsx:532
+msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
+msgstr "Kód nepřišel ani po minutě? Podívej se do složky se spamem, nebo požádej toho, kdo to s tebou sdílel, ať tě přidá."
 
 #: src/features/accounts/customer/BillingForm.tsx:370
 msgid "No country found"
@@ -2551,7 +2555,7 @@ msgstr "Číst"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Přečtěte si nabídku a podepište ji zde. Podepisuje za vaši organizaci někdo jiný? Uveďte ho v nabídce; obdrží vlastní odkaz."
 
-#: src/features/accounts/signing/SignGate.tsx:710
+#: src/features/accounts/signing/SignGate.tsx:727
 msgid "Read the offer and the DPA with your team"
 msgstr "Čti nabídku a DPA se svým týmem"
 
@@ -2797,12 +2801,12 @@ msgstr "Vyberte pole a nastavte jeho typ, popisek a zda je povinné. Přetažen�
 msgid "Send"
 msgstr "Odeslat"
 
-#: src/features/accounts/signing/SignGate.tsx:517
+#: src/features/accounts/signing/SignGate.tsx:521
 msgid "Send a new code"
 msgstr "Poslat nový kód"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:515
+#: src/features/accounts/signing/SignGate.tsx:519
 msgid "Send a new code in {0}s"
 msgstr "Odeslat nový kód za {0} s"
 
@@ -3401,7 +3405,7 @@ msgstr "Pozvánka byla odeslána na"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignGate.tsx:738
+#: src/features/accounts/signing/SignGate.tsx:755
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "Pozvánka byla zrušena nebo ji nahradila novější. Požádej toho, kdo tě pozval, aby ji poslal znovu."
 
@@ -3551,7 +3555,7 @@ msgstr "Tento dokument byl odeslán. Jeho pole jsou uzamčena; pro jejich změnu
 msgid "This invitation could not be loaded"
 msgstr "Pozvánku se nepodařilo načíst"
 
-#: src/features/accounts/signing/SignGate.tsx:754
+#: src/features/accounts/signing/SignGate.tsx:771
 msgid "This invitation has closed"
 msgstr "Tato pozvánka vypršela"
 
@@ -3564,7 +3568,7 @@ msgid "This is not an email address."
 msgstr "Toto není e-mailová adresa."
 
 #: src/features/accounts/signing/SignGate.tsx:190
-#: src/features/accounts/signing/SignGate.tsx:735
+#: src/features/accounts/signing/SignGate.tsx:752
 msgid "This link no longer works"
 msgstr "Tento odkaz už nefunguje"
 
@@ -4104,7 +4108,7 @@ msgstr "ty"
 msgid "You"
 msgstr "Vy"
 
-#: src/features/accounts/signing/SignGate.tsx:683
+#: src/features/accounts/signing/SignGate.tsx:700
 msgid "You accepted this invitation"
 msgstr "Tuto pozvánku jsi přijal"
 
@@ -4123,7 +4127,7 @@ msgstr "S adresou {email} už účet dembrane máte. Pošleme vám e-mailem kód
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Vše je hotovo. Teď na vás nic nečeká."
 
-#: src/features/accounts/signing/SignGate.tsx:704
+#: src/features/accounts/signing/SignGate.tsx:721
 msgid "You are invited to {org}"
 msgstr "Jsi pozván do {org}"
 
@@ -4175,7 +4179,7 @@ msgstr "Byl jsi pozván. Jakou roli máš v tomto rozhodnutí?"
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "Nepodepíšeš ty. {newName} místo tebe dostane odkaz k podpisu."
 
-#: src/features/accounts/signing/SignGate.tsx:527
+#: src/features/accounts/signing/SignGate.tsx:544
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Podepíšete elektronicky. Váš elektronický podpis je stejně závazný jako vlastnoruční."
 
