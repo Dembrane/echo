@@ -1558,7 +1558,7 @@ msgstr "Añade un objetivo al proyecto antes de guardar."
 #~ msgid "Add additional context (Optional)"
 #~ msgstr "Añadir contexto adicional (Opcional)"
 
-#: src/portal/components/start/ParticipantInitiateForm.tsx:308
+#: src/portal/components/start/ParticipantInitiateForm.tsx:310
 msgid "Add all that apply"
 msgstr "Añade todos los que correspondan"
 
@@ -2138,7 +2138,7 @@ msgstr "Se enviará una notificación por correo electrónico a {participantCoun
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Se enviará una notificación por correo electrónico a los participantes. ¿Quieres continuar?"
 
-#: src/portal/routes/ParticipantStart.tsx:85
+#: src/portal/routes/ParticipantStart.tsx:76
 msgid "An error occurred while loading the portal. Please contact the support team."
 msgstr "Ocurrió un error al cargar el portal. Ponte en contacto con el equipo de soporte."
 
@@ -2806,8 +2806,8 @@ msgid "Back"
 msgstr "Atrás"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:94
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:438
+#: src/portal/layout/ParticipantHeader.tsx:90
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:434
 msgid "participant.button.back"
 msgstr "Volver"
 
@@ -3150,7 +3150,7 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #. js-lingui-explicit-id
-#: src/portal/layout/ParticipantHeader.tsx:105
+#: src/portal/layout/ParticipantHeader.tsx:101
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "cancelar"
 
@@ -3160,7 +3160,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "cancelar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:447
+#: src/portal/components/settings/MicrophoneCheck.tsx:448
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Cancelar"
 
@@ -3952,7 +3952,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Configura los ajustes para cada base legal."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:436
+#: src/portal/components/settings/MicrophoneCheck.tsx:437
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Continuar"
 
@@ -4107,17 +4107,17 @@ msgid "participant.verify.instructions.button.next"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:456
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:452
 msgid "participant.button.next"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/start/ParticipantInitiateForm.tsx:345
+#: src/portal/components/start/ParticipantInitiateForm.tsx:347
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:416
+#: src/portal/components/settings/MicrophoneCheck.tsx:417
 msgid "participant.button.continue"
 msgstr "Continuar"
 
@@ -6050,7 +6050,7 @@ msgid "Everyone on the roster is trained."
 msgstr "Todo el personal de la lista está capacitado."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:389
+#: src/portal/components/settings/MicrophoneCheck.tsx:390
 msgid "participant.alert.microphone.access.success"
 msgstr "Acceso al micrófono verificado con éxito"
 
@@ -6303,7 +6303,7 @@ msgstr "Error al eliminar la respuesta"
 #~ msgstr ""
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:117
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:414
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:421
 msgid "Failed to finish conversation. Please try again."
 msgstr "Error al finalizar la conversación. Por favor, inténtalo de nuevo."
 
@@ -6344,7 +6344,7 @@ msgstr "Error al marcar el anuncio como no leído"
 #~ msgid "Failed to move projects"
 #~ msgstr ""
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:458
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:467
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Error al reconectar. Por favor, recarga la página."
 
@@ -6381,7 +6381,7 @@ msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo.
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Error al revisar el resultado. Por favor, inténtalo de nuevo."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:257
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:261
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, inténtalo de nuevo."
 
@@ -6572,7 +6572,7 @@ msgid "participant.button.stop.finish"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:735
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:746
 msgid "participant.button.finish"
 msgstr "Finalizar"
 
@@ -7113,7 +7113,7 @@ msgstr "Entendido"
 msgid "Grant licenses"
 msgstr "Otorgar licencias"
 
-#: src/portal/components/start/ParticipantInitiateForm.tsx:297
+#: src/portal/components/start/ParticipantInitiateForm.tsx:299
 msgid "Group 1, Table 3, etc."
 msgstr "Grupo 1, Mesa 3, etc."
 
@@ -8432,7 +8432,7 @@ msgstr "Vivo"
 #~ msgstr "Modo de ejecución de agente en vivo"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:336
+#: src/portal/components/settings/MicrophoneCheck.tsx:337
 msgid "participant.live.audio.level"
 msgstr "Nivel de audio en vivo"
 
@@ -8555,7 +8555,7 @@ msgstr "Cargando miembros"
 msgid "Loading methodology"
 msgstr "Cargando metodología"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:322
+#: src/portal/components/settings/MicrophoneCheck.tsx:323
 msgid "Loading microphones..."
 msgstr "Cargando micrófonos..."
 
@@ -9578,7 +9578,7 @@ msgid "No canvases yet. Ask in chat when you want a live view of the conversatio
 msgstr "Aún no hay lienzos. Pídelo por el chat cuando quieras una vista en directo de las conversaciones. El primer lienzo se quedará aquí."
 
 #. js-lingui-explicit-id
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:286
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:285
 msgid "participant.onboarding.no.card"
 msgstr "No hay ninguna tarjeta disponible para el idioma y la sección actuales."
 
@@ -11339,7 +11339,7 @@ msgstr "Reproducción y pantalla completa"
 #~ msgstr "Acepta los términos para continuar."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:365
+#: src/portal/components/settings/MicrophoneCheck.tsx:366
 msgid "participant.alert.microphone.access"
 msgstr "Por favor, permite el acceso al micrófono para iniciar el test."
 
@@ -12206,7 +12206,7 @@ msgstr "Listo a las"
 #~ msgstr "Listo a las {readyTime}"
 
 #. js-lingui-explicit-id
-#: src/portal/components/start/ParticipantOnboardingCards.tsx:346
+#: src/portal/components/start/ParticipantOnboardingCards.tsx:342
 msgid "participant.ready.to.begin"
 msgstr "¿Listo para empezar?"
 
@@ -12274,7 +12274,7 @@ msgstr "Reconectando"
 
 #. js-lingui-explicit-id
 #: src/portal/preview/PreviewScreens.tsx:103
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:711
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:722
 msgid "participant.button.record"
 msgstr "Grabar"
 
@@ -12889,7 +12889,7 @@ msgid "Requester"
 msgstr "Solicitante"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:377
+#: src/portal/components/settings/MicrophoneCheck.tsx:378
 msgid "participant.alert.microphone.access.loading"
 msgstr "Por favor, espera mientras verificamos el acceso al micrófono."
 
@@ -13737,7 +13737,7 @@ msgstr "Seleccionar {title}"
 msgid "Select a conversation to continue"
 msgstr "Selecciona una conversación para continuar"
 
-#: src/portal/components/settings/MicrophoneCheck.tsx:323
+#: src/portal/components/settings/MicrophoneCheck.tsx:324
 msgid "Select a microphone"
 msgstr "Seleccionar un micrófono"
 
@@ -13854,7 +13854,7 @@ msgid "Select who attended. Each gets a one-year license to use dembrane in high
 msgstr "Selecciona quiénes asistieron. Cada persona recibe una licencia de un año para usar dembrane en entornos de alto riesgo."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:315
+#: src/portal/components/settings/MicrophoneCheck.tsx:316
 msgid "participant.select.microphone"
 msgstr "Seleccionar un micrófono"
 
@@ -13874,7 +13874,7 @@ msgstr "Archivos seleccionados ({0}/{MAX_FILES})"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:311
+#: src/portal/components/settings/MicrophoneCheck.tsx:312
 msgid "participant.selected.microphone"
 msgstr "Micrófono seleccionado"
 
@@ -13977,7 +13977,7 @@ msgstr "Separa con comas, espacios o saltos de línea."
 #~ msgid "Server error"
 #~ msgstr "Error del servidor"
 
-#: src/portal/components/start/ParticipantInitiateForm.tsx:291
+#: src/portal/components/start/ParticipantInitiateForm.tsx:293
 msgid "Session name"
 msgstr "Nombre de la sesión"
 
@@ -14069,8 +14069,8 @@ msgstr "Configurando"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
 #: src/routes/project/ProjectsHome.tsx:302
-#: src/portal/layout/ParticipantHeader.tsx:125
-#: src/portal/layout/ParticipantHeader.tsx:126
+#: src/portal/layout/ParticipantHeader.tsx:121
+#: src/portal/layout/ParticipantHeader.tsx:122
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:108
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -14129,8 +14129,8 @@ msgstr "Comparte enlaces de invitación como alternativa a las invitaciones por 
 #~ msgid "Share options"
 #~ msgstr "Opciones para compartir"
 
-#: src/portal/layout/ParticipantHeader.tsx:117
-#: src/portal/layout/ParticipantHeader.tsx:118
+#: src/portal/layout/ParticipantHeader.tsx:113
+#: src/portal/layout/ParticipantHeader.tsx:114
 msgid "Share portal"
 msgstr "Compartir portal"
 
@@ -14920,7 +14920,7 @@ msgid "Stop"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:796
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:807
 #: src/e2e/verifyExploreHarness.tsx:157
 msgid "participant.button.stop"
 msgstr "Detener"
@@ -15179,7 +15179,7 @@ msgid "Switch to self-serve billing"
 msgstr "Cambiar a facturación de autoservicio"
 
 #: src/portal/preview/PreviewScreens.tsx:105
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:718
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:729
 msgid "Switch to text"
 msgstr "Cambiar a texto"
 
@@ -15230,7 +15230,7 @@ msgstr "Etiqueta {0}"
 msgid "Tag deleted"
 msgstr "Etiqueta eliminada"
 
-#: src/portal/components/start/ParticipantInitiateForm.tsx:307
+#: src/portal/components/start/ParticipantInitiateForm.tsx:309
 #: src/components/project/ProjectTagsInput.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:732
@@ -17926,7 +17926,7 @@ msgid "Watch the walkthrough for an introduction to organisations, workspaces an
 msgstr "Mira el vídeo para conocer las organizaciones, los espacios de trabajo y los proyectos."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:398
+#: src/portal/components/settings/MicrophoneCheck.tsx:399
 msgid "participant.alert.microphone.access.issue"
 msgstr "No podemos escucharte. Por favor, intenta cambiar tu micrófono o acercarte un poco más al dispositivo."
 
@@ -18042,7 +18042,7 @@ msgid "We'd love to learn a bit about how you use dembrane, so we can help you b
 msgstr "Nos encantaría saber un poco más sobre cómo usas dembrane, para poder ayudarte mejor. Son unos dos minutos en nuestra web y, al final, puedes reservar una llamada corta con nosotros si quieres."
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:300
+#: src/portal/components/settings/MicrophoneCheck.tsx:301
 msgid "participant.test.microphone.description"
 msgstr "Vamos a probar tu micrófono para asegurarnos de que todos tengan la mejor experiencia en la sesión."
 
@@ -18802,7 +18802,7 @@ msgid "You have already added all the conversations related to this"
 msgstr "Ya has añadido todas las conversaciones relacionadas con esto"
 
 #. js-lingui-explicit-id
-#: src/portal/components/settings/MicrophoneCheck.tsx:424
+#: src/portal/components/settings/MicrophoneCheck.tsx:425
 msgid "participant.modal.change.mic.confirmation.text"
 msgstr "Has cambiado tu micrófono. Por favor, haz clic en \"Continuar\", para continuar con la sesión."
 
