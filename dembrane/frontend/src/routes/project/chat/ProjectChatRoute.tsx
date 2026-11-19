@@ -91,7 +91,7 @@ import { isNoAnswer } from "./noAnswer";
 import { stoppedAnswer } from "./stoppedAnswer";
 import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 
-const useDembraneChat = ({ chatId }: { chatId: string }) => {
+export const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
 	const { projectId } = useParams();
