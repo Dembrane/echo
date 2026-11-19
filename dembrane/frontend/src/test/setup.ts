@@ -1,4 +1,10 @@
 import { afterEach } from "vitest";
+import failOnConsole from "vitest-fail-on-console";
+
+// A test that logs an error or warning fails, so React's warnings (invalid
+// DOM nesting, act, keys) are fixed instead of scrolling past in CI. A test
+// that logs on purpose spies on console and checks the message.
+failOnConsole();
 
 // Testing Library registers cleanup itself only when afterEach is a global,
 // and this suite runs without vitest globals. Node-environment tests have no
