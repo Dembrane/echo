@@ -355,6 +355,9 @@ importers:
       vitest:
         specifier: ^4.1.9
         version: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))
+      vitest-fail-on-console:
+        specifier: 0.10.1
+        version: 0.10.1(@vitest/utils@4.1.9)(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))(vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)))
 
 packages:
 
@@ -5466,6 +5469,13 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-fail-on-console@0.10.1:
+    resolution: {integrity: sha512-Xjy2SpgND547qSy0s0zYVnh1G/WyGtdjAbi4PFV8mkYRmTq+6NzRUJYdc08BHrw7HJLpO2kMxHFB8PWn7FOVsg==}
+    peerDependencies:
+      '@vitest/utils': '>=0.26.2'
+      vite: '>=4.5.2'
+      vitest: '>=0.26.2'
 
   vitest@4.1.9:
     resolution: {integrity: sha512-nE3/LEyc0z87uHYLZebqCUOaJr2hdtuPp7BQ4BosVFnfltxgAvMG08NyrSGlPpOUWvR27c5flSmYFTNr78L9GQ==}
@@ -11375,6 +11385,13 @@ snapshots:
       jiti: 1.21.7
       sugarss: 4.0.1(postcss@8.5.22)
       yaml: 2.7.0
+
+  vitest-fail-on-console@0.10.1(@vitest/utils@4.1.9)(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))(vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))):
+    dependencies:
+      '@vitest/utils': 4.1.9
+      chalk: 5.4.1
+      vite: 6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)
+      vitest: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0))
 
   vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@22.13.14)(jsdom@29.1.1(canvas@3.1.0))(vite@6.4.3(@types/node@22.13.14)(jiti@1.21.7)(sugarss@4.0.1(postcss@8.5.22))(yaml@2.7.0)):
     dependencies:
