@@ -255,6 +255,7 @@ export default defineConfig(({ mode }) => {
 			// e2e/ holds Playwright specs; they run against a live app, not in vitest.
 			exclude: [...configDefaults.exclude, "e2e/**"],
 			pool: "threads",
+			setupFiles: ["./src/test/setup.ts"],
 			// These barrels resolve thousands of modules, and every isolated test file
 			// imports them again; prebundling them cuts the suite's CPU by about a third.
 			// React stays external to the bundle, so their hooks share the tests' React.
