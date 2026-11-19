@@ -157,8 +157,8 @@ describe("parseInsightNote", () => {
 describe("extractTopLevelToolActivity", () => {
 	// buildHeadline goes through Lingui, which needs an active locale.
 	beforeAll(() => {
-		i18n.load("en", {});
-		i18n.activate("en");
+		i18n.load("en-US", {});
+		i18n.activate("en-US");
 	});
 
 	const toolEvent = (

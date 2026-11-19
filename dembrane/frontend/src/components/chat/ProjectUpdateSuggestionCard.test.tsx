@@ -40,8 +40,8 @@ vi.mock("@/components/common/Toaster", () => ({
 }));
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 
 	// MantineProvider reads the OS color scheme on mount; jsdom has no
 	// matchMedia, so stub a minimal (always non-matching) implementation.

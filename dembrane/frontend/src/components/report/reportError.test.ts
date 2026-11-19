@@ -3,8 +3,8 @@ import { beforeAll, expect, it } from "vitest";
 import { failedReportAlert, reportErrorText } from "./reportError";
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 });
 
 it("translates a run the AI budget ended, whatever English the server stored", () => {

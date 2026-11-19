@@ -13,8 +13,8 @@ import {
 // at all (closed this session, nothing waiting) is the connected wrapper's, tested in
 // ../TasksPrompt.test.tsx.
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({

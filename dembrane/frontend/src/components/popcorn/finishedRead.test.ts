@@ -3,8 +3,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { readAfterFinish } from "./finishedRead";
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 });
 
 const loop = (after: { id: string; name: string | null }[] | null) => ({

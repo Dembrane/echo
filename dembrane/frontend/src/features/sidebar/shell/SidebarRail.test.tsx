@@ -123,8 +123,8 @@ const renderIn = (
 const location = () => screen.getByTestId("location").textContent;
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	// The user menu stays mounted, and its theme control measures itself.
 	globalThis.ResizeObserver = class {
 		observe() {}

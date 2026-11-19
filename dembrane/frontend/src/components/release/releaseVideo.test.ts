@@ -80,8 +80,8 @@ describe("latestRelease", () => {
 // getReleases() resolves its copy through `t`, so a locale has to be active
 // before the shipped-history tests call it; the empty catalog falls back to
 // the English source, which is all these tests read.
-i18n.load("en", {});
-i18n.activate("en");
+i18n.load("en-US", {});
+i18n.activate("en-US");
 
 describe("the shipped release history", () => {
 	it("has a newest release and valid embeds for every supplied video", () => {

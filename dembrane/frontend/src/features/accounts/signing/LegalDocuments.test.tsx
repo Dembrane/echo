@@ -10,8 +10,8 @@ import { LegalDocuments } from "./SignRoute";
 // Above Sign: the documents the agreement is made of, each opening the version the offer
 // pinned. The pages are drawn on a canvas, so the links printed in them do nothing.
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 	window.matchMedia =
 		window.matchMedia ||
 		((query: string) => ({

@@ -8,8 +8,8 @@ import {
 } from "./OrganisationUsageRollup";
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
+	i18n.load("en-US", {});
+	i18n.activate("en-US");
 });
 
 it("totals the hours the rows show, counting a pooled free ledger once", () => {

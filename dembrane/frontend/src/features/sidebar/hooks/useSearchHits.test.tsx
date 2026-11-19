@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { useSearchHits } from "./useSearchHits";
 
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 
 vi.mock("@lingui/react", () => ({
-	useLingui: () => ({ i18n: { locale: "en" } }),
+	useLingui: () => ({ i18n: { locale: "en-US" } }),
 }));
 vi.mock("@/hooks/useV2Me", () => ({ useV2Me: () => ({ data: undefined }) }));
 vi.mock("./useRecents", () => ({ useRecents: () => ({ items: [] }) }));

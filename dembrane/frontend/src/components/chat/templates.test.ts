@@ -2,8 +2,8 @@ import { i18n } from "@lingui/core";
 import { describe, expect, it } from "vitest";
 
 // The template titles resolve on import, so the locale has to exist first.
-i18n.load("en", {});
-i18n.activate("en");
+i18n.load("en-US", {});
+i18n.activate("en-US");
 
 const {
 	agenticDefaultTemplates,

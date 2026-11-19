@@ -65,7 +65,7 @@ vi.mock("./hooks/useUserTemplates", () => ({
 }));
 
 // Template titles resolve on import, so the locale has to exist first.
-i18n.loadAndActivate({ locale: "en", messages: {} });
+i18n.loadAndActivate({ locale: "en-US", messages: {} });
 const { ChatTemplatesMenuConnected } = await import(
 	"./ChatTemplatesMenuConnected"
 );
