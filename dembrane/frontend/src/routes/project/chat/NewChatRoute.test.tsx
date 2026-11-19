@@ -14,12 +14,24 @@ import {
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 
-const { createChat, fetchMock, project } = vi.hoisted(() => ({
-	createChat: vi.fn(async () => {
+const {
+	attach,
+	createChat,
+	fetchMock,
+	initializeMode,
+	navigate,
+	project,
+	toastError,
+} = vi.hoisted(() => ({
+	attach: vi.fn(async (_vars: unknown) => ({})),
+	createChat: vi.fn(async (_vars?: unknown): Promise<{ id: string }> => {
 		throw new Error("stop here");
 	}),
 	fetchMock: vi.fn(),
+	initializeMode: vi.fn(async (_vars: unknown) => ({})),
+	navigate: vi.fn(),
 	project: { isSample: false, loaded: true },
+	toastError: vi.fn(),
 }));
 
 vi.mock("@/components/chat/hooks", () => ({
@@ -32,7 +44,7 @@ vi.mock("@/components/chat/hooks", () => ({
 	}),
 	useInitializeChatModeMutation: () => ({
 		isPending: false,
-		mutateAsync: vi.fn(),
+		mutateAsync: initializeMode,
 	}),
 	usePrefetchSuggestions: () => vi.fn(),
 	useProjectChatContext: () => ({ data: { conversations: [] } }),
@@ -43,7 +55,7 @@ vi.mock("@/components/chat/hooks", () => ({
 vi.mock("@/components/project/hooks", () => ({
 	useAttachChatConversationsMutation: () => ({
 		isPending: false,
-		mutateAsync: vi.fn(),
+		mutateAsync: attach,
 	}),
 	useCreateChatMutation: () => ({ isPending: false, mutateAsync: createChat }),
 	useProjectById: () =>
@@ -90,7 +102,10 @@ vi.mock("@/hooks/useWorkspace", () => ({
 vi.mock("@/hooks/useLanguage", () => ({
 	useLanguage: () => ({ iso639_1: "en", language: "en-US" }),
 }));
-vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => vi.fn() }));
+vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => navigate }));
+vi.mock("@/components/common/Toaster", () => ({
+	toast: Object.assign(vi.fn(), { error: toastError }),
+}));
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }));
 
 import { NewChatRoute } from "./NewChatRoute";
@@ -165,14 +180,24 @@ beforeAll(() => {
 beforeEach(() => {
 	fetchMock.mockReset();
 	fetchMock.mockImplementation(async () => answer(SPENT));
-	createChat.mockClear();
+	createChat.mockReset();
+	createChat.mockImplementation(async () => {
+		throw new Error("stop here");
+	});
+	attach.mockClear();
+	initializeMode.mockClear();
+	navigate.mockClear();
+	toastError.mockClear();
 	project.isSample = false;
 	project.loaded = true;
 });
 
 afterEach(() => cleanup());
 
-const renderRoute = async () => {
+type Entry = string | { pathname: string; search?: string; state?: unknown };
+const renderRoute = async (
+	entry: Entry = "/w/ws-1/projects/proj-1/chats/new",
+) => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -180,7 +205,7 @@ const renderRoute = async () => {
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
 				<QueryClientProvider client={client}>
-					<MemoryRouter initialEntries={["/w/ws-1/projects/proj-1/chats/new"]}>
+					<MemoryRouter initialEntries={[entry]}>
 						<Routes>
 							<Route
 								path="/w/:workspaceId/projects/:projectId/chats/new"
@@ -260,5 +285,123 @@ it("walls nothing while is_sample is still loading", async () => {
 		"Failed to create chat with mode:",
 		expect.any(Error),
 	);
+	consoleError.mockRestore();
+});
+
+// Arriving with the choice made (router state), or with a question in the
+// address, and opening the conversation picker.
+const NEW = "/w/ws-1/projects/proj-1/chats/new";
+
+it("starts the chat on arrival in the mode handed over", async () => {
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockResolvedValue({ id: "chat-1" });
+	await renderRoute({ pathname: NEW, state: { preferMode: "deep_dive" } });
+	await waitFor(() =>
+		expect(navigate).toHaveBeenCalledWith(
+			"/w/ws-1/projects/proj-1/chats/chat-1",
+			{ state: undefined },
+		),
+	);
+	expect(createChat).toHaveBeenCalledTimes(1);
+	expect(initializeMode).toHaveBeenCalledWith({
+		chatId: "chat-1",
+		mode: "deep_dive",
+		projectId: "proj-1",
+	});
+});
+
+it("starts the chat on arrival with a seed question, and hands it on", async () => {
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockResolvedValue({ id: "chat-2" });
+	await renderRoute({
+		pathname: NEW,
+		state: { initialMessage: "what came up?" },
+	});
+	await waitFor(() =>
+		expect(navigate).toHaveBeenCalledWith(
+			"/w/ws-1/projects/proj-1/chats/chat-2",
+			{ state: { initialMessage: "what came up?" } },
+		),
+	);
+	expect(createChat).toHaveBeenCalledTimes(1);
+});
+
+it("puts a question from the address in the box, and takes it out of the address", async () => {
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	await renderRoute({ pathname: NEW, search: "?prefill=Tell%20me%20more&x=1" });
+	expect(
+		(screen.getByTestId("ask-home-input") as HTMLTextAreaElement).value,
+	).toBe("Tell me more");
+	expect(window.location.search).toBe("?x=1");
+	expect(createChat).not.toHaveBeenCalled();
+});
+
+it("opens the picker on a draft chat, made once", async () => {
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockResolvedValue({ id: "draft-1" });
+	await renderRoute();
+	await act(async () => {
+		fireEvent.click(screen.getByTestId("ask-home-choose-conversations"));
+		fireEvent.click(screen.getByTestId("ask-home-choose-conversations"));
+	});
+	expect(
+		await screen.findByRole("dialog", { name: "Select conversations" }),
+	).toBeTruthy();
+	expect(createChat).toHaveBeenCalledTimes(1);
+	expect(createChat).toHaveBeenCalledWith({
+		navigateToNewChat: false,
+		project_id: { id: "proj-1" },
+		silent: true,
+	});
+});
+
+it("says so when the picker's draft cannot be made, and lets the next try make it", async () => {
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockResolvedValueOnce(undefined as unknown as { id: string });
+	await renderRoute();
+	await act(async () => {
+		fireEvent.click(screen.getByTestId("ask-home-choose-conversations"));
+	});
+	expect(toastError).toHaveBeenCalledWith(
+		"Could not open the conversation list. Try again.",
+	);
+	expect(
+		screen.queryByRole("dialog", { name: "Select conversations" }),
+	).toBeNull();
+
+	createChat.mockResolvedValueOnce({ id: "draft-2" });
+	await act(async () => {
+		fireEvent.click(screen.getByTestId("ask-home-choose-conversations"));
+	});
+	expect(
+		await screen.findByRole("dialog", { name: "Select conversations" }),
+	).toBeTruthy();
+	consoleError.mockRestore();
+});
+
+it("opens the picker anyway when only carrying over the selection failed", async () => {
+	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+	fetchMock.mockImplementation(async () => answer(ROOM));
+	createChat.mockResolvedValue({ id: "draft-3" });
+	attach.mockRejectedValueOnce(new Error("attach failed"));
+	await renderRoute({
+		pathname: NEW,
+		state: { selectedConversationIds: ["c1"] },
+	});
+	await act(async () => {
+		fireEvent.click(screen.getByTestId("ask-home-choose-conversations"));
+	});
+	expect(attach).toHaveBeenCalledWith({
+		chatId: "draft-3",
+		conversationIds: ["c1"],
+		projectId: "proj-1",
+	});
+	expect(toastError).toHaveBeenCalledWith(
+		"Could not carry over your selection. Pick again below.",
+	);
+	expect(
+		await screen.findByRole("dialog", { name: "Select conversations" }),
+	).toBeTruthy();
 	consoleError.mockRestore();
 });

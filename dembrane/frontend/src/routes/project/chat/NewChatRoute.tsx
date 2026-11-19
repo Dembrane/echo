@@ -72,6 +72,7 @@ import { useAllowanceApplies } from "@/hooks/useAllowanceApplies";
 import { useFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useLatest } from "@/hooks/useLatest";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { track } from "@/lib/analytics/events";
 import type { ChatMode } from "@/lib/api";
@@ -333,84 +334,97 @@ export const NewChatRoute = () => {
 		? (draftContextQuery.data?.conversations?.length ?? 0)
 		: selectedConversationIds.length;
 
-	const handleModeSelected = async (
+	// Whether a start may go ahead, as the person sees it at once: never
+	// without a project, and with this month's AI used up the wall opens
+	// instead (free tier). Gives the project to start in.
+	const beginStart = () => {
+		if (!projectId) return null;
+		if (aiUsedUp) {
+			openAiWall();
+			return null;
+		}
+		setIsInitializing(true);
+		return projectId;
+	};
+
+	// The start itself, after beginStart. It sets no state before its first
+	// request, so the start on arrival can run it from an effect.
+	const runStart = (
+		projectId: string,
 		mode: ChatMode,
 		initialMessage?: string,
 	) => {
-		if (!projectId) return;
-
-		// Free tier: this month's AI is used up. Route to upgrade instead of creating.
-		if (aiUsedUp) {
-			openAiWall();
-			return;
-		}
-
-		setIsInitializing(true);
-
-		try {
-			// Step 1: Reuse the draft chat the picker created (its context is
-			// already server-side), or create a fresh one. It has no mode yet.
-			let chatId = draftChatId;
-			if (!chatId) {
-				const chat = await createChatMutation.mutateAsync({
-					navigateToNewChat: false, // Don't navigate yet
-					project_id: { id: projectId },
+		// Step 1: Reuse the draft chat the picker created (its context is
+		// already server-side), or create a fresh one. It has no mode yet.
+		const chatIdReady: Promise<string> = draftChatId
+			? Promise.resolve(draftChatId)
+			: createChatMutation
+					.mutateAsync({
+						navigateToNewChat: false, // Don't navigate yet
+						project_id: { id: projectId },
+					})
+					.then((chat) => {
+						if (!chat?.id) throw new Error("Failed to create chat");
+						return chat.id;
+					});
+		return chatIdReady
+			.then(async (chatId) => {
+				track("chat_started", {
+					chat_id: chatId,
+					mode,
+					project_id: projectId,
 				});
-				if (!chat?.id) {
-					throw new Error("Failed to create chat");
-				}
-				chatId = chat.id;
-			}
 
-			track("chat_started", {
-				chat_id: chatId,
-				mode,
-				project_id: projectId,
-			});
-
-			// Step 2: Initialize the mode (this attaches conversations for overview mode)
-			await initializeModeMutation.mutateAsync({
-				chatId,
-				mode,
-				projectId,
-			});
-
-			// Step 3: Attach the conversations picked up-front, in one request,
-			// after the mode exists and before the first turn runs. Order
-			// matters: the server only skips the transcript token budget once it
-			// can see that the chat is agentic, so attaching first would make a
-			// long selection fail with "Conversation is too long" even for
-			// agentic.
-			if (!draftChatId && selectedConversationIds.length > 0) {
-				await attachConversationsMutation.mutateAsync({
+				// Step 2: Initialize the mode (this attaches conversations for overview mode)
+				await initializeModeMutation.mutateAsync({
 					chatId,
-					conversationIds: selectedConversationIds,
+					mode,
 					projectId,
 				});
-			}
 
-			// Step 4: For overview mode, prefetch suggestions (wait up to 3s; they show up later if slower)
-			// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
-			if (mode === "overview") {
-				await prefetchSuggestions(chatId, language, 3000);
-			}
+				// Step 3: Attach the conversations picked up-front, in one request,
+				// after the mode exists and before the first turn runs. Order
+				// matters: the server only skips the transcript token budget once it
+				// can see that the chat is agentic, so attaching first would make a
+				// long selection fail with "Conversation is too long" even for
+				// agentic.
+				if (!draftChatId && selectedConversationIds.length > 0) {
+					await attachConversationsMutation.mutateAsync({
+						chatId,
+						conversationIds: selectedConversationIds,
+						projectId,
+					});
+				}
 
-			// Step 5: Navigate to the new chat; the panel sends the typed
-			// question as the first message (router state, consumed once).
-			draftHandedOffRef.current = true;
-			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chatId}`, {
-				state: initialMessage ? { initialMessage } : undefined,
+				// Step 4: For overview mode, prefetch suggestions (wait up to 3s; they show up later if slower)
+				// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
+				if (mode === "overview") {
+					await prefetchSuggestions(chatId, language, 3000);
+				}
+
+				// Step 5: Navigate to the new chat; the panel sends the typed
+				// question as the first message (router state, consumed once).
+				draftHandedOffRef.current = true;
+				navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chatId}`, {
+					state: initialMessage ? { initialMessage } : undefined,
+				});
+			})
+			.catch((error) => {
+				// Backend safety net: a used-up AI budget returns 402.
+				if (!aiWall.openFor(error)) {
+					console.error("Failed to create chat with mode:", error);
+				}
+				setIsInitializing(false);
 			});
-		} catch (error) {
-			// Backend safety net: a used-up AI budget returns 402.
-			if (!aiWall.openFor(error)) {
-				console.error("Failed to create chat with mode:", error);
-			}
-			setIsInitializing(false);
-		}
+	};
+	const runStartRef = useLatest(runStart);
+
+	const handleModeSelected = (mode: ChatMode, initialMessage?: string) => {
+		const startIn = beginStart();
+		if (startIn) void runStart(startIn, mode, initialMessage);
 	};
 
-	const openPicker = async () => {
+	const openPicker = () => {
 		if (!projectId || isPending) return;
 		if (draftChatId) {
 			pickerHandlers.open();
@@ -426,48 +440,53 @@ export const NewChatRoute = () => {
 			return;
 		}
 		creatingDraftRef.current = true;
-		try {
-			const chat = await createChatMutation.mutateAsync({
+		createChatMutation
+			.mutateAsync({
 				navigateToNewChat: false,
 				project_id: { id: projectId },
 				silent: true,
-			});
-			if (!chat?.id) {
-				throw new Error("Failed to create chat");
-			}
-			// Adopt before anything else can throw, so a failed attach leaves a
-			// draft that cleanup deletes and the next open reuses.
-			draftChatIdRef.current = chat.id;
-			setDraftChatId(chat.id);
-			// Carry over anything picked before the draft existed (e.g. "Ask
-			// about these" router state) so the picker shows it as context.
-			if (selectedConversationIds.length > 0) {
-				await attachConversationsMutation.mutateAsync({
-					chatId: chat.id,
-					conversationIds: selectedConversationIds,
-					projectId,
-				});
-			}
-			pickerHandlers.open();
-		} catch (error) {
-			if (aiWall.openFor(error)) return;
-			if (draftChatIdRef.current) {
-				// Only the carry-over failed, so let the host pick by hand.
-				console.error("Failed to carry over the current selection:", error);
-				toast.error(t`Could not carry over your selection. Pick again below.`);
+			})
+			.then(async (chat) => {
+				if (!chat?.id) {
+					throw new Error("Failed to create chat");
+				}
+				// Adopt before anything else can throw, so a failed attach leaves a
+				// draft that cleanup deletes and the next open reuses.
+				draftChatIdRef.current = chat.id;
+				setDraftChatId(chat.id);
+				// Carry over anything picked before the draft existed (e.g. "Ask
+				// about these" router state) so the picker shows it as context.
+				if (selectedConversationIds.length > 0) {
+					await attachConversationsMutation.mutateAsync({
+						chatId: chat.id,
+						conversationIds: selectedConversationIds,
+						projectId,
+					});
+				}
 				pickerHandlers.open();
-			} else {
-				console.error("Failed to prepare the conversation picker:", error);
-				toast.error(t`Could not open the conversation list. Try again.`);
-			}
-		} finally {
-			creatingDraftRef.current = false;
-		}
+			})
+			.catch((error) => {
+				if (aiWall.openFor(error)) return;
+				if (draftChatIdRef.current) {
+					// Only the carry-over failed, so let the host pick by hand.
+					console.error("Failed to carry over the current selection:", error);
+					toast.error(
+						t`Could not carry over your selection. Pick again below.`,
+					);
+					pickerHandlers.open();
+				} else {
+					console.error("Failed to prepare the conversation picker:", error);
+					toast.error(t`Could not open the conversation list. Try again.`);
+				}
+			})
+			.finally(() => {
+				creatingDraftRef.current = false;
+			});
 	};
 
 	// Throwaway cleanup: leaving this screen without starting the chat
 	// deletes the draft, so abandoned pickers do not litter the chat list.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: unmount-only cleanup over refs
+	// Unmount-only cleanup over refs.
 	useEffect(() => {
 		return () => {
 			if (draftChatIdRef.current && !draftHandedOffRef.current && projectId) {
@@ -492,7 +511,6 @@ export const NewChatRoute = () => {
 		"string"
 			? ((location.state as { preferMode: ChatMode }).preferMode as ChatMode)
 			: null;
-	const queryPrefillStartedRef = useRef(false);
 	const initialMessage =
 		typeof (location.state as { initialMessage?: unknown } | null)
 			?.initialMessage === "string"
@@ -500,28 +518,63 @@ export const NewChatRoute = () => {
 			: null;
 	const autoStartMode: ChatMode | null =
 		preferredMode ?? (initialMessage ? modeToStart : null);
-	const autoStartedRef = useRef(false);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
+	// Arriving with the choice made starts the chat, once: decided during
+	// render (the wall or the spinner at once), and run from an effect, which
+	// also drops the router state so a reload does not start another.
+	const canAutoStart =
+		autoStartMode !== null &&
+		!(autoStartMode === "agentic" && !ENABLE_AGENTIC_CHAT);
+	const [autoStart, setAutoStart] = useState<{
+		projectId: string | null;
+		mode: ChatMode;
+		initialMessage?: string;
+	} | null>(null);
+	if (autoStart === null && canAutoStart && autoStartMode) {
+		setAutoStart({
+			initialMessage: initialMessage ?? undefined,
+			mode: autoStartMode,
+			projectId: beginStart(),
+		});
+	}
+	// StrictMode runs a mount's effects twice; the start runs once.
+	const autoStartRanRef = useRef(false);
 	useEffect(() => {
-		if (!autoStartMode || autoStartedRef.current) return;
-		if (autoStartMode === "agentic" && !ENABLE_AGENTIC_CHAT) return;
-		autoStartedRef.current = true;
+		if (!autoStart || autoStartRanRef.current) return;
+		autoStartRanRef.current = true;
 		window.history.replaceState({}, "");
-		void handleModeSelected(autoStartMode, initialMessage ?? undefined);
-	}, [autoStartMode]);
+		if (autoStart.projectId)
+			void runStartRef.current(
+				autoStart.projectId,
+				autoStart.mode,
+				autoStart.initialMessage,
+			);
+	}, [autoStart, runStartRef]);
 
+	// A question in the address (?prefill=) goes in the box once, during
+	// render; the effect takes it out of the address.
+	const { prefill, search: searchWithoutPrefill } = consumeChatPrefill(
+		location.search,
+	);
+	const hasPrefill = !!prefill || searchWithoutPrefill !== location.search;
+	const [prefillTaken, setPrefillTaken] = useState(false);
+	if (!prefillTaken && hasPrefill) {
+		setPrefillTaken(true);
+		if (prefill) setDraft(prefill);
+	}
 	useEffect(() => {
-		if (queryPrefillStartedRef.current) return;
-		const { prefill, search } = consumeChatPrefill(location.search);
-		if (!prefill && search === location.search) return;
-		queryPrefillStartedRef.current = true;
+		if (!prefillTaken || !hasPrefill) return;
 		window.history.replaceState(
 			window.history.state,
 			"",
-			`${location.pathname}${search}${location.hash}`,
+			`${location.pathname}${searchWithoutPrefill}${location.hash}`,
 		);
-		if (prefill) setDraft(prefill);
-	}, [location.hash, location.pathname, location.search]);
+	}, [
+		hasPrefill,
+		location.hash,
+		location.pathname,
+		prefillTaken,
+		searchWithoutPrefill,
+	]);
 
 	if (!projectId || !workspaceId) {
 		return (
