@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Menu, Radio, Stack, Text } from "@mantine/core";
 import { CheckCircleIcon, UserPlusIcon } from "@phosphor-icons/react";
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { PersonAvatar } from "@/components/common/UserAvatar";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -64,7 +64,10 @@ export function WhoSigns({
 	const [added, setAdded] = useState<Candidate[]>([]);
 	const [adding, setAdding] = useState<SignKind | null>(null);
 	const [dpia, setDpia] = useState<"no" | "yes" | null>(null);
-	const [tried, setTried] = useState(false);
+	// The step Next was pressed on while something was missing: a new step
+	// starts untried.
+	const [triedStep, setTriedStep] = useState<Step | null>(null);
+	const tried = triedStep === step;
 	const [error, setError] = useState<unknown>(null);
 	// The answer went through, but bringing someone new into the room did not.
 	const [addError, setAddError] = useState<unknown>(null);
@@ -78,22 +81,21 @@ export function WhoSigns({
 	});
 	const add = useAccountsMutation("addRoomPerson", { orgId });
 
-	// Each opening starts over.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on open only
-	useEffect(() => {
-		if (!opened) return;
-		setStep("signers");
-		setHolders({ dpa: null, offer: null });
-		setAdded([]);
-		setAdding(null);
-		setDpia(null);
-		setTried(false);
-		setError(null);
-		setAddError(null);
-	}, [opened]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new step starts untried
-	useEffect(() => setTried(false), [step]);
+	// Each opening starts over, during render, so no frame shows the last one.
+	const [wasOpened, setWasOpened] = useState(opened);
+	if (opened !== wasOpened) {
+		setWasOpened(opened);
+		if (opened) {
+			setStep("signers");
+			setHolders({ dpa: null, offer: null });
+			setAdded([]);
+			setAdding(null);
+			setDpia(null);
+			setTriedStep(null);
+			setError(null);
+			setAddError(null);
+		}
+	}
 
 	const myEmail = (me?.email ?? "").toLowerCase();
 	const myName =
@@ -150,9 +152,7 @@ export function WhoSigns({
 			role: c.role,
 		});
 		const dpaSame = o.email === d.email;
-		setPending(true);
-		setError(null);
-		try {
+		const send = async () => {
 			await answer.mutateAsync({
 				body: {
 					dpa_same: dpaSame,
@@ -169,18 +169,25 @@ export function WhoSigns({
 				await add.mutateAsync({ body }).catch(setAddError);
 			}
 			setStep("done");
-		} catch (e) {
-			setError(e);
-			const keys = Object.keys(e instanceof AccountsApiError ? e.fields : {});
-			if (keys.some((k) => /^(offer|dpa)_signer/.test(k))) setStep("signers");
-		} finally {
-			setPending(false);
-		}
+		};
+		setPending(true);
+		setError(null);
+		// a promise chain, not try/catch/finally: React Compiler can't compile
+		// a try with a finally, or one holding ?. or a ternary
+		await send()
+			.catch((e: unknown) => {
+				setError(e);
+				const keys = Object.keys(e instanceof AccountsApiError ? e.fields : {});
+				if (keys.some((k) => /^(offer|dpa)_signer/.test(k))) setStep("signers");
+			})
+			.finally(() => {
+				setPending(false);
+			});
 	};
 
 	const next = (e?: FormEvent) => {
 		e?.preventDefault();
-		if (need) return setTried(true);
+		if (need) return setTriedStep(step);
 		if (step === "signers") return setStep("dpia");
 		void confirm();
 	};
