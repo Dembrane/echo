@@ -242,13 +242,13 @@ const ParticipantOnboardingCards = ({
 	const [openedAt] = useState(initialSlide);
 	const [placed, setPlaced] = useState(openedAt === "first");
 	const privacyIndex = allSlides.findIndex((slide) => slide.type === "privacy");
-	useEffect(() => {
-		if (placed) return;
+	// placed during render, once, so the first paint is already the right card
+	if (!placed) {
+		setPlaced(true);
 		setCurrentSlideIndex(
 			openedAt === "last" ? allSlides.length - 1 : Math.max(0, privacyIndex),
 		);
-		setPlaced(true);
-	}, [placed, openedAt, allSlides.length, privacyIndex]);
+	}
 
 	const currentCard = allSlides[currentSlideIndex];
 
@@ -264,7 +264,7 @@ const ParticipantOnboardingCards = ({
 				? "terms"
 				: "scanned";
 	const tagsKey = preselectedTags.join("|");
-	// biome-ignore lint/correctness/useExhaustiveDependencies: preselectedTags folded into tagsKey; onFunnelStage identity is stable
+	// preselectedTags is folded into tagsKey; onFunnelStage identity is stable
 	useEffect(() => {
 		onFunnelStage?.({
 			stage: funnelStage,
@@ -273,7 +273,6 @@ const ParticipantOnboardingCards = ({
 		});
 	}, [funnelStage, tagsKey]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be inspected
 	useEffect(() => {
 		const timer = setTimeout(() => setAnimationDirection(""), 300);
 		return () => clearTimeout(timer);
@@ -291,10 +290,7 @@ const ParticipantOnboardingCards = ({
 	}
 
 	const nextSlide = () => {
-		if (
-			currentCard.checkbox?.required &&
-			!checkboxStates[`${currentSlideIndex}`]
-		) {
+		if (currentCard.checkbox?.required && !checkboxStates[currentSlideIndex]) {
 			return;
 		}
 		// Advancing past a required checkbox is the participant accepting consent.
@@ -319,7 +315,7 @@ const ParticipantOnboardingCards = ({
 	const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setCheckboxStates((prev) => ({
 			...prev,
-			[`${currentSlideIndex}`]: event.target.checked,
+			[currentSlideIndex]: event.target.checked,
 		}));
 	};
 
@@ -409,7 +405,7 @@ const ParticipantOnboardingCards = ({
 							{currentCard.checkbox && (
 								<Checkbox
 									id={`checkbox-${currentSlideIndex}`}
-									checked={checkboxStates[`${currentSlideIndex}`] || false}
+									checked={checkboxStates[currentSlideIndex] || false}
 									onChange={handleCheckboxChange}
 									label={currentCard.checkbox.label}
 									classNames={{
@@ -445,7 +441,7 @@ const ParticipantOnboardingCards = ({
 									size="lg"
 									disabled={
 										currentCard.checkbox?.required &&
-										!checkboxStates[`${currentSlideIndex}`]
+										!checkboxStates[currentSlideIndex]
 									}
 									className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
 									{...testId("portal-onboarding-next-button")}
