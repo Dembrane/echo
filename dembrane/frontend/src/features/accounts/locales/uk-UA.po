@@ -416,7 +416,7 @@ msgid "Add your signature first."
 msgstr "Спершу додайте свій підпис."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
-#: src/features/accounts/staff/BillToFields.tsx:106
+#: src/features/accounts/staff/BillToFields.tsx:104
 #: src/features/accounts/staff/AccountCardRoute.tsx:866
 #: src/features/accounts/customer/BillingForm.tsx:391
 #: src/features/accounts/customer/BillingForm.tsx:584
@@ -746,7 +746,7 @@ msgstr "Перевіряє ІТ і безпеку"
 msgid "Checks privacy and AI rules"
 msgstr "Перевіряє приватність і правила щодо ШІ"
 
-#: src/features/accounts/staff/BillToFields.tsx:133
+#: src/features/accounts/staff/BillToFields.tsx:131
 #: src/features/accounts/customer/BillingForm.tsx:351
 msgid "Choose a country"
 msgstr "Виберіть країну"
@@ -802,7 +802,7 @@ msgstr "Вибери, хто підписує пропозицію"
 msgid "Churned"
 msgstr "Втрачено"
 
-#: src/features/accounts/staff/BillToFields.tsx:123
+#: src/features/accounts/staff/BillToFields.tsx:121
 #: src/features/accounts/customer/BillingForm.tsx:402
 msgid "City"
 msgstr "Місто"
@@ -897,7 +897,7 @@ msgstr "Корпус"
 msgid "Counter-signed"
 msgstr "Підписано з нашого боку"
 
-#: src/features/accounts/staff/BillToFields.tsx:132
+#: src/features/accounts/staff/BillToFields.tsx:130
 #: src/features/accounts/customer/BillingForm.tsx:350
 msgid "Country"
 msgstr "Країна"
@@ -1578,11 +1578,11 @@ msgstr "Рахунок {0}"
 msgid "Invoice added"
 msgstr "Рахунок додано"
 
-#: src/features/accounts/staff/BillToFields.tsx:80
+#: src/features/accounts/staff/BillToFields.tsx:78
 msgid "Invoice another organisation"
 msgstr "Виставити рахунок іншій організації"
 
-#: src/features/accounts/staff/BillToFields.tsx:97
+#: src/features/accounts/staff/BillToFields.tsx:95
 #: src/features/accounts/staff/AccountCardRoute.tsx:865
 #: src/features/accounts/customer/BillingForm.tsx:385
 #: src/features/accounts/customer/BillingForm.tsx:585
@@ -2267,7 +2267,7 @@ msgstr "необов'язково"
 #: src/features/accounts/staff/PushOfferModal.tsx:559
 #: src/features/accounts/staff/PushOfferModal.tsx:580
 #: src/features/accounts/staff/LinesEditor.tsx:252
-#: src/features/accounts/staff/BillToFields.tsx:144
+#: src/features/accounts/staff/BillToFields.tsx:142
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:173
 #: src/features/accounts/signing/SignRoute.tsx:1213
 #: src/features/accounts/customer/NextSteps.tsx:659
@@ -2303,7 +2303,7 @@ msgid "Options for {first}"
 msgstr "Дії для {first}"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
-#: src/features/accounts/staff/BillToFields.tsx:89
+#: src/features/accounts/staff/BillToFields.tsx:87
 #: src/features/accounts/staff/AccountsPanel.tsx:141
 #: src/features/accounts/customer/BillingForm.tsx:583
 msgid "Organisation"
@@ -2433,11 +2433,11 @@ msgid "PO number"
 msgstr "Номер замовлення (PO)"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:416
-#: src/features/accounts/staff/BillToFields.tsx:153
+#: src/features/accounts/staff/BillToFields.tsx:151
 msgid "PO, order or project number"
 msgstr "Номер замовлення, закупівлі або проєкту"
 
-#: src/features/accounts/staff/BillToFields.tsx:115
+#: src/features/accounts/staff/BillToFields.tsx:113
 #: src/features/accounts/customer/BillingForm.tsx:398
 msgid "Postal code"
 msgstr "Поштовий індекс"
@@ -2959,7 +2959,7 @@ msgstr "Показати лист ще раз"
 msgid "Shown as written, under the opening. Write it in the customer's language."
 msgstr "Показується як є, під вступом. Пишіть мовою клієнта."
 
-#: src/features/accounts/staff/BillToFields.tsx:81
+#: src/features/accounts/staff/BillToFields.tsx:79
 msgid "Shown on the offer before signing"
 msgstr "Видно в пропозиції до підписання"
 
@@ -3470,7 +3470,7 @@ msgstr "Їхній власний DPA"
 msgid "Their own DPA signed, {day}"
 msgstr "Їхній власний DPA підписано, {day}"
 
-#: src/features/accounts/staff/BillToFields.tsx:152
+#: src/features/accounts/staff/BillToFields.tsx:150
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:197
 msgid "Their reference"
 msgstr "Їхній референс"
@@ -3746,7 +3746,7 @@ msgid "VAT %"
 msgstr "VAT %"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
-#: src/features/accounts/staff/BillToFields.tsx:143
+#: src/features/accounts/staff/BillToFields.tsx:141
 #: src/features/accounts/staff/AccountCardRoute.tsx:868
 #: src/features/accounts/customer/BillingForm.tsx:411
 #: src/features/accounts/customer/BillingForm.tsx:586
