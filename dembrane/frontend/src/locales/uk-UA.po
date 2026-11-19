@@ -1099,7 +1099,7 @@ msgstr "Від 2 до 5."
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:223
+#: src/routes/project/canvas/CanvasRoute.tsx:229
 #: src/components/sharing/LiveButton.tsx:84
 msgid "24 hours"
 msgstr "24 години"
@@ -1108,7 +1108,7 @@ msgstr "24 години"
 msgid "250 to 1000."
 msgstr "Від 250 до 1000."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:224
+#: src/routes/project/canvas/CanvasRoute.tsx:230
 msgid "3 days"
 msgstr "3 дні"
 
@@ -1128,7 +1128,7 @@ msgstr "Від 50 до 250."
 msgid "6 to 15."
 msgstr "Від 6 до 15."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:222
+#: src/routes/project/canvas/CanvasRoute.tsx:228
 #: src/components/sharing/LiveButton.tsx:83
 msgid "8 hours"
 msgstr "8 годин"
@@ -2831,7 +2831,7 @@ msgstr "Назад до розмов"
 #~ msgid "Back to dembrane"
 #~ msgstr "Назад до dembrane"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:315
+#: src/routes/project/canvas/CanvasRoute.tsx:321
 msgid "Back to live"
 msgstr "Назад до наживо"
 
@@ -3236,9 +3236,9 @@ msgstr "Cannot add empty conversation"
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:415
-#: src/routes/project/canvas/CanvasRoute.tsx:526
-#: src/routes/project/canvas/CanvasRoute.tsx:542
+#: src/routes/project/canvas/CanvasRoute.tsx:421
+#: src/routes/project/canvas/CanvasRoute.tsx:532
+#: src/routes/project/canvas/CanvasRoute.tsx:548
 msgid "Canvas"
 msgstr "Полотно"
 
@@ -3250,7 +3250,7 @@ msgstr "Актуальність полотна оновлено"
 msgid "Canvas preview"
 msgstr "Попередній перегляд полотна"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:639
+#: src/routes/project/canvas/CanvasRoute.tsx:645
 msgid "Canvas settings"
 msgstr "Налаштування полотна"
 
@@ -4434,7 +4434,7 @@ msgstr "Не вдалося завантажити платежі. Переві�
 msgid "Could not load the AI costs."
 msgstr "Не вдалося завантажити витрати на ШІ."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:528
+#: src/routes/project/canvas/CanvasRoute.tsx:534
 msgid "Could not load the canvas."
 msgstr "Не вдалося завантажити полотно."
 
@@ -4821,7 +4821,7 @@ msgstr "Поточний тариф"
 msgid "Current rate"
 msgstr "Поточний тарифний план"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:225
+#: src/routes/project/canvas/CanvasRoute.tsx:231
 msgid "Custom"
 msgstr "Custom"
 
@@ -5629,8 +5629,8 @@ msgstr "Редагувати власну тему"
 msgid "Edit file name"
 msgstr "Edit file name"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:564
-#: src/routes/project/canvas/CanvasRoute.tsx:567
+#: src/routes/project/canvas/CanvasRoute.tsx:570
+#: src/routes/project/canvas/CanvasRoute.tsx:573
 msgid "Edit freshness settings"
 msgstr "Змінити налаштування актуальності"
 
@@ -5933,7 +5933,7 @@ msgid "Entered details"
 msgstr "Введені дані"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
-#: src/routes/project/canvas/CanvasRoute.tsx:341
+#: src/routes/project/canvas/CanvasRoute.tsx:347
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
 #: src/components/dropzone/UploadConversationDropzone.tsx:943
 #: src/components/conversation/LiveMonitorSection.tsx:274
@@ -5990,15 +5990,15 @@ msgstr "Події для відстеження"
 #~ msgid "Events to Listen For"
 #~ msgstr "Events to Listen For"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:254
+#: src/routes/project/canvas/CanvasRoute.tsx:260
 msgid "Every 15 minutes"
 msgstr "Кожні 15 хвилин"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:253
+#: src/routes/project/canvas/CanvasRoute.tsx:259
 msgid "Every 5 minutes"
 msgstr "Кожні 5 хвилин"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:255
+#: src/routes/project/canvas/CanvasRoute.tsx:261
 msgid "Every 60 minutes"
 msgstr "Кожні 60 хвилин"
 
@@ -6084,8 +6084,8 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Перевищує ліміт місць. Застосовується додаткова плата."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1134
-#: src/routes/project/canvas/CanvasRoute.tsx:613
-#: src/routes/project/canvas/CanvasRoute.tsx:618
+#: src/routes/project/canvas/CanvasRoute.tsx:619
+#: src/routes/project/canvas/CanvasRoute.tsx:624
 msgid "Exit fullscreen"
 msgstr "Exit fullscreen"
 
@@ -6813,8 +6813,8 @@ msgstr "Від шаблону до пропозиції"
 msgid "From the transcript"
 msgstr "З транскрипту"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:613
-#: src/routes/project/canvas/CanvasRoute.tsx:618
+#: src/routes/project/canvas/CanvasRoute.tsx:619
+#: src/routes/project/canvas/CanvasRoute.tsx:624
 msgid "Full screen"
 msgstr "На весь екран"
 
@@ -7320,7 +7320,7 @@ msgstr "Ведучі можуть увімкнути відповіді та н�
 msgid "Hours"
 msgstr "Години"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:231
+#: src/routes/project/canvas/CanvasRoute.tsx:237
 msgid "Hours from now"
 msgstr "Годин відтепер"
 
@@ -8070,7 +8070,7 @@ msgstr "Залишити в очікуванні"
 msgid "Keep recordings awake"
 msgstr "Не давайте пристроям засинати під час запису"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:208
+#: src/routes/project/canvas/CanvasRoute.tsx:214
 msgid "Keep this canvas fresh"
 msgstr "Оновлювати це полотно"
 
@@ -8264,11 +8264,11 @@ msgid "Let's hear your first conversation."
 msgstr "Послухаймо вашу першу розмову."
 
 #. placeholder {0}: canvas.name
-#: src/routes/project/canvas/CanvasRoute.tsx:453
+#: src/routes/project/canvas/CanvasRoute.tsx:459
 msgid "Let's talk about the canvas \"{0}\"."
 msgstr "Поговорімо про канвас «{0}»."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:454
+#: src/routes/project/canvas/CanvasRoute.tsx:460
 msgid "Let's talk about this canvas."
 msgstr "Поговорімо про цей канвас."
 
@@ -8405,7 +8405,7 @@ msgstr "Складання списку розмов"
 msgid "Listing documentation pages"
 msgstr "Складання списку сторінок документації"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:305
+#: src/routes/project/canvas/CanvasRoute.tsx:311
 #: src/components/sharing/StatusLine.tsx:103
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
@@ -9389,8 +9389,8 @@ msgstr "нове"
 msgid "New"
 msgstr "New"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:608
-#: src/routes/project/canvas/CanvasRoute.tsx:658
+#: src/routes/project/canvas/CanvasRoute.tsx:614
+#: src/routes/project/canvas/CanvasRoute.tsx:664
 msgid "New chat about this canvas"
 msgstr "Новий чат про це полотно"
 
@@ -9582,7 +9582,7 @@ msgstr "Полотен ще немає. Запитайте в чаті, коли
 msgid "participant.onboarding.no.card"
 msgstr "Для поточної мови та розділу немає картки."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:336
+#: src/routes/project/canvas/CanvasRoute.tsx:342
 msgid "No change"
 msgstr "Без змін"
 
@@ -10584,7 +10584,7 @@ msgstr "Відкриті вкладки тепер оновлюються піс
 msgid "Open the {0} from here."
 msgstr "Відкрийте {0} звідси."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:606
+#: src/routes/project/canvas/CanvasRoute.tsx:612
 msgid "Open the chat"
 msgstr "Відкрити чат"
 
@@ -10692,7 +10692,7 @@ msgstr "Options"
 msgid "or"
 msgstr "or"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:239
+#: src/routes/project/canvas/CanvasRoute.tsx:245
 msgid "Or choose a time"
 msgstr "Або виберіть час"
 
@@ -11092,7 +11092,7 @@ msgstr "Призупинити фізику"
 msgid "Pause reading"
 msgstr "Pause reading"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:680
+#: src/routes/project/canvas/CanvasRoute.tsx:686
 msgid "Pause updates"
 msgstr "Призупинити оновлення"
 
@@ -12426,7 +12426,7 @@ msgstr "Оновлення…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:513
 #: src/routes/project/chat/ProjectChatRoute.tsx:765
-#: src/routes/project/canvas/CanvasRoute.tsx:697
+#: src/routes/project/canvas/CanvasRoute.tsx:703
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
 #: src/components/popcorn/PopcornActions.tsx:96
@@ -13047,7 +13047,7 @@ msgstr "Відновити фізику"
 msgid "Resume plan"
 msgstr "Відновити тариф"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:682
+#: src/routes/project/canvas/CanvasRoute.tsx:688
 msgid "Resume updates"
 msgstr "Відновити оновлення"
 
@@ -13307,7 +13307,7 @@ msgstr "Зразкові проєкти дозволяють один звіт"
 #~ msgid "Samples, demos and dev tools"
 #~ msgstr "Зразки, демо та інструменти розробки"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:265
+#: src/routes/project/canvas/CanvasRoute.tsx:271
 #: src/routes/admin/FreeLimitsPanel.tsx:229
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
@@ -14317,7 +14317,7 @@ msgstr "Show less"
 msgid "Show more"
 msgstr "Show more"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:357
+#: src/routes/project/canvas/CanvasRoute.tsx:363
 msgid "Show more versions"
 msgstr "Показати більше версій"
 
@@ -14864,7 +14864,7 @@ msgstr "Твердження"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:217
+#: src/routes/project/canvas/CanvasRoute.tsx:223
 #: src/components/sharing/LiveButton.tsx:147
 msgid "Stay live for"
 msgstr "Залишатися в ефірі на"
@@ -17298,7 +17298,7 @@ msgstr "Update"
 msgid "Update results"
 msgstr "Оновити результати"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:248
+#: src/routes/project/canvas/CanvasRoute.tsx:254
 msgid "Update rhythm"
 msgstr "Періодичність оновлення"
 
@@ -17639,7 +17639,7 @@ msgstr "Використовується стандартне значення �
 msgid "Using default dembrane logo"
 msgstr "Using default dembrane logo"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:588
+#: src/routes/project/canvas/CanvasRoute.tsx:594
 msgid "Using fixture data."
 msgstr "Використовуються тестові дані."
 
@@ -17767,7 +17767,7 @@ msgstr "Перевіряємо вашу адресу електронної по
 msgid "Version"
 msgstr "Версія"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:297
+#: src/routes/project/canvas/CanvasRoute.tsx:303
 msgid "Versions"
 msgstr "Версії"
 
@@ -17810,7 +17810,7 @@ msgstr "View your responses"
 #~ msgstr "Recreate View"
 
 #. placeholder {0}: generationLabel(selected)
-#: src/routes/project/canvas/CanvasRoute.tsx:301
+#: src/routes/project/canvas/CanvasRoute.tsx:307
 msgid "Viewing {0}"
 msgstr "Перегляд {0}"
 

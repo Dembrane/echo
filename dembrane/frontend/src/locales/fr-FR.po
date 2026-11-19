@@ -1099,7 +1099,7 @@ msgstr "2 à 5."
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Lorsqu'un événement de conversation ou de rapport se produit, nous envoyons automatiquement les données à votre URL"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:223
+#: src/routes/project/canvas/CanvasRoute.tsx:229
 #: src/components/sharing/LiveButton.tsx:84
 msgid "24 hours"
 msgstr "24 heures"
@@ -1108,7 +1108,7 @@ msgstr "24 heures"
 msgid "250 to 1000."
 msgstr "250 à 1000."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:224
+#: src/routes/project/canvas/CanvasRoute.tsx:230
 msgid "3 days"
 msgstr "3 jours"
 
@@ -1128,7 +1128,7 @@ msgstr "50 à 250."
 msgid "6 to 15."
 msgstr "6 à 15."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:222
+#: src/routes/project/canvas/CanvasRoute.tsx:228
 #: src/components/sharing/LiveButton.tsx:83
 msgid "8 hours"
 msgstr "8 heures"
@@ -2831,7 +2831,7 @@ msgstr "Retour aux conversations"
 #~ msgid "Back to dembrane"
 #~ msgstr "Retour à dembrane"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:315
+#: src/routes/project/canvas/CanvasRoute.tsx:321
 msgid "Back to live"
 msgstr "Retour au direct"
 
@@ -3236,9 +3236,9 @@ msgstr "Impossible d'ajouter une conversation vide"
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Impossible de reprogrammer dans les 10 minutes précédant l'heure prévue"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:415
-#: src/routes/project/canvas/CanvasRoute.tsx:526
-#: src/routes/project/canvas/CanvasRoute.tsx:542
+#: src/routes/project/canvas/CanvasRoute.tsx:421
+#: src/routes/project/canvas/CanvasRoute.tsx:532
+#: src/routes/project/canvas/CanvasRoute.tsx:548
 msgid "Canvas"
 msgstr "Canvas"
 
@@ -3250,7 +3250,7 @@ msgstr "Actualisation du canvas mise à jour"
 msgid "Canvas preview"
 msgstr "Aperçu du canvas"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:639
+#: src/routes/project/canvas/CanvasRoute.tsx:645
 msgid "Canvas settings"
 msgstr "Paramètres du canvas"
 
@@ -4434,7 +4434,7 @@ msgstr "Impossible de charger les paiements. Vérifiez l'authentification et les
 msgid "Could not load the AI costs."
 msgstr "Impossible de charger les coûts IA."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:528
+#: src/routes/project/canvas/CanvasRoute.tsx:534
 msgid "Could not load the canvas."
 msgstr "Impossible de charger le canevas."
 
@@ -4821,7 +4821,7 @@ msgstr "Forfait actuel"
 msgid "Current rate"
 msgstr "Tarif actuel"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:225
+#: src/routes/project/canvas/CanvasRoute.tsx:231
 msgid "Custom"
 msgstr "Personnalisé"
 
@@ -5629,8 +5629,8 @@ msgstr "Modifier le sujet personnalisé"
 msgid "Edit file name"
 msgstr "Modifier le nom du fichier"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:564
-#: src/routes/project/canvas/CanvasRoute.tsx:567
+#: src/routes/project/canvas/CanvasRoute.tsx:570
+#: src/routes/project/canvas/CanvasRoute.tsx:573
 msgid "Edit freshness settings"
 msgstr "Modifier les paramètres d'actualisation"
 
@@ -5933,7 +5933,7 @@ msgid "Entered details"
 msgstr "Coordonnées saisies"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
-#: src/routes/project/canvas/CanvasRoute.tsx:341
+#: src/routes/project/canvas/CanvasRoute.tsx:347
 #: src/components/dropzone/UploadConversationDropzone.tsx:825
 #: src/components/dropzone/UploadConversationDropzone.tsx:943
 #: src/components/conversation/LiveMonitorSection.tsx:274
@@ -5990,15 +5990,15 @@ msgstr "Événements à écouter"
 #~ msgid "Events to Listen For"
 #~ msgstr "Événements à écouter"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:254
+#: src/routes/project/canvas/CanvasRoute.tsx:260
 msgid "Every 15 minutes"
 msgstr "Toutes les 15 minutes"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:253
+#: src/routes/project/canvas/CanvasRoute.tsx:259
 msgid "Every 5 minutes"
 msgstr "Toutes les 5 minutes"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:255
+#: src/routes/project/canvas/CanvasRoute.tsx:261
 msgid "Every 60 minutes"
 msgstr "Toutes les 60 minutes"
 
@@ -6084,8 +6084,8 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Dépasse la limite de sièges. Des frais de dépassement s'appliquent."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1134
-#: src/routes/project/canvas/CanvasRoute.tsx:613
-#: src/routes/project/canvas/CanvasRoute.tsx:618
+#: src/routes/project/canvas/CanvasRoute.tsx:619
+#: src/routes/project/canvas/CanvasRoute.tsx:624
 msgid "Exit fullscreen"
 msgstr "Quitter le plein écran"
 
@@ -6813,8 +6813,8 @@ msgstr "Du modèle à la suggestion"
 msgid "From the transcript"
 msgstr "Extrait de la transcription"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:613
-#: src/routes/project/canvas/CanvasRoute.tsx:618
+#: src/routes/project/canvas/CanvasRoute.tsx:619
+#: src/routes/project/canvas/CanvasRoute.tsx:624
 msgid "Full screen"
 msgstr "Plein écran"
 
@@ -7320,7 +7320,7 @@ msgstr "Les hôtes peuvent activer les réponses et personnaliser leur consigne 
 msgid "Hours"
 msgstr "Heures"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:231
+#: src/routes/project/canvas/CanvasRoute.tsx:237
 msgid "Hours from now"
 msgstr "Heures à partir de maintenant"
 
@@ -8070,7 +8070,7 @@ msgstr "Laisser en attente"
 msgid "Keep recordings awake"
 msgstr "Gardez les appareils éveillés pendant l’enregistrement"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:208
+#: src/routes/project/canvas/CanvasRoute.tsx:214
 msgid "Keep this canvas fresh"
 msgstr "Garder ce canevas à jour"
 
@@ -8264,11 +8264,11 @@ msgid "Let's hear your first conversation."
 msgstr "Écoutons votre première conversation."
 
 #. placeholder {0}: canvas.name
-#: src/routes/project/canvas/CanvasRoute.tsx:453
+#: src/routes/project/canvas/CanvasRoute.tsx:459
 msgid "Let's talk about the canvas \"{0}\"."
 msgstr "Parlons du canevas « {0} »."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:454
+#: src/routes/project/canvas/CanvasRoute.tsx:460
 msgid "Let's talk about this canvas."
 msgstr "Parlons de ce canevas."
 
@@ -8405,7 +8405,7 @@ msgstr "Récupération des conversations"
 msgid "Listing documentation pages"
 msgstr "Récupération des pages de documentation"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:305
+#: src/routes/project/canvas/CanvasRoute.tsx:311
 #: src/components/sharing/StatusLine.tsx:103
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
@@ -9389,8 +9389,8 @@ msgstr "nouveau"
 msgid "New"
 msgstr "Nouveau"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:608
-#: src/routes/project/canvas/CanvasRoute.tsx:658
+#: src/routes/project/canvas/CanvasRoute.tsx:614
+#: src/routes/project/canvas/CanvasRoute.tsx:664
 msgid "New chat about this canvas"
 msgstr "Nouvelle discussion à propos de ce canevas"
 
@@ -9582,7 +9582,7 @@ msgstr "Aucun canevas pour l'instant. Demandez dans le chat lorsque vous souhait
 msgid "participant.onboarding.no.card"
 msgstr "Aucune fiche disponible pour la langue et la section actuelles."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:336
+#: src/routes/project/canvas/CanvasRoute.tsx:342
 msgid "No change"
 msgstr "Aucun changement"
 
@@ -10584,7 +10584,7 @@ msgstr "Les onglets ouverts s'actualisent après un nouveau déploiement au lieu
 msgid "Open the {0} from here."
 msgstr "Ouvrez le {0} d'ici."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:606
+#: src/routes/project/canvas/CanvasRoute.tsx:612
 msgid "Open the chat"
 msgstr "Ouvrir le chat"
 
@@ -10692,7 +10692,7 @@ msgstr "Options"
 msgid "or"
 msgstr "ou"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:239
+#: src/routes/project/canvas/CanvasRoute.tsx:245
 msgid "Or choose a time"
 msgstr "Ou choisissez un créneau"
 
@@ -11092,7 +11092,7 @@ msgstr "Mettre la physique en pause"
 msgid "Pause reading"
 msgstr "Mettre en pause la lecture"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:680
+#: src/routes/project/canvas/CanvasRoute.tsx:686
 msgid "Pause updates"
 msgstr "Mettre les mises à jour en pause"
 
@@ -12426,7 +12426,7 @@ msgstr "Actualisation…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:513
 #: src/routes/project/chat/ProjectChatRoute.tsx:765
-#: src/routes/project/canvas/CanvasRoute.tsx:697
+#: src/routes/project/canvas/CanvasRoute.tsx:703
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
 #: src/components/popcorn/PopcornActions.tsx:96
@@ -13047,7 +13047,7 @@ msgstr "Reprendre la physique"
 msgid "Resume plan"
 msgstr "Reprendre le forfait"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:682
+#: src/routes/project/canvas/CanvasRoute.tsx:688
 msgid "Resume updates"
 msgstr "Reprendre les mises à jour"
 
@@ -13307,7 +13307,7 @@ msgstr "Les projets d'exemple autorisent un rapport"
 #~ msgid "Samples, demos and dev tools"
 #~ msgstr "Échantillons, démos et outils de développement"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:265
+#: src/routes/project/canvas/CanvasRoute.tsx:271
 #: src/routes/admin/FreeLimitsPanel.tsx:229
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:196
@@ -14317,7 +14317,7 @@ msgstr "Afficher moins"
 msgid "Show more"
 msgstr "Afficher plus"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:357
+#: src/routes/project/canvas/CanvasRoute.tsx:363
 msgid "Show more versions"
 msgstr "Afficher plus de versions"
 
@@ -14864,7 +14864,7 @@ msgstr "Affirmation"
 msgid "Status"
 msgstr "Statut"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:217
+#: src/routes/project/canvas/CanvasRoute.tsx:223
 #: src/components/sharing/LiveButton.tsx:147
 msgid "Stay live for"
 msgstr "Rester en direct pendant"
@@ -17295,7 +17295,7 @@ msgstr "Mettre à jour"
 msgid "Update results"
 msgstr "Mettre à jour les résultats"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:248
+#: src/routes/project/canvas/CanvasRoute.tsx:254
 msgid "Update rhythm"
 msgstr "Rythme de mise à jour"
 
@@ -17636,7 +17636,7 @@ msgstr "Utilise la valeur par défaut du forfait Free."
 msgid "Using default dembrane logo"
 msgstr "Utilisation du logo dembrane par défaut"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:588
+#: src/routes/project/canvas/CanvasRoute.tsx:594
 msgid "Using fixture data."
 msgstr "Utilisation de données fictives."
 
@@ -17764,7 +17764,7 @@ msgstr "Vérification de votre adresse e-mail."
 msgid "Version"
 msgstr "Version"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:297
+#: src/routes/project/canvas/CanvasRoute.tsx:303
 msgid "Versions"
 msgstr "Versions"
 
@@ -17807,7 +17807,7 @@ msgstr "Voir vos réponses"
 #~ msgstr "Recréer la vue"
 
 #. placeholder {0}: generationLabel(selected)
-#: src/routes/project/canvas/CanvasRoute.tsx:301
+#: src/routes/project/canvas/CanvasRoute.tsx:307
 msgid "Viewing {0}"
 msgstr "Affichage de {0}"
 
