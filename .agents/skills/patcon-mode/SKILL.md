@@ -8,9 +8,12 @@ disable-model-invocation: true
 
 This file lives at `.agents/skills/patcon-mode/SKILL.md` in the repo root. Put its absolute path in every `patcon-agent` prompt.
 
+## Base
+
+Before anything else, read `.agents/skills/dembrane-mode/SKILL.md` in full and follow it. Where it conflicts with this file, this file wins.
+
 ## Non-negotiables
 
-- First message → restate the user's goal and the smallest change that meets it, then proceed.
 - Delegating code-writing or helper work → spawn a fresh `patcon-agent`, not `general-purpose`. Open its brief with the goal.
 - TODO: add triggers as they come up.
 
