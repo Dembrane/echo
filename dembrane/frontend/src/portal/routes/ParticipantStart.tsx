@@ -4,7 +4,6 @@ import { WarningCircleIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
-import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { Logo } from "@/components/common/Logo";
 import { ENABLE_MONITOR } from "@/config";
@@ -48,17 +47,9 @@ export const ParticipantStartRoute = () => {
 		error: projectError,
 	} = useParticipantProjectById(projectId ?? "");
 
-	const [loadingFinished, setLoadingFinished] = useSessionStorageState(
-		"loadingFinished",
-		{
-			defaultValue: false,
-		},
-	);
-
 	const landedCaptured = useRef(false);
 	useEffect(() => {
 		if (!isLoadingProject) {
-			setLoadingFinished(true);
 			// Funnel entry, fired once per mount. Skip when embedded, so a page that
 			// frames the portal does not inflate participant landings (the portal
 			// editor's preview never gets here: it starts no analytics, main.tsx).
@@ -72,9 +63,9 @@ export const ParticipantStartRoute = () => {
 				posthog.capture("portal_landed", { project_id: projectId });
 			}
 		}
-	}, [isLoadingProject, setLoadingFinished, projectId]);
+	}, [isLoadingProject, projectId]);
 
-	if (loadingFinished && projectError) {
+	if (projectError) {
 		return (
 			<div className="p-4" {...testId("portal-loading-error")}>
 				<Alert

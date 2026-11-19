@@ -4,7 +4,6 @@ import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ArrowLeftIcon, GearSixIcon, QrCodeIcon } from "@phosphor-icons/react";
 import { useLocation, useParams, useSearchParams } from "react-router";
-import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
@@ -13,9 +12,6 @@ import { ParticipantShareModal } from "../components/ParticipantShareModal";
 import { ParticipantSettingsModal } from "../components/settings/ParticipantSettingsModal";
 
 export const ParticipantHeader = () => {
-	const [loadingFinished] = useSessionStorageState("loadingFinished", {
-		defaultValue: true,
-	});
 	const { pathname } = useLocation();
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
@@ -39,7 +35,7 @@ export const ParticipantHeader = () => {
 		pathname.includes("start") || pathname.includes("finish");
 	const hideHeader = pathname.includes("start");
 
-	if (!loadingFinished || hideHeader) {
+	if (hideHeader) {
 		return null;
 	}
 
