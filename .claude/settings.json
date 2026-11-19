@@ -8,6 +8,12 @@
       }
     }
   },
+  "permissions": {
+    "allow": [
+      "Bash(.agents/skills/dembrane-mode/scripts/pstack-root.sh)",
+      "Bash(*/.agents/skills/dembrane-mode/scripts/pstack-root.sh)"
+    ]
+  },
   "enabledPlugins": {
     "pstack@cursor-plugins": true
   }
