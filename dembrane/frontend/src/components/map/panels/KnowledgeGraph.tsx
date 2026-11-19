@@ -385,16 +385,23 @@ export const KnowledgeGraph = ({
 }) => {
 	const { ref, width: measured } = useElementSize<HTMLDivElement>();
 	const width = Math.round(measured) || FALLBACK_WIDTH;
-	// The last layout seeds the next, so a travel moves the drawing on.
-	const lastLayout = useRef<Map<string, Point> | undefined>(undefined);
-	const target = useMemo(() => {
-		const next = layoutKnowledgeGraph(graph, width, GRAPH_HEIGHT, {
+	// The last layout seeds the next, so a travel moves the drawing on: kept
+	// with what it was laid out for, and laid out again during render when
+	// that changes.
+	const [laid, setLaid] = useState(() => ({
+		centre,
+		graph,
+		layout: layoutKnowledgeGraph(graph, width, GRAPH_HEIGHT, { centre }),
+		width,
+	}));
+	let target = laid.layout;
+	if (laid.graph !== graph || laid.width !== width || laid.centre !== centre) {
+		target = layoutKnowledgeGraph(graph, width, GRAPH_HEIGHT, {
 			centre,
-			seed: lastLayout.current,
+			seed: laid.layout,
 		});
-		lastLayout.current = next;
-		return next;
-	}, [graph, width, centre]);
+		setLaid({ centre, graph, layout: target, width });
+	}
 	const at = useGlide(target, graph, centre);
 	const [active, setActive] = useState<string | null>(null);
 	const highlight = mapHighlight(darkMode);
