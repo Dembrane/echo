@@ -218,7 +218,9 @@ it("a login blocked before dembrane says so and offers the emailed code", async 
 	]);
 	expect(events("login_blocked_shown")).toHaveLength(1);
 	// The notice carries the way out, so the link under Log in steps aside meanwhile.
-	expect(screen.getAllByText("Email me a sign-in code instead")).toHaveLength(1);
+	expect(screen.getAllByText("Email me a sign-in code instead")).toHaveLength(
+		1,
+	);
 	expect(screen.queryByTestId("auth-login-code-mode")).toBeNull();
 	expect(screen.getByTestId("auth-login-forgot-password-link")).toBeTruthy();
 	fireEvent.click(screen.getByTestId("auth-login-blocked-use-code"));
@@ -304,6 +306,26 @@ it("the code sign-in reads the platform limiter's retry_after_seconds and keeps 
 	expect(
 		(screen.getByTestId("auth-login-code-send") as HTMLButtonElement).disabled,
 	).toBe(true);
+});
+
+it("the code step says what to do when no code arrives, the same for every address", async () => {
+	stubFetch((url) =>
+		url.endsWith("/auth/email-otp/send-verification-otp")
+			? json(200, { success: true })
+			: undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	fireEvent.click(screen.getByTestId("auth-login-code-mode"));
+	// Before a code is asked for there is nothing to wait for, so no line.
+	expect(screen.queryByTestId("auth-login-no-code")).toBeNull();
+	fireEvent.change(screen.getByTestId("auth-login-code-email-input"), {
+		target: { value: "stranger@example.com" },
+	});
+	fireEvent.click(screen.getByTestId("auth-login-code-send"));
+	const line = await screen.findByTestId("auth-login-no-code");
+	expect(line.textContent).toBe(
+		"No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you.",
+	);
 });
 
 it("a failure after a successful sign-in is not a failed login: the person is told they are in and can carry on", async () => {

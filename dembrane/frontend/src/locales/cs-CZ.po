@@ -4651,7 +4651,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:762
+#: src/routes/auth/Login.tsx:779
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -5757,7 +5757,7 @@ msgstr "Email address"
 msgid "Email me a code"
 msgstr "Poslat kód e-mailem"
 
-#: src/routes/auth/Login.tsx:737
+#: src/routes/auth/Login.tsx:754
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
@@ -6739,7 +6739,7 @@ msgstr "Předpověď"
 msgid "Forgetting a saved memory"
 msgstr "Odstraňuje se uložená vzpomínka"
 
-#: src/routes/auth/Login.tsx:747
+#: src/routes/auth/Login.tsx:764
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9599,6 +9599,10 @@ msgstr "Hledání neodpovídají žádné chaty."
 msgid "No chats yet."
 msgstr "Zatím žádné chaty."
 
+#: src/routes/auth/Login.tsx:724
+msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Kód nepřišel ani po minutě? Podívej se do složky se spamem. Pokud s tebou někdo sdílel stránku dembrane, požádej ho, ať tě přidá."
+
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No collections found"
@@ -10688,7 +10692,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:753
+#: src/routes/auth/Login.tsx:770
 msgid "or"
 msgstr "or"
 
@@ -13905,12 +13909,12 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
-#: src/routes/auth/Login.tsx:710
+#: src/routes/auth/Login.tsx:711
 msgid "Send a new code"
 msgstr "Odeslat nový kód"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/routes/auth/Login.tsx:708
+#: src/routes/auth/Login.tsx:709
 msgid "Send a new code in {0}s"
 msgstr "Odeslat nový kód za {0} s"
 
@@ -17565,7 +17569,7 @@ msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboardin
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
-#: src/routes/auth/Login.tsx:722
+#: src/routes/auth/Login.tsx:739
 msgid "Use my password instead"
 msgstr "Místo toho použít heslo"
 

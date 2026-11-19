@@ -4651,7 +4651,7 @@ msgid "Create account"
 msgstr "Crea account"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:762
+#: src/routes/auth/Login.tsx:779
 msgid "Create an account"
 msgstr "Crea un account"
 
@@ -5757,7 +5757,7 @@ msgstr "Indirizzo email"
 msgid "Email me a code"
 msgstr "Inviami un codice via email"
 
-#: src/routes/auth/Login.tsx:737
+#: src/routes/auth/Login.tsx:754
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Inviami invece un codice di accesso via email"
@@ -6739,7 +6739,7 @@ msgstr "Previsione"
 msgid "Forgetting a saved memory"
 msgstr "Eliminazione di un ricordo salvato"
 
-#: src/routes/auth/Login.tsx:747
+#: src/routes/auth/Login.tsx:764
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9599,6 +9599,10 @@ msgstr "Nessuna chat corrisponde alla tua ricerca."
 msgid "No chats yet."
 msgstr "Nessuna chat per ora."
 
+#: src/routes/auth/Login.tsx:724
+msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Nessun codice dopo un minuto? Guarda nella cartella spam. Se qualcuno ha condiviso con te una pagina di dembrane, chiedigli di aggiungerti."
+
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No collections found"
@@ -10688,7 +10692,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:753
+#: src/routes/auth/Login.tsx:770
 msgid "or"
 msgstr "or"
 
@@ -13905,12 +13909,12 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Invia {0} inviti"
 
-#: src/routes/auth/Login.tsx:710
+#: src/routes/auth/Login.tsx:711
 msgid "Send a new code"
 msgstr "Invia un nuovo codice"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/routes/auth/Login.tsx:708
+#: src/routes/auth/Login.tsx:709
 msgid "Send a new code in {0}s"
 msgstr "Invia un nuovo codice tra {0} s"
 
@@ -17566,7 +17570,7 @@ msgstr "Usa l'italiano per la chat, i report, la trascrizione e le schede di onb
 msgid "Use latest results"
 msgstr "Usa gli ultimi risultati"
 
-#: src/routes/auth/Login.tsx:722
+#: src/routes/auth/Login.tsx:739
 msgid "Use my password instead"
 msgstr "Usa invece la password"
 
