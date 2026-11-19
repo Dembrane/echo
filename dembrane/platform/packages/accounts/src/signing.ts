@@ -567,6 +567,13 @@ export async function auditTrail(
       trail.push({ at: at(e), what: `${named} named as signer by ${by(e)}` });
     else if (e.type === "document.signer_replaced")
       trail.push({ at: at(e), what: `Signer changed to ${named} by ${by(e)}` });
+    else if (e.type === "document.signer_removed") {
+      const was = e.detail as { previous_email?: string; previous_name?: string } | null;
+      const them = was?.previous_name
+        ? `${was.previous_name} (${was.previous_email})`
+        : (was?.previous_email ?? "");
+      trail.push({ at: at(e), what: `${them} no longer named as signer, by ${by(e)}` });
+    }
   }
   // dembrane's signature, applied when the document was sent, in its place in time.
   for (const s of await store.signaturesOf(d.db, doc.id))
