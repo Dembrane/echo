@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -31,61 +31,57 @@ function useCopyToRichText() {
 		}
 	}, [copied]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
-	const copy = useCallback(
-		(input: string | Promise<string> | (() => Promise<string>)) => {
-			let textPromise: Promise<string>;
-			if (typeof input === "string") {
-				textPromise = Promise.resolve(input);
-			} else if (input instanceof Promise) {
-				textPromise = input;
-			} else if (typeof input === "function") {
-				textPromise = input();
-			} else {
-				textPromise = Promise.resolve("");
-			}
+	const copy = (input: string | Promise<string> | (() => Promise<string>)) => {
+		let textPromise: Promise<string>;
+		if (typeof input === "string") {
+			textPromise = Promise.resolve(input);
+		} else if (input instanceof Promise) {
+			textPromise = input;
+		} else if (typeof input === "function") {
+			textPromise = input();
+		} else {
+			textPromise = Promise.resolve("");
+		}
 
-			const htmlPromise = textPromise.then(async (markdown) => {
-				return await markdownToHtml(markdown);
-			});
+		const htmlPromise = textPromise.then(async (markdown) => {
+			return await markdownToHtml(markdown);
+		});
 
-			const textBlobPromise = textPromise.then(
-				(text) => new Blob([text], { type: "text/plain" }),
-			);
-			const htmlBlobPromise = htmlPromise.then(
-				(html) => new Blob([html], { type: "text/html" }),
-			);
+		const textBlobPromise = textPromise.then(
+			(text) => new Blob([text], { type: "text/plain" }),
+		);
+		const htmlBlobPromise = htmlPromise.then(
+			(html) => new Blob([html], { type: "text/html" }),
+		);
 
-			const clipboardItem = new ClipboardItem({
-				"text/plain": textBlobPromise,
-				"text/html": htmlBlobPromise,
-			});
+		const clipboardItem = new ClipboardItem({
+			"text/plain": textBlobPromise,
+			"text/html": htmlBlobPromise,
+		});
 
-			return navigator.clipboard.write([clipboardItem]).then(
-				() => {
-					setCopied(true);
-				},
-				async (err) => {
-					console.error("Rich text copy failed, trying fallback:", err);
-					const text = await textPromise;
-					if (navigator.clipboard?.writeText) {
-						try {
-							await navigator.clipboard.writeText(text);
-							setCopied(true);
-						} catch (e) {
-							console.error("writeText fallback failed:", e);
-							toast.error(t`Could not copy to clipboard. Please try again.`);
-							throw e;
-						}
-					} else {
+		return navigator.clipboard.write([clipboardItem]).then(
+			() => {
+				setCopied(true);
+			},
+			async (err) => {
+				console.error("Rich text copy failed, trying fallback:", err);
+				const text = await textPromise;
+				if (navigator.clipboard?.writeText) {
+					try {
+						await navigator.clipboard.writeText(text);
+						setCopied(true);
+					} catch (e) {
+						console.error("writeText fallback failed:", e);
 						toast.error(t`Could not copy to clipboard. Please try again.`);
-						throw err;
+						throw e;
 					}
-				},
-			);
-		},
-		[setCopied],
-	);
+				} else {
+					toast.error(t`Could not copy to clipboard. Please try again.`);
+					throw err;
+				}
+			},
+		);
+	};
 
 	return {
 		copied,
