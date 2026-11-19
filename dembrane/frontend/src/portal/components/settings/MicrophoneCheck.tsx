@@ -15,6 +15,7 @@ import Cookies from "js-cookie";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
+import { useLatest } from "@/hooks/useLatest";
 import { testId } from "@/lib/testUtils";
 
 interface MicrophoneCheckProps {
@@ -114,6 +115,10 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 		initializeDevices();
 	}, []);
 
+	// Read through a ref, so a new callback from the parent doesn't re-open the
+	// mic and restart the test.
+	const onMicTestSuccessRef = useLatest(onMicTestSuccess);
+
 	const stopAnalyzer = useCallback(() => {
 		if (animationFrameRef.current) {
 			cancelAnimationFrame(animationFrameRef.current);
@@ -155,7 +160,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 					if (!isMicSuccessRef.current) {
 						setIsMicTestSuccessful(true);
 						isMicSuccessRef.current = true;
-						onMicTestSuccess(true);
+						onMicTestSuccessRef.current(true);
 					}
 				} else if (silenceStartRef.current === null) {
 					silenceStartRef.current = now;
@@ -170,7 +175,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 			animationFrameRef.current = requestAnimationFrame(tick);
 		};
 		tick();
-	}, [onMicTestSuccess]);
+	}, [onMicTestSuccessRef]);
 
 	// setup stream, analyser when device changes
 	useEffect(() => {
@@ -188,7 +193,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 
 			// Reset success state when device changes
 			setIsMicTestSuccessful(false);
-			onMicTestSuccess(false);
+			onMicTestSuccessRef.current(false);
 			isMicSuccessRef.current = false;
 			silenceStartRef.current = null;
 
@@ -257,7 +262,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 				audioContextRef.current = null;
 			}
 		};
-	}, [selectedDeviceId, onMicTestSuccess, startAnalyzer, stopAnalyzer]);
+	}, [selectedDeviceId, onMicTestSuccessRef, startAnalyzer, stopAnalyzer]);
 
 	const handleContinue = () => {
 		// Ensure device ID is saved in cookies before continuing
