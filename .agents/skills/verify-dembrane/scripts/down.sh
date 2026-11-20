@@ -21,7 +21,7 @@ else
   PGPASSWORD=echo dropdb -h localhost -p 5432 -U echo --if-exists "$DB"
 fi
 release_ports
-rm -rf "$STATE"
+rm -rf "$STATE" "$FRONTEND/node_modules/.vite-verify/$RUN-"*
 for port in "$API_PORT" "$DASH_PORT" "$PORTAL_PORT"; do
   [ -z "$(listener_pid "$port")" ] || echo "warning: something still listens on :$port" >&2
 done

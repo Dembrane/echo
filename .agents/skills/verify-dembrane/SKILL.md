@@ -23,7 +23,7 @@ Export `VERIFY_RUN` for the whole task. Every helper acts on that run, and with 
 
 It needs bun, pnpm-installed `dembrane/frontend/node_modules`, `dembrane/platform/node_modules`, ffmpeg, agent-browser on `PATH`, and `dembrane/platform/.env.local` (created from `.env.example` with fresh secrets if missing, as `platform/scripts/setup.sh` does). Shell env overrides `.env.local`, so the run's database, port and URLs win. `up.sh` checks these first and lists everything missing before it creates anything.
 
-Ready means usable: it exits 0 only once the API's `/ready` reaches the database, the worker reports in on `/ready/worker`, and both dev servers proxy `/api/health` to the API. A first run on a cold Vite cache can take a minute. On failure it prints the cleanup command; the logs are in `$STATE/*.log`.
+Ready means usable: it exits 0 only once the API's `/ready` reaches the database, the worker reports in on `/ready/worker`, and both dev servers proxy `/api/health` to the API. Each run's dev servers start on their own cold Vite cache, so the first page load can take a minute. If it hangs, reload once. On failure it prints the cleanup command; the logs are in `$STATE/*.log`.
 
 The portal is served at `http://portal.localhost:<port>`: the frontend only switches to the participant router on port 5174 or a hostname starting with `portal.` (`dembrane/frontend/src/config.ts`), and Chrome resolves `*.localhost` to this machine.
 
