@@ -186,16 +186,19 @@ it("renders both banners when audio and AI are both used up", async () => {
 	);
 });
 
-it("renders nothing for used-up AI on a sample project", async () => {
-	respond(status(3600), true, allowance(true));
-	const client = renderNotice();
-	await settled(client);
-	await waitFor(() => expect(projectReads()).toBe(1));
-	await new Promise((r) => setTimeout(r, 20));
-	expect(screen.getByTestId("host").innerHTML).toBe("");
+it("renders the AI banner for used-up AI on a sample project, not the audio one", async () => {
+	respond(status(0), true, allowance(true));
+	renderNotice();
+	await waitFor(() =>
+		expect(
+			screen
+				.getAllByTestId("free-allowance-banner")
+				.map((b) => b.dataset.feature),
+		).toEqual(["ai"]),
+	);
 });
 
-it("renders nothing on a sample project", async () => {
+it("renders nothing for used-up audio on a sample project", async () => {
 	respond(status(0), true);
 	const client = renderNotice();
 	await settled(client);

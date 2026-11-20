@@ -19,16 +19,18 @@ export const AudioUsedUpNotice = ({
 	const { data: allowance } = useFreeAllowance(data?.free ? workspaceId : null);
 	const ai = allowance?.free ? allowance.ai : null;
 	const aiUsedUp = !!ai && ai.exhausted && !ai.unlimited;
-	const { applies } = useAllowanceApplies(
+	const { applies, isSample } = useAllowanceApplies(
 		audioUsedUp || aiUsedUp ? projectId : null,
 	);
-	if (!applies || (!audioUsedUp && !aiUsedUp)) return null;
+	// A sample takes no recording, so only the AI banner applies there.
+	const showAudio = audioUsedUp && !isSample;
+	if (!applies || (!showAudio && !aiUsedUp)) return null;
 	return (
 		<>
 			{aiUsedUp && (
 				<FreeAllowanceBanner workspaceId={workspaceId} feature="ai" />
 			)}
-			{audioUsedUp && (
+			{showAudio && (
 				<FreeAllowanceBanner workspaceId={workspaceId} feature="audio" />
 			)}
 		</>

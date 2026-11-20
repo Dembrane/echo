@@ -224,15 +224,14 @@ it("opens the AI wall, not an error, when the server refuses the report", async 
 	expect(document.body.textContent).not.toContain("Report limit reached");
 });
 
-it("leaves a sample project's report open when this month's AI is used up", async () => {
+it("walls a sample project's report too once this month's AI is used up", async () => {
 	project.isSample = true;
 	fetchMock.mockResolvedValue(answer(snapshot(true)));
-	const client = renderForm();
-	await settled(client);
-	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
+	renderForm();
+	await screen.findByTestId("free-allowance-banner");
 	fireEvent.click(screen.getAllByTestId("report-create-button")[0]);
-	expect(mutate).toHaveBeenCalledTimes(1);
-	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	expect(mutate).not.toHaveBeenCalled();
+	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("ai_budget");
 });
 
 it("walls nothing while is_sample is still loading", async () => {

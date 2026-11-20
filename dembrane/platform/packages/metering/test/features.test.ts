@@ -51,6 +51,9 @@ describe("classifyOperation", () => {
     ["POST /api/participant/conversations/:conversation_id/upload-text", "recording", "Recording"],
     // Voice input
     ["POST /api/stateless/transcribe", "voice", "Voice input"],
+    // Project setup
+    ["POST /api/v2/workspaces/:workspace_id/project-setup/suggestions", "setup", "Suggestions"],
+    ["POST /api/v2/workspaces/:workspace_id/project-setup/digest", "setup", "Digest"],
     // Samples and demos
     ["accounts.demo-build", "samples", "Demo builds"],
     ["samples.seed-best-practices", "samples", "Sample projects"],
@@ -111,6 +114,6 @@ describe("classifyOperation", () => {
       group: "chat",
       label: "Replies",
     });
-    expect(FEATURE_RULES).toHaveLength(33);
+    expect(FEATURE_RULES).toHaveLength(35);
   });
 });

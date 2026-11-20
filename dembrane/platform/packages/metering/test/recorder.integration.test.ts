@@ -130,7 +130,7 @@ run("model call recorder against the database", () => {
       select period_start, amount from free_usage
       where billing_account_id = ${accountId} and key = 'ai_spend_micro_eur' order by period_start`;
 
-  test("calls in a free project count, a sample project's call is recorded but not counted", async () => {
+  test("calls in a free project and in a sample project both count", async () => {
     const { accountId, workspaceId } = await account("free");
     const free = await project(workspaceId);
     const sample = await project(workspaceId, true);
@@ -142,11 +142,11 @@ run("model call recorder against the database", () => {
     expect(rows.map((r) => [r.payer, r.counted, r.project_id, Number(r.cost_micro_eur)])).toEqual([
       ["account", true, free, COST],
       ["account", true, free, 1000],
-      ["account", false, sample, COST],
+      ["account", true, sample, COST],
     ]);
     const spend = await spendOf(accountId);
     expect(spend.map((s) => [s.period_start.toISOString(), Number(s.amount)])).toEqual([
-      ["2026-10-01T00:00:00.000Z", COST + 1000],
+      ["2026-10-01T00:00:00.000Z", 2 * COST + 1000],
     ]);
   });
 
@@ -294,13 +294,12 @@ run("model call recorder against the database", () => {
     for (const payer of payers)
       expect([payerKey(payer), got.get(payerKey(payer))]).toEqual([
         payerKey(payer),
-        { accountId, tier: "free", downgradedAt: null, counted: true, projectId: p },
+        { accountId, tier: "free", downgradedAt: null, projectId: p },
       ]);
     expect(got.get(`workspace:${workspaceId}`)).toEqual({
       accountId,
       tier: "free",
       downgradedAt: null,
-      counted: true,
       projectId: null,
     });
     expect(got.get("internal:demo_build")).toBe("internal");

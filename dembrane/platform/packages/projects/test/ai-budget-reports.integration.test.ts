@@ -177,13 +177,21 @@ run("reports and the AI budget", () => {
     expect(await row(r.id)).toMatchObject({ status: "draft", free_period_start: null });
   });
 
-  test("a free sample keeps one report and never refuses for budget", async () => {
-    const { owner, billing, sample } = await seed();
-    await spend(billing, LIMIT);
+  test("a free sample keeps one report", async () => {
+    const { owner, sample } = await seed();
     await request(owner, sample, LATER);
     expect(await rejection(request(owner, sample, LATER))).toMatchObject({
       status: 402,
       details: { limit: "report" },
+    });
+  });
+
+  test("a free sample at zero refuses for budget", async () => {
+    const { owner, billing, sample } = await seed();
+    await spend(billing, LIMIT);
+    expect(await rejection(request(owner, sample, LATER))).toMatchObject({
+      status: 402,
+      details: { limit: "ai_budget" },
     });
   });
 

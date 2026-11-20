@@ -14,8 +14,9 @@ import type { SampleOwner } from "./millbrook";
  * Each workspace holds its own copy, owned by whoever created the workspace. Every id
  * derives from the workspace id, so a rerun writes the same rows, and a copy the user
  * deleted stays deleted: its project row is the tombstone. The copy is marked
- * project.is_sample, which keeps it out of usage, limits and public numbers, and it takes
- * no new conversations, so nothing real is ever recorded under that exemption.
+ * project.is_sample, which keeps it out of audio limits and public numbers (its AI use
+ * still spends the AI budget), and it takes no new conversations, so nothing real is ever
+ * recorded under that exemption.
  *
  * project.sample_version names the fixture a copy was seeded from. A rerun with the same
  * fixture writes nothing; a newer fixture rewrites the seeded conversations, their chunks

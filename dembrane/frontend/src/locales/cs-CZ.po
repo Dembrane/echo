@@ -5184,8 +5184,8 @@ msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participa
 msgstr "dembrane/pilot byl náš dřívější projekt. Děkujeme organizátorům, účastníkům a přispěvatelům, kteří jej pomáhali utvářet."
 
 #: src/routes/admin/AiCostsPanel.tsx:682
-msgid "Demos, voice outside projects, dev tools"
-msgstr "Ukázky, hlas mimo projekty, vývojářské nástroje"
+#~ msgid "Demos, voice outside projects, dev tools"
+#~ msgstr "Ukázky, hlas mimo projekty, vývojářské nástroje"
 
 #: src/routes/settings/AgentConsentRoute.tsx:335
 msgid "Deny"
@@ -14722,6 +14722,10 @@ msgstr "Bod zájmu"
 #: src/features/sidebar/shell/UserMenu.tsx:172
 msgid "Staff"
 msgstr "Staff"
+
+#: src/routes/admin/AiCostsPanel.tsx:682
+msgid "Staff demos and voice outside projects"
+msgstr "Ukázky týmu a hlas mimo projekty"
 
 #~ msgid "Staff demos, voice outside projects, dev tools"
 #~ msgstr "Interní ukázky, hlas mimo projekty, vývojářské nástroje"
