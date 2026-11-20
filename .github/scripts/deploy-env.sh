@@ -177,11 +177,13 @@ deploy() {
     --cpu "$(jq -r '.services.worker.cpu' "$TFVARS")" --memory "$(jq -r '.services.worker.memory' "$TFVARS")" \
     --instances "$wmin" & pids+=($!)
   for role in dashboard portal; do
+    # The web servers forward /api, event streams included, so they allow a request as long as
+    # the API does.
     # shellcheck disable=SC2086,SC2046
     rollout service "$prefix-$role" web --image "$REGISTRY/web:$tag" \
       --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role$web_pr" \
       --set-secrets "HTTP_PROXY_SECRET=$(secret proxy-secret)" \
-      $(scale $role) --allow-unauthenticated $web_ingress & pids+=($!)
+      $(scale $role) --timeout 3600 --allow-unauthenticated $web_ingress & pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
   [ "$fail" = 0 ] || exit 1
