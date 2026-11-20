@@ -22,4 +22,5 @@ Run `.agents/skills/dembrane-mode/scripts/pstack-root.sh`. It prints the folder 
 
 - Dashboard or portal change → prove it on a running copy with the `verify-dembrane` skill before calling it done. Pure logic, or a refactor with no visible change → unit tests are enough.
 - A flow verified by hand twice → turn its `verify-dembrane` recipe into a spec under `dembrane/frontend/e2e/`.
+- Before pushing any change under `dembrane/frontend/src` → run `pnpm run messages:extract` and `pnpm run messages:compile` in `dembrane/frontend`, and commit the `.po` changes. The catalogs record each string's source line, so moving lines is enough to fail CI's stale-catalog check.
 - TODO: add shared processes (branching, PRs, review, shipping).
