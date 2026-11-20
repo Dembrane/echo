@@ -31,4 +31,11 @@ Before anything else, read `.agents/skills/dembrane-mode/SKILL.md` in full and f
 - Skill and doc text → short bullets, with related details as indented sub-bullets.
 - A comment on a GitHub PR or issue posted as patcon → fill `comment-template.md` from this folder exactly. The blank line after `</summary>` makes the bullets render as a list. Keep @-mentions out of the summary.
 - A PR or issue triage that ends in an action on GitHub (close, rebase, supersede) → draft that comment, show it, and ask once for human words. Post it on "none" or with his words, then take the action.
+- An issue for a repo outside Dembrane → draft it, then hand over a pre-filled new-issue link alongside the draft file. Don't post it: his tokens can't open issues outside Dembrane.
+  - Search the repo's issues first, and link related ones in the draft.
+  - Read `.github/ISSUE_TEMPLATE/` with `gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE`. Draft to the matching template's fields, in their order.
+    - `config.yml` with `blank_issues_enabled: false` means the issue must go through a template. Its `contact_links` may send questions or feature requests to Discussions instead.
+  - A form template (`.yml`): `https://github.com/<owner>/<repo>/issues/new?template=<file>&title=…&labels=…&<field id>=…` fills each field by its `id`.
+  - A Markdown template (`.md`), or none: `…/issues/new?template=<file>&title=…&body=…`, with the body under the template's headings.
+  - Encode the query with `urllib.parse.urlencode`. Put the full link in the reply as a markdown link, plus the draft file's absolute path in case a field doesn't fill.
 - TODO: add overrides as they come up.
