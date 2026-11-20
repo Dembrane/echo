@@ -243,7 +243,7 @@ msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# in trascrizione} other {# in trascrizione}}"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1074
+#: src/routes/project/report/ProjectReportRoute.tsx:1086
 msgid "{0, plural, one {# view} other {# views}}"
 msgstr "{0, plural, one {# visualizzazione} other {# visualizzazioni}}"
 
@@ -1207,7 +1207,7 @@ msgstr "Un nuovo assistente e un monitor in diretta"
 msgid "A new free plan"
 msgstr "Un nuovo piano gratuito"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:467
+#: src/routes/project/report/ProjectReportRoute.tsx:469
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
 
@@ -2130,11 +2130,11 @@ msgstr "Ripristinata una formulazione precedente"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1238
+#: src/routes/project/report/ProjectReportRoute.tsx:1251
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "Verrà inviata una notifica via email a {participantCount, plural, one {# partecipante} other {# partecipanti}}. Vuoi procedere?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1248
+#: src/routes/project/report/ProjectReportRoute.tsx:1261
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Verrà inviata una notifica via email ai partecipanti. Vuoi procedere?"
 
@@ -2195,8 +2195,8 @@ msgstr "Analisi | dembrane"
 #~ msgid "Analysis runs"
 #~ msgstr "Esecuzioni di analisi"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:205
-#: src/routes/project/report/ProjectReportRoute.tsx:1089
+#: src/routes/project/report/ProjectReportRoute.tsx:207
+#: src/routes/project/report/ProjectReportRoute.tsx:1101
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -2309,7 +2309,7 @@ msgstr "Qualsiasi tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Chiunque nella tua organizzazione può trovare questo spazio di lavoro. Gli amministratori possono entrare; i membri possono richiedere l'accesso."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:967
+#: src/routes/project/report/ProjectReportRoute.tsx:979
 msgid "Anyone with the link can read it. No login, and no transcripts."
 msgstr "Chiunque abbia il link può leggerlo. Senza accesso e senza trascrizioni."
 
@@ -2425,7 +2425,7 @@ msgstr "Are you sure you want to delete this conversation? This action cannot be
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1263
+#: src/routes/project/report/ProjectReportRoute.tsx:1276
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Are you sure you want to delete this report? This action cannot be undone."
 
@@ -2793,7 +2793,7 @@ msgstr "Assente"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/CreateProjectRoute.tsx:509
 #: src/routes/project/CreateProjectRoute.tsx:728
-#: src/routes/project/report/ProjectReportRoute.tsx:500
+#: src/routes/project/report/ProjectReportRoute.tsx:502
 #: src/routes/organisation/OrganisationRoute.tsx:696
 #: src/routes/organisation/OrganisationRoute.tsx:719
 #: src/routes/onboarding/OnboardingRoute.tsx:502
@@ -3102,7 +3102,7 @@ msgstr "Chiamate non associate ad alcun account"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:478
-#: src/routes/project/report/ProjectReportRoute.tsx:281
+#: src/routes/project/report/ProjectReportRoute.tsx:283
 #: src/routes/organisation/OrganisationRoute.tsx:1833
 #: src/routes/organisation/OrganisationRoute.tsx:1856
 #: src/routes/organisation/OrganisationRoute.tsx:1879
@@ -3200,7 +3200,7 @@ msgstr "Annulla piano"
 msgid "Cancel request"
 msgstr "Annulla richiesta"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:535
+#: src/routes/project/report/ProjectReportRoute.tsx:537
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
@@ -3232,7 +3232,7 @@ msgstr "Se annulli, il tuo piano non si rinnoverà. Mantieni {0} fino al termine
 msgid "Cannot add empty conversation"
 msgstr "Cannot add empty conversation"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:514
+#: src/routes/project/report/ProjectReportRoute.tsx:516
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 
@@ -3981,7 +3981,7 @@ msgstr "Conferma password"
 #~ msgid "Confirm Publishing"
 #~ msgstr "Confirm Publishing"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:492
+#: src/routes/project/report/ProjectReportRoute.tsx:494
 msgid "Confirm reschedule"
 msgstr "Confirm reschedule"
 
@@ -4269,7 +4269,7 @@ msgstr "Conversazioni: {0}"
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1041
+#: src/routes/project/report/ProjectReportRoute.tsx:1053
 #: src/portal/components/ParticipantShareModal.tsx:111
 #: src/portal/components/start/InAppBrowserNotice.tsx:66
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:237
@@ -4330,7 +4330,7 @@ msgstr "Copia il link"
 #~ msgid "Copy link to clipboard"
 #~ msgstr "Copy link to clipboard"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1043
+#: src/routes/project/report/ProjectReportRoute.tsx:1055
 msgid "Copy report content"
 msgstr "Copy report content"
 
@@ -4993,7 +4993,7 @@ msgstr "Predefinito: {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1264
+#: src/routes/project/report/ProjectReportRoute.tsx:1277
 #: src/portal/components/conversation/UserChunkMessage.tsx:100
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
@@ -5043,8 +5043,8 @@ msgstr "Delete project"
 #~ msgid "Delete Project"
 #~ msgstr "Delete Project"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1053
-#: src/routes/project/report/ProjectReportRoute.tsx:1262
+#: src/routes/project/report/ProjectReportRoute.tsx:1065
+#: src/routes/project/report/ProjectReportRoute.tsx:1275
 msgid "Delete report"
 msgstr "Delete report"
 
@@ -5424,7 +5424,7 @@ msgstr "Scarica tutte le trascrizioni"
 msgid "Download as"
 msgstr "Download as"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1015
+#: src/routes/project/report/ProjectReportRoute.tsx:1027
 msgid "Download as PDF"
 msgstr "Scarica come PDF"
 
@@ -5642,7 +5642,7 @@ msgstr "Modifica obiettivo"
 msgid "Edit methodology"
 msgstr "Modifica metodologia"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1126
+#: src/routes/project/report/ProjectReportRoute.tsx:1138
 msgid "Edit mode"
 msgstr "Edit mode"
 
@@ -6083,7 +6083,7 @@ msgstr "Esempio di payload del webhook"
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Supera il limite di posti. Si applicano costi per l'eccedenza."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1133
+#: src/routes/project/report/ProjectReportRoute.tsx:1145
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 #: src/routes/project/canvas/CanvasRoute.tsx:618
 msgid "Exit fullscreen"
@@ -6370,7 +6370,7 @@ msgstr "Failed to remove avatar"
 msgid "Failed to remove logo"
 msgstr "Failed to remove logo"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:483
+#: src/routes/project/report/ProjectReportRoute.tsx:485
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Riprogrammazione non riuscita. Scegli un orario più avanti e riprova."
 
@@ -6822,7 +6822,7 @@ msgstr "Schermo intero"
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1133
+#: src/routes/project/report/ProjectReportRoute.tsx:1145
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
@@ -6894,7 +6894,7 @@ msgstr "Genera automaticamente i titoli delle conversazioni, con l'opzione di di
 msgid "Generate map"
 msgstr "Genera mappa"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:510
+#: src/routes/project/report/ProjectReportRoute.tsx:512
 #: src/components/report/UpdateReportModalButton.tsx:349
 #: src/components/report/CreateReportForm.tsx:350
 msgid "Generate now"
@@ -6944,7 +6944,7 @@ msgstr "Generato dalla trascrizione. Puoi modificarlo."
 msgid "Generating"
 msgstr "Generazione in corso"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:306
+#: src/routes/project/report/ProjectReportRoute.tsx:308
 msgid "Generating report..."
 msgstr "Generating report..."
 
@@ -6952,7 +6952,7 @@ msgstr "Generating report..."
 msgid "Generating the summary. Please wait..."
 msgstr "Generating the summary. Please wait..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:259
+#: src/routes/project/report/ProjectReportRoute.tsx:261
 msgid "Generating your report..."
 msgstr "Generating your report..."
 
@@ -7132,8 +7132,8 @@ msgstr "Guida la stesura del report con le tue istruzioni."
 msgid "Guide the report"
 msgstr "Guide the report"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:331
-#: src/routes/project/report/ProjectReportRoute.tsx:1116
+#: src/routes/project/report/ProjectReportRoute.tsx:333
+#: src/routes/project/report/ProjectReportRoute.tsx:1128
 msgid "Guided"
 msgstr "Guidato"
 
@@ -7542,7 +7542,7 @@ msgstr "Posta in arrivo"
 msgid "incl. {deleted} from removed accounts"
 msgstr "incl. {deleted} da account rimossi"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:970
+#: src/routes/project/report/ProjectReportRoute.tsx:982
 msgid "Include portal link"
 msgstr "Include portal link"
 
@@ -8182,7 +8182,7 @@ msgstr "Ultimo aggiornamento {0}"
 msgid "Last used"
 msgstr "Ultimo utilizzo"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:329
+#: src/routes/project/report/ProjectReportRoute.tsx:331
 msgid "Latest"
 msgstr "Latest"
 
@@ -9112,7 +9112,7 @@ msgstr "more"
 msgid "More"
 msgstr "Altro"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1024
+#: src/routes/project/report/ProjectReportRoute.tsx:1036
 msgid "More actions"
 msgstr "More actions"
 
@@ -9904,7 +9904,7 @@ msgstr "Nessun dato del report disponibile"
 msgid "No report found"
 msgstr "No report found"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:926
+#: src/routes/project/report/ProjectReportRoute.tsx:937
 msgid "No reports yet"
 msgstr "No reports yet"
 
@@ -11972,14 +11972,14 @@ msgstr "Provider: {provider}"
 msgid "Public page"
 msgstr "Pagina pubblica"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1254
+#: src/routes/project/report/ProjectReportRoute.tsx:1267
 msgid "Publish"
 msgstr "Publish"
 
 #~ msgid "Publish changes"
 #~ msgstr "Pubblica le modifiche"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1235
+#: src/routes/project/report/ProjectReportRoute.tsx:1248
 msgid "Publish report"
 msgstr "Pubblica report"
 
@@ -12687,7 +12687,7 @@ msgid "report"
 msgstr "report"
 
 #: src/routes/project/ProjectHomeRoute.tsx:115
-#: src/routes/project/report/ProjectReportRoute.tsx:174
+#: src/routes/project/report/ProjectReportRoute.tsx:176
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:162
 #: src/components/report/ReportRenderer.tsx:65
 msgid "Report"
@@ -12732,12 +12732,12 @@ msgstr "Report generation cancelled"
 msgid "Report generation continues in the background with a visible status."
 msgstr "La generazione del report continua in background con uno stato visibile."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:237
+#: src/routes/project/report/ProjectReportRoute.tsx:239
 msgid "Report generation in progress..."
 msgstr "Report generation in progress..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:758
-#: src/routes/project/report/ProjectReportRoute.tsx:1200
+#: src/routes/project/report/ProjectReportRoute.tsx:769
+#: src/routes/project/report/ProjectReportRoute.tsx:1213
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Report generation was cancelled. You can start a new report below."
 
@@ -12765,7 +12765,7 @@ msgstr "Report non generato"
 msgid "Report ready"
 msgstr "Report pronto"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:464
+#: src/routes/project/report/ProjectReportRoute.tsx:466
 msgid "Report scheduled"
 msgstr "Report scheduled"
 
@@ -12793,7 +12793,7 @@ msgstr "Report aggiornato"
 msgid "Report updated · {0}"
 msgstr "Report aggiornato · {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:886
+#: src/routes/project/report/ProjectReportRoute.tsx:897
 msgid "Reports"
 msgstr "Reports"
 
@@ -12906,12 +12906,12 @@ msgstr "Required"
 #~ msgid "Rerun popcorn?"
 #~ msgstr "Eseguire di nuovo il Popcorn?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:525
+#: src/routes/project/report/ProjectReportRoute.tsx:527
 #: src/components/training/TrainingRowActions.tsx:150
 msgid "Reschedule"
 msgstr "Reschedule"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:477
+#: src/routes/project/report/ProjectReportRoute.tsx:479
 msgid "Reschedule to"
 msgstr "Riprogramma per"
 
@@ -14430,7 +14430,7 @@ msgstr "Sono mostrati gli argomenti di un risultato."
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Mostrati i primi {0} di {shownCount} risultati. Restringi la ricerca per vedere il resto."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:862
+#: src/routes/project/report/ProjectReportRoute.tsx:873
 msgid "Showing your most recent completed report."
 msgstr "Showing your most recent completed report."
 
@@ -14573,12 +14573,12 @@ msgstr "Something went wrong"
 msgid "participant.conversation.error"
 msgstr "Something went wrong"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:857
+#: src/routes/project/report/ProjectReportRoute.tsx:868
 msgid "Something went wrong generating your latest report."
 msgstr "Something went wrong generating your latest report."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:765
-#: src/routes/project/report/ProjectReportRoute.tsx:1209
+#: src/routes/project/report/ProjectReportRoute.tsx:776
+#: src/routes/project/report/ProjectReportRoute.tsx:1222
 msgid "Something went wrong generating your report."
 msgstr "Something went wrong generating your report."
 
@@ -15818,7 +15818,7 @@ msgstr "I contrasti tra ciò che le persone vogliono, verificati rispetto alle c
 msgid "The random walk will surface nodes here once available."
 msgstr "L'esplorazione casuale mostrerà i nodi qui appena disponibili."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:971
+#: src/routes/project/report/ProjectReportRoute.tsx:983
 msgid "The report ends with an invitation to add your voice."
 msgstr "Il report si chiude con un invito a far sentire la tua voce."
 
@@ -16393,7 +16393,7 @@ msgstr "Questo report non è ancora disponibile."
 #~ msgstr "This report is not yet available. "
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:213
+#: src/routes/project/report/ProjectReportRoute.tsx:215
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
 
@@ -17258,7 +17258,7 @@ msgstr "Conversazione senza titolo"
 msgid "Untitled methodology"
 msgstr "Metodologia senza titolo"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:307
+#: src/routes/project/report/ProjectReportRoute.tsx:309
 msgid "Untitled report"
 msgstr "Untitled report"
 
@@ -18684,7 +18684,7 @@ msgstr "You can change this later in workspace settings."
 msgid "You can close this page. We'll notify you when it's done."
 msgstr "Puoi chiudere questa pagina. Ti avviseremo quando sarà pronto."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:262
+#: src/routes/project/report/ProjectReportRoute.tsx:264
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
 
@@ -18712,7 +18712,7 @@ msgstr "Puoi revocarlo più tardi in <0>Aiuto, Connetti il tuo agent</0>."
 #~ msgid "You can skip this and add them later."
 #~ msgstr "Puoi saltare questo passaggio e aggiungerli dopo."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1214
+#: src/routes/project/report/ProjectReportRoute.tsx:1227
 msgid "You can try again below."
 msgstr "You can try again below."
 
@@ -19157,7 +19157,7 @@ msgstr "Il tuo invito è già stato accettato, ma non fai più parte di {resolve
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "L'ultimo pagamento non è andato a buon fine. Il tuo piano rimane attivo. Aggiorna il metodo di pagamento o riprova l'addebito per saldare."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:848
+#: src/routes/project/report/ProjectReportRoute.tsx:859
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
