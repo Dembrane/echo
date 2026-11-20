@@ -206,3 +206,46 @@ it("counts a direct upload that landed as sent", async () => {
 
 	expect(outbox.progress("conv-1")).toEqual({ queued: 0, sent: 1, total: 1 });
 });
+
+it("tells the conversation's listener a chunk was kept, and any limit it hit", async () => {
+	api.confirm.mockResolvedValueOnce({ recording_stop: "audio_conversation" });
+	render(tree());
+	const conv1 = vi.fn();
+	const conv2 = vi.fn();
+	act(() => {
+		outbox.onRecordingNotice("conv-1", conv1);
+		outbox.onRecordingNotice("conv-2", conv2);
+	});
+
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await act(() => outbox.settled("conv-1"));
+
+	expect(conv1).toHaveBeenCalledWith({
+		accepted: true,
+		stop: "audio_conversation",
+	});
+	expect(conv2).not.toHaveBeenCalled();
+});
+
+it("drops a chunk a recording limit refuses, and says so", async () => {
+	api.upload.mockRejectedValueOnce(
+		Object.assign(new Error("HTTP 402"), {
+			isAxiosError: true,
+			response: {
+				data: { detail: { error: "FREE_TIER_LIMIT", limit: "ai_budget" } },
+				status: 402,
+			},
+		}),
+	);
+	render(tree());
+	const listener = vi.fn();
+	act(() => {
+		outbox.onRecordingNotice("conv-1", listener);
+	});
+
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await act(() => outbox.settled("conv-1"));
+
+	expect(listener).toHaveBeenCalledWith({ accepted: false, stop: "ai_budget" });
+	expect(api.upload).toHaveBeenCalledTimes(1);
+});

@@ -202,6 +202,7 @@ vi.mock("./outbox/OutboxProvider", async () => {
 					rerender();
 					if (queued === 0) for (const done of queueWaiters.splice(0)) done();
 				},
+				onRecordingNotice: () => () => {},
 				progress: () => ({ queued, sent, total: queued + sent }),
 				queuedCount: () => queued,
 				settled: async () => {
@@ -481,7 +482,9 @@ describe("finishing", () => {
 			"Awaiting connection: 0 of 1 part sent",
 		);
 		expect(
-			screen.getByText("Connection lost. Your audio will continue to be saved on device."),
+			screen.getByText(
+				"Connection lost. Your audio will continue to be saved on device.",
+			),
 		).toBeTruthy();
 		// Resume still works.
 		expect(

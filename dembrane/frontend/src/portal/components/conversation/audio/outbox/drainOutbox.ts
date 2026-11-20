@@ -16,8 +16,11 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 const MIN_RECOVERED_BYTES = 1024;
 
-/** The server says the conversation is gone or closed to us: sending again won't help. */
-const GONE_STATUSES = [403, 404, 410];
+/**
+ * Sending again won't help: the conversation is gone or closed to us, or (402)
+ * a recording limit refused the audio and would only refuse it again.
+ */
+const FINAL_STATUSES = [402, 403, 404, 410];
 
 type Uploaded = NonNullable<ChunkItem["uploaded"]>;
 
@@ -29,8 +32,15 @@ export type OutboxApi = {
 };
 
 export type OutboxEvent =
-	| { type: "delivered"; item: OutboxItem; ageMs: number; attempts: number }
-	| { type: "dropped"; item: OutboxItem; reason: string }
+	| {
+			type: "delivered";
+			item: OutboxItem;
+			ageMs: number;
+			attempts: number;
+			/** What the server answered the confirm (or finish) with. */
+			response: unknown;
+	  }
+	| { type: "dropped"; item: OutboxItem; reason: string; error?: unknown }
 	| {
 			type: "retrying";
 			item: OutboxItem;
@@ -105,22 +115,23 @@ export const createDrainer = ({
 		const attempts = item.attempts + 1;
 		await store.noteAttempt(item.seq);
 		let uploaded = item.kind === "chunk" ? item.uploaded : undefined;
+		let response: unknown;
 		try {
 			if (item.kind === "finish") {
-				await api.finish(item.conversationId);
+				response = await api.finish(item.conversationId);
 			} else {
 				if (!uploaded) {
 					uploaded = await api.upload(item);
 					await store.markUploaded(item.seq, uploaded);
 				}
-				await api.confirm(item, uploaded);
+				response = await api.confirm(item, uploaded);
 			}
 		} catch (error) {
 			const status = httpStatus(error);
-			if (status && GONE_STATUSES.includes(status)) {
+			if (status && FINAL_STATUSES.includes(status)) {
 				await store.remove(item.seq);
 				backoff.delete(item.conversationId);
-				onEvent({ item, reason: `http_${status}`, type: "dropped" });
+				onEvent({ error, item, reason: `http_${status}`, type: "dropped" });
 				return;
 			}
 			// Confirm answers 400 when S3 doesn't have the file: upload it again.
@@ -136,6 +147,7 @@ export const createDrainer = ({
 			ageMs: now() - item.createdAt,
 			attempts,
 			item,
+			response,
 			type: "delivered",
 		});
 	};

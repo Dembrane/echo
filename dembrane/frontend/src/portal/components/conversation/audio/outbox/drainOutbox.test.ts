@@ -240,7 +240,7 @@ it("holds a finish back while its conversation's chunk is still failing", async 
 	expect(api.finish).not.toHaveBeenCalled();
 });
 
-it.each([403, 404, 410])(
+it.each([402, 403, 404, 410])(
 	"drops an item the server answers %i to, and moves on",
 	async (status) => {
 		await enqueueChunk("gone", 1);
@@ -257,6 +257,20 @@ it.each([403, 404, 410])(
 		]);
 	},
 );
+
+it("hands the confirm's answer to the delivered event", async () => {
+	await enqueueChunk("conv-1");
+	api.confirm.mockResolvedValueOnce({ recording_stop: "ai_budget" });
+
+	await drainer.drain();
+
+	expect(events).toContainEqual(
+		expect.objectContaining({
+			response: { recording_stop: "ai_budget" },
+			type: "delivered",
+		}),
+	);
+});
 
 it("drops items older than 7 days when it starts", async () => {
 	await enqueueChunk("old");

@@ -10,6 +10,11 @@ import {
 	useRef,
 	useState,
 } from "react";
+import {
+	portalRecordingRefusal,
+	type RecordingRefusal,
+	recordingStopOf,
+} from "@/lib/freeTier";
 import { useUploadConversationChunk } from "../hooks/useUploadConversationChunk";
 import { createDrainer, type OutboxApi, type OutboxEvent } from "./drainOutbox";
 import { outboxApi } from "./outboxApi";
@@ -28,6 +33,35 @@ export type ChunkMeta = {
 	timestamp: Date;
 };
 
+/**
+ * What the server said about a conversation's audio. accepted: the chunk was
+ * kept. stop: a recording limit was hit, so the recording has to end.
+ */
+export type RecordingNotice = {
+	accepted: boolean;
+	stop: RecordingRefusal | null;
+};
+
+type NoticeMessage = { conversationId: string; notice: RecordingNotice };
+
+/** The notice a drainer event carries for the recording screen, if any. */
+const noticeOf = (event: OutboxEvent): NoticeMessage | null => {
+	if (event.type === "delivered" && event.item.kind === "chunk")
+		return {
+			conversationId: event.item.conversationId,
+			notice: { accepted: true, stop: recordingStopOf(event.response) },
+		};
+	if (event.type === "dropped") {
+		const stop = portalRecordingRefusal(event.error);
+		if (stop)
+			return {
+				conversationId: event.item.conversationId,
+				notice: { accepted: false, stop },
+			};
+	}
+	return null;
+};
+
 export type Outbox = {
 	/** Keeps the chunk on this device and sends it when it can. */
 	enqueueChunk: (chunk: Blob, meta: ChunkMeta) => Promise<void>;
@@ -40,6 +74,14 @@ export type Outbox = {
 	progress: (conversationId: string) => OutboxProgress;
 	/** Resolves once nothing for this conversation is waiting to send. */
 	settled: (conversationId: string) => Promise<void>;
+	/**
+	 * Calls back with what the server says about this conversation's audio,
+	 * from whichever tab sends it. Returns the unsubscribe.
+	 */
+	onRecordingNotice: (
+		conversationId: string,
+		listener: (notice: RecordingNotice) => void,
+	) => () => void;
 };
 
 export type OutboxProgress = { queued: number; sent: number; total: number };
@@ -114,8 +156,33 @@ export const OutboxProvider = ({
 	openStore?: () => Promise<OutboxStore>;
 }) => {
 	const queryClient = useQueryClient();
-	// Today's in-memory upload, for when the store can't be used.
-	const directUpload = useUploadConversationChunk();
+
+	const noticeListeners = useRef(
+		new Set<{
+			conversationId: string;
+			listener: (notice: RecordingNotice) => void;
+		}>(),
+	);
+	const notify = useCallback(({ conversationId, notice }: NoticeMessage) => {
+		for (const entry of noticeListeners.current)
+			if (entry.conversationId === conversationId) entry.listener(notice);
+	}, []);
+
+	// Today's in-memory upload, for when the store can't be used. Its callbacks
+	// don't say which conversation, so notices go to the one it last sent for.
+	const directConversationRef = useRef("");
+	const directUpload = useUploadConversationChunk({
+		onChunkAccepted: () =>
+			notify({
+				conversationId: directConversationRef.current,
+				notice: { accepted: true, stop: null },
+			}),
+		onRecordingStop: (stop, accepted) =>
+			notify({
+				conversationId: directConversationRef.current,
+				notice: { accepted, stop },
+			}),
+	});
 
 	const storeRef = useRef<Promise<OutboxStore | null> | null>(null);
 	const kickRef = useRef<() => void>(() => {});
@@ -202,6 +269,12 @@ export const OutboxProvider = ({
 
 		const onEvent = (event: OutboxEvent) => {
 			capture(event);
+			const message = noticeOf(event);
+			if (message) {
+				notify(message);
+				// The screen recording this conversation may be in another tab.
+				channel?.postMessage(message);
+			}
 			if (event.type === "delivered" && event.item.kind === "chunk") {
 				const { conversationId } = event.item;
 				queryClient.invalidateQueries({
@@ -265,7 +338,11 @@ export const OutboxProvider = ({
 		const onVisible = () => {
 			if (document.visibilityState === "visible") wake();
 		};
-		const onMessage = () => {
+		const onMessage = ({ data }: MessageEvent<"changed" | NoticeMessage>) => {
+			if (data !== "changed") {
+				notify(data);
+				return;
+			}
 			void refresh();
 			wake();
 		};
@@ -287,7 +364,7 @@ export const OutboxProvider = ({
 			releaseLock();
 			void storePromise.then((store) => store?.close());
 		};
-	}, [api, openStore, queryClient, countsChanged]);
+	}, [api, openStore, queryClient, countsChanged, notify]);
 
 	const enqueueChunk = useCallback(
 		async (chunk: Blob, meta: ChunkMeta) => {
@@ -327,6 +404,7 @@ export const OutboxProvider = ({
 				}
 			}
 			// No store: today's in-memory upload, still counted until it's done.
+			directConversationRef.current = meta.conversationId;
 			void directUpload
 				.mutateAsync({
 					chunk,
@@ -373,11 +451,28 @@ export const OutboxProvider = ({
 		[queued],
 	);
 
+	const onRecordingNotice = useCallback(
+		(conversationId: string, listener: (notice: RecordingNotice) => void) => {
+			const entry = { conversationId, listener };
+			noticeListeners.current.add(entry);
+			return () => {
+				noticeListeners.current.delete(entry);
+			};
+		},
+		[],
+	);
+
 	// A new value per version, so readers of queuedCount re-render.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version is the point
 	const value = useMemo<Outbox>(
-		() => ({ enqueueChunk, progress, queuedCount: queued, settled }),
-		[enqueueChunk, progress, queued, settled, version],
+		() => ({
+			enqueueChunk,
+			onRecordingNotice,
+			progress,
+			queuedCount: queued,
+			settled,
+		}),
+		[enqueueChunk, onRecordingNotice, progress, queued, settled, version],
 	);
 
 	return (

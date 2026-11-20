@@ -108,7 +108,7 @@ export const ParticipantConversationAudio = () => {
 		newConversationLink,
 		projectQuery,
 	} = useParticipantConversation(projectId, conversationId);
-	// Set after the recorder exists; upload callbacks reach it through this ref.
+	// Set after the recorder exists; upload notices reach it through this ref.
 	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
 	// Whether this page kept any chunk; a budget refusal before one means nothing was saved.
 	const keptChunkRef = useRef(false);
@@ -121,6 +121,21 @@ export const ParticipantConversationAudio = () => {
 		[queuedCount, conversationId],
 	);
 	const uploadProgress = outbox.progress(conversationId ?? "");
+	const { onRecordingNotice } = outbox;
+
+	// A recording limit answers through the audio: a kept chunk can carry a
+	// stop, and a refused one is the stop.
+	useEffect(
+		() =>
+			onRecordingNotice(conversationId ?? "", ({ accepted, stop }) => {
+				if (accepted) keptChunkRef.current = true;
+				if (!stop) return;
+				if (!accepted && stop === "ai_budget" && !keptChunkRef.current)
+					setRefusedUnsaved(true);
+				wrapUpRef.current?.(wrapUpReasonOf(stop));
+			}),
+		[onRecordingNotice, conversationId],
+	);
 
 	// The outbox keeps the chunk on the device until the server has it.
 	const onChunk = (chunk: Blob) => {

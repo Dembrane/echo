@@ -138,7 +138,6 @@ const wrappedUpTransition = (
 		case "finishStarted":
 			return { ...session, finishing: true };
 		case "finishFailed":
-		case "finishCancelled":
 			return { ...session, finishing: false };
 		default:
 			return session;

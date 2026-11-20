@@ -53,15 +53,22 @@ vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 		isLoading: false,
 	}),
 }));
-vi.mock("./hooks/useUploadConversationChunk", () => ({
-	useUploadConversationChunk: (options: {
-		onChunkAccepted?: () => void;
-		onRecordingStop?: (r: string, accepted: boolean) => void;
-	}) => {
-		state.onChunkAccepted = options.onChunkAccepted;
-		state.onRecordingStop = options.onRecordingStop;
-		return { mutateAsync: vi.fn() };
-	},
+// The outbox passes on what the server said about each chunk.
+vi.mock("./outbox/OutboxProvider", () => ({
+	useOutbox: () => ({
+		enqueueChunk: vi.fn(),
+		onRecordingNotice: (
+			_conversationId: string,
+			listener: (notice: { accepted: boolean; stop: string | null }) => void,
+		) => {
+			state.onChunkAccepted = () => listener({ accepted: true, stop: null });
+			state.onRecordingStop = (stop, accepted) => listener({ accepted, stop });
+			return () => {};
+		},
+		progress: () => ({ queued: 0, sent: 0, total: 0 }),
+		queuedCount: () => 0,
+		settled: async () => {},
+	}),
 }));
 vi.mock("./hooks/useChunkedAudioRecorder", () => ({
 	default: (options: { onRecordingInterrupted?: () => void }) => {
