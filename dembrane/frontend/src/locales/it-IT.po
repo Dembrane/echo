@@ -2797,7 +2797,7 @@ msgstr "Distanza media a bassa dimensione (predefinita: 10)"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:177
 msgid "participant.modal.upload_awaiting_connection"
-msgstr ""
+msgstr "In attesa di connessione: {sent} di {total, plural, one {# parte inviata} other {# parti inviate}}"
 
 #: src/components/conversation/StatePill.tsx:47
 #: src/components/conversation/LiveMonitorSection.tsx:269
@@ -4040,7 +4040,7 @@ msgstr "Connessione persa. Ricarica per la risposta."
 
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:144
 msgid "Connection lost. Your audio will continue to be saved on device."
-msgstr ""
+msgstr "Connessione persa. Il tuo audio continuerà a essere salvato sul dispositivo."
 
 #: src/components/agent-access/hooks/index.ts:211
 msgid "Connection revoked"
@@ -17460,7 +17460,7 @@ msgstr "Caricamento completato"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
 msgid "participant.modal.upload_complete"
-msgstr ""
+msgstr "Caricamento completato: {sent} di {total, plural, one {# parte inviata} other {# parti inviate}}"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Upload conversations"
@@ -17505,7 +17505,7 @@ msgstr "Caricamento dei file audio"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:172
 msgid "participant.modal.upload_in_progress"
-msgstr ""
+msgstr "Caricamento dell’audio: {sent} di {total, plural, one {# parte inviata} other {# parti inviate}}"
 
 #: src/components/workspace/gateWalls.ts:171
 msgid "Uploading recordings comes with a paid plan"
@@ -18071,7 +18071,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 
 #: src/portal/components/conversation/ConversationMessages.tsx:138
 msgid "We're having trouble reaching our server, but keep going: your audio is saved on this device and will send once we reconnect."
-msgstr ""
+msgstr "Abbiamo problemi a raggiungere il nostro server, ma continua pure: il tuo audio è salvato su questo dispositivo e verrà inviato appena ci riconnettiamo."
 
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
@@ -18907,7 +18907,7 @@ msgstr "Hai bisogno di un invito da parte di un collega"
 
 #: src/portal/components/conversation/ConversationMessages.tsx:123
 msgid "You seem to be offline, but keep going: your audio is saved on this device and will send once you're back online."
-msgstr ""
+msgstr "Sembra che tu sia offline, ma continua pure: il tuo audio è salvato su questo dispositivo e verrà inviato appena tornerai online."
 
 #: src/portal/components/conversation/ConversationMessages.tsx:129
 msgid "You seem to be offline, please check your internet connection"

@@ -2797,7 +2797,7 @@ msgstr "Prům. nízko-dim. vzdálenost (výchozí: 10)"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:177
 msgid "participant.modal.upload_awaiting_connection"
-msgstr ""
+msgstr "Čeká se na připojení: odesláno {sent} z {total, plural, one {# části} few {# částí} many {# části} other {# částí}}"
 
 #: src/components/conversation/StatePill.tsx:47
 #: src/components/conversation/LiveMonitorSection.tsx:269
@@ -4040,7 +4040,7 @@ msgstr "Spojení ztraceno. Načtěte znovu pro odpověď."
 
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:144
 msgid "Connection lost. Your audio will continue to be saved on device."
-msgstr ""
+msgstr "Spojení ztraceno. Váš zvuk se bude dál ukládat do zařízení."
 
 #: src/components/agent-access/hooks/index.ts:211
 msgid "Connection revoked"
@@ -17459,7 +17459,7 @@ msgstr "Nahrávání dokončeno"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
 msgid "participant.modal.upload_complete"
-msgstr ""
+msgstr "Nahrávání dokončeno: odesláno {sent} z {total, plural, one {# části} few {# částí} many {# části} other {# částí}}"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Upload conversations"
@@ -17504,7 +17504,7 @@ msgstr "Nahrávání zvukových souborů"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:172
 msgid "participant.modal.upload_in_progress"
-msgstr ""
+msgstr "Nahrávání zvuku: odesláno {sent} z {total, plural, one {# části} few {# částí} many {# části} other {# částí}}"
 
 #: src/components/workspace/gateWalls.ts:171
 msgid "Uploading recordings comes with a paid plan"
@@ -18069,7 +18069,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 
 #: src/portal/components/conversation/ConversationMessages.tsx:138
 msgid "We're having trouble reaching our server, but keep going: your audio is saved on this device and will send once we reconnect."
-msgstr ""
+msgstr "Nedaří se nám spojit s naším serverem, ale klidně pokračujte: váš zvuk se ukládá do tohoto zařízení a odešle se, jakmile se spojení obnoví."
 
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
@@ -18905,7 +18905,7 @@ msgstr "You need an invitation from a colleague"
 
 #: src/portal/components/conversation/ConversationMessages.tsx:123
 msgid "You seem to be offline, but keep going: your audio is saved on this device and will send once you're back online."
-msgstr ""
+msgstr "Zdá se, že jste offline, ale klidně pokračujte: váš zvuk se ukládá do tohoto zařízení a odešle se, jakmile budete zase online."
 
 #: src/portal/components/conversation/ConversationMessages.tsx:129
 msgid "You seem to be offline, please check your internet connection"

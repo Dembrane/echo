@@ -2797,7 +2797,7 @@ msgstr "Сер. низьковимірна відстань (за замовчу
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:177
 msgid "participant.modal.upload_awaiting_connection"
-msgstr ""
+msgstr "Очікування з’єднання: надіслано {sent} з {total, plural, one {# частини} few {# частин} many {# частин} other {# частини}}"
 
 #: src/components/conversation/StatePill.tsx:47
 #: src/components/conversation/LiveMonitorSection.tsx:269
@@ -4040,7 +4040,7 @@ msgstr "З'єднання втрачено. Оновіть сторінку дл
 
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:144
 msgid "Connection lost. Your audio will continue to be saved on device."
-msgstr ""
+msgstr "З’єднання втрачено. Ваше аудіо й надалі зберігатиметься на пристрої."
 
 #: src/components/agent-access/hooks/index.ts:211
 msgid "Connection revoked"
@@ -17460,7 +17460,7 @@ msgstr "Завантаження завершено"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
 msgid "participant.modal.upload_complete"
-msgstr ""
+msgstr "Завантаження завершено: надіслано {sent} з {total, plural, one {# частини} few {# частин} many {# частин} other {# частини}}"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:627
 msgid "Upload conversations"
@@ -17505,7 +17505,7 @@ msgstr "Завантаження аудіофайлів"
 #. js-lingui-explicit-id
 #: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:172
 msgid "participant.modal.upload_in_progress"
-msgstr ""
+msgstr "Завантаження аудіо: надіслано {sent} з {total, plural, one {# частини} few {# частин} many {# частин} other {# частини}}"
 
 #: src/components/workspace/gateWalls.ts:171
 msgid "Uploading recordings comes with a paid plan"
@@ -18071,7 +18071,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 
 #: src/portal/components/conversation/ConversationMessages.tsx:138
 msgid "We're having trouble reaching our server, but keep going: your audio is saved on this device and will send once we reconnect."
-msgstr ""
+msgstr "Не вдається зв’язатися з нашим сервером, але продовжуйте: ваше аудіо зберігається на цьому пристрої й буде надіслане, щойно з’єднання відновиться."
 
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
@@ -18907,7 +18907,7 @@ msgstr "Вам потрібне запрошення від колеги"
 
 #: src/portal/components/conversation/ConversationMessages.tsx:123
 msgid "You seem to be offline, but keep going: your audio is saved on this device and will send once you're back online."
-msgstr ""
+msgstr "Схоже, ви офлайн, але продовжуйте: ваше аудіо зберігається на цьому пристрої й буде надіслане, щойно ви знову будете онлайн."
 
 #: src/portal/components/conversation/ConversationMessages.tsx:129
 msgid "You seem to be offline, please check your internet connection"
