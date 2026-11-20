@@ -45,9 +45,14 @@ preflight() {
 
 # Chrome's sandbox needs unprivileged user namespaces, which Ubuntu 23.10 and later restrict
 # through AppArmor. Prints the agent-browser launch args that host needs, if any.
+# Every launch gets the same flags. agent-browser restarts the browser whenever a command's
+# flags differ from the running ones, and every helper reloads the env file, so flags given
+# once with --args are dropped on the next helper call. The fake microphone is harmless on
+# the dashboard, so it's always on.
 browser_args() {
-  [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] && echo --no-sandbox
-  return 0
+  local args=--use-fake-device-for-media-stream,--use-fake-ui-for-media-stream
+  [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] && args=--no-sandbox,$args
+  echo "$args"
 }
 
 listener_pid() { lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -1; }

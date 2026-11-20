@@ -22,12 +22,11 @@ All five proven on a fresh run with a "Table conversations" project.
 Preconditions:
 
 - A project made through [projects.md](./projects.md), with its id in `$PROJECT`.
-- The session launched as a phone with a fake microphone (the skill's Drive section). Close it first if it ran a dashboard recipe.
+- The session set up as a phone (the skill's Drive section). The env file's browser flags already include the fake microphone.
 
 ```sh
 S=.agents/skills/verify-dembrane/scripts
-agent-browser --session "$SESSION" close
-agent-browser --session "$SESSION" --args "--use-fake-device-for-media-stream,--use-fake-ui-for-media-stream" open "$PORTAL_URL/$PROJECT/start"
+agent-browser --session "$SESSION" open "$PORTAL_URL/$PROJECT/start"
 agent-browser --session "$SESSION" set device "iPhone 14"
 agent-browser --session "$SESSION" reload
 agent-browser --session "$SESSION" wait --text "Let's go!"
@@ -80,7 +79,7 @@ While recording, the record screen shows "ECHO" and "Stop" in place of "Record".
 ## Gotchas
 
 - Opening the portal port as `localhost` instead of `portal.localhost` shows the dashboard, not the portal.
-- Recording needs a microphone. Without the `--args` fake-media flags at launch the browser has none, and `--args` is ignored by a session that is already running.
+- Recording needs a microphone. The env file's `AGENT_BROWSER_ARGS` gives every launch a fake one. Passing `--args` replaces those flags, and the next helper call relaunches without them.
 - React Grab, the dev-only inspector (`dembrane/frontend/index.html`, `import.meta.env.DEV` only), puts its toolbar bottom-centre. At phone width it sits over the sticky "Record" button, and the click fails with "covered by <div>". Remove its host as above; production builds don't load it.
 - The worker transcribes each chunk with the model `.env.local` configures, so a run with Vertex credentials makes real, billed model calls. The fake microphone plays a tone, not speech: expect `[Nothing to transcribe]`, and sometimes invented text. Transcript content proves nothing here; the chunk rows and files do.
 - The verification seed adds about 50 sample conversations to other projects. Always filter conversation queries by `project_id`.

@@ -95,9 +95,11 @@ echo $! > "$STATE/worker.pid"
 # The portal router is picked by a hostname starting with "portal." (src/config.ts), since
 # only port 5174 also picks it, so the portal is served as portal.localhost.
 cd "$FRONTEND"
-VITE_DEV_API_PROXY=http://localhost:$API_PORT/ nohup ./node_modules/.bin/vite --port "$DASH_PORT" --strictPort > "$STATE/dashboard.log" 2>&1 &
+# Each server gets its own dependency cache: sharing one, a rebuild in one server leaves the
+# other serving a mix of old and new files.
+VITE_CACHE_DIR=$STATE/vite-dashboard VITE_DEV_API_PROXY=http://localhost:$API_PORT/ nohup ./node_modules/.bin/vite --port "$DASH_PORT" --strictPort > "$STATE/dashboard.log" 2>&1 &
 echo $! > "$STATE/dashboard.pid"
-VITE_DEV_API_PROXY=http://localhost:$API_PORT/ nohup ./node_modules/.bin/vite --port "$PORTAL_PORT" --strictPort > "$STATE/portal.log" 2>&1 &
+VITE_CACHE_DIR=$STATE/vite-portal VITE_DEV_API_PROXY=http://localhost:$API_PORT/ nohup ./node_modules/.bin/vite --port "$PORTAL_PORT" --strictPort > "$STATE/portal.log" 2>&1 &
 echo $! > "$STATE/portal.pid"
 
 # Ready means usable: the API reaches its database, the worker reports in, and both dev
