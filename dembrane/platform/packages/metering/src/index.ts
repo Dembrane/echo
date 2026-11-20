@@ -360,7 +360,7 @@ function attribution(r: Resolution) {
     payer: "account",
     billing_account_id: r.accountId,
     project_id: r.projectId,
-    counted: r.counted,
+    counted: true,
   };
 }
 
@@ -399,7 +399,7 @@ export function modelCallTable(db: Db): ModelCallSink {
         const sums = new Map<string, { accountId: string; period: string; amount: number }>();
         for (const b of spend.values()) {
           const r = who(b.payer);
-          if (!r || r === "internal" || !r.counted || b.costMicroEur <= 0) continue;
+          if (!r || r === "internal" || b.costMicroEur <= 0) continue;
           const period = periodStart(b.second, r.tier, r.downgradedAt).toISOString();
           const key = `${r.accountId}|${period}`;
           const had = sums.get(key);

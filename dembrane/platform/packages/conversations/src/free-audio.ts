@@ -7,7 +7,6 @@ import {
   freeLimitError,
   freeLimits,
   isFreeLimit,
-  isSampleProject,
   recordingProject,
   take,
   type UsageKey,
@@ -52,7 +51,7 @@ async function verdict(d: AudioDeps, projectId: string): Promise<Verdict | null>
   return { a, limits, refusal: null, used };
 }
 
-// Read only, on the caller's account: a sample never runs out, a failed read lets audio through.
+// Read only, on the caller's account: a failed read lets audio through.
 async function aiBudgetGone(
   d: AudioDeps,
   a: AllowanceAccount,
@@ -60,11 +59,7 @@ async function aiBudgetGone(
   used?: Usage,
 ): Promise<boolean> {
   try {
-    const [sample, budget] = await Promise.all([
-      isSampleProject(d.db, projectId),
-      aiBudgetFor(d.db, a, d.now(), used),
-    ]);
-    return !sample && budget.exhausted;
+    return (await aiBudgetFor(d.db, a, d.now(), used)).exhausted;
   } catch (err) {
     d.logger?.error(
       { err, projectId, signal: "free_audio.ai_budget_check_failed" },

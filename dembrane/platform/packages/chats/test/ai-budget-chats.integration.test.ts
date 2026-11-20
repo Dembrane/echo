@@ -278,10 +278,9 @@ run("chats and the AI budget", () => {
     });
   });
 
-  describe("a sample project in a free account at zero", () => {
+  describe("a sample project in a free account", () => {
     test("turns work up to the shared ten-turn cap, then chat_turns", async () => {
       const s = await seed();
-      await spend(s.billing, LIMIT);
       const h = app(s.owner);
       const created = await h.createChat(s.sample);
       expect(created.status).toBe(200);
@@ -303,6 +302,24 @@ run("chats and the AI budget", () => {
       });
       expect((await userMessages(a)) + (await userMessages(b))).toBe(10);
       expect(await stamp(a)).toBeNull();
+    });
+
+    test("at zero, a new chat and a turn are refused with ai_budget", async () => {
+      const s = await seed();
+      await spend(s.billing, LIMIT);
+      const h = app(s.owner);
+      const created = await h.createChat(s.sample);
+      expect(created.status).toBe(402);
+      expect(((await created.json()) as { details: unknown }).details).toMatchObject({
+        limit: "ai_budget",
+      });
+      const c = await chat(s.sample);
+      const res = await h.send(c);
+      expect(res.status).toBe(402);
+      expect(((await res.json()) as { details: unknown }).details).toMatchObject({
+        limit: "ai_budget",
+      });
+      expect(await userMessages(c)).toBe(0);
     });
 
     test("a paid account's sample has no turn cap", async () => {

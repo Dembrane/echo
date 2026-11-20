@@ -339,7 +339,7 @@ it("sums the month in captioned tiles", async () => {
 		summary.getByText("Calls no account could be matched to"),
 	).toBeTruthy();
 	expect(
-		summary.getByText("Demos, voice outside projects, dev tools"),
+		summary.getByText("Staff demos and voice outside projects"),
 	).toBeTruthy();
 });
 

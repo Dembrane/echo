@@ -195,10 +195,10 @@ it("closes the form and opens the AI wall when the server refuses the report", a
 	);
 });
 
-it("leaves a sample project's report open when this month's AI is used up", async () => {
+it("opens the AI wall on a sample project too once this month's AI is used up", async () => {
 	project.isSample = true;
 	await renderButton(true);
-	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("ai_budget");
 });
 
 it("walls nothing while is_sample is still loading", async () => {

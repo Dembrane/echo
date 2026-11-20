@@ -247,7 +247,7 @@ run("AI budget checks on the recording path: account resolves per request", () =
     expect(await at()).toBeNull();
   });
 
-  test("at zero, the budget check refuses, except in a sample project", async () => {
+  test("at zero, the budget check refuses, in a sample project too", async () => {
     const open = async (sample: boolean) => {
       const { p, acc } = await freeProject(sample);
       await sql`insert into free_usage (billing_account_id, period_start, key, amount)
@@ -264,6 +264,6 @@ run("AI budget checks on the recording path: account resolves per request", () =
       };
     };
     expect(await open(false)).toEqual({ open: false, stop: "ai_budget", check: "ai_budget" });
-    expect(await open(true)).toEqual({ open: true, stop: null, check: null });
+    expect(await open(true)).toEqual({ open: false, stop: "ai_budget", check: "ai_budget" });
   });
 });

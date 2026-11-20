@@ -331,8 +331,8 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       out: { [language]: { state, settings } },
       salesPortal: SALES_PORTAL,
       feedbackUrl: d.demo.feedbackUrl,
-      // The same exemptions a seeded sample has: no usage, no free-plan chat or report
-      // spent, out of the public and staff numbers. Its sample_version stays empty, which
+      // The same exemptions a seeded sample has: no audio usage, out of the public and staff
+      // numbers; its AI use still spends the AI budget. Its sample_version stays empty, which
       // is what keeps the best-practices updater (it selects by that stamp) away from it.
       sample: true,
       workspaceId,
