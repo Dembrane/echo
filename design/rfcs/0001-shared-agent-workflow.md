@@ -176,3 +176,7 @@ choose which tactics to move up into `dembrane-mode`.
       `/dembrane-mode` alone prompts the pstack install.
 - [ ] Pick the task for step 3: a Linear issue to paste in, or asking the agent to write a
       `verify-dembrane` recipe for a flow that has none.
+- [ ] Get the Linear and Dembrane MCP servers in `.mcp.json` working on a T3code server.
+      Check that T3code loads project config, that the servers don't wait on an approval
+      prompt nobody sees, and how a headless server signs in (OAuth or an API key in the
+      server's own config).
