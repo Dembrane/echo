@@ -16,9 +16,15 @@ import {
 	recordingStopOf,
 } from "@/lib/freeTier";
 import { useUploadConversationChunk } from "../hooks/useUploadConversationChunk";
-import { createDrainer, type OutboxApi, type OutboxEvent } from "./drainOutbox";
-import { outboxApi } from "./outboxApi";
-import { type OutboxStore, openOutboxStore } from "./outboxStore";
+import type { OutboxApi, OutboxEvent } from "./drainOutbox";
+import type { OutboxStore } from "./outboxStore";
+
+// The store, drainer and API load after the first screen: the portal's first
+// load has a size budget (scripts/check-portal-bundle.mjs), and nothing here
+// is needed before a chunk exists or the page has settled.
+const openOutboxStore = () =>
+	import("./outboxStore").then((m) => m.openOutboxStore());
+const loadOutboxApi = () => import("./outboxApi").then((m) => m.outboxApi);
 
 /** Only one tab sends at a time; the others queue and wait their turn. */
 const DRAIN_LOCK = "portal-audio-outbox";
@@ -148,7 +154,7 @@ const capture = (event: OutboxEvent) => {
  */
 export const OutboxProvider = ({
 	children,
-	api = outboxApi,
+	api,
 	openStore = openOutboxStore,
 }: {
 	children: ReactNode;
@@ -292,7 +298,12 @@ export const OutboxProvider = ({
 
 		// Only the tab holding the drain lock has a drainer; kicking elsewhere is a no-op.
 		const becomeDrainer = async (store: OutboxStore) => {
-			const drainer = createDrainer({ api, onEvent, store });
+			const [{ createDrainer }, drainApi] = await Promise.all([
+				import("./drainOutbox"),
+				api ?? loadOutboxApi(),
+			]);
+			if (cancelled) return;
+			const drainer = createDrainer({ api: drainApi, onEvent, store });
 			const kick = async () => {
 				clearTimeout(timer);
 				try {
