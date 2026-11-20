@@ -31,4 +31,5 @@ Each feature file has an H1, one paragraph of user-visible behaviour, then four 
 - [Account: register, verify, log in](./auth.md): proven on a fresh run.
 - [Onboarding](./onboarding.md): organisation, invite and about-you steps after the first login; proven on a fresh run.
 - [Create a project](./projects.md): from a format proven on a fresh run; from files, text or a link not yet driven.
+- [Project report](./reports.md): view and edit mode on the seeded Millbrook sample; generation fails locally without an LLM.
 - [Participant portal](./portal.md): start, tutorial, record and finish on a phone with a fake microphone; proven on a fresh run.

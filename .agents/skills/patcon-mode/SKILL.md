@@ -16,4 +16,5 @@ Before anything else, read `.agents/skills/dembrane-mode/SKILL.md` in full and f
 
 - Kickoffs name this skill's folder: the first line of every agent kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of this folder.
 - Spawn `patcon-agent` wherever the base says `dembrane-agent` or `poteto-agent`, and put this file's absolute path in its prompt.
+- When an issue or the user prescribes a fix, treat it as one hypothesis. Before implementing, list two or three options with their size and what changes for users, and say why the chosen one wins.
 - TODO: add overrides as they come up.

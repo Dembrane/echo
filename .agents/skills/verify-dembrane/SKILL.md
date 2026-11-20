@@ -65,7 +65,7 @@ $S/evidence.sh step <name>                 # screenshot, page text and URL of $S
 $S/evidence.sh query "<label>" "<select>"  # read-only query on the run's database, output kept
 ```
 
-- Exercise the real user path through the browser for the feature under test. No test-only endpoints, no setting state in the database to skip a step. `seed-user.sh` sets up preconditions only, and minting the verification link is the one stand-in, because the email never leaves the API locally.
+- Exercise the real user path through the browser for the feature under test. No test-only endpoints, no setting state in the database to skip a step. `seed-user.sh` sets up preconditions only. Minting the verification link and `seed-report.sh` are the only stand-ins, because the email never leaves the API and reports need an LLM locally.
 - Capture the action and the state it leads to: a `note` before, a `step` after each meaningful action.
 - Check side effects alongside the screen with `query`: for example `auth_user.email_verified`, `auth_session` rows, `org.name`.
 - Record failed attempts too, with a `note` saying what went wrong. `proof.md` is append-only.
@@ -87,5 +87,6 @@ All in `scripts/`, executable, run from anywhere in the repo, acting on `$VERIFY
 - `doctor.sh`: read-only health check.
 - `evidence.sh step <name> | query <label> <sql> | note <text>`: record proof into `proof.md`.
 - `seed-user.sh [--org <name>]`: a verified account, optionally onboarded.
+- `seed-report.sh <workspace-id>`: a project with a finished report, from the Millbrook sample, since generation needs an LLM.
 - `verify-link.ts <email> <dashboard-url>`: the email-verification link for an address.
 - `down.sh`: tear down, keeping the evidence.
