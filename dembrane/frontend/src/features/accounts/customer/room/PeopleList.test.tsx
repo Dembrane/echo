@@ -12,10 +12,12 @@ import {
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { RoomPageT, RoomPersonT } from "../../contract/contract.gen";
+import { PeopleList as PeopleListComponent } from "./PeopleList";
 
 // The one people component, decision lens: PeopleList({ lens, page, onAdd, onChange,
 // onRemove, onDismissHint }).
-const load = async () => (await import("./PeopleList")).PeopleList;
+// imported up front, so no test is timed on loading it
+const load = async () => PeopleListComponent;
 
 beforeAll(() => {
 	i18n.load("en-US", {});

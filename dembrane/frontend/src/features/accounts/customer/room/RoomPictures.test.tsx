@@ -5,9 +5,11 @@ import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { RoomPersonT } from "../../contract/contract.gen";
+import { RoomPictures as RoomPicturesComponent } from "./RoomPictures";
 
 // The small pictures at the top corner of the room's pages: RoomPictures({ people, onAdd }).
-const load = async () => (await import("./RoomPictures")).RoomPictures;
+// imported up front, so no test is timed on loading it
+const load = async () => RoomPicturesComponent;
 
 beforeAll(() => {
 	i18n.load("en-US", {});

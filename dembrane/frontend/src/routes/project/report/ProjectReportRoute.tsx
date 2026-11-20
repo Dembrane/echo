@@ -33,7 +33,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import posthog from "posthog-js";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
@@ -79,6 +79,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 
 dayjs.extend(relativeTime);
+
+const TOOLBAR_TOP = "1rem";
 
 /** Parse user_instructions into readable labels for the tooltip. */
 function formatGuidedTooltip(instructions: string, language: string): string {
@@ -557,6 +559,15 @@ export const ProjectReportRoute = () => {
 		fullscreen,
 	} = useFullscreen();
 	const [isEditing, setIsEditing] = useState(false);
+	const [toolbarHeight, setToolbarHeight] = useState(0);
+	const toolbarRef = useCallback((node: HTMLDivElement | null) => {
+		if (!node) return;
+		const observer = new ResizeObserver(([entry]) =>
+			setToolbarHeight(entry.borderBoxSize[0].blockSize),
+		);
+		observer.observe(node, { box: "border-box" });
+		return () => observer.disconnect();
+	}, []);
 
 	// Reports with content (completed)
 	const completedReports =
@@ -947,12 +958,13 @@ export const ProjectReportRoute = () => {
 						<Stack gap={0}>
 							{/* ── Sticky toolbar ── */}
 							<Paper
+								ref={toolbarRef}
 								withBorder
 								p="sm"
 								style={{
 									backgroundColor: "var(--mantine-color-body)",
 									position: "sticky",
-									top: "1rem",
+									top: TOOLBAR_TOP,
 									zIndex: 5,
 								}}
 							>
@@ -1163,6 +1175,7 @@ export const ProjectReportRoute = () => {
 												} as React.CSSProperties)
 											: ({
 													"--mdx-toolbar-position": "sticky",
+													"--mdx-toolbar-top": `calc(${TOOLBAR_TOP} + ${toolbarHeight}px)`,
 												} as React.CSSProperties)
 									}
 								>
