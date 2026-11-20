@@ -6319,7 +6319,7 @@ msgstr "Fout bij het verwijderen van de reactie"
 #~ msgstr "Verwijderen van tag mislukt"
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:117
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:453
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:465
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -6397,7 +6397,7 @@ msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:273
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:285
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
@@ -6588,7 +6588,7 @@ msgid "participant.button.stop.finish"
 msgstr "Afronden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:785
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:797
 msgid "participant.button.finish"
 msgstr "Voltooien"
 
@@ -12290,7 +12290,7 @@ msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
 #: src/portal/preview/PreviewScreens.tsx:103
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:761
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:773
 msgid "participant.button.record"
 msgstr "Opname starten"
 
@@ -14940,7 +14940,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:846
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:858
 #: src/e2e/verifyExploreHarness.tsx:157
 msgid "participant.button.stop"
 msgstr "Stop"
@@ -15199,7 +15199,7 @@ msgid "Switch to self-serve billing"
 msgstr "Overzetten naar self-serve facturering"
 
 #: src/portal/preview/PreviewScreens.tsx:105
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:768
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:780
 msgid "Switch to text"
 msgstr "Overschakelen naar tekst"
 

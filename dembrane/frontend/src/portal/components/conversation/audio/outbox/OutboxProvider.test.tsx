@@ -222,6 +222,7 @@ it("tells the conversation's listener a chunk was kept, and any limit it hit", a
 
 	expect(conv1).toHaveBeenCalledWith({
 		accepted: true,
+		recordedAt: "2026-10-14T10:00:00.000Z",
 		stop: "audio_conversation",
 	});
 	expect(conv2).not.toHaveBeenCalled();
@@ -246,6 +247,10 @@ it("drops a chunk a recording limit refuses, and says so", async () => {
 	await act(() => outbox.enqueueChunk(chunk(), meta));
 	await act(() => outbox.settled("conv-1"));
 
-	expect(listener).toHaveBeenCalledWith({ accepted: false, stop: "ai_budget" });
+	expect(listener).toHaveBeenCalledWith({
+		accepted: false,
+		recordedAt: "2026-10-14T10:00:00.000Z",
+		stop: "ai_budget",
+	});
 	expect(api.upload).toHaveBeenCalledTimes(1);
 });

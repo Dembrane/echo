@@ -46,6 +46,8 @@ export type ChunkMeta = {
 export type RecordingNotice = {
 	accepted: boolean;
 	stop: RecordingRefusal | null;
+	/** When the chunk was recorded (ISO), so a screen can tell its own audio from an earlier page's. */
+	recordedAt: string;
 };
 
 type NoticeMessage = { conversationId: string; notice: RecordingNotice };
@@ -55,14 +57,18 @@ const noticeOf = (event: OutboxEvent): NoticeMessage | null => {
 	if (event.type === "delivered" && event.item.kind === "chunk")
 		return {
 			conversationId: event.item.conversationId,
-			notice: { accepted: true, stop: recordingStopOf(event.response) },
+			notice: {
+				accepted: true,
+				recordedAt: event.item.timestamp,
+				stop: recordingStopOf(event.response),
+			},
 		};
-	if (event.type === "dropped") {
+	if (event.type === "dropped" && event.item.kind === "chunk") {
 		const stop = portalRecordingRefusal(event.error);
 		if (stop)
 			return {
 				conversationId: event.item.conversationId,
-				notice: { accepted: false, stop },
+				notice: { accepted: false, recordedAt: event.item.timestamp, stop },
 			};
 	}
 	return null;
@@ -181,12 +187,16 @@ export const OutboxProvider = ({
 		onChunkAccepted: () =>
 			notify({
 				conversationId: directConversationRef.current,
-				notice: { accepted: true, stop: null },
+				notice: {
+					accepted: true,
+					recordedAt: new Date().toISOString(),
+					stop: null,
+				},
 			}),
 		onRecordingStop: (stop, accepted) =>
 			notify({
 				conversationId: directConversationRef.current,
-				notice: { accepted, stop },
+				notice: { accepted, recordedAt: new Date().toISOString(), stop },
 			}),
 	});
 

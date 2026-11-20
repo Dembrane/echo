@@ -124,16 +124,28 @@ export const ParticipantConversationAudio = () => {
 	const { onRecordingNotice } = outbox;
 
 	// A recording limit answers through the audio: a kept chunk can carry a
-	// stop, and a refused one is the stop.
+	// stop, and a refused one is the stop. Audio from before this screen
+	// loaded (sent after a reload) may have been kept by that earlier page, so
+	// its refusal can't say that nothing was saved.
+	const mountedAtRef = useRef(new Date().toISOString());
 	useEffect(
 		() =>
-			onRecordingNotice(conversationId ?? "", ({ accepted, stop }) => {
-				if (accepted) keptChunkRef.current = true;
-				if (!stop) return;
-				if (!accepted && stop === "ai_budget" && !keptChunkRef.current)
-					setRefusedUnsaved(true);
-				wrapUpRef.current?.(wrapUpReasonOf(stop));
-			}),
+			onRecordingNotice(
+				conversationId ?? "",
+				({ accepted, recordedAt, stop }) => {
+					if (accepted) keptChunkRef.current = true;
+					if (!stop) return;
+					const recordedHere = recordedAt >= mountedAtRef.current;
+					if (
+						!accepted &&
+						stop === "ai_budget" &&
+						recordedHere &&
+						!keptChunkRef.current
+					)
+						setRefusedUnsaved(true);
+					wrapUpRef.current?.(wrapUpReasonOf(stop));
+				},
+			),
 		[onRecordingNotice, conversationId],
 	);
 

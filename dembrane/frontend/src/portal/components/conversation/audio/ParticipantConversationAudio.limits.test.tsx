@@ -15,6 +15,13 @@ const state = vi.hoisted(() => ({
 	chunks: [] as unknown[],
 	isRecording: false,
 	navigate: vi.fn(),
+	notice: undefined as
+		| ((n: {
+				accepted: boolean;
+				recordedAt: string;
+				stop: string | null;
+		  }) => void)
+		| undefined,
 	onChunkAccepted: undefined as (() => void) | undefined,
 	onRecordingInterrupted: undefined as (() => void) | undefined,
 	onRecordingStop: undefined as
@@ -59,10 +66,18 @@ vi.mock("./outbox/OutboxProvider", () => ({
 		enqueueChunk: vi.fn(),
 		onRecordingNotice: (
 			_conversationId: string,
-			listener: (notice: { accepted: boolean; stop: string | null }) => void,
+			listener: (notice: {
+				accepted: boolean;
+				recordedAt: string;
+				stop: string | null;
+			}) => void,
 		) => {
-			state.onChunkAccepted = () => listener({ accepted: true, stop: null });
-			state.onRecordingStop = (stop, accepted) => listener({ accepted, stop });
+			const recordedAt = () => new Date().toISOString();
+			state.onChunkAccepted = () =>
+				listener({ accepted: true, recordedAt: recordedAt(), stop: null });
+			state.onRecordingStop = (stop, accepted) =>
+				listener({ accepted, recordedAt: recordedAt(), stop });
+			state.notice = listener;
 			return () => {};
 		},
 		progress: () => ({ queued: 0, sent: 0, total: 0 }),
@@ -280,6 +295,30 @@ it.each([
 		expect(screen.queryByText(/Everything you recorded is saved/)).toBeNull();
 	},
 );
+
+// After a reload, the earlier page's backlog sends here. Its refusal can't
+// say nothing was saved: that page may have kept chunks this one never saw.
+it("wraps up, rather than not-taking, when the refused chunk was recorded before this screen loaded", async () => {
+	state.taking = true;
+	state.chunks = [{ id: "ch-1" }];
+	state.isRecording = true;
+	renderPage();
+
+	act(() =>
+		state.notice?.({
+			accepted: false,
+			recordedAt: new Date(Date.now() - 60_000).toISOString(),
+			stop: "ai_budget",
+		}),
+	);
+
+	expect(
+		await screen.findByText(
+			"Recording has stopped for now. Everything you recorded is saved.",
+		),
+	).toBeTruthy();
+	expect(screen.queryByTestId("portal-not-taking-recordings")).toBeNull();
+});
 
 it("keeps the wrap-up when a chunk was kept here before the refusal", async () => {
 	state.taking = true;
