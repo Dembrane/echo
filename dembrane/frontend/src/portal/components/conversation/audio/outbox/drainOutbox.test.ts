@@ -15,7 +15,11 @@ import {
 	type OutboxEvent,
 	recordingLockName,
 } from "./drainOutbox";
-import { type OutboxStore, openOutboxStore } from "./outboxStore";
+import {
+	type ChunkItem,
+	type OutboxStore,
+	openOutboxStore,
+} from "./outboxStore";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -240,7 +244,7 @@ it("holds a finish back while its conversation's chunk is still failing", async 
 	expect(api.finish).not.toHaveBeenCalled();
 });
 
-it.each([402, 403, 404, 410])(
+it.each([403, 404, 410])(
 	"drops an item the server answers %i to, and moves on",
 	async (status) => {
 		await enqueueChunk("gone", 1);
@@ -257,6 +261,81 @@ it.each([402, 403, 404, 410])(
 		]);
 	},
 );
+
+const HOUR_MS = 60 * 60 * 1000;
+
+describe("a chunk a recording limit refuses", () => {
+	beforeEach(async () => {
+		await enqueueChunk("conv-1", 1);
+		await enqueueChunk("conv-1", 2);
+		api.upload.mockRejectedValueOnce(httpError(402));
+	});
+
+	it("is kept on the device, parked, while the chunks behind it send", async () => {
+		const wait = await drainer.drain();
+
+		expect(calls()).toEqual([
+			"upload conv-1#1",
+			"upload conv-1#2",
+			"confirm conv-1#2",
+		]);
+		const [parked, ...rest] = await store.list();
+		expect(rest).toEqual([]);
+		expect(new Uint8Array((parked as ChunkItem).audio)[0]).toBe(1);
+		expect((parked as ChunkItem).parked).toMatchObject({
+			reason: "http_402",
+			retryAt: now + HOUR_MS,
+		});
+		expect(events).toContainEqual(
+			expect.objectContaining({ again: false, type: "parked" }),
+		);
+		// The drain loop comes back for it in an hour.
+		expect(wait).toBe(HOUR_MS);
+	});
+
+	it("is tried again after an hour, and sends once the limit has lifted", async () => {
+		await drainer.drain();
+		now += HOUR_MS - 1;
+		await drainer.drain();
+		expect(api.upload).toHaveBeenCalledTimes(2);
+
+		now += 1;
+		expect(await drainer.drain()).toBeNull();
+
+		expect(api.upload).toHaveBeenCalledTimes(3);
+		expect(await store.list()).toEqual([]);
+	});
+
+	it("is tried at once on the next visit", async () => {
+		await drainer.drain();
+		now += 1;
+		const nextVisit = createDrainer({
+			api,
+			now: () => now,
+			onEvent: (e) => events.push(e),
+			store,
+		});
+
+		expect(await nextVisit.drain()).toBeNull();
+		expect(api.upload).toHaveBeenCalledTimes(3);
+	});
+
+	it("is parked again, quietly, when the limit still holds", async () => {
+		await drainer.drain();
+		now += HOUR_MS;
+		api.upload.mockRejectedValueOnce(httpError(402));
+
+		await drainer.drain();
+
+		expect(events.filter((e) => e.type === "parked")).toEqual([
+			expect.objectContaining({ again: false }),
+			expect.objectContaining({ again: true }),
+		]);
+		expect(((await store.list())[0] as ChunkItem).parked?.retryAt).toBe(
+			now + HOUR_MS,
+		);
+	});
+});
 
 it("hands the confirm's answer to the delivered event", async () => {
 	await enqueueChunk("conv-1");

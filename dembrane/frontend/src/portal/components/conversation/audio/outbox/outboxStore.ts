@@ -50,6 +50,20 @@ export type ChunkItem = NewChunk & {
 	attempts: number;
 	/** Set once S3 has the file, so a retry only re-confirms. */
 	uploaded?: { chunk_id: string; file_url: string };
+	/**
+	 * Set when a recording limit refused it. Kept, since the limit can lift (a
+	 * new month, an upgrade), and tried again later instead of with the queue.
+	 */
+	parked?: Parked;
+};
+
+export type Parked = {
+	/** Why the server refused it, e.g. `http_402`. */
+	reason: string;
+	/** When it was last refused (ms). */
+	at: number;
+	/** When it is next due a try (ms). */
+	retryAt: number;
 };
 
 export type FinishItem = {
@@ -77,6 +91,8 @@ export type OutboxStore = {
 	list: () => Promise<OutboxItem[]>;
 	markUploaded: (seq: number, uploaded: ChunkItem["uploaded"]) => Promise<void>;
 	noteAttempt: (seq: number) => Promise<void>;
+	/** Marks a refused chunk to try again later. The server deleted any upload, so that's forgotten. */
+	park: (seq: number, parked: Parked) => Promise<void>;
 	remove: (seq: number) => Promise<void>;
 	/** Removes items created before `cutoff` (ms) and returns them. */
 	purgeOlderThan: (cutoff: number) => Promise<OutboxItem[]>;
@@ -220,6 +236,11 @@ export const openOutboxStore = async ({
 
 		noteAttempt: (seq) =>
 			update(seq, (item) => ({ ...item, attempts: item.attempts + 1 })),
+
+		park: (seq, parked) =>
+			update(seq, (item) =>
+				item.kind === "chunk" ? { ...item, parked, uploaded: undefined } : item,
+			),
 
 		purgeOlderThan: async (cutoff) => {
 			const tx = db.transaction(OUTBOX, "readwrite");

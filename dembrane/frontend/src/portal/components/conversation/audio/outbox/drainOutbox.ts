@@ -3,12 +3,15 @@ import type {
 	ChunkItem,
 	OutboxItem,
 	OutboxStore,
+	Parked,
 	SliceGroup,
 } from "./outboxStore";
 
 const FIRST_BACKOFF_MS = 2_000;
 const MAX_BACKOFF_MS = 60_000;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+/** How often a tab left open tries a parked chunk again. Each new visit also tries once. */
+const PARKED_RETRY_MS = 60 * 60 * 1000;
 
 /**
  * A recording cut off under this holds no audio worth sending: an MP4's first
@@ -16,11 +19,13 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 const MIN_RECOVERED_BYTES = 1024;
 
+/** The server says the conversation is gone or closed to us: sending again won't help. */
+const GONE_STATUSES = [403, 404, 410];
 /**
- * Sending again won't help: the conversation is gone or closed to us, or (402)
- * a recording limit refused the audio and would only refuse it again.
+ * A recording limit refused the audio. Asking again soon only repeats the
+ * refusal, but the limit can lift (a new month, an upgrade), so it's parked.
  */
-const FINAL_STATUSES = [402, 403, 404, 410];
+const LIMIT_STATUS = 402;
 
 type Uploaded = NonNullable<ChunkItem["uploaded"]>;
 
@@ -41,6 +46,13 @@ export type OutboxEvent =
 			response: unknown;
 	  }
 	| { type: "dropped"; item: OutboxItem; reason: string; error?: unknown }
+	| {
+			type: "parked";
+			item: ChunkItem;
+			error: unknown;
+			/** It was parked already: a retry that was refused again. */
+			again: boolean;
+	  }
 	| {
 			type: "retrying";
 			item: OutboxItem;
@@ -83,6 +95,8 @@ const heldWebLocks = async () => {
  * (its chunks, then its finish), and each conversation backs off on its own,
  * so one that keeps failing never holds up another's audio. A finish needs no
  * special gate: it's only picked once it's its conversation's oldest item.
+ * A chunk a recording limit refused is parked and stepped over until it's
+ * due again, so it never blocks the queue or a finish.
  */
 export const createDrainer = ({
 	store,
@@ -100,6 +114,10 @@ export const createDrainer = ({
 }): Drainer => {
 	// In memory only: after a reload, everything is tried straight away.
 	const backoff = new Map<string, { failures: number; retryAt: number }>();
+	// A chunk parked before this drainer existed gets one try on this visit.
+	const startedAt = now();
+	const parkedDue = (parked: Parked) =>
+		parked.retryAt <= now() || parked.at < startedAt;
 
 	const fail = (item: OutboxItem, attempts: number, error: unknown) => {
 		const failures = (backoff.get(item.conversationId)?.failures ?? 0) + 1;
@@ -128,7 +146,18 @@ export const createDrainer = ({
 			}
 		} catch (error) {
 			const status = httpStatus(error);
-			if (status && FINAL_STATUSES.includes(status)) {
+			if (status === LIMIT_STATUS && item.kind === "chunk") {
+				const at = now();
+				await store.park(item.seq, {
+					at,
+					reason: `http_${status}`,
+					retryAt: at + PARKED_RETRY_MS,
+				});
+				backoff.delete(item.conversationId);
+				onEvent({ again: !!item.parked, error, item, type: "parked" });
+				return;
+			}
+			if (status && GONE_STATUSES.includes(status)) {
 				await store.remove(item.seq);
 				backoff.delete(item.conversationId);
 				onEvent({ error, item, reason: `http_${status}`, type: "dropped" });
@@ -152,24 +181,32 @@ export const createDrainer = ({
 		});
 	};
 
-	/** The oldest item of each conversation that isn't backing off, oldest first. */
+	/**
+	 * The oldest item of each conversation that isn't backing off, oldest
+	 * first. A parked chunk that isn't due is stepped over, so it never holds
+	 * up the audio behind it.
+	 */
 	const pass = async (): Promise<number | null> => {
 		while (true) {
 			const items = await store.list();
 			if (items.length === 0) return null;
 
 			const heads = new Map<string, OutboxItem>();
+			let soonest = Number.POSITIVE_INFINITY;
 			for (const item of items) {
-				if (!heads.has(item.conversationId))
-					heads.set(item.conversationId, item);
+				if (heads.has(item.conversationId)) continue;
+				if (item.kind === "chunk" && item.parked && !parkedDue(item.parked)) {
+					soonest = Math.min(soonest, item.parked.retryAt);
+					continue;
+				}
+				heads.set(item.conversationId, item);
 			}
 			const due = [...heads.values()].find(
 				(item) => (backoff.get(item.conversationId)?.retryAt ?? 0) <= now(),
 			);
 			if (!due) {
-				const soonest = Math.min(
-					...[...heads.keys()].map((id) => backoff.get(id)?.retryAt ?? 0),
-				);
+				for (const id of heads.keys())
+					soonest = Math.min(soonest, backoff.get(id)?.retryAt ?? 0);
 				return soonest - now();
 			}
 			await send(due);

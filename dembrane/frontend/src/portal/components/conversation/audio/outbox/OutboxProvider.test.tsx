@@ -228,7 +228,7 @@ it("tells the conversation's listener a chunk was kept, and any limit it hit", a
 	expect(conv2).not.toHaveBeenCalled();
 });
 
-it("drops a chunk a recording limit refuses, and says so", async () => {
+it("parks a chunk a recording limit refuses, says so once, and settles", async () => {
 	api.upload.mockRejectedValueOnce(
 		Object.assign(new Error("HTTP 402"), {
 			isAxiosError: true,
@@ -247,10 +247,16 @@ it("drops a chunk a recording limit refuses, and says so", async () => {
 	await act(() => outbox.enqueueChunk(chunk(), meta));
 	await act(() => outbox.settled("conv-1"));
 
+	expect(listener).toHaveBeenCalledTimes(1);
 	expect(listener).toHaveBeenCalledWith({
 		accepted: false,
 		recordedAt: "2026-10-14T10:00:00.000Z",
 		stop: "ai_budget",
 	});
 	expect(api.upload).toHaveBeenCalledTimes(1);
+	// Kept on the device, but nothing waits on it: Finish isn't held up.
+	expect(outbox.queuedCount("conv-1")).toBe(0);
+	const store = await openOutboxStore({ dbName });
+	expect(await store.list()).toHaveLength(1);
+	store.close();
 });

@@ -63,7 +63,8 @@ const noticeOf = (event: OutboxEvent): NoticeMessage | null => {
 				stop: recordingStopOf(event.response),
 			},
 		};
-	if (event.type === "dropped" && event.item.kind === "chunk") {
+	// Only the first refusal: a parked chunk refused again on a later try says nothing new.
+	if (event.type === "parked" && !event.again) {
 		const stop = portalRecordingRefusal(event.error);
 		if (stop)
 			return {
@@ -117,8 +118,18 @@ const capture = (event: OutboxEvent) => {
 				attempts: event.attempts,
 				conversation_id: event.item.conversationId,
 				kind: event.item.kind,
+				// It had been parked: a limit lifted and the audio landed later.
+				parked: event.item.kind === "chunk" && !!event.item.parked,
 				recovered: event.item.kind === "chunk" && !!event.item.recovered,
 			});
+			return;
+		case "parked":
+			// Once per chunk, not every hourly retry.
+			if (!event.again)
+				posthog.capture("portal_outbox_parked", {
+					conversation_id: event.item.conversationId,
+					error: errorMessage(event.error),
+				});
 			return;
 		case "dropped":
 			posthog.capture("portal_outbox_dropped", {
@@ -266,6 +277,12 @@ export const OutboxProvider = ({
 			const next: Record<string, number> = {};
 			const { seen } = counts.current;
 			for (const item of items) {
+				// Parked audio waits on a limit, not the network: nothing waits on
+				// it, and progress doesn't count it as sent.
+				if (item.kind === "chunk" && item.parked) {
+					seen[item.conversationId]?.delete(item.seq);
+					continue;
+				}
 				next[item.conversationId] = (next[item.conversationId] ?? 0) + 1;
 				seen[item.conversationId] ??= new Set();
 				seen[item.conversationId].add(item.seq);
