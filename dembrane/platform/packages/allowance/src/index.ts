@@ -1,9 +1,7 @@
 export {
   type AllowanceAccount,
-  allowanceForCountedProject,
   allowanceForProject,
   allowanceForWorkspace,
-  isSampleProject,
   type ProjectAllowance,
   projectAllowance,
 } from "./account";

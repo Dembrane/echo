@@ -1,6 +1,6 @@
 import {
   aiBudgetForProject,
-  allowanceForCountedProject,
+  allowanceForProject,
   freeLimits,
   requireAiBudget,
 } from "@dembrane/allowance";
@@ -11,7 +11,7 @@ import { MIN_CADENCE_MINUTES } from "./settings";
 export interface PopcornAllowance {
   /** False when the free account's AI budget is used up. */
   admit(projectId: string, now: Date): Promise<boolean>;
-  /** Null when there is no budget (paid, unknown or a sample). */
+  /** Null when there is no budget (paid or unknown). */
   status(projectId: string, now: Date): Promise<{ exhausted: boolean } | null>;
   requireRoom(projectId: string, now: Date): Promise<void>;
   cadenceFloorMinutes(projectId: string, now: Date): Promise<number>;
@@ -34,7 +34,7 @@ export function popcornAllowance(db: Db): PopcornAllowance {
     requireRoom: (projectId, now) => requireAiBudget(db, projectId, now),
 
     async cadenceFloorMinutes(projectId, now) {
-      if (!(await allowanceForCountedProject(db, projectId, now))) return MIN_CADENCE_MINUTES;
+      if (!(await allowanceForProject(db, projectId, now))) return MIN_CADENCE_MINUTES;
       return (await freeLimits(db)).popcorn_cadence_minutes;
     },
   };

@@ -7,13 +7,10 @@ export interface PayingAccount {
   readonly accountId: string;
   readonly tier: string | null;
   readonly downgradedAt: string | null;
-  /** False for sample projects: recorded, never spent. */
-  readonly counted: boolean;
 }
 
 interface PayerRow extends AccountRow {
   key: string;
-  counted: boolean;
 }
 
 // The billing account that pays, on every tier; same pooling as allowanceFor*.
@@ -34,7 +31,6 @@ async function payers(
       accountId: pool ? (r.pool_id as string) : r.own_id,
       tier: pool ? r.pool_tier : r.own_tier,
       downgradedAt: pool ? r.pool_downgraded_at : r.own_downgraded_at,
-      counted: r.counted,
     });
   }
   return out;
@@ -50,7 +46,7 @@ export function payingAccountsForProjects(
     projectIds,
     sql`from project p join workspace w on w.id = p.workspace_id`,
     (ids) => sql`p.id = any(${sql.param(ids)}::uuid[])`,
-    sql`, p.id as key, not p.is_sample as counted`,
+    sql`, p.id as key`,
   );
 }
 
@@ -64,6 +60,6 @@ export function payingAccountsForWorkspaces(
     workspaceIds,
     sql`from workspace w`,
     (ids) => sql`w.id = any(${sql.param(ids)}::uuid[])`,
-    sql`, w.id as key, true as counted`,
+    sql`, w.id as key`,
   );
 }

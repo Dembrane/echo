@@ -5181,8 +5181,8 @@ msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participa
 msgstr "dembrane/pilot was ons eerdere project. Dank aan de hosts, deelnemers en bijdragers die het hebben helpen vormgeven."
 
 #: src/routes/admin/AiCostsPanel.tsx:682
-msgid "Demos, voice outside projects, dev tools"
-msgstr "Demo's, spraak buiten projecten, dev tools"
+#~ msgid "Demos, voice outside projects, dev tools"
+#~ msgstr "Demo's, spraak buiten projecten, dev tools"
 
 #: src/routes/settings/AgentConsentRoute.tsx:335
 msgid "Deny"
@@ -14719,6 +14719,10 @@ msgstr "Spotlight"
 #: src/features/sidebar/shell/UserMenu.tsx:172
 msgid "Staff"
 msgstr "Personeel"
+
+#: src/routes/admin/AiCostsPanel.tsx:682
+msgid "Staff demos and voice outside projects"
+msgstr "Demo's van staff en spraak buiten projecten"
 
 #~ msgid "Staff demos, voice outside projects, dev tools"
 #~ msgstr "Demo's van medewerkers, spraak buiten projecten, ontwikkelaarstools"

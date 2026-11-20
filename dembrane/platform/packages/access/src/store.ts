@@ -27,7 +27,7 @@ export interface ProjectRow {
   readonly deleted: boolean;
   /** Owner of a legacy project that predates workspaces. */
   readonly legacyOwnerDirectusUserId: string | null;
-  /** A seeded sample (project.is_sample): free-tier allowances neither apply to it nor count it. */
+  /** A seeded sample (project.is_sample): it spends the AI budget, but takes no audio and no stats. */
   readonly isSample?: boolean;
 }
 

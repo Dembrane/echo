@@ -8,6 +8,7 @@ export type FeatureGroup =
   | "portal"
   | "recording"
   | "voice"
+  | "setup"
   | "samples"
   | "other";
 
@@ -29,6 +30,7 @@ export const FEATURE_GROUP_LABELS: Readonly<Record<FeatureGroup, string>> = {
   recording: "Recording",
   reports: "Reports",
   samples: "Samples and demos",
+  setup: "Project setup",
   voice: "Voice input",
 };
 
@@ -138,6 +140,16 @@ export const FEATURE_RULES: readonly FeatureRule[] = [
     pattern: String.raw`^POST \/api\/stateless\/transcribe$`,
     group: "voice",
     label: "Voice input",
+  },
+  {
+    pattern: String.raw`^POST \/api\/v2\/workspaces\/:workspace_id\/project-setup\/suggestions$`,
+    group: "setup",
+    label: "Suggestions",
+  },
+  {
+    pattern: String.raw`^POST \/api\/v2\/workspaces\/:workspace_id\/project-setup\/digest$`,
+    group: "setup",
+    label: "Digest",
   },
   { pattern: String.raw`^accounts\.demo-build$`, group: "samples", label: "Demo builds" },
   { pattern: String.raw`^samples\.`, group: "samples", label: "Sample projects" },

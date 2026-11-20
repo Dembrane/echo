@@ -1,11 +1,7 @@
 import { type Db, schema } from "@dembrane/db";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { eq, sql } from "drizzle-orm";
-import {
-  type AllowanceAccount,
-  allowanceForCountedProject,
-  allowanceForWorkspace,
-} from "./account";
+import { type AllowanceAccount, allowanceForProject, allowanceForWorkspace } from "./account";
 import { freeLimitError } from "./errors";
 import { isFreeTier } from "./free";
 import { AI_SPEND_KEY, type UsageKey, usedThisPeriod } from "./ledger";
@@ -76,13 +72,13 @@ function percentOf(spent: number, limit: number | null): number {
   return Math.floor((Math.min(spent, limit) * 100) / limit);
 }
 
-// Null: paid, unknown or a sample project.
+// Null: paid or unknown. A sample project spends its account's budget.
 export async function aiBudgetForProject(
   db: Db,
   projectId: string,
   now: Date,
 ): Promise<AiBudget | null> {
-  const a = await allowanceForCountedProject(db, projectId, now);
+  const a = await allowanceForProject(db, projectId, now);
   return a ? aiBudgetFor(db, a, now) : null;
 }
 
