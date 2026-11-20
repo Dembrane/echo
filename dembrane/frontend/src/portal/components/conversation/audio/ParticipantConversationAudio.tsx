@@ -14,7 +14,9 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import {
 	type CSSProperties,
+	useCallback,
 	useEffect,
+	useMemo,
 	useReducer,
 	useRef,
 	useState,
@@ -31,7 +33,6 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import type { RecordingRefusal } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
-import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
 import { NotTakingRecordings } from "../../NotTakingRecordings";
 import { recordingClosed } from "../../recordingCap";
 import { RefineButtonLabel } from "../../refine/RefineButtonLabel";
@@ -43,7 +44,6 @@ import { ConversationErrorView } from "../ConversationErrorView";
 import { useParticipantConversation } from "../useParticipantConversation";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
-import { usePendingUploads } from "./hooks/usePendingUploads";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
 import { useRecordingLimit } from "./hooks/useRecordingLimit";
 import {
@@ -53,6 +53,7 @@ import {
 } from "./hooks/useRecordingTelemetry";
 import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
+import { useOutbox } from "./outbox/OutboxProvider";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { PermissionErrorModal } from "./PermissionErrorModal";
@@ -75,6 +76,9 @@ import { WrapUpModal } from "./WrapUpModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
+// Finish waits for the audio with no time limit; past this, say so in
+// telemetry. The old upload wait gave up here, so the numbers line up.
+const SLOW_FINISH_MS = 30_000;
 
 const wrapUpReasonOf = (r: RecordingRefusal): WrapUpReason =>
 	r === "audio_conversation" ? "conversation" : "account";
@@ -105,49 +109,63 @@ export const ParticipantConversationAudio = () => {
 		newConversationLink,
 		projectQuery,
 	} = useParticipantConversation(projectId, conversationId);
-	// Set after the recorder exists; upload callbacks reach it through this ref.
+	// Set after the recorder exists; upload notices reach it through this ref.
 	const wrapUpRef = useRef<((reason: WrapUpReason) => void) | null>(null);
 	// Whether this page kept any chunk; a budget refusal before one means nothing was saved.
 	const keptChunkRef = useRef(false);
 	const [refusedUnsaved, setRefusedUnsaved] = useState(false);
-	const uploadChunkMutation = useUploadConversationChunk({
-		onChunkAccepted: () => {
-			keptChunkRef.current = true;
-		},
-		onRecordingStop: (r, accepted) => {
-			if (accepted) keptChunkRef.current = true;
-			else if (r === "ai_budget" && !keptChunkRef.current)
-				setRefusedUnsaved(true);
-			wrapUpRef.current?.(wrapUpReasonOf(r));
-		},
-	});
 	const artefactsQuery = useConversationArtefacts(conversationId);
-	const pendingUploads = usePendingUploads();
+	const outbox = useOutbox();
+	const { queuedCount } = outbox;
+	const pendingUploadCount = useCallback(
+		() => queuedCount(conversationId ?? ""),
+		[queuedCount, conversationId],
+	);
+	const uploadProgress = outbox.progress(conversationId ?? "");
+	const { onRecordingNotice, openChunkSink } = outbox;
 
-	const onChunk = (chunk: Blob) => {
-		pendingUploads.track(
-			uploadChunkMutation.mutateAsync({
-				chunk,
+	// A recording limit answers through the audio: a kept chunk can carry a
+	// stop, and a refused one is the stop. Audio from before this screen
+	// loaded (sent after a reload) may have been kept by that earlier page, so
+	// its refusal can't say that nothing was saved.
+	const mountedAtRef = useRef(new Date().toISOString());
+	useEffect(
+		() =>
+			onRecordingNotice(
+				conversationId ?? "",
+				({ accepted, recordedAt, stop }) => {
+					if (accepted) keptChunkRef.current = true;
+					if (!stop) return;
+					const recordedHere = recordedAt >= mountedAtRef.current;
+					if (
+						!accepted &&
+						stop === "ai_budget" &&
+						recordedHere &&
+						!keptChunkRef.current
+					)
+						setRefusedUnsaved(true);
+					wrapUpRef.current?.(wrapUpReasonOf(stop));
+				},
+			),
+		[onRecordingNotice, conversationId],
+	);
+
+	// The outbox keeps the audio on the device until the server has it.
+	const sink = useMemo(
+		() =>
+			openChunkSink({
 				conversationId: conversationId ?? "",
-				runFinishHook: false,
 				source: "PORTAL_AUDIO",
-				timestamp: new Date(),
 			}),
-		);
-	};
+		[openChunkSink, conversationId],
+	);
 
-	// Before leaving the screen. Gives up after 30s rather than strand the
-	// participant, and records that some audio may not have landed.
-	const waitForPendingUploads = async (context: "finish" | "reconnect") => {
-		if ((await pendingUploads.waitForAll()) === "done") return;
-		console.warn("Upload wait timeout reached, proceeding anyway");
-		posthog.capture("portal_uploads_incomplete_on_finish", {
-			context,
-			conversation_id: conversationId,
-			pending_uploads: pendingUploads.count(),
-			project_id: projectId,
-		});
-	};
+	// The finish in progress, so Resume can call it off while it still waits
+	// on the audio.
+	const finishAttemptRef = useRef<{
+		pendingAtStart: number;
+		startedAt: number;
+	} | null>(null);
 
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
 		root: null,
@@ -194,8 +212,8 @@ export const ParticipantConversationAudio = () => {
 
 	const audioRecorder = useChunkedAudioRecorder({
 		deviceId,
-		onChunk,
 		onRecordingInterrupted: () => onRecordingInterruptedRef.current?.(),
+		sink,
 	});
 
 	// Set up the interruption callback after audioRecorder is available
@@ -233,13 +251,25 @@ export const ParticipantConversationAudio = () => {
 	useEffect(() => {
 		if (isRecording || isStarting) setStartedHere(true);
 	}, [isRecording, isStarting]);
+	// A failed refetch keeps the last good conversation. Once recording has
+	// started, that must not swap the recorder for an error page: audio waits in
+	// the outbox, so the recorder stays and the server banner says to keep going.
+	// Deletion codes still end the session through the effect below.
+	const refetchFailedWhileRecording =
+		conversationQuery.isError &&
+		!!conversationQuery.data &&
+		!CONVERSATION_DELETION_STATUS_CODES.includes(
+			conversationQuery.error?.response?.status ?? 0,
+		) &&
+		(isRecording || isStarting || isHeld(session));
+	const serverReachable = connectionHealthy && !refetchFailedWhileRecording;
 
 	// What colour the meter runs in. A run that was interrupted is the recording
 	// itself failing, so it outranks a connection that has merely gone quiet.
 	// The meter escalates to `problem` on its own when no sound arrives at all.
 	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
 		? "problem"
-		: !isOnline || !connectionHealthy
+		: !isOnline || !serverReachable
 			? "unhealthy"
 			: "healthy";
 
@@ -289,7 +319,7 @@ export const ParticipantConversationAudio = () => {
 		documentHidden,
 		isRecording,
 		participantState,
-		pendingUploadCount: pendingUploads.count,
+		pendingUploadCount,
 		projectId,
 		recordingTime,
 	});
@@ -397,22 +427,48 @@ export const ParticipantConversationAudio = () => {
 		recordingTime,
 	});
 
+	// Waits for every chunk to reach the server, however long that takes,
+	// then finishes. If the tab closes first, the queued audio still sends
+	// later and the backend's idle sweep finishes the conversation.
 	const handleConfirmFinish = async () => {
 		dispatch({ type: "finishStarted" });
+		const attempt = {
+			pendingAtStart: pendingUploadCount(),
+			startedAt: Date.now(),
+		};
+		finishAttemptRef.current = attempt;
+		const slow = setTimeout(() => {
+			posthog.capture("portal_finish_slow", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: attempt.pendingAtStart,
+				project_id: projectId,
+			});
+		}, SLOW_FINISH_MS);
 		try {
-			stopRecording();
-			// Release wakelock when finishing
 			wakeLock.release();
-
-			await waitForPendingUploads("finish");
-
-			await finish();
+			// The last chunk reaches the outbox as the recorder stops.
+			await stopRecording();
+			await outbox.settled(conversationId ?? "");
+			// Resumed while waiting.
+			if (finishAttemptRef.current !== attempt) return;
+			await finish({
+				finish_wait_ms: Date.now() - attempt.startedAt,
+				pending_uploads_at_start: attempt.pendingAtStart,
+			});
+			// Resumed while it was sending: stay. New audio reopens the
+			// conversation on the server.
+			if (finishAttemptRef.current !== attempt) return;
 			dispatch({ type: "finishSucceeded" });
 			navigate(finishUrl);
 		} catch (error) {
 			console.error("Error finishing conversation:", error);
 			toast.error(t`Failed to finish conversation. Please try again.`);
 			dispatch({ type: "finishFailed" });
+		} finally {
+			clearTimeout(slow);
+			if (finishAttemptRef.current === attempt) finishAttemptRef.current = null;
 		}
 	};
 
@@ -422,6 +478,18 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleResumeRecording = async () => {
+		const attempt = finishAttemptRef.current;
+		if (attempt) {
+			finishAttemptRef.current = null;
+			posthog.capture("portal_finish_cancelled", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: attempt.pendingAtStart,
+				project_id: projectId,
+				waited_ms: Date.now() - attempt.startedAt,
+			});
+		}
 		// The pause holds until the recorder has started, so the timer doesn't
 		// flash back to zero in between.
 		if (session.phase === "wrappedUp") return;
@@ -438,26 +506,19 @@ export const ParticipantConversationAudio = () => {
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
-	// Handler for reconnect button - waits for uploads, reports error, then reloads
-	const handleReconnect = async () => {
+	// Reports the interruption, then reloads. Queued audio is safe on the
+	// device and sends after the reload.
+	const handleReconnect = () => {
 		dispatch({ type: "reconnectStarted" });
-		try {
-			await waitForPendingUploads("reconnect");
-
-			if (audioRecorder.hadInterruption) {
-				captureInterruptionError({
-					chunkHistory: audioRecorder.getChunkHistory(),
-					conversationId,
-					projectId,
-					recordingTime: interruptedAt ?? 0,
-				});
-			}
-
-			window.location.reload();
-		} catch (_error) {
-			toast.error(t`Failed to reconnect. Please try reloading the page.`);
-			dispatch({ type: "reconnectFailed" });
+		if (audioRecorder.hadInterruption) {
+			captureInterruptionError({
+				chunkHistory: audioRecorder.getChunkHistory(),
+				conversationId,
+				projectId,
+				recordingTime: interruptedAt ?? 0,
+			});
 		}
+		window.location.reload();
 	};
 
 	const handleStartRecording = async () => {
@@ -520,7 +581,10 @@ export const ParticipantConversationAudio = () => {
 	}
 
 	// Check if conversation is not present or failed to load
-	if (loadState === "failed" || conversationDeletedDuringRecording) {
+	if (
+		(loadState === "failed" && !refetchFailedWhileRecording) ||
+		conversationDeletedDuringRecording
+	) {
 		return (
 			<ConversationErrorView
 				conversationDeletedDuringRecording={conversationDeletedDuringRecording}
@@ -577,7 +641,8 @@ export const ParticipantConversationAudio = () => {
 				opened={isConfirmOpen(session)}
 				close={() => dispatch({ type: "resume" })}
 				isStopping={isStopping}
-				isUploading={uploadChunkMutation.isPending}
+				isOnline={isOnline}
+				uploadProgress={uploadProgress}
 				handleConfirmFinish={handleConfirmFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
@@ -603,7 +668,6 @@ export const ParticipantConversationAudio = () => {
 
 			<RecordingInterruptedModal
 				opened={session.phase === "interrupted"}
-				isUploading={uploadChunkMutation.isPending}
 				isReconnecting={session.phase === "interrupted" && session.reconnecting}
 				onReconnect={handleReconnect}
 			/>
@@ -611,7 +675,7 @@ export const ParticipantConversationAudio = () => {
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
-						connectionHealthy,
+						connectionHealthy: serverReachable,
 						recordingTime,
 					}}
 				/>

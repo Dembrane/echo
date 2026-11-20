@@ -24,11 +24,11 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 /**
- * Measured on fix/portal-recording-bar-from-example at 25fdd82c (2026-11-11), after merging
- * main's free-tier work (#1311, #1359): the portal's wrap-up, recording limit and
- * not-taking notice, which participants need on the recording screen.
+ * Measured on feat/frontend-audio-outbox at 36270519 (2026-11-20): the audio outbox (#1264),
+ * which keeps a participant's recording on the device until the server has it. Its store
+ * and drainer load lazily; the provider every portal page mounts stays in the first load.
  */
-const BASELINE_GZIP_BYTES = 572_591;
+const BASELINE_GZIP_BYTES = 582_571;
 /** Room for ordinary drift (a few strings, a small fix) before the check objects. */
 const MARGIN_BYTES = 8 * 1024;
 const START_ROUTE = "src/portal/routes/ParticipantStart.tsx";

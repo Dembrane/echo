@@ -38,7 +38,6 @@ export type RecordingSessionEvent =
 	| { type: "finishSucceeded" }
 	| { type: "interrupted"; at: number }
 	| { type: "reconnectStarted" }
-	| { type: "reconnectFailed" }
 	| { type: "wrapUp"; at: number; reason: WrapUpReason }
 	| { type: "conversationDeleted" };
 
@@ -81,10 +80,11 @@ const transition = (
 				: session;
 
 		// The paused time stays until the recorder has actually started again,
-		// so the timer doesn't flash back to zero in between.
+		// so the timer doesn't flash back to zero in between. Resuming while
+		// finishing calls the finish off.
 		case "resume":
-			return session.phase === "paused"
-				? { ...session, confirming: false }
+			return session.phase === "paused" || session.phase === "finishing"
+				? { ...session, confirming: false, phase: "paused" }
 				: session;
 
 		case "recordingStarted":
@@ -98,6 +98,7 @@ const transition = (
 				? { ...session, phase: "finishing" }
 				: session;
 
+		// Back to the confirm modal, to resume or try again.
 		case "finishFailed":
 			return session.phase === "finishing"
 				? { ...session, phase: "paused" }
@@ -111,11 +112,6 @@ const transition = (
 		case "reconnectStarted":
 			return session.phase === "interrupted"
 				? { ...session, reconnecting: true }
-				: session;
-
-		case "reconnectFailed":
-			return session.phase === "interrupted"
-				? { ...session, reconnecting: false }
 				: session;
 
 		// Keeps the time it was stopped at; one already finishing goes on.
