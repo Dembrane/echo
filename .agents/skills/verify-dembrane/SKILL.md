@@ -70,6 +70,10 @@ $S/evidence.sh query "<label>" "<select>"  # read-only query on the run's databa
 - Check side effects alongside the screen with `query`: for example `auth_user.email_verified`, `auth_session` rows, `org.name`.
 - Record failed attempts too, with a `note` saying what went wrong. `proof.md` is append-only.
 - Mock nothing. External services the local config leaves unset (email, LLMs) are out of scope; say so rather than faking them.
+- A flow that plays out over time → also record it as video.
+  - `agent-browser --session "$SESSION" record start "$EVIDENCE/<name>.mp4"`, then `record stop`.
+  - It needs ffmpeg with libx264. `agent-browser doctor` checks.
+  - Keep it short, or lower `--fps`, so the file stays small enough to attach to a PR.
 
 ## Cleanup
 
