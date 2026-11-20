@@ -27,6 +27,11 @@ import { useAccountCard, useAccountsMutation } from "../api/hooks";
 import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
 import { BillToFields, billToBody, billToForm } from "./BillToFields";
+import {
+	CustomerSignerFields,
+	customerSignerBody,
+	customerSignerForm,
+} from "./CustomerSigner";
 import { InvoicePlanFields, planBody, planForm } from "./InvoicePlanFields";
 import {
 	emptyLine,
@@ -181,6 +186,11 @@ function OfferForm({
 	);
 	const noCharge = plan.kind === "none";
 	const [choose, setChoose] = useState<"any" | "one">(from?.choose ?? "any");
+	// Who signs for the customer: a draft's, or the sent offer's when revising, so the new
+	// version names the same person unless changed.
+	const [customerSigner, setCustomerSigner] = useState(() =>
+		customerSignerForm((draft ?? revise)?.signer),
+	);
 	const savedSecond = from?.second_signer ?? null;
 	const [second, setSecond] = useState<"none" | "customer" | "dembrane">(
 		savedSecond?.kind ?? "none",
@@ -241,6 +251,7 @@ function OfferForm({
 		bill_to: noCharge ? null : billToBody(billsOther, billTo),
 		currency,
 		customer_reference: customerReference.trim() || null,
+		customer_signer: customerSignerBody(customerSigner),
 		dembrane_signer: signs
 			? {
 					email: signer.email.trim(),
@@ -489,6 +500,13 @@ function OfferForm({
 			)}
 
 			<Divider label={t`Signatures`} labelPosition="left" />
+			<CustomerSignerFields
+				value={customerSigner}
+				onChange={setCustomerSigner}
+				errors={fields}
+				prefix="customer_signer."
+				hint={t`Optional. When the offer is sent, they get an email with a link to sign. Empty: the customer says who signs.`}
+			/>
 			<Stack gap="xs" data-testid="offer-dembrane-signer">
 				<Text size="sm">
 					<Trans>Signed for dembrane by</Trans>

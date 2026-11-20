@@ -12,7 +12,14 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
 import { renderOffer } from "./annex";
 import { type BillToInput, checkBillTo } from "./bill-to";
-import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
+import {
+  documentDetail,
+  fileBytes,
+  type Person,
+  setSigner,
+  signedBytes,
+  ticketOf,
+} from "./customer";
 import { type DealStage, dealMilestones, dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
@@ -370,6 +377,11 @@ export interface PushOfferInput {
   readonly dembrane_signer?: DembraneSigner | null | undefined;
   /** dembrane signs the offer itself when it is sent; on a change absent keeps the draft's. */
   readonly dembrane_signs_offer?: boolean | undefined;
+  /**
+   * Who signs for the customer: named when the offer is sent, as the customer names them.
+   * On a change absent keeps the draft's, null drops it.
+   */
+  readonly customer_signer?: Person | null | undefined;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -615,8 +627,9 @@ export async function pushOffer(
    */
   ids: { document?: string; task?: string; email?: boolean } = {},
 ) {
-  // Before anything is written: a refused push changes nothing.
-  if (input.send !== false && input.notify) assertPersonSends(who);
+  // Before anything is written: a refused push changes nothing. Naming the customer's
+  // signer emails them, so on a send that is a person's to do too.
+  if (input.send !== false && (input.notify || input.customer_signer)) assertPersonSends(who);
   const org = await staffOrg(d, orgId);
   const pinned = await legalForPush({
     db: d.db,
@@ -667,6 +680,8 @@ export async function pushOffer(
       ...file,
       requiresSignature: true,
       status: "draft",
+      // Kept on the draft; the send names them, with the invitation and the email.
+      ...draftSigner(input.customer_signer),
       // A new version belongs to the same deal unless it names another.
       externalRef: input.external_ref ?? prev?.externalRef ?? null,
       createdBy: who.directusUserId,
@@ -692,6 +707,20 @@ export async function pushOffer(
     task: task ? taskView(task, await store.documents(d.db, org.id)) : null,
   };
 }
+
+/**
+ * The customer's signer as a draft keeps it: named, not yet invited (no `signerInvitedAt`),
+ * so no link exists and no code goes to them until the send names them.
+ */
+const draftSigner = (s: Person | null | undefined) => ({
+  signerEmail: s ? s.email.trim().toLowerCase() : null,
+  signerName: s?.name ?? null,
+  signerRole: s?.role ?? null,
+  signerInvitedAt: null,
+});
+
+/** Whether sending this draft names its customer signer, which emails them. */
+const namesOnSend = (doc: DocumentRow) => Boolean(doc.signerEmail && !doc.signerInvitedAt);
 
 export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send" | "currency"> & {
   /** Absent keeps the draft's. */
@@ -770,6 +799,7 @@ export async function updateOffer(
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,
+      ...(input.customer_signer !== undefined && draftSigner(input.customer_signer)),
       updatedAt: d.now(),
     });
     await writeFields(tx, doc.id, rendered.fields);
@@ -804,9 +834,9 @@ async function sendOfferIn(
   notify: boolean,
   taskId?: string,
 ): Promise<string> {
-  if (notify) assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
+  if (notify || namesOnSend(doc)) assertPersonSends(who);
   // A revision drafted earlier replaces its offer now. One signed meanwhile stops the send,
   // and so does another version sent first: two live versions of one offer never exist.
   if (doc.supersedesId) {
@@ -886,6 +916,16 @@ async function sendOfferIn(
     },
     webhook: await sentPayload(d, tx, who, orgId, docId),
   });
+  // The signer staff gave is named now, as the customer would name them: invited, emailed.
+  if (namesOnSend(doc))
+    await setSigner(
+      d,
+      who,
+      (await store.org(tx, orgId)) as OrgRow,
+      docId,
+      { email: doc.signerEmail as string, name: doc.signerName ?? "", role: doc.signerRole },
+      { actor: actorOf(who), tx },
+    );
   if (notify) await tellCustomerOfOffer(d, tx, orgId, doc);
   return task.id;
 }
@@ -1205,7 +1245,7 @@ export async function sendDocument(
   if (doc.status !== "draft") throw new ConflictError("document.already_sent");
   if (doc.kind === "offer") {
     // Before the draft is drawn again: a refused send changes nothing.
-    if (notify) assertPersonSends(who);
+    if (notify || namesOnSend(doc)) assertPersonSends(who);
     await freshenDraftOffer(d, doc);
     doc = await staffDocument(d, orgId, docId);
     await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id, notify));
@@ -1276,6 +1316,24 @@ export async function voidDocument(
     "staff",
     who,
   );
+}
+
+/**
+ * Staff name who signs for the customer on an offer or a DPA still waiting, or change who
+ * it is: the same naming as the customer's (setSigner), recorded as staff's. It does not
+ * count against the organisation's own namings: that limit keeps a customer account from
+ * sending invitations in bulk, and a staff call is a person of ours, audited per call. The
+ * route refuses a staff key before this (naming emails the signer).
+ */
+export async function staffNameSigner(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  docId: string,
+  signer: Person,
+) {
+  const org = await staffOrg(d, orgId);
+  return setSigner(d, who, org, docId, signer, { actor: actorOf(who) });
 }
 
 export async function staffDocument(d: AccountsDeps, orgId: string, docId: string) {

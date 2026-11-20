@@ -69,6 +69,7 @@ import {
   staffCreateTask,
   staffDocument,
   staffFile,
+  staffNameSigner,
   staffOpenTicket,
   staffReply,
   updateAccount,
@@ -414,6 +415,13 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = await staff(c, "accounts.document.send");
     const b = await body(c, K.SendDocumentRequest);
     return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task, b.notify));
+  });
+  app.post(R.staffNameSigner.path, async (c) => {
+    const who = await staff(c, "accounts.document.signer.set");
+    // Before the body is read: naming emails the signer, and a staff key never emails.
+    assertPersonSends(who);
+    const b = await body(c, K.NameSignerRequest);
+    return c.json(await staffNameSigner(d, who, p(c, "orgId"), p(c, "docId"), b));
   });
   app.post(R.voidDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.void");

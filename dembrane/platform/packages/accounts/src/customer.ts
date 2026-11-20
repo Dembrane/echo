@@ -21,8 +21,8 @@ import {
 } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
-import type { AccountsDeps, Tx } from "./deps";
-import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
+import { type AccountsDeps, type Conn, isUuid, type Tx } from "./deps";
+import { type Actor, billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
 import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
 import { legalTextPage } from "./legal/page";
@@ -365,23 +365,50 @@ export async function nameSigner(
   who: Signed,
   orgId: string,
   docId: string,
-  signer: { name: string; email: string; role: string | null },
+  signer: Person,
 ) {
   const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
   // Before anything else, so a refusal costs none of the organisation's namings.
   assertMayNameSigner(role);
-  const doc = await store.document(d.db, org.id, docId);
-  if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
-  if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
-    throw new ConflictError("document.not_awaiting_signature");
-  await d.limiter.check(SIGNER_LIMIT, org.id);
+  return setSigner(d, who, org, docId, signer, {
+    actor: { kind: "customer", userId: who.directusUserId },
+    counted: true,
+  });
+}
+
+/**
+ * Names who signs a document that waits for a signature, or changes who it is: the one
+ * function behind every way a signer is named (the customer's route, their answer to "who
+ * signs", the staff route, an offer sent with its signer). Whoever calls it has decided
+ * that the caller may; this checks the document. The person gets the signing email with a
+ * link bound to them and this moment, so an earlier signer's link stops working; they are
+ * invited into the organisation, so the sign-in step sends them a code. One signer per
+ * document, and none once it is signed (409).
+ *
+ * `counted`: the naming counts against the organisation's own namings (SIGNER_LIMIT), as
+ * the customer's do. `tx`: within a transaction already open, as a send is.
+ */
+export async function setSigner(
+  d: AccountsDeps,
+  who: Signed,
+  org: { id: string; name: string },
+  docId: string,
+  signer: Person,
+  how: { actor: Actor; counted?: boolean; tx?: Conn },
+) {
+  const doc = await awaitingSigner(how.tx ?? d.db, org.id, docId);
+  // After the checks, so a refused naming costs the organisation none of its namings.
+  if (how.counted) await d.limiter.check(SIGNER_LIMIT, org.id);
   const email = signer.email.trim().toLowerCase();
   const replaced =
     doc.signerEmail && doc.signerEmail.toLowerCase() !== email
       ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
       : null;
   const now = d.now();
-  await d.db.transaction(async (tx) => {
+  const write = async (tx: Conn) => {
+    // Locked, so a signature at the same moment either lands first (and this is refused)
+    // or waits for the person named here.
+    await lockAwaiting(tx, org.id, doc.id);
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
       signerName: signer.name,
@@ -399,12 +426,14 @@ export async function nameSigner(
     await emailSigner(d, tx, who, org, { ...doc, signerEmail: email, signerInvitedAt: now });
     await emit(d, tx, {
       orgId: org.id,
-      actor: { kind: "customer", userId: who.directusUserId },
+      actor: how.actor,
       type: replaced ? "document.signer_replaced" : "document.signer_named",
       subject: { type: "document", id: doc.id },
       detail: { email, name: signer.name, ...replaced },
     });
-  });
+  };
+  if (how.tx) await write(how.tx);
+  else await d.db.transaction(write);
   return {
     signer: {
       email,
@@ -414,6 +443,62 @@ export async function nameSigner(
       role: signer.role,
     },
   };
+}
+
+/**
+ * Takes the naming off a document that waits for a signature: nobody is named, so whoever
+ * runs the account signs it, and the link sent to the person named stops working (it is
+ * bound to the naming). The other half of setSigner, and like it, the caller has decided
+ * that the caller may. Nobody named: nothing changes.
+ */
+export async function unsetSigner(
+  d: AccountsDeps,
+  org: { id: string },
+  docId: string,
+  how: { actor: Actor; tx?: Conn },
+) {
+  const doc = await awaitingSigner(how.tx ?? d.db, org.id, docId);
+  if (!doc.signerEmail) return;
+  const now = d.now();
+  const write = async (tx: Conn) => {
+    await lockAwaiting(tx, org.id, doc.id);
+    await store.updateDocument(tx, doc.id, {
+      signerEmail: null,
+      signerName: null,
+      signerRole: null,
+      signerInvitedAt: null,
+      updatedAt: now,
+    });
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: how.actor,
+      type: "document.signer_removed",
+      subject: { type: "document", id: doc.id },
+      detail: { previous_email: doc.signerEmail, previous_name: doc.signerName },
+    });
+  };
+  if (how.tx) await write(how.tx);
+  else await d.db.transaction(write);
+}
+
+/** Whether `email` is the person named to sign `doc`. */
+export const isNamedSigner = (doc: Pick<DocumentRow, "signerEmail">, email: string | null) =>
+  Boolean(email && doc.signerEmail?.toLowerCase() === email.trim().toLowerCase());
+
+/** A document a signer may be named on or taken off: sent, waiting for a signature. */
+async function awaitingSigner(c: Conn, orgId: string, docId: string) {
+  const doc = isUuid(docId) ? await store.document(c, orgId, docId) : null;
+  if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
+  if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
+    throw new ConflictError("document.not_awaiting_signature");
+  return doc;
+}
+
+/** Locks it as it is written, so a signature at the same moment lands first or waits. */
+async function lockAwaiting(tx: Conn, orgId: string, docId: string) {
+  const locked = await store.documentForUpdate(tx, orgId, docId);
+  if (!locked?.requiresSignature || !["sent", "viewed"].includes(locked.status))
+    throw new ConflictError("document.not_awaiting_signature");
 }
 
 /**
@@ -459,7 +544,7 @@ export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, 
 /** The invitation to sign, with the link for the person and naming the document carries. */
 async function emailSigner(
   d: AccountsDeps,
-  tx: Tx,
+  tx: Conn,
   who: Signed,
   org: { name: string },
   doc: DocumentRow,
@@ -489,7 +574,8 @@ async function emailSigner(
   );
 }
 
-type Person = { name: string; email: string; role: string | null };
+/** Someone named to sign, as staff and customers give them. */
+export type Person = { name: string; email: string; role: string | null };
 
 /** The DPA an offer went out with: the one pinning the same DPA text, in one of `statuses`. */
 export function dpaOf(
@@ -509,9 +595,13 @@ export function dpaOf(
  * same person signs the DPA, else who does (null: the person answering), and whether they
  * want their own DPIA. The DPA is its own document, sent with the offer (openDpa); the
  * answers only say whose each signature is. Asked once per offer, before signing; changing
- * it later goes through a question to us. An answer that names anyone is for owners and
- * admins: from Billing it is refused whole, before anything is applied, and "I sign" (no
- * one named) is theirs to give.
+ * it later goes through a question to us.
+ *
+ * The answer is made true: someone else is named, or, for "I sign" while someone else is
+ * named (staff may name the signer when sending), that naming is taken off. An answer that
+ * changes who signs is for owners and admins: from Billing it is refused whole, before
+ * anything is applied. Answering with the person named already, or "I sign" with nobody
+ * named, changes nothing, so Billing may give it, and nobody is emailed again.
  */
 export async function answerWhoSigns(
   d: AccountsDeps,
@@ -527,9 +617,10 @@ export async function answerWhoSigns(
 ) {
   const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
   const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
-  // Refused whole, before anything is applied: also when the DPA no longer waits, and the
-  // person would only be named in the answer.
-  if (input.offer_signer || dpaSigner) assertMayNameSigner(role);
+  // Naming someone in an answer is for owners and admins, as before; naming the person
+  // named already changes nothing and is checked below, with the documents.
+  const names = (doc: DocumentRow | null, p: Person | null) =>
+    p && !(doc && isNamedSigner(doc, p.email));
   const task = await store.task(d.db, org.id, taskId);
   if (task?.code !== "who_signs") throw new NotFoundError("task.not_found");
   if (!["open", "changes_requested"].includes(task.status))
@@ -540,20 +631,45 @@ export async function answerWhoSigns(
   // The DPA the offer went out with, while it still waits on a signature.
   const dpa = dpaOf(await store.documents(d.db, org.id), offer, ["sent", "viewed"]);
   const me = await store.identity(d.db, who.directusUserId);
+  const myEmail = me?.email ?? null;
+  // "I sign" while someone else is named takes their naming off.
+  const unnames = (doc: DocumentRow | null, p: Person | null) =>
+    !p && doc !== null && doc.signerEmail !== null && !isNamedSigner(doc, myEmail);
+  // Refused whole, before anything is applied: also when the DPA no longer waits, and the
+  // person would only be named in the answer.
+  if (
+    names(offer, input.offer_signer) ||
+    names(dpa, dpaSigner) ||
+    unnames(offer, input.offer_signer) ||
+    unnames(dpa, dpaSigner)
+  )
+    assertMayNameSigner(role);
   const self = me?.name ? `${me.name} (${me.email})` : (me?.email ?? "the person answering");
   const person = (p: Person | null) =>
     p ? `${p.name} (${p.email}${p.role ? `, ${p.role}` : ""})` : self;
+  /** Whom the answer replaces on a document, for the stored answer. */
+  const replaces = (doc: DocumentRow | null, p: Person | null) =>
+    doc?.signerEmail && (names(doc, p) || unnames(doc, p))
+      ? `, in place of ${doc.signerName ? `${doc.signerName} (${doc.signerEmail})` : doc.signerEmail}`
+      : "";
+  const offerWas = replaces(offer, input.offer_signer);
+  const dpaWas = replaces(dpa, dpaSigner);
 
-  // Each naming stands on its own, so answering again after a failure picks up where it
-  // stopped: naming the same signer again changes nothing.
-  if (input.offer_signer) await nameSigner(d, who, org.id, offer.id, input.offer_signer);
-  if (dpa && dpaSigner) await nameSigner(d, who, org.id, dpa.id, dpaSigner);
+  // Each change stands on its own, so answering again after a failure picks up where it
+  // stopped: the person named already is not named, or emailed, again.
+  const actor = { kind: "customer" as const, userId: who.directusUserId };
+  if (input.offer_signer && names(offer, input.offer_signer))
+    await nameSigner(d, who, org.id, offer.id, input.offer_signer);
+  else if (unnames(offer, input.offer_signer)) await unsetSigner(d, org, offer.id, { actor });
+  if (dpa && dpaSigner && names(dpa, dpaSigner))
+    await nameSigner(d, who, org.id, dpa.id, dpaSigner);
+  else if (dpa && unnames(dpa, dpaSigner)) await unsetSigner(d, org, dpa.id, { actor });
 
   const summary = [
-    `Offer: signed by ${person(input.offer_signer)}.`,
+    `Offer: signed by ${person(input.offer_signer)}${offerWas}.`,
     `Data processing agreement: signed by ${
       input.dpa_same ? "the same person" : person(input.dpa_signer)
-    }.`,
+    }${dpaWas}.`,
     input.dpia
       ? "They want their own data protection impact assessment (DPIA)."
       : "No DPIA of their own.",
