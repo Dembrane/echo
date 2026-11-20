@@ -3,14 +3,31 @@ import audioAlertSound from "@/assets/audio-alert.mp3";
 
 // Minimum chunk size in bytes - chunks smaller than this are considered suspicious
 const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
+/** The recorder hands over audio this often, so a crash loses at most this much. */
+const SLICE_MS = 1000;
 
 type ChunkInfo = {
 	size: number;
 	timestamp: number;
 };
 
+/** Where the recorder writes each chunk's audio as it records. */
+export type ChunkSink = {
+	/** Opens one chunk: one MediaRecorder, so one playable file. */
+	begin: (mimeType: string) => ChunkWriter;
+};
+
+export type ChunkWriter = {
+	/** Each slice, in the order recorded. */
+	append: (slice: Blob) => void;
+	/** The chunk is good: its slices become one chunk to send. */
+	seal: () => Promise<void>;
+	/** The chunk holds no audio worth sending. */
+	discard: () => Promise<void>;
+};
+
 type UseAudioRecorderOptions = {
-	onChunk: (chunk: Blob) => void;
+	sink: ChunkSink;
 	onRecordingInterrupted?: () => void;
 	deviceId?: string;
 	mimeType?: string;
@@ -64,7 +81,7 @@ export const getSupportedMimeType = () => {
 
 const defaultMimeType = getSupportedMimeType();
 const useChunkedAudioRecorder = ({
-	onChunk,
+	sink,
 	onRecordingInterrupted,
 	deviceId,
 	mimeType = defaultMimeType,
@@ -231,11 +248,15 @@ const useChunkedAudioRecorder = ({
 				: "audio/webm",
 		});
 		mediaRecorderRef.current = recorder;
+		// Each chunk is still one recorder's file, written a slice at a time.
+		recorder.start(SLICE_MS);
+		const writer = sink.begin(mimeType);
 
 		recorder.ondataavailable = (event) => {
 			log("ondataavailable", event.data.size, "bytes");
 			if (event.data.size > 0) {
 				chunkBufferRef.current.push(event.data);
+				writer.append(event.data);
 			}
 		};
 
@@ -274,8 +295,10 @@ const useChunkedAudioRecorder = ({
 
 		recorder.onstop = () => {
 			log("MediaRecorder stopped");
-			const chunkBlob = new Blob(chunkBufferRef.current, { type: mimeType });
-			const chunkSize = chunkBlob.size;
+			const chunkSize = chunkBufferRef.current.reduce(
+				(bytes, slice) => bytes + slice.size,
+				0,
+			);
 
 			// Track chunk history for interruption reporting
 			chunkHistoryRef.current.push({
@@ -286,6 +309,7 @@ const useChunkedAudioRecorder = ({
 			// Check if this is a suspicious chunk (< 1KB)
 			if (chunkSize < MIN_CHUNK_SIZE_BYTES) {
 				suspiciousChunkCountRef.current++;
+				void writer.discard();
 
 				// If 2 consecutive suspicious chunks, recording has failed
 				if (
@@ -305,15 +329,12 @@ const useChunkedAudioRecorder = ({
 
 			// Good chunk - reset suspicious counter and upload
 			suspiciousChunkCountRef.current = 0;
-			onChunk(chunkBlob);
+			void writer.seal();
 
 			// flush the buffer and restart
 			chunkBufferRef.current = [];
 			restartChunk();
 		};
-
-		// allow for some room to restart so all is just one chunk as per mediarec
-		recorder.start(timeslice * 2);
 	}, [isRecording]);
 
 	const startRecording = async (initialTime = 0): Promise<boolean> => {

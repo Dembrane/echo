@@ -16,6 +16,7 @@ import {
 	type CSSProperties,
 	useCallback,
 	useEffect,
+	useMemo,
 	useReducer,
 	useRef,
 	useState,
@@ -121,7 +122,7 @@ export const ParticipantConversationAudio = () => {
 		[queuedCount, conversationId],
 	);
 	const uploadProgress = outbox.progress(conversationId ?? "");
-	const { onRecordingNotice } = outbox;
+	const { onRecordingNotice, openChunkSink } = outbox;
 
 	// A recording limit answers through the audio: a kept chunk can carry a
 	// stop, and a refused one is the stop. Audio from before this screen
@@ -149,14 +150,15 @@ export const ParticipantConversationAudio = () => {
 		[onRecordingNotice, conversationId],
 	);
 
-	// The outbox keeps the chunk on the device until the server has it.
-	const onChunk = (chunk: Blob) => {
-		void outbox.enqueueChunk(chunk, {
-			conversationId: conversationId ?? "",
-			source: "PORTAL_AUDIO",
-			timestamp: new Date(),
-		});
-	};
+	// The outbox keeps the audio on the device until the server has it.
+	const sink = useMemo(
+		() =>
+			openChunkSink({
+				conversationId: conversationId ?? "",
+				source: "PORTAL_AUDIO",
+			}),
+		[openChunkSink, conversationId],
+	);
 
 	// The finish in progress, so Resume can call it off while it still waits
 	// on the audio.
@@ -210,8 +212,8 @@ export const ParticipantConversationAudio = () => {
 
 	const audioRecorder = useChunkedAudioRecorder({
 		deviceId,
-		onChunk,
 		onRecordingInterrupted: () => onRecordingInterruptedRef.current?.(),
+		sink,
 	});
 
 	// Set up the interruption callback after audioRecorder is available

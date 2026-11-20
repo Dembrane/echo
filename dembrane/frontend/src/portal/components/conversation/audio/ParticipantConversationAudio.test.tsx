@@ -20,6 +20,7 @@ import {
 	it,
 	vi,
 } from "vitest";
+import type { ChunkSink } from "./hooks/useChunkedAudioRecorder";
 import { ParticipantConversationAudio } from "./ParticipantConversationAudio";
 
 // Characterization tests: they pin down what the audio screen does today so
@@ -43,7 +44,7 @@ const wakeLock = {
 };
 
 type RecorderOptions = {
-	onChunk: (chunk: Blob) => void;
+	sink: ChunkSink;
 	onRecordingInterrupted?: () => void;
 };
 
@@ -55,6 +56,13 @@ const recorder = {
 	setRecordingTime: (_seconds: number) => {},
 	/** What stopRecording returns: settles once the last chunk is handed over. */
 	stopped: Promise.resolve() as Promise<unknown>,
+};
+
+/** The recorder writes one chunk of audio to the screen's sink. */
+const recordChunk = (slice = new Blob(["audio"])) => {
+	const writer = recorder.options?.sink.begin("audio/webm");
+	writer?.append(slice);
+	void writer?.seal();
 };
 
 vi.mock("./hooks/useChunkedAudioRecorder", async () => {
@@ -191,18 +199,30 @@ vi.mock("./outbox/OutboxProvider", async () => {
 		useOutbox: () => {
 			const [, rerender] = useReducer((n: number) => n + 1, 0);
 			return {
-				enqueueChunk: async (chunk: Blob, meta: object) => {
-					queued += 1;
-					rerender();
-					try {
-						await uploadChunk({ chunk, ...meta });
-					} catch {}
-					queued -= 1;
-					sent += 1;
-					rerender();
-					if (queued === 0) for (const done of queueWaiters.splice(0)) done();
-				},
 				onRecordingNotice: () => () => {},
+				openChunkSink: (meta: object) => ({
+					begin: () => {
+						const slices: Blob[] = [];
+						return {
+							append: (slice: Blob) => {
+								slices.push(slice);
+							},
+							discard: async () => {},
+							seal: async () => {
+								queued += 1;
+								rerender();
+								try {
+									await uploadChunk({ slices, ...meta });
+								} catch {}
+								queued -= 1;
+								sent += 1;
+								rerender();
+								if (queued === 0)
+									for (const done of queueWaiters.splice(0)) done();
+							},
+						};
+					},
+				}),
 				progress: () => ({ queued, sent, total: queued + sent }),
 				queuedCount: () => queued,
 				settled: async () => {
@@ -307,21 +327,18 @@ describe("recording", () => {
 		expect(wakeLock.enableAutoReacquire).toHaveBeenCalled();
 	});
 
-	it("hands each chunk the recorder produces to the outbox", async () => {
+	it("has the recorder write its audio to this conversation's outbox", async () => {
 		renderAudio();
 		await startRecording();
 
-		const chunk = new Blob(["audio"]);
-		act(() => recorder.options?.onChunk(chunk));
+		const slice = new Blob(["audio"]);
+		act(() => recordChunk(slice));
 
-		expect(uploadChunk).toHaveBeenCalledWith(
-			expect.objectContaining({
-				chunk,
-				conversationId: "c1",
-				source: "PORTAL_AUDIO",
-				timestamp: expect.any(Date),
-			}),
-		);
+		expect(uploadChunk).toHaveBeenCalledWith({
+			conversationId: "c1",
+			slices: [slice],
+			source: "PORTAL_AUDIO",
+		});
 	});
 
 	it("stopping pauses at the recorded time and asks to confirm", async () => {
@@ -435,7 +452,7 @@ describe("finishing", () => {
 		// Finish lands before the recorder's onstop has handed the chunk over.
 		await stopAndFinish();
 		await act(async () => {
-			recorder.options?.onChunk(new Blob(["audio"]));
+			recordChunk();
 			handover.resolve(undefined);
 		});
 		expect(finish).not.toHaveBeenCalled();
@@ -449,7 +466,7 @@ describe("finishing", () => {
 		uploadChunk.mockReturnValue(new Promise(() => {}));
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
+		act(() => recordChunk());
 
 		await stopAndFinish();
 		await act(() => vi.advanceTimersByTimeAsync(10 * 60_000));
@@ -471,7 +488,7 @@ describe("finishing", () => {
 		uploadChunk.mockReturnValue(new Promise(() => {}));
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
+		act(() => recordChunk());
 		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
 
 		const finishButton = await screen.findByTestId(
@@ -499,7 +516,7 @@ describe("finishing", () => {
 		uploadChunk.mockReturnValue(upload.promise);
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
+		act(() => recordChunk());
 		await stopAndFinish();
 
 		fireEvent.click(
@@ -549,8 +566,8 @@ describe("finishing", () => {
 		renderAudio();
 		await startRecording();
 		act(() => {
-			recorder.options?.onChunk(new Blob(["audio"]));
-			recorder.options?.onChunk(new Blob(["audio"]));
+			recordChunk();
+			recordChunk();
 		});
 		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
 		const finishButton = await screen.findByTestId(
@@ -754,7 +771,7 @@ describe("interruption", () => {
 		uploadChunk.mockReturnValue(new Promise(() => {}));
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
+		act(() => recordChunk());
 		interrupt();
 
 		const reconnect = await screen.findByTestId(

@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { ChunkItem, OutboxStore, Parked, SliceGroup } from "./outboxStore";
+import { recordingLockName } from "./recordingLock";
 
 const FIRST_BACKOFF_MS = 2_000;
 const MAX_BACKOFF_MS = 60_000;
@@ -73,9 +74,6 @@ export type Drainer = {
 
 const httpStatus = (error: unknown) =>
 	axios.isAxiosError(error) ? error.response?.status : undefined;
-
-/** Held by a tab for as long as it records into a slice group. */
-export const recordingLockName = (groupId: string) => `recording:${groupId}`;
 
 const heldWebLocks = async () => {
 	if (!navigator.locks?.query) return null;

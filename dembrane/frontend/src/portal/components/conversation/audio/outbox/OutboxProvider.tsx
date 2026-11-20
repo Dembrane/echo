@@ -15,9 +15,11 @@ import {
 	type RecordingRefusal,
 	recordingStopOf,
 } from "@/lib/freeTier";
+import type { ChunkSink } from "../hooks/useChunkedAudioRecorder";
 import { useUploadConversationChunk } from "../hooks/useUploadConversationChunk";
 import type { OutboxApi, OutboxEvent } from "./drainOutbox";
 import type { OutboxStore } from "./outboxStore";
+import { holdRecordingLock } from "./recordingLock";
 
 // The store, drainer and API load after the first screen: the portal's first
 // load has a size budget (scripts/check-portal-bundle.mjs), and nothing here
@@ -36,7 +38,6 @@ const DRAIN_ERROR_RETRY_MS = 60_000;
 export type ChunkMeta = {
 	conversationId: string;
 	source: string;
-	timestamp: Date;
 };
 
 /**
@@ -76,8 +77,12 @@ const noticeOf = (event: OutboxEvent): NoticeMessage | null => {
 };
 
 export type Outbox = {
-	/** Keeps the chunk on this device and sends it when it can. */
-	enqueueChunk: (chunk: Blob, meta: ChunkMeta) => Promise<void>;
+	/**
+	 * Where a recorder writes this conversation's audio. Each slice is kept on
+	 * this device as it's recorded, so a crash loses at most the last one, and
+	 * each sealed chunk is sent when it can be.
+	 */
+	openChunkSink: (meta: ChunkMeta) => ChunkSink;
 	/** Items for this conversation still waiting to send. Re-renders on change. */
 	queuedCount: (conversationId: string) => number;
 	/**
@@ -194,7 +199,7 @@ export const OutboxProvider = ({
 	// Today's in-memory upload, for when the store can't be used. Its callbacks
 	// don't say which conversation, so notices go to the one it last sent for.
 	const directConversationRef = useRef("");
-	const directUpload = useUploadConversationChunk({
+	const { mutateAsync: uploadDirectly } = useUploadConversationChunk({
 		onChunkAccepted: () =>
 			notify({
 				conversationId: directConversationRef.current,
@@ -218,6 +223,8 @@ export const OutboxProvider = ({
 	const refreshRef = useRef<(alongside?: () => void) => Promise<void>>(
 		async () => {},
 	);
+	/** Releases the recording lock of each slice group still being written. */
+	const recordingLocks = useRef(new Set<() => void>());
 
 	// Counts live in a ref so waiters resolve the moment they change, not after
 	// a render; the version only makes readers of queuedCount re-render.
@@ -400,20 +407,36 @@ export const OutboxProvider = ({
 			channelRef.current = null;
 			lockAbort.abort();
 			releaseLock();
+			for (const release of recordingLocks.current) release();
 			void storePromise.then((store) => store?.close());
 		};
 	}, [api, openStore, queryClient, countsChanged, notify]);
 
+	// A chunk is counted from the moment it's handed over, before any await,
+	// so a settled() right after never sees a gap before it's stored.
+	const hold = useCallback((conversationId: string, by: number) => {
+		const { inMemory } = counts.current;
+		inMemory[conversationId] = (inMemory[conversationId] ?? 0) + by;
+	}, []);
+
+	const handedToStore = useCallback(
+		async (conversationId: string, bytes: number) => {
+			posthog.capture("portal_outbox_enqueued", {
+				bytes,
+				conversation_id: conversationId,
+			});
+			// The store's count takes over in the same update ours drops.
+			await refreshRef.current(() => hold(conversationId, -1));
+			channelRef.current?.postMessage("changed");
+			kickRef.current();
+		},
+		[hold],
+	);
+
+	/** A whole chunk: what a chunk sink falls back to when its slices can't be stored. */
 	const enqueueChunk = useCallback(
-		async (chunk: Blob, meta: ChunkMeta) => {
-			// Counted from the moment it's handed over, before any await, so a
-			// settled() right after never sees a gap before it's stored.
-			const held = (by: number) => {
-				const { inMemory } = counts.current;
-				inMemory[meta.conversationId] =
-					(inMemory[meta.conversationId] ?? 0) + by;
-			};
-			held(1);
+		async (chunk: Blob, meta: ChunkMeta & { timestamp: Date }) => {
+			hold(meta.conversationId, 1);
 			countsChanged();
 			const store = await storeRef.current;
 			if (store) {
@@ -425,14 +448,7 @@ export const OutboxProvider = ({
 						source: meta.source,
 						timestamp: meta.timestamp.toISOString(),
 					});
-					posthog.capture("portal_outbox_enqueued", {
-						bytes: chunk.size,
-						conversation_id: meta.conversationId,
-					});
-					// The store's count takes over in the same update ours drops.
-					await refreshRef.current(() => held(-1));
-					channelRef.current?.postMessage("changed");
-					kickRef.current();
+					await handedToStore(meta.conversationId, chunk.size);
 					return;
 				} catch (error) {
 					posthog.capture("portal_outbox_store_failed", {
@@ -443,14 +459,13 @@ export const OutboxProvider = ({
 			}
 			// No store: today's in-memory upload, still counted until it's done.
 			directConversationRef.current = meta.conversationId;
-			void directUpload
-				.mutateAsync({
-					chunk,
-					conversationId: meta.conversationId,
-					runFinishHook: false,
-					source: meta.source,
-					timestamp: meta.timestamp,
-				})
+			void uploadDirectly({
+				chunk,
+				conversationId: meta.conversationId,
+				runFinishHook: false,
+				source: meta.source,
+				timestamp: meta.timestamp,
+			})
 				.then(() => {
 					const { directSent } = counts.current;
 					directSent[meta.conversationId] =
@@ -458,11 +473,107 @@ export const OutboxProvider = ({
 				})
 				.catch(() => {}) // the mutation reports its own failure
 				.finally(() => {
-					held(-1);
+					hold(meta.conversationId, -1);
 					countsChanged();
 				});
 		},
-		[directUpload, countsChanged],
+		[uploadDirectly, countsChanged, hold, handedToStore],
+	);
+
+	const openChunkSink = useCallback(
+		(meta: ChunkMeta): ChunkSink => ({
+			begin: (mimeType) => {
+				const { conversationId, source } = meta;
+				const groupId = crypto.randomUUID();
+				const timestamp = new Date();
+				// The same slices in memory, sent the old way if the store fails.
+				const slices: Blob[] = [];
+				const lock = holdRecordingLock(groupId);
+				const release = () => {
+					lock.release();
+					recordingLocks.current.delete(release);
+				};
+				recordingLocks.current.add(release);
+				// Whether every write so far landed. Writes go in order, the first
+				// once the lock keeps drainers off the group. After a failed write
+				// the rest are skipped: a chunk with a hole in it won't play.
+				let written = lock.held.then(() => true);
+
+				return {
+					append: (slice) => {
+						const index = slices.push(slice) - 1;
+						written = written.then(async (ok) => {
+							const store = ok && (await storeRef.current);
+							if (!store) return false;
+							try {
+								await store.appendSlice({
+									audio: await slice.arrayBuffer(),
+									conversationId,
+									groupId,
+									index,
+									mimeType,
+									source,
+									startedAt: timestamp.toISOString(),
+								});
+								return true;
+							} catch (error) {
+								posthog.capture("portal_outbox_store_failed", {
+									error: errorMessage(error),
+									stage: "append",
+								});
+								return false;
+							}
+						});
+					},
+
+					discard: async () => {
+						await written;
+						await (await storeRef.current)
+							?.discardGroup(groupId)
+							.catch(() => {});
+						release();
+					},
+
+					seal: async () => {
+						hold(conversationId, 1);
+						countsChanged();
+						try {
+							const store = (await written) && (await storeRef.current);
+							if (store) {
+								try {
+									const item = await store.sealGroup(groupId);
+									if (item) {
+										await handedToStore(conversationId, item.audio.byteLength);
+										return;
+									}
+								} catch (error) {
+									posthog.capture("portal_outbox_store_failed", {
+										error: errorMessage(error),
+										stage: "seal",
+									});
+								}
+							}
+							// Drop the partial slices while the lock still keeps drainers
+							// off them, then send the copy in memory the old way.
+							await (await storeRef.current)
+								?.discardGroup(groupId)
+								.catch(() => {});
+							const sent = enqueueChunk(new Blob(slices, { type: mimeType }), {
+								conversationId,
+								source,
+								timestamp,
+							});
+							hold(conversationId, -1);
+							countsChanged();
+							await sent;
+						} finally {
+							release();
+						}
+					},
+				};
+			},
+		}),
+		[countsChanged, enqueueChunk, handedToStore, hold],
 	);
 
 	const settled = useCallback(
@@ -504,13 +615,13 @@ export const OutboxProvider = ({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version is the point
 	const value = useMemo<Outbox>(
 		() => ({
-			enqueueChunk,
 			onRecordingNotice,
+			openChunkSink,
 			progress,
 			queuedCount: queued,
 			settled,
 		}),
-		[enqueueChunk, onRecordingNotice, progress, queued, settled, version],
+		[onRecordingNotice, openChunkSink, progress, queued, settled, version],
 	);
 
 	return (

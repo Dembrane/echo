@@ -13,13 +13,13 @@ import {
 	type Drainer,
 	type OutboxApi,
 	type OutboxEvent,
-	recordingLockName,
 } from "./drainOutbox";
 import {
 	type ChunkItem,
 	type OutboxStore,
 	openOutboxStore,
 } from "./outboxStore";
+import { recordingLockName } from "./recordingLock";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

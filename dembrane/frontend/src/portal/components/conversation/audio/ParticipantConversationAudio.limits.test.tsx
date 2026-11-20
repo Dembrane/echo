@@ -63,7 +63,6 @@ vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 // The outbox passes on what the server said about each chunk.
 vi.mock("./outbox/OutboxProvider", () => ({
 	useOutbox: () => ({
-		enqueueChunk: vi.fn(),
 		onRecordingNotice: (
 			_conversationId: string,
 			listener: (notice: {
@@ -80,6 +79,7 @@ vi.mock("./outbox/OutboxProvider", () => ({
 			state.notice = listener;
 			return () => {};
 		},
+		openChunkSink: vi.fn(),
 		progress: () => ({ queued: 0, sent: 0, total: 0 }),
 		queuedCount: () => 0,
 		settled: async () => {},
