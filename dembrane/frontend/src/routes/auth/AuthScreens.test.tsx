@@ -577,6 +577,24 @@ it("the register fields carry the hints a password manager needs", async () => {
 	expect(username.value).toBe("reg@example.com");
 });
 
+it("the password step carries the email as changed after going Back", async () => {
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByTestId("auth-register-password-input");
+	fireEvent.click(screen.getByText("Back"));
+	fireEvent.change(await screen.findByTestId("auth-register-email-input"), {
+		target: { value: "other@example.com" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByTestId("auth-register-password-input");
+	const username = document.querySelector(
+		'input[autocomplete="username"]',
+	) as HTMLInputElement;
+	expect(username.value).toBe("other@example.com");
+});
+
 it("'Wrong address? Change email' goes back to the email field and keeps the other answers", async () => {
 	const calls = stubFetch((url) =>
 		url.endsWith("/v2/auth/register")

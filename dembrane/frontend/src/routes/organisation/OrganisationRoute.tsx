@@ -1343,6 +1343,8 @@ function OrganisationOverviewPanel({
 	);
 
 	const ONE_DAY_MS = 86_400_000;
+	// Read once: "recently approved" is counted from when the page opened.
+	const [now] = useState(Date.now);
 	const myCards: WorkspaceCardModel[] = useMemo(() => {
 		const list = (mine?.workspaces ?? []).filter((w) => w.org_id === orgId);
 		return list
@@ -1352,7 +1354,7 @@ function OrganisationOverviewPanel({
 				const recentlyApproved =
 					!!w.created_at &&
 					w.tier !== "free" &&
-					Date.now() - new Date(w.created_at).getTime() < ONE_DAY_MS;
+					now - new Date(w.created_at).getTime() < ONE_DAY_MS;
 				return {
 					audio_hours: w.usage?.audio_hours ?? 0,
 					bills_separately: roster?.bills_separately ?? false,
@@ -1371,7 +1373,7 @@ function OrganisationOverviewPanel({
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name));
-	}, [mine, orgId, rosterMap]);
+	}, [mine, now, orgId, rosterMap]);
 
 	// Pending invites aren't on the team yet, so they don't count toward the
 	// people glance. Everyone with access (incl. externals) shows as a bubble.
