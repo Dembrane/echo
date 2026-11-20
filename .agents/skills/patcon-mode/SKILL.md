@@ -22,6 +22,13 @@ Before anything else, read `.agents/skills/dembrane-mode/SKILL.md` in full and f
   - Host them where the PR can display them, not as files in the PR's diff.
   - `gh pr edit --attach <file>` or `gh pr comment --attach <file>` uploads images and videos. Each `![alt](./file)` in the body becomes the uploaded copy.
   - Videos: H.264 `.mp4`, at most 10MB on a free plan.
+    - `--attach` rewrites a video's reference to a plain link, which GitHub doesn't play. Replace it with the bare uploaded URL, on its own line or alone in a table cell.
+- Asked for before/after Mermaid diagrams of a PR → compare the whole PR against its base branch, not only the latest push.
+  - Put them in the PR description, near the top, not in a comment.
+  - Colour the boxes: green for new, yellow for working differently, red for gone.
+  - Give the legend its own Mermaid block, kept in one row by chaining its boxes with `~~~`.
+- After pushing new work to an open PR → reread its description and fix what the push made out of date.
+- Skill and doc text → short bullets, with related details as indented sub-bullets.
 - A comment on a GitHub PR or issue posted as patcon → fill `comment-template.md` from this folder exactly. The blank line after `</summary>` makes the bullets render as a list. Keep @-mentions out of the summary.
 - A PR or issue triage that ends in an action on GitHub (close, rebase, supersede) → draft that comment, show it, and ask once for human words. Post it on "none" or with his words, then take the action.
 - TODO: add overrides as they come up.

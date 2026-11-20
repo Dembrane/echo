@@ -13,4 +13,4 @@
 
 {{principle line, if one shaped the call}}
 
-{{the action taken, e.g. "Closing. Re-open or complain if wrong"}}
+{{the action taken, e.g. "Rebased onto `main`." Add "Re-open or complain if wrong" only when closing}}
