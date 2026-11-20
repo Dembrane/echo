@@ -1147,18 +1147,28 @@ export async function currentMapSnapshot(
   reads: MapViewReads,
   o: { follow?: boolean; publish: EventPublisher },
 ): Promise<Snapshot | null> {
-  const scope = await store.findScope({
-    projectId,
-    kind: "view",
-    ownerId: MAP_VIEW_ID,
-    scopeKey: VIEW_SCOPE_KEY,
-  });
-  const snapshot = scope?.currentSnapshotId
-    ? await store.getSnapshot(scope.currentSnapshotId)
-    : null;
+  const head = async () => {
+    const scope = await store.findScope({
+      projectId,
+      kind: "view",
+      ownerId: MAP_VIEW_ID,
+      scopeKey: VIEW_SCOPE_KEY,
+    });
+    return scope?.currentSnapshotId ? await store.getSnapshot(scope.currentSnapshotId) : null;
+  };
+  const snapshot = await head();
   if (o.follow === false) return snapshot;
-  if (!snapshot || (await needsAdvance(snapshot, store, reads)))
-    return (await advanceMapView(projectId, store, reads, { publish: o.publish })) ?? snapshot;
+  if (!snapshot || (await needsAdvance(snapshot, store, reads))) {
+    try {
+      return (await advanceMapView(projectId, store, reads, { publish: o.publish })) ?? snapshot;
+    } catch (err) {
+      // Other writers kept moving the view: a read shows the snapshot they published.
+      if (!(err instanceof SnapshotConflict)) throw err;
+      const latest = await head();
+      if (!latest) throw err;
+      return latest;
+    }
+  }
   return snapshot;
 }
 
