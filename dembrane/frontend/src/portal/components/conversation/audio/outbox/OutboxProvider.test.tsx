@@ -336,6 +336,29 @@ it("parks a chunk a recording limit refuses, says so once, and settles", async (
 	store.close();
 });
 
+it("keeps whole chunks only, as before, in a browser without Web Locks", async () => {
+	Object.defineProperty(navigator, "locks", {
+		configurable: true,
+		value: undefined,
+	});
+	render(tree());
+	const other = await openSameStore();
+
+	const writer = begin();
+	writer.append(slice(1, 2));
+	writer.append(slice(3));
+	await act(async () => {});
+	// Nothing could ever recover these, or clear them away.
+	expect(await other.listSliceGroups()).toEqual([]);
+
+	await act(() => writer.seal());
+	await act(() => outbox.settled("conv-1"));
+
+	expect(api.upload).toHaveBeenCalledTimes(1);
+	expect(bytesOf(api.upload.mock.calls[0][0].audio)).toEqual([1, 2, 3]);
+	other.close();
+});
+
 describe("a chunk written a slice at a time", () => {
 	it("keeps each slice on the device as it's recorded, before the chunk is sealed", async () => {
 		render(tree());

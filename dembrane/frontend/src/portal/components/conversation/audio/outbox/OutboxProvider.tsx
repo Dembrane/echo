@@ -497,7 +497,12 @@ export const OutboxProvider = ({
 				// Whether every write so far landed. Writes go in order, the first
 				// once the lock keeps drainers off the group. After a failed write
 				// the rest are skipped: a chunk with a hole in it won't play.
-				let written = lock.held.then(() => true);
+				// Without Web Locks (Safari before 15.4) no tab can tell a live
+				// group from a dead one, so slices would never be recovered or
+				// cleared: write none, and seal the whole chunk from memory.
+				let written = navigator.locks
+					? lock.held.then(() => true)
+					: Promise.resolve(false);
 
 				return {
 					append: (slice) => {
