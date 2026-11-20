@@ -54,7 +54,7 @@ type NoticeMessage = { conversationId: string; notice: RecordingNotice };
 
 /** The notice a drainer event carries for the recording screen, if any. */
 const noticeOf = (event: OutboxEvent): NoticeMessage | null => {
-	if (event.type === "delivered" && event.item.kind === "chunk")
+	if (event.type === "delivered")
 		return {
 			conversationId: event.item.conversationId,
 			notice: {
@@ -119,8 +119,8 @@ const capture = (event: OutboxEvent) => {
 				conversation_id: event.item.conversationId,
 				kind: event.item.kind,
 				// It had been parked: a limit lifted and the audio landed later.
-				parked: event.item.kind === "chunk" && !!event.item.parked,
-				recovered: event.item.kind === "chunk" && !!event.item.recovered,
+				parked: !!event.item.parked,
+				recovered: !!event.item.recovered,
 			});
 			return;
 		case "parked":
@@ -279,7 +279,7 @@ export const OutboxProvider = ({
 			for (const item of items) {
 				// Parked audio waits on a limit, not the network: nothing waits on
 				// it, and progress doesn't count it as sent.
-				if (item.kind === "chunk" && item.parked) {
+				if (item.parked) {
 					seen[item.conversationId]?.delete(item.seq);
 					continue;
 				}
@@ -308,7 +308,7 @@ export const OutboxProvider = ({
 				// The screen recording this conversation may be in another tab.
 				channel?.postMessage(message);
 			}
-			if (event.type === "delivered" && event.item.kind === "chunk") {
+			if (event.type === "delivered") {
 				const { conversationId } = event.item;
 				queryClient.invalidateQueries({
 					queryKey: ["conversations", conversationId],

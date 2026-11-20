@@ -1,11 +1,5 @@
 import axios from "axios";
-import type {
-	ChunkItem,
-	OutboxItem,
-	OutboxStore,
-	Parked,
-	SliceGroup,
-} from "./outboxStore";
+import type { ChunkItem, OutboxStore, Parked, SliceGroup } from "./outboxStore";
 
 const FIRST_BACKOFF_MS = 2_000;
 const MAX_BACKOFF_MS = 60_000;
@@ -33,19 +27,18 @@ export type OutboxApi = {
 	/** Gets a presigned URL and puts the audio in S3. */
 	upload: (item: ChunkItem) => Promise<Uploaded>;
 	confirm: (item: ChunkItem, uploaded: Uploaded) => Promise<unknown>;
-	finish: (conversationId: string) => Promise<unknown>;
 };
 
 export type OutboxEvent =
 	| {
 			type: "delivered";
-			item: OutboxItem;
+			item: ChunkItem;
 			ageMs: number;
 			attempts: number;
-			/** What the server answered the confirm (or finish) with. */
+			/** What the server answered the confirm with. */
 			response: unknown;
 	  }
-	| { type: "dropped"; item: OutboxItem; reason: string; error?: unknown }
+	| { type: "dropped"; item: ChunkItem; reason: string; error?: unknown }
 	| {
 			type: "parked";
 			item: ChunkItem;
@@ -55,7 +48,7 @@ export type OutboxEvent =
 	  }
 	| {
 			type: "retrying";
-			item: OutboxItem;
+			item: ChunkItem;
 			attempts: number;
 			retryInMs: number;
 			error: unknown;
@@ -91,12 +84,10 @@ const heldWebLocks = async () => {
 };
 
 /**
- * Sends the outbox one item at a time. Order is kept within a conversation
- * (its chunks, then its finish), and each conversation backs off on its own,
- * so one that keeps failing never holds up another's audio. A finish needs no
- * special gate: it's only picked once it's its conversation's oldest item.
- * A chunk a recording limit refused is parked and stepped over until it's
- * due again, so it never blocks the queue or a finish.
+ * Sends the outbox one chunk at a time. Order is kept within a conversation,
+ * and each conversation backs off on its own, so one that keeps failing never
+ * holds up another's audio. A chunk a recording limit refused is parked and
+ * stepped over until it's due again, so it never blocks the queue.
  */
 export const createDrainer = ({
 	store,
@@ -119,7 +110,7 @@ export const createDrainer = ({
 	const parkedDue = (parked: Parked) =>
 		parked.retryAt <= now() || parked.at < startedAt;
 
-	const fail = (item: OutboxItem, attempts: number, error: unknown) => {
+	const fail = (item: ChunkItem, attempts: number, error: unknown) => {
 		const failures = (backoff.get(item.conversationId)?.failures ?? 0) + 1;
 		const retryInMs = Math.min(
 			FIRST_BACKOFF_MS * 2 ** (failures - 1),
@@ -129,24 +120,20 @@ export const createDrainer = ({
 		onEvent({ attempts, error, item, retryInMs, type: "retrying" });
 	};
 
-	const send = async (item: OutboxItem) => {
+	const send = async (item: ChunkItem) => {
 		const attempts = item.attempts + 1;
 		await store.noteAttempt(item.seq);
-		let uploaded = item.kind === "chunk" ? item.uploaded : undefined;
+		let uploaded = item.uploaded;
 		let response: unknown;
 		try {
-			if (item.kind === "finish") {
-				response = await api.finish(item.conversationId);
-			} else {
-				if (!uploaded) {
-					uploaded = await api.upload(item);
-					await store.markUploaded(item.seq, uploaded);
-				}
-				response = await api.confirm(item, uploaded);
+			if (!uploaded) {
+				uploaded = await api.upload(item);
+				await store.markUploaded(item.seq, uploaded);
 			}
+			response = await api.confirm(item, uploaded);
 		} catch (error) {
 			const status = httpStatus(error);
-			if (status === LIMIT_STATUS && item.kind === "chunk") {
+			if (status === LIMIT_STATUS) {
 				const at = now();
 				await store.park(item.seq, {
 					at,
@@ -191,11 +178,11 @@ export const createDrainer = ({
 			const items = await store.list();
 			if (items.length === 0) return null;
 
-			const heads = new Map<string, OutboxItem>();
+			const heads = new Map<string, ChunkItem>();
 			let soonest = Number.POSITIVE_INFINITY;
 			for (const item of items) {
 				if (heads.has(item.conversationId)) continue;
-				if (item.kind === "chunk" && item.parked && !parkedDue(item.parked)) {
+				if (item.parked && !parkedDue(item.parked)) {
 					soonest = Math.min(soonest, item.parked.retryAt);
 					continue;
 				}

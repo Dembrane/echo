@@ -11,6 +11,15 @@ const open = () => openOutboxStore({ dbName, now: () => now });
 const bytes = (...values: number[]) => new Uint8Array(values).buffer;
 const asArray = (buffer: ArrayBuffer) => Array.from(new Uint8Array(buffer));
 
+const enqueueChunk = (conversationId: string, audio = bytes(1)) =>
+	store.enqueueChunk({
+		audio,
+		conversationId,
+		mimeType: "audio/webm",
+		source: "PORTAL_AUDIO",
+		timestamp: "2026-10-14T10:00:00.000Z",
+	});
+
 const slice = (groupId: string, index: number, audio: ArrayBuffer) => ({
 	audio,
 	conversationId: "conv-1",
@@ -29,13 +38,7 @@ beforeEach(async () => {
 });
 
 it("enqueues a chunk and gives its audio back intact", async () => {
-	await store.enqueueChunk({
-		audio: bytes(1, 2, 3),
-		conversationId: "conv-1",
-		mimeType: "audio/webm",
-		source: "PORTAL_AUDIO",
-		timestamp: "2026-10-14T10:00:00.000Z",
-	});
+	await enqueueChunk("conv-1", bytes(1, 2, 3));
 
 	const [item] = await store.list();
 	expect(item).toMatchObject({
@@ -46,31 +49,19 @@ it("enqueues a chunk and gives its audio back intact", async () => {
 		mimeType: "audio/webm",
 		timestamp: "2026-10-14T10:00:00.000Z",
 	});
-	expect(item.kind === "chunk" && asArray(item.audio)).toEqual([1, 2, 3]);
+	expect(asArray(item.audio)).toEqual([1, 2, 3]);
 });
 
-it("lists chunks and finishes in the order they were enqueued", async () => {
-	await store.enqueueChunk({
-		audio: bytes(1),
-		conversationId: "conv-1",
-		mimeType: "audio/webm",
-		source: "PORTAL_AUDIO",
-		timestamp: "2026-10-14T10:00:00.000Z",
-	});
-	await store.enqueueFinish("conv-1");
-	await store.enqueueChunk({
-		audio: bytes(2),
-		conversationId: "conv-2",
-		mimeType: "audio/webm",
-		source: "PORTAL_AUDIO",
-		timestamp: "2026-10-14T10:00:30.000Z",
-	});
+it("lists chunks in the order they were enqueued", async () => {
+	await enqueueChunk("conv-1", bytes(1));
+	await enqueueChunk("conv-2", bytes(2));
+	await enqueueChunk("conv-1", bytes(3));
 
 	const items = await store.list();
-	expect(items.map((i) => [i.kind, i.conversationId])).toEqual([
-		["chunk", "conv-1"],
-		["finish", "conv-1"],
-		["chunk", "conv-2"],
+	expect(items.map((i) => [i.conversationId, ...asArray(i.audio)])).toEqual([
+		["conv-1", 1],
+		["conv-2", 2],
+		["conv-1", 3],
 	]);
 	expect(items[0].seq).toBeLessThan(items[1].seq);
 	expect(items[1].seq).toBeLessThan(items[2].seq);
@@ -93,7 +84,7 @@ it("seals a group's slices into one chunk, in slice order, and clears them", asy
 	});
 	expect(chunk?.recovered).toBeUndefined();
 	const [item] = await store.list();
-	expect(item.kind === "chunk" && asArray(item.audio)).toEqual([1, 2, 3, 4, 5]);
+	expect(asArray(item.audio)).toEqual([1, 2, 3, 4, 5]);
 	expect(await store.listSliceGroups()).toEqual([]);
 });
 
@@ -156,13 +147,7 @@ it("discards one group's slices without enqueueing anything", async () => {
 });
 
 it("remembers an upload and counts attempts on an item", async () => {
-	const { seq } = await store.enqueueChunk({
-		audio: bytes(1),
-		conversationId: "conv-1",
-		mimeType: "audio/webm",
-		source: "PORTAL_AUDIO",
-		timestamp: "2026-10-14T10:00:00.000Z",
-	});
+	const { seq } = await enqueueChunk("conv-1");
 
 	await store.markUploaded(seq, { chunk_id: "c1", file_url: "https://s3/c1" });
 	await store.noteAttempt(seq);
@@ -176,7 +161,7 @@ it("remembers an upload and counts attempts on an item", async () => {
 });
 
 it("removes an item", async () => {
-	const { seq } = await store.enqueueFinish("conv-1");
+	const { seq } = await enqueueChunk("conv-1");
 
 	await store.remove(seq);
 
@@ -184,9 +169,9 @@ it("removes an item", async () => {
 });
 
 it("purges items older than a cutoff and returns them", async () => {
-	await store.enqueueFinish("old");
+	await enqueueChunk("old");
 	now = 5_000;
-	await store.enqueueFinish("new");
+	await enqueueChunk("new");
 
 	const purged = await store.purgeOlderThan(5_000);
 
@@ -195,7 +180,7 @@ it("purges items older than a cutoff and returns them", async () => {
 });
 
 it("keeps everything across a reopen, as after a reload", async () => {
-	await store.enqueueFinish("conv-1");
+	await enqueueChunk("conv-1");
 	await store.appendSlice(slice("g1", 0, bytes(1)));
 	store.close();
 

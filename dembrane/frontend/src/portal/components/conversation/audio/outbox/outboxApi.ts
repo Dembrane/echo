@@ -1,6 +1,5 @@
 import {
 	confirmConversationChunkUpload,
-	finishConversation,
 	uploadConversationChunk,
 } from "@/lib/api";
 import type { OutboxApi } from "./drainOutbox";
@@ -15,7 +14,6 @@ export const outboxApi: OutboxApi = {
 			source: item.source,
 			timestamp: item.timestamp,
 		}),
-	finish: (conversationId) => finishConversation(conversationId),
 	upload: async (item) => {
 		const { chunk_id, file_url } = await uploadConversationChunk({
 			chunk: new Blob([item.audio], { type: item.mimeType }),

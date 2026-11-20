@@ -54,7 +54,6 @@ beforeEach(() => {
 	dbName = `provider-test-${crypto.randomUUID()}`;
 	api = {
 		confirm: vi.fn<OutboxApi["confirm"]>().mockResolvedValue(undefined),
-		finish: vi.fn<OutboxApi["finish"]>().mockResolvedValue(undefined),
 		upload: vi
 			.fn<OutboxApi["upload"]>()
 			.mockResolvedValue({ chunk_id: "c1", file_url: "https://s3/c1" }),

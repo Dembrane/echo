@@ -3,8 +3,8 @@
  * dropped network, a reload or a crash loses at most the last second.
  *
  * Two stores: `slices` holds the 1s pieces of the chunk being recorded right
- * now; `outbox` holds whole chunks and finishes waiting to send, in the order
- * they were recorded. Audio is kept as an ArrayBuffer, not a Blob: older iOS
+ * now; `outbox` holds whole chunks waiting to send, in the order they were
+ * recorded. Audio is kept as an ArrayBuffer, not a Blob: older iOS
  * Safari loses Blobs stored in IndexedDB.
  */
 
@@ -66,16 +66,6 @@ export type Parked = {
 	retryAt: number;
 };
 
-export type FinishItem = {
-	kind: "finish";
-	seq: number;
-	conversationId: string;
-	createdAt: number;
-	attempts: number;
-};
-
-export type OutboxItem = ChunkItem | FinishItem;
-
 export type OutboxStore = {
 	appendSlice: (slice: Slice) => Promise<void>;
 	/** Moves a group's slices into one queued chunk, atomically. Null if it has none. */
@@ -86,16 +76,15 @@ export type OutboxStore = {
 	discardGroup: (groupId: string) => Promise<void>;
 	listSliceGroups: () => Promise<SliceGroup[]>;
 	enqueueChunk: (chunk: NewChunk) => Promise<ChunkItem>;
-	enqueueFinish: (conversationId: string) => Promise<FinishItem>;
-	/** Every queued item, oldest first. */
-	list: () => Promise<OutboxItem[]>;
+	/** Every queued chunk, oldest first. */
+	list: () => Promise<ChunkItem[]>;
 	markUploaded: (seq: number, uploaded: ChunkItem["uploaded"]) => Promise<void>;
 	noteAttempt: (seq: number) => Promise<void>;
 	/** Marks a refused chunk to try again later. The server deleted any upload, so that's forgotten. */
 	park: (seq: number, parked: Parked) => Promise<void>;
 	remove: (seq: number) => Promise<void>;
-	/** Removes items created before `cutoff` (ms) and returns them. */
-	purgeOlderThan: (cutoff: number) => Promise<OutboxItem[]>;
+	/** Removes chunks created before `cutoff` (ms) and returns them. */
+	purgeOlderThan: (cutoff: number) => Promise<ChunkItem[]>;
 	close: () => void;
 };
 
@@ -149,21 +138,21 @@ export const openOutboxStore = async ({
 
 	// Within a transaction, only IDB requests are awaited: awaiting anything
 	// else lets the browser commit the transaction early.
-	const add = async <T extends OutboxItem>(
+	const add = async (
 		tx: IDBTransaction,
-		item: Omit<T, "seq">,
-	): Promise<T> => {
+		item: Omit<ChunkItem, "seq">,
+	): Promise<ChunkItem> => {
 		const seq = await request(tx.objectStore(OUTBOX).add(item));
-		return { ...item, seq } as T;
+		return { ...item, seq } as ChunkItem;
 	};
 
 	const update = async (
 		seq: number,
-		change: (item: OutboxItem) => OutboxItem,
+		change: (item: ChunkItem) => ChunkItem,
 	) => {
 		const tx = db.transaction(OUTBOX, "readwrite");
 		const store = tx.objectStore(OUTBOX);
-		const item = await request<OutboxItem | undefined>(store.get(seq));
+		const item = await request<ChunkItem | undefined>(store.get(seq));
 		if (item) store.put(change(item));
 		await committed(tx);
 	};
@@ -185,7 +174,7 @@ export const openOutboxStore = async ({
 
 		enqueueChunk: async (chunk) => {
 			const tx = db.transaction(OUTBOX, "readwrite");
-			const item = await add<ChunkItem>(tx, {
+			const item = await add(tx, {
 				...chunk,
 				attempts: 0,
 				createdAt: now(),
@@ -195,21 +184,9 @@ export const openOutboxStore = async ({
 			return item;
 		},
 
-		enqueueFinish: async (conversationId) => {
-			const tx = db.transaction(OUTBOX, "readwrite");
-			const item = await add<FinishItem>(tx, {
-				attempts: 0,
-				conversationId,
-				createdAt: now(),
-				kind: "finish",
-			});
-			await committed(tx);
-			return item;
-		},
-
 		list: async () => {
 			const tx = db.transaction(OUTBOX, "readonly");
-			return request<OutboxItem[]>(tx.objectStore(OUTBOX).getAll());
+			return request<ChunkItem[]>(tx.objectStore(OUTBOX).getAll());
 		},
 
 		listSliceGroups: async () => {
@@ -238,14 +215,12 @@ export const openOutboxStore = async ({
 			update(seq, (item) => ({ ...item, attempts: item.attempts + 1 })),
 
 		park: (seq, parked) =>
-			update(seq, (item) =>
-				item.kind === "chunk" ? { ...item, parked, uploaded: undefined } : item,
-			),
+			update(seq, (item) => ({ ...item, parked, uploaded: undefined })),
 
 		purgeOlderThan: async (cutoff) => {
 			const tx = db.transaction(OUTBOX, "readwrite");
 			const store = tx.objectStore(OUTBOX);
-			const all = await request<OutboxItem[]>(store.getAll());
+			const all = await request<ChunkItem[]>(store.getAll());
 			const old = all.filter((item) => item.createdAt < cutoff);
 			for (const item of old) store.delete(item.seq);
 			await committed(tx);
@@ -268,7 +243,7 @@ export const openOutboxStore = async ({
 			}
 			const [first] = found;
 			slices.delete(groupRange(groupId));
-			const chunk = await add<ChunkItem>(tx, {
+			const chunk = await add(tx, {
 				attempts: 0,
 				audio: concat(found.map((s) => s.audio)),
 				conversationId: first.conversationId,

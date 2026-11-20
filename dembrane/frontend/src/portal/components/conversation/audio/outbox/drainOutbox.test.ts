@@ -55,10 +55,6 @@ const calls = () =>
 			label: `confirm ${item.conversationId}#${new Uint8Array(item.audio)[0]}`,
 			order: api.confirm.mock.invocationCallOrder[i],
 		})),
-		...api.finish.mock.calls.map(([conversationId], i) => ({
-			label: `finish ${conversationId}`,
-			order: api.finish.mock.invocationCallOrder[i],
-		})),
 	]
 		.sort((a, b) => a.order - b.order)
 		.map((c) => c.label);
@@ -72,7 +68,6 @@ beforeEach(async () => {
 	events = [];
 	api = {
 		confirm: vi.fn<OutboxApi["confirm"]>().mockResolvedValue(undefined),
-		finish: vi.fn<OutboxApi["finish"]>().mockResolvedValue(undefined),
 		upload: vi
 			.fn<OutboxApi["upload"]>()
 			.mockResolvedValue({ chunk_id: "c1", file_url: "https://s3/c1" }),
@@ -104,10 +99,9 @@ it("uploads, confirms and removes a chunk", async () => {
 	]);
 });
 
-it("sends a conversation's chunks in order, then its finish", async () => {
+it("sends a conversation's chunks in order", async () => {
 	await enqueueChunk("conv-1", 1);
 	await enqueueChunk("conv-1", 2);
-	await store.enqueueFinish("conv-1");
 
 	await drainer.drain();
 
@@ -116,7 +110,6 @@ it("sends a conversation's chunks in order, then its finish", async () => {
 		"confirm conv-1#1",
 		"upload conv-1#2",
 		"confirm conv-1#2",
-		"finish conv-1",
 	]);
 	expect(await store.list()).toEqual([]);
 });
@@ -232,25 +225,12 @@ it("doesn't let one stuck conversation hold up another", async () => {
 	expect(api.confirm).toHaveBeenCalledTimes(1);
 });
 
-it("holds a finish back while its conversation's chunk is still failing", async () => {
-	await enqueueChunk("conv-1");
-	await store.enqueueFinish("conv-1");
-	api.upload.mockRejectedValue(new Error("Network Error"));
-
-	await drainer.drain();
-	now += 2_000;
-	await drainer.drain();
-
-	expect(api.finish).not.toHaveBeenCalled();
-});
-
 it.each([403, 404, 410])(
 	"drops an item the server answers %i to, and moves on",
 	async (status) => {
 		await enqueueChunk("gone", 1);
-		await store.enqueueFinish("gone");
-		api.upload.mockRejectedValueOnce(httpError(status));
-		api.finish.mockRejectedValueOnce(httpError(status));
+		await enqueueChunk("gone", 2);
+		api.upload.mockRejectedValue(httpError(status));
 
 		expect(await drainer.drain()).toBeNull();
 
@@ -430,7 +410,7 @@ describe("slices left behind by a tab that died mid-chunk", () => {
 		expect(await store.listSliceGroups()).toEqual([]);
 		const [item] = await store.list();
 		expect(item).toMatchObject({ conversationId: "conv-1", recovered: true });
-		expect(item.kind === "chunk" && item.audio.byteLength).toBe(1_600);
+		expect(item.audio.byteLength).toBe(1_600);
 		expect(events).toEqual([
 			expect.objectContaining({
 				group: expect.objectContaining({ groupId: "dead", sliceCount: 2 }),
