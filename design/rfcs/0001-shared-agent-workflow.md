@@ -126,7 +126,9 @@ When an agent has verified a flow twice with `agent-browser`, its recipe becomes
 ## How to try it
 
 1. Check out `feat/agent-proposal` and open Claude Code in the repo root.
-2. Accept the prompt to trust the repo and install `pstack`.
+2. Accept the prompt to trust the repo and install `pstack`. Hosts built on the Claude
+   Agent SDK, such as T3 Code, never show that prompt. There, `/dembrane-mode` stops and
+   prints two `claude plugin` commands to run in a shell.
 3. Run `/dembrane-mode` with a small dashboard or portal task (TODO: pick one).
 4. Read the agent's closing summary of what it proved.
 
@@ -156,6 +158,9 @@ choose which tactics to move up into `dembrane-mode`.
 - We would learn a new process that other people designed.
 - We don't know which agent tools everyone uses. It may be Claude Code for most of us.
 - We don't yet know whether this setup works well in tools other than Cursor and Claude Code.
+- Only the install prompt in interactive `claude` honors the pstack pin. The `claude plugin`
+  commands for Agent SDK hosts install pstack's latest commit, so two people can run
+  different versions of `poteto-mode`.
 - We may get little value from sharing skills and processes, or people may be happier
   working their own way.
 
@@ -173,7 +178,8 @@ choose which tactics to move up into `dembrane-mode`.
 ## To do before sharing
 
 - [ ] Try the steps in "How to try it" in a fresh environment. Check whether running
-      `/dembrane-mode` alone prompts the pstack install.
+      `/dembrane-mode` alone prompts the pstack install in interactive `claude`. In T3 Code
+      it doesn't, and the script prints the install commands instead.
 - [ ] Pick the task for step 3: a Linear issue to paste in, or asking the agent to write a
       `verify-dembrane` recipe for a flow that has none.
 - [ ] Get the Linear and Dembrane MCP servers in `.mcp.json` working on a T3code server.

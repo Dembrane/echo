@@ -12,8 +12,16 @@ read -r DIR SHA < <(bun -e '
   console.log(e ? `${e.installPath} ${e.gitCommitSha ?? "-"}` : "- -");
 ' "$INSTALLED")
 if [ "$DIR" = - ] || [ ! -f "$DIR/skills/poteto-mode/SKILL.md" ]; then
-  echo "pstack is not installed. In Claude Code, trust this repo and accept the plugin prompt from .claude/settings.json, or run: /plugin install pstack@cursor-plugins" >&2
+  cat >&2 <<'MSG'
+pstack is not installed.
+- Interactive claude in a terminal: trust this repo and accept the plugin prompt from .claude/settings.json, or run /plugin install pstack@cursor-plugins.
+- Agent SDK hosts (T3 Code and others) have no /plugin. Run these in a shell, then reload plugins:
+    claude plugin marketplace add cursor/plugins
+    claude plugin install pstack@cursor-plugins
+  This installs the marketplace's latest commit, not the pin in .claude/settings.json.
+MSG
   exit 1
 fi
-[ "$SHA" = "$PINNED" ] || echo "warning: installed pstack is from $SHA, this repo pins $PINNED (.claude/settings.json)" >&2
+[ "$SHA" = "$PINNED" ] || echo "note: installed pstack is from $SHA, this repo pins $PINNED (.claude/settings.json). Expected after a 'claude plugin install', safe to continue." >&2
+[ -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/rules/pstack-models.md" ] || echo "note: no pstack model rule yet, so subagents use pstack's default models. Suggest /pstack:setup-pstack to the user." >&2
 echo "$DIR"

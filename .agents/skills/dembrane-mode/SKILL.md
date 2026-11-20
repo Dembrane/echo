@@ -10,7 +10,7 @@ The team layer for everyone working in this repo. This file lives at `.agents/sk
 
 ## Base
 
-Run `.agents/skills/dembrane-mode/scripts/pstack-root.sh`. It prints the folder of the pstack plugin that `.claude/settings.json` installs and pins ([browse that version](https://github.com/cursor/plugins/tree/35a90942a7f02e1ebbc2443643179815f2147954/harness/pstack/claude-code/skills/poteto-mode)). Read `<folder>/skills/poteto-mode/SKILL.md` in full and follow it, including everything it tells you to read. Where it conflicts with this file, this file wins. If the script fails, stop and pass its message to the user.
+Run `.agents/skills/dembrane-mode/scripts/pstack-root.sh`. It prints the folder of the pstack plugin that `.claude/settings.json` installs and pins ([browse that version](https://github.com/cursor/plugins/tree/35a90942a7f02e1ebbc2443643179815f2147954/harness/pstack/claude-code/skills/poteto-mode)). Read `<folder>/skills/poteto-mode/SKILL.md` in full and follow it, including everything it tells you to read. Where it conflicts with this file, this file wins. If the script fails, stop and pass its message to the user. If it succeeds with notes, pass them on and continue.
 
 ## Overrides
 
