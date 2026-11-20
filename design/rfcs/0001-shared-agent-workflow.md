@@ -182,7 +182,9 @@ choose which tactics to move up into `dembrane-mode`.
       it doesn't, and the script prints the install commands instead.
 - [ ] Pick the task for step 3: a Linear issue to paste in, or asking the agent to write a
       `verify-dembrane` recipe for a flow that has none.
-- [ ] Get the Linear and Dembrane MCP servers in `.mcp.json` working on a T3code server.
-      Check that T3code loads project config, that the servers don't wait on an approval
-      prompt nobody sees, and how a headless server signs in (OAuth or an API key in the
-      server's own config).
+- [x] Get the Dembrane MCP server in `.mcp.json` working on a T3code server. T3code loads
+      project config but never shows the trust prompt, so `.mcp.json` servers stay pending
+      until `hasTrustDialogAccepted` is set for the main checkout in `~/.claude.json`.
+      `pstack-root.sh` says so. Sign in with `claude mcp login --no-browser dembrane`. Linear
+      left `.mcp.json`, since people already add it to their user config and the copy
+      in both places needed its own approval.

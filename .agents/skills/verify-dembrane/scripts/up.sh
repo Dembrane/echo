@@ -5,10 +5,12 @@
 # Prints the run's env file on success; source it for the URLs and paths.
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
+preflight
 
 RUN=${VERIFY_RUN:-v$(date +%Y%m%d%H%M%S)-$(head -c 2 /dev/urandom | od -An -tx1 | tr -d ' \n')}
 STATE=$RUNS/$RUN
 EVIDENCE=$FRONTEND/test-results/verify-dembrane/$RUN
+mkdir -p "$RUNS"
 mkdir "$STATE" 2>/dev/null || { echo "run $RUN already exists at $STATE" >&2; exit 1; }
 mkdir -p "$STATE/files" "$EVIDENCE"
 trap 'echo "up.sh failed; logs in $STATE. Clean up with: VERIFY_RUN=$RUN $SCRIPTS/down.sh" >&2' ERR
@@ -64,6 +66,7 @@ PORTAL_PORT=$PORTAL_PORT
 API_URL=http://localhost:$API_PORT
 DASHBOARD_URL=http://localhost:$DASH_PORT
 PORTAL_URL=http://portal.localhost:$PORTAL_PORT
+export AGENT_BROWSER_ARGS=$(browser_args)
 ENV
 
 cat > "$EVIDENCE/proof.md" <<MD

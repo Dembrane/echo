@@ -24,4 +24,14 @@ MSG
 fi
 [ "$SHA" = "$PINNED" ] || echo "note: installed pstack is from $SHA, this repo pins $PINNED (.claude/settings.json). Expected after a 'claude plugin install', safe to continue." >&2
 [ -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/rules/pstack-models.md" ] || echo "note: no pstack model rule yet, so subagents use pstack's default models. Suggest /pstack:setup-pstack to the user." >&2
+# Claude Code keys trust to the main checkout, so trusting it once covers every worktree. Agent
+# SDK hosts never show the trust prompt, and until it's accepted, .mcp.json servers stay pending
+# and this repo's .claude/settings.json permissions are ignored.
+MAIN=$(dirname "$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir)")
+TRUSTED=$(bun -e '
+  const f = process.argv[1];
+  const p = require("fs").existsSync(f) ? require(f).projects?.[process.argv[2]] : undefined;
+  console.log(p?.hasTrustDialogAccepted ? "yes" : "no");
+' "${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json" "$MAIN")
+[ "$TRUSTED" = yes ] || echo "note: Claude Code doesn't trust $MAIN yet, so .mcp.json servers stay pending and .claude/settings.json permissions are ignored. Run claude there once and accept the trust prompt, or, with the user's OK, set projects[\"$MAIN\"].hasTrustDialogAccepted to true in ~/.claude.json." >&2
 echo "$DIR"

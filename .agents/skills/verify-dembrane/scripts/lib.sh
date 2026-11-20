@@ -24,6 +24,32 @@ pick_run() {
   . "$RUNS/$run/env"
 }
 
+# Lists every missing prerequisite at once, so nothing gets created before a fix. Needs no run.
+preflight() {
+  local missing=() c
+  command -v ffmpeg >/dev/null 2>&1 || echo "warning: no ffmpeg on PATH; portal recordings will fail" >&2
+  for c in bun curl lsof agent-browser; do
+    command -v "$c" >/dev/null 2>&1 || missing+=("$c on PATH")
+  done
+  [ -d "$FRONTEND/node_modules" ] || missing+=("dembrane/frontend/node_modules (pnpm install)")
+  [ -d "$PLATFORM/node_modules" ] || missing+=("dembrane/platform/node_modules (bun install)")
+  if ! docker info >/dev/null 2>&1; then
+    command -v pg_isready >/dev/null 2>&1 && pg_isready -q -h localhost -p 5432 ||
+      missing+=("docker, or Postgres with pgvector on :5432 (see 'Run it without docker' in dembrane/platform/README.md)")
+  fi
+  [ ${#missing[@]} -eq 0 ] && return 0
+  echo "verify-dembrane is missing:" >&2
+  printf '  - %s\n' "${missing[@]}" >&2
+  return 1
+}
+
+# Chrome's sandbox needs unprivileged user namespaces, which Ubuntu 23.10 and later restrict
+# through AppArmor. Prints the agent-browser launch args that host needs, if any.
+browser_args() {
+  [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] && echo --no-sandbox
+  return 0
+}
+
 listener_pid() { lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -1; }
 
 # Claims the first port from $1 up that nothing listens on and no other run has claimed.
