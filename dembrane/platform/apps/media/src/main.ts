@@ -1,10 +1,10 @@
-import { LocalMedia } from "@dembrane/audio";
+import { LocalMedia, setFfmpegTimeout } from "@dembrane/audio";
 import { describe, loadSections } from "@dembrane/config";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { mediaApp } from "./app";
 
 // The media service reads only what it serves with: no database, no bucket, no secrets.
-const loaded = loadSections(["app", "observability", "http"]);
+const loaded = loadSections(["app", "observability", "http", "media"]);
 const config = loaded.values;
 const service = "echo-media";
 const logger = createLogger({
@@ -22,6 +22,7 @@ const tracing = initTracing({
   sampleRatio: config.observability.traceSampleRatio,
 });
 
+setFfmpegTimeout(config.media.ffmpegTimeoutSeconds * 1000);
 const app = mediaApp(new LocalMedia(), logger);
 // Media jobs run for minutes; Cloud Run's request timeout (60 minutes) is the real bound.
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 0 });

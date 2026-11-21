@@ -414,6 +414,10 @@ export const schema = defineSchema({
     timeoutSeconds: key("MEDIA_TIMEOUT_SECONDS", int.min(10).default(3600), {
       description: "How long one media request may take before the step fails and is retried.",
     }),
+    ffmpegTimeoutSeconds: key("MEDIA_FFMPEG_TIMEOUT_SECONDS", int.min(5).default(300), {
+      description:
+        "How long one ffmpeg or ffprobe process may run before the media service kills it (with anything it started) and the job fails as retryable. A browser chunk that hangs ffmpeg would otherwise hold the instance until MEDIA_TIMEOUT_SECONDS.",
+    }),
   },
   conversations: {
     participantTokenRequired: key("PARTICIPANT_TOKEN_REQUIRED", bool.default(false), {
