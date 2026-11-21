@@ -1,0 +1,20 @@
+{
+  "extraKnownMarketplaces": {
+    "cursor-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "cursor/plugins",
+        "sha": "35a90942a7f02e1ebbc2443643179815f2147954"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(.agents/skills/dembrane-mode/scripts/pstack-root.sh)",
+      "Bash(*/.agents/skills/dembrane-mode/scripts/pstack-root.sh)"
+    ]
+  },
+  "enabledPlugins": {
+    "pstack@cursor-plugins": true
+  }
+}
