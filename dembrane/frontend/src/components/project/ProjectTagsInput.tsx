@@ -195,7 +195,7 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		);
 
 		// Wait for all tag creation mutations to complete
-		await Promise.all(
+		const results = await Promise.allSettled(
 			tags.map((tag, index) =>
 				createTagMutation.mutateAsync({
 					// @ts-expect-error directus user id is not required
@@ -208,7 +208,13 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			),
 		);
 
-		setTagInput("");
+		// ErrorNotice shows the failure. Keep only the failed tags, so a retry
+		// does not create the saved tags again.
+		setTagInput(
+			tags
+				.filter((_, index) => results[index].status === "rejected")
+				.join(", "),
+		);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
